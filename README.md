@@ -2,7 +2,7 @@
 A free mixin-based injection hacked client for Minecraft Forge.
 
 Website: https://liquidbounce.net<br>
-YouTube: https://youtube.com/ccbluex<br>
+YouTube: https://youtube.com/CCBlueX<br>
 Twitter: https://twitter.com/CCBlueX
 
 ## License
