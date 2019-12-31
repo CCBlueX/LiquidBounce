@@ -8,7 +8,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.file.configs.FriendsConfig;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
-import net.ccbluex.liquidbounce.utils.render.ChatColor;
+import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import org.lwjgl.input.Mouse;
@@ -34,7 +34,7 @@ public class MidClick extends Module {
             final Entity entity = mc.objectMouseOver.entityHit;
 
             if(entity instanceof EntityPlayer) {
-                final String playerName = ChatColor.stripColor(entity.getName());
+                final String playerName = ColorUtils.stripColor(entity.getName());
                 final FriendsConfig friendsConfig = LiquidBounce.CLIENT.fileManager.friendsConfig;
 
                 if(!friendsConfig.isFriend(playerName)) {

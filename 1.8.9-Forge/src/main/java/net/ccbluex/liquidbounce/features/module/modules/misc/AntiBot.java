@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
-import net.ccbluex.liquidbounce.utils.render.ChatColor;
+import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.ListValue;
 import net.minecraft.client.network.NetworkPlayerInfo;
@@ -187,10 +187,10 @@ public class AntiBot extends Module {
 
         if(antiBot.tabValue.get()) {
             final boolean equals = antiBot.tabModeValue.get().equalsIgnoreCase("Equals");
-            final String targetName = ChatColor.stripColor(entity.getDisplayName().getFormattedText());
+            final String targetName = ColorUtils.stripColor(entity.getDisplayName().getFormattedText());
 
             for(final NetworkPlayerInfo networkPlayerInfo : mc.getNetHandler().getPlayerInfoMap()) {
-                final String networkName = ChatColor.stripColor(EntityUtils.getName(networkPlayerInfo));
+                final String networkName = ColorUtils.stripColor(EntityUtils.getName(networkPlayerInfo));
 
                 if(equals ? targetName.equals(networkName) : targetName.contains(networkName))
                     return false;

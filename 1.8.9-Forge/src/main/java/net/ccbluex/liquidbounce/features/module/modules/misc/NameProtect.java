@@ -8,7 +8,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.file.configs.FriendsConfig;
 import net.ccbluex.liquidbounce.utils.misc.StringUtils;
-import net.ccbluex.liquidbounce.utils.render.ChatColor;
+import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.TextValue;
 import net.minecraft.client.network.NetworkPlayerInfo;
@@ -33,12 +33,12 @@ public class NameProtect extends Module {
             return;
 
         for(final FriendsConfig.Friend friend : LiquidBounce.CLIENT.fileManager.friendsConfig.getFriends())
-            event.setText(StringUtils.replace(event.getText(), friend.getPlayerName(), ChatColor.translateAlternateColorCodes(friend.getAlias()) + "§f"));
+            event.setText(StringUtils.replace(event.getText(), friend.getPlayerName(), ColorUtils.translateAlternateColorCodes(friend.getAlias()) + "§f"));
 
         if(!getState())
             return;
 
-        event.setText(StringUtils.replace(event.getText(), mc.thePlayer.getName(), ChatColor.translateAlternateColorCodes(fakeNameValue.get()) + "§f"));
+        event.setText(StringUtils.replace(event.getText(), mc.thePlayer.getName(), ColorUtils.translateAlternateColorCodes(fakeNameValue.get()) + "§f"));
 
         if(allPlayersValue.get())
             for(final NetworkPlayerInfo playerInfo : mc.getNetHandler().getPlayerInfoMap())

@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
-import net.ccbluex.liquidbounce.utils.render.ChatColor
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 
 /**
  * LiquidBounce Hacked Client
@@ -26,7 +26,7 @@ class RenameCommand : Command("rename", emptyArray()) {
                 return
             }
 
-            item.setStackDisplayName(ChatColor.translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
+            item.setStackDisplayName(ColorUtils.translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
             chat("§3Item renamed to '${item.displayName}§3'")
             return
         }

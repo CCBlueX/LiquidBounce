@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.TextEvent
-import net.ccbluex.liquidbounce.utils.render.ChatColor
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.FontRenderer
@@ -110,7 +110,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     when {
                         colorIndex < 16 -> {
                             if (!ignoreColor) {
-                                val colorCode = ChatColor.colors[colorIndex]
+                                val colorCode = ColorUtils.hexColors[colorIndex]
 
                                 currentColor = Color((colorCode shr 16) / 255F, (colorCode shr 8 and 0xff) / 255F,
                                         (colorCode and 0xff) / 255F, alpha)
@@ -149,7 +149,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     else
                         defaultFont
 
-                    currentFont.drawString(if (randomCase) ChatColor.toRandom(words) else words, width.toDouble(), 0.0, currentColor)
+                    currentFont.drawString(if (randomCase) ColorUtils.randomMagicText(words) else words, width.toDouble(), 0.0, currentColor)
 
                     if (strikeThrough)
                         RenderUtils.drawLine(width / 2.0 + 1, currentFont.height / 3.0,
@@ -173,7 +173,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     }
 
     override fun getColorCode(charCode: Char) =
-            ChatColor.colors["0123456789abcdef".indexOf(charCode)]
+            ColorUtils.hexColors["0123456789abcdef".indexOf(charCode)]
 
     override fun getStringWidth(text: String): Int {
         var currentText = text

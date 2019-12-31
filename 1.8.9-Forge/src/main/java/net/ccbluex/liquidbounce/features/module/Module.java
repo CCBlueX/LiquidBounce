@@ -4,7 +4,7 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.Listenable;
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.notifications.Notification;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
-import net.ccbluex.liquidbounce.utils.render.ChatColor;
+import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.Value;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.util.ResourceLocation;
@@ -45,7 +45,7 @@ public class Module extends MinecraftInstance implements Listenable {
     }
 
     public String getColorlessTagName() {
-        return getName() + (getTag() == null ? "" : " " + ChatColor.stripColor(getTag()));
+        return getName() + (getTag() == null ? "" : " " + ColorUtils.stripColor(getTag()));
     }
 
     public String getDescription() {
