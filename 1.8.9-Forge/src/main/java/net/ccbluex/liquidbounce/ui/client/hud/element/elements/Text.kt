@@ -125,6 +125,8 @@ class Text : Element() {
             if (keyCode == Keyboard.KEY_BACK) {
                 if (displayString.get().isNotEmpty())
                     displayString.set(displayString.get().substring(0, displayString.get().length - 1))
+
+                updateElement()
                 return
             }
 
