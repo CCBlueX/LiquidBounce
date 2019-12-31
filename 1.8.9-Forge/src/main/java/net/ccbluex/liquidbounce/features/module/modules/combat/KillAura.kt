@@ -534,8 +534,6 @@ class KillAura : Module() {
         val rotations = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation,
                 (Math.random() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get()).toFloat())
 
-        rotations.fixGcd()
-
         if (silentRotationValue.get())
             RotationUtils.setTargetRotation(rotations)
         else
