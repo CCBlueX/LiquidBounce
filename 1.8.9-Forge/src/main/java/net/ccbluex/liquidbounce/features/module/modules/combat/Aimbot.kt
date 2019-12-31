@@ -67,8 +67,6 @@ class Aimbot : Module() {
                 (turnSpeedValue.get() + Math.random()).toFloat()
         )
 
-        rotation.fixGcd()
-
         rotation.toPlayer(mc.thePlayer)
 
         if (jitterValue.get()) {
