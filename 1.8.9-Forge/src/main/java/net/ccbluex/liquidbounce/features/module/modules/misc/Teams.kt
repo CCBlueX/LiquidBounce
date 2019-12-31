@@ -1,0 +1,41 @@
+package net.ccbluex.liquidbounce.features.module.modules.misc
+
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.entity.EntityLivingBase
+
+/**
+ * LiquidBounce Hacked Client
+ * A minecraft forge injection client using Mixin
+ *
+ * @game Minecraft
+ * @author CCBlueX
+ */
+@ModuleInfo(name = "Teams", description = "Prevents Killaura from attacking team mates.", category = ModuleCategory.MISC)
+class Teams : Module() {
+
+    private val scoreboardValue = BoolValue("ScoreboardTeam", true)
+    private val colorValue = BoolValue("Color", true)
+
+    /**
+     * Check if [entity] is in your own team using scoreboard or name color
+     */
+    fun isInYourTeam(entity: EntityLivingBase): Boolean {
+        mc.thePlayer ?: return false
+
+        if (scoreboardValue.get() && mc.thePlayer.team != null && entity.team != null &&
+                mc.thePlayer.team.isSameTeam(entity.team))
+            return true
+
+        if (colorValue.get() && mc.thePlayer.displayName != null && entity.displayName != null) {
+            val targetName = entity.displayName.formattedText.replace("§r", "")
+            val clientName = mc.thePlayer.displayName.formattedText.replace("§r", "")
+            return targetName.startsWith("§${clientName[1]}")
+        }
+
+        return false
+    }
+
+}
