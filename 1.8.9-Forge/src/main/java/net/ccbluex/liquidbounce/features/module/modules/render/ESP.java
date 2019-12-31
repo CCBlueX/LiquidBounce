@@ -8,7 +8,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
-import net.ccbluex.liquidbounce.utils.render.ChatColor;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.ccbluex.liquidbounce.utils.render.shader.FramebufferShader;
@@ -141,7 +140,7 @@ public class ESP extends Module {
                     if(index == -1)
                         continue;
 
-                    color = ChatColor.colors[index];
+                    color = ColorUtils.hexColors[index];
                     break;
                 }
 

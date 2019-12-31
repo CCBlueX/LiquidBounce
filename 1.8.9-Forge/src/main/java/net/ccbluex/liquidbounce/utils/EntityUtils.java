@@ -5,7 +5,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends;
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot;
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams;
-import net.ccbluex.liquidbounce.utils.render.ChatColor;
+import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -71,7 +71,7 @@ public final class EntityUtils extends MinecraftInstance {
 
     public static boolean isFriend(final Entity entity) {
         return entity instanceof EntityPlayer && entity.getName() != null &&
-                LiquidBounce.CLIENT.fileManager.friendsConfig.isFriend(ChatColor.stripColor(entity.getName()));
+                LiquidBounce.CLIENT.fileManager.friendsConfig.isFriend(ColorUtils.stripColor(entity.getName()));
     }
 
     public static boolean isAnimal(final Entity entity) {

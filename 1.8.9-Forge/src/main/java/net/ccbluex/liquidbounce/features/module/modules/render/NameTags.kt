@@ -8,7 +8,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.render.ChatColor
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.*
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -47,7 +47,7 @@ class NameTags : Module() {
 
             renderNameTag(entity as EntityLivingBase,
                     if (clearNamesValue.get())
-                        ChatColor.stripColor(entity.getDisplayName().unformattedText)
+                        ColorUtils.stripColor(entity.getDisplayName().unformattedText) ?: continue
                     else
                         entity.getDisplayName().unformattedText
             )
@@ -60,7 +60,7 @@ class NameTags : Module() {
 
         // Modify tag
         val bot = AntiBot.isBot(entity)
-        val nameColor = if (bot) ChatColor.DARK_AQUA else if (entity.isInvisible) ChatColor.GOLD else if (entity.isSneaking) ChatColor.DARK_RED else ChatColor.GRAY
+        val nameColor = if (bot) "§3" else if (entity.isInvisible) "§6" else if (entity.isSneaking) "§4" else "§7"
         val ping = if (entity is EntityPlayer) EntityUtils.getPing(entity) else 0
 
         val distanceText = if (distanceValue.get()) "§7${mc.thePlayer.getDistanceToEntity(entity).roundToInt()}m " else ""

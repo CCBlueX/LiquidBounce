@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -17,7 +16,6 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.util.glu.Cylinder
 import org.lwjgl.util.glu.GLU
 import java.awt.Color
-import java.util.*
 
 /**
  * LiquidBounce Hacked Client
@@ -124,7 +122,7 @@ class Projectiles : Module() {
         GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST)
         RenderUtils.glColor(Color(0, 160, 255, 255))
         GL11.glLineWidth(2f)
-        GL11.glBegin(GL11.GL_LINE)
+        GL11.glBegin(GL11.GL_LINE_STRIP)
 
         while (!hasLanded && posY > 0.0) {
             // Set pos before and after

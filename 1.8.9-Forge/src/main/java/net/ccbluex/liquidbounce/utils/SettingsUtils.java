@@ -7,7 +7,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
 import net.ccbluex.liquidbounce.features.module.modules.misc.Spammer;
 import net.ccbluex.liquidbounce.utils.misc.StringUtils;
-import net.ccbluex.liquidbounce.utils.render.ChatColor;
+import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.*;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -36,7 +36,7 @@ public final class SettingsUtils {
             if(split.length > 1) {
                 switch(split[0]) {
                     case "chat":
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §e" + ChatColor.translateAlternateColorCodes(StringUtils.toCompleteString(split, 1)));
+                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §e" + ColorUtils.translateAlternateColorCodes(StringUtils.toCompleteString(split, 1)));
                         break;
                     case "load":
                         final String urlRaw = StringUtils.toCompleteString(split, 1);

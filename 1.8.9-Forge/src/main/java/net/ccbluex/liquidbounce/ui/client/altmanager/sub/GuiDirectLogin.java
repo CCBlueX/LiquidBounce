@@ -1,12 +1,12 @@
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub;
 
-import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
+import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.TabUtils;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
-import net.ccbluex.liquidbounce.utils.render.ChatColor;
+import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -91,7 +91,7 @@ public class GuiDirectLogin extends GuiScreen {
                     status = "§aLogging in...";
 
                     if (password.getText().isEmpty())
-                        status = GuiAltManager.login(new MinecraftAccount(ChatColor.translateAlternateColorCodes(username.getText())));
+                        status = GuiAltManager.login(new MinecraftAccount(ColorUtils.translateAlternateColorCodes(username.getText())));
                     else
                         status = GuiAltManager.login(new MinecraftAccount(username.getText(), password.getText()));
 
