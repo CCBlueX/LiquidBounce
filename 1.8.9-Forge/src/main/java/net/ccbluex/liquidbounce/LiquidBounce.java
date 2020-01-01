@@ -48,7 +48,7 @@ public class LiquidBounce {
     // Client informations
     public static final String CLIENT_NAME = "LiquidBounce";
     public static final int CLIENT_VERSION = 67;
-    public static final boolean IN_DEV = true;
+    public static final boolean IN_DEV = false;
     public static final String CLIENT_CREATOR = "CCBlueX";
     public static final String MINECRAFT_VERSION = "1.8.9";
     public boolean isStarting;
