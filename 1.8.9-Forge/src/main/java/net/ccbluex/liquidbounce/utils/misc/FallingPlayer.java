@@ -18,7 +18,6 @@ public class FallingPlayer {
     private float strafe;
     private float forward;
 
-
     public FallingPlayer(double x, double y, double z, double motionX, double motionY, double motionZ, float yaw, float strafe, float forward) {
         this.x = x;
         this.y = y;
@@ -35,19 +34,18 @@ public class FallingPlayer {
         strafe *= 0.98F;
         forward *= 0.98F;
 
+        float v = strafe * strafe + forward * forward;
 
-        float f = strafe * strafe + forward * forward;
+        if (v >= 0.0001f) {
+            v = MathHelper.sqrt_float(v);
 
-        if (f >= 0.0001f) {
-            f = MathHelper.sqrt_float(f);
-
-            if (f < 1.0F) {
-                f = 1.0F;
+            if (v < 1.0F) {
+                v = 1.0F;
             }
 
-            f = Minecraft.getMinecraft().thePlayer.jumpMovementFactor / f;
-            strafe = strafe * f;
-            forward = forward * f;
+            v = Minecraft.getMinecraft().thePlayer.jumpMovementFactor / v;
+            strafe = strafe * v;
+            forward = forward * v;
             float f1 = MathHelper.sin(yaw * (float) Math.PI / 180.0F);
             float f2 = MathHelper.cos(yaw * (float) Math.PI / 180.0F);
             this.motionX += strafe * f2 - forward * f1;
@@ -75,21 +73,21 @@ public class FallingPlayer {
 
             Vec3 end = new Vec3(x, y, z);
 
-            BlockPos shit;
+            BlockPos raytracedBlock;
 
             float w = Minecraft.getMinecraft().thePlayer.width / 2.0f;
 
-            if ((shit = rayTrace(start, end)) != null) return shit;
+            if ((raytracedBlock = rayTrace(start, end)) != null) return raytracedBlock;
 
-            if ((shit = rayTrace(start.addVector(w, 0, w), end)) != null) return shit;
-            if ((shit = rayTrace(start.addVector(-w, 0, w), end)) != null) return shit;
-            if ((shit = rayTrace(start.addVector(w, 0, -w), end)) != null) return shit;
-            if ((shit = rayTrace(start.addVector(-w, 0, -w), end)) != null) return shit;
+            if ((raytracedBlock = rayTrace(start.addVector(w, 0, w), end)) != null) return raytracedBlock;
+            if ((raytracedBlock = rayTrace(start.addVector(-w, 0, w), end)) != null) return raytracedBlock;
+            if ((raytracedBlock = rayTrace(start.addVector(w, 0, -w), end)) != null) return raytracedBlock;
+            if ((raytracedBlock = rayTrace(start.addVector(-w, 0, -w), end)) != null) return raytracedBlock;
 
-            if ((shit = rayTrace(start.addVector(w, 0, w / 2f), end)) != null) return shit;
-            if ((shit = rayTrace(start.addVector(-w, 0, w / 2f), end)) != null) return shit;
-            if ((shit = rayTrace(start.addVector(w / 2f, 0, w), end)) != null) return shit;
-            if ((shit = rayTrace(start.addVector(w / 2f, 0, -w), end)) != null) return shit;
+            if ((raytracedBlock = rayTrace(start.addVector(w, 0, w / 2f), end)) != null) return raytracedBlock;
+            if ((raytracedBlock = rayTrace(start.addVector(-w, 0, w / 2f), end)) != null) return raytracedBlock;
+            if ((raytracedBlock = rayTrace(start.addVector(w / 2f, 0, w), end)) != null) return raytracedBlock;
+            if ((raytracedBlock = rayTrace(start.addVector(w / 2f, 0, -w), end)) != null) return raytracedBlock;
 
         }
 
@@ -99,10 +97,10 @@ public class FallingPlayer {
 
     @Nullable
     private BlockPos rayTrace(Vec3 start, Vec3 end) {
-        MovingObjectPosition movingObjectPosition = Minecraft.getMinecraft().theWorld.rayTraceBlocks(start, end, true);
+        MovingObjectPosition result = Minecraft.getMinecraft().theWorld.rayTraceBlocks(start, end, true);
 
-        if (movingObjectPosition != null && movingObjectPosition.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && movingObjectPosition.sideHit == EnumFacing.UP) {
-            return movingObjectPosition.getBlockPos();
+        if (result != null && result.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && result.sideHit == EnumFacing.UP) {
+            return result.getBlockPos();
         }
         return null;
     }

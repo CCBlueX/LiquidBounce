@@ -6,7 +6,6 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -21,12 +20,13 @@ import org.lwjgl.opengl.GL11
 import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.floor
+import kotlin.math.max
 
 /**
  * LiquidBounce Hacked Client
  * A minecraft forge injection client using Mixin
  *
- * @author CCBlueX
+ * @author CCBlueX, superblaubeere27
  * @game Minecraft
  */
 @ModuleInfo(name = "BugUp", description = "Automatically setbacks you after falling a certain distance.", category = ModuleCategory.MOVEMENT)
@@ -72,23 +72,23 @@ class BugUp : Module() {
 
             detectedLocation = fallingPlayer.findCollision(60)
 
-            if (detectedLocation != null && abs(MinecraftInstance.mc.thePlayer.posY - detectedLocation!!.y) + MinecraftInstance.mc.thePlayer.fallDistance <= maxFallDistance.get()) {
-                lastFound = MinecraftInstance.mc.thePlayer.fallDistance.toDouble()
+            if (detectedLocation != null && abs(mc.thePlayer.posY - detectedLocation!!.y) + mc.thePlayer.fallDistance <= maxFallDistance.get()) {
+                lastFound = mc.thePlayer.fallDistance.toDouble()
             }
 
-            if (MinecraftInstance.mc.thePlayer.fallDistance - lastFound > maxDistanceWithoutGround.get()) {
+            if (mc.thePlayer.fallDistance - lastFound > maxDistanceWithoutGround.get()) {
                 val mode = modeValue.get()
                 when (mode.toLowerCase()) {
                     "teleportback" -> {
-                        MinecraftInstance.mc.thePlayer.setPositionAndUpdate(prevX, prevY, prevZ)
-                        MinecraftInstance.mc.thePlayer.fallDistance = 0f
-                        MinecraftInstance.mc.thePlayer.motionY = 0.0
+                        mc.thePlayer.setPositionAndUpdate(prevX, prevY, prevZ)
+                        mc.thePlayer.fallDistance = 0f
+                        mc.thePlayer.motionY = 0.0
                     }
                     "flyflag" -> {
-                        MinecraftInstance.mc.thePlayer.motionY += 0.1
-                        MinecraftInstance.mc.thePlayer.fallDistance = 0f
+                        mc.thePlayer.motionY += 0.1
+                        mc.thePlayer.fallDistance = 0f
                     }
-                    "ongroundspoof" -> MinecraftInstance.mc.netHandler.addToSendQueue(C03PacketPlayer(true))
+                    "ongroundspoof" -> mc.netHandler.addToSendQueue(C03PacketPlayer(true))
                 }
             }
         }
@@ -96,14 +96,14 @@ class BugUp : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent?) {
-        if (detectedLocation == null || !indicator.get() || MinecraftInstance.mc.thePlayer.fallDistance + (MinecraftInstance.mc.thePlayer.posY - (detectedLocation!!.y + 1)) < 3)
+        if (detectedLocation == null || !indicator.get() || mc.thePlayer.fallDistance + (mc.thePlayer.posY - (detectedLocation!!.y + 1)) < 3)
             return
 
         val x = detectedLocation!!.x
         val y = detectedLocation!!.y
         val z = detectedLocation!!.z
 
-        val renderManager = MinecraftInstance.mc.renderManager
+        val renderManager = mc.renderManager
 
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
         GL11.glEnable(GL11.GL_BLEND)
@@ -120,9 +120,9 @@ class BugUp : Module() {
         GL11.glDepthMask(true)
         GL11.glDisable(GL11.GL_BLEND)
 
-        val fallDist = floor(MinecraftInstance.mc.thePlayer.fallDistance + (MinecraftInstance.mc.thePlayer.posY - (y + 0.5))).toInt()
+        val fallDist = floor(mc.thePlayer.fallDistance + (mc.thePlayer.posY - (y + 0.5))).toInt()
 
-        RenderUtils.renderNameTag(fallDist.toString() + "m (~" + Math.max(0, fallDist - 3) + " damage)", x + 0.5, y + 1.7, z + 0.5)
+        RenderUtils.renderNameTag(fallDist.toString() + "m (~" + max(0, fallDist - 3) + " damage)", x + 0.5, y + 1.7, z + 0.5)
 
         GlStateManager.resetColor()
     }
