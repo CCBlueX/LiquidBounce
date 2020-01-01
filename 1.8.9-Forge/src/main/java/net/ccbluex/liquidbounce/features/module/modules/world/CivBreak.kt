@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.block.BlockAir
 import net.minecraft.init.Blocks
 import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import java.awt.Color
@@ -29,10 +30,13 @@ class CivBreak : Module() {
     private var blockPos: BlockPos? = null
     private var enumFacing: EnumFacing? = null
 
-    private val airResetValue = BoolValue("Air-Reset", true)
     private val range = FloatValue("Range", 5F, 1F, 6F)
-    private val rangeResetValue = BoolValue("Range-Reset", true)
     private val rotationsValue = BoolValue("Rotations", true)
+    private val visualSwingValue = BoolValue("VisualSwing", true)
+
+    private val airResetValue = BoolValue("Air-Reset", true)
+    private val rangeResetValue = BoolValue("Range-Reset", true)
+
 
     @EventTarget
     fun onBlockClick(event: ClickBlockEvent) {
@@ -52,32 +56,43 @@ class CivBreak : Module() {
         if (event.eventState != EventState.POST)
             return
 
-        blockPos ?: return
+        val pos = blockPos ?: return
 
-        if (BlockUtils.getBlock(blockPos) is BlockAir &&
-                BlockUtils.getCenterDistance(blockPos!!) <= range.get()) {
-            mc.thePlayer.swingItem()
+        if (airResetValue.get() && BlockUtils.getBlock(pos) is BlockAir ||
+                rangeResetValue.get() && BlockUtils.getCenterDistance(pos) > range.get()) {
+            blockPos = null
+            return
+        }
 
-            if (rotationsValue.get())
-                RotationUtils.faceBlock(blockPos)
+        when (event.eventState) {
+            EventState.PRE -> {
+                if (rotationsValue.get())
+                    RotationUtils.faceBlock(pos)
+            }
 
-            // Break
-            mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, blockPos, enumFacing))
-            mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, blockPos, enumFacing))
-            mc.playerController.clickBlock(blockPos, enumFacing)
+            EventState.POST -> {
+                if (BlockUtils.getBlock(pos) !is BlockAir && BlockUtils.getCenterDistance(pos) <= range.get()) {
+                    if (visualSwingValue.get())
+                        mc.thePlayer.swingItem()
+                    else
+                        mc.netHandler.addToSendQueue(C0APacketAnimation())
+
+                    if (rotationsValue.get())
+                        RotationUtils.faceBlock(blockPos)
+
+                    // Break
+                    mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK,
+                            blockPos, enumFacing))
+                    mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK,
+                            blockPos, enumFacing))
+                    mc.playerController.clickBlock(blockPos, enumFacing)
+                }
+            }
         }
     }
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        blockPos ?: return
-
-        if (airResetValue.get() && BlockUtils.getBlock(blockPos) is BlockAir ||
-                rangeResetValue.get() && BlockUtils.getCenterDistance(blockPos!!) >= range.get()) {
-            blockPos = null
-            return
-        }
-
-        RenderUtils.drawBlockBox(blockPos, Color.RED, true)
+        RenderUtils.drawBlockBox(blockPos ?: return, Color.RED, true)
     }
 }
