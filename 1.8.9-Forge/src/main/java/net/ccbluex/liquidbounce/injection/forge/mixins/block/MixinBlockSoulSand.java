@@ -25,7 +25,7 @@ public class MixinBlockSoulSand {
     private void onEntityCollidedWithBlock(CallbackInfo callbackInfo) {
         final NoSlow noSlow = (NoSlow) ModuleManager.getModule(NoSlow.class);
 
-        if(noSlow.getState() && noSlow.soulsandValue.get())
+        if(noSlow.getState() && noSlow.getSoulsandValue().get())
             callbackInfo.cancel();
     }
 }

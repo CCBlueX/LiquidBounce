@@ -66,6 +66,14 @@ class KeyEvent(val key: Int) : Event()
 class MotionEvent(val eventState: EventState) : Event()
 
 /**
+ * Called in "onLivingUpdate" when the player is using a use item.
+ *
+ * @param strafe the applied strafe slow down
+ * @param forward the applied forward slow down
+ */
+class SlowDownEvent(var strafe: Float, var forward: Float) : Event()
+
+/**
  * Called when player moves
  *
  * @param x motion
