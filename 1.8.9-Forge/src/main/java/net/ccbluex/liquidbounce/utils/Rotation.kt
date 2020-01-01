@@ -10,7 +10,7 @@ import net.minecraft.util.Vec3
 data class Rotation(var yaw: Float, var pitch: Float) {
 
     /**
-     * Set roations to [player]
+     * Set rotations to [player]
      */
     fun toPlayer(player: EntityPlayer) {
         if(yaw.isNaN() || pitch.isNaN()) return
@@ -20,22 +20,17 @@ data class Rotation(var yaw: Float, var pitch: Float) {
     }
 
     /**
-     * Fix minecraft gcd
+     * Patch gcd exploit in aim
+     * 
+     * @see net.minecraft.client.renderer.EntityRenderer#updateRenderer
      */
-    fun fixGcd() {
-        // TODO: Currently in testing
-
-        val sensitivity = 0.91F
-
-        // val oldYaw = yaw
-        // val oldPitch = pitch
-
-        yaw -= yaw % sensitivity
-        pitch -= pitch % sensitivity
-
-        // ClientUtils.displayChatMessage("§7sen: §8$sensitivity §c- §7yaw: §8$oldYaw §c-> §8$yaw §c- §8pitch: §7$oldPitch §c-> §8$pitch")
+    fun fixGcd(val sensitivity: Float) {
+        val f = sensitivity * 0.6F + 0.2F
+        val gcd = f * f * f * 1.2F
+        
+        yaw -= yaw % gcd
+        pitch -= pitch % gcd
     }
-
 }
 
 /**
