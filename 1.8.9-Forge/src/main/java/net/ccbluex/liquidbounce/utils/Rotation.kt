@@ -9,15 +9,14 @@ import net.minecraft.util.Vec3
  */
 data class Rotation(var yaw: Float, var pitch: Float) {
 
-    init {
-        fixedSensitivity(MinecraftInstance.mc.gameSettings.mouseSensitivity)
-    }
-
     /**
      * Set rotations to [player]
      */
     fun toPlayer(player: EntityPlayer) {
-        if(yaw.isNaN() || pitch.isNaN()) return
+        if (yaw.isNaN() || pitch.isNaN())
+            return
+
+        fixedSensitivity(MinecraftInstance.mc.gameSettings.mouseSensitivity)
 
         player.rotationYaw = yaw
         player.rotationPitch = pitch
