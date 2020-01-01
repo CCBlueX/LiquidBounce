@@ -21,13 +21,13 @@ data class Rotation(var yaw: Float, var pitch: Float) {
 
     /**
      * Patch gcd exploit in aim
-     * 
+     *
      * @see net.minecraft.client.renderer.EntityRenderer#updateRenderer
      */
-    fun fixGcd(val sensitivity: Float) {
+    fun fixGcd(sensitivity: Float) {
         val f = sensitivity * 0.6F + 0.2F
         val gcd = f * f * f * 1.2F
-        
+
         yaw -= yaw % gcd
         pitch -= pitch % gcd
     }
