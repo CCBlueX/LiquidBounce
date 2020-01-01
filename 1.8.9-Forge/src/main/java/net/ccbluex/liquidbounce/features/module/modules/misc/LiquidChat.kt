@@ -94,6 +94,11 @@ class LiquidChat : Module() {
         override fun onPacket(packet: Packet) {
             when (packet) {
                 is ClientMessagePacket -> {
+                    if (mc.thePlayer == null) {
+                        println("[LiquidChat] ${packet.user.name}: ${packet.content}")
+                        return
+                    }
+
                     val chatComponent = ChatComponentText("§7[§a§lChat§7] §9${packet.user.name}: ")
                     val messageComponent = toChatComponent(packet.content)
                     chatComponent.appendSibling(messageComponent)
