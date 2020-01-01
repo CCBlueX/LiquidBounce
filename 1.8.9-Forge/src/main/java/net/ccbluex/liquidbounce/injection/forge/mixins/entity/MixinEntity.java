@@ -1,8 +1,5 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.event.EventState;
-import net.ccbluex.liquidbounce.event.MotionEvent;
 import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
@@ -11,6 +8,7 @@ import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
@@ -212,12 +210,17 @@ public abstract class MixinEntity {
 
     @Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
     private void handleRotations(float strafe, float forward, float friction, final CallbackInfo callbackInfo) {
+        if ((Entity) (Object) this != Minecraft.getMinecraft().thePlayer)
+            return;
+
         final KillAura killAura = (KillAura) ModuleManager.getModule(KillAura.class);
         final boolean rotationStrafe = killAura.getState() && killAura.getRotationStrafeValue().get();
-        if (!rotationStrafe) {
+
+        if (!rotationStrafe)
             return;
-        }
-        LiquidBounce.CLIENT.eventManager.callEvent(new MotionEvent(EventState.PRE));
+
+        killAura.update();
+
         if (RotationUtils.targetRotation != null) {
             final Rotation rotation = RotationUtils.targetRotation;
             float f = strafe * strafe + forward * forward;

@@ -223,6 +223,11 @@ class KillAura : Module() {
             return
         }
 
+        if (!rotationStrafeValue.get())
+            update();
+    }
+
+    fun update() {
         if (cancelRun || (noInventoryAttackValue.get() && (mc.currentScreen is GuiContainer ||
                         System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))) return
 
@@ -232,7 +237,6 @@ class KillAura : Module() {
         if (target == null) {
             stopBlocking()
             return
-
         }
 
         // Target

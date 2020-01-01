@@ -139,11 +139,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
     @Overwrite
     public void onUpdateWalkingPlayer() {
         try {
-            final KillAura killAura = (KillAura) ModuleManager.getModule(KillAura.class);
-            final boolean rotationStrafe = killAura.getState() && killAura.getRotationStrafeValue().get();
-            if(!rotationStrafe) {
-                LiquidBounce.CLIENT.eventManager.callEvent(new MotionEvent(EventState.PRE));
-            }
+            LiquidBounce.CLIENT.eventManager.callEvent(new MotionEvent(EventState.PRE));
+
             final InventoryMove inventoryMove = (InventoryMove) ModuleManager.getModule(InventoryMove.class);
             final Sneak sneak = (Sneak) ModuleManager.getModule(Sneak.class);
             final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || ModuleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
