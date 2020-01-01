@@ -31,7 +31,7 @@ import static org.lwjgl.opengl.GL11.*;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "BlockOverlay", description = "Allows you to change the design of the block overlay.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "BlockÜberlagerung", description = "Allows you to change the design of the block overlay.", category = ModuleCategory.RENDER)
 public class BlockOverlay extends Module {
 
     private final IntegerValue colorRedValue = new IntegerValue("R", 68, 0, 255);

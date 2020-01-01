@@ -33,7 +33,7 @@ import java.util.List;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "BufferSpeed", description = "Allows you to walk faster on slabs and stairs.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "PufferGeschwindigkeit", description = "Allows you to walk faster on slabs and stairs.", category = ModuleCategory.MOVEMENT)
 public class BufferSpeed extends Module {
 
     private final BoolValue speedLimitValue = new BoolValue("SpeedLimit", true);

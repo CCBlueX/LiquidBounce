@@ -29,7 +29,7 @@ import java.util.Random;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "ChestStealer", description = "Automatically steals all items from a chest.", category = ModuleCategory.WORLD)
+@ModuleInfo(name = "KistenKlauer", description = "Automatically steals all items from a chest.", category = ModuleCategory.WORLD)
 public class ChestStealer extends Module {
 
 	private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 200, 0, 400) {

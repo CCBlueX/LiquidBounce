@@ -20,7 +20,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "FastUse", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "SchnellNutzen", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
 class FastUse : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "CustomDelay"), "NCP")

@@ -14,7 +14,7 @@ import net.minecraft.client.settings.GameSettings
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AutoWalk", description = "Automatically makes you walk.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "AutoLaufen", description = "Automatically makes you walk.", category = ModuleCategory.MOVEMENT)
 class AutoWalk : Module() {
 
     @EventTarget

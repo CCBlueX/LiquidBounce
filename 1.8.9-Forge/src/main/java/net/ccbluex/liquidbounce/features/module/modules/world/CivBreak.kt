@@ -23,7 +23,7 @@ import java.awt.Color
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "CivBreak", description = "Allows you to break blocks instantly.", category = ModuleCategory.WORLD)
+@ModuleInfo(name = "CivBrechen", description = "Allows you to break blocks instantly.", category = ModuleCategory.WORLD)
 class CivBreak : Module() {
 
     private var blockPos: BlockPos? = null

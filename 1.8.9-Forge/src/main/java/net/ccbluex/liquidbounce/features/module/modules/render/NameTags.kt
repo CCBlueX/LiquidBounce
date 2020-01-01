@@ -27,7 +27,7 @@ import kotlin.math.roundToInt
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "NameTags", description = "Changes the scale of the nametags so you can always read them.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "Namensschilder", description = "Changes the scale of the nametags so you can always read them.", category = ModuleCategory.RENDER)
 class NameTags : Module() {
 
     private val healthValue = BoolValue("Health", true)

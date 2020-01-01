@@ -34,7 +34,7 @@ import kotlin.math.atan2
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
+@ModuleInfo(name = "KistenAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
 class ChestAura : Module() {
 
     private val rangeValue = FloatValue("Range", 5F, 1F, 6F)

@@ -18,7 +18,7 @@ import net.minecraft.client.settings.GameSettings
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "InventoryMove", description = "Allows you to walk while an inventory is opened.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "InventarBewegung", description = "Allows you to walk while an inventory is opened.", category = ModuleCategory.MOVEMENT)
 class InventoryMove : Module() {
 
     val noDetectableValue = BoolValue("NoDetectable", false)

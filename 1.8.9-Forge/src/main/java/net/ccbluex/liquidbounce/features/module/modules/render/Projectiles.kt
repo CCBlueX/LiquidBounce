@@ -24,7 +24,7 @@ import java.awt.Color
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "Geschosse", description = "Allows you to see where arrows will land.", category = ModuleCategory.RENDER)
 class Projectiles : Module() {
     
     private val dynamicBowPower = BoolValue("DynamicBowPower", true)

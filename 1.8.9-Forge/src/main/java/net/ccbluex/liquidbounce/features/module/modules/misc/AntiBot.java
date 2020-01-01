@@ -32,7 +32,7 @@ import java.util.Map;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AntiBot", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
+@ModuleInfo(name = "AntiRoboter", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
 public class AntiBot extends Module {
 
     private final BoolValue tabValue = new BoolValue("Tab", true);

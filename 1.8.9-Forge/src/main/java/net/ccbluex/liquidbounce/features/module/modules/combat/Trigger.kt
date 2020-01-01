@@ -17,7 +17,7 @@ import net.minecraft.client.settings.KeyBinding
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Trigger", description = "Automatically attacks the entity you are looking at.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "Auslöser", description = "Automatically attacks the entity you are looking at.", category = ModuleCategory.COMBAT)
 class Trigger : Module() {
 
     private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {

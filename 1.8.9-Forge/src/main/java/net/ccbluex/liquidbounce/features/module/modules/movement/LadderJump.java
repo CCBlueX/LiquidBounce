@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "LadderJump", description = "Boosts you up when touching a ladder.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "LeiterSprung", description = "Boosts you up when touching a ladder.", category = ModuleCategory.MOVEMENT)
 public class LadderJump extends Module {
 
     static boolean jumped;

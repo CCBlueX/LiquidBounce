@@ -33,7 +33,7 @@ import static org.lwjgl.opengl.GL11.*;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Blink", description = "Suspends all movement packets.", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "Blinken", description = "Suspends all movement packets.", category = ModuleCategory.PLAYER)
 public class Blink extends Module {
 
     private final List<Packet> packets = new ArrayList<>();

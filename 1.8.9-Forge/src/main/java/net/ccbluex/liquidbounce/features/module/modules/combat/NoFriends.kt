@@ -11,5 +11,5 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "NoFriends", description = "Allows you to attack friends.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "KeineFreunde", description = "Allows you to attack friends.", category = ModuleCategory.COMBAT)
 class NoFriends : Module()

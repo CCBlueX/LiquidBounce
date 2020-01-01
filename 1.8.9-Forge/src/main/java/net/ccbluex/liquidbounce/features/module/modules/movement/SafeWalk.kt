@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "SafeWalk", description = "Prevents you from falling down as if you were sneaking.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "SicherLaufen", description = "Prevents you from falling down as if you were sneaking.", category = ModuleCategory.MOVEMENT)
 class SafeWalk : Module() {
 
     private val airSafeValue = BoolValue("AirSafe", false)

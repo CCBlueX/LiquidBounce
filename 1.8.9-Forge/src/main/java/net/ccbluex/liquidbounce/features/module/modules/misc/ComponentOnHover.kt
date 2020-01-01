@@ -11,5 +11,5 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "ComponentOnHover", description = "Allows you to see onclick action and value of chat message components when hovered.", category = ModuleCategory.MISC)
+@ModuleInfo(name = "Bauteilüberlagerung", description = "Allows you to see onclick action and value of chat message components when hovered.", category = ModuleCategory.MISC)
 class ComponentOnHover : Module()

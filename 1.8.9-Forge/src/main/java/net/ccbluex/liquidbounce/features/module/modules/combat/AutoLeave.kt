@@ -18,7 +18,7 @@ import java.util.*
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AutoLeave", description = "Automatically makes you leave the server whenever your health is low.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "AutoVerlassen", description = "Automatically makes you leave the server whenever your health is low.", category = ModuleCategory.COMBAT)
 class AutoLeave : Module() {
 
     private val healthValue = FloatValue("Health", 8f, 0f, 20f)

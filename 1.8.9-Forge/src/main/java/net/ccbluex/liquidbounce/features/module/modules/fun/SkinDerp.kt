@@ -18,7 +18,7 @@ import kotlin.random.Random
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "SkinDerp", description = "Makes your skin blink (Requires multi-layer skin).", category = ModuleCategory.FUN)
+@ModuleInfo(name = "HautDerp", description = "Makes your skin blink (Requires multi-layer skin).", category = ModuleCategory.FUN)
 class SkinDerp : Module() {
 
     private val delayValue = IntegerValue("Delay", 0, 0, 1000)

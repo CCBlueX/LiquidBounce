@@ -21,7 +21,7 @@ import net.minecraft.util.EnumFacing
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "FastBow", description = "Turns your bow into a machine gun.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "SchnellerBogen", description = "Turns your bow into a machine gun.", category = ModuleCategory.COMBAT)
 class FastBow : Module() {
 
     private val packetsValue = IntegerValue("Packets", 20, 3, 20)

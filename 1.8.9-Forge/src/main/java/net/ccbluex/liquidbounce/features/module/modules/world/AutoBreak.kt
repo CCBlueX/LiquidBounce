@@ -15,7 +15,7 @@ import net.minecraft.init.Blocks
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AutoBreak", description = "Automatically breaks the block you are looking at.", category = ModuleCategory.WORLD)
+@ModuleInfo(name = "AutoBrechen", description = "Automatically breaks the block you are looking at.", category = ModuleCategory.WORLD)
 class AutoBreak : Module() {
 
     @EventTarget

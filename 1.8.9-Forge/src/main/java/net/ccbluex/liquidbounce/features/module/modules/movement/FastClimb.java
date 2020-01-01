@@ -22,7 +22,7 @@ import net.minecraft.util.EnumFacing;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "FastClimb", description = "Allows you to climb up ladders and vines faster.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "SchnellKlettern", description = "Allows you to climb up ladders and vines faster.", category = ModuleCategory.MOVEMENT)
 public class FastClimb extends Module {
 
     public final ListValue modeValue = new ListValue("Mode", new String[] {"Normal", "InstantTP", "AAC", "AACv3", "OAAC", "LAAC"}, "Normal");

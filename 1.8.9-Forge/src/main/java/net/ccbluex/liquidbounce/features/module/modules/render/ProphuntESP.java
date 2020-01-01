@@ -25,7 +25,7 @@ import java.util.Map;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "ProphuntESP", description = "Allows you to see disguised players in PropHunt.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "RequisitenjagdESP", description = "Allows you to see disguised players in PropHunt.", category = ModuleCategory.RENDER)
 public class ProphuntESP extends Module {
 
     public final Map<BlockPos, Long> blocks = new HashMap<>();

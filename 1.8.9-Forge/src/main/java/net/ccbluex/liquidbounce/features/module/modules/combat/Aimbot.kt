@@ -23,7 +23,7 @@ import kotlin.random.Random
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Aimbot", description = "Automatically faces selected entities around you.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "Zielroboter", description = "Automatically faces selected entities around you.", category = ModuleCategory.COMBAT)
 class Aimbot : Module() {
 
     private val rangeValue = FloatValue("Range", 4.4F, 1F, 8F)

@@ -11,5 +11,5 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "NoJumpDelay", description = "Removes delay between jumps.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "KeinSprungVerzögerung", description = "Removes delay between jumps.", category = ModuleCategory.MOVEMENT)
 class NoJumpDelay : Module()

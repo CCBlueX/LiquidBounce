@@ -40,7 +40,7 @@ import java.awt.*;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_I)
+@ModuleInfo(name = "Gerüst", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_I)
 public class Scaffold extends Module {
 
     /**

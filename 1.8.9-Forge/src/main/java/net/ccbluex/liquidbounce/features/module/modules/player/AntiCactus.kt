@@ -15,7 +15,7 @@ import net.minecraft.util.AxisAlignedBB
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AntiCactus", description = "Prevents cactuses from damaging you.", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "AntiKaktusse", description = "Prevents cactuses from damaging you.", category = ModuleCategory.PLAYER)
 class AntiCactus : Module() {
 
     @EventTarget

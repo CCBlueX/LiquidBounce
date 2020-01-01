@@ -11,5 +11,5 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Liquids", description = "Allows you to interact with liquids.", category = ModuleCategory.WORLD)
+@ModuleInfo(name = "Flüssigkeiten", description = "Allows you to interact with liquids.", category = ModuleCategory.WORLD)
 class Liquids : Module()

@@ -18,7 +18,7 @@ import net.minecraft.potion.Potion;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "Spurt", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
 public class Sprint extends Module {
 
     public final BoolValue allDirectionsValue = new BoolValue("AllDirections", true);

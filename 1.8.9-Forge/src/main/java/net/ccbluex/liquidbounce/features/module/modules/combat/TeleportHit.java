@@ -20,7 +20,7 @@ import net.minecraft.util.Vec3;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "TeleportHit", description = "Allows to hit entities from far away.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "TeleportationsTreffer", description = "Allows to hit entities from far away.", category = ModuleCategory.COMBAT)
 public class TeleportHit extends Module {
 
     private EntityLivingBase targetEntity;

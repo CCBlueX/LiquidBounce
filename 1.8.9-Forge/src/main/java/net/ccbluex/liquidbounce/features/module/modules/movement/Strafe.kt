@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Strafe", description = "Allows you to freely move in mid air.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "Beschießen", description = "Allows you to freely move in mid air.", category = ModuleCategory.MOVEMENT)
 class Strafe : Module() {
 
     @EventTarget

@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Freeze", description = "Allows you to stay stuck in mid air.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "Frieren", description = "Allows you to stay stuck in mid air.", category = ModuleCategory.MOVEMENT)
 class Freeze : Module() {
 
     @EventTarget

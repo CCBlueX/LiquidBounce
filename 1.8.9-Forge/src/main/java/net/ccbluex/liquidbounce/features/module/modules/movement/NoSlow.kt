@@ -25,7 +25,7 @@ import net.minecraft.util.EnumFacing
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "NoSlow", description = "Cancels slowness effects caused by soulsand and using items.",
+@ModuleInfo(name = "KeinLangsam", description = "Cancels slowness effects caused by soulsand and using items.",
         category = ModuleCategory.MOVEMENT)
 class NoSlow : Module() {
 

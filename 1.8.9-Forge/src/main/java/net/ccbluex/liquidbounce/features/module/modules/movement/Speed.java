@@ -27,7 +27,7 @@ import java.util.List;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "Geschwindigkeit", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
 public class Speed extends Module {
 
     private final SpeedMode[] speedModes = new SpeedMode[] {

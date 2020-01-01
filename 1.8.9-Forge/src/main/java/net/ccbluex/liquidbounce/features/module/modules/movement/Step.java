@@ -28,7 +28,7 @@ import net.minecraft.util.MathHelper;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Step", description = "Allows you to step up blocks.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "Schritt", description = "Allows you to step up blocks.", category = ModuleCategory.MOVEMENT)
 public class Step extends Module {
 
     private final ListValue modeValue = new ListValue("Mode", new String[] {"Vanilla", "Jump", "NCP", "AAC", "LAAC", "AAC3.3.4", "OldNCP", "Spartan", "Rewinside"}, "NCP");

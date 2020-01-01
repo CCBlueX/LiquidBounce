@@ -19,7 +19,7 @@ import net.minecraft.util.BlockPos;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "FastStairs", description = "Allows you to climb up stairs faster.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "SchnellTreppen", description = "Allows you to climb up stairs faster.", category = ModuleCategory.MOVEMENT)
 public class FastStairs extends Module {
 
     private final ListValue modeValue = new ListValue("Mode", new String[] {"NCP", "AAC", "LAAC"}, "NCP");

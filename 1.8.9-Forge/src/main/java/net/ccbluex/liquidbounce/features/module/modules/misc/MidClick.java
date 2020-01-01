@@ -20,7 +20,7 @@ import org.lwjgl.input.Mouse;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "MidClick", description = "Allows you to add a player as a friend by right clicking him.", category = ModuleCategory.MISC)
+@ModuleInfo(name = "MittelKlick", description = "Allows you to add a player as a friend by right clicking him.", category = ModuleCategory.MISC)
 public class MidClick extends Module {
 
     private boolean wasDown;

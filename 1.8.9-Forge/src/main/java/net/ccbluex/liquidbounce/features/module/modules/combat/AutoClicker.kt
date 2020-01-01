@@ -20,7 +20,7 @@ import kotlin.random.Random
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AutoClicker", description = "Constantly clicks when holding down a mouse button.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "AutoKlicker", description = "Constantly clicks when holding down a mouse button.", category = ModuleCategory.COMBAT)
 class AutoClicker : Module() {
 
     private val maxCPSValue: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {

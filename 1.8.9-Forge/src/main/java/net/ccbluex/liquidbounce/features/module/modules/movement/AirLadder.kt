@@ -17,7 +17,7 @@ import net.minecraft.util.BlockPos
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AirLadder", description = "Allows you to climb up ladders/vines without touching them.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "LuftLeiter", description = "Allows you to climb up ladders/vines without touching them.", category = ModuleCategory.MOVEMENT)
 class AirLadder : Module() {
 
     @EventTarget

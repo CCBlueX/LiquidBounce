@@ -14,7 +14,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.network.play.client.C0BPacketEntityAction;
 
-@ModuleInfo(name = "FreeCam", description = "Allows you to move out of your body.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "FreieKamera", description = "Allows you to move out of your body.", category = ModuleCategory.RENDER)
 public class FreeCam extends Module {
 
     private final FloatValue speedValue = new FloatValue("Speed", 0.8F, 0.1F, 2F);

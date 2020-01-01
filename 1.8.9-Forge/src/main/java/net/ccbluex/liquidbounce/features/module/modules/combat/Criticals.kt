@@ -23,7 +23,7 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Criticals", description = "Automatically deals critical hits.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "Kritiken", description = "Automatically deals critical hits.", category = ModuleCategory.COMBAT)
 class Criticals : Module() {
 
     val modeValue = ListValue("Mode", arrayOf("Packet", "HypixelPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump"), "packet")

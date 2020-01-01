@@ -30,7 +30,7 @@ import net.minecraft.util.Vec3;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Ignite", description = "Automatically sets targets aroung you on fire.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "Anzünden", description = "Automatically sets targets aroung you on fire.", category = ModuleCategory.COMBAT)
 public class Ignite extends Module {
 
     private final BoolValue lighterValue = new BoolValue("Lighter", true);

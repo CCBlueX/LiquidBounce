@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Reach", description = "Increases your reach.", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "Reichweite", description = "Increases your reach.", category = ModuleCategory.PLAYER)
 class Reach : Module() {
 
     val combatReachValue = FloatValue("CombatReach", 3.5f, 3f, 7f)

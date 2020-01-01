@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AntiBlind", description = "Cancels blindness effects.", category = ModuleCategory.RENDER)
+    @ModuleInfo(name = "AntiBlindheit", description = "Cancels blindness effects.", category = ModuleCategory.RENDER)
 class AntiBlind : Module() {
     val confusionEffect = BoolValue("Confusion", true)
     val pumpkinEffect = BoolValue("Pumpkin", true)

@@ -11,5 +11,5 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AirJump", description = "Allows you to jump in the mid air", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "LuftSprung", description = "Allows you to jump in the mid air", category = ModuleCategory.MOVEMENT)
 class AirJump : Module()

@@ -15,7 +15,7 @@ import net.minecraft.item.ItemFishingRod
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AutoFish", description = "Automatically catches fish when using a rod.", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "AutoFisch", description = "Automatically catches fish when using a rod.", category = ModuleCategory.PLAYER)
 class AutoFish : Module() {
 
     private val rodOutTimer = MSTimer()

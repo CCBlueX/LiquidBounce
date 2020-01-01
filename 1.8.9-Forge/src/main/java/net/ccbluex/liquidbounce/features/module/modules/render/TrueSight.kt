@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "TrueSight", description = "Allows you to see invisible entities and barriers.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "WahrSicht", description = "Allows you to see invisible entities and barriers.", category = ModuleCategory.RENDER)
 class TrueSight : Module() {
     val barriesValue = BoolValue("Barriers", true)
     val entitiesValue = BoolValue("Entities", true)

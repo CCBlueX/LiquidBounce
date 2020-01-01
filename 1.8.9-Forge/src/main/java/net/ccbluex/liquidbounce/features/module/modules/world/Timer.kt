@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Timer", description = "Changes the speed of the entire game.", category = ModuleCategory.WORLD)
+@ModuleInfo(name = "Zeitschaltuhr", description = "Changes the speed of the entire game.", category = ModuleCategory.WORLD)
 class Timer : Module() {
 
     private val speedValue = FloatValue("Speed", 2F, 0.1F, 10F)

@@ -48,7 +48,7 @@ import kotlin.math.min
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "KillAura", description = "Automatically attacks targets around you.",
+@ModuleInfo(name = "TötungsAura", description = "Automatically attacks targets around you.",
         category = ModuleCategory.COMBAT, keyBind = Keyboard.KEY_R)
 class KillAura : Module() {
 

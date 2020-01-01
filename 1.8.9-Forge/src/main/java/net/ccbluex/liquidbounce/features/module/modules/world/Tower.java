@@ -39,7 +39,7 @@ import java.awt.*;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Tower", description = "Automatically builds a tower beneath you.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_O)
+@ModuleInfo(name = "Turm", description = "Automatically builds a tower beneath you.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_O)
 public class Tower extends Module {
 
     /**

@@ -29,7 +29,7 @@ import net.minecraft.network.play.client.C16PacketClientStatus;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AutoArmor", description = "Automatically equips the best armor in your inventory.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "AutoRüstung", description = "Automatically equips the best armor in your inventory.", category = ModuleCategory.COMBAT)
 public class AutoArmor extends Module {
 
     private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 200, 0, 400) {

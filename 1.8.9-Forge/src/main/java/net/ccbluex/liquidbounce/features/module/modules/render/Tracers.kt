@@ -21,7 +21,7 @@ import java.awt.Color
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Tracers", description = "Draws a line to targets around you.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "Leuchtspurgeschosse", description = "Draws a line to targets around you.", category = ModuleCategory.RENDER)
 class Tracers : Module() {
 
     private val thicknessValue = FloatValue("Thickness", 2F, 1F, 5F)

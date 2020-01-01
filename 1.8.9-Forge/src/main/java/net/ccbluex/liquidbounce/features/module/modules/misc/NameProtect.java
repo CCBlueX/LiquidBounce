@@ -20,7 +20,7 @@ import net.minecraft.client.network.NetworkPlayerInfo;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "NameProtect", description = "Changes playernames clientside.", category = ModuleCategory.MISC)
+@ModuleInfo(name = "Namensschutz", description = "Changes playernames clientside.", category = ModuleCategory.MISC)
 public class NameProtect extends Module {
 
     private final TextValue fakeNameValue = new TextValue("FakeName", "&cMe");

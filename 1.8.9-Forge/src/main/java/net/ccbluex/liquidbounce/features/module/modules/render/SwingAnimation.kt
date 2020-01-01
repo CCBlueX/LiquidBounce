@@ -11,5 +11,5 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "SwingAnimation", description = "Changes swing animation.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "SchwungAnimation", description = "Changes swing animation.", category = ModuleCategory.RENDER)
 class SwingAnimation : Module()

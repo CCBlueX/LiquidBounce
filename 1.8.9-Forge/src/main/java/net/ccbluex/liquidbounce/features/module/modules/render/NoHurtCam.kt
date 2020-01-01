@@ -11,5 +11,5 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "NoHurtCam", description = "Disables hurt cam effect when getting hurt.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "KeineVerletzungsKamera", description = "Disables hurt cam effect when getting hurt.", category = ModuleCategory.RENDER)
 class NoHurtCam : Module()

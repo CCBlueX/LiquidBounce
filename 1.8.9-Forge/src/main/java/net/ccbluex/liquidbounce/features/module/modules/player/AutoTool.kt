@@ -14,7 +14,7 @@ import net.minecraft.util.BlockPos
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AutoTool", description = "Automatically selects the best tool in your inventory to mine a block.", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "AutoWerkzeug", description = "Automatically selects the best tool in your inventory to mine a block.", category = ModuleCategory.PLAYER)
 class AutoTool : Module() {
 
     @EventTarget

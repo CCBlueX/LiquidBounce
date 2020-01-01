@@ -16,7 +16,7 @@ import net.minecraft.network.play.server.S12PacketEntityVelocity;
 import net.minecraft.network.play.server.S27PacketExplosion;
 import net.minecraft.util.MathHelper;
 
-@ModuleInfo(name = "Velocity", description = "Allows you to modify the amount of knockback you take.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "Geschwindigkeit", description = "Allows you to modify the amount of knockback you take.", category = ModuleCategory.COMBAT)
 public class Velocity extends Module {
 
     private final FloatValue horizontalValue = new FloatValue("Horizontal", 0F, 0F, 1F);

@@ -36,7 +36,7 @@ import java.util.*;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Nuker", description = "Breaks all blocks around you.", category = ModuleCategory.WORLD)
+@ModuleInfo(name = "Atombomber", description = "Breaks all blocks around you.", category = ModuleCategory.WORLD)
 public class Nuker extends Module {
 
     private final FloatValue radiusValue = new FloatValue("Radius", 5.2F, 1F, 6F);

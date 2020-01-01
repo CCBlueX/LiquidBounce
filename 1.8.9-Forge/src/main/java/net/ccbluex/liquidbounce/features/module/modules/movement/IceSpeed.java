@@ -20,7 +20,7 @@ import net.minecraft.util.BlockPos;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "IceSpeed", description = "Allows you to walk faster on ice.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "EisGeschwindigkeit", description = "Allows you to walk faster on ice.", category = ModuleCategory.MOVEMENT)
 public class IceSpeed extends Module {
 
     private final ListValue modeValue = new ListValue("Mode", new String[] {"NCP", "AAC", "Spartan"}, "NCP");

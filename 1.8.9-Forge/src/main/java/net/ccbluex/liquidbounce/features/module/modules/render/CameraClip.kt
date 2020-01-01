@@ -11,5 +11,5 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "CameraClip", description = "Allows you to see through walls in third person view.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "KameraKlammer", description = "Allows you to see through walls in third person view.", category = ModuleCategory.RENDER)
 class CameraClip : Module()

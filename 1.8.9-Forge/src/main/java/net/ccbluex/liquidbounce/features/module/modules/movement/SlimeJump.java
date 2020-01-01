@@ -17,7 +17,7 @@ import net.minecraft.block.BlockSlime;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "SlimeJump", description = "Allows you to to jump higher on slime blocks.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "SchleimSprung", description = "Allows you to to jump higher on slime blocks.", category = ModuleCategory.MOVEMENT)
 public class SlimeJump extends Module {
 
     private final FloatValue motionValue = new FloatValue("Motion", 0.42F, 0.2F, 1F);

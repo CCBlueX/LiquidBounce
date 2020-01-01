@@ -19,7 +19,7 @@ import net.minecraft.network.play.client.C0BPacketEntityAction;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Sneak", description = "Automatically sneaks all the time.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "Verräter", description = "Automatically sneaks all the time.", category = ModuleCategory.MOVEMENT)
 public class Sneak extends Module {
 
     public final ListValue modeValue = new ListValue("Mode", new String[] {"Legit", "Vanilla", "Switch", "MineSecure"}, "MineSecure");

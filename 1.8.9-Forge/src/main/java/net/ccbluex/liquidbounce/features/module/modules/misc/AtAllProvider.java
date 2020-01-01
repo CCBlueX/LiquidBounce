@@ -25,7 +25,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AtAllProvider", description = "Automatically mentions everyone on the server when using '@a' in your message.", category = ModuleCategory.MISC)
+@ModuleInfo(name = "AnAlleBereitsteller", description = "Automatically mentions everyone on the server when using '@a' in your message.", category = ModuleCategory.MISC)
 public class AtAllProvider extends Module {
 
     private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 1000, 0, 20000) {

@@ -11,5 +11,5 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "NoScoreboard", description = "Disables the scoreboard.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "KeineAnzeigetafel", description = "Disables the scoreboard.", category = ModuleCategory.RENDER)
 class NoScoreboard : Module()

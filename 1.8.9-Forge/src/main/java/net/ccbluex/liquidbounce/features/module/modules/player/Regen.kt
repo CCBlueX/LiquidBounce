@@ -18,7 +18,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Regen", description = "Regenerates your health much faster.", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "Regenerierung", description = "Regenerates your health much faster.", category = ModuleCategory.PLAYER)
 class Regen : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Spartan"), "Vanilla")

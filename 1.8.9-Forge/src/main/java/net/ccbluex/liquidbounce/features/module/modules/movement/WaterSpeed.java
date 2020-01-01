@@ -16,7 +16,7 @@ import net.minecraft.block.BlockLiquid;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "WaterSpeed", description = "Allows you to swim faster.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "WasserGeschwindigkeit", description = "Allows you to swim faster.", category = ModuleCategory.MOVEMENT)
 public class WaterSpeed extends Module {
 
     private final FloatValue speedValue = new FloatValue("Speed", 1.2F, 1.1F, 1.5F);

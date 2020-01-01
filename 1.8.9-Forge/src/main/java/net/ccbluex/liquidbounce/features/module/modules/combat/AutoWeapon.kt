@@ -22,7 +22,7 @@ import net.minecraft.network.play.client.C09PacketHeldItemChange
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AutoWeapon", description = "Automatically selects the best weapon in your hotbar.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "AutoWaffe", description = "Automatically selects the best weapon in your hotbar.", category = ModuleCategory.COMBAT)
 class AutoWeapon : Module() {
 
     private val silentValue = BoolValue("SpoofItem", false)

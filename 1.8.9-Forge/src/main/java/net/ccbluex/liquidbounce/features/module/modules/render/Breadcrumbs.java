@@ -23,7 +23,7 @@ import static org.lwjgl.opengl.GL11.*;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Breadcrumbs", description = "Leaves a trail behind you.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "Semmelbrösel", description = "Leaves a trail behind you.", category = ModuleCategory.RENDER)
 public class Breadcrumbs extends Module {
 
     private final LinkedList<double[]> positions = new LinkedList<>();

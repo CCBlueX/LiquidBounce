@@ -21,7 +21,7 @@ import net.minecraft.util.MathHelper;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "WallClimb", description = "Allows you to climb up walls like a spider.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "WandKlettern", description = "Allows you to climb up walls like a spider.", category = ModuleCategory.MOVEMENT)
 public class WallClimb extends Module {
 
     private final ListValue modeValue = new ListValue("Mode", new String[] {"Simple", "CheckerClimb", "Clip", "AAC3.3.12", "AACGlide"}, "Simple");

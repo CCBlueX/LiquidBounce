@@ -15,7 +15,7 @@ import net.minecraft.network.play.client.C03PacketPlayer.*
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "PotionSaver", description = "Freezes all potion effects while you are standing still.", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "TrankSicherer", description = "Freezes all potion effects while you are standing still.", category = ModuleCategory.PLAYER)
 class PotionSaver : Module() {
 
     @EventTarget

@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "NoFOV", description = "Disables FOV changes caused by speed effect, etc.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "KeinFOV", description = "Disables FOV changes caused by speed effect, etc.", category = ModuleCategory.RENDER)
 class NoFOV : Module() {
     val fovValue = FloatValue("FOV", 1f, 0f, 1.5f)
 }

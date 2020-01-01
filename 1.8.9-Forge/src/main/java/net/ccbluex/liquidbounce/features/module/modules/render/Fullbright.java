@@ -18,7 +18,7 @@ import net.minecraft.potion.PotionEffect;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Fullbright", description = "Brightens up the world around you.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "GanzHell", description = "Brightens up the world around you.", category = ModuleCategory.RENDER)
 public class Fullbright extends Module {
 
     private final ListValue modeValue = new ListValue("Mode", new String[] {"Gamma", "NightVision"}, "Gamma");

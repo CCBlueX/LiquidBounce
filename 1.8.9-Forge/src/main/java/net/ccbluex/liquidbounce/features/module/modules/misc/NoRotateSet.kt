@@ -17,7 +17,7 @@ import net.minecraft.network.play.server.S08PacketPlayerPosLook
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "NoRotateSet", description = "Prevents the server from rotating your head.", category = ModuleCategory.MISC)
+@ModuleInfo(name = "KeinDrehSetzen", description = "Prevents the server from rotating your head.", category = ModuleCategory.MISC)
 class NoRotateSet : Module() {
 
     private val confirmValue = BoolValue("Confirm", true)

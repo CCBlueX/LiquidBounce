@@ -21,7 +21,7 @@ import net.minecraft.util.EnumFacing;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "LongJump", description = "Allows you to jump further.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "LangSprung", description = "Allows you to jump further.", category = ModuleCategory.MOVEMENT)
 public class LongJump extends Module {
 
     private final ListValue modeValue = new ListValue("Mode", new String[] {"NCP", "AACv1", "AACv2", "AACv3", "Mineplex", "Mineplex2", "Mineplex3"}, "NCP");

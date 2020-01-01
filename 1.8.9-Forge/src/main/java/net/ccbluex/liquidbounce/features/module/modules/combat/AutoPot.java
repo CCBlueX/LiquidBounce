@@ -28,7 +28,7 @@ import net.minecraft.potion.PotionEffect;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AutoPot", description = "Automatically throws healing potions.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "AutoTrank", description = "Automatically throws healing potions.", category = ModuleCategory.COMBAT)
 public class AutoPot extends Module {
 
     private final MSTimer msTimer = new MSTimer();

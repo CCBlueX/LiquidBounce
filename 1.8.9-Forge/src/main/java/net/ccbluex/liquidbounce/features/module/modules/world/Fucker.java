@@ -31,7 +31,7 @@ import java.util.Map;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Fucker", description = "Destroys selected blocks around you. (aka.  IDNuker)", category = ModuleCategory.WORLD)
+@ModuleInfo(name = "Arschloch", description = "Destroys selected blocks around you. (aka.  IDNuker)", category = ModuleCategory.WORLD)
 public class Fucker extends Module {
 
 	private final BlockValue blockValue = new BlockValue("ID", 26);

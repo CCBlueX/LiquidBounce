@@ -25,7 +25,7 @@ import net.minecraft.util.EnumFacing;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "AutoSoup", description = "Makes you automatically eat soup whenever your health is low.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "AutoSuppe", description = "Makes you automatically eat soup whenever your health is low.", category = ModuleCategory.COMBAT)
 public class AutoSoup extends Module {
 
     private final FloatValue healthValue = new FloatValue("Health", 15F, 0F, 20F);

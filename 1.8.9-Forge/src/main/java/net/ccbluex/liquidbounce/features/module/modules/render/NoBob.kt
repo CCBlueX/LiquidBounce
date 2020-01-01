@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "NoBob", description = "Disables the view bobbing effect.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "KeinBob", description = "Disables the view bobbing effect.", category = ModuleCategory.RENDER)
 class NoBob : Module() {
 
     @EventTarget

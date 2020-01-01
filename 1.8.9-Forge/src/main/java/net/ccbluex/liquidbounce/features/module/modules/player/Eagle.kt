@@ -16,7 +16,7 @@ import net.minecraft.util.BlockPos
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "Eagle", description = "Makes you eagle (aka. FastBridge).", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "Adler", description = "Makes you eagle (aka. FastBridge).", category = ModuleCategory.PLAYER)
 class Eagle : Module() {
 
     @EventTarget

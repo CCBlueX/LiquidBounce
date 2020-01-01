@@ -16,7 +16,7 @@ import net.minecraft.network.play.client.C0BPacketEntityAction
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "SuperKnockback", description = "Increases knockback dealt to other entities.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "SuperRückstoß", description = "Increases knockback dealt to other entities.", category = ModuleCategory.COMBAT)
 class SuperKnockback : Module() {
 
     private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)

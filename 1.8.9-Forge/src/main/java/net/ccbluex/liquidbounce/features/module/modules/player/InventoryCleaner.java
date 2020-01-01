@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "InventoryCleaner", description = "Automatically throws away useless items.", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "InventarReiniger", description = "Automatically throws away useless items.", category = ModuleCategory.PLAYER)
 public class InventoryCleaner extends Module {
 
     private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 600, 0, 1000) {

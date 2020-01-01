@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
  * @game Minecraft
  * @author CCBlueX
  */
-@ModuleInfo(name = "HeadRotations", description = "Allows you to see server-sided head rotations.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "KopfRotationen", description = "Allows you to see server-sided head rotations.", category = ModuleCategory.RENDER)
 class HeadRotations : Module() {
 
     @EventTarget
