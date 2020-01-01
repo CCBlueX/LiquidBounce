@@ -4,7 +4,6 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror
 import jdk.nashorn.internal.runtime.JSType
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.script.api.module.ScriptModule
 
 /**
  * A script api class for command support

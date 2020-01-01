@@ -7,8 +7,7 @@ import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
-
-import java.awt.*
+import java.awt.Color
 
 /**
  * LiquidBounce Hacked Client

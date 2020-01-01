@@ -15,29 +15,38 @@ class PanicCommand : Command("panic", emptyArray()) {
 
     override fun execute(args: Array<String>) {
         var modules = ModuleManager.getModules().filter { it.state }
-        var currType = ""
+        val msg: String
 
-        if (args.size > 1) {
-            if (!args[1].equals("all", true)) {
-                try {
-                    val category = ModuleCategory.values().first { it.displayName.equals(args[1], true) }
+        if (args.size > 1 && args[1].isNotEmpty()) {
+            when (args[1].toLowerCase()) {
+                "all" -> msg = "all"
+
+                "nonrender" -> {
+                    modules = modules.filter { it.category != ModuleCategory.RENDER }
+                    msg = "all non-render"
+                }
+
+                else -> {
+                    val categories = ModuleCategory.values().filter { it.displayName.equals(args[1], true) }
+
+                    if(categories.isEmpty()) {
+                        chat("Category ${args[1]} not found")
+                        return
+                    }
+
+                    val category = categories[0]
                     modules = modules.filter { it.category == category }
-                    currType = " ${category.displayName.toLowerCase()}"
-                } catch (noSuchElementException: NoSuchElementException) {
-                    chat("§cThe category does not exist!")
-                    return
+                    msg = "all ${category.displayName}"
                 }
             }
         } else {
-            modules = modules.filter { it.category != ModuleCategory.RENDER }
-
-            currType = " non-render"
+            chatSyntax("panic <all/nonrender/combat/player/movement/render/world/misc/exploit/fun>")
+            return
         }
 
         for (module in modules)
             module.state = false
 
-        chat("Disabled all$currType modules.")
+        chat("Disabled $msg modules.")
     }
-
 }
