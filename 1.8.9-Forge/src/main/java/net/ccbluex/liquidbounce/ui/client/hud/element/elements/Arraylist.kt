@@ -137,7 +137,7 @@ class Arraylist : Element() {
                     }
                     )
 
-                    fontRenderer.drawString(displayString, xPos - if (rectMode == "right") 3 else 0, yPos + textY, when {
+                    fontRenderer.drawString(displayString, xPos - if (rectMode.equals("right", true)) 3 else 0, yPos + textY, when {
                         colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
                         colorMode.equals("Random", ignoreCase = true) -> moduleColor
                         else -> customColor
