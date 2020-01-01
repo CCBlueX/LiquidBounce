@@ -106,6 +106,7 @@ public class Scaffold extends Module {
 
     // Safety
     private final BoolValue sameYValue = new BoolValue("SameY", false);
+    private final BoolValue safeWalkValue = new BoolValue("SafeWalk", true);
     private final BoolValue airSafeValue = new BoolValue("AirSafe", false);
 
     // Visuals
@@ -383,6 +384,9 @@ public class Scaffold extends Module {
      */
     @EventTarget
     public void onMove(final MoveEvent event) {
+        if (!safeWalkValue.get())
+            return;
+
         if(airSafeValue.get() || mc.thePlayer.onGround)
             event.setSafeWalk(true);
     }
