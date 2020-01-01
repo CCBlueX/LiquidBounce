@@ -125,6 +125,7 @@ class KillAura : Module() {
     }
 
     private val silentRotationValue = BoolValue("SilentRotation", true)
+    val rotationStrafeValue = BoolValue("RotationStrafe", false)
     private val randomCenterValue = BoolValue("RandomCenter", true)
     private val outborderValue = BoolValue("Outborder", false)
     private val fovValue = FloatValue("FOV", 180f, 0f, 180f)

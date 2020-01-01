@@ -1,14 +1,21 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
+import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.event.EventState;
+import net.ccbluex.liquidbounce.event.MotionEvent;
 import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
+import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.NoPitchLimit;
+import net.ccbluex.liquidbounce.utils.Rotation;
+import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -24,11 +31,10 @@ import java.util.Random;
 import java.util.UUID;
 
 /**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
+ * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
  *
- * @game Minecraft
  * @author CCBlueX
+ * @game Minecraft
  */
 @Mixin(Entity.class)
 @SideOnly(Side.CLIENT)
@@ -164,7 +170,8 @@ public abstract class MixinEntity {
     @Shadow
     public abstract UUID getUniqueID();
 
-    @Shadow public abstract boolean isSneaking();
+    @Shadow
+    public abstract boolean isSneaking();
 
     @Shadow
     public abstract boolean isInsideOfMaterial(Material materialIn);
@@ -185,13 +192,13 @@ public abstract class MixinEntity {
     private void getCollisionBorderSize(final CallbackInfoReturnable<Float> callbackInfoReturnable) {
         final HitBox hitBox = (HitBox) ModuleManager.getModule(HitBox.class);
 
-        if(hitBox.getState())
+        if (hitBox.getState())
             callbackInfoReturnable.setReturnValue(0.1F + hitBox.getSizeValue().get());
     }
 
     @Inject(method = "setAngles", at = @At("HEAD"), cancellable = true)
     private void setAngles(final float yaw, final float pitch, final CallbackInfo callbackInfo) {
-        if(ModuleManager.getModule(NoPitchLimit.class).getState()) {
+        if (ModuleManager.getModule(NoPitchLimit.class).getState()) {
             callbackInfo.cancel();
 
             float f = this.rotationPitch;
@@ -200,6 +207,38 @@ public abstract class MixinEntity {
             this.rotationPitch = (float) ((double) this.rotationPitch - (double) pitch * 0.15D);
             this.prevRotationPitch += this.rotationPitch - f;
             this.prevRotationYaw += this.rotationYaw - f1;
+        }
+    }
+
+    @Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
+    private void handleRotations(float strafe, float forward, float friction, final CallbackInfo callbackInfo) {
+        final KillAura killAura = (KillAura) ModuleManager.getModule(KillAura.class);
+        final boolean rotationStrafe = killAura.getState() && killAura.getRotationStrafeValue().get();
+        if (!rotationStrafe) {
+            return;
+        }
+        LiquidBounce.CLIENT.eventManager.callEvent(new MotionEvent(EventState.PRE));
+        if (RotationUtils.targetRotation != null) {
+            final Rotation rotation = RotationUtils.targetRotation;
+            float f = strafe * strafe + forward * forward;
+
+            if (f >= 1.0E-4F) {
+                f = MathHelper.sqrt_float(f);
+
+                if (f < 1.0F) {
+                    f = 1.0F;
+                }
+
+                f = friction / f;
+                strafe = strafe * f;
+                forward = forward * f;
+
+                float f1 = MathHelper.sin(rotation.getYaw() * (float) Math.PI / 180.0F);
+                float f2 = MathHelper.cos(rotation.getYaw() * (float) Math.PI / 180.0F);
+                this.motionX += strafe * f2 - forward * f1;
+                this.motionZ += forward * f2 + strafe * f1;
+            }
+            callbackInfo.cancel();
         }
     }
 }
