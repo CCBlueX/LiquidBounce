@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.event.ClickEvent
 import net.minecraft.util.ChatComponentText
+import net.minecraft.util.EnumChatFormatting
 import net.minecraft.util.IChatComponent
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
@@ -92,7 +93,13 @@ class LiquidChat : Module() {
          */
         override fun onPacket(packet: Packet) {
             when (packet) {
-                is ClientMessagePacket -> mc.thePlayer.addChatMessage(toChatComponent("§7[§a§lChat§7] §9${packet.user.name}: §7${packet.content}"))
+                is ClientMessagePacket -> {
+                    val chatComponent = ChatComponentText("§7[§a§lChat§7] §9${packet.user.name}: ")
+                    val messageComponent = toChatComponent(packet.content)
+                    chatComponent.appendSibling(messageComponent)
+
+                    mc.thePlayer.addChatMessage(chatComponent)
+                }
                 is ClientPrivateMessagePacket -> ClientUtils.displayChatMessage("§7[§a§lChat§7] §c(P)§9 ${packet.user.name}: §7${packet.content}")
                 is ClientErrorPacket -> {
                     val message = when(packet.message) {
@@ -349,44 +356,48 @@ class LiquidChat : Module() {
             // Append the previous left overs.
             val part = string.substring(lastEnd, start)
             if (part.isNotEmpty()) {
-                if (component == null)
+                if (component == null) {
                     component = ChatComponentText(part)
-                else
+                    component.chatStyle.color = EnumChatFormatting.GRAY
+                } else
                     component.appendText(part)
             }
 
             lastEnd = end
 
-            var url = string.substring(start, end)
+            val url = string.substring(start, end)
 
             try {
-                if (URI(url).scheme == null)
-                    url = "http://$url"
+                if (URI(url).scheme != null) {
+                    // Set the click event and append the link.
+                    val link: IChatComponent = ChatComponentText(url)
 
-                // Set the click event and append the link.
-                val link: IChatComponent = ChatComponentText(url)
+                    link.chatStyle.chatClickEvent = ClickEvent(ClickEvent.Action.OPEN_URL, url)
+                    link.chatStyle.underlined = true
+                    link.chatStyle.color = EnumChatFormatting.GRAY
 
-                link.chatStyle.chatClickEvent = ClickEvent(ClickEvent.Action.OPEN_URL, url)
-                link.chatStyle.underlined = true
-
-                if (component == null)
-                    component = link
-                else
-                    component.appendSibling(link)
+                    if (component == null)
+                        component = link
+                    else
+                        component.appendSibling(link)
+                    continue
+                }
             } catch (e: URISyntaxException) {
-                if (component == null)
-                    component = ChatComponentText(url)
-                else
-                    component.appendText(url)
             }
 
+            if (component == null) {
+                component = ChatComponentText(url)
+                component.chatStyle.color = EnumChatFormatting.GRAY
+            } else
+                component.appendText(url)
         }
 
         // Append the rest of the message.
         val end = string.substring(lastEnd)
-        if (component == null)
+        if (component == null) {
             component = ChatComponentText(end)
-        else if (end.isNotEmpty())
+            component.chatStyle.color = EnumChatFormatting.GRAY
+        } else if (end.isNotEmpty())
             component.appendText(string.substring(lastEnd))
         return component
     }
