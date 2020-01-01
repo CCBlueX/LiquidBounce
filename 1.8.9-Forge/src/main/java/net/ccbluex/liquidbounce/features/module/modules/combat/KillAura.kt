@@ -5,7 +5,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.module.ModuleManager.getModule
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
@@ -107,6 +107,7 @@ class KillAura : Module() {
 
     // Bypass
     private val aacValue = BoolValue("AAC", false)
+    private val gcdValue = BoolValue("GCD", false)
 
     // Turn Speed
 
@@ -437,10 +438,10 @@ class KillAura : Module() {
                 if (entity.isSpectator || AntiBot.isBot(entity))
                     return false
 
-                if (EntityUtils.isFriend(entity) && !ModuleManager.getModule(NoFriends::class.java)!!.state)
+                if (EntityUtils.isFriend(entity) && !getModule(NoFriends::class.java)!!.state)
                     return false
 
-                val teams = ModuleManager.getModule(Teams::class.java) as Teams
+                val teams = getModule(Teams::class.java) as Teams
 
                 return !teams.state || !teams.isInYourTeam(entity)
             }
@@ -486,7 +487,7 @@ class KillAura : Module() {
         }
 
         // Extra critical effects
-        val criticals = ModuleManager.getModule(Criticals::class.java) as Criticals
+        val criticals = getModule(Criticals::class.java) as Criticals
 
         for (i in 0..2) {
             // Critical Effect
@@ -531,13 +532,16 @@ class KillAura : Module() {
                 mc.thePlayer.getDistanceToEntityBox(entity) < throughWallsRangeValue.get()
         ) ?: return false
 
-        val rotations = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation,
+        val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation,
                 (Math.random() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get()).toFloat())
 
+        if (gcdValue.get())
+            limitedRotation.fixGcd(mc.gameSettings.mouseSensitivity)
+
         if (silentRotationValue.get())
-            RotationUtils.setTargetRotation(rotations)
+            RotationUtils.setTargetRotation(limitedRotation)
         else
-            rotations.toPlayer(mc.thePlayer)
+            limitedRotation.toPlayer(mc.thePlayer)
 
         return true
     }
@@ -555,7 +559,7 @@ class KillAura : Module() {
             }
 
             if (raycastValue.get() && raycastedEntity is EntityLivingBase
-                    && (ModuleManager.getModule(NoFriends::class.java)!!.state || !EntityUtils.isFriend(raycastedEntity)))
+                    && (getModule(NoFriends::class.java)!!.state || !EntityUtils.isFriend(raycastedEntity)))
                 currentTarget = raycastedEntity
 
             hitable = currentTarget == raycastedEntity
@@ -592,7 +596,7 @@ class KillAura : Module() {
      */
     private val cancelRun: Boolean
         get() = mc.thePlayer.isSpectator || !isAlive(mc.thePlayer)
-                || ModuleManager.getModule(Blink::class.java)!!.state || ModuleManager.getModule(FreeCam::class.java)!!.state
+                || getModule(Blink::class.java)!!.state || getModule(FreeCam::class.java)!!.state
 
     /**
      * Check if [entity] is alive

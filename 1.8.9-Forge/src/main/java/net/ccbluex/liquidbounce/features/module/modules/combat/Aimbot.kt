@@ -31,6 +31,7 @@ class Aimbot : Module() {
     private val fovValue = FloatValue("FOV", 180F, 1F, 180F)
     private val centerValue = BoolValue("Center", false)
     private val lockValue = BoolValue("Lock", false)
+    private val gcdValue = BoolValue("GCD", true)
     private val onClickValue = BoolValue("OnClick", false)
     private val jitterValue = BoolValue("Jitter", false)
 
@@ -63,9 +64,13 @@ class Aimbot : Module() {
                 if (centerValue.get())
                     RotationUtils.toRotation(RotationUtils.getCenter(entity.entityBoundingBox), true)
                 else
-                    RotationUtils.searchCenter(entity.entityBoundingBox, false, false, true, false).rotation,
+                    RotationUtils.searchCenter(entity.entityBoundingBox, false, false, true,
+                            false).rotation,
                 (turnSpeedValue.get() + Math.random()).toFloat()
         )
+
+        if (gcdValue.get())
+            rotation.fixGcd(mc.gameSettings.mouseSensitivity)
 
         rotation.toPlayer(mc.thePlayer)
 
@@ -76,10 +81,10 @@ class Aimbot : Module() {
             val pitchNegative = Random.nextBoolean()
 
             if (yaw)
-                mc.thePlayer.rotationYaw += if (yawNegative) -RandomUtils.nextFloat(0f, 1F) else RandomUtils.nextFloat(0f, 1F)
+                mc.thePlayer.rotationYaw += if (yawNegative) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
 
             if (pitch) {
-                mc.thePlayer.rotationPitch += if (pitchNegative) -RandomUtils.nextFloat(0f, 1F) else RandomUtils.nextFloat(0f, 1F)
+                mc.thePlayer.rotationPitch += if (pitchNegative) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
                 if (mc.thePlayer.rotationPitch > 90)
                     mc.thePlayer.rotationPitch = 90F
                 else if (mc.thePlayer.rotationPitch < -90)
