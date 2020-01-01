@@ -122,7 +122,7 @@ class BugUp : Module() {
 
         val fallDist = floor(mc.thePlayer.fallDistance + (mc.thePlayer.posY - (y + 0.5))).toInt()
 
-        RenderUtils.renderNameTag(fallDist.toString() + "m (~" + max(0, fallDist - 3) + " damage)", x + 0.5, y + 1.7, z + 0.5)
+        RenderUtils.renderNameTag("${fallDist}m (~${max(0, fallDist - 3)} damage)", x + 0.5, y + 1.7, z + 0.5)
 
         GlStateManager.resetColor()
     }
