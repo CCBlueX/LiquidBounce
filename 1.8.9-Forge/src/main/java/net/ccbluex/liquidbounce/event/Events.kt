@@ -74,6 +74,11 @@ class MotionEvent(val eventState: EventState) : Event()
 class SlowDownEvent(var strafe: Float, var forward: Float) : Event()
 
 /**
+ * Called in "moveFlying"
+ */
+class StrafeEvent(val strafe: Float, val forward: Float, val friction: Float) : CancellableEvent()
+
+/**
  * Called when player moves
  *
  * @param x motion

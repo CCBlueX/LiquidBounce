@@ -1,11 +1,10 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
+import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.event.StrafeEvent;
 import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
-import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.NoPitchLimit;
-import net.ccbluex.liquidbounce.utils.Rotation;
-import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -13,7 +12,6 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -213,35 +211,10 @@ public abstract class MixinEntity {
         if ((Entity) (Object) this != Minecraft.getMinecraft().thePlayer)
             return;
 
-        final KillAura killAura = (KillAura) ModuleManager.getModule(KillAura.class);
-        final boolean rotationStrafe = killAura.getState() && killAura.getRotationStrafeValue().get();
+        final StrafeEvent strafeEvent = new StrafeEvent(strafe, forward, friction);
+        LiquidBounce.CLIENT.eventManager.callEvent(strafeEvent);
 
-        if (!rotationStrafe)
-            return;
-
-        killAura.update();
-
-        if (RotationUtils.targetRotation != null) {
-            final Rotation rotation = RotationUtils.targetRotation;
-            float f = strafe * strafe + forward * forward;
-
-            if (f >= 1.0E-4F) {
-                f = MathHelper.sqrt_float(f);
-
-                if (f < 1.0F) {
-                    f = 1.0F;
-                }
-
-                f = friction / f;
-                strafe = strafe * f;
-                forward = forward * f;
-
-                float f1 = MathHelper.sin(rotation.getYaw() * (float) Math.PI / 180.0F);
-                float f2 = MathHelper.cos(rotation.getYaw() * (float) Math.PI / 180.0F);
-                this.motionX += strafe * f2 - forward * f1;
-                this.motionZ += forward * f2 + strafe * f1;
-            }
+        if (strafeEvent.isCancelled())
             callbackInfo.cancel();
-        }
     }
 }
