@@ -36,8 +36,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * LiquidBounce Hacked Client
  * A minecraft forge injection client using Mixin
  *
- * @game Minecraft
  * @author CCBlueX
+ * @game Minecraft
  */
 @SideOnly(Side.CLIENT)
 public class LiquidBounce {
@@ -48,7 +48,7 @@ public class LiquidBounce {
     // Client informations
     public static final String CLIENT_NAME = "LiquidBounce";
     public static final int CLIENT_VERSION = 68;
-    public static final boolean IN_DEV = false;
+    public static final boolean IN_DEV = true;
     public static final String CLIENT_CREATOR = "CCBlueX";
     public static final String MINECRAFT_VERSION = "1.8.9";
     public boolean isStarting;
@@ -59,19 +59,15 @@ public class LiquidBounce {
     public EventManager eventManager;
     public FileManager fileManager;
     public ScriptManager scriptManager;
-
-    // Discord RPC
-    private LiquidDiscordRPC liquidDiscordRPC;
-
     // HUD & ClickGUI
     public HUD hud;
     public ClickGui clickGui;
-
     // Update informations
     public int latestVersion;
-
     // Menu Background
     public ResourceLocation background;
+    // Discord RPC
+    private LiquidDiscordRPC liquidDiscordRPC;
 
     /**
      * Execute if client will be started
@@ -110,14 +106,14 @@ public class LiquidBounce {
         moduleManager.registerModules();
 
         // Remapper
-        try{
+        try {
             Remapper.INSTANCE.loadSrg();
 
             // ScriptManager
             scriptManager = new ScriptManager();
             scriptManager.loadScripts();
             scriptManager.enableScripts();
-        }catch(final Throwable throwable) {
+        } catch (final Throwable throwable) {
             ClientUtils.getLogger().error("Failed to load scripts.", throwable);
         }
 
@@ -137,7 +133,7 @@ public class LiquidBounce {
 
         // Tabs
         // Check if minecraft is forge
-        if(ClassUtils.hasClass("net.minecraftforge.common.MinecraftForge")) {
+        if (ClassUtils.hasClass("net.minecraftforge.common.MinecraftForge")) {
             // Register tabs
             new BlocksTab();
             new ExploitsTab();
@@ -145,16 +141,16 @@ public class LiquidBounce {
         }
 
         // Register capes service
-        try{
+        try {
             CapeAPI.INSTANCE.registerCapeService();
-        }catch(final Throwable throwable) {
+        } catch (final Throwable throwable) {
             ClientUtils.getLogger().error("Failed to register cape service", throwable);
         }
 
         // Setup Discord RPC
         try {
             (liquidDiscordRPC = new LiquidDiscordRPC()).setup();
-        }catch(final Throwable throwable) {
+        } catch (final Throwable throwable) {
             ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable);
         }
 
@@ -164,8 +160,8 @@ public class LiquidBounce {
 
         // Call liquidbounce started
         try {
-            ModuleManager.getModules().forEach(Module :: onStarted);
-        }catch(final Throwable throwable) {
+            ModuleManager.getModules().forEach(Module::onStarted);
+        } catch (final Throwable throwable) {
             ClientUtils.getLogger().error("Failed to call started to modules.", throwable);
         }
 
@@ -177,17 +173,17 @@ public class LiquidBounce {
             final JsonElement jsonElement = new JsonParser().parse(NetworkUtils.readContent("https://ccbluex.github.io/FileCloud/LiquidBounce/versions.json"));
 
             // Check json is valid object
-            if(jsonElement.isJsonObject()) {
+            if (jsonElement.isJsonObject()) {
                 // Get json object of element
                 final JsonObject jsonObject = jsonElement.getAsJsonObject();
 
                 // Check has minecraft version
-                if(jsonObject.has(MINECRAFT_VERSION)) {
+                if (jsonObject.has(MINECRAFT_VERSION)) {
                     // Get client version
                     latestVersion = jsonObject.get(MINECRAFT_VERSION).getAsInt();
                 }
             }
-        }catch(final Throwable exception) {
+        } catch (final Throwable exception) {
             // Print throwable to console
             ClientUtils.getLogger().error("Failed to check for updates.", exception);
         }
@@ -206,12 +202,12 @@ public class LiquidBounce {
         eventManager.callEvent(new ClientShutdownEvent());
 
         // Check if filemanager is available
-        if(fileManager != null)
+        if (fileManager != null)
             // Save all configs of file manager
             fileManager.saveAllConfigs();
 
         // Check if discord rpc is available
-        if(liquidDiscordRPC != null)
+        if (liquidDiscordRPC != null)
             // Shutdown discord rpc
             liquidDiscordRPC.shutdown();
     }
