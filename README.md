@@ -36,7 +36,8 @@ LiquidBounce is using Gradle, so make sure that it is installed properly. Instru
 
 ### Running LiquidBounce
 1. Open your IDE's run configuration window.
-2. Add the following to your projects VM options: `-Dfml.coreMods.load=net.ccbluex.liquidbounce.injection.forge.MixinLoader`
+2. Add the following to your projects VM options: <br>
+`-Dfml.coreMods.load=net.ccbluex.liquidbounce.injection.forge.MixinLoader`
 3. Now simply launch LiquidBounce inside your IDE
 
 ## Additional libraries
