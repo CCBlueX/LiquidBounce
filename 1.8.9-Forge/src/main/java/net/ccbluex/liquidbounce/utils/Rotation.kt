@@ -9,6 +9,10 @@ import net.minecraft.util.Vec3
  */
 data class Rotation(var yaw: Float, var pitch: Float) {
 
+    init {
+        fixedSensitivity(MinecraftInstance.mc.gameSettings.mouseSensitivity)
+    }
+
     /**
      * Set rotations to [player]
      */
@@ -24,7 +28,7 @@ data class Rotation(var yaw: Float, var pitch: Float) {
      *
      * @see net.minecraft.client.renderer.EntityRenderer#updateRenderer
      */
-    fun fixGcd(sensitivity: Float) {
+    fun fixedSensitivity(sensitivity: Float) {
         val f = sensitivity * 0.6F + 0.2F
         val gcd = f * f * f * 1.2F
 

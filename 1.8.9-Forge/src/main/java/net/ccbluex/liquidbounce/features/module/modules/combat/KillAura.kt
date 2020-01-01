@@ -107,7 +107,6 @@ class KillAura : Module() {
 
     // Bypass
     private val aacValue = BoolValue("AAC", false)
-    private val gcdValue = BoolValue("GCD", false)
 
     // Turn Speed
 
@@ -534,9 +533,6 @@ class KillAura : Module() {
 
         val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation,
                 (Math.random() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get()).toFloat())
-
-        if (gcdValue.get())
-            limitedRotation.fixGcd(mc.gameSettings.mouseSensitivity)
 
         if (silentRotationValue.get())
             RotationUtils.setTargetRotation(limitedRotation)

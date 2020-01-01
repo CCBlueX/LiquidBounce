@@ -31,7 +31,6 @@ class Aimbot : Module() {
     private val fovValue = FloatValue("FOV", 180F, 1F, 180F)
     private val centerValue = BoolValue("Center", false)
     private val lockValue = BoolValue("Lock", false)
-    private val gcdValue = BoolValue("GCD", true)
     private val onClickValue = BoolValue("OnClick", false)
     private val jitterValue = BoolValue("Jitter", false)
 
@@ -68,9 +67,6 @@ class Aimbot : Module() {
                             false).rotation,
                 (turnSpeedValue.get() + Math.random()).toFloat()
         )
-
-        if (gcdValue.get())
-            rotation.fixGcd(mc.gameSettings.mouseSensitivity)
 
         rotation.toPlayer(mc.thePlayer)
 
