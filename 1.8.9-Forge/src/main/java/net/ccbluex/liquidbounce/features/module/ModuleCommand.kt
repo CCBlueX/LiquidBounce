@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.features.module
 
-import joptsimple.internal.Strings
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
@@ -31,16 +30,14 @@ class ModuleCommand(val module: Module, val values: MutableList<Value<*>> = modu
         val moduleName = module.name.toLowerCase()
 
         if (args.size < 2) {
-
             chatSyntax(if (values.size == 1) "$moduleName $valueNames <value>" else "$moduleName <$valueNames>")
-
             return
         }
 
         val value = module.getValue(args[1])
 
         if (value == null) {
-            chatSyntax(".${moduleName} <$valueNames>")
+            chatSyntax("$moduleName <$valueNames>")
             return
         }
 
@@ -55,7 +52,7 @@ class ModuleCommand(val module: Module, val values: MutableList<Value<*>> = modu
                 if (value is IntegerValue || value is FloatValue || value is TextValue)
                     chatSyntax("$moduleName ${args[1].toLowerCase()} <value>")
                 else if (value is ListValue)
-                    chatSyntax("$moduleName ${args[1].toLowerCase()} <${Strings.join(value.values, "/").toLowerCase()}>")
+                    chatSyntax("$moduleName ${args[1].toLowerCase()} <${value.values.joinToString(separator = "/").toLowerCase()}>")
                 return
             }
 

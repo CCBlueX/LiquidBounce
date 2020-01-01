@@ -4,7 +4,6 @@ import net.ccbluex.liquidbounce.features.command.commands.*
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
-import java.util.*
 
 /**
  * LiquidBounce Hacked Client
@@ -16,7 +15,7 @@ import java.util.*
 @SideOnly(Side.CLIENT)
 class CommandManager {
 
-    val commands: MutableList<Command> = ArrayList()
+    val commands = mutableListOf<Command>()
     var prefix = '.'
 
     /**
