@@ -61,13 +61,16 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     }
 
     private fun drawText(text: String?, x: Float, y: Float, colorHex: Int, ignoreColor: Boolean): Int {
-        if (text.isNullOrEmpty()) return 0
+        if (text.isNullOrEmpty())
+            return 0
 
         GL11.glPushMatrix()
         GL11.glTranslated(x - 1.5, y + 0.5, 0.0)
         GlStateManager.enableAlpha()
-        RenderUtils.enableGlCap(GL11.GL_BLEND, GL11.GL_TEXTURE_2D)
+        val blend = GL11.glGetBoolean(GL11.GL_BLEND)
+        GL11.glEnable(GL11.GL_BLEND)
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
+        GL11.glEnable(GL11.GL_TEXTURE_2D)
 
         var hexColor = colorHex
         if (hexColor and -67108864 == 0)
@@ -86,7 +89,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
             var currentFont = defaultFont
             var currentColor = Color(red, green, blue, alpha)
 
-            var width = 0
+            var width = 0.0
 
             // Color code states
             var randomCase = false
@@ -100,7 +103,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     return@forEachIndexed
 
                 if (index == 0) {
-                    currentFont.drawString(part, width.toDouble(), 0.0, currentColor)
+                    currentFont.drawString(part, width, 0.0, currentColor)
                     width += currentFont.getStringWidth(part)
                 } else {
                     val words = part.substring(1)
@@ -149,15 +152,17 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     else
                         defaultFont
 
-                    currentFont.drawString(if (randomCase) ColorUtils.randomMagicText(words) else words, width.toDouble(), 0.0, currentColor)
+                    currentFont.drawString(if (randomCase) ColorUtils.randomMagicText(words) else words, width, 0.0, currentColor)
 
                     if (strikeThrough)
                         RenderUtils.drawLine(width / 2.0 + 1, currentFont.height / 3.0,
-                                (width + currentFont.getStringWidth(words)) / 2.0 + 1, currentFont.height / 3.0, FONT_HEIGHT / 16F)
+                                (width + currentFont.getStringWidth(words)) / 2.0 + 1, currentFont.height / 3.0,
+                                FONT_HEIGHT / 16F)
 
                     if (underline)
                         RenderUtils.drawLine(width / 2.0 + 1, currentFont.height / 2.0,
-                                (width + currentFont.getStringWidth(words)) / 2.0 + 1, currentFont.height / 2.0, FONT_HEIGHT / 16F)
+                                (width + currentFont.getStringWidth(words)) / 2.0 + 1, currentFont.height / 2.0,
+                                FONT_HEIGHT / 16F)
 
                     width += currentFont.getStringWidth(words)
                 }
@@ -165,7 +170,8 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
         } else
             defaultFont.drawString(text, 0.0, 0.0, color)
 
-        RenderUtils.resetCaps()
+        if (!blend)
+            GL11.glDisable(GL11.GL_BLEND)
         GL11.glPopMatrix()
         GL11.glColor4f(1F, 1F, 1F, 1F)
 

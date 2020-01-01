@@ -496,6 +496,8 @@ public final class RenderUtils extends MinecraftInstance {
 
     /**
      * GL CAP MANAGER
+     *
+     * TODO: Remove gl cap manager and replace by something better
      */
 
     public static void resetCaps() {

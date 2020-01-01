@@ -37,7 +37,7 @@ class NameTags : Module() {
     private val clearNamesValue = BoolValue("ClearNames", false)
     private val fontValue = FontValue("Font", Fonts.font40)
     private val borderValue = BoolValue("Border", true)
-    private val scaleValue = FloatValue("Scale", 1f, 1f, 4f)
+    private val scaleValue = FloatValue("Scale", 1F, 1F, 4F)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -96,6 +96,7 @@ class NameTags : Module() {
         val scale = distance / 100F * scaleValue.get()
 
         glScalef(-scale, -scale, scale)
+
         // Disable lightning and depth test
         disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
 
@@ -111,7 +112,8 @@ class NameTags : Module() {
         else
             drawRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F,
                     Integer.MIN_VALUE)
-        fontRenderer.drawString(text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, 0xFFFFFF, true)
+        fontRenderer.drawString(text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F,
+                0xFFFFFF, true)
 
         if (armorValue.get() && entity is EntityPlayer) {
             for (index in 0..4) {
