@@ -12,7 +12,7 @@ import java.io.FileFilter
  */
 class ScriptManager {
 
-    val scripts : ArrayList<Script> = arrayListOf()
+    val scripts = mutableListOf<Script>()
 
     val scriptsFolder = File(LiquidBounce.CLIENT.fileManager.dir, "scripts")
     private val scriptFileExtension = ".js"

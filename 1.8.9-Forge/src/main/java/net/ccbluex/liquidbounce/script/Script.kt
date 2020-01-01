@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.script
 import jdk.internal.dynalink.beans.StaticClass
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.script.api.*
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.io.File
 import javax.script.Invocable
@@ -67,9 +68,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
     /**
      * Load script
      */
-    fun onLoad() {
-        callFunction("onLoad")
-    }
+    fun onLoad() = callFunction("onLoad")
 
     /**
      * Enable script
@@ -103,7 +102,9 @@ class Script(val scriptFile: File) : MinecraftInstance() {
     private fun callFunction(functionName : String) {
         try {
             invocable.invokeFunction(functionName)
-        } catch(ex : NoSuchMethodException) {
+        } catch (ex: NoSuchMethodException) {
+        } catch (ex: Exception) {
+            ClientUtils.getLogger().error("${scriptFile.name} caused an error.", ex)
         }
     }
 }
