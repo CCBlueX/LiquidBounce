@@ -69,7 +69,7 @@ class CivBreak : Module() {
     }
 
     @EventTarget
-    fun onRender3D(event: Render3DEvent?) {
+    fun onRender3D(event: Render3DEvent) {
         blockPos ?: return
 
         if (airResetValue.get() && BlockUtils.getBlock(blockPos) is BlockAir ||

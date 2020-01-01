@@ -245,7 +245,7 @@ class KillAura : Module() {
      * Update event
      */
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         if (cancelRun) {
             target = null
             currentTarget = null
@@ -275,7 +275,7 @@ class KillAura : Module() {
      * Render event
      */
     @EventTarget
-    fun onRender3D(event: Render3DEvent?) {
+    fun onRender3D(event: Render3DEvent) {
         if (cancelRun) {
             target = null
             currentTarget = null

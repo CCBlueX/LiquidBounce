@@ -48,7 +48,7 @@ class TacoCommand : Command("taco", emptyArray()), Listenable {
     }
 
     @EventTarget
-    fun onRender2D(event: Render2DEvent?) {
+    fun onRender2D(event: Render2DEvent) {
         if (!toggle)
             return
 
@@ -60,7 +60,7 @@ class TacoCommand : Command("taco", emptyArray()), Listenable {
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         if (!toggle) {
             image = 0
             return

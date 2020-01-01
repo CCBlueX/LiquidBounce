@@ -24,7 +24,7 @@ class Zoot : Module() {
     private val noAirValue = BoolValue("NoAir", false)
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         if (noAirValue.get() && !mc.thePlayer.onGround)
             return
 

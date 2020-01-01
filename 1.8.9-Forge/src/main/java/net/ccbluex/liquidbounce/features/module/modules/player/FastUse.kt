@@ -30,7 +30,7 @@ class FastUse : Module() {
     private var usedTimer = false
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         if (usedTimer) {
             mc.timer.timerSpeed = 1F
             usedTimer = false

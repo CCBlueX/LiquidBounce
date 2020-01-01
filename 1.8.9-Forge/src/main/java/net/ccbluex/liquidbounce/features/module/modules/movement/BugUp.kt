@@ -6,12 +6,14 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockAir
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.AxisAlignedBB
@@ -31,13 +33,14 @@ import kotlin.math.max
  */
 @ModuleInfo(name = "BugUp", description = "Automatically setbacks you after falling a certain distance.", category = ModuleCategory.MOVEMENT)
 class BugUp : Module() {
+
     private val modeValue = ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof"), "FlyFlag")
     private val maxFallDistance = IntegerValue("MaxFallDistance", 10, 2, 50)
     private val maxDistanceWithoutGround = FloatValue("MaxDistanceToSetback", 2.5f, 1f, 30f)
     private val indicator = BoolValue("Indicator", true)
 
     private var detectedLocation: BlockPos? = null
-    private var lastFound = 0.0
+    private var lastFound = 0F
     private var prevX = 0.0
     private var prevY = 0.0
     private var prevZ = 0.0
@@ -49,12 +52,14 @@ class BugUp : Module() {
     }
 
     @EventTarget
-    fun onUpdate(e: UpdateEvent?) {
+    fun onUpdate(e: UpdateEvent) {
         detectedLocation = null
-        if (mc.thePlayer.onGround) {
-            prevX = mc.thePlayer.posX
-            prevY = mc.thePlayer.posY
-            prevZ = mc.thePlayer.posZ
+
+        if (mc.thePlayer.onGround && BlockUtils.getBlock(BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1.0,
+                        mc.thePlayer.posZ)) !is BlockAir) {
+            prevX = mc.thePlayer.prevPosX
+            prevY = mc.thePlayer.prevPosY
+            prevZ = mc.thePlayer.prevPosZ
         }
 
         if (!mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater) {
@@ -72,21 +77,23 @@ class BugUp : Module() {
 
             detectedLocation = fallingPlayer.findCollision(60)
 
-            if (detectedLocation != null && abs(mc.thePlayer.posY - detectedLocation!!.y) + mc.thePlayer.fallDistance <= maxFallDistance.get()) {
-                lastFound = mc.thePlayer.fallDistance.toDouble()
+            if (detectedLocation != null && abs(mc.thePlayer.posY - detectedLocation!!.y) +
+                    mc.thePlayer.fallDistance <= maxFallDistance.get()) {
+                lastFound = mc.thePlayer.fallDistance
             }
 
             if (mc.thePlayer.fallDistance - lastFound > maxDistanceWithoutGround.get()) {
                 val mode = modeValue.get()
+
                 when (mode.toLowerCase()) {
                     "teleportback" -> {
                         mc.thePlayer.setPositionAndUpdate(prevX, prevY, prevZ)
-                        mc.thePlayer.fallDistance = 0f
+                        mc.thePlayer.fallDistance = 0F
                         mc.thePlayer.motionY = 0.0
                     }
                     "flyflag" -> {
                         mc.thePlayer.motionY += 0.1
-                        mc.thePlayer.fallDistance = 0f
+                        mc.thePlayer.fallDistance = 0F
                     }
                     "ongroundspoof" -> mc.netHandler.addToSendQueue(C03PacketPlayer(true))
                 }
@@ -95,8 +102,9 @@ class BugUp : Module() {
     }
 
     @EventTarget
-    fun onRender3D(event: Render3DEvent?) {
-        if (detectedLocation == null || !indicator.get() || mc.thePlayer.fallDistance + (mc.thePlayer.posY - (detectedLocation!!.y + 1)) < 3)
+    fun onRender3D(event: Render3DEvent) {
+        if (detectedLocation == null || !indicator.get() ||
+                mc.thePlayer.fallDistance + (mc.thePlayer.posY - (detectedLocation!!.y + 1)) < 3)
             return
 
         val x = detectedLocation!!.x
@@ -113,7 +121,14 @@ class BugUp : Module() {
         GL11.glDepthMask(false)
 
         RenderUtils.glColor(Color(255, 0, 0, 90))
-        RenderUtils.drawFilledBox(AxisAlignedBB(x - renderManager.renderPosX, y + 1 - renderManager.renderPosY, z - renderManager.renderPosZ, x - renderManager.renderPosX + 1.0, y + 1.2 - renderManager.renderPosY, z - renderManager.renderPosZ + 1.0))
+        RenderUtils.drawFilledBox(AxisAlignedBB(
+                x - renderManager.renderPosX,
+                y + 1 - renderManager.renderPosY,
+                z - renderManager.renderPosZ,
+                x - renderManager.renderPosX + 1.0,
+                y + 1.2 - renderManager.renderPosY,
+                z - renderManager.renderPosZ + 1.0)
+        )
 
         GL11.glEnable(GL11.GL_TEXTURE_2D)
         GL11.glEnable(GL11.GL_DEPTH_TEST)
