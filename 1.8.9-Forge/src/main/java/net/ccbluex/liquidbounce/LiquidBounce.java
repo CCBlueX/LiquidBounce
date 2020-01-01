@@ -48,7 +48,7 @@ public class LiquidBounce {
     // Client informations
     public static final String CLIENT_NAME = "LiquidBounce";
     public static final int CLIENT_VERSION = 68;
-    public static final boolean IN_DEV = false;
+    public static final boolean IN_DEV = true;
     public static final String CLIENT_CREATOR = "CCBlueX";
     public static final String MINECRAFT_VERSION = "1.8.9";
     public boolean isStarting;
@@ -59,13 +59,17 @@ public class LiquidBounce {
     public EventManager eventManager;
     public FileManager fileManager;
     public ScriptManager scriptManager;
+
     // HUD & ClickGUI
     public HUD hud;
     public ClickGui clickGui;
+
     // Update informations
     public int latestVersion;
+
     // Menu Background
     public ResourceLocation background;
+
     // Discord RPC
     private LiquidDiscordRPC liquidDiscordRPC;
 
