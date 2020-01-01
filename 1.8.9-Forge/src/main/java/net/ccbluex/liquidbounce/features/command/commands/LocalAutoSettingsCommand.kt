@@ -112,7 +112,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", arrayOf("localsett
                 }
             }
         }
-        chatSyntax("localsettings <load/save/list>")
+        chatSyntax("localsettings <load/save/list/delete>")
     }
 
 }
