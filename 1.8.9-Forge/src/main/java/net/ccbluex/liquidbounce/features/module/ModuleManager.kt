@@ -28,6 +28,7 @@ import net.minecraftforge.fml.relauncher.SideOnly
 object ModuleManager : Listenable {
 
     private val modules = mutableListOf<Module>()
+    private val moduleClassMap = hashMapOf<Class<*>, Module>()
 
     init {
         LiquidBounce.CLIENT.eventManager.registerListener(this)
@@ -194,6 +195,8 @@ object ModuleManager : Listenable {
      */
     fun registerModule(module: Module) {
         modules.add(module)
+        moduleClassMap[module.javaClass] = module
+
         generateCommand(module)
         LiquidBounce.CLIENT.eventManager.registerListener(module)
     }
@@ -254,10 +257,7 @@ object ModuleManager : Listenable {
      */
     @JvmStatic
     fun getModule(moduleClass: Class<*>): Module? {
-        for (module in modules)
-            if (moduleClass == module.javaClass)
-                return module
-        return null
+        return moduleClassMap[moduleClass];
     }
 
     /**
@@ -268,6 +268,7 @@ object ModuleManager : Listenable {
         for (module in modules)
             if (module.getName().equals(moduleName, ignoreCase = true))
                 return module
+
         return null
     }
 
@@ -292,4 +293,6 @@ object ModuleManager : Listenable {
     }
 
     override fun handleEvents() = true
+
+    operator fun get(clazz: Class<*>) = getModule(clazz)
 }

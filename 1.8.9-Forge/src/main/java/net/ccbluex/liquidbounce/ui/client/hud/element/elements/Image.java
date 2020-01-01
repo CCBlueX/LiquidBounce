@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.ccbluex.liquidbounce.value.TextValue;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.ResourceLocation;
-import sun.misc.BASE64Decoder;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -91,7 +90,7 @@ public class Image extends Element {
         try {
             this.image.changeValue(image);
 
-            final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(new BASE64Decoder().decodeBuffer(image));
+            final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Base64.getDecoder().decode(image));
             final BufferedImage bufferedImage = ImageIO.read(byteArrayInputStream);
             byteArrayInputStream.close();
 
