@@ -1,8 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -30,17 +29,14 @@ class Aimbot : Module() {
     private val turnSpeedValue = FloatValue("TurnSpeed", 2F, 1F, 180F)
     private val fovValue = FloatValue("FOV", 180F, 1F, 180F)
     private val centerValue = BoolValue("Center", false)
-    private val lockValue = BoolValue("Lock", false)
+    private val lockValue = BoolValue("Lock", true)
     private val onClickValue = BoolValue("OnClick", false)
     private val jitterValue = BoolValue("Jitter", false)
 
     private val clickTimer = MSTimer()
 
     @EventTarget
-    fun onMotion(event: MotionEvent) {
-        if (event.eventState != EventState.PRE)
-            return
-
+    fun onStrafe(event: StrafeEvent) {
         if (mc.gameSettings.keyBindAttack.isKeyDown)
             clickTimer.reset()
 
