@@ -45,7 +45,7 @@ public class LiquidBounce {
     // Instance of client
     public static final LiquidBounce CLIENT = new LiquidBounce();
 
-    // Client informations
+    // Client information
     public static final String CLIENT_NAME = "LiquidBounce";
     public static final int CLIENT_VERSION = 69;
     public static final boolean IN_DEV = true;
@@ -64,7 +64,7 @@ public class LiquidBounce {
     public HUD hud;
     public ClickGui clickGui;
 
-    // Update informations
+    // Update information
     public int latestVersion;
 
     // Menu Background
