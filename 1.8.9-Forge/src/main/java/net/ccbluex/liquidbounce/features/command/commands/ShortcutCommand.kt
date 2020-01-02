@@ -9,7 +9,7 @@ class ShortcutCommand: Command("shortcut", arrayOf()) {
         when {
             args.size > 3 && args[1] == "add" -> {
                 try {
-                    LiquidBounce.CLIENT.commandManager.registerShortcut(args[2], args.sliceArray(3 until args.size))
+                    LiquidBounce.CLIENT.commandManager.registerShortcut(args[2], args.sliceArray(3 until args.size).joinToString(" "))
                 } catch (e: IllegalArgumentException) {
                     chat(e.message!!)
                 }

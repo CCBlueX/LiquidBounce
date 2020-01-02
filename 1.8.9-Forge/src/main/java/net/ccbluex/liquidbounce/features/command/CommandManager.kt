@@ -85,9 +85,9 @@ class CommandManager {
      */
     fun registerCommand(command: Command) = commands.add(command)
 
-    fun registerShortcut(name: String, script: Array<String>) {
+    fun registerShortcut(name: String, script: String) {
         if (getCommand(name) == null) {
-            registerCommand(Shortcut(name, script.joinToString(" ").split(';').map {
+            registerCommand(Shortcut(name, script.split(';').map {
                 val args = it.trim().split(' ')
 
                 val command = getCommand(args[0]) ?: throw IllegalArgumentException("Command ${args[0]} not found!")
