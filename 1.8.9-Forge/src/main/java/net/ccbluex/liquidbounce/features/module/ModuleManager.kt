@@ -14,8 +14,8 @@ import org.reflections.Reflections
  * A minecraft forge injection client using Mixin
  *
  * @author CCBlueX
- * @game Minecraft
  * Edited by DasDirt
+ * @game Minecraft
  */
 @SideOnly(Side.CLIENT)
 object ModuleManager : Listenable {
