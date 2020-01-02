@@ -29,7 +29,8 @@ import java.util.*
 @SideOnly(Side.CLIENT)
 object ModuleManager : Listenable {
 
-    private val moduleClassMap = TreeMap<Class<*>, Module> { moduleClass1, moduleClass2 -> moduleClass1.getAnnotation(ModuleInfo::class.java).name.compareTo(moduleClass2.getAnnotation(ModuleInfo::class.java).name) }
+    private val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }
+    private val moduleClassMap = hashMapOf<Class<*>, Module>()
 
     init {
         LiquidBounce.CLIENT.eventManager.registerListener(this)
@@ -188,13 +189,14 @@ object ModuleManager : Listenable {
                 NoSlowBreak::class.java
         )
 
-        ClientUtils.getLogger().info("[ModuleManager] Loaded ${moduleClassMap.size} modules.")
+        ClientUtils.getLogger().info("[ModuleManager] Loaded ${modules.size} modules.")
     }
 
     /**
      * Register [module]
      */
     fun registerModule(module: Module) {
+        modules.add(module)
         moduleClassMap[module.javaClass] = module
 
         generateCommand(module)
@@ -224,6 +226,7 @@ object ModuleManager : Listenable {
      * Unregister module
      */
     fun unregisterModule(module: Module?) {
+        modules.remove(module)
         moduleClassMap.remove(module!!::class.java)
         LiquidBounce.CLIENT.eventManager.unregisterListener(module!!)
     }
@@ -259,14 +262,14 @@ object ModuleManager : Listenable {
      */
     @JvmStatic
     fun getModule(moduleName: String?): Module? {
-        return moduleClassMap.values.find { it.name.equals(moduleName, ignoreCase = true) }
+        return modules.find { it.name.equals(moduleName, ignoreCase = true) }
     }
 
     /**
      * Get all modules
      */
     @JvmStatic
-    fun getModules() = moduleClassMap.values
+    fun getModules() = modules
 
     /**
      * Module related events
@@ -277,7 +280,7 @@ object ModuleManager : Listenable {
      */
     @EventTarget
     private fun onKey(event: KeyEvent) {
-        moduleClassMap.values.filter { it.keyBind == event.key }.forEach { it.toggle() }
+        modules.filter { it.keyBind == event.key }.forEach { it.toggle() }
     }
 
     override fun handleEvents() = true
