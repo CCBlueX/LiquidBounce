@@ -1,7 +1,6 @@
 package net.ccbluex.liquidbounce.features.command
 
 import net.ccbluex.liquidbounce.features.command.commands.*
-import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 
@@ -16,6 +15,7 @@ import net.minecraftforge.fml.relauncher.SideOnly
 class CommandManager {
 
     val commands = mutableListOf<Command>()
+
     var prefix = '.'
 
     /**
@@ -48,6 +48,7 @@ class CommandManager {
         registerCommand(ScriptManagerCommand())
         registerCommand(RemoteViewCommand())
         registerCommand(PrefixCommand())
+        registerCommand(ShortcutCommand())
     }
 
     /**
@@ -70,8 +71,6 @@ class CommandManager {
                 return
             }
         }
-
-        ClientUtils.displayChatMessage("§cCommand not found. Type ${prefix}help to view all commands.")
     }
 
     /**
@@ -86,8 +85,25 @@ class CommandManager {
      */
     fun registerCommand(command: Command) = commands.add(command)
 
+    fun registerShortcut(name: String, script: Array<String>) {
+        if (getCommand(name) == null) {
+            registerCommand(Shortcut(name, script.joinToString(" ").split(';').map {
+                val args = it.trim().split(' ')
+
+                val command = getCommand(args[0]) ?: throw IllegalArgumentException("Command ${args[0]} not found!")
+
+                Pair(command, args.toTypedArray())
+            }))
+        } else {
+            throw IllegalArgumentException("Command already exists!")
+        }
+    }
+
     /**
      * Unregister [command] by just removing it from the commands registry
      */
     fun unregisterCommand(command: Command?) = commands.remove(command)
+
+    fun unregisterCommand(name: String) = commands.removeIf { it.command.equals(name, ignoreCase = true) }
+
 }
