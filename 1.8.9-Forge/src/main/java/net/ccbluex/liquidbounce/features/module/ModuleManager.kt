@@ -29,7 +29,7 @@ import java.util.*
 @SideOnly(Side.CLIENT)
 object ModuleManager : Listenable {
 
-    private val moduleClassMap = TreeMap<Class<*>, Module> { moduleClass1, moduleClass2 -> moduleClass1.name.compareTo(moduleClass2.name) }
+    private val moduleClassMap = TreeMap<Class<*>, Module> { moduleClass1, moduleClass2 -> moduleClass1.getAnnotation(ModuleInfo::class.java).name.compareTo(moduleClass2.getAnnotation(ModuleInfo::class.java).name) }
 
     init {
         LiquidBounce.CLIENT.eventManager.registerListener(this)
