@@ -13,8 +13,9 @@ import org.reflections.Reflections
  * LiquidBounce Hacked Client
  * A minecraft forge injection client using Mixin
  *
- * @author CCBlueX, DasDirt
+ * @author CCBlueX
  * @game Minecraft
+ * Edited by DasDirt
  */
 @SideOnly(Side.CLIENT)
 object ModuleManager : Listenable {
