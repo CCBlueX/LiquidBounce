@@ -115,8 +115,6 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                             if (!ignoreColor) {
                                 val colorCode = ColorUtils.hexColors[colorIndex]
 
-                                println(colorCode)
-
                                 currentColor = Color((colorCode shr 16) / 255F, (colorCode shr 8 and 0xff) / 255F,
                                         (colorCode and 0xff) / 255F, alpha)
                             }
