@@ -52,5 +52,6 @@ class InventoryMove : Module() {
             mc.gameSettings.keyBindSprint.pressed = false
     }
 
-    override fun getTag() = if (aacAdditionProValue.get()) "AACAdditionPro" else null
+    override val tag: String?
+        get() = if (aacAdditionProValue.get()) "AACAdditionPro" else null
 }

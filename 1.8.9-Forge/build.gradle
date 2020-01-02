@@ -81,6 +81,8 @@ dependencies {
     compile "com.github.TheAltening:API-Java:api-2.0-SNAPSHOT"
     compile "com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT"
 
+    compile group: 'org.reflections', name: 'reflections', version: '0.9.10'
+
     compile fileTree(include: ['*.jar'], dir: 'libs')
 }
 

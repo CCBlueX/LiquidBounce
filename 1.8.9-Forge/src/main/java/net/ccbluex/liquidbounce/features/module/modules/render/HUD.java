@@ -29,7 +29,7 @@ public class HUD extends Module {
     public final BoolValue fontChatValue = new BoolValue("FontChat", false);
 
     public HUD() {
-        state = true;
+        setState(true);
     }
 
     @EventTarget
