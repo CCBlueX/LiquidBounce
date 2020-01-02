@@ -50,8 +50,6 @@ class CommandManager {
         registerCommand(RemoteViewCommand())
         registerCommand(PrefixCommand())
         registerCommand(ShortcutCommand())
-
-        ClientUtils.displayChatMessage("§cCommand not found. Type ${prefix}help to view all commands.")
     }
 
     /**
@@ -74,6 +72,8 @@ class CommandManager {
                 return
             }
         }
+
+        ClientUtils.displayChatMessage("§cCommand not found. Type ${prefix}help to view all commands.")
     }
 
     /**
