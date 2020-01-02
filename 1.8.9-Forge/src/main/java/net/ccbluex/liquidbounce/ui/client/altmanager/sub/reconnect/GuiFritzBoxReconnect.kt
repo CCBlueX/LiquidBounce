@@ -56,7 +56,7 @@ class GuiFritzBoxReconnect(gui: GuiAltManager) : GuiScreen() {
 
         if (routerIp!!.text.isEmpty() && !routerIp!!.isFocused)
             drawCenteredString(Fonts.font40, "§7Router IP Address", width / 2 - 55, 66, 0xffffff)
-        
+
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
@@ -87,7 +87,7 @@ class GuiFritzBoxReconnect(gui: GuiAltManager) : GuiScreen() {
                         conn.setRequestProperty("Man", "/igdupnp/control/WANIPConn1 HTTP/1.1")
                         conn.setRequestProperty("Host", "fritz.box:49000")
                         conn.setRequestProperty("Content-Type", "text/xml; charset=\"utf-8\"")
-                        conn.setRequestProperty("Content-Length", Integer.toString(REQUEST_BODY.length))
+                        conn.setRequestProperty("Content-Length", REQUEST_BODY.length.toString())
                         conn.setRequestProperty("SoapAction", "urn:schemas-upnp-org:service:WANIPConnection:1#ForceTermination")
                         // Write request body to SharePoint
                         conn.doOutput = true
@@ -126,7 +126,7 @@ class GuiFritzBoxReconnect(gui: GuiAltManager) : GuiScreen() {
     }
 
     private val externalIP: String
-        private get() {
+        get() {
             try {
                 val aws = URL("http://checkip.amazonaws.com")
 
