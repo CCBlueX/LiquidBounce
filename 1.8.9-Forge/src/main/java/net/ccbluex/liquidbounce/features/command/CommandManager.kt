@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.features.command
 
 import net.ccbluex.liquidbounce.features.command.commands.*
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 
@@ -49,6 +50,8 @@ class CommandManager {
         registerCommand(RemoteViewCommand())
         registerCommand(PrefixCommand())
         registerCommand(ShortcutCommand())
+
+        ClientUtils.displayChatMessage("§cCommand not found. Type ${prefix}help to view all commands.")
     }
 
     /**
