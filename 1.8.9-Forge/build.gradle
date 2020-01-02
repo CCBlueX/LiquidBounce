@@ -53,7 +53,7 @@ repositories {
     }
 }
 
-version = "b68"
+version = "b69"
 group = "net.ccbluex"
 archivesBaseName = "LiquidBounce"
 
