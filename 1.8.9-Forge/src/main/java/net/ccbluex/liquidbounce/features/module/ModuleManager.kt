@@ -27,7 +27,7 @@ import net.minecraftforge.fml.relauncher.SideOnly
 @SideOnly(Side.CLIENT)
 object ModuleManager : Listenable {
 
-    private val modules = mutableListOf<Module>()
+    private val modules = sortedSetOf<Module>()
     private val moduleClassMap = hashMapOf<Class<*>, Module>()
 
     init {
@@ -240,11 +240,6 @@ object ModuleManager : Listenable {
 
         LiquidBounce.CLIENT.commandManager.registerCommand(ModuleCommand(module, values))
     }
-
-    /**
-     * Sort all modules by name
-     */
-    fun sortModules() = modules.sortBy { it.getName() }
 
     /**
      * Legacy stuff

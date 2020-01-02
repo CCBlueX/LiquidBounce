@@ -128,9 +128,6 @@ public class LiquidBounce {
         fileManager.loadConfigs(fileManager.modulesConfig, fileManager.valuesConfig, fileManager.accountsConfig,
                 fileManager.friendsConfig, fileManager.xrayConfig);
 
-        // Sort modules
-        moduleManager.sortModules();
-
         // ClickGUI
         clickGui = new ClickGui();
         fileManager.loadConfig(fileManager.clickGuiConfig);

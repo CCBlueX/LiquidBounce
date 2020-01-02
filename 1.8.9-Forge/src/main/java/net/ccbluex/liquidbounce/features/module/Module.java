@@ -10,6 +10,7 @@ import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ import java.util.List;
  * @author CCBlueX
  */
 @SideOnly(Side.CLIENT)
-public class Module extends MinecraftInstance implements Listenable {
+public class Module extends MinecraftInstance implements Listenable, Comparable<Module> {
 
     protected String name = getClass().getAnnotation(ModuleInfo.class).name();
     protected String description = getClass().getAnnotation(ModuleInfo.class).description();
@@ -165,4 +166,10 @@ public class Module extends MinecraftInstance implements Listenable {
     public boolean handleEvents() {
         return getState();
     }
+
+    @Override
+    public int compareTo(@NotNull Module o) {
+        return name.compareTo(o.name);
+    }
+
 }
