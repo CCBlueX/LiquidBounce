@@ -110,10 +110,12 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     val type = part[0]
 
                     val colorIndex = "0123456789abcdefklmnor".indexOf(type)
-                    when {
-                        colorIndex < 16 -> {
+                    when (colorIndex) {
+                        in 0..15 -> {
                             if (!ignoreColor) {
                                 val colorCode = ColorUtils.hexColors[colorIndex]
+
+                                println(colorCode)
 
                                 currentColor = Color((colorCode shr 16) / 255F, (colorCode shr 8 and 0xff) / 255F,
                                         (colorCode and 0xff) / 255F, alpha)
@@ -125,14 +127,12 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                             underline = false
                             strikeThrough = false
                         }
-
-                        colorIndex == 16 -> randomCase = true
-                        colorIndex == 17 -> bold = true
-                        colorIndex == 18 -> strikeThrough = true
-                        colorIndex == 19 -> underline = true
-                        colorIndex == 20 -> italic = true
-
-                        colorIndex == 21 -> {
+                        16 -> randomCase = true
+                        17 -> bold = true
+                        18 -> strikeThrough = true
+                        19 -> underline = true
+                        20 -> italic = true
+                        21 -> {
                             bold = false
                             italic = false
                             randomCase = false
