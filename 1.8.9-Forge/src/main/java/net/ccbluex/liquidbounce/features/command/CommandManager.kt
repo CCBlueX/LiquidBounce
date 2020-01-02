@@ -78,11 +78,7 @@ class CommandManager {
      * Get command instance by given [name]
      */
     fun getCommand(name: String): Command? {
-        for (command in commands)
-            if (command.command.equals(name, ignoreCase = true))
-                return command
-
-        return null
+        return commands.find { it.command.equals(name, ignoreCase = true) }
     }
 
     /**
