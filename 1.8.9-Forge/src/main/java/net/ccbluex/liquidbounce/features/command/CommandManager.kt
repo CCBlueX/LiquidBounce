@@ -16,6 +16,7 @@ import net.minecraftforge.fml.relauncher.SideOnly
 class CommandManager {
 
     val commands = mutableListOf<Command>()
+
     var prefix = '.'
 
     /**
@@ -48,6 +49,7 @@ class CommandManager {
         registerCommand(ScriptManagerCommand())
         registerCommand(RemoteViewCommand())
         registerCommand(PrefixCommand())
+        registerCommand(ShortcutCommand())
     }
 
     /**
@@ -78,11 +80,7 @@ class CommandManager {
      * Get command instance by given [name]
      */
     fun getCommand(name: String): Command? {
-        for (command in commands)
-            if (command.command.equals(name, ignoreCase = true))
-                return command
-
-        return null
+        return commands.find { it.command.equals(name, ignoreCase = true) }
     }
 
     /**
@@ -90,8 +88,25 @@ class CommandManager {
      */
     fun registerCommand(command: Command) = commands.add(command)
 
+    fun registerShortcut(name: String, script: String) {
+        if (getCommand(name) == null) {
+            registerCommand(Shortcut(name, script.split(';').map {
+                val args = it.trim().split(' ')
+
+                val command = getCommand(args[0]) ?: throw IllegalArgumentException("Command ${args[0]} not found!")
+
+                Pair(command, args.toTypedArray())
+            }))
+        } else {
+            throw IllegalArgumentException("Command already exists!")
+        }
+    }
+
     /**
      * Unregister [command] by just removing it from the commands registry
      */
     fun unregisterCommand(command: Command?) = commands.remove(command)
+
+    fun unregisterCommand(name: String) = commands.removeIf { it.command.equals(name, ignoreCase = true) }
+
 }

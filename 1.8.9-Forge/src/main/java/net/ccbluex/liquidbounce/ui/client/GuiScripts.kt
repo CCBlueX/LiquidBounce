@@ -65,7 +65,6 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                 if (fileName.endsWith(".js")) {
                     client.scriptManager.importScript(file)
 
-                    client.moduleManager.sortModules()
                     client.clickGui = ClickGui()
                     client.fileManager.loadConfig(client.fileManager.clickGuiConfig)
                     return
@@ -97,7 +96,6 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
                     scriptFiles.forEach { scriptFile -> client.scriptManager.loadScript(scriptFile) }
 
-                    client.moduleManager.sortModules()
                     client.clickGui = ClickGui()
                     client.fileManager.loadConfig(client.fileManager.clickGuiConfig)
                     client.fileManager.loadConfig(client.fileManager.hudConfig)
@@ -116,7 +114,6 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
                     LiquidBounce.CLIENT.scriptManager.deleteScript(script)
 
-                    LiquidBounce.CLIENT.moduleManager.sortModules()
                     LiquidBounce.CLIENT.clickGui = ClickGui()
                     LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.clickGuiConfig)
                     LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.hudConfig)
