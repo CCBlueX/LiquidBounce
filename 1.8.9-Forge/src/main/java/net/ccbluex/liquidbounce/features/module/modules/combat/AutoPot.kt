@@ -150,5 +150,7 @@ class AutoPot : Module() {
         return -1
     }
 
-    override fun getTag() = healthValue.get().toString()
+    override val tag: String?
+        get() = healthValue.get().toString()
+
 }

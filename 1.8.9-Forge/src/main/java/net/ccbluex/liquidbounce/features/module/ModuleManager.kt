@@ -255,6 +255,8 @@ object ModuleManager : Listenable {
     @JvmStatic
     fun getModule(moduleClass: Class<*>) = moduleClassMap[moduleClass]
 
+    operator fun get(clazz: Class<*>) = getModule(clazz)
+
     /**
      * Get module by [moduleName]
      */
@@ -278,6 +280,4 @@ object ModuleManager : Listenable {
     private fun onKey(event: KeyEvent) = modules.filter { it.keyBind == event.key }.forEach { it.toggle() }
 
     override fun handleEvents() = true
-
-    operator fun get(clazz: Class<*>) = getModule(clazz)
 }

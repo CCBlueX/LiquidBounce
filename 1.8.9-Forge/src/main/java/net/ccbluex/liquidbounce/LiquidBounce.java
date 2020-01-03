@@ -8,7 +8,6 @@ import net.ccbluex.liquidbounce.discord.LiquidDiscordRPC;
 import net.ccbluex.liquidbounce.event.ClientShutdownEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.features.command.CommandManager;
-import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.special.AntiForge;
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof;
@@ -161,13 +160,6 @@ public class LiquidBounce {
         // Set HUD
         hud = new DefaultHUD();
         fileManager.loadConfig(fileManager.hudConfig);
-
-        // Call liquidbounce started
-        try {
-            ModuleManager.getModules().forEach(Module::onStarted);
-        } catch (final Throwable throwable) {
-            ClientUtils.getLogger().error("Failed to call started to modules.", throwable);
-        }
 
         // Disable fastrender
         ClientUtils.disableFastRender();

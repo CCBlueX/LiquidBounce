@@ -35,7 +35,7 @@ import kotlin.math.max
 class BugUp : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof"), "FlyFlag")
-    private val maxFallDistance = IntegerValue("MaxFallDistance", 10, 2, 50)
+    private val maxFallDistance = IntegerValue("MaxFallDistance", 10, 2, 255)
     private val maxDistanceWithoutGround = FloatValue("MaxDistanceToSetback", 2.5f, 1f, 30f)
     private val indicator = BoolValue("Indicator", true)
 

@@ -61,8 +61,8 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     }
 
     private fun drawText(text: String?, x: Float, y: Float, colorHex: Int, ignoreColor: Boolean): Int {
-        if (text == null)
-            return 0
+        text ?: return 0
+
         if (text.isEmpty())
             return x.toInt()
 

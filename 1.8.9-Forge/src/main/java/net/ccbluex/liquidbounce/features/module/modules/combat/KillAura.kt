@@ -661,6 +661,6 @@ class KillAura : Module() {
     /**
      * HUD Tag
      */
-    override fun getTag(): String = targetModeValue.get()
-
+    override val tag: String?
+        get() = targetModeValue.get()
 }
