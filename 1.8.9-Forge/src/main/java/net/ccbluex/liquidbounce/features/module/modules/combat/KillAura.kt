@@ -59,25 +59,21 @@ class KillAura : Module() {
 
     // CPS - Attack speed
     private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
-
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = minCPS.get()
             if (i > newValue) set(i)
 
             attackDelay = TimeUtils.randomClickDelay(minCPS.get(), this.get())
         }
-
     }
 
     private val minCPS: IntegerValue = object : IntegerValue("MinCPS", 5, 1, 20) {
-
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = maxCPS.get()
             if (i < newValue) set(i)
 
             attackDelay = TimeUtils.randomClickDelay(this.get(), maxCPS.get())
         }
-
     }
 
     private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
@@ -110,7 +106,6 @@ class KillAura : Module() {
     private val aacValue = BoolValue("AAC", false)
 
     // Turn Speed
-
     private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f, 180f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
             val v = minTurnSpeed.get()
@@ -126,13 +121,12 @@ class KillAura : Module() {
     }
 
     private val silentRotationValue = BoolValue("SilentRotation", true)
-    val rotationStrafeValue = BoolValue("RotationStrafe", false)
+    private val rotationStrafeValue = BoolValue("RotationStrafe", false)
     private val randomCenterValue = BoolValue("RandomCenter", true)
     private val outborderValue = BoolValue("Outborder", false)
     private val fovValue = FloatValue("FOV", 180f, 0f, 180f)
 
     // Predict
-
     private val predictValue = BoolValue("Predict", true)
 
     private val maxPredictSize: FloatValue = object : FloatValue("MaxPredictSize", 1f, 0.1f, 5f) {
@@ -225,7 +219,7 @@ class KillAura : Module() {
         }
 
         if (!rotationStrafeValue.get())
-            update();
+            update()
     }
 
     /**
@@ -234,11 +228,9 @@ class KillAura : Module() {
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
         if (!rotationStrafeValue.get()) return
-
         update()
 
         val (yaw) = RotationUtils.targetRotation ?: return
-
         var strafe = event.strafe
         var forward = event.forward
         val friction = event.friction
@@ -474,7 +466,7 @@ class KillAura : Module() {
     private fun isEnemy(entity: Entity?): Boolean {
         if (entity is EntityLivingBase && (EntityUtils.targetDead || isAlive(entity)) && entity != mc.thePlayer) {
             if (!EntityUtils.targetInvisible && entity.isInvisible())
-                return false;
+                return false
 
             if (EntityUtils.targetPlayer && entity is EntityPlayer) {
                 if (entity.isSpectator || AntiBot.isBot(entity))

@@ -73,14 +73,11 @@ public abstract class MixinGuiDisconnect extends MixinGuiScreen {
 
                     try {
                         final AccountData account = theAltening.getAccountData();
-
                         GuiAltManager.altService.switchService(AltService.EnumAltService.THEALTENING);
 
                         final YggdrasilUserAuthentication yggdrasilUserAuthentication = new YggdrasilUserAuthentication(new YggdrasilAuthenticationService(Proxy.NO_PROXY, ""), Agent.MINECRAFT);
-
                         yggdrasilUserAuthentication.setUsername(account.getToken());
                         yggdrasilUserAuthentication.setPassword(LiquidBounce.CLIENT_NAME);
-
                         yggdrasilUserAuthentication.logIn();
 
                         mc.session = new Session(yggdrasilUserAuthentication.getSelectedProfile().getName(), yggdrasilUserAuthentication.getSelectedProfile().getId().toString(), yggdrasilUserAuthentication.getAuthenticatedToken(), "mojang");
@@ -93,11 +90,9 @@ public abstract class MixinGuiDisconnect extends MixinGuiScreen {
                 }
 
                 final List<MinecraftAccount> accounts = LiquidBounce.CLIENT.fileManager.accountsConfig.altManagerMinecraftAccounts;
-
                 if(accounts.isEmpty()) break;
 
                 final MinecraftAccount minecraftAccount = accounts.get(new Random().nextInt(accounts.size()));
-
                 GuiAltManager.login(minecraftAccount);
                 ServerUtils.connectToLastServer();
                 break;

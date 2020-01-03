@@ -25,7 +25,7 @@ data class Rotation(var yaw: Float, var pitch: Float) {
     /**
      * Patch gcd exploit in aim
      *
-     * @see net.minecraft.client.renderer.EntityRenderer#updateRenderer
+     * @see net.minecraft.client.renderer.EntityRenderer.updateCameraAndRender
      */
     fun fixedSensitivity(sensitivity: Float) {
         val f = sensitivity * 0.6F + 0.2F
