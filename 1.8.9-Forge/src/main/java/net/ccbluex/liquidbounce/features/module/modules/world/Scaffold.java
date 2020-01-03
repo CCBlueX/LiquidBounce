@@ -260,8 +260,8 @@ public class Scaffold extends Module {
             place();
 
         if (eventState == EventState.PRE) {
-            if ((mc.thePlayer.getHeldItem() == null || mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) &&
-                    InventoryUtils.findAutoBlockBlock() == -1)
+            if (autoBlockValue.get() ? InventoryUtils.findAutoBlockBlock() == -1 : mc.thePlayer.getHeldItem() == null ||
+                    !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock))
                 return;
 
             findBlock(mode.equalsIgnoreCase("expand"));
