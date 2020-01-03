@@ -17,7 +17,6 @@ import net.minecraftforge.fml.relauncher.SideOnly
 @SideOnly(Side.CLIENT)
 class CommandManager {
 
-    val shortcutParser = ShortcutParser()
     val commands = mutableListOf<Command>()
 
     var prefix = '.'
@@ -93,8 +92,7 @@ class CommandManager {
 
     fun registerShortcut(name: String, script: String) {
         if (getCommand(name) == null) {
-            println("$script | ${shortcutParser.parse(script)}")
-            registerCommand(Shortcut(name, shortcutParser.parse(script).map {
+            registerCommand(Shortcut(name, ShortcutParser.parse(script).map {
                 val command = getCommand(it[0]) ?: throw IllegalArgumentException("Command ${it[0]} not found!")
 
                 Pair(command, it.toTypedArray())

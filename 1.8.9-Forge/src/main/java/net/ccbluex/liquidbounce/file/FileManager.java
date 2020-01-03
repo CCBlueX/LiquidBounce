@@ -21,7 +21,6 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 
 /**
  * LiquidBounce Hacked Client
@@ -186,8 +185,7 @@ public class FileManager extends MinecraftInstance {
             if (command instanceof Shortcut) {
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(shortcutsDir, command.getCommand() + ".lbsh")))) {
                     for (Pair<Command, String[]> entry : ((Shortcut) command).getScript())
-                        // Use command name defined in code instead of using command name entered by player.
-                        writer.write(entry.getFirst().getCommand() + " " + StringUtils.join(Arrays.copyOfRange(entry.getSecond(), 1, entry.getSecond().length), ' ') + ";\n");
+                        writer.write(StringUtils.join(entry.getSecond(), ' ') + ";\n");
                 } catch (IOException e) {
                     ClientUtils.getLogger().error("Unable to save shortcut!", e);
                 }
