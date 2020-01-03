@@ -235,7 +235,7 @@ class KillAura : Module() {
         if (!silentRotationValue.get())
             return
 
-        target ?: return
+        currentTarget ?: return
 
         val (yaw) = RotationUtils.targetRotation ?: return
         var strafe = event.strafe
