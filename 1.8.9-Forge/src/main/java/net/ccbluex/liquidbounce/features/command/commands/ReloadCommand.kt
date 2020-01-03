@@ -30,8 +30,6 @@ class ReloadCommand : Command("reload", arrayOf("configreload")) {
         LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.friendsConfig)
         chat("§c§lReloading xray...")
         LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.xrayConfig)
-        chat("§c§lSorting modules...")
-        LiquidBounce.CLIENT.moduleManager.sortModules()
         chat("§c§lReloading HUD...")
         LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.hudConfig)
         chat("§c§lReloading ClickGUI...")

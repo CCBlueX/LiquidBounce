@@ -30,11 +30,11 @@ import java.net.Proxy.NO_PROXY
  * @game Minecraft
  * @author CCBlueX
  */
-class GuiTheAltening(private val prevGui : GuiAltManager) : GuiScreen() {
+class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
 
     // Data Storage
     companion object {
-        var apiKey : String = ""
+        var apiKey: String = ""
     }
 
     // Buttons
@@ -42,13 +42,11 @@ class GuiTheAltening(private val prevGui : GuiAltManager) : GuiScreen() {
     private lateinit var generateButton: GuiButton
 
     // User Input Fields
-    private lateinit var apiKeyField : GuiTextField
-    private lateinit var tokenField : GuiTextField
+    private lateinit var apiKeyField: GuiTextField
+    private lateinit var tokenField: GuiTextField
 
     // Status
     private var status = ""
-
-    // TheAltening
 
     /**
      * Initialize The Altening Generator GUI
@@ -57,72 +55,71 @@ class GuiTheAltening(private val prevGui : GuiAltManager) : GuiScreen() {
         // Enable keyboard repeat events
         Keyboard.enableRepeatEvents(true)
 
-        // Add buttons to screen
-        loginButton = GuiButton(2, width / 2 - 100, 105, "Login")
+        // Login button
+        loginButton = GuiButton(2, width / 2 - 100, 75, "Login")
         buttonList.add(loginButton)
-        generateButton = GuiButton(1, width / 2 - 100, 175, "Generate")
-        buttonList.add(generateButton)
-        buttonList.add(GuiButton(3, width / 2 - 100, height - 83, "Buy"))
-        buttonList.add(GuiButton(0, width / 2 - 100, height - 60, "Back"))
 
-        // Add fields to screen
-        tokenField = GuiTextField(666, Fonts.font40, width / 2 - 100, 80, 200, 20)
+        // Generate button
+        generateButton = GuiButton(1, width / 2 - 100, 140, "Generate")
+        buttonList.add(generateButton)
+
+        // Buy & Back buttons
+        buttonList.add(GuiButton(3, width / 2 - 100, height - 54, 98, 20, "Buy"))
+        buttonList.add(GuiButton(0, width / 2 + 2, height - 54, 98, 20, "Back"))
+
+        // Token text field
+        tokenField = GuiTextField(666, Fonts.font40, width / 2 - 100, 50, 200, 20)
         tokenField.isFocused = true
         tokenField.maxStringLength = Integer.MAX_VALUE
 
-        apiKeyField = GuiPasswordField(1337, Fonts.font40, width / 2 - 100, 150, 200, 20)
+        // Api key password field
+        apiKeyField = GuiPasswordField(1337, Fonts.font40, width / 2 - 100, 115, 200, 20)
         apiKeyField.maxStringLength = 18
         apiKeyField.text = apiKey
 
         // Verify SSL
-        val sslVerification = SSLVerification()
-        sslVerification.verify()
-
-        // Call sub method
+        SSLVerification().verify()
         super.initGui()
     }
 
     /**
      * Draw screen
      */
-    override fun drawScreen(mouseX : Int, mouseY : Int, partialTicks : Float) {
+    override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         // Draw background to screen
         drawBackground(0)
         Gui.drawRect(30, 30, width - 30, height - 30, Integer.MIN_VALUE)
 
         // Draw title and status
-        drawCenteredString(Fonts.font35, "TheAltening", width / 2, 36, 0xffffff)
-        drawCenteredString(Fonts.font35, status, width / 2, height - 95, 0xffffff)
+        drawCenteredString(Fonts.font35, "TheAltening", width / 2, 6, 0xffffff)
+        drawCenteredString(Fonts.font35, status, width / 2, 18, 0xffffff)
 
         // Draw fields
         apiKeyField.drawTextBox()
         tokenField.drawTextBox()
 
-        drawCenteredString(Fonts.font40, "§7API-Key:", width / 2 - 78, 137, 0xffffff)
-        drawCenteredString(Fonts.font40, "§7Token:", width / 2 - 84, 66, 0xffffff)
-        drawCenteredString(Fonts.font40, "§7Use coupon code 'liquidbounce' for 20% off!", width / 2, height - 110, 0xffffff);
-
-        // Call sub method
+        // Draw text
+        drawCenteredString(Fonts.font40, "§7Token:", width / 2 - 84, 40, 0xffffff)
+        drawCenteredString(Fonts.font40, "§7API-Key:", width / 2 - 78, 105, 0xffffff)
+        drawCenteredString(Fonts.font40, "§7Use coupon code 'liquidbounce' for 20% off!", width / 2, height - 65, 0xffffff)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
     /**
      * Handle button actions
      */
-    override fun actionPerformed(button : GuiButton) {
-        if(!button.enabled) return
+    override fun actionPerformed(button: GuiButton) {
+        if (!button.enabled) return
 
-        when(button.id) {
+        when (button.id) {
             0 -> mc.displayGuiScreen(prevGui)
             1 -> {
                 loginButton.enabled = false
                 generateButton.enabled = false
-
                 apiKey = apiKeyField.text
 
                 val altening = TheAltening(apiKey)
                 val asynchronous = TheAltening.Asynchronous(altening)
-
                 status = "§cGenerating account..."
 
                 asynchronous.accountData.thenAccept { account ->
@@ -138,7 +135,6 @@ class GuiTheAltening(private val prevGui : GuiAltManager) : GuiScreen() {
 
                         // Set token as username
                         val yggdrasilUserAuthentication = YggdrasilUserAuthentication(YggdrasilAuthenticationService(NO_PROXY, ""), MINECRAFT)
-
                         yggdrasilUserAuthentication.setUsername(account.token)
                         yggdrasilUserAuthentication.setPassword(LiquidBounce.CLIENT_NAME)
 
@@ -150,9 +146,10 @@ class GuiTheAltening(private val prevGui : GuiAltManager) : GuiScreen() {
                                     yggdrasilUserAuthentication.authenticatedToken, "mojang")
                             LiquidBounce.CLIENT.eventManager.callEvent(SessionEvent())
                             MCLeaks.remove()
+
                             prevGui.status = "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
                             mc.displayGuiScreen(prevGui)
-                            "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
+                            ""
                         } catch (e: AuthenticationException) {
                             GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 
@@ -184,12 +181,10 @@ class GuiTheAltening(private val prevGui : GuiAltManager) : GuiScreen() {
 
                         // Change Alt Service
                         GuiAltManager.altService.switchService(AltService.EnumAltService.THEALTENING)
-
                         status = "§cLogging in..."
 
                         // Set token as username
                         val yggdrasilUserAuthentication = YggdrasilUserAuthentication(YggdrasilAuthenticationService(NO_PROXY, ""), MINECRAFT)
-
                         yggdrasilUserAuthentication.setUsername(tokenField.text)
                         yggdrasilUserAuthentication.setPassword(LiquidBounce.CLIENT_NAME)
 
@@ -201,16 +196,17 @@ class GuiTheAltening(private val prevGui : GuiAltManager) : GuiScreen() {
                                     yggdrasilUserAuthentication.authenticatedToken, "mojang")
                             LiquidBounce.CLIENT.eventManager.callEvent(SessionEvent())
                             MCLeaks.remove()
+
                             prevGui.status = "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
                             mc.displayGuiScreen(prevGui)
                             "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
-                        } catch(e : AuthenticationException) {
+                        } catch (e: AuthenticationException) {
                             GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 
                             ClientUtils.getLogger().error("Failed to login.", e)
                             "§cFailed to login: ${e.message}"
                         }
-                    } catch(throwable : Throwable) {
+                    } catch (throwable: Throwable) {
                         ClientUtils.getLogger().error("Failed to login.", throwable)
                         status = "§cFailed to login. Unknown error."
                     }
@@ -219,45 +215,36 @@ class GuiTheAltening(private val prevGui : GuiAltManager) : GuiScreen() {
                     generateButton.enabled = true
                 }).start()
             }
-            3 -> {
-                MiscUtils.showURL("https://thealtening.com/?ref=liquidbounce")
-            }
+            3 -> MiscUtils.showURL("https://thealtening.com/?ref=liquidbounce")
         }
 
-        // Call sub method
         super.actionPerformed(button)
     }
 
     /**
      * Handle key typed
      */
-    override fun keyTyped(typedChar : Char, keyCode : Int) {
+    override fun keyTyped(typedChar: Char, keyCode: Int) {
         // Check if user want to escape from screen
-        if(Keyboard.KEY_ESCAPE == keyCode) {
+        if (Keyboard.KEY_ESCAPE == keyCode) {
             // Send back to prev screen
             mc.displayGuiScreen(prevGui)
-
-            // Quit
             return
         }
 
         // Check if field is focused, then call key typed
-        if(apiKeyField.isFocused) apiKeyField.textboxKeyTyped(typedChar, keyCode)
-        if(tokenField.isFocused) tokenField.textboxKeyTyped(typedChar, keyCode)
-
-        // Call sub method
+        if (apiKeyField.isFocused) apiKeyField.textboxKeyTyped(typedChar, keyCode)
+        if (tokenField.isFocused) tokenField.textboxKeyTyped(typedChar, keyCode)
         super.keyTyped(typedChar, keyCode)
     }
 
     /**
      * Handle mouse clicked
      */
-    override fun mouseClicked(mouseX : Int, mouseY : Int, mouseButton : Int) {
+    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
         // Call mouse clicked to field
         apiKeyField.mouseClicked(mouseX, mouseY, mouseButton)
         tokenField.mouseClicked(mouseX, mouseY, mouseButton)
-
-        // Call sub method
         super.mouseClicked(mouseX, mouseY, mouseButton)
     }
 
@@ -279,8 +266,6 @@ class GuiTheAltening(private val prevGui : GuiAltManager) : GuiScreen() {
 
         // Set API key
         apiKey = apiKeyField.text
-
-        // Call sub method
         super.onGuiClosed()
     }
 }

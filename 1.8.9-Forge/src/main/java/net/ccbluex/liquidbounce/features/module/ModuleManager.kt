@@ -8,6 +8,10 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import org.reflections.Reflections
+import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.minecraftforge.fml.relauncher.Side
+import net.minecraftforge.fml.relauncher.SideOnly
+import java.util.*
 
 /**
  * LiquidBounce Hacked Client
@@ -20,7 +24,7 @@ import org.reflections.Reflections
 @SideOnly(Side.CLIENT)
 object ModuleManager : Listenable {
 
-    private val modules = mutableListOf<Module>()
+    private val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }
     private val moduleClassMap = hashMapOf<Class<*>, Module>()
 
     init {
@@ -42,7 +46,7 @@ object ModuleManager : Listenable {
      * Register [module]
      */
     fun registerModule(module: Module) {
-        modules.add(module)
+        modules += module
         moduleClassMap[module.javaClass] = module
 
         generateCommand(module)
@@ -50,11 +54,31 @@ object ModuleManager : Listenable {
     }
 
     /**
+     * Register [moduleClass]
+     */
+    private fun registerModule(moduleClass: Class<out Module>) {
+        try {
+            registerModule(moduleClass.newInstance())
+        } catch (e: Throwable) {
+            ClientUtils.getLogger().error("Failed to load module: ${moduleClass.name} (${e.javaClass.name}: ${e.message})")
+        }
+    }
+
+    /**
+     * Register a list of modules
+     */
+    @SafeVarargs
+    fun registerModules(vararg modules: Class<out Module>) {
+        modules.forEach(this::registerModule)
+    }
+
+    /**
      * Unregister module
      */
-    fun unregisterModule(module: Module?) {
+    fun unregisterModule(module: Module) {
         modules.remove(module)
-        LiquidBounce.CLIENT.eventManager.unregisterListener(module!!)
+        moduleClassMap.remove(module::class.java)
+        LiquidBounce.CLIENT.eventManager.unregisterListener(module)
     }
 
     /**
@@ -87,6 +111,7 @@ object ModuleManager : Listenable {
     fun getModule(moduleClass: Class<*>): Module? {
         return moduleClassMap[moduleClass]
     }
+    fun getModule(moduleClass: Class<*>) = moduleClassMap[moduleClass]
 
     /**
      * Get module by [moduleName]
@@ -99,6 +124,7 @@ object ModuleManager : Listenable {
 
         return null
     }
+    fun getModule(moduleName: String?) = modules.find { it.name.equals(moduleName, ignoreCase = true) }
 
     /**
      * Get all modules
@@ -114,11 +140,7 @@ object ModuleManager : Listenable {
      * Handle incoming key presses
      */
     @EventTarget
-    private fun onKey(event: KeyEvent) {
-        for (module in modules)
-            if (module.keyBind == event.key)
-                module.toggle()
-    }
+    private fun onKey(event: KeyEvent) = modules.filter { it.keyBind == event.key }.forEach { it.toggle() }
 
     override fun handleEvents() = true
 
