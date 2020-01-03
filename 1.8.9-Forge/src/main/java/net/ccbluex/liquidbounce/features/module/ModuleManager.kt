@@ -4,10 +4,10 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
-import org.reflections.Reflections
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
+import org.reflections.Reflections
 import java.util.*
 
 /**
@@ -33,9 +33,12 @@ object ModuleManager : Listenable {
      */
     fun registerModules() {
         ClientUtils.getLogger().info("[ModuleManager] Loading modules...")
-        for (aClass in Reflections(ModuleManager::class.java.getPackage().toString().replace("package ", "")).getTypesAnnotatedWith(ModuleInfo::class.java)) {
-            registerModule(aClass.newInstance() as Module)
+
+        for (moduleClass in Reflections(ModuleManager::class.java.getPackage().toString()
+                .replace("package ", "")).getTypesAnnotatedWith(ModuleInfo::class.java)) {
+            registerModule(moduleClass as Class<out Module>)
         }
+
         ClientUtils.getLogger().info("[ModuleManager] Loaded ${modules.size} modules.")
     }
 
