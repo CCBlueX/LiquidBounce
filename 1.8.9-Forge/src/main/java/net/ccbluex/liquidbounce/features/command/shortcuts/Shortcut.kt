@@ -1,4 +1,6 @@
-package net.ccbluex.liquidbounce.features.command
+package net.ccbluex.liquidbounce.features.command.shortcuts
+
+import net.ccbluex.liquidbounce.features.command.Command
 
 class Shortcut(val name: String, val script: List<Pair<Command, Array<String>>>): Command(name, arrayOf()) {
 

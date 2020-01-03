@@ -128,6 +128,8 @@ public class LiquidBounce {
         fileManager.loadConfigs(fileManager.modulesConfig, fileManager.valuesConfig, fileManager.accountsConfig,
                 fileManager.friendsConfig, fileManager.xrayConfig);
 
+        fileManager.loadShortcuts();
+
         // ClickGUI
         clickGui = new ClickGui();
         fileManager.loadConfig(fileManager.clickGuiConfig);
@@ -203,9 +205,11 @@ public class LiquidBounce {
         eventManager.callEvent(new ClientShutdownEvent());
 
         // Check if filemanager is available
-        if (fileManager != null)
+        if (fileManager != null) {
             // Save all configs of file manager
             fileManager.saveAllConfigs();
+            fileManager.saveShortcuts();
+        }
 
         // Check if discord rpc is available
         if (liquidDiscordRPC != null)

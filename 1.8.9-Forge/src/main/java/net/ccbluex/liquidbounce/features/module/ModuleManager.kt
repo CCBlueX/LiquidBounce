@@ -196,7 +196,7 @@ object ModuleManager : Listenable {
      * Register [module]
      */
     fun registerModule(module: Module) {
-        modules.add(module)
+        modules += module
         moduleClassMap[module.javaClass] = module
 
         generateCommand(module)
@@ -275,9 +275,7 @@ object ModuleManager : Listenable {
      * Handle incoming key presses
      */
     @EventTarget
-    private fun onKey(event: KeyEvent) {
-        modules.filter { it.keyBind == event.key }.forEach { it.toggle() }
-    }
+    private fun onKey(event: KeyEvent) = modules.filter { it.keyBind == event.key }.forEach { it.toggle() }
 
     override fun handleEvents() = true
 
