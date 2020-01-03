@@ -30,6 +30,7 @@ public class HUD extends Module {
 
     public HUD() {
         setState(true);
+        setArray(false);
     }
 
     @EventTarget
@@ -59,10 +60,5 @@ public class HUD extends Module {
             mc.entityRenderer.loadShader(new ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json"));
         else
             mc.entityRenderer.stopUseShader();
-    }
-
-    @Override
-    public boolean showArray() {
-        return false;
     }
 }

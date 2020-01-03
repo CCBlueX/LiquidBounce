@@ -10,7 +10,7 @@ import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.util.ResourceLocation
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
-import java.util.*
+import org.lwjgl.input.Keyboard
 
 /**
  * LiquidBounce Hacked Client
@@ -21,101 +21,118 @@ import java.util.*
  */
 @SideOnly(Side.CLIENT)
 open class Module : MinecraftInstance(), Listenable {
-    private val canEnable = javaClass.getAnnotation(ModuleInfo::class.java).canEnable
-    var name = javaClass.getAnnotation(ModuleInfo::class.java).name
-    var description = javaClass.getAnnotation(ModuleInfo::class.java).description
-    var category = javaClass.getAnnotation(ModuleInfo::class.java).category
-    var keyBind = javaClass.getAnnotation(ModuleInfo::class.java).keyBind
+
+    // Module information
+    // TODO: Remove ModuleInfo and change to constructor (#Kotlin)
+    var name: String
+    var description: String
+    var category: ModuleCategory
+    var keyBind = Keyboard.CHAR_NONE
         set(keyBind) {
             field = keyBind
             LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.modulesConfig)
         }
+    private val canEnable: Boolean
+
+    init {
+        val moduleInfo = javaClass.getAnnotation(ModuleInfo::class.java)!!
+
+        name = moduleInfo.name
+        description = moduleInfo.description
+        category = moduleInfo.category
+        keyBind = moduleInfo.keyBind
+        canEnable = moduleInfo.canEnable
+    }
+
+    // Current state of module
     var state = false
         set(value) {
-            if (field == value) {
-                return
-            }
+            if (field == value) return
+
+            // Call toggle
             onToggle(value)
+
+            // Play sound and add notification
+            if (!LiquidBounce.CLIENT.isStarting) {
+                mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"),
+                        1F))
+                LiquidBounce.CLIENT.hud.addNotification(Notification((if (state) "Enabled " else "Disabled ") + name))
+            }
+
+            // Call on enabled or disabled
             if (value) {
                 onEnable()
+
                 if (canEnable)
                     field = true
             } else {
                 onDisable()
                 field = false
             }
+
+            // Save module state
             LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.modulesConfig)
         }
 
 
     // HUD
     val hue = Math.random().toFloat()
-    var slide = 0f
+    var slide = 0F
+    var array = true
 
-    val tagName: String
-        get() = name + if (tag == null) "" else " §7$tag"
-
-    val colorlessTagName: String
-        get() = name + if (tag == null) "" else " " + stripColor(tag)
-
+    // Tag
     open val tag: String?
         get() = null
 
+    val tagName: String
+        get() = "$name${if (tag == null) "" else " §7$tag"}"
+
+    val colorlessTagName: String
+        get() = "$name${if (tag == null) "" else " " + stripColor(tag)}"
+
+    /**
+     * Toggle module
+     */
     fun toggle() {
         state = !state
     }
 
-    open fun onToggle(state: Boolean) {
-        if (!LiquidBounce.CLIENT.isStarting && this.state != state) {
-            mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"), 1.0f))
-            LiquidBounce.CLIENT.hud.addNotification(Notification((if (state) "Enabled " else "Disabled ") + name))
-        }
-    }
+    /**
+     * Called when module toggled
+     */
+    open fun onToggle(state: Boolean) {}
 
+    /**
+     * Called when module enabled
+     */
     open fun onEnable() {}
+
+    /**
+     * Called when module disabled
+     */
     open fun onDisable() {}
 
-    fun onStarted() {}
-    open fun showArray(): Boolean {
-        return true
-    }
-
-    // Value
+    /**
+     * Get module by [valueName]
+     */
     open fun getValue(valueName: String?): Value<*>? {
-        for (field in javaClass.declaredFields) {
-            try {
-                field.isAccessible = true
-                val o = field[this]
-                if (o is Value<*>) {
-                    if (o.name.equals(valueName, ignoreCase = true)) {
-                        return o
-                    }
-                }
-            } catch (e: IllegalAccessException) {
-                e.printStackTrace()
-            }
-        }
-        return null
+        return javaClass.declaredFields.map { valueField ->
+            valueField.isAccessible = true
+            valueField[this]
+        }.filterIsInstance<Value<*>>().find { it.name.equals(valueName, ignoreCase = true) }
     }
 
-    open val values: MutableList<Value<*>>
-        get() {
-            val values: MutableList<Value<*>> = ArrayList()
-            for (_field in javaClass.declaredFields) {
-                try {
-                    _field.isAccessible = true
-                    val o = _field[this]
-                    if (o is Value<*>) {
-                        values.add(o)
-                    }
-                } catch (e: IllegalAccessException) {
-                    e.printStackTrace()
-                }
-            }
-            return values
-        }
+    /**
+     * Get all values of module
+     */
+    open val values: List<Value<*>>
+        get() = javaClass.declaredFields.map { valueField ->
+            valueField.isAccessible = true
+            valueField[this]
+        }.filterIsInstance<Value<*>>()
 
-    override fun handleEvents(): Boolean {
-        return state
-    }
+    /**
+     * Events should be handled when module is enabled
+     */
+    override fun handleEvents() = state
 }

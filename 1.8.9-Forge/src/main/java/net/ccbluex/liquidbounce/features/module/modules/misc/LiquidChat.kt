@@ -38,6 +38,7 @@ class LiquidChat : Module() {
 
     init {
         state = true
+        array = false
     }
 
     private val jwtValue = object : BoolValue("JWT", false) {
@@ -289,8 +290,6 @@ class LiquidChat : Module() {
 
         })
     }
-
-    override fun showArray() = false
 
     override fun onDisable() {
         loggedIn = false

@@ -66,7 +66,7 @@ class Arraylist : Element() {
         val delta = RenderUtils.deltaTime
 
         for (module in getModules()) {
-            if (module.state && module.showArray()) {
+            if (module.state && module.array) {
                 var displayString = if (!tags.get())
                     module.name
                 else if (tagsArrayColor.get())
@@ -238,7 +238,7 @@ class Arraylist : Element() {
 
     override fun updateElement() {
         modules = getModules()
-                .filter { it.showArray() && it.slide > 0 }
+                .filter { it.array && it.slide > 0 }
                 .sortedBy { -fontRenderer.getStringWidth(if (upperCaseValue.get()) (if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName).toUpperCase() else if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName) }
     }
 

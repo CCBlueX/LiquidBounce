@@ -11,7 +11,7 @@ import net.minecraft.block.Block
  *
  * @author SenkJu
  */
-class ModuleCommand(val module: Module, val values: MutableList<Value<*>> = module.values) :
+class ModuleCommand(val module: Module, val values: List<Value<*>> = module.values) :
         Command(module.name.toLowerCase(), emptyArray()) {
 
     init {
