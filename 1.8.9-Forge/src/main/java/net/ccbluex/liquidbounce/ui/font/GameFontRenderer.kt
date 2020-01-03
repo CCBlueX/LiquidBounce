@@ -61,8 +61,10 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     }
 
     private fun drawText(text: String?, x: Float, y: Float, colorHex: Int, ignoreColor: Boolean): Int {
-        if (text.isNullOrEmpty())
+        if (text == null)
             return 0
+        if (text.isEmpty())
+            return x.toInt()
 
         GL11.glPushMatrix()
         GL11.glTranslated(x - 1.5, y + 0.5, 0.0)
