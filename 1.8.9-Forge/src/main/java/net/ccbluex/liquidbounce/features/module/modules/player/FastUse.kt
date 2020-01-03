@@ -82,5 +82,6 @@ class FastUse : Module() {
         }
     }
 
-    override fun getTag() = modeValue.get()
+    override val tag: String?
+        get() = modeValue.get()
 }

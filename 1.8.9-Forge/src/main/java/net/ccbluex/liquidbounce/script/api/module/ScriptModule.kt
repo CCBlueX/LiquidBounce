@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.value.Value
  * Script Support
  * @author CCBlueX
  */
-class ScriptModule(private val scriptObjectMirror : ScriptObjectMirror) : Module() {
+class ScriptModule(private val scriptObjectMirror: ScriptObjectMirror) : Module() {
 
-    private val values = mutableListOf<Value<*>>()
+    private val _values = mutableListOf<Value<*>>()
 
     /**
      * Initialize a new script module
@@ -43,38 +43,35 @@ class ScriptModule(private val scriptObjectMirror : ScriptObjectMirror) : Module
             scriptObjectMirror.callMember("addValues", adaptedValues)
 
             for (value in adaptedValues)
-                values.add(value.getValue())
+                _values.add(value.getValue())
         }
 
-        val categoryString : String = scriptObjectMirror.callMember("getCategory") as String
-        for(category in ModuleCategory.values())
-            if(categoryString.equals(category.displayName, true))
+        val categoryString: String = scriptObjectMirror.callMember("getCategory") as String
+        for (category in ModuleCategory.values())
+            if (categoryString.equals(category.displayName, true))
                 this.category = category
     }
 
-    /**
-     * Get all values of script module
-     */
-    override fun getValues(): MutableList<Value<*>> {
-        return values
-    }
+    override val values: MutableList<Value<*>>
+        get() {
+            return _values
+        }
 
-    /**
-     * Gets specific value of script module
-     */
-    override fun getValue(valueName: String): Value<*>? {
-        for (value in values)
-            if (value.name.equals(valueName, ignoreCase = true))
+    override fun getValue(valueName: String?): Value<*>? {
+        for (value in _values) {
+            if (value.name.equals(valueName, ignoreCase = true)) {
                 return value
-
+            }
+        }
         return null
     }
 
-    override fun getTag(): String? {
-        return if (scriptObjectMirror.hasMember("getTag"))
-            scriptObjectMirror.callMember("getTag") as String
-        else null
-    }
+    override val tag: String?
+        get() {
+            return if (scriptObjectMirror.hasMember("getTag"))
+                scriptObjectMirror.callMember("getTag") as String
+            else null
+        }
 
     /**
      * Handle onEnable and call js function of method
@@ -106,7 +103,7 @@ class ScriptModule(private val scriptObjectMirror : ScriptObjectMirror) : Module
 
     /**
      * Handle onRender3D and call js function of method
-    */
+     */
     @EventTarget
     fun onRender3D(render3DEvent: Render3DEvent) = call("onRender3D", render3DEvent)
 
@@ -167,12 +164,12 @@ class ScriptModule(private val scriptObjectMirror : ScriptObjectMirror) : Module
     /**
      * Call member of script when member is available
      */
-    private fun call(member : String, event : Any? = null) {
-        if(scriptObjectMirror.hasMember(member)) {
+    private fun call(member: String, event: Any? = null) {
+        if (scriptObjectMirror.hasMember(member)) {
             try {
                 scriptObjectMirror.callMember(member, event)
-            } catch(throwable : Throwable) {
-                ClientUtils.getLogger().error("An error occurred inside script module: ${getName()}", throwable)
+            } catch (throwable: Throwable) {
+                ClientUtils.getLogger().error("An error occurred inside script module: ${name}", throwable)
             }
         }
     }

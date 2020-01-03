@@ -37,6 +37,6 @@ class Timer : Module() {
         if (event.worldClient != null)
             return
 
-        setState(false)
+        state = false
     }
 }

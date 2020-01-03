@@ -75,7 +75,7 @@ public class SlowlyStyle extends Style {
         Fonts.font35.drawString(moduleElement.getDisplayName(), moduleElement.getX() + 5, moduleElement.getY() + 5, Color.WHITE.getRGB());
 
         // Draw settings
-        final List<Value> moduleValues = moduleElement.getModule().getValues();
+        final List<Value<?>> moduleValues = moduleElement.getModule().getValues();
 
         if(!moduleValues.isEmpty()) {
             Fonts.font35.drawString(">", moduleElement.getX() + moduleElement.getWidth() - 8, moduleElement.getY() + 5, Color.WHITE.getRGB());

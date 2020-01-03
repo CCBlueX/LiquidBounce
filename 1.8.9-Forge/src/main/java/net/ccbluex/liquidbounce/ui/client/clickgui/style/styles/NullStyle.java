@@ -68,7 +68,7 @@ public class NullStyle extends Style {
         GlStateManager.resetColor();
         Fonts.font35.drawString(moduleElement.getDisplayName(), (int) (moduleElement.getX() - (Fonts.font35.getStringWidth(moduleElement.getDisplayName()) - 100.0f) / 2.0f), moduleElement.getY() + 6, moduleElement.getModule().getState() ? guiColor : Integer.MAX_VALUE);
 
-        final List<Value> moduleValues = moduleElement.getModule().getValues();
+        final List<Value<?>> moduleValues = moduleElement.getModule().getValues();
 
         if(!moduleValues.isEmpty()) {
             Fonts.font35.drawString("+", moduleElement.getX() + moduleElement.getWidth() - 8, moduleElement.getY() + (moduleElement.getHeight() / 2), Color.WHITE.getRGB());

@@ -34,7 +34,7 @@ class AutoLeave : Module() {
                 "illegalchat" -> mc.thePlayer.sendChatMessage(Random().nextInt().toString() + "§§§" + Random().nextInt())
             }
 
-            setState(false)
+            state = false
         }
     }
 
