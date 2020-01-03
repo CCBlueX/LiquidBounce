@@ -259,8 +259,13 @@ public class Scaffold extends Module {
         if (placeModeValue.get().equalsIgnoreCase(eventState.getStateName()))
             place();
 
-        if (eventState == EventState.PRE)
+        if (eventState == EventState.PRE) {
+            if ((mc.thePlayer.getHeldItem() == null || mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) &&
+                    InventoryUtils.findAutoBlockBlock() == -1)
+                return;
+
             findBlock(mode.equalsIgnoreCase("expand"));
+        }
 
         if (targetBlock == null || targetFacing == null || targetVec == null) {
             if (placeableDelay.get())
