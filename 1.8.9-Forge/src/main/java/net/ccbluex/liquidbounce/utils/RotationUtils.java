@@ -296,10 +296,9 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
     @EventTarget
     public void onTick(final TickEvent event) {
         if(targetRotation != null) {
-            keepLength++;
+            keepLength--;
 
-            // Advanced Anti Cheat, huh
-            if(keepLength > 15)
+            if (keepLength <= 0)
                 reset();
         }
 
@@ -336,13 +335,22 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      * @param rotation your target rotation
      */
     public static void setTargetRotation(final Rotation rotation) {
+        setTargetRotation(rotation, 0);
+    }
+
+    /**
+     * Set your target rotation
+     *
+     * @param rotation your target rotation
+     */
+    public static void setTargetRotation(final Rotation rotation, final int keepLength) {
         if(Double.isNaN(rotation.getYaw()) || Double.isNaN(rotation.getPitch())
                 || rotation.getPitch() > 90 || rotation.getPitch() < -90)
             return;
 
         rotation.fixedSensitivity(mc.gameSettings.mouseSensitivity);
         targetRotation = rotation;
-        keepLength = 0;
+        RotationUtils.keepLength = keepLength;
     }
 
     /**

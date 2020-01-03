@@ -32,7 +32,6 @@ class ScriptManagerCommand : Command("scriptmanager", arrayOf("scripts")) {
                         if (fileName.endsWith(".js")) {
                             LiquidBounce.CLIENT.scriptManager.importScript(file)
 
-                            LiquidBounce.CLIENT.moduleManager.sortModules()
                             LiquidBounce.CLIENT.clickGui = ClickGui()
                             LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.clickGuiConfig)
 
@@ -66,7 +65,6 @@ class ScriptManagerCommand : Command("scriptmanager", arrayOf("scripts")) {
 
                             scriptFiles.forEach { scriptFile -> LiquidBounce.CLIENT.scriptManager.loadScript(scriptFile) }
 
-                            LiquidBounce.CLIENT.moduleManager.sortModules()
                             LiquidBounce.CLIENT.clickGui = ClickGui()
                             LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.clickGuiConfig)
                             LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.hudConfig)
@@ -101,7 +99,6 @@ class ScriptManagerCommand : Command("scriptmanager", arrayOf("scripts")) {
 
                         LiquidBounce.CLIENT.scriptManager.deleteScript(script)
 
-                        LiquidBounce.CLIENT.moduleManager.sortModules()
                         LiquidBounce.CLIENT.clickGui = ClickGui()
                         LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.clickGuiConfig)
                         LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.hudConfig)

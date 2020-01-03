@@ -73,6 +73,9 @@ public class LiquidBounce {
     // Discord RPC
     private LiquidDiscordRPC liquidDiscordRPC;
 
+    private LiquidBounce() {
+    }
+
     /**
      * Execute if client will be started
      */
@@ -126,10 +129,7 @@ public class LiquidBounce {
 
         // Load configs
         fileManager.loadConfigs(fileManager.modulesConfig, fileManager.valuesConfig, fileManager.accountsConfig,
-                fileManager.friendsConfig, fileManager.xrayConfig);
-
-        // Sort modules
-        moduleManager.sortModules();
+                fileManager.friendsConfig, fileManager.xrayConfig, fileManager.shortcutsConfig);
 
         // ClickGUI
         clickGui = new ClickGui();
@@ -206,9 +206,10 @@ public class LiquidBounce {
         eventManager.callEvent(new ClientShutdownEvent());
 
         // Check if filemanager is available
-        if (fileManager != null)
+        if (fileManager != null) {
             // Save all configs of file manager
             fileManager.saveAllConfigs();
+        }
 
         // Check if discord rpc is available
         if (liquidDiscordRPC != null)

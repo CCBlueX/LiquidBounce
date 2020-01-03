@@ -1,6 +1,8 @@
 package net.ccbluex.liquidbounce.features.command
 
 import net.ccbluex.liquidbounce.features.command.commands.*
+import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
+import net.ccbluex.liquidbounce.features.command.shortcuts.ShortcutParser
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
@@ -16,6 +18,7 @@ import net.minecraftforge.fml.relauncher.SideOnly
 class CommandManager {
 
     val commands = mutableListOf<Command>()
+
     var prefix = '.'
 
     /**
@@ -48,6 +51,7 @@ class CommandManager {
         registerCommand(ScriptManagerCommand())
         registerCommand(RemoteViewCommand())
         registerCommand(PrefixCommand())
+        registerCommand(ShortcutCommand())
     }
 
     /**
@@ -78,11 +82,7 @@ class CommandManager {
      * Get command instance by given [name]
      */
     fun getCommand(name: String): Command? {
-        for (command in commands)
-            if (command.command.equals(name, ignoreCase = true))
-                return command
-
-        return null
+        return commands.find { it.command.equals(name, ignoreCase = true) }
     }
 
     /**
@@ -90,8 +90,26 @@ class CommandManager {
      */
     fun registerCommand(command: Command) = commands.add(command)
 
+    fun registerShortcut(name: String, script: String) {
+        if (getCommand(name) == null) {
+            registerCommand(Shortcut(name, ShortcutParser.parse(script).map {
+                val command = getCommand(it[0]) ?: throw IllegalArgumentException("Command ${it[0]} not found!")
+
+                Pair(command, it.toTypedArray())
+            }))
+        } else {
+            throw IllegalArgumentException("Command already exists!")
+        }
+    }
+
+    fun unregisterShortcut(name: String) = commands.removeIf {
+        it is Shortcut &&
+                it.command.equals(name, ignoreCase = true)
+    }
+
     /**
      * Unregister [command] by just removing it from the commands registry
      */
     fun unregisterCommand(command: Command?) = commands.remove(command)
+
 }
