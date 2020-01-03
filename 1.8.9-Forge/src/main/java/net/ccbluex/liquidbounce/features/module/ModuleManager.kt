@@ -4,9 +4,6 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import org.reflections.Reflections
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.minecraftforge.fml.relauncher.Side
@@ -94,11 +91,6 @@ object ModuleManager : Listenable {
     }
 
     /**
-     * Sort all modules by name
-     */
-    fun sortModules() = modules.sortBy { it.name }
-
-    /**
      * Legacy stuff
      *
      * TODO: Remove later when everything is translated to Kotlin
@@ -108,22 +100,12 @@ object ModuleManager : Listenable {
      * Get module by [moduleClass]
      */
     @JvmStatic
-    fun getModule(moduleClass: Class<*>): Module? {
-        return moduleClassMap[moduleClass]
-    }
     fun getModule(moduleClass: Class<*>) = moduleClassMap[moduleClass]
 
     /**
      * Get module by [moduleName]
      */
     @JvmStatic
-    fun getModule(moduleName: String?): Module? {
-        for (module in modules)
-            if (module.name.equals(moduleName, ignoreCase = true))
-                return module
-
-        return null
-    }
     fun getModule(moduleName: String?) = modules.find { it.name.equals(moduleName, ignoreCase = true) }
 
     /**
