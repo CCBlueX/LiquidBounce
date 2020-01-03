@@ -298,7 +298,6 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
         if(targetRotation != null) {
             keepLength--;
 
-            // Advanced Anti Cheat, huh
             if (keepLength <= 0)
                 reset();
         }
@@ -336,7 +335,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      * @param rotation your target rotation
      */
     public static void setTargetRotation(final Rotation rotation) {
-        setTargetRotation(rotation, 15);
+        setTargetRotation(rotation, 0);
     }
 
     /**
@@ -361,14 +360,14 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
         if(serverRotation == null) return;
 
         targetRotation = serverRotation;
-        keepLength = 15;
+        keepLength = 0;
     }
 
     /**
      * Reset your target rotation
      */
     public static void reset() {
-        keepLength = 15;
+        keepLength = 0;
         targetRotation = null;
     }
 

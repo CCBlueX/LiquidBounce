@@ -87,8 +87,7 @@ class AutoPot : Module() {
                     mc.netHandler.addToSendQueue(C09PacketHeldItemChange(potion - 36))
 
                     if (mc.thePlayer.rotationPitch <= 80F) {
-                        RotationUtils.setTargetRotation(Rotation(mc.thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)),
-                                0)
+                        RotationUtils.setTargetRotation(Rotation(mc.thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)))
                     }
                     return
                 }

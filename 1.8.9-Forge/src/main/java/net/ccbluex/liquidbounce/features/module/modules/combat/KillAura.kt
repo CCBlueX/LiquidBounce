@@ -577,7 +577,7 @@ class KillAura : Module() {
                 (Math.random() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get()).toFloat())
 
         if (silentRotationValue.get())
-            RotationUtils.setTargetRotation(limitedRotation)
+            RotationUtils.setTargetRotation(limitedRotation, if (aacValue.get()) 15 else 0)
         else
             limitedRotation.toPlayer(mc.thePlayer)
 

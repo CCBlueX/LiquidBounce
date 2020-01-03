@@ -92,6 +92,7 @@ public class Scaffold extends Module {
 
     // Rotations
     private final BoolValue rotationsValue = new BoolValue("Rotations", true);
+    private final IntegerValue keepLengthValue = new IntegerValue("KeepRotationLength", 0, 0, 20);
     private final BoolValue keepRotationValue = new BoolValue("KeepRotation", false);
 
     // Zitter
@@ -498,7 +499,7 @@ public class Scaffold extends Module {
         if(placeRotation == null) return false;
 
         if (rotationsValue.get()) {
-            RotationUtils.setTargetRotation(placeRotation.getRotation());
+            RotationUtils.setTargetRotation(placeRotation.getRotation(), keepLengthValue.get());
             lockRotation = placeRotation.getRotation();
         }
 
