@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiAdd;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiChangeName;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDirectLogin;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape;
+import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiSessionLogin;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiMCLeaks;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
@@ -101,7 +102,9 @@ public class GuiAltManager extends GuiScreen {
         if(GENERATORS.getOrDefault("thealtening", true))
             this.buttonList.add(new GuiButton(9, 5, j + 24 * 6 + 5, 90, 20, "TheAltening"));
 
-        this.buttonList.add(new GuiButton(10, 5, j + 24 * 7 + 10, 90, 20, "Cape"));
+        this.buttonList.add(new GuiButton(10, 5, j + 24 * 7 + 5, 90, 20, "Session Login"));
+        this.buttonList.add(new GuiButton(11, 5, j + 24 * 8 + 10, 90, 20, "Cape"));
+
     }
 
     @Override
@@ -235,6 +238,9 @@ public class GuiAltManager extends GuiScreen {
                 mc.displayGuiScreen(new GuiTheAltening(this));
                 break;
             case 10:
+                mc.displayGuiScreen(new GuiSessionLogin(this));
+                break;
+            case 11:
                 mc.displayGuiScreen(new GuiDonatorCape(this));
                 break;
         }
