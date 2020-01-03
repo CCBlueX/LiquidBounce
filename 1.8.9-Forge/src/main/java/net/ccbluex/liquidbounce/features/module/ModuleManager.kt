@@ -225,10 +225,10 @@ object ModuleManager : Listenable {
     /**
      * Unregister module
      */
-    fun unregisterModule(module: Module?) {
+    fun unregisterModule(module: Module) {
         modules.remove(module)
-        moduleClassMap.remove(module!!::class.java)
-        LiquidBounce.CLIENT.eventManager.unregisterListener(module!!)
+        moduleClassMap.remove(module::class.java)
+        LiquidBounce.CLIENT.eventManager.unregisterListener(module)
     }
 
     /**
@@ -253,17 +253,13 @@ object ModuleManager : Listenable {
      * Get module by [moduleClass]
      */
     @JvmStatic
-    fun getModule(moduleClass: Class<*>): Module? {
-        return moduleClassMap[moduleClass]
-    }
+    fun getModule(moduleClass: Class<*>) = moduleClassMap[moduleClass]
 
     /**
      * Get module by [moduleName]
      */
     @JvmStatic
-    fun getModule(moduleName: String?): Module? {
-        return modules.find { it.name.equals(moduleName, ignoreCase = true) }
-    }
+    fun getModule(moduleName: String?) = modules.find { it.name.equals(moduleName, ignoreCase = true) }
 
     /**
      * Get all modules
@@ -279,9 +275,7 @@ object ModuleManager : Listenable {
      * Handle incoming key presses
      */
     @EventTarget
-    private fun onKey(event: KeyEvent) {
-        modules.filter { it.keyBind == event.key }.forEach { it.toggle() }
-    }
+    private fun onKey(event: KeyEvent) = modules.filter { it.keyBind == event.key }.forEach { it.toggle() }
 
     override fun handleEvents() = true
 
