@@ -2,7 +2,10 @@ package net.ccbluex.liquidbounce.file;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import kotlin.Pair;
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.features.command.Command;
+import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut;
 import net.ccbluex.liquidbounce.file.configs.*;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
@@ -10,12 +13,15 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.commons.io.IOCase;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 /**
  * LiquidBounce Hacked Client
@@ -30,6 +36,7 @@ public class FileManager extends MinecraftInstance {
     public final File dir = new File(mc.mcDataDir, LiquidBounce.CLIENT_NAME + "-1.8");
     public final File fontsDir = new File(dir, "fonts");
     public final File settingsDir = new File(dir, "settings");
+    public final File shortcutsDir = new File(dir, "shortcuts");
 
     public final FileConfig modulesConfig = new ModulesConfig(new File(dir, "modules.json"));
     public final FileConfig valuesConfig = new ValuesConfig(new File(dir, "values.json"));
@@ -68,6 +75,9 @@ public class FileManager extends MinecraftInstance {
 
         if(!settingsDir.exists())
             settingsDir.mkdir();
+
+        if (!shortcutsDir.exists())
+            shortcutsDir.mkdir();
     }
 
     /**
@@ -86,6 +96,34 @@ public class FileManager extends MinecraftInstance {
                     ClientUtils.getLogger().error("Failed to load config file of field " + field.getName() + ".", e);
                 }
             }
+        }
+    }
+
+    /**
+     * Load all shortcuts.
+     */
+    public void loadShortcuts() {
+        File[] shortcutFiles = shortcutsDir.listFiles((FilenameFilter) new WildcardFileFilter("*.lbsh", IOCase.INSENSITIVE));
+
+        if (shortcutFiles != null) {
+            for (File shortcutFile : shortcutFiles) {
+                String filename = shortcutFile.getName();
+
+                String shortcutName = filename.substring(0, filename.lastIndexOf('.'));
+
+                // I hope nobody will make shortcut script with size bigger than Integer.MAX_VALUE
+                char[] shortcutData = new char[(int) shortcutFile.length()];
+
+                try (BufferedReader reader = new BufferedReader(new FileReader(shortcutFile))) {
+                    reader.read(shortcutData);
+
+                    LiquidBounce.CLIENT.commandManager.registerShortcut(shortcutName, new String(shortcutData));
+                } catch (IOException e) {
+                    ClientUtils.getLogger().error("Unable to load a shortcut!", e);
+                }
+            }
+        } else {
+            ClientUtils.getLogger().error("Unable to get list of shortcut files.");
         }
     }
 
@@ -135,6 +173,23 @@ public class FileManager extends MinecraftInstance {
                 }catch(final IllegalAccessException e) {
                     ClientUtils.getLogger().error("[FileManager] Failed to save config file of field " +
                             field.getName() + ".", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Save all shortcuts.
+     */
+    public void saveShortcuts() {
+        for (Command command : LiquidBounce.CLIENT.commandManager.getCommands()) {
+            if (command instanceof Shortcut) {
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(shortcutsDir, command.getCommand() + ".lbsh")))) {
+                    for (Pair<Command, String[]> entry : ((Shortcut) command).getScript())
+                        // Use command name defined in code instead of using command name entered by player.
+                        writer.write(entry.getFirst().getCommand() + " " + StringUtils.join(Arrays.copyOfRange(entry.getSecond(), 1, entry.getSecond().length), ' ') + ";\n");
+                } catch (IOException e) {
+                    ClientUtils.getLogger().error("Unable to save shortcut!", e);
                 }
             }
         }

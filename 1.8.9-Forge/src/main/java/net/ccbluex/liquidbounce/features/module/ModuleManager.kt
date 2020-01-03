@@ -196,7 +196,7 @@ object ModuleManager : Listenable {
      * Register [module]
      */
     fun registerModule(module: Module) {
-        modules.add(module)
+        modules += module
         moduleClassMap[module.javaClass] = module
 
         generateCommand(module)

@@ -1,6 +1,8 @@
 package net.ccbluex.liquidbounce.features.command
 
 import net.ccbluex.liquidbounce.features.command.commands.*
+import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
+import net.ccbluex.liquidbounce.features.command.shortcuts.ShortcutParser
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
@@ -15,6 +17,7 @@ import net.minecraftforge.fml.relauncher.SideOnly
 @SideOnly(Side.CLIENT)
 class CommandManager {
 
+    val shortcutParser = ShortcutParser()
     val commands = mutableListOf<Command>()
 
     var prefix = '.'
@@ -90,12 +93,11 @@ class CommandManager {
 
     fun registerShortcut(name: String, script: String) {
         if (getCommand(name) == null) {
-            registerCommand(Shortcut(name, script.split(';').map {
-                val args = it.trim().split(' ')
+            println("$script | ${shortcutParser.parse(script)}")
+            registerCommand(Shortcut(name, shortcutParser.parse(script).map {
+                val command = getCommand(it[0]) ?: throw IllegalArgumentException("Command ${it[0]} not found!")
 
-                val command = getCommand(args[0]) ?: throw IllegalArgumentException("Command ${args[0]} not found!")
-
-                Pair(command, args.toTypedArray())
+                Pair(command, it.toTypedArray())
             }))
         } else {
             throw IllegalArgumentException("Command already exists!")
