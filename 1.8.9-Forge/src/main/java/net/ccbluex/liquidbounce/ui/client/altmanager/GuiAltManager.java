@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDirectLogin;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiMCLeaks;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
-import net.ccbluex.liquidbounce.ui.client.altmanager.sub.reconnect.GuiFritzBoxReconnect;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.login.LoginUtils;
@@ -103,7 +102,6 @@ public class GuiAltManager extends GuiScreen {
             this.buttonList.add(new GuiButton(9, 5, j + 24 * 6 + 5, 90, 20, "TheAltening"));
 
         this.buttonList.add(new GuiButton(10, 5, j + 24 * 7 + 10, 90, 20, "Cape"));
-        this.buttonList.add(new GuiButton(11, 5, j + 24 * 8 + 15, 90, 20, "Fritz!Box Reconnect"));
     }
 
     @Override
@@ -112,9 +110,9 @@ public class GuiAltManager extends GuiScreen {
 
         altsList.drawScreen(mouseX, mouseY, partialTicks);
 
-        Fonts.font40.drawCenteredString("AltManager", width / 2f, 6, 0xffffff);
+        Fonts.font40.drawCenteredString("AltManager", width / 2, 6, 0xffffff);
         Fonts.font35.drawCenteredString(LiquidBounce.CLIENT.fileManager.accountsConfig.altManagerMinecraftAccounts.size() + " Alts", width / 2, 18, 0xffffff);
-        Fonts.font35.drawCenteredString(status, width / 2f, 32, 0xffffff);
+        Fonts.font35.drawCenteredString(status, width / 2, 32, 0xffffff);
         Fonts.font35.drawStringWithShadow("§7User: §a" + (MCLeaks.isAltActive() ? MCLeaks.getSession().getUsername() : mc.getSession().getUsername()), 6, 6, 0xffffff);
         Fonts.font35.drawStringWithShadow("§7Type: §a" + (altService.getCurrentService() == AltService.EnumAltService.THEALTENING ? "TheAltening" : MCLeaks.isAltActive() ? "MCLeaks" : UserUtils.INSTANCE.isValidToken(mc.getSession().getToken()) ? "Premium" : "Cracked"), 6, 15, 0xffffff);
 
@@ -238,9 +236,6 @@ public class GuiAltManager extends GuiScreen {
                 break;
             case 10:
                 mc.displayGuiScreen(new GuiDonatorCape(this));
-                break;
-            case 11:
-                mc.displayGuiScreen(new GuiFritzBoxReconnect(this));
                 break;
         }
     }
