@@ -102,11 +102,14 @@ class CommandManager {
         }
     }
 
+    fun unregisterShortcut(name: String) = commands.removeIf {
+        it is Shortcut &&
+                it.command.equals(name, ignoreCase = true)
+    }
+
     /**
      * Unregister [command] by just removing it from the commands registry
      */
     fun unregisterCommand(command: Command?) = commands.remove(command)
-
-    fun unregisterCommand(name: String) = commands.removeIf { it.command.equals(name, ignoreCase = true) }
 
 }
