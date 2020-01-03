@@ -110,14 +110,17 @@ public class FileManager extends MinecraftInstance {
 
                 String shortcutName = filename.substring(0, filename.lastIndexOf('.'));
 
-                // I hope nobody will make shortcut script with size bigger than Integer.MAX_VALUE
-                char[] shortcutData = new char[(int) shortcutFile.length()];
+                StringBuilder shortcutData = new StringBuilder();
+
+                char[] readBuf = new char[1024];
+                int n;
 
                 try (BufferedReader reader = new BufferedReader(new FileReader(shortcutFile))) {
-                    reader.read(shortcutData);
+                    while ((n = reader.read(readBuf)) > 0)
+                        shortcutData.append(readBuf, 0, n);
 
-                    LiquidBounce.CLIENT.commandManager.registerShortcut(shortcutName, new String(shortcutData));
-                } catch (IOException e) {
+                    LiquidBounce.CLIENT.commandManager.registerShortcut(shortcutName, shortcutData.toString());
+                } catch (IOException | IllegalArgumentException e) {
                     ClientUtils.getLogger().error("Unable to load a shortcut!", e);
                 }
             }
