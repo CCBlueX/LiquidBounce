@@ -73,6 +73,9 @@ public class LiquidBounce {
     // Discord RPC
     private LiquidDiscordRPC liquidDiscordRPC;
 
+    private LiquidBounce() {
+    }
+
     /**
      * Execute if client will be started
      */
