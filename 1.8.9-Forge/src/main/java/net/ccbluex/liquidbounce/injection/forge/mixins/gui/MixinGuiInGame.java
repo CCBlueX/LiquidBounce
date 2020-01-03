@@ -19,14 +19,15 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * LiquidBounce Hacked Client
  * A minecraft forge injection client using Mixin
  *
- * @game Minecraft
  * @author CCBlueX
+ * @game Minecraft
  */
 @Mixin(GuiIngame.class)
 @SideOnly(Side.CLIENT)
@@ -37,15 +38,29 @@ public abstract class MixinGuiInGame {
 
     @Inject(method = "renderScoreboard", at = @At("HEAD"), cancellable = true)
     private void renderScoreboard(CallbackInfo callbackInfo) {
-        if(ModuleManager.getModule(NoScoreboard.class).getState())
+        NoScoreboard module = (NoScoreboard) ModuleManager.getModule(NoScoreboard.class);
+
+        if (module.getState() && module.getDisable().get())
             callbackInfo.cancel();
     }
+
+    @ModifyVariable(method = "renderScoreboard", index = 8, at = @At(value = "INVOKE", target = "Ljava/util/Collection;iterator()Ljava/util/Iterator;", ordinal = 1))
+    private int modifyX(int i) {
+        NoScoreboard module = (NoScoreboard) ModuleManager.getModule(NoScoreboard.class);
+
+        if (module.getState()) {
+            return (int) (i + i * module.getYOffset().get());
+        }
+
+        return i;
+    }
+
 
     @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
     private void renderTooltip(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
         final HUD hud = (HUD) ModuleManager.getModule(HUD.class);
 
-        if(Minecraft.getMinecraft().getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.blackHotbarValue.get()) {
+        if (Minecraft.getMinecraft().getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.blackHotbarValue.get()) {
             EntityPlayer entityPlayer = (EntityPlayer) Minecraft.getMinecraft().getRenderViewEntity();
 
             int middleScreen = sr.getScaledWidth() / 2;
@@ -59,7 +74,7 @@ public abstract class MixinGuiInGame {
             GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
             RenderHelper.enableGUIStandardItemLighting();
 
-            for(int j = 0; j < 9; ++j) {
+            for (int j = 0; j < 9; ++j) {
                 int k = sr.getScaledWidth() / 2 - 90 + j * 20 + 2;
                 int l = sr.getScaledHeight() - 16 - 3;
                 this.renderHotbarItem(j, k, l, partialTicks, entityPlayer);
@@ -76,7 +91,7 @@ public abstract class MixinGuiInGame {
 
     @Inject(method = "renderTooltip", at = @At("RETURN"))
     private void renderTooltipPost(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
-        if(!ClassUtils.hasClass("net.labymod.api.LabyModAPI"))
+        if (!ClassUtils.hasClass("net.labymod.api.LabyModAPI"))
             LiquidBounce.CLIENT.eventManager.callEvent(new Render2DEvent(partialTicks));
     }
 
@@ -84,7 +99,7 @@ public abstract class MixinGuiInGame {
     private void renderPumpkinOverlay(final CallbackInfo callbackInfo) {
         final AntiBlind antiBlind = (AntiBlind) ModuleManager.getModule(AntiBlind.class);
 
-        if(antiBlind.getState() && antiBlind.getPumpkinEffect().get())
+        if (antiBlind.getState() && antiBlind.getPumpkinEffect().get())
             callbackInfo.cancel();
     }
 }
