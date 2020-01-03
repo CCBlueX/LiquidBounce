@@ -1,10 +1,11 @@
 package net.ccbluex.liquidbounce.utils.misc;
 
-import net.minecraft.client.Minecraft;
+import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 import net.minecraft.util.*;
 import org.jetbrains.annotations.Nullable;
 
-public class FallingPlayer {
+public class FallingPlayer extends MinecraftInstance {
+    
     private double x;
     private double y;
     private double z;
@@ -30,7 +31,7 @@ public class FallingPlayer {
         this.forward = forward;
     }
 
-    public void calculateForTick() {
+    private void calculateForTick() {
         strafe *= 0.98F;
         forward *= 0.98F;
 
@@ -43,7 +44,7 @@ public class FallingPlayer {
                 v = 1.0F;
             }
 
-            v = Minecraft.getMinecraft().thePlayer.jumpMovementFactor / v;
+            v = mc.thePlayer.jumpMovementFactor / v;
             strafe = strafe * v;
             forward = forward * v;
             float f1 = MathHelper.sin(yaw * (float) Math.PI / 180.0F);
@@ -75,7 +76,7 @@ public class FallingPlayer {
 
             BlockPos raytracedBlock;
 
-            float w = Minecraft.getMinecraft().thePlayer.width / 2.0f;
+            float w = mc.thePlayer.width / 2F;
 
             if ((raytracedBlock = rayTrace(start, end)) != null) return raytracedBlock;
 
@@ -97,7 +98,7 @@ public class FallingPlayer {
 
     @Nullable
     private BlockPos rayTrace(Vec3 start, Vec3 end) {
-        MovingObjectPosition result = Minecraft.getMinecraft().theWorld.rayTraceBlocks(start, end, true);
+        MovingObjectPosition result = mc.theWorld.rayTraceBlocks(start, end, true);
 
         if (result != null && result.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && result.sideHit == EnumFacing.UP) {
             return result.getBlockPos();
