@@ -227,8 +227,15 @@ class KillAura : Module() {
      */
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        if (!rotationStrafeValue.get()) return
+        if (!rotationStrafeValue.get())
+            return
+
         update()
+
+        if (!silentRotationValue.get())
+            return
+
+        target ?: return
 
         val (yaw) = RotationUtils.targetRotation ?: return
         var strafe = event.strafe
