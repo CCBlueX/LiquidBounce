@@ -126,9 +126,7 @@ public class LiquidBounce {
 
         // Load configs
         fileManager.loadConfigs(fileManager.modulesConfig, fileManager.valuesConfig, fileManager.accountsConfig,
-                fileManager.friendsConfig, fileManager.xrayConfig);
-
-        fileManager.loadShortcuts();
+                fileManager.friendsConfig, fileManager.xrayConfig, fileManager.shortcutsConfig);
 
         // ClickGUI
         clickGui = new ClickGui();
@@ -208,7 +206,6 @@ public class LiquidBounce {
         if (fileManager != null) {
             // Save all configs of file manager
             fileManager.saveAllConfigs();
-            fileManager.saveShortcuts();
         }
 
         // Check if discord rpc is available
