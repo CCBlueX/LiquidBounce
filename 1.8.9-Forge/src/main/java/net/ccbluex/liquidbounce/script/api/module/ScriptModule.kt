@@ -52,19 +52,12 @@ class ScriptModule(private val scriptObjectMirror: ScriptObjectMirror) : Module(
                 this.category = category
     }
 
-    override val values: MutableList<Value<*>>
+    override val values: List<Value<*>>
         get() {
             return _values
         }
 
-    override fun getValue(valueName: String?): Value<*>? {
-        for (value in _values) {
-            if (value.name.equals(valueName, ignoreCase = true)) {
-                return value
-            }
-        }
-        return null
-    }
+    override fun getValue(valueName: String) = _values.find { it.name.equals(valueName, ignoreCase = true) }
 
     override val tag: String?
         get() {

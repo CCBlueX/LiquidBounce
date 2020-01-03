@@ -115,12 +115,10 @@ open class Module : MinecraftInstance(), Listenable {
     /**
      * Get module by [valueName]
      */
-    open fun getValue(valueName: String?): Value<*>? {
-        return javaClass.declaredFields.map { valueField ->
-            valueField.isAccessible = true
-            valueField[this]
-        }.filterIsInstance<Value<*>>().find { it.name.equals(valueName, ignoreCase = true) }
-    }
+    open fun getValue(valueName: String) = javaClass.declaredFields.map { valueField ->
+        valueField.isAccessible = true
+        valueField[this]
+    }.filterIsInstance<Value<*>>().find { it.name.equals(valueName, ignoreCase = true) }
 
     /**
      * Get all values of module
