@@ -57,6 +57,10 @@ public final class LoginUtils extends MinecraftInstance {
         LiquidBounce.CLIENT.eventManager.callEvent(new SessionEvent());
     }
 
+    public static void loginSession() {
+        LiquidBounce.CLIENT.eventManager.callEvent(new SessionEvent());
+    }
+
     public enum LoginResult {
         WRONG_PASSWORD,
         NO_CONTACT,

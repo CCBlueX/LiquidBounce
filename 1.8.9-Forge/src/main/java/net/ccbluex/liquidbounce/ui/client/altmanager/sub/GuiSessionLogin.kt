@@ -4,7 +4,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
+import net.ccbluex.liquidbounce.utils.login.LoginUtils.loginSession
 import net.minecraft.client.gui.Gui
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -20,8 +20,9 @@ import org.apache.http.util.EntityUtils
 import org.json.JSONArray
 import org.json.JSONObject
 import org.lwjgl.input.Keyboard
-import java.util.*
+import java.util.Base64
 import kotlin.concurrent.thread
+
 
 class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
 
@@ -166,8 +167,8 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
                     // Login into the session
                     mc.session = Session(username, uuid, accessToken, "mojang")
                     status = "§aLogged in"
-                    GuiAltManager.login(MinecraftAccount(username, ""))
-                    prevGui.status = "§aYour name is now §b§l${username}§c."
+                    prevGui.status = "§cYour name is now §f§l${username}§c."
+                    loginSession()
                     loginButton.enabled = true
                 }
             }
