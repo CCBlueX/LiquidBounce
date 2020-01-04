@@ -46,6 +46,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     jcenter()
+    maven { url 'https://jitpack.io' }
     
     maven {
         name = 'spongepowered-repo'
@@ -80,6 +81,7 @@ dependencies {
     implementation "com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT"
     compile "com.github.TheAltening:API-Java:api-2.0-SNAPSHOT"
     compile "com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT"
+    compile "com.github.goxr3plus:java-google-speech-api:V2.0"
 
     compile fileTree(include: ['*.jar'], dir: 'libs')
 }
@@ -155,6 +157,7 @@ shadowJar {
 
         include(dependency("com.github.TheAltening:API-Java"))
         include(dependency("com.github.TheAltening:API-Java-AuthLib"))
+        include(dependency("com.github.goxr3plus:java-google-speech-api"))
     }
 
     exclude 'dummyThing'

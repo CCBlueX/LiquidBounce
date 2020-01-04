@@ -52,6 +52,7 @@ class CommandManager {
         registerCommand(RemoteViewCommand())
         registerCommand(PrefixCommand())
         registerCommand(ShortcutCommand())
+        registerCommand(TranslateCommand())
     }
 
     /**
