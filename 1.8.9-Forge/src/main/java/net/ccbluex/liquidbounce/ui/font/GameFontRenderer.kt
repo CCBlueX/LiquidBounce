@@ -21,7 +21,7 @@ import java.awt.Font
  * @author CCBlueX
  */
 class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameSettings,
-        ResourceLocation("textures/font/ascii.png"), Minecraft.getMinecraft().textureManager, false) {
+        ResourceLocation("textures/font/ascii.png"), null, false) {
 
     var defaultFont = FontRenderer(font)
     private var boldFont = FontRenderer(font.deriveFont(Font.BOLD))
@@ -240,4 +240,6 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     override fun getCharWidth(character: Char) = getStringWidth(character.toString())
 
     override fun onResourceManagerReload(resourceManager: IResourceManager) {}
+
+    override fun bindTexture(location: ResourceLocation?) {}
 }

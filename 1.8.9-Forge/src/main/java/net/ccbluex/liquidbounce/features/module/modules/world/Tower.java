@@ -7,9 +7,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
-import net.ccbluex.liquidbounce.utils.InventoryUtils;
-import net.ccbluex.liquidbounce.utils.RotationUtils;
-import net.ccbluex.liquidbounce.utils.VecRotation;
+import net.ccbluex.liquidbounce.utils.*;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
@@ -27,7 +25,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.network.play.client.C09PacketHeldItemChange;
 import net.minecraft.network.play.client.C0APacketAnimation;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.*;
 import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
@@ -79,21 +77,38 @@ public class Tower extends Module {
      * MODULE
      */
 
+    // Target block
     private PlaceInfo placeInfo;
-    private final TickTimer packetTimer = new TickTimer();
-    private final TickTimer teleportTimer = new TickTimer();
-    private final TickTimer jumpTimer = new TickTimer();
+
+    // Rotation lock
+    private Rotation lockRotation;
+
+    // Mode stuff
+    private final TickTimer timer = new TickTimer();
     private double jumpGround = 0;
 
+    // AutoBlock
     private int slot;
+
+    @Override
+    public void onDisable() {
+        if (mc.thePlayer == null) return;
+
+        mc.timer.timerSpeed = 1F;
+        lockRotation = null;
+
+        if (slot != mc.thePlayer.inventory.currentItem)
+            mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
+    }
 
     @EventTarget
     public void onMotion(final MotionEvent event) {
         if (onJumpValue.get() && !mc.gameSettings.keyBindJump.isKeyDown())
             return;
 
-        if(rotationsValue.get() && keepRotationValue.get())
-            RotationUtils.setToServerRotation();
+        // Lock Rotation
+        if (rotationsValue.get() && keepRotationValue.get() && lockRotation != null)
+            RotationUtils.setTargetRotation(lockRotation);
 
         mc.timer.timerSpeed = timerValue.get();
 
@@ -103,9 +118,7 @@ public class Tower extends Module {
             place();
 
         if (eventState == EventState.PRE) {
-            packetTimer.update();
-            teleportTimer.update();
-            jumpTimer.update();
+            timer.update();
 
             if (autoBlockValue.get() ? InventoryUtils.findAutoBlockBlock() != -1 : mc.thePlayer.getHeldItem() != null
                     && mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) {
@@ -115,7 +128,7 @@ public class Tower extends Module {
 
                 final BlockPos blockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 0.5D, mc.thePlayer.posZ);
                 if (mc.theWorld.getBlockState(blockPos).getBlock() instanceof BlockAir) {
-                    if ((placeInfo = PlaceInfo.get(blockPos)) != null && rotationsValue.get()) {
+                    if (search(blockPos) && rotationsValue.get()) {
                         final VecRotation vecRotation = RotationUtils.faceBlock(blockPos);
 
                         if (vecRotation != null)
@@ -126,12 +139,15 @@ public class Tower extends Module {
         }
     }
 
+    /**
+     * Move player
+     */
     private void move() {
         switch (modeValue.get().toLowerCase()) {
             case "jump":
-                if (mc.thePlayer.onGround && jumpTimer.hasTimePassed(jumpDelayValue.get())) {
+                if (mc.thePlayer.onGround && timer.hasTimePassed(jumpDelayValue.get())) {
                     mc.thePlayer.motionY = jumpMotionValue.get();
-                    jumpTimer.reset();
+                    timer.reset();
                 }
                 break;
             case "motion":
@@ -144,22 +160,22 @@ public class Tower extends Module {
                     mc.thePlayer.setPosition(mc.thePlayer.posX, (int) mc.thePlayer.posY, mc.thePlayer.posZ);
                 break;
             case "packet":
-                if (mc.thePlayer.onGround && packetTimer.hasTimePassed(2)) {
+                if (mc.thePlayer.onGround && timer.hasTimePassed(2)) {
                     mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX,
                             mc.thePlayer.posY + 0.42D, mc.thePlayer.posZ, false));
                     mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX,
                             mc.thePlayer.posY + 0.753D, mc.thePlayer.posZ, false));
                     mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + 1D, mc.thePlayer.posZ);
-                    packetTimer.reset();
+                    timer.reset();
                 }
                 break;
             case "teleport":
                 if (teleportNoMotionValue.get())
                     mc.thePlayer.motionY = 0;
 
-                if ((mc.thePlayer.onGround || !teleportGroundValue.get()) && teleportTimer.hasTimePassed(teleportDelayValue.get())) {
+                if ((mc.thePlayer.onGround || !teleportGroundValue.get()) && timer.hasTimePassed(teleportDelayValue.get())) {
                     mc.thePlayer.setPositionAndUpdate(mc.thePlayer.posX, mc.thePlayer.posY + teleportHeightValue.get(), mc.thePlayer.posZ);
-                    teleportTimer.reset();
+                    timer.reset();
                 }
                 break;
             case "constantmotion":
@@ -194,7 +210,8 @@ public class Tower extends Module {
         if(placeInfo == null)
             return;
 
-        int blockSlot = Integer.MAX_VALUE;
+        // AutoBlock
+        int blockSlot = -1;
         ItemStack itemStack = mc.thePlayer.getHeldItem();
 
         if(mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock)) {
@@ -210,7 +227,9 @@ public class Tower extends Module {
             itemStack = mc.thePlayer.inventoryContainer.getSlot(blockSlot).getStack();
         }
 
-        if(mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, this.placeInfo.getBlockPos(), placeInfo.getEnumFacing(), placeInfo.getVec3())) {
+        // Place block
+        if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, this.placeInfo.getBlockPos(),
+                placeInfo.getEnumFacing(), placeInfo.getVec3())) {
             if(swingValue.get())
                 mc.thePlayer.swingItem();
             else
@@ -218,8 +237,85 @@ public class Tower extends Module {
         }
         this.placeInfo = null;
 
-        if(!stayAutoBlock.get() && blockSlot != Integer.MAX_VALUE)
+        // Switch back to old slot when using auto block
+        if (!stayAutoBlock.get() && blockSlot >= 0)
             mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
+    }
+
+    /**
+     * Search for placeable block
+     *
+     * @param blockPosition pos
+     * @return
+     */
+    private boolean search(final BlockPos blockPosition) {
+        if (!BlockUtils.isReplaceable(blockPosition))
+            return false;
+
+        final Vec3 eyesPos = new Vec3(mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY +
+                mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ);
+
+        PlaceRotation placeRotation = null;
+
+        for (final EnumFacing side : EnumFacing.values()) {
+            final BlockPos neighbor = blockPosition.offset(side);
+
+            if (!BlockUtils.canBeClicked(neighbor))
+                continue;
+
+            final Vec3 dirVec = new Vec3(side.getDirectionVec());
+
+            for (double xSearch = 0.1D; xSearch < 0.9D; xSearch += 0.1D) {
+                for (double ySearch = 0.1D; ySearch < 0.9D; ySearch += 0.1D) {
+                    for (double zSearch = 0.1D; zSearch < 0.9D; zSearch += 0.1D) {
+                        final Vec3 posVec = new Vec3(blockPosition).addVector(xSearch, ySearch, zSearch);
+                        final double distanceSqPosVec = eyesPos.squareDistanceTo(posVec);
+                        final Vec3 hitVec = posVec.add(new Vec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5));
+
+                        if ((eyesPos.squareDistanceTo(hitVec) > 18D ||
+                                distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) ||
+                                mc.theWorld.rayTraceBlocks(eyesPos, hitVec, false,
+                                        true, false) != null))
+                            continue;
+
+                        // face block
+                        final double diffX = hitVec.xCoord - eyesPos.xCoord;
+                        final double diffY = hitVec.yCoord - eyesPos.yCoord;
+                        final double diffZ = hitVec.zCoord - eyesPos.zCoord;
+
+                        final double diffXZ = MathHelper.sqrt_double(diffX * diffX + diffZ * diffZ);
+
+                        final Rotation rotation = new Rotation(
+                                MathHelper.wrapAngleTo180_float((float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90F),
+                                MathHelper.wrapAngleTo180_float((float) -Math.toDegrees(Math.atan2(diffY, diffXZ)))
+                        );
+
+                        final Vec3 rotationVector = RotationUtils.getVectorForRotation(rotation);
+                        final Vec3 vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4);
+                        final MovingObjectPosition obj = mc.theWorld.rayTraceBlocks(eyesPos, vector, false,
+                                false, true);
+
+                        if (!(obj.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && obj.getBlockPos().equals(neighbor)))
+                            continue;
+
+                        if (placeRotation == null || RotationUtils.getRotationDifference(rotation) <
+                                RotationUtils.getRotationDifference(placeRotation.getRotation()))
+                            placeRotation = new PlaceRotation(new PlaceInfo(neighbor, side.getOpposite(), hitVec), rotation);
+                    }
+                }
+            }
+        }
+
+        if (placeRotation == null)
+            return false;
+
+        if (rotationsValue.get()) {
+            RotationUtils.setTargetRotation(placeRotation.getRotation(), 0);
+            lockRotation = placeRotation.getRotation();
+        }
+
+        placeInfo = placeRotation.getPlaceInfo();
+        return true;
     }
 
     @EventTarget
@@ -247,7 +343,7 @@ public class Tower extends Module {
             GlStateManager.pushMatrix();
 
             final BlockOverlay blockOverlay = (BlockOverlay) ModuleManager.getModule(BlockOverlay.class);
-            if(blockOverlay.getState() && blockOverlay.infoValue.get() && mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.theWorld.getBlockState(mc.objectMouseOver.getBlockPos()).getBlock() != null && BlockUtils.canBeClicked(mc.objectMouseOver.getBlockPos()) && mc.theWorld.getWorldBorder().contains(mc.objectMouseOver.getBlockPos()))
+            if (blockOverlay.getState() && blockOverlay.getInfoValue().get() && blockOverlay.getCurrentBlock() != null)
                 GlStateManager.translate(0, 15F, 0);
 
             final String info = "Blocks: §7" + getBlocksAmount();
@@ -266,6 +362,9 @@ public class Tower extends Module {
             event.cancelEvent();
     }
 
+    /**
+     * @return hotbar blocks amount
+     */
     private int getBlocksAmount() {
         int amount = 0;
 
@@ -277,17 +376,6 @@ public class Tower extends Module {
         }
 
         return amount;
-    }
-
-    @Override
-    public void onDisable() {
-        if(mc.thePlayer == null)
-            return;
-
-        mc.timer.timerSpeed = 1F;
-
-        if(slot != mc.thePlayer.inventory.currentItem)
-            mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
     }
 
     @Override

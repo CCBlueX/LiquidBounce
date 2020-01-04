@@ -33,7 +33,7 @@ object BlockUtils : MinecraftInstance() {
      * Check [blockPos] is replaceable
      */
     @JvmStatic
-    fun isReplaceable(blockPos: BlockPos?) = getMaterial(blockPos)?.isReplaceable
+    fun isReplaceable(blockPos: BlockPos?) = getMaterial(blockPos)?.isReplaceable ?: false
 
     /**
      * Get state from [blockPos]
