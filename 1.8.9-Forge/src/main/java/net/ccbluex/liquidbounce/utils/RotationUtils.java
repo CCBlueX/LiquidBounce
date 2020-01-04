@@ -354,16 +354,6 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
     }
 
     /**
-     * Set current server rotation as target rotation
-     */
-    public static void setToServerRotation() {
-        if(serverRotation == null) return;
-
-        targetRotation = serverRotation;
-        keepLength = 0;
-    }
-
-    /**
      * Reset your target rotation
      */
     public static void reset() {

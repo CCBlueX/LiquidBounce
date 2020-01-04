@@ -7,7 +7,6 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.ServerUtils
-import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -18,6 +17,7 @@ import net.minecraft.client.gui.FontRenderer
 import net.minecraft.util.ChatAllowedCharacters
 import org.lwjgl.input.Keyboard
 import java.awt.Color
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 
 /**
@@ -29,6 +29,12 @@ import java.text.SimpleDateFormat
  */
 @ElementInfo(name = "Text")
 class Text : Element() {
+    companion object {
+        val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd")
+        val HOUR_FORMAT = SimpleDateFormat("HH:mm")
+
+        val DECIMAL_FORMAT = DecimalFormat("#.00")
+    }
 
     private val displayString = TextValue("DisplayText", "")
     private val redValue = IntegerValue("Red", 255, 0, 255)
@@ -46,33 +52,71 @@ class Text : Element() {
 
     private val display: String
         get() {
-            var textContent = if (displayString.get().isEmpty() && !editMode)
+            val textContent = if (displayString.get().isEmpty() && !editMode)
                 "Text Element"
             else
                 displayString.get()
 
-            if (textContent.contains("%")) {
-                textContent = StringUtils.replace(textContent, "%username%", mc.getSession().username)
-                textContent = StringUtils.replace(textContent, "%clientName%", LiquidBounce.CLIENT_NAME)
-                textContent = StringUtils.replace(textContent, "%clientVersion%", "b${LiquidBounce.CLIENT_VERSION}")
-                textContent = StringUtils.replace(textContent, "%clientCreator%", LiquidBounce.CLIENT_CREATOR)
-                textContent = StringUtils.replace(textContent, "%fps%", Minecraft.getDebugFPS().toString())
-                textContent = StringUtils.replace(textContent, "%date%", SimpleDateFormat("yyyy-MM-dd")
-                        .format(System.currentTimeMillis()))
-                textContent = StringUtils.replace(textContent, "%time%", SimpleDateFormat("HH:mm")
-                        .format(System.currentTimeMillis()))
-                textContent = StringUtils.replace(textContent, "%serverIp%", ServerUtils.getRemoteIp())
 
-                if (mc.thePlayer != null) {
-                    textContent = StringUtils.replace(textContent, "%x%", mc.thePlayer.posX.toString())
-                    textContent = StringUtils.replace(textContent, "%y%", mc.thePlayer.posY.toString())
-                    textContent = StringUtils.replace(textContent, "%z%", mc.thePlayer.posZ.toString())
-                    textContent = StringUtils.replace(textContent, "%ping%", EntityUtils.getPing(mc.thePlayer).toString())
-                }
-            }
-
-            return textContent
+            return multiReplace(textContent)
         }
+
+    private fun getReplacement(str: String): String? {
+        if (mc.thePlayer != null) {
+            when (str) {
+                "x" -> return DECIMAL_FORMAT.format(mc.thePlayer.posX)
+                "y" -> return DECIMAL_FORMAT.format(mc.thePlayer.posY)
+                "z" -> return DECIMAL_FORMAT.format(mc.thePlayer.posZ)
+                "xdp" -> return mc.thePlayer.posX.toString()
+                "ydp" -> return mc.thePlayer.posY.toString()
+                "zdp" -> return mc.thePlayer.posZ.toString()
+                "ping" -> return EntityUtils.getPing(mc.thePlayer).toString()
+            }
+        }
+
+        return when (str) {
+            "username" -> mc.getSession().username
+            "clientName" -> LiquidBounce.CLIENT_NAME
+            "clientVersion" -> "b${LiquidBounce.CLIENT_VERSION}"
+            "clientCreator" -> LiquidBounce.CLIENT_CREATOR
+            "fps" -> Minecraft.getDebugFPS().toString()
+            "date" -> DATE_FORMAT.format(System.currentTimeMillis())
+            "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
+            "serverIp" -> ServerUtils.getRemoteIp()
+            else -> null // Null = don't replace
+        }
+    }
+
+    private fun multiReplace(str: String): String {
+        var lastPercent = -1
+        val result = StringBuilder()
+        for (i in str.indices) {
+            if (str[i] == '%') {
+                if (lastPercent != -1) {
+                    if (lastPercent + 1 != i) {
+                        val replacement = getReplacement(str.substring(lastPercent + 1, i))
+
+                        if (replacement != null) {
+                            result.append(replacement)
+                            lastPercent = -1
+                            continue
+                        }
+                    }
+                    result.append(str, lastPercent, i)
+                }
+                lastPercent = i
+            } else if (lastPercent == -1) {
+                result.append(str[i])
+            }
+        }
+
+        if (lastPercent != -1) {
+            result.append(str, lastPercent, str.length)
+        }
+
+        return result.toString()
+    }
+
 
     override fun drawElement() {
         val color = Color(redValue.get(), greenValue.get(), blueValue.get()).rgb

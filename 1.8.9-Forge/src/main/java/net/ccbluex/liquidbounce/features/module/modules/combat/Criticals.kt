@@ -94,5 +94,6 @@ class Criticals : Module() {
             packet.onGround = false
     }
 
-    override fun getTag() = modeValue.get()
+    override val tag: String?
+        get() = modeValue.get()
 }

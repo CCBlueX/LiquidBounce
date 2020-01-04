@@ -38,13 +38,14 @@ class LiquidChat : Module() {
 
     init {
         state = true
+        array = false
     }
 
     private val jwtValue = object : BoolValue("JWT", false) {
         override fun onChanged(oldValue: Boolean, newValue: Boolean) {
-            if(getState()) {
-                setState(false)
-                setState(true)
+            if(state) {
+                state = false
+                state = true
             }
         }
     }
@@ -149,8 +150,8 @@ class LiquidChat : Module() {
                     jwtToken = packet.token
                     jwtValue.set(true)
 
-                    setState(false)
-                    setState(true)
+                    state = false
+                    state = true
                 }
             }
         }
@@ -174,7 +175,7 @@ class LiquidChat : Module() {
 
             override fun execute(args: Array<String>) {
                 if(args.size > 1) {
-                    if (!getState()) {
+                    if (!state) {
                         chat("§cError: §7LiquidChat is disabled!")
                         return
                     }
@@ -197,7 +198,7 @@ class LiquidChat : Module() {
 
             override fun execute(args: Array<String>) {
                 if(args.size > 2) {
-                    if (!getState()) {
+                    if (!state) {
                         chat("§cError: §7LiquidChat is disabled!")
                         return
                     }
@@ -230,16 +231,16 @@ class LiquidChat : Module() {
                                 jwtToken = StringUtils.toCompleteString(args, 2)
                                 jwtValue.set(true)
 
-                                if(getState()) {
-                                    setState(false)
-                                    setState(true)
+                                if(state) {
+                                    state = false
+                                    state = true
                                 }
                             }else
                                 chatSyntax("chattoken set <token>")
                         }
 
                         args[1].equals("generate", true) -> {
-                            if (!getState()) {
+                            if (!state) {
                                 chat("§cError: §7LiquidChat is disabled!")
                                 return
                             }
@@ -262,7 +263,7 @@ class LiquidChat : Module() {
         LiquidBounce.CLIENT.commandManager.registerCommand(object : Command("chatadmin", emptyArray()) {
 
             override fun execute(args: Array<String>) {
-                if (!getState()) {
+                if (!state) {
                     chat("§cError: §7LiquidChat is disabled!")
                     return
                 }
@@ -290,8 +291,6 @@ class LiquidChat : Module() {
         })
     }
 
-    override fun showArray() = false
-
     override fun onDisable() {
         loggedIn = false
         client.disconnect()
@@ -318,7 +317,7 @@ class LiquidChat : Module() {
 
         if(jwtValue.get() && jwtToken.isEmpty()) {
             ClientUtils.displayChatMessage("§7[§a§lChat§7] §cError: §7No token provided!")
-            setState(false)
+            state = false
             return
         }
 

@@ -21,7 +21,7 @@ import java.awt.Font
  * @author CCBlueX
  */
 class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameSettings,
-        ResourceLocation("textures/font/ascii.png"), Minecraft.getMinecraft().textureManager, false) {
+        ResourceLocation("textures/font/ascii.png"), null, false) {
 
     var defaultFont = FontRenderer(font)
     private var boldFont = FontRenderer(font.deriveFont(Font.BOLD))
@@ -61,8 +61,10 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     }
 
     private fun drawText(text: String?, x: Float, y: Float, colorHex: Int, ignoreColor: Boolean): Int {
-        if (text.isNullOrEmpty())
-            return 0
+        text ?: return 0
+
+        if (text.isEmpty())
+            return x.toInt()
 
         GL11.glPushMatrix()
         GL11.glTranslated(x - 1.5, y + 0.5, 0.0)
@@ -238,4 +240,6 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     override fun getCharWidth(character: Char) = getStringWidth(character.toString())
 
     override fun onResourceManagerReload(resourceManager: IResourceManager) {}
+
+    override fun bindTexture(location: ResourceLocation?) {}
 }

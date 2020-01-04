@@ -50,5 +50,6 @@ class NoWeb : Module() {
         }
     }
 
-    override fun getTag(): String = modeValue.get()
+    override val tag: String?
+        get() = modeValue.get()
 }
