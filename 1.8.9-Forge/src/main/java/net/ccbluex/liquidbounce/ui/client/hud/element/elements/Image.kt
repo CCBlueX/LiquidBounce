@@ -1,117 +1,122 @@
-package net.ccbluex.liquidbounce.ui.client.hud.element.elements;
+package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import com.google.gson.JsonElement;
-import net.ccbluex.liquidbounce.ui.client.hud.GuiHudDesigner;
-import net.ccbluex.liquidbounce.ui.client.hud.element.Element;
-import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo;
-import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
-import net.ccbluex.liquidbounce.utils.render.RenderUtils;
-import net.ccbluex.liquidbounce.value.TextValue;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.util.ResourceLocation;
+import com.google.gson.JsonElement
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.utils.misc.MiscUtils
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.value.TextValue
+import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.util.ResourceLocation
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.nio.file.Files
+import java.util.*
+import javax.imageio.ImageIO
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.nio.file.Files;
-import java.util.Base64;
 
 /**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
+ * CustomHUD image element
  *
- * @game Minecraft
- * @author CCBlueX
+ * Draw custom image
  */
 @ElementInfo(name = "Image")
-public class Image extends Element {
+class Image : Element() {
 
-    private final TextValue image = new TextValue("Image", "") {
+    companion object {
 
-        @Override
-        public void fromJson(JsonElement element) {
-            super.fromJson(element);
+        /**
+         * Create default element
+         */
+        fun default(): Image {
+            val image = Image()
 
-            if(image.get().isEmpty()) return;
+            image.x = 0.0
+            image.y = 0.0
 
-            setImage(image.get());
+            return image
         }
 
-        @Override
-        protected void onChanged(final String oldValue, final String newValue) {
-            if(image.get().isEmpty()) return;
+    }
 
-            setImage(image.get());
+    private val image: TextValue = object : TextValue("Image", "") {
+
+        override fun fromJson(element: JsonElement) {
+            super.fromJson(element)
+
+            if (get().isEmpty())
+                return
+
+            setImage(get())
         }
-    };
 
-    private final ResourceLocation resourceLocation = new ResourceLocation(RandomUtils.randomNumber(128));
+        override fun onChanged(oldValue: String, newValue: String) {
+            if (get().isEmpty())
+                return
 
-    private int width = 64;
-    private int height = 64;
-
-    @Override
-    public void drawElement() {
-        final int[] location = getLocationFromFacing();
-
-        RenderUtils.drawImage(resourceLocation, location[0], location[1], width / 2, height / 2);
-
-        if (mc.currentScreen instanceof GuiHudDesigner)
-            RenderUtils.drawBorderedRect(location[0], location[1], location[0] + width / 2, location[1] + height / 2, 3, Integer.MIN_VALUE, 0);
-    }
-
-    @Override
-    public void destroyElement() {
+            setImage(get())
+        }
 
     }
 
-    @Override
-    public void updateElement() {
+    private val resourceLocation = ResourceLocation(RandomUtils.randomNumber(128))
+    private var width = 64
+    private var height = 64
 
+    /**
+     * Draw element
+     */
+    override fun drawElement(): Border {
+        RenderUtils.drawImage(resourceLocation, 0, 0, width / 2, height / 2)
+
+        return Border(0F, 0F, width / 2F, height / 2F)
     }
 
-    @Override
-    public void handleMouseClick(int mouseX, int mouseY, int mouseButton) {
+    override fun createElement(): Boolean {
+        val file = MiscUtils.openFileChooser() ?: return false
+
+        if (!file.exists()) {
+            MiscUtils.showErrorPopup("Error", "The file does not exist.")
+            return false
+        }
+
+        if (file.isDirectory) {
+            MiscUtils.showErrorPopup("Error", "The file is a directory.")
+            return false
+        }
+
+        setImage(file)
+        return true
     }
 
-    @Override
-    public void handleKey(char c, int keyCode) {
-    }
-
-    @Override
-    public boolean isMouseOverElement(int mouseX, int mouseY) {
-        final int[] location = getLocationFromFacing();
-
-        return mouseX >= location[0] && mouseY >= location[1] && mouseX <= location[0] + width && mouseY <= location[1] + height;
-    }
-
-    private Image setImage(final String image) {
+    private fun setImage(image: String): Image {
         try {
-            this.image.changeValue(image);
+            this.image.changeValue(image)
 
-            final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Base64.getDecoder().decode(image));
-            final BufferedImage bufferedImage = ImageIO.read(byteArrayInputStream);
-            byteArrayInputStream.close();
+            val byteArrayInputStream = ByteArrayInputStream(Base64.getDecoder().decode(image))
+            val bufferedImage = ImageIO.read(byteArrayInputStream)
+            byteArrayInputStream.close()
 
-            width = bufferedImage.getWidth();
-            height = bufferedImage.getHeight();
+            width = bufferedImage.width
+            height = bufferedImage.height
 
-            mc.getTextureManager().loadTexture(resourceLocation, new DynamicTexture(bufferedImage));
-        }catch(final Exception e) {
-            e.printStackTrace();
+            mc.textureManager.loadTexture(resourceLocation, DynamicTexture(bufferedImage))
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
-        return this;
+        return this
     }
 
-    public Image setImage(final File image) {
+    fun setImage(image: File): Image {
         try {
-            setImage(Base64.getEncoder().encodeToString(Files.readAllBytes(image.toPath())));
-        }catch(final Exception e) {
-            e.printStackTrace();
+            setImage(Base64.getEncoder().encodeToString(Files.readAllBytes(image.toPath())))
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
 
-        return this;
+        return this
     }
+
 }

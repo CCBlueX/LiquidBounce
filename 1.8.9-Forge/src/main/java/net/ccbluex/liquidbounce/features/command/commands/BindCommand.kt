@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.ui.client.hud.element.elements.notifications.Notification
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import org.lwjgl.input.Keyboard
 
 /**

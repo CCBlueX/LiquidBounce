@@ -1,133 +1,107 @@
-package net.ccbluex.liquidbounce.ui.client.hud.element.elements;
+package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.ui.client.hud.GuiHudDesigner;
-import net.ccbluex.liquidbounce.ui.client.hud.element.Element;
-import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo;
-import net.ccbluex.liquidbounce.utils.render.RenderUtils;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.entity.EntityLivingBase;
-import org.lwjgl.opengl.GL11;
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.OpenGlHelper
+import net.minecraft.client.renderer.RenderHelper
+import net.minecraft.entity.EntityLivingBase
+import org.lwjgl.opengl.GL11
+import kotlin.math.abs
+import kotlin.math.atan
 
 /**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
+ * CustomHUD Model element
  *
- * @game Minecraft
- * @author CCBlueX
+ * Draw mini figure of your character to the HUD
  */
 @ElementInfo(name = "Model")
-public class Model extends Element {
+class Model : Element() {
 
-    private float rotate;
-    private boolean rotateDirection;
+    private var rotate = 0F
+    private var rotateDirection = false
 
-    @Override
-    public void drawElement() {
-        final int delta = RenderUtils.deltaTime;
+    /**
+     * Draw element
+     */
+    override fun drawElement(): Border {
+        val delta = RenderUtils.deltaTime
 
-        if(rotateDirection) {
-            if(rotate <= 70) {
-                rotate += 0.12F * delta;
-            }else{
-                rotateDirection = false;
-                rotate = 70;
+        if (rotateDirection) {
+            if (rotate <= 70F) {
+                rotate += 0.12F * delta
+            } else {
+                rotateDirection = false
+                rotate = 70F
             }
-        }else{
-            if(rotate >= -70) {
-                rotate -= 0.12F * delta;
-            }else{
-                rotateDirection = true;
-                rotate = -70;
+        } else {
+            if (rotate >= -70F) {
+                rotate -= 0.12F * delta
+            } else {
+                rotateDirection = true
+                rotate = -70F
             }
         }
 
-        final int[] location = getLocationFromFacing();
+        var pitch = mc.thePlayer.rotationPitch
+        pitch = if (pitch > 0) -mc.thePlayer.rotationPitch else abs(mc.thePlayer.rotationPitch)
 
-        final EntityPlayerSP entityPlayerSP = mc.thePlayer;
+        drawEntityOnScreen(rotate, pitch, mc.thePlayer)
 
-        float pitch = entityPlayerSP.rotationPitch;
-
-        if(pitch > 0)
-            pitch = -entityPlayerSP.rotationPitch;
-        else
-            pitch = Math.abs(entityPlayerSP.rotationPitch);
-
-        drawEntityOnScreen(location[0], location[1], rotate, pitch, entityPlayerSP);
-
-        if (mc.currentScreen instanceof GuiHudDesigner)
-            RenderUtils.drawBorderedRect(location[0] + 30, location[1] + 10, location[0] - 30, location[1] - 100, 3, Integer.MIN_VALUE, 0);
+        return Border(30F, 10F, -30F, -100F)
     }
 
-    @Override
-    public void destroyElement() {
+    /**
+     * Draw [entityLivingBase] to screen
+     */
+    private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: EntityLivingBase) {
+        GlStateManager.resetColor()
+        GL11.glColor4f(1F, 1F, 1F, 1F)
+        GlStateManager.enableColorMaterial()
+        GlStateManager.pushMatrix()
+        GlStateManager.translate(0F, 0F, 50F)
+        GlStateManager.scale(-50F, 50F, 50F)
+        GlStateManager.rotate(180F, 0F, 0F, 1F)
 
-    }
+        val renderYawOffset = entityLivingBase.renderYawOffset
+        val rotationYaw = entityLivingBase.rotationYaw
+        val rotationPitch = entityLivingBase.rotationPitch
+        val prevRotationYawHead = entityLivingBase.prevRotationYawHead
+        val rotationYawHead = entityLivingBase.rotationYawHead
 
-    @Override
-    public void updateElement() {
+        GlStateManager.rotate(135F, 0F, 1F, 0F)
+        RenderHelper.enableStandardItemLighting()
+        GlStateManager.rotate(-135F, 0F, 1F, 0F)
+        GlStateManager.rotate(-atan(pitch / 40F) * 20.0F, 1F, 0F, 0F)
 
-    }
+        entityLivingBase.renderYawOffset = atan(yaw / 40F) * 20F
+        entityLivingBase.rotationYaw = atan(yaw / 40F) * 40F
+        entityLivingBase.rotationPitch = -atan(pitch / 40F) * 20F
+        entityLivingBase.rotationYawHead = entityLivingBase.rotationYaw
+        entityLivingBase.prevRotationYawHead = entityLivingBase.rotationYaw
 
-    @Override
-    public void handleMouseClick(int mouseX, int mouseY, int mouseButton) {
+        GlStateManager.translate(0F, 0F, 0F)
 
-    }
+        val renderManager = mc.renderManager
+        renderManager.setPlayerViewY(180F)
+        renderManager.isRenderShadow = false
+        renderManager.renderEntityWithPosYaw(entityLivingBase, 0.0, 0.0, 0.0, 0F, 1F)
+        renderManager.isRenderShadow = true
 
-    @Override
-    public void handleKey(char c, int keyCode) {
+        entityLivingBase.renderYawOffset = renderYawOffset
+        entityLivingBase.rotationYaw = rotationYaw
+        entityLivingBase.rotationPitch = rotationPitch
+        entityLivingBase.prevRotationYawHead = prevRotationYawHead
+        entityLivingBase.rotationYawHead = rotationYawHead
 
-    }
-
-    @Override
-    public boolean isMouseOverElement(int mouseX, int mouseY) {
-        final int[] location = getLocationFromFacing();
-
-        return mouseX >= location[0] - 30 && mouseY >= location[1] - 100 && mouseX <= location[0] + 30 && mouseY <= location[1] + 10;
-    }
-
-    private void drawEntityOnScreen(int x, int y, float yaw, float pitch, EntityLivingBase entityLivingBase) {
-        GlStateManager.resetColor();
-        GL11.glColor4f(1F, 1F, 1F, 1F);
-        GlStateManager.enableColorMaterial();
-        GlStateManager.pushMatrix();
-        GlStateManager.translate((float) x, (float) y, 50.0F);
-        GlStateManager.scale((float) (-50), (float) 50, (float) 50);
-        GlStateManager.rotate(180.0F, 0.0F, 0.0F, 1.0F);
-        float var6 = entityLivingBase.renderYawOffset;
-        float var7 = entityLivingBase.rotationYaw;
-        float var8 = entityLivingBase.rotationPitch;
-        float var9 = entityLivingBase.prevRotationYawHead;
-        float var10 = entityLivingBase.rotationYawHead;
-        GlStateManager.rotate(135.0F, 0.0F, 1.0F, 0.0F);
-        RenderHelper.enableStandardItemLighting();
-        GlStateManager.rotate(-135.0F, 0.0F, 1.0F, 0.0F);
-        GlStateManager.rotate(-((float) Math.atan(pitch / 40.0F)) * 20.0F, 1.0F, 0.0F, 0.0F);
-        entityLivingBase.renderYawOffset = (float) Math.atan(yaw / 40.0F) * 20.0F;
-        entityLivingBase.rotationYaw = (float) Math.atan(yaw / 40.0F) * 40.0F;
-        entityLivingBase.rotationPitch = -((float) Math.atan(pitch / 40.0F)) * 20.0F;
-        entityLivingBase.rotationYawHead = entityLivingBase.rotationYaw;
-        entityLivingBase.prevRotationYawHead = entityLivingBase.rotationYaw;
-        GlStateManager.translate(0.0F, 0.0F, 0.0F);
-        RenderManager var11 = mc.getRenderManager();
-        var11.setPlayerViewY(180.0F);
-        var11.setRenderShadow(false);
-        var11.renderEntityWithPosYaw(entityLivingBase, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F);
-        var11.setRenderShadow(true);
-        entityLivingBase.renderYawOffset = var6;
-        entityLivingBase.rotationYaw = var7;
-        entityLivingBase.rotationPitch = var8;
-        entityLivingBase.prevRotationYawHead = var9;
-        entityLivingBase.rotationYawHead = var10;
-        GlStateManager.popMatrix();
-        RenderHelper.disableStandardItemLighting();
-        GlStateManager.disableRescaleNormal();
-        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
-        GlStateManager.disableTexture2D();
-        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
-        GlStateManager.resetColor();
+        GlStateManager.popMatrix()
+        RenderHelper.disableStandardItemLighting()
+        GlStateManager.disableRescaleNormal()
+        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
+        GlStateManager.disableTexture2D()
+        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
+        GlStateManager.resetColor()
     }
 }

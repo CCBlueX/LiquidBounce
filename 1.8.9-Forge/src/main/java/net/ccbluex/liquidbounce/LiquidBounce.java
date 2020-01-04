@@ -20,7 +20,6 @@ import net.ccbluex.liquidbounce.tabs.ExploitsTab;
 import net.ccbluex.liquidbounce.tabs.HeadsTab;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui;
-import net.ccbluex.liquidbounce.ui.client.hud.DefaultHUD;
 import net.ccbluex.liquidbounce.ui.client.hud.HUD;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
@@ -158,7 +157,7 @@ public class LiquidBounce {
         }
 
         // Set HUD
-        hud = new DefaultHUD();
+        hud = HUD.createDefault();
         fileManager.loadConfig(fileManager.hudConfig);
 
         // Disable fastrender

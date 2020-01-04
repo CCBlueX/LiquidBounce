@@ -1,129 +1,69 @@
-package net.ccbluex.liquidbounce.ui.client.hud.element.elements;
+package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.ui.client.hud.GuiHudDesigner;
-import net.ccbluex.liquidbounce.ui.client.hud.element.Element;
-import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo;
-import net.ccbluex.liquidbounce.ui.font.Fonts;
-import net.ccbluex.liquidbounce.utils.render.RenderUtils;
-import net.ccbluex.liquidbounce.value.BoolValue;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.PotionEffect;
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
+import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FontValue
+import net.minecraft.client.resources.I18n
+import net.minecraft.potion.Potion
 
 /**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
+ * CustomHUD effects element
  *
- * @game Minecraft
- * @author CCBlueX
+ * Shows a list of active potion effects
  */
 @ElementInfo(name = "Effects")
-public class Effects extends Element {
+class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
+              side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side) {
 
-    private FontRenderer fontRenderer = Fonts.font35;
-    private final BoolValue shadow = new BoolValue("Shadow", true);
+    private val fontValue = FontValue("Font", Fonts.font35)
+    private val shadow = BoolValue("Shadow", true)
 
-    private int x2;
-    private int y2;
+    /**
+     * Draw element
+     */
+    override fun drawElement(): Border {
+        var y = 0
+        var width = 0F
 
-    @Override
-    public void drawElement() {
-        final int[] location = getLocationFromFacing();
+        val fontRenderer = fontValue.get()
 
-        int y = location[1];
-        int width = 0;
-        for (final PotionEffect effect : mc.thePlayer.getActivePotionEffects()) {
-            final Potion potion = Potion.potionTypes[effect.getPotionID()];
-            String name = I18n.format(potion.getName());
+        for (effect in mc.thePlayer.activePotionEffects) {
+            val potion = Potion.potionTypes[effect.potionID]
 
-            if(effect.getAmplifier() == 1)
-                name = name + " II";
-            else if(effect.getAmplifier() == 2)
-                name = name + " III";
-            else if(effect.getAmplifier() == 3)
-                name = name + " IV";
-            else if(effect.getAmplifier() == 4)
-                name = name + " V";
-            else if(effect.getAmplifier() == 5)
-                name = name + " VI";
-            else if(effect.getAmplifier() == 6)
-                name = name + " VII";
-            else if(effect.getAmplifier() == 7)
-                name = name + " VIII";
-            else if(effect.getAmplifier() == 8)
-                name = name + " IX";
-            else if(effect.getAmplifier() == 9)
-                name = name + " X";
-            else if(effect.getAmplifier() > 10)
-                name = name + " X+";
-            else
-                name = name + " I";
+            val number = when {
+                effect.amplifier == 1 -> "II"
+                effect.amplifier == 2 -> "III"
+                effect.amplifier == 3 -> "IV"
+                effect.amplifier == 4 -> "V"
+                effect.amplifier == 5 -> "VI"
+                effect.amplifier == 6 -> "VII"
+                effect.amplifier == 7 -> "VIII"
+                effect.amplifier == 8 -> "IX"
+                effect.amplifier == 9 -> "X"
+                effect.amplifier > 10 -> "X+"
+                else -> "I"
+            }
 
-            name = name + "§f: §7" + Potion.getDurationString(effect);
+            val name = "${I18n.format(potion.name)} $number§f: §7${Potion.getDurationString(effect)}"
+            val stringWidth = fontRenderer.getStringWidth(name).toFloat()
 
-            if(width < fontRenderer.getStringWidth(name))
-                width = fontRenderer.getStringWidth(name);
+            if (width < stringWidth)
+                width = stringWidth
 
-            fontRenderer.drawString(name, location[0] - fontRenderer.getStringWidth(name), y, potion.getLiquidColor(), shadow.get());
-            y -= fontRenderer.FONT_HEIGHT;
+            fontRenderer.drawString(name, stringWidth, y.toFloat(), potion.liquidColor, shadow.get())
+            y -= fontRenderer.FONT_HEIGHT
         }
 
-        if(width == 0)
-            width = 40;
+        if (width == 0F)
+            width = 40F
 
-        if(location[1] == y)
-            y = location[1] - 10;
+        if (y == 0)
+            y = 10
 
-        this.y2 = y + fontRenderer.FONT_HEIGHT - 2;
-        this.x2 = location[0] - width;
-
-        if (mc.currentScreen instanceof GuiHudDesigner)
-            RenderUtils.drawBorderedRect(location[0] + 2, location[1] + fontRenderer.FONT_HEIGHT, x2 - 2, y2, 3, Integer.MIN_VALUE, 0);
-    }
-
-    @Override
-    public void destroyElement() {
-
-    }
-
-    @Override
-    public void updateElement() {
-
-    }
-
-    @Override
-    public void handleMouseClick(int mouseX, int mouseY, int mouseButton) {
-
-    }
-
-    @Override
-    public void handleKey(char c, int keyCode) {
-
-    }
-
-    @Override
-    public boolean isMouseOverElement(int mouseX, int mouseY) {
-        final int[] location = getLocationFromFacing();
-
-        return mouseX <= location[0] + 2 && mouseY <= location[1] + fontRenderer.FONT_HEIGHT && mouseX >= x2 - 2 && mouseY >= y2;
-    }
-
-    public FontRenderer getFontRenderer() {
-        return fontRenderer;
-    }
-
-    public Effects setFontRenderer(FontRenderer fontRenderer) {
-        this.fontRenderer = fontRenderer;
-        return this;
-    }
-
-    public boolean isShadow() {
-        return shadow.get();
-    }
-
-    public Effects setShadow(final boolean b) {
-        shadow.set(b);
-        return this;
+        return Border(2F, fontRenderer.FONT_HEIGHT.toFloat(), width, y + fontRenderer.FONT_HEIGHT - 2F)
     }
 }

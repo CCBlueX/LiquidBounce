@@ -2,31 +2,28 @@ package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager.getModules
-import net.ccbluex.liquidbounce.ui.client.hud.GuiHudDesigner
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
-import net.ccbluex.liquidbounce.ui.client.hud.element.Facing.Horizontal
-import net.ccbluex.liquidbounce.ui.client.hud.element.Facing.Vertical
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Horizontal
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Vertical
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.gui.FontRenderer
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.renderer.GlStateManager
 import java.awt.Color
 
 /**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
+ * CustomHUD Arraylist element
  *
- * @game Minecraft
- * @author CCBlueX
+ * Shows a list of enabled modules
  */
 @ElementInfo(name = "Arraylist")
-class Arraylist : Element() {
+class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
+                side: Side = Side(Horizontal.RIGHT, Vertical.UP)) : Element(x, y, scale, side) {
 
     private val colorModeValue = ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
     private val colorRedValue = IntegerValue("Text-R", 0, 0, 255)
@@ -52,16 +49,16 @@ class Arraylist : Element() {
     private val textHeightValue = FloatValue("TextHeight", 11F, 1F, 20F)
     private val textYValue = FloatValue("TextY", 1F, 0F, 20F)
     private val tagsArrayColor = BoolValue("TagsArrayColor", false)
-
-    var fontRenderer: FontRenderer = Fonts.font40
-        private set
+    private val fontValue = FontValue("Font", Fonts.font40)
 
     private var x2 = 0
     private var y2 = 0F
 
     private var modules = emptyList<Module>()
 
-    override fun drawElement() {
+    override fun drawElement(): Border? {
+        val fontRenderer = fontValue.get()
+
         // Slide animation - update every render
         val delta = RenderUtils.deltaTime
 
@@ -90,7 +87,7 @@ class Arraylist : Element() {
         }
 
         // Draw arraylist
-        val location = locationFromFacing
+        val location = arrayOf(0, 0)
         val colorMode = colorModeValue.get()
         val rectColorMode = rectColorModeValue.get()
         val backgroundColorMode = backgroundColorModeValue.get()
@@ -109,7 +106,7 @@ class Arraylist : Element() {
         val brightness = brightnessValue.get()
 
 
-        when (facing.horizontal!!) {
+        when (side.horizontal) {
             Horizontal.RIGHT, Horizontal.MIDDLE -> {
                 modules.forEachIndexed { index, module ->
                     var displayString = if (!tags.get())
@@ -122,8 +119,8 @@ class Arraylist : Element() {
                         displayString = displayString.toUpperCase()
 
                     val xPos = location[0] - module.slide - 2
-                    val yPos = location[1] + (if (facing.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
-                            if (facing.vertical == Vertical.DOWN) index + 1 else index
+                    val yPos = location[1] + (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
+                            if (side.vertical == Vertical.DOWN) index + 1 else index
                     val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
                     RenderUtils.drawRect(
@@ -173,8 +170,8 @@ class Arraylist : Element() {
 
                     val width = fontRenderer.getStringWidth(displayString)
                     val xPos = location[0] - (width - module.slide) + if (rectMode.equals("left", true)) 5 else 2
-                    val yPos = location[1] + (if (facing.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
-                            if (facing.vertical == Vertical.DOWN) index + 1 else index
+                    val yPos = location[1] + (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
+                            if (side.vertical == Vertical.DOWN) index + 1 else index
                     val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
                     RenderUtils.drawRect(
@@ -218,7 +215,7 @@ class Arraylist : Element() {
             x2 = Int.MIN_VALUE
 
             for (module in modules) {
-                when (facing.horizontal!!) {
+                when (side.horizontal) {
                     Horizontal.RIGHT, Horizontal.MIDDLE -> {
                         val xPos = location[0] - module.slide.toInt() - 2
                         if (x2 == Int.MIN_VALUE || xPos < x2) x2 = xPos
@@ -229,46 +226,17 @@ class Arraylist : Element() {
                     }
                 }
             }
-            y2 = location[1] + (if (facing.vertical == Vertical.DOWN) -textSpacer else textSpacer) * modules.size
+            y2 = location[1] + (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) * modules.size
 
-            RenderUtils.drawBorderedRect(location[0].toFloat(), location[1] - 1F, x2 - 7F, y2, 3F, Int.MIN_VALUE, 0)
+            return Border(location[0].toFloat(), location[1] - 1F, x2 - 7F, y2)
         }
         GlStateManager.resetColor()
+        return null
     }
 
     override fun updateElement() {
         modules = getModules()
                 .filter { it.array && it.slide > 0 }
-                .sortedBy { -fontRenderer.getStringWidth(if (upperCaseValue.get()) (if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName).toUpperCase() else if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName) }
-    }
-
-    override fun destroyElement() {}
-
-    override fun handleMouseClick(mouseX: Int, mouseY: Int, mouseButton: Int) {}
-
-    override fun handleKey(c: Char, keyCode: Int) {}
-
-    override fun isMouseOverElement(mouseX: Int, mouseY: Int): Boolean {
-        val location = locationFromFacing
-        val widthCollide = when (facing.horizontal!!) {
-            Horizontal.RIGHT, Horizontal.MIDDLE ->
-                mouseX >= x2 - 7 && mouseX <= location[0]
-            Horizontal.LEFT ->
-                mouseX <= x2 - 7 && mouseX >= location[0]
-        }
-
-        val heightCollide = when (facing.vertical!!) {
-            Vertical.UP, Vertical.MIDDLE ->
-                mouseY >= location[1] - 2 && mouseY <= y2
-            Vertical.DOWN ->
-                mouseY <= location[1] - 2 && mouseY >= y2
-        }
-
-        return widthCollide && heightCollide
-    }
-
-    fun setFontRenderer(fontRenderer: FontRenderer): Arraylist {
-        this.fontRenderer = fontRenderer
-        return this
+                .sortedBy { -fontValue.get().getStringWidth(if (upperCaseValue.get()) (if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName).toUpperCase() else if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName) }
     }
 }

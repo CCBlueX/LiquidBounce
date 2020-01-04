@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.ui.client.hud.element.elements.notifications.Notification
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.SettingsUtils
 import net.ccbluex.liquidbounce.utils.misc.NetworkUtils
 import java.net.URL

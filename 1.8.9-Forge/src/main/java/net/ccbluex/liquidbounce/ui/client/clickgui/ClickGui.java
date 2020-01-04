@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.elements.Element;
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle;
-import net.ccbluex.liquidbounce.ui.client.hud.GuiHudDesigner;
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.audio.PositionedSoundRecord;

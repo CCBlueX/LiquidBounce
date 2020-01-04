@@ -1,24 +1,23 @@
-package net.ccbluex.liquidbounce.ui.client.hud.element.elements;
+package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.features.module.Module;
-import net.ccbluex.liquidbounce.features.module.ModuleCategory;
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
-import net.ccbluex.liquidbounce.ui.client.hud.element.Element;
-import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo;
-import net.ccbluex.liquidbounce.ui.client.hud.element.Facing;
-import net.ccbluex.liquidbounce.ui.font.Fonts;
-import net.ccbluex.liquidbounce.utils.render.ColorUtils;
-import net.ccbluex.liquidbounce.utils.render.RenderUtils;
-import net.ccbluex.liquidbounce.value.BoolValue;
-import net.ccbluex.liquidbounce.value.IntegerValue;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.GlStateManager;
-
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.lwjgl.input.Keyboard.*;
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.ModuleManager.getModules
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
+import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.FontValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.client.gui.FontRenderer
+import net.minecraft.client.renderer.GlStateManager
+import org.lwjgl.input.Keyboard
+import java.awt.Color
 
 /**
  * LiquidBounce Hacked Client
@@ -28,294 +27,278 @@ import static org.lwjgl.input.Keyboard.*;
  * @author CCBlueX
  */
 @ElementInfo(name = "TabGUI")
-public class TabGUI extends Element {
+class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
 
-    private final IntegerValue redValue = new IntegerValue("Rectangle Red", 0, 0, 255);
-    private final IntegerValue greenValue = new IntegerValue("Rectangle Green", 148, 0, 255);
-    private final IntegerValue blueValue = new IntegerValue("Rectangle Blue", 255, 0, 255);
-    private final IntegerValue alphaValue = new IntegerValue("Rectangle Alpha", 140, 0, 255);
-    private final BoolValue rectangleRainbow = new BoolValue("Rectangle Rainbow", false);
+    private val redValue = IntegerValue("Rectangle Red", 0, 0, 255)
+    private val greenValue = IntegerValue("Rectangle Green", 148, 0, 255)
+    private val blueValue = IntegerValue("Rectangle Blue", 255, 0, 255)
+    private val alphaValue = IntegerValue("Rectangle Alpha", 140, 0, 255)
+    private val rectangleRainbow = BoolValue("Rectangle Rainbow", false)
+    private val backgroundRedValue = IntegerValue("Background Red", 0, 0, 255)
+    private val backgroundGreenValue = IntegerValue("Background Green", 0, 0, 255)
+    private val backgroundBlueValue = IntegerValue("Background Blue", 0, 0, 255)
+    private val backgroundAlphaValue = IntegerValue("Background Alpha", 150, 0, 255)
+    private val borderValue = BoolValue("Border", true)
+    private val borderStrength = FloatValue("Border Strength", 2F, 1F, 5F)
+    private val borderRedValue = IntegerValue("Border Red", 0, 0, 255)
+    private val borderGreenValue = IntegerValue("Border Green", 0, 0, 255)
+    private val borderBlueValue = IntegerValue("Border Blue", 0, 0, 255)
+    private val borderAlphaValue = IntegerValue("Border Alpha", 150, 0, 255)
+    private val borderRainbow = BoolValue("Border Rainbow", false)
+    private val arrowsValue = BoolValue("Arrows", true)
+    private val fontValue = FontValue("Font", Fonts.font35)
+    private val textShadow = BoolValue("TextShadow", false)
+    private val textFade = BoolValue("TextFade", true)
+    private val textPositionY = FloatValue("TextPosition-Y", 2F, 0F, 5F)
+    private val width = FloatValue("Width", 60F, 55F, 100F)
+    private val tabHeight = FloatValue("TabHeight", 12F, 10F, 15F)
+    private val upperCaseValue = BoolValue("UpperCase", false)
 
-    private final IntegerValue backgroundRedValue = new IntegerValue("Background Red", 0, 0, 255);
-    private final IntegerValue backgroundGreenValue = new IntegerValue("Background Green", 0, 0, 255);
-    private final IntegerValue backgroundBlueValue = new IntegerValue("Background Blue", 0, 0, 255);
-    private final IntegerValue backgroundAlphaValue = new IntegerValue("Background Alpha", 150, 0, 255);
+    private val tabs = mutableListOf<Tab>()
 
-    private final BoolValue borderValue = new BoolValue("Border", true);
+    private var categoryMenu = true
+    private var selectedCategory = 0
+    private var selectedModule = 0
 
-    private final IntegerValue borderStrength = new IntegerValue("Border Strength", 2, 1, 5);
+    private var tabY = 0F
+    private var itemY = 0F
 
-    private final IntegerValue borderRedValue = new IntegerValue("Border Red", 0, 0, 255);
-    private final IntegerValue borderGreenValue = new IntegerValue("Border Green", 0, 0, 255);
-    private final IntegerValue borderBlueValue = new IntegerValue("Border Blue", 0, 0, 255);
-    private final IntegerValue borderAlphaValue = new IntegerValue("Border Alpha", 150, 0, 255);
+    init {
+        for (category in ModuleCategory.values()) {
+            val tab = Tab(category.displayName)
 
-    private final BoolValue borderRainbow = new BoolValue("Border Rainbow", false);
+            getModules()
+                    .filter { module: Module -> category == module.category }
+                    .forEach { e: Module -> tab.modules.add(e) }
 
-    private final BoolValue arrowsValue = new BoolValue("Arrows", true);
-
-    private FontRenderer fontRenderer = Fonts.font35;
-    private final BoolValue textShadow = new BoolValue("TextShadow", false);
-    private final BoolValue textFade = new BoolValue("TextFade", true);
-    private final IntegerValue textPositionY = new IntegerValue("TextPosition-Y", 2, 0, 5);
-
-    private final IntegerValue width = new IntegerValue("Width", 60, 55, 100);
-    private final IntegerValue tabHeight = new IntegerValue("TabHeight", 12, 10, 15);
-
-    private final BoolValue upperCaseValue = new BoolValue("UpperCase", false);
-
-    private int guiHeight;
-
-    private float tabY;
-    private float itemY;
-
-    private int selectedTab;
-    private int selectedItem;
-    private boolean mainMenu = true;
-
-    private final List<Tab> tabs = new ArrayList<>();
-
-    public TabGUI() {
-        for(final ModuleCategory category : ModuleCategory.values()) {
-            final Tab tab = new Tab(category.getDisplayName());
-
-            ModuleManager.getModules().stream().filter(module -> category.equals(module.getCategory())).forEach(tab.modules :: add);
-
-            tabs.add(tab);
+            tabs.add(tab)
         }
     }
 
-    @Override
-    public void drawElement() {
-        final int delta = RenderUtils.deltaTime;
+    override fun drawElement(): Border? {
+        updateAnimation()
 
-        int xPos = tabHeight.get() * selectedTab;
-        if((int) tabY != xPos) {
-            if(xPos > tabY)
-                tabY += 0.1F * delta;
-            else
-                tabY -= 0.1F * delta;
-        }else tabY = xPos;
+        val fontRenderer = fontValue.get()
 
-        int xPos2 = tabHeight.get() * selectedItem;
-        if((int) itemY != xPos2) {
-            if(xPos2 > itemY)
-                itemY += 0.1F * delta;
-            else
-                itemY -= 0.1F * delta;
-        }else itemY = xPos2;
-
-        if(mainMenu)
-            itemY = 0;
-
-        if(textFade.get()) {
-            for(int i = 0; i < tabs.size(); ++i) {
-                final Tab tab = tabs.get(i);
-
-                if(i == selectedTab) {
-                    if(tab.textFade < 4) tab.textFade += 0.05F * delta;
-                    if(tab.textFade > 4) tab.textFade = 4;
-                }else{
-                    if(tab.textFade > 0) tab.textFade -= 0.05F * delta;
-                    if(tab.textFade < 0) tab.textFade = 0;
-                }
-            }
-        }else{
-            for(final Tab tab : tabs) {
-                if(tab.textFade > 0) tab.textFade -= 0.05F * delta;
-                if(tab.textFade < 0) tab.textFade = 0;
-            }
-        }
-
-        final int[] loc = getLocationFromFacing();
-
-        drawGui(loc[0], loc[1]);
-    }
-
-    @Override
-    public void destroyElement() {
-
-    }
-
-    @Override
-    public void updateElement() {
-
-    }
-
-    @Override
-    public void handleMouseClick(int mouseX, int mouseY, int mouseButton) {
-    }
-
-    @Override
-    public void handleKey(char c, int keyCode) {
-        switch(keyCode) {
-            case KEY_UP:
-                parseAction(Action.UP);
-                break;
-            case KEY_DOWN:
-                parseAction(Action.DOWN);
-                break;
-            case KEY_RIGHT:
-                parseAction(getFacing().getHorizontal() == Facing.Horizontal.RIGHT ? Action.LEFT : Action.RIGHT);
-                break;
-            case KEY_LEFT:
-                parseAction(getFacing().getHorizontal() == Facing.Horizontal.RIGHT ? Action.RIGHT : Action.LEFT);
-                break;
-            case KEY_RETURN:
-                parseAction(Action.TOGGLE);
-                break;
-        }
-    }
-
-    @Override
-    public boolean isMouseOverElement(int mouseX, int mouseY) {
-        final int[] location = getLocationFromFacing();
-
-        return mouseX >= location[0] && mouseY >= location[1] && mouseX <= location[0] + width.get() && mouseY <= location[1] + guiHeight;
-    }
-
-    private void drawGui(final int posX, final int posY) {
-        final Color color = !rectangleRainbow.get() ? new Color(redValue.get(), greenValue.get(), blueValue.get(), alphaValue.get()) : ColorUtils.rainbow(400000000L, alphaValue.get());
-        final Color backgroundColor = new Color(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get());
-        final Color borderColor = !borderRainbow.get() ? new Color(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get()) : ColorUtils.rainbow(400000000L, borderAlphaValue.get());
-
-        guiHeight = tabs.size() * tabHeight.get();
-        if(borderValue.get())
-            RenderUtils.drawBorderedRect(posX - 1, posY, posX + width.get(), posY + guiHeight, borderStrength.get(), borderColor.getRGB(), backgroundColor.getRGB());
+        // Color
+        val color = if (!rectangleRainbow.get())
+            Color(redValue.get(), greenValue.get(), blueValue.get(), alphaValue.get())
         else
-            RenderUtils.drawRect(posX - 1, posY, posX + width.get(), posY + guiHeight, backgroundColor.getRGB());
-        RenderUtils.drawRect(posX - 1, posY + 1 + tabY - 1, posX + width.get(), posY + tabY + tabHeight.get(), color);
-        GlStateManager.resetColor();
+            rainbow(400000000L, alphaValue.get())
 
-        int yOff = posY + 1;
-        for(int i = 0; i < tabs.size(); ++i) {
-            final String tabName = upperCaseValue.get() ? tabs.get(i).tabName.toUpperCase() : tabs.get(i).tabName;
-            fontRenderer.drawString(tabName, getFacing().getHorizontal() == Facing.Horizontal.RIGHT ? posX + width.get() - fontRenderer.getStringWidth(tabName) - tabs.get(i).textFade - 3 : posX + tabs.get(i).textFade + 2, yOff + textPositionY.get(), selectedTab == i ? 0xffffff : new Color(210, 210, 210).getRGB(), textShadow.get());
+        val backgroundColor = Color(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(),
+                backgroundAlphaValue.get())
 
-            if(arrowsValue.get()) {
-                if(getFacing().getHorizontal() == Facing.Horizontal.RIGHT)
-                    fontRenderer.drawString(!mainMenu && selectedTab == i ? ">" : "<", posX + 3, yOff + 2, 0xffffff, textShadow.get());
+        val borderColor = if (!borderRainbow.get())
+            Color(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get())
+        else
+            rainbow(400000000L, borderAlphaValue.get())
+
+        // Draw
+        val guiHeight = tabs.size * tabHeight.get()
+
+        if (borderValue.get())
+            RenderUtils.drawBorderedRect(1F, 0F, width.get(), guiHeight, borderStrength.get(), borderColor.rgb, backgroundColor.rgb)
+        else
+            RenderUtils.drawRect(1F, 0F, width.get(), guiHeight, backgroundColor.rgb)
+        RenderUtils.drawRect(1F, 1 + tabY - 1, width.get(), tabY + tabHeight.get(), color)
+        GlStateManager.resetColor()
+
+        var y = 1F
+        tabs.forEachIndexed { index, tab ->
+            val tabName = if (upperCaseValue.get())
+                tab.tabName.toUpperCase()
+            else
+                tab.tabName
+
+            val textX = if (side.horizontal == Side.Horizontal.RIGHT)
+                width.get() - fontRenderer.getStringWidth(tabName) - tab.textFade - 3
+            else
+                tab.textFade + 5
+            val textY = y + textPositionY.get()
+
+            val textColor = if (selectedCategory == index) 0xffffff else Color(210, 210, 210).rgb
+
+            fontRenderer.drawString(tabName, textX, textY, textColor, textShadow.get())
+
+            if (arrowsValue.get()) {
+                if (side.horizontal == Side.Horizontal.RIGHT)
+                    fontRenderer.drawString(if (!categoryMenu && selectedCategory == index) ">" else "<", 3F, y + 2F,
+                            0xffffff, textShadow.get())
                 else
-                    fontRenderer.drawString(!mainMenu && selectedTab == i ? "<" : ">", posX + width.get() - 8, yOff + 2, 0xffffff, textShadow.get());
+                    fontRenderer.drawString(if (!categoryMenu && selectedCategory == index) "<" else ">",
+                            width.get() - 8F, y + 2F, 0xffffff, textShadow.get())
             }
 
-            if(i == selectedTab && !mainMenu)
-                tabs.get(i).drawTab(getFacing().getHorizontal() == Facing.Horizontal.RIGHT ? posX - 3 - tabs.get(i).menuWidth : posX + width.get() + 3, yOff - 2, color.getRGB(), backgroundColor.getRGB(), borderColor.getRGB(), borderStrength.get(), upperCaseValue.get());
-            yOff += tabHeight.get();
+            if (index == selectedCategory && !categoryMenu) {
+                val tabX = if (side.horizontal == Side.Horizontal.RIGHT)
+                    1F - tab.menuWidth
+                else
+                    width.get() + 5
+
+                tab.drawTab(
+                        tabX,
+                        y,
+                        color.rgb,
+                        backgroundColor.rgb,
+                        borderColor.rgb,
+                        borderStrength.get(),
+                        upperCaseValue.get(),
+                        fontRenderer
+                )
+            }
+            y += tabHeight.get()
+        }
+
+        return Border(0F, 0F, width.get(), guiHeight)
+    }
+
+    override fun handleKey(c: Char, keyCode: Int) {
+        when (keyCode) {
+            Keyboard.KEY_UP -> parseAction(Action.UP)
+            Keyboard.KEY_DOWN -> parseAction(Action.DOWN)
+            Keyboard.KEY_RIGHT -> parseAction(if (side.horizontal == Side.Horizontal.RIGHT) Action.LEFT else Action.RIGHT)
+            Keyboard.KEY_LEFT -> parseAction(if (side.horizontal == Side.Horizontal.RIGHT) Action.RIGHT else Action.LEFT)
+            Keyboard.KEY_RETURN -> parseAction(Action.TOGGLE)
         }
     }
 
-    private void parseAction(final Action action) {
-        switch(action) {
-            case UP:
-                if(mainMenu) {
-                    --selectedTab;
-                    if(selectedTab < 0) {
-                        selectedTab = tabs.size() - 1;
-                        tabY = tabHeight.get() * selectedTab;
-                    }
-                }else{
-                    --selectedItem;
-                    if(selectedItem < 0) {
-                        selectedItem = tabs.get(selectedTab).modules.size() - 1;
-                        itemY = tabHeight.get() * selectedItem;
-                    }
-                }
-                break;
-            case DOWN:
-                if(mainMenu) {
-                    ++selectedTab;
-                    if(selectedTab > tabs.size() - 1) {
-                        selectedTab = 0;
-                        tabY = tabHeight.get() * selectedTab;
-                    }
-                }else{
-                    ++selectedItem;
-                    if(selectedItem > tabs.get(selectedTab).modules.size() - 1) {
-                        selectedItem = 0;
-                        itemY = tabHeight.get() * selectedItem;
-                    }
-                }
-                break;
-            case LEFT:
-                if(!mainMenu)
-                    mainMenu = true;
-                break;
-            case RIGHT:
-                if(mainMenu) {
-                    mainMenu = false;
-                    selectedItem = 0;
-                }
-                break;
-            case TOGGLE:
-                if(!mainMenu) {
-                    int sel = selectedItem;
-                    tabs.get(selectedTab).modules.get(sel).toggle();
-                }
-                break;
-        }
-    }
+    private fun updateAnimation() {
+        val delta = RenderUtils.deltaTime
 
-    public FontRenderer getFontRenderer() {
-        return fontRenderer;
-    }
-
-    public TabGUI setFontRenderer(final FontRenderer fontRenderer) {
-        this.fontRenderer = fontRenderer;
-        return this;
-    }
-
-    public TabGUI setRainbow(final boolean rainbow) {
-        this.rectangleRainbow.set(rainbow);
-        return this;
-    }
-
-    public TabGUI setColor(final Color c) {
-        redValue.set(c.getRed());
-        greenValue.set(c.getGreen());
-        blueValue.set(c.getBlue());
-        alphaValue.set(c.getAlpha());
-        return this;
-    }
-
-    private class Tab {
-
-        private final String tabName;
-        private final ArrayList<Module> modules = new ArrayList<>();
-
-        private int menuWidth;
-
-        private float textFade;
-
-        private Tab(final String name) {
-            tabName = name;
-        }
-
-        private void drawTab(int x, int y, final int color, final int backgroundColor, final int borderColor, final int borderStrength, final boolean upperCase) {
-            int maxWidth = 0;
-
-            for(final Module module : modules)
-                if(fontRenderer.getStringWidth(upperCase ? module.getName().toUpperCase() : module.getName()) + 4 > maxWidth)
-                    maxWidth = (int) (fontRenderer.getStringWidth(upperCase ? module.getName().toUpperCase() : module.getName()) + 7F);
-
-            menuWidth = maxWidth;
-            int menuHeight = modules.size() * tabHeight.get();
-
-            x += 2;
-            y += 2;
-
-            if(borderValue.get())
-                RenderUtils.drawBorderedRect(x - 1, y - 1, x + menuWidth - 2, y + menuHeight - 1, borderStrength, borderColor, backgroundColor);
+        val xPos = tabHeight.get() * selectedCategory
+        if (tabY.toInt() != xPos.toInt()) {
+            if (xPos > tabY)
+                tabY += 0.1F * delta
             else
-                RenderUtils.drawRect(x - 1, y - 1, x + menuWidth - 2, y + menuHeight - 1, backgroundColor);
-            RenderUtils.drawRect(x - 1, y + itemY - 1, x + menuWidth - 2, y + itemY + tabHeight.get() - 1, color);
-            GlStateManager.resetColor();
-            for(int i = 0; i < modules.size(); ++i)
-                fontRenderer.drawString(upperCase ? modules.get(i).getName().toUpperCase() : modules.get(i).getName(), x + 2, y + tabHeight.get() * i + textPositionY.get(), modules.get(i).getState() ? 0xffffff : new Color(205, 205, 205).getRGB(), textShadow.get());
+                tabY -= 0.1F * delta
+        } else
+            tabY = xPos
+        val xPos2 = tabHeight.get() * selectedModule
+
+        if (itemY.toInt() != xPos2.toInt()) {
+            if (xPos2 > itemY)
+                itemY += 0.1F * delta
+            else
+                itemY -= 0.1F * delta
+        } else
+            itemY = xPos2
+
+        if (categoryMenu)
+            itemY = 0F
+
+        if (textFade.get()) {
+            tabs.forEachIndexed { index, tab ->
+                if (index == selectedCategory) {
+                    if (tab.textFade < 4)
+                        tab.textFade += 0.05F * delta
+
+                    if (tab.textFade > 4)
+                        tab.textFade = 4F
+                } else {
+                    if (tab.textFade > 0)
+                        tab.textFade -= 0.05F * delta
+
+                    if (tab.textFade < 0)
+                        tab.textFade = 0F
+                }
+            }
+        } else {
+            for (tab in tabs) {
+                if (tab.textFade > 0)
+                    tab.textFade -= 0.05F * delta
+
+                if (tab.textFade < 0)
+                    tab.textFade = 0F
+            }
         }
     }
 
-    public enum Action {
-        UP, DOWN, LEFT, RIGHT, TOGGLE
+    private fun parseAction(action: Action) {
+        when (action) {
+            Action.UP -> if (categoryMenu) {
+                --selectedCategory
+                if (selectedCategory < 0) {
+                    selectedCategory = tabs.size - 1
+                    tabY = tabHeight.get() * selectedCategory.toFloat()
+                }
+            } else {
+                --selectedModule
+                if (selectedModule < 0) {
+                    selectedModule = tabs[selectedCategory].modules.size - 1
+                    itemY = tabHeight.get() * selectedModule.toFloat()
+                }
+            }
+
+            Action.DOWN -> if (categoryMenu) {
+                ++selectedCategory
+                if (selectedCategory > tabs.size - 1) {
+                    selectedCategory = 0
+                    tabY = tabHeight.get() * selectedCategory.toFloat()
+                }
+            } else {
+                ++selectedModule
+                if (selectedModule > tabs[selectedCategory].modules.size - 1) {
+                    selectedModule = 0
+                    itemY = tabHeight.get() * selectedModule.toFloat()
+                }
+            }
+
+            Action.LEFT -> if (!categoryMenu) categoryMenu = true
+
+            Action.RIGHT -> if (categoryMenu) {
+                categoryMenu = false
+                selectedModule = 0
+            }
+
+            Action.TOGGLE -> if (!categoryMenu) {
+                val sel = selectedModule
+                tabs[selectedCategory].modules[sel].toggle()
+            }
+        }
     }
+
+    /**
+     * TabGUI Tab
+     */
+    private inner class Tab(val tabName: String) {
+
+        val modules = mutableListOf<Module>()
+        var menuWidth = 0
+        var textFade = 0F
+
+        fun drawTab(x: Float, y: Float, color: Int, backgroundColor: Int, borderColor: Int, borderStrength: Float,
+                    upperCase: Boolean, fontRenderer: FontRenderer) {
+            var maxWidth = 0
+
+            for (module in modules)
+                if (fontRenderer.getStringWidth(if (upperCase) module.name.toUpperCase() else module.name) + 4 > maxWidth)
+                    maxWidth = (fontRenderer.getStringWidth(if (upperCase) module.name.toUpperCase() else module.name) + 7F).toInt()
+
+            menuWidth = maxWidth
+
+            val menuHeight = modules.size * tabHeight.get()
+
+            if (borderValue.get())
+                RenderUtils.drawBorderedRect(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, borderStrength, borderColor, backgroundColor)
+            else
+                RenderUtils.drawRect(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, backgroundColor)
+
+            RenderUtils.drawRect(x - 1.toFloat(), y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight.get() - 1, color)
+            GlStateManager.resetColor()
+
+            modules.forEachIndexed { index, module ->
+                val moduleColor = if (module.state) 0xffffff else Color(205, 205, 205).rgb
+
+                fontRenderer.drawString(if (upperCase) module.name.toUpperCase() else module.name, x + 2F,
+                        y + tabHeight.get() * index + textPositionY.get(), moduleColor, textShadow.get())
+            }
+        }
+
+    }
+
+    /**
+     * TabGUI Action
+     */
+    enum class Action { UP, DOWN, LEFT, RIGHT, TOGGLE }
 }

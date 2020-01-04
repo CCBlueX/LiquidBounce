@@ -5,7 +5,7 @@ import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.ui.client.hud.GuiHudDesigner;
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.util.ResourceLocation;
@@ -38,7 +38,7 @@ public class HUD extends Module {
         if(LiquidBounce.CLIENT.hud == null || mc.currentScreen instanceof GuiHudDesigner)
             return;
 
-        LiquidBounce.CLIENT.hud.render();
+        LiquidBounce.CLIENT.hud.render(false);
     }
 
     @EventTarget

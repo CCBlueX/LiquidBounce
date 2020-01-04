@@ -1,76 +1,50 @@
-package net.ccbluex.liquidbounce.ui.client.hud.element.elements;
+package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.ui.client.hud.GuiHudDesigner;
-import net.ccbluex.liquidbounce.ui.client.hud.element.Element;
-import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo;
-import net.ccbluex.liquidbounce.utils.render.RenderUtils;
-import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.item.ItemStack;
-import org.lwjgl.opengl.GL11;
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
+import net.minecraft.block.material.Material
+import net.minecraft.client.renderer.GlStateManager
+import org.lwjgl.opengl.GL11
 
 /**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
+ * CustomHUD Armor element
  *
- * @game Minecraft
- * @author CCBlueX
+ * Shows a horizontal display of current armor
  */
 @ElementInfo(name = "Armor")
-public class Armor extends Element {
+class Armor(x: Double = 8.0, y: Double = 57.0, scale: Float = 1F,
+            side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side) {
 
-    @Override
-    public void drawElement() {
-        final int[] location = getLocationFromFacing();
+    /**
+     * Draw element
+     */
+    override fun drawElement(): Border {
+        if (mc.playerController.isNotCreative) {
+            GL11.glPushMatrix()
 
-        if(mc.playerController.isNotCreative()) {
-            int x = location[0];
-            GL11.glPushMatrix();
+            val renderItem = mc.renderItem
+            val isInsideWater = mc.thePlayer.isInsideOfMaterial(Material.water)
 
-            for(int index = 3; index >= 0; --index) {
-                final ItemStack stack = mc.thePlayer.inventory.armorInventory[index];
+            var x = 1
+            val y = if (isInsideWater) 10 else 0
 
-                if(stack != null) {
-                    mc.getRenderItem().renderItemIntoGUI(stack, x, location[1] - (mc.thePlayer.isInsideOfMaterial(Material.water) ? 10 : 0));
-                    mc.getRenderItem().renderItemOverlays(mc.fontRendererObj, stack, x, location[1] - (mc.thePlayer.isInsideOfMaterial(Material.water) ? 10 : 0));
-                    x += 18;
-                }
+            for (index in 3 downTo 0) {
+                val stack = mc.thePlayer.inventory.armorInventory[index] ?: continue
+
+                renderItem.renderItemIntoGUI(stack, x, y)
+                renderItem.renderItemOverlays(mc.fontRendererObj, stack, x, y)
+                x += 18
             }
 
-            GlStateManager.disableCull();
-            GlStateManager.enableAlpha();
-            GlStateManager.disableBlend();
-            GlStateManager.disableLighting();
-            GlStateManager.disableCull();
-            GL11.glPopMatrix();
+            GlStateManager.enableAlpha()
+            GlStateManager.disableBlend()
+            GlStateManager.disableLighting()
+            GlStateManager.disableCull()
+            GL11.glPopMatrix()
         }
 
-        if (mc.currentScreen instanceof GuiHudDesigner)
-            RenderUtils.drawBorderedRect(location[0], location[1], location[0] + 72, location[1] + 17, 3, Integer.MIN_VALUE, 0);
-    }
-
-    @Override
-    public void destroyElement() {
-
-    }
-
-    @Override
-    public void updateElement() {
-
-    }
-
-    @Override
-    public void handleMouseClick(int mouseX, int mouseY, int mouseButton) {
-    }
-
-    @Override
-    public void handleKey(char c, int keyCode) {
-    }
-
-    @Override
-    public boolean isMouseOverElement(int mouseX, int mouseY) {
-        final int[] location = getLocationFromFacing();
-
-        return mouseX >= location[0] && mouseY >= location[1] && mouseX <= location[0] + 72 && mouseY <= location[1] + 10;
+        return Border(0F, 0F, 72F, 17F)
     }
 }

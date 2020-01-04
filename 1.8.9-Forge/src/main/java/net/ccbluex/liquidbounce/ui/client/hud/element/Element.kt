@@ -1,124 +1,177 @@
-package net.ccbluex.liquidbounce.ui.client.hud.element;
+package net.ccbluex.liquidbounce.ui.client.hud.element
 
-import net.ccbluex.liquidbounce.utils.MinecraftInstance;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.value.Value
+import net.minecraft.client.gui.ScaledResolution
+import kotlin.math.max
+import kotlin.math.min
 
 /**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
+ * CustomHUD element
  */
-@SideOnly(Side.CLIENT)
-public abstract class Element extends MinecraftInstance {
+abstract class Element(var x: Double = 2.0, var y: Double = 2.0, var scale: Float = 1F,
+                       var side: Side = Side.default()) : MinecraftInstance() {
 
-    private final String name = getClass().getAnnotation(ElementInfo.class).name();
+    val name = javaClass.getAnnotation(ElementInfo::class.java).name
 
-    private int x;
-    private int y;
-    private float scale = 1;
-    private Facing facing;
-
-    public boolean drag;
-    public int prevMouseX;
-    public int prevMouseY;
-
-    public abstract void drawElement();
-
-    public abstract void destroyElement();
-
-    public abstract void updateElement();
-
-    public abstract void handleMouseClick(final int mouseX, final int mouseY, final int mouseButton);
-
-    public abstract void handleKey(final char c, final int keyCode);
-
-    public abstract boolean isMouseOverElement(final int mouseX, final int mouseY);
-
-    public String getName() {
-        return name;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public Element setX(int x) {
-        this.x = x;
-        return this;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public Element setY(int y) {
-        this.y = y;
-        return this;
-    }
-
-    public Element setScale(float scale) {
-        if(scale < 0)
-            scale = 0;
-
-        this.scale = scale;
-        return this;
-    }
-
-    public float getScale() {
-        return scale;
-    }
-
-    public Facing getFacing() {
-        return facing;
-    }
-
-    public Element setFacing(Facing facing) {
-        this.facing = facing;
-        return this;
-    }
-
-    public int[] getLocationFromFacing() {
-        final ScaledResolution scaledResolution = new ScaledResolution(mc);
-        return new int[] {facing.getHorizontal() == Facing.Horizontal.RIGHT ? scaledResolution.getScaledWidth() - x : facing.getHorizontal() == Facing.Horizontal.MIDDLE ? (scaledResolution.getScaledWidth() / 2) + x : x, facing.getVertical() == Facing.Vertical.DOWN ? scaledResolution.getScaledHeight() - y : facing.getVertical() == Facing.Vertical.MIDDLE ? (scaledResolution.getScaledHeight() / 2) + y : y};
-    }
-
-    public Element setScreenX(final int x) {
-        final ScaledResolution scaledResolution = new ScaledResolution(mc);
-
-        switch(facing.getHorizontal()) {
-            case LEFT:
-                this.x = x;
-                break;
-            case MIDDLE:
-                this.x = x - (scaledResolution.getScaledWidth() / 2);
-                break;
-            case RIGHT:
-                this.x = scaledResolution.getScaledWidth() - x;
-                break;
+    var renderX: Double
+        get() = when (side.horizontal) {
+            Side.Horizontal.LEFT -> x
+            Side.Horizontal.MIDDLE -> (ScaledResolution(mc).scaledWidth / 2) - x
+            Side.Horizontal.RIGHT -> ScaledResolution(mc).scaledWidth - x
+        }
+        set(value) = when (side.horizontal) {
+            Side.Horizontal.LEFT -> {
+                x += value
+            }
+            Side.Horizontal.MIDDLE, Side.Horizontal.RIGHT -> {
+                x -= value
+            }
         }
 
-        return this;
-    }
-
-    public Element setScreenY(final int y) {
-        final ScaledResolution scaledResolution = new ScaledResolution(mc);
-
-        switch(facing.getVertical()) {
-            case UP:
-                this.y = y;
-                break;
-            case MIDDLE:
-                this.y = y - (scaledResolution.getScaledHeight() / 2);
-                break;
-            case DOWN:
-                this.y = scaledResolution.getScaledHeight() - y;
-                break;
+    var renderY: Double
+        get() = when (side.vertical) {
+            Side.Vertical.UP -> y
+            Side.Vertical.MIDDLE -> (ScaledResolution(mc).scaledHeight / 2) - y
+            Side.Vertical.DOWN -> ScaledResolution(mc).scaledHeight - y
+        }
+        set(value) = when (side.vertical) {
+            Side.Vertical.UP -> {
+                y += value
+            }
+            Side.Vertical.MIDDLE, Side.Vertical.DOWN -> {
+                y -= value
+            }
         }
 
-        return this;
+    var border: Border? = null
+
+    var drag = false
+    var prevMouseX = 0F
+    var prevMouseY = 0F
+
+    /**
+     * Get all values of element
+     */
+    open val values: List<Value<*>>
+        get() = javaClass.declaredFields.map { valueField ->
+            valueField.isAccessible = true
+            valueField[this]
+        }.filterIsInstance<Value<*>>()
+
+    /**
+     * Called when element created
+     */
+    open fun createElement() = true
+
+    /**
+     * Called when element destroyed
+     */
+    open fun destroyElement() {}
+
+    /**
+     * Draw element
+     */
+    abstract fun drawElement(): Border?
+
+    /**
+     * Update element
+     */
+    open fun updateElement() {}
+
+    /**
+     * Check if [x] and [y] is in element border
+     */
+    open fun isInBorder(x: Double, y: Double): Boolean {
+        val border = border ?: return false
+
+        val minX = min(border.x, border.x2)
+        val minY = min(border.y, border.y2)
+
+        val maxX = max(border.x, border.x2)
+        val maxY = max(border.y, border.y2)
+
+        return minX <= x && minY <= y && maxX >= x && maxY >= y
     }
+
+    /**
+     * Called when mouse clicked
+     */
+    open fun handleMouseClick(x: Double, y: Double, mouseButton: Int) {}
+
+    /**
+     * Called when key pressed
+     */
+    open fun handleKey(c: Char, keyCode: Int) {}
+
+}
+
+/**
+ * Element info
+ */
+@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+annotation class ElementInfo(val name: String)
+
+/**
+ * CustomHUD Side
+ *
+ * Allows to change default x and y position by side
+ */
+class Side(var horizontal: Horizontal, var vertical: Vertical) {
+
+    companion object {
+
+        /**
+         * Default element side
+         */
+        fun default() = Side(Horizontal.LEFT, Vertical.UP)
+
+    }
+
+    /**
+     * Horizontal side
+     */
+    enum class Horizontal(val sideName: String) {
+
+        LEFT("Left"),
+        MIDDLE("Middle"),
+        RIGHT("Right");
+
+        companion object {
+
+            @JvmStatic
+            fun getByName(name: String) = values().find { it.sideName == name }
+
+        }
+
+    }
+
+    /**
+     * Vertical side
+     */
+    enum class Vertical(val sideName: String) {
+
+        UP("Up"),
+        MIDDLE("Middle"),
+        DOWN("Down");
+
+        companion object {
+
+            @JvmStatic
+            fun getByName(name: String) = values().find { it.sideName == name }
+
+        }
+
+    }
+
+}
+
+/**
+ * Border of element
+ */
+data class Border(val x: Float, val y: Float, val x2: Float, val y2: Float) {
+
+    fun draw() = RenderUtils.drawBorderedRect(x, y, x2, y2, 3F, Int.MIN_VALUE, 0)
+
 }

@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.file.configs;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.file.FileConfig;
-import net.ccbluex.liquidbounce.ui.client.hud.config.Config;
+import net.ccbluex.liquidbounce.ui.client.hud.Config;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
