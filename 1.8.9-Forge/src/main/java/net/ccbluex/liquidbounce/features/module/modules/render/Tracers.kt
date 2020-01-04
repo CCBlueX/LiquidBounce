@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.entity.Entity
@@ -25,18 +26,21 @@ import java.awt.Color
 class Tracers : Module() {
 
     private val thicknessValue = FloatValue("Thickness", 2F, 1F, 5F)
+    private val distanceColorValue = BoolValue("DistanceColor", false)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity != null && entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
-                var dist = mc.thePlayer.getDistanceToEntity(entity) * 2
-                if (dist > 255) dist = 255F
+                var dist = (mc.thePlayer.getDistanceToEntity(entity) * 2).toInt()
+                if (dist > 255) dist = 255
 
                 val color = if (EntityUtils.isFriend(entity))
                     Color(0, 0, 255, 150)
+                else if (distanceColorValue.get())
+                    Color(255 - dist, dist, 0, 150)
                 else
-                    Color(255 - dist.toInt(), dist.toInt(), 0, 150)
+                    Color(255, 255, 255, 150)
 
                 drawTracer(entity, color)
             }
