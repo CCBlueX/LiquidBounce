@@ -107,7 +107,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     when (colorIndex) {
                         in 0..15 -> {
                             if (!ignoreColor) {
-                                hexColor = ColorUtils.hexColors[colorIndex] or alpha
+                                hexColor = ColorUtils.hexColors[colorIndex] or (alpha shl 24)
                             }
 
                             bold = false
