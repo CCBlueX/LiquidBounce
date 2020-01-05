@@ -1,8 +1,10 @@
 package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.texture.TextureUtil
+import net.minecraft.util.ResourceLocation
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.opengl.GL11
@@ -11,6 +13,8 @@ import java.awt.Font
 import java.awt.Graphics2D
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
+import java.lang.Error
+import java.lang.Throwable
 
 /**
  * Generate new bitmap based font renderer
@@ -40,26 +44,41 @@ class FontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
      * @param y     location for target position
      * @param color of the text
      */
-    fun drawString(text: String, x: Double, y: Double, color: Color) {
-        GL11.glPushMatrix()
-        GL11.glScaled(0.25, 0.25, 0.25)
+    fun drawString(text: String, x: Double, y: Double, color: Int) {
+
+        val scale = 0.25
+        val reverse = 1 / scale
+
+        GlStateManager.scale(scale, scale, scale)
         GlStateManager.bindTexture(textureID)
-        RenderUtils.glColor(color)
+
+        val red: Float = (color shr 16 and 0xff) / 255F
+        val green: Float = (color shr 8 and 0xff) / 255F
+        val blue: Float = (color and 0xff) / 255F
+        val alpha: Float = (color shr 24 and 0xff) / 255F
+
+        GlStateManager.color(red, green, blue, alpha)
 
         var currX = x * 2F
         for (char in text.toCharArray()) {
-            val fontChar = charLocations[
-                    if (char.toInt() < charLocations.size)
+            if (char.toInt() >= charLocations.size) {
+                GlStateManager.scale(reverse, reverse, reverse)
+                Minecraft.getMinecraft().fontRendererObj.drawString("$char", currX.toFloat() * scale.toFloat() + 1, (y * 2F).toFloat() + 1, color, false)
+                currX += Minecraft.getMinecraft().fontRendererObj.getStringWidth("$char") * reverse
+                GlStateManager.scale(scale, scale, scale)
+                GlStateManager.bindTexture(textureID)
+                GlStateManager.color(red, green, blue, alpha)
+                //senkju stinkt
+            } else {
+                val fontChar = charLocations[
                         char.toInt()
-                    else
-                        '\u0003'.toInt()
-            ] ?: continue
+                ] ?: continue
 
-            drawChar(fontChar, currX.toFloat(), (y * 2F - 2F).toFloat())
-            currX += fontChar.width - 8.0
+                drawChar(fontChar, currX.toFloat(), (y * 2F - 2F).toFloat())
+                currX += fontChar.width - 8.0
+            }
         }
-
-        GL11.glPopMatrix()
+        GlStateManager.scale(reverse, reverse, reverse)
     }
 
     /**
@@ -79,19 +98,18 @@ class FontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
         val renderWidth = width / textureWidth
         val renderHeight = height / textureHeight
 
-        GL11.glBegin(GL11.GL_TRIANGLES)
-        GL11.glTexCoord2f(renderX + renderWidth, renderY)
-        GL11.glVertex2f(x + width, y)
-        GL11.glTexCoord2f(renderX, renderY)
-        GL11.glVertex2f(x, y)
-        GL11.glTexCoord2f(renderX, renderY + renderHeight)
-        GL11.glVertex2f(x, y + height)
-        GL11.glTexCoord2f(renderX, renderY + renderHeight)
-        GL11.glVertex2f(x, y + height)
+        GL11.glBegin(GL11.GL_TRIANGLE_STRIP)
         GL11.glTexCoord2f(renderX + renderWidth, renderY + renderHeight)
         GL11.glVertex2f(x + width, y + height)
+
         GL11.glTexCoord2f(renderX + renderWidth, renderY)
         GL11.glVertex2f(x + width, y)
+
+        GL11.glTexCoord2f(renderX, renderY + renderHeight)
+        GL11.glVertex2f(x, y + height)
+
+        GL11.glTexCoord2f(renderX, renderY)
+        GL11.glVertex2f(x, y)
         GL11.glEnd()
     }
 

@@ -66,30 +66,22 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
         if (text.isEmpty())
             return x.toInt()
 
-        GL11.glPushMatrix()
-        GL11.glTranslated(x - 1.5, y + 0.5, 0.0)
+        GlStateManager.translate(x - 1.5, y + 0.5, 0.0)
         GlStateManager.enableAlpha()
-        val blend = GL11.glGetBoolean(GL11.GL_BLEND)
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
+        GlStateManager.enableBlend()
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+        GlStateManager.enableTexture2D()
 
         var hexColor = colorHex
         if (hexColor and -67108864 == 0)
             hexColor = hexColor or -16777216
 
-        val red: Float = (hexColor shr 16 and 0xff) / 255F
-        val green: Float = (hexColor shr 8 and 0xff) / 255F
-        val blue: Float = (hexColor and 0xff) / 255F
-        val alpha: Float = (hexColor shr 24 and 0xff) / 255F
-
-        val color = Color(red, green, blue, alpha)
+        val alpha: Int = (hexColor shr 24 and 0xff)
 
         if (text.contains("§")) {
             val parts = text.split("§")
 
             var currentFont = defaultFont
-            var currentColor = Color(red, green, blue, alpha)
 
             var width = 0.0
 
@@ -105,7 +97,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     return@forEachIndexed
 
                 if (index == 0) {
-                    currentFont.drawString(part, width, 0.0, currentColor)
+                    currentFont.drawString(part, width, 0.0, hexColor)
                     width += currentFont.getStringWidth(part)
                 } else {
                     val words = part.substring(1)
@@ -115,10 +107,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     when (colorIndex) {
                         in 0..15 -> {
                             if (!ignoreColor) {
-                                val colorCode = ColorUtils.hexColors[colorIndex]
-
-                                currentColor = Color((colorCode shr 16) / 255F, (colorCode shr 8 and 0xff) / 255F,
-                                        (colorCode and 0xff) / 255F, alpha)
+                                hexColor = ColorUtils.hexColors[colorIndex] or alpha
                             }
 
                             bold = false
@@ -138,8 +127,6 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                             randomCase = false
                             underline = false
                             strikeThrough = false
-
-                            currentColor = color
                         }
                     }
 
@@ -152,7 +139,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     else
                         defaultFont
 
-                    currentFont.drawString(if (randomCase) ColorUtils.randomMagicText(words) else words, width, 0.0, currentColor)
+                    currentFont.drawString(if (randomCase) ColorUtils.randomMagicText(words) else words, width, 0.0, hexColor)
 
                     if (strikeThrough)
                         RenderUtils.drawLine(width / 2.0 + 1, currentFont.height / 3.0,
@@ -168,12 +155,11 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                 }
             }
         } else
-            defaultFont.drawString(text, 0.0, 0.0, color)
+            defaultFont.drawString(text, 0.0, 0.0, hexColor)
 
-        if (!blend)
-            GL11.glDisable(GL11.GL_BLEND)
-        GL11.glPopMatrix()
-        GL11.glColor4f(1F, 1F, 1F, 1F)
+        GlStateManager.disableBlend()
+        GlStateManager.translate(-(x - 1.5), -(y + 0.5), 0.0)
+        GlStateManager.color(1f, 1f, 1f, 1f)
 
         return (x + getStringWidth(text)).toInt()
     }
