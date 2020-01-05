@@ -2,9 +2,10 @@ package net.ccbluex.liquidbounce.ui.client.altmanager.sub
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.login.LoginUtils.loginSession
 import net.minecraft.client.gui.Gui
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -20,7 +21,7 @@ import org.apache.http.util.EntityUtils
 import org.json.JSONArray
 import org.json.JSONObject
 import org.lwjgl.input.Keyboard
-import java.util.Base64
+import java.util.*
 import kotlin.concurrent.thread
 
 
@@ -111,6 +112,7 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
                         status = "§cFailed to decode the accesstoken"
                         return@thread
                     }
+
                     val dataDecodedStr = String(dataDecoded, Charsets.UTF_8)
                     val jsonElement: JsonElement = JsonParser().parse(dataDecodedStr)
                     val jsonObject = jsonElement.asJsonObject
@@ -126,12 +128,12 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
 
 
                     // Check if the accesstoken is valid
-                    val request1 = HttpPost("https://authserver.mojang.com/validate")
-                    request1.setHeaders(headers)
+                    val validateRequest = HttpPost("https://authserver.mojang.com/validate")
+                    validateRequest.setHeaders(headers)
                     val body = StringEntity("{\"accessToken\": \"${accessToken}\"}")
-                    request1.entity = body
-                    val response1 = httpClient.execute(request1)
-                    if (response1.statusLine.statusCode != 204) {
+                    validateRequest.entity = body
+                    val validateResponse = httpClient.execute(validateRequest)
+                    if (validateResponse.statusLine.statusCode != 204) {
                         loginButton.enabled = true
                         status = "§cSession is invalid"
                         return@thread
@@ -140,16 +142,17 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
 
                     status = "§aGetting the username"
                     // Get latest minecraft username
-                    val request2 = HttpGet("https://api.mojang.com/user/profiles/${uuid}/names")
-                    val response2 = httpClient.execute(request2)
-                    if (response2.statusLine.statusCode != 200) {
+
+                    val nameRequest = HttpGet("https://api.mojang.com/user/profiles/${uuid}/names")
+                    val nameResponse = httpClient.execute(nameRequest)
+                    if (nameResponse.statusLine.statusCode != 200) {
                         loginButton.enabled = true
                         status = "§cFailed to get usernames of the account"
                         return@thread
                     }
 
                     val usernamesJson = try {
-                        JSONArray(EntityUtils.toString(response2.entity))
+                        JSONArray(EntityUtils.toString(nameResponse.entity))
                     } catch (e: Exception) {
                         loginButton.enabled = true
                         status = "§cFailed to parse usernames"
@@ -168,7 +171,7 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
                     mc.session = Session(username, uuid, accessToken, "mojang")
                     status = "§aLogged in"
                     prevGui.status = "§cYour name is now §f§l${username}§c."
-                    loginSession()
+                    LiquidBounce.CLIENT.eventManager.callEvent(SessionEvent())
                     loginButton.enabled = true
                 }
             }
