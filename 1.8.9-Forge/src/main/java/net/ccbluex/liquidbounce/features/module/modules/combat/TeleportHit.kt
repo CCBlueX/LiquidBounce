@@ -1,17 +1,18 @@
-package net.ccbluex.liquidbounce.features.module.modules.combat;
+package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.EventState;
-import net.ccbluex.liquidbounce.event.EventTarget;
-import net.ccbluex.liquidbounce.event.MotionEvent;
-import net.ccbluex.liquidbounce.features.module.Module;
-import net.ccbluex.liquidbounce.features.module.ModuleCategory;
-import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.utils.*;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.network.play.client.C02PacketUseEntity;
-import net.minecraft.network.play.client.C03PacketPlayer;
-import net.minecraft.util.Vec3;
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.*
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.network.play.client.C02PacketUseEntity
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import java.util.function.Consumer
+import javax.vecmath.Vector3d
 
 /**
  * LiquidBounce Hacked Client
@@ -21,42 +22,43 @@ import net.minecraft.util.Vec3;
  * @author CCBlueX
  */
 @ModuleInfo(name = "TeleportHit", description = "Allows to hit entities from far away.", category = ModuleCategory.COMBAT)
-public class TeleportHit extends Module {
-
-    private EntityLivingBase targetEntity;
-    private boolean shouldHit;
+class TeleportHit : Module() {
+    private var targetEntity: EntityLivingBase? = null
+    private var shouldHit = false
 
     @EventTarget
-    public void onMotion(MotionEvent event) {
-        if(event.getEventState() != EventState.PRE)
-            return;
+    fun onMotion(event: MotionEvent) {
+        if (event.eventState !== EventState.PRE)
+            return
 
-        final Entity facedEntity = RaycastUtils.raycastEntity(100D, raycastedEntity -> raycastedEntity instanceof EntityLivingBase);
-        if(mc.gameSettings.keyBindAttack.isKeyDown() && EntityUtils.isSelected(facedEntity, true) && facedEntity.getDistanceSqToEntity(mc.thePlayer) >= 1D)
-            targetEntity = (EntityLivingBase) facedEntity;
+        val facedEntity = RaycastUtils.raycastEntity(100.0) { raycastedEntity: Entity? -> raycastedEntity is EntityLivingBase }
 
-        if(targetEntity != null) {
-            if(!shouldHit) {
-                shouldHit = true;
-                return;
+        if (mc.gameSettings.keyBindAttack.isKeyDown && EntityUtils.isSelected(facedEntity, true) && facedEntity.getDistanceSqToEntity(mc.thePlayer) >= 1.0)
+            targetEntity = facedEntity as EntityLivingBase
+
+        if (targetEntity != null) {
+            if (!shouldHit) {
+                shouldHit = true
+                return
             }
 
-            if(mc.thePlayer.fallDistance > 0F) {
-                final Vec3 rotationVector = RotationUtils.getVectorForRotation(new Rotation(mc.thePlayer.rotationYaw, 0F));
-                final double x = mc.thePlayer.posX + rotationVector.xCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1.0F);
-                final double z = mc.thePlayer.posZ + rotationVector.zCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1.0F);
-                final double y = targetEntity.getPosition().getY() + 0.25D;
+            if (mc.thePlayer.fallDistance > 0f) {
+                val rotationVector = RotationUtils.getVectorForRotation(Rotation(mc.thePlayer.rotationYaw, 0f))
+                val x = mc.thePlayer.posX + rotationVector.xCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1.0f)
+                val z = mc.thePlayer.posZ + rotationVector.zCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1.0f)
+                val y = targetEntity!!.position.y + 0.25
 
-                PathUtils.findPath(x, y + 1.0D, z, 4D).forEach(pos -> mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
+                PathUtils.findPath(x, y + 1.0, z, 4.0).forEach(Consumer { pos: Vector3d -> mc.netHandler.addToSendQueue(C04PacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)) })
 
-                mc.thePlayer.swingItem();
-                mc.thePlayer.sendQueue.addToSendQueue(new C02PacketUseEntity(targetEntity, C02PacketUseEntity.Action.ATTACK));
-                mc.thePlayer.onCriticalHit(targetEntity);
-                shouldHit = false;
-                targetEntity = null;
-            }else if(mc.thePlayer.onGround)
-                mc.thePlayer.jump();
-        }else
-            shouldHit = false;
+                mc.thePlayer.swingItem()
+                mc.thePlayer.sendQueue.addToSendQueue(C02PacketUseEntity(targetEntity, C02PacketUseEntity.Action.ATTACK))
+                mc.thePlayer.onCriticalHit(targetEntity)
+
+                shouldHit = false
+                targetEntity = null
+            } else if (mc.thePlayer.onGround)
+                mc.thePlayer.jump()
+
+        } else shouldHit = false
     }
 }

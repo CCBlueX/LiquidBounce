@@ -1,190 +1,172 @@
-package net.ccbluex.liquidbounce.features.module.modules.combat;
+package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.EventTarget;
-import net.ccbluex.liquidbounce.event.JumpEvent;
-import net.ccbluex.liquidbounce.event.PacketEvent;
-import net.ccbluex.liquidbounce.event.UpdateEvent;
-import net.ccbluex.liquidbounce.features.module.Module;
-import net.ccbluex.liquidbounce.features.module.ModuleCategory;
-import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.utils.MovementUtils;
-import net.ccbluex.liquidbounce.value.BoolValue;
-import net.ccbluex.liquidbounce.value.FloatValue;
-import net.ccbluex.liquidbounce.value.ListValue;
-import net.minecraft.network.Packet;
-import net.minecraft.network.play.server.S12PacketEntityVelocity;
-import net.minecraft.network.play.server.S27PacketExplosion;
-import net.minecraft.util.MathHelper;
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.JumpEvent
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.network.play.server.S12PacketEntityVelocity
+import net.minecraft.network.play.server.S27PacketExplosion
+import net.minecraft.util.MathHelper
 
 @ModuleInfo(name = "Velocity", description = "Allows you to modify the amount of knockback you take.", category = ModuleCategory.COMBAT)
-public class Velocity extends Module {
+class Velocity : Module() {
+    private val horizontalValue = FloatValue("Horizontal", 0f, 0f, 1f)
+    private val verticalValue = FloatValue("Vertical", 0f, 0f, 1f)
+    private val modeValue = ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "Jump", "Reverse", "Reverse2", "Glitch"), "Simple")
+    private val reverseStrengthValue = FloatValue("ReverseStrength", 1.0f, 0.1f, 1f)
+    private val reverse2StrenghtValue = FloatValue("Reverse2Strength", 0.05f, 0.02f, 0.1f)
+    private val aacPushXZReducerValue = FloatValue("AACPushXZReducer", 2f, 1f, 3f)
+    private val aacPushYReducerValue = BoolValue("AACPushYReducer", true)
+    private var velocityTime: Long = 0
+    private var gotVelocity = false
+    private var gotHurt = false
 
-    private final FloatValue horizontalValue = new FloatValue("Horizontal", 0F, 0F, 1F);
-    private final FloatValue verticalValue = new FloatValue("Vertical", 0F, 0F, 1F);
-    private final ListValue modeValue = new ListValue("Mode", new String[] {"Simple", "AAC", "AACPush", "AACZero", "Jump", "Reverse", "Reverse2", "Glitch"}, "Simple");
-    private final FloatValue reverseStrengthValue = new FloatValue("ReverseStrength", 1.0F, 0.1F, 1F);
-    private final FloatValue reverse2StrenghtValue = new FloatValue("Reverse2Strength", 0.05F, 0.02F, 0.1F);
-    private final FloatValue aacPushXZReducerValue = new FloatValue("AACPushXZReducer", 2F, 1F, 3F);
-    private final BoolValue aacPushYReducerValue = new BoolValue("AACPushYReducer", true);
+    override fun onDisable() {
+        if (mc.thePlayer == null)
+            return
 
-    private long velocityTime;
-    private boolean gotVelocity;
-    private boolean gotHurt;
+        mc.thePlayer.speedInAir = 0.02f
 
-    @Override
-    public void onDisable() {
-        if(mc.thePlayer == null)
-            return;
-
-        mc.thePlayer.speedInAir = 0.02F;
-        super.onDisable();
+        super.onDisable()
     }
 
     @EventTarget
-    public void onUpdate(final UpdateEvent event) {
-        if(mc.thePlayer.isInWater())
-            return;
+    fun onUpdate(event: UpdateEvent?) {
+        if (mc.thePlayer.isInWater) return
 
-        switch(modeValue.get().toLowerCase()) {
-            case "reverse":
-                if(!gotVelocity)
-                    break;
+        when (modeValue.get().toLowerCase()) {
+            "reverse" -> {
+                if (!gotVelocity)
+                    return
 
-                if(!mc.thePlayer.onGround && !mc.thePlayer.isInWater() && !mc.thePlayer.isInLava() && !mc.thePlayer.isInWeb) {
-                    MovementUtils.strafe(MovementUtils.getSpeed() * reverseStrengthValue.get());
-                }else if(System.currentTimeMillis() - velocityTime > 80L)
-                    gotVelocity = false;
-                break;
-            case "aac":
-                if(velocityTime != 0L && System.currentTimeMillis() - velocityTime > 80L) {
-                    mc.thePlayer.motionX *= horizontalValue.get();
-                    mc.thePlayer.motionZ *= verticalValue.get();
-                    velocityTime = 0L;
+                if (!mc.thePlayer.onGround && !mc.thePlayer.isInWater && !mc.thePlayer.isInLava && !mc.thePlayer.isInWeb) {
+                    MovementUtils.strafe(MovementUtils.getSpeed() * reverseStrengthValue.get())
+                } else if (System.currentTimeMillis() - velocityTime > 80L) {
+                    gotVelocity = false
                 }
-                break;
-            case "jump":
-                if(mc.thePlayer.hurtTime > 0 && mc.thePlayer.onGround) {
-                    mc.thePlayer.motionY = 0.42;
+            }
+            "aac" -> {
+                if (velocityTime != 0L && System.currentTimeMillis() - velocityTime > 80L) {
+                    mc.thePlayer.motionX *= horizontalValue.get()
+                    mc.thePlayer.motionZ *= verticalValue.get()
 
-                    final float f = mc.thePlayer.rotationYaw * 0.017453292F;
-                    mc.thePlayer.motionX -= MathHelper.sin(f) * 0.2F;
-                    mc.thePlayer.motionZ += MathHelper.cos(f) * 0.2F;
+                    velocityTime = 0L
                 }
-                break;
-            case "aacpush":
-                if(mc.thePlayer.movementInput.jump) break;
+            }
+            "jump" -> if (mc.thePlayer.hurtTime > 0 && mc.thePlayer.onGround) {
+                val f: Float = Math.toRadians(mc.thePlayer.rotationYaw.toDouble()).toFloat()
 
-                if(velocityTime != 0L && System.currentTimeMillis() - velocityTime > 80L) velocityTime = 0L;
+                mc.thePlayer.motionX -= MathHelper.sin(f) * 0.2f.toDouble()
+                mc.thePlayer.motionZ += MathHelper.cos(f) * 0.2f.toDouble()
+                mc.thePlayer.motionY = 0.42
+            }
+            "aacpush" -> {
+                if (mc.thePlayer.movementInput.jump)
+                    return
 
-                if(mc.thePlayer.hurtTime > 0 && mc.thePlayer.motionX != 0 && mc.thePlayer.motionZ != 0)
-                    mc.thePlayer.onGround = true;
+                if (velocityTime != 0L && System.currentTimeMillis() - velocityTime > 80L)
+                    velocityTime = 0L
 
-                if(mc.thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get())
-                    mc.thePlayer.motionY -= 0.0144;
+                if (mc.thePlayer.hurtTime > 0 && mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0)
+                    mc.thePlayer.onGround = true
 
-                if(mc.thePlayer.hurtResistantTime >= 19) {
-                    final double reduce = aacPushXZReducerValue.get();
+                if (mc.thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get())
+                    mc.thePlayer.motionY -= 0.0144
 
-                    mc.thePlayer.motionX /= reduce;
-                    mc.thePlayer.motionZ /= reduce;
+                if (mc.thePlayer.hurtResistantTime >= 19) {
+                    val reduce = aacPushXZReducerValue.get().toDouble()
+
+                    mc.thePlayer.motionX /= reduce
+                    mc.thePlayer.motionZ /= reduce
                 }
-                break;
-            case "glitch":
-                mc.thePlayer.noClip = gotVelocity;
+            }
+            "glitch" -> {
+                mc.thePlayer.noClip = gotVelocity
+
                 if (mc.thePlayer.hurtTime == 7)
-                    mc.thePlayer.motionY = 0.4;
-                gotVelocity = false;
-                break;
-            case "reverse2":
-                if(!gotVelocity) {
-                    mc.thePlayer.speedInAir = 0.02F;
-                    break;
+                    mc.thePlayer.motionY = 0.4
+
+                gotVelocity = false
+            }
+            "reverse2" -> {
+                if (!gotVelocity) {
+                    mc.thePlayer.speedInAir = 0.02f
+                    return
                 }
 
-                if(mc.thePlayer.hurtTime > 0)
-                    gotHurt = true;
-
-                if(!mc.thePlayer.onGround && !mc.thePlayer.isInWater() && !mc.thePlayer.isInLava() && !mc.thePlayer.isInWeb) {
-                    if(gotHurt)
-                        mc.thePlayer.speedInAir = reverse2StrenghtValue.get();
-                }else if(System.currentTimeMillis() - velocityTime > 80L) {
-                    gotVelocity = false;
-                    gotHurt = false;
+                if (mc.thePlayer.hurtTime > 0) {
+                    gotHurt = true
                 }
-                break;
-            case "aaczero":
-                if(mc.thePlayer.hurtTime > 0) {
-                    if(!gotVelocity || mc.thePlayer.onGround || mc.thePlayer.fallDistance > 2F)
-                        break;
+                if (!mc.thePlayer.onGround && !mc.thePlayer.isInWater && !mc.thePlayer.isInLava && !mc.thePlayer.isInWeb) {
+                    if (gotHurt)
+                        mc.thePlayer.speedInAir = reverse2StrenghtValue.get()
+                } else if (System.currentTimeMillis() - velocityTime > 80L) {
+                    gotVelocity = false
+                    gotHurt = false
+                }
+            }
+            "aaczero" -> if (mc.thePlayer.hurtTime > 0) {
+                if (!gotVelocity || mc.thePlayer.onGround || mc.thePlayer.fallDistance > 2f)
+                    return
 
-                    mc.thePlayer.addVelocity(0, -1, 0);
-                    mc.thePlayer.onGround = true;
-                }else
-                    gotVelocity = false;
-                break;
+                mc.thePlayer.addVelocity(0.0, -1.0, 0.0)
+                mc.thePlayer.onGround = true
+            } else gotVelocity = false
         }
     }
 
     @EventTarget
-    public void onPacket(final PacketEvent event) {
-        final Packet packet = event.getPacket();
+    fun onPacket(event: PacketEvent) {
+        val packet = event.packet
 
-        if(packet instanceof S12PacketEntityVelocity && mc.thePlayer != null && mc.theWorld != null) {
-            final S12PacketEntityVelocity packetEntityVelocity = (S12PacketEntityVelocity) packet;
+        if (packet is S12PacketEntityVelocity && mc.thePlayer != null && mc.theWorld != null) {
+            if (mc.theWorld.getEntityByID(packet.entityID) === mc.thePlayer) {
+                velocityTime = System.currentTimeMillis()
 
-            if(mc.theWorld.getEntityByID(packetEntityVelocity.getEntityID()) == mc.thePlayer) {
-                velocityTime = System.currentTimeMillis();
+                when (modeValue.get().toLowerCase()) {
+                    "simple" -> {
+                        val horizontal = horizontalValue.get().toDouble()
+                        val vertical = verticalValue.get().toDouble()
 
-                final String mode = modeValue.get();
+                        if (horizontal == 0.0 && vertical == 0.0)
+                            event.cancelEvent()
 
-                switch(mode.toLowerCase()) {
-                    case "simple":
-                        final double horizontal = horizontalValue.get();
-                        final double vertical = verticalValue.get();
-
-                        if(horizontal == 0D && vertical == 0D)
-                            event.cancelEvent();
-
-                        packetEntityVelocity.motionX = (int) (packetEntityVelocity.getMotionX() * horizontal);
-                        packetEntityVelocity.motionY = (int) (packetEntityVelocity.getMotionY() * vertical);
-                        packetEntityVelocity.motionZ = (int) (packetEntityVelocity.getMotionZ() * horizontal);
-                        break;
-                    case "reverse":
-                    case "reverse2":
-                    case "aaczero":
-                        gotVelocity = true;
-                        break;
-                    case "glitch":
-                        if(!mc.thePlayer.onGround)
-                            break;
-
-                        gotVelocity = true;
-                        event.cancelEvent();
-                        break;
+                        packet.motionX = (packet.getMotionX() * horizontal).toInt()
+                        packet.motionY = (packet.getMotionY() * vertical).toInt()
+                        packet.motionZ = (packet.getMotionZ() * horizontal).toInt()
+                    }
+                    "reverse", "reverse2", "aaczero" -> {
+                        gotVelocity = true
+                    }
+                    "glitch" -> {
+                        if (mc.thePlayer.onGround) {
+                            gotVelocity = true
+                            event.cancelEvent()
+                        }
+                    }
                 }
             }
         }
 
-        if(packet instanceof S27PacketExplosion)
-            event.cancelEvent();
+        if (packet is S27PacketExplosion)
+            event.cancelEvent()
     }
 
     @EventTarget
-    public void onJump(final JumpEvent event) {
-        if(mc.thePlayer == null || mc.thePlayer.isInWater())
-            return;
-
-        switch(modeValue.get().toLowerCase()) {
-            case "aacpush":
-            case "aaczero":
-                if(mc.thePlayer.hurtTime > 0)
-                    event.cancelEvent();
-                break;
+    fun onJump(event: JumpEvent) {
+        if (mc.thePlayer == null || mc.thePlayer.isInWater) return
+        when (modeValue.get().toLowerCase()) {
+            "aacpush", "aaczero" -> if (mc.thePlayer.hurtTime > 0) event.cancelEvent()
         }
     }
 
-    @Override
-    public String getTag() {
-        return modeValue.get();
-    }
+    override val tag: String
+        get() = modeValue.get()
 }
