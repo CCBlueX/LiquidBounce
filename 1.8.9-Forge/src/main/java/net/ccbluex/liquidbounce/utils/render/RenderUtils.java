@@ -352,7 +352,7 @@ public final class RenderUtils extends MinecraftInstance {
     }
 
     public static void glColor(final Color color) {
-        glColor4f(color.getRed() / 255F, color.getGreen() / 255F, color.getBlue() / 255F, color.getAlpha() / 255F);
+        glColor(color.getRGB());
     }
 
     private static void glColor(final int hex) {
@@ -360,7 +360,7 @@ public final class RenderUtils extends MinecraftInstance {
         float red = (hex >> 16 & 0xFF) / 255F;
         float green = (hex >> 8 & 0xFF) / 255F;
         float blue = (hex & 0xFF) / 255F;
-        glColor4f(red, green, blue, alpha);
+        GlStateManager.color(red, green, blue, alpha);
     }
 
     public static Color hexColor(final int hex) {
