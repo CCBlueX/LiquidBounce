@@ -5,10 +5,11 @@ import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
+import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor;
 import net.ccbluex.liquidbounce.injection.implementations.IItemStack;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
-import net.ccbluex.liquidbounce.utils.item.Armor;
+import net.ccbluex.liquidbounce.utils.item.ArmorPiece;
 import net.ccbluex.liquidbounce.utils.item.ItemUtils;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils;
@@ -23,40 +24,42 @@ import net.minecraft.item.*;
 import net.minecraft.network.play.client.C0DPacketCloseWindow;
 import net.minecraft.network.play.client.C16PacketClientStatus;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
  * LiquidBounce Hacked Client
  * A minecraft forge injection client using Mixin
  *
- * @game Minecraft
  * @author CCBlueX
+ * @game Minecraft
  */
 @ModuleInfo(name = "InventoryCleaner", description = "Automatically throws away useless items.", category = ModuleCategory.PLAYER)
 public class InventoryCleaner extends Module {
 
+    private static final Random RANDOM = new Random();
     private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 600, 0, 1000) {
         @Override
         protected void onChanged(final Integer oldValue, final Integer newValue) {
             final int minCPS = minDelayValue.get();
 
-            if(minCPS > newValue)
+            if (minCPS > newValue)
                 set(minCPS);
         }
     };
-
     private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 400, 0, 1000) {
 
         @Override
         protected void onChanged(final Integer oldValue, final Integer newValue) {
             final int maxDelay = maxDelayValue.get();
 
-            if(maxDelay < newValue)
+            if (maxDelay < newValue)
                 set(maxDelay);
         }
     };
-
     private final BoolValue invOpenValue = new BoolValue("InvOpen", false);
     private final BoolValue simulateInventory = new BoolValue("SimulateInventory", true);
     private final BoolValue noMoveValue = new BoolValue("NoMove", false);
@@ -64,8 +67,7 @@ public class InventoryCleaner extends Module {
     private final BoolValue randomSlotValue = new BoolValue("RandomSlot", false);
     private final BoolValue sortValue = new BoolValue("Sort", true);
     private final IntegerValue itemDelayValue = new IntegerValue("ItemDelay", 0, 0, 5000);
-
-    private final String[] items = new String[] {"None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water"};
+    private final String[] items = new String[]{"None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water"};
     private final ListValue sortSlot1Value = new ListValue("SortSlot-1", items, "Sword");
     private final ListValue sortSlot2Value = new ListValue("SortSlot-2", items, "Bow");
     private final ListValue sortSlot3Value = new ListValue("SortSlot-3", items, "Pickaxe");
@@ -75,120 +77,143 @@ public class InventoryCleaner extends Module {
     private final ListValue sortSlot7Value = new ListValue("SortSlot-7", items, "Food");
     private final ListValue sortSlot8Value = new ListValue("SortSlot-8", items, "Block");
     private final ListValue sortSlot9Value = new ListValue("SortSlot-9", items, "Block");
-
     private final MSTimer clickTimer = new MSTimer();
     private long delay;
+    private int[] bestArmor = new int[4];
 
     @EventTarget
     public void onRender3D(final Render3DEvent event) {
-        if(!clickTimer.hasTimePassed(delay) || (!(mc.currentScreen instanceof GuiInventory) && invOpenValue.get()) || (noMoveValue.get() && MovementUtils.isMoving()) || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
+        if (!clickTimer.hasTimePassed(delay) || (!(mc.currentScreen instanceof GuiInventory) && invOpenValue.get()) || (noMoveValue.get() && MovementUtils.isMoving()) || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
             return;
 
+        updateItems();
+
+        //noinspection unchecked
         final Map.Entry<Integer, ItemStack>[] entries = getItems(9, hotbarValue.get() ? 45 : 36).entrySet()
                 .stream()
-                .filter(stackEntry -> !isUseful(stackEntry.getValue())).sorted((o1, o2) -> randomSlotValue.get() ? new Random().nextBoolean() ? 1 : -1 : 1)
-                .toArray(Map.Entry[] ::new);
+                .filter(stackEntry -> !isUseful(stackEntry.getValue(), stackEntry.getKey()))
+                .sorted((o1, o2) -> randomSlotValue.get() ? RANDOM.nextBoolean() ? 1 : -1 : 1)
+                .toArray(Map.Entry[]::new);
 
-        if(entries.length == 0) {
+        if (entries.length == 0) {
             sortInventory();
             return;
         }
 
-        for(final Map.Entry<Integer, ItemStack> stackEntry : entries) {
+        for (final Map.Entry<Integer, ItemStack> stackEntry : entries) {
             final int slot = stackEntry.getKey();
             final ItemStack itemStack = stackEntry.getValue();
 
-            if(!isUseful(itemStack)) {
-                final boolean openInventory = !(mc.currentScreen instanceof GuiInventory) && simulateInventory.get();
+//            if(!isUseful(itemStack)) {
+            final boolean openInventory = !(mc.currentScreen instanceof GuiInventory) && simulateInventory.get();
 
-                if(openInventory)
-                    mc.getNetHandler().addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
+            if (openInventory)
+                mc.getNetHandler().addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
 
-                mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, slot, 4, 4, mc.thePlayer);
+            mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, slot, 4, 4, mc.thePlayer);
 
-                if(openInventory)
-                    mc.getNetHandler().addToSendQueue(new C0DPacketCloseWindow());
+            if (openInventory)
+                mc.getNetHandler().addToSendQueue(new C0DPacketCloseWindow());
 
-                clickTimer.reset();
-                delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
-                break;
-            }
+            clickTimer.reset();
+            delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
+            break;
         }
+//        }
     }
 
-    public boolean isUseful(final ItemStack itemStack) {
+    public void updateItems() {
+        Arrays.fill(bestArmor, -1);
+
+        getItems(0, 45).entrySet()
+                .stream()
+                .filter(i -> {
+                            ItemStack itemStack = i.getValue();
+
+                            return itemStack != null
+                                    && itemStack.getItem() instanceof ItemArmor
+                                    && (i.getKey() < 9 || System.currentTimeMillis() - ((IItemStack) (Object) itemStack).getItemDelay() >= itemDelayValue.get());
+                        }
+                )
+                .map(i -> new ArmorPiece(i.getValue(), i.getKey()))
+                .collect(Collectors.groupingBy(ArmorPiece::getArmorType))
+                .forEach((k, v) -> bestArmor[k] = v.stream().max((o1, o2) -> {
+                    int i = AutoArmor.ARMOR_COMPARATOR.compare(o1, o2);
+                    // If the items are equal, prefer the lower slot, so the items in the armor inventory are preferred
+                    return i != 0 ? i : (Integer.compare(o2.getSlot(), o1.getSlot()));
+                }).map(ArmorPiece::getSlot).orElse(-1));
+    }
+
+    /**
+     * Checks if the item is useful
+     *
+     * @param slot Slot id of the item. If the item isn't in the inventory -1
+     * @return Returns true when the item is useful
+     */
+    public boolean isUseful(ItemStack itemStack, int slot) {
         try {
             final Item item = itemStack.getItem();
 
-            if(item instanceof ItemSword || item instanceof ItemTool) {
-                for(final AttributeModifier attributeModifier : itemStack.getAttributeModifiers().get("generic.attackDamage")) {
+            if (item instanceof ItemSword || item instanceof ItemTool) {
+                for (final AttributeModifier attributeModifier : itemStack.getAttributeModifiers().get("generic.attackDamage")) {
                     final double damage = attributeModifier.getAmount() + (1.25D * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness));
 
-                    for(final ItemStack anotherStack : getItems(0, 45).values()) {
-                        if(itemStack.equals(anotherStack) || item.getClass() != anotherStack.getItem().getClass())
+                    for (final ItemStack anotherStack : getItems(0, 45).values()) {
+                        if (itemStack.equals(anotherStack) || item.getClass() != anotherStack.getItem().getClass())
                             continue;
 
-                        for(final AttributeModifier anotherAttributeModifier : anotherStack.getAttributeModifiers().get("generic.attackDamage"))
-                            if(damage <= anotherAttributeModifier.getAmount() + (1.25D * ItemUtils.getEnchantment(anotherStack, Enchantment.sharpness)))
+                        for (final AttributeModifier anotherAttributeModifier : anotherStack.getAttributeModifiers().get("generic.attackDamage"))
+                            if (damage <= anotherAttributeModifier.getAmount() + (1.25D * ItemUtils.getEnchantment(anotherStack, Enchantment.sharpness)))
                                 return false;
                     }
                 }
 
                 return true;
-            }else if(item instanceof ItemBow) {
+            } else if (item instanceof ItemBow) {
                 final int bowPower = ItemUtils.getEnchantment(itemStack, Enchantment.power);
 
-                for(final ItemStack anotherStack : getItems(0, 45).values()) {
-                    if(itemStack.equals(anotherStack) || !(anotherStack.getItem() instanceof ItemBow))
+                for (final ItemStack anotherStack : getItems(0, 45).values()) {
+                    if (itemStack.equals(anotherStack) || !(anotherStack.getItem() instanceof ItemBow))
                         continue;
 
-                    if(ItemUtils.getEnchantment(anotherStack, Enchantment.power) >= bowPower)
+                    if (ItemUtils.getEnchantment(anotherStack, Enchantment.power) >= bowPower)
                         return false;
                 }
                 return true;
-            }else if(item instanceof ItemArmor) {
-                final ItemArmor itemArmor = (ItemArmor) item;
-                final int itemID = Item.getIdFromItem(item);
+            } else if (item instanceof ItemArmor) {
+                int bestIndex = bestArmor[((ItemArmor) item).armorType];
 
-                final int[] array = Armor.getArmorArray(itemArmor);
-
-                if(array == null)
+                if (bestIndex == -1)
                     return true;
 
-                final List<Integer> armorArray = Arrays.stream(array).boxed().collect(Collectors.toList());
-
-                for(final ItemStack anotherStack : getItems(0, 45).values()) {
-                    if(!(anotherStack.getItem() instanceof ItemArmor) || itemStack.equals(anotherStack) || itemArmor.armorType != ((ItemArmor) anotherStack.getItem()).armorType)
-                        continue;
-
-                    if(armorArray.indexOf(itemID) >= armorArray.indexOf(Item.getIdFromItem(anotherStack.getItem())) && ItemUtils.getEnchantment(itemStack, Enchantment.protection) <= ItemUtils.getEnchantment(anotherStack, Enchantment.protection))
-                        return false;
+                if (slot == -1) {
+                    return AutoArmor.ARMOR_COMPARATOR.compare(new ArmorPiece(itemStack, -1), new ArmorPiece(mc.thePlayer.inventory.getStackInSlot(bestIndex), bestIndex)) > 0;
                 }
 
-                return true;
-            }else if(itemStack.getUnlocalizedName().equals("item.compass")) {
-                for(final ItemStack anotherStack : getItems(0, 45).values())
-                    if(!itemStack.equals(anotherStack) && anotherStack.getUnlocalizedName().equals("item.compass"))
+                return bestIndex == slot;
+            } else if (itemStack.getUnlocalizedName().equals("item.compass")) {
+                for (final ItemStack anotherStack : getItems(0, 45).values())
+                    if (!itemStack.equals(anotherStack) && anotherStack.getUnlocalizedName().equals("item.compass"))
                         return false;
 
                 return true;
-            }else
+            } else
                 return item instanceof ItemFood || itemStack.getUnlocalizedName().equals("item.arrow") || item instanceof ItemBlock && !itemStack.getUnlocalizedName().contains("flower") || item instanceof ItemBed || itemStack.getUnlocalizedName().equals("item.diamond") || itemStack.getUnlocalizedName().equals("item.ingotIron") || item instanceof ItemPotion || item instanceof ItemEnderPearl || item instanceof ItemEnchantedBook || item instanceof ItemBucket || itemStack.getUnlocalizedName().equals("item.stick");
-        }catch(final Throwable t) {
+        } catch (final Throwable t) {
             ClientUtils.getLogger().error("(InventoryCleaner) Failed to check item: " + itemStack.getUnlocalizedName() + ".", t);
             return true;
         }
     }
 
     private void sortInventory() {
-        if(!sortValue.get())
+        if (!sortValue.get())
             return;
 
-        for(int targetSlot = 0; targetSlot < 9; targetSlot++) {
+        for (int targetSlot = 0; targetSlot < 9; targetSlot++) {
             final ItemStack slotStack = mc.thePlayer.inventory.getStackInSlot(targetSlot);
             final SortCallback sortCallback = searchSortItem(targetSlot, slotStack);
 
-            if(sortCallback != null && sortCallback.getItemSlot() != targetSlot && (sortCallback.isReplaceCurrentItem() || slotStack == null)) {
+            if (sortCallback != null && sortCallback.getItemSlot() != targetSlot && (sortCallback.isReplaceCurrentItem() || slotStack == null)) {
                 mc.playerController.windowClick(0, sortCallback.getItemSlot() < 9 ? sortCallback.getItemSlot() + 36 : sortCallback.getItemSlot(), targetSlot, 2, mc.thePlayer);
 
                 clickTimer.reset();
@@ -199,7 +224,7 @@ public class InventoryCleaner extends Module {
     }
 
     private String getType(final int targetSlot) {
-        switch(targetSlot) {
+        switch (targetSlot) {
             case 0:
                 return sortSlot1Value.get();
             case 1:
@@ -227,40 +252,40 @@ public class InventoryCleaner extends Module {
     private SortCallback searchSortItem(final int targetSlot, final ItemStack slotStack) {
         final String targetType = getType(targetSlot);
 
-        switch(targetType.toLowerCase()) {
+        switch (targetType.toLowerCase()) {
             case "sword":
             case "pickaxe":
             case "axe": {
                 final Class<? extends Item> currentType = targetType.equalsIgnoreCase("Sword") ? ItemSword.class : targetType.equalsIgnoreCase("Pickaxe") ? ItemPickaxe.class : targetType.equalsIgnoreCase("Axe") ? ItemAxe.class : null;
                 int bestWeapon = slotStack != null && slotStack.getItem().getClass() == currentType ? targetSlot : -1;
 
-                for(int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
+                for (int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
                     final ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(sourceSlot);
 
-                    if(itemStack != null && itemStack.getItem().getClass() == currentType &&
+                    if (itemStack != null && itemStack.getItem().getClass() == currentType &&
                             !getType(sourceSlot).equalsIgnoreCase(targetType)) {
 
-                        if(bestWeapon == -1) {
+                        if (bestWeapon == -1) {
                             bestWeapon = sourceSlot;
                             continue;
                         }
 
-                        for(final AttributeModifier attributeModifier : itemStack.getAttributeModifiers().get("generic.attackDamage")) {
+                        for (final AttributeModifier attributeModifier : itemStack.getAttributeModifiers().get("generic.attackDamage")) {
                             final double damage = attributeModifier.getAmount() + (1.25D * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness));
 
                             final ItemStack anotherStack = mc.thePlayer.inventory.getStackInSlot(bestWeapon);
 
-                            if(anotherStack == null)
+                            if (anotherStack == null)
                                 continue;
 
-                            for(final AttributeModifier anotherAttributeModifier : anotherStack.getAttributeModifiers().get("generic.attackDamage"))
-                                if(damage < anotherAttributeModifier.getAmount() + (1.25D * ItemUtils.getEnchantment(anotherStack, Enchantment.sharpness)))
+                            for (final AttributeModifier anotherAttributeModifier : anotherStack.getAttributeModifiers().get("generic.attackDamage"))
+                                if (damage < anotherAttributeModifier.getAmount() + (1.25D * ItemUtils.getEnchantment(anotherStack, Enchantment.sharpness)))
                                     bestWeapon = sourceSlot;
                         }
                     }
                 }
 
-                if(bestWeapon == -1)
+                if (bestWeapon == -1)
                     return null;
 
                 return new SortCallback(bestWeapon, true);
@@ -268,51 +293,51 @@ public class InventoryCleaner extends Module {
             case "bow": {
                 int bestWeapon = -1;
 
-                for(int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
+                for (int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
                     final ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(sourceSlot);
 
-                    if(itemStack != null && itemStack.getItem() instanceof ItemBow &&
+                    if (itemStack != null && itemStack.getItem() instanceof ItemBow &&
                             !getType(sourceSlot).equalsIgnoreCase(targetType)) {
-                        if(bestWeapon == -1) {
+                        if (bestWeapon == -1) {
                             bestWeapon = sourceSlot;
                             continue;
                         }
 
                         final ItemStack anotherStack = mc.thePlayer.inventory.getStackInSlot(bestWeapon);
 
-                        if(ItemUtils.getEnchantment(itemStack, Enchantment.power) > ItemUtils.getEnchantment(anotherStack, Enchantment.power))
+                        if (ItemUtils.getEnchantment(itemStack, Enchantment.power) > ItemUtils.getEnchantment(anotherStack, Enchantment.power))
                             bestWeapon = sourceSlot;
                     }
                 }
 
-                if(bestWeapon == -1)
+                if (bestWeapon == -1)
                     return null;
 
                 return new SortCallback(bestWeapon, true);
             }
             case "food": {
-                for(int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
+                for (int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
                     final ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(sourceSlot);
 
-                    if(itemStack != null && itemStack.getItem() instanceof ItemFood && !getType(sourceSlot).equalsIgnoreCase("Food"))
+                    if (itemStack != null && itemStack.getItem() instanceof ItemFood && !getType(sourceSlot).equalsIgnoreCase("Food"))
                         return new SortCallback(sourceSlot, slotStack == null || !(slotStack.getItem() instanceof ItemFood));
                 }
                 break;
             }
             case "block": {
-                for(int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
+                for (int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
                     final ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(sourceSlot);
 
-                    if(itemStack != null && itemStack.getItem() instanceof ItemBlock && !getType(sourceSlot).equalsIgnoreCase("Block"))
+                    if (itemStack != null && itemStack.getItem() instanceof ItemBlock && !getType(sourceSlot).equalsIgnoreCase("Block"))
                         return new SortCallback(sourceSlot, slotStack == null || !(slotStack.getItem() instanceof ItemBlock));
                 }
                 break;
             }
             case "water":
-                for(int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
+                for (int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
                     final ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(sourceSlot);
 
-                    if(itemStack != null && itemStack.getItem() instanceof ItemBucket && ((ItemBucket) itemStack.getItem()).isFull == Blocks.flowing_water && !getType(sourceSlot).equalsIgnoreCase("Water"))
+                    if (itemStack != null && itemStack.getItem() instanceof ItemBucket && ((ItemBucket) itemStack.getItem()).isFull == Blocks.flowing_water && !getType(sourceSlot).equalsIgnoreCase("Water"))
                         return new SortCallback(sourceSlot, slotStack == null || !(slotStack.getItem() instanceof ItemBucket && ((ItemBucket) slotStack.getItem()).isFull == Blocks.water));
                 }
                 break;
@@ -324,13 +349,13 @@ public class InventoryCleaner extends Module {
     private Map<Integer, ItemStack> getItems(final int start, final int end) {
         final Map<Integer, ItemStack> itemsMap = new HashMap<>();
 
-        for(int i = end - 1; i >= start; i--) {
+        for (int i = end - 1; i >= start; i--) {
             final ItemStack itemStack = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
 
-            if(i >= 36 && i <= 44 && getType(i).equalsIgnoreCase("Ignore"))
+            if (i >= 36 && i <= 44 && getType(i).equalsIgnoreCase("Ignore"))
                 continue;
 
-            if(itemStack != null && itemStack.getItem() != null && System.currentTimeMillis() - ((IItemStack) (Object) itemStack).getItemDelay() >= itemDelayValue.get())
+            if (itemStack != null && itemStack.getItem() != null && System.currentTimeMillis() - ((IItemStack) (Object) itemStack).getItemDelay() >= itemDelayValue.get())
                 itemsMap.put(i, itemStack);
 
         }
