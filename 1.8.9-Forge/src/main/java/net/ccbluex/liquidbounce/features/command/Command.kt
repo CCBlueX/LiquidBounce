@@ -24,6 +24,18 @@ abstract class Command(val command: String, val alias: Array<String>) : Minecraf
     abstract fun execute(args: Array<String>)
 
     /**
+     * Returns a list of command completions based on the provided [args].
+     * If a command does not implement [tabComplete] an [EmptyList] is returned by default.
+     *
+     * @param args an array of command arguments that the player has passed to the command so far
+     * @return a list of matching completions for the command the player is trying to autocomplete
+     * @author NurMarvin
+     */
+    open fun tabComplete(args: Array<String>): List<String> {
+        return emptyList()
+    }
+
+    /**
      * Print [msg] to chat
      */
     protected fun chat(msg: String) = ClientUtils.displayChatMessage("§8[§9§l${LiquidBounce.CLIENT_NAME}§8] §3$msg")
@@ -34,12 +46,12 @@ abstract class Command(val command: String, val alias: Array<String>) : Minecraf
     protected fun chatSyntax(syntax: String) = ClientUtils.displayChatMessage("§8[§9§l${LiquidBounce.CLIENT_NAME}§8] §3Syntax: §7${LiquidBounce.CLIENT.commandManager.prefix}$syntax")
 
     /**
-     * Print [syntaxes] of command to chat
+     * Print [syntaxArray] of command to chat
      */
-    protected fun chatSyntax(syntaxes: Array<String>) {
+    protected fun chatSyntax(syntaxArray: Array<String>) {
         ClientUtils.displayChatMessage("§8[§9§l${LiquidBounce.CLIENT_NAME}§8] §3Syntax:")
 
-        for (syntax in syntaxes)
+        for (syntax in syntaxArray)
             ClientUtils.displayChatMessage("§8> §7${LiquidBounce.CLIENT.commandManager.prefix}$command ${syntax.toLowerCase()}")
     }
 

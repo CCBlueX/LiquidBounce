@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
@@ -18,6 +19,8 @@ import kotlin.concurrent.thread
  */
 class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings", "config", "autosetting")) {
 
+    private var autoSettings: JsonArray? = null
+
     override fun execute(args: Array<String>) {
         if (args.size <= 1) {
             chatSyntax("autosettings <load/list>")
@@ -28,20 +31,10 @@ class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings
             chat("Loading settings...")
 
             thread {
-                try {
-                    val listUrl = "https://api.github.com/repos/CCBlueX/FileCloud/contents/LiquidBounce/autosettings"
-                    val listElement = JsonParser().parse(NetworkUtils.readContent(listUrl))
+                val settings = this.getSettings()
 
-                    if (!listElement.isJsonArray)
-                        return@thread
-
-                    val listArray = listElement.asJsonArray
-
-                    for (setting in listArray)
-                        chat("> " + setting.asJsonObject["name"].asString)
-                } catch (e: Exception) {
-                    chat("Failed to fetch auto settings list.")
-                }
+                for (setting in settings)
+                    chat("> " + setting.asJsonObject["name"].asString)
             }
             return
         } else if (args[1].equals("load", ignoreCase = true)) {
@@ -69,5 +62,40 @@ class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings
             }
             return
         }
+    }
+
+    override fun tabComplete(args: Array<String>): List<String> {
+        if (args.isEmpty()) return emptyList()
+
+        return when (args.size) {
+            1 -> listOf("list", "load").filter { it.startsWith(args[0], true) }
+            2 -> {
+                if (args[0].equals("load", true)) {
+                    return this.getSettings()
+                        .map { it.asJsonObject["name"].asString }
+                        .filter { it.startsWith(args[1], true) }
+                }
+                return emptyList()
+            }
+            else -> emptyList()
+        }
+    }
+
+    private fun getSettings(): JsonArray {
+        if (this.autoSettings != null) return this.autoSettings!!
+
+        try {
+            val listUrl = "https://api.github.com/repos/CCBlueX/FileCloud/contents/LiquidBounce/autosettings"
+            val listElement = JsonParser().parse(NetworkUtils.readContent(listUrl))
+
+            if (!listElement.isJsonArray)
+                return JsonArray()
+
+            this.autoSettings = listElement.asJsonArray
+            return this.getSettings()
+        } catch (e: Exception) {
+            chat("Failed to fetch auto settings list.")
+        }
+        return JsonArray()
     }
 }

@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 
 class ShortcutCommand: Command("shortcut", arrayOf()) {
-
     override fun execute(args: Array<String>) {
         when {
             args.size > 3 && args[1].equals("add", true) -> {

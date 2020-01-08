@@ -11,7 +11,6 @@ class RemoteViewCommand : Command("remoteview", arrayOf("rv")) {
                 mc.renderViewEntity = mc.thePlayer
                 return
             }
-
             chatSyntax("remoteview <username>")
             return
         }
@@ -25,6 +24,17 @@ class RemoteViewCommand : Command("remoteview", arrayOf("rv")) {
                 chat("Execute §8${LiquidBounce.CLIENT.commandManager.prefix}remoteview §3again to go back to yours.")
                 break
             }
+        }
+    }
+
+    override fun tabComplete(args: Array<String>): List<String> {
+        if (args.isEmpty()) return emptyList()
+
+        return when (args.size) {
+            1 -> return mc.theWorld.playerEntities
+                .map { it.name }
+                .filter { it.startsWith(args[0], true) }
+            else -> emptyList()
         }
     }
 }

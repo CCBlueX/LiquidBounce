@@ -12,7 +12,7 @@ import net.minecraft.block.Block
  * @author SenkJu
  */
 class ModuleCommand(val module: Module, val values: List<Value<*>> = module.values) :
-        Command(module.name.toLowerCase(), emptyArray()) {
+    Command(module.name.toLowerCase(), emptyArray()) {
 
     init {
         if (values.isEmpty())
@@ -24,8 +24,8 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
      */
     override fun execute(args: Array<String>) {
         val valueNames = values
-                .filter { it !is FontValue }
-                .joinToString(separator = "/") { it.name.toLowerCase() }
+            .filter { it !is FontValue }
+            .joinToString(separator = "/") { it.name.toLowerCase() }
 
         val moduleName = module.name.toLowerCase()
 
@@ -98,4 +98,24 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
         }
     }
 
+    override fun tabComplete(args: Array<String>): List<String> {
+        if (args.isEmpty()) return emptyList()
+
+        return when (args.size) {
+            1 -> values
+                .filter { it !is FontValue && it.name.startsWith(args[0], true) }
+                .map { it.name.toLowerCase() }
+            2 -> {
+                when(module.getValue(args[0])) {
+                    is BlockValue -> {
+                        return Block.blockRegistry.keys
+                            .map { it.resourcePath.toLowerCase() }
+                            .filter { it.startsWith(args[1], true) }
+                    }
+                    else -> emptyList()
+                }
+            }
+            else -> emptyList()
+        }
+    }
 }

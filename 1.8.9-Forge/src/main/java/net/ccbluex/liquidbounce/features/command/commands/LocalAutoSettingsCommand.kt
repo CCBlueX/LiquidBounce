@@ -17,7 +17,6 @@ import java.io.IOException
  * @author CCBlueX
  */
 class LocalAutoSettingsCommand : Command("localautosettings", arrayOf("localsetting", "localsettings", "localconfig")) {
-
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
             when {
@@ -106,7 +105,9 @@ class LocalAutoSettingsCommand : Command("localautosettings", arrayOf("localsett
                 args[1].equals("list", ignoreCase = true) -> {
                     chat("§cSettings:")
 
-                    for (file in LiquidBounce.CLIENT.fileManager.settingsDir.listFiles())
+                    val settings = this.getLocalSettings() ?: return
+
+                    for (file in settings)
                         chat("> " + file.name)
                     return
                 }
@@ -115,4 +116,26 @@ class LocalAutoSettingsCommand : Command("localautosettings", arrayOf("localsett
         chatSyntax("localsettings <load/save/list/delete>")
     }
 
+    override fun tabComplete(args: Array<String>): List<String> {
+        if (args.isEmpty()) return emptyList()
+
+        return when (args.size) {
+            1 -> listOf("delete", "list", "load", "save").filter { it.startsWith(args[0], true) }
+            2 -> {
+                when (args[0].toLowerCase()) {
+                    "delete", "load" -> {
+                        val settings = this.getLocalSettings() ?: return emptyList()
+
+                        return settings
+                            .map { it.name }
+                            .filter { it.startsWith(args[1], true) }
+                    }
+                }
+                return emptyList()
+            }
+            else -> emptyList()
+        }
+    }
+
+    private fun getLocalSettings(): Array<File>? = LiquidBounce.CLIENT.fileManager.settingsDir.listFiles()
 }

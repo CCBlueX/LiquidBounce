@@ -19,8 +19,8 @@ import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 class HoloStandCommand : Command("holostand", emptyArray()) {
     override fun execute(args: Array<String>) {
         if (args.size > 4) {
-            if (!mc.thePlayer.capabilities.isCreativeMode) {
-                chat("You need creative mode.")
+            if (mc.playerController.isNotCreative) {
+                chat("§c§lError: §3You need to be in creative mode.")
                 return
             }
 
@@ -47,7 +47,7 @@ class HoloStandCommand : Command("holostand", emptyArray()) {
                 itemStack.setStackDisplayName("§c§lHolo§eStand")
                 mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(36, itemStack))
 
-                chat("The Holostand was successfully added to your inventory.")
+                chat("The HoloStand was successfully added to your inventory.")
             } catch (exception: NumberFormatException) {
                 chatSyntaxError()
             }

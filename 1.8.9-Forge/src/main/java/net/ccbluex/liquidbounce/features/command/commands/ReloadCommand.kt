@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
  * @author CCBlueX
  */
 class ReloadCommand : Command("reload", arrayOf("configreload")) {
-
     override fun execute(args: Array<String>) {
         chat("Reloading...")
         chat("§c§lReloading scripts...")
@@ -37,5 +36,4 @@ class ReloadCommand : Command("reload", arrayOf("configreload")) {
         LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.clickGuiConfig)
         chat("Reloaded.")
     }
-
 }

@@ -4,6 +4,7 @@ import net.ccbluex.liquidbounce.features.command.commands.*
 import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
 import net.ccbluex.liquidbounce.features.command.shortcuts.ShortcutParser
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.minecraft.util.EnumChatFormatting
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 
@@ -15,9 +16,10 @@ import net.minecraftforge.fml.relauncher.SideOnly
  * @author CCBlueX
  */
 @SideOnly(Side.CLIENT)
-class CommandManager {
+class CommandManager() {
 
     val commands = mutableListOf<Command>()
+    var latestAutoComplete: Array<String> = emptyArray()
 
     var prefix = '.'
 
@@ -79,10 +81,61 @@ class CommandManager {
     }
 
     /**
+     * Updates the [latestAutoComplete] array based on the provided [input].
+     *
+     * @param input text that should be used to check for auto completions.
+     * @author NurMarvin
+     */
+    fun autoComplete(input: String): Boolean {
+        this.latestAutoComplete = this.getCompletions(input) ?: emptyArray()
+        return input.startsWith(this.prefix) || this.latestAutoComplete.isNotEmpty()
+    }
+
+    /**
+     * Returns the auto completions for [input].
+     *
+     * @param input text that should be used to check for auto completions.
+     * @author NurMarvin
+     */
+    private fun getCompletions(input: String): Array<String>? {
+        if (input.isNotEmpty() && input.toCharArray()[0] == this.prefix) {
+            val args = input.split(" ")
+
+            return if (args.size > 1) {
+                val command = getCommand(args[0].substring(1))
+                val tabCompletions = command?.tabComplete(args.drop(1).toTypedArray())?.map { EnumChatFormatting.GRAY.toString() + it + EnumChatFormatting.RESET }
+
+                tabCompletions?.toTypedArray()
+            } else {
+                val rawInput = input.substring(1)
+                commands
+                    .filter {
+                        it.command.startsWith(rawInput, true)
+                            || it.alias.any { alias -> alias.startsWith(rawInput, true) }
+                    }
+                    .map {
+                        val alias: String = if (it.command.startsWith(rawInput, true))
+                            it.command
+                        else {
+                            it.alias.first { alias -> alias.startsWith(rawInput, true) }
+                        }
+
+                        EnumChatFormatting.GRAY.toString() + this.prefix + alias + EnumChatFormatting.RESET
+                    }
+                    .toTypedArray()
+            }
+        }
+        return null
+    }
+
+    /**
      * Get command instance by given [name]
      */
     fun getCommand(name: String): Command? {
-        return commands.find { it.command.equals(name, ignoreCase = true) }
+        return commands.find {
+            it.command.equals(name, ignoreCase = true)
+                || it.alias.any { alias -> alias.equals(name, true) }
+        }
     }
 
     /**
@@ -104,7 +157,7 @@ class CommandManager {
 
     fun unregisterShortcut(name: String) = commands.removeIf {
         it is Shortcut &&
-                it.command.equals(name, ignoreCase = true)
+            it.command.equals(name, ignoreCase = true)
     }
 
     /**

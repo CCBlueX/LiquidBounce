@@ -11,7 +11,6 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
  * @author CCBlueX
  */
 class HurtCommand : Command("hurt", emptyArray()) {
-
     override fun execute(args: Array<String>) {
         var damage = 1
 
@@ -38,5 +37,4 @@ class HurtCommand : Command("hurt", emptyArray()) {
         // Output message
         chat("You were damaged.")
     }
-
 }

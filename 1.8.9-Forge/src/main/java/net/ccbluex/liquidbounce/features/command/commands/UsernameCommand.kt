@@ -12,7 +12,6 @@ import java.awt.datatransfer.StringSelection
  * @author CCBlueX
  */
 class UsernameCommand : Command("username", emptyArray()) {
-
     /**
      * Execute command
      *
@@ -26,5 +25,4 @@ class UsernameCommand : Command("username", emptyArray()) {
         val stringSelection = StringSelection(username)
         Toolkit.getDefaultToolkit().systemClipboard.setContents(stringSelection, stringSelection)
     }
-
 }

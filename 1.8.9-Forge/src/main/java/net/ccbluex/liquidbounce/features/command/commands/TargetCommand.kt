@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
  * @author CCBlueX
  */
 class TargetCommand : Command("target", emptyArray()) {
-
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
             when {
@@ -48,4 +47,13 @@ class TargetCommand : Command("target", emptyArray()) {
         chatSyntax("target <players/mobs/animals/invisible>")
     }
 
+    override fun tabComplete(args: Array<String>): List<String> {
+        if (args.isEmpty()) return emptyList()
+
+        return when (args.size) {
+            1 -> listOf("players", "mobs", "animals", "invisible")
+                .filter { it.startsWith(args[0], true) }
+            else -> emptyList()
+        }
+    }
 }

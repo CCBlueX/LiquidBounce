@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.features.command.Command
  * @author CCBlueX
  */
 class VClipCommand : Command("vclip", emptyArray()) {
-
     /**
      * Execute command
      *
@@ -33,5 +32,4 @@ class VClipCommand : Command("vclip", emptyArray()) {
 
         chatSyntax("vclip <value>")
     }
-
 }

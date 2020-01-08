@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
  * @author CCBlueX
  */
 class HClipCommand : Command("hclip", emptyArray()) {
-
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
             try {
@@ -25,5 +24,4 @@ class HClipCommand : Command("hclip", emptyArray()) {
 
         chatSyntax("hclip <value>")
     }
-
 }

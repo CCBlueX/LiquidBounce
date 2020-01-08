@@ -16,7 +16,7 @@ class RenameCommand : Command("rename", emptyArray()) {
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
             if (mc.playerController.isNotCreative) {
-                chat("§c§lError: §3You need creative mode.")
+                chat("§c§lError: §3You need to be in creative mode.")
                 return
             }
 
