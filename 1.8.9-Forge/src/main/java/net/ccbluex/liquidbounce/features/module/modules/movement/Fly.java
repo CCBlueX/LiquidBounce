@@ -142,7 +142,10 @@ public class Fly extends Module {
                 mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + 2, mc.thePlayer.posZ);
                 break;
             case "boosthypixel":
-                if(!mc.thePlayer.onGround) break;
+                if(!mc.thePlayer.onGround
+                   &&(!mc.world.getCollisionBoxes(mc.player,mc.player.getEntityBoundingBox().offset(0.0 D, -1.0, 0.0 D))
+                      .isEmpty())) 
+                    break;
 
                 //Dog Updated on 12/27/2019
                 for(int i = 0; i <= 49; i++) {
@@ -171,7 +174,7 @@ public class Fly extends Module {
         }
         super.onEnable();
     }
-
+    
     @Override
     public void onDisable() {
         wasDead = false;
