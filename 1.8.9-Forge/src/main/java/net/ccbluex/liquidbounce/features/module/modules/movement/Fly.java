@@ -143,7 +143,7 @@ public class Fly extends Module {
                 break;
             case "boosthypixel":
                 if(!mc.thePlayer.onGround
-                   &&(mc.world.getCollisionBoxes(mc.player,mc.player.getEntityBoundingBox().offset(0.0 D, -0.1, 0.0 D))
+                   &&(mc.theWorld.getCollisionBoxes(mc.thePlayer,mc.thePlayer.getEntityBoundingBox().offset(0.0 D, -0.1, 0.0 D))
                       .isEmpty())) 
                     break;
 
