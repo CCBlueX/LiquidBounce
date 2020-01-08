@@ -81,7 +81,9 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
    }
 
    /**
-    * @param callbackInfo
+    * Adds client command auto completion and cancels sending an auto completion request packet
+    * to the server if the message contains a client command.
+    *
     * @author NurMarvin
     */
    @Inject(method = "sendAutocompleteRequest", at = @At("HEAD"), cancellable = true)
