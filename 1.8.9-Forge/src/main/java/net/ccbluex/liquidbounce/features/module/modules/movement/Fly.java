@@ -144,9 +144,11 @@ public class Fly extends Module {
             case "boosthypixel":
                 if(!mc.thePlayer.onGround) break;
 
-                for(int i = 0; i <= 64; i++) {
-                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY + 0.0625, mc.thePlayer.posZ, false));
-                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, i >= 64));
+                //Dog Updated on 12/27/2019
+                for(int i = 0; i <= 49; i++) {
+                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY + 0.06249D, mc.thePlayer.posZ, false));
+                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, false));
+                    mc.player.onGround = false;
                 }
 
                 mc.thePlayer.jump();
