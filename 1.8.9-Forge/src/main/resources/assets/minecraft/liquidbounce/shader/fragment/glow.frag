@@ -9,6 +9,7 @@ uniform float radius;
 uniform float divider;
 uniform float maxSample;
 
+// TODO: Replace floats for ints because amd sucks apparently...
 void main() {
     vec4 centerCol = texture2D(texture, gl_TexCoord[0].xy);
 
