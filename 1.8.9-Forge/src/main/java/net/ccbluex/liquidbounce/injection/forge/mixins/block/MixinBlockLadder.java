@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.FastClimb;
 import net.minecraft.block.BlockLadder;
 import net.minecraft.block.properties.PropertyDirection;
@@ -37,7 +37,7 @@ public abstract class MixinBlockLadder extends MixinBlock {
         final IBlockState iblockstate = worldIn.getBlockState(pos);
 
         if(iblockstate.getBlock() instanceof BlockLadder) {
-            final FastClimb fastClimb = (FastClimb) ModuleManager.getModule(FastClimb.class);
+            final FastClimb fastClimb = (FastClimb) LiquidBounce.moduleManager.getModule(FastClimb.class);
             final float f = fastClimb.getState() && fastClimb.modeValue.get().equalsIgnoreCase("AAC") ? 0.99f : 0.125f;
 
             switch(iblockstate.getValue(FACING)) {

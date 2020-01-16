@@ -36,7 +36,7 @@ public class ModuleElement extends ButtonElement {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float button) {
-        LiquidBounce.CLIENT.clickGui.style.drawModuleElement(mouseX, mouseY, this);
+        LiquidBounce.clickGui.style.drawModuleElement(mouseX, mouseY, this);
     }
 
     @Override

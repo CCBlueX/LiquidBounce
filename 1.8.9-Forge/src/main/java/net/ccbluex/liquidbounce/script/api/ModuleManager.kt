@@ -3,7 +3,6 @@ package net.ccbluex.liquidbounce.script.api
 import jdk.nashorn.api.scripting.ScriptObjectMirror
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.script.api.module.AdaptedModule
 import net.ccbluex.liquidbounce.script.api.module.ScriptModule
 
@@ -22,7 +21,7 @@ object ModuleManager {
     @JvmStatic
     fun registerModule(scriptObjectMirror: ScriptObjectMirror): Module {
         val module = ScriptModule(scriptObjectMirror)
-        LiquidBounce.CLIENT.moduleManager.registerModule(module)
+        LiquidBounce.moduleManager.registerModule(module)
         return module
     }
 
@@ -45,7 +44,7 @@ object ModuleManager {
     fun unregisterModule(scriptObjectMirror : ScriptObjectMirror) {
         val module = ScriptModule(scriptObjectMirror)
 
-        unregisterModule(ModuleManager.getModule(module.name)!!, true)
+        unregisterModule(LiquidBounce.moduleManager.getModule(module.name)!!, true)
     }
 
     /**
@@ -58,7 +57,7 @@ object ModuleManager {
     fun unregisterModule(module : Module, autoDisable : Boolean) {
         if(autoDisable && module.state) module.state = false
 
-        LiquidBounce.CLIENT.moduleManager.unregisterModule(module)
+        LiquidBounce.moduleManager.unregisterModule(module)
     }
 
     /**
@@ -67,11 +66,11 @@ object ModuleManager {
      * @param moduleName Name of module
      */
     @JvmStatic
-    fun getModule(moduleName: String) = AdaptedModule(ModuleManager.getModule(moduleName)!!)
+    fun getModule(moduleName: String) = AdaptedModule(LiquidBounce.moduleManager.getModule(moduleName)!!)
 
     /**
      * @return a list of all modules
      */
     @JvmStatic
-    fun getModules() = ModuleManager.getModules().map { AdaptedModule(it) }
+    fun getModules() = LiquidBounce.moduleManager.modules.map { AdaptedModule(it) }
 }

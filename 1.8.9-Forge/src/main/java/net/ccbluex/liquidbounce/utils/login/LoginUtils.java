@@ -35,7 +35,7 @@ public final class LoginUtils extends MinecraftInstance {
 
             mc.session = new Session(userAuthentication.getSelectedProfile().getName(),
                     userAuthentication.getSelectedProfile().getId().toString(), userAuthentication.getAuthenticatedToken(), "mojang");
-            LiquidBounce.CLIENT.eventManager.callEvent(new SessionEvent());
+            LiquidBounce.eventManager.callEvent(new SessionEvent());
 
             return LoginResult.LOGGED;
         }catch(AuthenticationUnavailableException exception) {
@@ -54,7 +54,7 @@ public final class LoginUtils extends MinecraftInstance {
 
     public static void loginCracked(final String username) {
         mc.session = new Session(username, UserUtils.INSTANCE.getUUID(username), "-", "legacy");
-        LiquidBounce.CLIENT.eventManager.callEvent(new SessionEvent());
+        LiquidBounce.eventManager.callEvent(new SessionEvent());
     }
 
     public enum LoginResult {

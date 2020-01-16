@@ -1,10 +1,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement;
 
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
@@ -111,12 +111,12 @@ public class Step extends Module {
         if(mc.thePlayer == null)
             return;
 
-        if(ModuleManager.getModule(Phase.class).getState()) {
+        if (LiquidBounce.moduleManager.getModule(Phase.class).getState()) {
             event.setStepHeight(0F);
             return;
         }
 
-        final Fly fly = (Fly) ModuleManager.getModule(Fly.class);
+        final Fly fly = (Fly) LiquidBounce.moduleManager.getModule(Fly.class);
 
         if(fly.getState()) {
             final String flyMode = fly.modeValue.get();

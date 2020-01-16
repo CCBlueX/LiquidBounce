@@ -1,7 +1,6 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI;
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.Element;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
@@ -64,7 +63,7 @@ public abstract class Panel extends MinecraftInstance {
         if(!visible)
             return;
 
-        final int maxElements = ((ClickGUI) Objects.requireNonNull(ModuleManager.getModule(ClickGUI.class))).maxElementsValue.get();
+        final int maxElements = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).maxElementsValue.get();
 
         // Drag
         if(drag) {
@@ -82,7 +81,7 @@ public abstract class Panel extends MinecraftInstance {
         if(this.scrollbar != scrollbar)
             this.scrollbar = scrollbar;
 
-        LiquidBounce.CLIENT.clickGui.style.drawPanel(mouseX, mouseY, this);
+        LiquidBounce.clickGui.style.drawPanel(mouseX, mouseY, this);
 
         int y = this.y + height - 2;
         int count = 0;
@@ -129,7 +128,7 @@ public abstract class Panel extends MinecraftInstance {
     }
 
     public boolean handleScroll(int mouseX, int mouseY, int wheel) {
-        final int maxElements = ((ClickGUI) Objects.requireNonNull(ModuleManager.getModule(ClickGUI.class))).maxElementsValue.get();
+        final int maxElements = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).maxElementsValue.get();
 
         if(mouseX >= getX() && mouseX <= getX() + 100 && mouseY >= getY() && mouseY <= getY() + 19 + elementsHeight) {
             if(wheel < 0 && scroll < elements.size() - maxElements) {
@@ -228,7 +227,7 @@ public abstract class Panel extends MinecraftInstance {
         int height = 0;
         int count = 0;
         for(final Element element : elements) {
-            if(count >= ((ClickGUI) Objects.requireNonNull(ModuleManager.getModule(ClickGUI.class))).maxElementsValue.get())
+            if (count >= ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).maxElementsValue.get())
                 continue;
             height += element.getHeight() + 1;
             ++count;

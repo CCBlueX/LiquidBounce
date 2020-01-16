@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.Module;
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat;
 import net.ccbluex.liquidbounce.features.special.AntiForge;
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof;
@@ -59,7 +58,7 @@ public class ValuesConfig extends FileConfig {
             final Map.Entry<String, JsonElement> entry = iterator.next();
 
             if (entry.getKey().equalsIgnoreCase("CommandPrefix")) {
-                LiquidBounce.CLIENT.commandManager.setPrefix(entry.getValue().getAsCharacter());
+                LiquidBounce.commandManager.setPrefix(entry.getValue().getAsCharacter());
             } else if (entry.getKey().equalsIgnoreCase("targets")) {
                 JsonObject jsonValue = (JsonObject) entry.getValue();
 
@@ -113,7 +112,7 @@ public class ValuesConfig extends FileConfig {
                 if (jsonValue.has("Particles"))
                     GuiBackground.Companion.setParticles(jsonValue.get("Particles").getAsBoolean());
             } else {
-                final Module module = ModuleManager.getModule(entry.getKey());
+                final Module module = LiquidBounce.moduleManager.getModule(entry.getKey());
 
                 if(module != null) {
                     final JsonObject jsonModule = (JsonObject) entry.getValue();
@@ -137,7 +136,7 @@ public class ValuesConfig extends FileConfig {
     protected void saveConfig() throws IOException {
         final JsonObject jsonObject = new JsonObject();
 
-        jsonObject.addProperty("CommandPrefix", LiquidBounce.CLIENT.commandManager.getPrefix());
+        jsonObject.addProperty("CommandPrefix", LiquidBounce.commandManager.getPrefix());
 
         final JsonObject jsonTargets = new JsonObject();
         jsonTargets.addProperty("TargetPlayer", EntityUtils.targetPlayer);
@@ -173,7 +172,7 @@ public class ValuesConfig extends FileConfig {
         backgroundObject.addProperty("Particles", GuiBackground.Companion.getParticles());
         jsonObject.add("Background", backgroundObject);
 
-        ModuleManager.getModules().stream().filter(module -> !module.getValues().isEmpty()).forEach(module -> {
+        LiquidBounce.moduleManager.getModules().stream().filter(module -> !module.getValues().isEmpty()).forEach(module -> {
             final JsonObject jsonModule = new JsonObject();
             module.getValues().forEach(value -> jsonModule.add(value.getName(), value.toJson()));
             jsonObject.add(module.getName(), jsonModule);

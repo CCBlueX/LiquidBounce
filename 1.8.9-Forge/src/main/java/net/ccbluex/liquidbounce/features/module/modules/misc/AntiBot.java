@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc;
 
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.AttackEvent;
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.PacketEvent;
@@ -7,7 +8,6 @@ import net.ccbluex.liquidbounce.event.WorldEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
@@ -133,7 +133,7 @@ public class AntiBot extends Module {
         if(!(entity instanceof EntityPlayer))
             return false;
 
-        final AntiBot antiBot = (AntiBot) ModuleManager.getModule(AntiBot.class);
+        final AntiBot antiBot = (AntiBot) LiquidBounce.moduleManager.getModule(AntiBot.class);
 
         if(antiBot == null || !antiBot.getState())
             return false;

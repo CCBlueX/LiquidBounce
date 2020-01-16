@@ -61,7 +61,7 @@ class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings
                     chat("Applying settings...")
                     SettingsUtils.executeScript(settings)
                     chat("§6Settings applied successfully")
-                    LiquidBounce.CLIENT.hud.addNotification(Notification("Updated Settings"))
+                    LiquidBounce.hud.addNotification(Notification("Updated Settings"))
                     playEdit()
                 } catch (exception: Exception) {
                     chat("Failed to fetch auto settings.")

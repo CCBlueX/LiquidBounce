@@ -66,13 +66,13 @@ class AdaptedModule(private val module : Module) {
      * Register adapted module
      */
     fun register() {
-        LiquidBounce.CLIENT.moduleManager.registerModule(module)
+        LiquidBounce.moduleManager.registerModule(module)
     }
 
     /**
      * Unregiser adapted module
      */
     fun unregister() {
-        LiquidBounce.CLIENT.moduleManager.unregisterModule(module)
+        LiquidBounce.moduleManager.unregisterModule(module)
     }
 }

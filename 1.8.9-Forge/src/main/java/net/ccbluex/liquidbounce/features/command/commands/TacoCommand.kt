@@ -39,7 +39,7 @@ class TacoCommand : Command("taco", emptyArray()), Listenable {
     )
 
     init {
-        LiquidBounce.CLIENT.eventManager.registerListener(this)
+        LiquidBounce.eventManager.registerListener(this)
     }
 
     override fun execute(args: Array<String>) {

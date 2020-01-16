@@ -38,11 +38,11 @@ class Script(val scriptFile: File) : MinecraftInstance() {
 
         // Variables
         scriptEngine.put("mc", mc)
-        scriptEngine.put("scriptManager", LiquidBounce.CLIENT.scriptManager)
+        scriptEngine.put("scriptManager", LiquidBounce.scriptManager)
         scriptEngine.put("script", this)
 
         scriptEngine.put("commandManager", StaticClass.forClass(CommandManager.javaClass))
-        scriptEngine.put("moduleManager", StaticClass.forClass(ModuleManager.javaClass))
+        scriptEngine.put("moduleManager", StaticClass.forClass(LiquidBounce.moduleManager.javaClass))
         scriptEngine.put("creativeTabs", StaticClass.forClass(CreativeTab.javaClass))
         scriptEngine.put("item", StaticClass.forClass(Item.javaClass))
         scriptEngine.put("value", StaticClass.forClass(Value.javaClass))
@@ -96,7 +96,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
      * Import external script file into script engine
      */
     fun import(scriptFile : String) {
-        scriptEngine.eval(File(LiquidBounce.CLIENT.scriptManager.scriptsFolder, scriptFile).readText())
+        scriptEngine.eval(File(LiquidBounce.scriptManager.scriptsFolder, scriptFile).readText())
     }
 
     private fun callFunction(functionName : String) {

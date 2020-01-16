@@ -54,8 +54,6 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
     }
 
     override fun actionPerformed(button: GuiButton) {
-        val client = LiquidBounce.CLIENT
-
         when (button.id) {
             0 -> mc.displayGuiScreen(prevGui)
             1 -> try {
@@ -63,10 +61,10 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                 val fileName = file.name
 
                 if (fileName.endsWith(".js")) {
-                    client.scriptManager.importScript(file)
+                    LiquidBounce.scriptManager.importScript(file)
 
-                    client.clickGui = ClickGui()
-                    client.fileManager.loadConfig(client.fileManager.clickGuiConfig)
+                    LiquidBounce.clickGui = ClickGui()
+                    LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
                     return
                 } else if (fileName.endsWith(".zip")) {
                     val zipFile = ZipFile(file)
@@ -76,7 +74,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                     while (entries.hasMoreElements()) {
                         val entry = entries.nextElement()
                         val entryName = entry.name
-                        val entryFile = File(client.scriptManager.scriptsFolder, entryName)
+                        val entryFile = File(LiquidBounce.scriptManager.scriptsFolder, entryName)
 
                         if (entry.isDirectory) {
                             entryFile.mkdir()
@@ -94,11 +92,11 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                             scriptFiles.add(entryFile)
                     }
 
-                    scriptFiles.forEach { scriptFile -> client.scriptManager.loadScript(scriptFile) }
+                    scriptFiles.forEach { scriptFile -> LiquidBounce.scriptManager.loadScript(scriptFile) }
 
-                    client.clickGui = ClickGui()
-                    client.fileManager.loadConfig(client.fileManager.clickGuiConfig)
-                    client.fileManager.loadConfig(client.fileManager.hudConfig)
+                    LiquidBounce.clickGui = ClickGui()
+                    LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
+                    LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
                     return
                 }
 
@@ -110,26 +108,26 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
             2 -> try {
                 if (list.getSelectedSlot() != -1) {
-                    val script = LiquidBounce.CLIENT.scriptManager.scripts[list.getSelectedSlot()]
+                    val script = LiquidBounce.scriptManager.scripts[list.getSelectedSlot()]
 
-                    LiquidBounce.CLIENT.scriptManager.deleteScript(script)
+                    LiquidBounce.scriptManager.deleteScript(script)
 
-                    LiquidBounce.CLIENT.clickGui = ClickGui()
-                    LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.clickGuiConfig)
-                    LiquidBounce.CLIENT.fileManager.loadConfig(LiquidBounce.CLIENT.fileManager.hudConfig)
+                    LiquidBounce.clickGui = ClickGui()
+                    LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
+                    LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
                 }
             } catch (t: Throwable) {
                 ClientUtils.getLogger().error("Something went wrong while deleting a script.", t)
                 MiscUtils.showErrorPopup(t.javaClass.name, t.message)
             }
             3 -> try {
-                LiquidBounce.CLIENT.scriptManager.reloadScripts()
+                LiquidBounce.scriptManager.reloadScripts()
             } catch (t: Throwable) {
                 ClientUtils.getLogger().error("Something went wrong while reloading all scripts.", t)
                 MiscUtils.showErrorPopup(t.javaClass.name, t.message)
             }
             4 -> try {
-                Desktop.getDesktop().open(LiquidBounce.CLIENT.scriptManager.scriptsFolder)
+                Desktop.getDesktop().open(LiquidBounce.scriptManager.scriptsFolder)
             } catch (t: Throwable) {
                 ClientUtils.getLogger().error("Something went wrong while trying to open your scripts folder.", t)
                 MiscUtils.showErrorPopup(t.javaClass.name, t.message)
@@ -165,16 +163,16 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
         override fun isSelected(id: Int) = selectedSlot == id
 
-        internal fun getSelectedSlot() = if(selectedSlot > LiquidBounce.CLIENT.scriptManager.scripts.size) -1 else selectedSlot
+        internal fun getSelectedSlot() = if (selectedSlot > LiquidBounce.scriptManager.scripts.size) -1 else selectedSlot
 
-        override fun getSize() = LiquidBounce.CLIENT.scriptManager.scripts.size
+        override fun getSize() = LiquidBounce.scriptManager.scripts.size
 
         public override fun elementClicked(id: Int, doubleClick: Boolean, var3: Int, var4: Int) {
             selectedSlot = id
         }
 
         override fun drawSlot(id: Int, x: Int, y: Int, var4: Int, var5: Int, var6: Int) {
-            val script = LiquidBounce.CLIENT.scriptManager.scripts[id]
+            val script = LiquidBounce.scriptManager.scripts[id]
             drawCenteredString(Fonts.font40, "§9" + script.scriptName + " §7v" + script.scriptVersion, width / 2, y + 2, Color.LIGHT_GRAY.rgb)
             drawCenteredString(Fonts.font40, "by §c" + script.scriptAuthor, width / 2, y + 15, Color.LIGHT_GRAY.rgb)
         }

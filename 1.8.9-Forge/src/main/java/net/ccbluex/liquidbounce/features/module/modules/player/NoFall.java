@@ -1,10 +1,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.player;
 
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
 import net.ccbluex.liquidbounce.utils.timer.TickTimer;
@@ -40,7 +40,7 @@ public class NoFall extends Module {
         if(mc.thePlayer.motionY > 0)
             jumped = true;
 
-        if(!getState() || ModuleManager.getModule(FreeCam.class).getState())
+        if (!getState() || LiquidBounce.moduleManager.getModule(FreeCam.class).getState())
             return;
 
         if(BlockUtils.collideBlock(mc.thePlayer.getEntityBoundingBox(), block -> block instanceof BlockLiquid) ||

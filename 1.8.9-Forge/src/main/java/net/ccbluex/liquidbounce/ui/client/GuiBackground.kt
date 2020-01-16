@@ -49,20 +49,20 @@ class GuiBackground(val prevGui: GuiScreen) : GuiScreen() {
                 if (file.isDirectory) return
 
                 try {
-                    Files.copy(file.toPath(), FileOutputStream(LiquidBounce.CLIENT.fileManager.backgroundFile))
+                    Files.copy(file.toPath(), FileOutputStream(LiquidBounce.fileManager.backgroundFile))
 
-                    val image = ImageIO.read(FileInputStream(LiquidBounce.CLIENT.fileManager.backgroundFile))
-                    LiquidBounce.CLIENT.background = ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png")
-                    mc.textureManager.loadTexture(LiquidBounce.CLIENT.background, DynamicTexture(image))
+                    val image = ImageIO.read(FileInputStream(LiquidBounce.fileManager.backgroundFile))
+                    LiquidBounce.background = ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png")
+                    mc.textureManager.loadTexture(LiquidBounce.background, DynamicTexture(image))
                 } catch (e: Exception) {
                     e.printStackTrace()
                     MiscUtils.showErrorPopup("Error", "Exception class: " + e.javaClass.name + "\nMessage: " + e.message)
-                    LiquidBounce.CLIENT.fileManager.backgroundFile.delete()
+                    LiquidBounce.fileManager.backgroundFile.delete()
                 }
             }
             4 -> {
-                LiquidBounce.CLIENT.background = null
-                LiquidBounce.CLIENT.fileManager.backgroundFile.delete()
+                LiquidBounce.background = null
+                LiquidBounce.fileManager.backgroundFile.delete()
             }
             0 -> mc.displayGuiScreen(prevGui)
         }

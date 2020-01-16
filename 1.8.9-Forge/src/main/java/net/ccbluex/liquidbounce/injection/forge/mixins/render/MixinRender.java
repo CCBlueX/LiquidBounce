@@ -24,6 +24,6 @@ public abstract class MixinRender {
 
     @Inject(method = "doRender", at = @At("HEAD"))
     private void doRender(Entity entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
-        LiquidBounce.CLIENT.eventManager.callEvent(new RenderEntityEvent(entity, x, y, z, entityYaw, partialTicks));
+        LiquidBounce.eventManager.callEvent(new RenderEntityEvent(entity, x, y, z, entityYaw, partialTicks));
     }
 }

@@ -74,7 +74,7 @@ public class GuiChangeName extends GuiScreen {
                 }
 
                 mc.session = new Session(name.getText(), mc.getSession().getPlayerID(), mc.getSession().getToken(), mc.getSession().getSessionType().name());
-                LiquidBounce.CLIENT.eventManager.callEvent(new SessionEvent());
+                LiquidBounce.eventManager.callEvent(new SessionEvent());
                 status = "§aChanged name to §7" + name.getText() + "§c.";
                 prevGui.status = status;
                 mc.displayGuiScreen(prevGui);

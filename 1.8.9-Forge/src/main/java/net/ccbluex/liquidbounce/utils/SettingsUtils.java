@@ -3,7 +3,6 @@ package net.ccbluex.liquidbounce.utils;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
 import net.ccbluex.liquidbounce.features.module.modules.misc.Spammer;
 import net.ccbluex.liquidbounce.utils.misc.StringUtils;
@@ -84,7 +83,7 @@ public final class SettingsUtils {
                             final String valueName = split[1];
                             final String value = split[2];
 
-                            final Module module = ModuleManager.getModule(moduleName);
+                            final Module module = LiquidBounce.moduleManager.getModule(moduleName);
                             if(module != null) {
                                 if(module.getCategory() != ModuleCategory.RENDER) {
                                     if(valueName.equalsIgnoreCase("toggle")) {
@@ -129,13 +128,13 @@ public final class SettingsUtils {
             }
         }
 
-        LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.valuesConfig);
+        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
     }
 
     public static String generateScript(final boolean values, final boolean binds, final boolean states) {
         final StringBuilder stringBuilder = new StringBuilder();
 
-        ModuleManager.getModules().stream().filter(module -> module.getCategory() != ModuleCategory.RENDER && !(module instanceof NameProtect) && !(module instanceof Spammer)).forEach(module -> {
+        LiquidBounce.moduleManager.getModules().stream().filter(module -> module.getCategory() != ModuleCategory.RENDER && !(module instanceof NameProtect) && !(module instanceof Spammer)).forEach(module -> {
             if(values)
                 for(final Value value : module.getValues())
                     stringBuilder.append(module.getName()).append(" ").append(value.getName()).append(" ").append(value.get()).append("\n");

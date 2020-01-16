@@ -35,15 +35,15 @@ public class MidClick extends Module {
 
             if(entity instanceof EntityPlayer) {
                 final String playerName = ColorUtils.stripColor(entity.getName());
-                final FriendsConfig friendsConfig = LiquidBounce.CLIENT.fileManager.friendsConfig;
+                final FriendsConfig friendsConfig = LiquidBounce.fileManager.friendsConfig;
 
                 if(!friendsConfig.isFriend(playerName)) {
                     friendsConfig.addFriend(playerName);
-                    LiquidBounce.CLIENT.fileManager.saveConfig(friendsConfig);
+                    LiquidBounce.fileManager.saveConfig(friendsConfig);
                     ClientUtils.displayChatMessage("§a§l" + playerName + "§c was added to your friends.");
                 }else{
                     friendsConfig.removeFriend(playerName);
-                    LiquidBounce.CLIENT.fileManager.saveConfig(friendsConfig);
+                    LiquidBounce.fileManager.saveConfig(friendsConfig);
                     ClientUtils.displayChatMessage("§a§l" + playerName + "§c was removed from your friends.");
                 }
             }else

@@ -35,20 +35,20 @@ public class HUD extends Module {
 
     @EventTarget
     public void onRender2D(Render2DEvent event) {
-        if(LiquidBounce.CLIENT.hud == null || mc.currentScreen instanceof GuiHudDesigner)
+        if (LiquidBounce.hud == null || mc.currentScreen instanceof GuiHudDesigner)
             return;
 
-        LiquidBounce.CLIENT.hud.render(false);
+        LiquidBounce.hud.render(false);
     }
 
     @EventTarget
     public void onUpdate(final UpdateEvent event) {
-        LiquidBounce.CLIENT.hud.update();
+        LiquidBounce.hud.update();
     }
 
     @EventTarget
     public void onKey(final KeyEvent event) {
-        LiquidBounce.CLIENT.hud.handleKey('a', event.getKey());
+        LiquidBounce.hud.handleKey('a', event.getKey());
     }
 
     @EventTarget(ignoreCondition = true)

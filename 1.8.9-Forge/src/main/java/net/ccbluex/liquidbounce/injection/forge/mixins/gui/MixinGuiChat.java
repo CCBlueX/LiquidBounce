@@ -46,7 +46,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
 
     @Inject(method = "keyTyped", at = @At("RETURN"))
     private void updateLenght(CallbackInfo callbackInfo) {
-        if (inputField.getText().startsWith(String.valueOf(LiquidBounce.CLIENT.commandManager.getPrefix())) && !inputField.getText().startsWith(LiquidBounce.CLIENT.commandManager.getPrefix() + "lc"))
+        if (inputField.getText().startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix())) && !inputField.getText().startsWith(LiquidBounce.commandManager.getPrefix() + "lc"))
             inputField.setMaxStringLength(10000);
         else
             inputField.setMaxStringLength(100);
@@ -67,7 +67,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
 
     @Inject(method = "autocompletePlayerNames", at = @At("HEAD"))
     private void addClientFriends(final CallbackInfo callbackInfo) {
-        foundPlayerNames.sort(Comparator.comparing(s -> !LiquidBounce.CLIENT.fileManager.friendsConfig.isFriend(s)));
+        foundPlayerNames.sort(Comparator.comparing(s -> !LiquidBounce.fileManager.friendsConfig.isFriend(s)));
     }
 
     /**

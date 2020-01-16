@@ -17,7 +17,7 @@ public class AACHop350 extends SpeedMode implements Listenable {
     public AACHop350() {
         super("AACHop3.5.0");
 
-        LiquidBounce.CLIENT.eventManager.registerListener(this);
+        LiquidBounce.eventManager.registerListener(this);
     }
 
     @Override

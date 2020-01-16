@@ -171,7 +171,7 @@ class LiquidChat : Module() {
     private val connectTimer = MSTimer()
 
     init {
-        LiquidBounce.CLIENT.commandManager.registerCommand(object : Command("chat", arrayOf("lc", "irc")) {
+        LiquidBounce.commandManager.registerCommand(object : Command("chat", arrayOf("lc", "irc")) {
 
             override fun execute(args: Array<String>) {
                 if(args.size > 1) {
@@ -194,7 +194,7 @@ class LiquidChat : Module() {
 
         })
 
-        LiquidBounce.CLIENT.commandManager.registerCommand(object : Command("pchat", arrayOf("privatechat", "lcpm")) {
+        LiquidBounce.commandManager.registerCommand(object : Command("pchat", arrayOf("privatechat", "lcpm")) {
 
             override fun execute(args: Array<String>) {
                 if(args.size > 2) {
@@ -219,7 +219,7 @@ class LiquidChat : Module() {
 
         })
 
-        LiquidBounce.CLIENT.commandManager.registerCommand(object : Command("chattoken", emptyArray()) {
+        LiquidBounce.commandManager.registerCommand(object : Command("chattoken", emptyArray()) {
 
             override fun execute(args: Array<String>) {
 
@@ -260,7 +260,7 @@ class LiquidChat : Module() {
 
         })
 
-        LiquidBounce.CLIENT.commandManager.registerCommand(object : Command("chatadmin", emptyArray()) {
+        LiquidBounce.commandManager.registerCommand(object : Command("chatadmin", emptyArray()) {
 
             override fun execute(args: Array<String>) {
                 if (!state) {

@@ -25,7 +25,7 @@ object CommandManager {
             }
         }
 
-        LiquidBounce.CLIENT.commandManager.registerCommand(command)
+        LiquidBounce.commandManager.registerCommand(command)
         return command
     }
 
@@ -36,7 +36,7 @@ object CommandManager {
      */
     @JvmStatic
     fun unregisterCommand(command : Command) {
-        LiquidBounce.CLIENT.commandManager.unregisterCommand(command)
+        LiquidBounce.commandManager.unregisterCommand(command)
     }
 
     /**
@@ -47,9 +47,9 @@ object CommandManager {
     @JvmStatic
     fun unregisterCommand(scriptObjectMirror : ScriptObjectMirror) {
         val commandName = scriptObjectMirror.callMember("getName") as String
-        val command = LiquidBounce.CLIENT.commandManager.getCommand(commandName)
+        val command = LiquidBounce.commandManager.getCommand(commandName)
 
-        LiquidBounce.CLIENT.commandManager.unregisterCommand(command)
+        LiquidBounce.commandManager.unregisterCommand(command)
     }
 
     /**
@@ -70,6 +70,6 @@ object CommandManager {
      */
     @JvmStatic
     fun executeCommand(command : String) {
-        LiquidBounce.CLIENT.commandManager.executeCommands(command)
+        LiquidBounce.commandManager.executeCommands(command)
     }
 }

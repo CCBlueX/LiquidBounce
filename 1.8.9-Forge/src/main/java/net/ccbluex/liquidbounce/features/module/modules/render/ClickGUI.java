@@ -49,19 +49,19 @@ public class ClickGUI extends Module {
     public void onEnable() {
         updateStyle();
 
-        mc.displayGuiScreen(LiquidBounce.CLIENT.clickGui);
+        mc.displayGuiScreen(LiquidBounce.clickGui);
     }
 
     private void updateStyle() {
         switch(styleValue.get().toLowerCase()) {
             case "liquidbounce":
-                LiquidBounce.CLIENT.clickGui.style = new LiquidBounceStyle();
+                LiquidBounce.clickGui.style = new LiquidBounceStyle();
                 break;
             case "null":
-                LiquidBounce.CLIENT.clickGui.style = new NullStyle();
+                LiquidBounce.clickGui.style = new NullStyle();
                 break;
             case "slowly":
-                LiquidBounce.CLIENT.clickGui.style = new SlowlyStyle();
+                LiquidBounce.clickGui.style = new SlowlyStyle();
                 break;
         }
     }

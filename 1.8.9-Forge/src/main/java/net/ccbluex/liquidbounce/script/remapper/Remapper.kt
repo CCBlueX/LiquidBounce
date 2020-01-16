@@ -13,7 +13,7 @@ import java.io.File
 object Remapper {
 
     private const val srgName = "stable_22"
-    private val srgFile = File(LiquidBounce.CLIENT.fileManager.dir, "mcp-$srgName.srg")
+    private val srgFile = File(LiquidBounce.fileManager.dir, "mcp-$srgName.srg")
 
     private val fields : HashMap<String, HashMap<String, String>> = hashMapOf()
     private val methods : HashMap<String, HashMap<String, String>> = hashMapOf()

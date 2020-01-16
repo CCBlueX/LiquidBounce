@@ -6,7 +6,6 @@ import com.jagrosh.discordipc.IPCListener
 import com.jagrosh.discordipc.entities.RichPresence
 import com.jagrosh.discordipc.entities.pipe.PipeStatus
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.NetworkUtils
@@ -101,7 +100,7 @@ class LiquidDiscordRPC : MinecraftInstance() {
 
             // Set display infos
             builder.setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else serverData.serverIP}")
-            builder.setState("Enabled ${ModuleManager.getModules().count { it.state }} of ${ModuleManager.getModules().size} modules")
+            builder.setState("Enabled ${LiquidBounce.moduleManager.modules.count { it.state }} of ${LiquidBounce.moduleManager.modules.size} modules")
         }
 
         // Check ipc client is connected and send rpc

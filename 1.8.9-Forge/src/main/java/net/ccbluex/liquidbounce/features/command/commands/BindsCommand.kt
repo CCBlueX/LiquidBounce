@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import org.lwjgl.input.Keyboard
 
@@ -17,7 +17,7 @@ class BindsCommand : Command("binds", emptyArray()) {
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
             if (args[1].equals("clear", true)) {
-                for (module in ModuleManager.getModules())
+                for (module in LiquidBounce.moduleManager.modules)
                     module.keyBind = Keyboard.KEY_NONE
 
                 chat("Removed all binds.")
@@ -26,7 +26,7 @@ class BindsCommand : Command("binds", emptyArray()) {
         }
 
         chat("§c§lBinds")
-        ModuleManager.getModules().filter { it.keyBind != Keyboard.KEY_NONE }.forEach {
+        LiquidBounce.moduleManager.modules.filter { it.keyBind != Keyboard.KEY_NONE }.forEach {
             ClientUtils.displayChatMessage("§6> §c${it.name}: §a§l${Keyboard.getKeyName(it.keyBind)}")
         }
         chatSyntax("binds clear")

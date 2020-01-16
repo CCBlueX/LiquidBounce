@@ -167,7 +167,7 @@ public class FileManager extends MinecraftInstance {
      * @param ignoreStarting check starting
      */
     private void saveConfig(final FileConfig config, final boolean ignoreStarting) {
-        if(!ignoreStarting && LiquidBounce.CLIENT.isStarting)
+        if (!ignoreStarting && LiquidBounce.INSTANCE.isStarting())
             return;
 
         try {
@@ -193,8 +193,8 @@ public class FileManager extends MinecraftInstance {
                 if(bufferedImage == null)
                     return;
 
-                LiquidBounce.CLIENT.background = new ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png");
-                mc.getTextureManager().loadTexture(LiquidBounce.CLIENT.background, new DynamicTexture(bufferedImage));
+                LiquidBounce.INSTANCE.setBackground(new ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png"));
+                mc.getTextureManager().loadTexture(LiquidBounce.INSTANCE.getBackground(), new DynamicTexture(bufferedImage));
                 ClientUtils.getLogger().info("[FileManager] Loaded background.");
             }catch(final Exception e) {
                 ClientUtils.getLogger().error("[FileManager] Failed to load background.", e);

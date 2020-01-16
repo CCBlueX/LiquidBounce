@@ -1,12 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.world;
 
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.event.UpdateEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
@@ -99,7 +99,7 @@ public class Nuker extends Module {
 
             RotationUtils.faceBlock(blockPos);
 
-            final AutoTool autoTool = (AutoTool) ModuleManager.getModule(AutoTool.class);
+            final AutoTool autoTool = (AutoTool) LiquidBounce.moduleManager.getModule(AutoTool.class);
 
             if(autoTool != null && autoTool.getState())
                 autoTool.switchSlot(blockPos);

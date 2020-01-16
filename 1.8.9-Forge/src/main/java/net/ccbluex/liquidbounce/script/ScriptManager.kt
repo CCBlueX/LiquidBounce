@@ -14,7 +14,7 @@ class ScriptManager {
 
     val scripts = mutableListOf<Script>()
 
-    val scriptsFolder = File(LiquidBounce.CLIENT.fileManager.dir, "scripts")
+    val scriptsFolder = File(LiquidBounce.fileManager.dir, "scripts")
     private val scriptFileExtension = ".js"
 
     /**

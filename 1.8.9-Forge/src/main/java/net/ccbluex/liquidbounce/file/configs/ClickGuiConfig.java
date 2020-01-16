@@ -46,7 +46,7 @@ public class ClickGuiConfig extends FileConfig {
 
         final JsonObject jsonObject = (JsonObject) jsonElement;
 
-        for(final Panel panel : LiquidBounce.CLIENT.clickGui.panels) {
+        for (final Panel panel : LiquidBounce.clickGui.panels) {
             if(!jsonObject.has(panel.getName()))
                 continue;
 
@@ -90,7 +90,7 @@ public class ClickGuiConfig extends FileConfig {
     protected void saveConfig() throws IOException {
         final JsonObject jsonObject = new JsonObject();
 
-        for(final Panel panel : LiquidBounce.CLIENT.clickGui.panels) {
+        for (final Panel panel : LiquidBounce.clickGui.panels) {
             final JsonObject panelObject = new JsonObject();
 
             panelObject.addProperty("open", panel.getOpen());

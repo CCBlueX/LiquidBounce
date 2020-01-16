@@ -3,7 +3,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 import com.google.common.base.Predicates;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach;
 import net.ccbluex.liquidbounce.features.module.modules.render.CameraClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoHurtCam;
@@ -65,18 +64,18 @@ public abstract class MixinEntityRenderer {
 
     @Inject(method = "renderWorldPass", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/EntityRenderer;renderHand:Z", shift = At.Shift.BEFORE))
     private void renderWorldPass(int pass, float partialTicks, long finishTimeNano, CallbackInfo callbackInfo) {
-        LiquidBounce.CLIENT.eventManager.callEvent(new Render3DEvent(partialTicks));
+        LiquidBounce.eventManager.callEvent(new Render3DEvent(partialTicks));
     }
 
     @Inject(method = "hurtCameraEffect", at = @At("HEAD"), cancellable = true)
     private void injectHurtCameraEffect(CallbackInfo callbackInfo) {
-        if(ModuleManager.getModule(NoHurtCam.class).getState())
+        if (LiquidBounce.moduleManager.getModule(NoHurtCam.class).getState())
             callbackInfo.cancel();
     }
 
     @Inject(method = "orientCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Vec3;distanceTo(Lnet/minecraft/util/Vec3;)D"), cancellable = true)
     private void cameraClip(float partialTicks, CallbackInfo callbackInfo) {
-        if(ModuleManager.getModule(CameraClip.class).getState()) {
+        if (LiquidBounce.moduleManager.getModule(CameraClip.class).getState()) {
             callbackInfo.cancel();
 
             Entity entity = this.mc.getRenderViewEntity();
@@ -145,12 +144,12 @@ public abstract class MixinEntityRenderer {
 
     @Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = At.Shift.BEFORE))
     private void setupCameraViewBobbingBefore(final CallbackInfo callbackInfo) {
-        if(ModuleManager.getModule(Tracers.class).getState()) GL11.glPushMatrix();
+        if (LiquidBounce.moduleManager.getModule(Tracers.class).getState()) GL11.glPushMatrix();
     }
 
     @Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = At.Shift.AFTER))
     private void setupCameraViewBobbingAfter(final CallbackInfo callbackInfo) {
-        if(ModuleManager.getModule(Tracers.class).getState()) GL11.glPopMatrix();
+        if (LiquidBounce.moduleManager.getModule(Tracers.class).getState()) GL11.glPopMatrix();
     }
 
     /**
@@ -163,7 +162,7 @@ public abstract class MixinEntityRenderer {
             this.mc.mcProfiler.startSection("pick");
             this.mc.pointedEntity = null;
 
-            final Reach reach = (Reach) ModuleManager.getModule(Reach.class);
+            final Reach reach = (Reach) LiquidBounce.moduleManager.getModule(Reach.class);
 
             double d0 = reach.getState() ? reach.getMaxRange() : (double) this.mc.playerController.getBlockReachDistance();
             this.mc.objectMouseOver = entity.rayTrace(reach.getState() ? reach.getBuildReachValue().get() : d0, p_getMouseOver_1_);

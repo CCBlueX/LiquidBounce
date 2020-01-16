@@ -29,7 +29,7 @@ public class ButtonElement extends Element {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float button) {
-        LiquidBounce.CLIENT.clickGui.style.drawButtonElement(mouseX, mouseY, this);
+        LiquidBounce.clickGui.style.drawButtonElement(mouseX, mouseY, this);
         super.drawScreen(mouseX, mouseY, button);
     }
 

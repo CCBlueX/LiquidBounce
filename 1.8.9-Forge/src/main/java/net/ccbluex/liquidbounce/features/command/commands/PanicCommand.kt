@@ -1,8 +1,8 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleManager
 
 /**
  * LiquidBounce Hacked Client
@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 class PanicCommand : Command("panic", emptyArray()) {
 
     override fun execute(args: Array<String>) {
-        var modules = ModuleManager.getModules().filter { it.state }
+        var modules = LiquidBounce.moduleManager.modules.filter { it.state }
         val msg: String
 
         if (args.size > 1 && args[1].isNotEmpty()) {

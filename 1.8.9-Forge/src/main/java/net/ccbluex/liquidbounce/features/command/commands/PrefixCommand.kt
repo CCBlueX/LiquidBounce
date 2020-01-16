@@ -18,8 +18,8 @@ class PrefixCommand : Command("prefix", emptyArray()) {
             return
         }
 
-        LiquidBounce.CLIENT.commandManager.prefix = prefix.single()
-        LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.valuesConfig)
+        LiquidBounce.commandManager.prefix = prefix.single()
+        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
 
         chat("Successfully changed command prefix to '§8$prefix§3'")
     }

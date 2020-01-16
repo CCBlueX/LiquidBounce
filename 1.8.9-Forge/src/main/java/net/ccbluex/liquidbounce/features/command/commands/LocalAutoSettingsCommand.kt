@@ -23,7 +23,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", arrayOf("localsett
             when {
                 args[1].equals("load", ignoreCase = true) -> {
                     if (args.size > 2) {
-                        val scriptFile = File(LiquidBounce.CLIENT.fileManager.settingsDir, args[2])
+                        val scriptFile = File(LiquidBounce.fileManager.settingsDir, args[2])
 
                         if (scriptFile.exists()) {
                             try {
@@ -34,7 +34,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", arrayOf("localsett
                                 chat("§9Set settings...")
                                 SettingsUtils.executeScript(settings)
                                 chat("§6Settings applied successfully.")
-                                LiquidBounce.CLIENT.hud.addNotification(Notification("Updated Settings"))
+                                LiquidBounce.hud.addNotification(Notification("Updated Settings"))
                                 playEdit()
                             } catch (e: IOException) {
                                 e.printStackTrace()
@@ -53,7 +53,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", arrayOf("localsett
 
                 args[1].equals("save", ignoreCase = true) -> {
                     if (args.size > 2) {
-                        val scriptFile = File(LiquidBounce.CLIENT.fileManager.settingsDir, args[2])
+                        val scriptFile = File(LiquidBounce.fileManager.settingsDir, args[2])
 
                         try {
                             if (scriptFile.exists())
@@ -87,7 +87,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", arrayOf("localsett
 
                 args[1].equals("delete", ignoreCase = true) -> {
                     if (args.size > 2) {
-                        val scriptFile = File(LiquidBounce.CLIENT.fileManager.settingsDir, args[2])
+                        val scriptFile = File(LiquidBounce.fileManager.settingsDir, args[2])
 
                         if (scriptFile.exists()) {
                             scriptFile.delete()
@@ -106,7 +106,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", arrayOf("localsett
                 args[1].equals("list", ignoreCase = true) -> {
                     chat("§cSettings:")
 
-                    for (file in LiquidBounce.CLIENT.fileManager.settingsDir.listFiles())
+                    for (file in LiquidBounce.fileManager.settingsDir.listFiles())
                         chat("> " + file.name)
                     return
                 }

@@ -32,7 +32,7 @@ public class NameProtect extends Module {
         if(mc.thePlayer == null || event.getText().contains("§8[§9§l" + LiquidBounce.CLIENT_NAME + "§8] §3"))
             return;
 
-        for(final FriendsConfig.Friend friend : LiquidBounce.CLIENT.fileManager.friendsConfig.getFriends())
+        for (final FriendsConfig.Friend friend : LiquidBounce.fileManager.friendsConfig.getFriends())
             event.setText(StringUtils.replace(event.getText(), friend.getPlayerName(), ColorUtils.translateAlternateColorCodes(friend.getAlias()) + "§f"));
 
         if(!getState())

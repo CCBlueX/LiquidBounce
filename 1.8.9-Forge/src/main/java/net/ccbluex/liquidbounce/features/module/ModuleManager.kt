@@ -15,8 +15,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.Timer
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import java.util.*
 
 /**
@@ -26,20 +24,17 @@ import java.util.*
  * @author CCBlueX
  * @game Minecraft
  */
-@SideOnly(Side.CLIENT)
-object ModuleManager : Listenable {
+class ModuleManager : Listenable {
 
-    private val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }
+    val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }
     private val moduleClassMap = hashMapOf<Class<*>, Module>()
 
     init {
-        LiquidBounce.CLIENT.eventManager.registerListener(this)
+        LiquidBounce.eventManager.registerListener(this)
     }
 
     /**
-     * Register all modules of liquidbounce
-     *
-     * TODO: Find a solution to register these much modules in a beautiful way
+     * Register all modules
      */
     fun registerModules() {
         ClientUtils.getLogger().info("[ModuleManager] Loading modules...")
@@ -201,7 +196,7 @@ object ModuleManager : Listenable {
         moduleClassMap[module.javaClass] = module
 
         generateCommand(module)
-        LiquidBounce.CLIENT.eventManager.registerListener(module)
+        LiquidBounce.eventManager.registerListener(module)
     }
 
     /**
@@ -229,7 +224,7 @@ object ModuleManager : Listenable {
     fun unregisterModule(module: Module) {
         modules.remove(module)
         moduleClassMap.remove(module::class.java)
-        LiquidBounce.CLIENT.eventManager.unregisterListener(module)
+        LiquidBounce.eventManager.unregisterListener(module)
     }
 
     /**
@@ -241,7 +236,7 @@ object ModuleManager : Listenable {
         if (values.isEmpty())
             return
 
-        LiquidBounce.CLIENT.commandManager.registerCommand(ModuleCommand(module, values))
+        LiquidBounce.commandManager.registerCommand(ModuleCommand(module, values))
     }
 
     /**
@@ -253,7 +248,6 @@ object ModuleManager : Listenable {
     /**
      * Get module by [moduleClass]
      */
-    @JvmStatic
     fun getModule(moduleClass: Class<*>) = moduleClassMap[moduleClass]
 
     operator fun get(clazz: Class<*>) = getModule(clazz)
@@ -261,14 +255,7 @@ object ModuleManager : Listenable {
     /**
      * Get module by [moduleName]
      */
-    @JvmStatic
     fun getModule(moduleName: String?) = modules.find { it.name.equals(moduleName, ignoreCase = true) }
-
-    /**
-     * Get all modules
-     */
-    @JvmStatic
-    fun getModules() = modules
 
     /**
      * Module related events

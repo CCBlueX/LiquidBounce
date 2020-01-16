@@ -171,7 +171,7 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
                     mc.session = Session(username, uuid, accessToken, "mojang")
                     status = "§aLogged in"
                     prevGui.status = "§cYour name is now §f§l${username}§c."
-                    LiquidBounce.CLIENT.eventManager.callEvent(SessionEvent())
+                    LiquidBounce.eventManager.callEvent(SessionEvent())
                     loginButton.enabled = true
                 }
             }

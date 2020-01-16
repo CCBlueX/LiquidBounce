@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -7,7 +8,6 @@ import net.ccbluex.liquidbounce.event.SlowDownEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.features.module.ModuleManager.getModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -49,7 +49,7 @@ class NoSlow : Module() {
         if (heldItem == null || heldItem.item !is ItemSword || !MovementUtils.isMoving()) {
             return
         }
-        val killAura = getModule(KillAura::class.java) as KillAura
+        val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
         if (!mc.thePlayer.isBlocking && !killAura.blockingStatus) {
             return
         }

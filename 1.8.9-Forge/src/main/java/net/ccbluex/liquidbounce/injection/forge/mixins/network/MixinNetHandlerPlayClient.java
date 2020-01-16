@@ -101,6 +101,6 @@ public abstract class MixinNetHandlerPlayClient {
         final Entity entity = packetIn.getEntity(this.clientWorldController);
 
         if(entity != null)
-            LiquidBounce.CLIENT.eventManager.callEvent(new EntityMovementEvent(entity));
+            LiquidBounce.eventManager.callEvent(new EntityMovementEvent(entity));
     }
 }

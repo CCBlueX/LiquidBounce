@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.features.module.ModuleManager.getModule
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
@@ -479,10 +478,10 @@ class KillAura : Module() {
                 if (entity.isSpectator || AntiBot.isBot(entity))
                     return false
 
-                if (EntityUtils.isFriend(entity) && !getModule(NoFriends::class.java)!!.state)
+                if (EntityUtils.isFriend(entity) && !LiquidBounce.moduleManager[NoFriends::class.java]!!.state)
                     return false
 
-                val teams = getModule(Teams::class.java) as Teams
+                val teams = LiquidBounce.moduleManager[Teams::class.java] as Teams
 
                 return !teams.state || !teams.isInYourTeam(entity)
             }
@@ -506,7 +505,7 @@ class KillAura : Module() {
         }
 
         // Call attack event
-        LiquidBounce.CLIENT.eventManager.callEvent(AttackEvent(entity))
+        LiquidBounce.eventManager.callEvent(AttackEvent(entity))
 
         // Attack target
         if (swingValue.get())
@@ -528,7 +527,7 @@ class KillAura : Module() {
         }
 
         // Extra critical effects
-        val criticals = getModule(Criticals::class.java) as Criticals
+        val criticals = LiquidBounce.moduleManager[Criticals::class.java] as Criticals
 
         for (i in 0..2) {
             // Critical Effect
@@ -597,7 +596,7 @@ class KillAura : Module() {
             }
 
             if (raycastValue.get() && raycastedEntity is EntityLivingBase
-                    && (getModule(NoFriends::class.java)!!.state || !EntityUtils.isFriend(raycastedEntity)))
+                    && (LiquidBounce.moduleManager[NoFriends::class.java]!!.state || !EntityUtils.isFriend(raycastedEntity)))
                 currentTarget = raycastedEntity
 
             hitable = currentTarget == raycastedEntity
@@ -634,7 +633,7 @@ class KillAura : Module() {
      */
     private val cancelRun: Boolean
         get() = mc.thePlayer.isSpectator || !isAlive(mc.thePlayer)
-                || getModule(Blink::class.java)!!.state || getModule(FreeCam::class.java)!!.state
+                || LiquidBounce.moduleManager[Blink::class.java]!!.state || LiquidBounce.moduleManager[FreeCam::class.java]!!.state
 
     /**
      * Check if [entity] is alive

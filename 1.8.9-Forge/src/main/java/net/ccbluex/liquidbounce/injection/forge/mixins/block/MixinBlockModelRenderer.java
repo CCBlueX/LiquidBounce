@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.BlockModelRenderer;
@@ -25,7 +25,7 @@ public class MixinBlockModelRenderer {
 
     @Inject(method = "renderModelAmbientOcclusion", at = @At("HEAD"), cancellable = true)
     private void renderModelAmbientOcclusion(IBlockAccess blockAccessIn, IBakedModel modelIn, Block blockIn, BlockPos blockPosIn, WorldRenderer worldRendererIn, boolean checkSide, final CallbackInfoReturnable<Boolean> booleanCallbackInfoReturnable) {
-        final XRay xray = (XRay) ModuleManager.getModule(XRay.class);
+        final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
 
         if (xray.getState() && !xray.getXrayBlocks().contains(blockIn))
             booleanCallbackInfoReturnable.setReturnValue(false);
@@ -33,7 +33,7 @@ public class MixinBlockModelRenderer {
 
     @Inject(method = "renderModelStandard", at = @At("HEAD"), cancellable = true)
     private void renderModelStandard(IBlockAccess blockAccessIn, IBakedModel modelIn, Block blockIn, BlockPos blockPosIn, WorldRenderer worldRendererIn, boolean checkSides, final CallbackInfoReturnable<Boolean> booleanCallbackInfoReturnable) {
-        final XRay xray = (XRay) ModuleManager.getModule(XRay.class);
+        final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
 
         if (xray.getState() && !xray.getXrayBlocks().contains(blockIn))
             booleanCallbackInfoReturnable.setReturnValue(false);

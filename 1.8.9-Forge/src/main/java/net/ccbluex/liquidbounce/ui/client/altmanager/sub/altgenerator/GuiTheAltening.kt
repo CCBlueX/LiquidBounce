@@ -144,7 +144,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                             mc.session = Session(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication
                                     .selectedProfile.id.toString(),
                                     yggdrasilUserAuthentication.authenticatedToken, "mojang")
-                            LiquidBounce.CLIENT.eventManager.callEvent(SessionEvent())
+                            LiquidBounce.eventManager.callEvent(SessionEvent())
                             MCLeaks.remove()
 
                             prevGui.status = "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
@@ -194,7 +194,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                             mc.session = Session(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication
                                     .selectedProfile.id.toString(),
                                     yggdrasilUserAuthentication.authenticatedToken, "mojang")
-                            LiquidBounce.CLIENT.eventManager.callEvent(SessionEvent())
+                            LiquidBounce.eventManager.callEvent(SessionEvent())
                             MCLeaks.remove()
 
                             prevGui.status = "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."

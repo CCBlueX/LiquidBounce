@@ -85,7 +85,7 @@ public class GuiAdd extends GuiScreen {
                 mc.displayGuiScreen(prevGui);
                 break;
             case 1:
-                if(LiquidBounce.CLIENT.fileManager.accountsConfig.altManagerMinecraftAccounts.stream().anyMatch(account -> account.getName().equals(username.getText()))) {
+                if (LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.stream().anyMatch(account -> account.getName().equals(username.getText()))) {
                     status = "§cThe account has already been added.";
                     break;
                 }
@@ -120,8 +120,8 @@ public class GuiAdd extends GuiScreen {
                     }else isWorking = true;
 
                     if(isWorking) {
-                        LiquidBounce.CLIENT.fileManager.accountsConfig.altManagerMinecraftAccounts.add(minecraftAccount);
-                        LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.accountsConfig);
+                        LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.add(minecraftAccount);
+                        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
                         status = "§aThe account has been added.";
                         prevGui.status = status;
                         mc.displayGuiScreen(prevGui);
@@ -140,7 +140,7 @@ public class GuiAdd extends GuiScreen {
                         return;
                     }
 
-                    if(LiquidBounce.CLIENT.fileManager.accountsConfig.altManagerMinecraftAccounts.stream().anyMatch(account -> account.getName().equals(args[0]))) {
+                    if (LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.stream().anyMatch(account -> account.getName().equals(args[0]))) {
                         status = "§cThe account has already been added.";
                         break;
                     }
@@ -160,8 +160,8 @@ public class GuiAdd extends GuiScreen {
                             userAuthentication.logIn();
                             account.setAccountName(userAuthentication.getSelectedProfile().getName());
 
-                            LiquidBounce.CLIENT.fileManager.accountsConfig.altManagerMinecraftAccounts.add(account);
-                            LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.accountsConfig);
+                            LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.add(account);
+                            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
                             status = "§aThe account has been added.";
                             prevGui.status = status;
                             mc.displayGuiScreen(prevGui);

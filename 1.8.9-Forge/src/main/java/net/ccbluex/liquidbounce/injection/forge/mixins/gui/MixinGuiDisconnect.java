@@ -64,7 +64,7 @@ public abstract class MixinGuiDisconnect extends MixinGuiScreen {
             case 2:
                 AntiForge.enabled = !AntiForge.enabled;
                 forgeBypassButton.displayString = "Bypass AntiForge: " + (AntiForge.enabled ? "On" : "Off");
-                LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.valuesConfig);
+                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 3:
                 if(!GuiTheAltening.Companion.getApiKey().isEmpty()) {
@@ -81,7 +81,7 @@ public abstract class MixinGuiDisconnect extends MixinGuiScreen {
                         yggdrasilUserAuthentication.logIn();
 
                         mc.session = new Session(yggdrasilUserAuthentication.getSelectedProfile().getName(), yggdrasilUserAuthentication.getSelectedProfile().getId().toString(), yggdrasilUserAuthentication.getAuthenticatedToken(), "mojang");
-                        LiquidBounce.CLIENT.eventManager.callEvent(new SessionEvent());
+                        LiquidBounce.eventManager.callEvent(new SessionEvent());
                         ServerUtils.connectToLastServer();
                         break;
                     }catch(final Throwable throwable) {
@@ -89,7 +89,7 @@ public abstract class MixinGuiDisconnect extends MixinGuiScreen {
                     }
                 }
 
-                final List<MinecraftAccount> accounts = LiquidBounce.CLIENT.fileManager.accountsConfig.altManagerMinecraftAccounts;
+                final List<MinecraftAccount> accounts = LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts;
                 if(accounts.isEmpty()) break;
 
                 final MinecraftAccount minecraftAccount = accounts.get(new Random().nextInt(accounts.size()));

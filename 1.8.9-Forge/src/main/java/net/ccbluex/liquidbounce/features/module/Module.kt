@@ -30,7 +30,7 @@ open class Module : MinecraftInstance(), Listenable {
     var keyBind = Keyboard.CHAR_NONE
         set(keyBind) {
             field = keyBind
-            LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.modulesConfig)
+            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
         }
     private val canEnable: Boolean
 
@@ -53,10 +53,10 @@ open class Module : MinecraftInstance(), Listenable {
             onToggle(value)
 
             // Play sound and add notification
-            if (!LiquidBounce.CLIENT.isStarting) {
+            if (!LiquidBounce.isStarting) {
                 mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"),
                         1F))
-                LiquidBounce.CLIENT.hud.addNotification(Notification("${if (value) "Enabled " else "Disabled "}$name"))
+                LiquidBounce.hud.addNotification(Notification("${if (value) "Enabled " else "Disabled "}$name"))
             }
 
             // Call on enabled or disabled
@@ -71,7 +71,7 @@ open class Module : MinecraftInstance(), Listenable {
             }
 
             // Save module state
-            LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.modulesConfig)
+            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
         }
 
 

@@ -40,12 +40,12 @@ class ShortcutsConfig(file: File) : FileConfig(file) {
                 val commandName = scriptCommand.get("name")?.asString ?: continue
                 val arguments = scriptCommand.get("arguments")?.asJsonArray ?: continue
 
-                val command = LiquidBounce.CLIENT.commandManager.getCommand(commandName) ?: continue
+                val command = LiquidBounce.commandManager.getCommand(commandName) ?: continue
 
                 script.add(Pair(command, arguments.map { it.asString }.toTypedArray()))
             }
 
-            LiquidBounce.CLIENT.commandManager.registerCommand(Shortcut(name, script))
+            LiquidBounce.commandManager.registerCommand(Shortcut(name, script))
         }
     }
 
@@ -57,7 +57,7 @@ class ShortcutsConfig(file: File) : FileConfig(file) {
     override fun saveConfig() {
         val jsonArray = JsonArray()
 
-        for (command in LiquidBounce.CLIENT.commandManager.commands) {
+        for (command in LiquidBounce.commandManager.commands) {
             if (command !is Shortcut)
                 continue
 

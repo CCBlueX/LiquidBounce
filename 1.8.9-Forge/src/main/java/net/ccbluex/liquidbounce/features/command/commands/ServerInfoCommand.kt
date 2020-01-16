@@ -17,7 +17,7 @@ import net.minecraft.network.handshake.client.C00Handshake
 class ServerInfoCommand : Command("serverinfo", emptyArray()), Listenable {
 
     init {
-        LiquidBounce.CLIENT.eventManager.registerListener(this)
+        LiquidBounce.eventManager.registerListener(this)
     }
 
     private var ip = ""

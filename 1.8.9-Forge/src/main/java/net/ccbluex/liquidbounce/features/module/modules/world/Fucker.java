@@ -1,12 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.world;
 
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.event.UpdateEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
@@ -53,7 +53,7 @@ public class Fucker extends Module {
 	@EventTarget
 	public void onUpdate(final UpdateEvent event) {
 		if(noHitValue.get()) {
-			final KillAura killAura = (KillAura) ModuleManager.getModule(KillAura.class);
+			final KillAura killAura = (KillAura) LiquidBounce.moduleManager.getModule(KillAura.class);
 
             if (killAura.getState() && killAura.getTarget() != null)
 				return;
@@ -115,7 +115,7 @@ public class Fucker extends Module {
 
 		switch(surroundings ? "destroy" : actionValue.get().toLowerCase()) {
 			case "destroy":
-				final AutoTool autoTool = (AutoTool) ModuleManager.getModule(AutoTool.class);
+				final AutoTool autoTool = (AutoTool) LiquidBounce.moduleManager.getModule(AutoTool.class);
 				if(autoTool != null && autoTool.getState())
 					autoTool.switchSlot(pos);
 

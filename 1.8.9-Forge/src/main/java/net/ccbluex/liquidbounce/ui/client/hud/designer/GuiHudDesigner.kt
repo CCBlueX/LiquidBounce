@@ -28,10 +28,10 @@ class GuiHudDesigner : GuiScreen() {
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        LiquidBounce.CLIENT.hud.render(true)
-        LiquidBounce.CLIENT.hud.handleMouseMove(mouseX, mouseY)
+        LiquidBounce.hud.render(true)
+        LiquidBounce.hud.handleMouseMove(mouseX, mouseY)
 
-        if (!LiquidBounce.CLIENT.hud.elements.contains(selectedElement))
+        if (!LiquidBounce.hud.elements.contains(selectedElement))
             selectedElement = null
 
         val wheel = Mouse.getDWheel()
@@ -39,7 +39,7 @@ class GuiHudDesigner : GuiScreen() {
         editorPanel.drawPanel(mouseX, mouseY, wheel)
 
         if (wheel != 0) {
-            for (element in LiquidBounce.CLIENT.hud.elements) {
+            for (element in LiquidBounce.hud.elements) {
                 if (element.isInBorder(mouseX / element.scale - element.renderX,
                                 mouseY / element.scale - element.renderY)) {
                     element.scale = element.scale + if (wheel > 0) 0.05f else -0.05f
@@ -58,7 +58,7 @@ class GuiHudDesigner : GuiScreen() {
             return
         }
 
-        LiquidBounce.CLIENT.hud.handleMouseClick(mouseX, mouseY, mouseButton)
+        LiquidBounce.hud.handleMouseClick(mouseX, mouseY, mouseButton)
 
         if (!(mouseX >= editorPanel.x && mouseX <= editorPanel.x + editorPanel.width && mouseY >= editorPanel.y &&
                         mouseY <= editorPanel.y + min(editorPanel.realHeight, 200))) {
@@ -67,7 +67,7 @@ class GuiHudDesigner : GuiScreen() {
         }
 
         if (mouseButton == 0) {
-            for (element in LiquidBounce.CLIENT.hud.elements) {
+            for (element in LiquidBounce.hud.elements) {
                 if (element.isInBorder(mouseX / element.scale - element.renderX, mouseY / element.scale - element.renderY)) {
                     selectedElement = element
                     break
@@ -79,12 +79,12 @@ class GuiHudDesigner : GuiScreen() {
     override fun mouseReleased(mouseX: Int, mouseY: Int, state: Int) {
         super.mouseReleased(mouseX, mouseY, state)
 
-        LiquidBounce.CLIENT.hud.handleMouseReleased()
+        LiquidBounce.hud.handleMouseReleased()
     }
 
     override fun onGuiClosed() {
         Keyboard.enableRepeatEvents(false)
-        LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.hudConfig)
+        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.hudConfig)
 
         super.onGuiClosed()
     }
@@ -92,14 +92,14 @@ class GuiHudDesigner : GuiScreen() {
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         when (keyCode) {
             Keyboard.KEY_DELETE -> if (Keyboard.KEY_DELETE == keyCode && selectedElement != null)
-                LiquidBounce.CLIENT.hud.removeElement(selectedElement!!)
+                LiquidBounce.hud.removeElement(selectedElement!!)
 
             Keyboard.KEY_ESCAPE -> {
                 selectedElement = null
                 editorPanel.create = false
             }
 
-            else -> LiquidBounce.CLIENT.hud.handleKey(typedChar, keyCode)
+            else -> LiquidBounce.hud.handleKey(typedChar, keyCode)
         }
 
         super.keyTyped(typedChar, keyCode)

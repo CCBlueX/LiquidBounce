@@ -27,12 +27,12 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F,
      * Draw element
      */
     override fun drawElement(): Border? {
-        if (LiquidBounce.CLIENT.hud.notifications.size > 0)
-            LiquidBounce.CLIENT.hud.notifications[0].drawNotification()
+        if (LiquidBounce.hud.notifications.size > 0)
+            LiquidBounce.hud.notifications[0].drawNotification()
 
         if (mc.currentScreen is GuiHudDesigner) {
-            if (!LiquidBounce.CLIENT.hud.notifications.contains(exampleNotification))
-                LiquidBounce.CLIENT.hud.addNotification(exampleNotification)
+            if (!LiquidBounce.hud.notifications.contains(exampleNotification))
+                LiquidBounce.hud.addNotification(exampleNotification)
 
             exampleNotification.fadeState = Notification.FadeState.STAY
             exampleNotification.x = exampleNotification.textLength + 8F
@@ -95,7 +95,7 @@ class Notification(private val message: String) {
             else
                 fadeState = FadeState.END
 
-            FadeState.END -> LiquidBounce.CLIENT.hud.removeNotification(this)
+            FadeState.END -> LiquidBounce.hud.removeNotification(this)
         }
     }
 

@@ -2,7 +2,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.Render2DEvent;
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
@@ -41,7 +40,7 @@ public abstract class MixinGuiInGame {
 
     @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
     private void renderTooltip(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
-        final HUD hud = (HUD) ModuleManager.getModule(HUD.class);
+        final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
 
         if(Minecraft.getMinecraft().getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.blackHotbarValue.get()) {
             EntityPlayer entityPlayer = (EntityPlayer) Minecraft.getMinecraft().getRenderViewEntity();
@@ -67,7 +66,7 @@ public abstract class MixinGuiInGame {
             GlStateManager.disableRescaleNormal();
             GlStateManager.disableBlend();
 
-            LiquidBounce.CLIENT.eventManager.callEvent(new Render2DEvent(partialTicks));
+            LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
             callbackInfo.cancel();
         }
     }
@@ -75,12 +74,12 @@ public abstract class MixinGuiInGame {
     @Inject(method = "renderTooltip", at = @At("RETURN"))
     private void renderTooltipPost(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
         if(!ClassUtils.hasClass("net.labymod.api.LabyModAPI"))
-            LiquidBounce.CLIENT.eventManager.callEvent(new Render2DEvent(partialTicks));
+            LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
     }
 
     @Inject(method = "renderPumpkinOverlay", at = @At("HEAD"), cancellable = true)
     private void renderPumpkinOverlay(final CallbackInfo callbackInfo) {
-        final AntiBlind antiBlind = (AntiBlind) ModuleManager.getModule(AntiBlind.class);
+        final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.getModule(AntiBlind.class);
 
         if(antiBlind.getState() && antiBlind.getPumpkinEffect().get())
             callbackInfo.cancel();

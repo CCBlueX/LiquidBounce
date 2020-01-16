@@ -35,8 +35,8 @@ public class HudConfig extends FileConfig {
      */
     @Override
     protected void loadConfig() throws IOException {
-        LiquidBounce.CLIENT.hud.clearElements();
-        LiquidBounce.CLIENT.hud = new Config(FileUtils.readFileToString(getFile())).toHUD();
+        LiquidBounce.hud.clearElements();
+        LiquidBounce.hud = new Config(FileUtils.readFileToString(getFile())).toHUD();
     }
 
     /**
@@ -47,7 +47,7 @@ public class HudConfig extends FileConfig {
     @Override
     protected void saveConfig() throws IOException {
         final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
-        printWriter.println(new Config(LiquidBounce.CLIENT.hud).toJson());
+        printWriter.println(new Config(LiquidBounce.hud).toJson());
         printWriter.close();
     }
 }

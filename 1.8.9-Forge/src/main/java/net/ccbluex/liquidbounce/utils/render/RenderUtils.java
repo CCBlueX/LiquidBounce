@@ -244,7 +244,7 @@ public final class RenderUtils extends MinecraftInstance {
         glEnable(GL_LINE_SMOOTH);
         glPushMatrix();
         glColor(color);
-        glBegin(7);
+        glBegin(GL_QUADS);
         glVertex2d(x2, y);
         glVertex2d(x, y);
         glVertex2d(x, y2);

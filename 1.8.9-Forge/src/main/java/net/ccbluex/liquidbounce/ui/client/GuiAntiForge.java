@@ -45,22 +45,22 @@ public class GuiAntiForge extends GuiScreen {
             case 1:
                 AntiForge.enabled = !AntiForge.enabled;
                 enabledButton.displayString = "Enabled (" + (AntiForge.enabled ? "On" : "Off") + ")";
-                LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.valuesConfig);
+                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 2:
                 AntiForge.blockFML = !AntiForge.blockFML;
                 fmlButton.displayString = "Block FML (" + (AntiForge.blockFML ? "On" : "Off") + ")";
-                LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.valuesConfig);
+                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 3:
                 AntiForge.blockProxyPacket = !AntiForge.blockProxyPacket;
                 proxyButton.displayString = "Block FML Proxy Packet (" + (AntiForge.blockProxyPacket ? "On" : "Off") + ")";
-                LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.valuesConfig);
+                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 4:
                 AntiForge.blockPayloadPackets = !AntiForge.blockPayloadPackets;
                 payloadButton.displayString = "Block Payload Packets (" + (AntiForge.blockPayloadPackets ? "On" : "Off") + ")";
-                LiquidBounce.CLIENT.fileManager.saveConfig(LiquidBounce.CLIENT.fileManager.valuesConfig);
+                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 0:
                 mc.displayGuiScreen(prevGui);

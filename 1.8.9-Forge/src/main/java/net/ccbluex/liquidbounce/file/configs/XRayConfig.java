@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce.file.configs;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import net.ccbluex.liquidbounce.features.module.ModuleManager;
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
 import net.ccbluex.liquidbounce.file.FileConfig;
 import net.ccbluex.liquidbounce.file.FileManager;
@@ -37,7 +37,7 @@ public class XRayConfig extends FileConfig {
      */
     @Override
     protected void loadConfig() throws IOException {
-        final XRay xRay = (XRay) ModuleManager.getModule(XRay.class);
+        final XRay xRay = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
 
         if(xRay == null) {
             ClientUtils.getLogger().error("[FileManager] Failed to find xray module.");
@@ -71,7 +71,7 @@ public class XRayConfig extends FileConfig {
      */
     @Override
     protected void saveConfig() throws IOException {
-        final XRay xRay = (XRay) ModuleManager.getModule(XRay.class);
+        final XRay xRay = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
 
         if(xRay == null) {
             ClientUtils.getLogger().error("[FileManager] Failed to find xray module.");
