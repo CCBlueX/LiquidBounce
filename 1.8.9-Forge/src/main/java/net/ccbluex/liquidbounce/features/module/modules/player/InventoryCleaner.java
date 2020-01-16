@@ -213,8 +213,16 @@ public class InventoryCleaner extends Module {
             final ItemStack slotStack = mc.thePlayer.inventory.getStackInSlot(targetSlot);
             final SortCallback sortCallback = searchSortItem(targetSlot, slotStack);
 
-            if (sortCallback != null && sortCallback.getItemSlot() != targetSlot && (sortCallback.isReplaceCurrentItem() || slotStack == null)) {
+            if(sortCallback != null && sortCallback.getItemSlot() != targetSlot && (sortCallback.isReplaceCurrentItem() || slotStack == null)) {
+                final boolean openInventory = !(mc.currentScreen instanceof GuiInventory) && simulateInventory.get();
+
+                if (openInventory)
+                    mc.getNetHandler().addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
+
                 mc.playerController.windowClick(0, sortCallback.getItemSlot() < 9 ? sortCallback.getItemSlot() + 36 : sortCallback.getItemSlot(), targetSlot, 2, mc.thePlayer);
+
+                if (openInventory)
+                    mc.getNetHandler().addToSendQueue(new C0DPacketCloseWindow());
 
                 clickTimer.reset();
                 delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
