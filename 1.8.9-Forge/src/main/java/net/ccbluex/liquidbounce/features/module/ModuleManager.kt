@@ -121,7 +121,6 @@ object ModuleManager : Listenable {
                 Plugins::class.java,
                 AntiHunger::class.java,
                 ConsoleSpammer::class.java,
-                NoScoreboard::class.java,
                 LongJump::class.java,
                 Parkour::class.java,
                 LadderJump::class.java,
@@ -188,6 +187,8 @@ object ModuleManager : Listenable {
                 ResourcePackSpoof::class.java,
                 NoSlowBreak::class.java
         )
+
+        registerModule(NoScoreboard) // Good idea? I don't know
 
         ClientUtils.getLogger().info("[ModuleManager] Loaded ${modules.size} modules.")
     }

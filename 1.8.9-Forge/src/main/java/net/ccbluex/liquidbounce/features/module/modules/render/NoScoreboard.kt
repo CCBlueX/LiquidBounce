@@ -12,4 +12,4 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
  * @author CCBlueX
  */
 @ModuleInfo(name = "NoScoreboard", description = "Disables the scoreboard.", category = ModuleCategory.RENDER)
-class NoScoreboard : Module()
+object NoScoreboard : Module()

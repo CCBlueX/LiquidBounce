@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import com.google.common.collect.Iterables
 import com.google.common.collect.Lists
+import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -31,6 +32,9 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
      * Draw element
      */
     override fun drawElement(): Border? {
+        if (NoScoreboard.state)
+            return null
+
         val fontRenderer = fontValue.get()
 
         val worldScoreboard: Scoreboard = mc.theWorld.scoreboard
