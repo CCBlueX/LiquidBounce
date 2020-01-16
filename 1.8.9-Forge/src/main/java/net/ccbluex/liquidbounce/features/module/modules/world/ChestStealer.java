@@ -95,25 +95,30 @@ public class ChestStealer extends Module {
 	@EventTarget
 	public void onRender3D(final Render3DEvent event) {
         if (mc.currentScreen instanceof GuiChest && msTimer.hasTimePassed(delay) && (!noCompassValue.get() || mc.thePlayer.inventory.getCurrentItem() == null || !mc.thePlayer.inventory.getCurrentItem().getItem().getUnlocalizedName().equals("item.compass"))) {
-			final GuiChest guiChest = (GuiChest) mc.currentScreen;
+            final GuiChest guiChest = (GuiChest) mc.currentScreen;
 
-			if(chestTitleValue.get() && (guiChest.lowerChestInventory == null || !guiChest.lowerChestInventory.getName().contains(new ItemStack(Item.itemRegistry.getObject(new ResourceLocation("minecraft:chest"))).getDisplayName())))
-				return;
+            if (chestTitleValue.get() && (guiChest.lowerChestInventory == null || !guiChest.lowerChestInventory.getName().contains(new ItemStack(Item.itemRegistry.getObject(new ResourceLocation("minecraft:chest"))).getDisplayName())))
+                return;
 
-			final InventoryCleaner inventoryCleaner = (InventoryCleaner) ModuleManager.getModule(InventoryCleaner.class);
+            final InventoryCleaner inventoryCleaner = (InventoryCleaner) ModuleManager.getModule(InventoryCleaner.class);
+
+            if (inventoryCleaner.getState()) {
+                inventoryCleaner.updateItems();
+            }
+
             final boolean takeRandomized = takeRandomizedValue.get();
 
-            if(!isEmpty(guiChest) && !(closeOnFullValue.get() && isInventoryFull())) {
-				autoCloseTimer.reset();
+            if (!isEmpty(guiChest) && !(closeOnFullValue.get() && isInventoryFull())) {
+                autoCloseTimer.reset();
 
-				if(takeRandomized) {
-					final List<Slot> items = new ArrayList<>();
+                if (takeRandomized) {
+                    final List<Slot> items = new ArrayList<>();
 
-					for(int i = 0; i < guiChest.inventoryRows * 9; i++) {
+                    for (int i = 0; i < guiChest.inventoryRows * 9; i++) {
 						final Slot slot = guiChest.inventorySlots.inventorySlots.get(i);
 
-                        if (slot.getStack() != null && (!onlyItemsValue.get() || !(slot.getStack().getItem() instanceof ItemBlock)) && (!inventoryCleaner.getState() || inventoryCleaner.isUseful(slot.getStack())))
-							items.add(slot);
+                        if (slot.getStack() != null && (!onlyItemsValue.get() || !(slot.getStack().getItem() instanceof ItemBlock)) && (!inventoryCleaner.getState() || inventoryCleaner.isUseful(slot.getStack(), -1)))
+                            items.add(slot);
 					}
 
 					final int randomSlot = new Random().nextInt(items.size());
@@ -127,12 +132,12 @@ public class ChestStealer extends Module {
 					for(int i = 0; i < guiChest.inventoryRows * 9; i++) {
 						final Slot slot = guiChest.inventorySlots.inventorySlots.get(i);
 
-                        if (msTimer.hasTimePassed(delay) && slot.getStack() != null && (!onlyItemsValue.get() || !(slot.getStack().getItem() instanceof ItemBlock)) && (!inventoryCleaner.getState() || inventoryCleaner.isUseful(slot.getStack()))) {
-							guiChest.handleMouseClick(slot, slot.slotNumber, 0, 1);
+                        if (msTimer.hasTimePassed(delay) && slot.getStack() != null && (!onlyItemsValue.get() || !(slot.getStack().getItem() instanceof ItemBlock)) && (!inventoryCleaner.getState() || inventoryCleaner.isUseful(slot.getStack(), -1))) {
+                            guiChest.handleMouseClick(slot, slot.slotNumber, 0, 1);
 
-							msTimer.reset();
-							delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
-						}
+                            msTimer.reset();
+                            delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
+                        }
 					}
 				}
 			}else if(autoCloseValue.get() && autoCloseTimer.hasTimePassed(autoCloseDelay)) {
@@ -149,7 +154,7 @@ public class ChestStealer extends Module {
 		for(int i = 0; i < guiChest.inventoryRows * 9; i++) {
             final Slot slot = guiChest.inventorySlots.inventorySlots.get(i);
 
-            if(slot.getStack() != null && (!onlyItemsValue.get() || !(slot.getStack().getItem() instanceof ItemBlock)) && (!inventoryCleaner.getState() || inventoryCleaner.isUseful(slot.getStack())))
+            if (slot.getStack() != null && (!onlyItemsValue.get() || !(slot.getStack().getItem() instanceof ItemBlock)) && (!inventoryCleaner.getState() || inventoryCleaner.isUseful(slot.getStack(), -1)))
                 return false;
         }
 

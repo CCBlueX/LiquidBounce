@@ -14,18 +14,18 @@ import java.util.regex.Pattern;
  * LiquidBounce Hacked Client
  * A minecraft forge injection client using Mixin
  *
- * @game Minecraft
  * @author CCBlueX
  * @author MCModding4K
+ * @game Minecraft
  */
 public final class ItemUtils {
 
     /**
      * Allows you to create a item using the item json
      *
-     * @author MCModding4K
      * @param itemArguments arguments of item
      * @return created item
+     * @author MCModding4K
      */
     public static ItemStack createItem(String itemArguments) {
         try {
@@ -35,44 +35,44 @@ public final class ItemUtils {
             int i = 1;
             int j = 0;
 
-            for(int mode = 0; mode <= Math.min(12, itemArguments.length() - 2); ++mode) {
+            for (int mode = 0; mode <= Math.min(12, itemArguments.length() - 2); ++mode) {
                 args = itemArguments.substring(mode).split(Pattern.quote(" "));
                 ResourceLocation resourcelocation = new ResourceLocation(args[0]);
                 item = Item.itemRegistry.getObject(resourcelocation);
-                if(item != null)
+                if (item != null)
                     break;
             }
 
-            if(item == null)
+            if (item == null)
                 return null;
 
-            if(Objects.requireNonNull(args).length >= 2 && args[1].matches("\\d+"))
+            if (Objects.requireNonNull(args).length >= 2 && args[1].matches("\\d+"))
                 i = Integer.parseInt(args[1]);
-            if(args.length >= 3 && args[2].matches("\\d+"))
+            if (args.length >= 3 && args[2].matches("\\d+"))
                 j = Integer.parseInt(args[2]);
 
             ItemStack itemstack = new ItemStack(item, i, j);
-            if(args.length >= 4) {
+            if (args.length >= 4) {
                 StringBuilder NBT = new StringBuilder();
-                for(int nbtcount = 3; nbtcount < args.length; ++nbtcount)
+                for (int nbtcount = 3; nbtcount < args.length; ++nbtcount)
                     NBT.append(" ").append(args[nbtcount]);
                 itemstack.setTagCompound(JsonToNBT.getTagFromJson(NBT.toString()));
             }
             return itemstack;
-        }catch(Exception exception) {
+        } catch (Exception exception) {
             exception.printStackTrace();
             return null;
         }
     }
 
     public static int getEnchantment(final ItemStack itemStack, final Enchantment enchantment) {
-        if(itemStack == null || itemStack.getEnchantmentTagList() == null || itemStack.getEnchantmentTagList().hasNoTags())
+        if (itemStack == null || itemStack.getEnchantmentTagList() == null || itemStack.getEnchantmentTagList().hasNoTags())
             return 0;
 
-        for(int i = 0; i < itemStack.getEnchantmentTagList().tagCount(); i++) {
+        for (int i = 0; i < itemStack.getEnchantmentTagList().tagCount(); i++) {
             final NBTTagCompound tagCompound = itemStack.getEnchantmentTagList().getCompoundTagAt(i);
 
-            if(tagCompound.getShort("ench") == enchantment.effectId || tagCompound.getShort("id") == enchantment.effectId)
+            if ((tagCompound.hasKey("ench") && tagCompound.getShort("ench") == enchantment.effectId) || (tagCompound.hasKey("id") && tagCompound.getShort("id") == enchantment.effectId))
                 return tagCompound.getShort("lvl");
         }
 
