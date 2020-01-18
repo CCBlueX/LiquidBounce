@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.FastPlace;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
 import net.ccbluex.liquidbounce.ui.client.GuiUpdate;
 import net.ccbluex.liquidbounce.ui.client.GuiWelcome;
+import net.ccbluex.liquidbounce.utils.CPSCounter;
 import net.ccbluex.liquidbounce.utils.render.IconUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.block.material.Material;
@@ -175,15 +176,24 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "clickMouse", at = @At("HEAD"))
     private void clickMouse(CallbackInfo callbackInfo) {
+        CPSCounter.registerClick(CPSCounter.MouseButton.LEFT);
+
         if (LiquidBounce.moduleManager.getModule(AutoClicker.class).getState())
             leftClickCounter = 0;
     }
 
+    @Inject(method = "middleClickMouse", at = @At("HEAD"))
+    private void middleClickMouse(CallbackInfo ci) {
+        CPSCounter.registerClick(CPSCounter.MouseButton.MIDDLE);
+    }
+
     @Inject(method = "rightClickMouse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelayTimer:I", shift = At.Shift.AFTER))
     private void rightClickMouse(final CallbackInfo callbackInfo) {
+        CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT);
+
         final FastPlace fastPlace = (FastPlace) LiquidBounce.moduleManager.getModule(FastPlace.class);
 
-        if(fastPlace.getState())
+        if (fastPlace.getState())
             rightClickDelayTimer = fastPlace.getSpeedValue().get();
     }
 
