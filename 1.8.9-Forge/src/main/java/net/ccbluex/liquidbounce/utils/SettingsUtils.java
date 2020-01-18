@@ -28,7 +28,7 @@ import java.util.List;
 @SideOnly(Side.CLIENT)
 public final class SettingsUtils {
 
-    public static void executeScript(final List<String> script) {
+    public static void executeScript(List<String> script) {
         for (String scriptLine : script) {
             String[] split = scriptLine.split(" ");
 
@@ -38,14 +38,14 @@ public final class SettingsUtils {
                         ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §e" + ColorUtils.translateAlternateColorCodes(StringUtils.toCompleteString(split, 1)));
                         break;
                     case "load":
-                        final String urlRaw = StringUtils.toCompleteString(split, 1);
-                        final String url = urlRaw.startsWith("http") ? urlRaw : "https://ccbluex.github.io/FileCloud/" + LiquidBounce.CLIENT_NAME + "/autosettings/" + urlRaw.toLowerCase();
+                        String urlRaw = StringUtils.toCompleteString(split, 1);
+                        String url = urlRaw.startsWith("http") ? urlRaw : "https://ccbluex.github.io/FileCloud/" + LiquidBounce.CLIENT_NAME + "/autosettings/" + urlRaw.toLowerCase();
 
                         try {
                             ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loading settings from §a§l" + url + "§7...");
 
-                            final List<String> nextScript = new ArrayList<>();
-                            final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
+                            List<String> nextScript = new ArrayList<>();
+                            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
                             for (String line; (line = bufferedReader.readLine()) != null; )
                                 if (!line.startsWith("#") && !line.isEmpty())
                                     nextScript.add(line);
@@ -53,7 +53,7 @@ public final class SettingsUtils {
                             SettingsUtils.executeScript(nextScript);
 
                             ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loaded settings from §a§l" + url + "§7.");
-                        } catch (final Exception e) {
+                        } catch (Exception e) {
                             ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Failed to load settings from §a§l" + url + "§7.");
                         }
                         break;
@@ -93,10 +93,6 @@ public final class SettingsUtils {
                             ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cModule §a§l" + moduleName + "§c was not found!");
                             break;
                         }
-                        if (module.getCategory() == ModuleCategory.RENDER) {
-                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cModule §a§l" + moduleName + "§c is a render module!");
-                            break;
-                        }
                         if (valueName.equalsIgnoreCase("toggle")) {
                             module.setState(value.equalsIgnoreCase("true"));
                             ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + module.getName() + " §7was toggled §c§l" + (module.getState() ? "on" : "off") + "§7.");
@@ -132,7 +128,7 @@ public final class SettingsUtils {
                             }
 
                             ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + module.getName() + "§7 value §8§l" + moduleValue.getName() + "§7 set to §c§l" + value + "§7.");
-                        } catch (final Exception e) {
+                        } catch (Exception e) {
                             ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + e.getClass().getName() + "§7(" + e.getMessage() + ") §cAn Exception occurred while setting §a§l" + value + "§c to §a§l" + moduleValue.getName() + "§c in §a§l" + module.getName() + "§c.");
 
                         }
@@ -144,8 +140,8 @@ public final class SettingsUtils {
         LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
     }
 
-    public static String generateScript(final boolean values, final boolean binds, final boolean states) {
-        final StringBuilder stringBuilder = new StringBuilder();
+    public static String generateScript(boolean values, boolean binds, boolean states) {
+        StringBuilder stringBuilder = new StringBuilder();
 
         LiquidBounce.moduleManager.getModules().stream().filter(module -> module.getCategory() != ModuleCategory.RENDER && !(module instanceof NameProtect) && !(module instanceof Spammer)).forEach(module -> {
             if (values) {
