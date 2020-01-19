@@ -11,13 +11,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(EntityHorse.class)
 public class MixinEntityHorse {
 
-    @Inject(method = "isHorseSaddled", cancellable = true, at = @At("HEAD"))
-    private void injectIsHorseSaddled(CallbackInfoReturnable<Boolean> cir) {
-        //noinspection ConstantConditions
-        if (LiquidBounce.moduleManager.getModule(UnSaddledRide.class).getState()) {
-            cir.setReturnValue(true);
-            cir.cancel();
-        }
+  @Inject(method = "isHorseSaddled", cancellable = true, at = @At("HEAD"))
+  private void injectIsHorseSaddled(CallbackInfoReturnable<Boolean> cir) {
+    // noinspection ConstantConditions
+    if (LiquidBounce.moduleManager.getModule(UnSaddledRide.class).getState()) {
+      cir.setReturnValue(true);
+      cir.cancel();
     }
-
+  }
 }
