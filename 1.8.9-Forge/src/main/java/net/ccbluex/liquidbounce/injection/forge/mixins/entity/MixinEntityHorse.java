@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.features.module.modules.exploit.UnSaddledRide;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.NoSaddleRide;
 import net.minecraft.entity.passive.EntityHorse;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,7 +14,7 @@ public class MixinEntityHorse {
     @Inject(method = "isHorseSaddled", cancellable = true, at = @At("HEAD"))
     private void injectIsHorseSaddled(CallbackInfoReturnable<Boolean> cir) {
         //noinspection ConstantConditions
-        if (LiquidBounce.moduleManager.getModule(UnSaddledRide.class).getState()) {
+        if (LiquidBounce.moduleManager.getModule(NoSaddleRide.class).getState()) {
             cir.setReturnValue(true);
             cir.cancel();
         }

@@ -181,7 +181,7 @@ class ModuleManager : Listenable {
                 KeepAlive::class.java,
                 ResourcePackSpoof::class.java,
                 NoSlowBreak::class.java,
-                UnSaddledRide::class.java
+                NoSaddleRide::class.java
         )
 
         registerModule(NoScoreboard) // Good idea? I don't know
