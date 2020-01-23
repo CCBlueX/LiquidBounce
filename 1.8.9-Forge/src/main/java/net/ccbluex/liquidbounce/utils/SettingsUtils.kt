@@ -24,11 +24,6 @@ object SettingsUtils {
         script.lines().filter { it.isNotEmpty() && !it.startsWith('#') }.forEachIndexed { index, s ->
             val args = s.split(" ").toTypedArray()
 
-            if (args.isEmpty()) {
-                ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cSyntax error at line '$index' in setting script.\n§8§lLine: §7$s")
-                return@forEachIndexed
-            }
-
             when (args[0]) {
                 "chat" -> ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §e${translateAlternateColorCodes(StringUtils.toCompleteString(args, 1))}")
 
