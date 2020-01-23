@@ -16,7 +16,7 @@ import net.minecraft.util.MathHelper
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import java.math.BigDecimal
+import java.text.DecimalFormat
 
 /**
  * LiquidBounce Hacked Client
@@ -212,19 +212,17 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         val element = currentElement ?: return
 
         // X
-        Fonts.font35.drawString("X: ${element.renderX} (${element.x})", x + 2, y + height, Color.WHITE.rgb)
+        Fonts.font35.drawString("X: ${DecimalFormat("#.##").format(element.renderX)} (${DecimalFormat("#.##").format(element.x)})", x + 2, y + height, Color.WHITE.rgb)
         height += 10
         realHeight += 10
 
         // Y
-        Fonts.font35.drawString("Y: ${element.renderY} (${element.y})", x + 2, y + height, Color.WHITE.rgb)
+        Fonts.font35.drawString("Y: ${DecimalFormat("#.##").format(element.renderY)} (${DecimalFormat("#.##").format(element.y)})", x + 2, y + height, Color.WHITE.rgb)
         height += 10
         realHeight += 10
 
         // Scale
-        var scaleRounded = BigDecimal(element.scale.toString())
-        scaleRounded = scaleRounded.setScale(2, 4)
-        Fonts.font35.drawString("Scale: $scaleRounded", x + 2, y + height, Color.WHITE.rgb)
+        Fonts.font35.drawString("Scale: ${DecimalFormat("#.##").format(element.scale)}", x + 2, y + height, Color.WHITE.rgb)
         height += 10
         realHeight += 10
 
@@ -288,10 +286,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                     val max = value.maximum
 
                     // Title
-                    var roundedValue = BigDecimal(current.toString())
-                    roundedValue = roundedValue.setScale(2, 4)
-
-                    val text = "${value.name}: §c$roundedValue"
+                    val text = "${value.name}: §c${DecimalFormat("#.##").format(current)}"
 
                     Fonts.font35.drawString(text, x + 2, y + height, Color.WHITE.rgb)
 
