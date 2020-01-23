@@ -26,7 +26,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
      * Draw element
      */
     override fun drawElement(): Border {
-        var y = 0
+        var y = 0F
         var width = 0F
 
         val fontRenderer = fontValue.get()
@@ -54,16 +54,16 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
             if (width < stringWidth)
                 width = stringWidth
 
-            fontRenderer.drawString(name, stringWidth, y.toFloat(), potion.liquidColor, shadow.get())
+            fontRenderer.drawString(name, -stringWidth, y, potion.liquidColor, shadow.get())
             y -= fontRenderer.FONT_HEIGHT
         }
 
         if (width == 0F)
             width = 40F
 
-        if (y == 0)
-            y = 10
+        if (y == 0F)
+            y = 10F
 
-        return Border(2F, fontRenderer.FONT_HEIGHT.toFloat(), width, y + fontRenderer.FONT_HEIGHT - 2F)
+        return Border(2F, fontRenderer.FONT_HEIGHT.toFloat(), -width - 2F, y + fontRenderer.FONT_HEIGHT - 2F)
     }
 }
