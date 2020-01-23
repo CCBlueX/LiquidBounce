@@ -121,6 +121,9 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                         20 -> italic = true
                         21 -> {
                             hexColor = colorHex
+                            if (hexColor and -67108864 == 0)
+                                hexColor = hexColor or -16777216
+
                             bold = false
                             italic = false
                             randomCase = false
