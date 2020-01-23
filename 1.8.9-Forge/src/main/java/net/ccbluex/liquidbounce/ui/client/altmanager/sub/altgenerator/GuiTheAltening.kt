@@ -11,7 +11,6 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication
 import com.thealtening.AltService
 import com.thealtening.api.TheAltening
-import com.thealtening.utilities.SSLVerification
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
@@ -74,9 +73,6 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
         apiKeyField = GuiPasswordField(1337, Fonts.font40, width / 2 - 100, 115, 200, 20)
         apiKeyField.maxStringLength = 18
         apiKeyField.text = apiKey
-
-        // Verify SSL
-        SSLVerification().verify()
         super.initGui()
     }
 
