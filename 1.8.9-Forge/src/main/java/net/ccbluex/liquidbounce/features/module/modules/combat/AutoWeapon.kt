@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.AttackEvent
@@ -15,16 +20,8 @@ import net.minecraft.item.ItemTool
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "AutoWeapon", description = "Automatically selects the best weapon in your hotbar.", category = ModuleCategory.COMBAT)
 class AutoWeapon : Module() {
-
     private val silentValue = BoolValue("SpoofItem", false)
 
     private var packetUseEntity: C02PacketUseEntity? = null

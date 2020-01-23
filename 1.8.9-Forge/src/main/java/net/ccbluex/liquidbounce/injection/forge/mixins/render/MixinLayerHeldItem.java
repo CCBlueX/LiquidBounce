@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import net.minecraft.block.Block;
@@ -22,13 +27,6 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.UUID;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @Mixin(LayerHeldItem.class)
 @SideOnly(Side.CLIENT)
 public class MixinLayerHeldItem {

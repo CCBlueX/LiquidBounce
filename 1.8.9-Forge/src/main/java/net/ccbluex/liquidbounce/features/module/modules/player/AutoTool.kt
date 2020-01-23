@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.ClickBlockEvent
@@ -7,13 +12,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.minecraft.util.BlockPos
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "AutoTool", description = "Automatically selects the best tool in your inventory to mine a block.", category = ModuleCategory.PLAYER)
 class AutoTool : Module() {
 

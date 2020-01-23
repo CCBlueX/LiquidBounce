@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.render;
 
 import net.ccbluex.liquidbounce.event.EventTarget;
@@ -18,13 +23,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "ProphuntESP", description = "Allows you to see disguised players in PropHunt.", category = ModuleCategory.RENDER)
 public class ProphuntESP extends Module {
 

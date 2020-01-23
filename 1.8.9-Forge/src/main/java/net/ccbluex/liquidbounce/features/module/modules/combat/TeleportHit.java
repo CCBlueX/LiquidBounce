@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.combat;
 
 import net.ccbluex.liquidbounce.event.EventState;
@@ -13,16 +18,8 @@ import net.minecraft.network.play.client.C02PacketUseEntity;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.util.Vec3;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "TeleportHit", description = "Allows to hit entities from far away.", category = ModuleCategory.COMBAT)
 public class TeleportHit extends Module {
-
     private EntityLivingBase targetEntity;
     private boolean shouldHit;
 

@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -5,15 +10,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.font.Fonts
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class ReloadCommand : Command("reload", arrayOf("configreload")) {
-
     /**
      * Execute commands with provided [args]
      */
@@ -40,5 +37,4 @@ class ReloadCommand : Command("reload", arrayOf("configreload")) {
         LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
         chat("Reloaded.")
     }
-
 }

@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.command
 
 import net.ccbluex.liquidbounce.features.command.commands.*
@@ -7,16 +12,8 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @SideOnly(Side.CLIENT)
 class CommandManager {
-
     val commands = mutableListOf<Command>()
 
     var prefix = '.'
@@ -111,5 +108,4 @@ class CommandManager {
      * Unregister [command] by just removing it from the commands registry
      */
     fun unregisterCommand(command: Command?) = commands.remove(command)
-
 }

@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.misc;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -13,16 +18,8 @@ import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.TextValue;
 import net.minecraft.client.network.NetworkPlayerInfo;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "NameProtect", description = "Changes playernames clientside.", category = ModuleCategory.MISC)
 public class NameProtect extends Module {
-
     private final TextValue fakeNameValue = new TextValue("FakeName", "&cMe");
     public final BoolValue allPlayersValue = new BoolValue("AllPlayers", false);
     public final BoolValue skinProtectValue = new BoolValue("SkinProtect", true);

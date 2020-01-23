@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.misc;
 
 import net.ccbluex.liquidbounce.event.EventTarget;
@@ -18,16 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "AtAllProvider", description = "Automatically mentions everyone on the server when using '@a' in your message.", category = ModuleCategory.MISC)
 public class AtAllProvider extends Module {
-
     private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 1000, 0, 20000) {
         @Override
         protected void onChanged(final Integer oldValue, final Integer newValue) {

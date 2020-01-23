@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.movement;
 
 import net.ccbluex.liquidbounce.event.EventTarget;
@@ -11,13 +16,6 @@ import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.minecraft.potion.Potion;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
 public class Sprint extends Module {
 

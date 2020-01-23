@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -19,13 +24,6 @@ import net.minecraft.client.renderer.GlStateManager
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ElementInfo(name = "TabGUI")
 class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
 

@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -5,15 +10,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import org.lwjgl.input.Keyboard
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class BindsCommand : Command("binds", emptyArray()) {
-
     /**
      * Execute commands with provided [args]
      */
@@ -34,5 +31,4 @@ class BindsCommand : Command("binds", emptyArray()) {
         }
         chatSyntax("binds clear")
     }
-
 }

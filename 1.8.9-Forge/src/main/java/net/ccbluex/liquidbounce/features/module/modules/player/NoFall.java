@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.player;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -14,13 +19,6 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.util.AxisAlignedBB;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "NoFall", description = "Prevents you from taking fall damage.", category = ModuleCategory.PLAYER)
 public class NoFall extends Module {
 
@@ -133,7 +131,7 @@ public class NoFall extends Module {
 
     @EventTarget
     public void onPacket(PacketEvent event) {
-        final Packet packet = event.getPacket();
+        final Packet<?> packet = event.getPacket();
         final String mode = modeValue.get();
 
         if(packet instanceof C03PacketPlayer && mode.equalsIgnoreCase("SpoofGround"))

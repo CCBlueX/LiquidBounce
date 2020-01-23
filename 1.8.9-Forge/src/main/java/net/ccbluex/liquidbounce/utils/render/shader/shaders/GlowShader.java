@@ -1,15 +1,13 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.utils.render.shader.shaders;
 
 import net.ccbluex.liquidbounce.utils.render.shader.FramebufferShader;
 import org.lwjgl.opengl.GL20;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 public final class GlowShader extends FramebufferShader {
 
     public static final GlowShader GLOW_SHADER = new GlowShader();

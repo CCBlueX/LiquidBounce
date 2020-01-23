@@ -1,17 +1,14 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class HurtCommand : Command("hurt", emptyArray()) {
-
     /**
      * Execute commands with provided [args]
      */
@@ -41,5 +38,4 @@ class HurtCommand : Command("hurt", emptyArray()) {
         // Output message
         chat("You were damaged.")
     }
-
 }

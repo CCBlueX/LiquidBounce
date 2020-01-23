@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.movement;
 
 import net.ccbluex.liquidbounce.event.*;
@@ -26,16 +31,8 @@ import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F)
 public class Fly extends Module {
-
     public final ListValue modeValue = new ListValue("Mode", new String[] {"Vanilla", "SmoothVanilla", "NCP", "OldNCP", "AAC", "AACv3", "FastAACv3", "AAC3.3.12", "AAC3.3.12-Glide", "AAC3.3.13", "Gomme", "Flag", "CubeCraft", "InfinityCubeCraft", "InfinityVCubeCraft", "Hypixel", "OtherHypixel", "LatestHypixel", "BoostHypixel", "FreeHypixel", "Rewinside", "TeleportRewinside", "Mineplex", "KeepAlive", "MineSecure", "Spartan", "Spartan2", "BugSpartan", "KillSwitch", "HawkEye", "Minesucht", "Jetpack", "HAC", "WatchCat", "NeruxVace"}, "Vanilla");
     private final FloatValue vanillaSpeedValue = new FloatValue("VanillaSpeed", 2F, 0F, 5F);
     private final BoolValue vanillaKickBypassValue = new BoolValue("VanillaKickBypass", false);
@@ -620,7 +617,7 @@ public class Fly extends Module {
         if(noPacketModify)
             return;
 
-        final Packet packet = event.getPacket();
+        final Packet<?> packet = event.getPacket();
 
         if(packet instanceof C03PacketPlayer) {
             final C03PacketPlayer packetPlayer = (C03PacketPlayer) packet;

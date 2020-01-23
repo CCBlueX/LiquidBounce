@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.utils.login;
 
 import com.mojang.authlib.Agent;
@@ -14,13 +19,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.net.Proxy;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @SideOnly(Side.CLIENT)
 public final class LoginUtils extends MinecraftInstance {
 

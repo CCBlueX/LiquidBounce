@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.special;
 
 import net.ccbluex.liquidbounce.event.EventTarget;
@@ -13,13 +18,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import java.text.MessageFormat;
 import java.util.Random;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @SideOnly(Side.CLIENT)
 public class BungeeCordSpoof extends MinecraftInstance implements Listenable {
 
@@ -27,7 +25,7 @@ public class BungeeCordSpoof extends MinecraftInstance implements Listenable {
 
     @EventTarget
     public void onPacket(PacketEvent event) {
-        final Packet packet = event.getPacket();
+        final Packet<?> packet = event.getPacket();
 
         if(packet instanceof C00Handshake && enabled && ((C00Handshake) packet).getRequestedState() == EnumConnectionState.LOGIN) {
             final C00Handshake handshake = (C00Handshake) packet;

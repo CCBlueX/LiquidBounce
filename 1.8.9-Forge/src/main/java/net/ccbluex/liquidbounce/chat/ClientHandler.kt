@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.chat
 
 import io.netty.channel.ChannelHandlerContext
@@ -10,13 +15,6 @@ import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker
 import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
 import net.ccbluex.liquidbounce.utils.ClientUtils
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class ClientHandler(val client: Client, private val handshaker: WebSocketClientHandshaker) : SimpleChannelInboundHandler<Any>() {
 
     lateinit var handshakeFuture: ChannelPromise

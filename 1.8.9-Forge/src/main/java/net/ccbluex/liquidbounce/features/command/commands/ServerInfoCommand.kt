@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -7,15 +12,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.minecraft.network.handshake.client.C00Handshake
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class ServerInfoCommand : Command("serverinfo", emptyArray()), Listenable {
-
     init {
         LiquidBounce.eventManager.registerListener(this)
     }
@@ -55,5 +52,4 @@ class ServerInfoCommand : Command("serverinfo", emptyArray()), Listenable {
     }
 
     override fun handleEvents() = true
-
 }
