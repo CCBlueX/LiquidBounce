@@ -1,8 +1,3 @@
-/*
- * LiquidBounce Hacked Client
- * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
- */
 package net.ccbluex.liquidbounce.cape
 
 import com.google.gson.JsonParser
@@ -15,11 +10,20 @@ import net.minecraft.client.renderer.ThreadDownloadImageData
 import net.minecraft.util.ResourceLocation
 import java.awt.image.BufferedImage
 import java.util.*
+import kotlin.collections.HashMap
 
+/**
+ * LiquidBounce Hacked Client
+ * A minecraft forge injection client using Mixin
+ *
+ * @game Minecraft
+ * @author CCBlueX
+ */
 object CapeAPI : MinecraftInstance() {
 
     // Cape Service
     private var capeService: CapeService? = null
+    private val capeCache = HashMap<UUID, CapeInfo>()
 
     /**
      * Register cape service
@@ -61,6 +65,9 @@ object CapeAPI : MinecraftInstance() {
      * @return cape info
      */
     fun loadCape(uuid: UUID): CapeInfo? {
+        if (capeCache.containsKey(uuid))
+            return capeCache[uuid]
+
         // Get url of cape from cape service
         val url = (capeService ?: return null).getCape(uuid) ?: return null
 
@@ -80,6 +87,8 @@ object CapeAPI : MinecraftInstance() {
         })
 
         mc.textureManager.loadTexture(resourceLocation, threadDownloadImageData)
+
+        capeCache[uuid] = capeInfo
 
         return capeInfo
     }
