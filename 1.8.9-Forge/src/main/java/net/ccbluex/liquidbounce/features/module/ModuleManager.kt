@@ -180,7 +180,8 @@ class ModuleManager : Listenable {
                 ComponentOnHover::class.java,
                 KeepAlive::class.java,
                 ResourcePackSpoof::class.java,
-                NoSlowBreak::class.java
+                NoSlowBreak::class.java,
+                NoSaddleRide::class.java
         )
 
         registerModule(NoScoreboard) // Good idea? I don't know

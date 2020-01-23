@@ -37,6 +37,14 @@ import java.util.stream.IntStream;
 @ModuleInfo(name = "AutoArmor", description = "Automatically equips the best armor in your inventory.", category = ModuleCategory.COMBAT)
 public class AutoArmor extends Module {
     public static final ArmorComparator ARMOR_COMPARATOR = new ArmorComparator();
+    private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 200, 0, 400) {
+        @Override
+        protected void onChanged(final Integer oldValue, final Integer newValue) {
+            final int minDelay = minDelayValue.get();
+
+            if (minDelay > newValue) set(minDelay);
+        }
+    };
     private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 100, 0, 400) {
 
         @Override
@@ -53,14 +61,6 @@ public class AutoArmor extends Module {
     private final BoolValue hotbarValue = new BoolValue("Hotbar", true);
 
     private final MSTimer msTimer = new MSTimer();
-    private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 200, 0, 400) {
-        @Override
-        protected void onChanged(final Integer oldValue, final Integer newValue) {
-            final int minDelay = minDelayValue.get();
-
-            if (minDelay > newValue) set(minDelay);
-        }
-    };
     // To save memory
     private final ArmorPiece[] bestArmor = new ArmorPiece[4];
     private long delay;
