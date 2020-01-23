@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.event
 
 import net.minecraft.block.Block
@@ -98,7 +103,6 @@ class MoveEvent(var x: Double, var y: Double, var z: Double) : CancellableEvent(
         x = 0.0
         z = 0.0
     }
-
 }
 
 /**

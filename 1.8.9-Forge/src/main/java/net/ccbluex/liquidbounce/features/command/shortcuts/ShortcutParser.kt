@@ -1,7 +1,11 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.command.shortcuts
 
 object ShortcutParser {
-
     private val SEPARATOR = ";".codePointAt(0)
 
     fun parse(script: String): List<List<String>> {
@@ -56,5 +60,4 @@ object ShortcutParser {
             tokenBuf.clear()
         }
     }
-
 }

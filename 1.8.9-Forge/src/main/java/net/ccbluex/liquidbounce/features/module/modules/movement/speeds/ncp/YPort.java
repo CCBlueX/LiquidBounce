@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp;
 
 import net.ccbluex.liquidbounce.event.MoveEvent;
@@ -14,13 +19,6 @@ import net.minecraft.util.MathHelper;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 public class YPort extends SpeedMode {
 
     private double moveSpeed = 0.2873D;

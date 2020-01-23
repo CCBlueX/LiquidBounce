@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.combat;
 
 import net.ccbluex.liquidbounce.event.EventTarget;
@@ -14,16 +19,8 @@ import net.minecraft.entity.item.EntityTNTPrimed;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "TNTBlock", description = "Automatically blocks with your sword when TNT around you explodes.", category = ModuleCategory.COMBAT)
 public class TNTBlock extends Module {
-
     private final IntegerValue fuseValue = new IntegerValue("Fuse", 10, 0, 80);
     private final FloatValue rangeValue = new FloatValue("Range", 9, 1, 20);
     private final BoolValue autoSwordValue = new BoolValue("AutoSword", true);

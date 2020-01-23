@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.command.commands
 
 import joptsimple.internal.Strings
@@ -5,15 +10,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class HelpCommand : Command("help", emptyArray()) {
-
     /**
      * Execute commands with provided [args]
      */
@@ -60,5 +57,4 @@ class HelpCommand : Command("help", emptyArray()) {
 
         ClientUtils.displayChatMessage("§a------------\n§7> §c${LiquidBounce.commandManager.prefix}help §8<§7§lpage§8>")
     }
-
 }

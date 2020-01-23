@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.discord
 
 import com.google.gson.JsonObject
@@ -15,13 +20,6 @@ import java.io.IOException
 import java.time.OffsetDateTime
 import kotlin.concurrent.thread
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class ClientRichPresence : MinecraftInstance() {
 
     // IPC Client
@@ -113,9 +111,9 @@ class ClientRichPresence : MinecraftInstance() {
      * Shutdown ipc client
      */
     fun shutdown() {
-        try{
+        try {
             ipcClient?.close()
-        }catch(e: Throwable) {
+        } catch (e: Throwable) {
             ClientUtils.getLogger().error("Failed to close Discord RPC.", e)
         }
     }

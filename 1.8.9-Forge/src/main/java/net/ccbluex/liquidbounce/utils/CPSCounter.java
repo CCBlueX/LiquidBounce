@@ -1,11 +1,12 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.utils;
 
 /**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
  * @author superblaubeere27
- * @game Minecraft
  */
 public class CPSCounter {
     private static final int MAX_CPS = 50;

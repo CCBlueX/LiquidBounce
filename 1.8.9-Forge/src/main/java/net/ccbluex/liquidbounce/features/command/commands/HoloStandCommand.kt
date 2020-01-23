@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
@@ -9,15 +14,7 @@ import net.minecraft.nbt.NBTTagDouble
 import net.minecraft.nbt.NBTTagList
 import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class HoloStandCommand : Command("holostand", emptyArray()) {
-
     /**
      * Execute commands with provided [args]
      */
@@ -61,5 +58,4 @@ class HoloStandCommand : Command("holostand", emptyArray()) {
 
         chatSyntax("holostand <x> <y> <z> <message...>")
     }
-
 }

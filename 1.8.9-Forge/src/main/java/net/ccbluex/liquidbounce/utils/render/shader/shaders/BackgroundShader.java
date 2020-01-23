@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.utils.render.shader.shaders;
 
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
@@ -5,13 +10,6 @@ import net.ccbluex.liquidbounce.utils.render.shader.Shader;
 import net.minecraft.client.gui.ScaledResolution;
 import org.lwjgl.opengl.GL20;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 public final class BackgroundShader extends Shader {
 
     public final static BackgroundShader BACKGROUND_SHADER = new BackgroundShader();

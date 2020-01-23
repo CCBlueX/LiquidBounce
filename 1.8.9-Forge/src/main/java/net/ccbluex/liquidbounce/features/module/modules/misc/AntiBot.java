@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.misc;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -25,16 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "AntiBot", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
 public class AntiBot extends Module {
-
     private final BoolValue tabValue = new BoolValue("Tab", true);
     private final ListValue tabModeValue = new ListValue("TabMode", new String[] {"Equals", "Contains"}, "Contains");
     private final BoolValue entityIDValue = new BoolValue("EntityID", true);
@@ -69,7 +66,7 @@ public class AntiBot extends Module {
         if(mc.thePlayer == null || mc.theWorld == null)
             return;
 
-        final Packet packet = event.getPacket();
+        final Packet<?> packet = event.getPacket();
 
         if(packet instanceof S14PacketEntity) {
             final S14PacketEntity packetEntity = (S14PacketEntity) event.getPacket();

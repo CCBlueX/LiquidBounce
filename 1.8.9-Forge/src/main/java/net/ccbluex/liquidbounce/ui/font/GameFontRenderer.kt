@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -13,13 +18,6 @@ import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.awt.Font
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameSettings,
         ResourceLocation("textures/font/ascii.png"), null, false) {
 

@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator
 
 import com.thealtening.AltService
@@ -15,13 +20,6 @@ import net.minecraft.client.gui.GuiTextField
 import org.lwjgl.input.Keyboard
 import java.io.IOException
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class GuiMCLeaks(private val prevGui: GuiAltManager) : GuiScreen() {
     private lateinit var tokenField: GuiTextField
     private var status: String? = null

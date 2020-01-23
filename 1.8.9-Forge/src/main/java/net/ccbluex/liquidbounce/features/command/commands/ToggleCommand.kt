@@ -1,17 +1,14 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class ToggleCommand : Command("toggle", arrayOf("t")) {
-
     /**
      * Execute commands with provided [args]
      */
@@ -31,5 +28,4 @@ class ToggleCommand : Command("toggle", arrayOf("t")) {
 
         chatSyntax("toggle <module>")
     }
-
 }

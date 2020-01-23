@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -11,16 +16,8 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.player.EnumPlayerModelParts
 import kotlin.random.Random
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "SkinDerp", description = "Makes your skin blink (Requires multi-layer skin).", category = ModuleCategory.FUN)
 class SkinDerp : Module() {
-
     private val delayValue = IntegerValue("Delay", 0, 0, 1000)
     private val hatValue = BoolValue("Hat", true)
     private val jacketValue = BoolValue("Jacket", true)

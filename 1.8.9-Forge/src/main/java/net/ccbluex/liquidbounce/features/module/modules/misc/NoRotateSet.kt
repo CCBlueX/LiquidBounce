@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -10,16 +15,8 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "NoRotateSet", description = "Prevents the server from rotating your head.", category = ModuleCategory.MISC)
 class NoRotateSet : Module() {
-
     private val confirmValue = BoolValue("Confirm", true)
     private val illegalRotationValue = BoolValue("ConfirmIllegalRotation", false)
     private val noZeroValue = BoolValue("NoZero", false)
@@ -46,5 +43,4 @@ class NoRotateSet : Module() {
             packet.pitch = mc.thePlayer.rotationPitch
         }
     }
-
 }
