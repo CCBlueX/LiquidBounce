@@ -117,8 +117,12 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         width = 90
 
         for (element in elements) {
-            val name = element.getAnnotation(ElementInfo::class.java).name
+            val info = element.getAnnotation(ElementInfo::class.java) ?: continue
 
+            if (info.single && LiquidBounce.hud.elements.any { it.javaClass == element })
+                continue
+
+            val name = info.name
             Fonts.font35.drawString(name, x + 2, y + height, Color.WHITE.rgb)
 
             val stringWidth = Fonts.font35.getStringWidth(name)
@@ -418,11 +422,13 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         Fonts.font35.drawString("§l${element.name}", x + 2F, y + 3.5F, Color.WHITE.rgb)
 
         // Delete button
-        val deleteWidth = x + width - Fonts.font35.getStringWidth("§lDelete") - 2F
-        Fonts.font35.drawString("§lDelete", deleteWidth, y + 3.5F, Color.WHITE.rgb)
-        if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= deleteWidth && mouseX <= x + width && mouseY >= y
-                && mouseY <= y + 10)
-            LiquidBounce.hud.removeElement(element)
+        if (!element.info.force) {
+            val deleteWidth = x + width - Fonts.font35.getStringWidth("§lDelete") - 2F
+            Fonts.font35.drawString("§lDelete", deleteWidth, y + 3.5F, Color.WHITE.rgb)
+            if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= deleteWidth && mouseX <= x + width && mouseY >= y
+                    && mouseY <= y + 10)
+                LiquidBounce.hud.removeElement(element)
+        }
     }
 
     /**

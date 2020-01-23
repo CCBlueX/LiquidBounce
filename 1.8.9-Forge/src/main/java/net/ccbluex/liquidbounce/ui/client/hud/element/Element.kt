@@ -13,7 +13,11 @@ import kotlin.math.min
 abstract class Element(var x: Double = 2.0, var y: Double = 2.0, var scale: Float = 1F,
                        var side: Side = Side.default()) : MinecraftInstance() {
 
-    val name = javaClass.getAnnotation(ElementInfo::class.java).name
+    val info = javaClass.getAnnotation(ElementInfo::class.java)
+            ?: throw IllegalArgumentException("Passed element with missing element info")
+
+    val name: String
+        get() = info.name
 
     var renderX: Double
         get() = when (side.horizontal) {
@@ -111,7 +115,7 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, var scale: Floa
  * Element info
  */
 @kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
-annotation class ElementInfo(val name: String)
+annotation class ElementInfo(val name: String, val single: Boolean = false, val force: Boolean = false)
 
 /**
  * CustomHUD Side

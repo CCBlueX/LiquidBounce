@@ -21,7 +21,7 @@ import java.awt.Color
  *
  * Shows a list of enabled modules
  */
-@ElementInfo(name = "Arraylist")
+@ElementInfo(name = "Arraylist", single = true)
 class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                 side: Side = Side(Horizontal.RIGHT, Vertical.UP)) : Element(x, y, scale, side) {
 
