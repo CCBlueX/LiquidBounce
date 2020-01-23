@@ -18,7 +18,7 @@ import kotlin.math.atan
  * Draw mini figure of your character to the HUD
  */
 @ElementInfo(name = "Model")
-class Model : Element() {
+class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
 
     private var rotate = 0F
     private var rotateDirection = false
