@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.world;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -33,13 +38,6 @@ import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_I)
 public class Scaffold extends Module {
 
@@ -235,7 +233,7 @@ public class Scaffold extends Module {
         if(mc.thePlayer == null)
             return;
 
-        final Packet packet = event.getPacket();
+        final Packet<?> packet = event.getPacket();
 
         // AutoBlock
         if(packet instanceof C09PacketHeldItemChange) {

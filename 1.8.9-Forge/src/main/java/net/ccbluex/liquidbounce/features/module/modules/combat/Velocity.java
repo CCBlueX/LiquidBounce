@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.combat;
 
 import net.ccbluex.liquidbounce.event.EventTarget;
@@ -18,12 +23,11 @@ import net.minecraft.util.MathHelper;
 
 @ModuleInfo(name = "Velocity", description = "Allows you to modify the amount of knockback you take.", category = ModuleCategory.COMBAT)
 public class Velocity extends Module {
-
     private final FloatValue horizontalValue = new FloatValue("Horizontal", 0F, 0F, 1F);
     private final FloatValue verticalValue = new FloatValue("Vertical", 0F, 0F, 1F);
     private final ListValue modeValue = new ListValue("Mode", new String[] {"Simple", "AAC", "AACPush", "AACZero", "Jump", "Reverse", "Reverse2", "Glitch"}, "Simple");
     private final FloatValue reverseStrengthValue = new FloatValue("ReverseStrength", 1.0F, 0.1F, 1F);
-    private final FloatValue reverse2StrenghtValue = new FloatValue("Reverse2Strength", 0.05F, 0.02F, 0.1F);
+    private final FloatValue reverse2StrengthValue = new FloatValue("Reverse2Strength", 0.05F, 0.02F, 0.1F);
     private final FloatValue aacPushXZReducerValue = new FloatValue("AACPushXZReducer", 2F, 1F, 3F);
     private final BoolValue aacPushYReducerValue = new BoolValue("AACPushYReducer", true);
 
@@ -106,7 +110,7 @@ public class Velocity extends Module {
 
                 if(!mc.thePlayer.onGround && !mc.thePlayer.isInWater() && !mc.thePlayer.isInLava() && !mc.thePlayer.isInWeb) {
                     if(gotHurt)
-                        mc.thePlayer.speedInAir = reverse2StrenghtValue.get();
+                        mc.thePlayer.speedInAir = reverse2StrengthValue.get();
                 }else if(System.currentTimeMillis() - velocityTime > 80L) {
                     gotVelocity = false;
                     gotHurt = false;
@@ -127,7 +131,7 @@ public class Velocity extends Module {
 
     @EventTarget
     public void onPacket(final PacketEvent event) {
-        final Packet packet = event.getPacket();
+        final Packet<?> packet = event.getPacket();
 
         if(packet instanceof S12PacketEntityVelocity && mc.thePlayer != null && mc.theWorld != null) {
             final S12PacketEntityVelocity packetEntityVelocity = (S12PacketEntityVelocity) packet;

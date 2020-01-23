@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.special;
 
 import io.netty.buffer.Unpooled;
@@ -13,13 +18,6 @@ import net.minecraft.network.play.client.C17PacketCustomPayload;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @SideOnly(Side.CLIENT)
 public class AntiForge extends MinecraftInstance implements Listenable {
 
@@ -30,7 +28,7 @@ public class AntiForge extends MinecraftInstance implements Listenable {
 
     @EventTarget
     public void onPacket(PacketEvent event) {
-        final Packet packet = event.getPacket();
+        final Packet<?> packet = event.getPacket();
 
         if (enabled && !mc.isIntegratedServerRunning()) {
             try {

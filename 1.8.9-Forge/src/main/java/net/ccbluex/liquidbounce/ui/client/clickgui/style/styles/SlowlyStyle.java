@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles;
 
 import net.ccbluex.liquidbounce.ui.client.clickgui.Panel;
@@ -24,13 +29,6 @@ import java.awt.*;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @SideOnly(Side.CLIENT)
 public class SlowlyStyle extends Style {
 

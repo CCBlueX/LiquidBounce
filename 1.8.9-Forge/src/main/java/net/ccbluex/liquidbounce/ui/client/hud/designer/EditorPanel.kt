@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.ui.client.hud.designer
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -18,13 +23,6 @@ import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.text.DecimalFormat
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: Int) {
 
     var width = 80

@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.utils.item;
 
 import net.minecraft.enchantment.Enchantment;
@@ -11,12 +16,7 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @author CCBlueX
  * @author MCModding4K
- * @game Minecraft
  */
 public final class ItemUtils {
 

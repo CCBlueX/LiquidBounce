@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.movement;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -26,16 +31,8 @@ import net.minecraft.util.BlockPos;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "BufferSpeed", description = "Allows you to walk faster on slabs and stairs.", category = ModuleCategory.MOVEMENT)
 public class BufferSpeed extends Module {
-
     private final BoolValue speedLimitValue = new BoolValue("SpeedLimit", true);
     private final FloatValue maxSpeedValue = new FloatValue("MaxSpeed", 2.0F, 1.0F, 5F);
     private final BoolValue bufferValue = new BoolValue("Buffer", true);
@@ -222,7 +219,7 @@ public class BufferSpeed extends Module {
 
     @EventTarget
     public void onPacket(final PacketEvent event) {
-        final Packet packet = event.getPacket();
+        final Packet<?> packet = event.getPacket();
 
         if(packet instanceof S08PacketPlayerPosLook)
             speed = 0F;

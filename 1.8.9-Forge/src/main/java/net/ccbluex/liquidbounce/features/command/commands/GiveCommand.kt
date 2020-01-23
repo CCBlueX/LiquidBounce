@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
@@ -5,15 +10,7 @@ import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class GiveCommand : Command("give", arrayOf("item", "i", "get")) {
-
     /**
      * Execute commands with provided [args]
      */
@@ -49,5 +46,4 @@ class GiveCommand : Command("give", arrayOf("item", "i", "get")) {
 
         chatSyntax("give <item> [amount] [data] [datatag]")
     }
-
 }

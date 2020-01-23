@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.movement;
 
 import net.ccbluex.liquidbounce.event.BlockBBEvent;
@@ -15,16 +20,8 @@ import net.minecraft.block.BlockVine;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "FastClimb", description = "Allows you to climb up ladders and vines faster.", category = ModuleCategory.MOVEMENT)
 public class FastClimb extends Module {
-
     public final ListValue modeValue = new ListValue("Mode", new String[] {"Normal", "InstantTP", "AAC", "AACv3", "OAAC", "LAAC"}, "Normal");
     private final FloatValue normalSpeedValue = new FloatValue("NormalSpeed", 0.2872F, 0.01F, 5F);
 

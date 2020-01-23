@@ -1,17 +1,14 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.minecraft.enchantment.Enchantment
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class EnchantCommand : Command("enchant", emptyArray()) {
-
     /**
      * Execute commands with provided [args]
      */
@@ -59,8 +56,6 @@ class EnchantCommand : Command("enchant", emptyArray()) {
             chat("${enchantment.getTranslatedName(level)} added to ${item.displayName}.")
             return
         }
-
         chatSyntax("enchant <type> [level]")
     }
-
 }

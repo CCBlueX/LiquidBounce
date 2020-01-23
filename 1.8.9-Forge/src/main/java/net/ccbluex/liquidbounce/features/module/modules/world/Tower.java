@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.world;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -30,13 +35,6 @@ import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 @ModuleInfo(name = "Tower", description = "Automatically builds a tower beneath you.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_O)
 public class Tower extends Module {
 
@@ -325,7 +323,7 @@ public class Tower extends Module {
         if(mc.thePlayer == null)
             return;
 
-        final Packet packet = event.getPacket();
+        final Packet<?> packet = event.getPacket();
 
         if(packet instanceof C09PacketHeldItemChange) {
             final C09PacketHeldItemChange packetHeldItemChange = (C09PacketHeldItemChange) packet;

@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.chat
 
 import com.google.gson.GsonBuilder
@@ -23,14 +28,6 @@ import net.ccbluex.liquidbounce.utils.login.UserUtils
 import java.net.URI
 import java.util.*
 
-
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 abstract class Client : ClientListener, MinecraftInstance() {
 
     internal var channel: Channel? = null

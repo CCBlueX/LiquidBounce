@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -6,13 +11,6 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.minecraft.client.gui.*
 import net.minecraft.client.resources.I18n
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 class GuiMainMenu : GuiScreen(), GuiYesNoCallback {
 
     override fun initGui() {
