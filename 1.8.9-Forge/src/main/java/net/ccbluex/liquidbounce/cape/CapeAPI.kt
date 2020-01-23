@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.cape
 
 import com.google.gson.JsonParser
@@ -12,13 +17,6 @@ import java.awt.image.BufferedImage
 import java.util.*
 import kotlin.collections.HashMap
 
-/**
- * LiquidBounce Hacked Client
- * A minecraft forge injection client using Mixin
- *
- * @game Minecraft
- * @author CCBlueX
- */
 object CapeAPI : MinecraftInstance() {
 
     // Cape Service
