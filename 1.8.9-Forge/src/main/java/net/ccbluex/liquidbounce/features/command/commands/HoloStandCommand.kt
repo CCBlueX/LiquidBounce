@@ -17,6 +17,10 @@ import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
  * @author CCBlueX
  */
 class HoloStandCommand : Command("holostand", emptyArray()) {
+
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         if (args.size > 4) {
             if (!mc.thePlayer.capabilities.isCreativeMode) {
@@ -51,8 +55,11 @@ class HoloStandCommand : Command("holostand", emptyArray()) {
             } catch (exception: NumberFormatException) {
                 chatSyntaxError()
             }
+
             return
         }
+
         chatSyntax("holostand <x> <y> <z> <message...>")
     }
+
 }

@@ -14,6 +14,9 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
  */
 class ReloadCommand : Command("reload", arrayOf("configreload")) {
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         chat("Reloading...")
         chat("§c§lReloading scripts...")

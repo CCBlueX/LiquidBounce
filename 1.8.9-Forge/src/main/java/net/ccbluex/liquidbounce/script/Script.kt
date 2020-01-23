@@ -42,7 +42,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         scriptEngine.put("script", this)
 
         scriptEngine.put("commandManager", StaticClass.forClass(CommandManager.javaClass))
-        scriptEngine.put("moduleManager", StaticClass.forClass(LiquidBounce.moduleManager.javaClass))
+        scriptEngine.put("moduleManager", StaticClass.forClass(ModuleManager.javaClass))
         scriptEngine.put("creativeTabs", StaticClass.forClass(CreativeTab.javaClass))
         scriptEngine.put("item", StaticClass.forClass(Item.javaClass))
         scriptEngine.put("value", StaticClass.forClass(Value.javaClass))

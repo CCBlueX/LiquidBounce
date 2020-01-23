@@ -13,10 +13,13 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
  * @author CCBlueX
  */
 class HelpCommand : Command("help", emptyArray()) {
+
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         var page = 1
-        val maxPageDouble = LiquidBounce.commandManager.commands.size.toDouble() / 8.0
-        val maxPage = if (maxPageDouble > maxPageDouble.toInt()) maxPageDouble.toInt() + 1 else maxPageDouble.toInt()
+
 
         if (args.size > 1) {
             try {
@@ -30,6 +33,12 @@ class HelpCommand : Command("help", emptyArray()) {
             chat("The number you have entered is too low, it must be over 0")
             return
         }
+
+        val maxPageDouble = LiquidBounce.commandManager.commands.size / 8.0
+        val maxPage = if (maxPageDouble > maxPageDouble.toInt())
+            maxPageDouble.toInt() + 1
+        else
+            maxPageDouble.toInt()
 
         if (page > maxPage) {
             chat("The number you have entered is too big, it must be under $maxPage.")
@@ -51,4 +60,5 @@ class HelpCommand : Command("help", emptyArray()) {
 
         ClientUtils.displayChatMessage("§a------------\n§7> §c${LiquidBounce.commandManager.prefix}help §8<§7§lpage§8>")
     }
+
 }

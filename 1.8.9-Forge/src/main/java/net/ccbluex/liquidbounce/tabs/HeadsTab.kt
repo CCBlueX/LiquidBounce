@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.tabs
 
 import com.google.gson.JsonParser
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.NetworkUtils
@@ -41,7 +42,7 @@ class HeadsTab : CreativeTabs("Heads") {
         try {
             ClientUtils.getLogger().info("Loading heads...")
 
-            val headsConfiguration = JsonParser().parse(NetworkUtils.readContent("https://ccbluex.github.io/FileCloud/LiquidBounce/heads.json"))
+            val headsConfiguration = JsonParser().parse(NetworkUtils.readContent("${LiquidBounce.CLIENT_CLOUD}/heads.json"))
 
             if (!headsConfiguration.isJsonObject) return
 

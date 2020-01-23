@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.discord
 
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.jagrosh.discordipc.IPCClient
 import com.jagrosh.discordipc.IPCListener
@@ -12,6 +13,7 @@ import net.ccbluex.liquidbounce.utils.misc.NetworkUtils
 import org.json.JSONObject
 import java.io.IOException
 import java.time.OffsetDateTime
+import kotlin.concurrent.thread
 
 /**
  * LiquidBounce Hacked Client
@@ -20,7 +22,7 @@ import java.time.OffsetDateTime
  * @game Minecraft
  * @author CCBlueX
  */
-class LiquidDiscordRPC : MinecraftInstance() {
+class ClientRichPresence : MinecraftInstance() {
 
     // IPC Client
     private var ipcClient: IPCClient? = null
@@ -50,7 +52,7 @@ class LiquidDiscordRPC : MinecraftInstance() {
                  * @param client The now ready IPCClient.
                  */
                 override fun onReady(client: IPCClient?) {
-                    Thread {
+                    thread {
                         while (running) {
                             update()
 
@@ -58,9 +60,8 @@ class LiquidDiscordRPC : MinecraftInstance() {
                                 Thread.sleep(1000L)
                             } catch (ignored: InterruptedException) {
                             }
-
                         }
-                    }.start()
+                    }
                 }
 
                 /**
@@ -126,19 +127,17 @@ class LiquidDiscordRPC : MinecraftInstance() {
      */
     private fun loadConfiguration() {
         // Read from web and convert to json object
-        val jsonElement = JsonParser().parse(NetworkUtils.readContent("https://ccbluex.github.io/FileCloud/LiquidBounce/discord-rpc.json"))
+        val json = JsonParser().parse(NetworkUtils.readContent("${LiquidBounce.CLIENT_CLOUD}/discord.json"))
 
-        if (!jsonElement.isJsonObject)
+        if (json !is JsonObject)
             return
 
-        val jsonObject = jsonElement.asJsonObject
-
         // Check has app id
-        if (jsonObject.has("appID"))
-            appID = jsonObject.get("appID").asLong
+        if (json.has("appID"))
+            appID = json.get("appID").asLong
 
         // Import all asset names
-        for ((key, value) in jsonObject.get("assets").asJsonObject.entrySet())
+        for ((key, value) in json.get("assets").asJsonObject.entrySet())
             assets[key] = value.asString
     }
 }

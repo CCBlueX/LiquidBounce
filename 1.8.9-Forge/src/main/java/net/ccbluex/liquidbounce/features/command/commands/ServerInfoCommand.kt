@@ -23,6 +23,9 @@ class ServerInfoCommand : Command("serverinfo", emptyArray()), Listenable {
     private var ip = ""
     private var port = 0
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         if (mc.currentServerData == null) {
             chat("The command does not work in single player.")

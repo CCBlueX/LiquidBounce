@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.value.Value
 class ScriptModule(private val scriptObjectMirror: ScriptObjectMirror) : Module() {
 
     private val _values = mutableListOf<Value<*>>()
+    private val eventCache = HashMap<String, Boolean>()
 
     /**
      * Initialize a new script module
@@ -158,7 +159,10 @@ class ScriptModule(private val scriptObjectMirror: ScriptObjectMirror) : Module(
      * Call member of script when member is available
      */
     private fun call(member: String, event: Any? = null) {
-        if (scriptObjectMirror.hasMember(member)) {
+        if (eventCache[member] == null)
+            eventCache[member] = scriptObjectMirror.hasMember(member)
+
+        if (eventCache[member]!!) {
             try {
                 scriptObjectMirror.callMember(member, event)
             } catch (throwable: Throwable) {

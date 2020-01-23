@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.cape
 
 import com.google.gson.JsonParser
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.NetworkUtils
@@ -27,7 +28,8 @@ object CapeAPI : MinecraftInstance() {
      */
     fun registerCapeService() {
         // Read cape infos from web
-        val jsonObject = JsonParser().parse(NetworkUtils.readContent("https://ccbluex.github.io/FileCloud/LiquidBounce/cape/service.json")).asJsonObject
+        val jsonObject = JsonParser()
+                .parse(NetworkUtils.readContent("${LiquidBounce.CLIENT_CLOUD}/capes.json")).asJsonObject
         val serviceType = jsonObject.get("serviceType").asString
 
         // Setup service type

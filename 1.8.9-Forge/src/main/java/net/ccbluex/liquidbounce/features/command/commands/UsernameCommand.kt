@@ -14,9 +14,7 @@ import java.awt.datatransfer.StringSelection
 class UsernameCommand : Command("username", emptyArray()) {
 
     /**
-     * Execute command
-     *
-     * @param args arguments by user
+     * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
         val username = mc.thePlayer.name

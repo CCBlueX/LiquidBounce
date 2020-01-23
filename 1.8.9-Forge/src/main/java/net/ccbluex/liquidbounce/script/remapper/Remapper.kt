@@ -28,7 +28,7 @@ object Remapper {
             srgFile.createNewFile()
 
             ClientUtils.getLogger().info("[Remapper] Downloading $srgName srg...")
-            srgFile.writeText(NetworkUtils.readContent("https://ccbluex.github.io/FileCloud/LiquidBounce/srg/mcp-$srgName.srg"))
+            srgFile.writeText(NetworkUtils.readContent("${LiquidBounce.CLIENT_CLOUD}/srgs/mcp-$srgName.srg"))
             ClientUtils.getLogger().info("[Remapper] Downloaded $srgName.")
         }
 

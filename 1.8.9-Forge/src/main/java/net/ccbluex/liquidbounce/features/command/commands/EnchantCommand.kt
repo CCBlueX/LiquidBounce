@@ -12,6 +12,9 @@ import net.minecraft.enchantment.Enchantment
  */
 class EnchantCommand : Command("enchant", emptyArray()) {
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         if (args.size > 2) {
             if (mc.playerController.isNotCreative) {

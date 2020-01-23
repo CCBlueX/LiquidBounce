@@ -18,6 +18,9 @@ import java.io.IOException
  */
 class LocalAutoSettingsCommand : Command("localautosettings", arrayOf("localsetting", "localsettings", "localconfig")) {
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
             when {

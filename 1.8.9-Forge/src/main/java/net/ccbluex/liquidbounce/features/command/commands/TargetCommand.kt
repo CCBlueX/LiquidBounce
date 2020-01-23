@@ -12,6 +12,9 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
  */
 class TargetCommand : Command("target", emptyArray()) {
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
             when {

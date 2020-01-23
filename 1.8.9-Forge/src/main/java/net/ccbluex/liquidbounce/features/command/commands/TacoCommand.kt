@@ -42,6 +42,9 @@ class TacoCommand : Command("taco", emptyArray()), Listenable {
         LiquidBounce.eventManager.registerListener(this)
     }
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         toggle = !toggle
         ClientUtils.displayChatMessage(if (toggle) "§aTACO TACO TACO. :)" else "§cYou made the little taco sad! :(")

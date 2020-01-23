@@ -17,6 +17,7 @@
     "entity.MixinEntityLivingBase",
     "entity.MixinEntityPlayer",
     "entity.MixinEntityPlayerSP",
+    "entity.MixinEntityHorse",
     "render.MixinEntityRenderer",
     "render.MixinFontRenderer",
     "gui.MixinGuiButton",

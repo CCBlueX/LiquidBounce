@@ -1,8 +1,9 @@
 package net.ccbluex.liquidbounce.ui.client
 
-import com.google.gson.JsonNull
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.NetworkUtils
@@ -104,31 +105,30 @@ class GuiCredits(private val prevGui: GuiScreen) : GuiScreen() {
         credits.clear()
 
         try {
-            val jsonElement = JsonParser().parse(NetworkUtils.readContent("https://ccbluex.github.io/FileCloud/LiquidBounce/credits.json"))
+            val json = JsonParser()
+                    .parse(NetworkUtils.readContent("${LiquidBounce.CLIENT_CLOUD}/credits.json"))
 
-            if (jsonElement is JsonNull)
-                return
+            if (json !is JsonArray) return
 
-            val jsonObject = jsonElement as JsonObject
-
-            for ((_, value) in jsonObject.entrySet()) {
-                val creditJson = value.asJsonObject
+            for (value in json) {
+                if (value !is JsonObject)
+                    continue
 
                 val userCredits = ArrayList<String>()
 
-                creditJson.get("Credits").asJsonObject.entrySet().forEach { stringJsonElementEntry -> userCredits.add(stringJsonElementEntry.value.asString) }
+                value.get("Credits").asJsonObject
+                        .entrySet().forEach { stringJsonElementEntry -> userCredits.add(stringJsonElementEntry.value.asString) }
 
                 credits.add(Credit(
-                        getInfoFromJson(creditJson, "Name")!!,
-                        getInfoFromJson(creditJson, "TwitterName"),
-                        getInfoFromJson(creditJson, "YouTubeName"),
+                        getInfoFromJson(value, "Name")!!,
+                        getInfoFromJson(value, "TwitterName"),
+                        getInfoFromJson(value, "YouTubeName"),
                         userCredits
                 ))
             }
         } catch (e: Exception) {
             ClientUtils.getLogger().error("Failed to load credits.", e)
         }
-
     }
 
     private fun getInfoFromJson(jsonObject: JsonObject, key: String): String? = if (jsonObject.has(key)) jsonObject.get(key).asString else null
