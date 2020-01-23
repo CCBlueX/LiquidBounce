@@ -29,7 +29,7 @@ class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings
 
             thread {
                 try {
-                    val listUrl = "https://api.github.com/repos/CCBlueX/FileCloud/contents/LiquidBounce/autosettings"
+                    val listUrl = "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
                     val listElement = JsonParser().parse(NetworkUtils.readContent(listUrl))
 
                     if (!listElement.isJsonArray)
@@ -52,7 +52,7 @@ class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings
 
             thread {
                 try {
-                    val url = if (args[2].startsWith("http")) args[2] else "https://ccbluex.github.io/FileCloud/${LiquidBounce.CLIENT_NAME}/autosettings/${args[2].toLowerCase()}"
+                    val url = if (args[2].startsWith("http")) args[2] else "${LiquidBounce.CLIENT_CLOUD}/settings/${args[2].toLowerCase()}"
 
                     chat("Loading settings...")
                     val settings = URL(url).readText().lines().filter {

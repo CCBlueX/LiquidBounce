@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.cape.CapeAPI.registerCapeService
-import net.ccbluex.liquidbounce.discord.LiquidDiscordRPC
+import net.ccbluex.liquidbounce.discord.ClientRichPresence
 import net.ccbluex.liquidbounce.event.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -43,6 +43,7 @@ object LiquidBounce {
     const val IN_DEV = true
     const val CLIENT_CREATOR = "CCBlueX"
     const val MINECRAFT_VERSION = "1.8.9"
+    const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce/"
 
     var isStarting = false
 
@@ -65,7 +66,7 @@ object LiquidBounce {
     var background: ResourceLocation? = null
 
     // Discord RPC
-    private lateinit var discordRPC: LiquidDiscordRPC
+    private lateinit var clientRichPresence: ClientRichPresence
 
     /**
      * Execute if client will be started
@@ -136,8 +137,8 @@ object LiquidBounce {
 
         // Setup Discord RPC
         try {
-            discordRPC = LiquidDiscordRPC()
-            discordRPC.setup()
+            clientRichPresence = ClientRichPresence()
+            clientRichPresence.setup()
         } catch (throwable: Throwable) {
             ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
         }
@@ -152,7 +153,7 @@ object LiquidBounce {
         try {
             // Read versions json from cloud
             val jsonObj = JsonParser()
-                    .parse(NetworkUtils.readContent("https://ccbluex.github.io/FileCloud/LiquidBounce/versions.json"))
+                    .parse(NetworkUtils.readContent("$CLIENT_CLOUD/versions.json"))
 
             // Check json is valid object and has current minecraft version
             if (jsonObj is JsonObject && jsonObj.has(MINECRAFT_VERSION)) {
@@ -181,7 +182,7 @@ object LiquidBounce {
         fileManager.saveAllConfigs()
 
         // Shutdown discord rpc
-        discordRPC.shutdown()
+        clientRichPresence.shutdown()
     }
 
 }

@@ -60,7 +60,7 @@ public class GuiAltManager extends GuiScreen {
     public static void loadGenerators() {
         try {
             // Read versions json from cloud
-            final JsonElement jsonElement = new JsonParser().parse(NetworkUtils.readContent("https://ccbluex.github.io/FileCloud/LiquidBounce/generators.json"));
+            final JsonElement jsonElement = new JsonParser().parse(NetworkUtils.readContent(LiquidBounce.CLIENT_CLOUD + "/generators.json"));
 
             // Check json is valid object
             if(jsonElement.isJsonObject()) {

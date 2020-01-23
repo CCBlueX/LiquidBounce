@@ -39,7 +39,7 @@ public final class SettingsUtils {
                         break;
                     case "load":
                         final String urlRaw = StringUtils.toCompleteString(split, 1);
-                        final String url = urlRaw.startsWith("http") ? urlRaw : "https://ccbluex.github.io/FileCloud/" + LiquidBounce.CLIENT_NAME + "/autosettings/" + urlRaw.toLowerCase();
+                        final String url = urlRaw.startsWith("http") ? urlRaw : LiquidBounce.CLIENT_CLOUD + "/settings/" + urlRaw.toLowerCase();
 
                         try {
                             ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loading settings from §a§l" + url + "§7...");

@@ -94,7 +94,7 @@ public class Fonts {
 
             if(!outputFile.exists()) {
                 ClientUtils.getLogger().info("Downloading fonts...");
-                final URL url = new URL("https://ccbluex.github.io/FileCloud/LiquidBounce/Roboto.zip");
+                final URL url = new URL(LiquidBounce.CLIENT_CLOUD + "/fonts/Roboto.zip");
                 FileUtils.copyURLToFile(url, outputFile);
                 ClientUtils.getLogger().info("Extract fonts...");
                 extractZip(outputFile.getPath(), LiquidBounce.fileManager.fontsDir.getPath());
