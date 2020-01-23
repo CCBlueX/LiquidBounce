@@ -75,7 +75,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                     module.colorlessTagName
                 else module.tagName
 
-                if (upperCaseValue.get()) displayString = displayString.toUpperCase()
+                if (upperCaseValue.get())
+                    displayString = displayString.toUpperCase()
 
                 val width = fontRenderer.getStringWidth(displayString)
 
@@ -88,11 +89,10 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                 module.slide -= 0.15F * delta
 
             if (module.slide < 0)
-                module.slide = 0f
+                module.slide = 0F
         }
 
         // Draw arraylist
-        val location = arrayOf(0, 0)
         val colorMode = colorModeValue.get()
         val rectColorMode = rectColorModeValue.get()
         val backgroundColorMode = backgroundColorModeValue.get()
@@ -110,7 +110,6 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
         val saturation = saturationValue.get()
         val brightness = brightnessValue.get()
 
-
         when (side.horizontal) {
             Horizontal.RIGHT, Horizontal.MIDDLE -> {
                 modules.forEachIndexed { index, module ->
@@ -123,15 +122,15 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                     if (upperCaseValue.get())
                         displayString = displayString.toUpperCase()
 
-                    val xPos = location[0] - module.slide - 2
-                    val yPos = location[1] + (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
+                    val xPos = -module.slide - 2
+                    val yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
                             if (side.vertical == Vertical.DOWN) index + 1 else index
                     val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
                     RenderUtils.drawRect(
                             xPos - if (rectMode.equals("right", true)) 5 else 2,
                             yPos - if (index == 0) 1 else 0,
-                            location[0] - (if (rectMode.equals("right", true)) 3 else 0).toFloat(),
+                            if (rectMode.equals("right", true)) -3F else 0F,
                             yPos + textHeight, when {
                         backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
                         backgroundColorMode.equals("Random", ignoreCase = true) -> moduleColor
@@ -155,7 +154,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                         when {
                             rectMode.equals("left", true) -> RenderUtils.drawRect(xPos - 5, yPos - 1, xPos - 2, yPos + textHeight,
                                     rectColor)
-                            rectMode.equals("right", true) -> RenderUtils.drawRect(location[0] - 3F, yPos - 1F, location[0].toFloat(),
+                            rectMode.equals("right", true) -> RenderUtils.drawRect(-3F, yPos - 1F, 0F,
                                     yPos + textHeight, rectColor)
                         }
                     }
@@ -174,13 +173,13 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                         displayString = displayString.toUpperCase()
 
                     val width = fontRenderer.getStringWidth(displayString)
-                    val xPos = location[0] - (width - module.slide) + if (rectMode.equals("left", true)) 5 else 2
-                    val yPos = location[1] + (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
+                    val xPos = -(width - module.slide) + if (rectMode.equals("left", true)) 5 else 2
+                    val yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
                             if (side.vertical == Vertical.DOWN) index + 1 else index
                     val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
                     RenderUtils.drawRect(
-                            location[0].toFloat(),
+                            0F,
                             yPos - if (index == 0) 1 else 0,
                             xPos + width + if (rectMode.equals("right", true)) 5 else 2,
                             yPos + textHeight, when {
@@ -204,8 +203,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                         }
 
                         when {
-                            rectMode.equals("left", true) -> RenderUtils.drawRect(location[0].toFloat(),
-                                    yPos - 1, location[0] + 3F, yPos + textHeight, rectColor)
+                            rectMode.equals("left", true) -> RenderUtils.drawRect(0F,
+                                    yPos - 1, -3F, yPos + textHeight, rectColor)
                             rectMode.equals("right", true) ->
                                 RenderUtils.drawRect(xPos + width + 2, yPos - 1, xPos + width + 2 + 3,
                                         yPos + textHeight, rectColor)
@@ -219,21 +218,28 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
         if (mc.currentScreen is GuiHudDesigner) {
             x2 = Int.MIN_VALUE
 
+            if (modules.isEmpty()) {
+                return if (side.horizontal == Horizontal.LEFT)
+                    Border(0F, -1F, 20F, 20F)
+                else
+                    Border(0F, -1F, -20F, 20F)
+            }
+
             for (module in modules) {
                 when (side.horizontal) {
                     Horizontal.RIGHT, Horizontal.MIDDLE -> {
-                        val xPos = location[0] - module.slide.toInt() - 2
+                        val xPos = -module.slide.toInt() - 2
                         if (x2 == Int.MIN_VALUE || xPos < x2) x2 = xPos
                     }
                     Horizontal.LEFT -> {
-                        val xPos = location[0] + module.slide.toInt() + 14
+                        val xPos = module.slide.toInt() + 14
                         if (x2 == Int.MIN_VALUE || xPos > x2) x2 = xPos
                     }
                 }
             }
-            y2 = location[1] + (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) * modules.size
+            y2 = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) * modules.size
 
-            return Border(location[0].toFloat(), location[1] - 1F, x2 - 7F, y2)
+            return Border(0F, -1F, x2 - 7F, y2)
         }
         GlStateManager.resetColor()
         return null
