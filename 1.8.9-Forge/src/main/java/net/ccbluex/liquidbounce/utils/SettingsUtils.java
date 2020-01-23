@@ -22,38 +22,38 @@ import java.util.List;
  * LiquidBounce Hacked Client
  * A minecraft forge injection client using Mixin
  *
- * @game Minecraft
  * @author CCBlueX
+ * @game Minecraft
  */
 @SideOnly(Side.CLIENT)
 public final class SettingsUtils {
 
-    public static void executeScript(final List<String> script) {
-        for(final String scriptLine : script) {
-            final String[] split = scriptLine.split(" ");
+    public static void executeScript(List<String> script) {
+        for (String scriptLine : script) {
+            String[] split = scriptLine.split(" ");
 
-            if(split.length > 1) {
-                switch(split[0]) {
+            if (split.length > 1) {
+                switch (split[0]) {
                     case "chat":
                         ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §e" + ColorUtils.translateAlternateColorCodes(StringUtils.toCompleteString(split, 1)));
                         break;
                     case "load":
-                        final String urlRaw = StringUtils.toCompleteString(split, 1);
-                        final String url = urlRaw.startsWith("http") ? urlRaw : LiquidBounce.CLIENT_CLOUD + "/settings/" + urlRaw.toLowerCase();
+                        String urlRaw = StringUtils.toCompleteString(split, 1);
+                        String url = urlRaw.startsWith("http") ? urlRaw : LiquidBounce.CLIENT_CLOUD + "/settings/" + urlRaw.toLowerCase();
 
                         try {
                             ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loading settings from §a§l" + url + "§7...");
 
-                            final List<String> nextScript = new ArrayList<>();
-                            final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
-                            for(String line; (line = bufferedReader.readLine()) != null; )
-                                if(!line.startsWith("#") && !line.isEmpty())
+                            List<String> nextScript = new ArrayList<>();
+                            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
+                            for (String line; (line = bufferedReader.readLine()) != null; )
+                                if (!line.startsWith("#") && !line.isEmpty())
                                     nextScript.add(line);
                             bufferedReader.close();
                             SettingsUtils.executeScript(nextScript);
 
                             ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loaded settings from §a§l" + url + "§7.");
-                        }catch(final Exception e) {
+                        } catch (Exception e) {
                             ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Failed to load settings from §a§l" + url + "§7.");
                         }
                         break;
@@ -78,51 +78,60 @@ public final class SettingsUtils {
                         ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + split[0] + "§7 set to §c§l" + EntityUtils.targetDead + "§7.");
                         break;
                     default:
-                        if(split.length == 3) {
-                            final String moduleName = split[0];
-                            final String valueName = split[1];
-                            final String value = split[2];
-
-                            final Module module = LiquidBounce.moduleManager.getModule(moduleName);
-                            if(module != null) {
-                                if(module.getCategory() != ModuleCategory.RENDER) {
-                                    if(valueName.equalsIgnoreCase("toggle")) {
-                                        module.setState(value.equalsIgnoreCase("true"));
-                                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + module.getName() + " §7was toggled §c§l" + (module.getState() ? "on" : "off") + "§7.");
-                                    }else if(valueName.equalsIgnoreCase("bind")) {
-                                        module.setKeyBind(Keyboard.getKeyIndex(value));
-                                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + module.getName() + " §7was bound to §c§l" + Keyboard.getKeyName(module.getKeyBind()) + "§7.");
-                                    }else{
-                                        final Value moduleValue = module.getValue(valueName);
-
-                                        if(moduleValue != null) {
-                                            try {
-                                                if (moduleValue instanceof BoolValue)
-                                                    moduleValue.changeValue(Boolean.parseBoolean(value));
-                                                else if(moduleValue instanceof TextValue
-                                                        || moduleValue instanceof ListValue)
-                                                    moduleValue.changeValue(value);
-                                                else if(moduleValue instanceof FloatValue)
-                                                    moduleValue.changeValue(Float.parseFloat(value));
-                                                else if(moduleValue instanceof IntegerValue)
-                                                    moduleValue.changeValue(Integer.parseInt(value));
-                                                else
-                                                    throw new UnsupportedOperationException();
-
-                                                ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + module.getName() + "§7 value §8§l" + moduleValue.getName() + "§7 set to §c§l" + value + "§7.");
-                                            }catch(final Exception e) {
-                                                ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + e.getClass().getName() + "§7(" + e.getMessage() + ") §cexception while set §a§l" + value + "§c to §a§l" + moduleValue.getName() + "§c in §a§l" + module.getName() + "§c.");
-                                            }
-                                        }else
-                                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cValue §a§l" + valueName + "§c don't found in module §a§l" + moduleName + "§c.");
-                                        break;
-                                    }
-                                }else
-                                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cModule §a§l" + moduleName + "§c is a render module!");
-                            }else
-                                ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cModule §a§l" + moduleName + "§c was not found!");
-                        }else
+                        if (split.length != 3) {
                             ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cSyntax error in setting script.\n§8§lLine: §7" + scriptLine);
+                            break;
+                        }
+
+                        String moduleName = split[0];
+                        String valueName = split[1];
+                        String value = split[2];
+
+                        Module module = LiquidBounce.moduleManager.getModule(moduleName);
+
+                        if (module == null) {
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cModule §a§l" + moduleName + "§c was not found!");
+                            break;
+                        }
+                        if (valueName.equalsIgnoreCase("toggle")) {
+                            module.setState(value.equalsIgnoreCase("true"));
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + module.getName() + " §7was toggled §c§l" + (module.getState() ? "on" : "off") + "§7.");
+                            break;
+                        }
+                        if (valueName.equalsIgnoreCase("bind")) {
+                            module.setKeyBind(Keyboard.getKeyIndex(value));
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + module.getName() + " §7was bound to §c§l" + Keyboard.getKeyName(module.getKeyBind()) + "§7.");
+                            break;
+                        }
+
+                        Value<?> moduleValue = module.getValue(valueName);
+
+                        if (moduleValue == null) {
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cValue §a§l" + valueName + "§c don't found in module §a§l" + moduleName + "§c.");
+                            break;
+                        }
+
+                        try {
+                            if (moduleValue instanceof BoolValue)
+                                ((BoolValue) moduleValue).changeValue(Boolean.parseBoolean(value));
+                            else if (moduleValue instanceof TextValue) {
+                                ((TextValue) moduleValue).changeValue(value);
+                            } else if (moduleValue instanceof ListValue) {
+                                ((ListValue) moduleValue).changeValue(value);
+                            } else {
+                                if (moduleValue instanceof FloatValue)
+                                    ((FloatValue) moduleValue).changeValue(Float.parseFloat(value));
+                                else if (moduleValue instanceof IntegerValue)
+                                    ((IntegerValue) moduleValue).changeValue(Integer.parseInt(value));
+                                else
+                                    throw new UnsupportedOperationException();
+                            }
+
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + module.getName() + "§7 value §8§l" + moduleValue.getName() + "§7 set to §c§l" + value + "§7.");
+                        } catch (Exception e) {
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + e.getClass().getName() + "§7(" + e.getMessage() + ") §cAn Exception occurred while setting §a§l" + value + "§c to §a§l" + moduleValue.getName() + "§c in §a§l" + module.getName() + "§c.");
+
+                        }
                         break;
                 }
             }
@@ -131,18 +140,18 @@ public final class SettingsUtils {
         LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
     }
 
-    public static String generateScript(final boolean values, final boolean binds, final boolean states) {
-        final StringBuilder stringBuilder = new StringBuilder();
+    public static String generateScript(boolean values, boolean binds, boolean states) {
+        StringBuilder stringBuilder = new StringBuilder();
 
         LiquidBounce.moduleManager.getModules().stream().filter(module -> module.getCategory() != ModuleCategory.RENDER && !(module instanceof NameProtect) && !(module instanceof Spammer)).forEach(module -> {
-            if(values)
-                for(final Value value : module.getValues())
-                    stringBuilder.append(module.getName()).append(" ").append(value.getName()).append(" ").append(value.get()).append("\n");
+            if (values) {
+                module.getValues().forEach(value -> stringBuilder.append(module.getName()).append(" ").append(value.getName()).append(" ").append(value.get()).append("\n"));
+            }
 
-            if(states)
+            if (states)
                 stringBuilder.append(module.getName()).append(" toggle ").append(module.getState()).append("\n");
 
-            if(binds)
+            if (binds)
                 stringBuilder.append(module.getName()).append(" bind ").append(Keyboard.getKeyName(module.getKeyBind())).append("\n");
         });
 
