@@ -13,6 +13,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
  */
 class PanicCommand : Command("panic", emptyArray()) {
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         var modules = LiquidBounce.moduleManager.modules.filter { it.state }
         val msg: String

@@ -12,6 +12,9 @@ import net.ccbluex.liquidbounce.features.command.Command
  */
 class ToggleCommand : Command("toggle", arrayOf("t")) {
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
             val module = LiquidBounce.moduleManager.getModule(args[1])

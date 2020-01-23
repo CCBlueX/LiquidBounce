@@ -12,6 +12,9 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
  */
 class HurtCommand : Command("hurt", emptyArray()) {
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         var damage = 1
 

@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
@@ -18,56 +19,71 @@ import kotlin.concurrent.thread
  */
 class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings", "config", "autosetting")) {
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         if (args.size <= 1) {
-            chatSyntax("autosettings <load/list>")
+            chatSyntax("settings <load/list>")
+
             return
         }
 
-        if (args[1].equals("list", ignoreCase = true)) {
-            chat("Loading settings...")
-
-            thread {
-                try {
-                    val listUrl = "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
-                    val listElement = JsonParser().parse(NetworkUtils.readContent(listUrl))
-
-                    if (!listElement.isJsonArray)
-                        return@thread
-
-                    val listArray = listElement.asJsonArray
-
-                    for (setting in listArray)
-                        chat("> " + setting.asJsonObject["name"].asString)
-                } catch (e: Exception) {
-                    chat("Failed to fetch auto settings list.")
+        when {
+            // Load subcommand
+            args[1].equals("load", ignoreCase = true) -> {
+                if (args.size < 3) {
+                    chatSyntax("settings load <name/url>")
+                    return
                 }
-            }
-            return
-        } else if (args[1].equals("load", ignoreCase = true)) {
-            if (args.size < 3) {
-                chatSyntax("autosettings load <name/url>")
-                return
-            }
 
-            thread {
-                try {
-                    val url = if (args[2].startsWith("http")) args[2] else "${LiquidBounce.CLIENT_CLOUD}/settings/${args[2].toLowerCase()}"
+                // Settings url
+                val url = if (args[2].startsWith("http"))
+                    args[2]
+                else
+                    "${LiquidBounce.CLIENT_CLOUD}/settings/${args[2].toLowerCase()}"
 
-                    chat("Loading settings...")
-                    val settings = URL(url).readText().lines().filter {
-                        it.isNotEmpty() && !it.startsWith('#')
+                chat("Loading settings...")
+
+                thread {
+                    try {
+                        // Load settings and apply them
+                        val settings = URL(url).readText().lines().filter {
+                            it.isNotEmpty() && !it.startsWith('#')
+                        }
+
+                        chat("Applying settings...")
+                        SettingsUtils.executeScript(settings)
+                        chat("§6Settings applied successfully")
+                        LiquidBounce.hud.addNotification(Notification("Updated Settings"))
+                        playEdit()
+                    } catch (exception: Exception) {
+                        chat("Failed to fetch auto settings.")
                     }
-                    chat("Applying settings...")
-                    SettingsUtils.executeScript(settings)
-                    chat("§6Settings applied successfully")
-                    LiquidBounce.hud.addNotification(Notification("Updated Settings"))
-                    playEdit()
-                } catch (exception: Exception) {
-                    chat("Failed to fetch auto settings.")
                 }
             }
-            return
+
+            // List subcommand
+            args[1].equals("list", ignoreCase = true) -> {
+                chat("Loading settings...")
+
+                thread {
+                    try {
+                        val json = JsonParser().parse(NetworkUtils.readContent(
+                                // TODO: Add another way to get all settings
+                                "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
+                        ))
+
+                        if (json !is JsonArray)
+                            return@thread
+
+                        for (setting in json)
+                            chat("> " + setting.asJsonObject["name"].asString)
+                    } catch (e: Exception) {
+                        chat("Failed to fetch auto settings list.")
+                    }
+                }
+            }
         }
     }
 }

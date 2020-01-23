@@ -13,6 +13,9 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils
  */
 class FriendCommand : Command("friend", arrayOf("friends")) {
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
             val friendsConfig = LiquidBounce.fileManager.friendsConfig

@@ -13,6 +13,10 @@ import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
  * @author CCBlueX
  */
 class GiveCommand : Command("give", arrayOf("item", "i", "get")) {
+
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         if (mc.playerController.isNotCreative) {
             chat("Creative mode only.")
@@ -42,6 +46,8 @@ class GiveCommand : Command("give", arrayOf("item", "i", "get")) {
 
             return
         }
+
         chatSyntax("give <item> [amount] [data] [datatag]")
     }
+
 }

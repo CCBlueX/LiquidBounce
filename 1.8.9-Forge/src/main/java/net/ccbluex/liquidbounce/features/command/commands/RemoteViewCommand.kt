@@ -5,6 +5,9 @@ import net.ccbluex.liquidbounce.features.command.Command
 
 class RemoteViewCommand : Command("remoteview", arrayOf("rv")) {
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         if (args.size < 2) {
             if (mc.renderViewEntity != mc.thePlayer) {

@@ -13,6 +13,9 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
  */
 class RenameCommand : Command("rename", emptyArray()) {
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
             if (mc.playerController.isNotCreative) {

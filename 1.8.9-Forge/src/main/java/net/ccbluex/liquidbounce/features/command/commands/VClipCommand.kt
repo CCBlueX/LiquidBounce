@@ -12,9 +12,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 class VClipCommand : Command("vclip", emptyArray()) {
 
     /**
-     * Execute command
-     *
-     * @param args arguments by user
+     * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
         if (args.size > 1) {

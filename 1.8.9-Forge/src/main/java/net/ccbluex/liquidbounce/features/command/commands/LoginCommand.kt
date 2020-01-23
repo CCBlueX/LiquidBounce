@@ -14,6 +14,9 @@ import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
  */
 class LoginCommand : Command("login", emptyArray()) {
 
+    /**
+     * Execute commands with provided [args]
+     */
     override fun execute(args: Array<String>) {
         if (args.size <= 1) {
             chatSyntax("login <username/email> [password]")
