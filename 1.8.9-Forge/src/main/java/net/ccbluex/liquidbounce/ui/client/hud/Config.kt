@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.elements
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.value.FontValue
 
 /**
  * LiquidBounce Hacked Client
@@ -76,6 +77,10 @@ class Config {
                                 if (jsonObject.has(value.name))
                                     value.fromJson(jsonObject[value.name])
                             }
+
+                            // Support for old HUD files
+                            if (jsonObject.has("font"))
+                                element.values.find { it is FontValue }?.fromJson(jsonObject["font"])
 
                             hud.addElement(element)
                             break
