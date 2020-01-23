@@ -122,6 +122,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                         19 -> underline = true
                         20 -> italic = true
                         21 -> {
+                            hexColor = colorHex
                             bold = false
                             italic = false
                             randomCase = false
