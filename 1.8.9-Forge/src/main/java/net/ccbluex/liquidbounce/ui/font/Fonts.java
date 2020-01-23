@@ -3,16 +3,15 @@ package net.ccbluex.liquidbounce.ui.font;
 import com.google.gson.*;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import org.apache.commons.io.FileUtils;
 
 import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -94,8 +93,7 @@ public class Fonts {
 
             if(!outputFile.exists()) {
                 ClientUtils.getLogger().info("Downloading fonts...");
-                final URL url = new URL(LiquidBounce.CLIENT_CLOUD + "/fonts/Roboto.zip");
-                FileUtils.copyURLToFile(url, outputFile);
+                HttpUtils.download(LiquidBounce.CLIENT_CLOUD + "/fonts/Roboto.zip", outputFile);
                 ClientUtils.getLogger().info("Extract fonts...");
                 extractZip(outputFile.getPath(), LiquidBounce.fileManager.fontsDir.getPath());
             }

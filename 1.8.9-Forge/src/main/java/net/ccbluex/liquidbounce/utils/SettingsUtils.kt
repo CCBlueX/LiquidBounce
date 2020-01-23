@@ -1,22 +1,14 @@
-package net.ccbluex.liquidbounce.utils;
+package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.features.module.Module;
-import net.ccbluex.liquidbounce.features.module.ModuleCategory;
-import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
-import net.ccbluex.liquidbounce.features.module.modules.misc.Spammer;
-import net.ccbluex.liquidbounce.utils.misc.StringUtils;
-import net.ccbluex.liquidbounce.utils.render.ColorUtils;
-import net.ccbluex.liquidbounce.value.*;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import org.lwjgl.input.Keyboard;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect
+import net.ccbluex.liquidbounce.features.module.modules.misc.Spammer
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
+import net.ccbluex.liquidbounce.utils.misc.StringUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorCodes
+import net.ccbluex.liquidbounce.value.*
+import org.lwjgl.input.Keyboard
 
 /**
  * LiquidBounce Hacked Client
@@ -25,136 +17,136 @@ import java.util.List;
  * @author CCBlueX
  * @game Minecraft
  */
-@SideOnly(Side.CLIENT)
-public final class SettingsUtils {
+object SettingsUtils {
 
-    public static void executeScript(List<String> script) {
-        for (String scriptLine : script) {
-            String[] split = scriptLine.split(" ");
+    fun executeScript(script: String) {
+        loop@ for (scriptLine in script.lines()) {
+            if (scriptLine.isEmpty() || scriptLine.startsWith("#"))
+                continue
 
-            if (split.length > 1) {
-                switch (split[0]) {
-                    case "chat":
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §e" + ColorUtils.translateAlternateColorCodes(StringUtils.toCompleteString(split, 1)));
-                        break;
-                    case "load":
-                        String urlRaw = StringUtils.toCompleteString(split, 1);
-                        String url = urlRaw.startsWith("http") ? urlRaw : LiquidBounce.CLIENT_CLOUD + "/settings/" + urlRaw.toLowerCase();
+            val args = scriptLine.split(" ").toTypedArray()
+
+            if (args.size > 1) {
+                when (args[0]) {
+                    "chat" -> ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §e${translateAlternateColorCodes(StringUtils.toCompleteString(args, 1))}")
+
+                    "load" -> {
+                        val urlRaw = StringUtils.toCompleteString(args, 1)
+                        val url = if (urlRaw.startsWith("http"))
+                            urlRaw
+                        else
+                            "${LiquidBounce.CLIENT_CLOUD}/settings/${urlRaw.toLowerCase()}"
 
                         try {
-                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loading settings from §a§l" + url + "§7...");
-
-                            List<String> nextScript = new ArrayList<>();
-                            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
-                            for (String line; (line = bufferedReader.readLine()) != null; )
-                                if (!line.startsWith("#") && !line.isEmpty())
-                                    nextScript.add(line);
-                            bufferedReader.close();
-                            SettingsUtils.executeScript(nextScript);
-
-                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loaded settings from §a§l" + url + "§7.");
-                        } catch (Exception e) {
-                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Failed to load settings from §a§l" + url + "§7.");
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loading settings from §a§l$url§7...")
+                            executeScript(get(url))
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loaded settings from §a§l$url§7.")
+                        } catch (e: Exception) {
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Failed to load settings from §a§l$url§7.")
                         }
-                        break;
-                    case "targetPlayer":
-                        EntityUtils.targetPlayer = split[1].equalsIgnoreCase("true");
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + split[0] + "§7 set to §c§l" + EntityUtils.targetPlayer + "§7.");
-                        break;
-                    case "targetMobs":
-                        EntityUtils.targetMobs = split[1].equalsIgnoreCase("true");
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + split[0] + "§7 set to §c§l" + EntityUtils.targetMobs + "§7.");
-                        break;
-                    case "targetAnimals":
-                        EntityUtils.targetAnimals = split[1].equalsIgnoreCase("true");
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + split[0] + "§7 set to §c§l" + EntityUtils.targetAnimals + "§7.");
-                        break;
-                    case "targetInvisible":
-                        EntityUtils.targetInvisible = split[1].equalsIgnoreCase("true");
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + split[0] + "§7 set to §c§l" + EntityUtils.targetInvisible + "§7.");
-                        break;
-                    case "targetDead":
-                        EntityUtils.targetDead = split[1].equalsIgnoreCase("true");
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + split[0] + "§7 set to §c§l" + EntityUtils.targetDead + "§7.");
-                        break;
-                    default:
-                        if (split.length != 3) {
-                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cSyntax error in setting script.\n§8§lLine: §7" + scriptLine);
-                            break;
+                    }
+
+                    "targetPlayer" -> {
+                        EntityUtils.targetPlayer = args[1].equals("true", ignoreCase = true)
+                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetPlayer}§7.")
+                    }
+
+                    "targetMobs" -> {
+                        EntityUtils.targetMobs = args[1].equals("true", ignoreCase = true)
+                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetMobs}§7.")
+                    }
+
+                    "targetAnimals" -> {
+                        EntityUtils.targetAnimals = args[1].equals("true", ignoreCase = true)
+                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetAnimals}§7.")
+                    }
+
+                    "targetInvisible" -> {
+                        EntityUtils.targetInvisible = args[1].equals("true", ignoreCase = true)
+                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetInvisible}§7.")
+                    }
+
+                    "targetDead" -> {
+                        EntityUtils.targetDead = args[1].equals("true", ignoreCase = true)
+                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetDead}§7.")
+                    }
+
+                    else -> {
+                        if (args.size != 3) {
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cSyntax error in setting script.\n§8§lLine: §7$scriptLine")
+                            continue@loop
                         }
 
-                        String moduleName = split[0];
-                        String valueName = split[1];
-                        String value = split[2];
-
-                        Module module = LiquidBounce.moduleManager.getModule(moduleName);
+                        val moduleName = args[0]
+                        val valueName = args[1]
+                        val value = args[2]
+                        val module = LiquidBounce.moduleManager.getModule(moduleName)
 
                         if (module == null) {
-                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cModule §a§l" + moduleName + "§c was not found!");
-                            break;
-                        }
-                        if (valueName.equalsIgnoreCase("toggle")) {
-                            module.setState(value.equalsIgnoreCase("true"));
-                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + module.getName() + " §7was toggled §c§l" + (module.getState() ? "on" : "off") + "§7.");
-                            break;
-                        }
-                        if (valueName.equalsIgnoreCase("bind")) {
-                            module.setKeyBind(Keyboard.getKeyIndex(value));
-                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + module.getName() + " §7was bound to §c§l" + Keyboard.getKeyName(module.getKeyBind()) + "§7.");
-                            break;
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cModule §a§l$moduleName§c was not found!")
+                            continue@loop
                         }
 
-                        Value<?> moduleValue = module.getValue(valueName);
+                        if (valueName.equals("toggle", ignoreCase = true)) {
+                            module.state = value.equals("true", ignoreCase = true)
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.name} §7was toggled §c§l${if (module.state) "on" else "off"}§7.")
+                            continue@loop
+                        }
 
+                        if (valueName.equals("bind", ignoreCase = true)) {
+                            module.keyBind = Keyboard.getKeyIndex(value)
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.name} §7was bound to §c§l${Keyboard.getKeyName(module.keyBind)}§7.")
+                            continue@loop
+                        }
+
+                        val moduleValue = module.getValue(valueName)
                         if (moduleValue == null) {
-                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cValue §a§l" + valueName + "§c don't found in module §a§l" + moduleName + "§c.");
-                            break;
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cValue §a§l$valueName§c don't found in module §a§l$moduleName§c.")
+                            continue@loop
                         }
 
                         try {
-                            if (moduleValue instanceof BoolValue)
-                                ((BoolValue) moduleValue).changeValue(Boolean.parseBoolean(value));
-                            else if (moduleValue instanceof TextValue) {
-                                ((TextValue) moduleValue).changeValue(value);
-                            } else if (moduleValue instanceof ListValue) {
-                                ((ListValue) moduleValue).changeValue(value);
-                            } else {
-                                if (moduleValue instanceof FloatValue)
-                                    ((FloatValue) moduleValue).changeValue(Float.parseFloat(value));
-                                else if (moduleValue instanceof IntegerValue)
-                                    ((IntegerValue) moduleValue).changeValue(Integer.parseInt(value));
-                                else
-                                    throw new UnsupportedOperationException();
+                            when (moduleValue) {
+                                is BoolValue -> moduleValue.changeValue(value.toBoolean())
+                                is TextValue -> moduleValue.changeValue(value)
+                                is ListValue -> moduleValue.changeValue(value)
+                                else -> {
+                                    when (moduleValue) {
+                                        is FloatValue -> moduleValue.changeValue(value.toFloat())
+                                        is IntegerValue -> moduleValue.changeValue(value.toInt())
+                                        else -> throw UnsupportedOperationException()
+                                    }
+                                }
                             }
 
-                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + module.getName() + "§7 value §8§l" + moduleValue.getName() + "§7 set to §c§l" + value + "§7.");
-                        } catch (Exception e) {
-                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l" + e.getClass().getName() + "§7(" + e.getMessage() + ") §cAn Exception occurred while setting §a§l" + value + "§c to §a§l" + moduleValue.getName() + "§c in §a§l" + module.getName() + "§c.");
-
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.name}§7 value §8§l${moduleValue.name}§7 set to §c§l$value§7.")
+                        } catch (e: Exception) {
+                            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${e.javaClass.name}§7(${e.message}) §cAn Exception occurred while setting §a§l$value§c to §a§l${moduleValue.name}§c in §a§l${module.name}§c.")
                         }
-                        break;
+                    }
                 }
             }
         }
 
-        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
     }
 
-    public static String generateScript(boolean values, boolean binds, boolean states) {
-        StringBuilder stringBuilder = new StringBuilder();
+    fun generateScript(values: Boolean, binds: Boolean, states: Boolean): String {
+        val stringBuilder = StringBuilder()
 
-        LiquidBounce.moduleManager.getModules().stream().filter(module -> module.getCategory() != ModuleCategory.RENDER && !(module instanceof NameProtect) && !(module instanceof Spammer)).forEach(module -> {
-            if (values) {
-                module.getValues().forEach(value -> stringBuilder.append(module.getName()).append(" ").append(value.getName()).append(" ").append(value.get()).append("\n"));
-            }
+        LiquidBounce.moduleManager.modules.filter {
+            it.category !== ModuleCategory.RENDER && it !is NameProtect && it !is Spammer
+        }.forEach {
+            if (values)
+                it.values.forEach { value -> stringBuilder.append(it.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n") }
 
             if (states)
-                stringBuilder.append(module.getName()).append(" toggle ").append(module.getState()).append("\n");
+                stringBuilder.append(it.name).append(" toggle ").append(it.state).append("\n")
 
             if (binds)
-                stringBuilder.append(module.getName()).append(" bind ").append(Keyboard.getKeyName(module.getKeyBind())).append("\n");
-        });
+                stringBuilder.append(it.name).append(" bind ").append(Keyboard.getKeyName(it.keyBind)).append("\n")
+        }
 
-        return stringBuilder.toString();
+        return stringBuilder.toString()
     }
 }

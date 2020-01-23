@@ -6,8 +6,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.SettingsUtils
-import net.ccbluex.liquidbounce.utils.misc.NetworkUtils
-import java.net.URL
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import kotlin.concurrent.thread
 
 /**
@@ -48,9 +47,7 @@ class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings
                 thread {
                     try {
                         // Load settings and apply them
-                        val settings = URL(url).readText().lines().filter {
-                            it.isNotEmpty() && !it.startsWith('#')
-                        }
+                        val settings = HttpUtils.get(url)
 
                         chat("Applying settings...")
                         SettingsUtils.executeScript(settings)
@@ -58,6 +55,7 @@ class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings
                         LiquidBounce.hud.addNotification(Notification("Updated Settings"))
                         playEdit()
                     } catch (exception: Exception) {
+                        exception.printStackTrace()
                         chat("Failed to fetch auto settings.")
                     }
                 }
@@ -69,7 +67,7 @@ class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings
 
                 thread {
                     try {
-                        val json = JsonParser().parse(NetworkUtils.readContent(
+                        val json = JsonParser().parse(HttpUtils.get(
                                 // TODO: Add another way to get all settings
                                 "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
                         ))

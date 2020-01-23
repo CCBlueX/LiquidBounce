@@ -6,7 +6,7 @@ import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.misc.NetworkUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.minecraft.client.gui.Gui
 import net.minecraft.client.gui.GuiButton
@@ -106,7 +106,7 @@ class GuiCredits(private val prevGui: GuiScreen) : GuiScreen() {
 
         try {
             val json = JsonParser()
-                    .parse(NetworkUtils.readContent("${LiquidBounce.CLIENT_CLOUD}/credits.json"))
+                    .parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/credits.json"))
 
             if (json !is JsonArray) return
 

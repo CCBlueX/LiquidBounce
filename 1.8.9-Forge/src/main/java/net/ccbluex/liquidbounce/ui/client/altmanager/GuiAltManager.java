@@ -13,8 +13,8 @@ import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.login.LoginUtils;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
 import net.ccbluex.liquidbounce.utils.login.UserUtils;
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils;
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
-import net.ccbluex.liquidbounce.utils.misc.NetworkUtils;
 import net.mcleaks.MCLeaks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -60,7 +60,7 @@ public class GuiAltManager extends GuiScreen {
     public static void loadGenerators() {
         try {
             // Read versions json from cloud
-            final JsonElement jsonElement = new JsonParser().parse(NetworkUtils.readContent(LiquidBounce.CLIENT_CLOUD + "/generators.json"));
+            final JsonElement jsonElement = new JsonParser().parse(HttpUtils.get(LiquidBounce.CLIENT_CLOUD + "/generators.json"));
 
             // Check json is valid object
             if(jsonElement.isJsonObject()) {

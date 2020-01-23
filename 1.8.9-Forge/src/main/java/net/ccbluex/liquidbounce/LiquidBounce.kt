@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.misc.NetworkUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.minecraft.util.ResourceLocation
 
 /**
@@ -153,7 +153,7 @@ object LiquidBounce {
         try {
             // Read versions json from cloud
             val jsonObj = JsonParser()
-                    .parse(NetworkUtils.readContent("$CLIENT_CLOUD/versions.json"))
+                    .parse(HttpUtils.get("$CLIENT_CLOUD/versions.json"))
 
             // Check json is valid object and has current minecraft version
             if (jsonObj is JsonObject && jsonObj.has(MINECRAFT_VERSION)) {

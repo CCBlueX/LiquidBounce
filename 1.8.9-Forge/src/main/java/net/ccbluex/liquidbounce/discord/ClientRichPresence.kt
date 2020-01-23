@@ -9,7 +9,7 @@ import com.jagrosh.discordipc.entities.pipe.PipeStatus
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.misc.NetworkUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import org.json.JSONObject
 import java.io.IOException
 import java.time.OffsetDateTime
@@ -127,7 +127,7 @@ class ClientRichPresence : MinecraftInstance() {
      */
     private fun loadConfiguration() {
         // Read from web and convert to json object
-        val json = JsonParser().parse(NetworkUtils.readContent("${LiquidBounce.CLIENT_CLOUD}/discord.json"))
+        val json = JsonParser().parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/discord.json"))
 
         if (json !is JsonObject)
             return

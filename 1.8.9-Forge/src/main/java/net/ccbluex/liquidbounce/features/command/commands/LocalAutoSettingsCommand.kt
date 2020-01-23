@@ -31,9 +31,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", arrayOf("localsett
                         if (scriptFile.exists()) {
                             try {
                                 chat("§9Loading settings...")
-                                val settings = scriptFile.readText().lines().filter {
-                                    it.isNotEmpty() && !it.startsWith('#')
-                                }
+                                val settings = scriptFile.readText()
                                 chat("§9Set settings...")
                                 SettingsUtils.executeScript(settings)
                                 chat("§6Settings applied successfully.")
