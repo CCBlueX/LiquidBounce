@@ -34,7 +34,7 @@ public class BlockESP extends Module {
 
     private final ListValue modeValue = new ListValue("Mode", new String[] {"Box", "2D"}, "Box");
 
-    private final BlockValue blockValue = new BlockValue("ID", 168);
+    private final BlockValue blockValue = new BlockValue("Block", 168);
     private final IntegerValue radiusValue = new IntegerValue("Radius", 40, 5, 120);
 
     private final IntegerValue colorRedValue = new IntegerValue("R", 255, 0, 255);
