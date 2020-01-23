@@ -46,7 +46,8 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      * @param blockPos target block
      */
     public static VecRotation faceBlock(final BlockPos blockPos) {
-        if(blockPos == null) return null;
+        if (blockPos == null)
+            return null;
 
         VecRotation vecRotation = null;
 
@@ -69,7 +70,8 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 
                     final Vec3 rotationVector = getVectorForRotation(rotation);
                     final Vec3 vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4);
-                    final MovingObjectPosition obj = mc.theWorld.rayTraceBlocks(eyesPos, vector, false, false, true);
+                    final MovingObjectPosition obj = mc.theWorld.rayTraceBlocks(eyesPos, vector, false,
+                            false, true);
 
                     if (obj.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                         final VecRotation currentVec = new VecRotation(posVec, rotation);
@@ -81,7 +83,6 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
             }
         }
 
-        if(vecRotation != null) setTargetRotation(vecRotation.getRotation());
         return vecRotation;
     }
 
@@ -126,7 +127,8 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      * @return rotation
      */
     public static Rotation toRotation(final Vec3 vec, final boolean predict) {
-        final Vec3 eyesPos = new Vec3(mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ);
+        final Vec3 eyesPos = new Vec3(mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY +
+                mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ);
 
         if(predict) eyesPos.addVector(mc.thePlayer.motionX, mc.thePlayer.motionY, mc.thePlayer.motionZ);
 

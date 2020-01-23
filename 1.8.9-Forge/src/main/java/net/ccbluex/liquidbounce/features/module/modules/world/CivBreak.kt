@@ -53,9 +53,6 @@ class CivBreak : Module() {
 
     @EventTarget
     fun onUpdate(event: MotionEvent) {
-        if (event.eventState != EventState.POST)
-            return
-
         val pos = blockPos ?: return
 
         if (airResetValue.get() && BlockUtils.getBlock(pos) is BlockAir ||
@@ -64,29 +61,25 @@ class CivBreak : Module() {
             return
         }
 
+        if (BlockUtils.getBlock(pos) is BlockAir || BlockUtils.getCenterDistance(pos) > range.get())
+            return
+
         when (event.eventState) {
-            EventState.PRE -> {
-                if (rotationsValue.get())
-                    RotationUtils.faceBlock(pos)
-            }
+            EventState.PRE -> if (rotationsValue.get())
+                RotationUtils.setTargetRotation((RotationUtils.faceBlock(pos) ?: return).rotation)
 
             EventState.POST -> {
-                if (BlockUtils.getBlock(pos) !is BlockAir && BlockUtils.getCenterDistance(pos) <= range.get()) {
-                    if (visualSwingValue.get())
-                        mc.thePlayer.swingItem()
-                    else
-                        mc.netHandler.addToSendQueue(C0APacketAnimation())
+                if (visualSwingValue.get())
+                    mc.thePlayer.swingItem()
+                else
+                    mc.netHandler.addToSendQueue(C0APacketAnimation())
 
-                    if (rotationsValue.get())
-                        RotationUtils.faceBlock(blockPos)
-
-                    // Break
-                    mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK,
-                            blockPos, enumFacing))
-                    mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK,
-                            blockPos, enumFacing))
-                    mc.playerController.clickBlock(blockPos, enumFacing)
-                }
+                // Break
+                mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK,
+                        blockPos, enumFacing))
+                mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK,
+                        blockPos, enumFacing))
+                mc.playerController.clickBlock(blockPos, enumFacing)
             }
         }
     }

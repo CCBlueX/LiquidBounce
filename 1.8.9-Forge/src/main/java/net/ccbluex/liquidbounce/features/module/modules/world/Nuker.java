@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
+import net.ccbluex.liquidbounce.utils.VecRotation;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
@@ -97,7 +98,9 @@ public class Nuker extends Module {
 
             attackedBlocks.add(blockPos);
 
-            RotationUtils.faceBlock(blockPos);
+            final VecRotation vecRotation = RotationUtils.faceBlock(blockPos);
+            if (vecRotation != null)
+                RotationUtils.setTargetRotation(vecRotation.getRotation());
 
             final AutoTool autoTool = (AutoTool) LiquidBounce.moduleManager.getModule(AutoTool.class);
 

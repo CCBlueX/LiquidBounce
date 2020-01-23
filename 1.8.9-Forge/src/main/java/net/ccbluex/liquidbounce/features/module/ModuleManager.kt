@@ -99,7 +99,6 @@ class ModuleManager : Listenable {
                 Ghost::class.java,
                 MidClick::class.java,
                 XRay::class.java,
-                Fucker::class.java,
                 Timer::class.java,
                 ChestAura::class.java,
                 Sneak::class.java,
@@ -184,7 +183,8 @@ class ModuleManager : Listenable {
                 NoSaddleRide::class.java
         )
 
-        registerModule(NoScoreboard) // Good idea? I don't know
+        registerModule(NoScoreboard)
+        registerModule(Fucker)
 
         ClientUtils.getLogger().info("[ModuleManager] Loaded ${modules.size} modules.")
     }

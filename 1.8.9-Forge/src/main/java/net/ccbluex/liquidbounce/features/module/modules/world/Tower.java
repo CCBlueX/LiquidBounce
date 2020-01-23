@@ -131,8 +131,10 @@ public class Tower extends Module {
                     if (search(blockPos) && rotationsValue.get()) {
                         final VecRotation vecRotation = RotationUtils.faceBlock(blockPos);
 
-                        if (vecRotation != null)
+                        if (vecRotation != null) {
+                            RotationUtils.setTargetRotation(vecRotation.getRotation());
                             placeInfo.setVec3(vecRotation.getVec());
+                        }
                     }
                 }
             }
