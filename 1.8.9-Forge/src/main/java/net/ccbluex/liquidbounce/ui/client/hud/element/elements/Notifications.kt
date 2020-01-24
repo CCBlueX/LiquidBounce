@@ -86,7 +86,7 @@ class Notification(private val message: String) {
         when (fadeState) {
             FadeState.IN -> {
                 if (x < width) {
-                    x = AnimationUtils.easeOut(fadeStep, 0F, width, width)
+                    x = AnimationUtils.easeOut(fadeStep, width) * width
                     fadeStep += delta / 4
                 } else fadeState = FadeState.STAY
 
@@ -102,7 +102,7 @@ class Notification(private val message: String) {
                 fadeState = FadeState.OUT
 
             FadeState.OUT -> if (x > 0) {
-                x = AnimationUtils.easeOut(fadeStep, fadeStep, width - fadeStep, width)
+                x = AnimationUtils.easeOut(fadeStep, width) * width
                 fadeStep -= delta / 4
             } else
                 fadeState = FadeState.END
