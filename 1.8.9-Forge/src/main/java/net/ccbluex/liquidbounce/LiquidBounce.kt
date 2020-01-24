@@ -37,8 +37,8 @@ object LiquidBounce {
 
     // Client information
     const val CLIENT_NAME = "LiquidBounce"
-    const val CLIENT_VERSION = 69
-    const val IN_DEV = false
+    const val CLIENT_VERSION = 70
+    const val IN_DEV = true
     const val CLIENT_CREATOR = "CCBlueX"
     const val MINECRAFT_VERSION = "1.8.9"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
