@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.minecraft.client.renderer.GlStateManager
 import java.awt.Color
@@ -56,6 +57,7 @@ class Notification(private val message: String) {
     var textLength = 0
 
     private var stay = 0F
+    private var fadeStep = 0F
     var fadeState = FadeState.IN
 
     /**
@@ -79,25 +81,30 @@ class Notification(private val message: String) {
         // Animation
         val delta = RenderUtils.deltaTime
 
+        val width = (textLength + 8).toFloat()
+
         when (fadeState) {
             FadeState.IN -> {
-                if (x < textLength + 8)
-                    x += 0.2F * delta else fadeState = FadeState.STAY
+                if (x < width) {
+                    x = AnimationUtils.easeOut(fadeStep, 0F, width, width)
+                    fadeStep += delta / 4
+                } else fadeState = FadeState.STAY
 
                 stay = 60F
 
-                if (x > textLength + 8F)
-                    x = textLength + 8F
+                if (x > width)
+                    x = width
             }
 
             FadeState.STAY -> if (stay > 0)
-                stay -= 0.2F * delta
+                stay = 0F
             else
                 fadeState = FadeState.OUT
 
-            FadeState.OUT -> if (x > 0)
-                x -= 0.2F * delta
-            else
+            FadeState.OUT -> if (x > 0) {
+                x = AnimationUtils.easeOut(fadeStep, fadeStep, width - fadeStep, width)
+                fadeStep -= delta / 4
+            } else
                 fadeState = FadeState.END
 
             FadeState.END -> LiquidBounce.hud.removeNotification(this)
