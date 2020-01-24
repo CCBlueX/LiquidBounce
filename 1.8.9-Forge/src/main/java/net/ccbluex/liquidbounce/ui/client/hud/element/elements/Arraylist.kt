@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Horizontal
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Vertical
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
@@ -68,35 +69,38 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
         val delta = RenderUtils.deltaTime
 
         for (module in LiquidBounce.moduleManager.modules) {
-            if (module.state && module.array) {
-                var displayString = if (!tags.get())
-                    module.name
-                else if (tagsArrayColor.get())
-                    module.colorlessTagName
-                else module.tagName
+            if (!module.array || (!module.state && module.slide == 0F)) continue
 
-                if (upperCaseValue.get())
-                    displayString = displayString.toUpperCase()
+            var displayString = if (!tags.get())
+                module.name
+            else if (tagsArrayColor.get())
+                module.colorlessTagName
+            else module.tagName
 
-                val width = fontRenderer.getStringWidth(displayString)
+            if (upperCaseValue.get())
+                displayString = displayString.toUpperCase()
 
-                if (module.slide < width)
-                    module.slide += 0.15F * delta else if (module.slide > width) module.slide -= 0.15F * delta
+            val width = fontRenderer.getStringWidth(displayString)
 
-                if (module.slide > width)
-                    module.slide = width.toFloat()
-            } else if (module.slide > 0)
-                module.slide -= 0.15F * delta
+            if (module.state) {
+                if (module.slide < width) {
+                    module.slide = AnimationUtils.easeOut(module.slideStep, 0F, width.toFloat(), width.toFloat())
+                    module.slideStep += delta / 4
+                }
+            } else if (module.slide > 0) {
+                module.slide = AnimationUtils.easeOut(module.slideStep, module.slideStep, width - module.slideStep, width.toFloat())
+                module.slideStep -= delta / 4
+            }
 
-            if (module.slide < 0)
-                module.slide = 0F
+            module.slide = module.slide.coerceIn(0F, width.toFloat())
+            module.slideStep = module.slideStep.coerceIn(0F, width.toFloat())
         }
 
         // Draw arraylist
         val colorMode = colorModeValue.get()
         val rectColorMode = rectColorModeValue.get()
         val backgroundColorMode = backgroundColorModeValue.get()
-        val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()).rgb
+        val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 1).rgb
         val rectCustomColor = Color(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(),
                 rectColorBlueAlpha.get()).rgb
         val space = spaceValue.get()
