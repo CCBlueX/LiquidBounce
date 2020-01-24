@@ -11,8 +11,6 @@ public class AnimationUtils {
      * In-out-easing function
      * https://github.com/jesusgollonet/processing-penner-easing
      * @param t Current iteration
-     * @param b Starting value
-     * @param c Change in value
      * @param d Total iterations
      * @return Eased value
      */
