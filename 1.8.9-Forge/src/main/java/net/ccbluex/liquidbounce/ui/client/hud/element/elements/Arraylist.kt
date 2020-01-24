@@ -85,11 +85,11 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
             if (module.state) {
                 if (module.slide < width) {
                     module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
-                    module.slideStep += delta / 4
+                    module.slideStep += delta / 4F
                 }
             } else if (module.slide > 0) {
                 module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
-                module.slideStep -= delta / 4
+                module.slideStep -= delta / 4F
             }
 
             module.slide = module.slide.coerceIn(0F, width.toFloat())
