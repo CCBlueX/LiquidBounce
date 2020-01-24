@@ -22,7 +22,7 @@ import java.awt.Color
  */
 @ElementInfo(name = "Notifications")
 class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F,
-                    side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side) {
+                    side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side) {
 
     /**
      * Example notification for CustomHUD designer
