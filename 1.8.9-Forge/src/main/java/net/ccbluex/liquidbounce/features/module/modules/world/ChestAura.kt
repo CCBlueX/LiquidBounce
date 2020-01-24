@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.extensions.getVec
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BlockValue
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -27,10 +28,9 @@ import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
-import java.util.*
 
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
-class ChestAura : Module() {
+object ChestAura : Module() {
 
     private val rangeValue = FloatValue("Range", 5F, 1F, 6F)
     private val delayValue = IntegerValue("Delay", 100, 50, 200)
@@ -39,17 +39,9 @@ class ChestAura : Module() {
     private val chestValue = BlockValue("Chest", Block.getIdFromBlock(Blocks.chest))
 
     private var currentBlock: BlockPos? = null
-    private val msTimer = MSTimer()
+    private val timer = MSTimer()
 
-    companion object {
-        val clickedBlocks: MutableList<BlockPos> = ArrayList()
-    }
-
-    override fun onDisable() {
-        mc.thePlayer ?: return
-
-        clickedBlocks.clear()
-    }
+    val clickedBlocks = mutableListOf<BlockPos>()
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
@@ -59,11 +51,12 @@ class ChestAura : Module() {
         when (event.eventState) {
             EventState.PRE -> {
                 if (mc.currentScreen is GuiContainer)
-                    msTimer.reset()
+                    timer.reset()
+
+                val radius = rangeValue.get() + 1
 
                 val eyesPos = Vec3(mc.thePlayer.posX, mc.thePlayer.entityBoundingBox.minY + mc.thePlayer.getEyeHeight(),
                         mc.thePlayer.posZ)
-                val radius = rangeValue.get() + 1
 
                 currentBlock = BlockUtils.searchBlocks(radius.toInt())
                         .filter {
@@ -71,10 +64,12 @@ class ChestAura : Module() {
                                     && BlockUtils.getCenterDistance(it.key) < rangeValue.get()
                         }
                         .filter {
-                            if (throughWallsValue.get()) return@filter true
+                            if (throughWallsValue.get())
+                                return@filter true
+
                             val blockPos = it.key
                             val movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos,
-                                    Vec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), false, true, false)
+                                    blockPos.getVec(), false, true, false)
 
                             movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
                         }
@@ -83,9 +78,9 @@ class ChestAura : Module() {
                 RotationUtils.setTargetRotation((RotationUtils.faceBlock(currentBlock ?: return) ?: return).rotation)
             }
 
-            EventState.POST -> if (currentBlock != null) {
-                if (msTimer.hasTimePassed(delayValue.get().toLong()) &&
-                        mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, mc.thePlayer.heldItem, currentBlock, EnumFacing.DOWN, Vec3(currentBlock!!.x.toDouble(), currentBlock!!.y.toDouble(), currentBlock!!.z.toDouble()))) {
+            EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get().toLong())) {
+                if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, mc.thePlayer.heldItem, currentBlock,
+                                EnumFacing.DOWN, currentBlock!!.getVec())) {
                     if (visualSwing.get())
                         mc.thePlayer.swingItem()
                     else
@@ -93,9 +88,13 @@ class ChestAura : Module() {
 
                     clickedBlocks.add(currentBlock!!)
                     currentBlock = null
-                    msTimer.reset()
+                    timer.reset()
                 }
             }
         }
+    }
+
+    override fun onDisable() {
+        clickedBlocks.clear()
     }
 }
