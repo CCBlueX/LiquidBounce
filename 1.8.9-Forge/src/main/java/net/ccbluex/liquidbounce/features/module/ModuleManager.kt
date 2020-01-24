@@ -178,8 +178,7 @@ class ModuleManager : Listenable {
                 ComponentOnHover::class.java,
                 KeepAlive::class.java,
                 ResourcePackSpoof::class.java,
-                NoSlowBreak::class.java,
-                NoSaddleRide::class.java
+                NoSlowBreak::class.java
         )
 
         registerModule(NoScoreboard)

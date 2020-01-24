@@ -30,6 +30,7 @@ open class Module : MinecraftInstance(), Listenable {
             field = keyBind
             LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
         }
+    var slideStep = 0F
     private val canEnable: Boolean
 
     init {

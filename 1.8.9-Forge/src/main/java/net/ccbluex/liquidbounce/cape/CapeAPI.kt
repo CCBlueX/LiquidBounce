@@ -21,7 +21,6 @@ object CapeAPI : MinecraftInstance() {
 
     // Cape Service
     private var capeService: CapeService? = null
-    private val capeCache = HashMap<UUID, CapeInfo>()
 
     /**
      * Register cape service
@@ -63,14 +62,11 @@ object CapeAPI : MinecraftInstance() {
      * @return cape info
      */
     fun loadCape(uuid: UUID): CapeInfo? {
-        if (capeCache.containsKey(uuid))
-            return capeCache[uuid]
-
         // Get url of cape from cape service
         val url = (capeService ?: return null).getCape(uuid) ?: return null
 
         // Load cape
-        val resourceLocation = ResourceLocation(String.format("capes/%s.png", Date().time))
+        val resourceLocation = ResourceLocation("capes/%s.png".format(uuid.toString()))
         val capeInfo = CapeInfo(resourceLocation)
         val threadDownloadImageData = ThreadDownloadImageData(null, url, null, object : IImageBuffer {
 
@@ -85,8 +81,6 @@ object CapeAPI : MinecraftInstance() {
         })
 
         mc.textureManager.loadTexture(resourceLocation, threadDownloadImageData)
-
-        capeCache[uuid] = capeInfo
 
         return capeInfo
     }

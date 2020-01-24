@@ -14,16 +14,18 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
+import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.Gui
+import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.util.MathHelper
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.text.DecimalFormat
 
-class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: Int) {
+class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: Int) : MinecraftInstance() {
 
     var width = 80
         private set
@@ -234,8 +236,14 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             val values = Side.Horizontal.values()
             val currIndex = values.indexOf(element.side.horizontal)
 
+            val x = element.renderX
+
             element.side.horizontal = values[if (currIndex + 1 >= values.size) 0 else currIndex + 1]
-            element.renderX = element.x
+            element.x = when (element.side.horizontal) {
+                Side.Horizontal.LEFT -> x
+                Side.Horizontal.MIDDLE -> (ScaledResolution(mc).scaledWidth / 2) - x
+                Side.Horizontal.RIGHT -> ScaledResolution(mc).scaledWidth - x
+            }
         }
 
         height += 10
@@ -250,8 +258,15 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             val values = Side.Vertical.values()
             val currIndex = values.indexOf(element.side.vertical)
 
+            val y = element.renderY
+
             element.side.vertical = values[if (currIndex + 1 >= values.size) 0 else currIndex + 1]
-            element.renderY = element.y
+            element.y = when (element.side.vertical) {
+                Side.Vertical.UP -> y
+                Side.Vertical.MIDDLE -> (ScaledResolution(mc).scaledHeight / 2) - y
+                Side.Vertical.DOWN -> ScaledResolution(mc).scaledHeight - y
+            }
+
         }
 
         height += 10
