@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat;
 
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.JumpEvent;
 import net.ccbluex.liquidbounce.event.PacketEvent;
@@ -12,6 +13,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
+import net.ccbluex.liquidbounce.features.module.modules.movement.Speed;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.FloatValue;
@@ -83,7 +85,8 @@ public class Velocity extends Module {
                 if(mc.thePlayer.hurtTime > 0 && mc.thePlayer.motionX != 0 && mc.thePlayer.motionZ != 0)
                     mc.thePlayer.onGround = true;
 
-                if(mc.thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get())
+                if (mc.thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get() && !LiquidBounce.moduleManager
+                        .getModule(Speed.class).getState())
                     mc.thePlayer.motionY -= 0.0144;
 
                 if(mc.thePlayer.hurtResistantTime >= 19) {
