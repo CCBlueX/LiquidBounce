@@ -9,6 +9,7 @@ import com.mojang.authlib.Agent;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
+import com.thealtening.AltService;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField;
@@ -76,7 +77,8 @@ public class GuiAdd extends GuiScreen {
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
-        if(!button.enabled) return;
+        if (!button.enabled)
+            return;
 
         switch(button.id) {
             case 0:
@@ -88,93 +90,27 @@ public class GuiAdd extends GuiScreen {
                     break;
                 }
 
-                MinecraftAccount minecraftAccount;
-
-                if(password.getText().isEmpty())
-                    minecraftAccount = new MinecraftAccount(username.getText());
-                else
-                    minecraftAccount = new MinecraftAccount(username.getText(), password.getText());
-
-                addButton.enabled = clipboardButton.enabled = false;
-
-                new Thread(() -> {
-                    status = "§aChecking...";
-
-                    boolean isWorking;
-
-                    if(!minecraftAccount.isCracked()) {
-                        final YggdrasilUserAuthentication userAuthentication = (YggdrasilUserAuthentication) new YggdrasilAuthenticationService(Proxy.NO_PROXY, "").createUserAuthentication(Agent.MINECRAFT);
-
-                        userAuthentication.setUsername(minecraftAccount.getName());
-                        userAuthentication.setPassword(minecraftAccount.getPassword());
-
-                        try{
-                            userAuthentication.logIn();
-                            minecraftAccount.setAccountName(userAuthentication.getSelectedProfile().getName());
-                            isWorking = true;
-                        }catch(final NullPointerException | AuthenticationException e) {
-                            isWorking = false;
-                        }
-                    }else isWorking = true;
-
-                    if(isWorking) {
-                        LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.add(minecraftAccount);
-                        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
-                        status = "§aThe account has been added.";
-                        prevGui.status = status;
-                        mc.displayGuiScreen(prevGui);
-                    }else status = "§cThe account doesn't work.";
-
-                    addButton.enabled = clipboardButton.enabled = true;
-                }).start();
+                addAccount(username.getText(), password.getText());
                 break;
             case 2:
                 try{
-                    final String clipboardData = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
-                    final String[] args = clipboardData.split(":", 2);
+                    final String clipboardData = (String) Toolkit.getDefaultToolkit().getSystemClipboard()
+                            .getData(DataFlavor.stringFlavor);
+                    final String[] accountData = clipboardData.split(":", 2);
 
-                    if(!clipboardData.contains(":") || args.length != 2) {
+                    if (!clipboardData.contains(":") || accountData.length != 2) {
                         status = "§cInvalid clipboard data. (Use: E-Mail:Password)";
                         return;
                     }
 
-                    if (LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.stream().anyMatch(account -> account.getName().equals(args[0]))) {
-                        status = "§cThe account has already been added.";
-                        break;
-                    }
-
-                    addButton.enabled = clipboardButton.enabled = false;
-
-                    new Thread(() -> {
-                        status = "§aChecking...";
-
-                        final MinecraftAccount account = new MinecraftAccount(args[0], args[1]);
-                        final YggdrasilUserAuthentication userAuthentication = (YggdrasilUserAuthentication) new YggdrasilAuthenticationService(Proxy.NO_PROXY, "").createUserAuthentication(Agent.MINECRAFT);
-
-                        userAuthentication.setUsername(account.getName());
-                        userAuthentication.setPassword(account.getPassword());
-
-                        try {
-                            userAuthentication.logIn();
-                            account.setAccountName(userAuthentication.getSelectedProfile().getName());
-
-                            LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.add(account);
-                            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
-                            status = "§aThe account has been added.";
-                            prevGui.status = status;
-                            mc.displayGuiScreen(prevGui);
-                        } catch (NullPointerException | AuthenticationException exception) {
-                            status = "§cThe account doesn't work.";
-                        }
-
-                        addButton.enabled = clipboardButton.enabled = true;
-                    }).start();
+                    addAccount(accountData[0], accountData[1]);
                 }catch(final UnsupportedFlavorException e) {
                     status = "§cClipboard flavor unsupported!";
                     ClientUtils.getLogger().error("Failed to read data from clipboard.", e);
                 }
                 break;
         }
+
         super.actionPerformed(button);
     }
 
@@ -219,5 +155,56 @@ public class GuiAdd extends GuiScreen {
     public void onGuiClosed() {
         Keyboard.enableRepeatEvents(false);
         super.onGuiClosed();
+    }
+
+    private void addAccount(final String name, final String password) {
+        if (LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.stream()
+                .anyMatch(account -> account.getName().equals(name))) {
+            status = "§cThe account has already been added.";
+            return;
+        }
+
+        addButton.enabled = clipboardButton.enabled = false;
+
+        final MinecraftAccount account = new MinecraftAccount(name, password);
+
+        new Thread(() -> {
+            if (!account.isCracked()) {
+                status = "§aChecking...";
+
+                try {
+                    final AltService.EnumAltService oldService = GuiAltManager.altService.getCurrentService();
+
+                    if (oldService != AltService.EnumAltService.MOJANG) {
+                        GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG);
+                    }
+
+                    final YggdrasilUserAuthentication userAuthentication = (YggdrasilUserAuthentication)
+                            new YggdrasilAuthenticationService(Proxy.NO_PROXY, "")
+                                    .createUserAuthentication(Agent.MINECRAFT);
+
+                    userAuthentication.setUsername(account.getName());
+                    userAuthentication.setPassword(account.getPassword());
+
+                    userAuthentication.logIn();
+                    account.setAccountName(userAuthentication.getSelectedProfile().getName());
+
+                    if (oldService == AltService.EnumAltService.THEALTENING)
+                        GuiAltManager.altService.switchService(AltService.EnumAltService.THEALTENING);
+                } catch (NullPointerException | AuthenticationException | NoSuchFieldException | IllegalAccessException e) {
+                    status = "§cThe account doesn't work.";
+                    addButton.enabled = clipboardButton.enabled = true;
+                    return;
+                }
+            }
+
+
+            LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.add(account);
+            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+
+            status = "§aThe account has been added.";
+            prevGui.status = status;
+            mc.displayGuiScreen(prevGui);
+        }).start();
     }
 }
