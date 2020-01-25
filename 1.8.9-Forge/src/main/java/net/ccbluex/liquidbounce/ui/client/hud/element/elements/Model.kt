@@ -40,27 +40,29 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
      * Draw element
      */
     override fun drawElement(): Border {
-        val delta = RenderUtils.deltaTime
-
-        if (rotateDirection) {
-            if (rotate <= 70F) {
-                rotate += 0.12F * delta
-            } else {
-                rotateDirection = false
-                rotate = 70F
-            }
-        } else {
-            if (rotate >= -70F) {
-                rotate -= 0.12F * delta
-            } else {
-                rotateDirection = true
-                rotate = -70F
-            }
-        }
-
         val yaw = when (yawMode.get().toLowerCase()) {
             "player" -> mc.thePlayer.rotationYaw
-            "animation" -> rotate
+            "animation" -> {
+                val delta = RenderUtils.deltaTime
+
+                if (rotateDirection) {
+                    if (rotate <= 70F) {
+                        rotate += 0.12F * delta
+                    } else {
+                        rotateDirection = false
+                        rotate = 70F
+                    }
+                } else {
+                    if (rotate >= -70F) {
+                        rotate -= 0.12F * delta
+                    } else {
+                        rotateDirection = true
+                        rotate = -70F
+                    }
+                }
+
+                rotate
+            }
             "custom" -> customYaw.get()
             else -> 0F
         }
