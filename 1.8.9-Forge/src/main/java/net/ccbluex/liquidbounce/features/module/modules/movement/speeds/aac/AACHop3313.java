@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac;
 
+import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.event.JumpEvent;
 import net.ccbluex.liquidbounce.event.MoveEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
@@ -20,17 +22,22 @@ public class AACHop3313 extends SpeedMode {
 
     @Override
     public void onMotion() {
-        if(!MovementUtils.isMoving() || mc.thePlayer.isInWater() || mc.thePlayer.isInLava() ||
-                mc.thePlayer.isOnLadder() || mc.thePlayer.isRiding())
+
+    }
+
+    @Override
+    public void onUpdate() {
+        if (!MovementUtils.isMoving() || mc.thePlayer.isInWater() || mc.thePlayer.isInLava() ||
+                mc.thePlayer.isOnLadder() || mc.thePlayer.isRiding() || mc.thePlayer.hurtTime > 0)
             return;
 
-        if(mc.thePlayer.onGround && mc.thePlayer.isCollidedVertically) {
+        if (mc.thePlayer.onGround && mc.thePlayer.isCollidedVertically) {
             // MotionXYZ
             float yawRad = mc.thePlayer.rotationYaw * 0.017453292F;
             mc.thePlayer.motionX -= MathHelper.sin(yawRad) * 0.202F;
             mc.thePlayer.motionZ += MathHelper.cos(yawRad) * 0.202F;
-            mc.thePlayer.motionY = mc.thePlayer.hurtTime > 0 ? 0.42F : 0.405F;
-            mc.thePlayer.movementInput.jump = true;
+            mc.thePlayer.motionY = 0.405F;
+            LiquidBounce.eventManager.callEvent(new JumpEvent(0.405F));
             MovementUtils.strafe();
         } else if (mc.thePlayer.fallDistance < 0.31F) {
             if (BlockUtils.getBlock(mc.thePlayer.getPosition()) instanceof BlockCarpet) // why?
@@ -44,11 +51,8 @@ public class AACHop3313 extends SpeedMode {
             // Motion Y
             if (!mc.thePlayer.isCollidedHorizontally)
                 mc.thePlayer.motionY -= 0.014999993F;
-        }
-    }
-
-    @Override
-    public void onUpdate() {
+        } else
+            mc.thePlayer.jumpMovementFactor = 0.02F;
     }
 
     @Override

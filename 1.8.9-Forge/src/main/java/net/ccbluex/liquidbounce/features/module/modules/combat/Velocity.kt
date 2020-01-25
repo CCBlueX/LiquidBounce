@@ -48,8 +48,11 @@ class Velocity : Module() {
     private var velocityTimer = MSTimer()
     private var velocityInput = false
 
-    // Reverse2
+    // SmoothReverse
     private var reverseHurt = false
+
+    // AACPush
+    private var jump = false
 
     override val tag: String
         get() = modeValue.get()
@@ -115,21 +118,24 @@ class Velocity : Module() {
             }
 
             "aacpush" -> {
-                if (mc.thePlayer.movementInput.jump)
-                    return
+                if (jump) {
+                    if (mc.thePlayer.onGround)
+                        jump = false
+                } else {
+                    // Strafe
+                    if (mc.thePlayer.hurtTime > 0 && mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0)
+                        mc.thePlayer.onGround = true
 
-                // Strafe
-                if (mc.thePlayer.hurtTime > 0 && mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0)
-                    mc.thePlayer.onGround = true
-
-                // Reduce Y
-                if (mc.thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get()
-                        && !LiquidBounce.moduleManager[Speed::class.java]!!.state)
-                    mc.thePlayer.motionY -= 0.014999993
+                    // Reduce Y
+                    if (mc.thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get()
+                            && !LiquidBounce.moduleManager[Speed::class.java]!!.state)
+                        mc.thePlayer.motionY -= 0.014999993
+                }
 
                 // Reduce XZ
                 if (mc.thePlayer.hurtResistantTime >= 19) {
-                    val reduce = aacPushXZReducerValue.get().toDouble()
+                    val reduce = aacPushXZReducerValue.get()
+
                     mc.thePlayer.motionX /= reduce
                     mc.thePlayer.motionZ /= reduce
                 }
@@ -193,7 +199,13 @@ class Velocity : Module() {
             return
 
         when (modeValue.get().toLowerCase()) {
-            "aacpush", "aaczero" -> if (mc.thePlayer.hurtTime > 0)
+            "aacpush" -> {
+                jump = true
+
+                if (!mc.thePlayer.isCollidedVertically)
+                    event.cancelEvent()
+            }
+            "aaczero" -> if (mc.thePlayer.hurtTime > 0)
                 event.cancelEvent()
         }
     }
