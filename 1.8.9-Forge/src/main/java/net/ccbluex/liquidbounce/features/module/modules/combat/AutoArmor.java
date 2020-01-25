@@ -11,10 +11,10 @@ import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.injection.implementations.IItemStack;
+import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator;
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece;
-import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
@@ -58,14 +58,13 @@ public class AutoArmor extends Module {
     private final IntegerValue itemDelayValue = new IntegerValue("ItemDelay", 0, 0, 5000);
     private final BoolValue hotbarValue = new BoolValue("Hotbar", true);
 
-    private final MSTimer msTimer = new MSTimer();
     // To save memory
     private final ArmorPiece[] bestArmor = new ArmorPiece[4];
     private long delay;
 
     @EventTarget
     public void onRender3D(final Render3DEvent event) {
-        if (!msTimer.hasTimePassed(delay) || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
+        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
             return;
 
         Map<Integer, List<ArmorPiece>> collect = IntStream.range(0, 36)
@@ -125,7 +124,6 @@ public class AutoArmor extends Module {
             mc.getNetHandler().addToSendQueue(new C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(item).getStack()));
             mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
 
-            msTimer.reset();
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
         } else if (!(noMoveValue.get() && MovementUtils.isMoving()) && (!invOpenValue.get() || mc.currentScreen instanceof GuiInventory) && item != -1) {
             final boolean openInventory = simulateInventory.get() && !(mc.currentScreen instanceof GuiInventory);
@@ -135,7 +133,6 @@ public class AutoArmor extends Module {
 
             mc.playerController.windowClick(mc.thePlayer.inventoryContainer.windowId, isArmorSlot ? item : (item < 9 ? item + 36 : item), 0, 1, mc.thePlayer);
 
-            msTimer.reset();
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 
             if (openInventory)

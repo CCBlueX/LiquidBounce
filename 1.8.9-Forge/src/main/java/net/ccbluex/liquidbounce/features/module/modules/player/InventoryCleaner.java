@@ -13,10 +13,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor;
 import net.ccbluex.liquidbounce.injection.implementations.IItemStack;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
+import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece;
 import net.ccbluex.liquidbounce.utils.item.ItemUtils;
-import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
@@ -76,13 +76,13 @@ public class InventoryCleaner extends Module {
     private final ListValue sortSlot7Value = new ListValue("SortSlot-7", items, "Food");
     private final ListValue sortSlot8Value = new ListValue("SortSlot-8", items, "Block");
     private final ListValue sortSlot9Value = new ListValue("SortSlot-9", items, "Block");
-    private final MSTimer clickTimer = new MSTimer();
+
     private long delay;
     private int[] bestArmor = new int[4];
 
     @EventTarget
     public void onRender3D(final Render3DEvent event) {
-        if (!clickTimer.hasTimePassed(delay) || (!(mc.currentScreen instanceof GuiInventory) && invOpenValue.get()) || (noMoveValue.get() && MovementUtils.isMoving()) || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
+        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || (!(mc.currentScreen instanceof GuiInventory) && invOpenValue.get()) || (noMoveValue.get() && MovementUtils.isMoving()) || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
             return;
 
         updateItems();
@@ -114,7 +114,6 @@ public class InventoryCleaner extends Module {
             if (openInventory)
                 mc.getNetHandler().addToSendQueue(new C0DPacketCloseWindow());
 
-            clickTimer.reset();
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
             break;
         }
@@ -223,7 +222,6 @@ public class InventoryCleaner extends Module {
                 if (openInventory)
                     mc.getNetHandler().addToSendQueue(new C0DPacketCloseWindow());
 
-                clickTimer.reset();
                 delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
                 break;
             }

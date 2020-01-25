@@ -7,9 +7,8 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.AttackEvent;
+import net.ccbluex.liquidbounce.event.ClickWindowEvent;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
-import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove;
-import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -39,9 +38,9 @@ public class MixinPlayerControllerMP {
 
     @Inject(method = "windowClick", at = @At("HEAD"), cancellable = true)
     private void windowClick(int windowId, int slotId, int mouseButtonClicked, int mode, EntityPlayer playerIn, CallbackInfoReturnable<ItemStack> callbackInfo) {
-        final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.getModule(InventoryMove.class);
+        final ClickWindowEvent event = new ClickWindowEvent(windowId, slotId, mouseButtonClicked, mode);
 
-        if (inventoryMove.getState() && inventoryMove.getNoMoveClicksValue().get() && MovementUtils.isMoving())
+        if (event.isCancelled())
             callbackInfo.cancel();
     }
 }
