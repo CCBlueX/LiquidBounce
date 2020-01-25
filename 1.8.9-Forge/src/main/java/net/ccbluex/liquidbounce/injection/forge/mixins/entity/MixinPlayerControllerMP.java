@@ -39,6 +39,7 @@ public class MixinPlayerControllerMP {
     @Inject(method = "windowClick", at = @At("HEAD"), cancellable = true)
     private void windowClick(int windowId, int slotId, int mouseButtonClicked, int mode, EntityPlayer playerIn, CallbackInfoReturnable<ItemStack> callbackInfo) {
         final ClickWindowEvent event = new ClickWindowEvent(windowId, slotId, mouseButtonClicked, mode);
+        LiquidBounce.eventManager.callEvent(event);
 
         if (event.isCancelled())
             callbackInfo.cancel();
