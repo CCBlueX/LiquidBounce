@@ -20,7 +20,7 @@ import org.lwjgl.opengl.GL11
  * Shows a horizontal display of current armor
  */
 @ElementInfo(name = "Armor")
-class Armor(x: Double = 8.0, y: Double = 57.0, scale: Float = 1F,
+class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
             side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side) {
 
     private val modeValue = ListValue("Alignment", arrayOf("Horizontal", "Vertical"), "Horizontal")
