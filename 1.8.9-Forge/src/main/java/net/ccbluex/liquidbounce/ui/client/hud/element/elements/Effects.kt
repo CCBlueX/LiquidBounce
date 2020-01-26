@@ -67,7 +67,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
             width = 40F
 
         if (y == 0F)
-            y = 10F
+            y = -10F
 
         return Border(2F, fontRenderer.FONT_HEIGHT.toFloat(), -width - 2F, y + fontRenderer.FONT_HEIGHT - 2F)
     }
