@@ -28,6 +28,7 @@ import net.minecraft.item.*
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
 
+
 @ModuleInfo(name = "InventoryCleaner", description = "Automatically throws away useless items.", category = ModuleCategory.PLAYER)
 class InventoryCleaner : Module() {
 
@@ -82,7 +83,8 @@ class InventoryCleaner : Module() {
                 mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0)
             return
 
-        sortHotbar()
+        if (sortValue.get())
+            sortHotbar()
 
         while (InventoryUtils.CLICK_TIMER.hasTimePassed(delay)) {
             val garbageItems = items(9, if (hotbarValue.get()) 45 else 36)
@@ -90,8 +92,9 @@ class InventoryCleaner : Module() {
                     .keys
                     .toMutableList()
 
-            if (garbageItems.isEmpty())
+            if (garbageItems.isEmpty()) {
                 break
+            }
 
             // Shuffle items
             if (randomSlotValue.get())
@@ -176,17 +179,16 @@ class InventoryCleaner : Module() {
      * Sort hotbar
      */
     private fun sortHotbar() {
-        for (currSlot in 0..8) {
-            val slotStack = mc.thePlayer.inventory.getStackInSlot(currSlot)
-            val bestItem = findBetterItem(currSlot, slotStack) ?: continue
+        for (index in 0..8) {
+            val bestItem = findBetterItem(index, mc.thePlayer.inventory.getStackInSlot(index)) ?: continue
 
-            if (bestItem != currSlot) {
+            if (bestItem != index) {
                 val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
 
                 if (openInventory)
                     mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
 
-                mc.playerController.windowClick(0, if (bestItem < 9) bestItem + 36 else bestItem, currSlot,
+                mc.playerController.windowClick(0, if (bestItem < 9) bestItem + 36 else bestItem, index,
                         2, mc.thePlayer)
 
                 if (openInventory)
@@ -233,7 +235,7 @@ class InventoryCleaner : Module() {
                     }
                 }
 
-                return if (bestWeapon != -1) bestWeapon else null
+                return if (bestWeapon != -1 || bestWeapon == targetSlot) bestWeapon else null
             }
 
             "bow" -> {
@@ -244,7 +246,7 @@ class InventoryCleaner : Module() {
                     0
 
                 mc.thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
-                    if (itemStack != null && itemStack.item is ItemBow && !type(index).equals(type, ignoreCase = true)) {
+                    if (itemStack?.item is ItemBow && !type(index).equals(type, ignoreCase = true)) {
                         if (bestBow == -1) {
                             bestBow = index
                         } else {
@@ -332,7 +334,7 @@ class InventoryCleaner : Module() {
     private fun items(start: Int = 0, end: Int = 45): Map<Int, ItemStack> {
         val items = mutableMapOf<Int, ItemStack>()
 
-        for (i in start until end) {
+        for (i in end - 1 downTo start) {
             val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
             itemStack.item ?: continue
 
