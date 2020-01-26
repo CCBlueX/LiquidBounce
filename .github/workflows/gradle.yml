@@ -18,6 +18,6 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
-        name:liquidbounce.jar
-        path:1.8.9-Forge/build/libs/*.jar
+        name: liquidbounce.jar
+        path: 1.8.9-Forge/build/libs/*.jar
       
