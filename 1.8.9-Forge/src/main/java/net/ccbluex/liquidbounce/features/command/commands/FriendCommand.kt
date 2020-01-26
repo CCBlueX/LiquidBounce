@@ -77,4 +77,28 @@ class FriendCommand : Command("friend", arrayOf("friends")) {
 
         chatSyntax("friend <add/remove/list/clear>")
     }
+
+    override fun tabComplete(args: Array<String>): List<String> {
+        if (args.isEmpty()) return emptyList()
+
+        return when (args.size) {
+            1 -> listOf("add", "remove", "list", "clear").filter { it.startsWith(args[0], true) }
+            2 -> {
+                when (args[0].toLowerCase()) {
+                    "add" -> {
+                        return mc.theWorld.playerEntities
+                            .map { it.name }
+                            .filter { it.startsWith(args[1], true) }
+                    }
+                    "remove" -> {
+                        return LiquidBounce.fileManager.friendsConfig.friends
+                                .map { it.playerName }
+                                .filter { it.startsWith(args[1], true) }
+                    }
+                }
+                return emptyList()
+            }
+            else -> emptyList()
+        }
+    }
 }

@@ -29,7 +29,7 @@ class PanicCommand : Command("panic", emptyArray()) {
                 else -> {
                     val categories = ModuleCategory.values().filter { it.displayName.equals(args[1], true) }
 
-                    if(categories.isEmpty()) {
+                    if (categories.isEmpty()) {
                         chat("Category ${args[1]} not found")
                         return
                     }
@@ -48,5 +48,15 @@ class PanicCommand : Command("panic", emptyArray()) {
             module.state = false
 
         chat("Disabled $msg modules.")
+    }
+
+    override fun tabComplete(args: Array<String>): List<String> {
+        if (args.isEmpty()) return emptyList()
+
+        return when (args.size) {
+            1 -> listOf("all", "nonrender", "combat", "player", "movement", "render", "world", "misc", "exploit", "fun")
+                .filter { it.startsWith(args[0], true) }
+            else -> emptyList()
+        }
     }
 }
