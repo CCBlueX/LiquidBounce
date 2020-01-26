@@ -93,7 +93,7 @@ class LiquidChat : Module() {
             when (packet) {
                 is ClientMessagePacket -> {
                     if (mc.thePlayer == null) {
-                        println("[LiquidChat] ${packet.user.name}: ${packet.content}")
+                        ClientUtils.getLogger().info("[LiquidChat] ${packet.user.name}: ${packet.content}")
                         return
                     }
 

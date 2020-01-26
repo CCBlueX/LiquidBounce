@@ -99,7 +99,6 @@ class ModuleManager : Listenable {
                 MidClick::class.java,
                 XRay::class.java,
                 Timer::class.java,
-                ChestAura::class.java,
                 Sneak::class.java,
                 SkinDerp::class.java,
                 Paralyze::class.java,
@@ -183,6 +182,7 @@ class ModuleManager : Listenable {
 
         registerModule(NoScoreboard)
         registerModule(Fucker)
+        registerModule(ChestAura)
 
         ClientUtils.getLogger().info("[ModuleManager] Loaded ${modules.size} modules.")
     }

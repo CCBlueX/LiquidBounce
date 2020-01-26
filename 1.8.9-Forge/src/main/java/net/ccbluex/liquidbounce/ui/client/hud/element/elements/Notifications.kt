@@ -22,7 +22,7 @@ import java.awt.Color
  */
 @ElementInfo(name = "Notifications")
 class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F,
-                    side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side) {
+                    side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side) {
 
     /**
      * Example notification for CustomHUD designer
@@ -65,13 +65,14 @@ class Notification(private val message: String) {
      */
     enum class FadeState { IN, STAY, OUT, END }
 
+    init {
+        textLength = Fonts.font35.getStringWidth(message)
+    }
+
     /**
      * Draw notification
      */
     fun drawNotification() {
-        // Get text length
-        textLength = Fonts.font35.getStringWidth(message)
-
         // Draw notification
         RenderUtils.drawRect(-x + 8 + textLength, 0F, -x, -20F, Color.BLACK.rgb)
         RenderUtils.drawRect(-x, 0F, -x - 5, -20F, Color(0, 160, 255).rgb)
@@ -80,14 +81,13 @@ class Notification(private val message: String) {
 
         // Animation
         val delta = RenderUtils.deltaTime
-
-        val width = (textLength + 8).toFloat()
+        val width = textLength + 8F
 
         when (fadeState) {
             FadeState.IN -> {
                 if (x < width) {
-                    x = AnimationUtils.easeOut(fadeStep, 0F, width, width)
-                    fadeStep += delta / 4
+                    x = AnimationUtils.easeOut(fadeStep, width) * width
+                    fadeStep += delta / 4F
                 } else fadeState = FadeState.STAY
 
                 stay = 60F
@@ -102,8 +102,8 @@ class Notification(private val message: String) {
                 fadeState = FadeState.OUT
 
             FadeState.OUT -> if (x > 0) {
-                x = AnimationUtils.easeOut(fadeStep, fadeStep, width - fadeStep, width)
-                fadeStep -= delta / 4
+                x = AnimationUtils.easeOut(fadeStep, width) * width
+                fadeStep -= delta / 4F
             } else
                 fadeState = FadeState.END
 
