@@ -24,6 +24,9 @@ import java.util.List;
 public final class InventoryUtils extends MinecraftInstance implements Listenable {
 
     public static final MSTimer CLICK_TIMER = new MSTimer();
+    public static final List<Block> BLOCK_BLACKLIST = Arrays.asList(Blocks.enchanting_table, Blocks.chest, Blocks.ender_chest, Blocks.trapped_chest,
+            Blocks.anvil, Blocks.sand, Blocks.web, Blocks.torch, Blocks.crafting_table, Blocks.furnace, Blocks.waterlily, Blocks.dispenser,
+            Blocks.stone_pressure_plate, Blocks.wooden_pressure_plate, Blocks.noteblock, Blocks.dropper);
 
     public static int findItem(final int startSlot, final int endSlot, final Item item) {
         for(int i = startSlot; i < endSlot; i++) {
@@ -46,10 +49,6 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
     }
 
     public static int findAutoBlockBlock() {
-        final List<Block> blockedBlocks = Arrays.asList(Blocks.enchanting_table, Blocks.chest, Blocks.ender_chest, Blocks.trapped_chest,
-                Blocks.anvil, Blocks.sand, Blocks.web, Blocks.torch, Blocks.crafting_table, Blocks.furnace, Blocks.waterlily, Blocks.dispenser,
-                Blocks.stone_pressure_plate, Blocks.wooden_pressure_plate, Blocks.noteblock, Blocks.dropper);
-
         for(int i = 36; i < 45; i++) {
             final ItemStack itemStack = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
 
@@ -57,7 +56,8 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
                 final ItemBlock itemBlock = (ItemBlock) itemStack.getItem();
                 final Block block = itemBlock.getBlock();
 
-                if(block.isFullCube() && !blockedBlocks.contains(block)) return i;
+                if (block.isFullCube() && !BLOCK_BLACKLIST.contains(block))
+                    return i;
             }
         }
 
@@ -68,7 +68,8 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
                 final ItemBlock itemBlock = (ItemBlock) itemStack.getItem();
                 final Block block = itemBlock.getBlock();
 
-                if(!blockedBlocks.contains(block)) return i;
+                if (!BLOCK_BLACKLIST.contains(block))
+                    return i;
             }
         }
 

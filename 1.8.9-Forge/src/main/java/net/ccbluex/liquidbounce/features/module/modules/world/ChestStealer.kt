@@ -107,10 +107,8 @@ class ChestStealer : Module() {
         if (chestTitleValue.get() && (screen.lowerChestInventory == null || !screen.lowerChestInventory.name.contains(ItemStack(Item.itemRegistry.getObject(ResourceLocation("minecraft:chest"))).displayName)))
             return
 
-        // Update inventory cleaner
+        // inventory cleaner
         val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
-        if (inventoryCleaner.state)
-            inventoryCleaner.updateItems()
 
         // Is empty?
         if (!isEmpty(screen) && !(closeOnFullValue.get() && fullInventory)) {

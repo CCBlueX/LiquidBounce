@@ -3,143 +3,117 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.module.modules.player;
+package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.EventTarget;
-import net.ccbluex.liquidbounce.event.Render3DEvent;
-import net.ccbluex.liquidbounce.features.module.Module;
-import net.ccbluex.liquidbounce.features.module.ModuleCategory;
-import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor;
-import net.ccbluex.liquidbounce.injection.implementations.IItemStack;
-import net.ccbluex.liquidbounce.utils.ClientUtils;
-import net.ccbluex.liquidbounce.utils.InventoryUtils;
-import net.ccbluex.liquidbounce.utils.MovementUtils;
-import net.ccbluex.liquidbounce.utils.item.ArmorPiece;
-import net.ccbluex.liquidbounce.utils.item.ItemUtils;
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils;
-import net.ccbluex.liquidbounce.value.BoolValue;
-import net.ccbluex.liquidbounce.value.IntegerValue;
-import net.ccbluex.liquidbounce.value.ListValue;
-import net.minecraft.client.gui.inventory.GuiInventory;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.*;
-import net.minecraft.network.play.client.C0DPacketCloseWindow;
-import net.minecraft.network.play.client.C16PacketClientStatus;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.stream.Collectors;
-
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
+import net.ccbluex.liquidbounce.injection.implementations.IItemStack
+import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.item.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.enchantment.Enchantment
+import net.minecraft.init.Blocks
+import net.minecraft.item.*
+import net.minecraft.network.play.client.C0DPacketCloseWindow
+import net.minecraft.network.play.client.C16PacketClientStatus
 
 @ModuleInfo(name = "InventoryCleaner", description = "Automatically throws away useless items.", category = ModuleCategory.PLAYER)
-public class InventoryCleaner extends Module {
+class InventoryCleaner : Module() {
 
-    private static final Random RANDOM = new Random();
-    private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 600, 0, 1000) {
-        @Override
-        protected void onChanged(final Integer oldValue, final Integer newValue) {
-            final int minCPS = minDelayValue.get();
+    /**
+     * OPTIONS
+     */
 
-            if (minCPS > newValue)
-                set(minCPS);
+    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 600, 0, 1000) {
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            val minCPS = minDelayValue.get()
+            if (minCPS > newValue) set(minCPS)
         }
-    };
-    private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 400, 0, 1000) {
-
-        @Override
-        protected void onChanged(final Integer oldValue, final Integer newValue) {
-            final int maxDelay = maxDelayValue.get();
-
-            if (maxDelay < newValue)
-                set(maxDelay);
-        }
-    };
-    private final BoolValue invOpenValue = new BoolValue("InvOpen", false);
-    private final BoolValue simulateInventory = new BoolValue("SimulateInventory", true);
-    private final BoolValue noMoveValue = new BoolValue("NoMove", false);
-    private final BoolValue hotbarValue = new BoolValue("Hotbar", true);
-    private final BoolValue randomSlotValue = new BoolValue("RandomSlot", false);
-    private final BoolValue sortValue = new BoolValue("Sort", true);
-    private final IntegerValue itemDelayValue = new IntegerValue("ItemDelay", 0, 0, 5000);
-    private final String[] items = new String[]{"None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water"};
-    private final ListValue sortSlot1Value = new ListValue("SortSlot-1", items, "Sword");
-    private final ListValue sortSlot2Value = new ListValue("SortSlot-2", items, "Bow");
-    private final ListValue sortSlot3Value = new ListValue("SortSlot-3", items, "Pickaxe");
-    private final ListValue sortSlot4Value = new ListValue("SortSlot-4", items, "Axe");
-    private final ListValue sortSlot5Value = new ListValue("SortSlot-5", items, "None");
-    private final ListValue sortSlot6Value = new ListValue("SortSlot-6", items, "None");
-    private final ListValue sortSlot7Value = new ListValue("SortSlot-7", items, "Food");
-    private final ListValue sortSlot8Value = new ListValue("SortSlot-8", items, "Block");
-    private final ListValue sortSlot9Value = new ListValue("SortSlot-9", items, "Block");
-
-    private long delay;
-    private int[] bestArmor = new int[4];
-
-    @EventTarget
-    public void onRender3D(final Render3DEvent event) {
-        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || (!(mc.currentScreen instanceof GuiInventory) && invOpenValue.get()) || (noMoveValue.get() && MovementUtils.isMoving()) || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
-            return;
-
-        updateItems();
-
-        //noinspection unchecked
-        final Map.Entry<Integer, ItemStack>[] entries = getItems(9, hotbarValue.get() ? 45 : 36).entrySet()
-                .stream()
-                .filter(stackEntry -> !isUseful(stackEntry.getValue(), stackEntry.getKey()))
-                .sorted((o1, o2) -> randomSlotValue.get() ? RANDOM.nextBoolean() ? 1 : -1 : 1)
-                .toArray(Map.Entry[]::new);
-
-        if (entries.length == 0) {
-            sortInventory();
-            return;
-        }
-
-        for (final Map.Entry<Integer, ItemStack> stackEntry : entries) {
-            final int slot = stackEntry.getKey();
-            final ItemStack itemStack = stackEntry.getValue();
-
-//            if(!isUseful(itemStack)) {
-            final boolean openInventory = !(mc.currentScreen instanceof GuiInventory) && simulateInventory.get();
-
-            if (openInventory)
-                mc.getNetHandler().addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
-
-            mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, slot, 4, 4, mc.thePlayer);
-
-            if (openInventory)
-                mc.getNetHandler().addToSendQueue(new C0DPacketCloseWindow());
-
-            delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
-            break;
-        }
-//        }
     }
 
-    public void updateItems() {
-        Arrays.fill(bestArmor, -1);
+    private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 400, 0, 1000) {
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            val maxDelay = maxDelayValue.get()
+            if (maxDelay < newValue) set(maxDelay)
+        }
+    }
 
-        getItems(0, 45).entrySet()
-                .stream()
-                .filter(i -> {
-                            ItemStack itemStack = i.getValue();
+    private val invOpenValue = BoolValue("InvOpen", false)
+    private val simulateInventory = BoolValue("SimulateInventory", true)
+    private val noMoveValue = BoolValue("NoMove", false)
+    private val hotbarValue = BoolValue("Hotbar", true)
+    private val randomSlotValue = BoolValue("RandomSlot", false)
+    private val sortValue = BoolValue("Sort", true)
+    private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
-                            return itemStack != null
-                                    && itemStack.getItem() instanceof ItemArmor
-                                    && (i.getKey() < 9 || System.currentTimeMillis() - ((IItemStack) (Object) itemStack).getItemDelay() >= itemDelayValue.get());
-                        }
-                )
-                .map(i -> new ArmorPiece(i.getValue(), i.getKey()))
-                .collect(Collectors.groupingBy(ArmorPiece::getArmorType))
-                .forEach((k, v) -> bestArmor[k] = v.stream().max((o1, o2) -> {
-                    int i = AutoArmor.ARMOR_COMPARATOR.compare(o1, o2);
-                    // If the items are equal, prefer the lower slot, so the items in the armor inventory are preferred
-                    return i != 0 ? i : (Integer.compare(o2.getSlot(), o1.getSlot()));
-                }).map(ArmorPiece::getSlot).orElse(-1));
+    private val items = arrayOf("None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water", "Gapple", "Pearl")
+    private val sortSlot1Value = ListValue("SortSlot-1", items, "Sword")
+    private val sortSlot2Value = ListValue("SortSlot-2", items, "Bow")
+    private val sortSlot3Value = ListValue("SortSlot-3", items, "Pickaxe")
+    private val sortSlot4Value = ListValue("SortSlot-4", items, "Axe")
+    private val sortSlot5Value = ListValue("SortSlot-5", items, "None")
+    private val sortSlot6Value = ListValue("SortSlot-6", items, "None")
+    private val sortSlot7Value = ListValue("SortSlot-7", items, "Food")
+    private val sortSlot8Value = ListValue("SortSlot-8", items, "Block")
+    private val sortSlot9Value = ListValue("SortSlot-9", items, "Block")
+
+    /**
+     * VALUES
+     */
+
+    private var delay = 0L
+
+    @EventTarget
+    fun onUpdate(event: UpdateEvent) {
+        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) ||
+                mc.currentScreen !is GuiInventory && invOpenValue.get() ||
+                noMoveValue.get() && MovementUtils.isMoving() ||
+                mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0)
+            return
+
+        val garbageItems = items(9, if (hotbarValue.get()) 45 else 36)
+                .filter { !isUseful(it.value, it.key) }
+                .keys
+                .toMutableList()
+
+        if (garbageItems.isEmpty()) {
+            if (sortValue.get())
+                sortHotbar()
+            return
+        }
+
+        // Shuffle items
+        if (randomSlotValue.get())
+            garbageItems.shuffle()
+
+        // Drop all useless items
+        for (slot in garbageItems) {
+            if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay))
+                break
+
+            val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
+
+            if (openInventory)
+                mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+
+            mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, slot, 4, 4, mc.thePlayer)
+
+            if (openInventory)
+                mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
+
+            delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+        }
     }
 
     /**
@@ -148,242 +122,244 @@ public class InventoryCleaner extends Module {
      * @param slot Slot id of the item. If the item isn't in the inventory -1
      * @return Returns true when the item is useful
      */
-    public boolean isUseful(ItemStack itemStack, int slot) {
-        try {
-            final Item item = itemStack.getItem();
+    fun isUseful(itemStack: ItemStack, slot: Int): Boolean {
+        return try {
+            val item = itemStack.item
 
-            if (item instanceof ItemSword || item instanceof ItemTool) {
-                for (final AttributeModifier attributeModifier : itemStack.getAttributeModifiers().get("generic.attackDamage")) {
-                    final double damage = attributeModifier.getAmount() + (1.25D * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness));
+            if (item is ItemSword || item is ItemTool) {
+                val damage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 0.0)
+                +1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness)
 
-                    for (final ItemStack anotherStack : getItems(0, 45).values()) {
-                        if (itemStack.equals(anotherStack) || item.getClass() != anotherStack.getItem().getClass())
-                            continue;
-
-                        for (final AttributeModifier anotherAttributeModifier : anotherStack.getAttributeModifiers().get("generic.attackDamage"))
-                            if (damage <= anotherAttributeModifier.getAmount() + (1.25D * ItemUtils.getEnchantment(anotherStack, Enchantment.sharpness)))
-                                return false;
-                    }
+                items(0, 45).none { (_, stack) ->
+                    stack != itemStack && stack.javaClass == itemStack.javaClass
+                            && damage <= (stack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
+                            ?: 0.0) + 1.25 * ItemUtils.getEnchantment(stack, Enchantment.sharpness)
                 }
+            } else if (item is ItemBow) {
+                val currPower = ItemUtils.getEnchantment(itemStack, Enchantment.power)
 
-                return true;
-            } else if (item instanceof ItemBow) {
-                final int bowPower = ItemUtils.getEnchantment(itemStack, Enchantment.power);
-
-                for (final ItemStack anotherStack : getItems(0, 45).values()) {
-                    if (itemStack.equals(anotherStack) || !(anotherStack.getItem() instanceof ItemBow))
-                        continue;
-
-                    if (ItemUtils.getEnchantment(anotherStack, Enchantment.power) >= bowPower)
-                        return false;
+                items().none { (_, stack) ->
+                    itemStack != stack && stack.item is ItemBow &&
+                            currPower <= ItemUtils.getEnchantment(stack, Enchantment.power)
                 }
-                return true;
-            } else if (item instanceof ItemArmor) {
-                int bestIndex = bestArmor[((ItemArmor) item).armorType];
+            } else if (item is ItemArmor) {
+                val currArmor = ArmorPiece(itemStack, slot)
 
-                if (bestIndex == -1)
-                    return true;
+                items().none { (slot, stack) ->
+                    if (stack != itemStack && stack.item is ItemArmor) {
+                        val armor = ArmorPiece(stack, slot)
 
-                if (slot == -1) {
-                    return AutoArmor.ARMOR_COMPARATOR.compare(new ArmorPiece(itemStack, -1), new ArmorPiece(mc.thePlayer.inventory.getStackInSlot(bestIndex), bestIndex)) > 0;
+                        if (armor.armorType != currArmor.armorType)
+                            false
+                        else
+                            AutoArmor.ARMOR_COMPARATOR.compare(currArmor, armor) <= 0
+                    } else
+                        false
                 }
+            } else if (itemStack.unlocalizedName == "item.compass") {
+                items(0, 45).none { (_, stack) -> itemStack != stack && stack.unlocalizedName == "item.compass" }
+            } else item is ItemFood || itemStack.unlocalizedName == "item.arrow" ||
+                    item is ItemBlock && !itemStack.unlocalizedName.contains("flower") ||
+                    item is ItemBed || itemStack.unlocalizedName == "item.diamond" || itemStack.unlocalizedName == "item.ingotIron" ||
+                    item is ItemPotion || item is ItemEnderPearl || item is ItemEnchantedBook || item is ItemBucket || itemStack.unlocalizedName == "item.stick"
+        } catch (ex: Exception) {
+            ClientUtils.getLogger().error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
 
-                return bestIndex == slot;
-            } else if (itemStack.getUnlocalizedName().equals("item.compass")) {
-                for (final ItemStack anotherStack : getItems(0, 45).values())
-                    if (!itemStack.equals(anotherStack) && anotherStack.getUnlocalizedName().equals("item.compass"))
-                        return false;
-
-                return true;
-            } else
-                return item instanceof ItemFood || itemStack.getUnlocalizedName().equals("item.arrow") || item instanceof ItemBlock && !itemStack.getUnlocalizedName().contains("flower") || item instanceof ItemBed || itemStack.getUnlocalizedName().equals("item.diamond") || itemStack.getUnlocalizedName().equals("item.ingotIron") || item instanceof ItemPotion || item instanceof ItemEnderPearl || item instanceof ItemEnchantedBook || item instanceof ItemBucket || itemStack.getUnlocalizedName().equals("item.stick");
-        } catch (final Throwable t) {
-            ClientUtils.getLogger().error("(InventoryCleaner) Failed to check item: " + itemStack.getUnlocalizedName() + ".", t);
-            return true;
+            true
         }
     }
 
-    private void sortInventory() {
-        if (!sortValue.get())
-            return;
+    /**
+     * INVENTORY SORTER
+     */
 
-        for (int targetSlot = 0; targetSlot < 9; targetSlot++) {
-            final ItemStack slotStack = mc.thePlayer.inventory.getStackInSlot(targetSlot);
-            final SortCallback sortCallback = searchSortItem(targetSlot, slotStack);
+    /**
+     * Sort hotbar
+     */
+    private fun sortHotbar() {
+        for (currSlot in 0..8) {
+            val slotStack = mc.thePlayer.inventory.getStackInSlot(currSlot)
+            val bestItem = findBetterItem(currSlot, slotStack) ?: continue
 
-            if(sortCallback != null && sortCallback.getItemSlot() != targetSlot && (sortCallback.isReplaceCurrentItem() || slotStack == null)) {
-                final boolean openInventory = !(mc.currentScreen instanceof GuiInventory) && simulateInventory.get();
+            if (bestItem != currSlot) {
+                val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
 
                 if (openInventory)
-                    mc.getNetHandler().addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
+                    mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
 
-                mc.playerController.windowClick(0, sortCallback.getItemSlot() < 9 ? sortCallback.getItemSlot() + 36 : sortCallback.getItemSlot(), targetSlot, 2, mc.thePlayer);
+                mc.playerController.windowClick(0, if (bestItem < 9) bestItem + 36 else bestItem, currSlot,
+                        2, mc.thePlayer)
 
                 if (openInventory)
-                    mc.getNetHandler().addToSendQueue(new C0DPacketCloseWindow());
+                    mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
 
-                delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
-                break;
+                delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+                break
             }
         }
     }
 
-    private String getType(final int targetSlot) {
-        switch (targetSlot) {
-            case 0:
-                return sortSlot1Value.get();
-            case 1:
-                return sortSlot2Value.get();
-            case 2:
-                return sortSlot3Value.get();
-            case 3:
-                return sortSlot4Value.get();
-            case 4:
-                return sortSlot5Value.get();
-            case 5:
-                return sortSlot6Value.get();
-            case 6:
-                return sortSlot7Value.get();
-            case 7:
-                return sortSlot8Value.get();
-            case 8:
-                return sortSlot9Value.get();
-        }
+    private fun findBetterItem(targetSlot: Int, slotStack: ItemStack?): Int? {
+        val type = type(targetSlot)
 
-        return "";
-    }
+        when (type.toLowerCase()) {
+            "sword", "pickaxe", "axe" -> {
+                val currentType: Class<out Item> = when {
+                    type.equals("Sword", ignoreCase = true) -> ItemSword::class.java
+                    type.equals("Pickaxe", ignoreCase = true) -> ItemPickaxe::class.java
+                    type.equals("Axe", ignoreCase = true) -> ItemAxe::class.java
+                    else -> return null
+                }
 
+                var bestWeapon = if (slotStack?.item?.javaClass == currentType)
+                    targetSlot
+                else -1
 
-    private SortCallback searchSortItem(final int targetSlot, final ItemStack slotStack) {
-        final String targetType = getType(targetSlot);
-
-        switch (targetType.toLowerCase()) {
-            case "sword":
-            case "pickaxe":
-            case "axe": {
-                final Class<? extends Item> currentType = targetType.equalsIgnoreCase("Sword") ? ItemSword.class : targetType.equalsIgnoreCase("Pickaxe") ? ItemPickaxe.class : targetType.equalsIgnoreCase("Axe") ? ItemAxe.class : null;
-                int bestWeapon = slotStack != null && slotStack.getItem().getClass() == currentType ? targetSlot : -1;
-
-                for (int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
-                    final ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(sourceSlot);
-
-                    if (itemStack != null && itemStack.getItem().getClass() == currentType &&
-                            !getType(sourceSlot).equalsIgnoreCase(targetType)) {
-
+                mc.thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
+                    if (itemStack?.item?.javaClass == currentType && !type(index).equals(type, ignoreCase = true)) {
                         if (bestWeapon == -1) {
-                            bestWeapon = sourceSlot;
-                            continue;
-                        }
+                            bestWeapon = index
+                        } else {
+                            val currDamage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
+                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness)
 
-                        for (final AttributeModifier attributeModifier : itemStack.getAttributeModifiers().get("generic.attackDamage")) {
-                            final double damage = attributeModifier.getAmount() + (1.25D * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness));
+                            val bestStack = mc.thePlayer.inventory.getStackInSlot(bestWeapon)
+                                    ?: return@forEachIndexed
+                            val bestDamage = (bestStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
+                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(bestStack, Enchantment.sharpness)
 
-                            final ItemStack anotherStack = mc.thePlayer.inventory.getStackInSlot(bestWeapon);
-
-                            if (anotherStack == null)
-                                continue;
-
-                            for (final AttributeModifier anotherAttributeModifier : anotherStack.getAttributeModifiers().get("generic.attackDamage"))
-                                if (damage < anotherAttributeModifier.getAmount() + (1.25D * ItemUtils.getEnchantment(anotherStack, Enchantment.sharpness)))
-                                    bestWeapon = sourceSlot;
+                            if (bestDamage < currDamage)
+                                bestWeapon = index
                         }
                     }
                 }
 
-                if (bestWeapon == -1)
-                    return null;
-
-                return new SortCallback(bestWeapon, true);
+                return if (bestWeapon != -1) bestWeapon else null
             }
-            case "bow": {
-                int bestWeapon = -1;
 
-                for (int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
-                    final ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(sourceSlot);
+            "bow" -> {
+                var bestBow = if (slotStack?.item is ItemBow) targetSlot else -1
+                var bestPower = if (bestBow != -1)
+                    ItemUtils.getEnchantment(slotStack, Enchantment.power)
+                else
+                    0
 
-                    if (itemStack != null && itemStack.getItem() instanceof ItemBow &&
-                            !getType(sourceSlot).equalsIgnoreCase(targetType)) {
-                        if (bestWeapon == -1) {
-                            bestWeapon = sourceSlot;
-                            continue;
+                mc.thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
+                    if (itemStack != null && itemStack.item is ItemBow && !type(index).equals(type, ignoreCase = true)) {
+                        if (bestBow == -1) {
+                            bestBow = index
+                        } else {
+                            val power = ItemUtils.getEnchantment(itemStack, Enchantment.power)
+
+                            if (ItemUtils.getEnchantment(itemStack, Enchantment.power) > bestPower) {
+                                bestBow = index
+                                bestPower = power
+                            }
                         }
-
-                        final ItemStack anotherStack = mc.thePlayer.inventory.getStackInSlot(bestWeapon);
-
-                        if (ItemUtils.getEnchantment(itemStack, Enchantment.power) > ItemUtils.getEnchantment(anotherStack, Enchantment.power))
-                            bestWeapon = sourceSlot;
                     }
                 }
 
-                if (bestWeapon == -1)
-                    return null;
-
-                return new SortCallback(bestWeapon, true);
+                return if (bestBow != -1) bestBow else null
             }
-            case "food": {
-                for (int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
-                    final ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(sourceSlot);
 
-                    if (itemStack != null && itemStack.getItem() instanceof ItemFood && !getType(sourceSlot).equalsIgnoreCase("Food"))
-                        return new SortCallback(sourceSlot, slotStack == null || !(slotStack.getItem() instanceof ItemFood));
+            "food" -> {
+                mc.thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
+                    val item = stack?.item
+
+                    if (item is ItemFood && item !is ItemAppleGold && !type(index).equals("Food", ignoreCase = true)) {
+                        val replaceCurr = slotStack == null || slotStack.item !is ItemFood
+
+                        return if (replaceCurr) index else null
+                    }
                 }
-                break;
             }
-            case "block": {
-                for (int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
-                    final ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(sourceSlot);
 
-                    if (itemStack != null && itemStack.getItem() instanceof ItemBlock && !getType(sourceSlot).equalsIgnoreCase("Block"))
-                        return new SortCallback(sourceSlot, slotStack == null || !(slotStack.getItem() instanceof ItemBlock));
+            "block" -> {
+                mc.thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
+                    val item = stack?.item
+
+                    if (item is ItemBlock && !InventoryUtils.BLOCK_BLACKLIST.contains(item.block) &&
+                            !type(index).equals("Block", ignoreCase = true)) {
+                        val replaceCurr = slotStack == null || slotStack.item !is ItemBlock
+
+                        return if (replaceCurr) index else null
+                    }
                 }
-                break;
             }
-            case "water":
-                for (int sourceSlot = 0; sourceSlot < mc.thePlayer.inventory.mainInventory.length; sourceSlot++) {
-                    final ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(sourceSlot);
 
-                    if (itemStack != null && itemStack.getItem() instanceof ItemBucket && ((ItemBucket) itemStack.getItem()).isFull == Blocks.flowing_water && !getType(sourceSlot).equalsIgnoreCase("Water"))
-                        return new SortCallback(sourceSlot, slotStack == null || !(slotStack.getItem() instanceof ItemBucket && ((ItemBucket) slotStack.getItem()).isFull == Blocks.water));
+            "water" -> {
+                mc.thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
+                    val item = stack?.item
+
+                    if (item is ItemBucket && item.isFull == Blocks.flowing_water && !type(index).equals("Water", ignoreCase = true)) {
+                        val replaceCurr = slotStack == null || (slotStack.item is ItemBucket && (slotStack.item as ItemBucket).isFull != Blocks.flowing_water)
+
+                        return if (replaceCurr) index else null
+                    }
                 }
-                break;
+            }
+
+            "gapple" -> {
+                mc.thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
+                    val item = stack?.item
+
+                    if (item is ItemAppleGold && !type(index).equals("Gapple", ignoreCase = true)) {
+                        val replaceCurr = slotStack == null || slotStack.item !is ItemAppleGold
+
+                        return if (replaceCurr) index else null
+                    }
+                }
+            }
+
+            "pearl" -> {
+                mc.thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
+                    val item = stack?.item
+
+                    if (item is ItemEnderPearl && !type(index).equals("Pearl", ignoreCase = true)) {
+                        val replaceCurr = slotStack == null || slotStack.item !is ItemEnderPearl
+
+                        return if (replaceCurr) index else null
+                    }
+                }
+            }
         }
 
-        return null;
+        return null
     }
 
-    private Map<Integer, ItemStack> getItems(final int start, final int end) {
-        final Map<Integer, ItemStack> itemsMap = new HashMap<>();
+    /**
+     * Get items in inventory
+     */
+    private fun items(start: Int = 0, end: Int = 45): Map<Int, ItemStack> {
+        val items = mutableMapOf<Int, ItemStack>()
 
-        for (int i = end - 1; i >= start; i--) {
-            final ItemStack itemStack = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
+        for (i in start until end) {
+            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+            itemStack.item ?: continue
 
-            if (i >= 36 && i <= 44 && getType(i).equalsIgnoreCase("Ignore"))
-                continue;
+            if (i in 36..44 && type(i).equals("Ignore", ignoreCase = true))
+                continue
 
-            if (itemStack != null && itemStack.getItem() != null && System.currentTimeMillis() - ((IItemStack) (Object) itemStack).getItemDelay() >= itemDelayValue.get())
-                itemsMap.put(i, itemStack);
-
+            if (System.currentTimeMillis() - (itemStack as IItemStack).itemDelay >= itemDelayValue.get())
+                items[i] = itemStack
         }
 
-        return itemsMap;
+        return items
     }
 
-    public class SortCallback {
-
-        private final int itemSlot;
-        private final boolean replaceCurrentItem;
-
-        public SortCallback(final int itemSlot, final boolean replaceCurrentItem) {
-            this.itemSlot = itemSlot;
-            this.replaceCurrentItem = replaceCurrentItem;
-        }
-
-        public int getItemSlot() {
-            return itemSlot;
-        }
-
-        public boolean isReplaceCurrentItem() {
-            return replaceCurrentItem;
-        }
+    /**
+     * Get type of [targetSlot]
+     */
+    private fun type(targetSlot: Int) = when (targetSlot) {
+        0 -> sortSlot1Value.get()
+        1 -> sortSlot2Value.get()
+        2 -> sortSlot3Value.get()
+        3 -> sortSlot4Value.get()
+        4 -> sortSlot5Value.get()
+        5 -> sortSlot6Value.get()
+        6 -> sortSlot7Value.get()
+        7 -> sortSlot8Value.get()
+        8 -> sortSlot9Value.get()
+        else -> ""
     }
 }
