@@ -21,6 +21,18 @@ abstract class Command(val command: String, val alias: Array<String>) : Minecraf
     abstract fun execute(args: Array<String>)
 
     /**
+     * Returns a list of command completions based on the provided [args].
+     * If a command does not implement [tabComplete] an [EmptyList] is returned by default.
+     *
+     * @param args an array of command arguments that the player has passed to the command so far
+     * @return a list of matching completions for the command the player is trying to autocomplete
+     * @author NurMarvin
+     */
+    open fun tabComplete(args: Array<String>): List<String> {
+        return emptyList()
+    }
+
+    /**
      * Print [msg] to chat
      */
     protected fun chat(msg: String) = ClientUtils.displayChatMessage("§8[§9§l${LiquidBounce.CLIENT_NAME}§8] §3$msg")

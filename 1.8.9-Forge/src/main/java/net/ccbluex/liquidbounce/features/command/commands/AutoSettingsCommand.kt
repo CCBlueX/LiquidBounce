@@ -15,6 +15,9 @@ import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import kotlin.concurrent.thread
 
 class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings", "config", "autosetting")) {
+
+    private var autoSettings: JsonArray? = null
+
     /**
      * Execute commands with provided [args]
      */
@@ -80,5 +83,40 @@ class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings
                 }
             }
         }
+    }
+
+    override fun tabComplete(args: Array<String>): List<String> {
+        if (args.isEmpty()) return emptyList()
+
+        return when (args.size) {
+            1 -> listOf("list", "load").filter { it.startsWith(args[0], true) }
+            2 -> {
+                if (args[0].equals("load", true)) {
+                    return this.getSettings()
+                        .map { it.asJsonObject["name"].asString }
+                        .filter { it.startsWith(args[1], true) }
+                }
+                return emptyList()
+            }
+            else -> emptyList()
+        }
+    }
+
+    private fun getSettings(): JsonArray {
+        if (this.autoSettings != null) return this.autoSettings!!
+
+        try {
+            val listUrl = "https://api.github.com/repos/CCBlueX/FileCloud/contents/LiquidBounce/autosettings"
+            val listElement = JsonParser().parse(HttpUtils.get(listUrl))
+
+            if (!listElement.isJsonArray)
+                return JsonArray()
+
+            this.autoSettings = listElement.asJsonArray
+            return this.getSettings()
+        } catch (e: Exception) {
+            chat("Failed to fetch auto settings list.")
+        }
+        return JsonArray()
     }
 }
