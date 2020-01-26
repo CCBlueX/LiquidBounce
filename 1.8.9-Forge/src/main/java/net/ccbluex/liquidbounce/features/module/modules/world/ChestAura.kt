@@ -37,6 +37,7 @@ object ChestAura : Module() {
     private val throughWallsValue = BoolValue("ThroughWalls", true)
     private val visualSwing = BoolValue("VisualSwing", true)
     private val chestValue = BlockValue("Chest", Block.getIdFromBlock(Blocks.chest))
+    private val rotationsValue = BoolValue("Rotations", true)
 
     private var currentBlock: BlockPos? = null
     private val timer = MSTimer()
@@ -75,7 +76,9 @@ object ChestAura : Module() {
                         }
                         .minBy { BlockUtils.getCenterDistance(it.key) }?.key
 
-                RotationUtils.setTargetRotation((RotationUtils.faceBlock(currentBlock ?: return) ?: return).rotation)
+                if (rotationsValue.get())
+                    RotationUtils.setTargetRotation((RotationUtils.faceBlock(currentBlock ?: return)
+                            ?: return).rotation)
             }
 
             EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get().toLong())) {
