@@ -69,7 +69,6 @@ class FontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
                 GlStateManager.scale(scale, scale, scale)
                 GlStateManager.bindTexture(textureID)
                 GlStateManager.color(red, green, blue, alpha)
-                //senkju stinkt
             } else {
                 val fontChar = charLocations[
                         char.toInt()
