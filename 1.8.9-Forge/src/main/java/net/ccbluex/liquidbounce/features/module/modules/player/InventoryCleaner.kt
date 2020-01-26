@@ -92,29 +92,24 @@ class InventoryCleaner : Module() {
                     .keys
                     .toMutableList()
 
-            if (garbageItems.isEmpty()) {
-                break
-            }
-
             // Shuffle items
             if (randomSlotValue.get())
                 garbageItems.shuffle()
 
+            val garbageItem = garbageItems.firstOrNull() ?: break
+
             // Drop all useless items
-            for (slot in garbageItems) {
-                val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
+            val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
 
-                if (openInventory)
-                    mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+            if (openInventory)
+                mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
 
-                mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, slot, 4, 4, mc.thePlayer)
+            mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, garbageItem, 4, 4, mc.thePlayer)
 
-                if (openInventory)
-                    mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
+            if (openInventory)
+                mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
 
-                delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
-                break
-            }
+            delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
         }
     }
 
@@ -129,8 +124,8 @@ class InventoryCleaner : Module() {
             val item = itemStack.item
 
             if (item is ItemSword || item is ItemTool) {
-                val damage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 0.0)
-                +1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness)
+                val damage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
+                        ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness)
 
                 items(0, 45).none { (_, stack) ->
                     stack != itemStack && stack.javaClass == itemStack.javaClass
