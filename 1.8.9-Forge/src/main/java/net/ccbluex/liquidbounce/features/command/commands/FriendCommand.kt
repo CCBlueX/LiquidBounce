@@ -91,9 +91,9 @@ class FriendCommand : Command("friend", arrayOf("friends")) {
                             .filter { it.startsWith(args[1], true) }
                     }
                     "remove" -> {
-                        return LiquidBounce.CLIENT.fileManager.friendsConfig.friends
-                            .map { it.playerName }
-                            .filter { it.startsWith(args[1], true) }
+                        return LiquidBounce.fileManager.friendsConfig.friends
+                                .map { it.playerName }
+                                .filter { it.startsWith(args[1], true) }
                     }
                 }
                 return emptyList()

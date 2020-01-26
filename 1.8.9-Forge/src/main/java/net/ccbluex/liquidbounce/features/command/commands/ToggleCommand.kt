@@ -7,8 +7,6 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.minecraft.util.EnumChatFormatting
 
 class ToggleCommand : Command("toggle", arrayOf("t")) {
     /**
@@ -37,10 +35,10 @@ class ToggleCommand : Command("toggle", arrayOf("t")) {
         val moduleName = args[0]
 
         return when (args.size) {
-            1 -> ModuleManager.getModules()
-                .map { it.name }
-                .filter { it.startsWith(moduleName, true) }
-                .toList()
+            1 -> LiquidBounce.moduleManager.modules
+                    .map { it.name }
+                    .filter { it.startsWith(moduleName, true) }
+                    .toList()
             else -> emptyList()
         }
     }

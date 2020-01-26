@@ -136,5 +136,5 @@ class LocalAutoSettingsCommand : Command("localautosettings", arrayOf("localsett
         }
     }
 
-    private fun getLocalSettings(): Array<File>? = LiquidBounce.CLIENT.fileManager.settingsDir.listFiles()
+    private fun getLocalSettings(): Array<File>? = LiquidBounce.fileManager.settingsDir.listFiles()
 }
