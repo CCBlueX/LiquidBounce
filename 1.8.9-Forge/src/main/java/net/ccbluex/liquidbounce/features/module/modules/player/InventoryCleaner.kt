@@ -82,37 +82,36 @@ class InventoryCleaner : Module() {
                 mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0)
             return
 
-        val garbageItems = items(9, if (hotbarValue.get()) 45 else 36)
-                .filter { !isUseful(it.value, it.key) }
-                .keys
-                .toMutableList()
+        sortHotbar()
 
-        if (garbageItems.isEmpty()) {
-            if (sortValue.get())
-                sortHotbar()
-            return
-        }
+        while (InventoryUtils.CLICK_TIMER.hasTimePassed(delay)) {
+            val garbageItems = items(9, if (hotbarValue.get()) 45 else 36)
+                    .filter { !isUseful(it.value, it.key) }
+                    .keys
+                    .toMutableList()
 
-        // Shuffle items
-        if (randomSlotValue.get())
-            garbageItems.shuffle()
-
-        // Drop all useless items
-        for (slot in garbageItems) {
-            if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay))
+            if (garbageItems.isEmpty())
                 break
 
-            val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
+            // Shuffle items
+            if (randomSlotValue.get())
+                garbageItems.shuffle()
 
-            if (openInventory)
-                mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+            // Drop all useless items
+            for (slot in garbageItems) {
+                val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
 
-            mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, slot, 4, 4, mc.thePlayer)
+                if (openInventory)
+                    mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
 
-            if (openInventory)
-                mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
+                mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, slot, 4, 4, mc.thePlayer)
 
-            delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+                if (openInventory)
+                    mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
+
+                delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+                break
+            }
         }
     }
 
