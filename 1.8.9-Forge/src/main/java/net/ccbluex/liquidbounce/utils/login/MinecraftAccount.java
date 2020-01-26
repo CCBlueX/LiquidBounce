@@ -27,7 +27,7 @@ public final class MinecraftAccount {
     }
 
     public boolean isCracked() {
-        return password == null;
+        return password == null || password.isEmpty();
     }
 
     public String getName() {
