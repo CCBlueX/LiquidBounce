@@ -13,7 +13,12 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FontValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.Gui
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.scoreboard.ScoreObjective
@@ -31,7 +36,24 @@ import java.awt.Color
 class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
                         side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.MIDDLE)) : Element(x, y, scale, side) {
 
-    private val fontValue: FontValue = FontValue("Font", Fonts.minecraftFont)
+    private val textRedValue = IntegerValue("Text-R", 255, 0, 255)
+    private val textGreenValue = IntegerValue("Text-G", 255, 0, 255)
+    private val textBlueValue = IntegerValue("Text-B", 255, 0, 255)
+
+    private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0, 255)
+    private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0, 255)
+    private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0, 255)
+    private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 95, 0, 255)
+
+    private val rectValue = BoolValue("Rect", false)
+    private val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Rainbow"), "Custom")
+    private val rectColorRedValue = IntegerValue("Rect-R", 0, 0, 255)
+    private val rectColorGreenValue = IntegerValue("Rect-G", 111, 0, 255)
+    private val rectColorBlueValue = IntegerValue("Rect-B", 255, 0, 255)
+    private val rectColorBlueAlpha = IntegerValue("Rect-Alpha", 255, 0, 255)
+
+    private val shadowValue = BoolValue("Shadow", false)
+    private val fontValue = FontValue("Font", Fonts.minecraftFont)
 
     /**
      * Draw element
@@ -41,6 +63,12 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
             return null
 
         val fontRenderer = fontValue.get()
+        val textColor = textColor().rgb
+        val backColor = backgroundColor().rgb
+
+        val rectColorMode = rectColorModeValue.get()
+        val rectCustomColor = Color(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(),
+                rectColorBlueAlpha.get()).rgb
 
         val worldScoreboard: Scoreboard = mc.theWorld.scoreboard
         var currObjective: ScoreObjective? = null
@@ -75,7 +103,11 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
         }
 
         val maxHeight = scoreCollection.size * fontRenderer.FONT_HEIGHT
-        val l1 = -maxWidth - 3
+        val l1 = -maxWidth - 3 - if (rectValue.get()) 3 else 0
+
+
+
+        Gui.drawRect(l1 - 2, -2, 5, maxHeight + fontRenderer.FONT_HEIGHT, backColor)
 
         scoreCollection.forEachIndexed { index, score ->
             val team = scoreboard.getPlayersTeam(score.playerName)
@@ -83,28 +115,40 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
             val name = ScorePlayerTeam.formatPlayerName(team, score.playerName)
             val scorePoints = "${EnumChatFormatting.RED}${score.scorePoints}"
 
-            val width = 5
+            val width = 5 - if (rectValue.get()) 4 else 0
             val height = maxHeight - index * fontRenderer.FONT_HEIGHT
 
             GlStateManager.resetColor()
-            Gui.drawRect(l1 - 2, height, width, height + fontRenderer.FONT_HEIGHT, 1342177280)
 
-            fontRenderer.drawString(name, l1, height, Color.WHITE.rgb)
-            fontRenderer.drawString(scorePoints, width - fontRenderer.getStringWidth(scorePoints), height, Color.WHITE.rgb)
+            fontRenderer.drawString(name, l1.toFloat(), height.toFloat(), textColor, shadowValue.get())
+            fontRenderer.drawString(scorePoints, (width - fontRenderer.getStringWidth(scorePoints)).toFloat(), height.toFloat(), textColor, shadowValue.get())
 
             if (index == scoreCollection.size - 1) {
                 val displayName = objective.displayName
 
                 GlStateManager.resetColor()
-                Gui.drawRect(l1 - 2, height - fontRenderer.FONT_HEIGHT - 1, width, height - 1, 1610612736)
-                Gui.drawRect(l1 - 2, height - 1, width, height, 1342177280)
 
-                fontRenderer.drawString(displayName, l1 + maxWidth / 2 - fontRenderer.getStringWidth(displayName) / 2, height -
-                        fontRenderer.FONT_HEIGHT, Color.WHITE.rgb)
+                fontRenderer.drawString(displayName, (l1 + maxWidth / 2 - fontRenderer.getStringWidth(displayName) / 2).toFloat(), (height -
+                        fontRenderer.FONT_HEIGHT).toFloat(), textColor, shadowValue.get())
+            }
+
+            if (rectValue.get()) {
+                val rectColor = when {
+                    rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
+                    else -> rectCustomColor
+                }
+
+                RenderUtils.drawRect(2F, if (index == scoreCollection.size - 1) -2F else height.toFloat(), 5F, if (index == 0) fontRenderer.FONT_HEIGHT.toFloat() else height.toFloat() + fontRenderer.FONT_HEIGHT * 2F, rectColor)
             }
         }
 
-        return Border(-maxWidth.toFloat() - 5, 0F, 5F, maxHeight.toFloat() + fontRenderer.FONT_HEIGHT)
+        return Border(-maxWidth.toFloat() - 5 - if (rectValue.get()) 3 else 0, -2F, 5F, maxHeight.toFloat() + fontRenderer.FONT_HEIGHT)
     }
+
+    private fun backgroundColor() = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(),
+            backgroundColorBlueValue.get(), backgroundColorAlphaValue.get())
+
+    private fun textColor() = Color(textRedValue.get(), textGreenValue.get(),
+            textBlueValue.get())
 
 }

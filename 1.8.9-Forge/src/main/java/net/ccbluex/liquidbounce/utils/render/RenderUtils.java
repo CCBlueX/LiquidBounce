@@ -69,8 +69,7 @@ public final class RenderUtils extends MinecraftInstance {
         disableGlCap(GL_TEXTURE_2D, GL_DEPTH_TEST);
         glDepthMask(false);
 
-        glColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha() == 255 ? outline ? 26 : 35
-                : color.getAlpha()));
+        glColor(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha() != 255 ? color.getAlpha() : outline ? 26 : 35);
         drawFilledBox(axisAlignedBB);
 
         if (outline) {
@@ -114,11 +113,11 @@ public final class RenderUtils extends MinecraftInstance {
         if (outline) {
             glLineWidth(1F);
             enableGlCap(GL_LINE_SMOOTH);
-            glColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 95));
+            glColor(color.getRed(), color.getGreen(), color.getBlue(), 95);
             drawSelectionBoundingBox(axisAlignedBB);
         }
 
-        glColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), outline ? 26 : 35));
+        glColor(color.getRed(), color.getGreen(), color.getBlue(), outline ? 26 : 35);
         drawFilledBox(axisAlignedBB);
         GlStateManager.resetColor();
         glDepthMask(true);
@@ -132,8 +131,7 @@ public final class RenderUtils extends MinecraftInstance {
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_DEPTH_TEST);
         glDepthMask(false);
-        if (color != null)
-            glColor(color);
+        glColor(color);
         drawFilledBox(axisAlignedBB);
         GlStateManager.resetColor();
         glEnable(GL_TEXTURE_2D);
@@ -309,7 +307,7 @@ public final class RenderUtils extends MinecraftInstance {
         GlStateManager.disableBlend();
     }
 
-    public static void drawFilledCircle(int xx, int yy, float radius, Color col) {
+    public static void drawFilledCircle(final int xx, final int yy, final float radius, final Color color) {
         int sections = 50;
         double dAngle = 2 * Math.PI / sections;
         float x, y;
@@ -325,10 +323,11 @@ public final class RenderUtils extends MinecraftInstance {
             x = (float) (radius * Math.sin((i * dAngle)));
             y = (float) (radius * Math.cos((i * dAngle)));
 
-            glColor4f(col.getRed() / 255f, col.getGreen() / 255f, col.getBlue() / 255f, col.getAlpha() / 255f);
+            glColor4f(color.getRed() / 255F, color.getGreen() / 255F, color.getBlue() / 255F, color.getAlpha() / 255F);
             glVertex2f(xx + x, yy + y);
         }
         GlStateManager.color(0, 0, 0);
+
         glEnd();
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_BLEND);
@@ -349,25 +348,26 @@ public final class RenderUtils extends MinecraftInstance {
         glEnable(GL_DEPTH_TEST);
     }
 
-    public static void glColor(final Color color) {
-        glColor(color.getRGB());
+    public static void glColor(final int red, final int green, final int blue, final int alpha) {
+        GlStateManager.color(red / 255F, green / 255F, blue / 255F, alpha / 255F);
     }
 
-    private static void glColor(final int hex) {
-        float alpha = (hex >> 24 & 0xFF) / 255F;
-        float red = (hex >> 16 & 0xFF) / 255F;
-        float green = (hex >> 8 & 0xFF) / 255F;
-        float blue = (hex & 0xFF) / 255F;
+    public static void glColor(final Color color) {
+        final float red = color.getRed() / 255F;
+        final float green = color.getGreen() / 255F;
+        final float blue = color.getBlue() / 255F;
+        final float alpha = color.getAlpha() / 255F;
+
         GlStateManager.color(red, green, blue, alpha);
     }
 
-    public static Color hexColor(final int hex) {
-        float alpha = (hex >> 24 & 0xFF) / 255F;
-        float red = (hex >> 16 & 0xFF) / 255F;
-        float green = (hex >> 8 & 0xFF) / 255F;
-        float blue = (hex & 0xFF) / 255F;
+    private static void glColor(final int hex) {
+        final float alpha = (hex >> 24 & 0xFF) / 255F;
+        final float red = (hex >> 16 & 0xFF) / 255F;
+        final float green = (hex >> 8 & 0xFF) / 255F;
+        final float blue = (hex & 0xFF) / 255F;
 
-        return new Color(red, green, blue, alpha);
+        GlStateManager.color(red, green, blue, alpha);
     }
 
     public static void draw2D(final EntityLivingBase entity, final double posX, final double posY, final double posZ, final int color, final int backgroundColor) {

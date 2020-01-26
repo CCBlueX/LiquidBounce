@@ -9,6 +9,8 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.OpenGlHelper
 import net.minecraft.client.renderer.RenderHelper
@@ -25,6 +27,12 @@ import kotlin.math.atan
 @ElementInfo(name = "Model")
 class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
 
+    private val yawMode = ListValue("Yaw", arrayOf("Player", "Animation", "Custom"), "Animation")
+    private val customYaw = FloatValue("CustomYaw", 0F, -180F, 180F)
+
+    private val pitchMode = ListValue("Pitch", arrayOf("Player", "Custom"), "Player")
+    private val customPitch = FloatValue("CustomPitch", 0F, -90F, 90F)
+
     private var rotate = 0F
     private var rotateDirection = false
 
@@ -32,28 +40,42 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
      * Draw element
      */
     override fun drawElement(): Border {
-        val delta = RenderUtils.deltaTime
+        val yaw = when (yawMode.get().toLowerCase()) {
+            "player" -> mc.thePlayer.rotationYaw
+            "animation" -> {
+                val delta = RenderUtils.deltaTime
 
-        if (rotateDirection) {
-            if (rotate <= 70F) {
-                rotate += 0.12F * delta
-            } else {
-                rotateDirection = false
-                rotate = 70F
+                if (rotateDirection) {
+                    if (rotate <= 70F) {
+                        rotate += 0.12F * delta
+                    } else {
+                        rotateDirection = false
+                        rotate = 70F
+                    }
+                } else {
+                    if (rotate >= -70F) {
+                        rotate -= 0.12F * delta
+                    } else {
+                        rotateDirection = true
+                        rotate = -70F
+                    }
+                }
+
+                rotate
             }
-        } else {
-            if (rotate >= -70F) {
-                rotate -= 0.12F * delta
-            } else {
-                rotateDirection = true
-                rotate = -70F
-            }
+            "custom" -> customYaw.get()
+            else -> 0F
         }
 
-        var pitch = mc.thePlayer.rotationPitch
-        pitch = if (pitch > 0) -mc.thePlayer.rotationPitch else abs(mc.thePlayer.rotationPitch)
+        var pitch = when (pitchMode.get().toLowerCase()) {
+            "player" -> mc.thePlayer.rotationPitch
+            "custom" -> customPitch.get()
+            else -> 0F
+        }
 
-        drawEntityOnScreen(rotate, pitch, mc.thePlayer)
+        pitch = if (pitch > 0) -pitch else abs(pitch)
+
+        drawEntityOnScreen(yaw, pitch, mc.thePlayer)
 
         return Border(30F, 10F, -30F, -100F)
     }

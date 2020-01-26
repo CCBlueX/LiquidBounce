@@ -20,7 +20,7 @@ import java.awt.Color
 /**
  * CustomHUD Notification element
  */
-@ElementInfo(name = "Notifications")
+@ElementInfo(name = "Notifications", single = true)
 class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F,
                     side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side) {
 

@@ -295,7 +295,7 @@ public class GuiAltManager extends GuiScreen {
             }
         }
 
-        if(minecraftAccount.getPassword() == null) {
+        if (minecraftAccount.isCracked()) {
             LoginUtils.loginCracked(minecraftAccount.getName());
             MCLeaks.remove();
             return "§cYour name is now §8" + minecraftAccount.getName() + "§c.";

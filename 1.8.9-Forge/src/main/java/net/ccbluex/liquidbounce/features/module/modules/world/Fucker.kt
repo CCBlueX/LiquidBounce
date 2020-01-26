@@ -144,7 +144,6 @@ object Fucker : Module() {
                     mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK,
                             currentPos, EnumFacing.DOWN))
                     currentDamage = 0F
-                    pos = null
                     return
                 }
 

@@ -208,7 +208,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
                         when {
                             rectMode.equals("left", true) -> RenderUtils.drawRect(0F,
-                                    yPos - 1, -3F, yPos + textHeight, rectColor)
+                                    yPos - 1, 3F, yPos + textHeight, rectColor)
                             rectMode.equals("right", true) ->
                                 RenderUtils.drawRect(xPos + width + 2, yPos - 1, xPos + width + 2 + 3,
                                         yPos + textHeight, rectColor)

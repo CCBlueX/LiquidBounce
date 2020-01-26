@@ -170,3 +170,8 @@ class UpdateEvent : Event()
  * Called when the world changes
  */
 class WorldEvent(val worldClient: WorldClient?) : Event()
+
+/**
+ * Called when window clicked
+ */
+class ClickWindowEvent(val windowId: Int, val slotId: Int, val mouseButtonClicked: Int, val mode: Int) : CancellableEvent()
