@@ -6,10 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.Render3DEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -83,10 +80,13 @@ class ReachAura : Module()
     // Bypass
     private val swingValue = BoolValue("Swing", true)
 
-    //initial pos
+    // initial pos
     private var initialx: Double? = null
     private var initialy: Double? = null
     private var initialz: Double? = null
+
+    // WTF
+    private var firsttick = true
 
 
     override fun onEnable()
@@ -101,17 +101,29 @@ class ReachAura : Module()
         updateTarget()
     }
 
+    @EventTarget
+    private fun onWorldEvent(event: TickEvent)
+    {
+        if (!firsttick) return
+
+        initialx = mc.thePlayer.posX
+        initialy = mc.thePlayer.posY
+        initialz = mc.thePlayer.posZ
+
+        firsttick = false
+    }
+
 
     /**
      * Disable reach aura module
      */
     override fun onDisable()
     {
-        target = null
-        targetList = null
         prevTargetEntities.clear()
         attackTimer.reset()
         clicks = 0
+        target = null
+        targetList = null
         returnInitial()
     }
 
