@@ -124,6 +124,9 @@ class InventoryCleaner : Module() {
             val item = itemStack.item
 
             if (item is ItemSword || item is ItemTool) {
+                if (slot >= 36 && findBetterItem(slot - 36, mc.thePlayer.inventory.getStackInSlot(slot - 36)) == slot - 36)
+                    return true
+
                 val damage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
                         ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness)
 
