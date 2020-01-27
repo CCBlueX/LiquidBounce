@@ -65,7 +65,7 @@ public final class ItemUtils {
         }
     }
 
-    public static int getEnchantment(final ItemStack itemStack, final Enchantment enchantment) {
+    public static int getEnchantment(ItemStack itemStack, Enchantment enchantment) {
         if (itemStack == null || itemStack.getEnchantmentTagList() == null || itemStack.getEnchantmentTagList().hasNoTags())
             return 0;
 
@@ -77,5 +77,21 @@ public final class ItemUtils {
         }
 
         return 0;
+    }
+
+    public static int getEnchantmentCount(ItemStack itemStack) {
+        if (itemStack == null || itemStack.getEnchantmentTagList() == null || itemStack.getEnchantmentTagList().hasNoTags())
+            return 0;
+
+        int c = 0;
+
+        for (int i = 0; i < itemStack.getEnchantmentTagList().tagCount(); i++) {
+            NBTTagCompound tagCompound = itemStack.getEnchantmentTagList().getCompoundTagAt(i);
+
+            if ((tagCompound.hasKey("ench") || tagCompound.hasKey("id")))
+                c++;
+        }
+
+        return c;
     }
 }

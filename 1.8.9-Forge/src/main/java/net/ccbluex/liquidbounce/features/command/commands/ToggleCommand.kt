@@ -28,4 +28,19 @@ class ToggleCommand : Command("toggle", arrayOf("t")) {
 
         chatSyntax("toggle <module>")
     }
+
+    override fun tabComplete(args: Array<String>): List<String> {
+        if (args.isEmpty()) return emptyList()
+
+        val moduleName = args[0]
+
+        return when (args.size) {
+            1 -> LiquidBounce.moduleManager.modules
+                    .map { it.name }
+                    .filter { it.startsWith(moduleName, true) }
+                    .toList()
+            else -> emptyList()
+        }
+    }
+
 }

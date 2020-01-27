@@ -15,6 +15,9 @@ import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import kotlin.concurrent.thread
 
 class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings", "config", "autosetting")) {
+    private val loadingLock = Object()
+    private var autoSettingFiles: MutableList<String>? = null
+
     /**
      * Execute commands with provided [args]
      */
@@ -62,23 +65,68 @@ class AutoSettingsCommand : Command("autosettings", arrayOf("setting", "settings
             args[1].equals("list", ignoreCase = true) -> {
                 chat("Loading settings...")
 
-                thread {
-                    try {
-                        val json = JsonParser().parse(HttpUtils.get(
-                                // TODO: Add another way to get all settings
-                                "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
-                        ))
-
-                        if (json !is JsonArray)
-                            return@thread
-
-                        for (setting in json)
-                            chat("> " + setting.asJsonObject["name"].asString)
-                    } catch (e: Exception) {
-                        chat("Failed to fetch auto settings list.")
-                    }
+                loadSettings(false) {
+                    for (setting in it)
+                        chat("> $setting")
                 }
             }
+        }
+    }
+
+    private fun loadSettings(useCached: Boolean, join: Long? = null, callback: (List<String>) -> Unit) {
+        var thread = thread {
+            // Prevent the settings from being loaded twice
+            synchronized(loadingLock) {
+                if (useCached && autoSettingFiles != null) {
+                    callback(autoSettingFiles!!)
+                    return@thread
+                }
+
+                try {
+                    val json = JsonParser().parse(HttpUtils.get(
+                            // TODO: Add another way to get all settings
+                            "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
+                    ))
+
+                    val autoSettings: MutableList<String> = mutableListOf()
+
+                    if (json is JsonArray) {
+                        for (setting in json)
+                            autoSettings.add(setting.asJsonObject["name"].asString)
+                    }
+
+                    callback(autoSettings)
+
+                    this.autoSettingFiles = autoSettings
+                } catch (e: Exception) {
+                    chat("Failed to fetch auto settings list.")
+                }
+            }
+        }
+
+        if (join != null) {
+            thread.join(join)
+        }
+    }
+
+    override fun tabComplete(args: Array<String>): List<String> {
+        if (args.isEmpty()) return emptyList()
+
+        return when (args.size) {
+            1 -> listOf("list", "load").filter { it.startsWith(args[0], true) }
+            2 -> {
+                if (args[0].equals("load", true)) {
+                    if (autoSettingFiles == null) {
+                        this.loadSettings(true, 500) {}
+                    }
+
+                    if (autoSettingFiles != null) {
+                        return autoSettingFiles!!.filter { it.startsWith(args[1], true) }
+                    }
+                }
+                return emptyList()
+            }
+            else -> emptyList()
         }
     }
 }
