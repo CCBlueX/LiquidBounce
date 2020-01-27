@@ -80,11 +80,16 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
      * @author NurMarvin
      */
     @Inject(method = "sendAutocompleteRequest", at = @At("HEAD"), cancellable = true)
-    private void handleClientCommandCompletion(final String full, final String ignored,
-                                               final CallbackInfo callbackInfo) {
+    private void handleClientCommandCompletion(String full, final String ignored, CallbackInfo callbackInfo) {
         if (LiquidBounce.commandManager.autoComplete(full)) {
             waitingOnAutocomplete = true;
-            this.onAutocompleteResponse(LiquidBounce.commandManager.getLatestAutoComplete());
+
+            String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
+
+            if (full.toLowerCase().endsWith(latestAutoComplete[latestAutoComplete.length - 1].toLowerCase()))
+                return;
+
+            this.onAutocompleteResponse(latestAutoComplete);
 
             callbackInfo.cancel();
         }
