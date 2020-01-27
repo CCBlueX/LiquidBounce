@@ -23,7 +23,6 @@ import net.minecraft.util.MathHelper
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import java.text.DecimalFormat
 
 class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: Int) : MinecraftInstance() {
 
@@ -212,17 +211,17 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         val element = currentElement ?: return
 
         // X
-        Fonts.font35.drawString("X: ${DecimalFormat("#.##").format(element.renderX)} (${DecimalFormat("#.##").format(element.x)})", x + 2, y + height, Color.WHITE.rgb)
+        Fonts.font35.drawString("X: ${"%.2f".format(element.renderX)} (${"%.2f".format(element.x)})", x + 2, y + height, Color.WHITE.rgb)
         height += 10
         realHeight += 10
 
         // Y
-        Fonts.font35.drawString("Y: ${DecimalFormat("#.##").format(element.renderY)} (${DecimalFormat("#.##").format(element.y)})", x + 2, y + height, Color.WHITE.rgb)
+        Fonts.font35.drawString("Y: ${"%.2f".format(element.renderY)} (${"%.2f".format(element.y)})", x + 2, y + height, Color.WHITE.rgb)
         height += 10
         realHeight += 10
 
         // Scale
-        Fonts.font35.drawString("Scale: ${DecimalFormat("#.##").format(element.scale)}", x + 2, y + height, Color.WHITE.rgb)
+        Fonts.font35.drawString("Scale: ${"%.2f".format(element.scale)}", x + 2, y + height, Color.WHITE.rgb)
         height += 10
         realHeight += 10
 
@@ -299,7 +298,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                     val max = value.maximum
 
                     // Title
-                    val text = "${value.name}: §c${DecimalFormat("#.##").format(current)}"
+                    val text = "${value.name}: §c${"%.2f".format(current)}"
 
                     Fonts.font35.drawString(text, x + 2, y + height, Color.WHITE.rgb)
 
