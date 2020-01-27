@@ -25,7 +25,7 @@ class ServerInfoCommand : Command("serverinfo", emptyArray()), Listenable {
      */
     override fun execute(args: Array<String>) {
         if (mc.currentServerData == null) {
-            chat("The command does not work in single player.")
+            chat("This command does not work in single player.")
             return
         }
 

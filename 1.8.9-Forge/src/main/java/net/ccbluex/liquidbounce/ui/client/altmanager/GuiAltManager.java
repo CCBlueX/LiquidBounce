@@ -39,17 +39,13 @@ import java.util.Random;
 
 public class GuiAltManager extends GuiScreen {
 
+    public static final AltService altService = new AltService();
+    private static final Map<String, Boolean> GENERATORS = new HashMap<>();
     private final GuiScreen prevGui;
-
+    public String status = "§7Idle...";
     private GuiButton loginButton;
     private GuiButton randomButton;
-
     private GuiList altsList;
-
-    public String status = "§7Idle...";
-
-    private static final Map<String, Boolean> GENERATORS = new HashMap<>();
-    public static final AltService altService = new AltService();
 
     public GuiAltManager(final GuiScreen prevGui) {
         this.prevGui = prevGui;
@@ -61,22 +57,83 @@ public class GuiAltManager extends GuiScreen {
             final JsonElement jsonElement = new JsonParser().parse(HttpUtils.get(LiquidBounce.CLIENT_CLOUD + "/generators.json"));
 
             // Check json is valid object
-            if(jsonElement.isJsonObject()) {
+            if (jsonElement.isJsonObject()) {
                 // Get json object of element
                 final JsonObject jsonObject = jsonElement.getAsJsonObject();
 
                 jsonObject.entrySet().forEach(stringJsonElementEntry -> GENERATORS.put(stringJsonElementEntry.getKey(), stringJsonElementEntry.getValue().getAsBoolean()));
             }
-        }catch(final Throwable throwable) {
+        } catch (final Throwable throwable) {
             // Print throwable to console
             ClientUtils.getLogger().error("Failed to load enabled generators.", throwable);
         }
     }
 
+    public static String login(final MinecraftAccount minecraftAccount) {
+        if (minecraftAccount == null)
+            return "";
+
+        if (altService.getCurrentService() != AltService.EnumAltService.MOJANG) {
+            try {
+                altService.switchService(AltService.EnumAltService.MOJANG);
+            } catch (final NoSuchFieldException | IllegalAccessException e) {
+                ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e);
+            }
+        }
+
+        if (minecraftAccount.isCracked()) {
+            LoginUtils.loginCracked(minecraftAccount.getName());
+            MCLeaks.remove();
+            return "§cYour name is now §8" + minecraftAccount.getName() + "§c.";
+        }
+
+        LoginUtils.LoginResult result = LoginUtils.login(minecraftAccount.getName(), minecraftAccount.getPassword());
+        if (result == LoginUtils.LoginResult.LOGGED) {
+            MCLeaks.remove();
+            String userName = Minecraft.getMinecraft().getSession().getUsername();
+            minecraftAccount.setAccountName(userName);
+            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+            return "§cYour name is now §f§l" + userName + "§c.";
+        }
+
+        if (result == LoginUtils.LoginResult.WRONG_PASSWORD)
+            return "§cWrong password.";
+
+        if (result == LoginUtils.LoginResult.NO_CONTACT)
+            return "§cCannot contact authentication server.";
+
+        if (result == LoginUtils.LoginResult.INVALID_ACCOUNT_DATA)
+            return "§cInvaild username or password.";
+
+        if (result == LoginUtils.LoginResult.MIGRATED)
+            return "§cAccount migrated.";
+
+        return "";
+    }
+
     public void initGui() {
         altsList = new GuiList(this);
         altsList.registerScrollButtons(7, 8);
-        altsList.elementClicked(-1, false, 0, 0);
+
+        int index = -1;
+
+        for (int i = 0; i < LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.size(); i++) {
+            MinecraftAccount minecraftAccount = LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.get(i);
+
+            if (minecraftAccount != null && (
+                    ((
+                            // When password is empty, the account is cracked
+                            minecraftAccount.getPassword() == null || minecraftAccount.getPassword().isEmpty()) && minecraftAccount.getName() != null && minecraftAccount.getName().equals(mc.session.getUsername()))
+                            // When the account is a premium account match the IGN
+                            || minecraftAccount.getAccountName() != null && minecraftAccount.getAccountName().equals(mc.session.getUsername())
+            )) {
+                index = i;
+                break;
+            }
+        }
+
+        altsList.elementClicked(index, false, 0, 0);
+        altsList.scrollBy(index * altsList.slotHeight);
 
         int j = 22;
         this.buttonList.add(new GuiButton(1, width - 80, j + 24, 70, 20, "Add"));
@@ -91,9 +148,9 @@ public class GuiAltManager extends GuiScreen {
         this.buttonList.add(new GuiButton(6, 5, j + 24 * 3, 90, 20, "Direct Login"));
         this.buttonList.add(new GuiButton(88, 5, j + 24 * 4, 90, 20, "Change Name"));
 
-        if(GENERATORS.getOrDefault("mcleaks", true))
+        if (GENERATORS.getOrDefault("mcleaks", true))
             this.buttonList.add(new GuiButton(5, 5, j + 24 * 5 + 5, 90, 20, "MCLeaks"));
-        if(GENERATORS.getOrDefault("thealtening", true))
+        if (GENERATORS.getOrDefault("thealtening", true))
             this.buttonList.add(new GuiButton(9, 5, j + 24 * 6 + 5, 90, 20, "TheAltening"));
 
         this.buttonList.add(new GuiButton(10, 5, j + 24 * 7 + 5, 90, 20, "Session Login"));
@@ -118,9 +175,9 @@ public class GuiAltManager extends GuiScreen {
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
-        if(!button.enabled) return;
+        if (!button.enabled) return;
 
-        switch(button.id) {
+        switch (button.id) {
             case 0:
                 mc.displayGuiScreen(prevGui);
                 break;
@@ -128,15 +185,15 @@ public class GuiAltManager extends GuiScreen {
                 mc.displayGuiScreen(new GuiAdd(this));
                 break;
             case 2:
-                if(altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize()) {
+                if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize()) {
                     LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.remove(altsList.getSelectedSlot());
                     LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
                     status = "§aThe account has been removed.";
-                }else
+                } else
                     status = "§cSelect an account.";
                 break;
             case 3:
-                if(altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize()) {
+                if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize()) {
                     loginButton.enabled = randomButton.enabled = false;
 
                     final Thread thread = new Thread(() -> {
@@ -147,7 +204,7 @@ public class GuiAltManager extends GuiScreen {
                         loginButton.enabled = randomButton.enabled = true;
                     }, "AltLogin");
                     thread.start();
-                }else
+                } else
                     status = "§cSelect an account.";
                 break;
             case 4:
@@ -158,7 +215,7 @@ public class GuiAltManager extends GuiScreen {
 
                 final int randomInteger = new Random().nextInt(LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.size());
 
-                if(randomInteger < altsList.getSize())
+                if (randomInteger < altsList.getSize())
                     altsList.selectedSlot = randomInteger;
 
                 loginButton.enabled = randomButton.enabled = false;
@@ -181,7 +238,7 @@ public class GuiAltManager extends GuiScreen {
             case 7:
                 final File file = MiscUtils.openFileChooser();
 
-                if(file == null)
+                if (file == null)
                     return;
 
                 final FileReader fileReader = new FileReader(file);
@@ -214,15 +271,15 @@ public class GuiAltManager extends GuiScreen {
                 status = "§aThe accounts were imported successfully.";
                 break;
             case 8:
-                if(altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize()) {
+                if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize()) {
                     final MinecraftAccount minecraftAccount = LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.get(altsList.getSelectedSlot());
 
-                    if(minecraftAccount == null)
+                    if (minecraftAccount == null)
                         break;
 
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(minecraftAccount.getName() + ":" + minecraftAccount.getPassword()), null);
                     status = "§aCopied account into your clipboard.";
-                }else
+                } else
                     status = "§cSelect an account.";
                 break;
             case 88:
@@ -242,20 +299,20 @@ public class GuiAltManager extends GuiScreen {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        switch(keyCode) {
+        switch (keyCode) {
             case Keyboard.KEY_ESCAPE:
                 mc.displayGuiScreen(prevGui);
                 return;
             case Keyboard.KEY_UP: {
                 int i = altsList.getSelectedSlot() - 1;
-                if(i < 0)
+                if (i < 0)
                     i = 0;
                 altsList.elementClicked(i, false, 0, 0);
                 break;
             }
             case Keyboard.KEY_DOWN: {
                 int i = altsList.getSelectedSlot() + 1;
-                if(i >= altsList.getSize())
+                if (i >= altsList.getSize())
                     i = altsList.getSize() - 1;
                 altsList.elementClicked(i, false, 0, 0);
                 break;
@@ -283,48 +340,6 @@ public class GuiAltManager extends GuiScreen {
         altsList.handleMouseInput();
     }
 
-    public static String login(final MinecraftAccount minecraftAccount) {
-        if(minecraftAccount == null)
-            return "";
-
-        if(altService.getCurrentService() != AltService.EnumAltService.MOJANG) {
-            try {
-                altService.switchService(AltService.EnumAltService.MOJANG);
-            }catch(final NoSuchFieldException | IllegalAccessException e) {
-                ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e);
-            }
-        }
-
-        if (minecraftAccount.isCracked()) {
-            LoginUtils.loginCracked(minecraftAccount.getName());
-            MCLeaks.remove();
-            return "§cYour name is now §8" + minecraftAccount.getName() + "§c.";
-        }
-
-        LoginUtils.LoginResult result = LoginUtils.login(minecraftAccount.getName(), minecraftAccount.getPassword());
-        if(result == LoginUtils.LoginResult.LOGGED) {
-            MCLeaks.remove();
-            String userName = Minecraft.getMinecraft().getSession().getUsername();
-            minecraftAccount.setAccountName(userName);
-            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
-            return "§cYour name is now §f§l" + userName + "§c.";
-        }
-
-        if(result == LoginUtils.LoginResult.WRONG_PASSWORD)
-            return "§cWrong password.";
-
-        if(result == LoginUtils.LoginResult.NO_CONTACT)
-            return "§cCannot contact authentication server.";
-
-        if(result == LoginUtils.LoginResult.INVALID_ACCOUNT_DATA)
-            return "§cInvaild username or password.";
-
-        if(result == LoginUtils.LoginResult.MIGRATED)
-            return "§cAccount migrated.";
-
-        return "";
-    }
-
     private class GuiList extends GuiSlot {
 
         private int selectedSlot;
@@ -344,6 +359,10 @@ public class GuiAltManager extends GuiScreen {
             return selectedSlot;
         }
 
+        public void setSelectedSlot(int selectedSlot) {
+            this.selectedSlot = selectedSlot;
+        }
+
         @Override
         protected int getSize() {
             return LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.size();
@@ -353,8 +372,8 @@ public class GuiAltManager extends GuiScreen {
         protected void elementClicked(int var1, boolean doubleClick, int var3, int var4) {
             selectedSlot = var1;
 
-            if(doubleClick) {
-                if(altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize() && loginButton.enabled) {
+            if (doubleClick) {
+                if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize() && loginButton.enabled) {
                     loginButton.enabled = randomButton.enabled = false;
 
                     new Thread(() -> {
@@ -364,13 +383,9 @@ public class GuiAltManager extends GuiScreen {
 
                         loginButton.enabled = randomButton.enabled = true;
                     }, "AltManagerLogin").start();
-                }else
+                } else
                     status = "§cSelect an account.";
             }
-        }
-
-        public void setSelectedSlot(int selectedSlot) {
-            this.selectedSlot = selectedSlot;
         }
 
         @Override

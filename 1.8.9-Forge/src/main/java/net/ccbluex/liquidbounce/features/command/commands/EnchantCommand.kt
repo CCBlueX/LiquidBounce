@@ -6,7 +6,9 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.minecraft.enchantment.Enchantment
+import net.minecraft.enchantment.EnumEnchantmentType
 
 class EnchantCommand : Command("enchant", emptyArray()) {
     /**
@@ -15,14 +17,14 @@ class EnchantCommand : Command("enchant", emptyArray()) {
     override fun execute(args: Array<String>) {
         if (args.size > 2) {
             if (mc.playerController.isNotCreative) {
-                chat("§c§lError: §3You need creative mode.")
+                chat("§c§lError: §3You need to be in creative mode.")
                 return
             }
 
             val item = mc.thePlayer.heldItem
 
             if (item == null || item.item == null) {
-                chat("§c§lError: §3You need to hold a item.")
+                chat("§c§lError: §3You need to hold an item.")
                 return
             }
 
@@ -32,7 +34,7 @@ class EnchantCommand : Command("enchant", emptyArray()) {
                 val enchantment = Enchantment.getEnchantmentByLocation(args[1])
 
                 if (enchantment == null) {
-                    chat("There is no such enchantment with the name " + args[1])
+                    chat("There is no enchantment with the name '${args[1]}'")
                     return
                 }
 
@@ -41,7 +43,7 @@ class EnchantCommand : Command("enchant", emptyArray()) {
 
             val enchantment = Enchantment.getEnchantmentById(enchantID)
             if (enchantment == null) {
-                chat("There is no such enchantment with ID $enchantID")
+                chat("There is no enchantment with the ID '$enchantID'")
                 return
             }
 
@@ -57,5 +59,18 @@ class EnchantCommand : Command("enchant", emptyArray()) {
             return
         }
         chatSyntax("enchant <type> [level]")
+    }
+
+    override fun tabComplete(args: Array<String>): List<String> {
+        if (args.isEmpty()) return emptyList()
+
+        return when (args.size) {
+            1 -> {
+                return Enchantment.func_181077_c()
+                    .map { it.resourcePath.toLowerCase() }
+                    .filter { it.startsWith(args[0], true) }
+            }
+            else -> emptyList()
+        }
     }
 }
