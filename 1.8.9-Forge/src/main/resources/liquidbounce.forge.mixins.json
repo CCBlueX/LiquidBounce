@@ -40,6 +40,7 @@
     "network.MixinNetHandlerLoginClient",
     "network.MixinNetHandlerPlayClient",
     "network.MixinNetworkManager",
+    "network.MixinNetworkPlayerInfo",
     "entity.MixinPlayerControllerMP",
     "client.MixinProfiler",
     "render.MixinRender",
@@ -52,6 +53,7 @@
     "render.MixinTileEntityRendererDispatcher",
     "render.MixinVisGraph",
     "world.MixinWorld",
-    "world.MixinWorldClient"
+    "world.MixinWorldClient",
+    "resources.MixinSkinManager"
   ]
 }
