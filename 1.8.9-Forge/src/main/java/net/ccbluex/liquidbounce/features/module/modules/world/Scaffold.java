@@ -218,11 +218,10 @@ public class Scaffold extends Module {
             if (zitterValue.get() && zitterModeValue.get().equalsIgnoreCase("teleport")) {
                 MovementUtils.strafe(zitterSpeed.get());
 
-                final EntityPlayerSP player = mc.thePlayer;
 
-                final double yaw = Math.toRadians(player.rotationYaw + (zitterDirection ? 90D : -90D));
-                player.motionX -= Math.sin(yaw) * zitterStrength.get();
-                player.motionZ += Math.cos(yaw) * zitterStrength.get();
+                final double yaw = Math.toRadians(mc.thePlayer.rotationYaw + (zitterDirection ? 90D : -90D));
+                mc.thePlayer.motionX -= Math.sin(yaw) * zitterStrength.get();
+                mc.thePlayer.motionZ += Math.cos(yaw) * zitterStrength.get();
                 zitterDirection = !zitterDirection;
             }
         }
