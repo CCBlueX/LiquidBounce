@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.features.command.commands.*
 import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
 import net.ccbluex.liquidbounce.features.command.shortcuts.ShortcutParser
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.minecraft.util.EnumChatFormatting
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 
@@ -85,7 +84,7 @@ class CommandManager {
      */
     fun autoComplete(input: String): Boolean {
         this.latestAutoComplete = this.getCompletions(input) ?: emptyArray()
-        return input.startsWith(this.prefix) || this.latestAutoComplete.isNotEmpty()
+        return input.startsWith(this.prefix) && this.latestAutoComplete.isNotEmpty()
     }
 
     /**
@@ -100,7 +99,7 @@ class CommandManager {
 
             return if (args.size > 1) {
                 val command = getCommand(args[0].substring(1))
-                val tabCompletions = command?.tabComplete(args.drop(1).toTypedArray())?.map { EnumChatFormatting.GRAY.toString() + it + EnumChatFormatting.RESET }
+                val tabCompletions = command?.tabComplete(args.drop(1).toTypedArray())
 
                 tabCompletions?.toTypedArray()
             } else {
@@ -117,7 +116,7 @@ class CommandManager {
                             it.alias.first { alias -> alias.startsWith(rawInput, true) }
                         }
 
-                        EnumChatFormatting.GRAY.toString() + this.prefix + alias + EnumChatFormatting.RESET
+                        this.prefix + alias
                     }
                     .toTypedArray()
             }

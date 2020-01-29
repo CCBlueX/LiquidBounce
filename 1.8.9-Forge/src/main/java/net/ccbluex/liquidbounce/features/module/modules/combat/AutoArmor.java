@@ -125,6 +125,8 @@ public class AutoArmor extends Module {
             mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
 
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
+
+            return true;
         } else if (!(noMoveValue.get() && MovementUtils.isMoving()) && (!invOpenValue.get() || mc.currentScreen instanceof GuiInventory) && item != -1) {
             final boolean openInventory = simulateInventory.get() && !(mc.currentScreen instanceof GuiInventory);
 
@@ -138,9 +140,10 @@ public class AutoArmor extends Module {
             if (openInventory)
                 mc.getNetHandler().addToSendQueue(new C0DPacketCloseWindow());
 
-            return false;
+            return true;
         }
-        return true;
+        
+        return false;
     }
 
 }
