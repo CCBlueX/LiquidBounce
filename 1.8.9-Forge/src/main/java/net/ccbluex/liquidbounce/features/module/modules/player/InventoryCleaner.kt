@@ -127,6 +127,16 @@ class InventoryCleaner : Module() {
                 if (slot >= 36 && findBetterItem(slot - 36, mc.thePlayer.inventory.getStackInSlot(slot - 36)) == slot - 36)
                     return true
 
+                for (i in 0..8) {
+                    if (type(i).equals("sword", true) && item is ItemSword
+                            || type(i).equals("pickaxe", true) && item is ItemPickaxe
+                            || type(i).equals("axe", true) && item is ItemAxe) {
+                        if (findBetterItem(i, mc.thePlayer.inventory.getStackInSlot(i)) == null) {
+                            return true
+                        }
+                    }
+                }
+
                 val damage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
                         ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness)
 
