@@ -32,6 +32,7 @@ import java.util.Map;
 
 @ModuleInfo(name = "AntiBot", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
 public class AntiBot extends Module {
+
     private final BoolValue tabValue = new BoolValue("Tab", true);
     private final ListValue tabModeValue = new ListValue("TabMode", new String[] {"Equals", "Contains"}, "Contains");
     private final BoolValue entityIDValue = new BoolValue("EntityID", true);
@@ -47,6 +48,8 @@ public class AntiBot extends Module {
     private final BoolValue armorValue = new BoolValue("Armor", false);
     private final BoolValue pingValue = new BoolValue("Ping", false);
     private final BoolValue needHitValue = new BoolValue("NeedHit", false);
+    private final BoolValue duplicateInWorldValue = new BoolValue("DuplicateInWorld", false);
+    private final BoolValue duplicateInTabValue = new BoolValue("DuplicateInTab", false);
 
     private final List<Integer> ground = new ArrayList<>();
     private final List<Integer> air = new ArrayList<>();
@@ -127,24 +130,25 @@ public class AntiBot extends Module {
     }
 
     public static boolean isBot(final EntityLivingBase entity) {
-        if(!(entity instanceof EntityPlayer))
+        if (!(entity instanceof EntityPlayer))
             return false;
 
         final AntiBot antiBot = (AntiBot) LiquidBounce.moduleManager.getModule(AntiBot.class);
 
-        if(antiBot == null || !antiBot.getState())
+        if (antiBot == null || !antiBot.getState())
             return false;
 
-        if(antiBot.colorValue.get() && !entity.getDisplayName().getFormattedText().replace("§r", "").contains("§"))
+        if (antiBot.colorValue.get() && !entity.getDisplayName().getFormattedText()
+                .replace("§r", "").contains("§"))
             return true;
 
-        if(antiBot.livingTimeValue.get() && entity.ticksExisted < 40)
+        if (antiBot.livingTimeValue.get() && entity.ticksExisted < 40)
             return true;
 
-        if(antiBot.groundValue.get() && !antiBot.ground.contains(entity.getEntityId()))
+        if (antiBot.groundValue.get() && !antiBot.ground.contains(entity.getEntityId()))
             return true;
 
-        if(antiBot.airValue.get() && !antiBot.air.contains(entity.getEntityId()))
+        if (antiBot.airValue.get() && !antiBot.air.contains(entity.getEntityId()))
             return true;
 
         if(antiBot.swingValue.get() && !antiBot.swing.contains(entity.getEntityId()))
@@ -165,7 +169,8 @@ public class AntiBot extends Module {
         if(antiBot.armorValue.get()) {
             final EntityPlayer player = (EntityPlayer) entity;
 
-            if(player.inventory.armorInventory[0] == null && player.inventory.armorInventory[1] == null && player.inventory.armorInventory[2] == null && player.inventory.armorInventory[3] == null)
+            if (player.inventory.armorInventory[0] == null && player.inventory.armorInventory[1] == null &&
+                    player.inventory.armorInventory[2] == null && player.inventory.armorInventory[3] == null)
                 return true;
         }
 
@@ -186,14 +191,34 @@ public class AntiBot extends Module {
             final boolean equals = antiBot.tabModeValue.get().equalsIgnoreCase("Equals");
             final String targetName = ColorUtils.stripColor(entity.getDisplayName().getFormattedText());
 
-            for(final NetworkPlayerInfo networkPlayerInfo : mc.getNetHandler().getPlayerInfoMap()) {
-                final String networkName = ColorUtils.stripColor(EntityUtils.getName(networkPlayerInfo));
+            if (targetName != null) {
+                for (final NetworkPlayerInfo networkPlayerInfo : mc.getNetHandler().getPlayerInfoMap()) {
+                    final String networkName = ColorUtils.stripColor(EntityUtils.getName(networkPlayerInfo));
 
-                if(equals ? targetName.equals(networkName) : targetName.contains(networkName))
-                    return false;
+                    if (networkName == null)
+                        continue;
+
+                    if (equals ? targetName.equals(networkName) : targetName.contains(networkName))
+                        return false;
+                }
+
+                return true;
             }
+        }
 
-            return true;
+        if(antiBot.duplicateInWorldValue.get()) {
+            if (mc.theWorld.loadedEntityList.stream()
+                    .filter(currEntity -> currEntity instanceof EntityPlayer && ((EntityPlayer) currEntity)
+                            .getDisplayNameString().equals(((EntityPlayer) currEntity).getDisplayNameString()))
+                    .count() > 1)
+                return true;
+        }
+
+        if(antiBot.duplicateInTabValue.get()) {
+            if (mc.getNetHandler().getPlayerInfoMap().stream()
+                    .filter(networkPlayer -> entity.getName().equals(ColorUtils.stripColor(EntityUtils.getName(networkPlayer))))
+                    .count() > 1)
+                return true;
         }
 
         return entity.getName().isEmpty() || entity.getName().equals(mc.thePlayer.getName());

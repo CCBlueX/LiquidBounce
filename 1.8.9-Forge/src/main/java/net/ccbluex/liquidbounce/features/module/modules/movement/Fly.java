@@ -33,6 +33,7 @@ import java.math.RoundingMode;
 
 @ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F)
 public class Fly extends Module {
+
     public final ListValue modeValue = new ListValue("Mode", new String[] {"Vanilla", "SmoothVanilla", "NCP", "OldNCP", "AAC", "AACv3", "FastAACv3", "AAC3.3.12", "AAC3.3.12-Glide", "AAC3.3.13", "Gomme", "Flag", "CubeCraft", "InfinityCubeCraft", "InfinityVCubeCraft", "Hypixel", "OtherHypixel", "LatestHypixel", "BoostHypixel", "FreeHypixel", "Rewinside", "TeleportRewinside", "Mineplex", "KeepAlive", "MineSecure", "Spartan", "Spartan2", "BugSpartan", "KillSwitch", "HawkEye", "Minesucht", "Jetpack", "HAC", "WatchCat", "NeruxVace"}, "Vanilla");
     private final FloatValue vanillaSpeedValue = new FloatValue("VanillaSpeed", 2F, 0F, 5F);
     private final BoolValue vanillaKickBypassValue = new BoolValue("VanillaKickBypass", false);
@@ -147,6 +148,7 @@ public class Fly extends Module {
                 }
 
                 mc.thePlayer.jump();
+                mc.thePlayer.posY += 0.42F; // Visual
                 boostHypixelState = 1;
                 moveSpeed = 0.1D;
                 lastDistance = 0D;
