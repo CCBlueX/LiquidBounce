@@ -9,6 +9,7 @@ import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 
 public class ArmorPiece {
+
     private ItemStack itemStack;
     private int slot;
 
