@@ -19,7 +19,7 @@ object BlockUtils : MinecraftInstance() {
      * Get block from [blockPos]
      */
     @JvmStatic
-    fun getBlock(blockPos: BlockPos?): Block? = mc.theWorld.getBlockState(blockPos).block
+    fun getBlock(blockPos: BlockPos?): Block? = mc.theWorld?.getBlockState(blockPos)?.block
 
     /**
      * Get material from [blockPos]
