@@ -47,6 +47,8 @@ public class AntiBot extends Module {
     private final BoolValue armorValue = new BoolValue("Armor", false);
     private final BoolValue pingValue = new BoolValue("Ping", false);
     private final BoolValue needHitValue = new BoolValue("NeedHit", false);
+    private final BoolValue duplicateInWorldValue = new BoolValue("DuplicateInWorld", false);
+    private final BoolValue duplicateInTabValue = new BoolValue("DuplicateInTab", false);
 
     private final List<Integer> ground = new ArrayList<>();
     private final List<Integer> air = new ArrayList<>();
@@ -189,11 +191,43 @@ public class AntiBot extends Module {
             for(final NetworkPlayerInfo networkPlayerInfo : mc.getNetHandler().getPlayerInfoMap()) {
                 final String networkName = ColorUtils.stripColor(EntityUtils.getName(networkPlayerInfo));
 
+                assert targetName != null;
+                assert networkName != null;
                 if(equals ? targetName.equals(networkName) : targetName.contains(networkName))
                     return false;
             }
 
             return true;
+        }
+
+        if(antiBot.duplicateInWorldValue.get()) {
+            HashMap<String, Integer> displayNames = new HashMap<String, Integer>();
+            for(final Entity worldEntity : mc.theWorld.getLoadedEntityList()) {
+                if (worldEntity instanceof EntityPlayer){
+                    final String entityName = ((EntityPlayer) worldEntity).getDisplayNameString();
+                    displayNames.put(entityName, displayNames.get(entityName)==null ? 1 : displayNames.get(entityName) + 1);
+                }
+            }
+            if (displayNames.get(((EntityPlayer) entity).getDisplayNameString())!=null && displayNames.get(((EntityPlayer) entity).getDisplayNameString()) > 1){
+                return true;
+            }
+
+        }
+
+        if(antiBot.duplicateInTabValue.get()) {
+            HashMap<String, Integer> Names = new HashMap<String, Integer>();
+            for(final NetworkPlayerInfo networkPlayerInfo : mc.getNetHandler().getPlayerInfoMap()) {
+                final String networkName = ColorUtils.stripColor(EntityUtils.getName(networkPlayerInfo));
+                assert networkName != null;
+                if (networkName.contains(entity.getName())){
+                    Names.put(entity.getName(), Names.get(entity.getName())==null ? 1 : Names.get(entity.getName()) + 1);
+                }
+            }
+            if (Names.get(entity.getName())!=null && Names.get(entity.getName()) > 1){
+                return true;
+            }
+
+
         }
 
         return entity.getName().isEmpty() || entity.getName().equals(mc.thePlayer.getName());
