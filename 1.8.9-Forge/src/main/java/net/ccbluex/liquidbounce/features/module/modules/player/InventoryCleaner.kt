@@ -124,6 +124,9 @@ class InventoryCleaner : Module() {
             val item = itemStack.item
 
             if (item is ItemSword || item is ItemTool) {
+                if (slot >= 36 && findBetterItem(slot - 36, mc.thePlayer.inventory.getStackInSlot(slot - 36)) == slot - 36)
+                    return true
+
                 val damage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
                         ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness)
 
@@ -288,7 +291,7 @@ class InventoryCleaner : Module() {
                     val item = stack?.item
 
                     if (item is ItemBucket && item.isFull == Blocks.flowing_water && !type(index).equals("Water", ignoreCase = true)) {
-                        val replaceCurr = slotStack == null || (slotStack.item is ItemBucket && (slotStack.item as ItemBucket).isFull != Blocks.flowing_water)
+                        val replaceCurr = slotStack == null || slotStack.item !is ItemBucket || (slotStack.item as ItemBucket).isFull != Blocks.flowing_water
 
                         return if (replaceCurr) index else null
                     }
