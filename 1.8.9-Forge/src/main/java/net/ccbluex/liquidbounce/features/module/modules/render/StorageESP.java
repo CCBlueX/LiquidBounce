@@ -33,7 +33,7 @@ import static org.lwjgl.opengl.GL11.*;
 @ModuleInfo(name = "StorageESP", description = "Allows you to see chests, dispensers, etc. through walls.", category = ModuleCategory.RENDER)
 public class StorageESP extends Module {
 
-    private final ListValue modeValue = new ListValue("Mode", new String[] {"Box", "OtherBox", "Outline", "ShaderOutline", "ShaderGlow", "2D", "WireFrame"}, "Outline");
+    private final ListValue modeValue = new ListValue("Mode", new String[]{"Box", "OtherBox", "Outline", "ShaderOutline", "ShaderGlow", "2D", "WireFrame"}, "Outline");
 
     private final BoolValue chestValue = new BoolValue("Chest", true);
     private final BoolValue enderChestValue = new BoolValue("EnderChest", true);
@@ -46,7 +46,7 @@ public class StorageESP extends Module {
         try {
             final String mode = modeValue.get();
 
-            if(mode.equalsIgnoreCase("outline")) {
+            if (mode.equalsIgnoreCase("outline")) {
                 ClientUtils.disableFastRender();
                 OutlineUtils.checkSetupFBO();
             }
@@ -54,7 +54,7 @@ public class StorageESP extends Module {
             float gamma = mc.gameSettings.gammaSetting;
             mc.gameSettings.gammaSetting = 100000.0F;
 
-            for(final TileEntity tileEntity : mc.theWorld.loadedTileEntityList) {
+            for (final TileEntity tileEntity : mc.theWorld.loadedTileEntityList) {
                 Color color = null;
 
                 if (chestValue.get() && tileEntity instanceof TileEntityChest && !ChestAura.INSTANCE.getClickedBlocks().contains(tileEntity.getPos()))
@@ -63,24 +63,24 @@ public class StorageESP extends Module {
                 if (enderChestValue.get() && tileEntity instanceof TileEntityEnderChest && !ChestAura.INSTANCE.getClickedBlocks().contains(tileEntity.getPos()))
                     color = Color.MAGENTA;
 
-                if(furnaceValue.get() && tileEntity instanceof TileEntityFurnace)
+                if (furnaceValue.get() && tileEntity instanceof TileEntityFurnace)
                     color = Color.BLACK;
 
-                if(dispenserValue.get() && tileEntity instanceof TileEntityDispenser)
+                if (dispenserValue.get() && tileEntity instanceof TileEntityDispenser)
                     color = Color.BLACK;
 
-                if(hopperValue.get() && tileEntity instanceof TileEntityHopper)
+                if (hopperValue.get() && tileEntity instanceof TileEntityHopper)
                     color = Color.GRAY;
 
-                if(color == null)
+                if (color == null)
                     continue;
 
-                if(!(tileEntity instanceof TileEntityChest || tileEntity instanceof TileEntityEnderChest)) {
+                if (!(tileEntity instanceof TileEntityChest || tileEntity instanceof TileEntityEnderChest)) {
                     RenderUtils.drawBlockBox(tileEntity.getPos(), color, !mode.equalsIgnoreCase("otherbox"));
                     continue;
                 }
 
-                switch(mode.toLowerCase()) {
+                switch (mode.toLowerCase()) {
                     case "otherbox":
                     case "box":
                         RenderUtils.drawBlockBox(tileEntity.getPos(), color, !mode.equalsIgnoreCase("otherbox"));
@@ -99,6 +99,8 @@ public class StorageESP extends Module {
                         OutlineUtils.renderFour(color);
                         TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.getPartialTicks(), -1);
                         OutlineUtils.renderFive();
+
+                        OutlineUtils.setColor(Color.WHITE);
                         break;
                     case "wireframe":
                         glPushMatrix();
@@ -120,9 +122,9 @@ public class StorageESP extends Module {
                 }
             }
 
-            for(final Entity entity : mc.theWorld.loadedEntityList)
-                if(entity instanceof EntityMinecartChest) {
-                    switch(mode.toLowerCase()) {
+            for (final Entity entity : mc.theWorld.loadedEntityList)
+                if (entity instanceof EntityMinecartChest) {
+                    switch (mode.toLowerCase()) {
                         case "otherbox":
                         case "box":
                             RenderUtils.drawEntityBox(entity, new Color(0, 66, 255), !mode.equalsIgnoreCase("otherbox"));
@@ -144,6 +146,8 @@ public class StorageESP extends Module {
                             OutlineUtils.renderFour(new Color(0, 66, 255));
                             mc.getRenderManager().renderEntityStatic(entity, mc.timer.renderPartialTicks, true);
                             OutlineUtils.renderFive();
+
+                            OutlineUtils.setColor(Color.WHITE);
 
                             mc.gameSettings.entityShadows = entityShadow;
                             break;
@@ -177,7 +181,7 @@ public class StorageESP extends Module {
 
             RenderUtils.glColor(new Color(255, 255, 255, 255));
             mc.gameSettings.gammaSetting = gamma;
-        }catch(Exception ignored) {
+        } catch (Exception ignored) {
         }
     }
 
@@ -189,15 +193,15 @@ public class StorageESP extends Module {
                 ? OutlineShader.OUTLINE_SHADER : mode.equalsIgnoreCase("shaderglow")
                 ? GlowShader.GLOW_SHADER : null;
 
-        if(shader == null) return;
+        if (shader == null) return;
 
         shader.startDraw(event.getPartialTicks());
 
         try {
             final RenderManager renderManager = mc.getRenderManager();
 
-            for(final TileEntity entity : mc.theWorld.loadedTileEntityList) {
-                if(!(entity instanceof TileEntityChest))
+            for (final TileEntity entity : mc.theWorld.loadedTileEntityList) {
+                if (!(entity instanceof TileEntityChest))
                     continue;
 
                 TileEntityRendererDispatcher.instance.renderTileEntityAt(
@@ -209,13 +213,13 @@ public class StorageESP extends Module {
                 );
             }
 
-            for(final Entity entity : mc.theWorld.loadedEntityList) {
-                if(!(entity instanceof EntityMinecartChest))
+            for (final Entity entity : mc.theWorld.loadedEntityList) {
+                if (!(entity instanceof EntityMinecartChest))
                     continue;
 
                 renderManager.renderEntityStatic(entity, event.getPartialTicks(), true);
             }
-        }catch (final Exception ex) {
+        } catch (final Exception ex) {
             ClientUtils.getLogger().error("An error occurred while rendering all storages for shader esp", ex);
         }
 
