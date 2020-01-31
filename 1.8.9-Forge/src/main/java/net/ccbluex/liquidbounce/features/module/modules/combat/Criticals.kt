@@ -24,8 +24,8 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 @ModuleInfo(name = "Criticals", description = "Automatically deals critical hits.", category = ModuleCategory.COMBAT)
 class Criticals : Module() {
     val modeValue = ListValue("Mode", arrayOf("Packet", "HypixelPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump"), "packet")
-    val delayValue = IntegerValue("Delay", 0, 0, 500)
-    private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
+    val delayValue = IntegerValue("Delay", 0, 0, 2000)
+    private val hurtTimeValue = IntegerValue("HurtTime", 20, 0, 20)
 
     val msTimer = MSTimer()
 
@@ -75,7 +75,7 @@ class Criticals : Module() {
                     mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.01, z, false))
                     mc.thePlayer.setPosition(x, y + 0.01, z)
                 }
-                "jump" -> mc.thePlayer.motionY = 0.42
+                "jump" -> mc.thePlayer.motionY = 0.46
                 "lowjump" -> mc.thePlayer.motionY = 0.3425
             }
 
