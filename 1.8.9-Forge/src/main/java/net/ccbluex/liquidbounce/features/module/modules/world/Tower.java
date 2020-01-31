@@ -116,6 +116,7 @@ public class Tower extends Module {
             place();
 
         if (eventState == EventState.PRE) {
+            placeInfo = null;
             timer.update();
 
             if (autoBlockValue.get() ? InventoryUtils.findAutoBlockBlock() != -1 : mc.thePlayer.getHeldItem() != null
@@ -124,7 +125,7 @@ public class Tower extends Module {
                         mc.thePlayer.posY + 2, mc.thePlayer.posZ)) instanceof BlockAir)
                     move();
 
-                final BlockPos blockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 0.5D, mc.thePlayer.posZ);
+                final BlockPos blockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1D, mc.thePlayer.posZ);
                 if (mc.theWorld.getBlockState(blockPos).getBlock() instanceof BlockAir) {
                     if (search(blockPos) && rotationsValue.get()) {
                         final VecRotation vecRotation = RotationUtils.faceBlock(blockPos);

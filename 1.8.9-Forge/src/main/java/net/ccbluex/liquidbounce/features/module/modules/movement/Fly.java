@@ -34,18 +34,76 @@ import java.math.RoundingMode;
 @ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F)
 public class Fly extends Module {
 
-    public final ListValue modeValue = new ListValue("Mode", new String[] {"Vanilla", "SmoothVanilla", "NCP", "OldNCP", "AAC", "AACv3", "FastAACv3", "AAC3.3.12", "AAC3.3.12-Glide", "AAC3.3.13", "Gomme", "Flag", "CubeCraft", "InfinityCubeCraft", "InfinityVCubeCraft", "Hypixel", "OtherHypixel", "LatestHypixel", "BoostHypixel", "FreeHypixel", "Rewinside", "TeleportRewinside", "Mineplex", "KeepAlive", "MineSecure", "Spartan", "Spartan2", "BugSpartan", "KillSwitch", "HawkEye", "Minesucht", "Jetpack", "HAC", "WatchCat", "NeruxVace"}, "Vanilla");
+    public final ListValue modeValue = new ListValue("Mode", new String[]{
+            "Vanilla",
+            "SmoothVanilla",
+
+            // NCP
+            "NCP",
+            "OldNCP",
+
+            // AAC
+            "AAC1.9.10",
+            "AAC3.0.5",
+            "AAC3.1.6-Gomme",
+            "AAC3.3.12",
+            "AAC3.3.12-Glide",
+            "AAC3.3.13",
+
+            // CubeCraft
+            "CubeCraft",
+
+            // Hypixel
+            "Hypixel",
+            "BoostHypixel",
+            "FreeHypixel",
+
+            // Rewinside
+            "Rewinside",
+            "TeleportRewinside",
+
+            // Other server specific flys
+            "Mineplex",
+            "NeruxVace",
+            "Minesucht",
+
+            // Spartan
+            "Spartan",
+            "Spartan2",
+            "BugSpartan",
+
+            // Other anticheats
+            "MineSecure",
+            "HawkEye",
+            "HAC",
+            "WatchCat",
+
+            // Other
+            "Jetpack",
+            "KeepAlive",
+            "Flag"
+    }, "Vanilla");
+
     private final FloatValue vanillaSpeedValue = new FloatValue("VanillaSpeed", 2F, 0F, 5F);
     private final BoolValue vanillaKickBypassValue = new BoolValue("VanillaKickBypass", false);
-    private final FloatValue mineplexSpeedValue = new FloatValue("MineplexSpeed", 1F, 0.5F, 10F);
+
     private final FloatValue ncpMotionValue = new FloatValue("NCPMotion", 0F, 0F, 1F);
-    private final FloatValue aacSpeedValue = new FloatValue("AACSpeed", 0.3F, 0F, 1F);
+
+    // AAC
+    private final FloatValue aacSpeedValue = new FloatValue("AAC1.9.10-Speed", 0.3F, 0F, 1F);
+    private final BoolValue aacFast = new BoolValue("AAC3.0.5-Fast", true);
     private final FloatValue aacMotion = new FloatValue("AAC3.3.12-Motion", 10F, 0.1F, 10F);
     private final FloatValue aacMotion2 = new FloatValue("AAC3.3.13-Motion", 10F, 0.1F, 10F);
+
+    // Hypixel
+    private final BoolValue hypixelBoost = new BoolValue("Hypixel-Boost", true);
+    private final IntegerValue hypixelBoostDelay = new IntegerValue("Hypixel-BoostDelay", 1200, 0, 2000);
+    private final FloatValue hypixelBoostTimer = new FloatValue("Hypixel-BoostTimer", 1F, 0F, 5F);
+
+    private final FloatValue mineplexSpeedValue = new FloatValue("MineplexSpeed", 1F, 0.5F, 10F);
     private final IntegerValue neruxVaceTicks = new IntegerValue("NeruxVace-Ticks", 6, 0, 20);
-    private final BoolValue hypixelLatestBoostValue = new BoolValue("HypixelLatest-Boost", true);
-    private final IntegerValue hypixelLatestBoostDelayValue = new IntegerValue("HypixelLatest-BoostDelay", 1200, 0, 2000);
-    private final FloatValue hypixelLatestBoostTimerValue = new FloatValue("HypixelLatest-BoostTimer", 1F, 0F, 5F);
+
+    // Visuals
     private final BoolValue markValue = new BoolValue("Mark", true);
 
     private double startY;
@@ -56,17 +114,23 @@ public class Fly extends Module {
     private boolean noPacketModify;
 
     private double aacJump;
+
     private int aac3delay;
     private int aac3glideDelay;
+
     private boolean noFlag;
+
     private final MSTimer mineSecureVClipTimer = new MSTimer();
+
     private final TickTimer spartanTimer = new TickTimer();
-    private final MSTimer hypixelTimer = new MSTimer();
+
     private long minesuchtTP;
-    private boolean hypixelSwitch;
+
     private final MSTimer mineplexTimer = new MSTimer();
+
     private boolean wasDead;
-    private final TickTimer latestHypixelTimer = new TickTimer();
+
+    private final TickTimer hypixelTimer = new TickTimer();
 
     private int boostHypixelState = 1;
     private double moveSpeed, lastDistance;
@@ -173,14 +237,15 @@ public class Fly extends Module {
     public void onDisable() {
         wasDead = false;
 
-        if(mc.thePlayer == null)
+        if (mc.thePlayer == null)
             return;
 
         noFlag = false;
 
-        final String flyMode = modeValue.get();
+        final String mode = modeValue.get();
 
-        if(!flyMode.toUpperCase().startsWith("AAC") && !flyMode.equalsIgnoreCase("LatestHypixel") && !flyMode.equalsIgnoreCase("CubeCraft")) {
+        if (!mode.toUpperCase().startsWith("AAC") && !mode.equalsIgnoreCase("Hypixel") &&
+                !mode.equalsIgnoreCase("CubeCraft")) {
             mc.thePlayer.motionX = 0;
             mc.thePlayer.motionY = 0;
             mc.thePlayer.motionZ = 0;
@@ -193,18 +258,17 @@ public class Fly extends Module {
 
     @EventTarget
     public void onUpdate(final UpdateEvent event) {
-        final String flyMode = modeValue.get();
         final float vanillaSpeed = vanillaSpeedValue.get();
 
-        switch(flyMode.toLowerCase()) {
+        switch (modeValue.get().toLowerCase()) {
             case "vanilla":
                 mc.thePlayer.capabilities.isFlying = false;
                 mc.thePlayer.motionY = 0;
                 mc.thePlayer.motionX = 0;
                 mc.thePlayer.motionZ = 0;
-                if(mc.gameSettings.keyBindJump.isKeyDown())
+                if (mc.gameSettings.keyBindJump.isKeyDown())
                     mc.thePlayer.motionY += vanillaSpeed;
-                if(mc.gameSettings.keyBindSneak.isKeyDown())
+                if (mc.gameSettings.keyBindSneak.isKeyDown())
                     mc.thePlayer.motionY -= vanillaSpeed;
                 MovementUtils.strafe(vanillaSpeed);
 
@@ -219,40 +283,6 @@ public class Fly extends Module {
                 mc.timer.timerSpeed = 0.6F;
 
                 cubecraftTeleportTickTimer.update();
-                break;
-            case "infinitycubecraft":
-                mc.timer.timerSpeed = 0.6F;
-
-                if(mc.thePlayer.onGround || startY <= mc.thePlayer.posY) {
-                    cubecraft2TickTimer.reset();
-                    cubecraftTeleportTickTimer.reset();
-                    break;
-                }
-
-                cubecraft2TickTimer.update();
-                cubecraftTeleportTickTimer.update();
-
-                if(cubecraft2TickTimer.hasTimePassed(3)) {
-                    mc.thePlayer.motionY = .07;
-                    cubecraft2TickTimer.reset();
-                }
-                break;
-            case "infinityvcubecraft":
-                mc.timer.timerSpeed = 0.5F;
-
-                if(mc.thePlayer.onGround || startY <= mc.thePlayer.posY) {
-                    cubecraft2TickTimer.reset();
-                    cubecraftTeleportTickTimer.reset();
-                    break;
-                }
-
-                cubecraft2TickTimer.update();
-                cubecraftTeleportTickTimer.update();
-
-                if(cubecraft2TickTimer.hasTimePassed(3)) {
-                    mc.thePlayer.motionY = .07;
-                    cubecraft2TickTimer.reset();
-                }
                 break;
             case "ncp":
                 mc.thePlayer.motionY = -ncpMotionValue.get();
@@ -272,7 +302,7 @@ public class Fly extends Module {
                     mc.thePlayer.motionY = 0.2D;
                 MovementUtils.strafe();
                 break;
-            case "aac":
+            case "aac1.9.10":
                 if(mc.gameSettings.keyBindJump.isKeyDown())
                     aacJump += 0.2D;
 
@@ -287,31 +317,27 @@ public class Fly extends Module {
 
                 MovementUtils.strafe();
                 break;
-            case "aacv3":
-                if(aac3delay == 2)
+            case "aac3.0.5":
+                if (aac3delay == 2)
                     mc.thePlayer.motionY = 0.1D;
-                else if(aac3delay > 2)
-                    aac3delay = 0;
-                aac3delay++;
-                break;
-            case "fastaacv3":
-                if(aac3delay == 2)
-                    mc.thePlayer.motionY = 0.1D;
-                else if(aac3delay > 2)
+                else if (aac3delay > 2)
                     aac3delay = 0;
 
-                if(mc.thePlayer.movementInput.moveStrafe == 0D)
-                    mc.thePlayer.jumpMovementFactor = 0.08F;
-                else
-                    mc.thePlayer.jumpMovementFactor = 0F;
+                if (aacFast.get()) {
+                    if (mc.thePlayer.movementInput.moveStrafe == 0D)
+                        mc.thePlayer.jumpMovementFactor = 0.08F;
+                    else
+                        mc.thePlayer.jumpMovementFactor = 0F;
+                }
+
                 aac3delay++;
                 break;
-            case "gomme":
+            case "aac3.1.6-gomme":
                 mc.thePlayer.capabilities.isFlying = true;
 
-                if(aac3delay == 2) {
+                if (aac3delay == 2) {
                     mc.thePlayer.motionY += 0.05D;
-                }else if(aac3delay > 2) {
+                } else if (aac3delay > 2) {
                     mc.thePlayer.motionY -= 0.05D;
                     aac3delay = 0;
                 }
@@ -363,15 +389,10 @@ public class Fly extends Module {
                     mineSecureVClipTimer.reset();
                 }
                 break;
-            case "killswitch":
-                mc.thePlayer.capabilities.isFlying = true;
-                break;
-            case "hawkeye":
-                mc.thePlayer.motionY = mc.thePlayer.motionY <= -0.42 ? 0.42 : -0.42;
-                break;
             case "hac":
                 mc.thePlayer.motionX *= 0.8;
                 mc.thePlayer.motionZ *= 0.8;
+            case "hawkeye":
                 mc.thePlayer.motionY = mc.thePlayer.motionY <= -0.42 ? 0.42 : -0.42;
                 break;
             case "teleportrewinside":
@@ -522,25 +543,25 @@ public class Fly extends Module {
                     mc.thePlayer.sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY + 10, mc.thePlayer.posZ, true));
                 break;
             case "neruxvace":
-                if(!mc.thePlayer.onGround)
+                if (!mc.thePlayer.onGround)
                     aac3glideDelay++;
 
-                if(aac3glideDelay >= neruxVaceTicks.get() && !mc.thePlayer.onGround) {
+                if (aac3glideDelay >= neruxVaceTicks.get() && !mc.thePlayer.onGround) {
                     aac3glideDelay = 0;
                     mc.thePlayer.motionY = .015;
                 }
                 break;
-            case "latesthypixel":
-                final int boostDelay = hypixelLatestBoostDelayValue.get();
-                if(hypixelLatestBoostValue.get() && !flyTimer.hasTimePassed(boostDelay)) {
-                    mc.timer.timerSpeed = 1F + (hypixelLatestBoostTimerValue.get() * ((float) flyTimer.hasTimeLeft(boostDelay) / (float) boostDelay));
+            case "hypixel":
+                final int boostDelay = hypixelBoostDelay.get();
+                if (hypixelBoost.get() && !flyTimer.hasTimePassed(boostDelay)) {
+                    mc.timer.timerSpeed = 1F + (hypixelBoostTimer.get() * ((float) flyTimer.hasTimeLeft(boostDelay) / (float) boostDelay));
                 }
 
-                latestHypixelTimer.update();
+                hypixelTimer.update();
 
-                if(latestHypixelTimer.hasTimePassed(2)) {
+                if (hypixelTimer.hasTimePassed(2)) {
                     mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + 1.0E-5, mc.thePlayer.posZ);
-                    latestHypixelTimer.reset();
+                    hypixelTimer.reset();
                 }
                 break;
             case "freehypixel":
@@ -561,9 +582,9 @@ public class Fly extends Module {
                 mc.thePlayer.motionY = 0;
                 mc.thePlayer.motionX = 0;
                 mc.thePlayer.motionZ = 0;
-                if(mc.gameSettings.keyBindJump.isKeyDown())
+                if (mc.gameSettings.keyBindJump.isKeyDown())
                     mc.thePlayer.motionY += vanillaSpeed;
-                if(mc.gameSettings.keyBindSneak.isKeyDown())
+                if (mc.gameSettings.keyBindSneak.isKeyDown())
                     mc.thePlayer.motionY -= vanillaSpeed;
                 MovementUtils.strafe(vanillaSpeed);
                 break;
@@ -575,11 +596,11 @@ public class Fly extends Module {
         if(modeValue.get().equalsIgnoreCase("boosthypixel")) {
             switch(event.getEventState()) {
                 case PRE:
-                    latestHypixelTimer.update();
+                    hypixelTimer.update();
 
-                    if(latestHypixelTimer.hasTimePassed(2)) {
+                    if (hypixelTimer.hasTimePassed(2)) {
                         mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + 1.0E-5, mc.thePlayer.posZ);
-                        latestHypixelTimer.reset();
+                        hypixelTimer.reset();
                     }
 
                     if(!failedStart) mc.thePlayer.motionY = 0D;
@@ -595,17 +616,17 @@ public class Fly extends Module {
 
     @EventTarget
     public void onRender3D(final Render3DEvent event) {
-        final String flyMode = modeValue.get();
+        final String mode = modeValue.get();
 
-        if(!markValue.get() || flyMode.equalsIgnoreCase("Vanilla") || flyMode.equalsIgnoreCase("SmoothVanilla") || flyMode.equalsIgnoreCase("LAAC") || flyMode.equalsIgnoreCase("KillSwitch"))
+        if (!markValue.get() || mode.equalsIgnoreCase("Vanilla") || mode.equalsIgnoreCase("SmoothVanilla"))
             return;
 
         double y = startY + 2D;
 
         RenderUtils.drawPlatform(y, mc.thePlayer.getEntityBoundingBox().maxY < y ? new Color(0, 255, 0, 90) : new Color(255, 0, 0, 90), 1);
 
-        switch(flyMode.toLowerCase()) {
-            case "aac":
+        switch (mode.toLowerCase()) {
+            case "aac1.9.10":
                 RenderUtils.drawPlatform(startY + aacJump, new Color(0, 0, 255, 90), 1);
                 break;
             case "aac3.3.12":
@@ -626,24 +647,12 @@ public class Fly extends Module {
 
             final String mode = modeValue.get();
 
-            if(mode.equalsIgnoreCase("NCP") || mode.equalsIgnoreCase("Hypixel") || mode.equalsIgnoreCase("OtherHypixel") || mode.equalsIgnoreCase("Rewinside") || (mode.equalsIgnoreCase("Mineplex") && mc.thePlayer.inventory.getCurrentItem() == null)) {
+            if (mode.equalsIgnoreCase("NCP") || mode.equalsIgnoreCase("Rewinside") ||
+                    (mode.equalsIgnoreCase("Mineplex") && mc.thePlayer.inventory.getCurrentItem() == null))
                 packetPlayer.onGround = true;
 
-                if(mode.equalsIgnoreCase("Hypixel")) {
-                    if(hypixelSwitch)
-                        packetPlayer.y += 1.1E-5D;
-                    hypixelSwitch = !hypixelSwitch;
-                }
-
-                if(mode.equalsIgnoreCase("OtherHypixel") && hypixelTimer.hasTimePassed(100)) {
-                    packetPlayer.y += 10E-4D;
-                    hypixelTimer.reset();
-                }
-            }
-
-            if(mode.equalsIgnoreCase("LatestHypixel") || mode.equalsIgnoreCase("BoostHypixel")) {
+            if (mode.equalsIgnoreCase("Hypixel") || mode.equalsIgnoreCase("BoostHypixel"))
                 packetPlayer.onGround = false;
-            }
         }
 
         if(packet instanceof S08PacketPlayerPosLook) {
@@ -659,50 +668,35 @@ public class Fly extends Module {
     @EventTarget
     public void onMove(final MoveEvent event) {
         switch(modeValue.get().toLowerCase()) {
-            case "cubecraft":
-                if(cubecraftTeleportTickTimer.hasTimePassed(2)) {
-                    final double yaw = Math.toRadians(mc.thePlayer.rotationYaw);
+            case "cubecraft": {
+                final double yaw = Math.toRadians(mc.thePlayer.rotationYaw);
 
+                if (cubecraftTeleportTickTimer.hasTimePassed(2)) {
                     event.setX(-Math.sin(yaw) * 2.4D);
                     event.setZ(Math.cos(yaw) * 2.4D);
 
                     cubecraftTeleportTickTimer.reset();
-                }else{
-                    final double yaw = Math.toRadians(mc.thePlayer.rotationYaw);
+                } else {
                     event.setX(-Math.sin(yaw) * 0.2D);
                     event.setZ(Math.cos(yaw) * 0.2D);
                 }
                 break;
-            case "infinitycubecraft":
-            case "infinityvcubecraft":
-                if(mc.thePlayer.onGround || startY <= mc.thePlayer.posY)
-                    break;
-
-                if(cubecraftTeleportTickTimer.hasTimePassed(4) && !mc.thePlayer.isSneaking()) {
-                    final double yaw = Math.toRadians(mc.thePlayer.rotationYaw);
-                    event.setX(-Math.sin(yaw) * 2);
-                    event.setZ(Math.cos(yaw) * 2);
-
-                    cubecraftTeleportTickTimer.reset();
-                }else{
-                    final double yaw = Math.toRadians(mc.thePlayer.rotationYaw);
-                    event.setX(-Math.sin(yaw) * 0.2D);
-                    event.setZ(Math.cos(yaw) * 0.2D);
-                }
-                break;
+            }
             case "boosthypixel":
-                if(!MovementUtils.isMoving()) {
+                if (!MovementUtils.isMoving()) {
                     event.setX(0D);
                     event.setZ(0D);
                     break;
                 }
 
-                if(failedStart) break;
+                if (failedStart)
+                    break;
 
-                final double amplifier = 1 + (mc.thePlayer.isPotionActive(Potion.moveSpeed) ? 0.2 * (mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).getAmplifier() + 1) : 0);
+                final double amplifier = 1 + (mc.thePlayer.isPotionActive(Potion.moveSpeed) ? 0.2 *
+                        (mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).getAmplifier() + 1) : 0);
                 final double baseSpeed = 0.29D * amplifier;
 
-                switch(boostHypixelState) {
+                switch (boostHypixelState) {
                     case 1:
                         moveSpeed = (mc.thePlayer.isPotionActive(Potion.moveSpeed) ? 1.56 : 2.034) * baseSpeed;
                         boostHypixelState = 2;
@@ -738,28 +732,31 @@ public class Fly extends Module {
 
     @EventTarget
     public void onBB(final BlockBBEvent event) {
-        if(mc.thePlayer == null)
-            return;
+        if (mc.thePlayer == null) return;
 
-        final String flyMode = modeValue.get();
+        final String mode = modeValue.get();
 
-        if(event.getBlock() instanceof BlockAir && (flyMode.equalsIgnoreCase("OtherHypixel") || flyMode.equalsIgnoreCase("Hypixel") || flyMode.equalsIgnoreCase("LatestHypixel") || flyMode.equalsIgnoreCase("BoostHypixel") || flyMode.equalsIgnoreCase("Rewinside") || (flyMode.equalsIgnoreCase("Mineplex") && mc.thePlayer.inventory.getCurrentItem() == null)) && event.getY() < mc.thePlayer.posY)
+        if (event.getBlock() instanceof BlockAir && (mode.equalsIgnoreCase("Hypixel") ||
+                mode.equalsIgnoreCase("BoostHypixel") || mode.equalsIgnoreCase("Rewinside") ||
+                (mode.equalsIgnoreCase("Mineplex") && mc.thePlayer.inventory.getCurrentItem() == null)) && event.getY() < mc.thePlayer.posY)
             event.setBoundingBox(AxisAlignedBB.fromBounds(event.getX(), event.getY(), event.getZ(), event.getX() + 1, mc.thePlayer.posY, event.getZ() + 1));
     }
 
     @EventTarget
     public void onJump(final JumpEvent e) {
-        final String flyMode = modeValue.get();
+        final String mode = modeValue.get();
 
-        if(flyMode.equalsIgnoreCase("Hypixel") || flyMode.equalsIgnoreCase("OtherHypixel") || flyMode.equalsIgnoreCase("LatestHypixel") || flyMode.equalsIgnoreCase("BoostHypixel") || flyMode.equalsIgnoreCase("Rewinside") || (flyMode.equalsIgnoreCase("Mineplex") && mc.thePlayer.inventory.getCurrentItem() == null))
+        if (mode.equalsIgnoreCase("Hypixel") || mode.equalsIgnoreCase("BoostHypixel") ||
+                mode.equalsIgnoreCase("Rewinside") || (mode.equalsIgnoreCase("Mineplex") && mc.thePlayer.inventory.getCurrentItem() == null))
             e.cancelEvent();
     }
 
     @EventTarget
     public void onStep(final StepEvent e) {
-        final String flyMode = modeValue.get();
+        final String mode = modeValue.get();
 
-        if(flyMode.equalsIgnoreCase("Hypixel") || flyMode.equalsIgnoreCase("OtherHypixel") || flyMode.equalsIgnoreCase("LatestHypixel") || flyMode.equalsIgnoreCase("BoostHypixel") || flyMode.equalsIgnoreCase("Rewinside") || (flyMode.equalsIgnoreCase("Mineplex") && mc.thePlayer.inventory.getCurrentItem() == null))
+        if (mode.equalsIgnoreCase("Hypixel") || mode.equalsIgnoreCase("BoostHypixel") ||
+                mode.equalsIgnoreCase("Rewinside") || (mode.equalsIgnoreCase("Mineplex") && mc.thePlayer.inventory.getCurrentItem() == null))
             e.setStepHeight(0F);
     }
 
