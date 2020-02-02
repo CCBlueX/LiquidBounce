@@ -48,14 +48,14 @@ public abstract class MixinGuiDisconnect extends MixinGuiScreen {
     private void initGui(CallbackInfo callbackInfo) {
         reconnectTimer = 0;
         buttonList.add(reconnectButton = new GuiButton(1, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 22, "Reconnect"));
-        buttonList.add(new GuiButton(3, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, "Random alt"));
+        buttonList.add(new GuiButton(3, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
         buttonList.add(new GuiButton(4, this.width / 2 + 2, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, "Random username"));
         buttonList.add(forgeBypassButton = new GuiButton(2, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 66, "Bypass AntiForge: " + (AntiForge.enabled ? "On" : "Off")));
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
     private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
-        switch(button.id) {
+        switch (button.id) {
             case 1:
                 ServerUtils.connectToLastServer();
                 break;
@@ -65,7 +65,7 @@ public abstract class MixinGuiDisconnect extends MixinGuiScreen {
                 LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 3:
-                if(!GuiTheAltening.Companion.getApiKey().isEmpty()) {
+                if (!GuiTheAltening.Companion.getApiKey().isEmpty()) {
                     final String apiKey = GuiTheAltening.Companion.getApiKey();
                     final TheAltening theAltening = new TheAltening(apiKey);
 
@@ -82,13 +82,13 @@ public abstract class MixinGuiDisconnect extends MixinGuiScreen {
                         LiquidBounce.eventManager.callEvent(new SessionEvent());
                         ServerUtils.connectToLastServer();
                         break;
-                    }catch(final Throwable throwable) {
+                    } catch (final Throwable throwable) {
                         ClientUtils.getLogger().error("Failed to login into random account from TheAltening.", throwable);
                     }
                 }
 
                 final List<MinecraftAccount> accounts = LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts;
-                if(accounts.isEmpty()) break;
+                if (accounts.isEmpty()) break;
 
                 final MinecraftAccount minecraftAccount = accounts.get(new Random().nextInt(accounts.size()));
                 GuiAltManager.login(minecraftAccount);
@@ -104,7 +104,7 @@ public abstract class MixinGuiDisconnect extends MixinGuiScreen {
     @Override
     public void updateScreen() {
         reconnectTimer++;
-        if(reconnectTimer > 100)
+        if (reconnectTimer > 100)
             ServerUtils.connectToLastServer();
     }
 
