@@ -57,8 +57,7 @@ class Criticals : Module() {
                     mc.thePlayer.onCriticalHit(entity)
                 }
 
-                "hypixelpacket" -> if (mc.thePlayer.ticksExisted % 9 == 0) {
-                    //This check does NOT need to exist. You already have msTimer, why do you need to check for this?
+                "hypixelpacket" -> {
                     mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.11, z, false))
                     mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.1100013579, z, false))
                     mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.0000013579, z, false))
