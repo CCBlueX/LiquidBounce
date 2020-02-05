@@ -39,7 +39,7 @@ class GuiUpdate : GuiScreen() {
     override fun actionPerformed(button: GuiButton) {
         when (button.id) {
             1 -> mc.displayGuiScreen(GuiMainMenu())
-            2 -> MiscUtils.showURL("https://liquidbounce.net/#download")
+            2 -> MiscUtils.showURL("https://liquidbounce.net/download")
         }
     }
 
