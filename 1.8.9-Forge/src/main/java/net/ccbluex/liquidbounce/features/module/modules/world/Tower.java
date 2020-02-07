@@ -31,6 +31,7 @@ import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.network.play.client.C09PacketHeldItemChange;
 import net.minecraft.network.play.client.C0APacketAnimation;
 import net.minecraft.util.*;
+import net.minecraft.stats.StatList;
 import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
@@ -140,6 +141,12 @@ public class Tower extends Module {
         }
     }
 
+    //Send jump packets, bypasses Hypixel.
+    private void fakeJump() {
+        mc.thePlayer.isAirBorne = true;
+        mc.thePlayer.triggerAchievement(StatList.jumpStat);
+    }
+    
     /**
      * Move player
      */
@@ -147,21 +154,27 @@ public class Tower extends Module {
         switch (modeValue.get().toLowerCase()) {
             case "jump":
                 if (mc.thePlayer.onGround && timer.hasTimePassed(jumpDelayValue.get())) {
+                    fakeJump();
                     mc.thePlayer.motionY = jumpMotionValue.get();
                     timer.reset();
                 }
                 break;
             case "motion":
-                if (mc.thePlayer.onGround) mc.thePlayer.motionY = 0.42D;
-                else if (mc.thePlayer.motionY < 0.1D) mc.thePlayer.motionY = -0.3D;
+                if (mc.thePlayer.onGround) {
+                    fakeJump();
+                    mc.thePlayer.motionY = 0.42D;
+                } else if (mc.thePlayer.motionY < 0.1D) mc.thePlayer.motionY = -0.3D;
                 break;
             case "motiontp":
-                if (mc.thePlayer.onGround) mc.thePlayer.motionY = 0.42D;
-                else if (mc.thePlayer.motionY < 0.23D)
+                if (mc.thePlayer.onGround) {
+                    fakeJump();
+                    mc.thePlayer.motionY = 0.42D;
+                } else if (mc.thePlayer.motionY < 0.23D)
                     mc.thePlayer.setPosition(mc.thePlayer.posX, (int) mc.thePlayer.posY, mc.thePlayer.posZ);
                 break;
             case "packet":
                 if (mc.thePlayer.onGround && timer.hasTimePassed(2)) {
+                    fakeJump();
                     mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX,
                             mc.thePlayer.posY + 0.42D, mc.thePlayer.posZ, false));
                     mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX,
@@ -175,25 +188,30 @@ public class Tower extends Module {
                     mc.thePlayer.motionY = 0;
 
                 if ((mc.thePlayer.onGround || !teleportGroundValue.get()) && timer.hasTimePassed(teleportDelayValue.get())) {
+                    fakeJump();
                     mc.thePlayer.setPositionAndUpdate(mc.thePlayer.posX, mc.thePlayer.posY + teleportHeightValue.get(), mc.thePlayer.posZ);
                     timer.reset();
                 }
                 break;
             case "constantmotion":
                 if (mc.thePlayer.onGround) {
+                    fakeJump();
                     jumpGround = mc.thePlayer.posY;
                     mc.thePlayer.motionY = constantMotionValue.get();
                 }
 
                 if (mc.thePlayer.posY > jumpGround + constantMotionJumpGroundValue.get()) {
+                    fakeJump();
                     mc.thePlayer.setPosition(mc.thePlayer.posX, (int) mc.thePlayer.posY, mc.thePlayer.posZ);
                     mc.thePlayer.motionY = constantMotionValue.get();
                     jumpGround = mc.thePlayer.posY;
                 }
                 break;
             case "aac3.3.9":
-                if (mc.thePlayer.onGround) mc.thePlayer.motionY = 0.4001;
-
+                if (mc.thePlayer.onGround) {
+                    fakeJump();
+                    mc.thePlayer.motionY = 0.4001;
+                }
                 mc.timer.timerSpeed = 1F;
 
                 if (mc.thePlayer.motionY < 0) {

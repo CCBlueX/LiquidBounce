@@ -57,10 +57,10 @@ class Criticals : Module() {
                     mc.thePlayer.onCriticalHit(entity)
                 }
 
-                "hypixelpacket" -> if (mc.thePlayer.ticksExisted % 9 == 0) {
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, false))
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + RandomUtils.nextDouble(0.01, 0.06), z, false))
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, false))
+                "hypixelpacket" -> {
+                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.11, z, false))
+                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.1100013579, z, false))
+                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.0000013579, z, false))
                     mc.thePlayer.onCriticalHit(entity)
                 }
 
