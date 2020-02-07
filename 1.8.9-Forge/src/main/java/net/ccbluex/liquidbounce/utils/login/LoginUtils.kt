@@ -3,63 +3,82 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.utils.login;
+package net.ccbluex.liquidbounce.utils.login
 
-import com.mojang.authlib.Agent;
-import com.mojang.authlib.exceptions.AuthenticationException;
-import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
-import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
-import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.event.SessionEvent;
-import net.ccbluex.liquidbounce.utils.MinecraftInstance;
-import net.minecraft.util.Session;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import com.google.gson.JsonParser
+import com.mojang.authlib.Agent
+import com.mojang.authlib.exceptions.AuthenticationException
+import com.mojang.authlib.exceptions.AuthenticationUnavailableException
+import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
+import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.SessionEvent
+import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.login.UserUtils.getUUID
+import net.minecraft.util.Session
+import java.net.Proxy
+import java.util.*
 
-import java.net.Proxy;
+object LoginUtils : MinecraftInstance() {
 
-@SideOnly(Side.CLIENT)
-public final class LoginUtils extends MinecraftInstance {
+    @JvmStatic
+    fun login(username: String?, password: String?): LoginResult {
+        val userAuthentication = YggdrasilAuthenticationService(Proxy.NO_PROXY, "").createUserAuthentication(Agent.MINECRAFT) as YggdrasilUserAuthentication
 
-    public static LoginResult login(final String username, final String password) {
-        final YggdrasilUserAuthentication userAuthentication = (YggdrasilUserAuthentication)
-                new YggdrasilAuthenticationService(Proxy.NO_PROXY, "").createUserAuthentication(Agent.MINECRAFT);
-        userAuthentication.setUsername(username);
-        userAuthentication.setPassword(password);
+        userAuthentication.setUsername(username)
+        userAuthentication.setPassword(password)
 
-        try {
-            userAuthentication.logIn();
-
-            mc.session = new Session(userAuthentication.getSelectedProfile().getName(),
-                    userAuthentication.getSelectedProfile().getId().toString(), userAuthentication.getAuthenticatedToken(), "mojang");
-            LiquidBounce.eventManager.callEvent(new SessionEvent());
-
-            return LoginResult.LOGGED;
-        }catch(AuthenticationUnavailableException exception) {
-            return LoginResult.NO_CONTACT;
-        }catch(AuthenticationException exception) {
-            if(exception.getMessage().contains("Invalid username or password."))
-                return LoginResult.INVALID_ACCOUNT_DATA;
-            else if(exception.getMessage().toLowerCase().contains("account migrated"))
-                return LoginResult.MIGRATED;
-            else
-                return LoginResult.NO_CONTACT;
-        }catch(NullPointerException exception) {
-            return LoginResult.WRONG_PASSWORD;
+        return try {
+            userAuthentication.logIn()
+            mc.session = Session(userAuthentication.selectedProfile.name,
+                    userAuthentication.selectedProfile.id.toString(), userAuthentication.authenticatedToken, "mojang")
+            LiquidBounce.eventManager.callEvent(SessionEvent())
+            LoginResult.LOGGED
+        } catch (exception: AuthenticationUnavailableException) {
+            LoginResult.NO_CONTACT
+        } catch (exception: AuthenticationException) {
+            val message = exception.message!!
+            when {
+                message.contains("invalid username or password.", ignoreCase = true) -> LoginResult.INVALID_ACCOUNT_DATA
+                message.contains("account migrated", ignoreCase = true) -> LoginResult.MIGRATED
+                else -> LoginResult.NO_CONTACT
+            }
+        } catch (exception: NullPointerException) {
+            LoginResult.WRONG_PASSWORD
         }
     }
 
-    public static void loginCracked(final String username) {
-        mc.session = new Session(username, UserUtils.INSTANCE.getUUID(username), "-", "legacy");
-        LiquidBounce.eventManager.callEvent(new SessionEvent());
+    @JvmStatic
+    fun loginCracked(username: String?) {
+        mc.session = Session(username, getUUID(username!!), "-", "legacy")
+        LiquidBounce.eventManager.callEvent(SessionEvent())
     }
 
-    public enum LoginResult {
-        WRONG_PASSWORD,
-        NO_CONTACT,
-        INVALID_ACCOUNT_DATA,
-        MIGRATED,
-        LOGGED
+    @JvmStatic
+    fun loginSessionId(sessionId: String): LoginResult {
+        val decodedSessionData = try {
+            String(Base64.getDecoder().decode(sessionId.split(".")[1]), Charsets.UTF_8)
+        } catch (e: Exception) {
+            return LoginResult.FAILED_PARSE_TOKEN
+        }
+
+        val sessionObject = JsonParser().parse(decodedSessionData).asJsonObject
+        val uuid = sessionObject.get("spr").asString
+        val accessToken = sessionObject.get("yggt").asString
+
+        if (!UserUtils.isValidToken(accessToken)) {
+            return LoginResult.INVALID_ACCOUNT_DATA
+        }
+
+        val username = UserUtils.getUsername(uuid) ?: return LoginResult.INVALID_ACCOUNT_DATA
+
+        mc.session = Session(username, uuid, accessToken, "mojang")
+        LiquidBounce.eventManager.callEvent(SessionEvent())
+
+        return LoginResult.LOGGED
+    }
+
+    enum class LoginResult {
+        WRONG_PASSWORD, NO_CONTACT, INVALID_ACCOUNT_DATA, MIGRATED, LOGGED, FAILED_PARSE_TOKEN
     }
 }
