@@ -217,7 +217,8 @@ public class Fly extends Module {
                     mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY + 0.0000013579, mc.thePlayer.posZ, false));
                     fallDistance -= 0.0624986421;
                 }
-
+                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true));
+                
                 mc.thePlayer.jump();
                 mc.thePlayer.posY += 0.42F; // Visual
                 boostHypixelState = 1;
