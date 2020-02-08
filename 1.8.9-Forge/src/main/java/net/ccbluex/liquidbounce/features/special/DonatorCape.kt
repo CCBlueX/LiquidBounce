@@ -12,6 +12,8 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.login.UserUtils
+import net.minecraftforge.fml.relauncher.Side
+import net.minecraftforge.fml.relauncher.SideOnly
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpPatch
@@ -21,12 +23,13 @@ import org.apache.http.message.BasicHeader
 import org.json.JSONObject
 import kotlin.concurrent.thread
 
+@SideOnly(Side.CLIENT)
 class DonatorCape : Listenable, MinecraftInstance() {
 
     @EventTarget
     fun onSession(event: SessionEvent) {
         if (!GuiDonatorCape.capeEnabled || GuiDonatorCape.transferCode.isEmpty() ||
-                !UserUtils.isValidToken(mc.session.token))
+                !UserUtils.isValidTokenOffline(mc.session.token))
             return
 
         thread {
