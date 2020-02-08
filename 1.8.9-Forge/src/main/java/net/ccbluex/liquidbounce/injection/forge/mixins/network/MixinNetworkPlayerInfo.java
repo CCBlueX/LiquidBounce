@@ -14,6 +14,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Objects;
+
 @Mixin(NetworkPlayerInfo.class)
 public class MixinNetworkPlayerInfo {
     @Shadow
@@ -25,7 +27,7 @@ public class MixinNetworkPlayerInfo {
         NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.getModule(NameProtect.class);
 
         if (nameProtect.getState() && nameProtect.skinProtectValue.get()) {
-            if (nameProtect.allPlayersValue.get() || gameProfile.getId().equals(Minecraft.getMinecraft().getSession().getProfile().getId())) {
+            if (nameProtect.allPlayersValue.get() || Objects.equals(gameProfile.getId(), Minecraft.getMinecraft().getSession().getProfile().getId())) {
                 cir.setReturnValue(DefaultPlayerSkin.getDefaultSkin(this.gameProfile.getId()));
                 cir.cancel();
             }
