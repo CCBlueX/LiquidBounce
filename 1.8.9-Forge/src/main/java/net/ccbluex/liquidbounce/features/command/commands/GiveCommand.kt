@@ -30,10 +30,21 @@ class GiveCommand : Command("give", arrayOf("item", "i", "get")) {
             }
 
             var emptySlot = -1
-            for (i in 9..44) {
-                mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
 
-                emptySlot = i
+            for (i in 36..44) {
+                if (mc.thePlayer.inventoryContainer.getSlot(i).stack == null) {
+                    emptySlot = i
+                    break
+                }
+            }
+
+            if (emptySlot == -1) {
+                for (i in 9..44) {
+                    if (mc.thePlayer.inventoryContainer.getSlot(i).stack == null) {
+                        emptySlot = i
+                        break
+                    }
+                }
             }
 
             if (emptySlot != -1) {
