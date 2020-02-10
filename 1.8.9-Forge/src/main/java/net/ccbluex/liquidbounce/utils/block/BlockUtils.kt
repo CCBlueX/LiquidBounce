@@ -19,13 +19,13 @@ object BlockUtils : MinecraftInstance() {
      * Get block from [blockPos]
      */
     @JvmStatic
-    fun getBlock(blockPos: BlockPos?): Block? = mc.theWorld?.getBlockState(blockPos)?.block
+    fun getBlock(blockPos: BlockPos): Block? = mc.theWorld?.getBlockState(blockPos)?.block
 
     /**
      * Get material from [blockPos]
      */
     @JvmStatic
-    fun getMaterial(blockPos: BlockPos?): Material? = getBlock(blockPos)?.material
+    fun getMaterial(blockPos: BlockPos?): Material? = getBlock(blockPos!!)?.material
 
     /**
      * Check [blockPos] is replaceable
@@ -43,7 +43,7 @@ object BlockUtils : MinecraftInstance() {
      * Check if [blockPos] is clickable
      */
     @JvmStatic
-    fun canBeClicked(blockPos: BlockPos?) = getBlock(blockPos)?.canCollideCheck(getState(blockPos), false) ?: false &&
+    fun canBeClicked(blockPos: BlockPos?) = getBlock(blockPos!!)?.canCollideCheck(getState(blockPos), false) ?: false &&
             mc.theWorld.worldBorder.contains(blockPos)
 
     /**
@@ -57,7 +57,7 @@ object BlockUtils : MinecraftInstance() {
      */
     @JvmStatic
     fun isFullBlock(blockPos: BlockPos?): Boolean {
-        val axisAlignedBB = getBlock(blockPos)?.getCollisionBoundingBox(mc.theWorld, blockPos, getState(blockPos))
+        val axisAlignedBB = getBlock(blockPos!!)?.getCollisionBoundingBox(mc.theWorld, blockPos, getState(blockPos))
                 ?: return false
         return axisAlignedBB.maxX - axisAlignedBB.minX == 1.0 && axisAlignedBB.maxY - axisAlignedBB.minY == 1.0 && axisAlignedBB.maxZ - axisAlignedBB.minZ == 1.0
     }

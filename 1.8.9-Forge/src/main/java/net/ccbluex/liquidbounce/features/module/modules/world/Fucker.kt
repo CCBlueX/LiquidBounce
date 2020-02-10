@@ -72,7 +72,7 @@ object Fucker : Module() {
 
         val targetId = blockValue.get()
 
-        if (pos == null || Block.getIdFromBlock(getBlock(pos)) != targetId ||
+        if (pos == null || Block.getIdFromBlock(getBlock(pos!!)) != targetId ||
                 getCenterDistance(pos!!) > rangeValue.get())
             pos = find(targetId)
 

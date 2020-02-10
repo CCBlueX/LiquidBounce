@@ -14,12 +14,14 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.PathUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.block.BlockAir
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
@@ -29,6 +31,7 @@ import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.potion.Potion
+import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "Reachaura", description = "Experimental: extra reach kill aura (tp hit)",
         category = ModuleCategory.COMBAT)
@@ -62,6 +65,7 @@ class ReachAura : Module()
     }
 
     private val rangeValue = FloatValue("Range", 20f, 1f, 100f)
+    private val tpDistanceValue = FloatValue("TpDistance",4.0f,0.5f,10.0f)
 
     // Attack delay
     private val attackTimer = MSTimer()
@@ -181,9 +185,12 @@ class ReachAura : Module()
         target = targetList?.first()
         while (clicks > 0)
         {
-            runAttack()
-            clicks--
             targetList?.removeAt(0)
+            if (isTpable(target!!))
+            {
+                runAttack()
+                clicks--
+            }
         }
         returnInitial()
     }
@@ -191,7 +198,7 @@ class ReachAura : Module()
     private fun returnInitial()
     {
         // TP back
-        for (vector3d in PathUtils.findPath(initialx!!, initialy!!, initialz!!, 4.0))
+        for (vector3d in PathUtils.findPath(initialx!!, initialy!!, initialz!!, tpDistanceValue.get().toDouble()))
         {
             mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(
                     vector3d.getX(), vector3d.getY(), vector3d.getZ(), false))
@@ -201,6 +208,9 @@ class ReachAura : Module()
 
     private fun runAttack()
     {
+        target ?: return
+        targetList ?: return
+
         if (target !in mc.theWorld.loadedEntityList)
         {
             target = null
@@ -209,8 +219,6 @@ class ReachAura : Module()
             return
         }
 
-        target ?: return
-        targetList ?: return
 
         val openInventory = mc.currentScreen is GuiInventory
         // Close inventory when open
@@ -218,7 +226,7 @@ class ReachAura : Module()
             mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
 
         // TP to entity
-        for (vector3d in PathUtils.findPath(target!!.posX, target!!.posY, target!!.posZ, 4.0))
+        for (vector3d in PathUtils.findPath(target!!.posX, target!!.posY, target!!.posZ, tpDistanceValue.get().toDouble()))
         {
             mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(
                     vector3d.getX(), vector3d.getY(), vector3d.getZ(), false))
@@ -229,6 +237,20 @@ class ReachAura : Module()
 
     private fun isAlive(entity: EntityLivingBase) = entity.isEntityAlive && entity.health > 0 ||
             entity.hurtTime > 5
+
+
+    private fun isTpable(entity: EntityLivingBase): Boolean
+    {
+        for (vector3d in PathUtils.findPath(entity.posX,entity.posY,entity.posZ, 1.0))
+        {
+            var pass = BlockUtils.getBlock(BlockPos(vector3d.x,vector3d.y + 2,vector3d.z)) is BlockAir &&
+                    BlockUtils.getBlock(BlockPos(vector3d.x,vector3d.y + 1,vector3d.z)) is BlockAir
+            if (!pass) return false
+        }
+        return true
+    }
+
+
 
     /**
      * Check if [entity] is selected as enemy with current target options and other modules
