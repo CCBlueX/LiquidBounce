@@ -22,6 +22,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Objects;
+
 @Mixin(AbstractClientPlayer.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
@@ -70,7 +72,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
         final NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.getModule(NameProtect.class);
 
         if(nameProtect.getState() && nameProtect.skinProtectValue.get()) {
-            if(!nameProtect.allPlayersValue.get() && !getGameProfile().getName().equals(Minecraft.getMinecraft().thePlayer.getGameProfile().getName()))
+            if (!nameProtect.allPlayersValue.get() && !Objects.equals(getGameProfile().getName(), Minecraft.getMinecraft().thePlayer.getGameProfile().getName()))
                 return;
 
             callbackInfoReturnable.setReturnValue(DefaultPlayerSkin.getDefaultSkin(getUniqueID()));

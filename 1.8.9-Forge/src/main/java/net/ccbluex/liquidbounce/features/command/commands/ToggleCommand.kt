@@ -21,12 +21,24 @@ class ToggleCommand : Command("toggle", arrayOf("t")) {
                 return
             }
 
-            module.toggle()
+            if (args.size > 2) {
+                val newState = args[2].toLowerCase();
+
+                if (newState == "on" || newState == "off") {
+                    module.state = newState == "on"
+                } else {
+                    chatSyntax("toggle <module> [on/off]")
+                    return
+                }
+            } else {
+                module.toggle()
+            }
+
             chat("${if (module.state) "Enabled" else "Disabled"} module §8${module.name}§3.")
             return
         }
 
-        chatSyntax("toggle <module>")
+        chatSyntax("toggle <module> [on/off]")
     }
 
     override fun tabComplete(args: Array<String>): List<String> {
