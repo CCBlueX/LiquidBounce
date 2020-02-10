@@ -38,7 +38,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
         this.buttonList.add(GuiButton(2, width - 80, j + 24 * 2, 70, 20, "Delete"))
         this.buttonList.add(GuiButton(3, width - 80, j + 24 * 3, 70, 20, "Reload"))
         this.buttonList.add(GuiButton(4, width - 80, j + 24 * 4, 70, 20, "Folder"))
-        this.buttonList.add(GuiButton(5, width - 80, j + 24 * 5, 70, 20, "Wiki"))
+        this.buttonList.add(GuiButton(5, width - 80, j + 24 * 5, 70, 20, "Docs"))
         this.buttonList.add(GuiButton(6, width - 80, j + 24 * 6, 70, 20, "Find Scripts"))
     }
 
@@ -131,7 +131,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                 MiscUtils.showErrorPopup(t.javaClass.name, t.message)
             }
             5 -> try {
-                Desktop.getDesktop().browse(URL("https://github.com/CCBlueX/LiquidBounce-ScriptAPI/wiki").toURI())
+                Desktop.getDesktop().browse(URL("https://liquidbounce.net/docs/ScriptAPI/Getting%20Started").toURI())
             } catch (ignored: Exception) { }
 
             6 -> try {
