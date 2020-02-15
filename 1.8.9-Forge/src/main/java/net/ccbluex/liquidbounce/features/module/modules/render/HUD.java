@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner;
-import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.util.ResourceLocation;
@@ -56,13 +55,10 @@ public class HUD extends Module {
             return;
 
         if (getState() && blurValue.get() && !mc.entityRenderer.isShaderActive() && event.getGuiScreen() != null &&
-                !(event.getGuiScreen() instanceof GuiChat || event.getGuiScreen() instanceof GuiHudDesigner)) {
-            ClientUtils.displayChatMessage("Load shader for '" + event.getGuiScreen() + "'...");
+                !(event.getGuiScreen() instanceof GuiChat || event.getGuiScreen() instanceof GuiHudDesigner))
             mc.entityRenderer.loadShader(new ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json"));
-        } else if (mc.entityRenderer.getShaderGroup() != null &&
-                mc.entityRenderer.getShaderGroup().getShaderGroupName().contains("liquidbounce/blur.json")) {
-            ClientUtils.displayChatMessage(mc.entityRenderer.getShaderGroup().getShaderGroupName());
+        else if (mc.entityRenderer.getShaderGroup() != null &&
+                mc.entityRenderer.getShaderGroup().getShaderGroupName().contains("liquidbounce/blur.json"))
             mc.entityRenderer.stopUseShader();
-        }
     }
 }
