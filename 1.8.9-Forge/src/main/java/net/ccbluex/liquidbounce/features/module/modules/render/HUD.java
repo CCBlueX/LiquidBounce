@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner;
+import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.util.ResourceLocation;
@@ -32,8 +33,8 @@ public class HUD extends Module {
     }
 
     @EventTarget
-    public void onRender2D(Render2DEvent event) {
-        if (LiquidBounce.hud == null || mc.currentScreen instanceof GuiHudDesigner)
+    public void onRender2D(final Render2DEvent event) {
+        if (mc.currentScreen instanceof GuiHudDesigner)
             return;
 
         LiquidBounce.hud.render(false);
@@ -50,13 +51,18 @@ public class HUD extends Module {
     }
 
     @EventTarget(ignoreCondition = true)
-    public void onScreenChange(ScreenEvent event) {
-        if(mc.theWorld == null || mc.thePlayer == null)
+    public void onScreen(final ScreenEvent event) {
+        if (mc.theWorld == null || mc.thePlayer == null)
             return;
 
-        if(getState() && event.getGuiScreen() != null && !(event.getGuiScreen() instanceof GuiChat || event.getGuiScreen() instanceof GuiHudDesigner) && blurValue.get())
+        if (getState() && blurValue.get() && !mc.entityRenderer.isShaderActive() && event.getGuiScreen() != null &&
+                !(event.getGuiScreen() instanceof GuiChat || event.getGuiScreen() instanceof GuiHudDesigner)) {
+            ClientUtils.displayChatMessage("Load shader for '" + event.getGuiScreen() + "'...");
             mc.entityRenderer.loadShader(new ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json"));
-        else
+        } else if (mc.entityRenderer.getShaderGroup() != null &&
+                mc.entityRenderer.getShaderGroup().getShaderGroupName().contains("liquidbounce/blur.json")) {
+            ClientUtils.displayChatMessage(mc.entityRenderer.getShaderGroup().getShaderGroupName());
             mc.entityRenderer.stopUseShader();
+        }
     }
 }
