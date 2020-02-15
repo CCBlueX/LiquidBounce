@@ -26,6 +26,7 @@ import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
+import kotlin.math.sqrt
 
 /**
  * CustomHUD text element
@@ -41,7 +42,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
         val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd")
         val HOUR_FORMAT = SimpleDateFormat("HH:mm")
 
-        val DECIMAL_FORMAT = DecimalFormat("#.00")
+        val DECIMAL_FORMAT = DecimalFormat("0.00")
 
         /**
          * Create default element
@@ -93,6 +94,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
                 "xdp" -> return mc.thePlayer.posX.toString()
                 "ydp" -> return mc.thePlayer.posY.toString()
                 "zdp" -> return mc.thePlayer.posZ.toString()
+                "velocity" -> return DECIMAL_FORMAT.format(sqrt(mc.thePlayer.motionX * mc.thePlayer.motionX + mc.thePlayer.motionZ * mc.thePlayer.motionZ))
                 "ping" -> return EntityUtils.getPing(mc.thePlayer).toString()
             }
         }
