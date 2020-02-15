@@ -62,7 +62,11 @@ object LoginUtils : MinecraftInstance() {
             return LoginResult.FAILED_PARSE_TOKEN
         }
 
-        val sessionObject = JsonParser().parse(decodedSessionData).asJsonObject
+        val sessionObject = try {
+            JsonParser().parse(decodedSessionData).asJsonObject
+        } catch (e: java.lang.Exception){
+            return LoginResult.FAILED_PARSE_TOKEN
+        }
         val uuid = sessionObject.get("spr").asString
         val accessToken = sessionObject.get("yggt").asString
 
