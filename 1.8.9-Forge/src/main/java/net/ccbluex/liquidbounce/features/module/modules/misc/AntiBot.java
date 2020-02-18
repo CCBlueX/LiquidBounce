@@ -16,6 +16,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
+import net.ccbluex.liquidbounce.value.FloatValue;
+import net.ccbluex.liquidbounce.value.IntegerValue;
 import net.ccbluex.liquidbounce.value.ListValue;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
@@ -38,6 +40,7 @@ public class AntiBot extends Module {
     private final BoolValue entityIDValue = new BoolValue("EntityID", true);
     private final BoolValue colorValue = new BoolValue("Color", false);
     private final BoolValue livingTimeValue = new BoolValue("LivingTime", false);
+    private final IntegerValue livingTimeTicksValue = new IntegerValue("LivingTimeTicks", 40, 1, 200);
     private final BoolValue groundValue = new BoolValue("Ground", true);
     private final BoolValue airValue = new BoolValue("Air", false);
     private final BoolValue invaildGroundValue = new BoolValue("InvaildGround", true);
@@ -142,7 +145,7 @@ public class AntiBot extends Module {
                 .replace("§r", "").contains("§"))
             return true;
 
-        if (antiBot.livingTimeValue.get() && entity.ticksExisted < 40)
+        if (antiBot.livingTimeValue.get() && entity.ticksExisted < antiBot.livingTimeTicksValue.get())
             return true;
 
         if (antiBot.groundValue.get() && !antiBot.ground.contains(entity.getEntityId()))
