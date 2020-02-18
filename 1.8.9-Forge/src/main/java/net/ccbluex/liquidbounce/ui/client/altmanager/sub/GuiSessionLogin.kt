@@ -87,12 +87,12 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
                 status = "§aLogging in..."
 
                 thread {
-                    val loginReeult = LoginUtils.loginSessionId(sessionTokenField.text)
+                    val loginResult = LoginUtils.loginSessionId(sessionTokenField.text)
 
-                    status = when (loginReeult) {
+                    status = when (loginResult) {
                         LoginUtils.LoginResult.LOGGED -> "§cYour name is now §f§l${mc.session.username}§c"
                         LoginUtils.LoginResult.FAILED_PARSE_TOKEN -> "§cFailed to parse Session ID!"
-                        LoginUtils.LoginResult.INVALID_ACCOUNT_DATA -> "§Invalid Session ID!"
+                        LoginUtils.LoginResult.INVALID_ACCOUNT_DATA -> "§cInvalid Session ID!"
                         else -> ""
                     }
 

@@ -157,7 +157,7 @@ class Velocity : Module() {
         val packet = event.packet
 
         if (packet is S12PacketEntityVelocity) {
-            if ((mc.theWorld?.getEntityByID(packet.entityID) ?: return) != mc.thePlayer)
+            if (mc.thePlayer == null || (mc.theWorld?.getEntityByID(packet.entityID) ?: return) != mc.thePlayer)
                 return
 
             velocityTimer.reset()
