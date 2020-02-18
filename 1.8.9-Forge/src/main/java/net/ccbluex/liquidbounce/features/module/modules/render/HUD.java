@@ -32,8 +32,8 @@ public class HUD extends Module {
     }
 
     @EventTarget
-    public void onRender2D(Render2DEvent event) {
-        if (LiquidBounce.hud == null || mc.currentScreen instanceof GuiHudDesigner)
+    public void onRender2D(final Render2DEvent event) {
+        if (mc.currentScreen instanceof GuiHudDesigner)
             return;
 
         LiquidBounce.hud.render(false);
@@ -50,13 +50,15 @@ public class HUD extends Module {
     }
 
     @EventTarget(ignoreCondition = true)
-    public void onScreenChange(ScreenEvent event) {
-        if(mc.theWorld == null || mc.thePlayer == null)
+    public void onScreen(final ScreenEvent event) {
+        if (mc.theWorld == null || mc.thePlayer == null)
             return;
 
-        if(getState() && event.getGuiScreen() != null && !(event.getGuiScreen() instanceof GuiChat || event.getGuiScreen() instanceof GuiHudDesigner) && blurValue.get())
+        if (getState() && blurValue.get() && !mc.entityRenderer.isShaderActive() && event.getGuiScreen() != null &&
+                !(event.getGuiScreen() instanceof GuiChat || event.getGuiScreen() instanceof GuiHudDesigner))
             mc.entityRenderer.loadShader(new ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json"));
-        else
+        else if (mc.entityRenderer.getShaderGroup() != null &&
+                mc.entityRenderer.getShaderGroup().getShaderGroupName().contains("liquidbounce/blur.json"))
             mc.entityRenderer.stopUseShader();
     }
 }
