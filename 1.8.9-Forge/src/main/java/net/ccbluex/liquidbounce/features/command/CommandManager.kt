@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.command
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.commands.*
 import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
 import net.ccbluex.liquidbounce.features.command.shortcuts.ShortcutParser
@@ -146,14 +147,21 @@ class CommandManager {
 
                 Pair(command, it.toTypedArray())
             }))
+
+            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.shortcutsConfig)
         } else {
             throw IllegalArgumentException("Command already exists!")
         }
     }
 
-    fun unregisterShortcut(name: String) = commands.removeIf {
-        it is Shortcut &&
-            it.command.equals(name, ignoreCase = true)
+    fun unregisterShortcut(name: String): Boolean {
+        val removed = commands.removeIf {
+            it is Shortcut && it.command.equals(name, ignoreCase = true)
+        }
+
+        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.shortcutsConfig)
+
+        return removed
     }
 
     /**
