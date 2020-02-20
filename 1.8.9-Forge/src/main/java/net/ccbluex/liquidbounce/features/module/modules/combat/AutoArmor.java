@@ -101,7 +101,7 @@ public class AutoArmor extends Module {
                 if (oldArmor.getItemStack() != null && move(8 - armorSlot, true))
                     return;
 
-                if (move(armorPiece.getSlot(), false))
+                if (mc.thePlayer.inventory.armorItemInSlot(armorSlot) == null && move(armorPiece.getSlot(), false))
                     return;
             }
         }
