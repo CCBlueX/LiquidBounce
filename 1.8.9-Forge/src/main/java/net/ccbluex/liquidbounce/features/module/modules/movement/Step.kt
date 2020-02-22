@@ -3,199 +3,286 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement;
+package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.event.*;
-import net.ccbluex.liquidbounce.features.module.Module;
-import net.ccbluex.liquidbounce.features.module.ModuleCategory;
-import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase;
-import net.ccbluex.liquidbounce.utils.MovementUtils;
-import net.ccbluex.liquidbounce.utils.block.BlockUtils;
-import net.ccbluex.liquidbounce.utils.timer.MSTimer;
-import net.ccbluex.liquidbounce.value.FloatValue;
-import net.ccbluex.liquidbounce.value.IntegerValue;
-import net.ccbluex.liquidbounce.value.ListValue;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockAir;
-import net.minecraft.block.BlockSnow;
-import net.minecraft.network.Packet;
-import net.minecraft.network.play.client.C03PacketPlayer;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
+import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
+import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockAir
+import net.minecraft.block.BlockSnow
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.stats.StatList
+import net.minecraft.util.BlockPos
+import net.minecraft.util.MathHelper
+import kotlin.math.cos
+import kotlin.math.sin
 
 @ModuleInfo(name = "Step", description = "Allows you to step up blocks.", category = ModuleCategory.MOVEMENT)
-public class Step extends Module {
+class Step : Module() {
 
-    private final ListValue modeValue = new ListValue("Mode", new String[] {"Vanilla", "Jump", "NCP", "AAC", "LAAC", "AAC3.3.4", "OldNCP", "Spartan", "Rewinside"}, "NCP");
-    private final FloatValue heightValue = new FloatValue("Height", 1F, 0.6F, 10F);
-    private final IntegerValue delayValue = new IntegerValue("Delay", 0, 0, 500);
+    /**
+     * OPTIONS
+     */
 
-    private boolean isStep;
-    private double stepX;
-    private double stepY;
-    private double stepZ;
+    private val modeValue = ListValue("Mode", arrayOf(
+            "Vanilla", "Jump", "NCP", "MotionNCP", "OldNCP", "AAC", "LAAC", "AAC3.3.4", "Spartan", "Rewinside"
+    ), "NCP")
 
-    private boolean spartanSwitch;
-    private boolean isAACStep;
+    private val heightValue = FloatValue("Height", 1F, 0.6F, 10F)
+    private val jumpHeightValue = FloatValue("JumpHeight", 0.42F, 0.37F, 0.42F)
+    private val delayValue = IntegerValue("Delay", 0, 0, 500)
 
-    private final MSTimer msTimer = new MSTimer();
+    /**
+     * VALUES
+     */
 
-    @Override
-    public void onDisable() {
-        if(mc.thePlayer == null)
-            return;
+    private var isStep = false
+    private var stepX = 0.0
+    private var stepY = 0.0
+    private var stepZ = 0.0
 
-        mc.thePlayer.stepHeight = 0.5F;
-        super.onDisable();
+    private var ncpNextStep = false
+    private var spartanSwitch = false
+    private var isAACStep = false
+
+    private val timer = MSTimer()
+
+    override fun onDisable() {
+        mc.thePlayer == null ?: return
+
+        // Change step height back to default (0.5 is default)
+        mc.thePlayer.stepHeight = 0.5F
     }
 
     @EventTarget
-    public void onUpdate(UpdateEvent event) {
-        switch(modeValue.get().toLowerCase()) {
-            case "jump":
-                if(mc.thePlayer.isCollidedHorizontally && mc.thePlayer.onGround && !mc.gameSettings.keyBindJump.isKeyDown())
-                    mc.thePlayer.jump();
-                break;
-            case "laac":
-                if(mc.thePlayer.isCollidedHorizontally && !mc.thePlayer.isOnLadder() && !mc.thePlayer.isInWater() && !mc.thePlayer.isInLava() && !mc.thePlayer.isInWeb) {
-                    if(mc.thePlayer.onGround && msTimer.hasTimePassed(delayValue.get())) {
-                        isStep = true;
-                        mc.thePlayer.motionY += 0.620000001490116;
+    fun onUpdate(event: UpdateEvent) {
+        val mode = modeValue.get()
 
-                        float f = mc.thePlayer.rotationYaw * 0.017453292F;
-                        mc.thePlayer.motionX -= MathHelper.sin(f) * 0.2F;
-                        mc.thePlayer.motionZ += MathHelper.cos(f) * 0.2F;
-                        msTimer.reset();
+        // Motion steps
+        when {
+            mode.equals("jump", true) && mc.thePlayer.isCollidedHorizontally && mc.thePlayer.onGround
+                    && !mc.gameSettings.keyBindJump.isKeyDown -> {
+                fakeJump()
+                mc.thePlayer.motionY = jumpHeightValue.get().toDouble()
+            }
+
+            mode.equals("laac", true) -> if (mc.thePlayer.isCollidedHorizontally && !mc.thePlayer.isOnLadder
+                    && !mc.thePlayer.isInWater && !mc.thePlayer.isInLava && !mc.thePlayer.isInWeb) {
+                if (mc.thePlayer.onGround && timer.hasTimePassed(delayValue.get().toLong())) {
+                    isStep = true
+                    fakeJump()
+                    mc.thePlayer.motionY += 0.620000001490116
+                    val f = mc.thePlayer.rotationYaw * 0.017453292f
+                    mc.thePlayer.motionX -= MathHelper.sin(f) * 0.2f.toDouble()
+                    mc.thePlayer.motionZ += MathHelper.cos(f) * 0.2f.toDouble()
+                    timer.reset()
+                }
+                mc.thePlayer.onGround = true
+            } else
+                isStep = false
+
+            mode.equals("aac3.3.4", true) -> if (mc.thePlayer.isCollidedHorizontally &&
+                    MovementUtils.isMoving()) {
+                if (mc.thePlayer.onGround) {
+                    // Find next block
+                    // TODO: Find better way to find if player is going to step
+                    val yaw = Math.toRadians(mc.thePlayer.rotationYaw.toDouble())
+                    val x = -sin(yaw) * 1
+                    val z = cos(yaw) * 1
+                    val blockPos = BlockPos(mc.thePlayer.posX + x, mc.thePlayer.posY + 1, mc.thePlayer.posZ + z)
+                    val block = getBlock(blockPos)
+                    val axisAlignedBB = block!!.getCollisionBoundingBox(mc.theWorld, blockPos, getState(blockPos))
+
+                    if (getBlock(BlockPos(mc.thePlayer.posX + x, mc.thePlayer.posY, mc.thePlayer.posZ + z)) !is BlockAir
+                            && (axisAlignedBB == null || block is BlockSnow)) {
+                        // Step
+                        mc.thePlayer.motionX *= 1.26
+                        mc.thePlayer.motionZ *= 1.26
+                        mc.thePlayer.jump()
+                        isAACStep = true
                     }
+                }
 
-                    mc.thePlayer.onGround = true;
-                }else
-                    isStep = false;
-                break;
-            case "aac3.3.4":
-                if(mc.thePlayer.isCollidedHorizontally && MovementUtils.isMoving()) {
-                    if(mc.thePlayer.onGround) {
-                        final double yaw = Math.toRadians(mc.thePlayer.rotationYaw);
-                        final double x = -Math.sin(yaw) * 1;
-                        final double z = Math.cos(yaw) * 1;
-                        final BlockPos blockPos = new BlockPos(mc.thePlayer.posX + x, mc.thePlayer.posY + 1, mc.thePlayer.posZ + z);
-                        final Block block = BlockUtils.getBlock(blockPos);
-                        final AxisAlignedBB axisAlignedBB = block.getCollisionBoundingBox(mc.theWorld, blockPos, BlockUtils.getState(blockPos));
-
-                        if(!(BlockUtils.getBlock(new BlockPos(mc.thePlayer.posX + x, mc.thePlayer.posY, mc.thePlayer.posZ + z)) instanceof BlockAir) && (axisAlignedBB == null || block instanceof BlockSnow)) {
-                            mc.thePlayer.motionX *= 1.26;
-                            mc.thePlayer.motionZ *= 1.26;
-                            mc.thePlayer.jump();
-
-                            isAACStep = true;
-                        }
-                    }
-
-                    if(isAACStep && mc.thePlayer.moveStrafing == 0F) {
-                        mc.thePlayer.motionY -= 0.015;
-                        mc.thePlayer.jumpMovementFactor = 0.3F;
-                    }
-                }else
-                    isAACStep = false;
-                break;
+                if (isAACStep && mc.thePlayer.moveStrafing == 0F) {
+                    mc.thePlayer.motionY -= 0.015
+                    mc.thePlayer.jumpMovementFactor = 0.3F
+                }
+            } else
+                isAACStep = false
         }
     }
 
     @EventTarget
-    public void onStep(StepEvent event) {
-        if(mc.thePlayer == null)
-            return;
+    fun onMove(event: MoveEvent) {
+        val mode = modeValue.get()
 
-        if (LiquidBounce.moduleManager.getModule(Phase.class).getState()) {
-            event.setStepHeight(0F);
-            return;
+        // Motion steps
+        when {
+            mode.equals("motionncp", true) && mc.thePlayer.isCollidedHorizontally &&
+                    !mc.gameSettings.keyBindJump.isKeyDown -> {
+                when {
+                    mc.thePlayer.onGround -> {
+                        fakeJump()
+                        event.y = 0.41999998688698
+                        ncpNextStep = true
+                    }
+
+                    ncpNextStep -> {
+                        event.y = 0.7531999805212 - 0.41999998688698
+                        ncpNextStep = false
+                    }
+
+                    else -> event.y = 1.001335979112147 - 0.7531999805212
+                }
+
+                mc.thePlayer.motionY = 0.0
+            }
+        }
+    }
+
+    @EventTarget
+    fun onStep(event: StepEvent) {
+        mc.thePlayer ?: return
+
+        // Phase should disable step
+        if (LiquidBounce.moduleManager[Phase::class.java]!!.state) {
+            event.stepHeight = 0F
+            return
         }
 
-        final Fly fly = (Fly) LiquidBounce.moduleManager.getModule(Fly.class);
+        // Some fly modes should disable step
+        val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
+        if (fly.state) {
+            val flyMode = fly.modeValue.get()
 
-        if(fly.getState()) {
-            final String flyMode = fly.modeValue.get();
-
-            if(flyMode.equalsIgnoreCase("Hypixel") || flyMode.equalsIgnoreCase("OtherHypixel") || flyMode.equalsIgnoreCase("LatestHypixel") || flyMode.equalsIgnoreCase("Rewinside") || (flyMode.equalsIgnoreCase("Mineplex") && mc.thePlayer.inventory.getCurrentItem() == null)) {
-                event.setStepHeight(0F);
-                return;
+            if (flyMode.equals("Hypixel", ignoreCase = true) ||
+                    flyMode.equals("OtherHypixel", ignoreCase = true) ||
+                    flyMode.equals("LatestHypixel", ignoreCase = true) ||
+                    flyMode.equals("Rewinside", ignoreCase = true) ||
+                    flyMode.equals("Mineplex", ignoreCase = true) && mc.thePlayer.inventory.getCurrentItem() == null) {
+                event.stepHeight = 0F
+                return
             }
         }
 
-        final String mode = modeValue.get();
 
-        if(!mc.thePlayer.onGround || !msTimer.hasTimePassed(delayValue.get()) || mode.equalsIgnoreCase("Jump") || mode.equalsIgnoreCase("LAAC") || mode.equalsIgnoreCase("AAC3.3.4")) {
-            mc.thePlayer.stepHeight = 0.5F;
-            event.setStepHeight(0.5F);
-            return;
+        val mode = modeValue.get()
+
+        // Set step to default in some cases
+        if (!mc.thePlayer.onGround || !timer.hasTimePassed(delayValue.get().toLong()) ||
+                mode.equals("Jump", ignoreCase = true) || mode.equals("MotionNCP", ignoreCase = true)
+                || mode.equals("LAAC", ignoreCase = true) || mode.equals("AAC3.3.4", ignoreCase = true)) {
+            mc.thePlayer.stepHeight = 0.5F
+            event.stepHeight = 0.5F
+            return
         }
 
-        final float height = heightValue.get();
-        mc.thePlayer.stepHeight = height;
-        event.setStepHeight(height);
+        // Set step height
+        val height = heightValue.get()
+        mc.thePlayer.stepHeight = height
+        event.stepHeight = height
 
-        if(event.getStepHeight() > 0.5F) {
-            isStep = true;
-            stepX = mc.thePlayer.posX;
-            stepY = mc.thePlayer.posY;
-            stepZ = mc.thePlayer.posZ;
+        // Detect possible step
+        if (event.stepHeight > 0.5F) {
+            isStep = true
+            stepX = mc.thePlayer.posX
+            stepY = mc.thePlayer.posY
+            stepZ = mc.thePlayer.posZ
         }
     }
 
     @EventTarget(ignoreCondition = true)
-    public void onStepConfirm(StepConfirmEvent event) {
-        if(isStep) {
-            final String mode = modeValue.get();
+    fun onStepConfirm(event: StepConfirmEvent) {
+        if (mc.thePlayer == null || !isStep) // Check if step
+            return
 
-            if(mc.thePlayer.getEntityBoundingBox().minY - stepY > 0.5D) {
-                if(mode.equalsIgnoreCase("NCP") || mode.equalsIgnoreCase("AAC")) {
-                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(stepX, stepY + 0.41999998688698D, stepZ, false));
-                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(stepX, stepY + 0.7531999805212D, stepZ, false));
-                    msTimer.reset();
-                }else if(mode.equalsIgnoreCase("Spartan")) {
-                    if(spartanSwitch) {
-                        mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(stepX, stepY + 0.41999998688698D, stepZ, false));
-                        mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(stepX, stepY + 0.7531999805212D, stepZ, false));
-                        mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(stepX, stepY + 1.001335979112147D, stepZ, false));
-                    }else
-                        mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(stepX, stepY + 0.6D, stepZ, false));
+        if (mc.thePlayer.entityBoundingBox.minY - stepY > 0.5) { // Check if full block step
+            val mode = modeValue.get()
 
-                    spartanSwitch = !spartanSwitch;
-                    msTimer.reset();
-                }else if(mode.equalsIgnoreCase("Rewinside")) {
-                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(stepX, stepY + 0.41999998688698D, stepZ, false));
-                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(stepX, stepY + 0.7531999805212D, stepZ, false));
-                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(stepX, stepY + 1.001335979112147D, stepZ, false));
-                    msTimer.reset();
+            when {
+                mode.equals("NCP", ignoreCase = true) || mode.equals("AAC", ignoreCase = true) -> {
+                    fakeJump()
+
+                    // Half legit step (1 packet missing) [COULD TRIGGER TOO MANY PACKETS]
+                    mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                            stepY + 0.41999998688698, stepZ, false))
+                    mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                            stepY + 0.7531999805212, stepZ, false))
+                    timer.reset()
+                }
+
+                mode.equals("Spartan", ignoreCase = true) -> {
+                    fakeJump()
+
+                    if (spartanSwitch) {
+                        // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
+                        mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                                stepY + 0.41999998688698, stepZ, false))
+                        mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                                stepY + 0.7531999805212, stepZ, false))
+                        mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                                stepY + 1.001335979112147, stepZ, false))
+                    } else // Force step
+                        mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                            stepY + 0.6, stepZ, false))
+
+                    // Spartan allows one unlegit step so just swap between legit and unlegit
+                    spartanSwitch = !spartanSwitch
+
+                    // Reset timer
+                    timer.reset()
+                }
+
+                mode.equals("Rewinside", ignoreCase = true) -> {
+                    fakeJump()
+
+                    // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
+                    mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                            stepY + 0.41999998688698, stepZ, false))
+                    mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                            stepY + 0.7531999805212, stepZ, false))
+                    mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                            stepY + 1.001335979112147, stepZ, false))
+
+                    // Reset timer
+                    timer.reset()
                 }
             }
-
-            isStep = false;
-            stepX = 0D;
-            stepY = 0D;
-            stepZ = 0D;
         }
+
+        isStep = false
+        stepX = 0.0
+        stepY = 0.0
+        stepZ = 0.0
+        ncpNextStep = false
     }
 
     @EventTarget(ignoreCondition = true)
-    public void onPacket(PacketEvent event) {
-        Packet packet = event.getPacket();
+    fun onPacket(event: PacketEvent) {
+        val packet = event.packet
 
-        if(packet instanceof C03PacketPlayer) {
-            final C03PacketPlayer packetPlayer = (C03PacketPlayer) packet;
-
-            if(isStep && modeValue.get().equalsIgnoreCase("OldNCP")) {
-                packetPlayer.y += 0.07D;
-                isStep = false;
-            }
+        if (packet is C03PacketPlayer && isStep && modeValue.get().equals("OldNCP", ignoreCase = true)) {
+            packet.y += 0.07
+            isStep = false
         }
     }
 
-    @Override
-    public String getTag() {
-        return modeValue.get();
+    // There could be some anti cheats which tries to detect step by checking for achievements and stuff
+    private fun fakeJump() {
+        mc.thePlayer.isAirBorne = true
+        mc.thePlayer.triggerAchievement(StatList.jumpStat)
     }
+
+    override val tag: String
+        get() = modeValue.get()
 }
