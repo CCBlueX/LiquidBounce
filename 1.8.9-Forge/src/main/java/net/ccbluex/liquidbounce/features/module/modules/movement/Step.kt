@@ -12,17 +12,12 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.BlockAir
-import net.minecraft.block.BlockSnow
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.stats.StatList
-import net.minecraft.util.BlockPos
 import net.minecraft.util.MathHelper
 import kotlin.math.cos
 import kotlin.math.sin
@@ -51,7 +46,7 @@ class Step : Module() {
     private var stepY = 0.0
     private var stepZ = 0.0
 
-    private var ncpNextStep = false
+    private var ncpNextStep = 0
     private var spartanSwitch = false
     private var isAACStep = false
 
@@ -80,42 +75,34 @@ class Step : Module() {
                     && !mc.thePlayer.isInWater && !mc.thePlayer.isInLava && !mc.thePlayer.isInWeb) {
                 if (mc.thePlayer.onGround && timer.hasTimePassed(delayValue.get().toLong())) {
                     isStep = true
+
                     fakeJump()
                     mc.thePlayer.motionY += 0.620000001490116
-                    val f = mc.thePlayer.rotationYaw * 0.017453292f
-                    mc.thePlayer.motionX -= MathHelper.sin(f) * 0.2f.toDouble()
-                    mc.thePlayer.motionZ += MathHelper.cos(f) * 0.2f.toDouble()
+
+                    val f = mc.thePlayer.rotationYaw * 0.017453292F
+                    mc.thePlayer.motionX -= MathHelper.sin(f) * 0.2
+                    mc.thePlayer.motionZ += MathHelper.cos(f) * 0.2
                     timer.reset()
                 }
+
                 mc.thePlayer.onGround = true
             } else
                 isStep = false
 
-            mode.equals("aac3.3.4", true) -> if (mc.thePlayer.isCollidedHorizontally &&
-                    MovementUtils.isMoving()) {
-                if (mc.thePlayer.onGround) {
-                    // Find next block
-                    // TODO: Find better way to find if player is going to step
-                    val yaw = Math.toRadians(mc.thePlayer.rotationYaw.toDouble())
-                    val x = -sin(yaw) * 1
-                    val z = cos(yaw) * 1
-                    val blockPos = BlockPos(mc.thePlayer.posX + x, mc.thePlayer.posY + 1, mc.thePlayer.posZ + z)
-                    val block = getBlock(blockPos)
-                    val axisAlignedBB = block!!.getCollisionBoundingBox(mc.theWorld, blockPos, getState(blockPos))
-
-                    if (getBlock(BlockPos(mc.thePlayer.posX + x, mc.thePlayer.posY, mc.thePlayer.posZ + z)) !is BlockAir
-                            && (axisAlignedBB == null || block is BlockSnow)) {
-                        // Step
-                        mc.thePlayer.motionX *= 1.26
-                        mc.thePlayer.motionZ *= 1.26
-                        mc.thePlayer.jump()
-                        isAACStep = true
-                    }
+            mode.equals("aac3.3.4", true) -> if (mc.thePlayer.isCollidedHorizontally
+                    && MovementUtils.isMoving()) {
+                if (mc.thePlayer.onGround && couldStep()) {
+                    mc.thePlayer.motionX *= 1.26
+                    mc.thePlayer.motionZ *= 1.26
+                    mc.thePlayer.jump()
+                    isAACStep = true
                 }
 
-                if (isAACStep && mc.thePlayer.moveStrafing == 0F) {
+                if (isAACStep) {
                     mc.thePlayer.motionY -= 0.015
-                    mc.thePlayer.jumpMovementFactor = 0.3F
+
+                    if(!mc.thePlayer.isUsingItem && mc.thePlayer.movementInput.moveStrafe == 0F)
+                        mc.thePlayer.jumpMovementFactor = 0.3F
                 }
             } else
                 isAACStep = false
@@ -128,24 +115,30 @@ class Step : Module() {
 
         // Motion steps
         when {
-            mode.equals("motionncp", true) && mc.thePlayer.isCollidedHorizontally &&
-                    !mc.gameSettings.keyBindJump.isKeyDown -> {
+            mode.equals("motionncp", true) && mc.thePlayer.isCollidedHorizontally && !mc.gameSettings.keyBindJump.isKeyDown -> {
                 when {
-                    mc.thePlayer.onGround -> {
+                    mc.thePlayer.onGround && couldStep() -> {
                         fakeJump()
+                        mc.thePlayer.motionY = 0.0
                         event.y = 0.41999998688698
-                        ncpNextStep = true
+                        ncpNextStep = 1
                     }
 
-                    ncpNextStep -> {
+                    ncpNextStep == 1 -> {
                         event.y = 0.7531999805212 - 0.41999998688698
-                        ncpNextStep = false
+                        ncpNextStep = 2
                     }
 
-                    else -> event.y = 1.001335979112147 - 0.7531999805212
-                }
+                    ncpNextStep == 2 -> {
+                        val yaw = Math.toRadians(mc.thePlayer.rotationYaw.toDouble())
 
-                mc.thePlayer.motionY = 0.0
+                        event.y = 1 - 0.7531999805212
+                        event.x = -sin(yaw) * 0.7
+                        event.z = cos(yaw) * 0.7
+
+                        ncpNextStep = 0
+                    }
+                }
             }
         }
     }
@@ -174,7 +167,6 @@ class Step : Module() {
                 return
             }
         }
-
 
         val mode = modeValue.get()
 
@@ -264,7 +256,6 @@ class Step : Module() {
         stepX = 0.0
         stepY = 0.0
         stepZ = 0.0
-        ncpNextStep = false
     }
 
     @EventTarget(ignoreCondition = true)
@@ -281,6 +272,16 @@ class Step : Module() {
     private fun fakeJump() {
         mc.thePlayer.isAirBorne = true
         mc.thePlayer.triggerAchievement(StatList.jumpStat)
+    }
+
+    // TODO: Find better way to check if player is able to step
+    private fun couldStep(): Boolean {
+        val yaw = Math.toRadians(mc.thePlayer.rotationYaw.toDouble())
+        val x = -sin(yaw) * 0.2
+        val z = cos(yaw) * 0.2
+
+        return mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer,
+                mc.thePlayer.entityBoundingBox.addCoord(x, 1.0, z)).size == 1
     }
 
     override val tag: String
