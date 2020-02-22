@@ -133,7 +133,7 @@ shadowJar {
         include(dependency('com.kohlschutter.junixsocket:junixsocket-common'))
         include(dependency('com.kohlschutter.junixsocket:junixsocket-native-common'))
 
-        include(dependency('org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}'))
+        include(dependency('org.jetbrains.kotlin:kotlin-stdlib'))
 
         include(dependency('com.github.TheAltening:API-Java'))
         include(dependency('com.github.TheAltening:API-Java-AuthLib'))

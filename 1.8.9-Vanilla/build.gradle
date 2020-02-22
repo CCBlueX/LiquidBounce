@@ -13,7 +13,6 @@ buildscript {
     dependencies {
         classpath group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: kotlin_version
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '2.1-SNAPSHOT'
-        classpath group: 'gradle.plugin.com.matthewprenger', name: 'CurseGradle', version: '1.0.10'
         classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.6-SNAPSHOT'
         classpath group: 'com.github.jengelman.gradle.plugins', name: 'shadow', version: '4.0.4'
     }
@@ -137,7 +136,7 @@ shadowJar {
         include(dependency('com.kohlschutter.junixsocket:junixsocket-common'))
         include(dependency('com.kohlschutter.junixsocket:junixsocket-native-common'))
 
-        include(dependency('org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}'))
+        include(dependency('org.jetbrains.kotlin:kotlin-stdlib'))
 
         include(dependency('com.github.TheAltening:API-Java'))
         include(dependency('com.github.TheAltening:API-Java-AuthLib'))
