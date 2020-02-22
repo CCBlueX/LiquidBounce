@@ -3,69 +3,96 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement;
+package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.event.EventTarget;
-import net.ccbluex.liquidbounce.event.UpdateEvent;
-import net.ccbluex.liquidbounce.features.module.Module;
-import net.ccbluex.liquidbounce.features.module.ModuleCategory;
-import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.utils.block.BlockUtils;
-import net.ccbluex.liquidbounce.value.BoolValue;
-import net.ccbluex.liquidbounce.value.ListValue;
-import net.minecraft.block.BlockStairs;
-import net.minecraft.util.BlockPos;
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockStairs
+import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "FastStairs", description = "Allows you to climb up stairs faster.", category = ModuleCategory.MOVEMENT)
-public class FastStairs extends Module {
-    private final ListValue modeValue = new ListValue("Mode", new String[] {"NCP", "AAC", "LAAC"}, "NCP");
-    private final BoolValue longJumpValue = new BoolValue("LongJump", false);
+class FastStairs : Module() {
 
-    private boolean canJump;
+    private val modeValue = ListValue("Mode", arrayOf("Step", "NCP", "AAC3.1.0", "AAC3.3.6", "AAC3.3.13"), "NCP")
+    private val longJumpValue = BoolValue("LongJump", false)
+
+    private var canJump = false
+
+    private var walkingDown = false
 
     @EventTarget
-    public void onUpdate(final UpdateEvent event) {
-        if (mc.thePlayer == null || LiquidBounce.moduleManager.getModule(Speed.class).getState())
-            return;
+    fun onUpdate(event: UpdateEvent) {
+        if (!MovementUtils.isMoving() || LiquidBounce.moduleManager[Speed::class.java]!!.state)
+            return
 
-        final BlockPos blockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY, mc.thePlayer.posZ);
+        if (mc.thePlayer.fallDistance > 0 && !walkingDown)
+            walkingDown = true
+        else if (mc.thePlayer.posY > mc.thePlayer.prevChasingPosY)
+            walkingDown = false
 
-        if(mc.thePlayer.onGround && mc.thePlayer.movementInput.moveForward > 0D) {
-            final String mode = modeValue.get();
+        val mode = modeValue.get()
 
-            if(BlockUtils.getBlock(blockPos) instanceof BlockStairs) {
-                mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + 0.5D, mc.thePlayer.posZ);
-
-                final double motion = mode.equalsIgnoreCase("NCP") ? 1.4D : mode.equalsIgnoreCase("AAC") ? 1.5D : mode.equalsIgnoreCase("AAC") ? 1.499D : 1D;
-                mc.thePlayer.motionX *= motion;
-                mc.thePlayer.motionZ *= motion;
+        if (walkingDown) {
+            when {
+                mode.equals("NCP", ignoreCase = true) ->
+                    mc.thePlayer.motionY = -1.0
+                mode.equals("AAC3.3.13", ignoreCase = true) ->
+                    mc.thePlayer.motionY -= 0.014
             }
 
-            if(BlockUtils.getBlock(blockPos.down()) instanceof BlockStairs) {
-                mc.thePlayer.motionX *= 1.3D;
-                mc.thePlayer.motionZ *= 1.3D;
+            return
+        }
 
-                if(mode.equalsIgnoreCase("LAAC")) {
-                    mc.thePlayer.motionX *= 1.18D;
-                    mc.thePlayer.motionZ *= 1.18D;
-                }
+        if (!mc.thePlayer.onGround)
+            return
 
-                canJump = true;
-            }else if((mode.equalsIgnoreCase("LAAC") || mode.equalsIgnoreCase("AAC")) && mc.thePlayer.onGround && canJump) {
-                if(longJumpValue.get()) {
-                    mc.thePlayer.jump();
-                    mc.thePlayer.motionX *= 1.35D;
-                    mc.thePlayer.motionZ *= 1.35D;
-                }
+        val blockPos = BlockPos(mc.thePlayer.posX, mc.thePlayer.entityBoundingBox.minY, mc.thePlayer.posZ)
 
-                canJump = false;
+        if (getBlock(blockPos) is BlockStairs) {
+            mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + 0.5, mc.thePlayer.posZ)
+
+            val motion = when {
+                mode.equals("NCP", ignoreCase = true) -> 1.4
+                mode.equals("AAC3.1.0", ignoreCase = true) -> 1.5
+                mode.equals("AAC3.3.13", ignoreCase = true) -> 1.2
+                else -> 1.0
             }
+
+            mc.thePlayer.motionX *= motion
+            mc.thePlayer.motionZ *= motion
+        }
+
+        if (getBlock(blockPos.down()) is BlockStairs) {
+            val motion = when {
+                mode.equals("NCP", ignoreCase = true) -> 1.3
+                mode.equals("AAC3.1.0", ignoreCase = true) -> 1.3
+                mode.equals("AAC3.3.6", ignoreCase = true) -> 1.48
+                mode.equals("AAC3.3.13", ignoreCase = true) -> 1.52
+                else -> 1.3
+            }
+
+            mc.thePlayer.motionX *= motion
+            mc.thePlayer.motionZ *= motion
+            canJump = true
+        } else if (mode.startsWith("AAC", ignoreCase = true) && canJump) {
+            if (longJumpValue.get()) {
+                mc.thePlayer.jump()
+                mc.thePlayer.motionX *= 1.35
+                mc.thePlayer.motionZ *= 1.35
+            }
+
+            canJump = false
         }
     }
 
-    @Override
-    public String getTag() {
-        return modeValue.get();
-    }
+    override val tag: String
+        get() = modeValue.get()
 }
