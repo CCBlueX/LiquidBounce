@@ -17,7 +17,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-@ModuleInfo(name = "HUD", description = "Toggles visibility of the HUD.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "HUD", description = "Toggles visibility of the HUD.", category = ModuleCategory.RENDER, array = false)
 @SideOnly(Side.CLIENT)
 public class HUD extends Module {
 
@@ -28,7 +28,6 @@ public class HUD extends Module {
 
     public HUD() {
         setState(true);
-        setArray(false);
     }
 
     @EventTarget
