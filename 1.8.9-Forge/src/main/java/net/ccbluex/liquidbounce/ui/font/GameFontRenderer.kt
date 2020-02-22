@@ -19,7 +19,7 @@ import java.awt.Color
 import java.awt.Font
 
 class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameSettings,
-        ResourceLocation("textures/font/ascii.png"), null, false) {
+        ResourceLocation("textures/font/ascii.png"), Minecraft.getMinecraft().textureManager, false) {
 
     var defaultFont = FontRenderer(font)
     private var boldFont = FontRenderer(font.deriveFont(Font.BOLD))

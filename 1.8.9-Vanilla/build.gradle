@@ -27,7 +27,7 @@ apply plugin: 'kotlin'
 apply plugin: 'idea'
 
 // Minecraft
-apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'net.minecraftforge.gradle.tweaker-client'
 apply plugin: 'org.spongepowered.mixin'
 
 // Jar packaging
@@ -58,9 +58,10 @@ idea {
 archivesBaseName = 'LiquidBounce'
 
 minecraft {
-    version = '1.8.9-11.15.1.2318-1.8.9'
+    version = '1.8.9'
     runDir = 'run'
     mappings = 'stable_22'
+    tweakClass = 'net.ccbluex.liquidbounce.injection.vanilla.TweakerMixinLoader'
     makeObfSourceJar = true
 }
 
@@ -74,6 +75,8 @@ repositories {
 }
 
 dependencies {
+    compile project(':1.8.9-Forge')
+
     compile('org.spongepowered:mixin:0.7.10-SNAPSHOT') {
         exclude module: 'launchwrapper'
     }
@@ -92,7 +95,7 @@ dependencies {
 processResources {
     inputs.property 'version', project.version
     inputs.property 'mcversion', project.minecraft.version
-    
+
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
 
@@ -146,7 +149,7 @@ shadowJar {
     classifier = ''
 }
 
-reobf { shadowJar { mappingType = 'SEARGE' } }
+reobf { shadowJar { mappingType = 'NOTCH' } }
 tasks.reobfShadowJar.mustRunAfter shadowJar
 
 configurations {
