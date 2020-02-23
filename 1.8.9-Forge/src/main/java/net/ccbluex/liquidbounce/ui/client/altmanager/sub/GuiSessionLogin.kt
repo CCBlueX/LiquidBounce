@@ -90,8 +90,6 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
                 status = "§aLogging in..."
 
                 thread {
-
-
                     val loginResult = LoginUtils.loginSessionId(sessionTokenField.text)
 
                     status = when (loginResult) {

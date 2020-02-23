@@ -40,23 +40,12 @@ class FastStairs : Module() {
 
         val mode = modeValue.get()
 
-        if (walkingDown) {
-            when {
-                mode.equals("NCP", ignoreCase = true) ->
-                    mc.thePlayer.motionY = -1.0
-                mode.equals("AAC3.3.13", ignoreCase = true) ->
-                    mc.thePlayer.motionY -= 0.014
-            }
-
-            return
-        }
-
         if (!mc.thePlayer.onGround)
             return
 
         val blockPos = BlockPos(mc.thePlayer.posX, mc.thePlayer.entityBoundingBox.minY, mc.thePlayer.posZ)
 
-        if (getBlock(blockPos) is BlockStairs) {
+        if (getBlock(blockPos) is BlockStairs && !walkingDown) {
             mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + 0.5, mc.thePlayer.posZ)
 
             val motion = when {
@@ -71,6 +60,17 @@ class FastStairs : Module() {
         }
 
         if (getBlock(blockPos.down()) is BlockStairs) {
+            if (walkingDown) {
+                when {
+                    mode.equals("NCP", ignoreCase = true) ->
+                        mc.thePlayer.motionY = -1.0
+                    mode.equals("AAC3.3.13", ignoreCase = true) ->
+                        mc.thePlayer.motionY -= 0.014
+                }
+
+                return
+            }
+
             val motion = when {
                 mode.equals("NCP", ignoreCase = true) -> 1.3
                 mode.equals("AAC3.1.0", ignoreCase = true) -> 1.3
