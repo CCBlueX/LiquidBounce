@@ -130,9 +130,9 @@ class Step : Module() {
                     }
 
                     ncpNextStep == 2 -> {
-                        val yaw = Math.toRadians(mc.thePlayer.rotationYaw.toDouble())
+                        val yaw = MovementUtils.getDirection()
 
-                        event.y = 1 - 0.7531999805212
+                        event.y = 1.001335979112147 - 0.7531999805212
                         event.x = -sin(yaw) * 0.7
                         event.z = cos(yaw) * 0.7
 
@@ -274,14 +274,13 @@ class Step : Module() {
         mc.thePlayer.triggerAchievement(StatList.jumpStat)
     }
 
-    // TODO: Find better way to check if player is able to step
     private fun couldStep(): Boolean {
-        val yaw = Math.toRadians(mc.thePlayer.rotationYaw.toDouble())
-        val x = -sin(yaw) * 0.2
-        val z = cos(yaw) * 0.2
+        val yaw = MovementUtils.getDirection()
+        val x = -sin(yaw) * 0.4
+        val z = cos(yaw) * 0.4
 
-        return mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer,
-                mc.thePlayer.entityBoundingBox.addCoord(x, 1.0, z)).size == 1
+        return mc.theWorld.getCollisionBoxes(mc.thePlayer.entityBoundingBox.offset(x, 1.001335979112147, z))
+                .isEmpty()
     }
 
     override val tag: String
