@@ -14,7 +14,7 @@ jobs:
       with:
         java-version: 1.8
     - name: Build with Gradle
-      run: "cd 1.8.9-Forge;./gradlew build;ls build/libs"
+      run: "chmod +x ./gradlew;./gradlew build;ls 1.8.9-Forge/build/libs"
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
