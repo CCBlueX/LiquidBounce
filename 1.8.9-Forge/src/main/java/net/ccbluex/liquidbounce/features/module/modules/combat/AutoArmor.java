@@ -101,7 +101,7 @@ public class AutoArmor extends Module {
                 if (oldArmor.getItemStack() != null && move(8 - armorSlot, true))
                     return;
 
-                if (move(armorPiece.getSlot(), false))
+                if (mc.thePlayer.inventory.armorItemInSlot(armorSlot) == null && move(armorPiece.getSlot(), false))
                     return;
             }
         }
@@ -115,7 +115,7 @@ public class AutoArmor extends Module {
      * @return True if it is unable to move the item
      */
     private boolean move(int item, boolean isArmorSlot) {
-        if (!isArmorSlot && item < 9 && hotbarValue.get()) {
+        if (!isArmorSlot && item < 9 && hotbarValue.get() && !(mc.currentScreen instanceof GuiInventory)) {
             mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(item));
             mc.getNetHandler().addToSendQueue(new C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(item).getStack()));
             mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
@@ -138,7 +138,7 @@ public class AutoArmor extends Module {
 
             return true;
         }
-        
+
         return false;
     }
 

@@ -51,6 +51,9 @@ public class ModulesConfig extends FileConfig {
 
                 module.setState(jsonModule.get("State").getAsBoolean());
                 module.setKeyBind(jsonModule.get("KeyBind").getAsInt());
+
+                if(jsonModule.has("Array"))
+                    module.setArray(jsonModule.get("Array").getAsBoolean());
             }
         }
     }
@@ -68,6 +71,7 @@ public class ModulesConfig extends FileConfig {
             final JsonObject jsonMod = new JsonObject();
             jsonMod.addProperty("State", module.getState());
             jsonMod.addProperty("KeyBind", module.getKeyBind());
+            jsonMod.addProperty("Array", module.getArray());
             jsonObject.add(module.getName(), jsonMod);
         }
 

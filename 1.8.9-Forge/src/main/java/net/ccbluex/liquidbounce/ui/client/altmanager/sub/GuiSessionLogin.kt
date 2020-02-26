@@ -5,9 +5,12 @@
  */
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub
 
+import com.thealtening.AltService
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.login.LoginUtils
+import net.mcleaks.MCLeaks
 import net.minecraft.client.gui.Gui
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -90,7 +93,21 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
                     val loginResult = LoginUtils.loginSessionId(sessionTokenField.text)
 
                     status = when (loginResult) {
-                        LoginUtils.LoginResult.LOGGED -> "§cYour name is now §f§l${mc.session.username}§c"
+                        LoginUtils.LoginResult.LOGGED -> {
+                            if (GuiAltManager.altService.currentService != AltService.EnumAltService.MOJANG) {
+                                try {
+                                    GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
+                                } catch (e: NoSuchFieldException) {
+                                    ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+                                } catch (e: IllegalAccessException) {
+                                    ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+                                }
+                            }
+
+                            MCLeaks.remove()
+
+                            "§cYour name is now §f§l${mc.session.username}§c"
+                        }
                         LoginUtils.LoginResult.FAILED_PARSE_TOKEN -> "§cFailed to parse Session ID!"
                         LoginUtils.LoginResult.INVALID_ACCOUNT_DATA -> "§cInvalid Session ID!"
                         else -> ""

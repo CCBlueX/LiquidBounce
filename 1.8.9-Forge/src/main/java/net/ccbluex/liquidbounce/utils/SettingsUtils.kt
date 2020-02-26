@@ -31,6 +31,7 @@ object SettingsUtils {
 
             when (args[0]) {
                 "chat" -> ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §e${translateAlternateColorCodes(StringUtils.toCompleteString(args, 1))}")
+                "unchat" -> ClientUtils.displayChatMessage(translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
 
                 "load" -> {
                     val urlRaw = StringUtils.toCompleteString(args, 1)
@@ -48,7 +49,7 @@ object SettingsUtils {
                     }
                 }
 
-                "targetPlayer" -> {
+                "targetPlayer", "targetPlayers" -> {
                     EntityUtils.targetPlayer = args[1].equals("true", ignoreCase = true)
                     ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetPlayer}§7.")
                 }

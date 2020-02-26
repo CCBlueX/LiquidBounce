@@ -28,10 +28,20 @@ open class Module : MinecraftInstance(), Listenable {
     var keyBind = Keyboard.CHAR_NONE
         set(keyBind) {
             field = keyBind
-            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
+
+            if (!LiquidBounce.isStarting)
+                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
         }
-    var slideStep = 0F
+    var array = true
+        set(array) {
+            field = array
+
+            if (!LiquidBounce.isStarting)
+                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
+        }
     private val canEnable: Boolean
+
+    var slideStep = 0F
 
     init {
         val moduleInfo = javaClass.getAnnotation(ModuleInfo::class.java)!!
@@ -40,6 +50,7 @@ open class Module : MinecraftInstance(), Listenable {
         description = moduleInfo.description
         category = moduleInfo.category
         keyBind = moduleInfo.keyBind
+        array = moduleInfo.array
         canEnable = moduleInfo.canEnable
     }
 
@@ -77,7 +88,6 @@ open class Module : MinecraftInstance(), Listenable {
     // HUD
     val hue = Math.random().toFloat()
     var slide = 0F
-    var array = true
 
     // Tag
     open val tag: String?

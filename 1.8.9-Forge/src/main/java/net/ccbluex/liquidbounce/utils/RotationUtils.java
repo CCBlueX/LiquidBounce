@@ -30,7 +30,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
     private static int keepLength;
 
     public static Rotation targetRotation;
-    public static Rotation serverRotation;
+    public static Rotation serverRotation = new Rotation(0F, 0F);
 
     public static boolean keepCurrentRotation = false;
 
