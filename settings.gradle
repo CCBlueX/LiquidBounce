@@ -1,0 +1,3 @@
+rootProject.name = 'LiquidBounce'
+include '1.8.9-Forge'
+include '1.8.9-Vanilla'

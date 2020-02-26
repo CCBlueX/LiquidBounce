@@ -45,7 +45,7 @@ public class TweakerMixinLoader implements ITweaker {
         System.out.println("[LiquidBounce] Injecting with TweakerMixinLoader.");
 
         MixinBootstrap.init();
-        Mixins.addConfiguration("liquidbounce.forge.mixins.json");
+        Mixins.addConfiguration("liquidbounce.vanilla.mixins.json");
         MixinEnvironment.getDefaultEnvironment().setSide(MixinEnvironment.Side.CLIENT);
 
         classLoader.registerTransformer(AbstractJavaLinkerTransformer.class.getName());

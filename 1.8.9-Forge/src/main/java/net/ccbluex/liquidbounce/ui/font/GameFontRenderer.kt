@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.TextEvent
+import net.ccbluex.liquidbounce.utils.ClassUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.minecraft.client.Minecraft
@@ -19,7 +20,7 @@ import java.awt.Color
 import java.awt.Font
 
 class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameSettings,
-        ResourceLocation("textures/font/ascii.png"), null, false) {
+        ResourceLocation("textures/font/ascii.png"), if (ClassUtils.hasForge()) null else Minecraft.getMinecraft().textureManager, false) {
 
     var defaultFont = FontRenderer(font)
     private var boldFont = FontRenderer(font.deriveFont(Font.BOLD))

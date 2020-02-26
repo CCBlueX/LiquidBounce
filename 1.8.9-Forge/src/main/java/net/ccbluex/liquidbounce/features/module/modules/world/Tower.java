@@ -30,8 +30,8 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.network.play.client.C09PacketHeldItemChange;
 import net.minecraft.network.play.client.C0APacketAnimation;
-import net.minecraft.util.*;
 import net.minecraft.stats.StatList;
+import net.minecraft.util.*;
 import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
@@ -43,7 +43,9 @@ public class Tower extends Module {
      * OPTIONS
      */
 
-    private final ListValue modeValue = new ListValue("Mode", new String[] {"Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9"}, "Motion");
+    private final ListValue modeValue = new ListValue("Mode", new String[] {
+            "Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4"
+    }, "Motion");
     private final BoolValue autoBlockValue = new BoolValue("AutoBlock", true);
     private final BoolValue stayAutoBlock = new BoolValue("StayAutoBlock", false);
     private final BoolValue swingValue = new BoolValue("Swing", true);
@@ -217,6 +219,15 @@ public class Tower extends Module {
                 if (mc.thePlayer.motionY < 0) {
                     mc.thePlayer.motionY -= 0.00000945;
                     mc.timer.timerSpeed = 1.6F;
+                }
+                break;
+            case "aac3.6.4":
+                if (mc.thePlayer.ticksExisted % 4 == 1) {
+                    mc.thePlayer.motionY = 0.4195464;
+                    mc.thePlayer.setPosition(mc.thePlayer.posX - 0.035, mc.thePlayer.posY, mc.thePlayer.posZ);
+                } else if (mc.thePlayer.ticksExisted % 4 == 0) {
+                    mc.thePlayer.motionY = -0.5;
+                    mc.thePlayer.setPosition(mc.thePlayer.posX + 0.035, mc.thePlayer.posY, mc.thePlayer.posZ);
                 }
                 break;
         }

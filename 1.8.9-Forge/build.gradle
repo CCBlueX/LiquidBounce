@@ -1,92 +1,96 @@
-allprojects {
-    repositories {
-        maven { url 'https://jitpack.io' }
-    }
-}
-
 buildscript {
-    ext.kotlin_version = '1.3.61'
-    
+
     repositories {
         jcenter()
         mavenLocal()
         mavenCentral()
 
-        maven {
-            name = "forge"
-            url = "https://files.minecraftforge.net/maven"
-        }
-
-        maven {
-            url = "https://plugins.gradle.org/m2"
-        }
-
-        maven {
-            name = "SpongePowered"
-            url = 'https://repo.spongepowered.org/maven'
-        }
+        maven { url 'https://files.minecraftforge.net/maven' }
+        maven { url 'https://plugins.gradle.org/m2' }
+        maven { url 'https://repo.spongepowered.org/maven' }
     }
 
     dependencies {
-        classpath "net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT"
-        classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.0.10"
-        classpath "org.spongepowered:mixingradle:0.6-SNAPSHOT"
-        classpath "com.github.jengelman.gradle.plugins:shadow:4.0.4"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: kotlin_version
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '2.1-SNAPSHOT'
+        classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.6-SNAPSHOT'
+        classpath group: 'com.github.jengelman.gradle.plugins', name: 'shadow', version: '4.0.4'
     }
 }
 
-apply plugin: "net.minecraftforge.gradle.forge"
-apply plugin: "org.spongepowered.mixin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "java"
+// Languages
+apply plugin: 'java'
+apply plugin: 'kotlin'
 
-repositories {
-    
-    mavenLocal()
-    mavenCentral()
-    jcenter()
-    
-    maven {
-        name = 'spongepowered-repo'
-        url = 'https://repo.spongepowered.org/maven/'
-    }
-}
+// IDE
+apply plugin: 'idea'
 
-version = "b71"
-group = "net.ccbluex"
-archivesBaseName = "LiquidBounce"
+// Minecraft
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'org.spongepowered.mixin'
+
+// Jar packaging
+apply plugin: 'com.github.johnrengelman.shadow'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 compileJava.options.encoding = 'UTF-8'
 
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+idea {
+    module {
+        inheritOutputDirs = true
+    }
+}
+
+archivesBaseName = 'LiquidBounce'
+
 minecraft {
-    version = "1.8.9-11.15.1.2318-1.8.9"
-    runDir = "run"
-    mappings = "stable_22"
+    version = '1.8.9-11.15.1.2318-1.8.9'
+    runDir = 'run'
+    mappings = 'stable_22'
     makeObfSourceJar = true
 }
 
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://repo.spongepowered.org/maven/' }
+}
+
 dependencies {
-    compile("org.spongepowered:mixin:0.7.10-SNAPSHOT") {
-        exclude module: "launchwrapper"
+    compile('org.spongepowered:mixin:0.7.10-SNAPSHOT') {
+        exclude module: 'launchwrapper'
     }
 
-    compile "com.jagrosh:DiscordIPC:0.4"
-    compile group: "org.jetbrains.kotlin", name: "kotlin-stdlib", version: kotlin_version
+    compile 'com.jagrosh:DiscordIPC:0.4'
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
 
-    implementation "com.github.TheAltening:API-Java:master-SNAPSHOT"
-    implementation "com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT"
-    compile "com.github.TheAltening:API-Java:api-2.0-SNAPSHOT"
-    compile "com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT"
+    implementation 'com.github.TheAltening:API-Java:master-SNAPSHOT'
+    implementation 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
+    compile 'com.github.TheAltening:API-Java:api-2.0-SNAPSHOT'
+    compile 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
 
     compile fileTree(include: ['*.jar'], dir: 'libs')
 }
 
 processResources {
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property 'version', project.version
+    inputs.property 'mcversion', project.minecraft.version
     
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
@@ -102,42 +106,20 @@ processResources {
 }
 
 mixin {
-    add sourceSets.main, "liquidbounce.mixins.refmap.json"
+    add sourceSets.main, 'liquidbounce.mixins.refmap.json'
 }
 
 jar {
     manifest.attributes(
-            "MixinConfigs": "liquidbounce.forge.mixins.json",
-            "tweakClass": "org.spongepowered.asm.launch.MixinTweaker",
-            "TweakOrder": 0,
-            "FMLCorePluginContainsFMLMod": "net.ccbluex.liquidbounce.injection.forge.MixinLoader",
-            "FMLCorePlugin": "net.ccbluex.liquidbounce.injection.forge.TransformerLoader",
-            "FMLAT": "liquidbounce_at.cfg",
-            "Manifest-Version": 1.0,
-            "Main-Class": "net.ccbluex.liquidinstruction.LiquidInstructionKt"
+            'MixinConfigs': 'liquidbounce.forge.mixins.json',
+            'tweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+            'TweakOrder': 0,
+            'FMLCorePluginContainsFMLMod': 'net.ccbluex.liquidbounce.injection.forge.MixinLoader',
+            'FMLCorePlugin': 'net.ccbluex.liquidbounce.injection.forge.TransformerLoader',
+            'FMLAT': 'liquidbounce_at.cfg',
+            'Manifest-Version': 1.0,
+            'Main-Class': 'net.ccbluex.liquidinstruction.LiquidInstructionKt'
     )
-}
-
-
-apply plugin: "idea"
-apply plugin: "kotlin"
-
-idea {
-    module {
-        inheritOutputDirs = true
-    }
-}
-
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-
-compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
 }
 
 shadowJar {
@@ -151,19 +133,19 @@ shadowJar {
         include(dependency('com.kohlschutter.junixsocket:junixsocket-common'))
         include(dependency('com.kohlschutter.junixsocket:junixsocket-native-common'))
 
-        include(dependency("org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}"))
+        include(dependency('org.jetbrains.kotlin:kotlin-stdlib'))
 
-        include(dependency("com.github.TheAltening:API-Java"))
-        include(dependency("com.github.TheAltening:API-Java-AuthLib"))
+        include(dependency('com.github.TheAltening:API-Java'))
+        include(dependency('com.github.TheAltening:API-Java-AuthLib'))
     }
 
     exclude 'dummyThing'
     exclude 'LICENSE.txt'
 
-    classifier = ""
+    classifier = ''
 }
 
-reobf { shadowJar { mappingType = "SEARGE" } }
+reobf { shadowJar { mappingType = 'SEARGE' } }
 tasks.reobfShadowJar.mustRunAfter shadowJar
 
 configurations {
