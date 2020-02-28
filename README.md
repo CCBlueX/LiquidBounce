@@ -1,5 +1,5 @@
 # LiquidBounce
-A free mixin-based injection hacked client for Minecraft using Minecraft Forge.
+A free mixin-based injection hacked-client for Minecraft using Minecraft Forge.
 
 Website: https://liquidbounce.net \
 Forum: https://forum.ccbluex.net/index.php \
