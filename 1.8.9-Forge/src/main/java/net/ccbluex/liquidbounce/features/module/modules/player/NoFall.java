@@ -113,19 +113,6 @@ public class NoFall extends Module {
                     spartanTimer.reset();
                 }
                 break;
-            case "hypixel":
-                if (mc.thePlayer.fallDistance > 1.3) {
-                    hypixel++;
-
-                    if (hypixel % 2 == 0) {
-                        mc.thePlayer.sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX,
-                                mc.thePlayer.posY, mc.thePlayer.posZ, true));
-                    } else {
-                        mc.thePlayer.sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX,
-                                mc.thePlayer.posY, mc.thePlayer.posZ, false));
-                    }
-                }
-                break;
         }
     }
 
@@ -139,6 +126,9 @@ public class NoFall extends Module {
 
         if(packet instanceof C03PacketPlayer && mode.equalsIgnoreCase("NoGround"))
             ((C03PacketPlayer) packet).onGround = false;
+        if(mc.thePlayer.fallDistance > 1.5 && packet instanceof C03PacketPlayer && mode.equalsIgnoreCase("Hypixel")){
+            ((C03PacketPlayer) packet).onGround = mc.thePlayer.ticksExisted % 2 == 0;
+        }
     }
 
     @EventTarget
