@@ -35,12 +35,7 @@ LiquidBounce is using Gradle, so make sure that it is installed properly. Instru
     - For IntelliJ: `gradlew --debug setupDevWorkspace idea genIntellijRuns build`
     - For Eclipse: `gradlew --debug setupDevWorkspace eclipse build`
 4. Open the folder as a Gradle project in your IDE.
-
-### Running LiquidBounce
-1. Open your IDE's run configuration window.
-2. Add the following to your projects VM options: <br>
-`-Dfml.coreMods.load=net.ccbluex.liquidbounce.injection.forge.MixinLoader`
-3. Now simply launch LiquidBounce inside your IDE
+5. Select either the Forge or Vanilla run configuration.
 
 ## Additional libraries
 ### Mixins
