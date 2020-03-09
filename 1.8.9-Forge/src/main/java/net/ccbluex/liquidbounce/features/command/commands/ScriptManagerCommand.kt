@@ -16,6 +16,8 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 import java.util.zip.ZipFile
+import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 
 class ScriptManagerCommand : Command("scriptmanager", arrayOf("scripts")) {
     /**
@@ -113,7 +115,13 @@ class ScriptManagerCommand : Command("scriptmanager", arrayOf("scripts")) {
 
                 args[1].equals("reload", true) -> {
                     try {
+                        LiquidBounce.commandManager = CommandManager()
+                        LiquidBounce.commandManager.registerCommands()
                         LiquidBounce.scriptManager.reloadScripts()
+                        LiquidBounce.clickGui = ClickGui()
+                        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
+                        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.modulesConfig)
+                        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.valuesConfig)
                         chat("Successfully reloaded all scripts.")
                     } catch (t: Throwable) {
                         ClientUtils.getLogger().error("Something went wrong while reloading all scripts.", t)
