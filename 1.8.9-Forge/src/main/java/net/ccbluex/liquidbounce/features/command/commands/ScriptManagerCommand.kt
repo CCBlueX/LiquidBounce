@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
@@ -16,8 +17,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 import java.util.zip.ZipFile
-import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 
 class ScriptManagerCommand : Command("scriptmanager", arrayOf("scripts")) {
     /**
