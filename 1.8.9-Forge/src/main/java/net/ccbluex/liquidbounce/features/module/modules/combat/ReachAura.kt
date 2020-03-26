@@ -41,36 +41,19 @@ class ReachAura : Module()
      * OPTIONS
      */
 
-    // CPS - Attack Speed
-    private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20)
-    {
-        override fun onChanged(oldValue: Int, newValue: Int)
-        {
-            val i = minCPS.get()
-            if (i > newValue) set(i)
-
-            attackDelay = TimeUtils.randomClickDelay(minCPS.get(), this.get())
-        }
-    }
-
-    private val minCPS: IntegerValue = object : IntegerValue("MinCPS", 5, 1, 20)
-    {
-        override fun onChanged(oldValue: Int, newValue: Int)
-        {
-            val i = maxCPS.get()
-            if (i < newValue) set(i)
-
-            attackDelay = TimeUtils.randomClickDelay(this.get(), maxCPS.get())
-        }
-    }
+    // PPS packets per sec
+    private val pPS = IntegerValue("PPS",100,0,400)
 
     private val rangeValue = FloatValue("Range", 20f, 1f, 100f)
     private val tpDistanceValue = FloatValue("TpDistance",4.0f,0.5f,10.0f)
 
     // Attack delay
-    private val attackTimer = MSTimer()
-    private var attackDelay = 0L
-    private var clicks = 0
+    //private val attackTimer = MSTimer()
+    //private var attackDelay = 0L
+    //private var clicks = 0
+    private var packets = 0
+    private var packetTimer = MSTimer()
+    private var packetDelay = 0L
 
     /**
      * MODULE
@@ -124,8 +107,8 @@ class ReachAura : Module()
     override fun onDisable()
     {
         prevTargetEntities.clear()
-        attackTimer.reset()
-        clicks = 0
+        packetTimer.reset()
+        packets = 0
         target = null
         targetList = null
         returnInitial()
@@ -154,18 +137,6 @@ class ReachAura : Module()
         }
     }
 
-    @EventTarget
-    fun onRender3D(event: Render3DEvent)
-    {
-        if (attackTimer.hasTimePassed(attackDelay))
-        {
-            clicks++
-            attackTimer.reset()
-            attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
-        }
-    }
-
-
     private fun update()
     {
         if (targetList?.size == 0)
@@ -183,15 +154,10 @@ class ReachAura : Module()
         update()
 
         target = targetList?.first()
-        while (clicks > 0)
-        {
-            targetList?.removeAt(0)
-            if (isTpable(target!!))
-            {
-                runAttack()
-                clicks--
-            }
-        }
+
+        targetList?.removeAt(0)
+
+
         returnInitial()
     }
 
