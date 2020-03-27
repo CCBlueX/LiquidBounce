@@ -24,16 +24,10 @@ class AdaptedValue(private val value : Value<Any>) {
     fun getValue() : Value<Any> = value
 
     fun set(newValue : Any) {
-        if (newValue is Number) {
-            if (value is FloatValue) {
-                value.set(newValue.toFloat())
-            } else if (value is IntegerValue) {
-                value.set(newValue.toInt())
-            }
-
-            return
-        }
-
-        value.set(newValue)
+        value.set(when {
+            value is FloatValue && newValue is Number -> newValue.toFloat()
+            value is IntegerValue && newValue is Number -> newValue.toInt()
+            else -> newValue
+        })
     }
 }
