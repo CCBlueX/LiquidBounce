@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.utils.PathUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -27,11 +26,18 @@ import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.Packet
+import net.minecraft.network.play.INetHandlerPlayServer
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C0DPacketCloseWindow
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.potion.Potion
 import net.minecraft.util.BlockPos
+import net.minecraft.util.Vec3
+import java.util.zip.DeflaterOutputStream
+import javax.vecmath.Vector3d
 
 @ModuleInfo(name = "Reachaura", description = "Experimental: extra reach kill aura (tp hit)",
         category = ModuleCategory.COMBAT)
@@ -41,19 +47,20 @@ class ReachAura : Module()
      * OPTIONS
      */
 
-    // PPS packets per sec
+    // PPS:packets per sec
     private val pPS = IntegerValue("PPS",100,0,400)
+    private val minPacketsPerGroup = IntegerValue("MinPacketsPerGroup",20,0,100)
+    private val noPositionSet = BoolValue("NoPositionSet",true)
 
     private val rangeValue = FloatValue("Range", 20f, 1f, 100f)
     private val tpDistanceValue = FloatValue("TpDistance",4.0f,0.5f,10.0f)
+    private val stopAtDistance = FloatValue("StopAtDistance",4.0f,0.0f, 6.0f)
 
     // Attack delay
     //private val attackTimer = MSTimer()
     //private var attackDelay = 0L
     //private var clicks = 0
     private var packets = 0
-    private var packetTimer = MSTimer()
-    private var packetDelay = 0L
 
     /**
      * MODULE
@@ -67,23 +74,18 @@ class ReachAura : Module()
     // Bypass
     private val swingValue = BoolValue("Swing", true)
 
-    // initial pos
-    private var initialx: Double? = null
-    private var initialy: Double? = null
-    private var initialz: Double? = null
 
     // WTF
     private var firsttick = true
+
+    //queue
+    private val reachAuraQueue = mutableListOf<Packet<INetHandlerPlayServer>>()
 
 
     override fun onEnable()
     {
         mc.thePlayer ?: return
         mc.theWorld ?: return
-
-        initialx = mc.thePlayer.posX
-        initialy = mc.thePlayer.posY
-        initialz = mc.thePlayer.posZ
 
         updateTarget()
     }
@@ -93,11 +95,9 @@ class ReachAura : Module()
     {
         if (!firsttick) return
 
-        initialx = mc.thePlayer.posX
-        initialy = mc.thePlayer.posY
-        initialz = mc.thePlayer.posZ
-
         firsttick = false
+
+        state = false
     }
 
 
@@ -107,11 +107,11 @@ class ReachAura : Module()
     override fun onDisable()
     {
         prevTargetEntities.clear()
-        packetTimer.reset()
         packets = 0
+        if (target != null)
+            returnInitial(target!!.positionVector)
         target = null
         targetList = null
-        returnInitial()
     }
 
     /**
@@ -137,38 +137,74 @@ class ReachAura : Module()
         }
     }
 
-    private fun update()
+    @EventTarget
+    fun onPacket(event: PacketEvent)
     {
-        if (targetList?.size == 0)
+        val packet = event.packet
+        if (packet is S08PacketPlayerPosLook && noPositionSet.get())
         {
-            targetList = null
-            updateTarget()
-
+            event.cancelEvent()
         }
-
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent)
+    fun onTick(event: TickEvent)
     {
-        update()
+        if (reachAuraQueue.size < pPS.get() * 5)
+        {
+            if (mc.thePlayer == null || mc.theWorld == null)
+            {
+                state = false
+                return
+            }
 
-        target = targetList?.first()
+            if (targetList?.size == 0)
+            {
+                targetList = null
+                updateTarget()
 
-        targetList?.removeAt(0)
+            }
+
+            target = targetList?.first()
+            targetList?.removeAt(0)
 
 
-        returnInitial()
+            var pos = target!!.positionVector
+            runAttack()
+            returnInitial(pos)
+        }
+
+        packets += (pPS.get() / 20 + 1)
+        if(packets >= minPacketsPerGroup.get())
+            while (packets > 0 && reachAuraQueue.size > 0)
+            {
+                mc.netHandler.addToSendQueue(reachAuraQueue.first())
+                reachAuraQueue.removeAt(0)
+                packets--
+            }
     }
 
-    private fun returnInitial()
+    private fun pathFindToCoord(fromX : Double,fromY : Double,fromZ : Double,
+            toX : Double,toY : Double,toZ : Double): MutableList<Vector3d>?
     {
+
+        return PathUtils.findPath(fromX,fromY,fromZ,
+                toX,toY,toZ,tpDistanceValue.get().toDouble())
+    }
+
+    private fun returnInitial(from : Vec3)
+    {
+        var me = mc.thePlayer
         // TP back
-        for (vector3d in PathUtils.findPath(initialx!!, initialy!!, initialz!!, tpDistanceValue.get().toDouble()))
-        {
-            mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(
-                    vector3d.getX(), vector3d.getY(), vector3d.getZ(), false))
-        }
+        var path =  pathFindToCoord(from.xCoord,from.yCoord,from.zCoord
+        ,me.posX,me.posY,me.posZ)!!
+
+        if (path.size != 0)
+            for (vector3d in path)
+            {
+                reachAuraQueue.add(C03PacketPlayer.C04PacketPlayerPosition(
+                        vector3d.getX(), vector3d.getY(), vector3d.getZ(), false))
+            }
     }
 
 
@@ -185,20 +221,25 @@ class ReachAura : Module()
             return
         }
 
-
         val openInventory = mc.currentScreen is GuiInventory
         // Close inventory when open
         if (openInventory)
-            mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
+           reachAuraQueue.add(C0DPacketCloseWindow())
 
         // TP to entity
-        for (vector3d in PathUtils.findPath(target!!.posX, target!!.posY, target!!.posZ, tpDistanceValue.get().toDouble()))
+        val me = mc.thePlayer
+        val path = pathFindToCoord(me.posX,me.posY,me.posZ,
+                target!!.posX, target!!.posY, target!!.posZ)!!
+        if (path.size != 0)
         {
-            mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(
-                    vector3d.getX(), vector3d.getY(), vector3d.getZ(), false))
-        }
+            for (vec3 in path)
+            {
+                reachAuraQueue.add(
+                        C03PacketPlayer.C04PacketPlayerPosition(vec3.x, vec3.y, vec3.z, true))
+            }
 
-        attackEntity(target!!)
+            attackEntity(target!!)
+        }
     }
 
     private fun isAlive(entity: EntityLivingBase) = entity.isEntityAlive && entity.health > 0 ||
@@ -260,7 +301,7 @@ class ReachAura : Module()
         // Attack target
         if (swingValue.get())
             mc.thePlayer.swingItem()
-        mc.netHandler.addToSendQueue(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
+        reachAuraQueue.add(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
 
 
         if (mc.thePlayer.fallDistance > 0F && !mc.thePlayer.onGround && !mc.thePlayer.isOnLadder &&
