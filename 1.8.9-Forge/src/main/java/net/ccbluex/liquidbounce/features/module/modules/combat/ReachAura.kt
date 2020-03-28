@@ -6,7 +6,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.AttackEvent
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -16,11 +19,13 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.PathUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.Block
 import net.minecraft.block.BlockAir
+import net.minecraft.block.BlockLiquid
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
@@ -32,11 +37,9 @@ import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.potion.Potion
-import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
-import java.util.zip.DeflaterOutputStream
+import java.lang.Math.pow
 import javax.vecmath.Vector3d
 
 @ModuleInfo(name = "Reachaura", description = "Experimental: extra reach kill aura (tp hit)",
@@ -55,6 +58,9 @@ class ReachAura : Module()
     private val rangeValue = FloatValue("Range", 20f, 1f, 100f)
     private val tpDistanceValue = FloatValue("TpDistance",4.0f,0.5f,10.0f)
     private val stopAtDistance = FloatValue("StopAtDistance",4.0f,0.0f, 6.0f)
+
+    private val pathFindingMode = ListValue("PathFindingMode", arrayOf("Simple",
+    "NaiveAstarGround","NaiveAstarFly"),"Simple")
 
     // Attack delay
     //private val attackTimer = MSTimer()
@@ -88,16 +94,6 @@ class ReachAura : Module()
         mc.theWorld ?: return
 
         updateTarget()
-    }
-
-    @EventTarget
-    private fun onWorldEvent(event: TickEvent)
-    {
-        if (!firsttick) return
-
-        firsttick = false
-
-        state = false
     }
 
 
@@ -150,6 +146,13 @@ class ReachAura : Module()
     @EventTarget
     fun onTick(event: TickEvent)
     {
+
+        if (!firsttick) return
+
+        firsttick = false
+
+        state = false
+
         if (reachAuraQueue.size < pPS.get() * 5)
         {
             if (mc.thePlayer == null || mc.theWorld == null)
@@ -164,6 +167,7 @@ class ReachAura : Module()
                 updateTarget()
 
             }
+
 
             target = targetList?.first()
             targetList?.removeAt(0)
@@ -187,9 +191,53 @@ class ReachAura : Module()
     private fun pathFindToCoord(fromX : Double,fromY : Double,fromZ : Double,
             toX : Double,toY : Double,toZ : Double): MutableList<Vector3d>?
     {
+        when (pathFindingMode.get().toLowerCase())
+        {
+            "simple" ->
+            {
+                val diffX = toX - fromX
+                val diffY = toY - fromY
+                val diffZ = toZ - fromZ
+                val distance = pow(diffX, 2.0) + pow(diffY, 2.0) + pow(diffZ, 2.0)
+                val ratio = 1 - stopAtDistance.get() / distance
 
-        return PathUtils.findPath(fromX,fromY,fromZ,
-                toX,toY,toZ,tpDistanceValue.get().toDouble())
+                val endX = fromX + diffX * ratio
+                val endY = fromY + diffY * ratio
+                val endZ = fromZ + diffZ * ratio
+
+                val path = PathUtils.findPath(fromX,fromY,fromZ,
+                        endX,endY,endZ,tpDistanceValue.get().toDouble())
+
+                val verify_path = PathUtils.findPath(fromX,fromY,fromZ,endX,endY,endZ,1.0)
+
+                var valid = true
+
+                val playerbbox = mc.thePlayer.entityBoundingBox
+
+                val pred : BlockUtils.Collidable = { block : Block? -> block !is BlockAir}
+
+                for (sample in verify_path)
+                {
+                    val newbbox = playerbbox.offset(sample.x - mc.thePlayer.posX,
+                    sample.y - mc.thePlayer.posY, sample.z - mc.thePlayer.posZ)
+                    if(BlockUtils.collideBlock(newbbox,pred))
+                        valid = false
+                }
+
+                if (valid) return path else return null
+            }
+
+            "naiveastarground" ->
+            {
+
+            }
+
+            "naiveastarfly" ->
+            {
+
+            }
+        }
+        TODO("use astar and implement theta star")
     }
 
     private fun returnInitial(from : Vec3)
@@ -197,7 +245,9 @@ class ReachAura : Module()
         var me = mc.thePlayer
         // TP back
         var path =  pathFindToCoord(from.xCoord,from.yCoord,from.zCoord
-        ,me.posX,me.posY,me.posZ)!!
+        ,me.posX,me.posY,me.posZ)
+
+        path ?: return
 
         if (path.size != 0)
             for (vector3d in path)
@@ -229,7 +279,10 @@ class ReachAura : Module()
         // TP to entity
         val me = mc.thePlayer
         val path = pathFindToCoord(me.posX,me.posY,me.posZ,
-                target!!.posX, target!!.posY, target!!.posZ)!!
+                target!!.posX, target!!.posY, target!!.posZ)
+
+        path ?: return
+
         if (path.size != 0)
         {
             for (vec3 in path)
@@ -244,19 +297,6 @@ class ReachAura : Module()
 
     private fun isAlive(entity: EntityLivingBase) = entity.isEntityAlive && entity.health > 0 ||
             entity.hurtTime > 5
-
-
-    private fun isTpable(entity: EntityLivingBase): Boolean
-    {
-        for (vector3d in PathUtils.findPath(entity.posX,entity.posY,entity.posZ, 1.0))
-        {
-            var pass = BlockUtils.getBlock(BlockPos(vector3d.x,vector3d.y + 2,vector3d.z)) is BlockAir &&
-                    BlockUtils.getBlock(BlockPos(vector3d.x,vector3d.y + 1,vector3d.z)) is BlockAir
-            if (!pass) return false
-        }
-        return true
-    }
-
 
 
     /**
