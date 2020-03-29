@@ -6,18 +6,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.TickEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.PathUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.Collidable
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.bBoxIntersectsBlock
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -41,6 +42,7 @@ import net.minecraft.potion.Potion
 import net.minecraft.util.Vec3
 import java.lang.Math.pow
 import javax.vecmath.Vector3d
+import kotlin.math.sqrt
 
 @ModuleInfo(name = "Reachaura", description = "Experimental: extra reach kill aura (tp hit)",
         category = ModuleCategory.COMBAT)
@@ -62,11 +64,7 @@ class ReachAura : Module()
     private val pathFindingMode = ListValue("PathFindingMode", arrayOf("Simple",
     "NaiveAstarGround","NaiveAstarFly"),"Simple")
 
-    // Attack delay
-    //private val attackTimer = MSTimer()
-    //private var attackDelay = 0L
-    //private var clicks = 0
-    private var packets = 0
+    private var packets = 0.0
 
     /**
      * MODULE
@@ -79,10 +77,6 @@ class ReachAura : Module()
 
     // Bypass
     private val swingValue = BoolValue("Swing", true)
-
-
-    // WTF
-    private var firsttick = true
 
     //queue
     private val reachAuraQueue = mutableListOf<Packet<INetHandlerPlayServer>>()
@@ -103,7 +97,7 @@ class ReachAura : Module()
     override fun onDisable()
     {
         prevTargetEntities.clear()
-        packets = 0
+        packets = 0.0
         if (target != null)
             returnInitial(target!!.positionVector)
         target = null
@@ -131,6 +125,8 @@ class ReachAura : Module()
             if (dist <= maxRange)
                 targetList!!.add(entity)
         }
+
+        if (targetList!!.size > 0) target = targetList!!.first()
     }
 
     @EventTarget
@@ -144,15 +140,8 @@ class ReachAura : Module()
     }
 
     @EventTarget
-    fun onTick(event: TickEvent)
+    fun onUpdate(event: UpdateEvent)
     {
-
-        if (!firsttick) return
-
-        firsttick = false
-
-        state = false
-
         if (reachAuraQueue.size < pPS.get() * 5)
         {
             if (mc.thePlayer == null || mc.theWorld == null)
@@ -161,24 +150,34 @@ class ReachAura : Module()
                 return
             }
 
-            if (targetList?.size == 0)
+            if (targetList?.size == 0 || target == null)
             {
                 targetList = null
                 updateTarget()
-
+                return
             }
 
-
-            target = targetList?.first()
-            targetList?.removeAt(0)
+            target = targetList!!.first()
+            targetList!!.removeAt(0)
 
 
             var pos = target!!.positionVector
             runAttack()
             returnInitial(pos)
         }
+    }
 
-        packets += (pPS.get() / 20 + 1)
+    @EventTarget
+    fun onWorldEvent(event: WorldEvent)
+    {
+        state = false
+    }
+
+    @EventTarget
+    fun onTick(event: TickEvent)
+    {
+
+        packets += (pPS.get() / 20)
         if(packets >= minPacketsPerGroup.get())
             while (packets > 0 && reachAuraQueue.size > 0)
             {
@@ -198,8 +197,8 @@ class ReachAura : Module()
                 val diffX = toX - fromX
                 val diffY = toY - fromY
                 val diffZ = toZ - fromZ
-                val distance = pow(diffX, 2.0) + pow(diffY, 2.0) + pow(diffZ, 2.0)
-                val ratio = 1 - stopAtDistance.get() / distance
+                val distance = sqrt(pow(diffX, 2.0) + pow(diffY, 2.0) + pow(diffZ, 2.0))
+                val ratio = 1.0 - (stopAtDistance.get() / distance)
 
                 val endX = fromX + diffX * ratio
                 val endY = fromY + diffY * ratio
@@ -214,13 +213,22 @@ class ReachAura : Module()
 
                 val playerbbox = mc.thePlayer.entityBoundingBox
 
-                val pred : BlockUtils.Collidable = { block : Block? -> block !is BlockAir}
 
                 for (sample in verify_path)
                 {
                     val newbbox = playerbbox.offset(sample.x - mc.thePlayer.posX,
                     sample.y - mc.thePlayer.posY, sample.z - mc.thePlayer.posZ)
-                    if(BlockUtils.collideBlock(newbbox,pred))
+                    if(BlockUtils.bBoxIntersectsBlock(newbbox,
+                                    object : Collidable
+                                    {
+                                        override fun collideBlock(block: Block?) : Boolean
+                                        {
+                                            val collide = block !is BlockAir
+                                            if (collide)
+                                                valid = false
+                                            return collide
+                                        }
+                                    }))
                         valid = false
                 }
 
