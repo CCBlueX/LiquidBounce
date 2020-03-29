@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.PathUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.Collidable
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.bBoxIntersectsBlock
@@ -48,6 +49,7 @@ import kotlin.math.sqrt
         category = ModuleCategory.COMBAT)
 class ReachAura : Module()
 {
+
     /**
      * OPTIONS
      */
@@ -64,6 +66,8 @@ class ReachAura : Module()
     private val pathFindingMode = ListValue("PathFindingMode", arrayOf("Simple",
     "NaiveAstarGround","NaiveAstarFly"),"Simple")
 
+    private val targetModeValue = ListValue("TargetMode", arrayOf("Switch", "Multi"), "Switch")
+
     private var packets = 0.0
 
     /**
@@ -73,6 +77,7 @@ class ReachAura : Module()
     // Target
     private var target: EntityLivingBase? = null
     private var targetList: ArrayList<EntityLivingBase>? = null
+    private var lastTargetPos: Vec3? = null
     private val prevTargetEntities = mutableListOf<Int>()
 
     // Bypass
@@ -126,7 +131,13 @@ class ReachAura : Module()
                 targetList!!.add(entity)
         }
 
-        if (targetList!!.size > 0) target = targetList!!.first()
+        if (targetList!!.size > 0)
+        {
+            target = targetList!!.first()
+        }
+        else if (targetModeValue.get() == "Multi")
+            state = false
+            //idk wtf, it's a dirty fix
     }
 
     @EventTarget
@@ -148,7 +159,7 @@ class ReachAura : Module()
     @EventTarget
     fun onTick(event: TickEvent)
     {
-        if (reachAuraQueue.size < pPS.get() * 5)
+        while (reachAuraQueue.size < pPS.get() * 0.1)
         {
             if (mc.thePlayer == null || mc.theWorld == null)
             {
@@ -166,10 +177,12 @@ class ReachAura : Module()
             target = targetList!!.first()
             targetList!!.removeAt(0)
 
+            val pos = target!!.positionVector
 
-            var pos = target!!.positionVector
+
             runAttack()
-            returnInitial(pos)
+            if (targetModeValue.get().equals("Switch"))
+                returnInitial(pos)
         }
 
         packets += (pPS.get() / 20)
@@ -183,7 +196,7 @@ class ReachAura : Module()
     }
 
     private fun pathFindToCoord(fromX : Double,fromY : Double,fromZ : Double,
-            toX : Double,toY : Double,toZ : Double): MutableList<Vector3d>?
+            toX : Double,toY : Double,toZ : Double, fullPath:Boolean = false): MutableList<Vector3d>?
     {
         when (pathFindingMode.get().toLowerCase())
         {
@@ -193,7 +206,7 @@ class ReachAura : Module()
                 val diffY = toY - fromY
                 val diffZ = toZ - fromZ
                 val distance = sqrt(pow(diffX, 2.0) + pow(diffY, 2.0) + pow(diffZ, 2.0))
-                val ratio = 1.0 - (stopAtDistance.get() / distance)
+                val ratio = if (fullPath) 1.0 else (1.0 - (stopAtDistance.get() / distance))
 
                 val endX = fromX + diffX * ratio
                 val endY = fromY + diffY * ratio
@@ -213,7 +226,7 @@ class ReachAura : Module()
                 {
                     val newbbox = playerbbox.offset(sample.x - mc.thePlayer.posX,
                     sample.y - mc.thePlayer.posY, sample.z - mc.thePlayer.posZ)
-                    if(BlockUtils.bBoxIntersectsBlock(newbbox,
+                    if(bBoxIntersectsBlock(newbbox,
                                     object : Collidable
                                     {
                                         override fun collideBlock(block: Block?) : Boolean
@@ -245,10 +258,10 @@ class ReachAura : Module()
 
     private fun returnInitial(from : Vec3)
     {
-        var me = mc.thePlayer
+        val me = mc.thePlayer
         // TP back
-        var path =  pathFindToCoord(from.xCoord,from.yCoord,from.zCoord
-        ,me.posX,me.posY,me.posZ)
+        val path =  pathFindToCoord(from.xCoord,from.yCoord,from.zCoord
+        ,me.posX,me.posY,me.posZ,true)
 
         path ?: return
 
@@ -280,18 +293,29 @@ class ReachAura : Module()
            reachAuraQueue.add(C0DPacketCloseWindow())
 
         // TP to entity
-        val me = mc.thePlayer
-        val path = pathFindToCoord(me.posX,me.posY,me.posZ,
-                target!!.posX, target!!.posY, target!!.posZ)
+
+        val path: MutableList<Vector3d>?
+        path = if (targetModeValue.get().equals("Switch") || lastTargetPos == null)
+        {
+            val me = mc.thePlayer
+            pathFindToCoord(me.posX, me.posY,me.posZ,
+                    target!!.posX, target!!.posY, target!!.posZ)
+        }
+        else
+            pathFindToCoord(lastTargetPos!!.xCoord,lastTargetPos!!.yCoord,lastTargetPos!!.zCoord,
+                    target!!.posX, target!!.posY, target!!.posZ)
+
 
         path ?: return
+
+        lastTargetPos = target!!.positionVector
 
         if (path.size != 0)
         {
             for (vec3 in path)
             {
                 reachAuraQueue.add(
-                        C03PacketPlayer.C04PacketPlayerPosition(vec3.x, vec3.y, vec3.z, true))
+                        C03PacketPlayer.C04PacketPlayerPosition(vec3.x, vec3.y, vec3.z, false))
             }
 
             attackEntity(target!!)
@@ -357,5 +381,5 @@ class ReachAura : Module()
     }
 
     override val tag:String?
-        get() = pathFindingMode.get() + ' ' + packets.toString()
+        get() = targetModeValue.get() + ' ' + pathFindingMode.get() + ' ' + reachAuraQueue.size.toString()
 }
