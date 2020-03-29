@@ -5,8 +5,10 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
+import com.sun.org.apache.xpath.internal.operations.Bool
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.block.Block
+import net.minecraft.block.BlockOldLeaf
 import net.minecraft.block.material.Material
 import net.minecraft.block.state.IBlockState
 import net.minecraft.util.AxisAlignedBB
@@ -123,6 +125,31 @@ object BlockUtils : MinecraftInstance() {
                 val block = getBlock(blockPos)
 
                 if (collide.collideBlock(block)) {
+                    val boundingBox = block?.getCollisionBoundingBox(mc.theWorld, blockPos, getState(blockPos))
+                            ?: continue
+
+                    if (mc.thePlayer.entityBoundingBox.intersectsWith(boundingBox))
+                        return true
+                }
+            }
+        }
+        return false
+    }
+
+    @JvmStatic
+    fun bBoxIntersectsBlock(axisAlignedBB: AxisAlignedBB,collidable: Collidable) : Boolean
+    {
+        for (x in MathHelper.floor_double(axisAlignedBB.minX) until
+                MathHelper.floor_double(axisAlignedBB.maxX) + 1)
+        {
+            for (z in MathHelper.floor_double(axisAlignedBB.minZ) until
+                    MathHelper.floor_double(axisAlignedBB.maxZ) + 1)
+            {
+                val blockPos = BlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble())
+                val block = getBlock(blockPos)
+
+                if (collidable.collideBlock(block))
+                {
                     val boundingBox = block?.getCollisionBoundingBox(mc.theWorld, blockPos, getState(blockPos))
                             ?: continue
 

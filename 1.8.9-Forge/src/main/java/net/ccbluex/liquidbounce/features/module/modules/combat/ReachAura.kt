@@ -140,7 +140,13 @@ class ReachAura : Module()
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent)
+    fun onWorldEvent(event: WorldEvent)
+    {
+        state = false
+    }
+
+    @EventTarget
+    fun onTick(event: TickEvent)
     {
         if (reachAuraQueue.size < pPS.get() * 5)
         {
@@ -165,17 +171,6 @@ class ReachAura : Module()
             runAttack()
             returnInitial(pos)
         }
-    }
-
-    @EventTarget
-    fun onWorldEvent(event: WorldEvent)
-    {
-        state = false
-    }
-
-    @EventTarget
-    fun onTick(event: TickEvent)
-    {
 
         packets += (pPS.get() / 20)
         if(packets >= minPacketsPerGroup.get())
@@ -361,5 +356,6 @@ class ReachAura : Module()
             mc.thePlayer.onEnchantmentCritical(entity)
     }
 
-
+    override val tag:String?
+        get() = pathFindingMode.get() + ' ' + packets.toString()
 }
