@@ -246,6 +246,10 @@ class LiquidChat : Module() {
                         }
 
                         args[1].equals("copy", true) -> {
+                            if (jwtToken.isEmpty()) {
+                                chat("§cError: §7No token set! Generate one first using '${LiquidBounce.commandManager.prefix}chattoken generate'.")
+                                return
+                            }
                             val stringSelection = StringSelection(jwtToken)
                             Toolkit.getDefaultToolkit().systemClipboard.setContents(stringSelection, stringSelection)
                             chat("§aCopied to clipboard!")
