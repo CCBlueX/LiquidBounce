@@ -55,8 +55,8 @@ class ReachAura : Module()
      */
 
     // PPS:packets per sec
-    private val pPS = IntegerValue("PPS",100,0,400)
-    private val minPacketsPerGroup = IntegerValue("MinPacketsPerGroup",20,0,100)
+    private val pPS = IntegerValue("PPS",20,0,50)
+    private val minPacketsPerGroup = IntegerValue("MinPacketsPerGroup",20,0,50)
     private val noPositionSet = BoolValue("NoPositionSet",true)
 
     private val rangeValue = FloatValue("Range", 20f, 1f, 100f)
@@ -185,7 +185,7 @@ class ReachAura : Module()
                 returnInitial(pos)
         }
 
-        packets += (pPS.get() / 20)
+        packets += (pPS.get() / 20.0)
         if(packets >= minPacketsPerGroup.get())
             while (packets > 0 && reachAuraQueue.size > 0)
             {
