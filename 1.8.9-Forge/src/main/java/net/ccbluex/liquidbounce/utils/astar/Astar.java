@@ -9,7 +9,7 @@ import java.util.Comparator;
 
 public final class Astar extends MinecraftInstance
 {
-	public ArrayList<AstarNode> find_path(final AstarNode begin, final AstarNode end,
+	public static ArrayList<AstarNode> find_path(final AstarNode begin, final AstarNode end,
 	                                      AstarEndOperator op,int timeout_ms)
 	{
 		ArrayList<AstarNode> openlist = new ArrayList<AstarNode>();
@@ -53,6 +53,15 @@ public final class Astar extends MinecraftInstance
 			if (timer.hasTimePassed(timeout_ms)) return new ArrayList<AstarNode>();
 		} while (!op.shouldend(current_node,end));
 
-		return openlist;
+		ArrayList<AstarNode> list = new ArrayList<>();
+
+		while (current_node.get_parent() != null)
+		{
+			list.add(0,current_node);
+			current_node = current_node.get_parent();
+		}
+		list.add(0,current_node);
+
+		return list;
 	}
 }

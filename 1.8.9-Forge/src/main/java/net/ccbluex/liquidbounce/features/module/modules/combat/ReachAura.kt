@@ -16,11 +16,16 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.PathUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.astar.Astar
+import net.ccbluex.liquidbounce.utils.astar.NaiveAstarFlyNode
+import net.ccbluex.liquidbounce.utils.astar.NaiveAstarGroundNode
+import net.ccbluex.liquidbounce.utils.astar.NaiveAstarNode
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.Collidable
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.bBoxIntersectsBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -41,8 +46,11 @@ import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.potion.Potion
 import net.minecraft.util.Vec3
+import java.awt.Color
+import java.lang.Math.abs
 import java.lang.Math.pow
 import javax.vecmath.Vector3d
+import kotlin.math.pow
 import kotlin.math.sqrt
 
 @ModuleInfo(name = "Reachaura", description = "Experimental: extra reach kill aura (tp hit)",
@@ -55,18 +63,20 @@ class ReachAura : Module()
      */
 
     // PPS:packets per sec
-    private val pPS = IntegerValue("PPS",20,0,50)
-    private val minPacketsPerGroup = IntegerValue("MinPacketsPerGroup",20,0,50)
-    private val noPositionSet = BoolValue("NoPositionSet",true)
+    private val pPS = IntegerValue("PPS", 20, 0, 50)
+    private val minPacketsPerGroup = IntegerValue("MinPacketsPerGroup", 20, 0, 50)
+    private val noPositionSet = BoolValue("NoPositionSet", true)
 
     private val rangeValue = FloatValue("Range", 20f, 1f, 100f)
-    private val tpDistanceValue = FloatValue("TpDistance",4.0f,0.5f,10.0f)
-    private val stopAtDistance = FloatValue("StopAtDistance",4.0f,0.0f, 6.0f)
+    private val tpDistanceValue = FloatValue("TpDistance", 4.0f, 0.5f, 10.0f)
+    private val stopAtDistance = FloatValue("StopAtDistance", 4.0f, 0.0f, 6.0f)
 
     private val pathFindingMode = ListValue("PathFindingMode", arrayOf("Simple",
-    "NaiveAstarGround","NaiveAstarFly"),"Simple")
+            "NaiveAstarGround", "NaiveAstarFly"), "Simple")
 
     private val targetModeValue = ListValue("TargetMode", arrayOf("Switch", "Multi"), "Switch")
+
+    private val renderPath = BoolValue("RenderPath", true)
 
     private var packets = 0.0
 
@@ -134,10 +144,29 @@ class ReachAura : Module()
         if (targetList!!.size > 0)
         {
             target = targetList!!.first()
-        }
-        else if (targetModeValue.get() == "Multi")
+        } else if (targetModeValue.get() == "Multi")
             state = false
-            //idk wtf, it's a dirty fix
+        //idk wtf, it's a dirty fix
+    }
+
+    @EventTarget
+    fun onRender3D(event: Render3DEvent)
+    {
+        if (!renderPath.get())
+            return
+        for (i in reachAuraQueue)
+        {
+            if (i is C03PacketPlayer.C04PacketPlayerPosition)
+            {
+                val dist = sqrt((i.x - mc.thePlayer.posX).pow(2.0) + (i.y - mc.thePlayer.posY).pow(2.0) + (i.z - mc.thePlayer.posZ).pow(2.0))
+
+                val render_mgr = mc.renderManager
+
+                RenderUtils.drawAxisAlignedBB(mc.thePlayer.entityBoundingBox.offset(i.x - mc.thePlayer.posX - render_mgr.renderPosX,
+                        i.y - mc.thePlayer.posY - render_mgr.renderPosY, i.z - mc.thePlayer.posZ - render_mgr.renderPosZ)
+                , Color((255F * dist / rangeValue.get()).toInt(),(255F * (1F - dist / rangeValue.get())).toInt(),30,50))
+            }
+        }
     }
 
     @EventTarget
@@ -186,7 +215,7 @@ class ReachAura : Module()
         }
 
         packets += (pPS.get() / 20.0)
-        if(packets >= minPacketsPerGroup.get())
+        if (packets >= minPacketsPerGroup.get())
             while (packets > 0 && reachAuraQueue.size > 0)
             {
                 mc.netHandler.addToSendQueue(reachAuraQueue.first())
@@ -195,8 +224,8 @@ class ReachAura : Module()
             }
     }
 
-    private fun pathFindToCoord(fromX : Double,fromY : Double,fromZ : Double,
-            toX : Double,toY : Double,toZ : Double, fullPath:Boolean = false): MutableList<Vector3d>?
+    private fun pathFindToCoord(fromX: Double, fromY: Double, fromZ: Double,
+                                toX: Double, toY: Double, toZ: Double, fullPath: Boolean = false): MutableList<Vector3d>?
     {
         when (pathFindingMode.get().toLowerCase())
         {
@@ -212,10 +241,10 @@ class ReachAura : Module()
                 val endY = fromY + diffY * ratio
                 val endZ = fromZ + diffZ * ratio
 
-                val path = PathUtils.findPath(fromX,fromY,fromZ,
-                        endX,endY,endZ,tpDistanceValue.get().toDouble())
+                val path = PathUtils.findPath(fromX, fromY, fromZ,
+                        endX, endY, endZ, tpDistanceValue.get().toDouble())
 
-                val verify_path = PathUtils.findPath(fromX,fromY,fromZ,endX,endY,endZ,1.0)
+                val verify_path = PathUtils.findPath(fromX, fromY, fromZ, endX, endY, endZ, 1.0)
 
                 var valid = true
 
@@ -225,11 +254,11 @@ class ReachAura : Module()
                 for (sample in verify_path)
                 {
                     val newbbox = playerbbox.offset(sample.x - mc.thePlayer.posX,
-                    sample.y - mc.thePlayer.posY, sample.z - mc.thePlayer.posZ)
-                    if(bBoxIntersectsBlock(newbbox,
+                            sample.y - mc.thePlayer.posY, sample.z - mc.thePlayer.posZ)
+                    if (bBoxIntersectsBlock(newbbox,
                                     object : Collidable
                                     {
-                                        override fun collideBlock(block: Block?) : Boolean
+                                        override fun collideBlock(block: Block?): Boolean
                                         {
                                             val collide = block !is BlockAir
                                             if (collide)
@@ -245,23 +274,53 @@ class ReachAura : Module()
 
             "naiveastarground" ->
             {
+                val begin = NaiveAstarGroundNode(mc.thePlayer.posX.toInt(), mc.thePlayer.posY.toInt(), mc.thePlayer.posZ.toInt())
+                val end = NaiveAstarGroundNode(target!!.posX.toInt(), target!!.posY.toInt(), target!!.posZ.toInt())
 
+                val nodes = Astar.find_path(begin, end,
+                        { current, end ->
+                            val c = current as NaiveAstarGroundNode
+                            val e = end as NaiveAstarGroundNode
+                            val dist = sqrt(pow((c.x - e.x).toDouble(), 2.0) + pow((c.y - e.y).toDouble(), 2.0) + pow((c.z - e.z).toDouble(), 2.0))
+                            (dist < stopAtDistance.get() && fullPath) || dist < 1
+                        }, 100) as ArrayList<NaiveAstarNode>
+
+                val path = mutableListOf<Vector3d>()
+                for (i in nodes)
+                    path.add(Vector3d(i.get_pos().xCoord, i.get_pos().yCoord, i.get_pos().zCoord))
+
+                return if (path.size != 0) path else null
             }
 
             "naiveastarfly" ->
             {
+                val begin = NaiveAstarFlyNode(mc.thePlayer.posX.toInt(), mc.thePlayer.posY.toInt(), mc.thePlayer.posZ.toInt())
+                val end = NaiveAstarFlyNode(target!!.posX.toInt(), target!!.posY.toInt(), target!!.posZ.toInt())
 
+                val nodes = Astar.find_path(begin, end,
+                        { current, end ->
+                            val c = current as NaiveAstarFlyNode
+                            val e = end as NaiveAstarFlyNode
+                            val dist = sqrt(pow((c.x - e.x).toDouble(), 2.0) + pow((c.y - e.y).toDouble(), 2.0) + pow((c.z - e.z).toDouble(), 2.0))
+                            (dist < stopAtDistance.get() && fullPath) || dist < 1
+                        }, 100) as ArrayList<NaiveAstarNode>
+
+                val path = mutableListOf<Vector3d>()
+                for (i in nodes)
+                    path.add(Vector3d(i.get_pos().xCoord, i.get_pos().yCoord, i.get_pos().zCoord))
+
+                return if (path.size != 0) path else null
             }
         }
         TODO("use astar and implement theta star")
     }
 
-    private fun returnInitial(from : Vec3)
+    private fun returnInitial(from: Vec3)
     {
         val me = mc.thePlayer
         // TP back
-        val path =  pathFindToCoord(from.xCoord,from.yCoord,from.zCoord
-        ,me.posX,me.posY,me.posZ,true)
+        val path = pathFindToCoord(from.xCoord, from.yCoord, from.zCoord
+                , me.posX, me.posY, me.posZ, true)
 
         path ?: return
 
@@ -290,7 +349,7 @@ class ReachAura : Module()
         val openInventory = mc.currentScreen is GuiInventory
         // Close inventory when open
         if (openInventory)
-           reachAuraQueue.add(C0DPacketCloseWindow())
+            reachAuraQueue.add(C0DPacketCloseWindow())
 
         // TP to entity
 
@@ -298,11 +357,10 @@ class ReachAura : Module()
         path = if (targetModeValue.get().equals("Switch") || lastTargetPos == null)
         {
             val me = mc.thePlayer
-            pathFindToCoord(me.posX, me.posY,me.posZ,
+            pathFindToCoord(me.posX, me.posY, me.posZ,
                     target!!.posX, target!!.posY, target!!.posZ)
-        }
-        else
-            pathFindToCoord(lastTargetPos!!.xCoord,lastTargetPos!!.yCoord,lastTargetPos!!.zCoord,
+        } else
+            pathFindToCoord(lastTargetPos!!.xCoord, lastTargetPos!!.yCoord, lastTargetPos!!.zCoord,
                     target!!.posX, target!!.posY, target!!.posZ)
 
 
@@ -380,6 +438,6 @@ class ReachAura : Module()
             mc.thePlayer.onEnchantmentCritical(entity)
     }
 
-    override val tag:String?
+    override val tag: String?
         get() = targetModeValue.get() + ' ' + pathFindingMode.get() + ' ' + reachAuraQueue.size.toString()
 }
