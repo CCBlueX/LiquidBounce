@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import com.sun.security.ntlm.Client
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
@@ -44,12 +45,14 @@ import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.potion.Potion
 import net.minecraft.util.Vec3
 import java.awt.Color
 import java.lang.Math.abs
 import java.lang.Math.pow
 import javax.vecmath.Vector3d
+import kotlin.math.nextDown
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -74,11 +77,13 @@ class ReachAura : Module()
     private val pathFindingMode = ListValue("PathFindingMode", arrayOf("Simple",
             "NaiveAstarGround", "NaiveAstarFly"), "Simple")
 
-    private val targetModeValue = ListValue("TargetMode", arrayOf("Switch", "Multi"), "Switch")
+    private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
+    private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Distance")
 
     private val renderPath = BoolValue("RenderPath", true)
 
     private var packets = 0.0
+    private val positionSetList = mutableListOf<S08PacketPlayerPosLook>()
 
     /**
      * MODULE
@@ -86,9 +91,8 @@ class ReachAura : Module()
 
     // Target
     private var target: EntityLivingBase? = null
-    private var targetList: ArrayList<EntityLivingBase>? = null
+    private var targetList = mutableListOf<EntityLivingBase?>()
     private var lastTargetPos: Vec3? = null
-    private val prevTargetEntities = mutableListOf<Int>()
 
     // Bypass
     private val swingValue = BoolValue("Swing", true)
@@ -111,12 +115,11 @@ class ReachAura : Module()
      */
     override fun onDisable()
     {
-        prevTargetEntities.clear()
+        if (lastTargetPos != null)
+            returnInitial(lastTargetPos!!)
         packets = 0.0
-        if (target != null)
-            returnInitial(target!!.positionVector)
         target = null
-        targetList = null
+        targetList.clear()
     }
 
     /**
@@ -128,25 +131,41 @@ class ReachAura : Module()
     private fun updateTarget()
     {
         target = null
-        targetList = ArrayList<EntityLivingBase>()
 
         for (entity in mc.theWorld.loadedEntityList)
         {
-            if (entity !is EntityLivingBase || !isEnemy(entity) || (prevTargetEntities.contains(entity.entityId)))
+            if (entity !is EntityLivingBase || !isEnemy(entity))
                 continue
 
             val dist = mc.thePlayer.getDistanceToEntityBox(entity)
 
             if (dist <= maxRange)
-                targetList!!.add(entity)
+                targetList.add(entity)
         }
 
-        if (targetList!!.size > 0)
+        if (targetList.size > 0)
         {
-            target = targetList!!.first()
-        } else if (targetModeValue.get() == "Multi")
-            state = false
-        //idk wtf, it's a dirty fix
+            if (priorityValue.get().equals("Distance") && targetModeValue.get().equals("Multi") && lastTargetPos != null)
+            {
+                targetList.sortBy {
+                    (it!!.posX - lastTargetPos!!.xCoord).pow(2) +
+                            (it!!.posY - lastTargetPos!!.yCoord).pow(2) +
+                            (it!!.posZ - lastTargetPos!!.zCoord).pow(2)
+                }
+            }
+            else
+
+                when (priorityValue.get().toLowerCase())
+                {
+                    "distance" -> targetList.sortBy { mc.thePlayer.getDistanceToEntityBox(it!!) } // Sort by distance
+                    "health" -> targetList.sortBy { it!!.health } // Sort by health
+                    "direction" -> targetList.sortBy { RotationUtils.getRotationDifference(it) } // Sort by FOV
+                    "livingtime" -> targetList.sortBy { -it!!.ticksExisted } // Sort by existence
+                }
+
+            target = targetList.first()
+
+        }
     }
 
     @EventTarget
@@ -164,7 +183,7 @@ class ReachAura : Module()
 
                 RenderUtils.drawAxisAlignedBB(mc.thePlayer.entityBoundingBox.offset(i.x - mc.thePlayer.posX - render_mgr.renderPosX,
                         i.y - mc.thePlayer.posY - render_mgr.renderPosY, i.z - mc.thePlayer.posZ - render_mgr.renderPosZ)
-                , Color((255F * dist / rangeValue.get()).toInt(),(255F * (1F - dist / rangeValue.get())).toInt(),30,50))
+                        , Color((255F * dist / rangeValue.get()).toInt(), (255F * (1F - dist / rangeValue.get())).toInt(), 30, 50))
             }
         }
     }
@@ -175,7 +194,36 @@ class ReachAura : Module()
         val packet = event.packet
         if (packet is S08PacketPlayerPosLook && noPositionSet.get())
         {
-            event.cancelEvent()
+            var avgPos = Vec3(0.0, 0.0, 0.0)
+
+            for (i in positionSetList)
+            {
+                avgPos.addVector(i.x / positionSetList.size,
+                        i.y / positionSetList.size,
+                        i.z / positionSetList.size)
+            }
+
+
+
+            if ((avgPos.xCoord - packet.x).pow(2.0) + (avgPos.yCoord - packet.y).pow(2.0) + (avgPos.zCoord - packet.z)
+                    > 3.0.pow(2.0) || positionSetList.size < 3)
+            {
+                event.cancelEvent()
+                positionSetList.add(packet)
+            } else
+            {
+                ClientUtils.displayChatMessage("Failed to return to position")
+
+                reachAuraQueue.clear()
+
+                mc.thePlayer.posX = packet.x
+                mc.thePlayer.posY = packet.y
+                mc.thePlayer.posZ = packet.z
+
+                state = false
+            }
+
+            if (positionSetList.size > 6) positionSetList.removeAt(0)
         }
     }
 
@@ -196,21 +244,20 @@ class ReachAura : Module()
                 return
             }
 
-            if (targetList?.size == 0 || target == null)
+            if (targetList.size == 0 || target == null)
             {
-                targetList = null
+                targetList.clear()
                 updateTarget()
                 return
             }
 
-            target = targetList!!.first()
-            targetList!!.removeAt(0)
+            target = targetList.first()
+            if (!priorityValue.get().equals("Single"))
+                targetList.removeAt(0)
 
             val pos = target!!.positionVector
 
-
-            runAttack()
-            if (targetModeValue.get().equals("Switch"))
+            if (runAttack() && !targetModeValue.get().equals("Multi")) //Short circuit exists in && ?
                 returnInitial(pos)
         }
 
@@ -218,7 +265,16 @@ class ReachAura : Module()
         if (packets >= minPacketsPerGroup.get())
             while (packets > 0 && reachAuraQueue.size > 0)
             {
-                mc.netHandler.addToSendQueue(reachAuraQueue.first())
+                val first = reachAuraQueue.first()
+                if (first is C03PacketPlayer.C04PacketPlayerPosition
+                        && (first.x.isNaN() ||first.y.isNaN() ||first.z.isNaN()))
+                {
+                    reachAuraQueue.removeAt(0)
+                    packets--
+                    continue
+                }
+
+                mc.netHandler.addToSendQueue(first)
                 reachAuraQueue.removeAt(0)
                 packets--
             }
@@ -283,7 +339,7 @@ class ReachAura : Module()
                             val e = end as NaiveAstarGroundNode
                             val dist = sqrt(pow((c.x - e.x).toDouble(), 2.0) + pow((c.y - e.y).toDouble(), 2.0) + pow((c.z - e.z).toDouble(), 2.0))
                             (dist < stopAtDistance.get() && fullPath) || dist < 1
-                        }, 100) as ArrayList<NaiveAstarNode>
+                        }, 200) as ArrayList<NaiveAstarNode>
 
                 val path = mutableListOf<Vector3d>()
                 for (i in nodes)
@@ -303,7 +359,7 @@ class ReachAura : Module()
                             val e = end as NaiveAstarFlyNode
                             val dist = sqrt(pow((c.x - e.x).toDouble(), 2.0) + pow((c.y - e.y).toDouble(), 2.0) + pow((c.z - e.z).toDouble(), 2.0))
                             (dist < stopAtDistance.get() && fullPath) || dist < 1
-                        }, 100) as ArrayList<NaiveAstarNode>
+                        }, 200) as ArrayList<NaiveAstarNode>
 
                 val path = mutableListOf<Vector3d>()
                 for (i in nodes)
@@ -312,7 +368,7 @@ class ReachAura : Module()
                 return if (path.size != 0) path else null
             }
         }
-        TODO("use astar and implement theta star")
+        TODO("implement theta star")
     }
 
     private fun returnInitial(from: Vec3)
@@ -333,17 +389,16 @@ class ReachAura : Module()
     }
 
 
-    private fun runAttack()
+    private fun runAttack(): Boolean
     {
-        target ?: return
-        targetList ?: return
+        target ?: return false
 
         if (target !in mc.theWorld.loadedEntityList)
         {
             target = null
 
             updateTarget()
-            return
+            return false
         }
 
         val openInventory = mc.currentScreen is GuiInventory
@@ -354,7 +409,7 @@ class ReachAura : Module()
         // TP to entity
 
         val path: MutableList<Vector3d>?
-        path = if (targetModeValue.get().equals("Switch") || lastTargetPos == null)
+        path = if (!targetModeValue.get().equals("Multi") || lastTargetPos == null)
         {
             val me = mc.thePlayer
             pathFindToCoord(me.posX, me.posY, me.posZ,
@@ -364,7 +419,7 @@ class ReachAura : Module()
                     target!!.posX, target!!.posY, target!!.posZ)
 
 
-        path ?: return
+        path ?: return false
 
         lastTargetPos = target!!.positionVector
 
@@ -378,6 +433,8 @@ class ReachAura : Module()
 
             attackEntity(target!!)
         }
+
+        return true
     }
 
     private fun isAlive(entity: EntityLivingBase) = entity.isEntityAlive && entity.health > 0 ||
