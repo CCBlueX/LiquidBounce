@@ -294,6 +294,7 @@ class ReachAura : Module()
     private fun pathFindToCoord(fromX: Double, fromY: Double, fromZ: Double,
                                 toX: Double, toY: Double, toZ: Double, fullPath: Boolean = false): MutableList<Vector3d>?
     {
+        target ?: return null
         when (pathFindingMode.get().toLowerCase())
         {
             "simple" ->
@@ -344,8 +345,6 @@ class ReachAura : Module()
                 val begin = NaiveAstarGroundNode(mc.thePlayer.posX.toInt(), mc.thePlayer.posY.toInt(), mc.thePlayer.posZ.toInt())
                 val end = NaiveAstarGroundNode(target!!.posX.toInt(), target!!.posY.toInt(), target!!.posZ.toInt())
 
-                target ?: return null
-
                 val nodes = Astar.find_path(begin, end,
                         { current, end ->
                             val c = current as NaiveAstarGroundNode
@@ -365,8 +364,6 @@ class ReachAura : Module()
             {
                 val begin = NaiveAstarFlyNode(mc.thePlayer.posX.toInt(), mc.thePlayer.posY.toInt(), mc.thePlayer.posZ.toInt())
                 val end = NaiveAstarFlyNode(target!!.posX.toInt(), target!!.posY.toInt(), target!!.posZ.toInt())
-
-                target ?: return null
 
                 val nodes = Astar.find_path(begin, end,
                         { current, end ->
@@ -412,7 +409,6 @@ class ReachAura : Module()
         {
             target = null
 
-            updateTarget()
             return false
         }
 
