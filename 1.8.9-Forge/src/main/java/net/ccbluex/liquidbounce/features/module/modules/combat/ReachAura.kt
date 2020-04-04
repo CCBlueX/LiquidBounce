@@ -344,8 +344,7 @@ class ReachAura : Module()
                 val begin = NaiveAstarGroundNode(mc.thePlayer.posX.toInt(), mc.thePlayer.posY.toInt(), mc.thePlayer.posZ.toInt())
                 val end = NaiveAstarGroundNode(target!!.posX.toInt(), target!!.posY.toInt(), target!!.posZ.toInt())
 
-                begin ?: return null
-                end ?: return null
+                target ?: return null
 
                 val nodes = Astar.find_path(begin, end,
                         { current, end ->
@@ -367,8 +366,7 @@ class ReachAura : Module()
                 val begin = NaiveAstarFlyNode(mc.thePlayer.posX.toInt(), mc.thePlayer.posY.toInt(), mc.thePlayer.posZ.toInt())
                 val end = NaiveAstarFlyNode(target!!.posX.toInt(), target!!.posY.toInt(), target!!.posZ.toInt())
 
-                begin ?: return null
-                end ?: return null
+                target ?: return null
 
                 val nodes = Astar.find_path(begin, end,
                         { current, end ->
