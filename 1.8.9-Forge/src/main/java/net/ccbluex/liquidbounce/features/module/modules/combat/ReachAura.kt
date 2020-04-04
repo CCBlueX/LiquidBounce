@@ -111,7 +111,7 @@ class ReachAura : Module()
         updateTarget()
 
         //if (pathFindingMode.get()=="NaiveAstarGround")
-            TODO("make it teleport to ground before all starts")
+        //    TODO("make it teleport to ground before all starts")
     }
 
 
