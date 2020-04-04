@@ -1,9 +1,11 @@
 package net.ccbluex.liquidbounce.utils.astar
 
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.minecraft.block.material.Material
 import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3i
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.minecraft.block.BlockAir
 
 import kotlin.collections.ArrayList
 
@@ -20,8 +22,8 @@ class NaiveAstarFlyNode(override val x: Int, override val y: Int, override val z
                 , Vec3i(x, y, z - 1)
         )
 
-        neibor_poss.filter { it -> BlockUtils.getBlock(BlockPos(it))?.getMaterial() == Material.air }
-        neibor_poss.filter { it -> BlockUtils.getBlock(BlockPos(it.x, it.y - 1, it.z))?.getMaterial() == Material.air }
+        neibor_poss = neibor_poss.filter { it -> BlockUtils.getBlock(BlockPos(it)) is BlockAir } as MutableList<Vec3i>
+        neibor_poss = neibor_poss.filter { it -> BlockUtils.getBlock(BlockPos(it.x, it.y + 1, it.z)) is BlockAir } as MutableList<Vec3i>
 
         var arrayList = ArrayList<AstarNode>()
 

@@ -48,6 +48,7 @@ import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.potion.Potion
 import net.minecraft.util.Vec3
+import scala.collection.script.Update
 import java.awt.Color
 import java.lang.Math.abs
 import java.lang.Math.pow
@@ -81,6 +82,7 @@ class ReachAura : Module()
     private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Distance")
 
     private val renderPath = BoolValue("RenderPath", true)
+    private val astarTimeout = IntegerValue("AstarTimeout",20,10,1000)
 
     private var packets = 0.0
     private val positionSetList = mutableListOf<S08PacketPlayerPosLook>()
@@ -107,6 +109,9 @@ class ReachAura : Module()
         mc.theWorld ?: return
 
         updateTarget()
+
+        //if (pathFindingMode.get()=="NaiveAstarGround")
+            TODO("make it teleport to ground before all starts")
     }
 
 
@@ -234,6 +239,12 @@ class ReachAura : Module()
     }
 
     @EventTarget
+    fun onUpdate(event: UpdateEvent)
+    {
+        updateTarget()
+    }
+
+    @EventTarget
     fun onTick(event: TickEvent)
     {
         while (reachAuraQueue.size < pPS.get() * 0.1)
@@ -333,13 +344,16 @@ class ReachAura : Module()
                 val begin = NaiveAstarGroundNode(mc.thePlayer.posX.toInt(), mc.thePlayer.posY.toInt(), mc.thePlayer.posZ.toInt())
                 val end = NaiveAstarGroundNode(target!!.posX.toInt(), target!!.posY.toInt(), target!!.posZ.toInt())
 
+                begin ?: return null
+                end ?: return null
+
                 val nodes = Astar.find_path(begin, end,
                         { current, end ->
                             val c = current as NaiveAstarGroundNode
                             val e = end as NaiveAstarGroundNode
                             val dist = sqrt(pow((c.x - e.x).toDouble(), 2.0) + pow((c.y - e.y).toDouble(), 2.0) + pow((c.z - e.z).toDouble(), 2.0))
                             (dist < stopAtDistance.get() && fullPath) || dist < 1
-                        }, 200) as ArrayList<NaiveAstarNode>
+                        }, 20) as ArrayList<NaiveAstarNode>
 
                 val path = mutableListOf<Vector3d>()
                 for (i in nodes)
@@ -353,13 +367,16 @@ class ReachAura : Module()
                 val begin = NaiveAstarFlyNode(mc.thePlayer.posX.toInt(), mc.thePlayer.posY.toInt(), mc.thePlayer.posZ.toInt())
                 val end = NaiveAstarFlyNode(target!!.posX.toInt(), target!!.posY.toInt(), target!!.posZ.toInt())
 
+                begin ?: return null
+                end ?: return null
+
                 val nodes = Astar.find_path(begin, end,
                         { current, end ->
                             val c = current as NaiveAstarFlyNode
                             val e = end as NaiveAstarFlyNode
                             val dist = sqrt(pow((c.x - e.x).toDouble(), 2.0) + pow((c.y - e.y).toDouble(), 2.0) + pow((c.z - e.z).toDouble(), 2.0))
                             (dist < stopAtDistance.get() && fullPath) || dist < 1
-                        }, 200) as ArrayList<NaiveAstarNode>
+                        }, 20) as ArrayList<NaiveAstarNode>
 
                 val path = mutableListOf<Vector3d>()
                 for (i in nodes)
