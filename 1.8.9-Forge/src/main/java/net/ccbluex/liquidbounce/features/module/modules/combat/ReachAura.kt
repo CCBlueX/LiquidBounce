@@ -239,12 +239,6 @@ class ReachAura : Module()
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent)
-    {
-        updateTarget()
-    }
-
-    @EventTarget
     fun onTick(event: TickEvent)
     {
         while (reachAuraQueue.size < pPS.get() * 0.1)
