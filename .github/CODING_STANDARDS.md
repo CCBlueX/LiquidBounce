@@ -33,7 +33,7 @@ In this section, the official conventions of Kotlin and Java are listed. Our pro
 
 # Rewriting
 
-If a functionality is rewritable in Kotlin instead of Java and results in the same functionality and performance, feel free to rewrite it.
+If a part of the codebase is rewritable in Kotlin instead of Java and results in the same functionality and performance, feel free to rewrite it.
 
 # Files
 
