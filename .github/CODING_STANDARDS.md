@@ -1,4 +1,4 @@
-# Contributing code to the LiquidBounce codebase
+# LiquidBounce Project Coding Standards
 
 Everyone is welcome to contribute their code via pull requests and to file issues on GitHub via our [issues repository](https://github.com/CCBlueX/LiquidBounce1.8-Issues "Redirects to https://github.com.");
 however we must enforce certain standards to keep our code more readable and easier to mantain.
@@ -7,15 +7,15 @@ Most of our code is written in Kotlin, still some features like LiquidBounce's m
 
 ## General
 
-In this section, the official conventions of Kotlin and Java are listed. Our project LiquidBounce follows Kotlin's and Java's coding conventions. 
+In this section, the official conventions of Kotlin and Java are listed. Our project LiquidBounce follows Kotlin's and Java's official coding conventions. Note that we enforce custom rules.
 
-Below this section are our own rules defined, apply them always.
+**Our own standards are listed below this section, apply them always.**
 
 ### Kotlin
  
 * Follow 
 [Kotlin's official coding conventions](https://kotlinlang.org/docs/reference/coding-conventions.html#coding-conventions 
-"Redirects to https://kotlinlang.org.")!
+"Redirects to https://kotlinlang.org.").
 * Have a look at 
 [Kotlin's official documentation](https://kotlinlang.org/docs/reference/ 
 "Redirects to https://kotlinlang.org.").
@@ -63,12 +63,13 @@ Example:
 
 `net.ccbluex.liquidbounce`
 
-*   If others send us their own code outside of GitHub and agree with an implementation into LiquidBounce's codebase, 
-    we put their work into different root packages.
-    
-    Example:
-    
-    `net.vitox` instead of `net.ccbluex`
+If others send us their own code outside of GitHub, want an own root package
+and agree with an implementation into LiquidBounce's codebase, 
+we put their code into different root packages.
+  
+Example:
+
+`net.vitox` instead of `net.ccbluex`
     
  Links:
 
