@@ -70,7 +70,7 @@ class ReachAura : Module()
     // PPS:packets per sec
     private val pPS = IntegerValue("PPS", 20, 0, 50)
     private val minPacketsPerGroup = IntegerValue("MinPacketsPerGroup", 20, 0, 50)
-    private val noPositionSet = BoolValue("NoPositionSet", true)
+    private val noPositionSet = BoolValue("IgnorePositionSet", true)
 
     private val rangeValue = FloatValue("Range", 20f, 1f, 100f)
     private val tpDistanceValue = FloatValue("TpDistance", 4.0f, 0.5f, 10.0f)
@@ -83,7 +83,7 @@ class ReachAura : Module()
     private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Distance")
 
     private val renderPath = BoolValue("RenderPath", true)
-    private val astarTimeout = IntegerValue("AstarTimeout",20,10,1000)
+    private val astarTimeout = IntegerValue("AstarTimeout", 20, 10, 1000)
 
     private var packets = 0.0
     private val positionSetList = mutableListOf<S08PacketPlayerPosLook>()
@@ -109,21 +109,24 @@ class ReachAura : Module()
         mc.thePlayer ?: return
         mc.theWorld ?: return
 
-        if (pathFindingMode.get()=="NaiveAstarGround")
+        if (pathFindingMode.get() == "NaiveAstarGround")
         {
             var y = mc.thePlayer.posY.toInt()
 
-            while (y > 0 && BlockUtils.getBlock(BlockPos(mc.thePlayer.posX,y.toDouble(),mc.thePlayer.posZ)) is BlockAir)
+            while (y > 0 && BlockUtils.getBlock(BlockPos(mc.thePlayer.posX, y.toDouble(), mc.thePlayer.posZ)) is BlockAir)
             {
                 y--
             }
 
-            val path = PathUtils.findPath(mc.thePlayer.posX,y.toDouble(),mc.thePlayer.posZ,1.0)
+            val path = PathUtils.findPath(mc.thePlayer.posX, y.toDouble(), mc.thePlayer.posZ, 1.0)
 
-            if (path!!.size == 0) {state = false ;return}
+            if (path!!.size == 0)
+            {
+                state = false;return
+            }
 
             for (i in path)
-                mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(i.x,i.y,i.z,false))
+                mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(i.x, i.y, i.z, false))
 
             mc.thePlayer.posY = y.toDouble()
         }
@@ -174,8 +177,7 @@ class ReachAura : Module()
                             (it!!.posY - lastTargetPos!!.yCoord).pow(2) +
                             (it!!.posZ - lastTargetPos!!.zCoord).pow(2)
                 }
-            }
-            else
+            } else
 
                 when (priorityValue.get().toLowerCase())
                 {
@@ -209,7 +211,7 @@ class ReachAura : Module()
             }
         }
 
-        RenderUtils.drawAxisAlignedBB(target!!.entityBoundingBox,Color.YELLOW)
+        RenderUtils.drawAxisAlignedBB(target!!.entityBoundingBox, Color.YELLOW)
     }
 
     @EventTarget
@@ -218,36 +220,8 @@ class ReachAura : Module()
         val packet = event.packet
         if (packet is S08PacketPlayerPosLook && noPositionSet.get())
         {
-            var avgPos = Vec3(0.0, 0.0, 0.0)
-
-            for (i in positionSetList)
-            {
-                avgPos.addVector(i.x / positionSetList.size,
-                        i.y / positionSetList.size,
-                        i.z / positionSetList.size)
-            }
-
-
-
-            if ((avgPos.xCoord - packet.x).pow(2.0) + (avgPos.yCoord - packet.y).pow(2.0) + (avgPos.zCoord - packet.z)
-                    > 3.0.pow(2.0) || positionSetList.size < 3)
-            {
-                event.cancelEvent()
-                positionSetList.add(packet)
-            } else
-            {
-                ClientUtils.displayChatMessage("Failed to return to position")
-
-                reachAuraQueue.clear()
-
-                mc.thePlayer.posX = packet.x
-                mc.thePlayer.posY = packet.y
-                mc.thePlayer.posZ = packet.z
-
-                state = false
-            }
-
-            if (positionSetList.size > 6) positionSetList.removeAt(0)
+            event.cancelEvent()
+            positionSetList.add(packet)
         }
     }
 
@@ -295,7 +269,7 @@ class ReachAura : Module()
             {
                 val first = reachAuraQueue.first()
                 if (first is C03PacketPlayer.C04PacketPlayerPosition
-                        && (first.x.isNaN() ||first.y.isNaN() ||first.z.isNaN()))
+                        && (first.x.isNaN() || first.y.isNaN() || first.z.isNaN()))
                 {
                     reachAuraQueue.removeAt(0)
                     packets--
@@ -319,7 +293,7 @@ class ReachAura : Module()
                 val diffX = toX - fromX
                 val diffY = toY - fromY
                 val diffZ = toZ - fromZ
-                val distance = sqrt(pow(diffX, 2.0) + pow(diffY, 2.0) + pow(diffZ, 2.0))
+                val distance = sqrt(diffX.pow(2.0) + diffY.pow(2.0) + diffZ.pow(2.0))
                 val ratio = if (fullPath) 1.0 else (1.0 - (stopAtDistance.get() / distance))
 
                 val endX = fromX + diffX * ratio
