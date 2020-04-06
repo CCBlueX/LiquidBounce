@@ -50,6 +50,7 @@ public final class Astar extends MinecraftInstance
 				}
 			}
 
+			if (openlist.size() > 10000) return new ArrayList<AstarNode>();
 			if (timer.hasTimePassed(timeout_ms)) return new ArrayList<AstarNode>();
 		} while (!op.shouldend(current_node,end));
 

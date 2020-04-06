@@ -47,6 +47,7 @@ import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.potion.Potion
+import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
 import scala.collection.script.Update
 import java.awt.Color
@@ -108,10 +109,26 @@ class ReachAura : Module()
         mc.thePlayer ?: return
         mc.theWorld ?: return
 
-        updateTarget()
+        if (pathFindingMode.get()=="NaiveAstarGround")
+        {
+            var y = mc.thePlayer.posY.toInt()
 
-        //if (pathFindingMode.get()=="NaiveAstarGround")
-        //    TODO("make it teleport to ground before all starts")
+            while (y > 0 && BlockUtils.getBlock(BlockPos(mc.thePlayer.posX,y.toDouble(),mc.thePlayer.posZ)) is BlockAir)
+            {
+                y--
+            }
+
+            val path = PathUtils.findPath(mc.thePlayer.posX,y.toDouble(),mc.thePlayer.posZ,1.0)
+
+            if (path!!.size == 0) {state = false ;return}
+
+            for (i in path)
+                mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(i.x,i.y,i.z,false))
+
+            mc.thePlayer.posY = y.toDouble()
+        }
+
+        updateTarget()
     }
 
 
@@ -188,9 +205,11 @@ class ReachAura : Module()
 
                 RenderUtils.drawAxisAlignedBB(mc.thePlayer.entityBoundingBox.offset(i.x - mc.thePlayer.posX - render_mgr.renderPosX,
                         i.y - mc.thePlayer.posY - render_mgr.renderPosY, i.z - mc.thePlayer.posZ - render_mgr.renderPosZ)
-                        , Color((255F * dist / rangeValue.get()).toInt(), (255F * (1F - dist / rangeValue.get())).toInt(), 30, 50))
+                        , Color(((1.0 - (maxRange - dist) / maxRange) * 255.0).toInt(), (((maxRange - dist) / maxRange) * 255.0).toInt(), 30, 50))
             }
         }
+
+        RenderUtils.drawAxisAlignedBB(target!!.entityBoundingBox,Color.YELLOW)
     }
 
     @EventTarget
@@ -255,6 +274,10 @@ class ReachAura : Module()
                 updateTarget()
                 return
             }
+
+
+            if (priorityValue.get().equals("Single"))
+                updateTarget()
 
             target = targetList.first()
             if (!priorityValue.get().equals("Single"))
@@ -344,8 +367,8 @@ class ReachAura : Module()
                             val c = current as NaiveAstarGroundNode
                             val e = end as NaiveAstarGroundNode
                             val dist = sqrt(pow((c.x - e.x).toDouble(), 2.0) + pow((c.y - e.y).toDouble(), 2.0) + pow((c.z - e.z).toDouble(), 2.0))
-                            (dist < stopAtDistance.get() && fullPath) || dist < 1
-                        }, 20) as ArrayList<NaiveAstarNode>
+                            (dist < stopAtDistance.get() && !fullPath) || dist < 1
+                        }, astarTimeout.get()) as ArrayList<NaiveAstarNode>
 
                 val path = mutableListOf<Vector3d>()
                 for (i in nodes)
@@ -364,8 +387,8 @@ class ReachAura : Module()
                             val c = current as NaiveAstarFlyNode
                             val e = end as NaiveAstarFlyNode
                             val dist = sqrt(pow((c.x - e.x).toDouble(), 2.0) + pow((c.y - e.y).toDouble(), 2.0) + pow((c.z - e.z).toDouble(), 2.0))
-                            (dist < stopAtDistance.get() && fullPath) || dist < 1
-                        }, 20) as ArrayList<NaiveAstarNode>
+                            (dist < stopAtDistance.get() && !fullPath) || dist < 1
+                        }, astarTimeout.get()) as ArrayList<NaiveAstarNode>
 
                 val path = mutableListOf<Vector3d>()
                 for (i in nodes)
@@ -374,7 +397,7 @@ class ReachAura : Module()
                 return if (path.size != 0) path else null
             }
         }
-        TODO("implement theta star")
+        return null // I don't want to implement theta* lol
     }
 
     private fun returnInitial(from: Vec3)
