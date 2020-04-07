@@ -175,7 +175,7 @@ abstract class Client : ClientListener, MinecraftInstance() {
     fun sendMessage(message: String) = sendPacket(ServerMessagePacket(message))
 
     /**
-     * Send chat message to server
+     * Send private chat message to server
      */
     fun sendPrivateMessage(username: String, message: String) = sendPacket(ServerPrivateMessagePacket(username, message))
 
@@ -185,7 +185,7 @@ abstract class Client : ClientListener, MinecraftInstance() {
     fun banUser(target: String) = sendPacket(ServerBanUserPacket(toUUID(target)))
 
     /**
-     * Ban user from server
+     * Unban user from server
      */
     fun unbanUser(target: String) = sendPacket(ServerUnbanUserPacket(toUUID(target)))
 
