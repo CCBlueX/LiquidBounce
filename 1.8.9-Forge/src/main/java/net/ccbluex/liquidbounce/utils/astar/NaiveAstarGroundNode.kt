@@ -1,10 +1,8 @@
 package net.ccbluex.liquidbounce.utils.astar
 
-import net.minecraft.block.material.Material
 import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3i
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
-import net.minecraft.block.Block
 import net.minecraft.block.BlockAir
 
 import java.util.ArrayList
