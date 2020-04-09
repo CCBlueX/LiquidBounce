@@ -41,6 +41,8 @@ public final class Astar extends MinecraftInstance
 					openlist.add(element);
 				else
 				{
+					element = openlist.get(openlist.indexOf(element));
+
 					AstarNode parent = element.get_parent();
 					double original_g = parent.cauculate_g(begin) + element.cauculate_cost_to_parent();
 					double new_g = element.cauculate_g(begin);
