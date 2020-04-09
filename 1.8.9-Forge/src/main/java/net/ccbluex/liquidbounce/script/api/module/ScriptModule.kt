@@ -159,6 +159,12 @@ class ScriptModule(private val scriptObjectMirror: ScriptObjectMirror) : Module(
      */
     @EventTarget
     fun onSession(sessionEvent: SessionEvent) = call("onSession")
+    
+    /**
+     * Handle onClickBlock and call js function of method
+     */
+    @EventTarget
+    fun onClickBlock(clickBlockEvent: ClickBlockEvent) = call("onClickBlock", clickBlockEvent)
 
     /**
      * Call member of script when member is available
