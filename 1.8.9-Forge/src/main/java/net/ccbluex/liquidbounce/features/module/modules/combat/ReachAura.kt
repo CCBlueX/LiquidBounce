@@ -47,6 +47,7 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
 import java.awt.Color
 import javax.vecmath.Vector3d
+import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -70,6 +71,7 @@ class ReachAura : Module()
 
     private val pathFindingMode = ListValue("PathFindingMode", arrayOf("Simple",
             "NaiveAstarGround", "NaiveAstarFly"), "Simple")
+    private val rayCastLessNode = BoolValue("RayCastLessNode",true)
 
     private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
     private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Distance")
@@ -77,7 +79,7 @@ class ReachAura : Module()
     private val renderPath = BoolValue("RenderPath", true)
     private val astarTimeout = IntegerValue("AstarTimeout", 20, 10, 1000)
 
-    private val pretend = BoolValue("Pretend",false)
+    private val pretend = BoolValue("Pretend", false)
 
     private var packets = 0.0
     private val positionSetList = mutableListOf<S08PacketPlayerPosLook>()
@@ -193,13 +195,15 @@ class ReachAura : Module()
     {
         if (!renderPath.get())
             return
+
+        val render_mgr = mc.renderManager
+
         for (i in reachAuraQueue)
         {
             if (i is C03PacketPlayer.C04PacketPlayerPosition)
             {
                 val dist = sqrt((i.x - mc.thePlayer.posX).pow(2.0) + (i.y - mc.thePlayer.posY).pow(2.0) + (i.z - mc.thePlayer.posZ).pow(2.0))
 
-                val render_mgr = mc.renderManager
 
                 RenderUtils.drawAxisAlignedBB(mc.thePlayer.entityBoundingBox.offset(i.x - mc.thePlayer.posX - render_mgr.renderPosX,
                         i.y - mc.thePlayer.posY - render_mgr.renderPosY, i.z - mc.thePlayer.posZ - render_mgr.renderPosZ)
@@ -207,7 +211,8 @@ class ReachAura : Module()
             }
         }
 
-        RenderUtils.drawAxisAlignedBB(target!!.entityBoundingBox, Color.YELLOW)
+        RenderUtils.drawAxisAlignedBB(target!!.entityBoundingBox.offset(-render_mgr.renderPosX,
+            -render_mgr.renderPosY,-render_mgr.renderPosZ), Color(86,156,214,170))
     }
 
     @EventTarget
@@ -238,7 +243,7 @@ class ReachAura : Module()
                 return
             }
 
-            if (targetList.size == 0|| target == null)
+            if (targetList.size == 0 || target == null)
             {
                 targetList.clear()//when did i write this???? wtf
                 if (targetModeValue.get() == "Multi")
@@ -291,7 +296,7 @@ class ReachAura : Module()
 
         val lowerCasePathfindString = pathFindingMode.get().toLowerCase()
 
-        if (lowerCasePathfindString.equals("simple"))
+        if (lowerCasePathfindString == "simple")
         {
             val diffX = toX - fromX
             val diffY = toY - fromY
@@ -313,15 +318,15 @@ class ReachAura : Module()
             val ground = lowerCasePathfindString.contains("ground")
 
             val begin = if (ground)
-                    NaiveAstarGroundNode(fromX.toInt(), fromY.toInt(), fromZ.toInt())
-                else
-                    NaiveAstarFlyNode(fromX.toInt(), fromY.toInt(), fromZ.toInt())
+                NaiveAstarGroundNode(fromX.toInt(), fromY.toInt(), fromZ.toInt())
+            else
+                NaiveAstarFlyNode(fromX.toInt(), fromY.toInt(), fromZ.toInt())
 
 
             val end = if (ground)
-                    NaiveAstarGroundNode(toX.toInt(), toY.toInt(), toZ.toInt())
-                else
-                    NaiveAstarFlyNode(toX.toInt(), toY.toInt(), toZ.toInt())
+                NaiveAstarGroundNode(toX.toInt(), toY.toInt(), toZ.toInt())
+            else
+                NaiveAstarFlyNode(toX.toInt(), toY.toInt(), toZ.toInt())
 
 
             val nodes = Astar.find_path(begin, end,
@@ -332,9 +337,45 @@ class ReachAura : Module()
                         (dist < stopAtDistance.get() && !fullPath) || dist < 2
                     }, astarTimeout.get()) as ArrayList<NaiveAstarNode>
 
-            val path = mutableListOf<Vector3d>()
+            var path = mutableListOf<Vector3d>()
             for (i in nodes)
                 path.add(Vector3d(i.get_pos().xCoord, i.get_pos().yCoord, i.get_pos().zCoord))
+
+            val rayCastLength = tpDistanceValue.maximum.toInt()
+            if (rayCastLessNode.get())
+            {
+                val tmp = mutableListOf<Vector3d>()
+                tmp.add(path.first())
+
+                var rayCastBegin = 0
+                while (rayCastBegin < path.size)
+                {
+                    var pathValid = false
+                    var rayCastEnd = min(rayCastBegin + rayCastLength,path.size - 1)
+                    val begin = path[rayCastBegin]
+
+                    while (rayCastEnd > rayCastBegin)
+                    {
+                        val end = path[rayCastEnd]
+                        val rayCastResult = raycastBBox(begin.x,begin.y,begin.z,end.x,end.y,end.z)
+                        if (rayCastResult.second && sqrt((begin.x-end.x).pow(2)+(begin.y-end.y).pow(2)+(begin.z-end.z).pow(2)) < tpDistanceValue.get())
+                        {
+                            tmp.add(path[rayCastEnd])
+                            rayCastBegin = rayCastEnd
+                            pathValid = true
+                            break
+                        }
+                            else
+                        rayCastEnd--
+                    }
+
+                    if (pathValid)
+                        continue
+                    else
+                        rayCastBegin++
+                }
+                path = tmp
+            }
 
             return if (path.size != 0) path else null
         }
