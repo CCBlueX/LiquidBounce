@@ -71,7 +71,7 @@ class ReachAura : Module()
 
     private val pathFindingMode = ListValue("PathFindingMode", arrayOf("Simple",
             "NaiveAstarGround", "NaiveAstarFly"), "Simple")
-    private val rayCastLessNode = BoolValue("RayCastLessNode",true)
+    private val rayCastLessNode = BoolValue("RayCastLessNode", true)
 
     private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
     private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Distance")
@@ -154,6 +154,7 @@ class ReachAura : Module()
     private fun updateTarget()
     {
         target = null
+        targetList.clear()
 
         for (entity in mc.theWorld.loadedEntityList)
         {
@@ -168,12 +169,12 @@ class ReachAura : Module()
 
         if (targetList.size > 0)
         {
-            if (priorityValue.get().equals("Distance") && targetModeValue.get().equals("Multi") && target != null)
+            if (priorityValue.get().equals("Distance") && targetModeValue.get().equals("Multi") && lastTargetPos != null)
             {
                 targetList.sortBy {
-                    (it!!.posX - target!!.posX).pow(2) +
-                            (it!!.posY - target!!.posY).pow(2) +
-                            (it!!.posZ - target!!.posZ).pow(2)
+                    (it!!.posX - lastTargetPos!!.xCoord).pow(2) +
+                            (it!!.posY - lastTargetPos!!.yCoord).pow(2) +
+                            (it!!.posZ - lastTargetPos!!.zCoord).pow(2)
                 }
             } else
 
@@ -211,8 +212,9 @@ class ReachAura : Module()
             }
         }
 
+        if (target != null)
         RenderUtils.drawAxisAlignedBB(target!!.entityBoundingBox.offset(-render_mgr.renderPosX,
-            -render_mgr.renderPosY,-render_mgr.renderPosZ), Color(86,156,214,170))
+                -render_mgr.renderPosY, -render_mgr.renderPosZ), Color(86, 156, 214, 170))
     }
 
     @EventTarget
@@ -263,10 +265,8 @@ class ReachAura : Module()
             if (targetModeValue.get() != "Single")
                 targetList.removeAt(0)
 
-            val pos = target!!.positionVector
-
             if (runAttack() && targetModeValue.get() != "Multi") //Short circuit exists in && ?
-                returnInitial(pos)
+                returnInitial(lastTargetPos!!)
         }
 
         packets += (pPS.get() / 20.0)
@@ -312,7 +312,7 @@ class ReachAura : Module()
             val path = pair.first
             val valid = pair.second
 
-            if (valid) return path else return null
+            return if (valid) path else null
         } else if (pathFindingMode.get().toLowerCase().contains("naiveastar"))
         {
             val ground = lowerCasePathfindString.contains("ground")
@@ -334,7 +334,7 @@ class ReachAura : Module()
                         val c = current as NaiveAstarNode
                         val e = end as NaiveAstarNode
                         val dist = sqrt((c.x - e.x).toDouble().pow(2.0) + (c.y - e.y).toDouble().pow(2.0) + (c.z - e.z).toDouble().pow(2.0))
-                        (dist < stopAtDistance.get() && !fullPath) || dist < 2
+                        (dist < stopAtDistance.get() && (!fullPath)) || dist < 2
                     }, astarTimeout.get()) as ArrayList<NaiveAstarNode>
 
             var path = mutableListOf<Vector3d>()
@@ -351,22 +351,21 @@ class ReachAura : Module()
                 while (rayCastBegin < path.size)
                 {
                     var pathValid = false
-                    var rayCastEnd = min(rayCastBegin + rayCastLength,path.size - 1)
+                    var rayCastEnd = min(rayCastBegin + rayCastLength, path.size - 1)
                     val begin = path[rayCastBegin]
 
                     while (rayCastEnd > rayCastBegin)
                     {
                         val end = path[rayCastEnd]
-                        val rayCastResult = raycastBBox(begin.x,begin.y,begin.z,end.x,end.y,end.z)
-                        if (rayCastResult.second && sqrt((begin.x-end.x).pow(2)+(begin.y-end.y).pow(2)+(begin.z-end.z).pow(2)) < tpDistanceValue.get())
+                        val rayCastResult = raycastBBox(begin.x, begin.y, begin.z, end.x, end.y, end.z)
+                        if (rayCastResult.second && sqrt((begin.x - end.x).pow(2) + (begin.y - end.y).pow(2) + (begin.z - end.z).pow(2)) < tpDistanceValue.get())
                         {
                             tmp.add(path[rayCastEnd])
                             rayCastBegin = rayCastEnd
                             pathValid = true
                             break
-                        }
-                            else
-                        rayCastEnd--
+                        } else
+                            rayCastEnd--
                     }
 
                     if (pathValid)
@@ -461,17 +460,16 @@ class ReachAura : Module()
             pathFindToCoord(lastTargetPos!!.xCoord, lastTargetPos!!.yCoord, lastTargetPos!!.zCoord,
                     target!!.posX, target!!.posY, target!!.posZ)
 
-        lastTargetPos = target!!.positionVector
+        lastTargetPos = if (path != null) Vec3(path.last().x, path.last().y, path.last().z) else lastTargetPos
 
-        if (mc.thePlayer.getDistanceToEntity(target) < stopAtDistance.get() || path!!.size != 0)
+        if (mc.thePlayer.getDistanceToEntity(target) < stopAtDistance.get() || path != null)
         {
-            path ?: return false
-
-            for (vec3 in path)
-            {
-                reachAuraQueue.add(
-                        C03PacketPlayer.C04PacketPlayerPosition(vec3.x, vec3.y, vec3.z, false))
-            }
+            if (path != null)
+                for (vec3 in path)
+                {
+                    reachAuraQueue.add(
+                            C03PacketPlayer.C04PacketPlayerPosition(vec3.x, vec3.y, vec3.z, false))
+                }
 
             attackEntity(target!!)
         }
