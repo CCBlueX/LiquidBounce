@@ -341,7 +341,7 @@ class ReachAura : Module()
             for (i in nodes)
                 path.add(Vector3d(i.get_pos().xCoord, i.get_pos().yCoord, i.get_pos().zCoord))
 
-            val rayCastLength = tpDistanceValue.maximum.toInt()
+            val rayCastLength = tpDistanceValue.maximum.toInt() * 2
             if (rayCastLessNode.get())
             {
                 val tmp = mutableListOf<Vector3d>()
