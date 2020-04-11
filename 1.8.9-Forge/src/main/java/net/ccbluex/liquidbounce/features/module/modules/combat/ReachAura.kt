@@ -47,6 +47,7 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
 import java.awt.Color
 import javax.vecmath.Vector3d
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -205,16 +206,19 @@ class ReachAura : Module()
             {
                 val dist = sqrt((i.x - mc.thePlayer.posX).pow(2.0) + (i.y - mc.thePlayer.posY).pow(2.0) + (i.z - mc.thePlayer.posZ).pow(2.0))
 
+                val red = max(min(((1.0 - (maxRange - dist) / maxRange) * 255.0).toInt(), 255), 0)
+                val green = max(min((((maxRange - dist) / maxRange) * 255.0).toInt(), 255), 0)
+
 
                 RenderUtils.drawAxisAlignedBB(mc.thePlayer.entityBoundingBox.offset(i.x - mc.thePlayer.posX - render_mgr.renderPosX,
                         i.y - mc.thePlayer.posY - render_mgr.renderPosY, i.z - mc.thePlayer.posZ - render_mgr.renderPosZ)
-                        , Color(((1.0 - (maxRange - dist) / maxRange) * 255.0).toInt(), (((maxRange - dist) / maxRange) * 255.0).toInt(), 30, 50))
+                        , Color(red, green, 30, 50))
             }
         }
 
         if (target != null)
-        RenderUtils.drawAxisAlignedBB(target!!.entityBoundingBox.offset(-render_mgr.renderPosX,
-                -render_mgr.renderPosY, -render_mgr.renderPosZ), Color(86, 156, 214, 170))
+            RenderUtils.drawAxisAlignedBB(target!!.entityBoundingBox.offset(-render_mgr.renderPosX,
+                    -render_mgr.renderPosY, -render_mgr.renderPosZ), Color(86, 156, 214, 170))
     }
 
     @EventTarget
@@ -248,7 +252,7 @@ class ReachAura : Module()
             if (targetList.size == 0 || target == null)
             {
                 targetList.clear()//when did i write this???? wtf
-                if (targetModeValue.get() == "Multi")
+                if (targetModeValue.get() == "Multi" && lastTargetPos != null)
                 {
                     returnInitial(lastTargetPos!!)
                     lastTargetPos = null
@@ -342,7 +346,7 @@ class ReachAura : Module()
                 path.add(Vector3d(i.get_pos().xCoord, i.get_pos().yCoord, i.get_pos().zCoord))
 
             val rayCastLength = tpDistanceValue.maximum.toInt() * 2
-            if (rayCastLessNode.get())
+            if (rayCastLessNode.get() && path.size != 0)
             {
                 val tmp = mutableListOf<Vector3d>()
                 tmp.add(path.first())
@@ -397,7 +401,7 @@ class ReachAura : Module()
         for (sample in (verify_path + path))
         {
             val newbbox = playerbbox.offset(sample.x - mc.thePlayer.posX,
-                    sample.y - mc.thePlayer.posY, sample.z - mc.thePlayer.posZ)
+                    sample.y - mc.thePlayer.posY, sample.z - mc.thePlayer.posZ).expand(0.1,0.0,0.1)
             if (bBoxIntersectsBlock(newbbox,
                             object : Collidable
                             {
