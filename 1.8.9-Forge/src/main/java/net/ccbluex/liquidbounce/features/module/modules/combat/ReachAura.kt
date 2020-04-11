@@ -52,6 +52,11 @@ import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+/**
+ * ReachAura
+ *@author commandblock2
+ */
+
 @ModuleInfo(name = "Reachaura", description = "Experimental: extra reach kill aura (tp hit)",
         category = ModuleCategory.COMBAT)
 class ReachAura : Module()
@@ -401,7 +406,7 @@ class ReachAura : Module()
         for (sample in (verify_path + path))
         {
             val newbbox = playerbbox.offset(sample.x - mc.thePlayer.posX,
-                    sample.y - mc.thePlayer.posY, sample.z - mc.thePlayer.posZ).expand(0.1,0.0,0.1)
+                    sample.y - mc.thePlayer.posY, sample.z - mc.thePlayer.posZ).expand(0.1, 0.0, 0.1)
             if (bBoxIntersectsBlock(newbbox,
                             object : Collidable
                             {

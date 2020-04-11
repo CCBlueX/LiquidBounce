@@ -38,7 +38,7 @@ class CivBreak : Module() {
 
     @EventTarget
     fun onBlockClick(event: ClickBlockEvent) {
-        if (BlockUtils.getBlock(BlockPos(event.clickedBlock)) == Blocks.bedrock)
+        if (BlockUtils.getBlock(event.clickedBlock) == Blocks.bedrock)
             return
 
         blockPos = event.clickedBlock

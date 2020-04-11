@@ -1,13 +1,14 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.utils.astar
 
-import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.minecraft.block.material.Material
-import net.minecraft.util.BlockPos
-import net.minecraft.util.Vec3i
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.minecraft.block.BlockAir
-
-import kotlin.collections.ArrayList
+import net.minecraft.util.BlockPos
+import net.minecraft.util.Vec3i
 
 class NaiveAstarFlyNode(override val x: Int, override val y: Int, override val z: Int, override var parent_node: NaiveAstarNode? = null) : NaiveAstarNode(x, y, z, parent_node)
 {
