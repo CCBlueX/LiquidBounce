@@ -5,8 +5,8 @@
  */
 package net.ccbluex.liquidbounce.utils.astar
 
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
-import net.minecraft.block.BlockAir
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.isBlockPassable
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3i
 
@@ -23,8 +23,8 @@ class NaiveAstarFlyNode(override val x: Int, override val y: Int, override val z
                 , Vec3i(x, y, z - 1)
         )
 
-        neighborPoss = neighborPoss.filter { it -> BlockUtils.getBlock(BlockPos(it)) is BlockAir } as MutableList<Vec3i>
-        neighborPoss = neighborPoss.filter { it -> BlockUtils.getBlock(BlockPos(it.x, it.y + 1, it.z)) is BlockAir } as MutableList<Vec3i>
+        neighborPoss = neighborPoss.filter { it -> isBlockPassable(BlockPos(it).getBlock())} as MutableList<Vec3i>
+        neighborPoss = neighborPoss.filter { it -> isBlockPassable(BlockPos(it.x, it.y + 1, it.z).getBlock())} as MutableList<Vec3i>
 
         var arrayList = ArrayList<AstarNode>()
 

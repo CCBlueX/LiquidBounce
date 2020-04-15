@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.block.Block
 import net.minecraft.block.material.Material
 import net.minecraft.block.state.IBlockState
+import net.minecraft.init.Blocks
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.MathHelper
@@ -158,6 +159,24 @@ object BlockUtils : MinecraftInstance() {
         }
         return false
     }
+
+    /**
+     *  Check if the block is passable
+     */
+
+    @JvmStatic
+    fun isBlockPassable(block : Block?): Boolean
+    {
+        block ?: return false
+
+        val material = block?.material
+        return block in passableBlocks || material in passableMaterial
+    }
+
+    private val passableMaterial = arrayOf(Material.air,Material.plants)
+    private val passableBlocks = arrayOf(Blocks.standing_sign, Blocks.wall_sign, Blocks.torch, Blocks.redstone_torch,
+            Blocks.redstone_wire, Blocks.wooden_button, Blocks.stone_button, Blocks.lever, Blocks.tripwire, Blocks.tripwire_hook,
+            Blocks.tallgrass, Blocks.red_flower, Blocks.yellow_flower)
 
     interface Collidable {
 

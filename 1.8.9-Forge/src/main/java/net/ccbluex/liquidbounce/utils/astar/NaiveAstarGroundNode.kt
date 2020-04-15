@@ -5,12 +5,11 @@
  */
 package net.ccbluex.liquidbounce.utils.astar
 
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.isBlockPassable
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3i
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
-import net.minecraft.block.BlockAir
-
-import java.util.ArrayList
+import java.util.*
 
 
 class NaiveAstarGroundNode(override val x: Int, override val y: Int, override val z: Int, override var parentNode: NaiveAstarNode? = null) : NaiveAstarNode(x, y, z, parentNode)
@@ -19,7 +18,7 @@ class NaiveAstarGroundNode(override val x: Int, override val y: Int, override va
     {
         var neighborPoss = mutableListOf<Vec3i>()
 
-        if (parentNode == null ||BlockUtils.getBlock(BlockPos(parentNode!!.x,parentNode!!.y - 1,parentNode!!.z)) !is BlockAir)
+        if (parentNode == null || !isBlockPassable(BlockPos(parentNode!!.x,parentNode!!.y - 1,parentNode!!.z).getBlock()))
         {
             neighborPoss.add(Vec3i(x + 1, y, z))
             neighborPoss.add(Vec3i(x - 1, y, z))
@@ -29,11 +28,11 @@ class NaiveAstarGroundNode(override val x: Int, override val y: Int, override va
         else
             neighborPoss.add(Vec3i(x, y - 1, z))
 
-        if (BlockUtils.getBlock(BlockPos(x,y - 1,z)) !is BlockAir)
+        if (!isBlockPassable(BlockPos(x,y - 1,z).getBlock()))
             neighborPoss.add(Vec3i(x,y+1,z))
 
-        neighborPoss = neighborPoss.filter { it -> BlockUtils.getBlock(BlockPos(it)) is BlockAir } as MutableList<Vec3i>
-        neighborPoss = neighborPoss.filter { it -> BlockUtils.getBlock(BlockPos(it.x, it.y + 1, it.z)) is BlockAir } as MutableList<Vec3i>
+        neighborPoss = neighborPoss.filter { it -> isBlockPassable(BlockPos(it).getBlock())} as MutableList<Vec3i>
+        neighborPoss = neighborPoss.filter { it -> isBlockPassable(BlockPos(it.x, it.y + 1, it.z).getBlock())} as MutableList<Vec3i>
 
         var arrayList = ArrayList<AstarNode>()
 

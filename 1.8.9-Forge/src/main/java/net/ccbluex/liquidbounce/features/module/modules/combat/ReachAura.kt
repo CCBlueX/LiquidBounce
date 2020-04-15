@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.astar.NaiveAstarNode
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.Collidable
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.bBoxIntersectsBlock
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.isBlockPassable
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -66,16 +67,16 @@ class ReachAura : Module()
      */
 
     // PPS:packets per sec
-    private val pPS = IntegerValue("PPS", 13, 0, 50)
-    private val disableOnReset = BoolValue("disableOnReset", false)
-    private val pulse = BoolValue("pulse",true)
+    private val pPS = IntegerValue("PPS", 18, 0, 50)
+    private val disableOnReset = BoolValue("DisableOnReset", false)
+    val pulse = BoolValue("Pulse",true)
 
     private val rangeValue = FloatValue("Range", 20f, 1f, 100f)
     private val tpDistanceValue = FloatValue("TpDistance", 4.0f, 0.5f, 10.0f)
     private val stopAtDistance = FloatValue("StopAtDistance", 0.0f, 0.0f, 6.0f)
 
     private val pathFindingMode = ListValue("PathFindingMode", arrayOf("Simple",
-            "NaiveAstarGround", "NaiveAstarFly"), "Simple")
+            "NaiveAstarGround", "NaiveAstarFly"), "NaiveAstarFly")
     private val rayCastLessNode = BoolValue("RayCastLessNode", true)
 
     private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
@@ -97,7 +98,7 @@ class ReachAura : Module()
     private var target: EntityLivingBase? = null
     private var targetList = mutableListOf<EntityLivingBase?>()
     private var lastTargetPos: Vec3? = null
-    private var singleSkipTick = 0
+    private var skipTick = 0
 
     // Bypass
     private val swingValue = BoolValue("Swing", true)
@@ -198,7 +199,7 @@ class ReachAura : Module()
 
         } else
         {
-            if (targetModeValue.get() == "Single") singleSkipTick = 3
+            skipTick = 3
             reachAuraQueue.clear()
         }
     }
@@ -251,9 +252,9 @@ class ReachAura : Module()
     @EventTarget
     fun onTick(event: TickEvent)
     {
-        if (singleSkipTick > 0)
+        if (skipTick > 0)
         {
-            singleSkipTick--
+            skipTick--
             return
         }
 
@@ -358,7 +359,7 @@ class ReachAura : Module()
 
             var path = mutableListOf<Vector3d>()
             for (i in nodes)
-                path.add(Vector3d(i.get_pos().xCoord, i.get_pos().yCoord, i.get_pos().zCoord))
+                path.add(Vector3d(i.getPos().xCoord, i.getPos().yCoord, i.getPos().zCoord))
 
             val rayCastLength = tpDistanceValue.maximum.toInt() * 2
             if (rayCastLessNode.get() && path.size != 0)
@@ -422,7 +423,7 @@ class ReachAura : Module()
                             {
                                 override fun collideBlock(block: Block?): Boolean
                                 {
-                                    val collide = block !is BlockAir
+                                    val collide = !isBlockPassable(block)
                                     if (collide)
                                         valid = false
                                     return collide

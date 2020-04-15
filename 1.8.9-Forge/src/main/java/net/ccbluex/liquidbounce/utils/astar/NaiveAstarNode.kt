@@ -5,6 +5,11 @@
  */
 package net.ccbluex.liquidbounce.utils.astar
 
+import jdk.nashorn.internal.ir.Block
+import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.minecraft.block.material.Material
+import net.minecraft.init.Blocks
+import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -52,7 +57,7 @@ abstract class NaiveAstarNode(open val x: Int, open val y: Int, open val z: Int,
                 .toDouble().pow(2))
     }
 
-    fun get_pos(): Vec3
+    fun getPos(): Vec3
     {
         return Vec3(x + 0.5, y + 0.0, z + 0.5)
     }

@@ -196,16 +196,16 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
 
                 if (this.ridingEntity == null) {
-                    if (moved && rotated && !reachAura.getState()) {
+                    if (moved && rotated && (!reachAura.getState() || reachAura.getPulse().get())) {
                         this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.posX, this.getEntityBoundingBox().minY, this.posZ, yaw, pitch, this.onGround));
-                    } else if (moved && !reachAura.getState()) {
+                    } else if (moved && (!reachAura.getState() || reachAura.getPulse().get())) {
                         this.sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(this.posX, this.getEntityBoundingBox().minY, this.posZ, this.onGround));
                     } else if (rotated) {
                         this.sendQueue.addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, this.onGround));
                     } else {
                         this.sendQueue.addToSendQueue(new C03PacketPlayer(this.onGround));
                     }
-                } else if(!reachAura.getState()){
+                } else if(!reachAura.getState() && !reachAura.getPulse().get()){
                     this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.motionX, -999.0D, this.motionZ, yaw, pitch, this.onGround));
                     moved = false;
                 }
