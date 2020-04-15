@@ -47,10 +47,7 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
 import java.awt.Color
 import javax.vecmath.Vector3d
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.pow
-import kotlin.math.sqrt
+import kotlin.math.*
 
 /**
  * ReachAura
@@ -68,8 +65,8 @@ class ReachAura : Module()
 
     // PPS:packets per sec
     private val pPS = IntegerValue("PPS", 13, 0, 50)
-    private val minPacketsPerGroup = IntegerValue("MinPacketsPerGroup", 0, 0, 50)
-    private val noPositionSet = BoolValue("IgnorePositionSet", false)
+    private val disableOnReset = BoolValue("disableOnReset", false)
+    private val pulse = BoolValue("pulse",true)
 
     private val rangeValue = FloatValue("Range", 20f, 1f, 100f)
     private val tpDistanceValue = FloatValue("TpDistance", 4.0f, 0.5f, 10.0f)
@@ -88,7 +85,7 @@ class ReachAura : Module()
     private val pretend = BoolValue("Pretend", false)
 
     private var packets = 0.0
-    private val positionSetList = mutableListOf<S08PacketPlayerPosLook>()
+    private var lastPacketPos: Vec3? = null
 
     /**
      * MODULE
@@ -98,6 +95,7 @@ class ReachAura : Module()
     private var target: EntityLivingBase? = null
     private var targetList = mutableListOf<EntityLivingBase?>()
     private var lastTargetPos: Vec3? = null
+    private var singleSkipTick = 0
 
     // Bypass
     private val swingValue = BoolValue("Swing", true)
@@ -128,10 +126,12 @@ class ReachAura : Module()
             }
 
             for (i in path)
-                mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(i.x, i.y, i.z, false))
+                mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(i.x, i.y, i.z, true))
 
             mc.thePlayer.posY = y.toDouble()
         }
+
+        lastPacketPos = mc.thePlayer.positionVector
 
         updateTarget()
     }
@@ -142,7 +142,7 @@ class ReachAura : Module()
      */
     override fun onDisable()
     {
-        if (lastTargetPos != null)
+        if (lastTargetPos != null && targetModeValue.get() == "Multi")
             returnInitial(lastTargetPos!!)
         packets = 0.0
         target = null
@@ -175,12 +175,12 @@ class ReachAura : Module()
 
         if (targetList.size > 0)
         {
-            if (priorityValue.get().equals("Distance") && targetModeValue.get().equals("Multi") && lastTargetPos != null)
+            if (priorityValue.get() == "Distance" && targetModeValue.get() == "Multi" && lastTargetPos != null)
             {
                 targetList.sortBy {
                     (it!!.posX - lastTargetPos!!.xCoord).pow(2) +
-                            (it!!.posY - lastTargetPos!!.yCoord).pow(2) +
-                            (it!!.posZ - lastTargetPos!!.zCoord).pow(2)
+                            (it.posY - lastTargetPos!!.yCoord).pow(2) +
+                            (it.posZ - lastTargetPos!!.zCoord).pow(2)
                 }
             } else
 
@@ -194,6 +194,10 @@ class ReachAura : Module()
 
             target = targetList.first()
 
+        } else
+        {
+            if (targetModeValue.get() == "Single") singleSkipTick = 3
+            reachAuraQueue.clear()
         }
     }
 
@@ -203,7 +207,7 @@ class ReachAura : Module()
         if (!renderPath.get())
             return
 
-        val render_mgr = mc.renderManager
+        val renderMgr = mc.renderManager
 
         for (i in reachAuraQueue)
         {
@@ -215,25 +219,24 @@ class ReachAura : Module()
                 val green = max(min((((maxRange - dist) / maxRange) * 255.0).toInt(), 255), 0)
 
 
-                RenderUtils.drawAxisAlignedBB(mc.thePlayer.entityBoundingBox.offset(i.x - mc.thePlayer.posX - render_mgr.renderPosX,
-                        i.y - mc.thePlayer.posY - render_mgr.renderPosY, i.z - mc.thePlayer.posZ - render_mgr.renderPosZ)
+                RenderUtils.drawAxisAlignedBB(mc.thePlayer.entityBoundingBox.offset(i.x - mc.thePlayer.posX - renderMgr.renderPosX,
+                        i.y - mc.thePlayer.posY - renderMgr.renderPosY, i.z - mc.thePlayer.posZ - renderMgr.renderPosZ)
                         , Color(red, green, 30, 50))
             }
         }
 
         if (target != null)
-            RenderUtils.drawAxisAlignedBB(target!!.entityBoundingBox.offset(-render_mgr.renderPosX,
-                    -render_mgr.renderPosY, -render_mgr.renderPosZ), Color(86, 156, 214, 170))
+            RenderUtils.drawAxisAlignedBB(target!!.entityBoundingBox.offset(-renderMgr.renderPosX,
+                    -renderMgr.renderPosY, -renderMgr.renderPosZ), Color(86, 156, 214, 170))
     }
 
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
         val packet = event.packet
-        if (packet is S08PacketPlayerPosLook && noPositionSet.get())
+        if (packet is S08PacketPlayerPosLook && disableOnReset.get())
         {
-            event.cancelEvent()
-            positionSetList.add(packet)
+            state = false
         }
     }
 
@@ -246,7 +249,13 @@ class ReachAura : Module()
     @EventTarget
     fun onTick(event: TickEvent)
     {
-        while (reachAuraQueue.size < pPS.get() * 0.1)
+        if (singleSkipTick > 0)
+        {
+            singleSkipTick--
+            return
+        }
+
+        while (reachAuraQueue.size < pPS.get() * 0.3)
         {
             if (mc.thePlayer == null || mc.theWorld == null)
             {
@@ -259,8 +268,8 @@ class ReachAura : Module()
                 targetList.clear()//when did i write this???? wtf
                 if (targetModeValue.get() == "Multi" && lastTargetPos != null)
                 {
-                    returnInitial(lastTargetPos!!)
-                    lastTargetPos = null
+                    if (returnInitial(lastTargetPos!!))
+                        lastTargetPos = null
                 }
                 updateTarget()
                 return
@@ -279,23 +288,24 @@ class ReachAura : Module()
         }
 
         packets += (pPS.get() / 20.0)
-        if (packets >= minPacketsPerGroup.get())
-            while (packets > 0 && reachAuraQueue.size > 0)
+        while (packets > 0 && reachAuraQueue.size > 0 && (!pulse.get() || packets > reachAuraQueue.size))
+        {
+            val first = reachAuraQueue.first()
+            if (first is C03PacketPlayer.C04PacketPlayerPosition
+                    && (first.x.isNaN() || first.y.isNaN() || first.z.isNaN()))
             {
-                val first = reachAuraQueue.first()
-                if (first is C03PacketPlayer.C04PacketPlayerPosition
-                        && (first.x.isNaN() || first.y.isNaN() || first.z.isNaN()))
-                {
-                    reachAuraQueue.removeAt(0)
-                    packets--
-                    continue
-                }
-
-                if (!pretend.get())
-                    mc.netHandler.addToSendQueue(first)
                 reachAuraQueue.removeAt(0)
                 packets--
+                continue
             }
+
+            if (!pretend.get())
+                mc.netHandler.addToSendQueue(first)
+            else if (first is C03PacketPlayer.C04PacketPlayerPosition)
+                ClientUtils.displayChatMessage("${first.x},${first.y},${first.z}")
+            reachAuraQueue.removeAt(0)
+            packets--
+        }
     }
 
     private fun pathFindToCoord(fromX: Double, fromY: Double, fromZ: Double,
@@ -396,18 +406,18 @@ class ReachAura : Module()
         val path = PathUtils.findPath(fromX, fromY, fromZ,
                 endX, endY, endZ, tpDistanceValue.get().toDouble())
 
-        val verify_path = PathUtils.findPath(fromX, fromY, fromZ, endX, endY, endZ, 1.0)
+        val verifyPath = PathUtils.findPath(fromX, fromY, fromZ, endX, endY, endZ, 1.0)
 
         var valid = true
 
-        val playerbbox = mc.thePlayer.entityBoundingBox
+        val playerBBox = mc.thePlayer.entityBoundingBox
 
 
-        for (sample in (verify_path + path))
+        for (sample in (verifyPath + path))
         {
-            val newbbox = playerbbox.offset(sample.x - mc.thePlayer.posX,
+            val newBBox = playerBBox.offset(sample.x - mc.thePlayer.posX,
                     sample.y - mc.thePlayer.posY, sample.z - mc.thePlayer.posZ).expand(0.1, 0.0, 0.1)
-            if (bBoxIntersectsBlock(newbbox,
+            if (bBoxIntersectsBlock(newBBox,
                             object : Collidable
                             {
                                 override fun collideBlock(block: Block?): Boolean
@@ -423,21 +433,43 @@ class ReachAura : Module()
         return Pair(path, valid)
     }
 
-    private fun returnInitial(from: Vec3)
+    private fun isNodeValid(vec3: Vector3d): Boolean
+    {
+        if (reachAuraQueue.size == 0) return true
+
+        val lastQueuePacket: C03PacketPlayer.C04PacketPlayerPosition =
+                (when
+                {
+                    reachAuraQueue.last() is C03PacketPlayer.C04PacketPlayerPosition -> reachAuraQueue.last()
+                    reachAuraQueue[reachAuraQueue.size - 2] is C03PacketPlayer.C04PacketPlayerPosition -> reachAuraQueue[reachAuraQueue.size - 2]
+                    else -> null
+                }
+                        ) as C03PacketPlayer.C04PacketPlayerPosition?
+                        ?: return true
+
+        return (vec3.x - lastQueuePacket.x).pow(2) + (vec3.y - lastQueuePacket.y).pow(2) + (vec3.z - lastQueuePacket.z).pow(2) < 100
+    }
+
+    private fun returnInitial(from: Vec3): Boolean
     {
         val me = mc.thePlayer
         // TP back
         val path = pathFindToCoord(from.xCoord, from.yCoord, from.zCoord
                 , me.posX, me.posY, me.posZ, true)
 
-        path ?: return
+        path ?: return false
 
         if (path.size != 0)
+
             for (vector3d in path)
             {
-                reachAuraQueue.add(C03PacketPlayer.C04PacketPlayerPosition(
-                        vector3d.getX(), vector3d.getY(), vector3d.getZ(), false))
+                if (isNodeValid(vector3d))
+                    reachAuraQueue.add(C03PacketPlayer.C04PacketPlayerPosition(
+                            vector3d.getX(), vector3d.getY(), vector3d.getZ(), true))
             }
+        return true
+
+        //it might failed then u get stuck
     }
 
 
@@ -476,8 +508,9 @@ class ReachAura : Module()
             if (path != null)
                 for (vec3 in path)
                 {
-                    reachAuraQueue.add(
-                            C03PacketPlayer.C04PacketPlayerPosition(vec3.x, vec3.y, vec3.z, false))
+                    if (isNodeValid(vec3))
+                        reachAuraQueue.add(
+                                C03PacketPlayer.C04PacketPlayerPosition(vec3.x, vec3.y, vec3.z, true))
                 }
 
             attackEntity(target!!)

@@ -6,29 +6,30 @@
 package net.ccbluex.liquidbounce.utils.astar
 
 import net.minecraft.util.Vec3
-import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-abstract class NaiveAstarNode(open val x: Int, open val y: Int, open val z: Int, open var parent_node: NaiveAstarNode? = null) : AstarNode
+typealias AstarNode = Astar.AstarNode
+
+abstract class NaiveAstarNode(open val x: Int, open val y: Int, open val z: Int, open var parentNode: NaiveAstarNode? = null) : AstarNode
 {
 
-    override fun cauculate_f(begin: AstarNode, end: AstarNode): Double
+    override fun f(begin: AstarNode, end: AstarNode): Double
     {
-        return cauculate_g(begin) + cauculate_h(end)
+        return g(begin) + h(end)
     }
 
-    override fun get_parent(): AstarNode?
+    override fun parent(): AstarNode?
     {
-        return parent_node
+        return parentNode
     }
 
-    override fun set_parent(p: AstarNode?)
+    override fun setParent(p: AstarNode?)
     {
-        parent_node = (p as NaiveAstarNode?)!!
+        parentNode = (p as NaiveAstarNode?)!!
     }
 
-    override fun cauculate_g(begin: AstarNode): Double
+    override fun g(begin: AstarNode): Double
     {
         val node = begin as NaiveAstarNode
         return sqrt((node.x - x).toDouble().pow(2)
@@ -36,7 +37,7 @@ abstract class NaiveAstarNode(open val x: Int, open val y: Int, open val z: Int,
                 + (node.z - z).toDouble().pow(2))
     }
 
-    override fun cauculate_h(end: AstarNode): Double
+    override fun h(end: AstarNode): Double
     {
         val node = end as NaiveAstarNode
         return sqrt((node.x - x).toDouble().pow(2) +
@@ -44,10 +45,10 @@ abstract class NaiveAstarNode(open val x: Int, open val y: Int, open val z: Int,
                 (node.z - z).toDouble().pow(2))
     }
 
-    override fun cauculate_cost_to_parent(): Double
+    override fun costToParent(): Double
     {
-        return sqrt((parent_node!!.x - x).toDouble().pow(2) +
-                (parent_node!!.y - y).toDouble().pow(2) + (parent_node!!.z - z)
+        return sqrt((parentNode!!.x - x).toDouble().pow(2) +
+                (parentNode!!.y - y).toDouble().pow(2) + (parentNode!!.z - z)
                 .toDouble().pow(2))
     }
 

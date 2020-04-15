@@ -14,59 +14,81 @@ import java.util.Comparator;
 
 public final class Astar extends MinecraftInstance
 {
+	public interface AstarEndOperator
+	{
+		boolean shouldEnd(AstarNode current, AstarNode end);
+	}
+
+	public interface AstarNode
+	{
+		double f(AstarNode begin, AstarNode end);
+		double g(AstarNode begin);
+		double h(AstarNode end);
+
+		AstarNode parent();
+		double costToParent();
+		void setParent(AstarNode p);
+
+		ArrayList<AstarNode> neighbors();
+
+		boolean equals(AstarNode p);
+	}
+
+
+
 	public static ArrayList<AstarNode> find_path(final AstarNode begin, final AstarNode end,
 	                                      AstarEndOperator op,int timeout_ms)
 	{
-		ArrayList<AstarNode> openlist = new ArrayList<AstarNode>();
-		ArrayList<AstarNode> closedlist = new ArrayList<AstarNode>();
+		ArrayList<AstarNode> openList = new ArrayList<AstarNode>();
+		ArrayList<AstarNode> closedList = new ArrayList<AstarNode>();
 
 		MSTimer timer = new MSTimer();
 		timer.reset();
 
-		openlist.add(begin);
+		openList.add(begin);
 
 		AstarNode current_node = null;
 		do
 		{
-			if (openlist.size() == 0) break;
+			if (openList.size() == 0) break;
 
-			current_node = Collections.min(openlist,Comparator.comparing(x -> x.cauculate_f(begin,end)));
+			current_node = Collections.min(openList,Comparator.comparing(x -> x.f(begin,end)));
 
-			closedlist.add(current_node);
-			openlist.remove(current_node);
+			closedList.add(current_node);
+			openList.remove(current_node);
 
-			ArrayList<AstarNode> neibors = current_node.get_neighbors();
+			ArrayList<AstarNode> neibors = current_node.neighbors();
 
 			for (AstarNode element: neibors)
 			{
-				if (closedlist.contains(element))
+				if (closedList.contains(element))
 					continue;
 
-				if (!openlist.contains(element))
-					openlist.add(element);
+				if (!openList.contains(element))
+					openList.add(element);
 				else
 				{
-					element = openlist.get(openlist.indexOf(element));
+					element = openList.get(openList.indexOf(element));
 
-					AstarNode parent = element.get_parent();
-					double original_g = parent.cauculate_g(begin) + element.cauculate_cost_to_parent();
-					double new_g = element.cauculate_g(begin);
+					AstarNode parent = element.parent();
+					double original_g = parent.g(begin) + element.costToParent();
+					double new_g = element.g(begin);
 
 					if (new_g < original_g)
-						element.set_parent(current_node);
+						element.setParent(current_node);
 				}
 			}
 
-			if (openlist.size() > 10000) return new ArrayList<AstarNode>();
+			if (openList.size() > 10000) return new ArrayList<AstarNode>();
 			if (timer.hasTimePassed(timeout_ms)) return new ArrayList<AstarNode>();
-		} while (!op.shouldend(current_node,end));
+		} while (!op.shouldEnd(current_node,end));
 
 		ArrayList<AstarNode> list = new ArrayList<>();
 
-		while (current_node.get_parent() != null)
+		while (current_node.parent() != null)
 		{
 			list.add(0,current_node);
-			current_node = current_node.get_parent();
+			current_node = current_node.parent();
 		}
 		list.add(0,current_node);
 
