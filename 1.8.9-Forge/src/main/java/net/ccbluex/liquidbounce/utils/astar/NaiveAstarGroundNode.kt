@@ -17,27 +17,27 @@ class NaiveAstarGroundNode(override val x: Int, override val y: Int, override va
 {
     override fun neighbors(): ArrayList<AstarNode>
     {
-        var neiborPoss = mutableListOf<Vec3i>()
+        var neighborPoss = mutableListOf<Vec3i>()
 
         if (parentNode == null ||BlockUtils.getBlock(BlockPos(parentNode!!.x,parentNode!!.y - 1,parentNode!!.z)) !is BlockAir)
         {
-            neiborPoss.add(Vec3i(x + 1, y, z))
-            neiborPoss.add(Vec3i(x - 1, y, z))
-            neiborPoss.add(Vec3i(x, y, z - 1))
-            neiborPoss.add(Vec3i(x, y , z + 1))
+            neighborPoss.add(Vec3i(x + 1, y, z))
+            neighborPoss.add(Vec3i(x - 1, y, z))
+            neighborPoss.add(Vec3i(x, y, z - 1))
+            neighborPoss.add(Vec3i(x, y , z + 1))
         }
         else
-            neiborPoss.add(Vec3i(x, y - 1, z))
+            neighborPoss.add(Vec3i(x, y - 1, z))
 
         if (BlockUtils.getBlock(BlockPos(x,y - 1,z)) !is BlockAir)
-            neiborPoss.add(Vec3i(x,y+1,z))
+            neighborPoss.add(Vec3i(x,y+1,z))
 
-        neiborPoss = neiborPoss.filter { it -> BlockUtils.getBlock(BlockPos(it)) is BlockAir } as MutableList<Vec3i>
-        neiborPoss = neiborPoss.filter { it -> BlockUtils.getBlock(BlockPos(it.x, it.y + 1, it.z)) is BlockAir } as MutableList<Vec3i>
+        neighborPoss = neighborPoss.filter { it -> BlockUtils.getBlock(BlockPos(it)) is BlockAir } as MutableList<Vec3i>
+        neighborPoss = neighborPoss.filter { it -> BlockUtils.getBlock(BlockPos(it.x, it.y + 1, it.z)) is BlockAir } as MutableList<Vec3i>
 
         var arrayList = ArrayList<AstarNode>()
 
-        neiborPoss.forEach { arrayList.add(NaiveAstarGroundNode(it.x, it.y, it.z, this)) }
+        neighborPoss.forEach { arrayList.add(NaiveAstarGroundNode(it.x, it.y, it.z, this)) }
 
         return arrayList
     }

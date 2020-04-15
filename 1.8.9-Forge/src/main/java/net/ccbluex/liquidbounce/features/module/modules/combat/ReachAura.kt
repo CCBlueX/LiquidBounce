@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
-import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.PathUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
@@ -47,7 +46,10 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
 import java.awt.Color
 import javax.vecmath.Vector3d
-import kotlin.math.*
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
  * ReachAura
@@ -301,8 +303,6 @@ class ReachAura : Module()
 
             if (!pretend.get())
                 mc.netHandler.addToSendQueue(first)
-            else if (first is C03PacketPlayer.C04PacketPlayerPosition)
-                ClientUtils.displayChatMessage("${first.x},${first.y},${first.z}")
             reachAuraQueue.removeAt(0)
             packets--
         }

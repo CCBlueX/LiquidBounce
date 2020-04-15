@@ -39,27 +39,27 @@ public final class Astar extends MinecraftInstance
 	public static ArrayList<AstarNode> find_path(final AstarNode begin, final AstarNode end,
 	                                      AstarEndOperator op,int timeout_ms)
 	{
-		ArrayList<AstarNode> openList = new ArrayList<AstarNode>();
-		ArrayList<AstarNode> closedList = new ArrayList<AstarNode>();
+		ArrayList<AstarNode> openList = new ArrayList<>();
+		ArrayList<AstarNode> closedList = new ArrayList<>();
 
 		MSTimer timer = new MSTimer();
 		timer.reset();
 
 		openList.add(begin);
 
-		AstarNode current_node = null;
+		AstarNode currentNode = null;
 		do
 		{
 			if (openList.size() == 0) break;
 
-			current_node = Collections.min(openList,Comparator.comparing(x -> x.f(begin,end)));
+			currentNode = Collections.min(openList,Comparator.comparing(x -> x.f(begin,end)));
 
-			closedList.add(current_node);
-			openList.remove(current_node);
+			closedList.add(currentNode);
+			openList.remove(currentNode);
 
-			ArrayList<AstarNode> neibors = current_node.neighbors();
+			ArrayList<AstarNode> neighbors = currentNode.neighbors();
 
-			for (AstarNode element: neibors)
+			for (AstarNode element: neighbors)
 			{
 				if (closedList.contains(element))
 					continue;
@@ -71,26 +71,26 @@ public final class Astar extends MinecraftInstance
 					element = openList.get(openList.indexOf(element));
 
 					AstarNode parent = element.parent();
-					double original_g = parent.g(begin) + element.costToParent();
-					double new_g = element.g(begin);
+					double g = parent.g(begin) + element.costToParent();
+					double tentativeG = element.g(begin);
 
-					if (new_g < original_g)
-						element.setParent(current_node);
+					if (tentativeG < g)
+						element.setParent(currentNode);
 				}
 			}
 
-			if (openList.size() > 10000) return new ArrayList<AstarNode>();
-			if (timer.hasTimePassed(timeout_ms)) return new ArrayList<AstarNode>();
-		} while (!op.shouldEnd(current_node,end));
+			if (openList.size() > 10000) return new ArrayList<>();
+			if (timer.hasTimePassed(timeout_ms)) return new ArrayList<>();
+		} while (!op.shouldEnd(currentNode,end));
 
 		ArrayList<AstarNode> list = new ArrayList<>();
 
-		while (current_node.parent() != null)
+		while (currentNode.parent() != null)
 		{
-			list.add(0,current_node);
-			current_node = current_node.parent();
+			list.add(0,currentNode);
+			currentNode = currentNode.parent();
 		}
-		list.add(0,current_node);
+		list.add(0,currentNode);
 
 		return list;
 	}

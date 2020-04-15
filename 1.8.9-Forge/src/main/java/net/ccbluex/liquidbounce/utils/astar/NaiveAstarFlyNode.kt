@@ -14,7 +14,7 @@ class NaiveAstarFlyNode(override val x: Int, override val y: Int, override val z
 {
     override fun neighbors(): ArrayList<AstarNode>
     {
-        var neiborPoss = mutableListOf<Vec3i>(
+        var neighborPoss = mutableListOf<Vec3i>(
                 Vec3i(x + 1, y, z)
                 , Vec3i(x - 1, y, z)
                 , Vec3i(x, y + 1, z)
@@ -23,12 +23,12 @@ class NaiveAstarFlyNode(override val x: Int, override val y: Int, override val z
                 , Vec3i(x, y, z - 1)
         )
 
-        neiborPoss = neiborPoss.filter { it -> BlockUtils.getBlock(BlockPos(it)) is BlockAir } as MutableList<Vec3i>
-        neiborPoss = neiborPoss.filter { it -> BlockUtils.getBlock(BlockPos(it.x, it.y + 1, it.z)) is BlockAir } as MutableList<Vec3i>
+        neighborPoss = neighborPoss.filter { it -> BlockUtils.getBlock(BlockPos(it)) is BlockAir } as MutableList<Vec3i>
+        neighborPoss = neighborPoss.filter { it -> BlockUtils.getBlock(BlockPos(it.x, it.y + 1, it.z)) is BlockAir } as MutableList<Vec3i>
 
         var arrayList = ArrayList<AstarNode>()
 
-        neiborPoss.forEach { arrayList.add(NaiveAstarFlyNode(it.x, it.y, it.z, this)) }
+        neighborPoss.forEach { arrayList.add(NaiveAstarFlyNode(it.x, it.y, it.z, this)) }
 
         return arrayList
     }
