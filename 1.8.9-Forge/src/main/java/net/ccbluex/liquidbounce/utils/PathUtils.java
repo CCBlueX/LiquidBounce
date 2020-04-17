@@ -49,17 +49,15 @@ public final class PathUtils extends MinecraftInstance {
 
     public static List<Vector3d> findPath(final double tpX, final double tpY, final double tpZ, final double offset) {
         final List<Vector3d> positions = new ArrayList<>();
-        final float yaw = (float) ((Math.atan2(tpZ - mc.thePlayer.posZ, tpX - mc.thePlayer.posX) * 180.0 / Math.PI) - 90F);
-        final double steps = getDistance(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, tpX, tpY, tpZ) / offset;
+        final double steps = Math.ceil(getDistance(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, tpX, tpY, tpZ) / offset);
 
-        double curY = mc.thePlayer.posY;
+        final double dX = tpX - mc.thePlayer.posX;
+        final double dY = tpY - mc.thePlayer.posY;
+        final double dZ = tpZ - mc.thePlayer.posZ;
 
-        for(double d = offset; d < getDistance(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, tpX, tpY, tpZ); d += offset) {
-            curY -= (mc.thePlayer.posY - tpY) / steps;
-            positions.add(new Vector3d(mc.thePlayer.posX - (Math.sin(Math.toRadians(yaw)) * d), curY, mc.thePlayer.posZ + Math.cos(Math.toRadians(yaw)) * d));
+        for(double d = 1D; d <= steps; ++d) {
+            positions.add(new Vector3d(mc.thePlayer.posX + (dX * d) / steps, mc.thePlayer.posY + (dY * d) / steps, mc.thePlayer.posZ + (dZ * d) / steps));
         }
-
-        positions.add(new Vector3d(tpX, tpY, tpZ));
 
         return positions;
     }
