@@ -68,8 +68,6 @@ class ReachAura : Module()
 
     // PPS:packets per sec
     private val pPS = IntegerValue("PPS", 18, 0, 50)
-    private val disableOnReset = BoolValue("DisableOnReset", false)
-    val pulse = BoolValue("Pulse",true)
 
     private val rangeValue = FloatValue("Range", 20f, 1f, 100f)
     private val tpDistanceValue = FloatValue("TpDistance", 4.0f, 0.5f, 10.0f)
@@ -77,15 +75,19 @@ class ReachAura : Module()
 
     private val pathFindingMode = ListValue("PathFindingMode", arrayOf("Simple",
             "NaiveAstarGround", "NaiveAstarFly"), "NaiveAstarFly")
-    private val rayCastLessNode = BoolValue("RayCastLessNode", true)
 
     private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
     private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Distance")
 
     private val renderPath = BoolValue("RenderPath", true)
-    private val astarTimeout = IntegerValue("AstarTimeout", 20, 10, 1000)
 
+
+    private val rescheduleOnMove = BoolValue("rescheduleOnMove", true)
+    private val rayCastLessNode = BoolValue("RayCastLessNode", true)
+    private val astarTimeout = IntegerValue("AstarTimeout", 20, 10, 1000)
+    private val disableOnReset = BoolValue("DisableOnReset", false)
     private val pretend = BoolValue("Pretend", false)
+    val pulse = BoolValue("Pulse",true)
 
     private var packets = 0.0
     private var lastPacketPos: Vec3? = null
@@ -252,6 +254,8 @@ class ReachAura : Module()
     @EventTarget
     fun onTick(event: TickEvent)
     {
+        var scheduled = false
+
         if (skipTick > 0)
         {
             skipTick--
@@ -286,11 +290,25 @@ class ReachAura : Module()
             if (targetModeValue.get() != "Single")
                 targetList.removeAt(0)
 
-            if (runAttack() && targetModeValue.get() != "Multi") //Short circuit exists in && ?
-                returnInitial(lastTargetPos!!)
+            schedule()
+            scheduled = true
         }
 
         packets += (pPS.get() / 20.0)
+
+        val begin = reachAuraQueue.first()
+        if (!scheduled && pulse.get() && rescheduleOnMove.get() && packets > reachAuraQueue.size && reachAuraQueue.size > 0)
+            if (begin is C03PacketPlayer.C04PacketPlayerPosition  && !(begin.x.isNaN() || begin.y.isNaN() || begin.z.isNaN()) &&
+                    (mc.thePlayer.getDistance(begin.positionX,begin.positionY,begin.z) > tpDistanceValue.get() || //if the player moves too much
+                    target != null && lastPacketPos != null &&
+                    target!!.getDistance(lastTargetPos!!.xCoord,lastTargetPos!!.yCoord,lastTargetPos!!.zCoord) > stopAtDistance.get()) //or the target moves too much
+            )
+            {
+                // reschedule
+                reachAuraQueue.clear()
+                schedule()
+            }
+
         while (packets > 0 && reachAuraQueue.size > 0 && (!pulse.get() || packets > reachAuraQueue.size))
         {
             val first = reachAuraQueue.first()
@@ -307,6 +325,12 @@ class ReachAura : Module()
             reachAuraQueue.removeAt(0)
             packets--
         }
+    }
+
+    private fun schedule()
+    {
+        if (runAttack() && targetModeValue.get() != "Multi") //Short circuit exists in && ?
+            returnInitial(lastTargetPos!!)
     }
 
     private fun pathFindToCoord(fromX: Double, fromY: Double, fromZ: Double,

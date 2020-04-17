@@ -144,16 +144,20 @@ object BlockUtils : MinecraftInstance() {
             for (z in MathHelper.floor_double(axisAlignedBB.minZ) until
                     MathHelper.floor_double(axisAlignedBB.maxZ) + 1)
             {
-                val blockPos = BlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble())
-                val block = getBlock(blockPos)
-
-                if (collidable.collideBlock(block))
+                for (y in MathHelper.floor_double(axisAlignedBB.minY) until
+                    MathHelper.floor_double(axisAlignedBB.maxY) + 1)
                 {
-                    val boundingBox = block?.getCollisionBoundingBox(mc.theWorld, blockPos, getState(blockPos))
-                            ?: continue
+                    val blockPos = BlockPos(x.toDouble(), y.toDouble(), z.toDouble())
+                    val block = getBlock(blockPos)
 
-                    if (mc.thePlayer.entityBoundingBox.intersectsWith(boundingBox))
-                        return true
+                    if (collidable.collideBlock(block))
+                    {
+                        val boundingBox = block?.getCollisionBoundingBox(mc.theWorld, blockPos, getState(blockPos))
+                                ?: continue
+
+                        if (mc.thePlayer.entityBoundingBox.intersectsWith(boundingBox))
+                            return true
+                    }
                 }
             }
         }
