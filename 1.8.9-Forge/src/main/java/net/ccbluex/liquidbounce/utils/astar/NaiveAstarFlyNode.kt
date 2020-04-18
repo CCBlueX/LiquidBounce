@@ -34,7 +34,7 @@ class NaiveAstarFlyNode(override val x: Int, override val y: Int, override val z
     }
 
 
-    override fun equals(p: AstarNode?): Boolean
+    override fun equals(p: AstarNode): Boolean
     {
         return super.equals(p)
     }

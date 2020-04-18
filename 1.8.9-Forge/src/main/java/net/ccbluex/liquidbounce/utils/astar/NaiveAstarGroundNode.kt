@@ -41,7 +41,7 @@ class NaiveAstarGroundNode(override val x: Int, override val y: Int, override va
         return arrayList
     }
 
-    override fun equals(p: AstarNode?): Boolean
+    override fun equals(p: AstarNode): Boolean
     {
         return super.equals(p)
     }
