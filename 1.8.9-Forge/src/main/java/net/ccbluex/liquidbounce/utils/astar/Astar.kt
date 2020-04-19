@@ -12,7 +12,7 @@ import java.util.*
 object Astar : MinecraftInstance()
 {
     fun findPath(begin: AstarNode, end: AstarNode,
-                 op: (AstarNode,AstarNode) -> Boolean, timeout_ms: Int): ArrayList<AstarNode?>
+                 op: (AstarNode,AstarNode) -> Boolean, timeout_ms: Int): MutableList<AstarNode>
     {
         val openList = mutableListOf<AstarNode?>()
         val closedList = mutableListOf<AstarNode?>()
@@ -56,7 +56,7 @@ object Astar : MinecraftInstance()
         } while (!op(currentNode!!, end))
 
 
-        val list = ArrayList<AstarNode?>()
+        val list = mutableListOf<AstarNode>()
         while (currentNode!!.parent() != null)
         {
             list.add(0, currentNode)
