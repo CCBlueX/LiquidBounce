@@ -30,14 +30,11 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
 import net.minecraft.block.BlockAir
-import net.minecraft.client.entity.EntityOtherPlayerMP
-import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.network.Packet
 import net.minecraft.network.play.INetHandlerPlayServer
 import net.minecraft.network.play.client.C02PacketUseEntity
@@ -45,10 +42,8 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.potion.Potion
-import net.minecraft.server.MinecraftServer
 import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
-import net.minecraft.world.WorldServer
 import java.awt.Color
 import javax.vecmath.Vector3d
 import kotlin.math.*
@@ -436,7 +431,7 @@ class ReachAura : Module()
                     while (rayCastEnd > rayCastBegin)
                     {
                         val end = path[rayCastEnd]
-                        val rayCastResult = raycastPlayerBBox(begin.x, begin.y, begin.z, end.x, end.y, end.z)
+                        val rayCastResult = raycastPlayerBBox(begin.x, begin.y, begin.z , end.x, end.y, end.z)
                         if (rayCastResult.second && PathUtils.getDistance(begin.x, begin.y, begin.z, end.x, end.y, end.z) < tpDistanceValue.get())
                         {
                             tmp.add(path[rayCastEnd])
@@ -450,7 +445,10 @@ class ReachAura : Module()
                     if (pathValid)
                         continue
                     else
+                    {
+                        tmp.add(path[rayCastBegin])
                         rayCastBegin++
+                    }
                 }
                 path = tmp
             }
