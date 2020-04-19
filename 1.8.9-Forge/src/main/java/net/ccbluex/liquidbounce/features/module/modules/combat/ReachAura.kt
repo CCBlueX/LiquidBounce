@@ -55,8 +55,7 @@ import kotlin.math.*
 
 @ModuleInfo(name = "ReachAura", description = "ReachAura or TpAura or InfiniteAura, the glitchy version",
         category = ModuleCategory.COMBAT)
-class ReachAura : Module()
-{
+class ReachAura : Module() {
 
     /**
      * OPTIONS
@@ -108,24 +107,20 @@ class ReachAura : Module()
      * Enable ReachAura module
      */
 
-    override fun onEnable()
-    {
+    override fun onEnable() {
         mc.thePlayer ?: return
         mc.theWorld ?: return
 
-        if (pathFindingMode.get() == "NaiveAstarGround")
-        {
+        if (pathFindingMode.get() == "NaiveAstarGround") {
             var y = mc.thePlayer.posY.toInt()
 
-            while (y > 0 && BlockUtils.getBlock(BlockPos(mc.thePlayer.posX, y.toDouble(), mc.thePlayer.posZ)) is BlockAir)
-            {
+            while (y > 0 && BlockUtils.getBlock(BlockPos(mc.thePlayer.posX, y.toDouble(), mc.thePlayer.posZ)) is BlockAir) {
                 y--
             }
 
             val path = PathUtils.findPath(mc.thePlayer.posX, y.toDouble(), mc.thePlayer.posZ, 1.0)
 
-            if (path!!.size == 0)
-            {
+            if (path!!.size == 0) {
                 state = false;return
             }
 
@@ -144,8 +139,7 @@ class ReachAura : Module()
     /**
      * Disable reach aura module
      */
-    override fun onDisable()
-    {
+    override fun onDisable() {
         if (lastTargetPos != null && targetModeValue.get() == "Multi")
             returnInitial(lastTargetPos!!)
         packets = 0.0
@@ -155,8 +149,7 @@ class ReachAura : Module()
         lastTargetPos = null
     }
 
-    private fun returnInitial(from: Vec3): Boolean
-    {
+    private fun returnInitial(from: Vec3): Boolean {
         val me = mc.thePlayer
         // TP back
         val path = pathFindToCoord(from.xCoord, from.yCoord, from.zCoord
@@ -168,8 +161,7 @@ class ReachAura : Module()
 
         if (path.size != 0)
 
-            for (vector3d in path)
-            {
+            for (vector3d in path) {
                 if (isNodeValid(vector3d))
                     reachAuraQueue += C03PacketPlayer.C04PacketPlayerPosition(
                             vector3d.getX(), vector3d.getY(), vector3d.getZ(), true)
@@ -187,13 +179,11 @@ class ReachAura : Module()
      *  updates the target list and current target
      */
 
-    private fun updateTarget()
-    {
+    private fun updateTarget() {
         target = null
         targetList.clear()
 
-        for (entity in mc.theWorld.loadedEntityList)
-        {
+        for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase || !isEnemy(entity))
                 continue
 
@@ -203,17 +193,14 @@ class ReachAura : Module()
                 targetList.add(entity)
         }
 
-        if (targetList.size > 0)
-        {
-            if (priorityValue.get() == "Distance" && targetModeValue.get() == "Multi" && lastTargetPos != null)
-            {
+        if (targetList.size > 0) {
+            if (priorityValue.get() == "Distance" && targetModeValue.get() == "Multi" && lastTargetPos != null) {
                 targetList.sortBy {
                     PathUtils.getDistance(it!!.posX, it.posY, it.posZ, lastTargetPos!!.xCoord, lastTargetPos!!.yCoord, lastTargetPos!!.zCoord)
                 }
             } else
 
-                when (priorityValue.get().toLowerCase())
-                {
+                when (priorityValue.get().toLowerCase()) {
                     "distance" -> targetList.sortBy { mc.thePlayer.getDistanceToEntityBox(it!!) } // Sort by distance
                     "health" -> targetList.sortBy { it!!.health } // Sort by health
                     "direction" -> targetList.sortBy { RotationUtils.getRotationDifference(it) } // Sort by FOV
@@ -222,16 +209,14 @@ class ReachAura : Module()
 
             target = targetList.first()
 
-        } else
-        {
+        } else {
             skipTick = 3
             reachAuraQueue.clear()
         }
     }
 
     @EventTarget
-    fun onRender3D(event: Render3DEvent)
-    {
+    fun onRender3D(event: Render3DEvent) {
         if (!renderPath.get())
             return
 
@@ -239,10 +224,8 @@ class ReachAura : Module()
 
         var index = 0
 
-        for (i in reachAuraQueue)
-        {
-            if (i is C03PacketPlayer.C04PacketPlayerPosition)
-            {
+        for (i in reachAuraQueue) {
+            if (i is C03PacketPlayer.C04PacketPlayerPosition) {
                 val dist = PathUtils.getDistance(i.x, i.y, i.z, mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ)
 
                 val red = max(min(((1.0 - (maxRange - dist) / maxRange) * 255.0).toInt(), 255), 0)
@@ -263,45 +246,36 @@ class ReachAura : Module()
     }
 
     @EventTarget
-    fun onPacket(event: PacketEvent)
-    {
+    fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        if (packet is S08PacketPlayerPosLook && disableOnReset.get())
-        {
+        if (packet is S08PacketPlayerPosLook && disableOnReset.get()) {
             state = false
         }
     }
 
     @EventTarget
-    fun onWorldEvent(event: WorldEvent)
-    {
+    fun onWorldEvent(event: WorldEvent) {
         state = false
     }
 
     @EventTarget
-    fun onTick(event: TickEvent)
-    {
+    fun onTick(event: TickEvent) {
         var scheduled = false
 
-        if (skipTick > 0)
-        {
+        if (skipTick > 0) {
             skipTick--
             return
         }
 
-        while (reachAuraQueue.size < pPS.get() * 0.3)
-        {
-            if (mc.thePlayer == null || mc.theWorld == null)
-            {
+        while (reachAuraQueue.size < pPS.get() * 0.3) {
+            if (mc.thePlayer == null || mc.theWorld == null) {
                 state = false
                 return
             }
 
-            if (targetList.size == 0 || target == null)
-            {
+            if (targetList.size == 0 || target == null) {
                 targetList.clear()//when did i write this???? wtf
-                if (targetModeValue.get() == "Multi" && lastTargetPos != null)
-                {
+                if (targetModeValue.get() == "Multi" && lastTargetPos != null) {
                     if (returnInitial(lastTargetPos!!))
                         lastTargetPos = null
                 }
@@ -329,19 +303,16 @@ class ReachAura : Module()
                     (mc.thePlayer.getDistance(begin.positionX, begin.positionY, begin.z) > tpDistanceValue.get() || //if the player moves too much
                             target != null && lastPacketPos != null &&
                             target!!.getDistance(lastTargetPos!!.xCoord, lastTargetPos!!.yCoord, lastTargetPos!!.zCoord) > stopAtDistance.get()) //or the target moves too much
-            )
-            {
+            ) {
                 // reschedule
                 reachAuraQueue.clear()
                 schedule()
             }
 
-        while (packets > 0 && reachAuraQueue.size > 0 && (!pulse.get() || packets > reachAuraQueue.size))
-        {
+        while (packets > 0 && reachAuraQueue.size > 0 && (!pulse.get() || packets > reachAuraQueue.size)) {
             val first = reachAuraQueue.first()
             if (first is C03PacketPlayer.C04PacketPlayerPosition
-                    && (first.x.isNaN() || first.y.isNaN() || first.z.isNaN()))
-            {
+                    && (first.x.isNaN() || first.y.isNaN() || first.z.isNaN())) {
                 if (BlockUtils.getBlock(BlockPos(first.x, first.y - 1, first.z)) is BlockAir)
                     first.onGround = false
 
@@ -357,21 +328,18 @@ class ReachAura : Module()
         }
     }
 
-    private fun schedule()
-    {
+    private fun schedule() {
         if (runAttack() && targetModeValue.get() != "Multi") //Short circuit exists in && ?
             tpBack()
     }
 
     private fun pathFindToCoord(fromX: Double, fromY: Double, fromZ: Double,
-                                toX: Double, toY: Double, toZ: Double): MutableList<Vector3d>?
-    {
+                                toX: Double, toY: Double, toZ: Double): MutableList<Vector3d>? {
         target ?: return null
 
         val lowerCasePathfindString = pathFindingMode.get().toLowerCase()
 
-        if (lowerCasePathfindString == "simple")
-        {
+        if (lowerCasePathfindString == "simple") {
             val diffX = toX - fromX
             val diffY = toY - fromY
             val diffZ = toZ - fromZ
@@ -387,8 +355,7 @@ class ReachAura : Module()
             val valid = pair.second
 
             return if (valid) path else null
-        } else if (pathFindingMode.get().toLowerCase().contains("naiveastar"))
-        {
+        } else if (pathFindingMode.get().toLowerCase().contains("naiveastar")) {
             val ground = lowerCasePathfindString.contains("ground")
 
             val begin = if (ground)
@@ -416,24 +383,20 @@ class ReachAura : Module()
                 path.add(Vector3d(i.getPos().xCoord, i.getPos().yCoord, i.getPos().zCoord))
 
             val rayCastLength = tpDistanceValue.maximum.toInt() * 2
-            if (rayCastLessNode.get() && path.size != 0)
-            {
+            if (rayCastLessNode.get() && path.size != 0) {
                 val tmp = mutableListOf<Vector3d>()
                 tmp.add(path.first())
 
                 var rayCastBegin = 0
-                while (rayCastBegin < path.size)
-                {
+                while (rayCastBegin < path.size) {
                     var pathValid = false
                     var rayCastEnd = min(rayCastBegin + rayCastLength, path.size - 1)
                     val begin = path[rayCastBegin]
 
-                    while (rayCastEnd > rayCastBegin)
-                    {
+                    while (rayCastEnd > rayCastBegin) {
                         val end = path[rayCastEnd]
-                        val rayCastResult = raycastPlayerBBox(begin.x, begin.y, begin.z , end.x, end.y, end.z)
-                        if (rayCastResult.second && PathUtils.getDistance(begin.x, begin.y, begin.z, end.x, end.y, end.z) < tpDistanceValue.get())
-                        {
+                        val rayCastResult = raycastPlayerBBox(begin.x, begin.y, begin.z, end.x, end.y, end.z)
+                        if (rayCastResult.second && PathUtils.getDistance(begin.x, begin.y, begin.z, end.x, end.y, end.z) < tpDistanceValue.get()) {
                             tmp.add(path[rayCastEnd])
                             rayCastBegin = rayCastEnd
                             pathValid = true
@@ -444,8 +407,7 @@ class ReachAura : Module()
 
                     if (pathValid)
                         continue
-                    else
-                    {
+                    else {
                         tmp.add(path[rayCastBegin])
                         rayCastBegin++
                     }
@@ -463,8 +425,7 @@ class ReachAura : Module()
      *  Check if the player can tp from a coord to another coord
      */
 
-    private fun raycastPlayerBBox(fromX: Double, fromY: Double, fromZ: Double, endX: Double, endY: Double, endZ: Double): Pair<MutableList<Vector3d>, Boolean>
-    {
+    private fun raycastPlayerBBox(fromX: Double, fromY: Double, fromZ: Double, endX: Double, endY: Double, endZ: Double): Pair<MutableList<Vector3d>, Boolean> {
         val path = PathUtils.findPath(fromX, fromY, fromZ,
                 endX, endY, endZ, tpDistanceValue.get().toDouble())
 
@@ -475,15 +436,12 @@ class ReachAura : Module()
         val playerBBox = mc.thePlayer.entityBoundingBox
 
 
-        for (sample in (verifyPath + path))
-        {
+        for (sample in (verifyPath + path)) {
             val newBBox = playerBBox.offset(sample.x - mc.thePlayer.posX,
                     sample.y - mc.thePlayer.posY, sample.z - mc.thePlayer.posZ).expand(0.1, 0.0, 0.1)
             if (bBoxIntersectsBlock(newBBox,
-                            object : BlockUtils.Collidable
-                            {
-                                override fun collideBlock(block: Block?): Boolean
-                                {
+                            object : BlockUtils.Collidable {
+                                override fun collideBlock(block: Block?): Boolean {
                                     val collide = !isBlockPassable(block)
                                     if (collide)
                                         valid = false
@@ -495,13 +453,11 @@ class ReachAura : Module()
         return Pair(path, valid)
     }
 
-    private fun isNodeValid(vec3: Vector3d): Boolean
-    {
+    private fun isNodeValid(vec3: Vector3d): Boolean {
         if (reachAuraQueue.size == 0) return true
 
         val lastQueuePacket: C03PacketPlayer.C04PacketPlayerPosition =
-                (when
-                {
+                (when {
                     reachAuraQueue.last() is C03PacketPlayer.C04PacketPlayerPosition -> reachAuraQueue.last()
                     reachAuraQueue[reachAuraQueue.size - 2] is C03PacketPlayer.C04PacketPlayerPosition -> reachAuraQueue[reachAuraQueue.size - 2]
                     else -> null
@@ -512,21 +468,17 @@ class ReachAura : Module()
         return PathUtils.getDistance(vec3.x, vec3.y, vec3.z, lastQueuePacket.x, lastQueuePacket.y, lastQueuePacket.z) < 10
     }
 
-    private fun tpBack()
-    {
-        val me = mc.thePlayer
+    private fun tpBack() {
         // TP back
         reachAuraQueue += attackPacketsCache
         attackPacketsCache.clear()
     }
 
 
-    private fun runAttack(): Boolean
-    {
+    private fun runAttack(): Boolean {
         target ?: return false
 
-        if (target !in mc.theWorld.loadedEntityList)
-        {
+        if (target !in mc.theWorld.loadedEntityList) {
             target = null
 
             return false
@@ -540,8 +492,7 @@ class ReachAura : Module()
         // TP to entity
 
         val path: MutableList<Vector3d>?
-        path = if (targetModeValue.get() != "Multi" || lastTargetPos == null)
-        {
+        path = if (targetModeValue.get() != "Multi" || lastTargetPos == null) {
             val me = mc.thePlayer
             pathFindToCoord(me.posX, me.posY, me.posZ,
                     target!!.posX, target!!.posY, target!!.posZ)
@@ -551,13 +502,10 @@ class ReachAura : Module()
 
         lastTargetPos = if (path != null) Vec3(path.last().x, path.last().y, path.last().z) else lastTargetPos
 
-        if (mc.thePlayer.getDistanceToEntity(target) < stopAtDistance.get() || path != null)
-        {
+        if (mc.thePlayer.getDistanceToEntity(target) < stopAtDistance.get() || path != null) {
             if (path != null)
-                for (vec3 in path)
-                {
-                    if (isNodeValid(vec3))
-                    {
+                for (vec3 in path) {
+                    if (isNodeValid(vec3)) {
                         reachAuraQueue.add(C03PacketPlayer.C04PacketPlayerPosition(vec3.x, vec3.y, vec3.z, true))
                         attackPacketsCache.add(0, C03PacketPlayer.C04PacketPlayerPosition(vec3.x, vec3.y, vec3.z, true))
                     }
@@ -576,15 +524,12 @@ class ReachAura : Module()
     /**
      * Check if [entity] is selected as enemy with current target options and other modules
      */
-    private fun isEnemy(entity: Entity?): Boolean
-    {
-        if (entity is EntityLivingBase && (EntityUtils.targetDead || isAlive(entity)) && entity != mc.thePlayer)
-        {
+    private fun isEnemy(entity: Entity?): Boolean {
+        if (entity is EntityLivingBase && (EntityUtils.targetDead || isAlive(entity)) && entity != mc.thePlayer) {
             if (!EntityUtils.targetInvisible && entity.isInvisible())
                 return false
 
-            if (EntityUtils.targetPlayer && entity is EntityPlayer)
-            {
+            if (EntityUtils.targetPlayer && entity is EntityPlayer) {
                 if (entity.isSpectator || AntiBot.isBot(entity))
                     return false
 
@@ -606,8 +551,7 @@ class ReachAura : Module()
     /**
      * Attack [entity]
      */
-    private fun attackEntity(entity: EntityLivingBase)
-    {
+    private fun attackEntity(entity: EntityLivingBase) {
 
         // Call attack event
         LiquidBounce.eventManager.callEvent(AttackEvent(entity))
