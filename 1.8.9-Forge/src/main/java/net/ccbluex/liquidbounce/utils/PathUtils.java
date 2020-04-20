@@ -62,7 +62,25 @@ public final class PathUtils extends MinecraftInstance {
         return positions;
     }
 
-    private static double getDistance(final double x1, final double y1, final double z1, final double x2, final double y2, final double z2) {
+    public static List<Vector3d> findPath(final double initX,final double initY,double initZ
+            ,final double tpX, final double tpY, final double tpZ, final double offset) {
+        final List<Vector3d> positions = new ArrayList<>();
+        final double steps = Math.ceil(getDistance(initX, initY,initZ, tpX, tpY, tpZ) / offset);
+
+        final double dX = tpX - initX;
+        final double dY = tpY - initY;
+        final double dZ = tpZ - initZ;
+
+        positions.add(new Vector3d(tpX, tpY, tpZ));
+
+        for(double d = 1D; d <= steps; ++d) {
+            positions.add(new Vector3d(initX + (dX * d) / steps, initY + (dY * d) / steps, initZ + (dZ * d) / steps));
+        }
+
+        return positions;
+    }
+
+    public static double getDistance(final double x1, final double y1, final double z1, final double x2, final double y2, final double z2) {
         final double xDiff = x1 - x2;
         final double yDiff = y1 - y2;
         final double zDiff = z1 - z2;
