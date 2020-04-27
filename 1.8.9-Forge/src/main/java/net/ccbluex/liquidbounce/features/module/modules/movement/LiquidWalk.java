@@ -104,6 +104,12 @@ public class LiquidWalk extends Module {
                         mc.thePlayer.motionY += 0.04D;
                 }
                 break;
+
+            case "dolphin":
+                if(mc.thePlayer.isInWater())
+                    mc.thePlayer.motionY += 0.03999999910593033;
+                break;
+
         }
     }
 

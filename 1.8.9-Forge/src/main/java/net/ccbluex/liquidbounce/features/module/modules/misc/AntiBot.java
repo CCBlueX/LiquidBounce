@@ -43,7 +43,7 @@ public class AntiBot extends Module {
     private final IntegerValue livingTimeTicksValue = new IntegerValue("LivingTimeTicks", 40, 1, 200);
     private final BoolValue groundValue = new BoolValue("Ground", true);
     private final BoolValue airValue = new BoolValue("Air", false);
-    private final BoolValue invaildGroundValue = new BoolValue("InvaildGround", true);
+    private final BoolValue invalidGroundValue = new BoolValue("InvalidGround", true);
     private final BoolValue swingValue = new BoolValue("Swing", false);
     private final BoolValue healthValue = new BoolValue("Health", false);
     private final BoolValue derpValue = new BoolValue("Derp", true);
@@ -56,7 +56,7 @@ public class AntiBot extends Module {
 
     private final List<Integer> ground = new ArrayList<>();
     private final List<Integer> air = new ArrayList<>();
-    private final Map<Integer, Integer> invaildGround = new HashMap<>();
+    private final Map<Integer, Integer> invalidGround = new HashMap<>();
     private final List<Integer> swing = new ArrayList<>();
     private final List<Integer> invisible = new ArrayList<>();
     private final List<Integer> hitted = new ArrayList<>();
@@ -87,14 +87,14 @@ public class AntiBot extends Module {
 
                 if(packetEntity.getOnGround()) {
                     if(entity.prevPosY != entity.posY)
-                        invaildGround.put(entity.getEntityId(), invaildGround.getOrDefault(entity.getEntityId(), 0) + 1);
+                        invalidGround.put(entity.getEntityId(), invalidGround.getOrDefault(entity.getEntityId(), 0) + 1);
                 }else{
-                    final int currentVL = invaildGround.getOrDefault(entity.getEntityId(), 0) / 2;
+                    final int currentVL = invalidGround.getOrDefault(entity.getEntityId(), 0) / 2;
 
                     if(currentVL <= 0)
-                        invaildGround.remove(entity.getEntityId());
+                        invalidGround.remove(entity.getEntityId());
                     else
-                        invaildGround.put(entity.getEntityId(), currentVL);
+                        invalidGround.put(entity.getEntityId(), currentVL);
                 }
 
                 if(entity.isInvisible() && !invisible.contains(entity.getEntityId()))
@@ -128,7 +128,7 @@ public class AntiBot extends Module {
         hitted.clear();
         swing.clear();
         ground.clear();
-        invaildGround.clear();
+        invalidGround.clear();
         invisible.clear();
     }
 
@@ -187,7 +187,7 @@ public class AntiBot extends Module {
         if(antiBot.needHitValue.get() && !antiBot.hitted.contains(entity.getEntityId()))
             return true;
 
-        if(antiBot.invaildGroundValue.get() && antiBot.invaildGround.getOrDefault(entity.getEntityId(), 0) >= 10)
+        if(antiBot.invalidGroundValue.get() && antiBot.invalidGround.getOrDefault(entity.getEntityId(), 0) >= 10)
             return true;
 
         if(antiBot.tabValue.get()) {

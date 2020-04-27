@@ -53,6 +53,7 @@ class InventoryCleaner : Module() {
     private val invOpenValue = BoolValue("InvOpen", false)
     private val simulateInventory = BoolValue("SimulateInventory", true)
     private val noMoveValue = BoolValue("NoMove", false)
+    private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
     private val hotbarValue = BoolValue("Hotbar", true)
     private val randomSlotValue = BoolValue("RandomSlot", false)
     private val sortValue = BoolValue("Sort", true)
@@ -171,7 +172,8 @@ class InventoryCleaner : Module() {
             } else item is ItemFood || itemStack.unlocalizedName == "item.arrow" ||
                     item is ItemBlock && !itemStack.unlocalizedName.contains("flower") ||
                     item is ItemBed || itemStack.unlocalizedName == "item.diamond" || itemStack.unlocalizedName == "item.ingotIron" ||
-                    item is ItemPotion || item is ItemEnderPearl || item is ItemEnchantedBook || item is ItemBucket || itemStack.unlocalizedName == "item.stick"
+                    item is ItemPotion || item is ItemEnderPearl || item is ItemEnchantedBook || item is ItemBucket || itemStack.unlocalizedName == "item.stick" || 
+                    ignoreVehiclesValue.get() && (item is ItemBoat || item is ItemMinecart)
         } catch (ex: Exception) {
             ClientUtils.getLogger().error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
 
