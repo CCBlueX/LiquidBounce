@@ -53,7 +53,7 @@ class Step : Module() {
     private val timer = MSTimer()
 
     override fun onDisable() {
-        mc.thePlayer == null ?: return
+        mc.thePlayer ?: return
 
         // Change step height back to default (0.5 is default)
         mc.thePlayer.stepHeight = 0.5F
