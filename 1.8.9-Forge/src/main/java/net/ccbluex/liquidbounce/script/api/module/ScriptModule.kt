@@ -161,6 +161,18 @@ class ScriptModule(private val scriptObjectMirror: ScriptObjectMirror) : Module(
     fun onSession(sessionEvent: SessionEvent) = call("onSession")
 
     /**
+     * Handle onStrafe and call js function of method
+     */
+    @EventTarget
+    fun onStrafe(strafeEvent: StrafeEvent) = call("onStrafe", strafeEvent)
+
+    /**
+     * Handle onSlowDown and call js function of method
+     */
+    @EventTarget
+    fun onSlowDown(slowDownEvent: SlowDownEvent) = call("onSlowDown", slowDownEvent)
+
+    /**
      * Call member of script when member is available
      */
     private fun call(member: String, event: Any? = null) {
