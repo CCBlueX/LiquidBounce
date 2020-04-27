@@ -117,17 +117,22 @@ public class NoFall extends Module {
     }
 
     @EventTarget
-    public void onPacket(PacketEvent event) {
+    public void onPacket(final PacketEvent event) {
         final Packet<?> packet = event.getPacket();
         final String mode = modeValue.get();
 
-        if(packet instanceof C03PacketPlayer && mode.equalsIgnoreCase("SpoofGround"))
-            ((C03PacketPlayer) packet).onGround = true;
+        if (packet instanceof C03PacketPlayer) {
+            final C03PacketPlayer playerPacket = (C03PacketPlayer) packet;
 
-        if(packet instanceof C03PacketPlayer && mode.equalsIgnoreCase("NoGround"))
-            ((C03PacketPlayer) packet).onGround = false;
-        if(mc.thePlayer.fallDistance > 1.5 && packet instanceof C03PacketPlayer && mode.equalsIgnoreCase("Hypixel")){
-            ((C03PacketPlayer) packet).onGround = mc.thePlayer.ticksExisted % 2 == 0;
+            if (mode.equalsIgnoreCase("SpoofGround"))
+                playerPacket.onGround = true;
+
+            if (mode.equalsIgnoreCase("NoGround"))
+                playerPacket.onGround = false;
+
+            if (mode.equalsIgnoreCase("Hypixel")
+                    && mc.thePlayer != null && mc.thePlayer.fallDistance > 1.5)
+                playerPacket.onGround = mc.thePlayer.ticksExisted % 2 == 0;
         }
     }
 
