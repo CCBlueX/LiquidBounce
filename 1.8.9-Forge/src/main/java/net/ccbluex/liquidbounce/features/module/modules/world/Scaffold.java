@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.FloatValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
 import net.ccbluex.liquidbounce.value.ListValue;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.settings.GameSettings;
@@ -306,7 +305,7 @@ public class Scaffold extends Module {
             return;
         }
 
-        if (!delayTimer.hasTimePassed(delay) || (sameYValue.get() && launchY != (int) mc.thePlayer.posY))
+        if (!delayTimer.hasTimePassed(delay) || (sameYValue.get() && launchY - 1 != (int) targetPlace.getVec3().yCoord))
             return;
 
         int blockSlot = -1;
