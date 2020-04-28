@@ -50,12 +50,43 @@ class InventoryCleaner : Module() {
         }
     }
 
+    private val maxBlockStacksValue = object : IntegerValue("MaxBlockStacks", 5, 0, 10) {
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            if (newValue < minimum) {
+                set(minimum)
+            }
+        }
+    }
+    private val maxEnchantedBooksValue = object : IntegerValue("MaxEnchantedBooks", 5, 0, 10) {
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            if (newValue < minimum) {
+                set(minimum)
+            }
+        }
+    }
+    private val maxWaterBucketsValue = object : IntegerValue("MaxWaterBuckets", 1, 0, 10) {
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            if (newValue < minimum) {
+                set(minimum)
+            }
+        }
+    }
+    private val maxLavaBucketsValue = object : IntegerValue("MaxLavaBuckets", 1, 0, 10) {
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            if (newValue < minimum) {
+                set(minimum)
+            }
+        }
+    }
+
+
     private val invOpenValue = BoolValue("InvOpen", false)
     private val simulateInventory = BoolValue("SimulateInventory", true)
     private val noMoveValue = BoolValue("NoMove", false)
     private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
     private val hotbarValue = BoolValue("Hotbar", true)
     private val randomSlotValue = BoolValue("RandomSlot", false)
+    private val cleanValue = BoolValue("Clean", true)
     private val sortValue = BoolValue("Sort", true)
     private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
@@ -87,7 +118,7 @@ class InventoryCleaner : Module() {
         if (sortValue.get())
             sortHotbar()
 
-        while (InventoryUtils.CLICK_TIMER.hasTimePassed(delay)) {
+        while (InventoryUtils.CLICK_TIMER.hasTimePassed(delay) && cleanValue.get()) {
             val garbageItems = items(9, if (hotbarValue.get()) 45 else 36)
                     .filter { !isUseful(it.value, it.key) }
                     .keys
@@ -170,15 +201,57 @@ class InventoryCleaner : Module() {
             } else if (itemStack.unlocalizedName == "item.compass") {
                 items(0, 45).none { (_, stack) -> itemStack != stack && stack.unlocalizedName == "item.compass" }
             } else item is ItemFood || itemStack.unlocalizedName == "item.arrow" ||
-                    item is ItemBlock && !itemStack.unlocalizedName.contains("flower") ||
+                    (item is ItemBlock && getBlockStacksAmount() <= maxBlockStacksValue.get() && !itemStack.unlocalizedName.contains("flower")) ||
                     item is ItemBed || itemStack.unlocalizedName == "item.diamond" || itemStack.unlocalizedName == "item.ingotIron" ||
-                    item is ItemPotion || item is ItemEnderPearl || item is ItemEnchantedBook || item is ItemBucket || itemStack.unlocalizedName == "item.stick" || 
+                    item is ItemPotion || item is ItemEnderPearl ||
+                    (itemStack.unlocalizedName == "item.enchantedBook" && getEnchantedBooksAmount() <= maxEnchantedBooksValue.get()) ||
+                    (itemStack.unlocalizedName == "item.bucketWater" && getWaterBucketsAmount() <= maxWaterBucketsValue.get()) ||
+                    (itemStack.unlocalizedName == "item.bucketLava" && getLavaBucketsAmount() <= maxLavaBucketsValue.get()) ||
+                    itemStack.unlocalizedName == "item.bucket" ||
+                    itemStack.unlocalizedName == "item.stick" ||
                     ignoreVehiclesValue.get() && (item is ItemBoat || item is ItemMinecart)
         } catch (ex: Exception) {
             ClientUtils.getLogger().error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
 
             true
         }
+    }
+
+
+    private fun getBlockStacksAmount(): Int {
+        var amount = 0
+        for (i in 9..44) {
+            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
+            if (itemStack != null && itemStack.item is ItemBlock && !itemStack.unlocalizedName.contains("flower")) amount += 1
+        }
+        return amount
+    }
+
+    private fun getEnchantedBooksAmount(): Int {
+        var amount = 0
+        for (i in 9..44) {
+            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
+            if (itemStack != null && itemStack.unlocalizedName == "item.enchantedBook") amount += 1
+        }
+        return amount
+    }
+
+    private fun getWaterBucketsAmount(): Int {
+        var amount = 0
+        for (i in 9..44) {
+            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
+            if (itemStack != null && itemStack.unlocalizedName == "item.bucketWater") amount += 1
+        }
+        return amount
+    }
+
+    private fun getLavaBucketsAmount(): Int {
+        var amount = 0
+        for (i in 9..44) {
+            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
+            if (itemStack != null && itemStack.unlocalizedName == "item.bucketLava") amount += 1
+        }
+        return amount
     }
 
     /**
@@ -232,12 +305,12 @@ class InventoryCleaner : Module() {
                             bestWeapon = index
                         } else {
                             val currDamage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
-                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness)
+                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness) + 0.1 * ItemUtils.getEnchantment(itemStack, Enchantment.fireAspect)
 
                             val bestStack = mc.thePlayer.inventory.getStackInSlot(bestWeapon)
                                     ?: return@forEachIndexed
                             val bestDamage = (bestStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
-                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(bestStack, Enchantment.sharpness)
+                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(bestStack, Enchantment.sharpness) + 0.1 * ItemUtils.getEnchantment(bestStack, Enchantment.fireAspect)
 
                             if (bestDamage < currDamage)
                                 bestWeapon = index
