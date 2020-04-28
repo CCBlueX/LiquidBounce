@@ -83,14 +83,24 @@ public class Scaffold extends Module {
     private final BoolValue eagleValue = new BoolValue("Eagle", false);
     private final BoolValue eagleSilentValue = new BoolValue("EagleSilent", false);
     private final IntegerValue blocksToEagleValue = new IntegerValue("BlocksToEagle", 0, 0, 10);
+    private final FloatValue eagleEdgeDistanceValue = new FloatValue("EagleEdgeDistance", 0.2F, 0F, 0.5F);
 
     // Expand
     private final IntegerValue expandLengthValue = new IntegerValue("ExpandLength", 5, 1, 6);
 
     // Rotations
+    public final ListValue rotationModeValue = new ListValue("RotationMode", new String[]{"Normal", "Static", "StaticPitch", "StaticYaw"}, "Normal");
     private final BoolValue rotationsValue = new BoolValue("Rotations", true);
+    private final FloatValue staticPitchValue = new FloatValue("StaticPitch", 86F, 70F, 90F);
     private final IntegerValue keepLengthValue = new IntegerValue("KeepRotationLength", 0, 0, 20);
     private final BoolValue keepRotationValue = new BoolValue("KeepRotation", false);
+    private final BoolValue rotationStrafeValue = new BoolValue("RotationStrafe", false) {
+        @Override
+        protected void onChanged(final Boolean oldValue, final Boolean newValue) {
+            if (newValue)
+                keepRotationValue.set(true);
+        }
+    };
 
     // Zitter
     private final BoolValue zitterValue = new BoolValue("Zitter", false);
@@ -191,9 +201,27 @@ public class Scaffold extends Module {
 
             // Eagle
             if (eagleValue.get()) {
+                double dif = 0.5D;
+                if (eagleEdgeDistanceValue.get() > 0) {
+                    for (int i = 0; i < 4; i++) {
+                        final BlockPos blockPos = new BlockPos(mc.thePlayer.posX + (i == 0 ? (-1) : i == 1 ? 1 : 0), mc.thePlayer.posY - (mc.thePlayer.posY == (int) mc.thePlayer.posY + 0.5D ? 0D : 1.0D), mc.thePlayer.posZ + (i == 2 ? -1 : i == 3 ? 1 : 0));
+                        final PlaceInfo placeInfo = PlaceInfo.get(blockPos);
+                        if (BlockUtils.isReplaceable(blockPos) && placeInfo != null) {
+                            double calcDif = i > 1 ? mc.thePlayer.posZ - blockPos.getZ() : mc.thePlayer.posX - blockPos.getX();
+                            calcDif -= 0.5D;
+
+                            if (calcDif < 0)
+                                calcDif *= -1;
+                            calcDif -= 0.5D;
+
+                            if (calcDif < dif)
+                                dif = calcDif;
+                        }
+                    }
+                }
                 if (placedBlocksWithoutEagle >= blocksToEagleValue.get()) {
                     final boolean shouldEagle = mc.theWorld.getBlockState(
-                            new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1D, mc.thePlayer.posZ)).getBlock() == Blocks.air;
+                            new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1D, mc.thePlayer.posZ)).getBlock() == Blocks.air || dif < eagleEdgeDistanceValue.get();
 
                     if (eagleSilentValue.get()) {
                         if (eagleSneaking != shouldEagle) {
@@ -238,6 +266,125 @@ public class Scaffold extends Module {
             final C09PacketHeldItemChange packetHeldItemChange = (C09PacketHeldItemChange) packet;
 
             slot = packetHeldItemChange.getSlotId();
+        }
+    }
+
+    @EventTarget
+    private void onStrafe(StrafeEvent event) {
+
+        if (!rotationStrafeValue.get())
+            return;
+
+        if (lockRotation != null && keepRotationValue.get()) {
+            final int dif = (int) ((MathHelper.wrapAngleTo180_float(mc.thePlayer.rotationYaw - lockRotation.getYaw()
+                    - 23.5F - 135)
+                    + 180) / 45);
+
+            final float yaw = lockRotation.getYaw();
+            final float strafe = event.getStrafe();
+            final float forward = event.getForward();
+            final float friction = event.getFriction();
+            float calcForward = 0F;
+            float calcStrafe = 0F;
+            /*
+            Rotation Dif
+
+            7 \ 0 / 1     +  +  +      +  |  -
+            6   +   2     -- F --      +  S  -
+            5 / 4 \ 3     -  -  -      +  |  -
+            */
+            switch (dif) {
+                case 0: {
+                    calcForward = forward;
+                    calcStrafe = strafe;
+                    break;
+                }
+                case 1: {
+                    calcForward += forward;
+                    calcStrafe -= forward;
+                    calcForward += strafe;
+                    calcStrafe += strafe;
+                    break;
+                }
+                case 2: {
+                    calcForward = strafe;
+                    calcStrafe = -forward;
+                    break;
+                }
+                case 3: {
+                    calcForward -= forward;
+                    calcStrafe -= forward;
+                    calcForward += strafe;
+                    calcStrafe -= strafe;
+                    break;
+                }
+                case 4: {
+                    calcForward = -forward;
+                    calcStrafe = -strafe;
+                    break;
+                }
+                case 5: {
+                    calcForward -= forward;
+                    calcStrafe += forward;
+                    calcForward -= strafe;
+                    calcStrafe -= strafe;
+                    break;
+                }
+                case 6: {
+                    calcForward = -strafe;
+                    calcStrafe = forward;
+                    break;
+                }
+                case 7: {
+                    calcForward += forward;
+                    calcStrafe += forward;
+                    calcForward -= strafe;
+                    calcStrafe += strafe;
+                    break;
+                }
+            }
+
+            if (calcForward > 1F) {
+                calcForward *= 0.5F;
+            } else if (calcForward < 0.9F && calcForward > 0.3F) {
+                calcForward *= 0.5F;
+            }
+            if (calcForward < -1F) {
+                calcForward *= 0.5F;
+            } else if (calcForward > -0.9F && calcForward < -0.3F) {
+                calcForward *= 0.5F;
+            }
+
+            if (calcStrafe > 1F) {
+                calcStrafe *= 0.5F;
+            } else if (calcStrafe < 0.9F && calcStrafe > 0.3F) {
+                calcStrafe *= 0.5F;
+            }
+            if (calcStrafe < -1F) {
+                calcStrafe *= 0.5F;
+            } else if (calcStrafe > -0.9F && calcStrafe < -0.3F) {
+                calcStrafe *= 0.5F;
+            }
+
+            float f = calcStrafe * calcStrafe + calcForward * calcForward;
+
+            if (f >= 1.0E-4F) {
+                f = MathHelper.sqrt_float(f);
+
+                if (f < 1.0F)
+                    f = 1.0F;
+
+                f = friction / f;
+                calcStrafe *= f;
+                calcForward *= f;
+
+                final float yawSin = MathHelper.sin((float) (yaw * Math.PI / 180F));
+                final float yawCos = MathHelper.cos((float) (yaw * Math.PI / 180F));
+
+                mc.thePlayer.motionX += calcStrafe * yawCos - calcForward * yawSin;
+                mc.thePlayer.motionZ += calcForward * yawCos + calcStrafe * yawSin;
+            }
+            event.cancelEvent();
         }
     }
 
@@ -446,6 +593,12 @@ public class Scaffold extends Module {
         if(!BlockUtils.isReplaceable(blockPosition))
             return false;
 
+        // StaticModes
+        final boolean staticMode = rotationModeValue.get().equalsIgnoreCase("Static");
+        final boolean staticPitchMode = staticMode || rotationModeValue.get().equalsIgnoreCase("StaticPitch");
+        final boolean staticYawMode = staticMode || rotationModeValue.get().equalsIgnoreCase("StaticYaw");
+        final float staticPitch = staticPitchValue.get();
+
         final Vec3 eyesPos = new Vec3(mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ);
 
         PlaceRotation placeRotation = null;
@@ -469,26 +622,28 @@ public class Scaffold extends Module {
                             continue;
 
                         // face block
-                        final double diffX = hitVec.xCoord - eyesPos.xCoord;
-                        final double diffY = hitVec.yCoord - eyesPos.yCoord;
-                        final double diffZ = hitVec.zCoord - eyesPos.zCoord;
+                        for (int i = 0; i < (staticYawMode ? 2 : 1); i++) {
+                            final double diffX = staticYawMode && i == 0 ? 0 : hitVec.xCoord - eyesPos.xCoord;
+                            final double diffY = hitVec.yCoord - eyesPos.yCoord;
+                            final double diffZ = staticYawMode && i == 1 ? 0 : hitVec.zCoord - eyesPos.zCoord;
 
-                        final double diffXZ = MathHelper.sqrt_double(diffX * diffX + diffZ * diffZ);
+                            final double diffXZ = MathHelper.sqrt_double(diffX * diffX + diffZ * diffZ);
 
-                        final Rotation rotation = new Rotation(
-                                MathHelper.wrapAngleTo180_float((float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90F),
-                                MathHelper.wrapAngleTo180_float((float) -Math.toDegrees(Math.atan2(diffY, diffXZ)))
-                        );
+                            final Rotation rotation = new Rotation(
+                                    MathHelper.wrapAngleTo180_float((float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90F),
+                                    staticPitchMode ? staticPitch : MathHelper.wrapAngleTo180_float((float) -Math.toDegrees(Math.atan2(diffY, diffXZ)))
+                            );
 
-                        final Vec3 rotationVector = RotationUtils.getVectorForRotation(rotation);
-                        final Vec3 vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4);
-                        final MovingObjectPosition obj = mc.theWorld.rayTraceBlocks(eyesPos, vector, false, false, true);
+                            final Vec3 rotationVector = RotationUtils.getVectorForRotation(rotation);
+                            final Vec3 vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4);
+                            final MovingObjectPosition obj = mc.theWorld.rayTraceBlocks(eyesPos, vector, false, false, true);
 
-                        if (!(obj.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && obj.getBlockPos().equals(neighbor)))
-                            continue;
+                            if (!(obj.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && obj.getBlockPos().equals(neighbor)))
+                                continue;
 
-                        if(placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation.getRotation()))
-                            placeRotation = new PlaceRotation(new PlaceInfo(neighbor, side.getOpposite(), hitVec), rotation);
+                            if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation.getRotation()))
+                                placeRotation = new PlaceRotation(new PlaceInfo(neighbor, side.getOpposite(), hitVec), rotation);
+                        }
                     }
                 }
             }
@@ -500,7 +655,6 @@ public class Scaffold extends Module {
             RotationUtils.setTargetRotation(placeRotation.getRotation(), keepLengthValue.get());
             lockRotation = placeRotation.getRotation();
         }
-
         targetPlace = placeRotation.getPlaceInfo();
         return true;
     }
