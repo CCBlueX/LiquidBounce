@@ -588,6 +588,12 @@ class KillAura : Module() {
      * Check if enemy is hitable with current rotations
      */
     private fun updateHitable() {
+        // Disable hitable check if turn speed is zero
+        if(maxTurnSpeed.get() <= 0F) {
+            hitable = true
+            return
+        }
+
         val reach = min(maxRange.toDouble(), mc.thePlayer.getDistanceToEntityBox(target!!)) + 0.4
 
         if (raycastValue.get()) {
