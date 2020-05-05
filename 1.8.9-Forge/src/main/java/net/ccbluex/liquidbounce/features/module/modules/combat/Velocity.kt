@@ -113,7 +113,8 @@ class Velocity : Module() {
 
             "aac" -> if (velocityInput && velocityTimer.hasTimePassed(80L)) {
                 mc.thePlayer.motionX *= horizontalValue.get()
-                mc.thePlayer.motionZ *= verticalValue.get()
+                mc.thePlayer.motionZ *= horizontalValue.get()
+                //mc.thePlayer.motionY *= verticalValue.get() ?
                 velocityInput = false
             }
 
