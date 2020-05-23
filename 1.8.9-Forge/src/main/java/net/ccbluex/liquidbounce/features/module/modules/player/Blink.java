@@ -49,11 +49,13 @@ public class Blink extends Module {
         if(mc.thePlayer == null)
             return;
 
-        fakePlayer = new EntityOtherPlayerMP(mc.theWorld, mc.thePlayer.getGameProfile());
-        fakePlayer.clonePlayer(mc.thePlayer, true);
-        fakePlayer.copyLocationAndAnglesFrom(mc.thePlayer);
-        fakePlayer.rotationYawHead = mc.thePlayer.rotationYawHead;
-        mc.theWorld.addEntityToWorld(-9100, fakePlayer);
+        if (!pulseValue.get()) {
+            fakePlayer = new EntityOtherPlayerMP(mc.theWorld, mc.thePlayer.getGameProfile());
+            fakePlayer.clonePlayer(mc.thePlayer, true);
+            fakePlayer.copyLocationAndAnglesFrom(mc.thePlayer);
+            fakePlayer.rotationYawHead = mc.thePlayer.rotationYawHead;
+            mc.theWorld.addEntityToWorld(-1337, fakePlayer);
+        }
 
         synchronized(positions) {
             positions.add(new double[] {mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY + (mc.thePlayer.getEyeHeight() / 2), mc.thePlayer.posZ});
@@ -65,12 +67,14 @@ public class Blink extends Module {
 
     @Override
     public void onDisable() {
-        if(mc.thePlayer == null || fakePlayer == null)
+        if(mc.thePlayer == null)
             return;
 
         blink();
-        mc.theWorld.removeEntityFromWorld(fakePlayer.getEntityId());
-        fakePlayer = null;
+        if (fakePlayer != null) {
+            mc.theWorld.removeEntityFromWorld(fakePlayer.getEntityId());
+            fakePlayer = null;
+        }
     }
 
     @EventTarget
@@ -148,7 +152,7 @@ public class Blink extends Module {
             disableLogger = true;
 
             final Iterator<Packet> packetIterator = packets.iterator();
-            for(; packetIterator.hasNext(); ) {
+            while (packetIterator.hasNext()) {
                 mc.getNetHandler().addToSendQueue(packetIterator.next());
                 packetIterator.remove();
             }
