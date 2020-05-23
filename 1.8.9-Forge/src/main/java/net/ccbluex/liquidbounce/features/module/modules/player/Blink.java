@@ -24,17 +24,15 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.*;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.lwjgl.opengl.GL11.*;
 
 @ModuleInfo(name = "Blink", description = "Suspends all movement packets.", category = ModuleCategory.PLAYER)
 public class Blink extends Module {
 
-    private final List<Packet> packets = new ArrayList<>();
+    private final LinkedBlockingQueue<Packet> packets = new LinkedBlockingQueue<>();
     private EntityOtherPlayerMP fakePlayer = null;
     private boolean disableLogger;
     private final LinkedList<double[]> positions = new LinkedList<>();
@@ -151,10 +149,8 @@ public class Blink extends Module {
         try {
             disableLogger = true;
 
-            final Iterator<Packet> packetIterator = packets.iterator();
-            while (packetIterator.hasNext()) {
-                mc.getNetHandler().addToSendQueue(packetIterator.next());
-                packetIterator.remove();
+            while (!packets.isEmpty()) {
+                mc.getNetHandler().getNetworkManager().sendPacket(packets.take());
             }
 
             disableLogger = false;
