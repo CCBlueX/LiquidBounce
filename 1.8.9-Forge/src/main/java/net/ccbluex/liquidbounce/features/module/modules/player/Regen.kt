@@ -38,7 +38,7 @@ class Regen : Module() {
             when (modeValue.get().toLowerCase()) {
                 "vanilla" -> {
                     repeat(speedValue.get()) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer())
+                        mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
                     }
                 }
 
@@ -47,7 +47,7 @@ class Regen : Module() {
                         return
 
                     repeat(9) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer())
+                        mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
                     }
 
                     mc.timer.timerSpeed = 0.45F

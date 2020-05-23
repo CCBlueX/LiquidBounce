@@ -26,16 +26,22 @@ class Zoot : Module() {
         if (noAirValue.get() && !mc.thePlayer.onGround)
             return
 
-        if (badEffectsValue.get())
-            for (potion in mc.thePlayer.activePotionEffects)
-                if (potion != null && hasBadEffect()) // TODO: Check current potion
-                    for (i in 0 until potion.duration / 20)
-                        mc.netHandler.addToSendQueue(C03PacketPlayer())
+        if (badEffectsValue.get()) {
+            val effect = mc.thePlayer.activePotionEffects.maxBy { it.duration }
 
-        if (fireValue.get())
-            if (!mc.thePlayer.capabilities.isCreativeMode && mc.thePlayer.isBurning)
-                for (i in 0..9)
-                    mc.netHandler.addToSendQueue(C03PacketPlayer())
+            if (effect != null) {
+                repeat(effect.duration / 20) {
+                    mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
+                }
+            }
+        }
+
+
+        if (fireValue.get() && !mc.thePlayer.capabilities.isCreativeMode && mc.thePlayer.isBurning) {
+            repeat(9) {
+                mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
+            }
+        }
     }
 
     // TODO: Check current potion
