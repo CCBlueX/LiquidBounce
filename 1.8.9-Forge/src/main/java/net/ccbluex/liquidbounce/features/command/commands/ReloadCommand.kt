@@ -23,11 +23,13 @@ class ReloadCommand : Command("reload", arrayOf("configreload")) {
         for(module in LiquidBounce.moduleManager.modules)
             LiquidBounce.moduleManager.generateCommand(module)
         chat("§c§lReloading scripts...")
+        LiquidBounce.isStarting = true
         LiquidBounce.scriptManager.reloadScripts()
         chat("§c§lReloading fonts...")
         Fonts.loadFonts()
         chat("§c§lReloading modules...")
         LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.modulesConfig)
+        LiquidBounce.isStarting = false
         chat("§c§lReloading values...")
         LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.valuesConfig)
         chat("§c§lReloading accounts...")
