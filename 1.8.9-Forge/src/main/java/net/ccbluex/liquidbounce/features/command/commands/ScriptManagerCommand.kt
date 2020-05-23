@@ -118,11 +118,13 @@ class ScriptManagerCommand : Command("scriptmanager", arrayOf("scripts")) {
                         LiquidBounce.commandManager.registerCommands()
                         for(module in LiquidBounce.moduleManager.modules)
                             LiquidBounce.moduleManager.generateCommand(module)
+                        LiquidBounce.isStarting = true
                         LiquidBounce.scriptManager.reloadScripts()
+                        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.modulesConfig)
+                        LiquidBounce.isStarting = false
+                        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.valuesConfig)
                         LiquidBounce.clickGui = ClickGui()
                         LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
-                        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.modulesConfig)
-                        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.valuesConfig)
                         chat("Successfully reloaded all scripts.")
                     } catch (t: Throwable) {
                         ClientUtils.getLogger().error("Something went wrong while reloading all scripts.", t)
