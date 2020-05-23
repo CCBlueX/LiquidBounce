@@ -116,6 +116,8 @@ class ScriptManagerCommand : Command("scriptmanager", arrayOf("scripts")) {
                     try {
                         LiquidBounce.commandManager = CommandManager()
                         LiquidBounce.commandManager.registerCommands()
+                        for(module in LiquidBounce.moduleManager.modules)
+                            LiquidBounce.moduleManager.generateCommand(module)
                         LiquidBounce.scriptManager.reloadScripts()
                         LiquidBounce.clickGui = ClickGui()
                         LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)

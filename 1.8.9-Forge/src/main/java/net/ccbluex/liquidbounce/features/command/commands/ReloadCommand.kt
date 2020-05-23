@@ -7,9 +7,9 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.features.command.CommandManager
 
 class ReloadCommand : Command("reload", arrayOf("configreload")) {
     /**
@@ -20,6 +20,8 @@ class ReloadCommand : Command("reload", arrayOf("configreload")) {
         chat("§c§lReloading commands...")
         LiquidBounce.commandManager = CommandManager()
         LiquidBounce.commandManager.registerCommands()
+        for(module in LiquidBounce.moduleManager.modules)
+            LiquidBounce.moduleManager.generateCommand(module)
         chat("§c§lReloading scripts...")
         LiquidBounce.scriptManager.reloadScripts()
         chat("§c§lReloading fonts...")
