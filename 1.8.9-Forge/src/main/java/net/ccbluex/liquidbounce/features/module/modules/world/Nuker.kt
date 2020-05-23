@@ -3,163 +3,241 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.module.modules.world;
+package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.event.EventTarget;
-import net.ccbluex.liquidbounce.event.Render3DEvent;
-import net.ccbluex.liquidbounce.event.UpdateEvent;
-import net.ccbluex.liquidbounce.features.module.Module;
-import net.ccbluex.liquidbounce.features.module.ModuleCategory;
-import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool;
-import net.ccbluex.liquidbounce.utils.RotationUtils;
-import net.ccbluex.liquidbounce.utils.VecRotation;
-import net.ccbluex.liquidbounce.utils.block.BlockUtils;
-import net.ccbluex.liquidbounce.utils.render.RenderUtils;
-import net.ccbluex.liquidbounce.value.BoolValue;
-import net.ccbluex.liquidbounce.value.FloatValue;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockAir;
-import net.minecraft.block.BlockLiquid;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemSword;
-import net.minecraft.network.play.client.C07PacketPlayerDigging;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
-
-import java.awt.*;
-import java.util.List;
-import java.util.*;
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.Render3DEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
+import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.timer.TickTimer
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.Block
+import net.minecraft.block.BlockAir
+import net.minecraft.block.BlockLiquid
+import net.minecraft.init.Blocks
+import net.minecraft.item.ItemSword
+import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
+import java.awt.Color
+import kotlin.math.roundToInt
 
 @ModuleInfo(name = "Nuker", description = "Breaks all blocks around you.", category = ModuleCategory.WORLD)
-public class Nuker extends Module {
+class Nuker : Module() {
 
-    private final FloatValue radiusValue = new FloatValue("Radius", 5.2F, 1F, 6F);
-    private final BoolValue throughWallsValue = new BoolValue("ThroughWalls", false);
+    /**
+     * OPTIONS
+     */
 
-    private final List<BlockPos> attackedBlocks = new ArrayList<>();
-    private BlockPos currentBlock;
+    private val radiusValue = FloatValue("Radius", 5.2F, 1F, 6F)
+    private val throughWallsValue = BoolValue("ThroughWalls", false)
+    private val priorityValue = ListValue("Priority", arrayOf("Distance", "Hardness"), "Distance")
+    private val rotationsValue = BoolValue("Rotations", true)
+    private val layerValue = BoolValue("Layer", false)
+    private val hitDelayValue = IntegerValue("HitDelay", 4, 0, 20)
+    private val nukeValue = IntegerValue("Nuke", 1, 1, 20)
+    private val nukeDelay = IntegerValue("NukeDelay", 1, 1, 20)
 
-    static float currentDamage;
-    private int blockHitDelay;
+    /**
+     * VALUES
+     */
+
+    private val attackedBlocks = arrayListOf<BlockPos>()
+    private var currentBlock: BlockPos? = null
+    private var blockHitDelay = 0
+
+    private var nukeTimer = TickTimer()
+    private var nuke = 0
 
     @EventTarget
-    public void onUpdate(final UpdateEvent event) {
-        if(blockHitDelay > 0) {
-            blockHitDelay--;
-            return;
+    fun onUpdate(event: UpdateEvent) {
+        // Block hit delay
+        if (blockHitDelay > 0 && !LiquidBounce.moduleManager[FastBreak::class.java]!!.state) {
+            blockHitDelay--
+            return
         }
 
-        attackedBlocks.clear();
+        // Reset bps
+        nukeTimer.update()
+        if (nukeTimer.hasTimePassed(nukeDelay.get())) {
+            nuke = 0
+            nukeTimer.reset()
+        }
 
-        if(mc.playerController.isNotCreative()) {
-            final Optional<Map.Entry<BlockPos, Block>> optionalEntry = BlockUtils.searchBlocks(Math.round(radiusValue.get()) + 1).entrySet().stream()
-                    .filter(entry -> {
-                        final Block block = entry.getValue();
+        // Clear blocks
+        attackedBlocks.clear()
 
-                        return BlockUtils.getCenterDistance(entry.getKey()) <= radiusValue.get() && !(block instanceof BlockAir) && block != Blocks.bedrock && !(block instanceof BlockLiquid);
-                    })
-                    .filter(entry -> {
-                        if (throughWallsValue.get()) return true;
+        if (mc.playerController.isNotCreative) {
+            // Default nuker
 
-                        final BlockPos blockPos = entry.getKey();
-                        final Vec3 eyesPos = new Vec3(mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ);
-                        final MovingObjectPosition movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos, new Vec3(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5), false, true, false);
+            val validBlocks = searchBlocks(radiusValue.get().roundToInt() + 1)
+                    .filter { (pos, block) ->
+                        if (getCenterDistance(pos) <= radiusValue.get() && validBlock(block)) {
+                            if (layerValue.get() && pos.y < mc.thePlayer.posY) { // Layer: Break all blocks above you
+                                return@filter false
+                            }
 
-                        return movingObjectPosition != null && movingObjectPosition.getBlockPos().equals(blockPos);
-                    })
-                    .min(Comparator.comparingDouble(value -> {
-                        final BlockPos blockPos = value.getKey();
+                            if (throughWallsValue.get()) { // ThroughWalls: Just break blocks in your sight
+                                // Raytrace player eyes to block position (through walls check)
+                                val eyesPos = Vec3(mc.thePlayer.posX, mc.thePlayer.entityBoundingBox.minY +
+                                        mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ)
+                                val blockVec = Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
+                                val rayTrace = mc.theWorld.rayTraceBlocks(eyesPos, blockVec,
+                                        false, true, false)
 
-                        final boolean onBlock = (int) mc.thePlayer.posX == blockPos.getX() + 1 && mc.thePlayer.posY > blockPos.getY() && (int) mc.thePlayer.posZ == blockPos.getZ() + 1;
-                        final double dist = BlockUtils.getCenterDistance(value.getKey());
+                                // Check if block is visible
+                                rayTrace != null && rayTrace.blockPos == pos
+                            }else true // Done
+                        }else false // Bad block
+                    }.toMutableMap()
 
-                        return onBlock ? Double.MAX_VALUE - dist : dist;
-                    }));
+            do{
+                val (blockPos, block) = when(priorityValue.get()) {
+                    "Distance" -> validBlocks.minBy { (pos, block) ->
+                        val distance = getCenterDistance(pos)
+                        val safePos = BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)
 
-            if(!optionalEntry.isPresent())
-                return;
+                        if (pos.x == safePos.x && safePos.y <= pos.y && pos.z == safePos.z)
+                            Double.MAX_VALUE - distance // Last block
+                        else
+                            distance
+                    }
+                    "Hardness" -> validBlocks.maxBy { (pos, block) ->
+                        val hardness = block.getPlayerRelativeBlockHardness(mc.thePlayer, mc.theWorld, pos).toDouble()
 
-            final Map.Entry<BlockPos, Block> entry = optionalEntry.get();
+                        val safePos = BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)
+                        if (pos.x == safePos.x && safePos.y <= pos.y && pos.z == safePos.z)
+                            Double.MIN_VALUE + hardness // Last block
+                        else
+                            hardness
+                    }
+                    else -> return // what? why?
+                } ?: return // well I guess there is no block to break :(
 
-            final BlockPos blockPos = entry.getKey();
-            final Block block = entry.getValue();
+                // Reset current damage in case of block switch
+                if (blockPos != currentBlock)
+                    currentDamage = 0F
 
-            if(!blockPos.equals(currentBlock))
-                currentDamage = 0F;
-
-            currentBlock = blockPos;
-
-            attackedBlocks.add(blockPos);
-
-            final VecRotation vecRotation = RotationUtils.faceBlock(blockPos);
-            if (vecRotation != null)
-                RotationUtils.setTargetRotation(vecRotation.getRotation());
-
-            final AutoTool autoTool = (AutoTool) LiquidBounce.moduleManager.getModule(AutoTool.class);
-
-            if(autoTool != null && autoTool.getState())
-                autoTool.switchSlot(blockPos);
-
-            if(currentDamage == 0F) {
-                mc.getNetHandler().addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, blockPos, EnumFacing.DOWN));
-
-                if(mc.thePlayer.capabilities.isCreativeMode || block.getPlayerRelativeBlockHardness(mc.thePlayer, mc.theWorld, blockPos) >= 1.0F) {
-                    currentDamage = 0F;
-                    mc.thePlayer.swingItem();
-                    mc.playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN);
-                    return;
+                // Change head rotations to next block
+                if (rotationsValue.get()) {
+                    val rotation = RotationUtils.faceBlock(blockPos) ?: return // In case of a mistake. Prevent flag.
+                    RotationUtils.setTargetRotation(rotation.rotation)
                 }
-            }
 
-            mc.thePlayer.swingItem();
+                // Set next target block
+                currentBlock = blockPos
+                attackedBlocks.add(blockPos)
 
-            currentDamage += block.getPlayerRelativeBlockHardness(mc.thePlayer, mc.theWorld, blockPos);
-            mc.theWorld.sendBlockBreakProgress(mc.thePlayer.getEntityId(), blockPos, (int) (currentDamage * 10F) - 1);
+                // Call auto tool
+                val autoTool = LiquidBounce.moduleManager.getModule(AutoTool::class.java) as AutoTool
+                if (autoTool.state)
+                    autoTool.switchSlot(blockPos)
 
-            if(currentDamage >= 1.0F) {
-                mc.getNetHandler().addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, blockPos, EnumFacing.DOWN));
-                mc.playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN);
-                blockHitDelay = 4;
-                currentDamage = 0F;
-            }
-        }else{
-            final ItemStack heldItem = mc.thePlayer.getHeldItem();
+                // Start block breaking
+                if (currentDamage == 0F) {
+                    mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK,
+                            blockPos, EnumFacing.DOWN))
 
-            if (heldItem != null && heldItem.getItem() instanceof ItemSword)
-                return;
+                    // End block break if able to break instant
+                    if (block.getPlayerRelativeBlockHardness(mc.thePlayer, mc.theWorld, blockPos) >= 1F) {
+                        currentDamage = 0F
+                        mc.thePlayer.swingItem()
+                        mc.playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
+                        blockHitDelay = hitDelayValue.get()
+                        validBlocks -= blockPos
+                        nuke++
+                        continue // Next break
+                    }
+                }
 
-            BlockUtils.searchBlocks(Math.round(radiusValue.get()) + 1).entrySet().stream()
-                    .filter(entry -> BlockUtils.getCenterDistance(entry.getKey()) <= radiusValue.get() && !(entry.getValue() instanceof BlockAir))
-                    .map(Map.Entry :: getKey)
-                    .filter(blockPos -> {
-                        if(throughWallsValue.get()) return true;
+                // Break block
+                mc.thePlayer.swingItem()
+                currentDamage += block.getPlayerRelativeBlockHardness(mc.thePlayer, mc.theWorld, blockPos)
+                mc.theWorld.sendBlockBreakProgress(mc.thePlayer.entityId, blockPos, (currentDamage * 10F).toInt() - 1)
 
-                        final Vec3 eyesPos = new Vec3(mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ);
-                        final MovingObjectPosition movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos, new Vec3(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5), false, true, false);
+                // End of breaking block
+                if (currentDamage >= 1F) {
+                    mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, blockPos, EnumFacing.DOWN))
+                    mc.playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
+                    blockHitDelay = hitDelayValue.get()
+                    currentDamage = 0F
+                }
+                return // Break out
+            } while (nuke < nukeValue.get())
+        } else {
+            // Fast creative mode nuker (CreativeStorm option)
 
-                        return movingObjectPosition != null && movingObjectPosition.getBlockPos().equals(blockPos);
-                    })
-                    .forEach(blockPos -> {
-                        mc.getNetHandler().addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, blockPos, EnumFacing.DOWN));
-                        mc.thePlayer.swingItem();
-                        mc.getNetHandler().addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, blockPos, EnumFacing.DOWN));
+            // Unable to break with swords in creative mode
+            if (mc.thePlayer.heldItem?.item is ItemSword)
+                return
 
-                        attackedBlocks.add(blockPos);
-                    });
+            // Serach for new blocks to break
+            searchBlocks(radiusValue.get().roundToInt() + 1)
+                    .filter { (pos, block) ->
+                        if (getCenterDistance(pos) <= radiusValue.get() && validBlock(block)) {
+                            if (layerValue.get() && pos.y < mc.thePlayer.posY) { // Layer: Break all blocks above you
+                                return@filter false
+                            }
+
+                            if (throughWallsValue.get()) { // ThroughWalls: Just break blocks in your sight
+                                // Raytrace player eyes to block position (through walls check)
+                                val eyesPos = Vec3(mc.thePlayer.posX, mc.thePlayer.entityBoundingBox.minY +
+                                        mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ)
+                                val blockVec = Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
+                                val rayTrace = mc.theWorld.rayTraceBlocks(eyesPos, blockVec,
+                                        false, true, false)
+
+                                // Check if block is visible
+                                rayTrace != null && rayTrace.blockPos == pos
+                            }else true // Done
+                        }else false // Bad block
+                    }
+                    .forEach { (pos, block) ->
+                        // Instant break block
+                        mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK,
+                                pos, EnumFacing.DOWN))
+                        mc.thePlayer.swingItem()
+                        mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK,
+                                pos, EnumFacing.DOWN))
+                        attackedBlocks.add(pos)
+                    }
         }
     }
 
     @EventTarget
-    public void onRender3D(final Render3DEvent event) {
-        for(final BlockPos blockPos : attackedBlocks) RenderUtils.drawBlockBox(blockPos, Color.RED, true);
+    fun onRender3D(event: Render3DEvent) {
+        // Safe block
+        if (!layerValue.get()) {
+            val safePos = BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)
+            val safeBlock = BlockUtils.getBlock(safePos)
+            if (safeBlock != null && validBlock(safeBlock))
+                RenderUtils.drawBlockBox(safePos, Color.GREEN, true)
+        }
+
+        // Just draw all blocks
+        for (blockPos in attackedBlocks)
+            RenderUtils.drawBlockBox(blockPos, Color.RED, true)
     }
 
-    private boolean isBreakable(final Block block) {
-        return false;
+    /**
+     * Check if [block] is a valid block to break
+     */
+    private fun validBlock(block: Block) = block !is BlockAir && block !is BlockLiquid && block != Blocks.bedrock
+
+    companion object {
+        var currentDamage = 0F
     }
 }
