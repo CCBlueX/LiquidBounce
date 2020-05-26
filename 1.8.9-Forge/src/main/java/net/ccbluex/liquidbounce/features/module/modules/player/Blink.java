@@ -24,17 +24,15 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.*;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.lwjgl.opengl.GL11.*;
 
 @ModuleInfo(name = "Blink", description = "Suspends all movement packets.", category = ModuleCategory.PLAYER)
 public class Blink extends Module {
 
-    private final List<Packet> packets = new ArrayList<>();
+    private final LinkedBlockingQueue<Packet> packets = new LinkedBlockingQueue<>();
     private EntityOtherPlayerMP fakePlayer = null;
     private boolean disableLogger;
     private final LinkedList<double[]> positions = new LinkedList<>();
@@ -49,11 +47,13 @@ public class Blink extends Module {
         if(mc.thePlayer == null)
             return;
 
-        fakePlayer = new EntityOtherPlayerMP(mc.theWorld, mc.thePlayer.getGameProfile());
-        fakePlayer.clonePlayer(mc.thePlayer, true);
-        fakePlayer.copyLocationAndAnglesFrom(mc.thePlayer);
-        fakePlayer.rotationYawHead = mc.thePlayer.rotationYawHead;
-        mc.theWorld.addEntityToWorld(-9100, fakePlayer);
+        if (!pulseValue.get()) {
+            fakePlayer = new EntityOtherPlayerMP(mc.theWorld, mc.thePlayer.getGameProfile());
+            fakePlayer.clonePlayer(mc.thePlayer, true);
+            fakePlayer.copyLocationAndAnglesFrom(mc.thePlayer);
+            fakePlayer.rotationYawHead = mc.thePlayer.rotationYawHead;
+            mc.theWorld.addEntityToWorld(-1337, fakePlayer);
+        }
 
         synchronized(positions) {
             positions.add(new double[] {mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY + (mc.thePlayer.getEyeHeight() / 2), mc.thePlayer.posZ});
@@ -65,12 +65,14 @@ public class Blink extends Module {
 
     @Override
     public void onDisable() {
-        if(mc.thePlayer == null || fakePlayer == null)
+        if(mc.thePlayer == null)
             return;
 
         blink();
-        mc.theWorld.removeEntityFromWorld(fakePlayer.getEntityId());
-        fakePlayer = null;
+        if (fakePlayer != null) {
+            mc.theWorld.removeEntityFromWorld(fakePlayer.getEntityId());
+            fakePlayer = null;
+        }
     }
 
     @EventTarget
@@ -147,10 +149,8 @@ public class Blink extends Module {
         try {
             disableLogger = true;
 
-            final Iterator<Packet> packetIterator = packets.iterator();
-            for(; packetIterator.hasNext(); ) {
-                mc.getNetHandler().addToSendQueue(packetIterator.next());
-                packetIterator.remove();
+            while (!packets.isEmpty()) {
+                mc.getNetHandler().getNetworkManager().sendPacket(packets.take());
             }
 
             disableLogger = false;

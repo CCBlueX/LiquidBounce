@@ -157,9 +157,9 @@ public class LiquidWalk extends Module {
         if (mc.thePlayer == null)
             return;
 
-        final Block block = BlockUtils.getBlock(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ));
+        final Block block = BlockUtils.getBlock(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 0.01, mc.thePlayer.posZ));
 
-        if (noJumpValue.get() && block instanceof  BlockLiquid)
+        if (noJumpValue.get() && block instanceof BlockLiquid)
             event.cancelEvent();
     }
 

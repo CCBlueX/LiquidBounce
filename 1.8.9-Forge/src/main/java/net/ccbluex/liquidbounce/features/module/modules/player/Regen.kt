@@ -31,13 +31,14 @@ class Regen : Module() {
     fun onUpdate(event: UpdateEvent) {
         if (resetTimer)
             mc.timer.timerSpeed = 1F
+            resetTimer = false
 
         if ((!noAirValue.get() || mc.thePlayer.onGround) && !mc.thePlayer.capabilities.isCreativeMode &&
                 mc.thePlayer.foodStats.foodLevel > foodValue.get() && mc.thePlayer.isEntityAlive && mc.thePlayer.health < healthValue.get()) {
             when (modeValue.get().toLowerCase()) {
                 "vanilla" -> {
                     repeat(speedValue.get()) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer())
+                        mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
                     }
                 }
 
@@ -46,7 +47,7 @@ class Regen : Module() {
                         return
 
                     repeat(9) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer())
+                        mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
                     }
 
                     mc.timer.timerSpeed = 0.45F

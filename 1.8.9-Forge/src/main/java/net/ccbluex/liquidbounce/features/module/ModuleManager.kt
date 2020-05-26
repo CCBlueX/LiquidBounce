@@ -178,8 +178,7 @@ class ModuleManager : Listenable {
                 KeepAlive::class.java,
                 ResourcePackSpoof::class.java,
                 NoSlowBreak::class.java,
-                PortalMenu::class.java,
-                ReachAura::class.java
+                PortalMenu::class.java
         )
 
         registerModule(NoScoreboard)
@@ -231,7 +230,7 @@ class ModuleManager : Listenable {
     /**
      * Generate command for [module]
      */
-    private fun generateCommand(module: Module) {
+    internal fun generateCommand(module: Module) {
         val values = module.values
 
         if (values.isEmpty())

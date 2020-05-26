@@ -43,7 +43,7 @@ class FastUse : Module() {
             when (modeValue.get().toLowerCase()) {
                 "instant" -> {
                     repeat(35) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer())
+                        mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
                     }
 
                     mc.playerController.onStoppedUsingItem(mc.thePlayer)
@@ -51,7 +51,7 @@ class FastUse : Module() {
 
                 "ncp" -> if (mc.thePlayer.itemInUseDuration > 14) {
                     repeat(20) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer())
+                        mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
                     }
 
                     mc.playerController.onStoppedUsingItem(mc.thePlayer)
@@ -66,7 +66,7 @@ class FastUse : Module() {
                     if (!msTimer.hasTimePassed(delayValue.get().toLong()))
                         return
 
-                    mc.netHandler.addToSendQueue(C03PacketPlayer())
+                    mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
                     msTimer.reset()
                 }
             }
