@@ -96,7 +96,7 @@ object LiquidBounce {
 
         // Setup module manager and register modules
         moduleManager = ModuleManager()
-        LiquidBounce.moduleManager.registerModules()
+        moduleManager.registerModules()
 
         // Remapper
         try {

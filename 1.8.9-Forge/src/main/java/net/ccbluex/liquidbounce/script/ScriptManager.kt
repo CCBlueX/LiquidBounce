@@ -10,11 +10,6 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import java.io.File
 import java.io.FileFilter
 
-/**
- * A nashorn based script manager
- *
- * @author CCBlueX
- */
 class ScriptManager {
 
     val scripts = mutableListOf<Script>()
@@ -23,7 +18,7 @@ class ScriptManager {
     private val scriptFileExtension = ".js"
 
     /**
-     * Load scripts from directory
+     * Loads all scripts inside the scripts folder.
      */
     fun loadScripts() {
         if(!scriptsFolder.exists())
@@ -33,14 +28,14 @@ class ScriptManager {
     }
 
     /**
-     *
+     * Unloads all scripts.
      */
     fun unloadScripts() {
         scripts.clear()
     }
 
     /**
-     * Load script from file
+     * Loads a script from a file.
      */
     fun loadScript(scriptFile : File) {
         try {
@@ -52,21 +47,22 @@ class ScriptManager {
     }
 
     /**
-     * Enable all scripts
+     * Enables all scripts.
      */
     fun enableScripts() {
         scripts.forEach { it.onEnable() }
     }
 
     /**
-     * Disable all scripts
+     * Disables all scripts.
      */
     fun disableScripts() {
         scripts.forEach { it.onDisable() }
     }
 
     /**
-     * Import script
+     * Imports a script.
+     * @param file JavaScript file to be imported.
      */
     fun importScript(file : File) {
         val scriptFile = File(scriptsFolder, file.name)
@@ -77,7 +73,8 @@ class ScriptManager {
     }
 
     /**
-     * Delete script
+     * Deletes a script.
+     * @param script Script to be deleted.
      */
     fun deleteScript(script : Script) {
         script.onDisable()
@@ -88,7 +85,7 @@ class ScriptManager {
     }
 
     /**
-     * Reload scripts
+     * Reloads all scripts.
      */
     fun reloadScripts() {
         disableScripts()
