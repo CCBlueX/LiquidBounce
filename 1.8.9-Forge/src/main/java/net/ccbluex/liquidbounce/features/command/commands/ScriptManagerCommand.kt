@@ -153,7 +153,7 @@ class ScriptManagerCommand : Command("scriptmanager", arrayOf("scripts")) {
 
         if (scriptManager.scripts.isNotEmpty()) {
             chat("§c§lScripts")
-            scriptManager.scripts.forEachIndexed { index, script -> chat("$index: §a§l${script.scriptName} §a§lv${script.scriptVersion} §3by §a§l${script.scriptAuthor}") }
+            scriptManager.scripts.forEachIndexed { index, script -> chat("$index: §a§l${script.scriptName} §a§lv${script.scriptVersion} §3by §a§l${script.scriptAuthors.joinToString(", ")}") }
         }
 
         chatSyntax("scriptmanager <import/delete/reload/folder>")

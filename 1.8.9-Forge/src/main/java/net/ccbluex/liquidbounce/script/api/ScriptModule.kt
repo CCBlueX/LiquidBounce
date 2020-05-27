@@ -34,11 +34,11 @@ class ScriptModule(private val moduleObject: JSObject) : Module() {
             if (categoryString.equals(category.displayName, true))
                 this.category = category
 
-        if (moduleObject.hasMember("values")) {
-            val values = moduleObject.getMember("values") as JSObject
+        if (moduleObject.hasMember("settings")) {
+            val settings = moduleObject.getMember("settings") as JSObject
 
-            for (valueName in values.keySet()) {
-                _values[valueName] = values.getMember(valueName) as Value<*>
+            for (settingName in settings.keySet()) {
+                _values[settingName] = settings.getMember(settingName) as Value<*>
             }
         }
     }
