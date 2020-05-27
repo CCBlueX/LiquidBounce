@@ -52,6 +52,7 @@ class CommandManager {
         registerCommand(PrefixCommand())
         registerCommand(ShortcutCommand())
         registerCommand(HideCommand())
+        registerCommand(WindowTitleCommand())
     }
 
     /**
