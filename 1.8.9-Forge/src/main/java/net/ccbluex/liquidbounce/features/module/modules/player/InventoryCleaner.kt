@@ -50,35 +50,6 @@ class InventoryCleaner : Module() {
         }
     }
 
-    private val maxBlockStacksValue = object : IntegerValue("MaxBlockStacks", 5, 0, 10) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            if (newValue < minimum) {
-                set(minimum)
-            }
-        }
-    }
-    private val maxEnchantedBooksValue = object : IntegerValue("MaxEnchantedBooks", 5, 0, 10) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            if (newValue < minimum) {
-                set(minimum)
-            }
-        }
-    }
-    private val maxWaterBucketsValue = object : IntegerValue("MaxWaterBuckets", 1, 0, 10) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            if (newValue < minimum) {
-                set(minimum)
-            }
-        }
-    }
-    private val maxLavaBucketsValue = object : IntegerValue("MaxLavaBuckets", 1, 0, 10) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            if (newValue < minimum) {
-                set(minimum)
-            }
-        }
-    }
-
 
     private val invOpenValue = BoolValue("InvOpen", false)
     private val simulateInventory = BoolValue("SimulateInventory", true)
@@ -201,57 +172,15 @@ class InventoryCleaner : Module() {
             } else if (itemStack.unlocalizedName == "item.compass") {
                 items(0, 45).none { (_, stack) -> itemStack != stack && stack.unlocalizedName == "item.compass" }
             } else item is ItemFood || itemStack.unlocalizedName == "item.arrow" ||
-                    (item is ItemBlock && getBlockStacksAmount() <= maxBlockStacksValue.get() && !itemStack.unlocalizedName.contains("flower")) ||
+                    item is ItemBlock && !itemStack.unlocalizedName.contains("flower") ||
                     item is ItemBed || itemStack.unlocalizedName == "item.diamond" || itemStack.unlocalizedName == "item.ingotIron" ||
-                    item is ItemPotion || item is ItemEnderPearl ||
-                    (itemStack.unlocalizedName == "item.enchantedBook" && getEnchantedBooksAmount() <= maxEnchantedBooksValue.get()) ||
-                    (itemStack.unlocalizedName == "item.bucketWater" && getWaterBucketsAmount() <= maxWaterBucketsValue.get()) ||
-                    (itemStack.unlocalizedName == "item.bucketLava" && getLavaBucketsAmount() <= maxLavaBucketsValue.get()) ||
-                    itemStack.unlocalizedName == "item.bucket" ||
-                    itemStack.unlocalizedName == "item.stick" ||
+                    item is ItemPotion || item is ItemEnderPearl || item is ItemEnchantedBook || item is ItemBucket || itemStack.unlocalizedName == "item.stick" ||
                     ignoreVehiclesValue.get() && (item is ItemBoat || item is ItemMinecart)
         } catch (ex: Exception) {
             ClientUtils.getLogger().error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
 
             true
         }
-    }
-
-
-    private fun getBlockStacksAmount(): Int {
-        var amount = 0
-        for (i in 9..44) {
-            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
-            if (itemStack != null && itemStack.item is ItemBlock && !itemStack.unlocalizedName.contains("flower")) amount += 1
-        }
-        return amount
-    }
-
-    private fun getEnchantedBooksAmount(): Int {
-        var amount = 0
-        for (i in 9..44) {
-            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
-            if (itemStack != null && itemStack.unlocalizedName == "item.enchantedBook") amount += 1
-        }
-        return amount
-    }
-
-    private fun getWaterBucketsAmount(): Int {
-        var amount = 0
-        for (i in 9..44) {
-            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
-            if (itemStack != null && itemStack.unlocalizedName == "item.bucketWater") amount += 1
-        }
-        return amount
-    }
-
-    private fun getLavaBucketsAmount(): Int {
-        var amount = 0
-        for (i in 9..44) {
-            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
-            if (itemStack != null && itemStack.unlocalizedName == "item.bucketLava") amount += 1
-        }
-        return amount
     }
 
     /**
