@@ -35,9 +35,9 @@ object Setting {
     @JvmStatic
     fun integer(settingInfo: JSObject): IntegerValue {
         val name = settingInfo.getMember("name") as String
-        val default = settingInfo.getMember("default") as Int
-        val min = settingInfo.getMember("min") as Int
-        val max = settingInfo.getMember("max") as Int
+        val default = (settingInfo.getMember("default") as Number).toInt()
+        val min = (settingInfo.getMember("min") as Number).toInt()
+        val max = (settingInfo.getMember("max") as Number).toInt()
 
         return IntegerValue(name, default, min, max)
     }
@@ -78,7 +78,7 @@ object Setting {
     @JvmStatic
     fun block(settingInfo: JSObject): BlockValue {
         val name = settingInfo.getMember("name") as String
-        val default = settingInfo.getMember("default") as Int
+        val default = (settingInfo.getMember("default") as Number).toInt()
 
         return BlockValue(name, default)
     }
