@@ -24,6 +24,7 @@ import javax.script.ScriptEngineManager
 class Script(val scriptFile: File) : MinecraftInstance() {
 
     private var scriptEngine = ScriptEngineManager().getEngineByName("nashorn")
+    private val scriptText = scriptFile.readText()
 
     // Script information
     lateinit var scriptName: String
@@ -50,7 +51,8 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         // Global functions
         scriptEngine.put("registerScript", RegisterScript())
 
-        val scriptText = scriptFile.readText()
+        legacy()
+
         scriptEngine.eval(scriptText)
 
         callEvent("load")
@@ -108,6 +110,14 @@ class Script(val scriptFile: File) : MinecraftInstance() {
     @Suppress("unused")
     fun registerTab(tabObject: JSObject) {
         ScriptTab(tabObject)
+    }
+
+    fun legacy() {
+        if (!scriptText.lines().first().contains("api_version=2")) {
+            ClientUtils.getLogger().info("[ScriptAPI] Running script '${scriptFile.name}' with legacy support.")
+            val legacyScript = LiquidBounce::class.java.getResource("/assets/minecraft/liquidbounce/scriptapi/legacy.js").readText()
+            scriptEngine.eval(legacyScript)
+        }
     }
 
     /**

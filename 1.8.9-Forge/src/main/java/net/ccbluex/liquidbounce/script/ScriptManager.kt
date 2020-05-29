@@ -40,9 +40,9 @@ class ScriptManager {
     fun loadScript(scriptFile : File) {
         try {
             scripts.add(Script(scriptFile))
-            ClientUtils.getLogger().info("Successfully loaded script: ${scriptFile.name}")
+            ClientUtils.getLogger().info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
         } catch(t : Throwable) {
-            ClientUtils.getLogger().error("Failed to load script: ${scriptFile.name}", t)
+            ClientUtils.getLogger().error("[ScriptAPI] Failed to load script '${scriptFile.name}'.", t)
         }
     }
 
@@ -69,7 +69,7 @@ class ScriptManager {
         file.copyTo(scriptFile)
 
         loadScript(scriptFile)
-        ClientUtils.getLogger().info("Successfully imported script: ${scriptFile.name}")
+        ClientUtils.getLogger().info("[ScriptAPI]  Successfully imported script '${scriptFile.name}'.")
     }
 
     /**
@@ -81,7 +81,7 @@ class ScriptManager {
         scripts.remove(script)
         script.scriptFile.delete()
 
-        ClientUtils.getLogger().info("Successfully deleted script: ${script.scriptFile.name}")
+        ClientUtils.getLogger().info("[ScriptAPI]  Successfully deleted script '${script.scriptFile.name}'.")
     }
 
     /**
@@ -93,6 +93,6 @@ class ScriptManager {
         loadScripts()
         enableScripts()
 
-        ClientUtils.getLogger().info("Successfully reloaded scripts.")
+        ClientUtils.getLogger().info("[ScriptAPI]  Successfully reloaded scripts.")
     }
 }
