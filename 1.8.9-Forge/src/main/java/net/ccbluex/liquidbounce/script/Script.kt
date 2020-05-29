@@ -51,7 +51,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         // Global functions
         scriptEngine.put("registerScript", RegisterScript())
 
-        legacy()
+        supportLegacyScripts()
 
         scriptEngine.eval(scriptText)
 
@@ -112,7 +112,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         ScriptTab(tabObject)
     }
 
-    fun legacy() {
+    fun supportLegacyScripts() {
         if (!scriptText.lines().first().contains("api_version=2")) {
             ClientUtils.getLogger().info("[ScriptAPI] Running script '${scriptFile.name}' with legacy support.")
             val legacyScript = LiquidBounce::class.java.getResource("/assets/minecraft/liquidbounce/scriptapi/legacy.js").readText()
