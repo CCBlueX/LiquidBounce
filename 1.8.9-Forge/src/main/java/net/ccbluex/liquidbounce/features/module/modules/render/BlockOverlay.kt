@@ -21,7 +21,6 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.block.Block
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.client.renderer.RenderGlobal
 import net.minecraft.util.BlockPos
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -70,7 +69,7 @@ class BlockOverlay : Module() {
                 .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
                 .offset(-x, -y, -z)
 
-        RenderGlobal.drawSelectionBoundingBox(axisAlignedBB)
+        RenderUtils.drawSelectionBoundingBox(axisAlignedBB)
         RenderUtils.drawFilledBox(axisAlignedBB)
         GlStateManager.depthMask(true)
         GlStateManager.enableTexture2D()
