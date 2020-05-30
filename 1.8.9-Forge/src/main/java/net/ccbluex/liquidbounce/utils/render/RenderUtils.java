@@ -37,10 +37,53 @@ import static org.lwjgl.opengl.GL11.*;
 
 @SideOnly(Side.CLIENT)
 public final class RenderUtils extends MinecraftInstance {
-    
     private static final Map<Integer, Boolean> glCapMap = new HashMap<>();
 
     public static int deltaTime;
+
+    private static final int[] DISPLAY_LISTS_2D = new int[4];
+
+    static {
+        for (int i = 0; i < DISPLAY_LISTS_2D.length; i++) {
+            DISPLAY_LISTS_2D[i] = glGenLists(1);
+        }
+
+        glNewList(DISPLAY_LISTS_2D[0], GL_COMPILE);
+
+        quickDrawRect(-7F, 2F, -4F, 3F);
+        quickDrawRect(4F, 2F, 7F, 3F);
+        quickDrawRect(-7F, 0.5F, -6F, 3F);
+        quickDrawRect(6F, 0.5F, 7F, 3F);
+
+        glEndList();
+
+        glNewList(DISPLAY_LISTS_2D[1], GL_COMPILE);
+
+        quickDrawRect(-7F, 3F, -4F, 3.3F);
+        quickDrawRect(4F, 3F, 7F, 3.3F);
+        quickDrawRect(-7.3F, 0.5F, -7F, 3.3F);
+        quickDrawRect(7F, 0.5F, 7.3F, 3.3F);
+
+        glEndList();
+
+        glNewList(DISPLAY_LISTS_2D[2], GL_COMPILE);
+
+        quickDrawRect(4F, -20F, 7F, -19F);
+        quickDrawRect(-7F, -20F, -4F, -19F);
+        quickDrawRect(6F, -20F, 7F, -17.5F);
+        quickDrawRect(-7F, -20F, -6F, -17.5F);
+
+        glEndList();
+
+        glNewList(DISPLAY_LISTS_2D[3], GL_COMPILE);
+
+        quickDrawRect(7F, -20F, 7.3F, -17.5F);
+        quickDrawRect(-7.3F, -20F, -7F, -17.5F);
+        quickDrawRect(4F, -20.3F, 7.3F, -20F);
+        quickDrawRect(-7.3F, -20.3F, -4F, -20F);
+
+        glEndList();
+    }
 
     public static void drawBlockBox(final BlockPos blockPos, final Color color, final boolean outline) {
         final RenderManager renderManager = mc.getRenderManager();
@@ -233,20 +276,31 @@ public final class RenderUtils extends MinecraftInstance {
         tessellator.draw();
     }
 
-    public static void drawRect(final float x, final float y, final float x2, final float y2, final int color) {
-        glEnable(GL_BLEND);
-        glDisable(GL_TEXTURE_2D);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_LINE_SMOOTH);
-        glPushMatrix();
-        glColor(color);
+    public static void quickDrawRect(final float x, final float y, final float x2, final float y2) {
         glBegin(GL_QUADS);
+
         glVertex2d(x2, y);
         glVertex2d(x, y);
         glVertex2d(x, y2);
         glVertex2d(x2, y2);
         glEnd();
-        glPopMatrix();
+    }
+
+    public static void drawRect(final float x, final float y, final float x2, final float y2, final int color) {
+        glEnable(GL_BLEND);
+        glDisable(GL_TEXTURE_2D);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_LINE_SMOOTH);
+
+        glColor(color);
+        glBegin(GL_QUADS);
+
+        glVertex2d(x2, y);
+        glVertex2d(x, y);
+        glVertex2d(x, y2);
+        glVertex2d(x2, y2);
+        glEnd();
+
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_BLEND);
         glDisable(GL_LINE_SMOOTH);
@@ -263,7 +317,7 @@ public final class RenderUtils extends MinecraftInstance {
         glDisable(GL_TEXTURE_2D);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_LINE_SMOOTH);
-        glPushMatrix();
+
         glColor(color1);
         glLineWidth(width);
         glBegin(1);
@@ -276,7 +330,7 @@ public final class RenderUtils extends MinecraftInstance {
         glVertex2d(x, y2);
         glVertex2d(x2, y2);
         glEnd();
-        glPopMatrix();
+
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_BLEND);
         glDisable(GL_LINE_SMOOTH);
@@ -312,7 +366,6 @@ public final class RenderUtils extends MinecraftInstance {
         double dAngle = 2 * Math.PI / sections;
         float x, y;
 
-        glPushMatrix();
         glEnable(GL_BLEND);
         glDisable(GL_TEXTURE_2D);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -332,7 +385,6 @@ public final class RenderUtils extends MinecraftInstance {
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_BLEND);
         glDisable(GL_LINE_SMOOTH);
-        glPopMatrix();
     }
 
     public static void drawImage(ResourceLocation image, int x, int y, int width, int height) {
@@ -373,38 +425,37 @@ public final class RenderUtils extends MinecraftInstance {
     public static void draw2D(final EntityLivingBase entity, final double posX, final double posY, final double posZ, final int color, final int backgroundColor) {
         GlStateManager.pushMatrix();
         GlStateManager.translate(posX, posY, posZ);
-        glNormal3f(0F, 0F, 0F);
         GlStateManager.rotate(-mc.getRenderManager().playerViewY, 0F, 1F, 0F);
         GlStateManager.scale(-0.1D, -0.1D, 0.1D);
+
         glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glDisable(GL_TEXTURE_2D);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        GlStateManager.enableTexture2D();
+
         GlStateManager.depthMask(true);
 
-        drawRect(-7F, 2F, -4F, 3F, color);
-        drawRect(4F, 2F, 7F, 3F, color);
-        drawRect(-7F, 0.5F, -6F, 3F, color);
-        drawRect(6F, 0.5F, 7F, 3F, color);
+        glColor(color);
 
-        drawRect(-7F, 3F, -4F, 3.3F, backgroundColor);
-        drawRect(4F, 3F, 7F, 3.3F, backgroundColor);
-        drawRect(-7.3F, 0.5F, -7F, 3.3F, backgroundColor);
-        drawRect(7F, 0.5F, 7.3F, 3.3F, backgroundColor);
+        glCallList(DISPLAY_LISTS_2D[0]);
+
+        glColor(backgroundColor);
+
+        glCallList(DISPLAY_LISTS_2D[1]);
 
         GlStateManager.translate(0, 21 + -(entity.getEntityBoundingBox().maxY - entity.getEntityBoundingBox().minY) * 12, 0);
 
-        drawRect(4F, -20F, 7F, -19F, color);
-        drawRect(-7F, -20F, -4F, -19F, color);
-        drawRect(6F, -20F, 7F, -17.5F, color);
-        drawRect(-7F, -20F, -6F, -17.5F, color);
+        glColor(color);
+        glCallList(DISPLAY_LISTS_2D[2]);
 
-        drawRect(7F, -20F, 7.3F, -17.5F, backgroundColor);
-        drawRect(-7.3F, -20F, -7F, -17.5F, backgroundColor);
-        drawRect(4F, -20.3F, 7.3F, -20F, backgroundColor);
-        drawRect(-7.3F, -20.3F, -4F, -20F, backgroundColor);
+        glColor(backgroundColor);
+        glCallList(DISPLAY_LISTS_2D[3]);
 
         // Stop render
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_TEXTURE_2D);
+        glDisable(GL_BLEND);
+
         GlStateManager.popMatrix();
     }
 
@@ -417,38 +468,39 @@ public final class RenderUtils extends MinecraftInstance {
 
         GlStateManager.pushMatrix();
         GlStateManager.translate(posX, posY, posZ);
-        glNormal3f(0F, 0F, 0F);
         GlStateManager.rotate(-mc.getRenderManager().playerViewY, 0F, 1F, 0F);
         GlStateManager.scale(-0.1D, -0.1D, 0.1D);
-        setGlCap(GL_DEPTH_TEST, false);
+
+        glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glDisable(GL_TEXTURE_2D);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        GlStateManager.enableTexture2D();
+
         GlStateManager.depthMask(true);
 
-        drawRect(-7F, 2F, -4F, 3F, color);
-        drawRect(4F, 2F, 7F, 3F, color);
-        drawRect(-7F, 0.5F, -6F, 3F, color);
-        drawRect(6F, 0.5F, 7F, 3F, color);
+        glColor(color);
 
-        drawRect(-7F, 3F, -4F, 3.3F, backgroundColor);
-        drawRect(4F, 3F, 7F, 3.3F, backgroundColor);
-        drawRect(-7.3F, 0.5F, -7F, 3.3F, backgroundColor);
-        drawRect(7F, 0.5F, 7.3F, 3.3F, backgroundColor);
+        glCallList(DISPLAY_LISTS_2D[0]);
+
+        glColor(backgroundColor);
+
+        glCallList(DISPLAY_LISTS_2D[1]);
 
         GlStateManager.translate(0, 9, 0);
 
-        drawRect(4F, -20F, 7F, -19F, color);
-        drawRect(-7F, -20F, -4F, -19F, color);
-        drawRect(6F, -20F, 7F, -17.5F, color);
-        drawRect(-7F, -20F, -6F, -17.5F, color);
+        glColor(color);
 
-        drawRect(7F, -20F, 7.3F, -17.5F, backgroundColor);
-        drawRect(-7.3F, -20F, -7F, -17.5F, backgroundColor);
-        drawRect(4F, -20.3F, 7.3F, -20F, backgroundColor);
-        drawRect(-7.3F, -20.3F, -4F, -20F, backgroundColor);
+        glCallList(DISPLAY_LISTS_2D[2]);
+
+        glColor(backgroundColor);
+
+        glCallList(DISPLAY_LISTS_2D[3]);
 
         // Stop render
-        resetCaps();
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_TEXTURE_2D);
+        glDisable(GL_BLEND);
+
         GlStateManager.popMatrix();
     }
 
