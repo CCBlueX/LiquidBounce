@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.ui.client.hud
 
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
-import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.*
 import net.ccbluex.liquidbounce.utils.ClientUtils
@@ -139,13 +138,13 @@ open class HUD : MinecraftInstance() {
                 if (moveX == 0F && moveY == 0F)
                     continue
 
-                val border = element.border ?: Border(0F, 0F, 0F, 0F)
+                val border = element.border ?: continue
 
-                val minX = min(border.x, border.x2)
-                val minY = min(border.y, border.y2)
+                val minX = min(border.x, border.x2) + 1
+                val minY = min(border.y, border.y2) + 1
 
-                val maxX = max(border.x, border.x2)
-                val maxY = max(border.y, border.y2)
+                val maxX = max(border.x, border.x2) - 1
+                val maxY = max(border.y, border.y2) - 1
 
                 val width = scaledResolution.scaledWidth / element.scale
                 val height = scaledResolution.scaledHeight / element.scale

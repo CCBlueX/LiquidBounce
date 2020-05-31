@@ -135,7 +135,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
                     RenderUtils.drawRect(
                             xPos - if (rectMode.equals("right", true)) 5 else 2,
-                            yPos - if (index == 0) 1 else 0,
+                            yPos,
                             if (rectMode.equals("right", true)) -3F else 0F,
                             yPos + textHeight, when {
                         backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
@@ -158,9 +158,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                         }
 
                         when {
-                            rectMode.equals("left", true) -> RenderUtils.drawRect(xPos - 5, yPos - 1, xPos - 2, yPos + textHeight,
+                            rectMode.equals("left", true) -> RenderUtils.drawRect(xPos - 5, yPos, xPos - 2, yPos + textHeight,
                                     rectColor)
-                            rectMode.equals("right", true) -> RenderUtils.drawRect(-3F, yPos - 1F, 0F,
+                            rectMode.equals("right", true) -> RenderUtils.drawRect(-3F, yPos, 0F,
                                     yPos + textHeight, rectColor)
                         }
                     }
@@ -186,7 +186,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
                     RenderUtils.drawRect(
                             0F,
-                            yPos - if (index == 0) 1 else 0,
+                            yPos,
                             xPos + width + if (rectMode.equals("right", true)) 5 else 2,
                             yPos + textHeight, when {
                         backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
@@ -212,7 +212,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                             rectMode.equals("left", true) -> RenderUtils.drawRect(0F,
                                     yPos - 1, 3F, yPos + textHeight, rectColor)
                             rectMode.equals("right", true) ->
-                                RenderUtils.drawRect(xPos + width + 2, yPos - 1, xPos + width + 2 + 3,
+                                RenderUtils.drawRect(xPos + width + 2, yPos, xPos + width + 2 + 3,
                                         yPos + textHeight, rectColor)
                         }
                     }
@@ -245,7 +245,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
             }
             y2 = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) * modules.size
 
-            return Border(0F, -1F, x2 - 7F, y2)
+            return Border(0F, 0F, x2 - 7F, y2 - if(side.vertical == Vertical.DOWN) 1F else 0F)
         }
 
         net.ccbluex.liquidbounce.ui.font.FontRenderer.assumeNonVolatile = false
