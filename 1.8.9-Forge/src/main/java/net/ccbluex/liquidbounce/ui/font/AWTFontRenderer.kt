@@ -82,7 +82,9 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
         val scale = 0.25
         val reverse = 1 / scale
 
+        GlStateManager.pushMatrix()
         GlStateManager.scale(scale, scale, scale)
+        GL11.glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
         GlStateManager.bindTexture(textureID)
 
         val red: Float = (color shr 16 and 0xff) / 255F
@@ -92,7 +94,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
 
         GlStateManager.color(red, green, blue, alpha)
 
-        var currX = x * 2F
+        var currX = 0.0
 
         val cached: CachedFont? = cachedStrings[text]
 
@@ -101,12 +103,12 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
 
             cached.lastUsage = System.currentTimeMillis()
 
-            GlStateManager.scale(reverse, reverse, reverse)
+            GlStateManager.popMatrix()
 
             return
         }
 
-        var list = 0
+        var list = -1
 
         if (assumeNonVolatile) {
             list = GL11.glGenLists(1)
@@ -120,9 +122,11 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
             if (char.toInt() >= charLocations.size) {
                 GL11.glEnd()
 
-                GlStateManager.scale(reverse, reverse, reverse)
+                GlStateManager.popMatrix()
                 Minecraft.getMinecraft().fontRendererObj.drawString("$char", currX.toFloat() * scale.toFloat() + 1, (y * 2F).toFloat() + 1, color, false)
                 currX += Minecraft.getMinecraft().fontRendererObj.getStringWidth("$char") * reverse
+                GlStateManager.pushMatrix()
+
                 GlStateManager.scale(scale, scale, scale)
                 GlStateManager.bindTexture(textureID)
                 GlStateManager.color(red, green, blue, alpha)
@@ -131,7 +135,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
             } else {
                 val fontChar = charLocations[char.toInt()] ?: continue
 
-                drawChar(fontChar, currX.toFloat(), (y * 2F - 2F).toFloat())
+                drawChar(fontChar, currX.toFloat(), 0f)
                 currX += fontChar.width - 8.0
             }
         }
@@ -143,7 +147,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
             GL11.glEndList()
         }
 
-        GlStateManager.scale(reverse, reverse, reverse)
+        GlStateManager.popMatrix()
     }
 
     /**
