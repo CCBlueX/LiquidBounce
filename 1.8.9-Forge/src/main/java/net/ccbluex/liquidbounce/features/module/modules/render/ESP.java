@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.FloatValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
 import net.ccbluex.liquidbounce.value.ListValue;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -36,6 +37,7 @@ import org.lwjgl.util.vector.Vector3f;
 import java.awt.*;
 
 import static net.ccbluex.liquidbounce.utils.render.WorldToScreen.getMatrix;
+import static org.lwjgl.opengl.GL11.*;
 
 @ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
 public class ESP extends Module {
@@ -76,6 +78,11 @@ public class ESP extends Module {
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glPushMatrix();
             GL11.glLoadIdentity();
+
+            glDisable(GL_DEPTH_TEST);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            GlStateManager.enableTexture2D();
+            GlStateManager.depthMask(true);
 
             GL11.glLineWidth(1.0f);
         }
@@ -165,6 +172,8 @@ public class ESP extends Module {
         }
 
         if (real2d) {
+            glEnable(GL_DEPTH_TEST);
+
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glPopMatrix();
 
