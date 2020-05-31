@@ -24,7 +24,6 @@ import java.awt.image.BufferedImage
 class FontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
 
     companion object {
-        //        public var timeTakenRenderingFonts: Long = 0
         var assumeNonVolatile: Boolean = false
         val activeFontRenderers: ArrayList<FontRenderer> = ArrayList()
 
@@ -82,8 +81,6 @@ class FontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
     fun drawString(text: String, x: Double, y: Double, color: Int) {
         val scale = 0.25
         val reverse = 1 / scale
-
-        val nanoTime = System.nanoTime()
 
         GlStateManager.scale(scale, scale, scale)
         GlStateManager.bindTexture(textureID)
@@ -147,8 +144,6 @@ class FontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
         }
 
         GlStateManager.scale(reverse, reverse, reverse)
-
-//        timeTakenRenderingFonts += System.nanoTime() - nanoTime
     }
 
     /**

@@ -71,9 +71,6 @@ public abstract class MixinGuiInGame {
             FontRenderer.Companion.garbageCollectionTick();
             callbackInfo.cancel();
         }
-
-//        System.out.println("Time spent rendering texts " + FontRenderer.Companion.getTimeTakenRenderingFonts() / 1000 + "us");
-//        FontRenderer.Companion.setTimeTakenRenderingFonts(0);
     }
 
     @Inject(method = "renderTooltip", at = @At("RETURN"))
