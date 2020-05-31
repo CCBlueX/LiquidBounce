@@ -184,7 +184,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
                     RenderUtils.drawRect(
                             0F,
-                            yPos - if (index == 0) 1 else 0,
+                            yPos,
                             xPos + width + if (rectMode.equals("right", true)) 5 else 2,
                             yPos + textHeight, when {
                         backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
@@ -210,7 +210,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                             rectMode.equals("left", true) -> RenderUtils.drawRect(0F,
                                     yPos - 1, 3F, yPos + textHeight, rectColor)
                             rectMode.equals("right", true) ->
-                                RenderUtils.drawRect(xPos + width + 2, yPos - 1, xPos + width + 2 + 3,
+                                RenderUtils.drawRect(xPos + width + 2, yPos, xPos + width + 2 + 3,
                                         yPos + textHeight, rectColor)
                         }
                     }
