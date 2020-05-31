@@ -102,9 +102,12 @@ class NameTags : Module() {
         enableGlCap(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
+
+        net.ccbluex.liquidbounce.ui.font.FontRenderer.assumeNonVolatile = true
+
         // Draw nametag
         val width = fontRenderer.getStringWidth(text) / 2
-        if(borderValue.get())
+        if (borderValue.get())
             drawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F, 2F,
                     Color(255, 255, 255, 90).rgb, Integer.MIN_VALUE)
         else
@@ -112,6 +115,8 @@ class NameTags : Module() {
                     Integer.MIN_VALUE)
         fontRenderer.drawString(text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F,
                 0xFFFFFF, true)
+
+        net.ccbluex.liquidbounce.ui.font.FontRenderer.assumeNonVolatile = false
 
         if (armorValue.get() && entity is EntityPlayer) {
             for (index in 0..4) {
