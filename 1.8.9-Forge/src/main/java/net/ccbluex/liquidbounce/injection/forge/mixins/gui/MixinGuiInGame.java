@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.Render2DEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard;
+import net.ccbluex.liquidbounce.ui.font.FontRenderer;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiIngame;
@@ -67,14 +68,20 @@ public abstract class MixinGuiInGame {
             GlStateManager.disableBlend();
 
             LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
+            FontRenderer.Companion.garbageCollectionTick();
             callbackInfo.cancel();
         }
+
+//        System.out.println("Time spent rendering texts " + FontRenderer.Companion.getTimeTakenRenderingFonts() / 1000 + "us");
+//        FontRenderer.Companion.setTimeTakenRenderingFonts(0);
     }
 
     @Inject(method = "renderTooltip", at = @At("RETURN"))
     private void renderTooltipPost(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
-        if(!ClassUtils.hasClass("net.labymod.api.LabyModAPI"))
+        if (!ClassUtils.hasClass("net.labymod.api.LabyModAPI")) {
             LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
+            FontRenderer.Companion.garbageCollectionTick();
+        }
     }
 
     @Inject(method = "renderPumpkinOverlay", at = @At("HEAD"), cancellable = true)

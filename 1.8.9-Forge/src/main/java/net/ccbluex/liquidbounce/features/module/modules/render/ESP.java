@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
+import net.ccbluex.liquidbounce.ui.font.GameFontRenderer;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
@@ -41,9 +42,8 @@ import static org.lwjgl.opengl.GL11.*;
 
 @ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
 public class ESP extends Module {
-
     public static boolean renderNameTags = true;
-    public final ListValue modeValue = new ListValue("Mode", new String[]{"Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"}, "Box");
+    public final ListValue modeValue = new ListValue("Mode", new String[]{"Box", "OtherBox", "WireFrame", "2D", "Outline", "ShaderOutline", "ShaderGlow"}, "Box");
     public final FloatValue outlineWidth = new FloatValue("Outline-Width", 3F, 0.5F, 5F);
     public final FloatValue wireframeWidth = new FloatValue("WireFrame-Width", 2F, 0.5F, 5F);
     private final FloatValue shaderOutlineRadius = new FloatValue("ShaderOutline-Radius", 1.35F, 1F, 2F);
@@ -236,15 +236,14 @@ public class ESP extends Module {
             if (colorTeam.get()) {
                 final char[] chars = entityLivingBase.getDisplayName().getFormattedText().toCharArray();
                 int color = Integer.MAX_VALUE;
-                final String colors = "0123456789abcdef";
 
                 for (int i = 0; i < chars.length; i++) {
                     if (chars[i] != '§' || i + 1 >= chars.length)
                         continue;
 
-                    final int index = colors.indexOf(chars[i + 1]);
+                    final int index = GameFontRenderer.getColorIndex(chars[i + 1]);
 
-                    if (index == -1)
+                    if (index < 0 || index > 15)
                         continue;
 
                     color = ColorUtils.hexColors[index];

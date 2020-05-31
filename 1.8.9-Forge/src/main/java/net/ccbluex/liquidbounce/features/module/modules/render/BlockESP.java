@@ -29,7 +29,6 @@ import java.util.List;
 
 @ModuleInfo(name = "BlockESP", description = "Allows you to see a selected block through walls.", category = ModuleCategory.RENDER)
 public class BlockESP extends Module {
-
     private final ListValue modeValue = new ListValue("Mode", new String[] {"Box", "2D"}, "Box");
 
     private final BlockValue blockValue = new BlockValue("Block", 168);

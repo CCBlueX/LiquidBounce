@@ -76,6 +76,8 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
     override fun drawElement(): Border? {
         updateAnimation()
 
+        net.ccbluex.liquidbounce.ui.font.FontRenderer.assumeNonVolatile = true
+
         val fontRenderer = fontValue.get()
 
         // Color
@@ -147,6 +149,8 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
             }
             y += tabHeight.get()
         }
+
+        net.ccbluex.liquidbounce.ui.font.FontRenderer.assumeNonVolatile = false
 
         return Border(1F, 0F, width.get(), guiHeight)
     }

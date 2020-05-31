@@ -15,7 +15,6 @@ import net.minecraft.init.Blocks
 
 @ModuleInfo(name = "XRay", description = "Allows you to see ores through walls.", category = ModuleCategory.RENDER)
 class XRay : Module() {
-
     val xrayBlocks = mutableListOf<Block>(
             Blocks.coal_ore,
             Blocks.iron_ore,

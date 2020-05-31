@@ -60,9 +60,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     }
 
     private fun drawText(text: String?, x: Float, y: Float, colorHex: Int, ignoreColor: Boolean): Int {
-        text ?: return 0
-
-        if (text.isEmpty())
+        if (text.isNullOrEmpty())
             return x.toInt()
 
         GlStateManager.translate(x - 1.5, y + 0.5, 0.0)
@@ -102,8 +100,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     val words = part.substring(1)
                     val type = part[0]
 
-                    val colorIndex = "0123456789abcdefklmnor".indexOf(type)
-                    when (colorIndex) {
+                    when (val colorIndex = getColorIndex(type)) {
                         in 0..15 -> {
                             if (!ignoreColor) {
                                 hexColor = ColorUtils.hexColors[colorIndex] or (alpha shl 24)
@@ -168,7 +165,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     }
 
     override fun getColorCode(charCode: Char) =
-            ColorUtils.hexColors["0123456789abcdef".indexOf(charCode)]
+            ColorUtils.hexColors[getColorIndex(charCode)]
 
     override fun getStringWidth(text: String): Int {
         var currentText = text
@@ -194,7 +191,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                 } else {
                     val words = part.substring(1)
                     val type = part[0]
-                    val colorIndex = "0123456789abcdefklmnor".indexOf(type)
+                    val colorIndex = getColorIndex(type)
                     when {
                         colorIndex < 16 -> {
                             bold = false
@@ -231,4 +228,17 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     override fun onResourceManagerReload(resourceManager: IResourceManager) {}
 
     override fun bindTexture(location: ResourceLocation?) {}
+
+    companion object {
+        @JvmStatic
+        fun getColorIndex(type: Char): Int {
+            return when (type) {
+                in '0'..'9' -> type - '0'
+                in 'a'..'f' -> type - 'a' + 10
+                in 'k'..'o' -> type - 'k' + 16
+                'r' -> 21
+                else -> -1
+            }
+        }
+    }
 }
