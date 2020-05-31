@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle;
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner;
-import net.ccbluex.liquidbounce.ui.font.FontRenderer;
+import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -204,7 +204,7 @@ public class ClickGui extends GuiScreen {
             mc.displayGuiScreen(new GuiHudDesigner());
 
         // Enable DisplayList optimization
-        FontRenderer.Companion.setAssumeNonVolatile(true);
+        AWTFontRenderer.Companion.setAssumeNonVolatile(true);
 
         final double scale = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).scaleValue.get();
 
@@ -249,7 +249,7 @@ public class ClickGui extends GuiScreen {
         RenderHelper.disableStandardItemLighting();
         GlStateManager.scale(1, 1, 1);
 
-        FontRenderer.Companion.setAssumeNonVolatile(false);
+        AWTFontRenderer.Companion.setAssumeNonVolatile(false);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }

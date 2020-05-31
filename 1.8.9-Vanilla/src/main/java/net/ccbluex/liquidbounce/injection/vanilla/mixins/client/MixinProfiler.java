@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.injection.vanilla.mixins.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.Render2DEvent;
-import net.ccbluex.liquidbounce.ui.font.FontRenderer;
+import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
 import net.minecraft.profiler.Profiler;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,7 +23,7 @@ public class MixinProfiler {
         if (name.equals("bossHealth") && ClassUtils.hasClass("net.labymod.api.LabyModAPI")) {
             LiquidBounce.eventManager.callEvent(new Render2DEvent(0F));
 
-            FontRenderer.Companion.garbageCollectionTick();
+            AWTFontRenderer.Companion.garbageCollectionTick();
         }
     }
 }

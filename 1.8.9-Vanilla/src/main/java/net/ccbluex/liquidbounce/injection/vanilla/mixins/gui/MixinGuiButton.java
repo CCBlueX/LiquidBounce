@@ -99,14 +99,14 @@ public abstract class MixinGuiButton extends Gui {
          mc.getTextureManager().bindTexture(buttonTextures);
          mouseDragged(mc, mouseX, mouseY);
 
-         net.ccbluex.liquidbounce.ui.font.FontRenderer.Companion.setAssumeNonVolatile(true);
+         net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.setAssumeNonVolatile(true);
 
          fontRenderer.drawStringWithShadow(displayString,
                  (float) ((this.xPosition + this.width / 2) -
                          fontRenderer.getStringWidth(displayString) / 2),
                  this.yPosition + (this.height - 5) / 2F, 14737632);
 
-         net.ccbluex.liquidbounce.ui.font.FontRenderer.Companion.setAssumeNonVolatile(false);
+         net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.setAssumeNonVolatile(false);
 
          GlStateManager.resetColor();
       }

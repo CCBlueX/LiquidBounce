@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.Panel;
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement;
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style;
+import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
@@ -117,7 +118,7 @@ public class SlowlyStyle extends Style {
                     boolean isNumber = value.get() instanceof Number;
 
                     if (isNumber) {
-                        net.ccbluex.liquidbounce.ui.font.FontRenderer.Companion.setAssumeNonVolatile(false);
+                        AWTFontRenderer.Companion.setAssumeNonVolatile(false);
                     }
 
                     if (value instanceof BoolValue) {
@@ -283,7 +284,7 @@ public class SlowlyStyle extends Style {
                     }
 
                     if (isNumber) {
-                        net.ccbluex.liquidbounce.ui.font.FontRenderer.Companion.setAssumeNonVolatile(true);
+                        AWTFontRenderer.Companion.setAssumeNonVolatile(true);
                     }
                 }
 

@@ -21,11 +21,11 @@ import java.awt.image.BufferedImage
  * Generate new bitmap based font renderer
  */
 @SideOnly(Side.CLIENT)
-class FontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
+class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
 
     companion object {
         var assumeNonVolatile: Boolean = false
-        val activeFontRenderers: ArrayList<FontRenderer> = ArrayList()
+        val activeFontRenderers: ArrayList<AWTFontRenderer> = ArrayList()
 
         private var gcTicks: Int = 0
         private const val GC_TICKS = 600 // Start garbage collection every 600 frames

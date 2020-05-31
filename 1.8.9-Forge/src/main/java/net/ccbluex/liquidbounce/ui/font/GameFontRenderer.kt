@@ -22,10 +22,10 @@ import java.awt.Font
 class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameSettings,
         ResourceLocation("textures/font/ascii.png"), if (ClassUtils.hasForge()) null else Minecraft.getMinecraft().textureManager, false) {
 
-    var defaultFont = FontRenderer(font)
-    private var boldFont = FontRenderer(font.deriveFont(Font.BOLD))
-    private var italicFont = FontRenderer(font.deriveFont(Font.ITALIC))
-    private var boldItalicFont = FontRenderer(font.deriveFont(Font.BOLD or Font.ITALIC))
+    var defaultFont = AWTFontRenderer(font)
+    private var boldFont = AWTFontRenderer(font.deriveFont(Font.BOLD))
+    private var italicFont = AWTFontRenderer(font.deriveFont(Font.ITALIC))
+    private var boldItalicFont = AWTFontRenderer(font.deriveFont(Font.BOLD or Font.ITALIC))
 
     val height: Int
         get() = defaultFont.height / 2

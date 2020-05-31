@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Horizontal
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Vertical
+import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -65,7 +66,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     override fun drawElement(): Border? {
         val fontRenderer = fontValue.get()
 
-        net.ccbluex.liquidbounce.ui.font.FontRenderer.assumeNonVolatile = true
+        AWTFontRenderer.assumeNonVolatile = true
 
         // Slide animation - update every render
         val delta = RenderUtils.deltaTime
@@ -248,7 +249,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
             return Border(0F, 0F, x2 - 7F, y2 - if(side.vertical == Vertical.DOWN) 1F else 0F)
         }
 
-        net.ccbluex.liquidbounce.ui.font.FontRenderer.assumeNonVolatile = false
+        AWTFontRenderer.assumeNonVolatile = false
         GlStateManager.resetColor()
         return null
     }
