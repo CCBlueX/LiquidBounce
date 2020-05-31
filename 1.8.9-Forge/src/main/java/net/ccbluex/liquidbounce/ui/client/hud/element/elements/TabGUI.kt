@@ -148,7 +148,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
             y += tabHeight.get()
         }
 
-        return Border(0F, 0F, width.get(), guiHeight)
+        return Border(1F, 0F, width.get(), guiHeight)
     }
 
     override fun handleKey(c: Char, keyCode: Int) {
