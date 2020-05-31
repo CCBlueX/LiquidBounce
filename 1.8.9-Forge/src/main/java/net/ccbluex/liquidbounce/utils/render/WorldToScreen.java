@@ -24,7 +24,7 @@ public class WorldToScreen {
         return worldToScreen(pointInWorld, getMatrix(GL11.GL_MODELVIEW_MATRIX), getMatrix(GL11.GL_PROJECTION_MATRIX), screenWidth, screenHeight);
     }
 
-    private static Vector2f worldToScreen(Vector3f pointInWorld, Matrix4f view, Matrix4f projection, int screenWidth, int screenHeight) {
+    public static Vector2f worldToScreen(Vector3f pointInWorld, Matrix4f view, Matrix4f projection, int screenWidth, int screenHeight) {
         Vector4f clipSpacePos = multiply(multiply(new Vector4f(pointInWorld.x, pointInWorld.y, pointInWorld.z, 1.0f), view), projection);
 
         Vector3f ndcSpacePos = new Vector3f(clipSpacePos.x / clipSpacePos.w, clipSpacePos.y / clipSpacePos.w, clipSpacePos.z / clipSpacePos.w);
@@ -33,6 +33,11 @@ public class WorldToScreen {
 
         float screenX = ((ndcSpacePos.x + 1.0f) / 2.0f) * screenWidth;
         float screenY = ((1.0f - ndcSpacePos.y) / 2.0f) * screenHeight;
+
+        // nPlane = -1, fPlane = 1
+        if (ndcSpacePos.z < -1.0 || ndcSpacePos.z > 1.0) {
+            return null;
+        }
 
         return new Vector2f(screenX, screenY);
     }
