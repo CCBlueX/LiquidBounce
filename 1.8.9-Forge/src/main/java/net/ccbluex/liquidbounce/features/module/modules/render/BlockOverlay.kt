@@ -27,7 +27,6 @@ import java.awt.Color
 
 @ModuleInfo(name = "BlockOverlay", description = "Allows you to change the design of the block overlay.", category = ModuleCategory.RENDER)
 class BlockOverlay : Module() {
-
     private val colorRedValue = IntegerValue("R", 68, 0, 255)
     private val colorGreenValue = IntegerValue("G", 117, 0, 255)
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)

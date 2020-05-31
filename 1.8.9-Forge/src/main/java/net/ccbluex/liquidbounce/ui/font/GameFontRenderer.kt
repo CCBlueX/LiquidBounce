@@ -164,16 +164,6 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
         return (x + getStringWidth(text)).toInt()
     }
 
-    private fun getColorIndex(type: Char): Int {
-        return when (type) {
-            in '0'..'9' -> type - '0'
-            in 'a'..'f' -> type - 'a' + 10
-            in 'k'..'o' -> type - 'k' + 16
-            'r' -> 21
-            else -> -1
-        }
-    }
-
     override fun getColorCode(charCode: Char) =
             ColorUtils.hexColors[getColorIndex(charCode)]
 
@@ -238,4 +228,17 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     override fun onResourceManagerReload(resourceManager: IResourceManager) {}
 
     override fun bindTexture(location: ResourceLocation?) {}
+
+    companion object {
+        @JvmStatic
+        fun getColorIndex(type: Char): Int {
+            return when (type) {
+                in '0'..'9' -> type - '0'
+                in 'a'..'f' -> type - 'a' + 10
+                in 'k'..'o' -> type - 'k' + 16
+                'r' -> 21
+                else -> -1
+            }
+        }
+    }
 }

@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
+import net.ccbluex.liquidbounce.ui.font.GameFontRenderer;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
@@ -31,31 +32,27 @@ import java.awt.*;
 
 @ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
 public class ESP extends Module {
-
-    public final ListValue modeValue = new ListValue("Mode", new String[] {"Box", "OtherBox", "WireFrame", "2D", "Outline", "ShaderOutline", "ShaderGlow"}, "Box");
+    public static boolean renderNameTags = true;
+    public final ListValue modeValue = new ListValue("Mode", new String[]{"Box", "OtherBox", "WireFrame", "2D", "Outline", "ShaderOutline", "ShaderGlow"}, "Box");
     public final FloatValue outlineWidth = new FloatValue("Outline-Width", 3F, 0.5F, 5F);
     public final FloatValue wireframeWidth = new FloatValue("WireFrame-Width", 2F, 0.5F, 5F);
-
     private final FloatValue shaderOutlineRadius = new FloatValue("ShaderOutline-Radius", 1.35F, 1F, 2F);
     private final FloatValue shaderGlowRadius = new FloatValue("ShaderGlow-Radius", 2.3F, 2F, 3F);
-
     private final IntegerValue colorRedValue = new IntegerValue("R", 255, 0, 255);
     private final IntegerValue colorGreenValue = new IntegerValue("G", 255, 0, 255);
     private final IntegerValue colorBlueValue = new IntegerValue("B", 255, 0, 255);
     private final BoolValue colorRainbow = new BoolValue("Rainbow", false);
     private final BoolValue colorTeam = new BoolValue("Team", false);
 
-    public static boolean renderNameTags = true;
-
     @EventTarget
     public void onRender3D(Render3DEvent event) {
         final String mode = modeValue.get();
 
-        for(final Entity entity : mc.theWorld.loadedEntityList) {
-            if(entity != null && entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
+        for (final Entity entity : mc.theWorld.loadedEntityList) {
+            if (entity != null && entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
                 final EntityLivingBase entityLiving = (EntityLivingBase) entity;
 
-                switch(mode.toLowerCase()) {
+                switch (mode.toLowerCase()) {
                     case "box":
                     case "otherbox":
                         RenderUtils.drawEntityBox(entity, getColor(entityLiving), !mode.equalsIgnoreCase("otherbox"));
@@ -83,7 +80,7 @@ public class ESP extends Module {
                 ? OutlineShader.OUTLINE_SHADER : mode.equalsIgnoreCase("shaderglow")
                 ? GlowShader.GLOW_SHADER : null;
 
-        if(shader == null) return;
+        if (shader == null) return;
 
         shader.startDraw(event.getPartialTicks());
 
@@ -96,7 +93,7 @@ public class ESP extends Module {
 
                 mc.getRenderManager().renderEntityStatic(entity, mc.timer.renderPartialTicks, true);
             }
-        }catch (final Exception ex) {
+        } catch (final Exception ex) {
             ClientUtils.getLogger().error("An error occurred while rendering all entities for shader esp", ex);
         }
 
@@ -115,27 +112,26 @@ public class ESP extends Module {
     }
 
     public Color getColor(final Entity entity) {
-        if(entity instanceof EntityLivingBase) {
+        if (entity instanceof EntityLivingBase) {
             final EntityLivingBase entityLivingBase = (EntityLivingBase) entity;
 
-            if(entityLivingBase.hurtTime > 0)
+            if (entityLivingBase.hurtTime > 0)
                 return Color.RED;
 
-            if(EntityUtils.isFriend(entityLivingBase))
+            if (EntityUtils.isFriend(entityLivingBase))
                 return Color.BLUE;
 
-            if(colorTeam.get()) {
+            if (colorTeam.get()) {
                 final char[] chars = entityLivingBase.getDisplayName().getFormattedText().toCharArray();
                 int color = Integer.MAX_VALUE;
-                final String colors = "0123456789abcdef";
 
-                for(int i = 0; i < chars.length; i++) {
-                    if(chars[i] != '§' || i + 1 >= chars.length)
+                for (int i = 0; i < chars.length; i++) {
+                    if (chars[i] != '§' || i + 1 >= chars.length)
                         continue;
 
-                    final int index = colors.indexOf(chars[i + 1]);
+                    final int index = GameFontRenderer.getColorIndex(chars[i + 1]);
 
-                    if(index == -1)
+                    if (index < 0 || index > 15)
                         continue;
 
                     color = ColorUtils.hexColors[index];

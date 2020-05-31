@@ -26,7 +26,7 @@ import java.awt.*;
 
 @ModuleInfo(name = "ItemESP", description = "Allows you to see items through walls.", category = ModuleCategory.RENDER)
 public class ItemESP extends Module {
-    private final ListValue modeValue = new ListValue("Mode", new String[] {"Box", "ShaderOutline"}, "Box");
+    private final ListValue modeValue = new ListValue("Mode", new String[]{"Box", "ShaderOutline"}, "Box");
     private final IntegerValue colorRedValue = new IntegerValue("R", 0, 0, 255);
     private final IntegerValue colorGreenValue = new IntegerValue("G", 255, 0, 255);
     private final IntegerValue colorBlueValue = new IntegerValue("B", 0, 0, 255);
@@ -34,11 +34,11 @@ public class ItemESP extends Module {
 
     @EventTarget
     public void onRender3D(final Render3DEvent event) {
-        if(modeValue.get().equalsIgnoreCase("Box")) {
+        if (modeValue.get().equalsIgnoreCase("Box")) {
             final Color color = colorRainbow.get() ? ColorUtils.rainbow() : new Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get());
 
-            for(final Entity entity : mc.theWorld.loadedEntityList) {
-                if(!(entity instanceof EntityItem || entity instanceof EntityArrow))
+            for (final Entity entity : mc.theWorld.loadedEntityList) {
+                if (!(entity instanceof EntityItem || entity instanceof EntityArrow))
                     continue;
 
                 RenderUtils.drawEntityBox(entity, color, true);
@@ -48,17 +48,17 @@ public class ItemESP extends Module {
 
     @EventTarget
     public void onRender2D(final Render2DEvent event) {
-        if(modeValue.get().equalsIgnoreCase("ShaderOutline")) {
+        if (modeValue.get().equalsIgnoreCase("ShaderOutline")) {
             OutlineShader.OUTLINE_SHADER.startDraw(event.getPartialTicks());
 
-            try{
-                for(final Entity entity : mc.theWorld.loadedEntityList) {
-                    if(!(entity instanceof EntityItem || entity instanceof EntityArrow))
+            try {
+                for (final Entity entity : mc.theWorld.loadedEntityList) {
+                    if (!(entity instanceof EntityItem || entity instanceof EntityArrow))
                         continue;
 
                     mc.getRenderManager().renderEntityStatic(entity, event.getPartialTicks(), true);
                 }
-            }catch (final Exception ex) {
+            } catch (final Exception ex) {
                 ClientUtils.getLogger().error("An error occurred while rendering all item entities for shader esp", ex);
             }
 
