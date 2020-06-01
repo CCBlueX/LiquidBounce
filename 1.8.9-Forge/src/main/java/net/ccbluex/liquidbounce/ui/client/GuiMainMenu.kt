@@ -27,7 +27,7 @@ class GuiMainMenu : GuiScreen(), GuiYesNoCallback {
         // Minecraft Realms
         //		this.buttonList.add(new GuiButton(14, this.width / 2 - 100, j + 24 * 2, I18n.format("menu.online", new Object[0])));
 
-        this.buttonList.add(GuiButton(108, this.width / 2 - 100, defaultHeight + 24 * 3, "Credits"))
+        this.buttonList.add(GuiButton(108, this.width / 2 - 100, defaultHeight + 24 * 3, "Contributors"))
         this.buttonList.add(GuiButton(0, this.width / 2 - 100, defaultHeight + 24 * 4, 98, 20, I18n.format("menu.options")))
         this.buttonList.add(GuiButton(4, this.width / 2 + 2, defaultHeight + 24 * 4, 98, 20, I18n.format("menu.quit")))
 
@@ -54,7 +54,7 @@ class GuiMainMenu : GuiScreen(), GuiYesNoCallback {
             101 -> mc.displayGuiScreen(GuiServerStatus(this))
             102 -> mc.displayGuiScreen(GuiBackground(this))
             103 -> mc.displayGuiScreen(GuiModsMenu(this))
-            108 -> mc.displayGuiScreen(GuiCredits(this))
+            108 -> mc.displayGuiScreen(GuiContributors(this))
         }
     }
 

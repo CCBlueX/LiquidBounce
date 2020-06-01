@@ -9,6 +9,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
@@ -22,7 +23,7 @@ import java.awt.Color
 import java.util.*
 import kotlin.concurrent.thread
 
-class GuiCredits(private val prevGui: GuiScreen) : GuiScreen() {
+class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
     private lateinit var list: GuiList
 
@@ -69,7 +70,7 @@ class GuiCredits(private val prevGui: GuiScreen) : GuiScreen() {
             }
         }
 
-        Fonts.font40.drawCenteredString("Credits", width / 2F, 6F, 0xffffff)
+        Fonts.font40.drawCenteredString("Contributors", width / 2F, 6F, 0xffffff)
 
         if (credits.isEmpty()) {
             drawCenteredString(Fonts.font40, "Loading...", width / 8, height / 2, Color.WHITE.rgb)
@@ -136,13 +137,21 @@ class GuiCredits(private val prevGui: GuiScreen) : GuiScreen() {
     private inner class GuiList(gui: GuiScreen) :
             GuiSlot(mc, gui.width / 4, gui.height, 40, gui.height - 40, 15) {
 
+        init {
+            @Suppress("CAST_NEVER_SUCCEEDS")
+            val mixin = this as IMixinGuiSlot
+
+            mixin.setListWidth(gui.width * 3 / 13)
+            mixin.setEnableScissor(true)
+        }
+
         private var selectedSlot = 0
 
         override fun isSelected(id: Int) = selectedSlot == id
 
         override fun getSize() = credits.size
 
-        internal fun getSelectedSlot() = if(selectedSlot > credits.size) -1 else selectedSlot
+        internal fun getSelectedSlot() = if (selectedSlot > credits.size) -1 else selectedSlot
 
         public override fun elementClicked(index: Int, doubleClick: Boolean, var3: Int, var4: Int) {
             selectedSlot = index
