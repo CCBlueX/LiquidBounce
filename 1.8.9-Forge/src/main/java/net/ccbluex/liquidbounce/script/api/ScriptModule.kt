@@ -19,6 +19,7 @@ class ScriptModule(private val moduleObject: JSObject) : Module() {
 
     private val events = HashMap<String, JSObject>()
     private val _values = HashMap<String, Value<*>>()
+    private var _tag : String? = null
 
     /**
      * Allows the user to access values by typing module.settings.<valuename>
@@ -37,10 +38,12 @@ class ScriptModule(private val moduleObject: JSObject) : Module() {
         if (moduleObject.hasMember("settings")) {
             val settings = moduleObject.getMember("settings") as JSObject
 
-            for (settingName in settings.keySet()) {
+            for (settingName in settings.keySet())
                 _values[settingName] = settings.getMember(settingName) as Value<*>
-            }
         }
+
+        if (moduleObject.hasMember("tag"))
+            _tag = moduleObject.getMember("tag") as String
     }
 
     override val values: List<Value<*>>
@@ -48,14 +51,9 @@ class ScriptModule(private val moduleObject: JSObject) : Module() {
             return _values.values.toList()
         }
 
-    override val tag: String?
-        get() = if (moduleObject.hasMember("tag")) {
-            moduleObject.getMember("tag") as String
-        } else {
-            null
-        }
-
-    override fun getValue(valueName: String) = values.find { it.name.equals(valueName, ignoreCase = true) }
+    override var tag: String?
+        get() = _tag
+        set(value) { _tag = value }
 
     /**
      * Called from inside the script to register a new event handler.
