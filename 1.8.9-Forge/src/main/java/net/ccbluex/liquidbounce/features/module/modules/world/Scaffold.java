@@ -46,7 +46,19 @@ public class Scaffold extends Module {
 
     // Mode
     public final ListValue modeValue = new ListValue("Mode", new String[]{"Normal", "Rewinside", "Expand"}, "Normal");
+    // Basic stuff
+    public final BoolValue sprintValue = new BoolValue("Sprint", true);
+    // Rotations
+    public final ListValue rotationModeValue = new ListValue("RotationMode", new String[]{"Normal",/* "Static", "StaticPitch", */"StaticYaw"}, "Normal");
+    private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 0, 0, 1000) {
+        @Override
+        protected void onChanged(final Integer oldValue, final Integer newValue) {
+            final int i = maxDelayValue.get();
 
+            if (i < newValue)
+                set(i);
+        }
+    };
     // Delay
     private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 0, 0, 1000) {
         @Override
@@ -57,40 +69,21 @@ public class Scaffold extends Module {
                 set(i);
         }
     };
-
-    private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 0, 0, 1000) {
-        @Override
-        protected void onChanged(final Integer oldValue, final Integer newValue) {
-            final int i = maxDelayValue.get();
-
-            if (i < newValue)
-                set(i);
-        }
-    };
     private final BoolValue placeableDelay = new BoolValue("PlaceableDelay", false);
-
     // AutoBlock
     private final BoolValue autoBlockValue = new BoolValue("AutoBlock", true);
     private final BoolValue stayAutoBlock = new BoolValue("StayAutoBlock", false);
-
-    // Basic stuff
-    public final BoolValue sprintValue = new BoolValue("Sprint", true);
     private final BoolValue swingValue = new BoolValue("Swing", true);
     private final BoolValue downValue = new BoolValue("Down", false);
     private final BoolValue searchValue = new BoolValue("Search", true);
     private final ListValue placeModeValue = new ListValue("PlaceTiming", new String[]{"Pre", "Post"}, "Post");
-
     // Eagle
     private final BoolValue eagleValue = new BoolValue("Eagle", false);
     private final BoolValue eagleSilentValue = new BoolValue("EagleSilent", false);
     private final IntegerValue blocksToEagleValue = new IntegerValue("BlocksToEagle", 0, 0, 10);
     private final FloatValue eagleEdgeDistanceValue = new FloatValue("EagleEdgeDistance", 0.2F, 0F, 0.5F);
-
     // Expand
     private final IntegerValue expandLengthValue = new IntegerValue("ExpandLength", 5, 1, 6);
-
-    // Rotations
-    public final ListValue rotationModeValue = new ListValue("RotationMode", new String[]{"Normal",/* "Static", "StaticPitch", */"StaticYaw"}, "Normal");
     private final BoolValue rotationsValue = new BoolValue("Rotations", true);
     private final FloatValue staticPitchValue = new FloatValue("StaticPitch", 86F, 70F, 90F);
     private final IntegerValue keepLengthValue = new IntegerValue("KeepRotationLength", 0, 0, 20);
@@ -108,7 +101,6 @@ public class Scaffold extends Module {
                 keepRotationValue.set(true);
         }
     };
-
     // Zitter
     private final BoolValue zitterValue = new BoolValue("Zitter", false);
     private final ListValue zitterModeValue = new ListValue("ZitterMode", new String[]{"Teleport", "Smooth"}, "Teleport");
@@ -127,29 +119,23 @@ public class Scaffold extends Module {
     // Visuals
     private final BoolValue counterDisplayValue = new BoolValue("Counter", true);
     private final BoolValue markValue = new BoolValue("Mark", false);
-
+    // Delay
+    private final MSTimer delayTimer = new MSTimer();
+    private final MSTimer zitterTimer = new MSTimer();
     /**
      * MODULE
      */
 
     // Target block
     private PlaceInfo targetPlace;
-
     // Launch position
     private int launchY;
-
     // Rotation lock
     private Rotation lockRotation;
-
     // Auto block slot
     private int slot;
-
     // Zitter Smooth
     private boolean zitterDirection;
-
-    // Delay
-    private final MSTimer delayTimer = new MSTimer();
-    private final MSTimer zitterTimer = new MSTimer();
     private long delay;
 
     // Eagle
@@ -284,119 +270,12 @@ public class Scaffold extends Module {
 
     @EventTarget
     private void onStrafe(final StrafeEvent event) {
-
         if (!rotationStrafeValue.get())
             return;
 
         if (lockRotation != null && keepRotationValue.get()) {
-            final int dif = (int) ((MathHelper.wrapAngleTo180_float(mc.thePlayer.rotationYaw - lockRotation.getYaw()
-                    - 23.5F - 135)
-                    + 180) / 45);
+            lockRotation.applyStrafeToPlayer(event);
 
-            final float yaw = lockRotation.getYaw();
-            final float strafe = event.getStrafe();
-            final float forward = event.getForward();
-            final float friction = event.getFriction();
-            float calcForward = 0F;
-            float calcStrafe = 0F;
-            /*
-            Rotation Dif
-
-            7 \ 0 / 1     +  +  +      +  |  -
-            6   +   2     -- F --      +  S  -
-            5 / 4 \ 3     -  -  -      +  |  -
-            */
-            switch (dif) {
-                case 0: {
-                    calcForward = forward;
-                    calcStrafe = strafe;
-                    break;
-                }
-                case 1: {
-                    calcForward += forward;
-                    calcStrafe -= forward;
-                    calcForward += strafe;
-                    calcStrafe += strafe;
-                    break;
-                }
-                case 2: {
-                    calcForward = strafe;
-                    calcStrafe = -forward;
-                    break;
-                }
-                case 3: {
-                    calcForward -= forward;
-                    calcStrafe -= forward;
-                    calcForward += strafe;
-                    calcStrafe -= strafe;
-                    break;
-                }
-                case 4: {
-                    calcForward = -forward;
-                    calcStrafe = -strafe;
-                    break;
-                }
-                case 5: {
-                    calcForward -= forward;
-                    calcStrafe += forward;
-                    calcForward -= strafe;
-                    calcStrafe -= strafe;
-                    break;
-                }
-                case 6: {
-                    calcForward = -strafe;
-                    calcStrafe = forward;
-                    break;
-                }
-                case 7: {
-                    calcForward += forward;
-                    calcStrafe += forward;
-                    calcForward -= strafe;
-                    calcStrafe += strafe;
-                    break;
-                }
-            }
-
-            if (calcForward > 1F) {
-                calcForward *= 0.5F;
-            } else if (calcForward < 0.9F && calcForward > 0.3F) {
-                calcForward *= 0.5F;
-            }
-            if (calcForward < -1F) {
-                calcForward *= 0.5F;
-            } else if (calcForward > -0.9F && calcForward < -0.3F) {
-                calcForward *= 0.5F;
-            }
-
-            if (calcStrafe > 1F) {
-                calcStrafe *= 0.5F;
-            } else if (calcStrafe < 0.9F && calcStrafe > 0.3F) {
-                calcStrafe *= 0.5F;
-            }
-            if (calcStrafe < -1F) {
-                calcStrafe *= 0.5F;
-            } else if (calcStrafe > -0.9F && calcStrafe < -0.3F) {
-                calcStrafe *= 0.5F;
-            }
-
-            float f = calcStrafe * calcStrafe + calcForward * calcForward;
-
-            if (f >= 1.0E-4F) {
-                f = MathHelper.sqrt_float(f);
-
-                if (f < 1.0F)
-                    f = 1.0F;
-
-                f = friction / f;
-                calcStrafe *= f;
-                calcForward *= f;
-
-                final float yawSin = MathHelper.sin((float) (yaw * Math.PI / 180F));
-                final float yawCos = MathHelper.cos((float) (yaw * Math.PI / 180F));
-
-                mc.thePlayer.motionX += calcStrafe * yawCos - calcForward * yawSin;
-                mc.thePlayer.motionZ += calcForward * yawCos + calcStrafe * yawSin;
-            }
             event.cancelEvent();
         }
     }

@@ -57,7 +57,7 @@ class ChestStealer : Module() {
     private val takeRandomizedValue = BoolValue("TakeRandomized", false)
     private val onlyItemsValue = BoolValue("OnlyItems", false)
     private val noCompassValue = BoolValue("NoCompass", false)
-    private val usefulValue = BoolValue("Useful", true)
+    private val usefulValue = BoolValue("OnlyUseful", true)
     private val autoCloseValue = BoolValue("AutoClose", true)
 
     private val autoCloseMaxDelayValue: IntegerValue = object : IntegerValue("AutoCloseMaxDelay", 0, 0, 400) {
