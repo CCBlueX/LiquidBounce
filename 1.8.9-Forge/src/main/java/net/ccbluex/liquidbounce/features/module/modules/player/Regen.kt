@@ -37,8 +37,9 @@ class Regen : Module() {
 
         if ((!noAirValue.get() || mc.thePlayer.onGround) && !mc.thePlayer.capabilities.isCreativeMode &&
                 mc.thePlayer.foodStats.foodLevel > foodValue.get() && mc.thePlayer.isEntityAlive && mc.thePlayer.health < healthValue.get()) {
-            if(!potionEffectValue.get()) return
-            if(!mc.thePlayer.isPotionActive(Potion.regeneration)) return
+            if(potionEffectValue.get() && !mc.thePlayer.isPotionActive(Potion.regeneration)) 
+                return
+            
             when (modeValue.get().toLowerCase()) {
                 "vanilla" -> {
                     repeat(speedValue.get()) {
