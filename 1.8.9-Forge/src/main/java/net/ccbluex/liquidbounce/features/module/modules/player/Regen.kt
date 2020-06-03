@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.potion.Potion
 
 @ModuleInfo(name = "Regen", description = "Regenerates your health much faster.", category = ModuleCategory.PLAYER)
 class Regen : Module() {
@@ -25,7 +24,6 @@ class Regen : Module() {
     private val foodValue = IntegerValue("Food", 18, 0, 20)
     private val speedValue = IntegerValue("Speed", 100, 1, 100)
     private val noAirValue = BoolValue("NoAir", false)
-    private val potionEffectValue = BoolValue("PotionEffect", false)
 
     private var resetTimer = false
 
@@ -37,9 +35,6 @@ class Regen : Module() {
 
         if ((!noAirValue.get() || mc.thePlayer.onGround) && !mc.thePlayer.capabilities.isCreativeMode &&
                 mc.thePlayer.foodStats.foodLevel > foodValue.get() && mc.thePlayer.isEntityAlive && mc.thePlayer.health < healthValue.get()) {
-            if(potionEffectValue.get() && !mc.thePlayer.isPotionActive(Potion.regeneration)) 
-                return
-            
             when (modeValue.get().toLowerCase()) {
                 "vanilla" -> {
                     repeat(speedValue.get()) {

@@ -14,7 +14,6 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Horizontal
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Vertical
-import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -65,8 +64,6 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
     override fun drawElement(): Border? {
         val fontRenderer = fontValue.get()
-
-        AWTFontRenderer.assumeNonVolatile = true
 
         // Slide animation - update every render
         val delta = RenderUtils.deltaTime
@@ -136,7 +133,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
                     RenderUtils.drawRect(
                             xPos - if (rectMode.equals("right", true)) 5 else 2,
-                            yPos,
+                            yPos - if (index == 0) 1 else 0,
                             if (rectMode.equals("right", true)) -3F else 0F,
                             yPos + textHeight, when {
                         backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
@@ -159,9 +156,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                         }
 
                         when {
-                            rectMode.equals("left", true) -> RenderUtils.drawRect(xPos - 5, yPos, xPos - 2, yPos + textHeight,
+                            rectMode.equals("left", true) -> RenderUtils.drawRect(xPos - 5, yPos - 1, xPos - 2, yPos + textHeight,
                                     rectColor)
-                            rectMode.equals("right", true) -> RenderUtils.drawRect(-3F, yPos, 0F,
+                            rectMode.equals("right", true) -> RenderUtils.drawRect(-3F, yPos - 1F, 0F,
                                     yPos + textHeight, rectColor)
                         }
                     }
@@ -187,7 +184,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
                     RenderUtils.drawRect(
                             0F,
-                            yPos,
+                            yPos - if (index == 0) 1 else 0,
                             xPos + width + if (rectMode.equals("right", true)) 5 else 2,
                             yPos + textHeight, when {
                         backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
@@ -213,7 +210,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                             rectMode.equals("left", true) -> RenderUtils.drawRect(0F,
                                     yPos - 1, 3F, yPos + textHeight, rectColor)
                             rectMode.equals("right", true) ->
-                                RenderUtils.drawRect(xPos + width + 2, yPos, xPos + width + 2 + 3,
+                                RenderUtils.drawRect(xPos + width + 2, yPos - 1, xPos + width + 2 + 3,
                                         yPos + textHeight, rectColor)
                         }
                     }
@@ -246,10 +243,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
             }
             y2 = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) * modules.size
 
-            return Border(0F, 0F, x2 - 7F, y2 - if(side.vertical == Vertical.DOWN) 1F else 0F)
+            return Border(0F, -1F, x2 - 7F, y2)
         }
-
-        AWTFontRenderer.assumeNonVolatile = false
         GlStateManager.resetColor()
         return null
     }
