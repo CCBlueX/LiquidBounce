@@ -50,12 +50,14 @@ class InventoryCleaner : Module() {
         }
     }
 
+
     private val invOpenValue = BoolValue("InvOpen", false)
     private val simulateInventory = BoolValue("SimulateInventory", true)
     private val noMoveValue = BoolValue("NoMove", false)
     private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
     private val hotbarValue = BoolValue("Hotbar", true)
     private val randomSlotValue = BoolValue("RandomSlot", false)
+    private val cleanValue = BoolValue("Clean", true)
     private val sortValue = BoolValue("Sort", true)
     private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
@@ -87,7 +89,7 @@ class InventoryCleaner : Module() {
         if (sortValue.get())
             sortHotbar()
 
-        while (InventoryUtils.CLICK_TIMER.hasTimePassed(delay)) {
+        while (InventoryUtils.CLICK_TIMER.hasTimePassed(delay) && cleanValue.get()) {
             val garbageItems = items(9, if (hotbarValue.get()) 45 else 36)
                     .filter { !isUseful(it.value, it.key) }
                     .keys
@@ -172,7 +174,7 @@ class InventoryCleaner : Module() {
             } else item is ItemFood || itemStack.unlocalizedName == "item.arrow" ||
                     item is ItemBlock && !itemStack.unlocalizedName.contains("flower") ||
                     item is ItemBed || itemStack.unlocalizedName == "item.diamond" || itemStack.unlocalizedName == "item.ingotIron" ||
-                    item is ItemPotion || item is ItemEnderPearl || item is ItemEnchantedBook || item is ItemBucket || itemStack.unlocalizedName == "item.stick" || 
+                    item is ItemPotion || item is ItemEnderPearl || item is ItemEnchantedBook || item is ItemBucket || itemStack.unlocalizedName == "item.stick" ||
                     ignoreVehiclesValue.get() && (item is ItemBoat || item is ItemMinecart)
         } catch (ex: Exception) {
             ClientUtils.getLogger().error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
@@ -232,12 +234,12 @@ class InventoryCleaner : Module() {
                             bestWeapon = index
                         } else {
                             val currDamage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
-                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness)
+                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness) + 0.1 * ItemUtils.getEnchantment(itemStack, Enchantment.fireAspect)
 
                             val bestStack = mc.thePlayer.inventory.getStackInSlot(bestWeapon)
                                     ?: return@forEachIndexed
                             val bestDamage = (bestStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
-                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(bestStack, Enchantment.sharpness)
+                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(bestStack, Enchantment.sharpness) + 0.1 * ItemUtils.getEnchantment(bestStack, Enchantment.fireAspect)
 
                             if (bestDamage < currDamage)
                                 bestWeapon = index
