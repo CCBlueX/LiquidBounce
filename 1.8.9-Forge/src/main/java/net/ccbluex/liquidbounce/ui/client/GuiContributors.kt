@@ -5,29 +5,35 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
-import com.google.gson.JsonArray
+import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.LiquidBounce
+import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.render.CustomTexture
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.minecraft.client.gui.Gui
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiSlot
+import net.minecraft.client.renderer.GlStateManager
 import org.lwjgl.input.Keyboard
+import org.lwjgl.opengl.GL11
 import java.awt.Color
+import java.text.DecimalFormat
+import java.text.NumberFormat
 import java.util.*
+import javax.imageio.ImageIO
 import kotlin.concurrent.thread
 
 class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
-
+    private val DECIMAL_FORMAT = NumberFormat.getInstance(Locale.US) as DecimalFormat
     private lateinit var list: GuiList
 
-    private val credits = ArrayList<Credit>()
+    private var credits: List<Credit> = Collections.emptyList()
 
     override fun initGui() {
         list = GuiList(this)
@@ -50,23 +56,80 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
             val credit = credits[list.getSelectedSlot()]
 
             var y = 45
-            Fonts.font40.drawString("Name: " + credit.name, (width / 4 + 5).toFloat(), y.toFloat(), Color.WHITE.rgb, true)
+            val x = width / 4 + 5
+            var infoOffset = 0
 
-            if (credit.twitterName != null) {
-                y += Fonts.font40.FONT_HEIGHT
-                Fonts.font40.drawString("Twitter: " + credit.twitterName, (width / 4 + 5).toFloat(), y.toFloat(), Color.WHITE.rgb, true)
+            val avatar = credit.avatar
+
+            val imageSize = fontRendererObj.FONT_HEIGHT * 4
+
+            if (avatar != null) {
+                GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
+
+                GlStateManager.enableAlpha()
+                GlStateManager.enableBlend()
+                GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+                GlStateManager.enableTexture2D()
+
+                GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f)
+
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, avatar.textureId)
+
+
+                GL11.glBegin(GL11.GL_QUADS)
+
+                GL11.glTexCoord2f(0f, 0f)
+                GL11.glVertex2i(x, y)
+                GL11.glTexCoord2f(0f, 1f)
+                GL11.glVertex2i(x, y + imageSize)
+                GL11.glTexCoord2f(1f, 1f)
+                GL11.glVertex2i(x + imageSize, y + imageSize)
+                GL11.glTexCoord2f(1f, 0f)
+                GL11.glVertex2i(x + imageSize, y)
+
+                GL11.glEnd()
+
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
+
+                GlStateManager.disableBlend()
+
+                infoOffset = imageSize
+
+                GL11.glPopAttrib()
             }
 
-            if (credit.youtubeName != null) {
-                y += Fonts.font40.FONT_HEIGHT
-                Fonts.font40.drawString("YouTube: " + credit.youtubeName, (width / 4 + 5).toFloat(), y.toFloat(), Color.WHITE.rgb, true)
-            }
+            y += imageSize
 
-            y += Fonts.font40.FONT_HEIGHT
+            Fonts.font40.drawString("@" + credit.name, (x + infoOffset + 5).toFloat(), 48f, Color.WHITE.rgb, true)
+            Fonts.font40.drawString("${credit.commits} commits §a${DECIMAL_FORMAT.format(credit.additions)}++ §4${DECIMAL_FORMAT.format(credit.deletions)}--", (x + infoOffset + 5).toFloat(), (y - Fonts.font40.FONT_HEIGHT).toFloat(), Color.WHITE.rgb, true)
+//            Fonts.font40.drawString("Name: " + credit.name, (width / 4 + 5).toFloat(), y.toFloat(), Color.WHITE.rgb, true)
 
-            for (s in credit.credits) {
-                y += Fonts.font40.FONT_HEIGHT
-                Fonts.font40.drawString(s, (width / 4 + 5).toFloat(), y.toFloat(), Color.WHITE.rgb, true)
+//            if (credit.twitterName != null) {
+//                y += Fonts.font40.FONT_HEIGHT
+//                Fonts.font40.drawString("Twitter: " + credit.twitterName, (width / 4 + 5).toFloat(), y.toFloat(), Color.WHITE.rgb, true)
+//            }
+//
+//            if (credit.youtubeName != null) {
+//                y += Fonts.font40.FONT_HEIGHT
+//                Fonts.font40.drawString("YouTube: " + credit.youtubeName, (width / 4 + 5).toFloat(), y.toFloat(), Color.WHITE.rgb, true)
+//            }
+//
+//            y += Fonts.font40.FONT_HEIGHT
+//
+
+            for (s in credit.contributions) {
+                y += Fonts.font40.FONT_HEIGHT + 2
+
+                GlStateManager.disableTexture2D()
+                GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+                GL11.glBegin(GL11.GL_LINES)
+
+                GL11.glVertex2i(x, y + Fonts.font40.FONT_HEIGHT / 2 - 1)
+                GL11.glVertex2i(x + 3, y + Fonts.font40.FONT_HEIGHT / 2 - 1)
+
+                GL11.glEnd()
+
+                Fonts.font40.drawString(s, (x + 5f), y.toFloat(), Color.WHITE.rgb, true)
             }
         }
 
@@ -101,29 +164,63 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
     }
 
     private fun loadCredits() {
-        credits.clear()
-
         try {
-            val json = JsonParser()
-                    .parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/credits.json"))
+            val gson = Gson()
+            val jsonParser = JsonParser()
 
-            if (json !is JsonArray) return
+            val gitHubContributors = gson.fromJson(HttpUtils.get("https://api.github.com/repos/CCBlueX/LiquidBounce/stats/contributors"), Array<GitHubContributor>::class.java)
+            val additionalInformation = jsonParser.parse(HttpUtils.get("https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/contributors.json")).asJsonObject
 
-            for (value in json) {
-                if (value !is JsonObject)
-                    continue
+            val credits = ArrayList<Credit>(gitHubContributors.size)
 
-                val userCredits = ArrayList<String>()
+            for (gitHubContributor in gitHubContributors) {
+                var contributorInformation: ContributorInformation? = null
+                val jsonElement = additionalInformation[gitHubContributor.author.id.toString()]
 
-                value.get("Credits").asJsonObject
-                        .entrySet().forEach { stringJsonElementEntry -> userCredits.add(stringJsonElementEntry.value.asString) }
+                if (jsonElement != null) {
+                    contributorInformation = gson.fromJson(jsonElement, ContributorInformation::class.java)
+                }
 
-                credits.add(Credit(
-                        getInfoFromJson(value, "Name")!!,
-                        getInfoFromJson(value, "TwitterName"),
-                        getInfoFromJson(value, "YouTubeName"),
-                        userCredits
-                ))
+                var additions = 0
+                var deletions = 0
+                var commits = 0
+
+                for (week in gitHubContributor.weeks) {
+                    additions += week.additions
+                    deletions += week.deletions
+                    commits += week.commits
+                }
+
+                credits.add(Credit(gitHubContributor.author.name, gitHubContributor.author.avatarUrl, null, additions, deletions, commits, contributorInformation?.teamMember
+                        ?: false, contributorInformation?.contributions ?: Collections.emptyList()))
+            }
+
+            credits.sortWith(object : Comparator<Credit> {
+                override fun compare(o1: Credit, o2: Credit): Int {
+                    if (o1.isTeamMember && o2.isTeamMember) {
+                        return -o1.commits.compareTo(o2.commits)
+                    }
+
+                    if (o1.isTeamMember)
+                        return -1
+                    if (o2.isTeamMember)
+                        return 1
+
+                    return -o1.additions.compareTo(o2.additions)
+                }
+
+            })
+
+            this.credits = credits
+
+            for (credit in credits) {
+                try {
+                    HttpUtils.requestStream(credit.avatarUrl, "GET")?.use {
+                        credit.avatar = CustomTexture(ImageIO.read(it)!!)
+                    }
+                } catch (e: Exception) {
+
+                }
             }
         } catch (e: Exception) {
             ClientUtils.getLogger().error("Failed to load credits.", e)
@@ -132,7 +229,13 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
     private fun getInfoFromJson(jsonObject: JsonObject, key: String): String? = if (jsonObject.has(key)) jsonObject.get(key).asString else null
 
-    internal inner class Credit(val name: String, val twitterName: String?, val youtubeName: String?, val credits: List<String>)
+    internal inner class ContributorInformation(val name: String, val teamMember: Boolean, val contributions: List<String>)
+
+    internal inner class GitHubContributor(@SerializedName("total") val totalContributions: Int, val weeks: List<GitHubWeek>, val author: GitHubAuthor)
+    internal inner class GitHubWeek(@SerializedName("w") val timestamp: Long, @SerializedName("a") val additions: Int, @SerializedName("d") val deletions: Int, @SerializedName("c") val commits: Int)
+    internal inner class GitHubAuthor(@SerializedName("login") val name: String, val id: Int, @SerializedName("avatar_url") val avatarUrl: String)
+
+    internal inner class Credit(val name: String, val avatarUrl: String, var avatar: CustomTexture?, val additions: Int, val deletions: Int, val commits: Int, val isTeamMember: Boolean, val contributions: List<String>)
 
     private inner class GuiList(gui: GuiScreen) :
             GuiSlot(mc, gui.width / 4, gui.height, 40, gui.height - 40, 15) {
@@ -163,6 +266,6 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
             Fonts.font40.drawCenteredString(credit.name, width / 2F, p_180791_3_ + 2F, Color.WHITE.rgb, true)
         }
 
-        override fun drawBackground() { }
+        override fun drawBackground() {}
     }
 }
