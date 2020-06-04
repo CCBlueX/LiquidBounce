@@ -3,22 +3,20 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.script.api
+package net.ccbluex.liquidbounce.script.api.global
 
 import net.ccbluex.liquidbounce.utils.ClientUtils
 
 /**
- * A script api class for chat better chat support
- *
- * @author CCBlueX
+ * Object used by the script API to provide an easier way of calling chat-related methods.
  */
 object Chat {
 
     /**
-     * Print a message to chat
-     *
-     * @param message A string as message for printing to chat
+     * Prints a message to the chat (client-side)
+     * @param message Message to be printed
      */
+    @Suppress("unused")
     @JvmStatic
     fun print(message : String) {
         ClientUtils.displayChatMessage(message)

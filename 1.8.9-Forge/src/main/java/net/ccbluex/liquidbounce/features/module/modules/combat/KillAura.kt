@@ -118,7 +118,7 @@ class KillAura : Module() {
     }
 
     private val silentRotationValue = BoolValue("SilentRotation", true)
-    private val rotationStrafeValue = BoolValue("RotationStrafe", false)
+    private val rotationStrafeValue = ListValue("Strafe", arrayOf("Off", "Strafe", "Silent"), "Off")
     private val randomCenterValue = BoolValue("RandomCenter", true)
     private val outborderValue = BoolValue("Outborder", false)
     private val fovValue = FloatValue("FOV", 180f, 0f, 180f)
@@ -215,7 +215,7 @@ class KillAura : Module() {
             return
         }
 
-        if (!rotationStrafeValue.get())
+        if (rotationStrafeValue.get().equals("Off", true))
             update()
     }
 
@@ -224,46 +224,53 @@ class KillAura : Module() {
      */
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        if (!rotationStrafeValue.get())
+        if (rotationStrafeValue.get().equals("Off", true))
             return
 
         update()
 
-        if (!silentRotationValue.get())
-            return
+        if (currentTarget != null && RotationUtils.targetRotation != null) {
+            when (rotationStrafeValue.get().toLowerCase()) {
+                "strafe" -> {
+                    val (yaw) = RotationUtils.targetRotation ?: return
+                    var strafe = event.strafe
+                    var forward = event.forward
+                    val friction = event.friction
 
-        currentTarget ?: return
+                    var f = strafe * strafe + forward * forward
 
-        val (yaw) = RotationUtils.targetRotation ?: return
-        var strafe = event.strafe
-        var forward = event.forward
-        val friction = event.friction
+                    if (f >= 1.0E-4F) {
+                        f = MathHelper.sqrt_float(f)
 
-        var f = strafe * strafe + forward * forward
+                        if (f < 1.0F)
+                            f = 1.0F
 
-        if (f >= 1.0E-4F) {
-            f = MathHelper.sqrt_float(f)
+                        f = friction / f
+                        strafe *= f
+                        forward *= f
 
-            if (f < 1.0F)
-                f = 1.0F
+                        val yawSin = MathHelper.sin((yaw * Math.PI / 180F).toFloat())
+                        val yawCos = MathHelper.cos((yaw * Math.PI / 180F).toFloat())
 
-            f = friction / f
-            strafe *= f
-            forward *= f
+                        mc.thePlayer.motionX += strafe * yawCos - forward * yawSin
+                        mc.thePlayer.motionZ += forward * yawCos + strafe * yawSin
+                    }
+                    event.cancelEvent()
+                }
+                "silent" -> {
+                    update()
 
-            val yawSin = MathHelper.sin((yaw * Math.PI / 180F).toFloat())
-            val yawCos = MathHelper.cos((yaw * Math.PI / 180F).toFloat())
-
-            mc.thePlayer.motionX += strafe * yawCos - forward * yawSin
-            mc.thePlayer.motionZ += forward * yawCos + strafe * yawSin
+                    RotationUtils.targetRotation.applyStrafeToPlayer(event)
+                    event.cancelEvent()
+                }
+            }
         }
-
-        event.cancelEvent()
     }
 
     fun update() {
         if (cancelRun || (noInventoryAttackValue.get() && (mc.currentScreen is GuiContainer ||
-                        System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))) return
+                        System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get())))
+            return
 
         // Update target
         updateTarget()
@@ -351,7 +358,7 @@ class KillAura : Module() {
     @EventTarget
     fun onEntityMove(event: EntityMovementEvent) {
         val movedEntity = event.movedEntity
-        if (target == null || movedEntity !== currentTarget) return
+        if (target == null || movedEntity != currentTarget) return
         updateHitable()
     }
 

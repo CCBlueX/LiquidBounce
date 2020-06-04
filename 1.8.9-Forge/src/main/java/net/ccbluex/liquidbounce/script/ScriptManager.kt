@@ -10,11 +10,6 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import java.io.File
 import java.io.FileFilter
 
-/**
- * A nashorn based script manager
- *
- * @author CCBlueX
- */
 class ScriptManager {
 
     val scripts = mutableListOf<Script>()
@@ -23,7 +18,7 @@ class ScriptManager {
     private val scriptFileExtension = ".js"
 
     /**
-     * Load scripts from directory
+     * Loads all scripts inside the scripts folder.
      */
     fun loadScripts() {
         if(!scriptsFolder.exists())
@@ -33,62 +28,64 @@ class ScriptManager {
     }
 
     /**
-     *
+     * Unloads all scripts.
      */
     fun unloadScripts() {
         scripts.clear()
     }
 
     /**
-     * Load script from file
+     * Loads a script from a file.
      */
     fun loadScript(scriptFile : File) {
         try {
             scripts.add(Script(scriptFile))
-            ClientUtils.getLogger().info("Successfully loaded script: ${scriptFile.name}")
+            ClientUtils.getLogger().info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
         } catch(t : Throwable) {
-            ClientUtils.getLogger().error("Failed to load script: ${scriptFile.name}", t)
+            ClientUtils.getLogger().error("[ScriptAPI] Failed to load script '${scriptFile.name}'.", t)
         }
     }
 
     /**
-     * Enable all scripts
+     * Enables all scripts.
      */
     fun enableScripts() {
         scripts.forEach { it.onEnable() }
     }
 
     /**
-     * Disable all scripts
+     * Disables all scripts.
      */
     fun disableScripts() {
         scripts.forEach { it.onDisable() }
     }
 
     /**
-     * Import script
+     * Imports a script.
+     * @param file JavaScript file to be imported.
      */
     fun importScript(file : File) {
         val scriptFile = File(scriptsFolder, file.name)
         file.copyTo(scriptFile)
 
         loadScript(scriptFile)
-        ClientUtils.getLogger().info("Successfully imported script: ${scriptFile.name}")
+        ClientUtils.getLogger().info("[ScriptAPI]  Successfully imported script '${scriptFile.name}'.")
     }
 
     /**
-     * Delete script
+     * Deletes a script.
+     * @param script Script to be deleted.
      */
     fun deleteScript(script : Script) {
         script.onDisable()
         scripts.remove(script)
         script.scriptFile.delete()
 
-        ClientUtils.getLogger().info("Successfully deleted script: ${script.scriptFile.name}")
+        ClientUtils.getLogger().info("[ScriptAPI]  Successfully deleted script '${script.scriptFile.name}'.")
     }
 
     /**
-     * Reload scripts
+     * Reloads all scripts.
      */
     fun reloadScripts() {
         disableScripts()
@@ -96,6 +93,6 @@ class ScriptManager {
         loadScripts()
         enableScripts()
 
-        ClientUtils.getLogger().info("Successfully reloaded scripts.")
+        ClientUtils.getLogger().info("[ScriptAPI]  Successfully reloaded scripts.")
     }
 }

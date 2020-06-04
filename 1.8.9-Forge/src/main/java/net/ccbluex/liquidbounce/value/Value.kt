@@ -68,6 +68,10 @@ open class BoolValue(name: String, value: Boolean) : Value<Boolean>(name, value)
 open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maximum: Int = Integer.MAX_VALUE)
     : Value<Int>(name, value) {
 
+    fun set(newValue: Number) {
+        set(newValue.toInt())
+    }
+
     override fun toJson() = JsonPrimitive(value)
 
     override fun fromJson(element: JsonElement) {
@@ -82,6 +86,10 @@ open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maxi
  */
 open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val maximum: Float = Float.MAX_VALUE)
     : Value<Float>(name, value) {
+
+    fun set(newValue: Number) {
+        set(newValue.toFloat())
+    }
 
     override fun toJson() = JsonPrimitive(value)
 
