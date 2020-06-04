@@ -172,7 +172,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
         override fun drawSlot(id: Int, x: Int, y: Int, var4: Int, var5: Int, var6: Int) {
             val script = LiquidBounce.scriptManager.scripts[id]
             drawCenteredString(Fonts.font40, "§9" + script.scriptName + " §7v" + script.scriptVersion, width / 2, y + 2, Color.LIGHT_GRAY.rgb)
-            drawCenteredString(Fonts.font40, "by §c" + script.scriptAuthor, width / 2, y + 15, Color.LIGHT_GRAY.rgb)
+            drawCenteredString(Fonts.font40, "by §c" + script.scriptAuthors.joinToString(", "), width / 2, y + 15, Color.LIGHT_GRAY.rgb)
         }
 
         override fun drawBackground() { }

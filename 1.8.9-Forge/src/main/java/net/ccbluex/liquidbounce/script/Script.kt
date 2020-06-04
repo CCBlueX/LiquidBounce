@@ -6,110 +6,172 @@
 package net.ccbluex.liquidbounce.script
 
 import jdk.internal.dynalink.beans.StaticClass
+import jdk.nashorn.api.scripting.JSObject
+import jdk.nashorn.api.scripting.ScriptUtils
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.script.api.*
+import net.ccbluex.liquidbounce.script.api.global.Chat
+import net.ccbluex.liquidbounce.script.api.global.Item
+import net.ccbluex.liquidbounce.script.api.global.Setting
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.io.File
-import javax.script.Invocable
-import javax.script.ScriptEngine
+import java.util.function.Function
 import javax.script.ScriptEngineManager
 
-/**
- * A nashorn based script
- *
- * @author CCBlueX
- */
 class Script(val scriptFile: File) : MinecraftInstance() {
 
-    private lateinit var scriptEngine : ScriptEngine
-    private lateinit var invocable : Invocable
+    private var scriptEngine = ScriptEngineManager().getEngineByName("nashorn")
+    private val scriptText = scriptFile.readText()
 
-    lateinit var scriptName : String
-    var scriptVersion : Double = 1.0
-    lateinit var scriptAuthor : String
+    // Script information
+    lateinit var scriptName: String
+    lateinit var scriptVersion: String
+    lateinit var scriptAuthors: Array<String>
 
     private var state = false
+    private val events = HashMap<String, JSObject>()
+    private val registeredModules = mutableListOf<Module>()
+    private val registeredCommands = mutableListOf<Command>()
 
     init {
-        loadScript()
-    }
+        // Global classes
+        scriptEngine.put("Chat", StaticClass.forClass(Chat::class.java))
+        scriptEngine.put("Setting", StaticClass.forClass(Setting::class.java))
+        scriptEngine.put("Item", StaticClass.forClass(Item::class.java))
 
-    /**
-     * Load script
-     */
-    fun loadScript() {
-        scriptEngine = ScriptEngineManager().getEngineByName("nashorn")
-
-        // Variables
+        // Global instances
         scriptEngine.put("mc", mc)
+        scriptEngine.put("moduleManager", LiquidBounce.moduleManager)
+        scriptEngine.put("commandManager", LiquidBounce.commandManager)
         scriptEngine.put("scriptManager", LiquidBounce.scriptManager)
-        scriptEngine.put("script", this)
 
-        scriptEngine.put("commandManager", StaticClass.forClass(CommandManager.javaClass))
-        scriptEngine.put("moduleManager", StaticClass.forClass(ModuleManager.javaClass))
-        scriptEngine.put("creativeTabs", StaticClass.forClass(CreativeTab.javaClass))
-        scriptEngine.put("item", StaticClass.forClass(Item.javaClass))
-        scriptEngine.put("value", StaticClass.forClass(Value.javaClass))
-        scriptEngine.put("chat", StaticClass.forClass(Chat.javaClass))
+        // Global functions
+        scriptEngine.put("registerScript", RegisterScript())
 
-        // Eval script
-        val scriptText = scriptFile.readText()
+        supportLegacyScripts()
 
         scriptEngine.eval(scriptText)
 
-        // Cast script engine to invocable and set to variable
-        invocable = scriptEngine as Invocable
+        callEvent("load")
+    }
 
-        // Load script informations from js engine
-        scriptName = scriptEngine.get("scriptName") as String
-        scriptVersion = scriptEngine.get("scriptVersion") as Double
-        scriptAuthor = scriptEngine.get("scriptAuthor") as String
+    @Suppress("UNCHECKED_CAST")
+    inner class RegisterScript : Function<JSObject, Script> {
+        /**
+         * Global function 'registerScript' which is called to register a script.
+         * @param scriptObject JavaScript object containing information about the script.
+         * @return The instance of this script.
+         */
+        override fun apply(scriptObject: JSObject): Script {
+            scriptName = scriptObject.getMember("name") as String
+            scriptVersion = scriptObject.getMember("version") as String
+            scriptAuthors = ScriptUtils.convert(scriptObject.getMember("authors"), Array<String>::class.java) as Array<String>
 
-        // Call on load
-        onLoad()
+            return this@Script
+        }
     }
 
     /**
-     * Load script
+     * Registers a new script module.
+     * @param moduleObject JavaScript object containing information about the module.
+     * @param callback JavaScript function to which the corresponding instance of [ScriptModule] is passed.
+     * @see ScriptModule
      */
-    fun onLoad() = callFunction("onLoad")
+    @Suppress("unused")
+    fun registerModule(moduleObject: JSObject, callback: JSObject) {
+        val module = ScriptModule(moduleObject)
+        LiquidBounce.moduleManager.registerModule(module)
+        registeredModules += module
+        callback.call(moduleObject, module)
+    }
 
     /**
-     * Enable script
+     * Registers a new script command.
+     * @param commandObject JavaScript object containing information about the command.
+     * @param callback JavaScript function to which the corresponding instance of [ScriptCommand] is passed.
+     * @see ScriptCommand
+     */
+    @Suppress("unused")
+    fun registerCommand(commandObject: JSObject, callback: JSObject) {
+        val command = ScriptCommand(commandObject)
+        LiquidBounce.commandManager.registerCommand(command)
+        registeredCommands += command
+        callback.call(commandObject, command)
+    }
+
+    /**
+     * Registers a new creative inventory tab.
+     * @param tabObject JavaScript object containing information about the tab.
+     * @see ScriptTab
+     */
+    @Suppress("unused")
+    fun registerTab(tabObject: JSObject) {
+        ScriptTab(tabObject)
+    }
+
+    fun supportLegacyScripts() {
+        if (!scriptText.lines().first().contains("api_version=2")) {
+            ClientUtils.getLogger().info("[ScriptAPI] Running script '${scriptFile.name}' with legacy support.")
+            val legacyScript = LiquidBounce::class.java.getResource("/assets/minecraft/liquidbounce/scriptapi/legacy.js").readText()
+            scriptEngine.eval(legacyScript)
+        }
+    }
+
+    /**
+     * Called from inside the script to register a new event handler.
+     * @param eventName Name of the event.
+     * @param handler JavaScript function used to handle the event.
+     */
+    fun on(eventName: String, handler: JSObject) {
+        events[eventName] = handler
+    }
+
+    /**
+     * Called when the client enables the script.
      */
     fun onEnable() {
-        if(state)
-            return
+        if (state) return
 
-        callFunction("onEnable")
+        callEvent("enable")
         state = true
     }
 
     /**
-     * Disable script
+     * Called when the client disables the script. Handles unregistering all modules and commands
+     * created with this script.
      */
     fun onDisable() {
-        if(!state)
-            return
+        if (!state) return
 
-        callFunction("onDisable")
+        registeredModules.forEach { LiquidBounce.moduleManager.unregisterModule(it) }
+        registeredCommands.forEach { LiquidBounce.commandManager.unregisterCommand(it) }
+
+        callEvent("disable")
         state = false
     }
 
     /**
-     * Import external script file into script engine
+     * Imports another JavaScript file inro the context of this script.
+     * @param scriptFile Path to the file to be imported.
      */
-    fun import(scriptFile : String) {
+    fun import(scriptFile: String) {
         scriptEngine.eval(File(LiquidBounce.scriptManager.scriptsFolder, scriptFile).readText())
     }
 
-    private fun callFunction(functionName : String) {
-        try {
-            invocable.invokeFunction(functionName)
-        } catch (ex: NoSuchMethodException) {
-        } catch (ex: Exception) {
-            ClientUtils.getLogger().error("${scriptFile.name} caused an error.", ex)
+    /**
+     * Calls the handler of a registered event.
+     * @param eventName Name of the event to be called.
+     */
+    private fun callEvent(eventName: String) {
+        if (events.containsKey(eventName)) {
+            try {
+                events[eventName]?.call(null)
+            } catch (throwable: Throwable) {
+                ClientUtils.getLogger().error("Exception in script '$scriptName'!", throwable)
+            }
         }
     }
 }
