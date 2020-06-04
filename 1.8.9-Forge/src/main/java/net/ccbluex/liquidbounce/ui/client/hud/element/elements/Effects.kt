@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
-import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FontValue
@@ -37,8 +36,6 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
 
         val fontRenderer = fontValue.get()
 
-        assumeNonVolatile = true
-
         for (effect in mc.thePlayer.activePotionEffects) {
             val potion = Potion.potionTypes[effect.potionID]
 
@@ -65,8 +62,6 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
             fontRenderer.drawString(name, -stringWidth, y, potion.liquidColor, shadow.get())
             y -= fontRenderer.FONT_HEIGHT
         }
-
-        assumeNonVolatile = false
 
         if (width == 0F)
             width = 40F

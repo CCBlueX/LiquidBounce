@@ -38,7 +38,6 @@ import net.minecraft.network.play.client.*
 import net.minecraft.potion.Potion
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
-import net.minecraft.util.MathHelper
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import java.awt.Color
@@ -229,36 +228,11 @@ class KillAura : Module() {
 
         update()
 
-        if (!silentRotationValue.get())
-            return
+        if (silentRotationValue.get() && currentTarget != null && RotationUtils.targetRotation != null) {
+            RotationUtils.targetRotation.applyStrafeToPlayer(event)
 
-        currentTarget ?: return
-
-        val (yaw) = RotationUtils.targetRotation ?: return
-        var strafe = event.strafe
-        var forward = event.forward
-        val friction = event.friction
-
-        var f = strafe * strafe + forward * forward
-
-        if (f >= 1.0E-4F) {
-            f = MathHelper.sqrt_float(f)
-
-            if (f < 1.0F)
-                f = 1.0F
-
-            f = friction / f
-            strafe *= f
-            forward *= f
-
-            val yawSin = MathHelper.sin((yaw * Math.PI / 180F).toFloat())
-            val yawCos = MathHelper.cos((yaw * Math.PI / 180F).toFloat())
-
-            mc.thePlayer.motionX += strafe * yawCos - forward * yawSin
-            mc.thePlayer.motionZ += forward * yawCos + strafe * yawSin
+            event.cancelEvent()
         }
-
-        event.cancelEvent()
     }
 
     fun update() {

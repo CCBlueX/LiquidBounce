@@ -15,6 +15,7 @@ import net.minecraft.init.Blocks
 
 @ModuleInfo(name = "XRay", description = "Allows you to see ores through walls.", category = ModuleCategory.RENDER)
 class XRay : Module() {
+
     val xrayBlocks = mutableListOf<Block>(
             Blocks.coal_ore,
             Blocks.iron_ore,
@@ -60,18 +61,7 @@ class XRay : Module() {
                     if (args[1].equals("add", ignoreCase = true)) {
                         if (args.size > 2) {
                             try {
-                                val block = try {
-                                    Block.getBlockById(args[2].toInt())
-                                } catch (exception: NumberFormatException) {
-                                    val tmpBlock = Block.getBlockFromName(args[2])
-
-                                    if (Block.getIdFromBlock(tmpBlock) <= 0 || tmpBlock == null) {
-                                        chat("§7Block §8${args[2]}§7 does not exist!")
-                                        return
-                                    }
-
-                                    tmpBlock
-                                }
+                                val block = Block.getBlockById(Integer.parseInt(args[2]))
 
                                 if (xrayBlocks.contains(block)) {
                                     chat("This block is already on the list.")
@@ -96,18 +86,7 @@ class XRay : Module() {
                     if (args[1].equals("remove", ignoreCase = true)) {
                         if (args.size > 2) {
                             try {
-                                var block: Block
-
-                                try {
-                                    block = Block.getBlockById(args[2].toInt())
-                                } catch (exception: NumberFormatException) {
-                                    block = Block.getBlockFromName(args[2])
-
-                                    if (Block.getIdFromBlock(block) <= 0) {
-                                        chat("§7Block §8${args[2]}§7 does not exist!")
-                                        return
-                                    }
-                                }
+                                val block = Block.getBlockById(Integer.parseInt(args[2]))
 
                                 if (!xrayBlocks.contains(block)) {
                                     chat("This block is not on the list.")

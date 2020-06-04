@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
-import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -28,6 +27,7 @@ import kotlin.math.roundToInt
 
 @ModuleInfo(name = "NameTags", description = "Changes the scale of the nametags so you can always read them.", category = ModuleCategory.RENDER)
 class NameTags : Module() {
+
     private val healthValue = BoolValue("Health", true)
     private val pingValue = BoolValue("Ping", true)
     private val distanceValue = BoolValue("Distance", false)
@@ -102,12 +102,9 @@ class NameTags : Module() {
         enableGlCap(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-
-        AWTFontRenderer.assumeNonVolatile = true
-
         // Draw nametag
         val width = fontRenderer.getStringWidth(text) / 2
-        if (borderValue.get())
+        if(borderValue.get())
             drawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F, 2F,
                     Color(255, 255, 255, 90).rgb, Integer.MIN_VALUE)
         else
@@ -115,8 +112,6 @@ class NameTags : Module() {
                     Integer.MIN_VALUE)
         fontRenderer.drawString(text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F,
                 0xFFFFFF, true)
-
-        AWTFontRenderer.assumeNonVolatile = false
 
         if (armorValue.get() && entity is EntityPlayer) {
             for (index in 0..4) {
