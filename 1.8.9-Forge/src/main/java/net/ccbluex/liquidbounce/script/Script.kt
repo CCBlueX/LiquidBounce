@@ -166,12 +166,10 @@ class Script(val scriptFile: File) : MinecraftInstance() {
      * @param eventName Name of the event to be called.
      */
     private fun callEvent(eventName: String) {
-        if (events.containsKey(eventName)) {
-            try {
-                events[eventName]?.call(null)
-            } catch (throwable: Throwable) {
-                ClientUtils.getLogger().error("Exception in script '$scriptName'!", throwable)
-            }
+        try {
+            events[eventName]?.call(null)
+        } catch (throwable: Throwable) {
+            ClientUtils.getLogger().error("Exception in script '$scriptName'!", throwable)
         }
     }
 }

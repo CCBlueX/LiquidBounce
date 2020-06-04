@@ -19,7 +19,7 @@ class ScriptModule(private val moduleObject: JSObject) : Module() {
 
     private val events = HashMap<String, JSObject>()
     private val _values = HashMap<String, Value<*>>()
-    private var _tag : String? = null
+    private var _tag: String? = null
 
     /**
      * Allows the user to access values by typing module.settings.<valuename>
@@ -53,7 +53,9 @@ class ScriptModule(private val moduleObject: JSObject) : Module() {
 
     override var tag: String?
         get() = _tag
-        set(value) { _tag = value }
+        set(value) {
+            _tag = value
+        }
 
     /**
      * Called from inside the script to register a new event handler.
@@ -122,12 +124,10 @@ class ScriptModule(private val moduleObject: JSObject) : Module() {
      * @param payload Event data passed to the handler function.
      */
     private fun callEvent(eventName: String, payload: Any? = null) {
-        if (events.containsKey(eventName)) {
-            try {
-                events[eventName]?.call(moduleObject, payload)
-            } catch (throwable: Throwable) {
-                ClientUtils.getLogger().error("Exception in module '$name'!", throwable)
-            }
+        try {
+            events[eventName]?.call(moduleObject, payload)
+        } catch (throwable: Throwable) {
+            ClientUtils.getLogger().error("Exception in module '$name'!", throwable)
         }
     }
 }

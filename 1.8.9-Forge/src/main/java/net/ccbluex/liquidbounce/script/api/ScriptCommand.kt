@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 
 @Suppress("UNCHECKED_CAST", "unused")
 class ScriptCommand(private val commandObject: JSObject) : Command(commandObject.getMember("name") as String,
-         ScriptUtils.convert(commandObject.getMember("aliases"), Array<String>::class.java) as Array<String> ) {
+        ScriptUtils.convert(commandObject.getMember("aliases"), Array<String>::class.java) as Array<String>) {
 
     private val events = HashMap<String, JSObject>()
 
@@ -26,12 +26,10 @@ class ScriptCommand(private val commandObject: JSObject) : Command(commandObject
     }
 
     override fun execute(args: Array<String>) {
-        if (events.containsKey("execute")) {
-            try {
-                events["execute"]?.call(commandObject, args)
-            } catch (throwable: Throwable) {
-                ClientUtils.getLogger().error("Exception in command '$command'!", throwable)
-            }
+        try {
+            events["execute"]?.call(commandObject, args)
+        } catch (throwable: Throwable) {
+            ClientUtils.getLogger().error("Exception in command '$command'!", throwable)
         }
     }
 }
