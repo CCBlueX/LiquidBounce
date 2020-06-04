@@ -77,6 +77,7 @@ public class Scaffold extends Module {
     public final BoolValue sprintValue = new BoolValue("Sprint", true);
     private final BoolValue swingValue = new BoolValue("Swing", true);
     private final BoolValue searchValue = new BoolValue("Search", true);
+    private final BoolValue downValue = new BoolValue("Down", true);
     private final ListValue placeModeValue = new ListValue("PlaceTiming", new String[]{"Pre", "Post"}, "Post");
 
     // Eagle
@@ -118,6 +119,7 @@ public class Scaffold extends Module {
     // Target block
     private PlaceInfo targetPlace;
 
+
     // Launch position
     private int launchY;
 
@@ -139,12 +141,15 @@ public class Scaffold extends Module {
     private int placedBlocksWithoutEagle = 0;
     private boolean eagleSneaking;
 
+    // Down
+    private boolean shouldGoDown = false;
+
     /**
      * Enable module
      */
     @Override
     public void onEnable() {
-        if(mc.thePlayer == null) return;
+        if (mc.thePlayer == null) return;
 
         launchY = (int) mc.thePlayer.posY;
     }
@@ -158,7 +163,11 @@ public class Scaffold extends Module {
     public void onUpdate(final UpdateEvent event) {
         mc.timer.timerSpeed = timerValue.get();
 
-        if(mc.thePlayer.onGround) {
+        shouldGoDown = downValue.get() && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && getBlocksAmount() > 1;
+        if (shouldGoDown)
+            mc.gameSettings.keyBindSneak.pressed = false;
+
+        if (mc.thePlayer.onGround) {
             final String mode = modeValue.get();
 
             // Rewinside scaffold mode
@@ -175,7 +184,7 @@ public class Scaffold extends Module {
                 if (!GameSettings.isKeyDown(mc.gameSettings.keyBindLeft))
                     mc.gameSettings.keyBindLeft.pressed = false;
 
-                if(zitterTimer.hasTimePassed(100)) {
+                if (zitterTimer.hasTimePassed(100)) {
                     zitterDirection = !zitterDirection;
                     zitterTimer.reset();
                 }
@@ -183,17 +192,17 @@ public class Scaffold extends Module {
                 if (zitterDirection) {
                     mc.gameSettings.keyBindRight.pressed = true;
                     mc.gameSettings.keyBindLeft.pressed = false;
-                }else{
+                } else {
                     mc.gameSettings.keyBindRight.pressed = false;
                     mc.gameSettings.keyBindLeft.pressed = true;
                 }
             }
 
             // Eagle
-            if (eagleValue.get()) {
+            if (eagleValue.get() && !shouldGoDown) {
                 if (placedBlocksWithoutEagle >= blocksToEagleValue.get()) {
-                    final boolean shouldEagle = mc.theWorld.getBlockState(
-                            new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1D, mc.thePlayer.posZ)).getBlock() == Blocks.air;
+                    final boolean shouldEagle = mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX,
+                            mc.thePlayer.posY - 1D, mc.thePlayer.posZ)).getBlock() == Blocks.air;
 
                     if (eagleSilentValue.get()) {
                         if (eagleSneaking != shouldEagle) {
@@ -217,7 +226,6 @@ public class Scaffold extends Module {
             if (zitterValue.get() && zitterModeValue.get().equalsIgnoreCase("teleport")) {
                 MovementUtils.strafe(zitterSpeed.get());
 
-
                 final double yaw = Math.toRadians(mc.thePlayer.rotationYaw + (zitterDirection ? 90D : -90D));
                 mc.thePlayer.motionX -= Math.sin(yaw) * zitterStrength.get();
                 mc.thePlayer.motionZ += Math.cos(yaw) * zitterStrength.get();
@@ -228,13 +236,13 @@ public class Scaffold extends Module {
 
     @EventTarget
     public void onPacket(final PacketEvent event) {
-        if(mc.thePlayer == null)
+        if (mc.thePlayer == null)
             return;
 
         final Packet<?> packet = event.getPacket();
 
         // AutoBlock
-        if(packet instanceof C09PacketHeldItemChange) {
+        if (packet instanceof C09PacketHeldItemChange) {
             final C09PacketHeldItemChange packetHeldItemChange = (C09PacketHeldItemChange) packet;
 
             slot = packetHeldItemChange.getSlotId();
@@ -243,38 +251,44 @@ public class Scaffold extends Module {
 
     @EventTarget
     public void onMotion(final MotionEvent event) {
-        // Lock Rotation
-        if(rotationsValue.get() && keepRotationValue.get() && lockRotation != null)
-            RotationUtils.setTargetRotation(lockRotation);
-
-        final String mode = modeValue.get();
         final EventState eventState = event.getEventState();
 
+        // Lock Rotation
+        if (rotationsValue.get() && keepRotationValue.get() && lockRotation != null)
+            RotationUtils.setTargetRotation(lockRotation);
+
+        // Place block
         if (placeModeValue.get().equalsIgnoreCase(eventState.getStateName()))
             place();
 
-        if (eventState == EventState.PRE) {
-            if (autoBlockValue.get() ? InventoryUtils.findAutoBlockBlock() == -1 : mc.thePlayer.getHeldItem() == null ||
-                    !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock))
-                return;
+        // Update and search for new block
+        if (eventState == EventState.PRE)
+            update();
 
-            findBlock(mode.equalsIgnoreCase("expand"));
-        }
+        // Reset placeable delay
+        if (targetPlace == null && placeableDelay.get())
+            delayTimer.reset();
+    }
 
-        if (targetPlace == null) {
-            if (placeableDelay.get())
-                delayTimer.reset();
-        }
+    private void update() {
+        if (autoBlockValue.get() ? InventoryUtils.findAutoBlockBlock() == -1 : mc.thePlayer.getHeldItem() == null ||
+                !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock))
+            return;
+
+        findBlock(modeValue.get().equalsIgnoreCase("expand"));
     }
 
     /**
      * Search for new target block
      */
     private void findBlock(final boolean expand) {
-        final BlockPos blockPosition = mc.thePlayer.posY == (int) mc.thePlayer.posY + 0.5D ? new BlockPos(mc.thePlayer)
-                : new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ).down();
+        final BlockPos blockPosition = shouldGoDown ? (mc.thePlayer.posY == (int) mc.thePlayer.posY + 0.5D ?
+                new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 0.6D, mc.thePlayer.posZ)
+                : new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 0.6, mc.thePlayer.posZ).down()) :
+                (mc.thePlayer.posY == (int) mc.thePlayer.posY + 0.5D ? new BlockPos(mc.thePlayer)
+                        : new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ).down());
 
-        if (!expand && (!BlockUtils.isReplaceable(blockPosition) || search(blockPosition, true)))
+        if (!expand && (!BlockUtils.isReplaceable(blockPosition) || search(blockPosition, !shouldGoDown)))
             return;
 
         if (expand) {
@@ -290,7 +304,7 @@ public class Scaffold extends Module {
         } else if (searchValue.get()) {
             for (int x = -1; x <= 1; x++)
                 for (int z = -1; z <= 1; z++)
-                    if (search(blockPosition.add(x, 0, z), true))
+                    if (search(blockPosition.add(x, 0, z), !shouldGoDown))
                         return;
         }
     }
@@ -363,16 +377,17 @@ public class Scaffold extends Module {
                 mc.getNetHandler().addToSendQueue(new C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SNEAKING));
         }
 
-        if(!GameSettings.isKeyDown(mc.gameSettings.keyBindRight))
+        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindRight))
             mc.gameSettings.keyBindRight.pressed = false;
 
-        if(!GameSettings.isKeyDown(mc.gameSettings.keyBindLeft))
+        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindLeft))
             mc.gameSettings.keyBindLeft.pressed = false;
 
         lockRotation = null;
         mc.timer.timerSpeed = 1F;
+        shouldGoDown = false;
 
-        if(slot != mc.thePlayer.inventory.currentItem)
+        if (slot != mc.thePlayer.inventory.currentItem)
             mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
     }
 
@@ -383,10 +398,10 @@ public class Scaffold extends Module {
      */
     @EventTarget
     public void onMove(final MoveEvent event) {
-        if (!safeWalkValue.get())
+        if (!safeWalkValue.get() || shouldGoDown)
             return;
 
-        if(airSafeValue.get() || mc.thePlayer.onGround)
+        if (airSafeValue.get() || mc.thePlayer.onGround)
             event.setSafeWalk(true);
     }
 
@@ -397,7 +412,7 @@ public class Scaffold extends Module {
      */
     @EventTarget
     public void onRender2D(final Render2DEvent event) {
-        if(counterDisplayValue.get()) {
+        if (counterDisplayValue.get()) {
             GlStateManager.pushMatrix();
 
             final BlockOverlay blockOverlay = (BlockOverlay) LiquidBounce.moduleManager.getModule(BlockOverlay.class);
@@ -421,14 +436,14 @@ public class Scaffold extends Module {
      */
     @EventTarget
     public void onRender3D(final Render3DEvent event) {
-        if(!markValue.get())
+        if (!markValue.get())
             return;
 
-        for(int i = 0; i < (modeValue.get().equalsIgnoreCase("Expand") ? expandLengthValue.get() + 1 : 2); i++) {
-            final BlockPos blockPos = new BlockPos(mc.thePlayer.posX + (mc.thePlayer.getHorizontalFacing() == EnumFacing.WEST ? -i : mc.thePlayer.getHorizontalFacing() == EnumFacing.EAST ? i : 0), mc.thePlayer.posY - (mc.thePlayer.posY == (int) mc.thePlayer.posY + 0.5D ? 0D : 1.0D), mc.thePlayer.posZ + (mc.thePlayer.getHorizontalFacing() == EnumFacing.NORTH ? -i : mc.thePlayer.getHorizontalFacing() == EnumFacing.SOUTH ? i : 0));
+        for (int i = 0; i < (modeValue.get().equalsIgnoreCase("Expand") ? expandLengthValue.get() + 1 : 2); i++) {
+            final BlockPos blockPos = new BlockPos(mc.thePlayer.posX + (mc.thePlayer.getHorizontalFacing() == EnumFacing.WEST ? -i : mc.thePlayer.getHorizontalFacing() == EnumFacing.EAST ? i : 0), mc.thePlayer.posY - (mc.thePlayer.posY == (int) mc.thePlayer.posY + 0.5D ? 0D : 1.0D) - (shouldGoDown ? 1D : 0), mc.thePlayer.posZ + (mc.thePlayer.getHorizontalFacing() == EnumFacing.NORTH ? -i : mc.thePlayer.getHorizontalFacing() == EnumFacing.SOUTH ? i : 0));
             final PlaceInfo placeInfo = PlaceInfo.get(blockPos);
 
-            if(BlockUtils.isReplaceable(blockPos) && placeInfo != null) {
+            if (BlockUtils.isReplaceable(blockPos) && placeInfo != null) {
                 RenderUtils.drawBlockBox(blockPos, new Color(68, 117, 255, 100), false);
                 break;
             }
@@ -443,23 +458,23 @@ public class Scaffold extends Module {
      * @return
      */
     private boolean search(final BlockPos blockPosition, final boolean checks) {
-        if(!BlockUtils.isReplaceable(blockPosition))
+        if (!BlockUtils.isReplaceable(blockPosition))
             return false;
 
         final Vec3 eyesPos = new Vec3(mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ);
 
         PlaceRotation placeRotation = null;
 
-        for(final EnumFacing side : EnumFacing.values()) {
+        for (final EnumFacing side : EnumFacing.values()) {
             final BlockPos neighbor = blockPosition.offset(side);
 
-            if(!BlockUtils.canBeClicked(neighbor))
+            if (!BlockUtils.canBeClicked(neighbor))
                 continue;
 
             final Vec3 dirVec = new Vec3(side.getDirectionVec());
 
-            for(double xSearch = 0.1D; xSearch < 0.9D; xSearch += 0.1D) {
-                for(double ySearch = 0.1D; ySearch < 0.9D; ySearch += 0.1D) {
+            for (double xSearch = 0.1D; xSearch < 0.9D; xSearch += 0.1D) {
+                for (double ySearch = 0.1D; ySearch < 0.9D; ySearch += 0.1D) {
                     for (double zSearch = 0.1D; zSearch < 0.9D; zSearch += 0.1D) {
                         final Vec3 posVec = new Vec3(blockPosition).addVector(xSearch, ySearch, zSearch);
                         final double distanceSqPosVec = eyesPos.squareDistanceTo(posVec);
@@ -487,20 +502,19 @@ public class Scaffold extends Module {
                         if (!(obj.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && obj.getBlockPos().equals(neighbor)))
                             continue;
 
-                        if(placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation.getRotation()))
+                        if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation.getRotation()))
                             placeRotation = new PlaceRotation(new PlaceInfo(neighbor, side.getOpposite(), hitVec), rotation);
                     }
                 }
             }
         }
 
-        if(placeRotation == null) return false;
+        if (placeRotation == null) return false;
 
         if (rotationsValue.get()) {
             RotationUtils.setTargetRotation(placeRotation.getRotation(), keepLengthValue.get());
             lockRotation = placeRotation.getRotation();
         }
-
         targetPlace = placeRotation.getPlaceInfo();
         return true;
     }
@@ -511,10 +525,10 @@ public class Scaffold extends Module {
     private int getBlocksAmount() {
         int amount = 0;
 
-        for(int i = 36; i < 45; i++) {
+        for (int i = 36; i < 45; i++) {
             final ItemStack itemStack = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
 
-            if(itemStack != null && itemStack.getItem() instanceof ItemBlock)
+            if (itemStack != null && itemStack.getItem() instanceof ItemBlock)
                 amount += itemStack.stackSize;
         }
 
