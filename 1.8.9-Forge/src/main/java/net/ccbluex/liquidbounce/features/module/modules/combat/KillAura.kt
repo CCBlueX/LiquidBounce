@@ -358,7 +358,10 @@ class KillAura : Module() {
     @EventTarget
     fun onEntityMove(event: EntityMovementEvent) {
         val movedEntity = event.movedEntity
-        if (target == null || movedEntity != currentTarget) return
+
+        if (target == null || movedEntity != currentTarget)
+            return
+
         updateHitable()
     }
 
@@ -382,7 +385,8 @@ class KillAura : Module() {
 
         // Check is not hitable or check failrate
         if (!hitable || failHit) {
-            if (swing && (fakeSwingValue.get() || failHit)) mc.thePlayer.swingItem()
+            if (swing && (fakeSwingValue.get() || failHit))
+                mc.thePlayer.swingItem()
         } else {
             // Attack
             if (!multi) {
@@ -601,7 +605,7 @@ class KillAura : Module() {
             return
         }
 
-        val reach = min(maxRange.toDouble(), mc.thePlayer.getDistanceToEntityBox(target!!)) + 0.4
+        val reach = min(maxRange.toDouble(), mc.thePlayer.getDistanceToEntityBox(target!!)) + 1
 
         if (raycastValue.get()) {
             val raycastedEntity = RaycastUtils.raycastEntity(reach) {
