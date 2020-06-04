@@ -215,7 +215,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
             for (credit in credits) {
                 try {
-                    HttpUtils.requestStream(credit.avatarUrl, "GET")?.use {
+                    HttpUtils.requestStream("${credit.avatarUrl}?s=${fontRendererObj.FONT_HEIGHT * 4}", "GET")?.use {
                         credit.avatar = CustomTexture(ImageIO.read(it)!!)
                     }
                 } catch (e: Exception) {
