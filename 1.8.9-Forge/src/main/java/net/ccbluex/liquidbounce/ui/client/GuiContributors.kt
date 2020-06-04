@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.ui.client
 
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot
@@ -212,8 +211,6 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
             ClientUtils.getLogger().error("Failed to load credits.", e)
         }
     }
-
-    private fun getInfoFromJson(jsonObject: JsonObject, key: String): String? = if (jsonObject.has(key)) jsonObject.get(key).asString else null
 
     internal inner class ContributorInformation(val name: String, val teamMember: Boolean, val contributions: List<String>)
 
