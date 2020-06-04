@@ -5,8 +5,8 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
+import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
-import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -93,17 +93,22 @@ public abstract class MixinGuiButton extends Gui {
          }
 
          Gui.drawRect(this.xPosition + (int) this.cut, this.yPosition,
-                      this.xPosition + this.width - (int) this.cut, this.yPosition + this.height,
-                      this.enabled ? new Color(0F, 0F, 0F, this.alpha / 255F).getRGB() :
-                      new Color(0.5F, 0.5F, 0.5F, 0.5F).getRGB());
+                 this.xPosition + this.width - (int) this.cut, this.yPosition + this.height,
+                 this.enabled ? new Color(0F, 0F, 0F, this.alpha / 255F).getRGB() :
+                         new Color(0.5F, 0.5F, 0.5F, 0.5F).getRGB());
 
          mc.getTextureManager().bindTexture(buttonTextures);
          mouseDragged(mc, mouseX, mouseY);
 
+         AWTFontRenderer.Companion.setAssumeNonVolatile(true);
+
          fontRenderer.drawStringWithShadow(displayString,
-                                           (float) ((this.xPosition + this.width / 2) -
-                                                    fontRenderer.getStringWidth(displayString) / 2),
-                                           this.yPosition + (this.height - 5) / 2F, 14737632);
+                 (float) ((this.xPosition + this.width / 2) -
+                         fontRenderer.getStringWidth(displayString) / 2),
+                 this.yPosition + (this.height - 5) / 2F, 14737632);
+
+         AWTFontRenderer.Companion.setAssumeNonVolatile(false);
+
          GlStateManager.resetColor();
       }
    }

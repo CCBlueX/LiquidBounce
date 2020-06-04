@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
+import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -73,6 +74,8 @@ class Notification(private val message: String) {
      * Draw notification
      */
     fun drawNotification() {
+        AWTFontRenderer.assumeNonVolatile = true
+
         // Draw notification
         RenderUtils.drawRect(-x + 8 + textLength, 0F, -x, -20F, Color.BLACK.rgb)
         RenderUtils.drawRect(-x, 0F, -x - 5, -20F, Color(0, 160, 255).rgb)
@@ -109,6 +112,9 @@ class Notification(private val message: String) {
 
             FadeState.END -> LiquidBounce.hud.removeNotification(this)
         }
+
+
+        AWTFontRenderer.assumeNonVolatile = false
     }
 
 }

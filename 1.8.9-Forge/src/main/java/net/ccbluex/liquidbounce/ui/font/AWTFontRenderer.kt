@@ -21,10 +21,41 @@ import java.awt.image.BufferedImage
  * Generate new bitmap based font renderer
  */
 @SideOnly(Side.CLIENT)
-class FontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
+class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
+
+    companion object {
+        var assumeNonVolatile: Boolean = false
+        val activeFontRenderers: ArrayList<AWTFontRenderer> = ArrayList()
+
+        private var gcTicks: Int = 0
+        private const val GC_TICKS = 600 // Start garbage collection every 600 frames
+        private const val CACHED_FONT_REMOVAL_TIME = 30000 // Remove cached texts after 30s of not being used
+
+        fun garbageCollectionTick() {
+            if (gcTicks++ > GC_TICKS) {
+                activeFontRenderers.forEach { it.collectGarbage() }
+
+                gcTicks = 0
+            }
+        }
+    }
+
+    private fun collectGarbage() {
+        val currentTime = System.currentTimeMillis()
+
+        cachedStrings.filter { currentTime - it.value.lastUsage > CACHED_FONT_REMOVAL_TIME }.forEach {
+            GL11.glDeleteLists(it.value.displayList, 1)
+
+            it.value.deleted = true
+
+            cachedStrings.remove(it.key)
+        }
+    }
 
     private var fontHeight = -1
     private val charLocations = arrayOfNulls<CharLocation>(stopChar)
+
+    private val cachedStrings: HashMap<String, CachedFont> = HashMap()
 
     private var textureID = 0
     private var textureWidth = 0
@@ -35,6 +66,8 @@ class FontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
 
     init {
         renderBitmap(startChar, stopChar)
+
+        activeFontRenderers.add(this)
     }
 
     /**
@@ -46,11 +79,12 @@ class FontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
      * @param color of the text
      */
     fun drawString(text: String, x: Double, y: Double, color: Int) {
-
         val scale = 0.25
         val reverse = 1 / scale
 
+        GlStateManager.pushMatrix()
         GlStateManager.scale(scale, scale, scale)
+        GL11.glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
         GlStateManager.bindTexture(textureID)
 
         val red: Float = (color shr 16 and 0xff) / 255F
@@ -60,25 +94,60 @@ class FontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
 
         GlStateManager.color(red, green, blue, alpha)
 
-        var currX = x * 2F
+        var currX = 0.0
+
+        val cached: CachedFont? = cachedStrings[text]
+
+        if (cached != null) {
+            GL11.glCallList(cached.displayList)
+
+            cached.lastUsage = System.currentTimeMillis()
+
+            GlStateManager.popMatrix()
+
+            return
+        }
+
+        var list = -1
+
+        if (assumeNonVolatile) {
+            list = GL11.glGenLists(1)
+
+            GL11.glNewList(list, GL11.GL_COMPILE_AND_EXECUTE)
+        }
+
+        GL11.glBegin(GL11.GL_QUADS)
+
         for (char in text.toCharArray()) {
             if (char.toInt() >= charLocations.size) {
-                GlStateManager.scale(reverse, reverse, reverse)
+                GL11.glEnd()
+
+                GlStateManager.popMatrix()
                 Minecraft.getMinecraft().fontRendererObj.drawString("$char", currX.toFloat() * scale.toFloat() + 1, (y * 2F).toFloat() + 1, color, false)
                 currX += Minecraft.getMinecraft().fontRendererObj.getStringWidth("$char") * reverse
+                GlStateManager.pushMatrix()
+
                 GlStateManager.scale(scale, scale, scale)
                 GlStateManager.bindTexture(textureID)
                 GlStateManager.color(red, green, blue, alpha)
-            } else {
-                val fontChar = charLocations[
-                        char.toInt()
-                ] ?: continue
 
-                drawChar(fontChar, currX.toFloat(), (y * 2F - 2F).toFloat())
+                GL11.glBegin(GL11.GL_QUADS)
+            } else {
+                val fontChar = charLocations[char.toInt()] ?: continue
+
+                drawChar(fontChar, currX.toFloat(), 0f)
                 currX += fontChar.width - 8.0
             }
         }
-        GlStateManager.scale(reverse, reverse, reverse)
+
+        GL11.glEnd()
+
+        if (assumeNonVolatile) {
+            cachedStrings[text] = CachedFont(list, System.currentTimeMillis())
+            GL11.glEndList()
+        }
+
+        GlStateManager.popMatrix()
     }
 
     /**
@@ -98,19 +167,14 @@ class FontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
         val renderWidth = width / textureWidth
         val renderHeight = height / textureHeight
 
-        GL11.glBegin(GL11.GL_TRIANGLE_STRIP)
-        GL11.glTexCoord2f(renderX + renderWidth, renderY + renderHeight)
-        GL11.glVertex2f(x + width, y + height)
-
-        GL11.glTexCoord2f(renderX + renderWidth, renderY)
-        GL11.glVertex2f(x + width, y)
-
-        GL11.glTexCoord2f(renderX, renderY + renderHeight)
-        GL11.glVertex2f(x, y + height)
-
         GL11.glTexCoord2f(renderX, renderY)
         GL11.glVertex2f(x, y)
-        GL11.glEnd()
+        GL11.glTexCoord2f(renderX, renderY + renderHeight)
+        GL11.glVertex2f(x, y + height)
+        GL11.glTexCoord2f(renderX + renderWidth, renderY + renderHeight)
+        GL11.glVertex2f(x + width, y + height)
+        GL11.glTexCoord2f(renderX + renderWidth, renderY)
+        GL11.glVertex2f(x + width, y)
     }
 
     /**

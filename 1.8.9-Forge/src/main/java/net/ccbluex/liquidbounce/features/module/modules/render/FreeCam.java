@@ -21,7 +21,6 @@ import net.minecraft.network.play.client.C0BPacketEntityAction;
 
 @ModuleInfo(name = "FreeCam", description = "Allows you to move out of your body.", category = ModuleCategory.RENDER)
 public class FreeCam extends Module {
-
     private final FloatValue speedValue = new FloatValue("Speed", 0.8F, 0.1F, 2F);
     private final BoolValue flyValue = new BoolValue("Fly", true);
     private final BoolValue noClipValue = new BoolValue("NoClip", true);

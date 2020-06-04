@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "block.MixinBlock",
+    "block.MixinBlockAnvil",
     "block.MixinBlockLadder",
     "block.MixinBlockLiquid",
     "block.MixinBlockModelRenderer",
@@ -50,6 +51,7 @@
     "render.MixinRendererLivingEntity",
     "render.MixinTileEntityChestRenderer",
     "render.MixinTileEntityItemStackRenderer",
+    "render.MixinTileEntityMobSpawnerRenderer",
     "render.MixinTileEntityRendererDispatcher",
     "render.MixinVisGraph",
     "resources.MixinSkinManager",

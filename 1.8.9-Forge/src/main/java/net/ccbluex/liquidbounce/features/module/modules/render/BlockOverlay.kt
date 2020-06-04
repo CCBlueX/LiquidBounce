@@ -21,14 +21,12 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.block.Block
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.client.renderer.RenderGlobal
 import net.minecraft.util.BlockPos
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
 @ModuleInfo(name = "BlockOverlay", description = "Allows you to change the design of the block overlay.", category = ModuleCategory.RENDER)
 class BlockOverlay : Module() {
-
     private val colorRedValue = IntegerValue("R", 68, 0, 255)
     private val colorGreenValue = IntegerValue("G", 117, 0, 255)
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
@@ -70,7 +68,7 @@ class BlockOverlay : Module() {
                 .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
                 .offset(-x, -y, -z)
 
-        RenderGlobal.drawSelectionBoundingBox(axisAlignedBB)
+        RenderUtils.drawSelectionBoundingBox(axisAlignedBB)
         RenderUtils.drawFilledBox(axisAlignedBB)
         GlStateManager.depthMask(true)
         GlStateManager.enableTexture2D()

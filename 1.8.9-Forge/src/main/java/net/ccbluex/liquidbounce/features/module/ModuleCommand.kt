@@ -117,6 +117,13 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                             .map { it.resourcePath.toLowerCase() }
                             .filter { it.startsWith(args[1], true) }
                     }
+                    is ListValue -> {
+                        values.forEach { value ->
+                            if (value is ListValue)
+                                return value.values.filter { it.startsWith(args[1], true) }
+                        }
+                        return emptyList()
+                    }                    
                     else -> emptyList()
                 }
             }
