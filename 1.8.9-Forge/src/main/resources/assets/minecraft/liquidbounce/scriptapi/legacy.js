@@ -79,13 +79,7 @@ var _AdaptedValue = function (value) {
     }
 
     this.set = function (newValue) {
-        if (value instanceof this.FloatValue) {
-            value.set(this.Float.parseFloat(newValue.toString()));
-        } else if (value instanceof this.IntegerValue) {
-            value.set(this.Integer.parseInt(newValue.toString()));
-        } else {
-            value.set(newValue);
-        }
+        value.set(newValue)
     }
 }
 
