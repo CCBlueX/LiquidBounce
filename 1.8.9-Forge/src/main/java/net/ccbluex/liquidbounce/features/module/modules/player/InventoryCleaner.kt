@@ -50,14 +50,12 @@ class InventoryCleaner : Module() {
         }
     }
 
-
     private val invOpenValue = BoolValue("InvOpen", false)
     private val simulateInventory = BoolValue("SimulateInventory", true)
     private val noMoveValue = BoolValue("NoMove", false)
     private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
     private val hotbarValue = BoolValue("Hotbar", true)
     private val randomSlotValue = BoolValue("RandomSlot", false)
-    private val cleanValue = BoolValue("Clean", true)
     private val sortValue = BoolValue("Sort", true)
     private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
@@ -89,7 +87,7 @@ class InventoryCleaner : Module() {
         if (sortValue.get())
             sortHotbar()
 
-        while (InventoryUtils.CLICK_TIMER.hasTimePassed(delay) && cleanValue.get()) {
+        while (InventoryUtils.CLICK_TIMER.hasTimePassed(delay)) {
             val garbageItems = items(9, if (hotbarValue.get()) 45 else 36)
                     .filter { !isUseful(it.value, it.key) }
                     .keys
@@ -234,12 +232,12 @@ class InventoryCleaner : Module() {
                             bestWeapon = index
                         } else {
                             val currDamage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
-                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness) + 0.1 * ItemUtils.getEnchantment(itemStack, Enchantment.fireAspect)
+                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness)
 
                             val bestStack = mc.thePlayer.inventory.getStackInSlot(bestWeapon)
                                     ?: return@forEachIndexed
                             val bestDamage = (bestStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
-                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(bestStack, Enchantment.sharpness) + 0.1 * ItemUtils.getEnchantment(bestStack, Enchantment.fireAspect)
+                                    ?: 0.0) + 1.25 * ItemUtils.getEnchantment(bestStack, Enchantment.sharpness)
 
                             if (bestDamage < currDamage)
                                 bestWeapon = index
