@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.Panel;
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement;
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style;
+import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
@@ -74,17 +75,23 @@ public class NullStyle extends Style {
             if(moduleElement.isShowSettings()) {
                 int yPos = moduleElement.getY() + 4;
                 for(final Value value : moduleValues) {
-                    if(value instanceof BoolValue) {
+                    boolean isNumber = value.get() instanceof Number;
+
+                    if (isNumber) {
+                        AWTFontRenderer.Companion.setAssumeNonVolatile(false);
+                    }
+
+                    if (value instanceof BoolValue) {
                         String text = value.getName();
                         float textWidth = Fonts.font35.getStringWidth(text);
 
-                        if(moduleElement.getSettingsWidth() < textWidth + 8)
+                        if (moduleElement.getSettingsWidth() < textWidth + 8)
                             moduleElement.setSettingsWidth(textWidth + 8);
 
                         RenderUtils.drawRect(moduleElement.getX() + moduleElement.getWidth() + 4, yPos + 2, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 14, Integer.MIN_VALUE);
 
-                        if(mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= yPos + 2 && mouseY <= yPos + 14) {
-                            if(Mouse.isButtonDown(0) && moduleElement.isntPressed()) {
+                        if (mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= yPos + 2 && mouseY <= yPos + 14) {
+                            if (Mouse.isButtonDown(0) && moduleElement.isntPressed()) {
                                 final BoolValue boolValue = (BoolValue) value;
 
                                 boolValue.set(!boolValue.get());
@@ -256,13 +263,18 @@ public class NullStyle extends Style {
                         String text = value.getName() + "§f: §c" + value.get();
                         float textWidth = Fonts.font35.getStringWidth(text);
 
-                        if(moduleElement.getSettingsWidth() < textWidth + 8)
+                        if (moduleElement.getSettingsWidth() < textWidth + 8)
                             moduleElement.setSettingsWidth(textWidth + 8);
 
                         RenderUtils.drawRect(moduleElement.getX() + moduleElement.getWidth() + 4, yPos + 2, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 14, Integer.MIN_VALUE);
                         GlStateManager.resetColor();
                         Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
                         yPos += 12;
+                    }
+
+                    if (isNumber) {
+                        // This state is cleaned up in ClickGUI
+                        AWTFontRenderer.Companion.setAssumeNonVolatile(true);
                     }
                 }
 

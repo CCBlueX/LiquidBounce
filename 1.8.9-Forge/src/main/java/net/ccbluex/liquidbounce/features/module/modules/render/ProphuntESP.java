@@ -25,7 +25,6 @@ import java.util.Map;
 
 @ModuleInfo(name = "ProphuntESP", description = "Allows you to see disguised players in PropHunt.", category = ModuleCategory.RENDER)
 public class ProphuntESP extends Module {
-
     public final Map<BlockPos, Long> blocks = new HashMap<>();
 
     private final IntegerValue colorRedValue = new IntegerValue("R", 0, 0, 255);

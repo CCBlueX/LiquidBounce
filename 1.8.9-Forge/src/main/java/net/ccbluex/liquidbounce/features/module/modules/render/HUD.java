@@ -20,7 +20,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @ModuleInfo(name = "HUD", description = "Toggles visibility of the HUD.", category = ModuleCategory.RENDER, array = false)
 @SideOnly(Side.CLIENT)
 public class HUD extends Module {
-
     public final BoolValue blackHotbarValue = new BoolValue("BlackHotbar", true);
     public final BoolValue inventoryParticle = new BoolValue("InventoryParticle", false);
     private final BoolValue blurValue = new BoolValue("Blur", false);

@@ -14,6 +14,8 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.block.material.Material
+import net.minecraft.client.renderer.Tessellator
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import net.minecraft.entity.Entity
 import net.minecraft.item.*
 import net.minecraft.util.*
@@ -24,7 +26,6 @@ import java.awt.Color
 
 @ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land.", category = ModuleCategory.RENDER)
 class Projectiles : Module() {
-    
     private val dynamicBowPower = BoolValue("DynamicBowPower", true)
     
     @EventTarget
@@ -112,6 +113,9 @@ class Projectiles : Module() {
         var hasLanded = false
         var hitEntity = false
 
+        val tessellator = Tessellator.getInstance()
+        val worldRenderer = tessellator.worldRenderer
+
         // Start drawing of path
         GL11.glDepthMask(false)
         RenderUtils.enableGlCap(GL11.GL_BLEND, GL11.GL_LINE_SMOOTH)
@@ -120,7 +124,8 @@ class Projectiles : Module() {
         GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST)
         RenderUtils.glColor(Color(0, 160, 255, 255))
         GL11.glLineWidth(2f)
-        GL11.glBegin(GL11.GL_LINE_STRIP)
+
+        worldRenderer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION)
 
         while (!hasLanded && posY > 0.0) {
             // Set pos before and after
@@ -191,12 +196,12 @@ class Projectiles : Module() {
             motionY -= gravity.toDouble()
 
             // Draw path
-            GL11.glVertex3d(posX - renderManager.renderPosX, posY - renderManager.renderPosY,
-                    posZ - renderManager.renderPosZ)
+            worldRenderer.pos(posX - renderManager.renderPosX, posY - renderManager.renderPosY,
+                    posZ - renderManager.renderPosZ).endVertex()
         }
 
         // End the rendering of the path
-        GL11.glEnd()
+        tessellator.draw()
         GL11.glPushMatrix()
         GL11.glTranslated(posX - renderManager.renderPosX, posY - renderManager.renderPosY,
                 posZ - renderManager.renderPosZ)
