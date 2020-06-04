@@ -102,20 +102,6 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
             Fonts.font40.drawString("@" + credit.name, (x + infoOffset + 5).toFloat(), 48f, Color.WHITE.rgb, true)
             Fonts.font40.drawString("${credit.commits} commits §a${DECIMAL_FORMAT.format(credit.additions)}++ §4${DECIMAL_FORMAT.format(credit.deletions)}--", (x + infoOffset + 5).toFloat(), (y - Fonts.font40.FONT_HEIGHT).toFloat(), Color.WHITE.rgb, true)
-//            Fonts.font40.drawString("Name: " + credit.name, (width / 4 + 5).toFloat(), y.toFloat(), Color.WHITE.rgb, true)
-
-//            if (credit.twitterName != null) {
-//                y += Fonts.font40.FONT_HEIGHT
-//                Fonts.font40.drawString("Twitter: " + credit.twitterName, (width / 4 + 5).toFloat(), y.toFloat(), Color.WHITE.rgb, true)
-//            }
-//
-//            if (credit.youtubeName != null) {
-//                y += Fonts.font40.FONT_HEIGHT
-//                Fonts.font40.drawString("YouTube: " + credit.youtubeName, (width / 4 + 5).toFloat(), y.toFloat(), Color.WHITE.rgb, true)
-//            }
-//
-//            y += Fonts.font40.FONT_HEIGHT
-//
 
             for (s in credit.contributions) {
                 y += Fonts.font40.FONT_HEIGHT + 2
