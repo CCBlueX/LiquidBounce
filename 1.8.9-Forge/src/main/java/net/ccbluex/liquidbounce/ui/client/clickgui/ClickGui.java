@@ -25,7 +25,6 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Mouse;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -216,8 +215,7 @@ public class ClickGui extends GuiScreen {
 
         drawDefaultBackground();
 
-        RenderUtils.drawFilledCircle(25, height - 25, 16, new Color(37, 126, 255));
-        RenderUtils.drawImage(hudIcon, 12, height - 35, 23, 23);
+        RenderUtils.drawImage(hudIcon, 9, height - 41, 32, 32);
 
         GlStateManager.scale(scale, scale, scale);
 

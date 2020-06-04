@@ -396,6 +396,8 @@ public final class RenderUtils extends MinecraftInstance {
         double dAngle = 2 * Math.PI / sections;
         float x, y;
 
+        glPushAttrib(GL_ENABLE_BIT);
+
         glEnable(GL_BLEND);
         glDisable(GL_TEXTURE_2D);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -409,12 +411,12 @@ public final class RenderUtils extends MinecraftInstance {
             glColor4f(color.getRed() / 255F, color.getGreen() / 255F, color.getBlue() / 255F, color.getAlpha() / 255F);
             glVertex2f(xx + x, yy + y);
         }
+
         GlStateManager.color(0, 0, 0);
 
         glEnd();
-        glEnable(GL_TEXTURE_2D);
-        glDisable(GL_BLEND);
-        glDisable(GL_LINE_SMOOTH);
+
+        glPopAttrib();
     }
 
     public static void drawImage(ResourceLocation image, int x, int y, int width, int height) {
