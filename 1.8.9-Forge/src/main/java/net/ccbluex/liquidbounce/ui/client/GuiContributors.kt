@@ -27,12 +27,14 @@ import java.text.NumberFormat
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.concurrent.thread
+import kotlin.math.sin
 
 class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
     private val DECIMAL_FORMAT = NumberFormat.getInstance(Locale.US) as DecimalFormat
     private lateinit var list: GuiList
 
     private var credits: List<Credit> = Collections.emptyList()
+    private var failed = false
 
     override fun initGui() {
         list = GuiList(this)
@@ -40,6 +42,8 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
         list.elementClicked(-1, false, 0, 0)
 
         buttonList.add(GuiButton(1, width / 2 - 100, height - 30, "Back"))
+
+        failed = false
 
         thread { loadCredits() }
     }
@@ -121,8 +125,13 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
         Fonts.font40.drawCenteredString("Contributors", width / 2F, 6F, 0xffffff)
 
         if (credits.isEmpty()) {
-            drawCenteredString(Fonts.font40, "Loading...", width / 8, height / 2, Color.WHITE.rgb)
-            RenderUtils.drawLoadingCircle((width / 8).toFloat(), (height / 2 - 40).toFloat())
+            if (failed) {
+                val gb = ((sin(System.currentTimeMillis() * (1 / 333.0)) + 1) * (0.5 * 255)).toInt()
+                drawCenteredString(Fonts.font40, "Failed to load", width / 8, height / 2, Color(255, gb, gb).rgb)
+            } else {
+                drawCenteredString(Fonts.font40, "Loading...", width / 8, height / 2, Color.WHITE.rgb)
+                RenderUtils.drawLoadingCircle((width / 8).toFloat(), (height / 2 - 40).toFloat())
+            }
         }
 
         super.drawScreen(mouseX, mouseY, partialTicks)
@@ -209,6 +218,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
             }
         } catch (e: Exception) {
             ClientUtils.getLogger().error("Failed to load credits.", e)
+            failed = true
         }
     }
 
