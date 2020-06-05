@@ -85,52 +85,63 @@ var _AdaptedValue = function (value) {
 
 var _AdaptedModule = function (module) {
 
+    this.module = module;
+
     this.moduleManager = Java.type("net.ccbluex.liquidbounce.LiquidBounce").moduleManager;
 
     this.getName = function () {
-        return module.getName();
+        return this.module.getName();
     }
 
     this.getDescription = function () {
-        return module.getDescription();
+        return this.module.getDescription();
     }
 
     this.getCategory = function () {
-        return module.getCategory().displayName;
+        return this.module.getCategory().displayName;
     }
 
     this.getState = function () {
-        return module.getState();
+        return this.module.getState();
     }
 
     this.setState = function (state) {
-        module.setState(state);
+        this.module.setState(state);
     }
 
     this.getBind = function () {
-        return module.keyBind;
+        return this.module.keyBind;
     }
 
     this.setBind = function (bind) {
-        module.keyBind = bind;
+        this.module.keyBind = bind;
     }
 
     this.getValue = function (name) {
-        return new _AdaptedValue(module.getValue(name));
+        return new _AdaptedValue(this.module.getValue(name));
     }
 
     this.register = function () {
-        this.moduleManager.registerModule(module);
+        this.moduleManager.registerModule(this.module);
     }
 
     this.unregister = function () {
-        this.moduleManager.unregisterModule(module);
+        this.moduleManager.unregisterModule(this.module);
     }
 
     this._getRaw = function () {
-        return module;
+        return this.module;
     }
 }
+
+Object.defineProperty(_AdaptedModule.prototype, "state", {
+    get: function() {
+        return this.module.getState();
+    },
+    set: function (newState) {
+        this.module.setState(newState);
+    }
+});
 
 var _ModuleManager = function () {
 
