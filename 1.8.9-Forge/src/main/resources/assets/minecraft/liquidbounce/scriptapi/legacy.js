@@ -143,6 +143,15 @@ Object.defineProperty(_AdaptedModule.prototype, "state", {
     }
 });
 
+Object.defineProperty(_AdaptedModule.prototype, "bind", {
+    get: function() {
+        return this.module.keyBind;
+    },
+    set: function (newBind) {
+        this.module.keyBind = newBind;
+    }
+});
+
 var _ModuleManager = function () {
 
     this.moduleManager = Java.type("net.ccbluex.liquidbounce.LiquidBounce").moduleManager;
