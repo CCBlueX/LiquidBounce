@@ -17,6 +17,7 @@ import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
 @ModuleInfo(name = "NoRotateSet", description = "Prevents the server from rotating your head.", category = ModuleCategory.MISC)
 class NoRotateSet : Module() {
+
     private val confirmValue = BoolValue("Confirm", true)
     private val illegalRotationValue = BoolValue("ConfirmIllegalRotation", false)
     private val noZeroValue = BoolValue("NoZero", false)
@@ -43,4 +44,5 @@ class NoRotateSet : Module() {
             packet.pitch = mc.thePlayer.rotationPitch
         }
     }
+
 }

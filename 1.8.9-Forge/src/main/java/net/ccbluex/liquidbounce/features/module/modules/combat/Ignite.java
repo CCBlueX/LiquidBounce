@@ -31,6 +31,7 @@ import net.minecraft.util.Vec3;
 @ModuleInfo(name = "Ignite", description = "Automatically sets targets around you on fire.",
             category = ModuleCategory.COMBAT)
 public class Ignite extends Module {
+
    private final BoolValue lighterValue = new BoolValue("Lighter", true);
    private final BoolValue lavaBucketValue = new BoolValue("Lava", true);
 

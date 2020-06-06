@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
-import net.ccbluex.liquidbounce.value.FloatValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
 import net.ccbluex.liquidbounce.value.ListValue;
 import net.minecraft.client.network.NetworkPlayerInfo;
@@ -226,4 +225,5 @@ public class AntiBot extends Module {
 
         return entity.getName().isEmpty() || entity.getName().equals(mc.thePlayer.getName());
     }
+
 }

@@ -20,6 +20,7 @@ import org.lwjgl.input.Mouse;
 
 @ModuleInfo(name = "MidClick", description = "Allows you to add a player as a friend by right clicking him.", category = ModuleCategory.MISC)
 public class MidClick extends Module {
+
     private boolean wasDown;
 
     @EventTarget
@@ -49,4 +50,5 @@ public class MidClick extends Module {
 
         wasDown = Mouse.isButtonDown(2);
     }
+
 }

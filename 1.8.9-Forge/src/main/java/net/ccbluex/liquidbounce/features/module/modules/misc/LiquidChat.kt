@@ -33,6 +33,7 @@ import kotlin.concurrent.thread
 
 @ModuleInfo(name = "LiquidChat", description = "Allows you to chat with other LiquidBounce users.", category = ModuleCategory.MISC)
 class LiquidChat : Module() {
+
     init {
         state = true
         array = false
@@ -406,4 +407,5 @@ class LiquidChat : Module() {
             component.appendText(string.substring(lastEnd))
         return component
     }
+
 }

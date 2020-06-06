@@ -17,6 +17,7 @@ import net.minecraft.client.settings.KeyBinding
 
 @ModuleInfo(name = "Trigger", description = "Automatically attacks the entity you are looking at.", category = ModuleCategory.COMBAT)
 class Trigger : Module() {
+
     private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = minCPS.get()

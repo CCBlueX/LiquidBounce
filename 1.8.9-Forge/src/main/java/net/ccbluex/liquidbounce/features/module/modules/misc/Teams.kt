@@ -13,6 +13,7 @@ import net.minecraft.entity.EntityLivingBase
 
 @ModuleInfo(name = "Teams", description = "Prevents Killaura from attacking team mates.", category = ModuleCategory.MISC)
 class Teams : Module() {
+
     private val scoreboardValue = BoolValue("ScoreboardTeam", true)
     private val colorValue = BoolValue("Color", true)
     private val gommeSWValue = BoolValue("GommeSW", false)
@@ -43,4 +44,5 @@ class Teams : Module() {
 
         return false
     }
+
 }

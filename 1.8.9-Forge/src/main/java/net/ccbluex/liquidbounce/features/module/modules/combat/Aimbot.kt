@@ -22,6 +22,7 @@ import kotlin.random.Random
 
 @ModuleInfo(name = "Aimbot", description = "Automatically faces selected entities around you.", category = ModuleCategory.COMBAT)
 class Aimbot : Module() {
+
     private val rangeValue = FloatValue("Range", 4.4F, 1F, 8F)
     private val turnSpeedValue = FloatValue("TurnSpeed", 2F, 1F, 180F)
     private val fovValue = FloatValue("FOV", 180F, 1F, 180F)

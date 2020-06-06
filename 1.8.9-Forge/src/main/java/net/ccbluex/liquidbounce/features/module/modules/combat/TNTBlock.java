@@ -21,6 +21,7 @@ import net.minecraft.item.ItemSword;
 
 @ModuleInfo(name = "TNTBlock", description = "Automatically blocks with your sword when TNT around you explodes.", category = ModuleCategory.COMBAT)
 public class TNTBlock extends Module {
+
     private final IntegerValue fuseValue = new IntegerValue("Fuse", 10, 0, 80);
     private final FloatValue rangeValue = new FloatValue("Range", 9, 1, 20);
     private final BoolValue autoSwordValue = new BoolValue("AutoSword", true);

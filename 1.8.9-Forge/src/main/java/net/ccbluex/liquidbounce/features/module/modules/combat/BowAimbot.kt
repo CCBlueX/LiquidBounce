@@ -24,6 +24,7 @@ import java.awt.Color
 
 @ModuleInfo(name = "BowAimbot", description = "Automatically aims at players when using a bow.", category = ModuleCategory.COMBAT)
 class BowAimbot : Module() {
+
     private val silentValue = BoolValue("Silent", true)
     private val predictValue = BoolValue("Predict", true)
     private val throughWallsValue = BoolValue("ThroughWalls", false)

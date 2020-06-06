@@ -25,6 +25,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @ModuleInfo(name = "AtAllProvider", description = "Automatically mentions everyone on the server when using '@a' in your message.", category = ModuleCategory.MISC)
 public class AtAllProvider extends Module {
+
     private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 1000, 0, 20000) {
         @Override
         protected void onChanged(final Integer oldValue, final Integer newValue) {
@@ -116,4 +117,5 @@ public class AtAllProvider extends Module {
             }
         }
     }
+
 }
