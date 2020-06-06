@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.value.Value
 class ScriptModule(private val moduleObject: JSObject) : Module() {
 
     private val events = HashMap<String, JSObject>()
-    private val _values = HashMap<String, Value<*>>()
+    private val _values = LinkedHashMap<String, Value<*>>()
     private var _tag: String? = null
 
     /**
@@ -127,7 +127,7 @@ class ScriptModule(private val moduleObject: JSObject) : Module() {
         try {
             events[eventName]?.call(moduleObject, payload)
         } catch (throwable: Throwable) {
-            ClientUtils.getLogger().error("Exception in module '$name'!", throwable)
+            ClientUtils.getLogger().error("[ScriptAPI] Exception in module '$name'!", throwable)
         }
     }
 }
