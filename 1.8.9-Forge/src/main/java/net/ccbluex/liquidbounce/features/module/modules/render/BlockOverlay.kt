@@ -91,7 +91,7 @@ class BlockOverlay : Module() {
             RenderUtils.drawBorderedRect(
                     scaledWidthHalf - 2F,
                     scaledHeightHalf + 5F,
-                    scaledWidthHalf * 0.5f + Fonts.font40.getStringWidth(info) + 2F,
+                    scaledWidthHalf + Fonts.font40.getStringWidth(info) + 2F,
                     scaledHeightHalf + 16F,
                     3F, Color.BLACK.rgb, Color.BLACK.rgb
             )
