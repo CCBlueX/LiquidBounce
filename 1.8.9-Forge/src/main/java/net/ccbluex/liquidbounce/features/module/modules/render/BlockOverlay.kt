@@ -96,7 +96,7 @@ class BlockOverlay : Module() {
                     3F, Color.BLACK.rgb, Color.BLACK.rgb
             )
             GlStateManager.resetColor()
-            Fonts.font40.drawString(info, scaledResolution.scaledWidth * 0.5f, scaledResolution.scaledHeight * 0.5f + 7,
+            Fonts.font40.drawString(info, scaledWidthHalf, scaledHeightHalf + 7,
                     Color.WHITE.rgb)
         }
     }
