@@ -94,9 +94,9 @@ class FastUse : Module() {
     fun onMove(event: MoveEvent?) {
         if (event == null) return
 
+        if (!state || !mc.thePlayer.isUsingItem) return
         val usingItem = mc.thePlayer.itemInUse.item
-        if (state && mc.thePlayer.isUsingItem &&
-                (usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion) &&
+        if ((usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion) &&
                 noMoveValue.get())
             event.zero()
     }
