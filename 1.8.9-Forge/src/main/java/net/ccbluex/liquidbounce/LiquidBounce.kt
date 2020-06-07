@@ -65,7 +65,7 @@ object LiquidBounce {
     var background: ResourceLocation? = null
 
     // Discord RPC
-    private lateinit var clientRichPresence: ClientRichPresence
+    lateinit var clientRichPresence: ClientRichPresence
 
     /**
      * Execute if client will be started

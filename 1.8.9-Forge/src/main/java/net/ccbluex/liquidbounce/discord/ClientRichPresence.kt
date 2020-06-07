@@ -30,7 +30,7 @@ class ClientRichPresence : MinecraftInstance() {
     private val timestamp = OffsetDateTime.now()
 
     // Status of running
-    private var running: Boolean = false
+    var running: Boolean = false
 
     /**
      * Setup Discord RPC
@@ -111,10 +111,12 @@ class ClientRichPresence : MinecraftInstance() {
      * Shutdown ipc client
      */
     fun shutdown() {
-        try {
-            ipcClient?.close()
-        } catch (e: Throwable) {
-            ClientUtils.getLogger().error("Failed to close Discord RPC.", e)
+        if (running) {
+            try {
+                ipcClient?.close()
+            } catch (e: Throwable) {
+                ClientUtils.getLogger().error("Failed to close Discord RPC.", e)
+            }
         }
     }
 
