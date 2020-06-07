@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.discord.DiscordRichPresence
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -15,29 +16,40 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 class DiscordRPC : Module() {
 
     init {
-        state = true
-        array = false
+        if (LiquidBounce.fileManager.firstStart) {
+            state = true
+            array = false
+        }
+    }
+
+    private fun enableDiscordRPC() {
+        val setupDiscordRPC = Thread {
+            try {
+                DiscordRichPresence.clientRichPresence.setup()
+                if (!state) {
+                    state = true
+                }
+            } catch (e: Throwable) {
+                ClientUtils.getLogger().error("Failed to enable Discord RPC module.", e)
+                state = false
+            }
+        }
+        setupDiscordRPC.start()
     }
 
     override fun onEnable() {
         try {
-            if (!LiquidBounce.clientRichPresence.running) {
-                val setupDiscordRPC = Thread {
-                    try {
-                        LiquidBounce.clientRichPresence.setup()
-                    } catch (e: Throwable) {
-                        ClientUtils.getLogger().error("Failed to enable Discord RPC module.", e)
-                    }
-                }
-                setupDiscordRPC.start()
+            if (!DiscordRichPresence.clientRichPresence.running) {
+                enableDiscordRPC()
             }
         } catch (e: Throwable) {
-            ClientUtils.getLogger().debug("Discord RPC not initialized yet.")
+            ClientUtils.getLogger().info("Initializing Discord RPC.")
+            enableDiscordRPC()
         }
     }
 
     override fun onDisable() {
-        LiquidBounce.clientRichPresence.shutdown()
+        DiscordRichPresence.clientRichPresence.shutdown()
     }
 
 }

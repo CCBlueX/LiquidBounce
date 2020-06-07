@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.cape.CapeAPI.registerCapeService
-import net.ccbluex.liquidbounce.discord.ClientRichPresence
+import net.ccbluex.liquidbounce.discord.DiscordRichPresence
 import net.ccbluex.liquidbounce.event.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -63,9 +63,6 @@ object LiquidBounce {
 
     // Menu Background
     var background: ResourceLocation? = null
-
-    // Discord RPC
-    lateinit var clientRichPresence: ClientRichPresence
 
     /**
      * Execute if client will be started
@@ -135,14 +132,6 @@ object LiquidBounce {
             ClientUtils.getLogger().error("Failed to register cape service", throwable)
         }
 
-        // Setup Discord RPC
-        try {
-            clientRichPresence = ClientRichPresence()
-            clientRichPresence.setup()
-        } catch (throwable: Throwable) {
-            ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
-        }
-
         // Set HUD
         hud = createDefault()
         fileManager.loadConfig(fileManager.hudConfig)
@@ -182,7 +171,7 @@ object LiquidBounce {
         fileManager.saveAllConfigs()
 
         // Shutdown discord rpc
-        clientRichPresence.shutdown()
+        DiscordRichPresence.clientRichPresence.shutdown()
     }
 
 }
