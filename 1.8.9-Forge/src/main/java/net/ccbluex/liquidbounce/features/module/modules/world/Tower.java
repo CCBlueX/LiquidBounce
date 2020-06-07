@@ -241,16 +241,23 @@ public class Tower extends Module {
             return;
 
         // AutoBlock
-        int blockSlot = -1;
+        int blockSlot = mc.thePlayer.inventory.currentItem + 36;
         ItemStack itemStack = mc.thePlayer.getHeldItem();
 
+        //Fixed 0 Item Bug
         if(mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock)) {
-            if(!autoBlockValue.get())
+
+            if (mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().stackSize <= 0) {
+                mc.thePlayer.inventory.removeStackFromSlot(mc.thePlayer.inventory.currentItem);
+            }
+
+            if (!autoBlockValue.get())
                 return;
+
 
             blockSlot = InventoryUtils.findAutoBlockBlock();
 
-            if(blockSlot == -1)
+            if (blockSlot == -1)
                 return;
 
             mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(blockSlot - 36));
@@ -260,7 +267,11 @@ public class Tower extends Module {
         // Place block
         if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, this.placeInfo.getBlockPos(),
                 placeInfo.getEnumFacing(), placeInfo.getVec3())) {
-            if(swingValue.get())
+            //Fixed 0 Item Bug
+            if (itemStack.stackSize <= 0)
+                mc.thePlayer.inventory.removeStackFromSlot(blockSlot - 36);
+
+            if (swingValue.get())
                 mc.thePlayer.swingItem();
             else
                 mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
@@ -378,9 +389,16 @@ public class Tower extends Module {
 
             final String info = "Blocks: §7" + getBlocksAmount();
             final ScaledResolution scaledResolution = new ScaledResolution(mc);
-            RenderUtils.drawBorderedRect((scaledResolution.getScaledWidth() / 2) - 2, (scaledResolution.getScaledHeight() / 2) + 5, (scaledResolution.getScaledWidth() / 2) + Fonts.font40.getStringWidth(info) + 2, (scaledResolution.getScaledHeight() / 2) + 16, 3, Color.BLACK.getRGB(), Color.BLACK.getRGB());
+
+            //Compromised operations, changed divisions to multiplications
+            float scaledWidthHalf = scaledResolution.getScaledWidth() * 0.5f;
+            float scaledWidthHeight = scaledResolution.getScaledHeight() * 0.5f;
+
+            RenderUtils.drawBorderedRect(scaledWidthHalf - 2, scaledWidthHeight + 5,
+                    scaledWidthHalf + Fonts.font40.getStringWidth(info) + 2, scaledWidthHeight + 16, 3,
+                    Color.BLACK.getRGB(), Color.BLACK.getRGB());
             GlStateManager.resetColor();
-            Fonts.font40.drawString(info, scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 2 + 7, Color.WHITE.getRGB());
+            Fonts.font40.drawString(info, scaledWidthHalf, scaledWidthHeight + 7, Color.WHITE.getRGB());
 
             GlStateManager.popMatrix();
         }

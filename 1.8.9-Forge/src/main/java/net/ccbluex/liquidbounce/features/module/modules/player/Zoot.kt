@@ -30,7 +30,8 @@ class Zoot : Module() {
             val effect = mc.thePlayer.activePotionEffects.maxBy { it.duration }
 
             if (effect != null) {
-                repeat(effect.duration / 20) {
+                //changed divisions to multiplications
+                repeat((effect.duration * 0.05f).toInt()) {
                     mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
                 }
             }

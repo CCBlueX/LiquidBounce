@@ -52,24 +52,34 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
         for(int i = 36; i < 45; i++) {
             final ItemStack itemStack = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
 
-            if(itemStack != null && itemStack.getItem() instanceof ItemBlock) {
+            //Fixed 0 Item Bug
+            if (itemStack != null && itemStack.getItem() instanceof ItemBlock && itemStack.stackSize > 0) {
                 final ItemBlock itemBlock = (ItemBlock) itemStack.getItem();
                 final Block block = itemBlock.getBlock();
 
                 if (block.isFullCube() && !BLOCK_BLACKLIST.contains(block))
                     return i;
+            } else if (itemStack != null && itemStack.stackSize <= 0) {
+                if (mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().stackSize <= 0) {
+                    mc.thePlayer.inventory.removeStackFromSlot(i - 36);
+                }
             }
         }
 
         for(int i = 36; i < 45; i++) {
             final ItemStack itemStack = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
 
-            if(itemStack != null && itemStack.getItem() instanceof ItemBlock) {
+            //Fixed 0 Item Bug
+            if (itemStack != null && itemStack.getItem() instanceof ItemBlock && itemStack.stackSize > 0) {
                 final ItemBlock itemBlock = (ItemBlock) itemStack.getItem();
                 final Block block = itemBlock.getBlock();
 
                 if (!BLOCK_BLACKLIST.contains(block))
                     return i;
+            } else if (itemStack != null && itemStack.stackSize <= 0) {
+                if (mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().stackSize <= 0) {
+                    mc.thePlayer.inventory.removeStackFromSlot(i - 36);
+                }
             }
         }
 

@@ -322,10 +322,17 @@ public class Scaffold extends Module {
         if (!delayTimer.hasTimePassed(delay) || (sameYValue.get() && launchY - 1 != (int) targetPlace.getVec3().yCoord))
             return;
 
-        int blockSlot = -1;
+        int blockSlot = mc.thePlayer.inventory.currentItem + 36;
         ItemStack itemStack = mc.thePlayer.getHeldItem();
 
-        if (mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock)) {
+        //Fixed 0 Item Bug
+        //If you are too fast you will fall down, because of the bug
+        if (mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) || mc.thePlayer.getHeldItem().stackSize <= 0) {
+
+            if (mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().stackSize <= 0) {
+                mc.thePlayer.inventory.removeStackFromSlot(mc.thePlayer.inventory.currentItem);
+            }
+
             if (!autoBlockValue.get())
                 return;
 
@@ -338,8 +345,14 @@ public class Scaffold extends Module {
             itemStack = mc.thePlayer.inventoryContainer.getSlot(blockSlot).getStack();
         }
 
+
         if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, targetPlace.getBlockPos(),
                 targetPlace.getEnumFacing(), targetPlace.getVec3())) {
+
+            //Fixed 0 Item Bug
+            if (itemStack.stackSize <= 0)
+                mc.thePlayer.inventory.removeStackFromSlot(blockSlot - 36);
+
             delayTimer.reset();
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 
@@ -421,9 +434,16 @@ public class Scaffold extends Module {
 
             final String info = "Blocks: §7" + getBlocksAmount();
             final ScaledResolution scaledResolution = new ScaledResolution(mc);
-            RenderUtils.drawBorderedRect((scaledResolution.getScaledWidth() / 2) - 2, (scaledResolution.getScaledHeight() / 2) + 5, (scaledResolution.getScaledWidth() / 2) + Fonts.font40.getStringWidth(info) + 2, (scaledResolution.getScaledHeight() / 2) + 16, 3, Color.BLACK.getRGB(), Color.BLACK.getRGB());
+
+            //Compromised operations, changed divisions to multiplications
+            float scaledWidthHalf = scaledResolution.getScaledWidth() * 0.5f;
+            float scaledWidthHeight = scaledResolution.getScaledHeight() * 0.5f;
+
+            RenderUtils.drawBorderedRect(scaledWidthHalf - 2, scaledWidthHeight + 5,
+                    scaledWidthHalf + Fonts.font40.getStringWidth(info) + 2, scaledWidthHeight + 16, 3,
+                    Color.BLACK.getRGB(), Color.BLACK.getRGB());
             GlStateManager.resetColor();
-            Fonts.font40.drawString(info, scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 2 + 7, Color.WHITE.getRGB());
+            Fonts.font40.drawString(info, scaledWidthHalf, scaledWidthHeight + 7, Color.WHITE.getRGB());
 
             GlStateManager.popMatrix();
         }

@@ -74,7 +74,10 @@ public class Breadcrumbs extends Module {
             return;
 
         synchronized (positions) {
-            positions.add(new double[]{mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY + (mc.thePlayer.getEyeHeight() / 2), mc.thePlayer.posZ});
+            //changed divisions to multiplications
+            positions.add(new double[]{mc.thePlayer.posX,
+                    mc.thePlayer.getEntityBoundingBox().minY + (mc.thePlayer.getEyeHeight() * 0.5f),
+                    mc.thePlayer.posZ});
             positions.add(new double[]{mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY, mc.thePlayer.posZ});
         }
         super.onEnable();

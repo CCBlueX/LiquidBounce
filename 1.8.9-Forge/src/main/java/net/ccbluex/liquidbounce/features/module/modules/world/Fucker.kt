@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
 import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -204,12 +203,44 @@ object Fucker : Module() {
     /**
      * Find new target block by [targetID]
      */
-    private fun find(targetID: Int) = searchBlocks(rangeValue.get().toInt() + 1)
-            .filter {
-                Block.getIdFromBlock(it.value) == targetID && getCenterDistance(it.key) <= rangeValue.get()
-                        && (isHitable(it.key) || surroundingsValue.get())
+    /*private fun find(targetID: Int) =
+        searchBlocks(rangeValue.get().toInt() + 1).filter {
+                    Block.getIdFromBlock(it.value) == targetID && getCenterDistance(it.key) <= rangeValue.get()
+                            && (isHitable(it.key) || surroundingsValue.get())
+                }.minBy { getCenterDistance(it.key) }?.key*/
+
+    //Removed triple iteration of blocks to improve speed
+    /**
+     * Find new target block by [targetID]
+     */
+    private fun find(targetID: Int): BlockPos? {
+        val radius = rangeValue.get().toInt() + 1
+
+        var nearestBlockDistance = Double.MAX_VALUE
+        var nearestBlock: BlockPos? = null
+
+        for (x in radius downTo -radius + 1) {
+            for (y in radius downTo -radius + 1) {
+                for (z in radius downTo -radius + 1) {
+                    val blockPos = BlockPos(mc.thePlayer.posX.toInt() + x, mc.thePlayer.posY.toInt() + y,
+                            mc.thePlayer.posZ.toInt() + z)
+                    val block = getBlock(blockPos) ?: continue
+
+                    if (Block.getIdFromBlock(block) != targetID) continue
+
+                    val distance = getCenterDistance(blockPos)
+                    if (distance > rangeValue.get()) continue
+                    if (nearestBlockDistance < distance) continue
+                    if (!isHitable(blockPos) && !surroundingsValue.get()) continue
+
+                    nearestBlockDistance = distance
+                    nearestBlock = blockPos
+                }
             }
-            .minBy { getCenterDistance(it.key) }?.key
+        }
+
+        return nearestBlock
+    }
 
     /**
      * Check if block is hitable (or allowed to hit through walls)
