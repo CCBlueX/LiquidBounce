@@ -31,6 +31,7 @@ public class Speed extends Module {
     private final SpeedMode[] speedModes = new SpeedMode[] {
             // NCP
             new NCPBHop(),
+            new NCPBHop2(),
             new NCPFHop(),
             new SNCPBHop(),
             new NCPHop(),
@@ -50,16 +51,24 @@ public class Speed extends Module {
             new AAC5BHop(),
             new AAC6BHop(),
             new AAC7BHop(),
+            new AAC3310BHop(),
             new AACHop3313(),
             new AACHop350(),
+            new AACHop4312(),
+            new AAC4Hop(),
+            new AAC4FastHop(),
             new AACLowHop(),
             new AACLowHop2(),
             new AACLowHop3(),
+            new AACLowHop4(),
+            new AACLowHop5(),
             new AACGround(),
             new AACGround2(),
             new AACYPort(),
             new AACYPort2(),
             new AACPort(),
+            new AACv4CustomHop(),
+            new AACv4CustomHop2(),
             new OldAACBHop(),
 
             // Spartan
@@ -70,6 +79,11 @@ public class Speed extends Module {
             new SpectreBHop(),
             new SpectreOnGround(),
             new TeleportCubeCraft(),
+
+            //Matrix
+            new MatrixHop(),
+            new CustomMatrixHop(),
+            new CustomMatrixHop2(),
 
             // Server
             new HiveHop(),
@@ -105,6 +119,14 @@ public class Speed extends Module {
 
     public final FloatValue portMax = new FloatValue("AAC-PortLength", 1, 1, 20);
     public final FloatValue aacGroundTimerValue = new FloatValue("AACGround-Timer", 3F, 1.1F, 10F);
+    public final FloatValue custommatrixHopTimerValue = new FloatValue("CustomMatrixHop-Timer1", 1.0F, 1.0F, 2.9F);
+    public final FloatValue custommatrixHopTimerValue2 = new FloatValue("CustomMatrixHop-Timer2", 0.6F, 0.3F, 1.1F);
+    public final FloatValue custommatrixHop2TimerValue = new FloatValue("CustomMatrixHop2-Timer2", 1.0F, 1.0F, 2.9F);
+    public final FloatValue custommatrixHop2TimerValue2 = new FloatValue("CustomMatrixHop2-Timer1", 0.6F, 0.3F, 1.1F);
+    public final FloatValue aac4customHopTimerValue = new FloatValue("AACv4CustomHop-Timer1", 1.0F, 1.0F, 3.4F);
+    public final FloatValue aac4customHopTimerValue2 = new FloatValue("AACv4CustomHop-Timer2", 0.4F, 0.2F, 1.0F);
+    public final FloatValue aac4customHop2TimerValue = new FloatValue("AACv4CustomHop2-Timer2", 1.0F, 1.0F, 3.4F);
+    public final FloatValue aac4customHop2TimerValue2 = new FloatValue("AACv4CustomHop2-Timer1", 0.4F, 0.2F, 1.0F);
     public final FloatValue cubecraftPortLengthValue = new FloatValue("CubeCraft-PortLength", 1F, 0.1F, 2F);
     public final FloatValue mineplexGroundSpeedValue = new FloatValue("MineplexGround-Speed", 0.5F, 0.1F, 1F);
 
