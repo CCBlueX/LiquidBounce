@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
+import net.ccbluex.liquidbounce.value.FloatValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
 import net.ccbluex.liquidbounce.value.ListValue;
 import net.minecraft.client.network.NetworkPlayerInfo;
@@ -36,6 +37,7 @@ public class AntiBot extends Module {
 
     private final BoolValue tabValue = new BoolValue("Tab", true);
     private final ListValue tabModeValue = new ListValue("TabMode", new String[] {"Equals", "Contains"}, "Contains");
+    private final ListValue tabMode2Value = new ListValue("TabMode2", new String[] {"Equals", "Contains"}, "Contains");
     private final BoolValue entityIDValue = new BoolValue("EntityID", true);
     private final BoolValue colorValue = new BoolValue("Color", false);
     private final BoolValue livingTimeValue = new BoolValue("LivingTime", false);
@@ -190,6 +192,25 @@ public class AntiBot extends Module {
             return true;
 
         if(antiBot.tabValue.get()) {
+            final boolean equals = antiBot.tabMode2Value.get().equalsIgnoreCase("Equals");
+            final String targetName = ColorUtils.stripColor(entity.getDisplayName().getFormattedText());
+
+            if (targetName != null) {
+                for (final NetworkPlayerInfo networkPlayerInfo : mc.getNetHandler().getPlayerInfoMap()) {
+                    final String networkName = ColorUtils.stripColor(EntityUtils.getName(networkPlayerInfo));
+
+                    if (networkName == null)
+                        continue;
+
+                    if (equals ? targetName.equals(networkName) : targetName.contains(networkName))
+                        return false;
+                }
+
+                return true;
+            }
+        }
+
+        if(antiBot.tabValue.get()) {
             final boolean equals = antiBot.tabModeValue.get().equalsIgnoreCase("Equals");
             final String targetName = ColorUtils.stripColor(entity.getDisplayName().getFormattedText());
 
@@ -225,5 +246,4 @@ public class AntiBot extends Module {
 
         return entity.getName().isEmpty() || entity.getName().equals(mc.thePlayer.getName());
     }
-
 }

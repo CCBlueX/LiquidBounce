@@ -20,7 +20,6 @@ import net.minecraft.client.network.NetworkPlayerInfo;
 
 @ModuleInfo(name = "NameProtect", description = "Changes playernames clientside.", category = ModuleCategory.MISC)
 public class NameProtect extends Module {
-
     private final TextValue fakeNameValue = new TextValue("FakeName", "&cMe");
     public final BoolValue allPlayersValue = new BoolValue("AllPlayers", false);
     public final BoolValue skinProtectValue = new BoolValue("SkinProtect", true);
@@ -42,5 +41,4 @@ public class NameProtect extends Module {
             for(final NetworkPlayerInfo playerInfo : mc.getNetHandler().getPlayerInfoMap())
                 event.setText(StringUtils.replace(event.getText(), playerInfo.getGameProfile().getName(), "Protected User"));
     }
-
 }
