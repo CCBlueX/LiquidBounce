@@ -89,7 +89,7 @@ public class AntiBot extends Module {
                         invalidGround.put(entity.getEntityId(), invalidGround.getOrDefault(entity.getEntityId(), 0) + 1);
                 }else{
                     //changed divisions to multiplications
-                    final int currentVL = (int) (invalidGround.getOrDefault(entity.getEntityId(), 0) * 0.5f);
+                    final int currentVL = invalidGround.getOrDefault(entity.getEntityId(), 0) / 2;
 
                     if (currentVL <= 0)
                         invalidGround.remove(entity.getEntityId());

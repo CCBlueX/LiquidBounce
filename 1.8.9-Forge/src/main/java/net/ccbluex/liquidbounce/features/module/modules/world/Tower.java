@@ -390,15 +390,13 @@ public class Tower extends Module {
             final String info = "Blocks: §7" + getBlocksAmount();
             final ScaledResolution scaledResolution = new ScaledResolution(mc);
 
-            //Compromised operations, changed divisions to multiplications
-            float scaledWidthHalf = scaledResolution.getScaledWidth() * 0.5f;
-            float scaledWidthHeight = scaledResolution.getScaledHeight() * 0.5f;
-
-            RenderUtils.drawBorderedRect(scaledWidthHalf - 2, scaledWidthHeight + 5,
-                    scaledWidthHalf + Fonts.font40.getStringWidth(info) + 2, scaledWidthHeight + 16, 3,
-                    Color.BLACK.getRGB(), Color.BLACK.getRGB());
+            RenderUtils.drawBorderedRect((scaledResolution.getScaledWidth() / 2) - 2,
+                    (scaledResolution.getScaledHeight() / 2) + 5,
+                    (scaledResolution.getScaledWidth() / 2) + Fonts.font40.getStringWidth(info) + 2,
+                    (scaledResolution.getScaledHeight() / 2) + 16, 3, Color.BLACK.getRGB(), Color.BLACK.getRGB());
             GlStateManager.resetColor();
-            Fonts.font40.drawString(info, scaledWidthHalf, scaledWidthHeight + 7, Color.WHITE.getRGB());
+            Fonts.font40.drawString(info, scaledResolution.getScaledWidth() / 2,
+                    scaledResolution.getScaledHeight() / 2 + 7, Color.WHITE.getRGB());
 
             GlStateManager.popMatrix();
         }

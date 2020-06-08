@@ -249,9 +249,8 @@ class KillAura : Module() {
                         strafe *= f
                         forward *= f
 
-                        val ya = (yaw * Math.PI / 180F).toFloat()
-                        val yawSin = MathHelper.sin(ya)
-                        val yawCos = MathHelper.cos(ya)
+                        val yawSin = MathHelper.sin((yaw * Math.PI / 180F).toFloat())
+                        val yawCos = MathHelper.cos((yaw * Math.PI / 180F).toFloat())
 
                         mc.thePlayer.motionX += strafe * yawCos - forward * yawSin
                         mc.thePlayer.motionZ += forward * yawCos + strafe * yawSin
@@ -580,7 +579,7 @@ class KillAura : Module() {
         val (_, rotation) = RotationUtils.searchCenter(
                 boundingBox,
                 //changed divisions to multiplications
-                outborderValue.get() && !attackTimer.hasTimePassed((attackDelay * 0.5f).toLong()),
+                outborderValue.get() && !attackTimer.hasTimePassed(attackDelay / 2),
                 randomCenterValue.get(),
                 predictValue.get(),
                 mc.thePlayer.getDistanceToEntityBox(entity) < throughWallsRangeValue.get()

@@ -60,9 +60,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
                 if (block.isFullCube() && !BLOCK_BLACKLIST.contains(block))
                     return i;
             } else if (itemStack != null && itemStack.stackSize <= 0) {
-                if (mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().stackSize <= 0) {
                     mc.thePlayer.inventory.removeStackFromSlot(i - 36);
-                }
             }
         }
 
@@ -77,9 +75,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
                 if (!BLOCK_BLACKLIST.contains(block))
                     return i;
             } else if (itemStack != null && itemStack.stackSize <= 0) {
-                if (mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().stackSize <= 0) {
                     mc.thePlayer.inventory.removeStackFromSlot(i - 36);
-                }
             }
         }
 

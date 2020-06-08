@@ -85,19 +85,15 @@ class BlockOverlay : Module() {
             val info = "${block.localizedName} §7ID: ${Block.getIdFromBlock(block)}"
             val scaledResolution = ScaledResolution(mc)
 
-            //Changed division of two to multiplication with 0.5
-            val scaledWidthHalf = scaledResolution.scaledWidth * 0.5f
-            val scaledHeightHalf = scaledResolution.scaledHeight * 0.5f
             RenderUtils.drawBorderedRect(
-                    scaledWidthHalf - 2F,
-                    scaledHeightHalf + 5F,
-                    scaledWidthHalf + Fonts.font40.getStringWidth(info) + 2F,
-                    scaledHeightHalf + 16F,
+                    scaledResolution.scaledWidth / 2 - 2F,
+                    scaledResolution.scaledHeight / 2 + 5F,
+                    scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2F,
+                    scaledResolution.scaledHeight / 2 + 16F,
                     3F, Color.BLACK.rgb, Color.BLACK.rgb
             )
             GlStateManager.resetColor()
-            Fonts.font40.drawString(info, scaledWidthHalf, scaledHeightHalf + 7,
-                    Color.WHITE.rgb)
+            Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2, scaledResolution.scaledHeight / 2 + 7, Color.WHITE.rgb)
         }
     }
 }
