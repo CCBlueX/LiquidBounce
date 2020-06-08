@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.ClickWindowEvent
 import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -16,13 +17,20 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.client.gui.GuiChat
 import net.minecraft.client.gui.GuiIngameMenu
 import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.client.settings.GameSettings
+import net.minecraft.network.play.client.C0BPacketEntityAction
+import net.minecraft.network.play.client.C16PacketClientStatus
+import net.minecraft.network.play.server.S2EPacketCloseWindow
 
 @ModuleInfo(name = "InventoryMove", description = "Allows you to walk while an inventory is opened.", category = ModuleCategory.MOVEMENT)
 class InventoryMove : Module() {
 
     private val noDetectableValue = BoolValue("NoDetectable", false)
     val aacAdditionProValue = BoolValue("AACAdditionPro", false)
+    val matrixValue = BoolValue("Matrix", false)
+    private val tagValue = BoolValue("Tag", true)
+    private val dontClose = BoolValue("NoClose", true)
     private val noMoveClicksValue = BoolValue("NoMoveClicks", false)
 
     @EventTarget
@@ -34,6 +42,30 @@ class InventoryMove : Module() {
             mc.gameSettings.keyBindLeft.pressed = GameSettings.isKeyDown(mc.gameSettings.keyBindLeft)
             mc.gameSettings.keyBindJump.pressed = GameSettings.isKeyDown(mc.gameSettings.keyBindJump)
             mc.gameSettings.keyBindSprint.pressed = GameSettings.isKeyDown(mc.gameSettings.keyBindSprint)
+        }
+    }
+
+    @EventTarget
+    fun onPacket(event: PacketEvent) {
+        val packet = event.packet
+
+        if (packet is S2EPacketCloseWindow && dontClose.get() && mc.currentScreen is GuiInventory) {
+            event.cancelEvent()
+
+            if (matrixValue.get()) {
+                if (event.packet is C0BPacketEntityAction) {
+                    val act = event.packet.action
+                    if (act == C0BPacketEntityAction.Action.OPEN_INVENTORY) {
+                        event.cancelEvent()
+                    }
+                }
+                if (event.packet is C16PacketClientStatus) {
+                    val st = event.packet.status
+                    if (st == C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT) {
+                        event.cancelEvent()
+                    }
+                }
+            }
         }
     }
 
@@ -59,5 +91,5 @@ class InventoryMove : Module() {
     }
 
     override val tag: String?
-        get() = if (aacAdditionProValue.get()) "AACAdditionPro" else null
+        get() = if (tagValue.get()) "Basic" else null
 }

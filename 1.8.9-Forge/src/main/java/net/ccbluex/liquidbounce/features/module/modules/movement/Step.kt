@@ -30,11 +30,12 @@ class Step : Module() {
      */
 
     private val modeValue = ListValue("Mode", arrayOf(
-            "Vanilla", "Jump", "NCP", "MotionNCP", "OldNCP", "AAC", "LAAC", "AAC3.3.4", "Spartan", "Rewinside"
+            "Vanilla", "Jump", "NCP", "MotionNCP", "OldNCP", "AAC", "LAAC", "AAC3.3.4", "AAC3.3.15", "AAC4.3.10", "AAC3.6.4", "Spartan", "Rewinside"
     ), "NCP")
 
     private val heightValue = FloatValue("Height", 1F, 0.6F, 10F)
     private val jumpHeightValue = FloatValue("JumpHeight", 0.42F, 0.37F, 0.42F)
+    private val aac4310HeightValue = FloatValue("AAC4.3.10Height", 0.42F, 0.42F, 0.55F)
     private val delayValue = IntegerValue("Delay", 0, 0, 500)
 
     /**
@@ -101,11 +102,43 @@ class Step : Module() {
                 if (isAACStep) {
                     mc.thePlayer.motionY -= 0.015
 
-                    if(!mc.thePlayer.isUsingItem && mc.thePlayer.movementInput.moveStrafe == 0F)
+                    if (!mc.thePlayer.isUsingItem && mc.thePlayer.movementInput.moveStrafe == 0F)
                         mc.thePlayer.jumpMovementFactor = 0.3F
                 }
             } else
                 isAACStep = false
+
+            mode.equals("aac4.3.10", true) && mc.thePlayer.isCollidedHorizontally && mc.thePlayer.onGround
+                    && !mc.gameSettings.keyBindJump.isKeyDown -> {
+                fakeJump()
+                mc.thePlayer.motionY = aac4310HeightValue.get().toDouble()
+                isAACStep = true
+            }
+
+            mode.equals("aac3.3.15", true) -> if (mc.thePlayer.isCollidedHorizontally
+                    && MovementUtils.isMoving()) {
+                if (mc.thePlayer.onGround && couldStep()) {
+                    mc.thePlayer.motionX *= 0.43
+                    mc.thePlayer.motionZ *= 0.43
+                    mc.thePlayer.jump()
+                    isAACStep = true
+                }
+
+                if (isAACStep) {
+                    mc.thePlayer.motionY -= 0.015
+
+                    if (!mc.thePlayer.isUsingItem && mc.thePlayer.movementInput.moveStrafe == 0F)
+                        mc.thePlayer.jumpMovementFactor = 0.3F
+                }
+            } else
+                isAACStep = true
+
+            mode.equals("aac3.6.4", true) && mc.thePlayer.isCollidedHorizontally && mc.thePlayer.onGround
+                    && !mc.gameSettings.keyBindJump.isKeyDown -> {
+                fakeJump()
+                mc.thePlayer.motionY += 0.4722F;
+                isAACStep = true
+            }
         }
     }
 
@@ -173,7 +206,7 @@ class Step : Module() {
         // Set step to default in some cases
         if (!mc.thePlayer.onGround || !timer.hasTimePassed(delayValue.get().toLong()) ||
                 mode.equals("Jump", ignoreCase = true) || mode.equals("MotionNCP", ignoreCase = true)
-                || mode.equals("LAAC", ignoreCase = true) || mode.equals("AAC3.3.4", ignoreCase = true)) {
+                || mode.equals("LAAC", ignoreCase = true) || mode.equals("AAC3.6.4", ignoreCase = true) || mode.equals("AAC4.3.10", ignoreCase = true) || mode.equals("AAC3.3.4", ignoreCase = true)) {
             mc.thePlayer.stepHeight = 0.5F
             event.stepHeight = 0.5F
             return

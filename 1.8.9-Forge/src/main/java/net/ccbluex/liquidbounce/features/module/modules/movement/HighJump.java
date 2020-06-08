@@ -34,7 +34,7 @@ public class HighJump extends Module {
 
         switch(modeValue.get().toLowerCase()) {
             case "damage":
-                if(mc.thePlayer.hurtTime > 0 && mc.thePlayer.onGround)
+                if (mc.thePlayer.hurtTime > 0 && mc.thePlayer.onGround)
                     mc.thePlayer.motionY += 0.42F * heightValue.get();
                 break;
             case "aacv3":
