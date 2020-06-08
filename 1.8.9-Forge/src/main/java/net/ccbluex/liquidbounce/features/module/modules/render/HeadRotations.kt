@@ -17,25 +17,25 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.BowAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
 @ModuleInfo(name = "HeadRotations", description = "Allows you to see server-sided head and body rotations.", category = ModuleCategory.RENDER)
 class HeadRotations : Module() {
 
-    private val modeValue = ListValue("Mode", arrayOf("Head", "Body"), "Head")
+    private val bodyValue = BoolValue("Body", true)
     private var playerYaw: Float? = null
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        if (RotationUtils.serverRotation != null && modeValue.get().equals("Head"))
+        if (RotationUtils.serverRotation != null && !bodyValue.get())
             mc.thePlayer.rotationYawHead = RotationUtils.serverRotation.yaw
     }
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (!modeValue.get().equals("Body") || !shouldRotate()) return
+        if (!bodyValue.get() || !shouldRotate()) return
         val packet = event.packet
         if (packet is C03PacketPlayer.C06PacketPlayerPosLook || packet is C03PacketPlayer.C05PacketPlayerLook || packet is S08PacketPlayerPosLook) {
             playerYaw = (packet as C03PacketPlayer).yaw
