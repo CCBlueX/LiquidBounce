@@ -36,7 +36,7 @@ import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
 
-@ModuleInfo(name = "Tower", description = "Automatically builds a tower beneath you.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_O)
+@ModuleInfo(name = "Tower", description = "Automatically builds a tower beneath you.", category = ModuleCategory.WORLD)
 public class Tower extends Module {
 
     /**
@@ -44,7 +44,7 @@ public class Tower extends Module {
      */
 
     private final ListValue modeValue = new ListValue("Mode", new String[] {
-            "Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4"
+            "Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4", "AACv4"
     }, "Motion");
     private final BoolValue autoBlockValue = new BoolValue("AutoBlock", true);
     private final BoolValue stayAutoBlock = new BoolValue("StayAutoBlock", false);
@@ -60,6 +60,8 @@ public class Tower extends Module {
     // Jump mode
     private final FloatValue jumpMotionValue = new FloatValue("JumpMotion", 0.42F, 0.3681289F, 0.79F);
     private final IntegerValue jumpDelayValue = new IntegerValue("JumpDelay", 0, 0, 20);
+    private final IntegerValue aacv4JumpDelayValue = new IntegerValue("AACv4JumpDelay", 0, 0, 7);
+
 
     // ConstantMotion
     private final FloatValue constantMotionValue = new FloatValue("ConstantMotion", 0.42F, 0.1F, 1F);
@@ -158,6 +160,13 @@ public class Tower extends Module {
                 if (mc.thePlayer.onGround && timer.hasTimePassed(jumpDelayValue.get())) {
                     fakeJump();
                     mc.thePlayer.motionY = jumpMotionValue.get();
+                    timer.reset();
+                }
+                break;
+            case "aacv4":
+                if (mc.thePlayer.onGround && timer.hasTimePassed(aacv4JumpDelayValue.get())) {
+                    fakeJump();
+                    mc.thePlayer.motionY = 0.388F;
                     timer.reset();
                 }
                 break;

@@ -37,7 +37,7 @@ import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
 
-@ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_I)
+@ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD)
 public class Scaffold extends Module {
 
     /**
@@ -77,7 +77,7 @@ public class Scaffold extends Module {
     public final BoolValue sprintValue = new BoolValue("Sprint", true);
     private final BoolValue swingValue = new BoolValue("Swing", true);
     private final BoolValue searchValue = new BoolValue("Search", true);
-    private final BoolValue downValue = new BoolValue("Down", true);
+    private final BoolValue downValue = new BoolValue("Downwards", true);
     private final ListValue placeModeValue = new ListValue("PlaceTiming", new String[]{"Pre", "Post"}, "Post");
 
     // Eagle
