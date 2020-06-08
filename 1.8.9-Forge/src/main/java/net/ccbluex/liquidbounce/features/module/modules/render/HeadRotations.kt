@@ -23,7 +23,7 @@ import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
 
 @ModuleInfo(name = "HeadRotations", description = "Allows you to see server-sided head and body rotations.", category = ModuleCategory.RENDER)
-class PlayerRoation : Module() {
+class HeadRotations : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Head", "Body"), "Head")
 
