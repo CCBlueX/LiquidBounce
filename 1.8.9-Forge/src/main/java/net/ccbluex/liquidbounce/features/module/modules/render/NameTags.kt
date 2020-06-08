@@ -15,7 +15,8 @@ import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.*
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
@@ -39,8 +40,25 @@ class NameTags : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        for(entity in mc.theWorld.loadedEntityList) {
-            if(!EntityUtils.isSelected(entity, false))
+        val renderManager = mc.renderManager
+
+        glPushAttrib(GL_ENABLE_BIT)
+        glPushMatrix()
+
+        // Disable lightning and depth test
+        glDisable(GL_LIGHTING)
+        glDisable(GL_DEPTH_TEST)
+
+        glEnable(GL_LINE_SMOOTH)
+
+        // Enable blend
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        val nanoTime = System.nanoTime()
+
+        for (entity in mc.theWorld.loadedEntityList) {
+            if (!EntityUtils.isSelected(entity, false))
                 continue
 
             renderNameTag(entity as EntityLivingBase,
@@ -50,6 +68,15 @@ class NameTags : Module() {
                         entity.getDisplayName().unformattedText
             )
         }
+
+        glPopMatrix()
+        glPopAttrib()
+
+        // Reset color
+        resetColor()
+        glColor4f(1F, 1F, 1F, 1F)
+
+        println("${((System.nanoTime() - nanoTime) / 1000)}us")
     }
 
     private fun renderNameTag(entity: EntityLivingBase, tag: String) {
@@ -71,8 +98,9 @@ class NameTags : Module() {
         glPushMatrix()
 
         // Translate to player position
-        val renderManager = mc.renderManager
         val timer = mc.timer
+        val renderManager = mc.renderManager
+
 
         glTranslated( // Translate to player position with render pos and interpolate it
                 entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX,
@@ -80,7 +108,6 @@ class NameTags : Module() {
                 entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
         )
 
-        // Rotate view to player
         glRotatef(-mc.renderManager.playerViewY, 0F, 1F, 0F)
         glRotatef(mc.renderManager.playerViewX, 1F, 0F, 0F)
 
@@ -95,24 +122,21 @@ class NameTags : Module() {
 
         glScalef(-scale, -scale, scale)
 
-        // Disable lightning and depth test
-        disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
-
-        // Enable blend
-        enableGlCap(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-
         AWTFontRenderer.assumeNonVolatile = true
 
         // Draw NameTag
         val width = fontRenderer.getStringWidth(text) * 0.5f
+
+        glDisable(GL_TEXTURE_2D)
+        glEnable(GL_BLEND)
+
         if (borderValue.get())
-            drawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F, 2F,
-                    Color(255, 255, 255, 90).rgb, Integer.MIN_VALUE)
+            quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F, 2F, Color(255, 255, 255, 90).rgb, Integer.MIN_VALUE)
         else
-            drawRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F,
-                    Integer.MIN_VALUE)
+            quickDrawRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F, Integer.MIN_VALUE)
+
+        glEnable(GL_TEXTURE_2D)
+
         fontRenderer.drawString(text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F,
                 0xFFFFFF, true)
 
@@ -131,13 +155,6 @@ class NameTags : Module() {
             disableBlend()
             enableTexture2D()
         }
-
-        // Reset caps
-        resetCaps()
-
-        // Reset color
-        resetColor()
-        glColor4f(1F, 1F, 1F, 1F)
 
         // Pop
         glPopMatrix()
