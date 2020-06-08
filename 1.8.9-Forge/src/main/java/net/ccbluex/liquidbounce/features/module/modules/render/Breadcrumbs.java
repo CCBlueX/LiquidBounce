@@ -74,7 +74,6 @@ public class Breadcrumbs extends Module {
             return;
 
         synchronized (positions) {
-            //changed divisions to multiplications
             positions.add(new double[]{mc.thePlayer.posX,
                     mc.thePlayer.getEntityBoundingBox().minY + (mc.thePlayer.getEyeHeight() * 0.5f),
                     mc.thePlayer.posZ});

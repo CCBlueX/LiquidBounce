@@ -73,7 +73,6 @@ class FastUse : Module() {
                 }
 
                 "customdelay" -> {
-                    //Added customspeed and customtimer value to customdelay
                     mc.timer.timerSpeed = customTimer.get()
                     usedTimer = true
 
