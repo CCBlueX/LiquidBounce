@@ -53,7 +53,6 @@ class NameTags : Module() {
     }
 
     private fun renderNameTag(entity: EntityLivingBase, tag: String) {
-        // Set fontrenderer local
         val fontRenderer = fontValue.get()
 
         // Modify tag
@@ -85,13 +84,14 @@ class NameTags : Module() {
         glRotatef(-mc.renderManager.playerViewY, 0F, 1F, 0F)
         glRotatef(mc.renderManager.playerViewX, 1F, 0F, 0F)
 
+
         // Scale
-        var distance = mc.thePlayer.getDistanceToEntity(entity) / 4F
+        var distance = mc.thePlayer.getDistanceToEntity(entity) * 0.25f
 
         if (distance < 1F)
             distance = 1F
 
-        val scale = distance / 100F * scaleValue.get()
+        val scale = distance / 100f * scaleValue.get()
 
         glScalef(-scale, -scale, scale)
 
@@ -105,8 +105,8 @@ class NameTags : Module() {
 
         AWTFontRenderer.assumeNonVolatile = true
 
-        // Draw nametag
-        val width = fontRenderer.getStringWidth(text) / 2
+        // Draw NameTag
+        val width = fontRenderer.getStringWidth(text) * 0.5f
         if (borderValue.get())
             drawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F, 2F,
                     Color(255, 255, 255, 90).rgb, Integer.MIN_VALUE)

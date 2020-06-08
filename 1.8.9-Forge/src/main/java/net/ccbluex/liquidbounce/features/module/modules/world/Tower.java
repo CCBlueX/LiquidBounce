@@ -245,12 +245,13 @@ public class Tower extends Module {
         ItemStack itemStack = mc.thePlayer.getHeldItem();
 
         if(mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock)) {
-            if(!autoBlockValue.get())
+            if (!autoBlockValue.get())
                 return;
+
 
             blockSlot = InventoryUtils.findAutoBlockBlock();
 
-            if(blockSlot == -1)
+            if (blockSlot == -1)
                 return;
 
             mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(blockSlot - 36));
@@ -258,13 +259,13 @@ public class Tower extends Module {
         }
 
         // Place block
-        if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, this.placeInfo.getBlockPos(),
-                placeInfo.getEnumFacing(), placeInfo.getVec3())) {
-            if(swingValue.get())
+        if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, this.placeInfo.getBlockPos(), placeInfo.getEnumFacing(), placeInfo.getVec3())) {
+            if (swingValue.get())
                 mc.thePlayer.swingItem();
             else
                 mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
         }
+
         this.placeInfo = null;
 
         // Switch back to old slot when using auto block
@@ -378,9 +379,14 @@ public class Tower extends Module {
 
             final String info = "Blocks: §7" + getBlocksAmount();
             final ScaledResolution scaledResolution = new ScaledResolution(mc);
-            RenderUtils.drawBorderedRect((scaledResolution.getScaledWidth() / 2) - 2, (scaledResolution.getScaledHeight() / 2) + 5, (scaledResolution.getScaledWidth() / 2) + Fonts.font40.getStringWidth(info) + 2, (scaledResolution.getScaledHeight() / 2) + 16, 3, Color.BLACK.getRGB(), Color.BLACK.getRGB());
+
+            RenderUtils.drawBorderedRect((scaledResolution.getScaledWidth() / 2) - 2,
+                    (scaledResolution.getScaledHeight() / 2) + 5,
+                    (scaledResolution.getScaledWidth() / 2) + Fonts.font40.getStringWidth(info) + 2,
+                    (scaledResolution.getScaledHeight() / 2) + 16, 3, Color.BLACK.getRGB(), Color.BLACK.getRGB());
             GlStateManager.resetColor();
-            Fonts.font40.drawString(info, scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 2 + 7, Color.WHITE.getRGB());
+            Fonts.font40.drawString(info, scaledResolution.getScaledWidth() / 2,
+                    scaledResolution.getScaledHeight() / 2 + 7, Color.WHITE.getRGB());
 
             GlStateManager.popMatrix();
         }

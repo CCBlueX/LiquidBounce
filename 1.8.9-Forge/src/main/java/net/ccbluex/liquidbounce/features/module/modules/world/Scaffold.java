@@ -325,7 +325,7 @@ public class Scaffold extends Module {
         int blockSlot = -1;
         ItemStack itemStack = mc.thePlayer.getHeldItem();
 
-        if (mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock)) {
+        if (mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) || mc.thePlayer.getHeldItem().stackSize <= 0) {
             if (!autoBlockValue.get())
                 return;
 
@@ -338,8 +338,8 @@ public class Scaffold extends Module {
             itemStack = mc.thePlayer.inventoryContainer.getSlot(blockSlot).getStack();
         }
 
-        if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, targetPlace.getBlockPos(),
-                targetPlace.getEnumFacing(), targetPlace.getVec3())) {
+
+        if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, targetPlace.getBlockPos(), targetPlace.getEnumFacing(), targetPlace.getVec3())) {
             delayTimer.reset();
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 
@@ -421,9 +421,14 @@ public class Scaffold extends Module {
 
             final String info = "Blocks: §7" + getBlocksAmount();
             final ScaledResolution scaledResolution = new ScaledResolution(mc);
-            RenderUtils.drawBorderedRect((scaledResolution.getScaledWidth() / 2) - 2, (scaledResolution.getScaledHeight() / 2) + 5, (scaledResolution.getScaledWidth() / 2) + Fonts.font40.getStringWidth(info) + 2, (scaledResolution.getScaledHeight() / 2) + 16, 3, Color.BLACK.getRGB(), Color.BLACK.getRGB());
+
+            RenderUtils.drawBorderedRect((scaledResolution.getScaledWidth() / 2) - 2,
+                    (scaledResolution.getScaledHeight() / 2) + 5,
+                    (scaledResolution.getScaledWidth() / 2) + Fonts.font40.getStringWidth(info) + 2,
+                    (scaledResolution.getScaledHeight() / 2) + 16, 3, Color.BLACK.getRGB(), Color.BLACK.getRGB());
             GlStateManager.resetColor();
-            Fonts.font40.drawString(info, scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 2 + 7, Color.WHITE.getRGB());
+            Fonts.font40.drawString(info, scaledResolution.getScaledWidth() / 2,
+                    scaledResolution.getScaledHeight() / 2 + 7, Color.WHITE.getRGB());
 
             GlStateManager.popMatrix();
         }

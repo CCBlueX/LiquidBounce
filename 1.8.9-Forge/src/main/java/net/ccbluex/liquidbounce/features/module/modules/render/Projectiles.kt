@@ -86,18 +86,21 @@ class Projectiles : Module() {
         else
             mc.thePlayer.rotationPitch
 
+        val yawRadians = yaw / 180f * Math.PI.toFloat()
+        val pitchRadians = pitch / 180f * Math.PI.toFloat()
+
         // Positions
-        var posX = renderManager.renderPosX - MathHelper.cos(yaw / 180F * 3.1415927F) * 0.16F
+        var posX = renderManager.renderPosX - MathHelper.cos(yawRadians) * 0.16F
         var posY = renderManager.renderPosY + mc.thePlayer.getEyeHeight() - 0.10000000149011612
-        var posZ = renderManager.renderPosZ - MathHelper.sin(yaw / 180F * 3.1415927F) * 0.16F
+        var posZ = renderManager.renderPosZ - MathHelper.sin(yawRadians) * 0.16F
 
         // Motions
-        var motionX = (-MathHelper.sin(yaw / 180f * 3.1415927F) * MathHelper.cos(pitch / 180F * 3.1415927F)
+        var motionX = (-MathHelper.sin(yawRadians) * MathHelper.cos(pitchRadians)
                 * if (isBow) 1.0 else 0.4)
         var motionY = -MathHelper.sin((pitch +
                 if (item is ItemPotion && ItemPotion.isSplash(mc.thePlayer.heldItem.itemDamage)) -20 else 0)
                 / 180f * 3.1415927f) * if (isBow) 1.0 else 0.4
-        var motionZ = (MathHelper.cos(yaw / 180f * 3.1415927F) * MathHelper.cos(pitch / 180F * 3.1415927F)
+        var motionZ = (MathHelper.cos(yawRadians) * MathHelper.cos(pitchRadians)
                 * if (isBow) 1.0 else 0.4)
         val distance = MathHelper.sqrt_double(motionX * motionX + motionY * motionY + motionZ * motionZ)
 
@@ -149,6 +152,7 @@ class Projectiles : Module() {
             // Set arrow box
             val arrowBox = AxisAlignedBB(posX - size, posY - size, posZ - size, posX + size,
                     posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
+
             val chunkMinX = MathHelper.floor_double((arrowBox.minX - 2.0) / 16.0)
             val chunkMaxX = MathHelper.floor_double((arrowBox.maxX + 2.0) / 16.0)
             val chunkMinZ = MathHelper.floor_double((arrowBox.minZ - 2.0) / 16.0)
