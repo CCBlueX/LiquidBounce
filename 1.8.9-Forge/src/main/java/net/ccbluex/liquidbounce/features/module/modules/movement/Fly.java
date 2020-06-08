@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
+import net.ccbluex.liquidbounce.utils.GlideUtils;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
@@ -30,12 +31,14 @@ import org.lwjgl.input.Keyboard;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.concurrent.atomic.AtomicReference;
 
-@ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F)
+@ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT)
 public class Fly extends Module {
 
     public final ListValue modeValue = new ListValue("Mode", new String[]{
             "Vanilla",
+            "GlideVanilla",
             "SmoothVanilla",
 
             // NCP
@@ -49,6 +52,7 @@ public class Fly extends Module {
             "AAC3.3.12",
             "AAC3.3.12-Glide",
             "AAC3.3.13",
+            "Matrix-Glide",
 
             // CubeCraft
             "CubeCraft",
@@ -61,6 +65,11 @@ public class Fly extends Module {
             // Rewinside
             "Rewinside",
             "TeleportRewinside",
+
+            //LibreCraft
+            "LibreCraft",
+            "LibreCraft2",
+            "LibreCraft3",
 
             // Other server specific flys
             "Mineplex",
@@ -138,6 +147,14 @@ public class Fly extends Module {
 
     private final TickTimer cubecraft2TickTimer = new TickTimer();
     private final TickTimer cubecraftTeleportTickTimer = new TickTimer();
+
+    private final TickTimer cubecraft2TickTimer2 = new TickTimer();
+    private final TickTimer cubecraftTeleportTickTimer2 = new TickTimer();
+
+    private final TickTimer aac335TickTimer = new TickTimer();
+
+    private final TickTimer cubecraft2TickTimer3 = new TickTimer();
+    private final TickTimer cubecraftTeleportTickTimer3 = new TickTimer();
 
     private final TickTimer freeHypixelTimer = new TickTimer();
     private float freeHypixelYaw;
@@ -252,7 +269,7 @@ public class Fly extends Module {
 
         final String mode = modeValue.get();
 
-        if (!mode.toUpperCase().startsWith("AAC") && !mode.equalsIgnoreCase("Hypixel") &&
+        if (!mode.toUpperCase().startsWith("AAC") && !mode.equalsIgnoreCase("CubeCraft2") && !mode.equalsIgnoreCase("InfiniteCubeCraft") && !mode.equalsIgnoreCase("Hypixel") &&
                 !mode.equalsIgnoreCase("CubeCraft")) {
             mc.thePlayer.motionX = 0;
             mc.thePlayer.motionY = 0;
@@ -282,6 +299,17 @@ public class Fly extends Module {
 
                 handleVanillaKickBypass();
                 break;
+            case "glidevanilla":
+                mc.thePlayer.capabilities.isFlying = false;
+                mc.thePlayer.motionY = -0.20;
+                mc.thePlayer.motionX = 0;
+                mc.thePlayer.motionZ = 0;
+                if (mc.gameSettings.keyBindJump.isKeyDown())
+                    mc.thePlayer.motionY += vanillaSpeed;
+                if (mc.gameSettings.keyBindSneak.isKeyDown())
+                    mc.thePlayer.motionY -= vanillaSpeed;
+                MovementUtils.strafe(vanillaSpeed);
+                break;
             case "smoothvanilla":
                 mc.thePlayer.capabilities.isFlying = true;
 
@@ -291,6 +319,16 @@ public class Fly extends Module {
                 mc.timer.timerSpeed = 0.6F;
 
                 cubecraftTeleportTickTimer.update();
+                break;
+            case "infinitecubecraft":
+                mc.timer.timerSpeed = 0.3F;
+                mc.thePlayer.motionY = mc.thePlayer.motionY <= -0.42 ? 0.42 : -0.42;
+
+                cubecraftTeleportTickTimer3.update();
+            case "cubecraft2":
+                mc.timer.timerSpeed = 0.4F;
+
+                cubecraftTeleportTickTimer2.update();
                 break;
             case "ncp":
                 mc.thePlayer.motionY = -ncpMotionValue.get();
@@ -339,6 +377,19 @@ public class Fly extends Module {
                 }
 
                 aac3delay++;
+                break;
+            case "matrix-glide":
+                if(mc.thePlayer.onGround) {
+                    mc.timer.timerSpeed = 1.0F;
+                } else {
+                    if (mc.thePlayer.fallDistance > 3.0F) {
+                        mc.thePlayer.motionY = 0.0F;
+                        mc.thePlayer.onGround = false;
+                        mc.thePlayer.fallDistance = 0.0F;
+
+                        mc.timer.timerSpeed = 0.79F;
+                    }
+                }
                 break;
             case "aac3.1.6-gomme":
                 mc.thePlayer.capabilities.isFlying = true;
@@ -415,6 +466,80 @@ public class Fly extends Module {
                 );
                 mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(vectorEnd.xCoord, mc.thePlayer.posY + 2, vectorEnd.zCoord, true));
                 mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(vectorStart.xCoord, mc.thePlayer.posY + 2, vectorStart.zCoord, true));
+                mc.thePlayer.motionY = 0;
+                break;
+            case "teleportrewinside2":
+                final Vec3 vectorStart6 = new Vec3(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+                final float yaw6 = -mc.thePlayer.rotationYaw;
+                final float pitch6 = -mc.thePlayer.rotationPitch;
+                final double length6 = 9.9;
+                final Vec3 vectorEnd6 = new Vec3(
+                        Math.sin(Math.toRadians(yaw6)) * Math.cos(Math.toRadians(pitch6)) * length6 + vectorStart6.xCoord,
+                        Math.sin(Math.toRadians(pitch6)) * length6 + vectorStart6.yCoord,
+                        Math.cos(Math.toRadians(yaw6)) * Math.cos(Math.toRadians(pitch6)) * length6 + vectorStart6.zCoord
+                );
+                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(vectorEnd6.xCoord, mc.thePlayer.posY + 2, vectorEnd6.zCoord, true));
+                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(vectorStart6.xCoord, mc.thePlayer.posY + 2, vectorStart6.zCoord, true));
+                mc.thePlayer.motionY = 0;
+                mc.thePlayer.onGround = false;
+                mc.thePlayer.isAirBorne = true;
+                break;
+            case "aac3.3.14-rewi":
+                final Vec3 vectorStart3 = new Vec3(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+                final float yaw3 = -mc.thePlayer.rotationYaw;
+                final float pitch3 = -mc.thePlayer.rotationPitch;
+                final double length3 = 6.9;
+                final Vec3 vectorEnd3 = new Vec3(
+                        Math.sin(Math.toRadians(yaw3)) * Math.cos(Math.toRadians(pitch3)) * length3 + vectorStart3.xCoord,
+                        Math.sin(Math.toRadians(pitch3)) * length3 + vectorStart3.yCoord,
+                        Math.cos(Math.toRadians(yaw3)) * Math.cos(Math.toRadians(pitch3)) * length3 + vectorStart3.zCoord
+                );
+                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(vectorEnd3.xCoord, mc.thePlayer.posY + 0.6, vectorEnd3.zCoord, true));
+                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(vectorStart3.xCoord, mc.thePlayer.posY + 0.6, vectorStart3.zCoord, true));
+                mc.thePlayer.motionY = 0;
+                break;
+            case "librecraft2":
+                final Vec3 vectorStart4 = new Vec3(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+                final float yaw4 = -mc.thePlayer.rotationYaw;
+                final float pitch4 = -mc.thePlayer.rotationPitch;
+                final double length4 = 8.9;
+                final Vec3 vectorEnd4 = new Vec3(
+                        Math.sin(Math.toRadians(yaw4)) * Math.cos(Math.toRadians(pitch4)) * length4 + vectorStart4.xCoord,
+                        Math.sin(Math.toRadians(pitch4)) * length4 + vectorStart4.yCoord,
+                        Math.cos(Math.toRadians(yaw4)) * Math.cos(Math.toRadians(pitch4)) * length4 + vectorStart4.zCoord
+                );
+                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(vectorEnd4.xCoord, mc.thePlayer.posY + 0.3, vectorEnd4.zCoord, true));
+                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(vectorStart4.xCoord, mc.thePlayer.posY + 0.3, vectorStart4.zCoord, true));
+                mc.thePlayer.motionY = 0;
+                break;
+            case "librecraft3":
+                final Vec3 vectorStart5 = new Vec3(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+                final float yaw5 = -mc.thePlayer.rotationYaw;
+                final float pitch5 = -mc.thePlayer.rotationPitch;
+                final double length5 = 5.1;
+                final Vec3 vectorEnd5 = new Vec3(
+                        Math.sin(Math.toRadians(yaw5)) * Math.cos(Math.toRadians(pitch5)) * length5 + vectorStart5.xCoord,
+                        Math.sin(Math.toRadians(pitch5)) * length5 + vectorStart5.yCoord,
+                        Math.cos(Math.toRadians(yaw5)) * Math.cos(Math.toRadians(pitch5)) * length5 + vectorStart5.zCoord
+                );
+                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(vectorEnd5.xCoord, mc.thePlayer.posY + 0.2, vectorEnd5.zCoord, true));
+                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(vectorStart5.xCoord, mc.thePlayer.posY + 0.2, vectorStart5.zCoord, true));
+                mc.thePlayer.motionY = 0;
+                mc.thePlayer.onGround = true;
+                mc.thePlayer.isAirBorne = true;
+                break;
+            case "librecraft":
+                final Vec3 vectorStart2 = new Vec3(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+                final float yaw2 = -mc.thePlayer.rotationYaw;
+                final float pitch2 = -mc.thePlayer.rotationPitch;
+                final double length2 = 13.9;
+                final Vec3 vectorEnd2 = new Vec3(
+                        Math.sin(Math.toRadians(yaw2)) * Math.cos(Math.toRadians(pitch2)) * length2 + vectorStart2.xCoord,
+                        Math.sin(Math.toRadians(pitch2)) * length2 + vectorStart2.yCoord,
+                        Math.cos(Math.toRadians(yaw2)) * Math.cos(Math.toRadians(pitch2)) * length2 + vectorStart2.zCoord
+                );
+                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(vectorEnd2.xCoord, mc.thePlayer.posY + 1, vectorEnd2.zCoord, true));
+                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(vectorStart2.xCoord, mc.thePlayer.posY + 1, vectorStart2.zCoord, true));
                 mc.thePlayer.motionY = 0;
                 break;
             case "minesucht":
@@ -687,6 +812,42 @@ public class Fly extends Module {
                 } else {
                     event.setX(-Math.sin(yaw) * 0.2D);
                     event.setZ(Math.cos(yaw) * 0.2D);
+                }
+                break;
+            }
+            case "glidevanilla": {
+                mc.thePlayer.motionY = -0.50;
+                break;
+            }
+            case "cubecraft2": {
+                final double yaw = Math.toRadians(mc.thePlayer.rotationYaw);
+
+                event.setX(-Math.sin(yaw) * 2.0D);
+                event.setZ(Math.cos(yaw) * 2.0D);
+                if (cubecraftTeleportTickTimer2.hasTimePassed(2)) {
+                    mc.thePlayer.motionY = 0.0F;
+                    mc.thePlayer.onGround = true;
+                    event.setX(-Math.sin(yaw) * 2.0D);
+                    event.setZ(Math.cos(yaw) * 2.0D);
+
+                    cubecraftTeleportTickTimer2.reset();
+                } else {
+                    event.setX(-Math.sin(yaw) * 0.1D);
+                    event.setZ(Math.cos(yaw) * 0.1D);
+                }
+                break;
+            }
+            case "infinitecubecraft": {
+                final double yaw = Math.toRadians(mc.thePlayer.rotationYaw);
+
+                if (cubecraftTeleportTickTimer3.hasTimePassed(2)) {
+                    event.setX(-Math.sin(yaw) * 2.0D);
+                    event.setZ(Math.cos(yaw) * 2.0D);
+
+                    cubecraftTeleportTickTimer3.reset();
+                } else {
+                    event.setX(-Math.sin(yaw) * 0.1D);
+                    event.setZ(Math.cos(yaw) * 0.1D);
                 }
                 break;
             }
