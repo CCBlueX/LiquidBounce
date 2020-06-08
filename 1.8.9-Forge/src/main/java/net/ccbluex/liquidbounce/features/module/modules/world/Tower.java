@@ -241,16 +241,11 @@ public class Tower extends Module {
             return;
 
         // AutoBlock
-        int blockSlot = mc.thePlayer.inventory.currentItem + 36;
+        int blockSlot = -1;
         ItemStack itemStack = mc.thePlayer.getHeldItem();
 
         //Fixed 0 Item Bug
         if(mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock)) {
-
-            if (mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().stackSize <= 0) {
-                mc.thePlayer.inventory.removeStackFromSlot(mc.thePlayer.inventory.currentItem);
-            }
-
             if (!autoBlockValue.get())
                 return;
 
@@ -265,17 +260,13 @@ public class Tower extends Module {
         }
 
         // Place block
-        if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, this.placeInfo.getBlockPos(),
-                placeInfo.getEnumFacing(), placeInfo.getVec3())) {
-            //Fixed 0 Item Bug
-            if (itemStack.stackSize <= 0)
-                mc.thePlayer.inventory.removeStackFromSlot(blockSlot - 36);
-
+        if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, this.placeInfo.getBlockPos(), placeInfo.getEnumFacing(), placeInfo.getVec3())) {
             if (swingValue.get())
                 mc.thePlayer.swingItem();
             else
                 mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
         }
+
         this.placeInfo = null;
 
         // Switch back to old slot when using auto block

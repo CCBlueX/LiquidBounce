@@ -578,7 +578,6 @@ class KillAura : Module() {
 
         val (_, rotation) = RotationUtils.searchCenter(
                 boundingBox,
-                //changed divisions to multiplications
                 outborderValue.get() && !attackTimer.hasTimePassed(attackDelay / 2),
                 randomCenterValue.get(),
                 predictValue.get(),

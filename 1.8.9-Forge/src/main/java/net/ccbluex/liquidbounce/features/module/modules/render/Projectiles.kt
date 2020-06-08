@@ -50,8 +50,7 @@ class Projectiles : Module() {
             size = 0.3F
 
             // Calculate power of bow
-            //changed divisions to multiplications
-            var power = (if (dynamicBowPower.get()) mc.thePlayer.itemInUseDuration else item.getMaxItemUseDuration(ItemStack(item))) * 0.05f
+            var power = (if (dynamicBowPower.get()) mc.thePlayer.itemInUseDuration else item.getMaxItemUseDuration(ItemStack(item))) / 20f
             power = (power * power + power * 2F) / 3F
             if (power < 0.1F)
                 return
@@ -87,21 +86,21 @@ class Projectiles : Module() {
         else
             mc.thePlayer.rotationPitch
 
-        //Compromised operations
-        val ya = yaw / 180f * Math.PI.toFloat()
-        val pit = pitch / 180f * Math.PI.toFloat()
+        val yawRadians = yaw / 180f * Math.PI.toFloat()
+        val pitchRadians = pitch / 180f * Math.PI.toFloat()
+
         // Positions
-        var posX = renderManager.renderPosX - MathHelper.cos(ya) * 0.16F
+        var posX = renderManager.renderPosX - MathHelper.cos(yawRadians) * 0.16F
         var posY = renderManager.renderPosY + mc.thePlayer.getEyeHeight() - 0.10000000149011612
-        var posZ = renderManager.renderPosZ - MathHelper.sin(ya) * 0.16F
+        var posZ = renderManager.renderPosZ - MathHelper.sin(yawRadians) * 0.16F
 
         // Motions
-        var motionX = (-MathHelper.sin(ya) * MathHelper.cos(pit)
+        var motionX = (-MathHelper.sin(yawRadians) * MathHelper.cos(pitchRadians)
                 * if (isBow) 1.0 else 0.4)
         var motionY = -MathHelper.sin((pitch +
                 if (item is ItemPotion && ItemPotion.isSplash(mc.thePlayer.heldItem.itemDamage)) -20 else 0)
                 / 180f * 3.1415927f) * if (isBow) 1.0 else 0.4
-        var motionZ = (MathHelper.cos(ya) * MathHelper.cos(pit)
+        var motionZ = (MathHelper.cos(yawRadians) * MathHelper.cos(pitchRadians)
                 * if (isBow) 1.0 else 0.4)
         val distance = MathHelper.sqrt_double(motionX * motionX + motionY * motionY + motionZ * motionZ)
 
@@ -155,10 +154,10 @@ class Projectiles : Module() {
                     posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
 
             //changed divisions to multiplications
-            val chunkMinX = MathHelper.floor_double((arrowBox.minX - 2.0) * 0.0625f)
-            val chunkMaxX = MathHelper.floor_double((arrowBox.maxX + 2.0) * 0.0625f)
-            val chunkMinZ = MathHelper.floor_double((arrowBox.minZ - 2.0) * 0.0625f)
-            val chunkMaxZ = MathHelper.floor_double((arrowBox.maxZ + 2.0) * 0.0625f)
+            val chunkMinX = MathHelper.floor_double((arrowBox.minX - 2.0) / 16.0)
+            val chunkMaxX = MathHelper.floor_double((arrowBox.maxX + 2.0) / 16.0)
+            val chunkMinZ = MathHelper.floor_double((arrowBox.minZ - 2.0) / 16.0)
+            val chunkMaxZ = MathHelper.floor_double((arrowBox.maxZ + 2.0) / 16.0)
 
             // Check which entities colliding with the arrow
             val collidedEntities = mutableListOf<Entity>()

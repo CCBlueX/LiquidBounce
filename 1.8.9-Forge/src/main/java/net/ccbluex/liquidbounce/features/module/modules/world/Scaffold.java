@@ -322,17 +322,12 @@ public class Scaffold extends Module {
         if (!delayTimer.hasTimePassed(delay) || (sameYValue.get() && launchY - 1 != (int) targetPlace.getVec3().yCoord))
             return;
 
-        int blockSlot = mc.thePlayer.inventory.currentItem + 36;
+        int blockSlot = -1;
         ItemStack itemStack = mc.thePlayer.getHeldItem();
 
         //Fixed 0 Item Bug
         //If you are too fast you will fall down, because of the bug
         if (mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) || mc.thePlayer.getHeldItem().stackSize <= 0) {
-
-            if (mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().stackSize <= 0) {
-                mc.thePlayer.inventory.removeStackFromSlot(mc.thePlayer.inventory.currentItem);
-            }
-
             if (!autoBlockValue.get())
                 return;
 
