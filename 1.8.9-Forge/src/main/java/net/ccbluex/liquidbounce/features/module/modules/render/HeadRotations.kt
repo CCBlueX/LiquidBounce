@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
 @ModuleInfo(name = "HeadRotations", description = "Allows you to see server-sided head and body rotations.", category = ModuleCategory.RENDER)
 class HeadRotations : Module() {
@@ -35,15 +34,16 @@ class HeadRotations : Module() {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (!bodyValue.get() || !shouldRotate()) return
+        if (!bodyValue.get() || !shouldRotate() || mc.thePlayer == null) return
         val packet = event.packet
-        if (packet is C03PacketPlayer.C06PacketPlayerPosLook || packet is C03PacketPlayer.C05PacketPlayerLook || packet is S08PacketPlayerPosLook) {
+        if (packet is C03PacketPlayer.C06PacketPlayerPosLook || packet is C03PacketPlayer.C05PacketPlayerLook) {
             playerYaw = (packet as C03PacketPlayer).yaw
-            mc.thePlayer.renderYawOffset = packet.getYaw();
-            mc.thePlayer.rotationYawHead = packet.getYaw();
+            mc.thePlayer.renderYawOffset = packet.getYaw()
+            mc.thePlayer.rotationYawHead = packet.getYaw()
         } else {
-            mc.thePlayer.renderYawOffset = this.playerYaw!!;
-            mc.thePlayer.rotationYawHead = mc.thePlayer.renderYawOffset;
+            if (playerYaw != null)
+                mc.thePlayer.renderYawOffset = this.playerYaw!!
+            mc.thePlayer.rotationYawHead = mc.thePlayer.renderYawOffset
         }
     }
 
