@@ -31,8 +31,8 @@ class Velocity : Module() {
      */
     private val horizontalValue = FloatValue("Horizontal", 0F, 0F, 1F)
     private val verticalValue = FloatValue("Vertical", 0F, 0F, 1F)
-    private val modeValue = ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero",
-            "Reverse", "SmoothReverse", "Jump", "Glitch"), "Simple")
+    private val modeValue = ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "AAC4.1.0",
+            "Reverse", "SmoothReverse", "SmoothAAC", "Jump", "Glitch"), "Simple")
 
     // Reverse
     private val reverseStrengthValue = FloatValue("ReverseStrength", 1F, 0.1F, 1F)
@@ -45,6 +45,7 @@ class Velocity : Module() {
     /**
      * VALUES
      */
+
     private var velocityTimer = MSTimer()
     private var velocityInput = false
 
@@ -111,10 +112,16 @@ class Velocity : Module() {
                 }
             }
 
+            "smoothaac" -> {
+                if(mc.thePlayer.hurtTime > 0) {
+                    mc.thePlayer.speedInAir = 0.04F
+                }
+            }
+
             "aac" -> if (velocityInput && velocityTimer.hasTimePassed(80L)) {
                 mc.thePlayer.motionX *= horizontalValue.get()
                 mc.thePlayer.motionZ *= horizontalValue.get()
-                //mc.thePlayer.motionY *= verticalValue.get() ?
+                mc.thePlayer.motionY *= verticalValue.get()
                 velocityInput = false
             }
 
@@ -140,6 +147,11 @@ class Velocity : Module() {
                     mc.thePlayer.motionX /= reduce
                     mc.thePlayer.motionZ /= reduce
                 }
+            }
+
+            "aac4.1.0" -> if(mc.thePlayer.hurtTime > 0) {
+                mc.thePlayer.onGround = true
+                velocityInput = false
             }
 
             "aaczero" -> if (mc.thePlayer.hurtTime > 0) {

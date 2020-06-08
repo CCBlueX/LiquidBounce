@@ -19,11 +19,11 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.stats.StatList
 
 @ModuleInfo(name = "Criticals", description = "Automatically deals critical hits.", category = ModuleCategory.COMBAT)
 class Criticals : Module() {
-
-    val modeValue = ListValue("Mode", arrayOf("Packet", "NcpPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump"), "packet")
+    val modeValue = ListValue("Mode", arrayOf("Packet", "HypixelPacket", "NoGround", "FakeJump", "Hop", "TPHop", "Legit", "LowJump"), "packet")
     val delayValue = IntegerValue("Delay", 0, 0, 500)
     private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
 
@@ -57,7 +57,7 @@ class Criticals : Module() {
                     mc.thePlayer.onCriticalHit(entity)
                 }
 
-                "ncppacket" -> {
+                "hypixelpacket" -> {
                     mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.11, z, false))
                     mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.1100013579, z, false))
                     mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.0000013579, z, false))
@@ -75,7 +75,13 @@ class Criticals : Module() {
                     mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.01, z, false))
                     mc.thePlayer.setPosition(x, y + 0.01, z)
                 }
-                "jump" -> mc.thePlayer.motionY = 0.42
+                "legit" -> mc.thePlayer.motionY = 0.42
+                "fakejump" -> {
+                    mc.thePlayer.isAirBorne = true;
+                    mc.thePlayer.triggerAchievement(StatList.jumpStat);
+                    mc.thePlayer.onGround = false;
+                    mc.thePlayer.onCriticalHit(entity)
+                }
                 "lowjump" -> mc.thePlayer.motionY = 0.3425
             }
 

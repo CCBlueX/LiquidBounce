@@ -29,9 +29,8 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 
 @ModuleInfo(name = "Ignite", description = "Automatically sets targets around you on fire.",
-            category = ModuleCategory.COMBAT)
+        category = ModuleCategory.COMBAT)
 public class Ignite extends Module {
-
    private final BoolValue lighterValue = new BoolValue("Lighter", true);
    private final BoolValue lavaBucketValue = new BoolValue("Lava", true);
 
@@ -43,9 +42,9 @@ public class Ignite extends Module {
          return;
 
       final int lighterInHotbar =
-         lighterValue.get() ? InventoryUtils.findItem(36, 45, Items.flint_and_steel) : -1;
+              lighterValue.get() ? InventoryUtils.findItem(36, 45, Items.flint_and_steel) : -1;
       final int lavaInHotbar =
-         lavaBucketValue.get() ? InventoryUtils.findItem(26, 45, Items.lava_bucket) : -1;
+              lavaBucketValue.get() ? InventoryUtils.findItem(26, 45, Items.lava_bucket) : -1;
 
       if (lighterInHotbar == -1 && lavaInHotbar == -1)
          return;
@@ -57,8 +56,8 @@ public class Ignite extends Module {
             final BlockPos blockPos = entity.getPosition();
 
             if (mc.thePlayer.getDistanceSq(blockPos) >= 22.3D ||
-                !BlockUtils.isReplaceable(blockPos) ||
-                !(BlockUtils.getBlock(blockPos) instanceof BlockAir))
+                    !BlockUtils.isReplaceable(blockPos) ||
+                    !(BlockUtils.getBlock(blockPos) instanceof BlockAir))
                continue;
 
             RotationUtils.keepCurrentRotation = true;
@@ -66,24 +65,24 @@ public class Ignite extends Module {
             mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(fireInHotbar - 36));
 
             final ItemStack itemStack =
-               mc.thePlayer.inventoryContainer.getSlot(fireInHotbar).getStack();
+                    mc.thePlayer.inventoryContainer.getSlot(fireInHotbar).getStack();
 
             if (itemStack.getItem() instanceof ItemBucket) {
                final double diffX = blockPos.getX() + 0.5D - mc.thePlayer.posX;
                final double diffY = blockPos.getY() + 0.5D -
-                                    (mc.thePlayer.getEntityBoundingBox().minY +
-                                     mc.thePlayer.getEyeHeight());
+                       (mc.thePlayer.getEntityBoundingBox().minY +
+                               mc.thePlayer.getEyeHeight());
                final double diffZ = blockPos.getZ() + 0.5D - mc.thePlayer.posZ;
                final double sqrt = Math.sqrt(diffX * diffX + diffZ * diffZ);
                final float yaw = (float) (Math.atan2(diffZ, diffX) * 180.0D / Math.PI) - 90F;
                final float pitch = (float) -(Math.atan2(diffY, sqrt) * 180.0D / Math.PI);
 
                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(
-                  mc.thePlayer.rotationYaw +
-                  MathHelper.wrapAngleTo180_float(yaw - mc.thePlayer.rotationYaw),
-                  mc.thePlayer.rotationPitch +
-                  MathHelper.wrapAngleTo180_float(pitch - mc.thePlayer.rotationPitch),
-                  mc.thePlayer.onGround));
+                       mc.thePlayer.rotationYaw +
+                               MathHelper.wrapAngleTo180_float(yaw - mc.thePlayer.rotationYaw),
+                       mc.thePlayer.rotationPitch +
+                               MathHelper.wrapAngleTo180_float(pitch - mc.thePlayer.rotationPitch),
+                       mc.thePlayer.onGround));
 
                mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, itemStack);
             } else {
@@ -94,23 +93,23 @@ public class Ignite extends Module {
 
                   final double diffX = neighbor.getX() + 0.5D - mc.thePlayer.posX;
                   final double diffY = neighbor.getY() + 0.5D -
-                                       (mc.thePlayer.getEntityBoundingBox().minY +
-                                        mc.thePlayer.getEyeHeight());
+                          (mc.thePlayer.getEntityBoundingBox().minY +
+                                  mc.thePlayer.getEyeHeight());
                   final double diffZ = neighbor.getZ() + 0.5D - mc.thePlayer.posZ;
                   final double sqrt = Math.sqrt(diffX * diffX + diffZ * diffZ);
                   final float yaw = (float) (Math.atan2(diffZ, diffX) * 180.0D / Math.PI) - 90F;
                   final float pitch = (float) -(Math.atan2(diffY, sqrt) * 180.0D / Math.PI);
 
                   mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(
-                     mc.thePlayer.rotationYaw +
-                     MathHelper.wrapAngleTo180_float(yaw - mc.thePlayer.rotationYaw),
-                     mc.thePlayer.rotationPitch +
-                     MathHelper.wrapAngleTo180_float(pitch - mc.thePlayer.rotationPitch),
-                     mc.thePlayer.onGround));
+                          mc.thePlayer.rotationYaw +
+                                  MathHelper.wrapAngleTo180_float(yaw - mc.thePlayer.rotationYaw),
+                          mc.thePlayer.rotationPitch +
+                                  MathHelper.wrapAngleTo180_float(pitch - mc.thePlayer.rotationPitch),
+                          mc.thePlayer.onGround));
 
                   if (mc.playerController
-                     .onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, neighbor,
-                                         side.getOpposite(), new Vec3(side.getDirectionVec()))) {
+                          .onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, neighbor,
+                                  side.getOpposite(), new Vec3(side.getDirectionVec()))) {
                      mc.thePlayer.swingItem();
                      break;
                   }
@@ -118,12 +117,12 @@ public class Ignite extends Module {
             }
 
             mc.getNetHandler()
-              .addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
+                    .addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
             RotationUtils.keepCurrentRotation = false;
             mc.getNetHandler().addToSendQueue(
-               new C03PacketPlayer.C05PacketPlayerLook(mc.thePlayer.rotationYaw,
-                                                       mc.thePlayer.rotationPitch,
-                                                       mc.thePlayer.onGround));
+                    new C03PacketPlayer.C05PacketPlayerLook(mc.thePlayer.rotationYaw,
+                            mc.thePlayer.rotationPitch,
+                            mc.thePlayer.onGround));
 
             msTimer.reset();
             break;

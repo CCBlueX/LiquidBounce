@@ -20,7 +20,6 @@ import net.minecraft.util.EnumFacing
 
 @ModuleInfo(name = "AutoBow", description = "Automatically shoots an arrow whenever your bow is fully loaded.", category = ModuleCategory.COMBAT)
 class AutoBow : Module() {
-
     private val waitForBowAimbot = BoolValue("WaitForBowAimbot", true)
 
     @EventTarget

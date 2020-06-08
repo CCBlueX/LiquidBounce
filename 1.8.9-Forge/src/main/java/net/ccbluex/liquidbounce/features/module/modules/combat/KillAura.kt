@@ -118,7 +118,7 @@ class KillAura : Module() {
     }
 
     private val silentRotationValue = BoolValue("SilentRotation", true)
-    private val rotationStrafeValue = ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off")
+    private val rotationStrafeValue = ListValue("Strafe", arrayOf("Off", "Strafe", "Silent"), "Off")
     private val randomCenterValue = BoolValue("RandomCenter", true)
     private val outborderValue = BoolValue("Outborder", false)
     private val fovValue = FloatValue("FOV", 180f, 0f, 180f)
@@ -231,7 +231,7 @@ class KillAura : Module() {
 
         if (currentTarget != null && RotationUtils.targetRotation != null) {
             when (rotationStrafeValue.get().toLowerCase()) {
-                "strict" -> {
+                "strafe" -> {
                     val (yaw) = RotationUtils.targetRotation ?: return
                     var strafe = event.strafe
                     var forward = event.forward

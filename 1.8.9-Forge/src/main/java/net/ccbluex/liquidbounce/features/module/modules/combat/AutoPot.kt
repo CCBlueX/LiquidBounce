@@ -32,7 +32,6 @@ import net.minecraft.potion.Potion
 
 @ModuleInfo(name = "AutoPot", description = "Automatically throws healing potions.", category = ModuleCategory.COMBAT)
 class AutoPot : Module() {
-
     private val healthValue = FloatValue("Health", 15F, 1F, 20F)
     private val delayValue = IntegerValue("Delay", 500, 500, 1000)
 
@@ -150,5 +149,4 @@ class AutoPot : Module() {
 
     override val tag: String?
         get() = healthValue.get().toString()
-
 }
