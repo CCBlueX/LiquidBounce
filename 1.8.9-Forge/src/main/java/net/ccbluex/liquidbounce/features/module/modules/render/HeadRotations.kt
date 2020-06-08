@@ -21,12 +21,10 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
-
 @ModuleInfo(name = "HeadRotations", description = "Allows you to see server-sided head and body rotations.", category = ModuleCategory.RENDER)
 class HeadRotations : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Head", "Body"), "Head")
-
     private var playerYaw: Float? = null
 
     @EventTarget
