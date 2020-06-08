@@ -33,7 +33,6 @@ import java.util.Map;
 
 @ModuleInfo(name = "AntiBot", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
 public class AntiBot extends Module {
-
     private final BoolValue tabValue = new BoolValue("Tab", true);
     private final ListValue tabModeValue = new ListValue("TabMode", new String[] {"Equals", "Contains"}, "Contains");
     private final BoolValue entityIDValue = new BoolValue("EntityID", true);
@@ -88,7 +87,6 @@ public class AntiBot extends Module {
                     if(entity.prevPosY != entity.posY)
                         invalidGround.put(entity.getEntityId(), invalidGround.getOrDefault(entity.getEntityId(), 0) + 1);
                 }else{
-                    //changed divisions to multiplications
                     final int currentVL = invalidGround.getOrDefault(entity.getEntityId(), 0) / 2;
 
                     if (currentVL <= 0)

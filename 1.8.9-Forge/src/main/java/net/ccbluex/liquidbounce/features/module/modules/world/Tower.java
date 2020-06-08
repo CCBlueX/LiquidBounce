@@ -244,7 +244,6 @@ public class Tower extends Module {
         int blockSlot = -1;
         ItemStack itemStack = mc.thePlayer.getHeldItem();
 
-        //Fixed 0 Item Bug
         if(mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock)) {
             if (!autoBlockValue.get())
                 return;

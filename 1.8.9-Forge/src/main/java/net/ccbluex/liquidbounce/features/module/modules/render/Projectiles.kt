@@ -153,7 +153,6 @@ class Projectiles : Module() {
             val arrowBox = AxisAlignedBB(posX - size, posY - size, posZ - size, posX + size,
                     posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
 
-            //changed divisions to multiplications
             val chunkMinX = MathHelper.floor_double((arrowBox.minX - 2.0) / 16.0)
             val chunkMaxX = MathHelper.floor_double((arrowBox.maxX + 2.0) / 16.0)
             val chunkMinZ = MathHelper.floor_double((arrowBox.minZ - 2.0) / 16.0)

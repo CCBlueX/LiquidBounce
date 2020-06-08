@@ -325,8 +325,6 @@ public class Scaffold extends Module {
         int blockSlot = -1;
         ItemStack itemStack = mc.thePlayer.getHeldItem();
 
-        //Fixed 0 Item Bug
-        //If you are too fast you will fall down, because of the bug
         if (mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) || mc.thePlayer.getHeldItem().stackSize <= 0) {
             if (!autoBlockValue.get())
                 return;
@@ -341,13 +339,7 @@ public class Scaffold extends Module {
         }
 
 
-        if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, targetPlace.getBlockPos(),
-                targetPlace.getEnumFacing(), targetPlace.getVec3())) {
-
-            //Fixed 0 Item Bug
-            if (itemStack.stackSize <= 0)
-                mc.thePlayer.inventory.removeStackFromSlot(blockSlot - 36);
-
+        if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, targetPlace.getBlockPos(), targetPlace.getEnumFacing(), targetPlace.getVec3())) {
             delayTimer.reset();
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 
