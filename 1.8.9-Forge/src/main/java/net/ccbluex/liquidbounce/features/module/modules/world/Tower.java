@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.FloatValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
 import net.ccbluex.liquidbounce.value.ListValue;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockAir;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -407,8 +408,11 @@ public class Tower extends Module {
         for(int i = 36; i < 45; i++) {
             final ItemStack itemStack = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
 
-            if(itemStack != null && itemStack.getItem() instanceof ItemBlock)
-                amount += itemStack.stackSize;
+            if (itemStack != null && itemStack.getItem() instanceof ItemBlock) {
+                final Block block = ((ItemBlock) itemStack.getItem()).getBlock();
+                if (!InventoryUtils.BLOCK_BLACKLIST.contains(block))
+                    amount += itemStack.stackSize;
+            }
         }
 
         return amount;
