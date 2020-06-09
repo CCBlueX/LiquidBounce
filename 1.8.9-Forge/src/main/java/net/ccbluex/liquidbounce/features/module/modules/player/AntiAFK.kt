@@ -13,55 +13,117 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.GameSettings
+import net.minecraft.client.settings.KeyBinding
 
 @ModuleInfo(name = "AntiAFK", description = "Prevents you from getting kicked for being AFK.", category = ModuleCategory.PLAYER)
 class AntiAFK : Module() {
 
-    private val timer = MSTimer()
+    private val swingDelayTimer = MSTimer()
+    private val delayTimer = MSTimer()
 
+    private val modeValue = ListValue("Mode", arrayOf("Old", "Random", "Custom"), "Random")
+
+    private val swingDelayValue = IntegerValue("SwingDelay", 100, 0, 1000)
+    private val rotationDelayValue = IntegerValue("RotationDelay", 100, 0, 1000)
+    private val rotationAngleValue = FloatValue("RotationAngle", 1f, -180F, 180F)
+
+    private val jumpValue = BoolValue("Jump", true)
     private val moveValue = BoolValue("Move", true)
     private val rotateValue = BoolValue("Rotate", true)
-    private val jumpValue = BoolValue("Jump", true)
     private val swingValue = BoolValue("Swing", true)
 
-    private var flipPitch = false
-    private var lastPitch = 0f
-
-    private var moved = false
-
-    private var nextSwingDelay = RandomUtils.nextInt(100, 200)
+    private var shouldMove = false
+    private var randomTimerDelay = 500L
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        //Made antiafk bypassing more anticheats and added more features
-        if (moveValue.get()) {
-            mc.gameSettings.keyBindForward.pressed = true
-            moved = true
-        } else if (moved) {
-            if (!GameSettings.isKeyDown(mc.gameSettings.keyBindForward))
-                mc.gameSettings.keyBindForward.pressed = false
+        when (modeValue.get().toLowerCase()) {
+            "old" -> {
+                mc.gameSettings.keyBindForward.pressed = true
 
-            moved = false
+                if (delayTimer.hasTimePassed(500)) {
+                    mc.thePlayer.rotationYaw += 180F
+                    delayTimer.reset()
+                }
+            }
+            "random" -> {
+                KeyBinding.setKeyBindState(getRandomMoveKeyBind(), shouldMove)
+                if (!delayTimer.hasTimePassed(randomTimerDelay)) return
+                    shouldMove = false
+                    randomTimerDelay = 500L
+                    when (RandomUtils.nextInt(0, 6)) {
+                        0 -> {
+                            if (mc.thePlayer.onGround) mc.thePlayer.jump()
+                            delayTimer.reset()
+                        }
+                        1 -> {
+                            if (!mc.thePlayer.isSwingInProgress) mc.thePlayer.swingItem()
+                            delayTimer.reset()
+                        }
+                        2 -> {
+                            randomTimerDelay = RandomUtils.nextInt(0, 1000).toLong()
+                            shouldMove = true
+                            delayTimer.reset()
+                        }
+                        3 -> {
+                            mc.thePlayer.inventory.currentItem = RandomUtils.nextInt(0,9)
+                            mc.playerController.updateController()
+                            delayTimer.reset()
+                        }
+                        4 -> {
+                            mc.thePlayer.rotationYaw += RandomUtils.nextFloat(-180.0F, 180.0F)
+                            delayTimer.reset()
+                        }
+                        5 -> {
+                            if (mc.thePlayer.rotationPitch <= -90 || mc.thePlayer.rotationPitch >= 90) mc.thePlayer.rotationPitch = 0F
+                            mc.thePlayer.rotationPitch += RandomUtils.nextFloat(-10.0F, 10.0F)
+                            delayTimer.reset()
+                        }
+                    }
+            }
+            "custom" -> {
+                if (moveValue.get())
+                    mc.gameSettings.keyBindForward.pressed = true
+
+                if (jumpValue.get() && mc.thePlayer.onGround)
+                    mc.thePlayer.jump()
+
+                if (rotateValue.get() && delayTimer.hasTimePassed(rotationDelayValue.get().toLong())) {
+                    mc.thePlayer.rotationYaw += rotationAngleValue.get()
+                    if (mc.thePlayer.rotationPitch <= -90 || mc.thePlayer.rotationPitch >= 90) mc.thePlayer.rotationPitch = 0F
+                    mc.thePlayer.rotationPitch += RandomUtils.nextFloat(0F, 1F) * 2 - 1
+                    delayTimer.reset()
+                }
+
+                if (swingValue.get() && !mc.thePlayer.isSwingInProgress && swingDelayTimer.hasTimePassed(swingDelayValue.get().toLong())) {
+                    mc.thePlayer.swingItem()
+                    swingDelayTimer.reset()
+                }
+            }
         }
+    }
 
-        if (rotateValue.get()) {
-            mc.thePlayer.rotationYaw += RandomUtils.nextFloat(2f, 5f)
-            //Added Pitch Movement the prevent BotLike-Moving Flags
-            lastPitch = if (flipPitch) -lastPitch else RandomUtils.nextFloat(0.1f, 0.6f)
-            flipPitch = !flipPitch
-            mc.thePlayer.rotationPitch += lastPitch
-        } else {
-            flipPitch = false
-        }
-
-        if (jumpValue.get() && mc.thePlayer.onGround)
-            mc.thePlayer.jump()
-
-        if (swingValue.get() && !mc.thePlayer.isSwingInProgress && timer.hasTimePassed(nextSwingDelay.toLong())) {
-            mc.thePlayer.swingItem()
-            timer.reset()
-            nextSwingDelay = RandomUtils.nextInt(100, 200)
+    private fun getRandomMoveKeyBind(): Int {
+        when(RandomUtils.nextInt(0,4)) {
+            0 -> {
+               return mc.gameSettings.keyBindRight.keyCode
+            }
+            1 -> {
+                return mc.gameSettings.keyBindLeft.keyCode
+            }
+            2 -> {
+                return mc.gameSettings.keyBindBack.keyCode
+            }
+            3 -> {
+                return mc.gameSettings.keyBindForward.keyCode
+            }
+            else -> {
+                return 0
+            }
         }
     }
 
