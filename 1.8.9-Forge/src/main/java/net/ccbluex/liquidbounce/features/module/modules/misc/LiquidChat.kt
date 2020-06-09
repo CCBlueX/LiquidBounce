@@ -121,7 +121,7 @@ class LiquidChat : Module() {
                         "MessageTooLong" -> "Message is too long!"
                         "InvalidCharacter" -> "Message contains a non-ASCII character!"
                         "InvalidId" -> "The given ID is invalid!"
-                        "Internal" -> "An internal server error occured!"
+                        "Internal" -> "An internal server error occurred!"
                         else -> packet.message
                     }
 

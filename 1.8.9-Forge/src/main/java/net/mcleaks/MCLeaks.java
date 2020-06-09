@@ -45,7 +45,7 @@ public class MCLeaks {
             final URLConnection connection = preparePostRequest("{\"token\":\"" + token + "\"}");
 
             if(connection == null) {
-                callback.done("An error occured! [R1]");
+                callback.done("An error occurred! [R1]");
                 return;
             }
 
@@ -61,7 +61,7 @@ public class MCLeaks {
                 return;
 
             if(!jsonObject.has("mcname") || !jsonObject.has("session")) {
-                callback.done("An error occured! [R2]");
+                callback.done("An error occurred! [R2]");
                 return;
             }
 
@@ -103,18 +103,18 @@ public class MCLeaks {
             final JsonElement jsonElement = gson.fromJson(stringBuilder.toString(), JsonElement.class);
 
             if(!jsonElement.isJsonObject() || !jsonElement.getAsJsonObject().has("success"))
-                return "An error occured! [G1]";
+                return "An error occurred! [G1]";
 
             if(!jsonElement.getAsJsonObject().get("success").getAsBoolean())
-                return jsonElement.getAsJsonObject().has("errorMessage") ? jsonElement.getAsJsonObject().get("errorMessage").getAsString() : "An error occured! [G4]";
+                return jsonElement.getAsJsonObject().has("errorMessage") ? jsonElement.getAsJsonObject().get("errorMessage").getAsString() : "An error occurred! [G4]";
 
             if(!jsonElement.getAsJsonObject().has("result"))
-                return "An error occured! [G3]";
+                return "An error occurred! [G3]";
 
             return jsonElement.getAsJsonObject().get("result").isJsonObject() ? jsonElement.getAsJsonObject().get("result").getAsJsonObject() : null;
         }catch(final Exception e) {
             e.printStackTrace();
-            return "An error occured! [G2]";
+            return "An error occurred! [G2]";
         }
     }
 }
