@@ -325,8 +325,9 @@ public class Scaffold extends Module {
 
         int blockSlot = -1;
         ItemStack itemStack = mc.thePlayer.getHeldItem();
+        Block block = ((ItemBlock) itemStack.getItem()).getBlock();
 
-        if (mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) || mc.thePlayer.getHeldItem().stackSize <= 0) {
+        if (mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) || mc.thePlayer.getHeldItem().stackSize <= 0 || InventoryUtils.BLOCK_BLACKLIST.contains(block)) {
             if (!autoBlockValue.get())
                 return;
 
