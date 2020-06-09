@@ -154,7 +154,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
     }
 
     /**
-     * Imports another JavaScript file inro the context of this script.
+     * Imports another JavaScript file into the context of this script.
      * @param scriptFile Path to the file to be imported.
      */
     fun import(scriptFile: String) {
