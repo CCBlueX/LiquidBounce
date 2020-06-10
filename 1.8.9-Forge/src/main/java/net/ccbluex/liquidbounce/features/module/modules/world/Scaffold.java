@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.FloatValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
 import net.ccbluex.liquidbounce.value.ListValue;
+import net.minecraft.block.Block;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.settings.GameSettings;
@@ -271,8 +272,8 @@ public class Scaffold extends Module {
     }
 
     private void update() {
-        if (autoBlockValue.get() ? InventoryUtils.findAutoBlockBlock() == -1 : mc.thePlayer.getHeldItem() == null ||
-                !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock))
+        final boolean isHeldItemBlock = mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock;
+        if (autoBlockValue.get() ? InventoryUtils.findAutoBlockBlock() == -1 && !isHeldItemBlock : !isHeldItemBlock)
             return;
 
         findBlock(modeValue.get().equalsIgnoreCase("expand"));
@@ -533,8 +534,11 @@ public class Scaffold extends Module {
         for (int i = 36; i < 45; i++) {
             final ItemStack itemStack = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
 
-            if (itemStack != null && itemStack.getItem() instanceof ItemBlock)
-                amount += itemStack.stackSize;
+            if (itemStack != null && itemStack.getItem() instanceof ItemBlock) {
+                final Block block = ((ItemBlock) itemStack.getItem()).getBlock();
+                if (mc.thePlayer.getHeldItem() == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block))
+                    amount += itemStack.stackSize;
+            }
         }
 
         return amount;
