@@ -154,8 +154,8 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
      * Draw char from texture to display
      *
      * @param char target font char to render
-     * @param x        target positon x to render
-     * @param y        target potion y to render
+     * @param x        target position x to render
+     * @param y        target position y to render
      */
     private fun drawChar(char: CharLocation, x: Float, y: Float) {
         val width = char.width.toFloat()

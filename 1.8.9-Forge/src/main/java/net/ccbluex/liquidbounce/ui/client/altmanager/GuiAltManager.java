@@ -103,7 +103,7 @@ public class GuiAltManager extends GuiScreen {
             return "§cCannot contact authentication server.";
 
         if (result == LoginUtils.LoginResult.INVALID_ACCOUNT_DATA)
-            return "§cInvaild username or password.";
+            return "§cInvalid username or password.";
 
         if (result == LoginUtils.LoginResult.MIGRATED)
             return "§cAccount migrated.";

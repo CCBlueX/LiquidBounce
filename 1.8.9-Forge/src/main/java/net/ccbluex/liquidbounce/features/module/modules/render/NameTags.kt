@@ -40,8 +40,6 @@ class NameTags : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val renderManager = mc.renderManager
-
         glPushAttrib(GL_ENABLE_BIT)
         glPushMatrix()
 
@@ -54,8 +52,6 @@ class NameTags : Module() {
         // Enable blend
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        val nanoTime = System.nanoTime()
 
         for (entity in mc.theWorld.loadedEntityList) {
             if (!EntityUtils.isSelected(entity, false))
@@ -75,8 +71,6 @@ class NameTags : Module() {
         // Reset color
         resetColor()
         glColor4f(1F, 1F, 1F, 1F)
-
-        println("${((System.nanoTime() - nanoTime) / 1000)}us")
     }
 
     private fun renderNameTag(entity: EntityLivingBase, tag: String) {

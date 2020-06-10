@@ -184,7 +184,7 @@ class Nuker : Module() {
             if (mc.thePlayer.heldItem?.item is ItemSword)
                 return
 
-            // Serach for new blocks to break
+            // Search for new blocks to break
             searchBlocks(radiusValue.get().roundToInt() + 1)
                     .filter { (pos, block) ->
                         if (getCenterDistance(pos) <= radiusValue.get() && validBlock(block)) {

@@ -157,7 +157,7 @@ object LiquidBounce {
 
             // Check json is valid object and has current minecraft version
             if (jsonObj is JsonObject && jsonObj.has(MINECRAFT_VERSION)) {
-                // Get offical latest client version
+                // Get official latest client version
                 latestVersion = jsonObj[MINECRAFT_VERSION].asInt
             }
         } catch (exception: Throwable) { // Print throwable to console

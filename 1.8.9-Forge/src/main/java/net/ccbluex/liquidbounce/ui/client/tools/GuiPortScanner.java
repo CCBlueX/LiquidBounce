@@ -35,7 +35,7 @@ public class GuiPortScanner extends GuiScreen {
 
     private boolean running;
 
-    private String status = "§7Wating...";
+    private String status = "§7Waiting...";
 
     private String host;
 

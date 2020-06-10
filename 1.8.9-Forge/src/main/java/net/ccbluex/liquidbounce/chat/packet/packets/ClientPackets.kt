@@ -18,10 +18,10 @@ import net.ccbluex.liquidbounce.chat.User
 
 /**
  * After the client sent the server a RequestMojangInfo packet, the server will provide the client with a session_hash.
- * A session hash is synonymous with a server id in the context of authentication with mojang.
- * The client has to send a LoginMojang packet to the server after authenticating itself with mojang.
+ * A session hash is synonymous with a server id in the context of authentication with Mojang.
+ * The client has to send a LoginMojang packet to the server after authenticating itself with Mojang.
  *
- * @param sessionHash session_hash to authenticate with mojang
+ * @param sessionHash session_hash to authenticate with Mojang
  */
 data class ClientMojangInfoPacket(
 
