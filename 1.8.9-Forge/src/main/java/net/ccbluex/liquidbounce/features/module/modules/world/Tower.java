@@ -244,7 +244,6 @@ public class Tower extends Module {
         // AutoBlock
         int blockSlot = -1;
         ItemStack itemStack = mc.thePlayer.getHeldItem();
-        Block block = ((ItemBlock) itemStack.getItem()).getBlock();
 
         if(mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock)) {
             if (!autoBlockValue.get())
