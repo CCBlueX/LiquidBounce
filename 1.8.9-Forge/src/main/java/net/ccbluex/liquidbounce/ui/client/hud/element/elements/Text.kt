@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -153,12 +154,25 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
 
         val fontRenderer = fontValue.get()
 
-        fontRenderer.drawString(displayText, 0F, 0F, if (rainbow.get())
-            ColorUtils.rainbow(400000000L).rgb else color, shadow.get())
+        val rainbow = rainbow.get()
+
+        if (rainbow) {
+            RainbowFontShader.INSTANCE.setOffset((System.nanoTime() + 400000000L) / 10000000000F % 1)
+            RainbowFontShader.INSTANCE.setStrengthX(-1 / 500.0F)
+            RainbowFontShader.INSTANCE.setStrengthY(-1 / 500.0F)
+            RainbowFontShader.INSTANCE.startShader()
+        }
+
+        fontRenderer.drawString(displayText, 0F, 0F, if (rainbow)
+            0 else color, shadow.get())
 
         if (editMode && mc.currentScreen is GuiHudDesigner && editTicks <= 40)
             fontRenderer.drawString("_", fontRenderer.getStringWidth(displayText) + 2F,
-                    0F, if (rainbow.get()) ColorUtils.rainbow(400000000L).rgb else color, shadow.get())
+                    0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else color, shadow.get())
+
+        if (rainbow) {
+            RainbowFontShader.INSTANCE.stopShader()
+        }
 
         if (editMode && mc.currentScreen !is GuiHudDesigner) {
             editMode = false

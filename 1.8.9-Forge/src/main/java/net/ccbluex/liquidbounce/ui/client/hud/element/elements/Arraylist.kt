@@ -19,6 +19,8 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.renderer.GlStateManager
 import java.awt.Color
@@ -31,7 +33,6 @@ import java.awt.Color
 @ElementInfo(name = "Arraylist", single = true)
 class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                 side: Side = Side(Horizontal.RIGHT, Vertical.UP)) : Element(x, y, scale, side) {
-
     private val colorModeValue = ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
     private val colorRedValue = IntegerValue("Text-R", 0, 0, 255)
     private val colorGreenValue = IntegerValue("Text-G", 111, 0, 255)
@@ -139,21 +140,44 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                             yPos,
                             if (rectMode.equals("right", true)) -3F else 0F,
                             yPos + textHeight, when {
-                        backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
+                        backgroundColorMode.equals("Rainbow", ignoreCase = true) -> 0
                         backgroundColorMode.equals("Random", ignoreCase = true) -> moduleColor
                         else -> backgroundCustomColor
                     }
                     )
 
+                    val rainbow = colorMode.equals("Rainbow", ignoreCase = true)
+
+                    if (rainbow) {
+                        RainbowFontShader.INSTANCE.setOffset((System.nanoTime() + 400000000L) / 10000000000F % 1)
+                        RainbowFontShader.INSTANCE.setStrengthX(-1 / 500.0F)
+                        RainbowFontShader.INSTANCE.setStrengthY(-1 / 500.0F)
+                        RainbowFontShader.INSTANCE.startShader()
+                    }
+
                     fontRenderer.drawString(displayString, xPos - if (rectMode.equals("right", true)) 3 else 0, yPos + textY, when {
-                        colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
+                        rainbow -> ColorUtils.rainbow(400000000L * index).rgb
                         colorMode.equals("Random", ignoreCase = true) -> moduleColor
                         else -> customColor
                     }, textShadow)
 
+
+                    if (rainbow) {
+                        RainbowFontShader.INSTANCE.stopShader()
+                    }
+
                     if (!rectMode.equals("none", true)) {
+                        val rectRainbow = rectColorMode.equals("Rainbow", ignoreCase = true)
+
+                        if (rectRainbow) {
+                            RainbowShader.INSTANCE.setOffset((System.nanoTime() + 400000000L) / 10000000000F % 1)
+                            RainbowShader.INSTANCE.setStrengthX(-1 / 500.0F)
+                            RainbowShader.INSTANCE.setStrengthY(-1 / 500.0F)
+                            RainbowShader.INSTANCE.startShader()
+                        }
+
                         val rectColor = when {
-                            rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
+                            rectRainbow -> 0
                             rectColorMode.equals("Random", ignoreCase = true) -> moduleColor
                             else -> rectCustomColor
                         }
@@ -163,6 +187,11 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                                     rectColor)
                             rectMode.equals("right", true) -> RenderUtils.drawRect(-3F, yPos, 0F,
                                     yPos + textHeight, rectColor)
+                        }
+
+
+                        if (rectRainbow) {
+                            RainbowShader.INSTANCE.stopShader()
                         }
                     }
                 }
@@ -246,7 +275,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
             }
             y2 = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) * modules.size
 
-            return Border(0F, 0F, x2 - 7F, y2 - if(side.vertical == Vertical.DOWN) 1F else 0F)
+            return Border(0F, 0F, x2 - 7F, y2 - if (side.vertical == Vertical.DOWN) 1F else 0F)
         }
 
         AWTFontRenderer.assumeNonVolatile = false

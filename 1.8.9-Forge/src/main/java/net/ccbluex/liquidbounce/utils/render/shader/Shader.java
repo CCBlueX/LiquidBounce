@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Shader extends MinecraftInstance {
-
     private int program;
 
     private Map<String, Integer> uniformsMap;
@@ -111,5 +110,9 @@ public abstract class Shader extends MinecraftInstance {
 
     public int getUniform(final String uniformName) {
         return uniformsMap.get(uniformName);
+    }
+
+    public int getProgramId() {
+        return program;
     }
 }

@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
@@ -81,11 +82,14 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
 
         val fontRenderer = fontValue.get()
 
+        val rectangleRainbowEnabled = rectangleRainbow.get()
+
         // Color
-        val color = if (!rectangleRainbow.get())
+        val color = if (!rectangleRainbowEnabled)
             Color(redValue.get(), greenValue.get(), blueValue.get(), alphaValue.get())
-        else
+        else {
             rainbow(400000000L, alphaValue.get())
+        }
 
         val backgroundColor = Color(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(),
                 backgroundAlphaValue.get())
@@ -102,7 +106,18 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
             RenderUtils.drawBorderedRect(1F, 0F, width.get(), guiHeight, borderStrength.get(), borderColor.rgb, backgroundColor.rgb)
         else
             RenderUtils.drawRect(1F, 0F, width.get(), guiHeight, backgroundColor.rgb)
+        if (rectangleRainbowEnabled) {
+            RainbowShader.INSTANCE.setOffset((System.nanoTime() + 400000000L) / 10000000000F % 1)
+            RainbowShader.INSTANCE.setStrengthX(-1 / 500.0F)
+            RainbowShader.INSTANCE.setStrengthY(-1 / 500.0F)
+            RainbowShader.INSTANCE.startShader()
+        }
         RenderUtils.drawRect(1F, 1 + tabY - 1, width.get(), tabY + tabHeight.get(), color)
+
+        if (rectangleRainbowEnabled) {
+            RainbowShader.INSTANCE.stopShader()
+        }
+
         GlStateManager.resetColor()
 
         var y = 1F
