@@ -11,8 +11,10 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.material.Material
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
@@ -27,11 +29,12 @@ import java.awt.Color
 @ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land.", category = ModuleCategory.RENDER)
 class Projectiles : Module() {
     private val dynamicBowPower = BoolValue("DynamicBowPower", true)
-    
+    private val colorMode = ListValue("ColorMode", arrayOf("Default", "BowPower", "Rainbow"), "BowPower")
+
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         mc.thePlayer.heldItem ?: return
-        
+
         val item = mc.thePlayer.heldItem.item
         val renderManager = mc.renderManager
         var isBow = false
@@ -39,7 +42,7 @@ class Projectiles : Module() {
         var motionSlowdown = 0.99F
         val gravity: Float
         val size: Float
-        
+
         // Check items
         if (item is ItemBow) {
             if (dynamicBowPower.get() && !mc.thePlayer.isUsingItem)
@@ -125,7 +128,17 @@ class Projectiles : Module() {
         RenderUtils.disableGlCap(GL11.GL_DEPTH_TEST, GL11.GL_ALPHA_TEST, GL11.GL_TEXTURE_2D)
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
         GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST)
-        RenderUtils.glColor(Color(0, 160, 255, 255))
+        when (colorMode.get().toLowerCase()) {
+            "default" -> {
+                RenderUtils.glColor(Color(0, 160, 255, 255))
+            }
+            "bowpower" -> {
+                RenderUtils.glColor(ColorUtils.interpolateHSB(Color.RED, Color.GREEN, (motionFactor / 30) * 10))
+            }
+            "rainbow" -> {
+                RenderUtils.glColor(ColorUtils.rainbow())
+            }
+        }
         GL11.glLineWidth(2f)
 
         worldRenderer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION)
