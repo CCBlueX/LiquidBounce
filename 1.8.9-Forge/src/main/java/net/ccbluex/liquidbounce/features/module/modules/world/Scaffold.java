@@ -273,7 +273,8 @@ public class Scaffold extends Module {
 
     private void update() {
         if (autoBlockValue.get() ? InventoryUtils.findAutoBlockBlock() == -1 : mc.thePlayer.getHeldItem() == null ||
-                !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock))
+                !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) ||
+                InventoryUtils.BLOCK_BLACKLIST.contains(((ItemBlock) mc.thePlayer.getHeldItem().getItem()).getBlock()))
             return;
 
         findBlock(modeValue.get().equalsIgnoreCase("expand"));
@@ -325,9 +326,8 @@ public class Scaffold extends Module {
 
         int blockSlot = -1;
         ItemStack itemStack = mc.thePlayer.getHeldItem();
-        Block block = ((ItemBlock) itemStack.getItem()).getBlock();
 
-        if (mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) || mc.thePlayer.getHeldItem().stackSize <= 0 || InventoryUtils.BLOCK_BLACKLIST.contains(block)) {
+        if (mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) || mc.thePlayer.getHeldItem().stackSize <= 0 || InventoryUtils.BLOCK_BLACKLIST.contains(((ItemBlock) itemStack.getItem()).getBlock())) {
             if (!autoBlockValue.get())
                 return;
 
