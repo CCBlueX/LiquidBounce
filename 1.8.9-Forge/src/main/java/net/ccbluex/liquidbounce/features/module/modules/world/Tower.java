@@ -123,9 +123,8 @@ public class Tower extends Module {
             placeInfo = null;
             timer.update();
 
-            if (autoBlockValue.get() ? InventoryUtils.findAutoBlockBlock() != -1 : mc.thePlayer.getHeldItem() != null
-                    && mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock
-                    && !InventoryUtils.BLOCK_BLACKLIST.contains(((ItemBlock) mc.thePlayer.getHeldItem().getItem()).getBlock())) {
+            final boolean isHeldItemBlock = mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock;
+            if (autoBlockValue.get() ? InventoryUtils.findAutoBlockBlock() != -1 || isHeldItemBlock : isHeldItemBlock) {
                 if (!stopWhenBlockAbove.get() || BlockUtils.getBlock(new BlockPos(mc.thePlayer.posX,
                         mc.thePlayer.posY + 2, mc.thePlayer.posZ)) instanceof BlockAir)
                     move();
@@ -247,7 +246,7 @@ public class Tower extends Module {
         ItemStack itemStack = mc.thePlayer.getHeldItem();
         Block block = ((ItemBlock) itemStack.getItem()).getBlock();
 
-        if(mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) || InventoryUtils.BLOCK_BLACKLIST.contains(block)) {
+        if(mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock)) {
             if (!autoBlockValue.get())
                 return;
 
@@ -411,7 +410,7 @@ public class Tower extends Module {
 
             if (itemStack != null && itemStack.getItem() instanceof ItemBlock) {
                 final Block block = ((ItemBlock) itemStack.getItem()).getBlock();
-                if (!InventoryUtils.BLOCK_BLACKLIST.contains(block))
+                if (mc.thePlayer.getHeldItem() == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block))
                     amount += itemStack.stackSize;
             }
         }
