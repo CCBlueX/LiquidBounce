@@ -11,8 +11,11 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.material.Material
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
@@ -27,11 +30,16 @@ import java.awt.Color
 @ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land.", category = ModuleCategory.RENDER)
 class Projectiles : Module() {
     private val dynamicBowPower = BoolValue("DynamicBowPower", true)
-    
+    private val colorMode = ListValue("ColorMode", arrayOf("Custom", "BowPower", "Rainbow"), "BowPower")
+
+    private val colorRedValue = IntegerValue("R", 0, 0, 255)
+    private val colorGreenValue = IntegerValue("G", 160, 0, 255)
+    private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         mc.thePlayer.heldItem ?: return
-        
+
         val item = mc.thePlayer.heldItem.item
         val renderManager = mc.renderManager
         var isBow = false
@@ -39,7 +47,7 @@ class Projectiles : Module() {
         var motionSlowdown = 0.99F
         val gravity: Float
         val size: Float
-        
+
         // Check items
         if (item is ItemBow) {
             if (dynamicBowPower.get() && !mc.thePlayer.isUsingItem)
@@ -125,7 +133,17 @@ class Projectiles : Module() {
         RenderUtils.disableGlCap(GL11.GL_DEPTH_TEST, GL11.GL_ALPHA_TEST, GL11.GL_TEXTURE_2D)
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
         GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST)
-        RenderUtils.glColor(Color(0, 160, 255, 255))
+        when (colorMode.get().toLowerCase()) {
+            "custom" -> {
+                RenderUtils.glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
+            }
+            "bowpower" -> {
+                RenderUtils.glColor(interpolateHSB(Color.RED, Color.GREEN, (motionFactor / 30) * 10))
+            }
+            "rainbow" -> {
+                RenderUtils.glColor(ColorUtils.rainbow())
+            }
+        }
         GL11.glLineWidth(2f)
 
         worldRenderer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION)
@@ -233,5 +251,19 @@ class Projectiles : Module() {
         GL11.glDepthMask(true)
         RenderUtils.resetCaps()
         GL11.glColor4f(1F, 1F, 1F, 1F)
+    }
+    
+    fun interpolateHSB(startColor: Color, endColor: Color, process: Float): Color? {
+        val startHSB = Color.RGBtoHSB(startColor.red, startColor.green, startColor.blue, null)
+        val endHSB = Color.RGBtoHSB(endColor.red, endColor.green, endColor.blue, null)
+
+        val brightness = (startHSB[2] + endHSB[2]) / 2
+        val saturation = (startHSB[1] + endHSB[1]) / 2
+
+        val hueMax = if (startHSB[0] > endHSB[0]) startHSB[0] else endHSB[0]
+        val hueMin = if (startHSB[0] > endHSB[0]) endHSB[0] else startHSB[0]
+
+        val hue = (hueMax - hueMin) * process + hueMin
+        return Color.getHSBColor(hue, saturation, brightness)
     }
 }
