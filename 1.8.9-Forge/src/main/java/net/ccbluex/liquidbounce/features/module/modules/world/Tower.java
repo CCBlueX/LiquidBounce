@@ -124,7 +124,8 @@ public class Tower extends Module {
             timer.update();
 
             if (autoBlockValue.get() ? InventoryUtils.findAutoBlockBlock() != -1 : mc.thePlayer.getHeldItem() != null
-                    && mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) {
+                    && mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock
+                    && !InventoryUtils.BLOCK_BLACKLIST.contains(((ItemBlock) mc.thePlayer.getHeldItem().getItem()).getBlock())) {
                 if (!stopWhenBlockAbove.get() || BlockUtils.getBlock(new BlockPos(mc.thePlayer.posX,
                         mc.thePlayer.posY + 2, mc.thePlayer.posZ)) instanceof BlockAir)
                     move();
@@ -149,7 +150,7 @@ public class Tower extends Module {
         mc.thePlayer.isAirBorne = true;
         mc.thePlayer.triggerAchievement(StatList.jumpStat);
     }
-    
+
     /**
      * Move player
      */
@@ -244,11 +245,11 @@ public class Tower extends Module {
         // AutoBlock
         int blockSlot = -1;
         ItemStack itemStack = mc.thePlayer.getHeldItem();
+        Block block = ((ItemBlock) itemStack.getItem()).getBlock();
 
-        if(mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock)) {
+        if(mc.thePlayer.getHeldItem() == null || !(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock) || InventoryUtils.BLOCK_BLACKLIST.contains(block)) {
             if (!autoBlockValue.get())
                 return;
-
 
             blockSlot = InventoryUtils.findAutoBlockBlock();
 
