@@ -29,7 +29,6 @@ import java.awt.Color
 
 @ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land.", category = ModuleCategory.RENDER)
 class Projectiles : Module() {
-    private val dynamicBowPower = BoolValue("DynamicBowPower", true)
     private val colorMode = ListValue("Color", arrayOf("Custom", "BowPower", "Rainbow"), "BowPower")
 
     private val colorRedValue = IntegerValue("R", 0, 0, 255)
@@ -50,7 +49,7 @@ class Projectiles : Module() {
 
         // Check items
         if (item is ItemBow) {
-            if (dynamicBowPower.get() && !mc.thePlayer.isUsingItem)
+            if (!mc.thePlayer.isUsingItem)
                 return
 
             isBow = true
@@ -58,7 +57,7 @@ class Projectiles : Module() {
             size = 0.3F
 
             // Calculate power of bow
-            var power = (if (dynamicBowPower.get()) mc.thePlayer.itemInUseDuration else item.getMaxItemUseDuration(ItemStack(item))) / 20f
+            var power = mc.thePlayer.itemInUseDuration / 20f
             power = (power * power + power * 2F) / 3F
             if (power < 0.1F)
                 return
@@ -252,7 +251,7 @@ class Projectiles : Module() {
         RenderUtils.resetCaps()
         GL11.glColor4f(1F, 1F, 1F, 1F)
     }
-    
+
     fun interpolateHSB(startColor: Color, endColor: Color, process: Float): Color? {
         val startHSB = Color.RGBtoHSB(startColor.red, startColor.green, startColor.blue, null)
         val endHSB = Color.RGBtoHSB(endColor.red, endColor.green, endColor.blue, null)
