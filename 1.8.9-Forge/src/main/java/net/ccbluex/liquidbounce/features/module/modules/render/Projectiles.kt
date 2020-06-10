@@ -29,7 +29,6 @@ import java.awt.Color
 
 @ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land.", category = ModuleCategory.RENDER)
 class Projectiles : Module() {
-
     private val dynamicBowPower = BoolValue("DynamicBowPower", true)
     private val colorMode = ListValue("ColorMode", arrayOf("Custom", "BowPower", "Rainbow"), "BowPower")
 
