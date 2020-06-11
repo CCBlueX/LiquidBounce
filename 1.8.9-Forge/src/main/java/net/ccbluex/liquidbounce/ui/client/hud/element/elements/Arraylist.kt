@@ -156,7 +156,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                     }
 
                     fontRenderer.drawString(displayString, xPos - if (rectMode.equals("right", true)) 3 else 0, yPos + textY, when {
-                        rainbow -> ColorUtils.rainbow(400000000L * index).rgb
+                        rainbow -> 0
                         colorMode.equals("Random", ignoreCase = true) -> moduleColor
                         else -> customColor
                     }, textShadow)

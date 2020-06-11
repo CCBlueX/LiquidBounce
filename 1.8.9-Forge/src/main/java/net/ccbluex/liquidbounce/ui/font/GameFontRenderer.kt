@@ -76,6 +76,9 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
 
         val rainbowShaderId = RainbowFontShader.INSTANCE.programId
 
+        if (rainbow)
+            glUseProgram(rainbowShaderId)
+
         GlStateManager.translate(x - 1.5, y + 0.5, 0.0)
         GlStateManager.enableAlpha()
         GlStateManager.enableBlend()
@@ -110,7 +113,6 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     return@forEachIndexed
 
                 if (index == 0) {
-                    glUseProgram(if (rainbow && currentColor == defaultColor) rainbowShaderId else 0)
                     currentFont.drawString(part, width, 0.0, currentColor)
                     width += currentFont.getStringWidth(part)
                 } else {
@@ -121,6 +123,9 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                         in 0..15 -> {
                             if (!ignoreColor) {
                                 currentColor = ColorUtils.hexColors[colorIndex] or (alpha shl 24)
+
+                                if (rainbow)
+                                    glUseProgram(0)
                             }
 
                             bold = false
@@ -136,8 +141,12 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                         20 -> italic = true
                         21 -> {
                             currentColor = color
+
                             if (currentColor and -67108864 == 0)
                                 currentColor = currentColor or -16777216
+
+                            if (rainbow)
+                                glUseProgram(rainbowShaderId)
 
                             bold = false
                             italic = false
@@ -156,7 +165,6 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     else
                         defaultFont
 
-                    glUseProgram(if (rainbow && currentColor == defaultColor) rainbowShaderId else 0)
                     currentFont.drawString(if (randomCase) ColorUtils.randomMagicText(words) else words, width, 0.0, currentColor)
 
                     if (strikeThrough)
@@ -173,7 +181,6 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                 }
             }
         } else {
-            glUseProgram(if (rainbow) rainbowShaderId else 0)
             // Color code states
             defaultFont.drawString(text, 0.0, 0.0, currentColor)
         }
