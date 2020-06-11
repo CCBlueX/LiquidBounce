@@ -163,7 +163,8 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      * @param throughWalls throughWalls option
      * @return center
      */
-    public static VecRotation searchCenter(final AxisAlignedBB bb, final boolean outborder, final boolean random, final boolean predict, final boolean throughWalls) {
+    public static VecRotation searchCenter(final AxisAlignedBB bb, final boolean outborder, final boolean random,
+                                           final boolean predict, final boolean throughWalls, final float distance) {
         if(outborder) {
             final Vec3 vec3 = new Vec3(bb.minX + (bb.maxX - bb.minX) * (x * 0.3 + 1.0), bb.minY + (bb.maxY - bb.minY) * (y * 0.3 + 1.0), bb.minZ + (bb.maxZ - bb.minZ) * (z * 0.3 + 1.0));
             return new VecRotation(vec3, toRotation(vec3, predict));
@@ -172,13 +173,20 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
         final Vec3 randomVec = new Vec3(bb.minX + (bb.maxX - bb.minX) * x * 0.8, bb.minY + (bb.maxY - bb.minY) * y * 0.8, bb.minZ + (bb.maxZ - bb.minZ) * z * 0.8);
         final Rotation randomRotation = toRotation(randomVec, predict);
 
+        final Vec3 eyes = mc.thePlayer.getPositionEyes(1F);
+
         VecRotation vecRotation = null;
 
         for(double xSearch = 0.15D; xSearch < 0.85D; xSearch += 0.1D) {
             for (double ySearch = 0.15D; ySearch < 1D; ySearch += 0.1D) {
                 for (double zSearch = 0.15D; zSearch < 0.85D; zSearch += 0.1D) {
-                    final Vec3 vec3 = new Vec3(bb.minX + (bb.maxX - bb.minX) * xSearch, bb.minY + (bb.maxY - bb.minY) * ySearch, bb.minZ + (bb.maxZ - bb.minZ) * zSearch);
+                    final Vec3 vec3 = new Vec3(bb.minX + (bb.maxX - bb.minX) * xSearch,
+                            bb.minY + (bb.maxY - bb.minY) * ySearch, bb.minZ + (bb.maxZ - bb.minZ) * zSearch);
                     final Rotation rotation = toRotation(vec3, predict);
+                    final double vecDist = eyes.distanceTo(vec3);
+
+                    if (vecDist > distance)
+                        continue;
 
                     if(throughWalls || isVisible(vec3)) {
                         final VecRotation currentVec = new VecRotation(vec3, rotation);

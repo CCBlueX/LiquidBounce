@@ -9,21 +9,20 @@ import net.minecraft.entity.Entity
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.Vec3
 import kotlin.math.abs
-import kotlin.math.sqrt
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
  * Allows to get the distance between the current entity and [entity] from the nearest corner of the bounding box
  */
 fun Entity.getDistanceToEntityBox(entity: Entity): Double {
-    val eyes = this.getPositionEyes(0f)
+    val eyes = this.getPositionEyes(1F)
     val pos = getNearestPointBB(eyes, entity.entityBoundingBox)
     val xDist = abs(pos.xCoord - eyes.xCoord)
     val yDist = abs(pos.yCoord - eyes.yCoord)
     val zDist = abs(pos.zCoord - eyes.zCoord)
     return sqrt(xDist.pow(2) + yDist.pow(2) + zDist.pow(2))
 }
-
 
 fun getNearestPointBB(eye: Vec3, box: AxisAlignedBB): Vec3 {
     val origin = doubleArrayOf(eye.xCoord, eye.yCoord, eye.zCoord)
