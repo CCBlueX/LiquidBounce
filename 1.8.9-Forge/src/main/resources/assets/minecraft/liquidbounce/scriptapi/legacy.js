@@ -61,11 +61,6 @@ var _ItemAdaptar = function () {
 
 var _AdaptedValue = function (value) {
 
-    this.FloatValue = Java.type("net.ccbluex.liquidbounce.value.FloatValue");
-    this.IntegerValue = Java.type("net.ccbluex.liquidbounce.value.IntegerValue");
-    this.Float = Java.type("java.lang.Float");
-    this.Integer = Java.type("java.lang.Integer");
-
     this.get = function () {
         return value.get();
     }
@@ -182,6 +177,15 @@ var _ModuleManager = function () {
                         scriptModule[legacyName](event);
                     });
                 }
+            }
+
+            if (scriptModule.getTag) {
+                var Timer = Java.type("java.util.Timer");
+
+                var updateTagTimer = new Timer("updateTagTimer", true);
+                updateTagTimer.schedule(function () {
+                    module.tag = scriptModule.getTag();
+                }, 500, 500);
             }
 
             registerEvent("update", "onUpdate");
