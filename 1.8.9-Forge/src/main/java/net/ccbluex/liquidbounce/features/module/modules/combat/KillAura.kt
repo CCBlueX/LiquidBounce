@@ -445,16 +445,6 @@ class KillAura : Module() {
                 targets.add(entity)
         }
 
-        // Cleanup last targets when no targets found and try again
-        if (targets.isEmpty()) {
-            if (prevTargetEntities.isNotEmpty()) {
-                prevTargetEntities.clear()
-                updateTarget()
-            }
-
-            return
-        }
-
         // Sort targets by priority
         when (priorityValue.get().toLowerCase()) {
             "distance" -> targets.sortBy { mc.thePlayer.getDistanceToEntityBox(it) } // Sort by distance
@@ -472,6 +462,12 @@ class KillAura : Module() {
             // Set target to current entity
             target = entity
             return
+        }
+
+        // Cleanup last targets when no target found and try again
+        if (prevTargetEntities.isNotEmpty()) {
+            prevTargetEntities.clear()
+            updateTarget()
         }
     }
 
