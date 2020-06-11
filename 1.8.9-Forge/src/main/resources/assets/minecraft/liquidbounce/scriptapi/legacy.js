@@ -20,6 +20,13 @@ script.on("disable", function () {
 
 script.on("load", function () {
     try {
+        script.setScriptName(scriptName);
+        script.setScriptVersion(scriptVersion.toString() + " §7[§4Legacy Script§7]");
+        script.setScriptAuthors([scriptAuthor]);
+    } catch (err) {
+    }
+
+    try {
         onLoad();
     } catch (err) {
     }
