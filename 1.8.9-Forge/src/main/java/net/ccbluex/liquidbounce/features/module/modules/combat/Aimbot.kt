@@ -58,7 +58,7 @@ class Aimbot : Module() {
                     RotationUtils.toRotation(RotationUtils.getCenter(entity.entityBoundingBox), true)
                 else
                     RotationUtils.searchCenter(entity.entityBoundingBox, false, false, true,
-                            false).rotation,
+                            false, range).rotation,
                 (turnSpeedValue.get() + Math.random()).toFloat()
         )
 

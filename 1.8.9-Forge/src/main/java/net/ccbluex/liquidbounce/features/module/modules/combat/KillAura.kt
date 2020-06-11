@@ -572,12 +572,13 @@ class KillAura : Module() {
                     (entity.posZ - entity.prevPosZ) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get())
             )
 
-        val (_, rotation) = RotationUtils.searchCenter(
+        val (vec, rotation) = RotationUtils.searchCenter(
                 boundingBox,
                 outborderValue.get() && !attackTimer.hasTimePassed(attackDelay / 2),
                 randomCenterValue.get(),
                 predictValue.get(),
-                mc.thePlayer.getDistanceToEntityBox(entity) < throughWallsRangeValue.get()
+                mc.thePlayer.getDistanceToEntityBox(entity) < throughWallsRangeValue.get(),
+                maxRange
         ) ?: return false
 
         val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation,
