@@ -23,6 +23,7 @@
     "gui.MixinGuiChat",
     "gui.MixinGuiConnecting",
     "gui.MixinGuiDisconnect",
+    "gui.MixinGuiDownloadTerrain",
     "gui.MixinGuiEditSign",
     "gui.MixinGuiInGame",
     "gui.MixinGuiIngameMenu",
