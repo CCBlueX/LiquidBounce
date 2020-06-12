@@ -18,7 +18,7 @@ object AutoReconnect {
         private set
     var delay = 5000
         set(value) {
-            isEnabled = delay < MAX
+            isEnabled = value < MAX
 
             field = value
         }
