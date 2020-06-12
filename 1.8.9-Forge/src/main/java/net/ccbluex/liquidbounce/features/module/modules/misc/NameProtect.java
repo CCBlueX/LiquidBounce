@@ -31,7 +31,8 @@ public class NameProtect extends Module {
             return;
 
         for (final FriendsConfig.Friend friend : LiquidBounce.fileManager.friendsConfig.getFriends())
-            event.setText(StringUtils.replace(event.getText(), friend.getPlayerName(), ColorUtils.translateAlternateColorCodes(friend.getAlias()) + "§f"));
+            if (LiquidBounce.moduleManager.getModule(friend.getPlayerName()) != null)
+                event.setText(StringUtils.replace(event.getText(), friend.getPlayerName(), ColorUtils.translateAlternateColorCodes(friend.getAlias()) + "§f"));
 
         if(!getState())
             return;
