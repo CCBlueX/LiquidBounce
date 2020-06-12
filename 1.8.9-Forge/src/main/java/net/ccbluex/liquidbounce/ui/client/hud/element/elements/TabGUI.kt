@@ -14,8 +14,8 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
@@ -33,6 +33,8 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
     private val blueValue = IntegerValue("Rectangle Blue", 255, 0, 255)
     private val alphaValue = IntegerValue("Rectangle Alpha", 140, 0, 255)
     private val rectangleRainbow = BoolValue("Rectangle Rainbow", false)
+    private val rainbowX = FloatValue("Rainbow-X", -1000F, -2000F, 2000F)
+    private val rainbowY = FloatValue("Rainbow-Y", -1000F, -2000F, 2000F)
     private val backgroundRedValue = IntegerValue("Background Red", 0, 0, 255)
     private val backgroundGreenValue = IntegerValue("Background Green", 0, 0, 255)
     private val backgroundBlueValue = IntegerValue("Background Blue", 0, 0, 255)
@@ -83,40 +85,35 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
 
         val rectangleRainbowEnabled = rectangleRainbow.get()
 
-        // Color
-        val color = if (!rectangleRainbowEnabled)
-            Color(redValue.get(), greenValue.get(), blueValue.get(), alphaValue.get())
-        else {
-            rainbow(400000000L, alphaValue.get())
-        }
-
         val backgroundColor = Color(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(),
                 backgroundAlphaValue.get())
 
         val borderColor = if (!borderRainbow.get())
             Color(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get())
         else
-            rainbow(400000000L, borderAlphaValue.get())
+            Color.black
 
         // Draw
         val guiHeight = tabs.size * tabHeight.get()
 
-        if (borderValue.get())
-            RenderUtils.drawBorderedRect(1F, 0F, width.get(), guiHeight, borderStrength.get(), borderColor.rgb, backgroundColor.rgb)
-        else
-            RenderUtils.drawRect(1F, 0F, width.get(), guiHeight, backgroundColor.rgb)
+        if (borderValue.get()) {
+            RainbowShader.begin(borderRainbow.get(), if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+                RenderUtils.drawBorder(1F, 0F, width.get(), guiHeight, borderStrength.get(), borderColor.rgb)
+            }
+        }
 
-//        if (rectangleRainbowEnabled) {
-//            RainbowShader.INSTANCE.setOffset((System.nanoTime() + 400000000L) / 10000000000F % 1)
-//            RainbowShader.INSTANCE.setStrengthX(-1 / 500.0F)
-//            RainbowShader.INSTANCE.setStrengthY(-1 / 500.0F)
-//            RainbowShader.INSTANCE.startShader()
-//        }
-        RenderUtils.drawRect(1F, 1 + tabY - 1, width.get(), tabY + tabHeight.get(), color)
+        RenderUtils.drawRect(1F, 0F, width.get(), guiHeight, backgroundColor.rgb)
 
-//        if (rectangleRainbowEnabled) {
-//            RainbowShader.INSTANCE.stopShader()
-//        }
+        // Color
+        val rectColor = if (!rectangleRainbowEnabled)
+            Color(redValue.get(), greenValue.get(), blueValue.get(), alphaValue.get())
+        else {
+            Color.black
+        }
+
+        RainbowShader.begin(rectangleRainbowEnabled, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+            RenderUtils.drawRect(1F, 1 + tabY - 1, width.get(), tabY + tabHeight.get(), rectColor)
+        }
 
         GlStateManager.resetColor()
 
@@ -155,7 +152,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
                 tab.drawTab(
                         tabX,
                         y,
-                        color.rgb,
+                        rectColor.rgb,
                         backgroundColor.rgb,
                         borderColor.rgb,
                         borderStrength.get(),
