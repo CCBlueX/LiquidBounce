@@ -10,12 +10,14 @@ import net.ccbluex.liquidbounce.event.TextEvent
 import net.ccbluex.liquidbounce.utils.ClassUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.FontRenderer
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.resources.IResourceManager
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL20.glUseProgram
 import java.awt.Color
 import java.awt.Font
 
@@ -54,16 +56,28 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
         currentText = event.text ?: return 0
 
         val currY = y - 3F
-        if (shadow)
+
+        val rainbow = RainbowFontShader.INSTANCE.isInUse
+
+        if (shadow) {
+            glUseProgram(0)
+
             drawText(currentText, x + 1f, currY + 1f, Color(0, 0, 0, 150).rgb, true)
-        return drawText(currentText, x, currY, color, false)
+        }
+
+        return drawText(currentText, x, currY, color, false, rainbow)
     }
 
-    private fun drawText(text: String?, x: Float, y: Float, colorHex: Int, ignoreColor: Boolean): Int {
+    private fun drawText(text: String?, x: Float, y: Float, color: Int, ignoreColor: Boolean, rainbow: Boolean = false): Int {
         if (text == null)
             return 0
         if (text.isNullOrEmpty())
             return x.toInt()
+
+        val rainbowShaderId = RainbowFontShader.INSTANCE.programId
+
+        if (rainbow)
+            glUseProgram(rainbowShaderId)
 
         GlStateManager.translate(x - 1.5, y + 0.5, 0.0)
         GlStateManager.enableAlpha()
@@ -71,11 +85,14 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
         GlStateManager.enableTexture2D()
 
-        var hexColor = colorHex
-        if (hexColor and -67108864 == 0)
-            hexColor = hexColor or -16777216
+        var currentColor = color
 
-        val alpha: Int = (hexColor shr 24 and 0xff)
+        if (currentColor and -0x4000000 == 0)
+            currentColor = currentColor or -16777216
+
+        val defaultColor = currentColor
+
+        val alpha: Int = (currentColor shr 24 and 0xff)
 
         if (text.contains("§")) {
             val parts = text.split("§")
@@ -96,7 +113,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     return@forEachIndexed
 
                 if (index == 0) {
-                    currentFont.drawString(part, width, 0.0, hexColor)
+                    currentFont.drawString(part, width, 0.0, currentColor)
                     width += currentFont.getStringWidth(part)
                 } else {
                     val words = part.substring(1)
@@ -105,7 +122,10 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     when (val colorIndex = getColorIndex(type)) {
                         in 0..15 -> {
                             if (!ignoreColor) {
-                                hexColor = ColorUtils.hexColors[colorIndex] or (alpha shl 24)
+                                currentColor = ColorUtils.hexColors[colorIndex] or (alpha shl 24)
+
+                                if (rainbow)
+                                    glUseProgram(0)
                             }
 
                             bold = false
@@ -120,9 +140,13 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                         19 -> underline = true
                         20 -> italic = true
                         21 -> {
-                            hexColor = colorHex
-                            if (hexColor and -67108864 == 0)
-                                hexColor = hexColor or -16777216
+                            currentColor = color
+
+                            if (currentColor and -67108864 == 0)
+                                currentColor = currentColor or -16777216
+
+                            if (rainbow)
+                                glUseProgram(rainbowShaderId)
 
                             bold = false
                             italic = false
@@ -141,7 +165,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     else
                         defaultFont
 
-                    currentFont.drawString(if (randomCase) ColorUtils.randomMagicText(words) else words, width, 0.0, hexColor)
+                    currentFont.drawString(if (randomCase) ColorUtils.randomMagicText(words) else words, width, 0.0, currentColor)
 
                     if (strikeThrough)
                         RenderUtils.drawLine(width / 2.0 + 1, currentFont.height / 3.0,
@@ -156,8 +180,10 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     width += currentFont.getStringWidth(words)
                 }
             }
-        } else
-            defaultFont.drawString(text, 0.0, 0.0, hexColor)
+        } else {
+            // Color code states
+            defaultFont.drawString(text, 0.0, 0.0, currentColor)
+        }
 
         GlStateManager.disableBlend()
         GlStateManager.translate(-(x - 1.5), -(y + 0.5), 0.0)
