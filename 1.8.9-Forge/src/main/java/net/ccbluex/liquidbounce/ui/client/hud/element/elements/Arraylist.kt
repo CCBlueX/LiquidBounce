@@ -32,13 +32,13 @@ import java.awt.Color
 @ElementInfo(name = "Arraylist", single = true)
 class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                 side: Side = Side(Horizontal.RIGHT, Vertical.UP)) : Element(x, y, scale, side) {
+    private val rainbowX = FloatValue("Rainbow-X", -1000F, -2000F, 2000F)
+    private val rainbowY = FloatValue("Rainbow-Y", -1000F, -2000F, 2000F)
     private val colorModeValue = ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
     private val colorRedValue = IntegerValue("Text-R", 0, 0, 255)
     private val colorGreenValue = IntegerValue("Text-G", 111, 0, 255)
     private val colorBlueValue = IntegerValue("Text-B", 255, 0, 255)
     private val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow"), "Rainbow")
-    private val rainbowX = FloatValue("Rainbow-X", -1000F, -2000F, 2000F)
-    private val rainbowY = FloatValue("Rainbow-Y", -1000F, -2000F, 2000F)
     private val rectColorRedValue = IntegerValue("Rect-R", 255, 0, 255)
     private val rectColorGreenValue = IntegerValue("Rect-G", 255, 0, 255)
     private val rectColorBlueValue = IntegerValue("Rect-B", 255, 0, 255)
