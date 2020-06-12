@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.awt.*;
 import java.util.Comparator;
 import java.util.List;
 
@@ -48,7 +49,10 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
 
     @Inject(method = "keyTyped", at = @At("RETURN"))
     private void updateLength(CallbackInfo callbackInfo) {
-        if (inputField.getText().startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix())) && !inputField.getText().startsWith(LiquidBounce.commandManager.getPrefix() + "lc"))
+        if (!inputField.getText().startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix()))) return;
+        LiquidBounce.commandManager.autoComplete(inputField.getText());
+
+        if (!inputField.getText().startsWith(LiquidBounce.commandManager.getPrefix() + "lc"))
             inputField.setMaxStringLength(10000);
         else
             inputField.setMaxStringLength(100);
@@ -96,12 +100,31 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
     }
 
     /**
+     * Add this callback, to check if the User complete a Playername or a Liquidbounce command.
+     * To fix this bug: https://github.com/CCBlueX/LiquidBounce1.8-Issues/issues/3795
+     *
+     * @author derech1e
+     */
+    @Inject(method = "onAutocompleteResponse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiChat;autocompletePlayerNames(F)V", shift = At.Shift.BEFORE), cancellable = true)
+    private void onAutocompleteResponse(String[] autoCompleteResponse, CallbackInfo callbackInfo) {
+        if (LiquidBounce.commandManager.getLatestAutoComplete().length != 0) callbackInfo.cancel();
+    }
+
+    /**
      * @author CCBlueX
      */
     @Overwrite
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         Gui.drawRect(2, this.height - (int) fade, this.width - 2, this.height, Integer.MIN_VALUE);
         this.inputField.drawTextBox();
+
+        if (LiquidBounce.commandManager.getLatestAutoComplete().length > 0 && !inputField.getText().isEmpty() && inputField.getText().startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix()))) {
+            String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
+            String[] textArray = inputField.getText().split(" ");
+            String trimmedString = latestAutoComplete[0].replaceFirst("(?i)" + textArray[textArray.length - 1], "");
+
+            mc.fontRendererObj.drawStringWithShadow(trimmedString, inputField.xPosition + mc.fontRendererObj.getStringWidth(inputField.getText()), inputField.yPosition, new Color(165, 165, 165).getRGB());
+        }
 
         IChatComponent ichatcomponent =
                 this.mc.ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());
