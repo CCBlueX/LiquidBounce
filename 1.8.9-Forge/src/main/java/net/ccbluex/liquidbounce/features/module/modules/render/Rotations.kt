@@ -20,10 +20,11 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.network.play.client.C03PacketPlayer
 
-@ModuleInfo(name = "HeadRotations", description = "Allows you to see server-sided head and body rotations.", category = ModuleCategory.RENDER)
-class HeadRotations : Module() {
+@ModuleInfo(name = "Rotations", description = "Allows you to see server-sided head and body rotations.", category = ModuleCategory.RENDER)
+class Rotations : Module() {
 
     private val bodyValue = BoolValue("Body", true)
+
     private var playerYaw: Float? = null
 
     @EventTarget
@@ -34,7 +35,9 @@ class HeadRotations : Module() {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (!bodyValue.get() || !shouldRotate() || mc.thePlayer == null) return
+        if (!bodyValue.get() || !shouldRotate() || mc.thePlayer == null)
+            return
+
         val packet = event.packet
         if (packet is C03PacketPlayer.C06PacketPlayerPosLook || packet is C03PacketPlayer.C05PacketPlayerLook) {
             playerYaw = (packet as C03PacketPlayer).yaw
@@ -47,12 +50,14 @@ class HeadRotations : Module() {
         }
     }
 
-    private fun getModuleState(module: Class<*>): Boolean {
-        return LiquidBounce.moduleManager[module]!!.state
-    }
+    private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module]!!.state
 
     private fun shouldRotate(): Boolean {
         val killAura = LiquidBounce.moduleManager.getModule(KillAura::class.java) as KillAura
-        return getModuleState(Scaffold::class.java) || getModuleState(Tower::class.java) || (getModuleState(KillAura::class.java) && killAura.target != null) || getModuleState(Derp::class.java) || getModuleState(BowAimbot::class.java) || getModuleState(Fucker::class.java) || getModuleState(CivBreak::class.java) || getModuleState(Nuker::class.java) || getModuleState(ChestAura::class.java)
+        return getState(Scaffold::class.java) || getState(Tower::class.java) ||
+                (getState(KillAura::class.java) && killAura.target != null) ||
+                getState(Derp::class.java) || getState(BowAimbot::class.java) ||
+                getState(Fucker::class.java) || getState(CivBreak::class.java) || getState(Nuker::class.java) ||
+                getState(ChestAura::class.java)
     }
 }

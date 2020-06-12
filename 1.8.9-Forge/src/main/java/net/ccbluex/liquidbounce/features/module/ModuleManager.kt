@@ -167,7 +167,7 @@ class ModuleManager : Listenable {
                 KeepContainer::class.java,
                 VehicleOneHit::class.java,
                 Reach::class.java,
-                HeadRotations::class.java,
+                Rotations::class.java,
                 NoJumpDelay::class.java,
                 BlockWalk::class.java,
                 AntiAFK::class.java,
