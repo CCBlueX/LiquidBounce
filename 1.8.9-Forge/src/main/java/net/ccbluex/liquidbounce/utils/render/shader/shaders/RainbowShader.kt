@@ -3,64 +3,64 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
+package net.ccbluex.liquidbounce.utils.render.shader.shaders
 
-package net.ccbluex.liquidbounce.utils.render.shader.shaders;
+import net.ccbluex.liquidbounce.utils.render.shader.Shader
+import org.lwjgl.opengl.GL20
+import java.io.Closeable
 
-import net.ccbluex.liquidbounce.utils.render.shader.Shader;
-import org.lwjgl.opengl.GL20;
+class RainbowShader : Shader("rainbow_shader.frag"), Closeable {
+    var isInUse = false
+        private set
 
-public class RainbowShader extends Shader {
-    public static final RainbowShader INSTANCE = new RainbowShader();
+    var strengthX = 0f
+    var strengthY = 0f
+    var offset = 0f
 
-    private boolean inUse = false;
-
-    private float strengthX;
-    private float strengthY;
-    private float offset;
-
-    public RainbowShader() {
-        super("rainbow_shader.frag");
+    override fun setupUniforms() {
+        setupUniform("offset")
+        setupUniform("strength")
     }
 
-    @Override
-    public void setupUniforms() {
-        setupUniform("offset");
-        setupUniform("strength");
+    override fun updateUniforms() {
+        GL20.glUniform2f(getUniform("strength"), strengthX, strengthY)
+        GL20.glUniform1f(getUniform("offset"), offset)
     }
 
-    @Override
-    public void updateUniforms() {
-        GL20.glUniform2f(getUniform("strength"), strengthX, strengthY);
-        GL20.glUniform1f(getUniform("offset"), offset);
+    override fun startShader() {
+        super.startShader()
+
+        isInUse = true
     }
 
-    public void setStrengthX(float strengthX) {
-        this.strengthX = strengthX;
+    override fun stopShader() {
+        super.stopShader()
+
+        isInUse = false
     }
 
-    public void setStrengthY(float strengthY) {
-        this.strengthY = strengthY;
+    override fun close() {
+        if (isInUse)
+            stopShader()
     }
 
-    public void setOffset(float offset) {
-        this.offset = offset;
-    }
+    companion object {
+        @JvmField
+        val INSTANCE = RainbowShader()
 
-    @Override
-    public void startShader() {
-        super.startShader();
+        @Suppress("NOTHING_TO_INLINE")
+        inline fun begin(enable: Boolean, x: Float, y: Float, offset: Float): RainbowShader {
+            val instance = INSTANCE
 
-        inUse = true;
-    }
+            if (enable) {
+                instance.strengthX = x
+                instance.strengthY = y
+                instance.offset = offset
 
-    @Override
-    public void stopShader() {
-        super.stopShader();
+                instance.startShader()
+            }
 
-        inUse = false;
-    }
-
-    public boolean isInUse() {
-        return inUse;
+            return instance
+        }
     }
 }

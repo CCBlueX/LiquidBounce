@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Vertical
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
-import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
@@ -38,6 +37,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     private val colorGreenValue = IntegerValue("Text-G", 111, 0, 255)
     private val colorBlueValue = IntegerValue("Text-B", 255, 0, 255)
     private val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow"), "Rainbow")
+    private val rainbowX = FloatValue("Rainbow-X", -1000F, -2000F, 2000F)
+    private val rainbowY = FloatValue("Rainbow-Y", -1000F, -2000F, 2000F)
     private val rectColorRedValue = IntegerValue("Rect-R", 255, 0, 255)
     private val rectColorGreenValue = IntegerValue("Rect-G", 255, 0, 255)
     private val rectColorBlueValue = IntegerValue("Rect-B", 255, 0, 255)
@@ -135,63 +136,47 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                             if (side.vertical == Vertical.DOWN) index + 1 else index
                     val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
-                    RenderUtils.drawRect(
-                            xPos - if (rectMode.equals("right", true)) 5 else 2,
-                            yPos,
-                            if (rectMode.equals("right", true)) -3F else 0F,
-                            yPos + textHeight, when {
-                        backgroundColorMode.equals("Rainbow", ignoreCase = true) -> 0
-                        backgroundColorMode.equals("Random", ignoreCase = true) -> moduleColor
-                        else -> backgroundCustomColor
+                    val backgroundRectRainbow = backgroundColorMode.equals("Rainbow", ignoreCase = true)
+
+                    RainbowShader.begin(backgroundRectRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+                        RenderUtils.drawRect(
+                                xPos - if (rectMode.equals("right", true)) 5 else 2,
+                                yPos,
+                                if (rectMode.equals("right", true)) -3F else 0F,
+                                yPos + textHeight, when {
+                            backgroundRectRainbow -> 0xFF shl 24
+                            backgroundColorMode.equals("Random", ignoreCase = true) -> moduleColor
+                            else -> backgroundCustomColor
+                        }
+                        )
                     }
-                    )
 
                     val rainbow = colorMode.equals("Rainbow", ignoreCase = true)
 
-                    if (rainbow) {
-                        RainbowFontShader.INSTANCE.setOffset((System.nanoTime() + 400000000L) / 10000000000F % 1)
-                        RainbowFontShader.INSTANCE.setStrengthX(-1 / 500.0F)
-                        RainbowFontShader.INSTANCE.setStrengthY(-1 / 500.0F)
-                        RainbowFontShader.INSTANCE.startShader()
-                    }
-
-                    fontRenderer.drawString(displayString, xPos - if (rectMode.equals("right", true)) 3 else 0, yPos + textY, when {
-                        rainbow -> 0
-                        colorMode.equals("Random", ignoreCase = true) -> moduleColor
-                        else -> customColor
-                    }, textShadow)
-
-
-                    if (rainbow) {
-                        RainbowFontShader.INSTANCE.stopShader()
+                    RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+                        fontRenderer.drawString(displayString, xPos - if (rectMode.equals("right", true)) 3 else 0, yPos + textY, when {
+                            rainbow -> 0
+                            colorMode.equals("Random", ignoreCase = true) -> moduleColor
+                            else -> customColor
+                        }, textShadow)
                     }
 
                     if (!rectMode.equals("none", true)) {
                         val rectRainbow = rectColorMode.equals("Rainbow", ignoreCase = true)
 
-                        if (rectRainbow) {
-                            RainbowShader.INSTANCE.setOffset((System.nanoTime() + 400000000L) / 10000000000F % 1)
-                            RainbowShader.INSTANCE.setStrengthX(-1 / 500.0F)
-                            RainbowShader.INSTANCE.setStrengthY(-1 / 500.0F)
-                            RainbowShader.INSTANCE.startShader()
-                        }
+                        RainbowShader.begin(rectRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+                            val rectColor = when {
+                                rectRainbow -> 0
+                                rectColorMode.equals("Random", ignoreCase = true) -> moduleColor
+                                else -> rectCustomColor
+                            }
 
-                        val rectColor = when {
-                            rectRainbow -> 0
-                            rectColorMode.equals("Random", ignoreCase = true) -> moduleColor
-                            else -> rectCustomColor
-                        }
-
-                        when {
-                            rectMode.equals("left", true) -> RenderUtils.drawRect(xPos - 5, yPos, xPos - 2, yPos + textHeight,
-                                    rectColor)
-                            rectMode.equals("right", true) -> RenderUtils.drawRect(-3F, yPos, 0F,
-                                    yPos + textHeight, rectColor)
-                        }
-
-
-                        if (rectRainbow) {
-                            RainbowShader.INSTANCE.stopShader()
+                            when {
+                                rectMode.equals("left", true) -> RenderUtils.drawRect(xPos - 5, yPos, xPos - 2, yPos + textHeight,
+                                        rectColor)
+                                rectMode.equals("right", true) -> RenderUtils.drawRect(-3F, yPos, 0F,
+                                        yPos + textHeight, rectColor)
+                            }
                         }
                     }
                 }
@@ -214,36 +199,48 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                             if (side.vertical == Vertical.DOWN) index + 1 else index
                     val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
-                    RenderUtils.drawRect(
-                            0F,
-                            yPos,
-                            xPos + width + if (rectMode.equals("right", true)) 5 else 2,
-                            yPos + textHeight, when {
-                        backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
-                        backgroundColorMode.equals("Random", ignoreCase = true) -> moduleColor
-                        else -> backgroundCustomColor
-                    }
-                    )
+                    val backgroundRectRainbow = backgroundColorMode.equals("Rainbow", ignoreCase = true)
 
-                    fontRenderer.drawString(displayString, xPos, yPos + textY, when {
-                        colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
-                        colorMode.equals("Random", ignoreCase = true) -> moduleColor
-                        else -> customColor
-                    }, textShadow)
-
-                    if (!rectMode.equals("none", true)) {
-                        val rectColor = when {
-                            rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
-                            rectColorMode.equals("Random", ignoreCase = true) -> moduleColor
-                            else -> rectCustomColor
+                    RainbowShader.begin(backgroundRectRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+                        RenderUtils.drawRect(
+                                0F,
+                                yPos,
+                                xPos + width + if (rectMode.equals("right", true)) 5 else 2,
+                                yPos + textHeight, when {
+                            backgroundRectRainbow -> 0
+                            backgroundColorMode.equals("Random", ignoreCase = true) -> moduleColor
+                            else -> backgroundCustomColor
                         }
+                        )
+                    }
 
-                        when {
-                            rectMode.equals("left", true) -> RenderUtils.drawRect(0F,
-                                    yPos - 1, 3F, yPos + textHeight, rectColor)
-                            rectMode.equals("right", true) ->
-                                RenderUtils.drawRect(xPos + width + 2, yPos, xPos + width + 2 + 3,
-                                        yPos + textHeight, rectColor)
+                    val rainbow = colorMode.equals("Rainbow", ignoreCase = true)
+
+                    RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+                        fontRenderer.drawString(displayString, xPos, yPos + textY, when {
+                            rainbow -> 0
+                            colorMode.equals("Random", ignoreCase = true) -> moduleColor
+                            else -> customColor
+                        }, textShadow)
+                    }
+
+                    val rectColorRainbow = backgroundColorMode.equals("Rainbow", ignoreCase = true)
+
+                    RainbowShader.begin(rectColorRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+                        if (!rectMode.equals("none", true)) {
+                            val rectColor = when {
+                                rectColorRainbow -> 0
+                                rectColorMode.equals("Random", ignoreCase = true) -> moduleColor
+                                else -> rectCustomColor
+                            }
+
+                            when {
+                                rectMode.equals("left", true) -> RenderUtils.drawRect(0F,
+                                        yPos - 1, 3F, yPos + textHeight, rectColor)
+                                rectMode.equals("right", true) ->
+                                    RenderUtils.drawRect(xPos + width + 2, yPos, xPos + width + 2 + 3,
+                                            yPos + textHeight, rectColor)
+                            }
                         }
                     }
                 }

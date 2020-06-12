@@ -16,5 +16,5 @@ float rand(vec2 co){
 void main() {
     vec2 color_vector = gl_FragCoord.xy * strength;
 
-    gl_FragColor = vec4(hsv2rgb(vec3(mod(sqrt(color_vector.x * color_vector.x + color_vector.y * color_vector.y) + offset, 1.0), 1.0, 1.0)), 1.0);
+    gl_FragColor = vec4(hsv2rgb(vec3(mod(color_vector.x + color_vector.y + offset, 1.0), 1.0, 1.0)), 1.0);
 }

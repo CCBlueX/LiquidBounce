@@ -17,10 +17,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FontValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.TextValue
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.Minecraft
 import net.minecraft.util.ChatAllowedCharacters
 import org.lwjgl.input.Keyboard
@@ -66,6 +63,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
     private val greenValue = IntegerValue("Green", 255, 0, 255)
     private val blueValue = IntegerValue("Blue", 255, 0, 255)
     private val rainbow = BoolValue("Rainbow", false)
+    private val rainbowX = FloatValue("Rainbow-X", -1000F, -2000F, 2000F)
+    private val rainbowY = FloatValue("Rainbow-Y", -1000F, -2000F, 2000F)
     private val shadow = BoolValue("Shadow", true)
     private var fontValue = FontValue("Font", Fonts.font40)
 
@@ -156,22 +155,13 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
 
         val rainbow = rainbow.get()
 
-        if (rainbow) {
-            RainbowFontShader.INSTANCE.setOffset((System.nanoTime() + 400000000L) / 10000000000F % 1)
-            RainbowFontShader.INSTANCE.setStrengthX(-1 / 500.0F)
-            RainbowFontShader.INSTANCE.setStrengthY(-1 / 500.0F)
-            RainbowFontShader.INSTANCE.startShader()
-        }
+        RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+            fontRenderer.drawString(displayText, 0F, 0F, if (rainbow)
+                0 else color, shadow.get())
 
-        fontRenderer.drawString(displayText, 0F, 0F, if (rainbow)
-            0 else color, shadow.get())
-
-        if (editMode && mc.currentScreen is GuiHudDesigner && editTicks <= 40)
-            fontRenderer.drawString("_", fontRenderer.getStringWidth(displayText) + 2F,
-                    0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else color, shadow.get())
-
-        if (rainbow) {
-            RainbowFontShader.INSTANCE.stopShader()
+            if (editMode && mc.currentScreen is GuiHudDesigner && editTicks <= 40)
+                fontRenderer.drawString("_", fontRenderer.getStringWidth(displayText) + 2F,
+                        0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else color, shadow.get())
         }
 
         if (editMode && mc.currentScreen !is GuiHudDesigner) {
