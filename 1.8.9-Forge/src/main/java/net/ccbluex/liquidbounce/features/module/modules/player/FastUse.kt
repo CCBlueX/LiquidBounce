@@ -28,9 +28,9 @@ class FastUse : Module() {
 
     private val noMoveValue = BoolValue("NoMove", false)
 
-    private val delayValue = IntegerValue("Custom Delay", 0, 0, 300)
-    private val customSpeedValue = IntegerValue("Custom Speed", 2, 1, 35)
-    private val customTimer = FloatValue("Custom Timer", 1.1f, 0.5f, 2f)
+    private val delayValue = IntegerValue("CustomDelay", 0, 0, 300)
+    private val customSpeedValue = IntegerValue("CustomSpeed", 2, 1, 35)
+    private val customTimer = FloatValue("CustomTimer", 1.1f, 0.5f, 2f)
 
     private val msTimer = MSTimer()
     private var usedTimer = false
