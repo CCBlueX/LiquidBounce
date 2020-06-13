@@ -24,6 +24,7 @@ import java.awt.Color
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.*
+import kotlin.math.abs
 import kotlin.math.pow
 
 /**
@@ -31,6 +32,7 @@ import kotlin.math.pow
  */
 @ElementInfo(name = "Target")
 class Target : Element() {
+
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
     private val fadeSpeed = FloatValue("FadeSpeed", 2F, 1F, 9F)
 
@@ -41,7 +43,8 @@ class Target : Element() {
         val target = (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target
 
         if (target is EntityPlayer) {
-            if (target != lastTarget || easingHealth < 0 || easingHealth > target.maxHealth || kotlin.math.abs(easingHealth - target.health) < 0.01) {
+            if (target != lastTarget || easingHealth < 0 || easingHealth > target.maxHealth ||
+                    abs(easingHealth - target.health) < 0.01) {
                 easingHealth = target.health
             }
 
