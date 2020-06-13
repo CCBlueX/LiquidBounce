@@ -25,6 +25,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSlot;
+import net.minecraft.client.gui.GuiTextField;
 import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
@@ -45,6 +46,7 @@ public class GuiAltManager extends GuiScreen {
     private GuiButton loginButton;
     private GuiButton randomButton;
     private GuiList altsList;
+    private GuiTextField searchField;
 
     public GuiAltManager(final GuiScreen prevGui) {
         this.prevGui = prevGui;
@@ -139,6 +141,9 @@ public class GuiAltManager extends GuiScreen {
         altsList.elementClicked(index, false, 0, 0);
         altsList.scrollBy(index * altsList.slotHeight);
 
+        searchField = new GuiTextField(2, Fonts.font40, width - width / 4 - 4, 10, width / 4, 20);
+        searchField.setMaxStringLength(Integer.MAX_VALUE);
+
         int j = 22;
         this.buttonList.add(new GuiButton(1, width - 80, j + 24, 70, 20, "Add"));
         this.buttonList.add(new GuiButton(2, width - 80, j + 24 * 2, 70, 20, "Remove"));
@@ -173,6 +178,12 @@ public class GuiAltManager extends GuiScreen {
         Fonts.font35.drawCenteredString(status, width / 2.0f, 32, 0xffffff);
         Fonts.font35.drawStringWithShadow("§7User: §a" + (MCLeaks.isAltActive() ? MCLeaks.getSession().getUsername() : mc.getSession().getUsername()), 6, 6, 0xffffff);
         Fonts.font35.drawStringWithShadow("§7Type: §a" + (altService.getCurrentService() == AltService.EnumAltService.THEALTENING ? "TheAltening" : MCLeaks.isAltActive() ? "MCLeaks" : UserUtils.INSTANCE.isValidTokenOffline(mc.getSession().getToken()) ? "Premium" : "Cracked"), 6, 15, 0xffffff);
+
+        this.searchField.drawTextBox();
+
+        if (searchField.getText().isEmpty() && !searchField.isFocused())
+            drawString(Fonts.font40, "§7Search...", this.searchField.xPosition + 4, 17, 0xffffff);
+
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
@@ -298,6 +309,11 @@ public class GuiAltManager extends GuiScreen {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (searchField.isFocused()) {
+            searchField.textboxKeyTyped(typedChar, keyCode);
+            this.altsList.updateAccounts(searchField.getText());
+        }
+
         switch (keyCode) {
             case Keyboard.KEY_ESCAPE:
                 mc.displayGuiScreen(prevGui);
@@ -337,6 +353,18 @@ public class GuiAltManager extends GuiScreen {
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         altsList.handleMouseInput();
+    }
+
+    @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        searchField.mouseClicked(mouseX, mouseY, mouseButton);
+
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+    }
+
+    @Override
+    public void updateScreen() {
+        searchField.updateCursorCounter();
     }
 
     private class GuiList extends GuiSlot {
