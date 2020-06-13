@@ -21,6 +21,9 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11
 import java.awt.Color
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.*
 import kotlin.math.pow
 
 /**
@@ -28,6 +31,7 @@ import kotlin.math.pow
  */
 @ElementInfo(name = "Target")
 class Target : Element() {
+    private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
     private val fadeSpeed = FloatValue("FadeSpeed", 2F, 1F, 9F)
 
     private var easingHealth: Float = 0F
@@ -59,12 +63,12 @@ class Target : Element() {
             easingHealth += ((target.health - easingHealth) / 2.0F.pow(10.0F - fadeSpeed.get())) * RenderUtils.deltaTime
 
             Fonts.font40.drawString(target.name, 36, 3, 0xffffff)
-            Fonts.font35.drawString("Distance: ${"%.2f".format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
+            Fonts.font35.drawString("Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
 
             // Draw head
             val playerInfo = mc.netHandler.getPlayerInfo(target.uniqueID)
             if (playerInfo != null) {
-                Fonts.font35.drawString("Ping: ${playerInfo.responseTime.coerceAtLeast(0)}", 36, 23, 0xffffff)
+                Fonts.font35.drawString("Ping: ${playerInfo.responseTime.coerceAtLeast(0)}", 36, 24, 0xffffff)
 
                 val locationSkin = playerInfo.locationSkin
 
