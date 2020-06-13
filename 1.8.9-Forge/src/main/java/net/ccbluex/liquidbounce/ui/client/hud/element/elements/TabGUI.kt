@@ -96,13 +96,13 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
         // Draw
         val guiHeight = tabs.size * tabHeight.get()
 
+        RenderUtils.drawRect(1F, 0F, width.get(), guiHeight, backgroundColor.rgb)
+
         if (borderValue.get()) {
             RainbowShader.begin(borderRainbow.get(), if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
                 RenderUtils.drawBorder(1F, 0F, width.get(), guiHeight, borderStrength.get(), borderColor.rgb)
             }
         }
-
-        RenderUtils.drawRect(1F, 0F, width.get(), guiHeight, backgroundColor.rgb)
 
         // Color
         val rectColor = if (!rectangleRainbowEnabled)
@@ -157,7 +157,9 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
                         borderColor.rgb,
                         borderStrength.get(),
                         upperCaseValue.get(),
-                        fontRenderer
+                        fontRenderer,
+                        borderValue.get(),
+                        rectangleRainbowEnabled
                 )
             }
             y += tabHeight.get()
@@ -283,7 +285,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
         var textFade = 0F
 
         fun drawTab(x: Float, y: Float, color: Int, backgroundColor: Int, borderColor: Int, borderStrength: Float,
-                    upperCase: Boolean, fontRenderer: FontRenderer) {
+                    upperCase: Boolean, fontRenderer: FontRenderer, borderRainbow: Boolean, rectRainbow: Boolean) {
             var maxWidth = 0
 
             for (module in modules)
@@ -294,12 +296,18 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
 
             val menuHeight = modules.size * tabHeight.get()
 
-            if (borderValue.get())
-                RenderUtils.drawBorderedRect(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, borderStrength, borderColor, backgroundColor)
-            else
-                RenderUtils.drawRect(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, backgroundColor)
+            if (borderValue.get()) {
+                RainbowShader.begin(borderRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+                    RenderUtils.drawBorder(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, borderStrength, borderColor)
+                }
+            }
+            RenderUtils.drawRect(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, backgroundColor)
 
-            RenderUtils.drawRect(x - 1.toFloat(), y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight.get() - 1, color)
+
+            RainbowShader.begin(rectRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+                RenderUtils.drawRect(x - 1.toFloat(), y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight.get() - 1, color)
+            }
+
             GlStateManager.resetColor()
 
             modules.forEachIndexed { index, module ->

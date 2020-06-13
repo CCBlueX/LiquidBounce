@@ -224,7 +224,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                         }, textShadow)
                     }
 
-                    val rectColorRainbow = backgroundColorMode.equals("Rainbow", ignoreCase = true)
+                    val rectColorRainbow = rectColorMode.equals("Rainbow", ignoreCase = true)
 
                     RainbowShader.begin(rectColorRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
                         if (!rectMode.equals("none", true)) {
