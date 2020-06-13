@@ -1,3 +1,9 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
+
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -7,46 +13,50 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.client.gui.Gui
+import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11
 import java.awt.Color
+import kotlin.math.pow
 
 /**
  * A target hud
  */
 @ElementInfo(name = "Target")
 class Target : Element() {
-
-    // TODO: Add more options
+    private val fadeSpeed = FloatValue("FadeSpeed", 2F, 1F, 9F)
 
     private var easingHealth: Float = 0F
-    private var easingStep: Float = 0F
+    private var lastTarget: Entity? = null
 
     override fun drawElement(): Border {
-        val killaura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-        val target = killaura.target
+        val target = (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target
 
         if (target is EntityPlayer) {
-            // Easing
-            val delta = RenderUtils.deltaTime
-            val width = (target.health / target.maxHealth) * 118F
-
-            // TODO: Fix flicking around
-            if (easingHealth < width) {
-                easingHealth = AnimationUtils.easeOut(easingStep, width) * width
-                easingStep += delta / 0.4F
-            } else if (easingHealth > width) {
-                easingHealth = AnimationUtils.easeOut(easingStep, width) * width
-                easingStep -= delta / 0.4F
+            if (target != lastTarget || easingHealth < 0 || easingHealth > target.maxHealth || kotlin.math.abs(easingHealth - target.health) < 0.01) {
+                easingHealth = target.health
             }
 
             // Draw
             RenderUtils.drawBorderedRect(0F, 0F, 118F, 36F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
-            RenderUtils.drawRect(0F, 34F, easingHealth, 36F, Color.RED.rgb)
+
+            // Damaged
+            if (easingHealth > target.health) {
+                RenderUtils.drawRect(0F, 34F, (easingHealth / target.maxHealth) * 118F, 36F, Color(255, 156, 0).rgb)
+            }
+
+            RenderUtils.drawRect(0F, 34F, (target.health / target.maxHealth) * 118F, 36F, Color.RED.rgb)
+
+            // Healed
+            if (easingHealth < target.health) {
+                RenderUtils.drawRect((easingHealth / target.maxHealth) * 118F, 34F, (target.health / target.maxHealth) * 118F, 36F, Color(68, 229, 0).rgb)
+            }
+
+            easingHealth += ((target.health - easingHealth) / 2.0F.pow(10.0F - fadeSpeed.get())) * RenderUtils.deltaTime
 
             Fonts.font40.drawString(target.name, 36, 3, 0xffffff)
             Fonts.font35.drawString("Distance: ${"%.2f".format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
@@ -61,6 +71,8 @@ class Target : Element() {
                 drawHead(locationSkin, 30, 30)
             }
         }
+
+        lastTarget = target
 
         return Border(0F, 0F, 120F, 36F)
     }
