@@ -5,7 +5,10 @@
  */
 package net.ccbluex.liquidbounce.file.configs;
 
+import com.google.gson.*;
 import net.ccbluex.liquidbounce.file.FileConfig;
+import net.ccbluex.liquidbounce.file.FileManager;
+import net.ccbluex.liquidbounce.utils.ClientUtils;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -32,21 +35,42 @@ public class FriendsConfig extends FileConfig {
     @Override
     protected void loadConfig() throws IOException {
         clearFriends();
+        try {
+            final JsonElement jsonElement = new JsonParser().parse(new BufferedReader(new FileReader(getFile())));
 
-        final BufferedReader bufferedReader = new BufferedReader(new FileReader(getFile()));
-        String line;
-        while((line = bufferedReader.readLine()) != null) {
-            if(!line.contains("{") && !line.contains("}")) {
-                line = line.replace(" ", "").replace("\"", "").replace(",", "");
+            if (jsonElement instanceof JsonNull)
+                return;
 
-                if(line.contains(":")) {
-                    String[] data = line.split(":");
-                    addFriend(data[0], data[1]);
-                }else
-                    addFriend(line);
+            for (final JsonElement friendElement : jsonElement.getAsJsonArray()) {
+                JsonObject friendObject = friendElement.getAsJsonObject();
+                addFriend(friendObject.get("playerName").getAsString(), friendObject.get("alias").getAsString());
             }
+
+        } catch (JsonSyntaxException | IllegalStateException ex) {
+            //When the JSON Parse fail, the client try to load and update the old config
+            ClientUtils.getLogger().info("[FileManager] Try to load old Friends config...");
+
+            final BufferedReader bufferedReader = new BufferedReader(new FileReader(getFile()));
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                if (!line.contains("{") && !line.contains("}")) {
+                    line = line.replace(" ", "").replace("\"", "").replace(",", "");
+
+                    if (line.contains(":")) {
+                        String[] data = line.split(":");
+                        addFriend(data[0], data[1]);
+                    } else
+                        addFriend(line);
+                }
+            }
+            bufferedReader.close();
+            ClientUtils.getLogger().info("[FileManager] Loaded old Friends config...");
+
+            //Save the friends into a new valid JSON file
+            saveConfig();
+            ClientUtils.getLogger().info("[FileManager] Saved Friends to new config...");
         }
-        bufferedReader.close();
     }
 
     /**
@@ -56,9 +80,17 @@ public class FriendsConfig extends FileConfig {
      */
     @Override
     protected void saveConfig() throws IOException {
+        final JsonArray jsonArray = new JsonArray();
+
+        for (final Friend friend : getFriends()) {
+            JsonObject friendObject = new JsonObject();
+            friendObject.addProperty("playerName", friend.getPlayerName());
+            friendObject.addProperty("alias", friend.getAlias());
+            jsonArray.add(friendObject);
+        }
+
         final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
-        for(final Friend friend : getFriends())
-            printWriter.append(friend.getPlayerName()).append(":").append(friend.getAlias()).append("\n");
+        printWriter.println(FileManager.PRETTY_GSON.toJson(jsonArray));
         printWriter.close();
     }
 
