@@ -16,8 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AccountsConfig extends FileConfig {
-
-    private final List<MinecraftAccount> altManagerMinecraftAccounts = new ArrayList<>();
+    private final List<MinecraftAccount> accounts = new ArrayList<>();
 
     /**
      * Constructor of config
@@ -64,17 +63,17 @@ public class AccountsConfig extends FileConfig {
             if (accountList == null)
                 return;
 
-            altManagerMinecraftAccounts.clear();
+            accounts.clear();
 
             for (final String account : accountList) {
                 final String[] information = account.split(":");
 
                 if (information.length >= 3)
-                    altManagerMinecraftAccounts.add(new MinecraftAccount(information[0], information[1], information[2]));
+                    accounts.add(new MinecraftAccount(information[0], information[1], information[2]));
                 else if (information.length == 2)
-                    altManagerMinecraftAccounts.add(new MinecraftAccount(information[0], information[1]));
+                    accounts.add(new MinecraftAccount(information[0], information[1]));
                 else
-                    altManagerMinecraftAccounts.add(new MinecraftAccount(information[0]));
+                    accounts.add(new MinecraftAccount(information[0]));
             }
             ClientUtils.getLogger().info("[FileManager] Loaded old Accounts config...");
 
@@ -94,7 +93,7 @@ public class AccountsConfig extends FileConfig {
     protected void saveConfig() throws IOException {
         final JsonArray jsonArray = new JsonArray();
 
-        for (final MinecraftAccount minecraftAccount : altManagerMinecraftAccounts) {
+        for (final MinecraftAccount minecraftAccount : accounts) {
             JsonObject friendObject = new JsonObject();
             friendObject.addProperty("name", minecraftAccount.getName());
             friendObject.addProperty("password", minecraftAccount.getPassword());
@@ -116,7 +115,7 @@ public class AccountsConfig extends FileConfig {
         if (accountExists(name))
             return;
 
-        altManagerMinecraftAccounts.add(new MinecraftAccount(name));
+        accounts.add(new MinecraftAccount(name));
     }
 
     /**
@@ -129,7 +128,7 @@ public class AccountsConfig extends FileConfig {
         if (accountExists(name))
             return;
 
-        altManagerMinecraftAccounts.add(new MinecraftAccount(name, password));
+        accounts.add(new MinecraftAccount(name, password));
     }
 
     /**
@@ -142,7 +141,7 @@ public class AccountsConfig extends FileConfig {
         if (accountExists(name))
             return;
 
-        altManagerMinecraftAccounts.add(new MinecraftAccount(name, password, inGameName));
+        accounts.add(new MinecraftAccount(name, password, inGameName));
     }
 
     /**
@@ -151,10 +150,10 @@ public class AccountsConfig extends FileConfig {
      * @param selectedSlot of the account
      */
     public void removeAccount(final int selectedSlot) {
-        if (!accountExists(altManagerMinecraftAccounts.get(selectedSlot).getName()))
+        if (!accountExists(accounts.get(selectedSlot).getName()))
             return;
 
-        altManagerMinecraftAccounts.remove(selectedSlot);
+        accounts.remove(selectedSlot);
     }
 
     /**
@@ -164,7 +163,7 @@ public class AccountsConfig extends FileConfig {
      * @return if the account exists
      */
     public boolean accountExists(final String name) {
-        for (final MinecraftAccount minecraftAccount : altManagerMinecraftAccounts)
+        for (final MinecraftAccount minecraftAccount : accounts)
             if (minecraftAccount.getName().equals(name))
                 return true;
         return false;
@@ -174,7 +173,7 @@ public class AccountsConfig extends FileConfig {
      * Clear all minecraft accounts from alt array
      */
     public void clearAccounts() {
-        altManagerMinecraftAccounts.clear();
+        accounts.clear();
     }
 
     /**
@@ -182,7 +181,7 @@ public class AccountsConfig extends FileConfig {
      *
      * @return list of Alt Accounts
      */
-    public List<MinecraftAccount> getAltManagerMinecraftAccounts() {
-        return altManagerMinecraftAccounts;
+    public List<MinecraftAccount> getAccounts() {
+        return accounts;
     }
 }

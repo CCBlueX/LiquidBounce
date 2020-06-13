@@ -198,7 +198,7 @@ public class GuiAdd extends GuiScreen {
             }
 
 
-            LiquidBounce.fileManager.accountsConfig.getAltManagerMinecraftAccounts().add(account);
+            LiquidBounce.fileManager.accountsConfig.getAccounts().add(account);
             LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 
             status = "§aThe account has been added.";

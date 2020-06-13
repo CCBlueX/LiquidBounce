@@ -92,7 +92,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
                     }
                 }
 
-                final List<MinecraftAccount> accounts = LiquidBounce.fileManager.accountsConfig.getAltManagerMinecraftAccounts();
+                final List<MinecraftAccount> accounts = LiquidBounce.fileManager.accountsConfig.getAccounts();
                 if (accounts.isEmpty()) break;
 
                 final MinecraftAccount minecraftAccount = accounts.get(new Random().nextInt(accounts.size()));
