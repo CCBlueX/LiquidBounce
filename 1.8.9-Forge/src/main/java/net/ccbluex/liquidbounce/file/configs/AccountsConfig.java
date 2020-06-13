@@ -150,10 +150,17 @@ public class AccountsConfig extends FileConfig {
      * @param selectedSlot of the account
      */
     public void removeAccount(final int selectedSlot) {
-        if (!accountExists(accounts.get(selectedSlot).getName()))
-            return;
-
         accounts.remove(selectedSlot);
+    }
+
+
+    /**
+     * Removed an account from the config
+     *
+     * @param account the account
+     */
+    public void removeAccount(MinecraftAccount account) {
+        accounts.remove(account);
     }
 
     /**
