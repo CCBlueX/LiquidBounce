@@ -46,14 +46,14 @@ class Target : Element() {
 
             // Damaged
             if (easingHealth > target.health) {
-                RenderUtils.drawRect(0F, 34F, (easingHealth / target.maxHealth) * 118F, 36F, Color(255, 156, 0).rgb)
+                RenderUtils.drawRect(0F, 34F, (easingHealth / target.maxHealth) * 118F, 36F, Color(252, 185, 65).rgb)
             }
 
-            RenderUtils.drawRect(0F, 34F, (target.health / target.maxHealth) * 118F, 36F, Color.RED.rgb)
+            RenderUtils.drawRect(0F, 34F, (target.health / target.maxHealth) * 118F, 36F, Color(252, 96, 66).rgb)
 
             // Healed
             if (easingHealth < target.health) {
-                RenderUtils.drawRect((easingHealth / target.maxHealth) * 118F, 34F, (target.health / target.maxHealth) * 118F, 36F, Color(68, 229, 0).rgb)
+                RenderUtils.drawRect((easingHealth / target.maxHealth) * 118F, 34F, (target.health / target.maxHealth) * 118F, 36F, Color(44, 201, 144).rgb)
             }
 
             easingHealth += ((target.health - easingHealth) / 2.0F.pow(10.0F - fadeSpeed.get())) * RenderUtils.deltaTime
