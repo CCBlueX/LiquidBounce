@@ -85,7 +85,7 @@ public class GuiAdd extends GuiScreen {
                 mc.displayGuiScreen(prevGui);
                 break;
             case 1:
-                if (LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.stream().anyMatch(account -> account.getName().equals(username.getText()))) {
+                if (LiquidBounce.fileManager.accountsConfig.accountExists(username.getText())) {
                     status = "§cThe account has already been added.";
                     break;
                 }
@@ -158,8 +158,7 @@ public class GuiAdd extends GuiScreen {
     }
 
     private void addAccount(final String name, final String password) {
-        if (LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.stream()
-                .anyMatch(account -> account.getName().equals(name))) {
+        if (LiquidBounce.fileManager.accountsConfig.accountExists(name)) {
             status = "§cThe account has already been added.";
             return;
         }
@@ -199,7 +198,7 @@ public class GuiAdd extends GuiScreen {
             }
 
 
-            LiquidBounce.fileManager.accountsConfig.altManagerMinecraftAccounts.add(account);
+            LiquidBounce.fileManager.accountsConfig.getAccounts().add(account);
             LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 
             status = "§aThe account has been added.";
