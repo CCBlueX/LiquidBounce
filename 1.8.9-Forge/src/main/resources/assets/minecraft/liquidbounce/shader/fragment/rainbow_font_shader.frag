@@ -11,7 +11,7 @@ void main ()
     tmpvar_1 = texture (font_texture, gl_TexCoord[0].xy);
 
     if (tmpvar_1.w == 0.0)
-    discard;
+        discard;
 
 
     vec2 tmpvar_2 = (gl_FragCoord.xy * strength);

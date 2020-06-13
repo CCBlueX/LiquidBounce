@@ -76,7 +76,7 @@ class AutoPot : Module() {
                             mc.thePlayer.moveForward
                     )
 
-                    val collisionBlock = fallingPlayer.findCollision(20)
+                    val collisionBlock = fallingPlayer.findCollision(20)?.pos
 
                     if (mc.thePlayer.posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get())
                         return

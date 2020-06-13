@@ -73,7 +73,7 @@ class BugUp : Module() {
                     mc.thePlayer.moveForward
             )
 
-            detectedLocation = fallingPlayer.findCollision(60)
+            detectedLocation = fallingPlayer.findCollision(60)?.pos
 
             if (detectedLocation != null && abs(mc.thePlayer.posY - detectedLocation!!.y) +
                     mc.thePlayer.fallDistance <= maxFallDistance.get()) {
