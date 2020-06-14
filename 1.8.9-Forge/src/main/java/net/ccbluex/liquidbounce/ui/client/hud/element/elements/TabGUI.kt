@@ -158,7 +158,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
                         borderStrength.get(),
                         upperCaseValue.get(),
                         fontRenderer,
-                        borderValue.get(),
+                        borderRainbow.get(),
                         rectangleRainbowEnabled
                 )
             }
