@@ -126,13 +126,7 @@ public class GuiAltManager extends GuiScreen {
         for (int i = 0; i < LiquidBounce.fileManager.accountsConfig.getAccounts().size(); i++) {
             MinecraftAccount minecraftAccount = LiquidBounce.fileManager.accountsConfig.getAccounts().get(i);
 
-            if (minecraftAccount != null && (
-                    ((
-                            // When password is empty, the account is cracked
-                            minecraftAccount.getPassword() == null || minecraftAccount.getPassword().isEmpty()) && minecraftAccount.getName() != null && minecraftAccount.getName().equals(mc.session.getUsername()))
-                            // When the account is a premium account match the IGN
-                            || minecraftAccount.getAccountName() != null && minecraftAccount.getAccountName().equals(mc.session.getUsername())
-            )) {
+            if (minecraftAccount != null && (((minecraftAccount.getPassword() == null || minecraftAccount.getPassword().isEmpty()) && minecraftAccount.getName() != null && minecraftAccount.getName().equals(mc.session.getUsername())) || minecraftAccount.getAccountName() != null && minecraftAccount.getAccountName().equals(mc.session.getUsername()))) {
                 index = i;
                 break;
             }
@@ -140,9 +134,6 @@ public class GuiAltManager extends GuiScreen {
 
         altsList.elementClicked(index, false, 0, 0);
         altsList.scrollBy(index * altsList.slotHeight);
-
-        searchField = new GuiTextField(2, Fonts.font40, width - width / 4 - 4, 10, width / 4, 20);
-        searchField.setMaxStringLength(Integer.MAX_VALUE);
 
         int j = 22;
         this.buttonList.add(new GuiButton(1, width - 80, j + 24, 70, 20, "Add"));
