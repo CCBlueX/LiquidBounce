@@ -39,13 +39,8 @@ class Script(val scriptFile: File) : MinecraftInstance() {
     private val registeredModules = mutableListOf<Module>()
     private val registeredCommands = mutableListOf<Command>()
 
-    // Additional information about script contained in magic comments (eg. /// api_version=2)
-    private val magicComments = HashMap<String, String>()
-
     init {
-        parseMagicComments()
-
-        val engineFlags = magicComments["engine_flags"]?.split(",")?.toTypedArray() ?: emptyArray()
+        val engineFlags = getMagicComment("engine_flags")?.split(",")?.toTypedArray() ?: emptyArray()
         scriptEngine = NashornScriptEngineFactory().getScriptEngine(*engineFlags)
 
         // Global classes
@@ -124,25 +119,30 @@ class Script(val scriptFile: File) : MinecraftInstance() {
     }
 
     /**
-     * Parses magic comments used to specify additional information about the script.
-     * eg. /// api_version=2
+     * Gets the value of a magic comment from the script. Used for specifying additional information about the script.
+     * @param name Name of the comment.
+     * @return Value of the comment.
      */
-    fun parseMagicComments() {
+    private fun getMagicComment(name: String): String? {
         val magicPrefix = "///"
 
         scriptText.lines().forEach {
-            if (!it.startsWith(magicPrefix)) return
+            if (!it.startsWith(magicPrefix)) return null
 
-            val commentData = it.substring(magicPrefix.length).trim().split("=", limit = 2)
-            magicComments[commentData.first()] = commentData.last()
+            val commentData = it.substring(magicPrefix.length).split("=", limit = 2)
+            if (commentData.first().trim() == name) {
+                return commentData.last().trim()
+            }
         }
+
+        return null
     }
 
     /**
      * Adds support for scripts made for LiquidBounce's original script API.
      */
-    fun supportLegacyScripts() {
-        if (magicComments["api_version"] != "2") {
+    private fun supportLegacyScripts() {
+        if (getMagicComment("api_version") != "2") {
             ClientUtils.getLogger().info("[ScriptAPI] Running script '${scriptFile.name}' with legacy support.")
             val legacyScript = LiquidBounce::class.java.getResource("/assets/minecraft/liquidbounce/scriptapi/legacy.js").readText()
             scriptEngine.eval(legacyScript)
