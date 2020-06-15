@@ -54,10 +54,8 @@ class Rotations : Module() {
 
     private fun shouldRotate(): Boolean {
         val killAura = LiquidBounce.moduleManager.getModule(KillAura::class.java) as KillAura
-        return getState(Scaffold::class.java) || getState(Tower::class.java) ||
-                (getState(KillAura::class.java) && killAura.target != null) ||
+        return getState(Tower::class.java) || (getState(KillAura::class.java) && killAura.target != null) ||
                 getState(Derp::class.java) || getState(BowAimbot::class.java) ||
-                getState(Fucker::class.java) || getState(CivBreak::class.java) || getState(Nuker::class.java) ||
-                getState(ChestAura::class.java)
+                getState(Fucker::class.java)
     }
 }
