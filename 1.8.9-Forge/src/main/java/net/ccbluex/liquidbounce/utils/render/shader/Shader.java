@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils.render.shader;
 
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 import org.apache.commons.io.IOUtils;
@@ -23,11 +24,11 @@ public abstract class Shader extends MinecraftInstance {
         int vertexShaderID, fragmentShaderID;
 
         try {
-            final InputStream vertexStream = getClass().getResourceAsStream("/assets/minecraft/liquidbounce/shader/vertex.vert");
+            final InputStream vertexStream = getClass().getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/shader/vertex.vert");
             vertexShaderID = createShader(IOUtils.toString(vertexStream), ARBVertexShader.GL_VERTEX_SHADER_ARB);
             IOUtils.closeQuietly(vertexStream);
 
-            final InputStream fragmentStream = getClass().getResourceAsStream("/assets/minecraft/liquidbounce/shader/fragment/" + fragmentShader);
+            final InputStream fragmentStream = getClass().getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/shader/fragment/" + fragmentShader);
             fragmentShaderID = createShader(IOUtils.toString(fragmentStream), ARBFragmentShader.GL_FRAGMENT_SHADER_ARB);
             IOUtils.closeQuietly(fragmentStream);
         }catch(final Exception e) {
