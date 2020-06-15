@@ -13,6 +13,7 @@ import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.util.IChatComponent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -105,7 +106,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
      *
      * @author derech1e
      */
-    @Inject(method = "onAutocompleteResponse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiChat;autocompletePlayerNames(F)V", shift = At.Shift.BEFORE), cancellable = true)
+    @Inject(method = "onAutocompleteResponse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiChat;autocompletePlayerNames()V", shift = At.Shift.BEFORE), cancellable = true)
     private void onAutocompleteResponse(String[] autoCompleteResponse, CallbackInfo callbackInfo) {
         if (LiquidBounce.commandManager.getLatestAutoComplete().length != 0) callbackInfo.cancel();
     }
@@ -118,18 +119,20 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
         Gui.drawRect(2, this.height - (int) fade, this.width - 2, this.height, Integer.MIN_VALUE);
         this.inputField.drawTextBox();
 
-        if (LiquidBounce.commandManager.getLatestAutoComplete().length > 0 && !inputField.getText().isEmpty() && inputField.getText().startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix()))) {
-            String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
-            String[] textArray = inputField.getText().split(" ");
-            String trimmedString = latestAutoComplete[0].replaceFirst("(?i)" + textArray[textArray.length - 1], "");
-
-            mc.fontRendererObj.drawStringWithShadow(trimmedString, inputField.xPosition + mc.fontRendererObj.getStringWidth(inputField.getText()), inputField.yPosition, new Color(165, 165, 165).getRGB());
-        }
-
         IChatComponent ichatcomponent =
                 this.mc.ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());
 
         if (ichatcomponent != null)
             this.handleComponentHover(ichatcomponent, mouseX, mouseY);
+
+        String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
+        if (!inputField.getText().startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix())) || latestAutoComplete.length == 0)
+            return;
+
+        String suggestion = latestAutoComplete[0];
+        String[] inputArray = inputField.getText().trim().split("\\s");
+        String trimmedString = StringUtils.replaceOnce(suggestion.toLowerCase(), inputArray[inputArray.length - 1].toLowerCase(), "");
+
+        mc.fontRendererObj.drawStringWithShadow(trimmedString, inputField.xPosition + mc.fontRendererObj.getStringWidth(inputField.getText()), inputField.yPosition, new Color(165, 165, 165).getRGB());
     }
 }

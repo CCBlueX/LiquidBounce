@@ -12,11 +12,14 @@ import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.file.configs.FriendsConfig;
-import net.ccbluex.liquidbounce.utils.misc.StringUtils;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.TextValue;
 import net.minecraft.client.network.NetworkPlayerInfo;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @ModuleInfo(name = "NameProtect", description = "Changes playernames clientside.", category = ModuleCategory.MISC)
 public class NameProtect extends Module {
@@ -31,16 +34,15 @@ public class NameProtect extends Module {
             return;
 
         for (final FriendsConfig.Friend friend : LiquidBounce.fileManager.friendsConfig.getFriends())
-            event.setText(StringUtils.replace(event.getText(), friend.getPlayerName(), ColorUtils.translateAlternateColorCodes(friend.getAlias()) + "§f"));
+            event.setText(event.getText().replace(friend.getPlayerName(), ColorUtils.translateAlternateColorCodes(friend.getAlias() + "§f")));
 
         if(!getState())
             return;
 
-        event.setText(StringUtils.replace(event.getText(), mc.thePlayer.getName(), ColorUtils.translateAlternateColorCodes(fakeNameValue.get()) + "§f"));
+        event.setText(event.getText().replace(mc.thePlayer.getName(), ColorUtils.translateAlternateColorCodes(fakeNameValue.get()) + "§f"));
 
         if(allPlayersValue.get())
             for(final NetworkPlayerInfo playerInfo : mc.getNetHandler().getPlayerInfoMap())
-                event.setText(StringUtils.replace(event.getText(), playerInfo.getGameProfile().getName(), "Protected User"));
+                event.setText(event.getText().replace(playerInfo.getGameProfile().getName(), "Protected User"));
     }
-
 }
