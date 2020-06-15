@@ -26,8 +26,5 @@ class FastBreak : Module() {
 
         if (Fucker.currentDamage > breakDamage.get())
             Fucker.currentDamage = 1F
-
-        if (Nuker.currentDamage > breakDamage.get())
-            Nuker.currentDamage = 1F
     }
 }
