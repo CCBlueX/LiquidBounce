@@ -48,39 +48,45 @@ class Target : Element() {
                 easingHealth = target.health
             }
 
-            // Draw
-            RenderUtils.drawBorderedRect(0F, 0F, 118F, 36F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
+            val width = (38 + Fonts.font40.getStringWidth(target.name))
+                    .coerceAtLeast(118)
+                    .toFloat()
 
-            // Damaged
-            if (easingHealth > target.health) {
-                RenderUtils.drawRect(0F, 34F, (easingHealth / target.maxHealth) * 118F, 36F, Color(252, 185, 65).rgb)
-            }
+            // Draw rect box
+            RenderUtils.drawBorderedRect(0F, 0F, width, 36F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
 
-            RenderUtils.drawRect(0F, 34F, (target.health / target.maxHealth) * 118F, 36F, Color(252, 96, 66).rgb)
+            // Damage animation
+            if (easingHealth > target.health)
+                RenderUtils.drawRect(0F, 34F, (easingHealth / target.maxHealth) * width,
+                        36F, Color(252, 185, 65).rgb)
 
-            // Healed
-            if (easingHealth < target.health) {
-                RenderUtils.drawRect((easingHealth / target.maxHealth) * 118F, 34F, (target.health / target.maxHealth) * 118F, 36F, Color(44, 201, 144).rgb)
-            }
+            // Health bar
+            RenderUtils.drawRect(0F, 34F, (target.health / target.maxHealth) * width,
+                    36F, Color(252, 96, 66).rgb)
+
+            // Heal animation
+            if (easingHealth < target.health)
+                RenderUtils.drawRect((easingHealth / target.maxHealth) * width, 34F,
+                        (target.health / target.maxHealth) * width, 36F, Color(44, 201, 144).rgb)
 
             easingHealth += ((target.health - easingHealth) / 2.0F.pow(10.0F - fadeSpeed.get())) * RenderUtils.deltaTime
 
             Fonts.font40.drawString(target.name, 36, 3, 0xffffff)
             Fonts.font35.drawString("Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
 
-            // Draw head
+            // Draw info
             val playerInfo = mc.netHandler.getPlayerInfo(target.uniqueID)
             if (playerInfo != null) {
-                Fonts.font35.drawString("Ping: ${playerInfo.responseTime.coerceAtLeast(0)}", 36, 24, 0xffffff)
+                Fonts.font35.drawString("Ping: ${playerInfo.responseTime.coerceAtLeast(0)}",
+                        36, 24, 0xffffff)
 
+                // Draw head
                 val locationSkin = playerInfo.locationSkin
-
                 drawHead(locationSkin, 30, 30)
             }
         }
 
         lastTarget = target
-
         return Border(0F, 0F, 120F, 36F)
     }
 
