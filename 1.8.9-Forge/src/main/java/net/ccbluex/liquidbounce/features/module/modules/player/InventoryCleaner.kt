@@ -105,7 +105,7 @@ class InventoryCleaner : Module() {
             if (openInventory)
                 mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
 
-            mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, garbageItem, 4, 4, mc.thePlayer)
+            mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, garbageItem, 1, 4, mc.thePlayer)
 
             if (openInventory)
                 mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
