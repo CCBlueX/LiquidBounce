@@ -36,7 +36,8 @@ open class HUD : MinecraftInstance() {
                 TabGUI::class.java,
                 Text::class.java,
                 ScoreboardElement::class.java,
-                Target::class.java
+                Target::class.java,
+                Radar::class.java
         )
 
         /**
