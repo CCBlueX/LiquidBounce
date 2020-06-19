@@ -232,6 +232,8 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
     }
 
     private fun parseAction(action: Action) {
+        var toggle = false
+
         when (action) {
             Action.UP -> if (categoryMenu) {
                 --selectedCategory
@@ -261,17 +263,26 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
                 }
             }
 
-            Action.LEFT -> if (!categoryMenu) categoryMenu = true
-
-            Action.RIGHT -> if (categoryMenu) {
-                categoryMenu = false
-                selectedModule = 0
+            Action.LEFT -> {
+                if (!categoryMenu)
+                    categoryMenu = true
             }
 
-            Action.TOGGLE -> if (!categoryMenu) {
-                val sel = selectedModule
-                tabs[selectedCategory].modules[sel].toggle()
-            }
+            Action.RIGHT ->
+                if (!categoryMenu) {
+                    toggle = true
+                } else {
+                    categoryMenu = false
+                    selectedModule = 0
+                }
+
+
+            Action.TOGGLE -> if (!categoryMenu) toggle = true
+        }
+
+        if (toggle) {
+            val sel = selectedModule
+            tabs[selectedCategory].modules[sel].toggle()
         }
     }
 
