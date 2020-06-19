@@ -42,8 +42,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
     private val playerShapeValue = ListValue("Player Shape", arrayOf("Triangle", "Rectangle", "Circle"), "Triangle")
     private val playerSizeValue = FloatValue("Player Size", 2.0F, 0.5f, 20F)
     private val useESPColorsValue = BoolValue("Use ESP Colors", true)
-    private val drawFovIndicatorValue = BoolValue("FOV Indicator", true)
-    private val fovIndicatorSizeValue = FloatValue("FOV Indicator Size", 10F, 0.5F, 100F)
+    private val fovSizeValue = FloatValue("FOV Size", 10F, 0F, 50F)
     private val fovAngleValue = FloatValue("FOV Angle", 70F, 30F, 160F)
 
     private val minimapValue = BoolValue("Minimap", true)
@@ -90,8 +89,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
 
         val viewDistance = viewDistanceValue.get() * 16.0F
 
-        val maxDisplayableDistanceSquare = ((viewDistance + fovIndicatorSizeValue.get().toDouble()) *
-                (viewDistance + fovIndicatorSizeValue.get().toDouble()))
+        val maxDisplayableDistanceSquare = ((viewDistance + fovSizeValue.get().toDouble()) *
+                (viewDistance + fovSizeValue.get().toDouble()))
         val halfSize = size / 2f
 
         RenderUtils.makeScissorBox(x.toFloat(), y.toFloat(), x.toFloat() + ceil(size), y.toFloat() + ceil(size))
@@ -181,7 +180,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
                 if (maxDisplayableDistanceSquare < positionRelativeToPlayer.lengthSquared())
                     continue
 
-                val transform = triangleMode || drawFovIndicatorValue.get()
+                val transform = triangleMode || fovSizeValue.get() > 0F
 
                 if (transform) {
                     glPushMatrix()
@@ -191,10 +190,10 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
                     glRotatef(entity.rotationYaw, 0f, 0f, 1f)
                 }
 
-                if (drawFovIndicatorValue.get()) {
+                if (fovSizeValue.get() > 0F) {
                     glPushMatrix()
                     glRotatef(180.0f, 0f, 0f, 1f)
-                    val sc = (fovIndicatorSizeValue.get() / viewDistance) * size
+                    val sc = (fovSizeValue.get() / viewDistance) * size
                     glScalef(sc, sc, sc)
 
                     glColor4f(1.0f, 1.0f, 1.0f, if (minimapValue.get()) 0.75f else 0.25f)
