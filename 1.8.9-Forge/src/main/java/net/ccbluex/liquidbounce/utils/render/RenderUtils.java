@@ -416,8 +416,9 @@ public final class RenderUtils extends MinecraftInstance {
         glEnable(GL_LINE_SMOOTH);
         glLineWidth(2F);
         glBegin(GL_LINE_STRIP);
-        for (float i = end; i >= start; i -= (360 / 90.0f))
+        for (float i = end; i >= start; i -= (360 / 90.0f)) {
             glVertex2f((float) (x + (cos(i * PI / 180) * (radius * 1.001F))), (float) (y + (sin(i * PI / 180) * (radius * 1.001F))));
+        }
         glEnd();
         glDisable(GL_LINE_SMOOTH);
 

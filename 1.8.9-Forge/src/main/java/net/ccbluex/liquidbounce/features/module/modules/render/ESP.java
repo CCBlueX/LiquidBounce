@@ -224,7 +224,7 @@ public class ESP extends Module {
         return modeValue.get();
     }
 
-    public Color getColor(final Entity entity) {
+    public final Color getColor(final Entity entity) {
         if (entity instanceof EntityLivingBase) {
             final EntityLivingBase entityLivingBase = (EntityLivingBase) entity;
 
