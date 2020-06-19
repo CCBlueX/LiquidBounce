@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.SafeVertexBuffer
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
@@ -19,29 +20,33 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import net.minecraft.client.renderer.vertex.VertexBuffer
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector2f
 import java.awt.Color
-import kotlin.math.ceil
-import kotlin.math.cos
-import kotlin.math.sin
+import kotlin.math.*
 
-@ElementInfo(name = "Radar")
-class Radar : Element() {
-    private val sizeValue = FloatValue("Size", 0.125F, 0.001F, 0.5F)
+@ElementInfo(name = "Radar", disableScale = true)
+class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
+
+    companion object {
+        private val SQRT_OF_TWO = sqrt(2f)
+    }
+
     private val viewDistanceValue = FloatValue("View Distance", 4F, 0.5F, 32F)
 
     private val modeValue = ListValue("Mode", arrayOf("Triangle", "Rectangle", "Circle"), "Triangle")
 
+    private val sizeValue = FloatValue("Size", 90f, 30f, 500f)
     private val playerSize = FloatValue("Player Size", 2.0F, 0.5f, 20F)
 
     private val useESPColorsValue = BoolValue("Use ESP Colors", true)
 
     private val backgroundValue = BoolValue("Background", true)
+    private val minimapValue = BoolValue("Minimap", true)
 
     private val backgroundRedValue = IntegerValue("Background Red", 0, 0, 255)
     private val backgroundGreenValue = IntegerValue("Background Green", 0, 0, 255)
@@ -71,6 +76,8 @@ class Radar : Element() {
     private var lastFov = 0f
 
     override fun drawElement(): Border? {
+        MiniMapRegister.updateChunks()
+
         val fovAngle = fovAngle.get()
 
         if (lastFov != fovAngle || fovMarkerVertexBuffer == null) {
@@ -81,57 +88,100 @@ class Radar : Element() {
             lastFov = fovAngle
         }
 
-        val size = ScaledResolution(mc).scaledWidth * sizeValue.get()
+        val renderViewEntity = mc.renderViewEntity
 
-        if (backgroundValue.get()) {
+        val size = sizeValue.get()
+
+        if (backgroundValue.get() && !minimapValue.get()) {
             RenderUtils.drawRect(0F, 0F, size, size, Color(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get()).rgb)
         }
 
         val viewDistance = viewDistanceValue.get() * 16.0F
 
-        val maxDisplayableDistanceSquare = (viewDistance * viewDistance) * 2.0F
+        val maxDisplayableDistanceSquare = ((viewDistance + fovViewDistance.get().toDouble()) * (viewDistance + fovViewDistance.get().toDouble()))
         val halfSize = size / 2f
 
         RenderUtils.makeScissorBox(x.toFloat(), y.toFloat(), x.toFloat() + ceil(size), y.toFloat() + ceil(size))
 
-        GL11.glEnable(GL11.GL_SCISSOR_TEST)
+        glEnable(GL_SCISSOR_TEST)
 
-        GL11.glPushMatrix()
+        glPushMatrix()
 
-        GL11.glTranslatef(halfSize, halfSize, 0f)
-        GL11.glRotatef(mc.thePlayer.rotationYaw, 0f, 0f, -1f)
+        glTranslatef(halfSize, halfSize, 0f)
+        glRotatef(renderViewEntity.rotationYaw, 0f, 0f, -1f)
 
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glEnable(GL11.GL_LINE_SMOOTH)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        if (minimapValue.get()) {
+            glEnable(GL_TEXTURE_2D)
+
+            val chunkSizeOnScreen = size / viewDistanceValue.get()
+            val chunksToRender = max(1, ceil((SQRT_OF_TWO * (viewDistanceValue.get() * 0.5f))).toInt())
+
+            val currX = renderViewEntity.posX / 16.0
+            val currZ = renderViewEntity.posZ / 16.0
+
+            for (x in -chunksToRender..chunksToRender) {
+                for (z in -chunksToRender..chunksToRender) {
+                    val currChunk = MiniMapRegister.getChunkTextureAt(floor(currX).toInt() + x, floor(currZ).toInt() + z)
+
+                    if (currChunk != null) {
+                        val sc = chunkSizeOnScreen.toDouble()
+
+                        val onScreenX = (currX - floor(currX).toLong() - 1 - x) * sc
+                        val onScreenZ = (currZ - floor(currZ).toLong() - 1 - z) * sc
+
+                        GlStateManager.bindTexture(currChunk.texture.glTextureId)
+
+                        glBegin(GL_QUADS)
+
+                        glTexCoord2f(0f, 0f)
+                        glVertex2d(onScreenX, onScreenZ)
+                        glTexCoord2f(0f, 1f)
+                        glVertex2d(onScreenX, onScreenZ + chunkSizeOnScreen)
+                        glTexCoord2f(1f, 1f)
+                        glVertex2d(onScreenX + chunkSizeOnScreen, onScreenZ + chunkSizeOnScreen)
+                        glTexCoord2f(1f, 0f)
+                        glVertex2d(onScreenX + chunkSizeOnScreen, onScreenZ)
+
+                        glEnd()
+                    }
+
+                }
+            }
+
+            GlStateManager.bindTexture(0)
+
+            glDisable(GL_TEXTURE_2D)
+        }
+
+        glDisable(GL_TEXTURE_2D)
+        glEnable(GL_LINE_SMOOTH)
 
         val triangleMode = modeValue.get().equals("triangle", true)
-        val rectangleMode = modeValue.get().equals("rectangle", true)
         val circleMode = modeValue.get().equals("circle", true)
 
         val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
 
         if (circleMode) {
-            GL11.glEnable(GL11.GL_POINT_SMOOTH)
+            glEnable(GL_POINT_SMOOTH)
         }
 
         var playerSize = playerSize.get()
 
-        GL11.glEnable(GL11.GL_POLYGON_SMOOTH)
+        glEnable(GL_POLYGON_SMOOTH)
 
         if (triangleMode) {
             playerSize *= 2
         } else {
-            worldRenderer.begin(GL11.GL_POINTS, DefaultVertexFormats.POSITION_COLOR)
-            GL11.glPointSize(playerSize)
+            worldRenderer.begin(GL_POINTS, DefaultVertexFormats.POSITION_COLOR)
+            glPointSize(playerSize)
         }
 
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity != null && entity !== mc.thePlayer && EntityUtils.isSelected(entity, false)) {
-                val renderViewEntity = mc.renderViewEntity
-
                 val positionRelativeToPlayer = Vector2f((renderViewEntity.posX - entity.posX).toFloat(), (renderViewEntity.posZ - entity.posZ).toFloat())
 
                 if (maxDisplayableDistanceSquare < positionRelativeToPlayer.lengthSquared())
@@ -140,51 +190,51 @@ class Radar : Element() {
                 val transform = triangleMode || drawFovIndicatorValue.get()
 
                 if (transform) {
-                    GL11.glPushMatrix()
+                    glPushMatrix()
 
-                    GL11.glTranslatef((positionRelativeToPlayer.x / viewDistance) * size, (positionRelativeToPlayer.y / viewDistance) * size, 0f)
-                    GL11.glRotatef(entity.rotationYaw, 0f, 0f, 1f)
+                    glTranslatef((positionRelativeToPlayer.x / viewDistance) * size, (positionRelativeToPlayer.y / viewDistance) * size, 0f)
+                    glRotatef(entity.rotationYaw, 0f, 0f, 1f)
                 }
 
                 if (drawFovIndicatorValue.get()) {
-                    GL11.glPushMatrix()
-                    GL11.glRotatef(180.0f, 0f, 0f, 1f)
+                    glPushMatrix()
+                    glRotatef(180.0f, 0f, 0f, 1f)
                     val sc = (fovViewDistance.get() / viewDistance) * size
-                    GL11.glScalef(sc, sc, sc)
+                    glScalef(sc, sc, sc)
 
-                    GL11.glColor4f(1.0f, 1.0f, 1.0f, 0.25f)
+                    glColor4f(1.0f, 1.0f, 1.0f, if (minimapValue.get()) 0.75f else 0.25f)
 
                     val vbo = fovMarkerVertexBuffer!!
 
                     vbo.bindBuffer()
 
-                    GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY)
-                    GL11.glVertexPointer(3, GL11.GL_FLOAT, 12, 0L)
+                    glEnableClientState(GL_VERTEX_ARRAY)
+                    glVertexPointer(3, GL_FLOAT, 12, 0L)
 
-                    vbo.drawArrays(GL11.GL_TRIANGLE_FAN)
+                    vbo.drawArrays(GL_TRIANGLE_FAN)
                     vbo.unbindBuffer()
 
-                    GL11.glDisableClientState(GL11.GL_VERTEX_ARRAY)
+                    glDisableClientState(GL_VERTEX_ARRAY)
 
-                    GL11.glPopMatrix()
+                    glPopMatrix()
                 }
 
                 if (triangleMode) {
                     if (useESPColorsValue.get()) {
                         val color = (LiquidBounce.moduleManager[ESP::class.java] as ESP).getColor(entity)
 
-                        GL11.glColor4f(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f)
+                        glColor4f(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f)
                     } else {
-                        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+                        glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
                     }
 
-                    GL11.glBegin(GL11.GL_TRIANGLES)
+                    glBegin(GL_TRIANGLES)
 
-                    GL11.glVertex2f(-playerSize * 0.25f, playerSize * 0.5f)
-                    GL11.glVertex2f(playerSize * 0.25f, playerSize * 0.5f)
-                    GL11.glVertex2f(0f, -playerSize * 0.5f)
+                    glVertex2f(-playerSize * 0.25f, playerSize * 0.5f)
+                    glVertex2f(playerSize * 0.25f, playerSize * 0.5f)
+                    glVertex2f(0f, -playerSize * 0.5f)
 
-                    GL11.glEnd()
+                    glEnd()
                 } else {
                     val color = (LiquidBounce.moduleManager[ESP::class.java] as ESP).getColor(entity)
 
@@ -192,7 +242,7 @@ class Radar : Element() {
                 }
 
                 if (transform) {
-                    GL11.glPopMatrix()
+                    glPopMatrix()
                 }
 
             }
@@ -202,17 +252,17 @@ class Radar : Element() {
             tessellator.draw()
 
         if (circleMode) {
-            GL11.glDisable(GL11.GL_POINT_SMOOTH)
+            glDisable(GL_POINT_SMOOTH)
         }
-        GL11.glDisable(GL11.GL_POLYGON_SMOOTH)
+        glDisable(GL_POLYGON_SMOOTH)
 
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_LINE_SMOOTH)
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+        glDisable(GL_LINE_SMOOTH)
 
-        GL11.glDisable(GL11.GL_SCISSOR_TEST)
+        glDisable(GL_SCISSOR_TEST)
 
-        GL11.glPopMatrix()
+        glPopMatrix()
 
         RainbowShader.begin(borderRainbow.get(), if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
             if (borderValue.get()) {
@@ -220,31 +270,31 @@ class Radar : Element() {
             }
 
             if (crosshairValue.get()) {
-                GL11.glEnable(GL11.GL_BLEND)
-                GL11.glDisable(GL11.GL_TEXTURE_2D)
-                GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-                GL11.glEnable(GL11.GL_LINE_SMOOTH)
+                glEnable(GL_BLEND)
+                glDisable(GL_TEXTURE_2D)
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+                glEnable(GL_LINE_SMOOTH)
 
                 RenderUtils.glColor(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get())
-                GL11.glLineWidth(borderStrength.get())
+                glLineWidth(borderStrength.get())
 
-                GL11.glBegin(GL11.GL_LINES)
+                glBegin(GL_LINES)
 
-                GL11.glVertex2f(halfSize, 0f)
-                GL11.glVertex2f(halfSize, size)
+                glVertex2f(halfSize, 0f)
+                glVertex2f(halfSize, size)
 
-                GL11.glVertex2f(0f, halfSize)
-                GL11.glVertex2f(size, halfSize)
+                glVertex2f(0f, halfSize)
+                glVertex2f(size, halfSize)
 
-                GL11.glEnd()
+                glEnd()
 
-                GL11.glEnable(GL11.GL_TEXTURE_2D)
-                GL11.glDisable(GL11.GL_BLEND)
-                GL11.glDisable(GL11.GL_LINE_SMOOTH)
+                glEnable(GL_TEXTURE_2D)
+                glDisable(GL_BLEND)
+                glDisable(GL_LINE_SMOOTH)
             }
         }
 
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
         return Border(0F, 0F, size, size)
     }
@@ -253,7 +303,7 @@ class Radar : Element() {
         // Rendering
         val worldRenderer = Tessellator.getInstance().worldRenderer
 
-        worldRenderer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION)
+        worldRenderer.begin(GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION)
 
         val start = (90.0f - (angle * 0.5f)) / 180.0f * Math.PI.toFloat()
         val end = (90.0f + (angle * 0.5f)) / 180.0f * Math.PI.toFloat()

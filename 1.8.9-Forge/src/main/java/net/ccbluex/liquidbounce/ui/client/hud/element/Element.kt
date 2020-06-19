@@ -15,11 +15,27 @@ import kotlin.math.min
 /**
  * CustomHUD element
  */
-abstract class Element(var x: Double = 2.0, var y: Double = 2.0, var scale: Float = 1F,
+abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 1F,
                        var side: Side = Side.default()) : MinecraftInstance() {
-
     val info = javaClass.getAnnotation(ElementInfo::class.java)
             ?: throw IllegalArgumentException("Passed element with missing element info")
+
+    var scale: Float = 1F
+        set(value) {
+            if (info.disableScale)
+                return
+
+            field = value
+        }
+        get() {
+            if (info.disableScale)
+                return 1.0f
+            return field
+        }
+
+    init {
+        this.scale = scale
+    }
 
     val name: String
         get() = info.name
@@ -120,7 +136,7 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, var scale: Floa
  * Element info
  */
 @kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
-annotation class ElementInfo(val name: String, val single: Boolean = false, val force: Boolean = false)
+annotation class ElementInfo(val name: String, val single: Boolean = false, val force: Boolean = false, val disableScale: Boolean = false)
 
 /**
  * CustomHUD Side

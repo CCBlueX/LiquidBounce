@@ -61,7 +61,10 @@ open class HUD : MinecraftInstance() {
     fun render(designer: Boolean) {
         for (element in elements) {
             GL11.glPushMatrix()
-            GL11.glScalef(element.scale, element.scale, element.scale)
+
+            if (!element.info.disableScale)
+                GL11.glScalef(element.scale, element.scale, element.scale)
+
             GL11.glTranslated(element.renderX, element.renderY, 0.0)
 
             try {
