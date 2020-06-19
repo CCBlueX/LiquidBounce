@@ -202,6 +202,8 @@ public class StorageESP extends Module {
             for (final TileEntity entity : mc.theWorld.loadedTileEntityList) {
                 if (!(entity instanceof TileEntityChest))
                     continue;
+                if (ChestAura.INSTANCE.getClickedBlocks().contains(entity.getPos()))
+                    continue;
 
                 TileEntityRendererDispatcher.instance.renderTileEntityAt(
                         entity,
