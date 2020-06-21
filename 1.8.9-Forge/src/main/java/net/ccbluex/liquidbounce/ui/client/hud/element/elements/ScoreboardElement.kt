@@ -53,6 +53,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
     private val rectColorBlueAlpha = IntegerValue("Rect-Alpha", 255, 0, 255)
 
     private val shadowValue = BoolValue("Shadow", false)
+    private val hideNumbers = BoolValue("HideNumbers", false)
     private val fontValue = FontValue("Font", Fonts.minecraftFont)
 
     /**
@@ -121,7 +122,8 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
             GlStateManager.resetColor()
 
             fontRenderer.drawString(name, l1.toFloat(), height.toFloat(), textColor, shadowValue.get())
-            fontRenderer.drawString(scorePoints, (width - fontRenderer.getStringWidth(scorePoints)).toFloat(), height.toFloat(), textColor, shadowValue.get())
+            if (!hideNumbers.get())
+                fontRenderer.drawString(scorePoints, (width - fontRenderer.getStringWidth(scorePoints)).toFloat(), height.toFloat(), textColor, shadowValue.get())
 
             if (index == scoreCollection.size - 1) {
                 val displayName = objective.displayName

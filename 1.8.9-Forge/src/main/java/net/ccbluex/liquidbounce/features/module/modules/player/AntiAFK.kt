@@ -55,7 +55,7 @@ class AntiAFK : Module() {
                 if (!delayTimer.hasTimePassed(randomTimerDelay)) return
                     shouldMove = false
                     randomTimerDelay = 500L
-                    when (RandomUtils.nextInt(0, 6)) {
+                    when (RandomUtils.nextInt(0, 7)) {
                         0 -> {
                             if (mc.thePlayer.onGround) mc.thePlayer.jump()
                             delayTimer.reset()
@@ -81,6 +81,10 @@ class AntiAFK : Module() {
                         5 -> {
                             if (mc.thePlayer.rotationPitch <= -90 || mc.thePlayer.rotationPitch >= 90) mc.thePlayer.rotationPitch = 0F
                             mc.thePlayer.rotationPitch += RandomUtils.nextFloat(-10.0F, 10.0F)
+                            delayTimer.reset()
+                        }
+                        6 -> {
+                            mc.thePlayer.isSneaking = !mc.thePlayer.isSneaking
                             delayTimer.reset()
                         }
                     }
