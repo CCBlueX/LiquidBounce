@@ -37,7 +37,7 @@ class KeepAlive : Module() {
                     if (soupInHotbar != -1) {
                         mc.netHandler.addToSendQueue(C09PacketHeldItemChange(soupInHotbar - 36))
                         mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(soupInHotbar).stack))
-                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.getCurrentItemInHand))
                     }
                 }
             }

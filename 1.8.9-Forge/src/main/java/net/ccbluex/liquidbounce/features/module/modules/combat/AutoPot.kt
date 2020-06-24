@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketClientStatus
+import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.event.EventState.POST
 import net.ccbluex.liquidbounce.event.EventState.PRE
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -22,13 +24,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.gui.inventory.GuiInventory
-import net.minecraft.item.ItemPotion
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C09PacketHeldItemChange
-import net.minecraft.network.play.client.C0DPacketCloseWindow
-import net.minecraft.network.play.client.C16PacketClientStatus
-import net.minecraft.potion.Potion
 
 @ModuleInfo(name = "AutoPot", description = "Automatically throws healing potions.", category = ModuleCategory.COMBAT)
 class AutoPot : Module() {
@@ -50,42 +45,44 @@ class AutoPot : Module() {
         if (!msTimer.hasTimePassed(delayValue.get().toLong()) || mc.playerController.isInCreativeMode)
             return
 
+        val thePlayer = mc.thePlayer ?: return
+
         when (motionEvent.eventState) {
             PRE -> {
                 // Hotbar Potion
                 val potionInHotbar = findPotion(36, 45)
 
-                if (mc.thePlayer.health <= healthValue.get() && potionInHotbar != -1) {
-                    if (mc.thePlayer.onGround) {
+                if (thePlayer.health <= healthValue.get() && potionInHotbar != -1) {
+                    if (thePlayer.onGround) {
                         when (modeValue.get().toLowerCase()) {
-                            "jump" -> mc.thePlayer.jump()
-                            "port" -> mc.thePlayer.moveEntity(0.0, 0.42, 0.0)
+                            "jump" -> thePlayer.jump()
+                            "port" -> thePlayer.moveEntity(0.0, 0.42, 0.0)
                         }
                     }
 
                     // Prevent throwing potions into the void
                     val fallingPlayer = FallingPlayer(
-                            mc.thePlayer.posX,
-                            mc.thePlayer.posY,
-                            mc.thePlayer.posZ,
-                            mc.thePlayer.motionX,
-                            mc.thePlayer.motionY,
-                            mc.thePlayer.motionZ,
-                            mc.thePlayer.rotationYaw,
-                            mc.thePlayer.moveStrafing,
-                            mc.thePlayer.moveForward
+                            thePlayer.posX,
+                            thePlayer.posY,
+                            thePlayer.posZ,
+                            thePlayer.motionX,
+                            thePlayer.motionY,
+                            thePlayer.motionZ,
+                            thePlayer.rotationYaw,
+                            thePlayer.moveStrafing,
+                            thePlayer.moveForward
                     )
 
                     val collisionBlock = fallingPlayer.findCollision(20)?.pos
 
-                    if (mc.thePlayer.posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get())
+                    if (thePlayer.posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get())
                         return
 
                     potion = potionInHotbar
-                    mc.netHandler.addToSendQueue(C09PacketHeldItemChange(potion - 36))
+                    mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(potion - 36))
 
-                    if (mc.thePlayer.rotationPitch <= 80F) {
-                        RotationUtils.setTargetRotation(Rotation(mc.thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)))
+                    if (thePlayer.rotationPitch <= 80F) {
+                        RotationUtils.setTargetRotation(Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)))
                     }
                     return
                 }
@@ -93,30 +90,29 @@ class AutoPot : Module() {
                 // Inventory Potion -> Hotbar Potion
                 val potionInInventory = findPotion(9, 36)
                 if (potionInInventory != -1 && InventoryUtils.hasSpaceHotbar()) {
-                    if (openInventoryValue.get() && mc.currentScreen !is GuiInventory)
+                    if (openInventoryValue.get() && !classProvider.isGuiInventory(mc.currentScreen))
                         return
 
-                    val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
+                    val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
 
                     if (openInventory)
-                        mc.netHandler.addToSendQueue(
-                                C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT))
 
-                    mc.playerController.windowClick(0, potionInInventory, 0, 1, mc.thePlayer)
+                    mc.playerController.windowClick(0, potionInInventory, 0, 1, thePlayer)
 
                     if (openInventory)
-                        mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
 
                     msTimer.reset()
                 }
             }
             POST -> {
                 if (potion >= 0 && RotationUtils.serverRotation.pitch >= 75F) {
-                    val itemStack = mc.thePlayer.inventoryContainer.getSlot(potion).stack
+                    val itemStack = thePlayer.inventory.getStackInSlot(potion)
 
                     if (itemStack != null) {
-                        mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(itemStack))
-                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(itemStack))
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.getCurrentItemInHand))
 
                         msTimer.reset()
                     }
@@ -128,21 +124,24 @@ class AutoPot : Module() {
     }
 
     private fun findPotion(startSlot: Int, endSlot: Int): Int {
-        for (i in startSlot until endSlot) {
-            val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack
+        val thePlayer = mc.thePlayer!!
 
-            if (stack == null || stack.item !is ItemPotion || !ItemPotion.isSplash(stack.itemDamage))
+        for (i in startSlot until endSlot) {
+            val stack = thePlayer.inventory.getStackInSlot(i)
+
+            if (stack == null || !classProvider.isItemPotion(stack.item) || (stack.itemDamage and 16384) == 0)
                 continue
 
-            val itemPotion = stack.item as ItemPotion
+            val itemPotion = stack.item.asItemPotion()
 
             for (potionEffect in itemPotion.getEffects(stack))
-                if (potionEffect.potionID == Potion.heal.id)
+                if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.HEAL).id)
                     return i
 
-            if (!mc.thePlayer.isPotionActive(Potion.regeneration))
+            if (!thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.REGENERATION)))
                 for (potionEffect in itemPotion.getEffects(stack))
-                    if (potionEffect.potionID == Potion.regeneration.id) return i
+                    if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.REGENERATION).id)
+                        return i
         }
 
         return -1

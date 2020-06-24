@@ -162,7 +162,7 @@ class Step : Module() {
                     flyMode.equals("OtherHypixel", ignoreCase = true) ||
                     flyMode.equals("LatestHypixel", ignoreCase = true) ||
                     flyMode.equals("Rewinside", ignoreCase = true) ||
-                    flyMode.equals("Mineplex", ignoreCase = true) && mc.thePlayer.inventory.getCurrentItem() == null) {
+                    flyMode.equals("Mineplex", ignoreCase = true) && mc.thePlayer.inventory.getCurrentItemInHand() == null) {
                 event.stepHeight = 0F
                 return
             }

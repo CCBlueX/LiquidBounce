@@ -42,7 +42,7 @@ class CivBreak : Module() {
             return
 
         blockPos = event.clickedBlock
-        enumFacing = event.enumFacing
+        enumFacing = event.WEnumFacing
 
         // Break
         mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, blockPos, enumFacing))

@@ -19,9 +19,8 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.server.S12PacketEntityVelocity
-import net.minecraft.network.play.server.S27PacketExplosion
-import net.minecraft.util.MathHelper
+import kotlin.math.cos
+import kotlin.math.sin
 
 @ModuleInfo(name = "Velocity", description = "Allows you to modify the amount of knockback you take.", category = ModuleCategory.COMBAT)
 class Velocity : Module() {
@@ -63,22 +62,26 @@ class Velocity : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.thePlayer.isInWater || mc.thePlayer.isInLava || mc.thePlayer.isInWeb)
+        val thePlayer = mc.thePlayer ?: return
+
+        if (thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb)
             return
 
         when (modeValue.get().toLowerCase()) {
-            "jump" -> if (mc.thePlayer.hurtTime > 0 && mc.thePlayer.onGround) {
-                mc.thePlayer.motionY = 0.42
+            "jump" -> if (thePlayer.hurtTime > 0 && thePlayer.onGround) {
+                thePlayer.motionY = 0.42
 
-                val yaw = mc.thePlayer.rotationYaw * 0.017453292F
-                mc.thePlayer.motionX -= MathHelper.sin(yaw) * 0.2
-                mc.thePlayer.motionZ += MathHelper.cos(yaw) * 0.2
+                val yaw = thePlayer.rotationYaw * 0.017453292F
+
+                thePlayer.motionX -= sin(yaw) * 0.2
+                thePlayer.motionZ += cos(yaw) * 0.2
             }
 
             "glitch" -> {
-                mc.thePlayer.noClip = velocityInput
-                if (mc.thePlayer.hurtTime == 7)
-                    mc.thePlayer.motionY = 0.4
+                thePlayer.noClip = velocityInput
+
+                if (thePlayer.hurtTime == 7)
+                    thePlayer.motionY = 0.4
 
                 velocityInput = false
             }
@@ -87,7 +90,7 @@ class Velocity : Module() {
                 if (!velocityInput)
                     return
 
-                if (!mc.thePlayer.onGround) {
+                if (!thePlayer.onGround) {
                     MovementUtils.strafe(MovementUtils.getSpeed() * reverseStrengthValue.get())
                 } else if (velocityTimer.hasTimePassed(80L))
                     velocityInput = false
@@ -95,16 +98,16 @@ class Velocity : Module() {
 
             "smoothreverse" -> {
                 if (!velocityInput) {
-                    mc.thePlayer.speedInAir = 0.02F
+                    thePlayer.speedInAir = 0.02F
                     return
                 }
 
-                if (mc.thePlayer.hurtTime > 0)
+                if (thePlayer.hurtTime > 0)
                     reverseHurt = true
 
-                if (!mc.thePlayer.onGround) {
+                if (!thePlayer.onGround) {
                     if (reverseHurt)
-                        mc.thePlayer.speedInAir = reverse2StrengthValue.get()
+                        thePlayer.speedInAir = reverse2StrengthValue.get()
                 } else if (velocityTimer.hasTimePassed(80L)) {
                     velocityInput = false
                     reverseHurt = false
@@ -112,42 +115,43 @@ class Velocity : Module() {
             }
 
             "aac" -> if (velocityInput && velocityTimer.hasTimePassed(80L)) {
-                mc.thePlayer.motionX *= horizontalValue.get()
-                mc.thePlayer.motionZ *= horizontalValue.get()
+                thePlayer.motionX *= horizontalValue.get()
+                thePlayer.motionZ *= horizontalValue.get()
                 //mc.thePlayer.motionY *= verticalValue.get() ?
                 velocityInput = false
             }
 
             "aacpush" -> {
                 if (jump) {
-                    if (mc.thePlayer.onGround)
+                    if (thePlayer.onGround)
                         jump = false
                 } else {
                     // Strafe
-                    if (mc.thePlayer.hurtTime > 0 && mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0)
-                        mc.thePlayer.onGround = true
+                    if (thePlayer.hurtTime > 0 && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0)
+                        thePlayer.onGround = true
 
                     // Reduce Y
-                    if (mc.thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get()
+                    if (thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get()
                             && !LiquidBounce.moduleManager[Speed::class.java]!!.state)
-                        mc.thePlayer.motionY -= 0.014999993
+                        thePlayer.motionY -= 0.014999993
                 }
 
                 // Reduce XZ
-                if (mc.thePlayer.hurtResistantTime >= 19) {
+                if (thePlayer.hurtResistantTime >= 19) {
                     val reduce = aacPushXZReducerValue.get()
 
-                    mc.thePlayer.motionX /= reduce
-                    mc.thePlayer.motionZ /= reduce
+                    thePlayer.motionX /= reduce
+                    thePlayer.motionZ /= reduce
                 }
             }
 
-            "aaczero" -> if (mc.thePlayer.hurtTime > 0) {
-                if (!velocityInput || mc.thePlayer.onGround || mc.thePlayer.fallDistance > 2F)
+            "aaczero" -> if (thePlayer.hurtTime > 0) {
+                if (!velocityInput || thePlayer.onGround || thePlayer.fallDistance > 2F)
                     return
 
-                mc.thePlayer.addVelocity(0.0, -1.0, 0.0)
-                mc.thePlayer.onGround = true
+                thePlayer.motionY -= 1.0
+                thePlayer.isAirBorne = true
+                thePlayer.onGround = true
             } else
                 velocityInput = false
         }
@@ -155,10 +159,15 @@ class Velocity : Module() {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
+        val thePlayer = mc.thePlayer ?: return
+
         val packet = event.packet
 
-        if (packet is S12PacketEntityVelocity) {
-            if (mc.thePlayer == null || (mc.theWorld?.getEntityByID(packet.entityID) ?: return) != mc.thePlayer)
+        if (classProvider.isSPacketEntityVelocity(packet)) {
+            val packetEntityVelocity = packet.asSPacketEntityVelocity()
+
+
+            if ((mc.theWorld?.getEntityByID(packetEntityVelocity.entityID) ?: return) != thePlayer)
                 return
 
             velocityTimer.reset()
@@ -171,15 +180,15 @@ class Velocity : Module() {
                     if (horizontal == 0F && vertical == 0F)
                         event.cancelEvent()
 
-                    packet.motionX = (packet.getMotionX() * horizontal).toInt()
-                    packet.motionY = (packet.getMotionY() * vertical).toInt()
-                    packet.motionZ = (packet.getMotionZ() * horizontal).toInt()
+                    packetEntityVelocity.motionX = (packetEntityVelocity.motionX * horizontal).toInt()
+                    packetEntityVelocity.motionY = (packetEntityVelocity.motionY * vertical).toInt()
+                    packetEntityVelocity.motionZ = (packetEntityVelocity.motionZ * horizontal).toInt()
                 }
 
                 "aac", "reverse", "smoothreverse", "aaczero" -> velocityInput = true
 
                 "glitch" -> {
-                    if (!mc.thePlayer.onGround)
+                    if (!thePlayer.onGround)
                         return
 
                     velocityInput = true
@@ -188,7 +197,7 @@ class Velocity : Module() {
             }
         }
 
-        if (packet is S27PacketExplosion) {
+        if (classProvider.isSPacketExplosion(packet)) {
             // TODO: Support velocity for explosions
             event.cancelEvent()
         }
@@ -196,17 +205,19 @@ class Velocity : Module() {
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        if (mc.thePlayer == null || mc.thePlayer.isInWater || mc.thePlayer.isInLava || mc.thePlayer.isInWeb)
+        val thePlayer = mc.thePlayer
+
+        if (thePlayer == null || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb)
             return
 
         when (modeValue.get().toLowerCase()) {
             "aacpush" -> {
                 jump = true
 
-                if (!mc.thePlayer.isCollidedVertically)
+                if (!thePlayer.isCollidedVertically)
                     event.cancelEvent()
             }
-            "aaczero" -> if (mc.thePlayer.hurtTime > 0)
+            "aaczero" -> if (thePlayer.hurtTime > 0)
                 event.cancelEvent()
         }
     }

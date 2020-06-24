@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -17,9 +18,6 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.item.ItemBow
 import java.awt.Color
 
 @ModuleInfo(name = "BowAimbot", description = "Automatically aims at players when using a bow.", category = ModuleCategory.COMBAT)
@@ -32,7 +30,7 @@ class BowAimbot : Module() {
     private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
     private val markValue = BoolValue("Mark", true)
 
-    private var target: Entity? = null
+    private var target: IEntity? = null
 
     override fun onDisable() {
         target = null
@@ -42,7 +40,7 @@ class BowAimbot : Module() {
     fun onUpdate(event: UpdateEvent) {
         target = null
 
-        if (mc.thePlayer.itemInUse?.item is ItemBow) {
+        if (classProvider.isItemBow(mc.thePlayer?.itemInUse?.item)) {
             val entity = getTarget(throughWallsValue.get(), priorityValue.get()) ?: return
 
             target = entity
@@ -56,19 +54,19 @@ class BowAimbot : Module() {
             RenderUtils.drawPlatform(target, Color(37, 126, 255, 70))
     }
 
-    private fun getTarget(throughWalls: Boolean, priorityMode: String): Entity? {
-        val targets = mc.theWorld.loadedEntityList.filter {
-            it is EntityLivingBase && EntityUtils.isSelected(it, true) &&
-                    (throughWalls || mc.thePlayer.canEntityBeSeen(it))
+    private fun getTarget(throughWalls: Boolean, priorityMode: String): IEntity? {
+        val targets = mc.theWorld!!.loadedEntityList.filter {
+            classProvider.isEntityLivingBase(it) && EntityUtils.isSelected(it, true) &&
+                    (throughWalls || mc.thePlayer!!.canEntityBeSeen(it))
         }
 
         return when (priorityMode.toUpperCase()) {
-            "DISTANCE" -> targets.minBy { mc.thePlayer.getDistanceToEntity(it) }
+            "DISTANCE" -> targets.minBy { mc.thePlayer!!.getDistanceToEntity(it) }
             "DIRECTION" -> targets.minBy { RotationUtils.getRotationDifference(it) }
-            "HEALTH" -> targets.minBy { (it as EntityLivingBase).health }
+            "HEALTH" -> targets.minBy { it.asEntityLivingBase().health }
             else -> null
         }
     }
 
-    fun hasTarget() = target != null && mc.thePlayer.canEntityBeSeen(target)
+    fun hasTarget() = target != null && mc.thePlayer!!.canEntityBeSeen(target!!)
 }

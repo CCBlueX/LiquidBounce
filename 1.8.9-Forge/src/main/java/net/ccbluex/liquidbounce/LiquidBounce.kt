@@ -7,6 +7,8 @@ package net.ccbluex.liquidbounce
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import net.ccbluex.liquidbounce.api.Wrapper
+import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.cape.CapeAPI.registerCapeService
 import net.ccbluex.liquidbounce.discord.ClientRichPresence
 import net.ccbluex.liquidbounce.event.ClientShutdownEvent
@@ -62,16 +64,20 @@ object LiquidBounce {
     var latestVersion = 0
 
     // Menu Background
-    var background: ResourceLocation? = null
+    var background: IResourceLocation? = null
 
     // Discord RPC
     private lateinit var clientRichPresence: ClientRichPresence
 
+    lateinit var wrapper: Wrapper
+
     /**
      * Execute if client will be started
      */
-    fun startClient() {
+    fun startClient(wrapper: Wrapper) {
         isStarting = true
+
+        this.wrapper = wrapper
 
         ClientUtils.getLogger().info("Starting $CLIENT_NAME b$CLIENT_VERSION, by $CLIENT_CREATOR")
 

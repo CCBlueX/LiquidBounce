@@ -5,28 +5,27 @@
  */
 package net.ccbluex.liquidbounce.utils.item;
 
-import net.minecraft.item.ItemArmor;
-import net.minecraft.item.ItemStack;
+
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack;
 
 public class ArmorPiece {
+    private final IItemStack itemStack;
+    private final int slot;
 
-    private ItemStack itemStack;
-    private int slot;
-
-    public ArmorPiece(ItemStack itemStack, int slot) {
+    public ArmorPiece(IItemStack itemStack, int slot) {
         this.itemStack = itemStack;
         this.slot = slot;
     }
 
     public int getArmorType() {
-        return ((ItemArmor) itemStack.getItem()).armorType;
+        return itemStack.getItem().asItemArmor().getArmorType();
     }
 
     public int getSlot() {
         return slot;
     }
 
-    public ItemStack getItemStack() {
+    public IItemStack getItemStack() {
         return itemStack;
     }
 }

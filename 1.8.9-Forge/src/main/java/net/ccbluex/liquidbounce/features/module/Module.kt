@@ -11,13 +11,8 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.value.Value
-import net.minecraft.client.audio.PositionedSoundRecord
-import net.minecraft.util.ResourceLocation
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.input.Keyboard
 
-@SideOnly(Side.CLIENT)
 open class Module : MinecraftInstance(), Listenable {
 
     // Module information
@@ -64,8 +59,7 @@ open class Module : MinecraftInstance(), Listenable {
 
             // Play sound and add notification
             if (!LiquidBounce.isStarting) {
-                mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"),
-                        1F))
+                mc.soundHandler.playSound("random.click", 1F)
                 LiquidBounce.hud.addNotification(Notification("${if (value) "Enabled " else "Disabled "}$name"))
             }
 

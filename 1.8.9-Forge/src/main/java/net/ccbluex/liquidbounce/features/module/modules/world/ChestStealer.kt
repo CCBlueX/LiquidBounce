@@ -100,7 +100,7 @@ class ChestStealer : Module() {
         }
 
         // No Compass
-        if (noCompassValue.get() && mc.thePlayer.inventory.getCurrentItem()?.item?.unlocalizedName == "item.compass")
+        if (noCompassValue.get() && mc.thePlayer.inventory.getCurrentItemInHand()?.item?.unlocalizedName == "item.compass")
             return
 
         // Chest title

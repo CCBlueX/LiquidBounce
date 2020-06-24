@@ -6,6 +6,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity;
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase;
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer;
+import net.ccbluex.liquidbounce.api.minecraft.client.network.INetworkPlayerInfo;
+import net.ccbluex.liquidbounce.api.minecraft.network.IPacket;
+import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketAnimation;
+import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketEntity;
 import net.ccbluex.liquidbounce.event.AttackEvent;
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.PacketEvent;
@@ -18,13 +25,6 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
 import net.ccbluex.liquidbounce.value.ListValue;
-import net.minecraft.client.network.NetworkPlayerInfo;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.network.Packet;
-import net.minecraft.network.play.server.S0BPacketAnimation;
-import net.minecraft.network.play.server.S14PacketEntity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +34,7 @@ import java.util.Map;
 @ModuleInfo(name = "AntiBot", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
 public class AntiBot extends Module {
     private final BoolValue tabValue = new BoolValue("Tab", true);
-    private final ListValue tabModeValue = new ListValue("TabMode", new String[] {"Equals", "Contains"}, "Contains");
+    private final ListValue tabModeValue = new ListValue("TabMode", new String[]{"Equals", "Contains"}, "Contains");
     private final BoolValue entityIDValue = new BoolValue("EntityID", true);
     private final BoolValue colorValue = new BoolValue("Color", false);
     private final BoolValue livingTimeValue = new BoolValue("LivingTime", false);
@@ -59,6 +59,101 @@ public class AntiBot extends Module {
     private final List<Integer> invisible = new ArrayList<>();
     private final List<Integer> hitted = new ArrayList<>();
 
+    public static boolean isBot(final IEntityLivingBase entity) {
+        if (!classProvider.isEntityPlayer(entity))
+            return false;
+
+        final AntiBot antiBot = (AntiBot) LiquidBounce.moduleManager.getModule(AntiBot.class);
+
+        if (antiBot == null || !antiBot.getState())
+            return false;
+
+        if (antiBot.colorValue.get() && !entity.getDisplayName().getFormattedText()
+                .replace("§r", "").contains("§"))
+            return true;
+
+        if (antiBot.livingTimeValue.get() && entity.getTicksExisted() < antiBot.livingTimeTicksValue.get())
+            return true;
+
+        if (antiBot.groundValue.get() && !antiBot.ground.contains(entity.getEntityId()))
+            return true;
+
+        if (antiBot.airValue.get() && !antiBot.air.contains(entity.getEntityId()))
+            return true;
+
+        if (antiBot.swingValue.get() && !antiBot.swing.contains(entity.getEntityId()))
+            return true;
+
+        if (antiBot.healthValue.get() && entity.getHealth() > 20F)
+            return true;
+
+        if (antiBot.entityIDValue.get() && (entity.getEntityId() >= 1000000000 || entity.getEntityId() <= -1))
+            return true;
+
+        if (antiBot.derpValue.get() && (entity.getRotationPitch() > 90F || entity.getRotationPitch() < -90F))
+            return true;
+
+        if (antiBot.wasInvisibleValue.get() && antiBot.invisible.contains(entity.getEntityId()))
+            return true;
+
+        if (antiBot.armorValue.get()) {
+            final IEntityPlayer player = entity.asEntityPlayer();
+
+            if (player.getInventory().armorInventory[0] == null && player.getInventory().armorInventory[1] == null &&
+                    player.getInventory().armorInventory[2] == null && player.getInventory().armorInventory[3] == null)
+                return true;
+        }
+
+        if (antiBot.pingValue.get()) {
+            IEntityPlayer player = entity.asEntityPlayer();
+
+            if (mc.getNetHandler().getPlayerInfo(player.getUniqueID()).getResponseTime() == 0)
+                return true;
+        }
+
+        if (antiBot.needHitValue.get() && !antiBot.hitted.contains(entity.getEntityId()))
+            return true;
+
+        if (antiBot.invalidGroundValue.get() && antiBot.invalidGround.getOrDefault(entity.getEntityId(), 0) >= 10)
+            return true;
+
+        if (antiBot.tabValue.get()) {
+            final boolean equals = antiBot.tabModeValue.get().equalsIgnoreCase("Equals");
+            final String targetName = ColorUtils.stripColor(entity.getDisplayName().getFormattedText());
+
+            if (targetName != null) {
+                for (INetworkPlayerInfo networkPlayerInfo : mc.getNetHandler().getPlayerInfoMap()) {
+                    final String networkName = ColorUtils.stripColor(EntityUtils.getName(networkPlayerInfo));
+
+                    if (networkName == null)
+                        continue;
+
+                    if (equals ? targetName.equals(networkName) : targetName.contains(networkName))
+                        return false;
+                }
+
+                return true;
+            }
+        }
+
+        if (antiBot.duplicateInWorldValue.get()) {
+            if (mc.getTheWorld().getLoadedEntityList().stream()
+                    .filter(currEntity -> classProvider.isEntityPlayer(currEntity) && currEntity.asEntityPlayer()
+                            .getDisplayNameString().equals((currEntity.asEntityPlayer()).getDisplayNameString()))
+                    .count() > 1)
+                return true;
+        }
+
+        if (antiBot.duplicateInTabValue.get()) {
+            if (mc.getNetHandler().getPlayerInfoMap().stream()
+                    .filter(networkPlayer -> entity.getName().equals(ColorUtils.stripColor(EntityUtils.getName(networkPlayer))))
+                    .count() > 1)
+                return true;
+        }
+
+        return entity.getName().isEmpty() || entity.getName().equals(mc.getThePlayer().getName());
+    }
+
     @Override
     public void onDisable() {
         clearAll();
@@ -67,26 +162,26 @@ public class AntiBot extends Module {
 
     @EventTarget
     public void onPacket(final PacketEvent event) {
-        if(mc.thePlayer == null || mc.theWorld == null)
+        if (mc.getThePlayer() == null || mc.getTheWorld() == null)
             return;
 
-        final Packet<?> packet = event.getPacket();
+        final IPacket packet = event.getPacket();
 
-        if(packet instanceof S14PacketEntity) {
-            final S14PacketEntity packetEntity = (S14PacketEntity) event.getPacket();
-            final Entity entity = packetEntity.getEntity(mc.theWorld);
+        if (classProvider.isSPacketEntity(packet)) {
+            final ISPacketEntity packetEntity = packet.asSPacketEntity();
+            final IEntity entity = packetEntity.getEntity(mc.getTheWorld());
 
-            if(entity instanceof EntityPlayer) {
-                if(packetEntity.getOnGround() && !ground.contains(entity.getEntityId()))
+            if (classProvider.isEntityPlayer(entity)) {
+                if (packetEntity.getOnGround() && !ground.contains(entity.getEntityId()))
                     ground.add(entity.getEntityId());
 
-                if(!packetEntity.getOnGround() && !air.contains(entity.getEntityId()))
+                if (!packetEntity.getOnGround() && !air.contains(entity.getEntityId()))
                     air.add(entity.getEntityId());
 
-                if(packetEntity.getOnGround()) {
-                    if(entity.prevPosY != entity.posY)
+                if (packetEntity.getOnGround()) {
+                    if (entity.getPrevPosY() != entity.getPosY())
                         invalidGround.put(entity.getEntityId(), invalidGround.getOrDefault(entity.getEntityId(), 0) + 1);
-                }else{
+                } else {
                     final int currentVL = invalidGround.getOrDefault(entity.getEntityId(), 0) / 2;
 
                     if (currentVL <= 0)
@@ -95,25 +190,25 @@ public class AntiBot extends Module {
                         invalidGround.put(entity.getEntityId(), currentVL);
                 }
 
-                if(entity.isInvisible() && !invisible.contains(entity.getEntityId()))
+                if (entity.isInvisible() && !invisible.contains(entity.getEntityId()))
                     invisible.add(entity.getEntityId());
             }
         }
 
-        if(packet instanceof S0BPacketAnimation) {
-            final S0BPacketAnimation packetAnimation = (S0BPacketAnimation) event.getPacket();
-            final Entity entity = mc.theWorld.getEntityByID(packetAnimation.getEntityID());
+        if (classProvider.isSPacketAnimation(packet)) {
+            final ISPacketAnimation packetAnimation = packet.asSPacketAnimation();
+            final IEntity entity = mc.getTheWorld().getEntityByID(packetAnimation.getEntityID());
 
-            if(entity instanceof EntityLivingBase && packetAnimation.getAnimationType() == 0 && !swing.contains(entity.getEntityId()))
+            if (entity != null && classProvider.isEntityLivingBase(entity) && packetAnimation.getAnimationType() == 0 && !swing.contains(entity.getEntityId()))
                 swing.add(entity.getEntityId());
         }
     }
 
     @EventTarget
     public void onAttack(final AttackEvent e) {
-        final Entity entity = e.getTargetEntity();
+        final IEntity entity = e.getTargetEntity();
 
-        if(entity instanceof EntityLivingBase && !hitted.contains(entity.getEntityId()))
+        if (entity != null && classProvider.isEntityLivingBase(entity) && !hitted.contains(entity.getEntityId()))
             hitted.add(entity.getEntityId());
     }
 
@@ -128,101 +223,6 @@ public class AntiBot extends Module {
         ground.clear();
         invalidGround.clear();
         invisible.clear();
-    }
-
-    public static boolean isBot(final EntityLivingBase entity) {
-        if (!(entity instanceof EntityPlayer))
-            return false;
-
-        final AntiBot antiBot = (AntiBot) LiquidBounce.moduleManager.getModule(AntiBot.class);
-
-        if (antiBot == null || !antiBot.getState())
-            return false;
-
-        if (antiBot.colorValue.get() && !entity.getDisplayName().getFormattedText()
-                .replace("§r", "").contains("§"))
-            return true;
-
-        if (antiBot.livingTimeValue.get() && entity.ticksExisted < antiBot.livingTimeTicksValue.get())
-            return true;
-
-        if (antiBot.groundValue.get() && !antiBot.ground.contains(entity.getEntityId()))
-            return true;
-
-        if (antiBot.airValue.get() && !antiBot.air.contains(entity.getEntityId()))
-            return true;
-
-        if(antiBot.swingValue.get() && !antiBot.swing.contains(entity.getEntityId()))
-            return true;
-
-        if(antiBot.healthValue.get() && entity.getHealth() > 20F)
-            return true;
-
-        if(antiBot.entityIDValue.get() && (entity.getEntityId() >= 1000000000 || entity.getEntityId() <= -1))
-            return true;
-
-        if(antiBot.derpValue.get() && (entity.rotationPitch > 90F || entity.rotationPitch < -90F))
-            return true;
-
-        if(antiBot.wasInvisibleValue.get() && antiBot.invisible.contains(entity.getEntityId()))
-            return true;
-
-        if(antiBot.armorValue.get()) {
-            final EntityPlayer player = (EntityPlayer) entity;
-
-            if (player.inventory.armorInventory[0] == null && player.inventory.armorInventory[1] == null &&
-                    player.inventory.armorInventory[2] == null && player.inventory.armorInventory[3] == null)
-                return true;
-        }
-
-        if(antiBot.pingValue.get()) {
-            EntityPlayer player = (EntityPlayer) entity;
-
-            if(mc.getNetHandler().getPlayerInfo(player.getUniqueID()).getResponseTime() == 0)
-                return true;
-        }
-
-        if(antiBot.needHitValue.get() && !antiBot.hitted.contains(entity.getEntityId()))
-            return true;
-
-        if(antiBot.invalidGroundValue.get() && antiBot.invalidGround.getOrDefault(entity.getEntityId(), 0) >= 10)
-            return true;
-
-        if(antiBot.tabValue.get()) {
-            final boolean equals = antiBot.tabModeValue.get().equalsIgnoreCase("Equals");
-            final String targetName = ColorUtils.stripColor(entity.getDisplayName().getFormattedText());
-
-            if (targetName != null) {
-                for (final NetworkPlayerInfo networkPlayerInfo : mc.getNetHandler().getPlayerInfoMap()) {
-                    final String networkName = ColorUtils.stripColor(EntityUtils.getName(networkPlayerInfo));
-
-                    if (networkName == null)
-                        continue;
-
-                    if (equals ? targetName.equals(networkName) : targetName.contains(networkName))
-                        return false;
-                }
-
-                return true;
-            }
-        }
-
-        if(antiBot.duplicateInWorldValue.get()) {
-            if (mc.theWorld.loadedEntityList.stream()
-                    .filter(currEntity -> currEntity instanceof EntityPlayer && ((EntityPlayer) currEntity)
-                            .getDisplayNameString().equals(((EntityPlayer) currEntity).getDisplayNameString()))
-                    .count() > 1)
-                return true;
-        }
-
-        if(antiBot.duplicateInTabValue.get()) {
-            if (mc.getNetHandler().getPlayerInfoMap().stream()
-                    .filter(networkPlayer -> entity.getName().equals(ColorUtils.stripColor(EntityUtils.getName(networkPlayer))))
-                    .count() > 1)
-                return true;
-        }
-
-        return entity.getName().isEmpty() || entity.getName().equals(mc.thePlayer.getName());
     }
 
 }

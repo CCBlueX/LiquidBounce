@@ -5,6 +5,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.api.enums.ItemType
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketClientStatus
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
+import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WEnumFacing
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -16,11 +21,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.gui.inventory.GuiInventory
-import net.minecraft.init.Items
-import net.minecraft.network.play.client.*
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
 
 @ModuleInfo(name = "AutoSoup", description = "Makes you automatically eat soup whenever your health is low.", category = ModuleCategory.COMBAT)
 class AutoSoup : Module() {
@@ -41,60 +41,65 @@ class AutoSoup : Module() {
         if (!timer.hasTimePassed(delayValue.get().toLong()))
             return
 
-        val soupInHotbar = InventoryUtils.findItem(36, 45, Items.mushroom_stew)
-        if (mc.thePlayer.health <= healthValue.get() && soupInHotbar != -1) {
-            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(soupInHotbar - 36))
-            mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer
-                    .getSlot(soupInHotbar).stack))
+        val thePlayer = mc.thePlayer ?: return
+
+        val soupInHotbar = InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.MUSHROOM_STEW))
+
+        if (thePlayer.health <= healthValue.get() && soupInHotbar != -1) {
+            mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(soupInHotbar - 36))
+            mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)))
+
             if (bowlValue.get().equals("Drop", true))
-                mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.DROP_ITEM,
-                        BlockPos.ORIGIN, EnumFacing.DOWN))
-            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+                mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, WEnumFacing.DOWN))
+
+            mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.getCurrentItemInHand))
             timer.reset()
             return
         }
 
-        val bowlInHotbar = InventoryUtils.findItem(36, 45, Items.bowl)
+        val bowlInHotbar = InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.BOWL))
         if (bowlValue.get().equals("Move", true) && bowlInHotbar != -1) {
-            if (openInventoryValue.get() && mc.currentScreen !is GuiInventory)
+            if (openInventoryValue.get() && !classProvider.isGuiInventory(mc.currentScreen))
                 return
 
             var bowlMovable = false
 
             for (i in 9..36) {
-                val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
+                val itemStack = thePlayer.inventory.getStackInSlot(i)
 
                 if (itemStack == null) {
                     bowlMovable = true
                     break
-                } else if (itemStack.item == Items.bowl && itemStack.stackSize < 64) {
+                } else if (itemStack.item == classProvider.getItemEnum(ItemType.BOWL) && itemStack.stackSize < 64) {
                     bowlMovable = true
                     break
                 }
             }
 
             if (bowlMovable) {
-                val openInventory = mc.currentScreen !is GuiInventory && simulateInventoryValue.get()
+                val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventoryValue.get()
 
                 if (openInventory)
-                    mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
-                mc.playerController.windowClick(0, bowlInHotbar, 0, 1, mc.thePlayer)
+                    mc.netHandler.addToSendQueue(classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT))
+
+                mc.playerController.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
             }
         }
 
-        val soupInInventory = InventoryUtils.findItem(9, 36, Items.mushroom_stew)
+        val soupInInventory = InventoryUtils.findItem(9, 36, classProvider.getItemEnum(ItemType.MUSHROOM_STEW))
+
         if (soupInInventory != -1 && InventoryUtils.hasSpaceHotbar()) {
-            if (openInventoryValue.get() && mc.currentScreen !is GuiInventory)
+            if (openInventoryValue.get() && !classProvider.isGuiInventory(mc.currentScreen))
                 return
 
-            val openInventory = mc.currentScreen !is GuiInventory && simulateInventoryValue.get()
+            val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventoryValue.get()
             if (openInventory)
-                mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+                mc.netHandler.addToSendQueue(classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT))
 
-            mc.playerController.windowClick(0, soupInInventory, 0, 1, mc.thePlayer)
+            mc.playerController.windowClick(0, soupInInventory, 0, 1, thePlayer)
 
             if (openInventory)
-                mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
+                mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
 
             timer.reset()
         }

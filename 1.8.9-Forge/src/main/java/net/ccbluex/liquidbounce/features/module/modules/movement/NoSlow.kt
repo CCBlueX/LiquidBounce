@@ -58,7 +58,7 @@ class NoSlow : Module() {
                     mc.netHandler.addToSendQueue(digging)
                 }
                 EventState.POST -> {
-                    val blockPlace = C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getCurrentItem())
+                    val blockPlace = C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getCurrentItemInHand())
                     mc.netHandler.addToSendQueue(blockPlace)
                 }
             }

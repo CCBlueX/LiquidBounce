@@ -6,24 +6,20 @@
 package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
 import net.ccbluex.liquidbounce.event.TextEvent
-import net.ccbluex.liquidbounce.utils.ClassUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
-import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.FontRenderer
-import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.client.resources.IResourceManager
-import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL14
 import org.lwjgl.opengl.GL20.glUseProgram
 import java.awt.Color
 import java.awt.Font
 
-class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameSettings,
-        ResourceLocation("textures/font/ascii.png"), if (ClassUtils.hasForge()) null else Minecraft.getMinecraft().textureManager, false) {
+class GameFontRenderer(font: Font) : IWrappedFontRenderer {
 
+    val fontHeight: Int
     var defaultFont = AWTFontRenderer(font)
     private var boldFont = AWTFontRenderer(font.deriveFont(Font.BOLD))
     private var italicFont = AWTFontRenderer(font.deriveFont(Font.ITALIC))
@@ -36,16 +32,16 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
         get() = defaultFont.font.size
 
     init {
-        FONT_HEIGHT = height
+        fontHeight = height
     }
 
-    fun drawString(s: String, x: Float, y: Float, color: Int) = drawString(s, x, y, color, false)
+    override fun drawString(s: String, x: Float, y: Float, color: Int) = drawString(s, x, y, color, false)
 
     override fun drawStringWithShadow(text: String, x: Float, y: Float, color: Int) = drawString(text, x, y, color, true)
 
-    fun drawCenteredString(s: String, x: Float, y: Float, color: Int, shadow: Boolean) = drawString(s, x - getStringWidth(s) / 2F, y, color, shadow)
+    override fun drawCenteredString(s: String, x: Float, y: Float, color: Int, shadow: Boolean) = drawString(s, x - getStringWidth(s) / 2F, y, color, shadow)
 
-    fun drawCenteredString(s: String, x: Float, y: Float, color: Int) =
+    override fun drawCenteredString(s: String, x: Float, y: Float, color: Int) =
             drawStringWithShadow(s, x - getStringWidth(s) / 2F, y, color)
 
     override fun drawString(text: String, x: Float, y: Float, color: Int, shadow: Boolean): Int {
@@ -79,11 +75,11 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
         if (rainbow)
             glUseProgram(rainbowShaderId)
 
-        GlStateManager.translate(x - 1.5, y + 0.5, 0.0)
-        GlStateManager.enableAlpha()
-        GlStateManager.enableBlend()
-        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
-        GlStateManager.enableTexture2D()
+        GL11.glTranslatef(x - 1.5f, y + 0.5f, 0.0f)
+        GL11.glEnable(GL11.GL_ALPHA_TEST)
+        GL11.glEnable(GL11.GL_BLEND)
+        GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+        GL11.glEnable(GL11.GL_TEXTURE_2D)
 
         var currentColor = color
 
@@ -170,12 +166,12 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     if (strikeThrough)
                         RenderUtils.drawLine(width / 2.0 + 1, currentFont.height / 3.0,
                                 (width + currentFont.getStringWidth(words)) / 2.0 + 1, currentFont.height / 3.0,
-                                FONT_HEIGHT / 16F)
+                                fontHeight / 16F)
 
                     if (underline)
                         RenderUtils.drawLine(width / 2.0 + 1, currentFont.height / 2.0,
                                 (width + currentFont.getStringWidth(words)) / 2.0 + 1, currentFont.height / 2.0,
-                                FONT_HEIGHT / 16F)
+                                fontHeight / 16F)
 
                     width += currentFont.getStringWidth(words)
                 }
@@ -185,9 +181,9 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
             defaultFont.drawString(text, 0.0, 0.0, currentColor)
         }
 
-        GlStateManager.disableBlend()
-        GlStateManager.translate(-(x - 1.5), -(y + 0.5), 0.0)
-        GlStateManager.color(1f, 1f, 1f, 1f)
+        GL11.glDisable(GL11.GL_BLEND)
+        GL11.glTranslated(-(x - 1.5), -(y + 0.5), 0.0)
+        GL11.glColor4f(1f, 1f, 1f, 1f)
 
         return (x + getStringWidth(text)).toInt()
     }
@@ -252,10 +248,6 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     }
 
     override fun getCharWidth(character: Char) = getStringWidth(character.toString())
-
-    override fun onResourceManagerReload(resourceManager: IResourceManager) {}
-
-    override fun bindTexture(location: ResourceLocation?) {}
 
     companion object {
         @JvmStatic

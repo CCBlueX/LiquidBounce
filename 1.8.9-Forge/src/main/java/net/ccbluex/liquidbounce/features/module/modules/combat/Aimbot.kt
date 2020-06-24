@@ -42,10 +42,10 @@ class Aimbot : Module() {
             return
 
         val range = rangeValue.get()
-        val entity = mc.theWorld.loadedEntityList
+        val entity = mc.theWorld!!.loadedEntityList
                 .filter {
-                    EntityUtils.isSelected(it, true) && mc.thePlayer.canEntityBeSeen(it) &&
-                            mc.thePlayer.getDistanceToEntityBox(it) <= range && RotationUtils.getRotationDifference(it) <= fovValue.get()
+                    EntityUtils.isSelected(it, true) && mc.thePlayer!!.canEntityBeSeen(it) &&
+                            mc.thePlayer!!.getDistanceToEntityBox(it) <= range && RotationUtils.getRotationDifference(it) <= fovValue.get()
                 }
                 .minBy { RotationUtils.getRotationDifference(it) } ?: return
 

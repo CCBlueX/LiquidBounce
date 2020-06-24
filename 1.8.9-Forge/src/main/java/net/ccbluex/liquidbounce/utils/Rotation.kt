@@ -5,25 +5,28 @@
  */
 package net.ccbluex.liquidbounce.utils
 
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
-import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.util.MathHelper
-import net.minecraft.util.Vec3
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 /**
  * Rotations
  */
-data class Rotation(var yaw: Float, var pitch: Float) {
+data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance {
 
     /**
      * Set rotations to [player]
      */
-    fun toPlayer(player: EntityPlayer) {
+    fun toPlayer(player: IEntityPlayer) {
         if (yaw.isNaN() || pitch.isNaN())
             return
 
-        fixedSensitivity(MinecraftInstance.mc.gameSettings.mouseSensitivity)
+        fixedSensitivity(mc.gameSettings.mouseSensitivity)
 
         player.rotationYaw = yaw
         player.rotationPitch = pitch
@@ -48,8 +51,9 @@ data class Rotation(var yaw: Float, var pitch: Float) {
      * @author bestnub
      */
     fun applyStrafeToPlayer(event: StrafeEvent) {
-        val player = MinecraftInstance.mc.thePlayer
-        val dif = ((MathHelper.wrapAngleTo180_float(player.rotationYaw - this.yaw
+        val player = mc.thePlayer!!
+
+        val dif = ((WMathHelper.wrapAngleTo180_float(player.rotationYaw - this.yaw
                 - 23.5f - 135)
                 + 180) / 45).toInt()
 
@@ -116,13 +120,13 @@ data class Rotation(var yaw: Float, var pitch: Float) {
         var d = calcStrafe * calcStrafe + calcForward * calcForward
 
         if (d >= 1.0E-4f) {
-            d = MathHelper.sqrt_float(d)
+            d = sqrt(d)
             if (d < 1.0f) d = 1.0f
             d = friction / d
             calcStrafe *= d
             calcForward *= d
-            val yawSin = MathHelper.sin((yaw * Math.PI / 180f).toFloat())
-            val yawCos = MathHelper.cos((yaw * Math.PI / 180f).toFloat())
+            val yawSin = sin((yaw * Math.PI / 180f).toFloat())
+            val yawCos = cos((yaw * Math.PI / 180f).toFloat())
             player.motionX += calcStrafe * yawCos - calcForward * yawSin.toDouble()
             player.motionZ += calcForward * yawCos + calcStrafe * yawSin.toDouble()
         }
@@ -132,7 +136,7 @@ data class Rotation(var yaw: Float, var pitch: Float) {
 /**
  * Rotation with vector
  */
-data class VecRotation(val vec: Vec3, val rotation: Rotation)
+data class VecRotation(val vec: WVec3, val rotation: Rotation)
 
 /**
  * Rotation with place info

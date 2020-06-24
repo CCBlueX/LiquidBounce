@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
-import net.ccbluex.liquidbounce.injection.implementations.IItemStack
+import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -138,12 +138,12 @@ class InventoryCleaner : Module() {
                     }
                 }
 
-                val damage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
+                val damage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull().amount
                         ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness)
 
                 items(0, 45).none { (_, stack) ->
                     stack != itemStack && stack.javaClass == itemStack.javaClass
-                            && damage <= (stack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
+                            && damage <= (stack.attributeModifiers["generic.attackDamage"].firstOrNull().amount
                             ?: 0.0) + 1.25 * ItemUtils.getEnchantment(stack, Enchantment.sharpness)
                 }
             } else if (item is ItemBow) {
@@ -222,16 +222,16 @@ class InventoryCleaner : Module() {
                     else -> return null
                 }
 
-                var bestWeapon = if (slotStack?.item?.javaClass == currentType)
+                var bestWeapon = if (slotStack.item.javaClass == currentType)
                     targetSlot
                 else -1
 
                 mc.thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
-                    if (itemStack?.item?.javaClass == currentType && !type(index).equals(type, ignoreCase = true)) {
+                    if (itemStack.item.javaClass == currentType && !type(index).equals(type, ignoreCase = true)) {
                         if (bestWeapon == -1) {
                             bestWeapon = index
                         } else {
-                            val currDamage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
+                            val currDamage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull().amount
                                     ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, Enchantment.sharpness)
 
                             val bestStack = mc.thePlayer.inventory.getStackInSlot(bestWeapon)
@@ -249,14 +249,14 @@ class InventoryCleaner : Module() {
             }
 
             "bow" -> {
-                var bestBow = if (slotStack?.item is ItemBow) targetSlot else -1
+                var bestBow = if (slotStack.item is ItemBow) targetSlot else -1
                 var bestPower = if (bestBow != -1)
                     ItemUtils.getEnchantment(slotStack, Enchantment.power)
                 else
                     0
 
                 mc.thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
-                    if (itemStack?.item is ItemBow && !type(index).equals(type, ignoreCase = true)) {
+                    if (itemStack.item is ItemBow && !type(index).equals(type, ignoreCase = true)) {
                         if (bestBow == -1) {
                             bestBow = index
                         } else {
@@ -275,7 +275,7 @@ class InventoryCleaner : Module() {
 
             "food" -> {
                 mc.thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-                    val item = stack?.item
+                    val item = stack.item
 
                     if (item is ItemFood && item !is ItemAppleGold && !type(index).equals("Food", ignoreCase = true)) {
                         val replaceCurr = slotStack == null || slotStack.item !is ItemFood
@@ -287,7 +287,7 @@ class InventoryCleaner : Module() {
 
             "block" -> {
                 mc.thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-                    val item = stack?.item
+                    val item = stack.item
 
                     if (item is ItemBlock && !InventoryUtils.BLOCK_BLACKLIST.contains(item.block) &&
                             !type(index).equals("Block", ignoreCase = true)) {
@@ -300,7 +300,7 @@ class InventoryCleaner : Module() {
 
             "water" -> {
                 mc.thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-                    val item = stack?.item
+                    val item = stack.item
 
                     if (item is ItemBucket && item.isFull == Blocks.flowing_water && !type(index).equals("Water", ignoreCase = true)) {
                         val replaceCurr = slotStack == null || slotStack.item !is ItemBucket || (slotStack.item as ItemBucket).isFull != Blocks.flowing_water
@@ -312,7 +312,7 @@ class InventoryCleaner : Module() {
 
             "gapple" -> {
                 mc.thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-                    val item = stack?.item
+                    val item = stack.item
 
                     if (item is ItemAppleGold && !type(index).equals("Gapple", ignoreCase = true)) {
                         val replaceCurr = slotStack == null || slotStack.item !is ItemAppleGold
@@ -324,7 +324,7 @@ class InventoryCleaner : Module() {
 
             "pearl" -> {
                 mc.thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-                    val item = stack?.item
+                    val item = stack.item
 
                     if (item is ItemEnderPearl && !type(index).equals("Pearl", ignoreCase = true)) {
                         val replaceCurr = slotStack == null || slotStack.item !is ItemEnderPearl
@@ -351,7 +351,7 @@ class InventoryCleaner : Module() {
             if (i in 36..44 && type(i).equals("Ignore", ignoreCase = true))
                 continue
 
-            if (System.currentTimeMillis() - (itemStack as IItemStack).itemDelay >= itemDelayValue.get())
+            if (System.currentTimeMillis() - (itemStack as IMixinItemStack).itemDelay >= itemDelayValue.get())
                 items[i] = itemStack
         }
 
