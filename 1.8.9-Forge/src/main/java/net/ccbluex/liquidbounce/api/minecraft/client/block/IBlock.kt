@@ -14,6 +14,13 @@ import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 
 @Suppress("INAPPLICABLE_JVM_NAME")
 interface IBlock {
+    var slipperiness: Float
+
+    @get:JvmName("isTransculent")
+    val translucent: Boolean
+    val blockBoundsMinY: Double
+    val blockBoundsMaxY: Double
+    val defaultState: IIBlockState?
     val localizedName: String
     val material: IMaterial?
 
@@ -21,6 +28,7 @@ interface IBlock {
     val fullCube: Boolean
 
     fun getSelectedBoundingBox(world: IWorld, blockPos: WBlockPos): IAxisAlignedBB
-    fun getCollisionBoundingBox(world: IWorld, pos: WBlockPos, state: IIBlockState?): IAxisAlignedBB
+    fun getCollisionBoundingBox(world: IWorld, pos: WBlockPos, state: IIBlockState?): IAxisAlignedBB?
     fun canCollideCheck(state: IIBlockState?, hitIfLiquid: Boolean): Boolean
+    fun setBlockBoundsBasedOnState(world: IWorld, blockPos: WBlockPos)
 }

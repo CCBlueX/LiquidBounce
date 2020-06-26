@@ -3,104 +3,94 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.module.modules.render;
+package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.EventTarget;
-import net.ccbluex.liquidbounce.event.Render3DEvent;
-import net.ccbluex.liquidbounce.event.UpdateEvent;
-import net.ccbluex.liquidbounce.features.module.Module;
-import net.ccbluex.liquidbounce.features.module.ModuleCategory;
-import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.utils.block.BlockUtils;
-import net.ccbluex.liquidbounce.utils.render.ColorUtils;
-import net.ccbluex.liquidbounce.utils.render.RenderUtils;
-import net.ccbluex.liquidbounce.utils.timer.MSTimer;
-import net.ccbluex.liquidbounce.value.BlockValue;
-import net.ccbluex.liquidbounce.value.BoolValue;
-import net.ccbluex.liquidbounce.value.IntegerValue;
-import net.ccbluex.liquidbounce.value.ListValue;
-import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
-
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
+import net.ccbluex.liquidbounce.api.enums.BlockType
+import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.Render3DEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.value.BlockValue
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import java.awt.Color
+import java.util.*
 
 @ModuleInfo(name = "BlockESP", description = "Allows you to see a selected block through walls.", category = ModuleCategory.RENDER)
-public class BlockESP extends Module {
-    private final ListValue modeValue = new ListValue("Mode", new String[] {"Box", "2D"}, "Box");
-
-    private final BlockValue blockValue = new BlockValue("Block", 168);
-    private final IntegerValue radiusValue = new IntegerValue("Radius", 40, 5, 120);
-
-    private final IntegerValue colorRedValue = new IntegerValue("R", 255, 0, 255);
-    private final IntegerValue colorGreenValue = new IntegerValue("G", 179, 0, 255);
-    private final IntegerValue colorBlueValue = new IntegerValue("B", 72, 0, 255);
-    private final BoolValue colorRainbow = new BoolValue("Rainbow", false);
-
-    private final MSTimer searchTimer = new MSTimer();
-    private final List<BlockPos> posList = new ArrayList<>();
-    private Thread thread;
+class BlockESP : Module() {
+    private val modeValue = ListValue("Mode", arrayOf("Box", "2D"), "Box")
+    private val blockValue = BlockValue("Block", 168)
+    private val radiusValue = IntegerValue("Radius", 40, 5, 120)
+    private val colorRedValue = IntegerValue("R", 255, 0, 255)
+    private val colorGreenValue = IntegerValue("G", 179, 0, 255)
+    private val colorBlueValue = IntegerValue("B", 72, 0, 255)
+    private val colorRainbow = BoolValue("Rainbow", false)
+    private val searchTimer = MSTimer()
+    private val posList: MutableList<WBlockPos> = ArrayList()
+    private var thread: Thread? = null
 
     @EventTarget
-    public void onUpdate(UpdateEvent event) {
-        if(searchTimer.hasTimePassed(1000L) && (thread == null || !thread.isAlive())) {
-            final int radius = radiusValue.get();
-            final Block selectedBlock = Block.getBlockById(blockValue.get());
+    fun onUpdate(event: UpdateEvent?) {
+        if (searchTimer.hasTimePassed(1000L) && (thread == null || !thread!!.isAlive)) {
+            val radius = radiusValue.get()
+            val selectedBlock = functions.getBlockById(blockValue.get())
 
-            if(selectedBlock == null || selectedBlock == Blocks.air)
-                return;
+            if (selectedBlock == null || selectedBlock == classProvider.getBlockEnum(BlockType.AIR))
+                return
 
-            thread = new Thread(() -> {
-                final List<BlockPos> blockList = new ArrayList<>();
+            thread = Thread(Runnable {
+                val blockList: MutableList<WBlockPos> = ArrayList()
 
-                for(int x = -radius; x < radius; x++) {
-                    for(int y = radius; y > -radius; y--) {
-                        for(int z = -radius; z < radius; z++) {
-                            final int xPos = ((int) mc.thePlayer.posX + x);
-                            final int yPos = ((int) mc.thePlayer.posY + y);
-                            final int zPos = ((int) mc.thePlayer.posZ + z);
+                for (x in -radius until radius) {
+                    for (y in radius downTo -radius + 1) {
+                        for (z in -radius until radius) {
+                            val thePlayer = mc.thePlayer!!
 
-                            final BlockPos blockPos = new BlockPos(xPos, yPos, zPos);
-                            final Block block = BlockUtils.getBlock(blockPos);
-                            if(block == selectedBlock)
-                                blockList.add(blockPos);
+                            val xPos = thePlayer.posX.toInt() + x
+                            val yPos = thePlayer.posY.toInt() + y
+                            val zPos = thePlayer.posZ.toInt() + z
+
+                            val blockPos = WBlockPos(xPos, yPos, zPos)
+                            val block = getBlock(blockPos)
+
+                            if (block == selectedBlock) blockList.add(blockPos)
                         }
                     }
                 }
-
-                searchTimer.reset();
+                searchTimer.reset()
 
                 synchronized(posList) {
-                    posList.clear();
-                    posList.addAll(blockList);
+                    posList.clear()
+                    posList.addAll(blockList)
                 }
-            }, "BlockESP-BlockFinder");
-            thread.start();
+            }, "BlockESP-BlockFinder")
+
+            thread!!.start()
         }
     }
 
     @EventTarget
-    public void onRender3D(Render3DEvent event) {
+    fun onRender3D(event: Render3DEvent?) {
         synchronized(posList) {
-            final Color color = colorRainbow.get() ? ColorUtils.rainbow() : new Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get());
-
-            for(final BlockPos blockPos : posList) {
-                switch(modeValue.get().toLowerCase()) {
-                    case "box":
-                        RenderUtils.drawBlockBox(blockPos, color, true);
-                        break;
-                    case "2d":
-                        RenderUtils.draw2D(blockPos, color.getRGB(), Color.BLACK.getRGB());
-                        break;
+            val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+            for (blockPos in posList) {
+                when (modeValue.get().toLowerCase()) {
+                    "box" -> RenderUtils.drawBlockBox(blockPos, color, true)
+                    "2d" -> RenderUtils.draw2D(blockPos, color.rgb, Color.BLACK.rgb)
                 }
             }
         }
     }
 
-    @Override
-    public String getTag() {
-        return BlockUtils.getBlockName(blockValue.get());
-    }
+    override val tag: String
+        get() = getBlockName(blockValue.get())
 }

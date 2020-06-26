@@ -7,5 +7,9 @@
 package net.ccbluex.liquidbounce.api.minecraft.util
 
 interface IIChatComponent {
+    val chatStyle: IChatStyle
     val formattedText: String
+
+    fun appendText(text: String)
+    fun appendSibling(component: IIChatComponent)
 }

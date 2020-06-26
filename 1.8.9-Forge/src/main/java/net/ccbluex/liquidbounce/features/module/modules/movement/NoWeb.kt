@@ -19,31 +19,33 @@ class NoWeb : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (!mc.thePlayer.isInWeb)
+        val thePlayer = mc.thePlayer ?: return
+
+        if (!thePlayer.isInWeb)
             return
 
         when (modeValue.get().toLowerCase()) {
-            "none" -> mc.thePlayer.isInWeb = false
+            "none" -> thePlayer.isInWeb = false
             "aac" -> {
-                mc.thePlayer.jumpMovementFactor = 0.59f
+                thePlayer.jumpMovementFactor = 0.59f
 
                 if (!mc.gameSettings.keyBindSneak.isKeyDown)
-                    mc.thePlayer.motionY = 0.0
+                    thePlayer.motionY = 0.0
             }
             "laac" -> {
-                mc.thePlayer.jumpMovementFactor = if (mc.thePlayer.movementInput.moveStrafe != 0f) 1.0f else 1.21f
+                thePlayer.jumpMovementFactor = if (thePlayer.movementInput.moveStrafe != 0f) 1.0f else 1.21f
 
                 if (!mc.gameSettings.keyBindSneak.isKeyDown)
-                    mc.thePlayer.motionY = 0.0
+                    thePlayer.motionY = 0.0
 
-                if (mc.thePlayer.onGround)
-                    mc.thePlayer.jump()
+                if (thePlayer.onGround)
+                    thePlayer.jump()
             }
             "rewi" -> {
-                mc.thePlayer.jumpMovementFactor = 0.42f
+                thePlayer.jumpMovementFactor = 0.42f
 
-                if (mc.thePlayer.onGround)
-                    mc.thePlayer.jump()
+                if (thePlayer.onGround)
+                    thePlayer.jump()
             }
         }
     }

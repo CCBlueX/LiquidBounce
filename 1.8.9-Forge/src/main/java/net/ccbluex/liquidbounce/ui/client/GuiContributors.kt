@@ -70,8 +70,8 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
                 GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
 
                 GlStateManager.enableAlpha()
-                GlStateManager.enableBlend()
-                GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+                GL11.glEnable(GL11.GL_BLEND)
+                GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
                 GlStateManager.enableTexture2D()
 
                 GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f)
@@ -249,7 +249,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
         internal fun getSelectedSlot() = if (selectedSlot > credits.size) -1 else selectedSlot
 
-        public override fun elementClicked(index: Int, doubleClick: Boolean, var3: Int, var4: Int) {
+        override fun elementClicked(index: Int, doubleClick: Boolean, var3: Int, var4: Int) {
             selectedSlot = index
         }
 

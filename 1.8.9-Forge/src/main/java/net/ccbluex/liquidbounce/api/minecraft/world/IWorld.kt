@@ -25,7 +25,9 @@ interface IWorld {
     fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean, ignoreBlockWithoutBoundingBox: Boolean, returnLastUncollidableBlock: Boolean): IMovingObjectPosition?
 
     fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: Predicate<in IEntity>): List<IEntity>
-    fun getBlockState(blockPos: WBlockPos?): IIBlockState?
+    fun getBlockState(blockPos: WBlockPos?): IIBlockState
     fun getEntitiesWithinAABBExcludingEntity(entity: IEntity?, bb: IAxisAlignedBB): Collection<IEntity>
-    fun getCollidingBoundingBoxes(entity: IEntity, bb: IAxisAlignedBB): Collection<IEntity>
+    fun getCollidingBoundingBoxes(entity: IEntity, bb: IAxisAlignedBB): Collection<IAxisAlignedBB>
+    fun checkBlockCollision(aabb: IAxisAlignedBB): Boolean
+    fun getCollisionBoxes(bb: IAxisAlignedBB): Collection<IAxisAlignedBB>
 }

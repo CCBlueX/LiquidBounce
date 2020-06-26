@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.minecraft.entity.EntityLivingBase
 
 @ModuleInfo(name = "Teams", description = "Prevents Killaura from attacking team mates.", category = ModuleCategory.MISC)
 class Teams : Module() {
@@ -23,23 +22,25 @@ class Teams : Module() {
      * Check if [entity] is in your own team using scoreboard, name color or team prefix
      */
     fun isInYourTeam(entity: IEntityLivingBase): Boolean {
-        mc.thePlayer ?: return false
+        val thePlayer = mc.thePlayer ?: return false
 
-        if (scoreboardValue.get() && mc.thePlayer.team != null && entity.team != null &&
-                mc.thePlayer.team.isSameTeam(entity.team))
+        if (scoreboardValue.get() && thePlayer.team != null && entity.team != null &&
+                thePlayer.team!!.isSameTeam(entity.team!!))
             return true
 
-        if (gommeSWValue.get() && mc.thePlayer.displayName != null && entity.displayName != null) {
-            val targetName = entity.displayName.formattedText.replace("§r", "")
-            val clientName = mc.thePlayer.displayName.formattedText.replace("§r", "")
+        val displayName = thePlayer.displayName
+
+        if (gommeSWValue.get() && displayName != null && entity.displayName != null) {
+            val targetName = entity.displayName!!.formattedText.replace("§r", "")
+            val clientName = displayName.formattedText.replace("§r", "")
             if (targetName.startsWith("T") && clientName.startsWith("T"))
                 if (targetName[1].isDigit() && clientName[1].isDigit())
                     return targetName[1] == clientName[1]
         }
 
-        if (colorValue.get() && mc.thePlayer.displayName != null && entity.displayName != null) {
-            val targetName = entity.displayName.formattedText.replace("§r", "")
-            val clientName = mc.thePlayer.displayName.formattedText.replace("§r", "")
+        if (colorValue.get() && displayName != null && entity.displayName != null) {
+            val targetName = entity.displayName!!.formattedText.replace("§r", "")
+            val clientName = displayName.formattedText.replace("§r", "")
             return targetName.startsWith("§${clientName[1]}")
         }
 

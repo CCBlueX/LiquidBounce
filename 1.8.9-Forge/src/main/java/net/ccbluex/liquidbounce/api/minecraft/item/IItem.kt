@@ -17,4 +17,5 @@ interface IItem {
     fun asItemPotion(): IItemPotion
     fun asItemBlock(): IItemBlock
     fun asItemSword(): IItemSword
+    fun asItemBucket(): IItemBucket
 }

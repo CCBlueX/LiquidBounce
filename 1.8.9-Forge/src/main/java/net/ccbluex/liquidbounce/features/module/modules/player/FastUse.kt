@@ -16,10 +16,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.item.ItemBucketMilk
-import net.minecraft.item.ItemFood
-import net.minecraft.item.ItemPotion
-import net.minecraft.network.play.client.C03PacketPlayer
 
 @ModuleInfo(name = "FastUse", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
 class FastUse : Module() {
@@ -37,34 +33,36 @@ class FastUse : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
+        val thePlayer = mc.thePlayer ?: return
+
         if (usedTimer) {
             mc.timer.timerSpeed = 1F
             usedTimer = false
         }
 
-        if (!mc.thePlayer.isUsingItem) {
+        if (!thePlayer.isUsingItem) {
             msTimer.reset()
             return
         }
 
-        val usingItem = mc.thePlayer.itemInUse.item
+        val usingItem = thePlayer.itemInUse!!.item
 
-        if (usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion) {
+        if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem)) {
             when (modeValue.get().toLowerCase()) {
                 "instant" -> {
                     repeat(35) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
                     }
 
-                    mc.playerController.onStoppedUsingItem(mc.thePlayer)
+                    mc.playerController.onStoppedUsingItem(thePlayer)
                 }
 
-                "ncp" -> if (mc.thePlayer.itemInUseDuration > 14) {
+                "ncp" -> if (thePlayer.itemInUseDuration > 14) {
                     repeat(20) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
                     }
 
-                    mc.playerController.onStoppedUsingItem(mc.thePlayer)
+                    mc.playerController.onStoppedUsingItem(thePlayer)
                 }
 
                 "aac" -> {
@@ -80,7 +78,7 @@ class FastUse : Module() {
                         return
 
                     repeat(customSpeedValue.get()) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
                     }
 
                     msTimer.reset()
@@ -91,11 +89,16 @@ class FastUse : Module() {
 
     @EventTarget
     fun onMove(event: MoveEvent?) {
-        if (event == null) return
+        val thePlayer = mc.thePlayer
 
-        if (!state || !mc.thePlayer.isUsingItem || !noMoveValue.get()) return
-        val usingItem = mc.thePlayer.itemInUse.item
-        if ((usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion))
+        if (thePlayer == null || event == null)
+            return
+        if (!state || !thePlayer.isUsingItem || !noMoveValue.get())
+            return
+
+        val usingItem = thePlayer.itemInUse!!.item
+
+        if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem))
             event.zero()
     }
 

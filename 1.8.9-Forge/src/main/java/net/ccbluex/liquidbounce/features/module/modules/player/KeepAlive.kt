@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.api.enums.ItemType
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -13,9 +14,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.init.Items
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C09PacketHeldItemChange
 
 @ModuleInfo(name = "KeepAlive", description = "Tries to prevent you from dying.", category = ModuleCategory.PLAYER)
 class KeepAlive : Module() {
@@ -26,18 +24,20 @@ class KeepAlive : Module() {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        if (mc.thePlayer.isDead || mc.thePlayer.health <= 0) {
+        val thePlayer = mc.thePlayer ?: return
+
+        if (thePlayer.isDead || thePlayer.health <= 0) {
             if (runOnce) return
 
             when (modeValue.get().toLowerCase()) {
-                "/heal" -> mc.thePlayer.sendChatMessage("/heal")
+                "/heal" -> thePlayer.sendChatMessage("/heal")
                 "soup" -> {
-                    val soupInHotbar = InventoryUtils.findItem(36, 45, Items.mushroom_stew)
+                    val soupInHotbar = InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.MUSHROOM_STEW))
 
                     if (soupInHotbar != -1) {
-                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(soupInHotbar - 36))
-                        mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(soupInHotbar).stack))
-                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.getCurrentItemInHand))
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(soupInHotbar - 36))
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)))
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
                     }
                 }
             }

@@ -6,15 +6,19 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.client.entity
 
+import net.ccbluex.liquidbounce.api.minecraft.block.material.IMaterial
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import java.util.*
 
 @Suppress("INAPPLICABLE_JVM_NAME")
 interface IEntity {
+    var stepHeight: Float
+    val horizontalFacing: WEnumFacing
     val lookVec: WVec3?
     var isDead: Boolean
     val isCollidedVertically: Boolean
+    val isCollidedHorizontally: Boolean
     var isAirBorne: Boolean
     val hurtResistantTime: Int
     var noClip: Boolean
@@ -29,7 +33,7 @@ interface IEntity {
     val burning: Boolean
     var fallDistance: Float
     val isInWater: Boolean
-    val isInWeb: Boolean
+    var isInWeb: Boolean
     val isInLava: Boolean
     val width: Float
     var onGround: Boolean
@@ -42,7 +46,7 @@ interface IEntity {
     val eyeHeight: Double
     var entityBoundingBox: IAxisAlignedBB
     val posX: Double
-    val posY: Double
+    var posY: Double
     val posZ: Double
 
     val lastTickPosX: Double
@@ -56,7 +60,7 @@ interface IEntity {
     var rotationYaw: Float
     var rotationPitch: Float
     val entityId: Int
-    val displayName: IIChatComponent
+    val displayName: IIChatComponent?
     val uniqueID: UUID
     val name: String?
 
@@ -86,4 +90,7 @@ interface IEntity {
     fun getDistanceSq(blockPos: WBlockPos): Double
     fun setPositionAndUpdate(posX: Double, posY: Double, posZ: Double)
     fun rayTrace(range: Int, partialTicks: Float): IMovingObjectPosition?
+    fun getLook(partialTicks: Float): WVec3
+    fun isInsideOfMaterial(material: IMaterial): Boolean
+    fun copyLocationAndAnglesFrom(player: IEntityPlayerSP)
 }

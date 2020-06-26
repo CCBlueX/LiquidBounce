@@ -6,6 +6,8 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation;
+import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI;
@@ -18,11 +20,6 @@ import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner;
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
@@ -30,10 +27,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ClickGui extends GuiScreen {
+public class ClickGui extends WrappedGuiScreen {
 
     public final List<Panel> panels = new ArrayList<>();
-    private final ResourceLocation hudIcon = new ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/custom_hud_icon.png");
+    private final IResourceLocation hudIcon = classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/custom_hud_icon.png");
     public Style style = new SlowlyStyle();
     private Panel clickedPanel;
     private int mouseX;
@@ -85,7 +82,7 @@ public class ClickGui extends GuiScreen {
                             EntityUtils.targetPlayer = !EntityUtils.targetPlayer;
                             displayName = "Players";
                             color = EntityUtils.targetPlayer ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
-                            mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                            mc.getSoundHandler().playSound("gui.button.press", 1.0F);
                         }
                     }
                 });
@@ -111,7 +108,7 @@ public class ClickGui extends GuiScreen {
                             EntityUtils.targetMobs = !EntityUtils.targetMobs;
                             displayName = "Mobs";
                             color = EntityUtils.targetMobs ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
-                            mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                            mc.getSoundHandler().playSound("gui.button.press", 1.0F);
                         }
                     }
                 });
@@ -137,7 +134,7 @@ public class ClickGui extends GuiScreen {
                             EntityUtils.targetAnimals = !EntityUtils.targetAnimals;
                             displayName = "Animals";
                             color = EntityUtils.targetAnimals ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
-                            mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                            mc.getSoundHandler().playSound("gui.button.press", 1.0F);
                         }
                     }
                 });
@@ -163,7 +160,7 @@ public class ClickGui extends GuiScreen {
                             EntityUtils.targetInvisible = !EntityUtils.targetInvisible;
                             displayName = "Invisible";
                             color = EntityUtils.targetInvisible ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
-                            mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                            mc.getSoundHandler().playSound("gui.button.press", 1.0F);
                         }
                     }
                 });
@@ -189,7 +186,7 @@ public class ClickGui extends GuiScreen {
                             EntityUtils.targetDead = !EntityUtils.targetDead;
                             displayName = "Dead";
                             color = EntityUtils.targetDead ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
-                            mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                            mc.getSoundHandler().playSound("gui.button.press", 1.0F);
                         }
                     }
                 });
@@ -199,8 +196,8 @@ public class ClickGui extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        if (Mouse.isButtonDown(0) && mouseX >= 5 && mouseX <= 50 && mouseY <= height - 5 && mouseY >= height - 50)
-            mc.displayGuiScreen(new GuiHudDesigner());
+        if (Mouse.isButtonDown(0) && mouseX >= 5 && mouseX <= 50 && mouseY <= representedScreen.getHeight() - 5 && mouseY >= representedScreen.getHeight() - 50)
+            mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiHudDesigner()));
 
         // Enable DisplayList optimization
         AWTFontRenderer.Companion.setAssumeNonVolatile(true);

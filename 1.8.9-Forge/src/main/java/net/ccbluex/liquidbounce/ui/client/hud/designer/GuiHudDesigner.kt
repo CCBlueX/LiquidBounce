@@ -6,13 +6,13 @@
 package net.ccbluex.liquidbounce.ui.client.hud.designer
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
-import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
 import kotlin.math.min
 
-class GuiHudDesigner : GuiScreen() {
+class GuiHudDesigner : WrappedGuiScreen() {
 
     private var editorPanel = EditorPanel(this, 2, 2)
 
@@ -21,8 +21,8 @@ class GuiHudDesigner : GuiScreen() {
 
     override fun initGui() {
         Keyboard.enableRepeatEvents(true)
-        editorPanel = EditorPanel(this, width / 2, height / 2)
-        super.initGui()
+        editorPanel = EditorPanel(this, representedScreen.width / 2, representedScreen.height / 2)
+        representedScreen.superInitGui()
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
@@ -61,7 +61,7 @@ class GuiHudDesigner : GuiScreen() {
         if (!(mouseX >= editorPanel.x && mouseX <= editorPanel.x + editorPanel.width && mouseY >= editorPanel.y &&
                         mouseY <= editorPanel.y + min(editorPanel.realHeight, 200))) {
             selectedElement = null
-            editorPanel.create = false;
+            editorPanel.create = false
         }
 
         if (mouseButton == 0) {
@@ -75,7 +75,7 @@ class GuiHudDesigner : GuiScreen() {
     }
 
     override fun mouseReleased(mouseX: Int, mouseY: Int, state: Int) {
-        super.mouseReleased(mouseX, mouseY, state)
+        representedScreen.superMouseReleased(mouseX, mouseY, state)
 
         LiquidBounce.hud.handleMouseReleased()
     }

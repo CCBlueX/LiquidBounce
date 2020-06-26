@@ -8,4 +8,5 @@ package net.ccbluex.liquidbounce.api.minecraft.scoreboard
 
 interface ITeam {
     fun formatString(name: String): String
+    fun isSameTeam(team: ITeam): Boolean
 }

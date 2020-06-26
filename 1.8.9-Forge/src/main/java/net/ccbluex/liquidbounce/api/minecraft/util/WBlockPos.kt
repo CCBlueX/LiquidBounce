@@ -27,4 +27,12 @@ class WBlockPos(x: Int, y: Int, z: Int) : WVec3i(x, y, z) {
     fun up(n: Int): WBlockPos {
         return offset(WEnumFacing.UP, n)
     }
+
+    fun down(): WBlockPos {
+        return this.down(1)
+    }
+
+    fun down(n: Int): WBlockPos {
+        return offset(WEnumFacing.DOWN, n)
+    }
 }

@@ -53,7 +53,7 @@ public abstract class MixinGuiInGame {
             GuiIngame.drawRect(middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
 
             GlStateManager.enableRescaleNormal();
-            GlStateManager.enableBlend();
+            GL11.glEnable(GL11.GL_BLEND);
             GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
             RenderHelper.enableGUIStandardItemLighting();
 

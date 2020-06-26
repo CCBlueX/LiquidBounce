@@ -16,6 +16,11 @@ interface IGameSettings {
     val keyBindUseItem: IKeyBinding
     val keyBindJump: IKeyBinding
     val keyBindSneak: IKeyBinding
+    val keyBindForward: IKeyBinding
+    val keyBindBack: IKeyBinding
+    val keyBindRight: IKeyBinding
+    val keyBindLeft: IKeyBinding
+    val keyBindSprint: IKeyBinding
 
     fun isKeyDown(key: IKeyBinding): Boolean
     fun setModelPartEnabled(modelParts: WEnumPlayerModelParts, enabled: Boolean)

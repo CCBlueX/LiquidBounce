@@ -6,15 +6,24 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.client.entity.player
 
+import com.mojang.authlib.GameProfile
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.projectile.IEntityFishHook
 import net.ccbluex.liquidbounce.api.minecraft.entity.player.IInventoryPlayer
 import net.ccbluex.liquidbounce.api.minecraft.entity.player.IPlayerCapabilities
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
+import net.ccbluex.liquidbounce.api.minecraft.stats.IStatList
+import net.ccbluex.liquidbounce.api.minecraft.util.IFoodStats
 
 @Suppress("INAPPLICABLE_JVM_NAME")
 interface IEntityPlayer : IEntityLivingBase {
+    val gameProfile: GameProfile
+    val fishEntity: IEntityFishHook?
+    val foodStats: IFoodStats
+    val prevChasingPosY: Double
     var sleepTimer: Int
     var sleeping: Boolean
     val isPlayerSleeping: Boolean
@@ -41,4 +50,7 @@ interface IEntityPlayer : IEntityLivingBase {
     fun onCriticalHit(entity: IEntity)
     fun onEnchantmentCritical(entity: IEntityLivingBase)
     fun attackTargetEntityWithCurrentItem(entity: IEntity)
+    fun fall(distance: Float, damageMultiplier: Float)
+    fun triggerAchievement(stat: IStatList)
+    fun clonePlayer(player: IEntityPlayerSP, respawnFromEnd: Boolean)
 }

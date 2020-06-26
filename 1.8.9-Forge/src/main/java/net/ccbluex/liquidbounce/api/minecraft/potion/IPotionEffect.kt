@@ -7,5 +7,7 @@
 package net.ccbluex.liquidbounce.api.minecraft.potion
 
 interface IPotionEffect {
+    val amplifier: Int
+    val duration: Int
     val potionID: Int
 }

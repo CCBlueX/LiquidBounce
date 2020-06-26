@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
 
 interface IPlayerControllerMP {
+    val blockReachDistance: Double
     val currentGameType: IWorldSettings.WGameType
     val isInCreativeMode: Boolean
     val curBlockDamageMP: Float
@@ -24,4 +25,5 @@ interface IPlayerControllerMP {
     fun updateController()
     fun sendUseItem(playerSP: IEntityPlayer, theWorld: IWorld, itemStack: IItemStack)
     fun onPlayerRightClick(playerSP: IEntityPlayer, theWorld: IWorld, itemStack: IItemStack, position: WBlockPos, sideOpposite: WEnumFacing, hitVec: WVec3): Boolean
+    fun onStoppedUsingItem(thePlayer: IEntityPlayerSP)
 }

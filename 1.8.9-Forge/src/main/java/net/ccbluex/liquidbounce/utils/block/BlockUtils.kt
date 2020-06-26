@@ -13,31 +13,33 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import kotlin.math.floor
 
+typealias Collidable = (IBlock?) -> Boolean
+
 object BlockUtils : MinecraftInstance() {
 
     /**
      * Get block from [blockPos]
      */
     @JvmStatic
-    fun getBlock(blockPos: WBlockPos?): IBlock? = mc.theWorld?.getBlockState(blockPos)?.block
+    inline fun getBlock(blockPos: WBlockPos?): IBlock? = mc.theWorld?.getBlockState(blockPos)?.block
 
     /**
      * Get material from [blockPos]
      */
     @JvmStatic
-    fun getMaterial(blockPos: WBlockPos?): IMaterial? = getBlock(blockPos)?.material
+    inline fun getMaterial(blockPos: WBlockPos?): IMaterial? = getBlock(blockPos)?.material
 
     /**
      * Check [blockPos] is replaceable
      */
     @JvmStatic
-    fun isReplaceable(blockPos: WBlockPos?) = getMaterial(blockPos)?.isReplaceable ?: false
+    inline fun isReplaceable(blockPos: WBlockPos?) = getMaterial(blockPos)?.isReplaceable ?: false
 
     /**
      * Get state from [blockPos]
      */
     @JvmStatic
-    fun getState(blockPos: WBlockPos?): IIBlockState? = mc.theWorld?.getBlockState(blockPos)
+    inline fun getState(blockPos: WBlockPos?): IIBlockState? = mc.theWorld?.getBlockState(blockPos)
 
     /**
      * Check if [blockPos] is clickable
@@ -107,7 +109,7 @@ object BlockUtils : MinecraftInstance() {
                     floor(thePlayer.entityBoundingBox.maxZ).toInt() + 1) {
                 val block = getBlock(WBlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble()))
 
-                if (!collide.collideBlock(block))
+                if (!collide(block))
                     return false
             }
         }
@@ -130,7 +132,7 @@ object BlockUtils : MinecraftInstance() {
                 val blockPos = WBlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble())
                 val block = getBlock(blockPos)
 
-                if (collide.collideBlock(block)) {
+                if (collide(block)) {
                     val boundingBox = block?.getCollisionBoundingBox(world, blockPos, getState(blockPos))
                             ?: continue
 
@@ -142,11 +144,12 @@ object BlockUtils : MinecraftInstance() {
         return false
     }
 
-    interface Collidable {
 
-        /**
-         * Check if [block] is collidable
-         */
-        fun collideBlock(block: IBlock?): Boolean
-    }
+//    interface Collidable {
+//
+//        /**
+//         * Check if [block] is collidable
+//         */
+//        fun collideBlock(block: IBlock?): Boolean
+//    }
 }

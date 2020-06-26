@@ -7,5 +7,6 @@
 package net.ccbluex.liquidbounce.api.enums
 
 enum class EnchantmentType {
-    SHARPNESS
+    SHARPNESS,
+    POWER
 }

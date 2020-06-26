@@ -10,10 +10,7 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketChatMe
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayer
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ISPacketCloseWindow
-import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketAnimation
-import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketEntity
-import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketEntityVelocity
-import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketTabComplete
+import net.ccbluex.liquidbounce.api.minecraft.network.play.server.*
 
 interface IPacket {
     fun asSPacketAnimation(): ISPacketAnimation
@@ -24,4 +21,6 @@ interface IPacket {
     fun asCPacketChatMessage(): ICPacketChatMessage
     fun asSPacketCloseWindow(): ISPacketCloseWindow
     fun asSPacketTabComplete(): ISPacketTabComplete
+    fun asSPacketPosLook(): ISPacketPosLook
+    fun asISPacketResourcePackSend(): ISPacketResourcePackSend
 }

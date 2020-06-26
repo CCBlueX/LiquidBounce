@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.api.minecraft.client.settings.IKeyBinding
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -16,8 +17,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.settings.GameSettings
-import net.minecraft.client.settings.KeyBinding
 
 @ModuleInfo(name = "AntiAFK", description = "Prevents you from getting kicked for being AFK.", category = ModuleCategory.PLAYER)
 class AntiAFK : Module() {
@@ -41,27 +40,30 @@ class AntiAFK : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
+        val thePlayer = mc.thePlayer ?: return
+
         when (modeValue.get().toLowerCase()) {
             "old" -> {
                 mc.gameSettings.keyBindForward.pressed = true
 
                 if (delayTimer.hasTimePassed(500)) {
-                    mc.thePlayer.rotationYaw += 180F
+                    thePlayer.rotationYaw += 180F
                     delayTimer.reset()
                 }
             }
             "random" -> {
-                KeyBinding.setKeyBindState(getRandomMoveKeyBind(), shouldMove)
+                getRandomMoveKeyBind()!!.pressed = shouldMove
+
                 if (!delayTimer.hasTimePassed(randomTimerDelay)) return
-                    shouldMove = false
-                    randomTimerDelay = 500L
-                    when (RandomUtils.nextInt(0, 6)) {
-                        0 -> {
-                            if (mc.thePlayer.onGround) mc.thePlayer.jump()
-                            delayTimer.reset()
-                        }
-                        1 -> {
-                            if (!mc.thePlayer.isSwingInProgress) mc.thePlayer.swingItem()
+                shouldMove = false
+                randomTimerDelay = 500L
+                when (RandomUtils.nextInt(0, 6)) {
+                    0 -> {
+                        if (thePlayer.onGround) thePlayer.jump()
+                        delayTimer.reset()
+                    }
+                    1 -> {
+                        if (!thePlayer.isSwingInProgress) thePlayer.swingItem()
                             delayTimer.reset()
                         }
                         2 -> {
@@ -70,17 +72,17 @@ class AntiAFK : Module() {
                             delayTimer.reset()
                         }
                         3 -> {
-                            mc.thePlayer.inventory.currentItem = RandomUtils.nextInt(0,9)
+                            thePlayer.inventory.currentItem = RandomUtils.nextInt(0, 9)
                             mc.playerController.updateController()
                             delayTimer.reset()
                         }
                         4 -> {
-                            mc.thePlayer.rotationYaw += RandomUtils.nextFloat(-180.0F, 180.0F)
+                            thePlayer.rotationYaw += RandomUtils.nextFloat(-180.0F, 180.0F)
                             delayTimer.reset()
                         }
                         5 -> {
-                            if (mc.thePlayer.rotationPitch <= -90 || mc.thePlayer.rotationPitch >= 90) mc.thePlayer.rotationPitch = 0F
-                            mc.thePlayer.rotationPitch += RandomUtils.nextFloat(-10.0F, 10.0F)
+                            if (thePlayer.rotationPitch <= -90 || thePlayer.rotationPitch >= 90) thePlayer.rotationPitch = 0F
+                            thePlayer.rotationPitch += RandomUtils.nextFloat(-10.0F, 10.0F)
                             delayTimer.reset()
                         }
                     }
@@ -89,46 +91,46 @@ class AntiAFK : Module() {
                 if (moveValue.get())
                     mc.gameSettings.keyBindForward.pressed = true
 
-                if (jumpValue.get() && mc.thePlayer.onGround)
-                    mc.thePlayer.jump()
+                if (jumpValue.get() && thePlayer.onGround)
+                    thePlayer.jump()
 
                 if (rotateValue.get() && delayTimer.hasTimePassed(rotationDelayValue.get().toLong())) {
-                    mc.thePlayer.rotationYaw += rotationAngleValue.get()
-                    if (mc.thePlayer.rotationPitch <= -90 || mc.thePlayer.rotationPitch >= 90) mc.thePlayer.rotationPitch = 0F
-                    mc.thePlayer.rotationPitch += RandomUtils.nextFloat(0F, 1F) * 2 - 1
+                    thePlayer.rotationYaw += rotationAngleValue.get()
+                    if (thePlayer.rotationPitch <= -90 || thePlayer.rotationPitch >= 90) thePlayer.rotationPitch = 0F
+                    thePlayer.rotationPitch += RandomUtils.nextFloat(0F, 1F) * 2 - 1
                     delayTimer.reset()
                 }
 
-                if (swingValue.get() && !mc.thePlayer.isSwingInProgress && swingDelayTimer.hasTimePassed(swingDelayValue.get().toLong())) {
-                    mc.thePlayer.swingItem()
+                if (swingValue.get() && !thePlayer.isSwingInProgress && swingDelayTimer.hasTimePassed(swingDelayValue.get().toLong())) {
+                    thePlayer.swingItem()
                     swingDelayTimer.reset()
                 }
             }
         }
     }
 
-    private fun getRandomMoveKeyBind(): Int {
-        when(RandomUtils.nextInt(0,4)) {
+    private fun getRandomMoveKeyBind(): IKeyBinding? {
+        when (RandomUtils.nextInt(0, 4)) {
             0 -> {
-               return mc.gameSettings.keyBindRight.keyCode
+                return mc.gameSettings.keyBindRight
             }
             1 -> {
-                return mc.gameSettings.keyBindLeft.keyCode
+                return mc.gameSettings.keyBindLeft
             }
             2 -> {
-                return mc.gameSettings.keyBindBack.keyCode
+                return mc.gameSettings.keyBindBack
             }
             3 -> {
-                return mc.gameSettings.keyBindForward.keyCode
+                return mc.gameSettings.keyBindForward
             }
             else -> {
-                return 0
+                return null
             }
         }
     }
 
     override fun onDisable() {
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindForward))
+        if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindForward))
             mc.gameSettings.keyBindForward.pressed = false
     }
 }

@@ -7,6 +7,9 @@
 package net.ccbluex.liquidbounce.api.minecraft.renderer.entity
 
 interface IRenderManager {
+    val viewerPosX: Double
+    val viewerPosY: Double
+    val viewerPosZ: Double
     val playerViewX: Float
     val playerViewY: Float
     val renderPosX: Double

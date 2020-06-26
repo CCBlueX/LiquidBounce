@@ -13,4 +13,6 @@ interface IWorldClient : IWorld {
     val loadedEntityList: Collection<IEntity>
 
     fun sendQuittingDisconnectingPacket()
+    fun addEntityToWorld(entityId: Int, fakePlayer: IEntity)
+    fun removeEntityFromWorld(entityId: Int)
 }

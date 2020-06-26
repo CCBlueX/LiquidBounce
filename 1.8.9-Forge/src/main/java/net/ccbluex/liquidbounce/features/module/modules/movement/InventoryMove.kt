@@ -13,10 +13,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.minecraft.client.gui.GuiChat
-import net.minecraft.client.gui.GuiIngameMenu
-import net.minecraft.client.gui.inventory.GuiContainer
-import net.minecraft.client.settings.GameSettings
 
 @ModuleInfo(name = "InventoryMove", description = "Allows you to walk while an inventory is opened.", category = ModuleCategory.MOVEMENT)
 class InventoryMove : Module() {
@@ -25,15 +21,21 @@ class InventoryMove : Module() {
     val aacAdditionProValue = BoolValue("AACAdditionPro", false)
     private val noMoveClicksValue = BoolValue("NoMoveClicks", false)
 
+    private val affectedBindings = arrayOf(
+            mc.gameSettings.keyBindForward,
+            mc.gameSettings.keyBindBack,
+            mc.gameSettings.keyBindRight,
+            mc.gameSettings.keyBindLeft,
+            mc.gameSettings.keyBindJump,
+            mc.gameSettings.keyBindSprint
+    )
+
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.currentScreen !is GuiChat && mc.currentScreen !is GuiIngameMenu && (!noDetectableValue.get() || mc.currentScreen !is GuiContainer)) {
-            mc.gameSettings.keyBindForward.pressed = GameSettings.isKeyDown(mc.gameSettings.keyBindForward)
-            mc.gameSettings.keyBindBack.pressed = GameSettings.isKeyDown(mc.gameSettings.keyBindBack)
-            mc.gameSettings.keyBindRight.pressed = GameSettings.isKeyDown(mc.gameSettings.keyBindRight)
-            mc.gameSettings.keyBindLeft.pressed = GameSettings.isKeyDown(mc.gameSettings.keyBindLeft)
-            mc.gameSettings.keyBindJump.pressed = GameSettings.isKeyDown(mc.gameSettings.keyBindJump)
-            mc.gameSettings.keyBindSprint.pressed = GameSettings.isKeyDown(mc.gameSettings.keyBindSprint)
+        if (!classProvider.isGuiChat(mc.currentScreen) && !classProvider.isGuiIngameMenu(mc.currentScreen) && (!noDetectableValue.get() || !classProvider.isGuiContainer(mc.currentScreen))) {
+            for (affectedBinding in affectedBindings) {
+                affectedBinding.pressed = mc.gameSettings.isKeyDown(affectedBinding)
+            }
         }
     }
 
@@ -44,18 +46,12 @@ class InventoryMove : Module() {
     }
 
     override fun onDisable() {
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindForward) || mc.currentScreen != null)
-            mc.gameSettings.keyBindForward.pressed = false
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindBack) || mc.currentScreen != null)
-            mc.gameSettings.keyBindBack.pressed = false
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindRight) || mc.currentScreen != null)
-            mc.gameSettings.keyBindRight.pressed = false
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindLeft) || mc.currentScreen != null)
-            mc.gameSettings.keyBindLeft.pressed = false
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindJump) || mc.currentScreen != null)
-            mc.gameSettings.keyBindJump.pressed = false
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSprint) || mc.currentScreen != null)
-            mc.gameSettings.keyBindSprint.pressed = false
+        val isIngame = mc.currentScreen != null
+
+        for (affectedBinding in affectedBindings) {
+            if (!mc.gameSettings.isKeyDown(affectedBinding) || isIngame)
+                affectedBinding.pressed = false
+        }
     }
 
     override val tag: String?

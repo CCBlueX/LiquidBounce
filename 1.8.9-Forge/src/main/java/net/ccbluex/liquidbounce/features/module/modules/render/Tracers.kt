@@ -71,7 +71,7 @@ class Tracers : Module() {
         GL11.glEnable(GL11.GL_DEPTH_TEST)
         GL11.glDepthMask(true)
         GL11.glDisable(GL11.GL_BLEND)
-        GlStateManager.resetColor()
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
     }
 
     private fun drawTraces(entity: Entity, color: Color) {

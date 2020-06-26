@@ -19,7 +19,7 @@ class SafeWalk : Module() {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if (airSafeValue.get() || mc.thePlayer.onGround)
+        if (airSafeValue.get() || mc.thePlayer!!.onGround)
             event.isSafeWalk = true
     }
 }

@@ -20,20 +20,25 @@ class NoClip : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        mc.thePlayer.noClip = true
-        mc.thePlayer.fallDistance = 0f
-        mc.thePlayer.onGround = false
+        val thePlayer = mc.thePlayer ?: return
 
-        mc.thePlayer.capabilities.isFlying = false
-        mc.thePlayer.motionX = 0.0
-        mc.thePlayer.motionY = 0.0
-        mc.thePlayer.motionZ = 0.0
+        thePlayer.noClip = true
+        thePlayer.fallDistance = 0f
+        thePlayer.onGround = false
+
+        thePlayer.capabilities.isFlying = false
+        thePlayer.motionX = 0.0
+        thePlayer.motionY = 0.0
+        thePlayer.motionZ = 0.0
 
         val speed = 0.32f
-        mc.thePlayer.jumpMovementFactor = speed
+
+        thePlayer.jumpMovementFactor = speed
+
         if (mc.gameSettings.keyBindJump.isKeyDown)
-            mc.thePlayer.motionY += speed.toDouble()
+            thePlayer.motionY += speed.toDouble()
+
         if (mc.gameSettings.keyBindSneak.isKeyDown)
-            mc.thePlayer.motionY -= speed.toDouble()
+            thePlayer.motionY -= speed.toDouble()
     }
 }

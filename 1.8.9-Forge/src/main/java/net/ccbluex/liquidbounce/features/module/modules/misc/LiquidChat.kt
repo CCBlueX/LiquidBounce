@@ -6,6 +6,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
+import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
+import net.ccbluex.liquidbounce.api.minecraft.util.WEnumChatFormatting
 import net.ccbluex.liquidbounce.chat.Client
 import net.ccbluex.liquidbounce.chat.packet.packets.*
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -20,10 +23,6 @@ import net.ccbluex.liquidbounce.utils.login.UserUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.minecraft.event.ClickEvent
-import net.minecraft.util.ChatComponentText
-import net.minecraft.util.EnumChatFormatting
-import net.minecraft.util.IChatComponent
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.net.URI
@@ -41,7 +40,7 @@ class LiquidChat : Module() {
 
     private val jwtValue = object : BoolValue("JWT", false) {
         override fun onChanged(oldValue: Boolean, newValue: Boolean) {
-            if(state) {
+            if (state) {
                 state = false
                 state = true
             }
@@ -71,7 +70,7 @@ class LiquidChat : Module() {
         /**
          * Handle handshake
          */
-        override fun onHandshake(success: Boolean) { }
+        override fun onHandshake(success: Boolean) {}
 
         /**
          * Handle disconnect
@@ -93,20 +92,22 @@ class LiquidChat : Module() {
         override fun onPacket(packet: Packet) {
             when (packet) {
                 is ClientMessagePacket -> {
-                    if (mc.thePlayer == null) {
+                    val thePlayer = mc.thePlayer
+
+                    if (thePlayer == null) {
                         ClientUtils.getLogger().info("[LiquidChat] ${packet.user.name}: ${packet.content}")
                         return
                     }
 
-                    val chatComponent = ChatComponentText("§7[§a§lChat§7] §9${packet.user.name}: ")
+                    val chatComponent = classProvider.createChatComponentText("§7[§a§lChat§7] §9${packet.user.name}: ")
                     val messageComponent = toChatComponent(packet.content)
                     chatComponent.appendSibling(messageComponent)
 
-                    mc.thePlayer.addChatMessage(chatComponent)
+                    thePlayer.addChatMessage(chatComponent)
                 }
                 is ClientPrivateMessagePacket -> ClientUtils.displayChatMessage("§7[§a§lChat§7] §c(P)§9 ${packet.user.name}: §7${packet.content}")
                 is ClientErrorPacket -> {
-                    val message = when(packet.message) {
+                    val message = when (packet.message) {
                         "NotSupported" -> "This method is not supported!"
                         "LoginFailed" -> "Login Failed!"
                         "NotLoggedIn" -> "You must be logged in to use the chat! Enable LiquidChat."
@@ -128,7 +129,7 @@ class LiquidChat : Module() {
                     ClientUtils.displayChatMessage("§7[§a§lChat§7] §cError: §7$message")
                 }
                 is ClientSuccessPacket -> {
-                    when(packet.reason) {
+                    when (packet.reason) {
                         "Login" -> {
                             ClientUtils.displayChatMessage("§7[§a§lChat§7] §9Logged in!")
 
@@ -172,13 +173,13 @@ class LiquidChat : Module() {
         LiquidBounce.commandManager.registerCommand(object : Command("chat", arrayOf("lc", "irc")) {
 
             override fun execute(args: Array<String>) {
-                if(args.size > 1) {
+                if (args.size > 1) {
                     if (!state) {
                         chat("§cError: §7LiquidChat is disabled!")
                         return
                     }
 
-                    if(!client.isConnected()) {
+                    if (!client.isConnected()) {
                         chat("§cError: §LiquidChat is currently not connected to the server!")
                         return
                     }
@@ -186,7 +187,7 @@ class LiquidChat : Module() {
                     val message = StringUtils.toCompleteString(args, 1)
 
                     client.sendMessage(message)
-                }else
+                } else
                     chatSyntax("chat <message>")
             }
 
@@ -195,13 +196,13 @@ class LiquidChat : Module() {
         LiquidBounce.commandManager.registerCommand(object : Command("pchat", arrayOf("privatechat", "lcpm")) {
 
             override fun execute(args: Array<String>) {
-                if(args.size > 2) {
+                if (args.size > 2) {
                     if (!state) {
                         chat("§cError: §7LiquidChat is disabled!")
                         return
                     }
 
-                    if(!client.isConnected()) {
+                    if (!client.isConnected()) {
                         chat("§cError: §LiquidChat is currently not connected to the server!")
                         return
                     }
@@ -211,7 +212,7 @@ class LiquidChat : Module() {
 
                     client.sendPrivateMessage(target, message)
                     chat("Message was successfully sent.")
-                }else
+                } else
                     chatSyntax("pchat <username> <message>")
             }
 
@@ -222,18 +223,18 @@ class LiquidChat : Module() {
             override fun execute(args: Array<String>) {
 
 
-                if(args.size > 1) {
+                if (args.size > 1) {
                     when {
                         args[1].equals("set", true) -> {
-                            if(args.size > 2) {
+                            if (args.size > 2) {
                                 jwtToken = StringUtils.toCompleteString(args, 2)
                                 jwtValue.set(true)
 
-                                if(state) {
+                                if (state) {
                                     state = false
                                     state = true
                                 }
-                            }else
+                            } else
                                 chatSyntax("chattoken set <token>")
                         }
 
@@ -256,7 +257,7 @@ class LiquidChat : Module() {
                             chat("§aCopied to clipboard!")
                         }
                     }
-                }else
+                } else
                     chatSyntax("chattoken <set/copy/generate>")
             }
 
@@ -270,23 +271,23 @@ class LiquidChat : Module() {
                     return
                 }
 
-                if(args.size > 1) {
+                if (args.size > 1) {
                     when {
                         args[1].equals("ban", true) -> {
-                            if(args.size > 2) {
+                            if (args.size > 2) {
                                 client.banUser(args[2])
-                            }else
+                            } else
                                 chatSyntax("chatadmin ban <username>")
                         }
 
                         args[1].equals("unban", true) -> {
-                            if(args.size > 2) {
+                            if (args.size > 2) {
                                 client.unbanUser(args[2])
-                            }else
+                            } else
                                 chatSyntax("chatadmin unban <username>")
                         }
                     }
-                }else
+                } else
                     chatSyntax("chatadmin <ban/unban>")
             }
 
@@ -306,18 +307,18 @@ class LiquidChat : Module() {
 
     @EventTarget
     fun onUpdate(updateEvent: UpdateEvent) {
-        if(client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
+        if (client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
 
-        if(connectTimer.hasTimePassed(5000)) {
+        if (connectTimer.hasTimePassed(5000)) {
             connect()
             connectTimer.reset()
         }
     }
 
     private fun connect() {
-        if(client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
+        if (client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
 
-        if(jwtValue.get() && jwtToken.isEmpty()) {
+        if (jwtValue.get() && jwtToken.isEmpty()) {
             ClientUtils.displayChatMessage("§7[§a§lChat§7] §cError: §7No token provided!")
             state = false
             return
@@ -329,11 +330,11 @@ class LiquidChat : Module() {
             try {
                 client.connect()
 
-                if(jwtValue.get())
+                if (jwtValue.get())
                     client.loginJWT(jwtToken)
-                else if(UserUtils.isValidToken(mc.session.token))
+                else if (UserUtils.isValidToken(mc.session.token))
                     client.loginMojang()
-            }catch (cause: Exception) {
+            } catch (cause: Exception) {
                 ClientUtils.getLogger().error("LiquidChat error", cause)
                 ClientUtils.displayChatMessage("§7[§a§lChat§7] §cError: §7${cause.javaClass.name}: ${cause.message}")
             }
@@ -350,8 +351,8 @@ class LiquidChat : Module() {
 
     private val urlPattern = Pattern.compile("((?:[a-z0-9]{2,}:\\/\\/)?(?:(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|(?:[-\\w_\\.]{1,}\\.[a-z]{2,}?))(?::[0-9]{1,5})?.*?(?=[!\"\u00A7 \n]|$))", Pattern.CASE_INSENSITIVE)
 
-    private fun toChatComponent(string: String): IChatComponent {
-        var component: IChatComponent? = null
+    private fun toChatComponent(string: String): IIChatComponent {
+        var component: IIChatComponent? = null
         val matcher = urlPattern.matcher(string)
         var lastEnd = 0
 
@@ -363,8 +364,8 @@ class LiquidChat : Module() {
             val part = string.substring(lastEnd, start)
             if (part.isNotEmpty()) {
                 if (component == null) {
-                    component = ChatComponentText(part)
-                    component.chatStyle.color = EnumChatFormatting.GRAY
+                    component = classProvider.createChatComponentText(part)
+                    component.chatStyle.color = WEnumChatFormatting.GRAY
                 } else
                     component.appendText(part)
             }
@@ -376,11 +377,11 @@ class LiquidChat : Module() {
             try {
                 if (URI(url).scheme != null) {
                     // Set the click event and append the link.
-                    val link: IChatComponent = ChatComponentText(url)
+                    val link: IIChatComponent = classProvider.createChatComponentText(url)
 
-                    link.chatStyle.chatClickEvent = ClickEvent(ClickEvent.Action.OPEN_URL, url)
+                    link.chatStyle.chatClickEvent = classProvider.createClickEvent(IClickEvent.WAction.OPEN_URL, url)
                     link.chatStyle.underlined = true
-                    link.chatStyle.color = EnumChatFormatting.GRAY
+                    link.chatStyle.color = WEnumChatFormatting.GRAY
 
                     if (component == null)
                         component = link
@@ -392,19 +393,21 @@ class LiquidChat : Module() {
             }
 
             if (component == null) {
-                component = ChatComponentText(url)
-                component.chatStyle.color = EnumChatFormatting.GRAY
+                component = classProvider.createChatComponentText(url)
+                component.chatStyle.color = WEnumChatFormatting.GRAY
             } else
                 component.appendText(url)
         }
 
         // Append the rest of the message.
         val end = string.substring(lastEnd)
+
         if (component == null) {
-            component = ChatComponentText(end)
-            component.chatStyle.color = EnumChatFormatting.GRAY
+            component = classProvider.createChatComponentText(end)
+            component.chatStyle.color = WEnumChatFormatting.GRAY
         } else if (end.isNotEmpty())
             component.appendText(string.substring(lastEnd))
+
         return component
     }
 

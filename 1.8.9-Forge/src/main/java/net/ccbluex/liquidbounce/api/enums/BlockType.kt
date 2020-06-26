@@ -26,5 +26,12 @@ enum class BlockType {
     WALL_BANNER,
     REDSTONE_TORCH,
     NOTEBLOCK,
-    DROPPER
+    DROPPER,
+    SNOW_LAYER,
+    AIR,
+    ICE_PACKED,
+    ICE,
+    WATER,
+    BARRIER,
+    FLOWING_WATER
 }

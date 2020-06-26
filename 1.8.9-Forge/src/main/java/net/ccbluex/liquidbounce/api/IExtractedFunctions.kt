@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 
 interface IExtractedFunctions {
     fun getBlockById(id: Int): IBlock?
+    fun getIdFromBlock(block: IBlock): Int
     fun getModifierForCreature(heldItem: IItemStack?, creatureAttribute: IEnumCreatureAttribute): Float
 
 }

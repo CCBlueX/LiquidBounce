@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.enums.StatType
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -16,9 +17,6 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.stats.StatList
-import net.minecraft.util.MathHelper
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -53,56 +51,57 @@ class Step : Module() {
     private val timer = MSTimer()
 
     override fun onDisable() {
-        mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
         // Change step height back to default (0.5 is default)
-        mc.thePlayer.stepHeight = 0.5F
+        thePlayer.stepHeight = 0.5F
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val mode = modeValue.get()
+        val thePlayer = mc.thePlayer ?: return
 
         // Motion steps
         when {
-            mode.equals("jump", true) && mc.thePlayer.isCollidedHorizontally && mc.thePlayer.onGround
+            mode.equals("jump", true) && thePlayer.isCollidedHorizontally && thePlayer.onGround
                     && !mc.gameSettings.keyBindJump.isKeyDown -> {
                 fakeJump()
-                mc.thePlayer.motionY = jumpHeightValue.get().toDouble()
+                thePlayer.motionY = jumpHeightValue.get().toDouble()
             }
 
-            mode.equals("laac", true) -> if (mc.thePlayer.isCollidedHorizontally && !mc.thePlayer.isOnLadder
-                    && !mc.thePlayer.isInWater && !mc.thePlayer.isInLava && !mc.thePlayer.isInWeb) {
-                if (mc.thePlayer.onGround && timer.hasTimePassed(delayValue.get().toLong())) {
+            mode.equals("laac", true) -> if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder
+                    && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb) {
+                if (thePlayer.onGround && timer.hasTimePassed(delayValue.get().toLong())) {
                     isStep = true
 
                     fakeJump()
-                    mc.thePlayer.motionY += 0.620000001490116
+                    thePlayer.motionY += 0.620000001490116
 
-                    val f = mc.thePlayer.rotationYaw * 0.017453292F
-                    mc.thePlayer.motionX -= MathHelper.sin(f) * 0.2
-                    mc.thePlayer.motionZ += MathHelper.cos(f) * 0.2
+                    val f = thePlayer.rotationYaw * 0.017453292F
+                    thePlayer.motionX -= sin(f) * 0.2
+                    thePlayer.motionZ += cos(f) * 0.2
                     timer.reset()
                 }
 
-                mc.thePlayer.onGround = true
+                thePlayer.onGround = true
             } else
                 isStep = false
 
-            mode.equals("aac3.3.4", true) -> if (mc.thePlayer.isCollidedHorizontally
+            mode.equals("aac3.3.4", true) -> if (thePlayer.isCollidedHorizontally
                     && MovementUtils.isMoving()) {
-                if (mc.thePlayer.onGround && couldStep()) {
-                    mc.thePlayer.motionX *= 1.26
-                    mc.thePlayer.motionZ *= 1.26
-                    mc.thePlayer.jump()
+                if (thePlayer.onGround && couldStep()) {
+                    thePlayer.motionX *= 1.26
+                    thePlayer.motionZ *= 1.26
+                    thePlayer.jump()
                     isAACStep = true
                 }
 
                 if (isAACStep) {
-                    mc.thePlayer.motionY -= 0.015
+                    thePlayer.motionY -= 0.015
 
-                    if(!mc.thePlayer.isUsingItem && mc.thePlayer.movementInput.moveStrafe == 0F)
-                        mc.thePlayer.jumpMovementFactor = 0.3F
+                    if (!thePlayer.isUsingItem && thePlayer.movementInput.moveStrafe == 0F)
+                        thePlayer.jumpMovementFactor = 0.3F
                 }
             } else
                 isAACStep = false
@@ -112,14 +111,15 @@ class Step : Module() {
     @EventTarget
     fun onMove(event: MoveEvent) {
         val mode = modeValue.get()
+        val thePlayer = mc.thePlayer ?: return
 
         // Motion steps
         when {
-            mode.equals("motionncp", true) && mc.thePlayer.isCollidedHorizontally && !mc.gameSettings.keyBindJump.isKeyDown -> {
+            mode.equals("motionncp", true) && thePlayer.isCollidedHorizontally && !mc.gameSettings.keyBindJump.isKeyDown -> {
                 when {
-                    mc.thePlayer.onGround && couldStep() -> {
+                    thePlayer.onGround && couldStep() -> {
                         fakeJump()
-                        mc.thePlayer.motionY = 0.0
+                        thePlayer.motionY = 0.0
                         event.y = 0.41999998688698
                         ncpNextStep = 1
                     }
@@ -145,7 +145,7 @@ class Step : Module() {
 
     @EventTarget
     fun onStep(event: StepEvent) {
-        mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
         // Phase should disable step
         if (LiquidBounce.moduleManager[Phase::class.java]!!.state) {
@@ -162,7 +162,7 @@ class Step : Module() {
                     flyMode.equals("OtherHypixel", ignoreCase = true) ||
                     flyMode.equals("LatestHypixel", ignoreCase = true) ||
                     flyMode.equals("Rewinside", ignoreCase = true) ||
-                    flyMode.equals("Mineplex", ignoreCase = true) && mc.thePlayer.inventory.getCurrentItemInHand() == null) {
+                    flyMode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItemInHand() == null) {
                 event.stepHeight = 0F
                 return
             }
@@ -171,34 +171,36 @@ class Step : Module() {
         val mode = modeValue.get()
 
         // Set step to default in some cases
-        if (!mc.thePlayer.onGround || !timer.hasTimePassed(delayValue.get().toLong()) ||
+        if (!thePlayer.onGround || !timer.hasTimePassed(delayValue.get().toLong()) ||
                 mode.equals("Jump", ignoreCase = true) || mode.equals("MotionNCP", ignoreCase = true)
                 || mode.equals("LAAC", ignoreCase = true) || mode.equals("AAC3.3.4", ignoreCase = true)) {
-            mc.thePlayer.stepHeight = 0.5F
+            thePlayer.stepHeight = 0.5F
             event.stepHeight = 0.5F
             return
         }
 
         // Set step height
         val height = heightValue.get()
-        mc.thePlayer.stepHeight = height
+        thePlayer.stepHeight = height
         event.stepHeight = height
 
         // Detect possible step
         if (event.stepHeight > 0.5F) {
             isStep = true
-            stepX = mc.thePlayer.posX
-            stepY = mc.thePlayer.posY
-            stepZ = mc.thePlayer.posZ
+            stepX = thePlayer.posX
+            stepY = thePlayer.posY
+            stepZ = thePlayer.posZ
         }
     }
 
     @EventTarget(ignoreCondition = true)
     fun onStepConfirm(event: StepConfirmEvent) {
-        if (mc.thePlayer == null || !isStep) // Check if step
+        val thePlayer = mc.thePlayer
+
+        if (thePlayer == null || !isStep) // Check if step
             return
 
-        if (mc.thePlayer.entityBoundingBox.minY - stepY > 0.5) { // Check if full block step
+        if (thePlayer.entityBoundingBox.minY - stepY > 0.5) { // Check if full block step
             val mode = modeValue.get()
 
             when {
@@ -206,9 +208,9 @@ class Step : Module() {
                     fakeJump()
 
                     // Half legit step (1 packet missing) [COULD TRIGGER TOO MANY PACKETS]
-                    mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
                             stepY + 0.41999998688698, stepZ, false))
-                    mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
                             stepY + 0.7531999805212, stepZ, false))
                     timer.reset()
                 }
@@ -218,15 +220,15 @@ class Step : Module() {
 
                     if (spartanSwitch) {
                         // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-                        mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
                                 stepY + 0.41999998688698, stepZ, false))
-                        mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
                                 stepY + 0.7531999805212, stepZ, false))
-                        mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
                                 stepY + 1.001335979112147, stepZ, false))
                     } else // Force step
-                        mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
-                            stepY + 0.6, stepZ, false))
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
+                                stepY + 0.6, stepZ, false))
 
                     // Spartan allows one unlegit step so just swap between legit and unlegit
                     spartanSwitch = !spartanSwitch
@@ -239,11 +241,11 @@ class Step : Module() {
                     fakeJump()
 
                     // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-                    mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
                             stepY + 0.41999998688698, stepZ, false))
-                    mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
                             stepY + 0.7531999805212, stepZ, false))
-                    mc.netHandler.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(stepX,
+                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
                             stepY + 1.001335979112147, stepZ, false))
 
                     // Reset timer
@@ -262,16 +264,18 @@ class Step : Module() {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet is C03PacketPlayer && isStep && modeValue.get().equals("OldNCP", ignoreCase = true)) {
-            packet.y += 0.07
+        if (classProvider.isCPacketPlayer(packet) && isStep && modeValue.get().equals("OldNCP", ignoreCase = true)) {
+            packet.asCPacketPlayer().y += 0.07
             isStep = false
         }
     }
 
     // There could be some anti cheats which tries to detect step by checking for achievements and stuff
     private fun fakeJump() {
-        mc.thePlayer.isAirBorne = true
-        mc.thePlayer.triggerAchievement(StatList.jumpStat)
+        val thePlayer = mc.thePlayer ?: return
+
+        thePlayer.isAirBorne = true
+        thePlayer.triggerAchievement(classProvider.getStatEnum(StatType.JUMP_STAT))
     }
 
     private fun couldStep(): Boolean {
@@ -279,7 +283,7 @@ class Step : Module() {
         val x = -sin(yaw) * 0.4
         val z = cos(yaw) * 0.4
 
-        return mc.theWorld.getCollisionBoxes(mc.thePlayer.entityBoundingBox.offset(x, 1.001335979112147, z))
+        return mc.theWorld!!.getCollisionBoxes(mc.thePlayer!!.entityBoundingBox.offset(x, 1.001335979112147, z))
                 .isEmpty()
     }
 
