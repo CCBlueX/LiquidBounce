@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -93,14 +94,15 @@ class ChestStealer : Module() {
     @EventTarget
     fun onRender3D(event: Render3DEvent?) {
         val screen = mc.currentScreen
+        val thePlayer = mc.thePlayer!!
 
-        if (screen !is GuiChest || !delayTimer.hasTimePassed(nextDelay)) {
+        if (!classProvider.isGuiChest(screen) || !delayTimer.hasTimePassed(nextDelay)) {
             autoCloseTimer.reset()
             return
         }
 
         // No Compass
-        if (noCompassValue.get() && mc.thePlayer.inventory.getCurrentItemInHand()?.item?.unlocalizedName == "item.compass")
+        if (noCompassValue.get() && thePlayer.inventory.getCurrentItemInHand()?.item?.unlocalizedName == "item.compass")
             return
 
         // Chest title
@@ -153,7 +155,7 @@ class ChestStealer : Module() {
     private fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet is S30PacketWindowItems)
+        if (classProvider.isSPacketWindowItems(classProvider))
             contentReceived = packet.func_148911_c()
     }
 
@@ -163,7 +165,7 @@ class ChestStealer : Module() {
         nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
     }
 
-    private fun isEmpty(chest: GuiChest): Boolean {
+    private fun isEmpty(chest: IGuiChest): Boolean {
         val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 
         for (i in 0 until chest.inventoryRows * 9) {
@@ -177,5 +179,5 @@ class ChestStealer : Module() {
     }
 
     private val fullInventory: Boolean
-        get() = mc.thePlayer.inventory.mainInventory.none { it == null }
+        get() = mc.thePlayer?.inventory?.mainInventory?.none { it == null } ?: false
 }

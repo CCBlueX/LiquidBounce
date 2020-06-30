@@ -115,6 +115,8 @@ interface IClassProvider {
     fun isCPacketClientStatus(obj: Any?): Boolean
     fun isCPacketAnimation(obj: Any?): Boolean
     fun isCPacketEntityAction(obj: Any?): Boolean
+    fun isSPacketWindowItems(obj: Any?): Boolean
+    fun isCPacketHeldItemChange(obj: Any?): Boolean
 
     fun isItemSword(item: Any?): Boolean
     fun isItemTool(item: Any?): Boolean
@@ -146,6 +148,7 @@ interface IClassProvider {
     fun isBlockPane(obj: Any?): Boolean
     fun isBlockLiquid(obj: Any?): Boolean
     fun isBlockCactus(obj: Any?): Boolean
+    fun isBlockBedrock(obj: Any?): Boolean
     fun isItemFishingRod(obj: Any?): Boolean
 
     fun isGuiInventory(obj: Any?): Boolean
@@ -153,6 +156,7 @@ interface IClassProvider {
     fun isGuiGameOver(obj: Any?): Boolean
     fun isGuiChat(obj: Any?): Boolean
     fun isGuiIngameMenu(obj: Any?): Boolean
+    fun isGuiChest(obj: Any?): Boolean
     fun isClickGui(obj: Any?): Boolean
 
     fun isFontRenderer(item: Any?): Boolean

@@ -4,10 +4,7 @@
  * https://github.com/CCBlueX/LiquidBounce/
  */
 
-package net.ccbluex.liquidbounce.api.minecraft.inventory
+package net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory
 
-interface IContainer {
-    val windowId: Int
-
-    fun getSlot(id: Int): ISlot
+interface IGuiChest {
 }

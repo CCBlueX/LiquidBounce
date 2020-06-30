@@ -19,11 +19,14 @@ interface IPlayerControllerMP {
     val blockReachDistance: Double
     val currentGameType: IWorldSettings.WGameType
     val isInCreativeMode: Boolean
-    val curBlockDamageMP: Float
+    var curBlockDamageMP: Float
+    var blockHitDelay: Int
 
     fun windowClick(windowId: Int, slot: Int, mouseButton: Int, mode: Int, player: IEntityPlayerSP)
     fun updateController()
     fun sendUseItem(playerSP: IEntityPlayer, theWorld: IWorld, itemStack: IItemStack)
     fun onPlayerRightClick(playerSP: IEntityPlayer, theWorld: IWorld, itemStack: IItemStack, position: WBlockPos, sideOpposite: WEnumFacing, hitVec: WVec3): Boolean
     fun onStoppedUsingItem(thePlayer: IEntityPlayerSP)
+    fun clickBlock(blockPos: WBlockPos, enumFacing: WEnumFacing)
+    fun onPlayerDestroyBlock(blockPos: WBlockPos, enumFacing: WEnumFacing): Boolean
 }

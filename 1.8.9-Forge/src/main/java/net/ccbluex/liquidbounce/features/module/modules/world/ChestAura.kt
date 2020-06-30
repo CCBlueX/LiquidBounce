@@ -6,6 +6,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -39,15 +41,18 @@ object ChestAura : Module() {
     private val chestValue = BlockValue("Chest", Block.getIdFromBlock(Blocks.chest))
     private val rotationsValue = BoolValue("Rotations", true)
 
-    private var currentBlock: BlockPos? = null
+    private var currentBlock: WBlockPos? = null
     private val timer = MSTimer()
 
-    val clickedBlocks = mutableListOf<BlockPos>()
+    val clickedBlocks = mutableListOf<WBlockPos>()
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
         if (LiquidBounce.moduleManager[Blink::class.java]!!.state)
             return
+
+        val thePlayer = mc.thePlayer!!
+        val theWorld = mc.theWorld!!
 
         when (event.eventState) {
             EventState.PRE -> {
@@ -56,8 +61,8 @@ object ChestAura : Module() {
 
                 val radius = rangeValue.get() + 1
 
-                val eyesPos = Vec3(mc.thePlayer.posX, mc.thePlayer.entityBoundingBox.minY + mc.thePlayer.getEyeHeight(),
-                        mc.thePlayer.posZ)
+                val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight,
+                        thePlayer.posZ)
 
                 currentBlock = BlockUtils.searchBlocks(radius.toInt())
                         .filter {
@@ -69,7 +74,7 @@ object ChestAura : Module() {
                                 return@filter true
 
                             val blockPos = it.key
-                            val movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos,
+                            val movingObjectPosition = theWorld.rayTraceBlocks(eyesPos,
                                     blockPos.getVec(), false, true, false)
 
                             movingObjectPosition != null && movingObjectPosition.blockPos == blockPos

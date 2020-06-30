@@ -5,6 +5,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
+import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WEnumFacing
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -14,19 +17,13 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
-import net.minecraft.block.BlockAir
-import net.minecraft.init.Blocks
-import net.minecraft.network.play.client.C07PacketPlayerDigging
-import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
 import java.awt.Color
 
 @ModuleInfo(name = "CivBreak", description = "Allows you to break blocks instantly.", category = ModuleCategory.WORLD)
 class CivBreak : Module() {
 
-    private var blockPos: BlockPos? = null
-    private var enumFacing: EnumFacing? = null
+    private var blockPos: WBlockPos? = null
+    private var enumFacing: WEnumFacing? = null
 
     private val range = FloatValue("Range", 5F, 1F, 6F)
     private val rotationsValue = BoolValue("Rotations", true)
@@ -38,28 +35,28 @@ class CivBreak : Module() {
 
     @EventTarget
     fun onBlockClick(event: ClickBlockEvent) {
-        if (BlockUtils.getBlock(event.clickedBlock) == Blocks.bedrock)
+        if (classProvider.isBlockBedrock(BlockUtils.getBlock(event.clickedBlock)))
             return
 
-        blockPos = event.clickedBlock
-        enumFacing = event.WEnumFacing
+        blockPos = event.clickedBlock ?: return
+        enumFacing = event.WEnumFacing ?: return
 
         // Break
-        mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, blockPos, enumFacing))
-        mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, blockPos, enumFacing))
+        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, blockPos!!, enumFacing!!))
+        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos!!, enumFacing!!))
     }
 
     @EventTarget
     fun onUpdate(event: MotionEvent) {
         val pos = blockPos ?: return
 
-        if (airResetValue.get() && BlockUtils.getBlock(pos) is BlockAir ||
+        if (airResetValue.get() && classProvider.isBlockAir(BlockUtils.getBlock(pos)) ||
                 rangeResetValue.get() && BlockUtils.getCenterDistance(pos) > range.get()) {
             blockPos = null
             return
         }
 
-        if (BlockUtils.getBlock(pos) is BlockAir || BlockUtils.getCenterDistance(pos) > range.get())
+        if (classProvider.isBlockAir(BlockUtils.getBlock(pos)) || BlockUtils.getCenterDistance(pos) > range.get())
             return
 
         when (event.eventState) {
@@ -70,14 +67,14 @@ class CivBreak : Module() {
                 if (visualSwingValue.get())
                     mc.thePlayer.swingItem()
                 else
-                    mc.netHandler.addToSendQueue(C0APacketAnimation())
+                    mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
 
                 // Break
-                mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK,
-                        blockPos, enumFacing))
-                mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK,
-                        blockPos, enumFacing))
-                mc.playerController.clickBlock(blockPos, enumFacing)
+                mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK,
+                        blockPos!!, enumFacing!!))
+                mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK,
+                        blockPos!!, enumFacing!!))
+                mc.playerController.clickBlock(blockPos!!, enumFacing!!)
             }
         }
     }

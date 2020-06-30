@@ -6,8 +6,8 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.inventory
 
-interface IContainer {
-    val windowId: Int
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 
-    fun getSlot(id: Int): ISlot
+interface ISlot {
+    fun getStack(): IItemStack?
 }

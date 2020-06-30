@@ -21,7 +21,7 @@ class ResourcePackSpoof : Module() {
     @EventTarget
     fun onPacket(event: PacketEvent) {
         if (classProvider.isSPacketResourcePackSend(event.packet)) {
-            val packet = event.packet.asISPacketResourcePackSend()
+            val packet = event.packet.asSPacketResourcePackSend()
 
             val url = packet.url
             val hash = packet.hash
