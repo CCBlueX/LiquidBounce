@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -18,14 +19,14 @@ class AutoBreak : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.objectMouseOver == null || mc.objectMouseOver.blockPos == null)
+        if (mc.objectMouseOver == null || mc.objectMouseOver!!.blockPos == null || mc.theWorld == null)
             return
 
-        mc.gameSettings.keyBindAttack.pressed = mc.theWorld.getBlockState(mc.objectMouseOver.blockPos).block != Blocks.air
+        mc.gameSettings.keyBindAttack.pressed = mc.theWorld!!.getBlockState(mc.objectMouseOver!!.blockPos).block != Blocks.air
     }
 
     override fun onDisable() {
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindAttack))
+        if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindAttack))
             mc.gameSettings.keyBindAttack.pressed = false
     }
 }

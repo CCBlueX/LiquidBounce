@@ -6,10 +6,7 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.network
 
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketChatMessage
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayer
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ISPacketCloseWindow
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.*
 
 interface IPacket {
@@ -22,5 +19,6 @@ interface IPacket {
     fun asSPacketCloseWindow(): ISPacketCloseWindow
     fun asSPacketTabComplete(): ISPacketTabComplete
     fun asSPacketPosLook(): ISPacketPosLook
-    fun asISPacketResourcePackSend(): ISPacketResourcePackSend
+    fun asSPacketResourcePackSend(): ISPacketResourcePackSend
+    fun asCPacketHeldItemChange(): ICPacketHeldItemChange
 }
