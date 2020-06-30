@@ -26,6 +26,8 @@ import net.minecraft.util.EnumFacing
 @ModuleInfo(name = "NoSlow", description = "Cancels slowness effects caused by soulsand and using items.",
         category = ModuleCategory.MOVEMENT)
 class NoSlow : Module() {
+        
+    private val ModeValue = ListValue("Mode", arrayOf("Vanilla", "Packet", "AAC"), "Vanilla")
 
     private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1.0F, 0.2F, 1.0F)
     private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1.0F, 0.2F, 1.0F)
@@ -35,8 +37,6 @@ class NoSlow : Module() {
 
     private val bowForwardMultiplier = FloatValue("BowForwardMultiplier", 1.0F, 0.2F, 1.0F)
     private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1.0F, 0.2F, 1.0F)
-
-    private val packet = BoolValue("Packet", true)
 
     // Soulsand
     val soulsandValue = BoolValue("Soulsand", true)
@@ -51,15 +51,27 @@ class NoSlow : Module() {
         if (!mc.thePlayer.isBlocking && !killAura.blockingStatus) {
             return
         }
-        if (this.packet.get()) {
-            when (event.eventState) {
-                EventState.PRE -> {
-                    val digging = C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN)
-                    mc.netHandler.addToSendQueue(digging)
+        when (ModeValue.get().toLowerCase()) {
+            "packet" -> {
+                when (event.eventState) {
+                    EventState.PRE -> {
+                        val digging = C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN)
+                        mc.netHandler.addToSendQueue(digging)
+                    }
+                    EventState.POST -> {
+                        val blockPlace = C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getCurrentItem())
+                        mc.netHandler.addToSendQueue(blockPlace)
+                    }
                 }
-                EventState.POST -> {
-                    val blockPlace = C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getCurrentItem())
-                    mc.netHandler.addToSendQueue(blockPlace)
+            }
+            "aac" -> {
+                when (event.eventState) {
+                    EventState.PRE -> {
+                        mc.thePlayer.sendQueue.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+                    }
+                    EventState.POST -> {
+                        return
+                    }
                 }
             }
         }
@@ -85,5 +97,4 @@ class NoSlow : Module() {
         }
         else -> 0.2F
     }
-
 }
