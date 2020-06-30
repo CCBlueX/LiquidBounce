@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 interface IMovingObjectPosition {
     val entityHit: IEntity?
     val blockPos: WBlockPos?
-    val sideHit: WEnumFacing
+    val sideHit: WEnumFacing?
     val hitVec: WVec3
     val typeOfHit: WMovingObjectType
 

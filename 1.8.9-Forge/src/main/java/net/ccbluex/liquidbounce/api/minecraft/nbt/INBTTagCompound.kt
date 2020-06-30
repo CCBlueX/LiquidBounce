@@ -10,5 +10,5 @@ interface INBTTagCompound : INBTBase {
     fun hasKey(name: String): Boolean
     fun getShort(name: String): Short
     fun setString(key: String, value: String)
-    fun setTag(key: String, tag: INBTTagList)
+    fun setTag(key: String, tag: INBTBase)
 }

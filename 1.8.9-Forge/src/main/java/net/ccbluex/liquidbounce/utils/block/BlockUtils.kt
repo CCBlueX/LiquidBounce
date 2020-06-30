@@ -21,25 +21,25 @@ object BlockUtils : MinecraftInstance() {
      * Get block from [blockPos]
      */
     @JvmStatic
-    inline fun getBlock(blockPos: WBlockPos?): IBlock? = mc.theWorld?.getBlockState(blockPos)?.block
+    inline fun getBlock(blockPos: WBlockPos): IBlock? = mc.theWorld?.getBlockState(blockPos)?.block
 
     /**
      * Get material from [blockPos]
      */
     @JvmStatic
-    inline fun getMaterial(blockPos: WBlockPos?): IMaterial? = getBlock(blockPos)?.material
+    inline fun getMaterial(blockPos: WBlockPos): IMaterial? = getBlock(blockPos)?.material
 
     /**
      * Check [blockPos] is replaceable
      */
     @JvmStatic
-    inline fun isReplaceable(blockPos: WBlockPos?) = getMaterial(blockPos)?.isReplaceable ?: false
+    inline fun isReplaceable(blockPos: WBlockPos) = getMaterial(blockPos)?.isReplaceable ?: false
 
     /**
      * Get state from [blockPos]
      */
     @JvmStatic
-    inline fun getState(blockPos: WBlockPos?): IIBlockState? = mc.theWorld?.getBlockState(blockPos)
+    inline fun getState(blockPos: WBlockPos): IIBlockState? = mc.theWorld?.getBlockState(blockPos)
 
     /**
      * Check if [blockPos] is clickable

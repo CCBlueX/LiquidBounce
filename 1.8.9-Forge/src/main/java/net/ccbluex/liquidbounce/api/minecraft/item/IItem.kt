@@ -9,8 +9,6 @@ package net.ccbluex.liquidbounce.api.minecraft.item
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 
 interface IItem {
-    fun isBow(): Boolean
-
     fun getObjectFromItemRegistry(location: IResourceLocation): IItem?
 
     fun asItemArmor(): IItemArmor

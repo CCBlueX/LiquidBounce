@@ -43,7 +43,7 @@ interface IEntity {
     var motionY: Double
     var motionZ: Double
 
-    val eyeHeight: Double
+    val eyeHeight: Float
     var entityBoundingBox: IAxisAlignedBB
     val posX: Double
     var posY: Double
@@ -77,7 +77,7 @@ interface IEntity {
     fun canBeCollidedWith(): Boolean
     fun canRiderInteract(): Boolean
     fun moveEntity(x: Double, y: Double, z: Double)
-    fun getDistanceToEntity(it: IEntity): Double
+    fun getDistanceToEntity(it: IEntity): Float
     fun getDistanceSqToEntity(it: IEntity): Double
 
     fun asEntityPlayer(): IEntityPlayer
@@ -89,7 +89,7 @@ interface IEntity {
 
     fun getDistanceSq(blockPos: WBlockPos): Double
     fun setPositionAndUpdate(posX: Double, posY: Double, posZ: Double)
-    fun rayTrace(range: Int, partialTicks: Float): IMovingObjectPosition?
+    fun rayTrace(range: Double, partialTicks: Float): IMovingObjectPosition?
     fun getLook(partialTicks: Float): WVec3
     fun isInsideOfMaterial(material: IMaterial): Boolean
     fun copyLocationAndAnglesFrom(player: IEntityPlayerSP)

@@ -15,7 +15,6 @@ interface IEntityLivingBase : IEntity {
     val activePotionEffects: Collection<IPotionEffect>
     val isSwingInProgress: Boolean
     var cameraPitch: Float
-    var cameraYaw: Float
     val team: ITeam?
     val creatureAttribute: IEnumCreatureAttribute
     val hurtTime: Int
@@ -28,7 +27,6 @@ interface IEntityLivingBase : IEntity {
 
     fun canEntityBeSeen(it: IEntity): Boolean
     fun isPotionActive(potion: IPotion): Boolean
-    fun jump()
     fun swingItem()
     fun getActivePotionEffect(potion: IPotion): IPotionEffect
 }

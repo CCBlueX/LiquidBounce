@@ -6,6 +6,6 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.item
 
-interface IItemArmor {
+interface IItemArmor : IItem {
     val armorType: Int
 }

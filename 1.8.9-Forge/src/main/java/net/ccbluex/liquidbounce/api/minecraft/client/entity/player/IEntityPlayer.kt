@@ -28,6 +28,7 @@ interface IEntityPlayer : IEntityLivingBase {
     var sleeping: Boolean
     val isPlayerSleeping: Boolean
     var speedInAir: Float
+    var cameraYaw: Float
 
     @get:JvmName("isBlocking")
     val isBlocking: Boolean
@@ -39,7 +40,7 @@ interface IEntityPlayer : IEntityLivingBase {
     val inventoryContainer: IContainer
     val inventory: IInventoryPlayer
     val openContainer: IContainer?
-    val itemInUseDuration: Float
+    val itemInUseDuration: Int
     val displayNameString: String
 
     @get:JvmName("isSpectator")
@@ -53,4 +54,5 @@ interface IEntityPlayer : IEntityLivingBase {
     fun fall(distance: Float, damageMultiplier: Float)
     fun triggerAchievement(stat: IStatList)
     fun clonePlayer(player: IEntityPlayerSP, respawnFromEnd: Boolean)
+    fun jump()
 }

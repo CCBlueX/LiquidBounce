@@ -38,7 +38,7 @@ class TNTBlock : Module() {
                             val itemStack = thePlayer.inventory.getStackInSlot(i)
 
                             if (itemStack != null && classProvider.isItemSword(itemStack.item)) {
-                                val itemDamage = itemStack.item.asItemSword().damageVsEntity + 4f
+                                val itemDamage = itemStack.item!!.asItemSword().damageVsEntity + 4f
 
                                 if (itemDamage > bestDamage) {
                                     bestDamage = itemDamage
