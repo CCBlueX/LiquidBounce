@@ -84,7 +84,7 @@ class KillAura : Module() {
     // Modes
     private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Distance")
     private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
-    private val AutoBlockModeValue = ListValue("AutoBlockMode", arrayOf("Packet","Vanilla"), "Vanilla")
+    private val autoblockModeValue = ListValue("AutoBlockMode", arrayOf("Packet","Vanilla"), "Vanilla")
 
     // Bypass
     private val swingValue = BoolValue("Swing", true)
@@ -630,7 +630,7 @@ class KillAura : Module() {
             mc.netHandler.addToSendQueue(C02PacketUseEntity(interactEntity, C02PacketUseEntity.Action.INTERACT))
         }
 
-        when (AutoBlockModeValue.get().toLowerCase()) {
+        when (autoblockModeValue.get().toLowerCase()) {
             "packet" -> {
                 mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getCurrentItem()))
                 blockingStatus = true
@@ -652,7 +652,7 @@ class KillAura : Module() {
      */
     private fun stopBlocking() {
         if (blockingStatus) {
-            when (AutoBlockModeValue.get().toLowerCase()) {
+            when (autoblockModeValue.get().toLowerCase()) {
                 "packet" -> {
                     mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
                 }
