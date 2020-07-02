@@ -96,17 +96,17 @@ class XRay : Module() {
                     if (args[1].equals("remove", ignoreCase = true)) {
                         if (args.size > 2) {
                             try {
-                                var block: Block
-
-                                try {
-                                    block = Block.getBlockById(args[2].toInt())
+                                val block = try {
+                                    Block.getBlockById(args[2].toInt())
                                 } catch (exception: NumberFormatException) {
-                                    block = Block.getBlockFromName(args[2])
+                                    val tmpBlock = Block.getBlockFromName(args[2])
 
-                                    if (Block.getIdFromBlock(block) <= 0) {
+                                    if (Block.getIdFromBlock(tmpBlock) <= 0 || tmpBlock == null) {
                                         chat("§7Block §8${args[2]}§7 does not exist!")
                                         return
                                     }
+
+                                    tmpBlock
                                 }
 
                                 if (!xrayBlocks.contains(block)) {
