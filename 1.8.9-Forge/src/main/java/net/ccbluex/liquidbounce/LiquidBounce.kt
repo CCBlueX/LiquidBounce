@@ -65,7 +65,7 @@ object LiquidBounce {
     var background: ResourceLocation? = null
 
     // Discord RPC
-    private lateinit var clientRichPresence: ClientRichPresence
+    lateinit var clientRichPresence: ClientRichPresence
 
     /**
      * Execute if client will be started
@@ -87,6 +87,9 @@ object LiquidBounce {
         eventManager.registerListener(BungeeCordSpoof())
         eventManager.registerListener(DonatorCape())
         eventManager.registerListener(InventoryUtils())
+
+        // Setup Discord RPC
+        clientRichPresence = ClientRichPresence()
 
         // Create command manager
         commandManager = CommandManager()
@@ -133,14 +136,6 @@ object LiquidBounce {
             registerCapeService()
         } catch (throwable: Throwable) {
             ClientUtils.getLogger().error("Failed to register cape service", throwable)
-        }
-
-        // Setup Discord RPC
-        try {
-            clientRichPresence = ClientRichPresence()
-            clientRichPresence.setup()
-        } catch (throwable: Throwable) {
-            ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
         }
 
         // Set HUD
