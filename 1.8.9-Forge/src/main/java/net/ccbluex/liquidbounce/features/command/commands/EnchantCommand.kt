@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.EnumEnchantmentType
+import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 
 class EnchantCommand : Command("enchant", emptyArray()) {
     /**
@@ -55,6 +56,7 @@ class EnchantCommand : Command("enchant", emptyArray()) {
             }
 
             item.addEnchantment(enchantment, level)
+            mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(36 + mc.thePlayer.inventory.currentItem, item))
             chat("${enchantment.getTranslatedName(level)} added to ${item.displayName}.")
             return
         }
