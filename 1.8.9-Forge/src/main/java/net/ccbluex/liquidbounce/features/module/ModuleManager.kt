@@ -179,7 +179,8 @@ class ModuleManager : Listenable {
                 ResourcePackSpoof::class.java,
                 NoSlowBreak::class.java,
                 PortalMenu::class.java,
-                RichPresence::class.java
+                RichPresence::class.java,
+                AntiLiquidPush::class.java
         )
 
         registerModule(NoScoreboard)
