@@ -9,11 +9,11 @@ import kotlin.concurrent.thread
 @ModuleInfo(name = "RichPresence", description = "Show discord presence", category = ModuleCategory.MISC)
 class RichPresence : Module() {
 
-  override fun onToggle(state: Boolean) {
-    val rpc = LiquidBounce.clientRichPresence
-    when (state) {
-      false -> rpc.shutdown()
-      true -> thread { rpc.setup() }
+    override fun onToggle(state: Boolean) {
+        val rpc = LiquidBounce.clientRichPresence
+        when (state) {
+            false -> rpc.shutdown()
+            true -> thread { rpc.setup() }
+        }
     }
-  }
 }
