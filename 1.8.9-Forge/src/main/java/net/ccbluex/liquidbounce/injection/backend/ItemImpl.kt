@@ -13,6 +13,9 @@ import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.item.*
 
 open class ItemImpl<T : Item>(val wrapped: T) : IItem {
+    override val unlocalizedName: String
+        get() = wrapped.unlocalizedName
+
     override fun getObjectFromItemRegistry(location: IResourceLocation): IItem? = Item.itemRegistry.getObject(location.unwrap())?.wrap()
 
     override fun asItemArmor(): IItemArmor = ItemArmorImpl(wrapped as ItemArmor)

@@ -16,13 +16,12 @@ interface IRenderManager {
     val viewerPosY: Double
     val viewerPosZ: Double
     val playerViewX: Float
-    val playerViewY: Float
+    var playerViewY: Float
     val renderPosX: Double
     val renderPosY: Double
     val renderPosZ: Double
 
-    fun renderEntityStatic(entity: IEntity, renderPartialTicks: Float, hideDebugBox: Boolean)
+    fun renderEntityStatic(entity: IEntity, renderPartialTicks: Float, hideDebugBox: Boolean): Boolean
     fun renderEntityAt(entity: ITileEntity, x: Double, y: Double, z: Double, partialTicks: Float)
-    fun setPlayerViewY(value: Float)
-    fun renderEntityWithPosYaw(entityLivingBase: IEntityLivingBase, d: Double, d1: Double, d2: Double, fl: Float, fl1: Float)
+    fun renderEntityWithPosYaw(entityLivingBase: IEntityLivingBase, d: Double, d1: Double, d2: Double, fl: Float, fl1: Float): Boolean
 }

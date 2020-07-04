@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
-import net.ccbluex.liquidbounce.api.minecraft.stats.IStatList
+import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
@@ -199,7 +199,7 @@ interface IClassProvider {
     fun getEnumFacing(type: EnumFacingType): IEnumFacing
     fun getBlockEnum(type: BlockType): IBlock
     fun getMaterialEnum(type: MaterialType): IMaterial
-    fun getStatEnum(type: StatType): IStatList
+    fun getStatEnum(type: StatType): IStatBase
     fun getItemEnum(type: ItemType): IItem
     fun getEnchantmentEnum(type: EnchantmentType): IEnchantment
     fun getVertexFormatEnum(type: WDefaultVertexFormats): IVertexFormat

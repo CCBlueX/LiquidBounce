@@ -17,8 +17,6 @@ import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.Minecraft
-import net.minecraft.util.ChatAllowedCharacters
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.text.DecimalFormat

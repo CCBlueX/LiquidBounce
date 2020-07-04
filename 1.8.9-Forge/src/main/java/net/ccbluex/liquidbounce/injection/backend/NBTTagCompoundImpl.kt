@@ -19,4 +19,6 @@ class NBTTagCompoundImpl(wrapped: NBTTagCompound) : NBTBaseImpl<NBTTagCompound>(
     override fun setString(key: String, value: String) = wrapped.setString(key, value)
 
     override fun setTag(key: String, tag: INBTBase) = wrapped.setTag(key, tag.unwrap())
+
+    override fun setInteger(key: String, value: Int) = wrapped.setInteger(key, value)
 }

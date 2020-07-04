@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.api.minecraft.entity.player.IInventoryPlayer
 import net.ccbluex.liquidbounce.api.minecraft.entity.player.IPlayerCapabilities
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.stats.IStatList
+import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.IFoodStats
 
 @Suppress("INAPPLICABLE_JVM_NAME")
@@ -52,7 +52,7 @@ interface IEntityPlayer : IEntityLivingBase {
     fun onEnchantmentCritical(entity: IEntityLivingBase)
     fun attackTargetEntityWithCurrentItem(entity: IEntity)
     fun fall(distance: Float, damageMultiplier: Float)
-    fun triggerAchievement(stat: IStatList)
+    fun triggerAchievement(stat: IStatBase)
     fun clonePlayer(player: IEntityPlayerSP, respawnFromEnd: Boolean)
     fun jump()
 }

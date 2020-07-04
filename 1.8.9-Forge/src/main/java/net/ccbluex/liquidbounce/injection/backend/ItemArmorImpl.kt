@@ -12,4 +12,6 @@ import net.minecraft.item.ItemArmor
 class ItemArmorImpl(wrapped: ItemArmor) : ItemImpl<ItemArmor>(wrapped), IItemArmor {
     override val armorType: Int
         get() = wrapped.armorType
+    override val unlocalizedName: String
+        get() = wrapped.unlocalizedName
 }

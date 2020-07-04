@@ -7,5 +7,5 @@
 package net.ccbluex.liquidbounce.api.minecraft.client.audio
 
 interface ISoundHandler {
-    fun playSound(name: String, volume: Float)
+    fun playSound(name: String, pitch: Float)
 }

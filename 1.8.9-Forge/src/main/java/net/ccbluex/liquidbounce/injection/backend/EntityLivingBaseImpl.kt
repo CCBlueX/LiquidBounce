@@ -9,15 +9,31 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.entity.IEnumCreatureAttribute
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
+import net.ccbluex.liquidbounce.api.util.WrappedCollection
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
+import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.entity.EntityLivingBase
+import net.minecraft.potion.PotionEffect
 
 open class EntityLivingBaseImpl<T : EntityLivingBase>(wrapped: T) : EntityImpl<T>(wrapped), IEntityLivingBase {
+    override val maxHealth: Float
+        get() = wrapped.maxHealth
+    override var prevRotationYawHead: Float
+        get() = wrapped.prevRotationYawHead
+        set(value) {
+            wrapped.prevRotationYawHead = value
+        }
+    override var renderYawOffset: Float
+        get() = wrapped.prevRotationYawHead
+        set(value) {
+            wrapped.prevRotationYawHead = value
+        }
     override val activePotionEffects: Collection<IPotionEffect>
-        get() = TODO("Not yet implemented")
+        get() = WrappedCollection<PotionEffect, IPotionEffect, Collection<PotionEffect>>(wrapped.activePotionEffects, IPotionEffect::unwrap, PotionEffect::wrap)
     override val isSwingInProgress: Boolean
         get() = wrapped.isSwingInProgress
     override var cameraPitch: Float
@@ -26,9 +42,9 @@ open class EntityLivingBaseImpl<T : EntityLivingBase>(wrapped: T) : EntityImpl<T
             wrapped.cameraPitch = value
         }
     override val team: ITeam?
-        get() = TODO("Not yet implemented")
+        get() = wrapped.team?.wrap()
     override val creatureAttribute: IEnumCreatureAttribute
-        get() = TODO("Not yet implemented")
+        get() = wrapped.creatureAttribute.wrap()
     override val hurtTime: Int
         get() = wrapped.hurtTime
     override val isOnLadder: Boolean
@@ -55,13 +71,15 @@ open class EntityLivingBaseImpl<T : EntityLivingBase>(wrapped: T) : EntityImpl<T
 
     override fun canEntityBeSeen(it: IEntity): Boolean = wrapped.canEntityBeSeen(it.unwrap())
 
-    override fun isPotionActive(potion: IPotion): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isPotionActive(potion: IPotion): Boolean = wrapped.isPotionActive(potion.unwrap())
 
     override fun swingItem() = wrapped.swingItem()
 
-    override fun getActivePotionEffect(potion: IPotion): IPotionEffect {
-        TODO("Not yet implemented")
-    }
+    override fun getActivePotionEffect(potion: IPotion): IPotionEffect = wrapped.getActivePotionEffect(potion.unwrap()).wrap()
+
+    override fun removePotionEffectClient(id: Int) = wrapped.removePotionEffectClient(id)
+
+    override fun addPotionEffect(effect: IPotionEffect) = wrapped.addPotionEffect(effect.unwrap())
+
+    override fun getEquipmentInSlot(index: Int): IItemStack? = wrapped.getEquipmentInSlot(index)?.wrap()
 }

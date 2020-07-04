@@ -11,23 +11,23 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.projectile.IEntityFishHook
 import net.ccbluex.liquidbounce.api.minecraft.entity.player.IInventoryPlayer
 import net.ccbluex.liquidbounce.api.minecraft.entity.player.IPlayerCapabilities
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.stats.IStatList
+import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.IFoodStats
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
+import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.entity.player.EntityPlayer
 
 open class EntityPlayerImpl<T : EntityPlayer>(wrapped: T) : EntityLivingBaseImpl<T>(wrapped), IEntityPlayer {
     override val gameProfile: GameProfile
         get() = wrapped.gameProfile
-    override val fishEntity: IEntityFishHook?
-        get() = TODO("Not yet implemented")
+    override val fishEntity: IEntity?
+        get() = wrapped.fishEntity?.wrap()
     override val foodStats: IFoodStats
-        get() = TODO("Not yet implemented")
+        get() = wrapped.foodStats.wrap()
     override val prevChasingPosY: Double
         get() = wrapped.prevChasingPosY
     override var sleepTimer: Int
@@ -60,19 +60,19 @@ open class EntityPlayerImpl<T : EntityPlayer>(wrapped: T) : EntityLivingBaseImpl
             wrapped.itemInUseCount = value
         }
     override val itemInUse: IItemStack?
-        get() = TODO("Not yet implemented")
+        get() = wrapped.itemInUse?.wrap()
     override val capabilities: IPlayerCapabilities
-        get() = TODO("Not yet implemented")
+        get() = wrapped.capabilities.wrap()
     override val heldItem: IItemStack?
-        get() = TODO("Not yet implemented")
+        get() = wrapped.heldItem?.wrap()
     override val isUsingItem: Boolean
         get() = wrapped.isUsingItem
     override val inventoryContainer: IContainer
-        get() = TODO("Not yet implemented")
+        get() = wrapped.inventoryContainer.wrap()
     override val inventory: IInventoryPlayer
-        get() = TODO("Not yet implemented")
+        get() = wrapped.inventory.wrap()
     override val openContainer: IContainer?
-        get() = TODO("Not yet implemented")
+        get() = wrapped.openContainer?.wrap()
     override val itemInUseDuration: Int
         get() = wrapped.itemInUseDuration
     override val displayNameString: String
@@ -90,13 +90,9 @@ open class EntityPlayerImpl<T : EntityPlayer>(wrapped: T) : EntityLivingBaseImpl
 
     override fun fall(distance: Float, damageMultiplier: Float) = wrapped.fall(distance, damageMultiplier)
 
-    override fun triggerAchievement(stat: IStatList) {
-        TODO("Not yet implemented")
-    }
+    override fun triggerAchievement(stat: IStatBase) = wrapped.triggerAchievement(stat.unwrap())
 
-    override fun clonePlayer(player: IEntityPlayerSP, respawnFromEnd: Boolean) {
-        TODO("Not yet implemented")
-    }
+    override fun clonePlayer(player: IEntityPlayerSP, respawnFromEnd: Boolean) = wrapped.clonePlayer(player.unwrap(), respawnFromEnd)
 
     override fun jump() = wrapped.jump()
 

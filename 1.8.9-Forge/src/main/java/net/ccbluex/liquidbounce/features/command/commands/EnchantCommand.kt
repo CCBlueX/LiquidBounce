@@ -25,8 +25,8 @@ class EnchantCommand : Command("enchant") {
                 return
             }
 
-            val enchantID: Short = try {
-                args[1].toShort()
+            val enchantID: Int = try {
+                args[1].toInt()
             } catch (e: NumberFormatException) {
                 val enchantment = functions.getEnchantmentByLocation(args[1])
 

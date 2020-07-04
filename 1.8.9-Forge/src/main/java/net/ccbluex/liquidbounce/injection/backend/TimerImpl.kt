@@ -18,3 +18,6 @@ class TimerImpl(val wrapped: Timer) : ITimer {
     override val renderPartialTicks: Float
         get() = wrapped.renderPartialTicks
 }
+
+inline fun ITimer.unwrap(): Timer = (this as TimerImpl).wrapped
+inline fun Timer.wrap(): ITimer = TimerImpl(this)

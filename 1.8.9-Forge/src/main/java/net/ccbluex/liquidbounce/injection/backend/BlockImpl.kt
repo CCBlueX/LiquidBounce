@@ -9,6 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.block.material.IMaterial
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
@@ -44,4 +45,8 @@ class BlockImpl(val wrapped: Block) : IBlock {
     override fun canCollideCheck(state: IIBlockState?, hitIfLiquid: Boolean): Boolean = wrapped.canCollideCheck(state?.unwrap(), hitIfLiquid)
 
     override fun setBlockBoundsBasedOnState(world: IWorld, blockPos: WBlockPos) = wrapped.setBlockBoundsBasedOnState(world.unwrap(), blockPos.unwrap())
+
+    override fun getPlayerRelativeBlockHardness(thePlayer: IEntityPlayerSP, theWorld: IWorld, blockPos: WBlockPos): Float = wrapped.getPlayerRelativeBlockHardness(thePlayer.unwrap(), theWorld.unwrap(), blockPos.unwrap())
+
+    override fun getIdFromBlock(block: IBlock): Int = Block.getIdFromBlock(block.unwrap())
 }

@@ -7,19 +7,19 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumFacing
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.util.MovingObjectPosition
 
 class MovingObjectPositionImpl(val wrapped: MovingObjectPosition) : IMovingObjectPosition {
     override val entityHit: IEntity?
-        get() = TODO("Not yet implemented")
+        get() = wrapped.entityHit?.wrap()
     override val blockPos: WBlockPos?
         get() = wrapped.blockPos?.wrap()
-    override val sideHit: WEnumFacing?
+    override val sideHit: IEnumFacing?
         get() = wrapped.sideHit?.wrap()
     override val hitVec: WVec3
         get() = wrapped.hitVec.wrap()

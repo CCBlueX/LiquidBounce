@@ -16,15 +16,30 @@ import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
 import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.item.EntityTNTPrimed
+import net.minecraft.entity.player.EntityPlayer
 import java.util.*
 
 open class EntityImpl<T : Entity>(val wrapped: T) : IEntity {
+    override var distanceWalkedOnStepModified: Float
+        get() = wrapped.distanceWalkedOnStepModified
+        set(value) {
+            wrapped.distanceWalkedOnStepModified = value
+        }
+    override var distanceWalkedModified: Float
+        get() = wrapped.distanceWalkedModified
+        set(value) {
+            wrapped.distanceWalkedModified = value
+        }
+    override val sneaking: Boolean
+        get() = wrapped.isSneaking
     override var stepHeight: Float
         get() = wrapped.stepHeight
         set(value) {
             wrapped.stepHeight = value
         }
-    override val horizontalFacing: WEnumFacing
+    override val horizontalFacing: IEnumFacing
         get() = wrapped.horizontalFacing.wrap()
     override val lookVec: WVec3?
         get() = wrapped.lookVec.wrap()
@@ -78,6 +93,8 @@ open class EntityImpl<T : Entity>(val wrapped: T) : IEntity {
         get() = wrapped.isInLava
     override val width: Float
         get() = wrapped.width
+    override val height: Float
+        get() = wrapped.height
     override var onGround: Boolean
         get() = wrapped.onGround
         set(value) {
@@ -143,7 +160,7 @@ open class EntityImpl<T : Entity>(val wrapped: T) : IEntity {
     override val entityId: Int
         get() = wrapped.entityId
     override val displayName: IIChatComponent?
-        get() = TODO("Not yet implemented")
+        get() = wrapped.displayName.wrap()
     override val uniqueID: UUID
         get() = wrapped.uniqueID
     override val name: String?
@@ -167,17 +184,11 @@ open class EntityImpl<T : Entity>(val wrapped: T) : IEntity {
 
     override fun getDistanceSqToEntity(it: IEntity): Double = wrapped.getDistanceSqToEntity(it.unwrap())
 
-    override fun asEntityPlayer(): IEntityPlayer {
-        TODO("Not yet implemented")
-    }
+    override fun asEntityPlayer(): IEntityPlayer = EntityPlayerImpl(wrapped as EntityPlayer)
 
-    override fun asEntityLivingBase(): IEntityLivingBase {
-        TODO("Not yet implemented")
-    }
+    override fun asEntityLivingBase(): IEntityLivingBase = EntityLivingBaseImpl(wrapped as EntityLivingBase)
 
-    override fun asEntityTNTPrimed(): IEntityTNTPrimed {
-        TODO("Not yet implemented")
-    }
+    override fun asEntityTNTPrimed(): IEntityTNTPrimed = EntityTNTPrimedImpl(wrapped as EntityTNTPrimed)
 
     override fun getDistance(x: Double, y: Double, z: Double): Double = wrapped.getDistance(x, y, z)
 
@@ -193,8 +204,8 @@ open class EntityImpl<T : Entity>(val wrapped: T) : IEntity {
 
     override fun isInsideOfMaterial(material: IMaterial): Boolean = wrapped.isInsideOfMaterial(material.unwrap())
 
-    override fun copyLocationAndAnglesFrom(player: IEntityPlayerSP) {
-        TODO("Not yet implemented")
-    }
+    override fun copyLocationAndAnglesFrom(player: IEntityPlayerSP) = wrapped.copyLocationAndAnglesFrom(player.unwrap())
+
+    override fun setPositionAndRotation(oldX: Double, oldY: Double, oldZ: Double, rotationYaw: Float, rotationPitch: Float) = wrapped.setPositionAndRotation(oldX, oldY, oldZ, rotationYaw, rotationPitch)
 }
 

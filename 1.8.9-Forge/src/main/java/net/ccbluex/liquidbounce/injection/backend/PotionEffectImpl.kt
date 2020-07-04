@@ -7,9 +7,12 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
+import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
 
 class PotionEffectImpl(val wrapped: PotionEffect) : IPotionEffect {
+    override fun getDurationString(): String = Potion.getDurationString(wrapped)
+
     override val amplifier: Int
         get() = wrapped.amplifier
     override val duration: Int

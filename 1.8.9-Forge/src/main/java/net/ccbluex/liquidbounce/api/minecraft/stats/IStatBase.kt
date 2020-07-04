@@ -4,8 +4,6 @@
  * https://github.com/CCBlueX/LiquidBounce/
  */
 
-package net.ccbluex.liquidbounce.api.minecraft.client.entity.projectile
+package net.ccbluex.liquidbounce.api.minecraft.stats
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-
-interface IEntityFishHook : IEntity
+interface IStatBase

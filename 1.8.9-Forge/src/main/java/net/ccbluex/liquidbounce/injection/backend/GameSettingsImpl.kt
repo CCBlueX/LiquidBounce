@@ -16,6 +16,16 @@ import net.minecraft.client.settings.GameSettings
 import net.minecraft.entity.player.EnumPlayerModelParts
 
 class GameSettingsImpl(val wrapped: GameSettings) : IGameSettings {
+    override var entityShadows: Boolean
+        get() = wrapped.entityShadows
+        set(value) {
+            wrapped.entityShadows = value
+        }
+    override var gammaSetting: Float
+        get() = wrapped.gammaSetting
+        set(value) {
+            wrapped.gammaSetting = value
+        }
     override val modelParts: Set<WEnumPlayerModelParts>
         get() = WrappedSet(wrapped.modelParts, WEnumPlayerModelParts::unwrap, EnumPlayerModelParts::wrap)
     override val mouseSensitivity: Float

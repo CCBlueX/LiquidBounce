@@ -9,10 +9,12 @@ package net.ccbluex.liquidbounce.injection.backend
 import com.google.common.base.Predicate
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.world.IChunk
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.api.minecraft.world.border.IWorldBorder
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
@@ -23,9 +25,11 @@ import net.minecraft.util.AxisAlignedBB
 import net.minecraft.world.World
 
 class WorldImpl(val wrapped: World) : IWorld {
+    override val scoreboard: IScoreboard
+        get() = wrapped.scoreboard.wrap()
 
     override val worldBorder: IWorldBorder
-        get() = TODO("Not yet implemented")
+        get() = wrapped.worldBorder.wrap()
 
     override fun getEntityByID(id: Int): IEntity? = wrapped.getEntityByID(id)?.wrap()
 
@@ -63,6 +67,7 @@ class WorldImpl(val wrapped: World) : IWorld {
 
     override fun checkBlockCollision(aabb: IAxisAlignedBB): Boolean = wrapped.checkBlockCollision(aabb.unwrap())
 
-    override fun getCollisionBoxes(bb: IAxisAlignedBB): Collection<IAxisAlignedBB> = WrappedCollection<AxisAlignedBB, IAxisAlignedBB>(wrapped.getCollisionBoxes(bb.unwrap()), IAxisAlignedBB::unwrap, AxisAlignedBB::wrap)
+    override fun getCollisionBoxes(bb: IAxisAlignedBB): Collection<IAxisAlignedBB> = WrappedCollection(wrapped.getCollisionBoxes(bb.unwrap()), IAxisAlignedBB::unwrap, AxisAlignedBB::wrap)
+    override fun getChunkFromChunkCoords(x: Int, z: Int): IChunk = wrapped.getChunkFromChunkCoords(x, z).wrap()
 }
 

@@ -26,7 +26,7 @@ interface IExtractedFunctions {
     fun getBlockFromName(name: String): IBlock?
     fun getItemByName(name: String): IItem?
     fun getEnchantmentByLocation(location: String): IEnchantment?
-    fun getEnchantmentById(enchantID: Short): IEnchantment?
+    fun getEnchantmentById(enchantID: Int): IEnchantment?
     fun getEnchantments(): Collection<IResourceLocation>
     fun getItemRegistryKeys(): Collection<IResourceLocation>
     fun getBlockRegistryKeys(): Collection<IResourceLocation>

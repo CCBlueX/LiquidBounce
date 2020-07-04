@@ -26,7 +26,7 @@ open class EntityPlayerSPImpl<T : EntityPlayerSP>(wrapped: T) : AbstractClientPl
     override val sendQueue: IINetHandlerPlayClient
         get() = TODO("Not yet implemented")
     override val movementInput: IMovementInput
-        get() = TODO("Not yet implemented")
+        get() = wrapped.movementInput.wrap()
     override val sneaking: Boolean
         get() = wrapped.isSneaking
     override var serverSprintState: Boolean
@@ -39,7 +39,7 @@ open class EntityPlayerSPImpl<T : EntityPlayerSP>(wrapped: T) : AbstractClientPl
 
     override fun respawnPlayer() = wrapped.respawnPlayer()
 
-    override fun addChatMessage(component: IIChatComponent) {
-        TODO("Not yet implemented")
-    }
+    override fun addChatMessage(component: IIChatComponent) = wrapped.addChatMessage(component.unwrap())
+
+    override fun closeScreen() = wrapped.closeScreen()
 }

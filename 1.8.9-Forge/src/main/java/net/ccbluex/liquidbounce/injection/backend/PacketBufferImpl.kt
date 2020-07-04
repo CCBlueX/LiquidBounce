@@ -19,4 +19,10 @@ class PacketBufferImpl(val wrapped: PacketBuffer) : IPacketBuffer {
     override fun writeItemStackToBuffer(itemStack: IItemStack) {
         wrapped.writeItemStackToBuffer(itemStack.unwrap())
     }
+
+    override fun writeString(vanilla: String): IPacketBuffer {
+        wrapped.writeString(vanilla)
+
+        return this
+    }
 }
