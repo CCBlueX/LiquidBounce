@@ -18,7 +18,7 @@ import java.io.FileOutputStream
 import java.util.*
 import java.util.zip.ZipFile
 
-class ScriptManagerCommand : Command("scriptmanager", arrayOf("scripts")) {
+class ScriptManagerCommand : Command("scriptmanager", "scripts") {
     /**
      * Execute commands with provided [args]
      */

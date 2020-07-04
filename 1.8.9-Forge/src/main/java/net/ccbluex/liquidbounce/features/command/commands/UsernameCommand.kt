@@ -9,12 +9,12 @@ import net.ccbluex.liquidbounce.features.command.Command
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 
-class UsernameCommand : Command("username", emptyArray()) {
+class UsernameCommand : Command("username", "ign") {
     /**
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        val username = mc.thePlayer.name
+        val username = mc.thePlayer!!.name
 
         chat("Username: $username")
 

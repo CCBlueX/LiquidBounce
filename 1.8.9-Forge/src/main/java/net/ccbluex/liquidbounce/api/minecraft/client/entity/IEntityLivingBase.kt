@@ -7,11 +7,15 @@
 package net.ccbluex.liquidbounce.api.minecraft.client.entity
 
 import net.ccbluex.liquidbounce.api.minecraft.entity.IEnumCreatureAttribute
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
 
 interface IEntityLivingBase : IEntity {
+    val maxHealth: Float
+    var prevRotationYawHead: Float
+    var renderYawOffset: Float
     val activePotionEffects: Collection<IPotionEffect>
     val isSwingInProgress: Boolean
     var cameraPitch: Float
@@ -29,4 +33,7 @@ interface IEntityLivingBase : IEntity {
     fun isPotionActive(potion: IPotion): Boolean
     fun swingItem()
     fun getActivePotionEffect(potion: IPotion): IPotionEffect
+    fun removePotionEffectClient(id: Int)
+    fun addPotionEffect(effect: IPotionEffect)
+    fun getEquipmentInSlot(index: Int): IItemStack?
 }

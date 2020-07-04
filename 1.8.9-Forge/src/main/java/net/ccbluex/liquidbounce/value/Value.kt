@@ -9,14 +9,11 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.minecraft.client.gui.FontRenderer
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import java.util.*
 
-@SideOnly(Side.CLIENT)
 abstract class Value<T>(val name: String, protected var value: T) {
 
     fun set(newValue: T) {
@@ -116,13 +113,13 @@ open class TextValue(name: String, value: String) : Value<String>(name, value) {
 /**
  * Font value represents a value with a font
  */
-class FontValue(valueName: String, value: FontRenderer) : Value<FontRenderer>(valueName, value) {
+class FontValue(valueName: String, value: IFontRenderer) : Value<IFontRenderer>(valueName, value) {
 
     override fun toJson(): JsonElement? {
         val fontDetails = Fonts.getFontDetails(value) ?: return null
         val valueObject = JsonObject()
-        valueObject.addProperty("fontName", fontDetails[0] as String)
-        valueObject.addProperty("fontSize", fontDetails[1] as Int)
+        valueObject.addProperty("fontName", fontDetails.name)
+        valueObject.addProperty("fontSize", fontDetails.fontSize)
         return valueObject
     }
 

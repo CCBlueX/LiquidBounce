@@ -10,6 +10,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.thealtening.AltService;
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen;
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
+import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
+import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.*;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiMCLeaks;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
@@ -21,11 +26,6 @@ import net.ccbluex.liquidbounce.utils.login.UserUtils;
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils;
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 import net.mcleaks.MCLeaks;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.GuiSlot;
-import net.minecraft.client.gui.GuiTextField;
 import org.lwjgl.input.Keyboard;
 
 import javax.swing.*;
@@ -35,18 +35,18 @@ import java.io.*;
 import java.util.List;
 import java.util.*;
 
-public class GuiAltManager extends GuiScreen {
+public class GuiAltManager extends WrappedGuiScreen {
 
     public static final AltService altService = new AltService();
     private static final Map<String, Boolean> GENERATORS = new HashMap<>();
-    private final GuiScreen prevGui;
+    private final IGuiScreen prevGui;
     public String status = "§7Idle...";
-    private GuiButton loginButton;
-    private GuiButton randomButton;
+    private IGuiButton loginButton;
+    private IGuiButton randomButton;
     private GuiList altsList;
-    private GuiTextField searchField;
+    private IGuiTextField searchField;
 
-    public GuiAltManager(final GuiScreen prevGui) {
+    public GuiAltManager(final IGuiScreen prevGui) {
         this.prevGui = prevGui;
     }
 
@@ -89,7 +89,7 @@ public class GuiAltManager extends GuiScreen {
         LoginUtils.LoginResult result = LoginUtils.login(minecraftAccount.getName(), minecraftAccount.getPassword());
         if (result == LoginUtils.LoginResult.LOGGED) {
             MCLeaks.remove();
-            String userName = Minecraft.getMinecraft().getSession().getUsername();
+            String userName = mc.getSession().getUsername();
             minecraftAccount.setAccountName(userName);
             LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
             return "§cYour name is now §f§l" + userName + "§c.";
@@ -111,83 +111,84 @@ public class GuiAltManager extends GuiScreen {
     }
 
     public void initGui() {
-        int textFieldWidth = Math.max(width / 8, 70);
+        int textFieldWidth = Math.max(representedScreen.getWidth() / 8, 70);
 
-        searchField = new GuiTextField(2, Fonts.font40, width - textFieldWidth - 10, 10, textFieldWidth, 20);
+        searchField = classProvider.createGuiTextField(2, Fonts.font40, representedScreen.getWidth() - textFieldWidth - 10, 10, textFieldWidth, 20);
         searchField.setMaxStringLength(Integer.MAX_VALUE);
 
-        altsList = new GuiList(this);
-        altsList.registerScrollButtons(7, 8);
+        altsList = new GuiList(representedScreen);
+        altsList.represented.registerScrollButtons(7, 8);
 
         int index = -1;
 
         for (int i = 0; i < LiquidBounce.fileManager.accountsConfig.getAccounts().size(); i++) {
             MinecraftAccount minecraftAccount = LiquidBounce.fileManager.accountsConfig.getAccounts().get(i);
 
-            if (minecraftAccount != null && (((minecraftAccount.getPassword() == null || minecraftAccount.getPassword().isEmpty()) && minecraftAccount.getName() != null && minecraftAccount.getName().equals(mc.session.getUsername())) || minecraftAccount.getAccountName() != null && minecraftAccount.getAccountName().equals(mc.session.getUsername()))) {
+            if (minecraftAccount != null && (((minecraftAccount.getPassword() == null || minecraftAccount.getPassword().isEmpty()) && minecraftAccount.getName() != null && minecraftAccount.getName().equals(mc.getSession().getUsername())) || minecraftAccount.getAccountName() != null && minecraftAccount.getAccountName().equals(mc.getSession().getUsername()))) {
                 index = i;
                 break;
             }
         }
 
         altsList.elementClicked(index, false, 0, 0);
-        altsList.scrollBy(index * altsList.slotHeight);
+        altsList.represented.scrollBy(index * altsList.represented.getSlotHeight());
 
         int j = 22;
-        this.buttonList.add(new GuiButton(1, width - 80, j + 24, 70, 20, "Add"));
-        this.buttonList.add(new GuiButton(2, width - 80, j + 24 * 2, 70, 20, "Remove"));
-        this.buttonList.add(new GuiButton(7, width - 80, j + 24 * 3, 70, 20, "Import"));
-        this.buttonList.add(new GuiButton(12, width - 80, j + 24 * 4, 70, 20, "Export"));
-        this.buttonList.add(new GuiButton(8, width - 80, j + 24 * 5, 70, 20, "Copy"));
+        representedScreen.getButtonList().add(classProvider.createGuiButton(1, representedScreen.getWidth() - 80, j + 24, 70, 20, "Add"));
+        representedScreen.getButtonList().add(classProvider.createGuiButton(2, representedScreen.getWidth() - 80, j + 24 * 2, 70, 20, "Remove"));
+        representedScreen.getButtonList().add(classProvider.createGuiButton(7, representedScreen.getWidth() - 80, j + 24 * 3, 70, 20, "Import"));
+        representedScreen.getButtonList().add(classProvider.createGuiButton(12, representedScreen.getWidth() - 80, j + 24 * 4, 70, 20, "Export"));
+        representedScreen.getButtonList().add(classProvider.createGuiButton(8, representedScreen.getWidth() - 80, j + 24 * 5, 70, 20, "Copy"));
 
-        this.buttonList.add(new GuiButton(0, width - 80, height - 65, 70, 20, "Back"));
+        representedScreen.getButtonList().add(classProvider.createGuiButton(0, representedScreen.getWidth() - 80, representedScreen.getHeight() - 65, 70, 20, "Back"));
 
-        this.buttonList.add(loginButton = new GuiButton(3, 5, j + 24, 90, 20, "Login"));
-        this.buttonList.add(randomButton = new GuiButton(4, 5, j + 24 * 2, 90, 20, "Random"));
-        this.buttonList.add(new GuiButton(6, 5, j + 24 * 3, 90, 20, "Direct Login"));
-        this.buttonList.add(new GuiButton(88, 5, j + 24 * 4, 90, 20, "Change Name"));
+        representedScreen.getButtonList().add(loginButton = classProvider.createGuiButton(3, 5, j + 24, 90, 20, "Login"));
+        representedScreen.getButtonList().add(randomButton = classProvider.createGuiButton(4, 5, j + 24 * 2, 90, 20, "Random"));
+        representedScreen.getButtonList().add(classProvider.createGuiButton(6, 5, j + 24 * 3, 90, 20, "Direct Login"));
+        representedScreen.getButtonList().add(classProvider.createGuiButton(88, 5, j + 24 * 4, 90, 20, "Change Name"));
 
         if (GENERATORS.getOrDefault("mcleaks", true))
-            this.buttonList.add(new GuiButton(5, 5, j + 24 * 5 + 5, 90, 20, "MCLeaks"));
+            representedScreen.getButtonList().add(classProvider.createGuiButton(5, 5, j + 24 * 5 + 5, 90, 20, "MCLeaks"));
         if (GENERATORS.getOrDefault("thealtening", true))
-            this.buttonList.add(new GuiButton(9, 5, j + 24 * 6 + 5, 90, 20, "TheAltening"));
+            representedScreen.getButtonList().add(classProvider.createGuiButton(9, 5, j + 24 * 6 + 5, 90, 20, "TheAltening"));
 
-        this.buttonList.add(new GuiButton(10, 5, j + 24 * 7 + 5, 90, 20, "Session Login"));
-        this.buttonList.add(new GuiButton(11, 5, j + 24 * 8 + 10, 90, 20, "Cape"));
+        representedScreen.getButtonList().add(classProvider.createGuiButton(10, 5, j + 24 * 7 + 5, 90, 20, "Session Login"));
+        representedScreen.getButtonList().add(classProvider.createGuiButton(11, 5, j + 24 * 8 + 10, 90, 20, "Cape"));
 
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawBackground(0);
+        representedScreen.drawBackground(0);
 
-        altsList.drawScreen(mouseX, mouseY, partialTicks);
+        altsList.represented.drawScreen(mouseX, mouseY, partialTicks);
 
-        Fonts.font40.drawCenteredString("AltManager", width / 2.0f, 6, 0xffffff);
-        Fonts.font35.drawCenteredString(this.searchField.getText().isEmpty() ? (LiquidBounce.fileManager.accountsConfig.getAccounts().size() + " Alts") : this.altsList.accounts.size() + " Search Results", width / 2.0f, 18, 0xffffff);
-        Fonts.font35.drawCenteredString(status, width / 2.0f, 32, 0xffffff);
+        Fonts.font40.drawCenteredString("AltManager", representedScreen.getWidth() / 2.0f, 6, 0xffffff);
+        Fonts.font35.drawCenteredString(this.searchField.getText().isEmpty() ? (LiquidBounce.fileManager.accountsConfig.getAccounts().size() + " Alts") : this.altsList.accounts.size() + " Search Results", representedScreen.getWidth() / 2.0f, 18, 0xffffff);
+        Fonts.font35.drawCenteredString(status, representedScreen.getWidth() / 2.0f, 32, 0xffffff);
         Fonts.font35.drawStringWithShadow("§7User: §a" + (MCLeaks.isAltActive() ? MCLeaks.getSession().getUsername() : mc.getSession().getUsername()), 6, 6, 0xffffff);
         Fonts.font35.drawStringWithShadow("§7Type: §a" + (altService.getCurrentService() == AltService.EnumAltService.THEALTENING ? "TheAltening" : MCLeaks.isAltActive() ? "MCLeaks" : UserUtils.INSTANCE.isValidTokenOffline(mc.getSession().getToken()) ? "Premium" : "Cracked"), 6, 15, 0xffffff);
 
         this.searchField.drawTextBox();
 
         if (searchField.getText().isEmpty() && !searchField.isFocused())
-            drawString(Fonts.font40, "§7Search...", this.searchField.xPosition + 4, 17, 0xffffff);
+            Fonts.font40.drawStringWithShadow("§7Search...", this.searchField.getXPosition() + 4, 17, 0xffffff);
 
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
-        if (!button.enabled) return;
+    protected void actionPerformed(IGuiButton button) throws IOException {
+        if (!button.getEnabled())
+            return;
 
-        switch (button.id) {
+        switch (button.getId()) {
             case 0:
                 mc.displayGuiScreen(prevGui);
                 break;
             case 1:
-                mc.displayGuiScreen(new GuiAdd(this));
+                mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiAdd(this)));
                 break;
             case 2:
                 if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize()) {
@@ -201,14 +202,16 @@ public class GuiAltManager extends GuiScreen {
                 break;
             case 3:
                 if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize()) {
-                    loginButton.enabled = randomButton.enabled = false;
+                    loginButton.setEnabled(false);
+                    randomButton.setEnabled(false);
 
                     final Thread thread = new Thread(() -> {
                         final MinecraftAccount minecraftAccount = this.altsList.accounts.get(altsList.getSelectedSlot());
                         status = "§aLogging in...";
                         status = login(minecraftAccount);
 
-                        loginButton.enabled = randomButton.enabled = true;
+                        loginButton.setEnabled(true);
+                        randomButton.setEnabled(true);
                     }, "AltLogin");
                     thread.start();
                 } else
@@ -225,22 +228,24 @@ public class GuiAltManager extends GuiScreen {
                 if (randomInteger < altsList.getSize())
                     altsList.selectedSlot = randomInteger;
 
-                loginButton.enabled = randomButton.enabled = false;
+                loginButton.setEnabled(false);
+                randomButton.setEnabled(false);
 
                 final Thread thread = new Thread(() -> {
                     final MinecraftAccount minecraftAccount = this.altsList.accounts.get(randomInteger);
                     status = "§aLogging in...";
                     status = login(minecraftAccount);
 
-                    loginButton.enabled = randomButton.enabled = true;
+                    loginButton.setEnabled(true);
+                    randomButton.setEnabled(true);
                 }, "AltLogin");
                 thread.start();
                 break;
             case 5:
-                mc.displayGuiScreen(new GuiMCLeaks(this));
+                mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiMCLeaks(this)));
                 break;
             case 6:
-                mc.displayGuiScreen(new GuiDirectLogin(this));
+                mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiDirectLogin(this)));
                 break;
             case 7:
                 final File file = MiscUtils.openFileChooser();
@@ -283,16 +288,16 @@ public class GuiAltManager extends GuiScreen {
                     status = "§cSelect an account.";
                 break;
             case 88:
-                mc.displayGuiScreen(new GuiChangeName(this));
+                mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiChangeName(this)));
                 break;
             case 9:
-                mc.displayGuiScreen(new GuiTheAltening(this));
+                mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiTheAltening(this)));
                 break;
             case 10:
-                mc.displayGuiScreen(new GuiSessionLogin(this));
+                mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiSessionLogin(this)));
                 break;
             case 11:
-                mc.displayGuiScreen(new GuiDonatorCape(this));
+                mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiDonatorCape(this)));
                 break;
             case 12:
                 if (LiquidBounce.fileManager.accountsConfig.getAccounts().size() == 0) {
@@ -360,29 +365,30 @@ public class GuiAltManager extends GuiScreen {
                 break;
             }
             case Keyboard.KEY_NEXT: {
-                altsList.scrollBy(height - 100);
+                altsList.represented.scrollBy(representedScreen.getHeight() - 100);
                 break;
             }
             case Keyboard.KEY_PRIOR: {
-                altsList.scrollBy(-height + 100);
+                altsList.represented.scrollBy(-representedScreen.getHeight() + 100);
                 return;
             }
         }
 
-        super.keyTyped(typedChar, keyCode);
+        representedScreen.keyTyped(typedChar, keyCode);
     }
 
     @Override
     public void handleMouseInput() throws IOException {
-        super.handleMouseInput();
-        altsList.handleMouseInput();
+        representedScreen.handleMouseInput();
+
+        altsList.represented.handleMouseInput();
     }
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         searchField.mouseClicked(mouseX, mouseY, mouseButton);
 
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+        representedScreen.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
@@ -390,12 +396,12 @@ public class GuiAltManager extends GuiScreen {
         searchField.updateCursorCounter();
     }
 
-    private class GuiList extends GuiSlot {
+    private class GuiList extends WrappedGuiSlot {
         private List<MinecraftAccount> accounts;
         private int selectedSlot;
 
-        GuiList(GuiScreen prevGui) {
-            super(GuiAltManager.this.mc, prevGui.width, prevGui.height, 40, prevGui.height - 40, 30);
+        GuiList(IGuiScreen prevGui) {
+            super(mc, prevGui.getWidth(), prevGui.getHeight(), 40, prevGui.getHeight() - 40, 30);
 
             updateAccounts(null);
         }
@@ -444,15 +450,17 @@ public class GuiAltManager extends GuiScreen {
             selectedSlot = var1;
 
             if (doubleClick) {
-                if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize() && loginButton.enabled) {
-                    loginButton.enabled = randomButton.enabled = false;
+                if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize() && loginButton.getEnabled()) {
+                    loginButton.setEnabled(false);
+                    randomButton.setEnabled(false);
 
                     new Thread(() -> {
                         MinecraftAccount minecraftAccount = accounts.get(altsList.getSelectedSlot());
                         status = "§aLogging in...";
                         status = "§c" + login(minecraftAccount);
 
-                        loginButton.enabled = randomButton.enabled = true;
+                        loginButton.setEnabled(true);
+                        randomButton.setEnabled(true);
                     }, "AltManagerLogin").start();
                 } else
                     status = "§cSelect an account.";
@@ -462,8 +470,9 @@ public class GuiAltManager extends GuiScreen {
         @Override
         protected void drawSlot(int id, int x, int y, int var4, int var5, int var6) {
             final MinecraftAccount minecraftAccount = accounts.get(id);
-            Fonts.font40.drawCenteredString(minecraftAccount.getAccountName() == null ? minecraftAccount.getName() : minecraftAccount.getAccountName(), (width / 2), y + 2, Color.WHITE.getRGB(), true);
-            Fonts.font40.drawCenteredString(minecraftAccount.isCracked() ? "Cracked" : (minecraftAccount.getAccountName() == null ? "Premium" : minecraftAccount.getName()), (width / 2), y + 15, minecraftAccount.isCracked() ? Color.GRAY.getRGB() : (minecraftAccount.getAccountName() == null ? Color.GREEN.getRGB() : Color.LIGHT_GRAY.getRGB()), true);
+
+            Fonts.font40.drawCenteredString(minecraftAccount.getAccountName() == null ? minecraftAccount.getName() : minecraftAccount.getAccountName(), (representedScreen.getWidth() / 2), y + 2, Color.WHITE.getRGB(), true);
+            Fonts.font40.drawCenteredString(minecraftAccount.isCracked() ? "Cracked" : (minecraftAccount.getAccountName() == null ? "Premium" : minecraftAccount.getName()), (representedScreen.getWidth() / 2), y + 15, minecraftAccount.isCracked() ? Color.GRAY.getRGB() : (minecraftAccount.getAccountName() == null ? Color.GREEN.getRGB() : Color.LIGHT_GRAY.getRGB()), true);
         }
 
         @Override

@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumFacing
 import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MoveEvent
@@ -42,11 +41,13 @@ class FastClimb : Module() {
                 var x = 0.0
                 var z = 0.0
 
-                when (thePlayer.horizontalFacing) {
-                    WEnumFacing.NORTH -> z = -0.99
-                    WEnumFacing.EAST -> x = +0.99
-                    WEnumFacing.SOUTH -> z = +0.99
-                    WEnumFacing.WEST -> x = -0.99
+                val horizontalFacing = thePlayer.horizontalFacing
+
+                when {
+                    horizontalFacing.isNorth() -> z = -0.99
+                    horizontalFacing.isEast() -> x = +0.99
+                    horizontalFacing.isSouth() -> z = +0.99
+                    horizontalFacing.isWest() -> x = -0.99
                     else -> {
                     }
                 }
@@ -91,11 +92,13 @@ class FastClimb : Module() {
                     if (!classProvider.isBlockLadder(block)) {
                         var x = 0.0
                         var z = 0.0
-                        when (thePlayer.horizontalFacing) {
-                            WEnumFacing.NORTH -> z = -1.0
-                            WEnumFacing.EAST -> x = +1.0
-                            WEnumFacing.SOUTH -> z = +1.0
-                            WEnumFacing.WEST -> x = -1.0
+                        val horizontalFacing = thePlayer.horizontalFacing
+
+                        when {
+                            horizontalFacing.isNorth() -> z = -1.0
+                            horizontalFacing.isEast() -> x = +1.0
+                            horizontalFacing.isSouth() -> z = +1.0
+                            horizontalFacing.isWest() -> x = -1.0
                             else -> {
                             }
                         }

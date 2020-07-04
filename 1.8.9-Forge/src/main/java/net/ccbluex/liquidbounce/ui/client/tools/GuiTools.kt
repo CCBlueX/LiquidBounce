@@ -5,28 +5,29 @@
  */
 package net.ccbluex.liquidbounce.ui.client.tools
 
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
+import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.minecraft.client.gui.GuiButton
-import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
 
-class GuiTools(private val prevGui: GuiScreen) : GuiScreen() {
+class GuiTools(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
     override fun initGui() {
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 4 + 48 + 25, "Port Scanner"))
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 48 + 25 * 2 + 5, "Back"))
+        representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 48 + 25, "Port Scanner"))
+        representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 - 100, representedScreen.height / 4 + 48 + 25 * 2 + 5, "Back"))
     }
 
-    override fun actionPerformed(button: GuiButton) {
+    override fun actionPerformed(button: IGuiButton) {
         when (button.id) {
-            1 -> mc.displayGuiScreen(GuiPortScanner(this))
+            1 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiPortScanner(this.representedScreen)))
             0 -> mc.displayGuiScreen(prevGui)
         }
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        drawBackground(0)
-        Fonts.fontBold180.drawCenteredString("Tools", width / 2F, height / 8F + 5F, 4673984, true)
+        representedScreen.drawBackground(0)
+        Fonts.fontBold180.drawCenteredString("Tools", representedScreen.width / 2F, representedScreen.height / 8F + 5F, 4673984, true)
 
         super.drawScreen(mouseX, mouseY, partialTicks)
     }

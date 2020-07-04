@@ -5,17 +5,15 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.client.renderer.OpenGlHelper
-import net.minecraft.client.renderer.RenderHelper
-import net.minecraft.entity.EntityLivingBase
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL12
 import kotlin.math.abs
 import kotlin.math.atan
 
@@ -41,7 +39,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
      */
     override fun drawElement(): Border {
         val yaw = when (yawMode.get().toLowerCase()) {
-            "player" -> mc.thePlayer.rotationYaw
+            "player" -> mc.thePlayer!!.rotationYaw
             "animation" -> {
                 val delta = RenderUtils.deltaTime
 
@@ -68,14 +66,14 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
         }
 
         var pitch = when (pitchMode.get().toLowerCase()) {
-            "player" -> mc.thePlayer.rotationPitch
+            "player" -> mc.thePlayer!!.rotationPitch
             "custom" -> customPitch.get()
             else -> 0F
         }
 
         pitch = if (pitch > 0) -pitch else abs(pitch)
 
-        drawEntityOnScreen(yaw, pitch, mc.thePlayer)
+        drawEntityOnScreen(yaw, pitch, mc.thePlayer!!)
 
         return Border(30F, 10F, -30F, -100F)
     }
@@ -83,14 +81,14 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
     /**
      * Draw [entityLivingBase] to screen
      */
-    private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: EntityLivingBase) {
-        GlStateManager.resetColor()
+    private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: IEntityLivingBase) {
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
         GL11.glColor4f(1F, 1F, 1F, 1F)
-        GlStateManager.enableColorMaterial()
-        GlStateManager.pushMatrix()
-        GlStateManager.translate(0F, 0F, 50F)
-        GlStateManager.scale(-50F, 50F, 50F)
-        GlStateManager.rotate(180F, 0F, 0F, 1F)
+        GL11.glEnable(GL11.GL_COLOR_MATERIAL)
+        GL11.glPushMatrix()
+        GL11.glTranslatef(0F, 0F, 50F)
+        GL11.glTranslatef(-50F, 50F, 50F)
+        GL11.glRotatef(180F, 0F, 0F, 1F)
 
         val renderYawOffset = entityLivingBase.renderYawOffset
         val rotationYaw = entityLivingBase.rotationYaw
@@ -98,10 +96,10 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
         val prevRotationYawHead = entityLivingBase.prevRotationYawHead
         val rotationYawHead = entityLivingBase.rotationYawHead
 
-        GlStateManager.rotate(135F, 0F, 1F, 0F)
-        RenderHelper.enableStandardItemLighting()
-        GlStateManager.rotate(-135F, 0F, 1F, 0F)
-        GlStateManager.rotate(-atan(pitch / 40F) * 20.0F, 1F, 0F, 0F)
+        GL11.glRotatef(135F, 0F, 1F, 0F)
+        functions.enableStandardItemLighting()
+        GL11.glRotatef(-135F, 0F, 1F, 0F)
+        GL11.glRotatef(-atan(pitch / 40F) * 20.0F, 1F, 0F, 0F)
 
         entityLivingBase.renderYawOffset = atan(yaw / 40F) * 20F
         entityLivingBase.rotationYaw = atan(yaw / 40F) * 40F
@@ -109,7 +107,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
         entityLivingBase.rotationYawHead = entityLivingBase.rotationYaw
         entityLivingBase.prevRotationYawHead = entityLivingBase.rotationYaw
 
-        GlStateManager.translate(0F, 0F, 0F)
+        GL11.glTranslatef(0F, 0F, 0F)
 
         val renderManager = mc.renderManager
         renderManager.setPlayerViewY(180F)
@@ -123,12 +121,13 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
         entityLivingBase.prevRotationYawHead = prevRotationYawHead
         entityLivingBase.rotationYawHead = rotationYawHead
 
-        GlStateManager.popMatrix()
-        RenderHelper.disableStandardItemLighting()
-        GlStateManager.disableRescaleNormal()
-        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
-        GlStateManager.disableTexture2D()
-        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
-        GlStateManager.resetColor()
+        GL11.glPopMatrix()
+        functions.disableStandardItemLighting()
+        GL11.glDisable(GL12.GL_RESCALE_NORMAL)
+//        functions.
+//        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
+        GL11.glDisable(GL11.GL_TEXTURE_2D)
+//        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUn+it)
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
     }
 }

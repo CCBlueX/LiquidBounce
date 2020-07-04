@@ -15,8 +15,10 @@ import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IPlayerControll
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.network.IINetHandlerPlayClient
+import net.ccbluex.liquidbounce.api.minecraft.client.render.entity.IRenderItem
 import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.ITextureManager
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IEntityRenderer
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IRenderGlobal
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
 import net.ccbluex.liquidbounce.api.minecraft.renderer.entity.IRenderManager
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
@@ -24,16 +26,21 @@ import net.ccbluex.liquidbounce.api.minecraft.util.ISession
 import net.ccbluex.liquidbounce.api.minecraft.util.ITimer
 
 interface IMinecraft {
+    val debugFPS: Int
+    val renderGlobal: IRenderGlobal
+    val renderItem: IRenderItem
+    val displayWidth: Int
+    val displayHeight: Int
     val entityRenderer: IEntityRenderer
     var rightClickDelayTimer: Int
-    val session: ISession
+    var session: ISession
     val soundHandler: ISoundHandler
     val objectMouseOver: IMovingObjectPosition?
     val timer: ITimer
     val renderManager: IRenderManager
     val playerController: IPlayerControllerMP
     val currentScreen: IGuiScreen?
-    val renderViewEntity: IEntity?
+    var renderViewEntity: IEntity?
     val netHandler: IINetHandlerPlayClient
     val theWorld: IWorldClient?
     val thePlayer: IEntityPlayerSP?
@@ -45,4 +52,5 @@ interface IMinecraft {
 
     fun displayGuiScreen(screen: IGuiScreen?)
     fun rightClickMouse()
+    fun shutdown()
 }

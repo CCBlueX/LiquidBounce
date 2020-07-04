@@ -8,4 +8,6 @@ package net.ccbluex.liquidbounce.api.minecraft.enchantments
 
 interface IEnchantment {
     val effectId: Short
+
+    fun getTranslatedName(level: Int): String
 }

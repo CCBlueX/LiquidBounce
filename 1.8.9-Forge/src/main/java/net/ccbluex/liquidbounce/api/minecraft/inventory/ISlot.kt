@@ -9,5 +9,6 @@ package net.ccbluex.liquidbounce.api.minecraft.inventory
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 
 interface ISlot {
-    fun getStack(): IItemStack?
+    val slotNumber: Int
+    val stack: IItemStack?
 }

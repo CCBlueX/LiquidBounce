@@ -5,20 +5,15 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud
 
-import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.*
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Target
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.client.gui.ScaledResolution
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.opengl.GL11
 import kotlin.math.max
 import kotlin.math.min
 
-@SideOnly(Side.CLIENT)
 open class HUD : MinecraftInstance() {
 
     val elements = mutableListOf<Element>()
@@ -124,10 +119,10 @@ open class HUD : MinecraftInstance() {
      * Handle mouse move
      */
     fun handleMouseMove(mouseX: Int, mouseY: Int) {
-        if (mc.currentScreen !is GuiHudDesigner)
+        if (!classProvider.isGuiHudDesigner(mc.currentScreen))
             return
 
-        val scaledResolution = ScaledResolution(mc)
+        val scaledResolution = classProvider.createScaledResolution(mc)
 
         for (element in elements) {
             val scaledX = mouseX / element.scale

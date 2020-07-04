@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
+import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumFacing
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -23,7 +23,7 @@ import java.awt.Color
 class CivBreak : Module() {
 
     private var blockPos: WBlockPos? = null
-    private var enumFacing: WEnumFacing? = null
+    private var enumFacing: IEnumFacing? = null
 
     private val range = FloatValue("Range", 5F, 1F, 6F)
     private val rotationsValue = BoolValue("Rotations", true)
@@ -35,7 +35,7 @@ class CivBreak : Module() {
 
     @EventTarget
     fun onBlockClick(event: ClickBlockEvent) {
-        if (classProvider.isBlockBedrock(BlockUtils.getBlock(event.clickedBlock)))
+        if (classProvider.isBlockBedrock(event.clickedBlock?.let { BlockUtils.getBlock(it) }))
             return
 
         blockPos = event.clickedBlock ?: return
@@ -65,7 +65,7 @@ class CivBreak : Module() {
 
             EventState.POST -> {
                 if (visualSwingValue.get())
-                    mc.thePlayer.swingItem()
+                    mc.thePlayer!!.swingItem()
                 else
                     mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
 

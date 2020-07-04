@@ -69,7 +69,7 @@ object CapeAPI : MinecraftInstance() {
         val capeInfo = CapeInfo(resourceLocation)
         val threadDownloadImageData = LiquidBounce.wrapper.classProvider.createThreadDownloadImageData(null, url, null, object : WIImageBuffer {
 
-            override fun parseUserSkin(image: BufferedImage): BufferedImage {
+            override fun parseUserSkin(image: BufferedImage?): BufferedImage? {
                 return image
             }
 

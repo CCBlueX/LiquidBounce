@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack.Companion.isSplash
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketClientStatus
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.event.EventState.POST
@@ -112,7 +113,7 @@ class AutoPot : Module() {
 
                     if (itemStack != null) {
                         mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(itemStack))
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.getCurrentItemInHand))
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
                         msTimer.reset()
                     }
@@ -129,10 +130,10 @@ class AutoPot : Module() {
         for (i in startSlot until endSlot) {
             val stack = thePlayer.inventory.getStackInSlot(i)
 
-            if (stack == null || !classProvider.isItemPotion(stack.item) || (stack.itemDamage and 16384) == 0)
+            if (stack == null || !classProvider.isItemPotion(stack.item) || stack.isSplash())
                 continue
 
-            val itemPotion = stack.item.asItemPotion()
+            val itemPotion = stack.item!!.asItemPotion()
 
             for (potionEffect in itemPotion.getEffects(stack))
                 if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.HEAL).id)

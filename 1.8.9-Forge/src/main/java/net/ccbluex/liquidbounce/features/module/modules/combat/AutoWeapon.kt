@@ -54,7 +54,7 @@ class AutoWeapon : Module() {
                                 ?: 0.0) + 1.25 * ItemUtils.getEnchantment(it.second, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
                     } ?: return
 
-            if (slot == thePlayer.inventory.getCurrentItemInHand) // If in hand no need to swap
+            if (slot == thePlayer.inventory.currentItem) // If in hand no need to swap
                 return
 
             // Switch to best weapon
@@ -77,7 +77,7 @@ class AutoWeapon : Module() {
         // Switch back to old item after some time
         if (spoofedSlot > 0) {
             if (spoofedSlot == 1)
-                mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(mc.thePlayer!!.inventory.getCurrentItemInHand))
+                mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(mc.thePlayer!!.inventory.currentItem))
             spoofedSlot--
         }
     }

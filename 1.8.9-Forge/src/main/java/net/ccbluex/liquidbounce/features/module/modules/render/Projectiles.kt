@@ -5,6 +5,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.api.enums.MaterialType
+import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack.Companion.isSplash
+import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
+import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -15,16 +22,14 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.material.Material
-import net.minecraft.client.renderer.Tessellator
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
-import net.minecraft.entity.Entity
-import net.minecraft.item.*
-import net.minecraft.util.*
 import org.lwjgl.opengl.GL11
 import org.lwjgl.util.glu.Cylinder
 import org.lwjgl.util.glu.GLU
 import java.awt.Color
+import kotlin.math.cos
+import kotlin.math.floor
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 @ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land.", category = ModuleCategory.RENDER)
 class Projectiles : Module() {
@@ -36,9 +41,12 @@ class Projectiles : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        mc.thePlayer.heldItem ?: return
+        val thePlayer = mc.thePlayer ?: return
+        val theWorld = mc.theWorld ?: return
 
-        val item = mc.thePlayer.heldItem.item
+        val heldItem = thePlayer.heldItem ?: return
+
+        val item = heldItem.item
         val renderManager = mc.renderManager
         var isBow = false
         var motionFactor = 1.5F
@@ -47,8 +55,8 @@ class Projectiles : Module() {
         val size: Float
 
         // Check items
-        if (item is ItemBow) {
-            if (!mc.thePlayer.isUsingItem)
+        if (classProvider.isItemBow(item)) {
+            if (!thePlayer.isUsingItem)
                 return
 
             isBow = true
@@ -56,7 +64,7 @@ class Projectiles : Module() {
             size = 0.3F
 
             // Calculate power of bow
-            var power = mc.thePlayer.itemInUseDuration / 20f
+            var power = thePlayer.itemInUseDuration / 20f
             power = (power * power + power * 2F) / 3F
             if (power < 0.1F)
                 return
@@ -65,16 +73,16 @@ class Projectiles : Module() {
                 power = 1F
 
             motionFactor = power * 3F
-        } else if (item is ItemFishingRod) {
+        } else if (classProvider.isItemFishingRod(item)) {
             gravity = 0.04F
             size = 0.25F
             motionSlowdown = 0.92F
-        } else if (item is ItemPotion && ItemPotion.isSplash(mc.thePlayer.heldItem.itemDamage)) {
+        } else if (classProvider.isItemPotion(item) && heldItem.isSplash()) {
             gravity = 0.05F
             size = 0.25F
             motionFactor = 0.5F
         } else {
-            if (item !is ItemSnowball && item !is ItemEnderPearl && item !is ItemEgg)
+            if (!classProvider.isItemSnowball(item) && !classProvider.isItemEnderPearl(item) && !classProvider.isItemEgg(item))
                 return
 
             gravity = 0.03F
@@ -85,30 +93,30 @@ class Projectiles : Module() {
         val yaw = if (RotationUtils.targetRotation != null)
             RotationUtils.targetRotation.yaw
         else
-            mc.thePlayer.rotationYaw
+            thePlayer.rotationYaw
 
         val pitch = if (RotationUtils.targetRotation != null)
             RotationUtils.targetRotation.pitch
         else
-            mc.thePlayer.rotationPitch
+            thePlayer.rotationPitch
 
         val yawRadians = yaw / 180f * Math.PI.toFloat()
         val pitchRadians = pitch / 180f * Math.PI.toFloat()
 
         // Positions
-        var posX = renderManager.renderPosX - MathHelper.cos(yawRadians) * 0.16F
-        var posY = renderManager.renderPosY + mc.thePlayer.getEyeHeight() - 0.10000000149011612
-        var posZ = renderManager.renderPosZ - MathHelper.sin(yawRadians) * 0.16F
+        var posX = renderManager.renderPosX - cos(yawRadians) * 0.16F
+        var posY = renderManager.renderPosY + thePlayer.eyeHeight - 0.10000000149011612
+        var posZ = renderManager.renderPosZ - sin(yawRadians) * 0.16F
 
         // Motions
-        var motionX = (-MathHelper.sin(yawRadians) * MathHelper.cos(pitchRadians)
+        var motionX = (-sin(yawRadians) * cos(pitchRadians)
                 * if (isBow) 1.0 else 0.4)
-        var motionY = -MathHelper.sin((pitch +
-                if (item is ItemPotion && ItemPotion.isSplash(mc.thePlayer.heldItem.itemDamage)) -20 else 0)
+        var motionY = -sin((pitch +
+                if (classProvider.isItemPotion(item) && heldItem.isSplash()) -20 else 0)
                 / 180f * 3.1415927f) * if (isBow) 1.0 else 0.4
-        var motionZ = (MathHelper.cos(yawRadians) * MathHelper.cos(pitchRadians)
+        var motionZ = (cos(yawRadians) * cos(pitchRadians)
                 * if (isBow) 1.0 else 0.4)
-        val distance = MathHelper.sqrt_double(motionX * motionX + motionY * motionY + motionZ * motionZ)
+        val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
 
         motionX /= distance
         motionY /= distance
@@ -118,11 +126,11 @@ class Projectiles : Module() {
         motionZ *= motionFactor
 
         // Landing
-        var landingPosition: MovingObjectPosition? = null
+        var landingPosition: IMovingObjectPosition? = null
         var hasLanded = false
         var hitEntity = false
 
-        val tessellator = Tessellator.getInstance()
+        val tessellator = classProvider.tessellatorInstance
         val worldRenderer = tessellator.worldRenderer
 
         // Start drawing of path
@@ -144,46 +152,47 @@ class Projectiles : Module() {
         }
         GL11.glLineWidth(2f)
 
-        worldRenderer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION)
+        worldRenderer.begin(GL11.GL_LINE_STRIP, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
 
         while (!hasLanded && posY > 0.0) {
             // Set pos before and after
-            var posBefore = Vec3(posX, posY, posZ)
-            var posAfter = Vec3(posX + motionX, posY + motionY, posZ + motionZ)
+            var posBefore = WVec3(posX, posY, posZ)
+            var posAfter = WVec3(posX + motionX, posY + motionY, posZ + motionZ)
 
             // Get landing position
-            landingPosition = mc.theWorld.rayTraceBlocks(posBefore, posAfter, false,
-                    true, false)
+            landingPosition = theWorld.rayTraceBlocks(posBefore, posAfter, stopOnLiquid = false,
+                    ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
 
             // Set pos before and after
-            posBefore = Vec3(posX, posY, posZ)
-            posAfter = Vec3(posX + motionX, posY + motionY, posZ + motionZ)
+            posBefore = WVec3(posX, posY, posZ)
+            posAfter = WVec3(posX + motionX, posY + motionY, posZ + motionZ)
 
             // Check if arrow is landing
             if (landingPosition != null) {
                 hasLanded = true
-                posAfter = Vec3(landingPosition.hitVec.xCoord, landingPosition.hitVec.yCoord, landingPosition.hitVec.zCoord)
+                posAfter = WVec3(landingPosition.hitVec.xCoord, landingPosition.hitVec.yCoord, landingPosition.hitVec.zCoord)
             }
 
             // Set arrow box
-            val arrowBox = AxisAlignedBB(posX - size, posY - size, posZ - size, posX + size,
+            val arrowBox = classProvider.createAxisAlignedBB(posX - size, posY - size, posZ - size, posX + size,
                     posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
 
-            val chunkMinX = MathHelper.floor_double((arrowBox.minX - 2.0) / 16.0)
-            val chunkMaxX = MathHelper.floor_double((arrowBox.maxX + 2.0) / 16.0)
-            val chunkMinZ = MathHelper.floor_double((arrowBox.minZ - 2.0) / 16.0)
-            val chunkMaxZ = MathHelper.floor_double((arrowBox.maxZ + 2.0) / 16.0)
+            val chunkMinX = floor((arrowBox.minX - 2.0) / 16.0).toInt()
+            val chunkMaxX = floor((arrowBox.maxX + 2.0) / 16.0).toInt()
+            val chunkMinZ = floor((arrowBox.minZ - 2.0) / 16.0).toInt()
+            val chunkMaxZ = floor((arrowBox.maxZ + 2.0) / 16.0).toInt()
 
             // Check which entities colliding with the arrow
-            val collidedEntities = mutableListOf<Entity>()
+            val collidedEntities = mutableListOf<IEntity>()
+
             for (x in chunkMinX..chunkMaxX)
                 for (z in chunkMinZ..chunkMaxZ)
-                    mc.theWorld.getChunkFromChunkCoords(x, z)
-                            .getEntitiesWithinAABBForEntity(mc.thePlayer, arrowBox, collidedEntities, null)
+                    theWorld.getChunkFromChunkCoords(x, z)
+                            .getEntitiesWithinAABBForEntity(thePlayer, arrowBox, collidedEntities, null)
 
             // Check all possible entities
             for (possibleEntity in collidedEntities) {
-                if (possibleEntity.canBeCollidedWith() && possibleEntity !== mc.thePlayer) {
+                if (possibleEntity.canBeCollidedWith() && possibleEntity !== thePlayer) {
                     val possibleEntityBoundingBox = possibleEntity.entityBoundingBox
                             .expand(size.toDouble(), size.toDouble(), size.toDouble())
 
@@ -202,7 +211,7 @@ class Projectiles : Module() {
             posZ += motionZ
 
             // Check is next position water
-            if (mc.theWorld.getBlockState(BlockPos(posX, posY, posZ)).block.material === Material.water) {
+            if (theWorld.getBlockState(WBlockPos(posX, posY, posZ)).block.material == classProvider.getMaterialEnum(MaterialType.WATER)) {
                 // Update motion
                 motionX *= 0.6
                 motionY *= 0.6
@@ -228,7 +237,7 @@ class Projectiles : Module() {
 
         if (landingPosition != null) {
             // Switch rotation of hit cylinder of the hit axis
-            when (landingPosition.sideHit.axis.ordinal) {
+            when (landingPosition.sideHit!!.axisOrdinal) {
                 0 -> GL11.glRotatef(90F, 0F, 0F, 1F)
                 2 -> GL11.glRotatef(90F, 1F, 0F, 0F)
             }

@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -20,9 +21,6 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
-import net.minecraft.client.renderer.GlStateManager.*
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.entity.player.EntityPlayer
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.roundToInt
@@ -34,7 +32,7 @@ class NameTags : Module() {
     private val distanceValue = BoolValue("Distance", false)
     private val armorValue = BoolValue("Armor", true)
     private val clearNamesValue = BoolValue("ClearNames", false)
-    private val fontValue = FontValue("Font", Fonts.font40)
+    private val fontValue = FontValue("Font", Fonts.font40!!)
     private val borderValue = BoolValue("Border", true)
     private val scaleValue = FloatValue("Scale", 1F, 1F, 4F)
 
@@ -53,15 +51,15 @@ class NameTags : Module() {
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        for (entity in mc.theWorld.loadedEntityList) {
+        for (entity in mc.theWorld!!.loadedEntityList) {
             if (!EntityUtils.isSelected(entity, false))
                 continue
 
-            renderNameTag(entity as EntityLivingBase,
+            renderNameTag(entity.asEntityLivingBase(),
                     if (clearNamesValue.get())
-                        ColorUtils.stripColor(entity.getDisplayName().unformattedText) ?: continue
+                        ColorUtils.stripColor(entity.displayName?.unformattedText) ?: continue
                     else
-                        entity.getDisplayName().unformattedText
+                        (entity.displayName ?: continue).unformattedText
             )
         }
 
@@ -69,20 +67,21 @@ class NameTags : Module() {
         glPopAttrib()
 
         // Reset color
-        resetColor()
         glColor4f(1F, 1F, 1F, 1F)
     }
 
-    private fun renderNameTag(entity: EntityLivingBase, tag: String) {
+    private fun renderNameTag(entity: IEntityLivingBase, tag: String) {
+        val thePlayer = mc.thePlayer ?: return
+
         val fontRenderer = fontValue.get()
 
         // Modify tag
         val bot = AntiBot.isBot(entity)
-        val nameColor = if (bot) "§3" else if (entity.isInvisible) "§6" else if (entity.isSneaking) "§4" else "§7"
-        val ping = if (entity is EntityPlayer) EntityUtils.getPing(entity) else 0
+        val nameColor = if (bot) "§3" else if (entity.invisible) "§6" else if (entity.sneaking) "§4" else "§7"
+        val ping = if (classProvider.isEntityPlayer(entity)) EntityUtils.getPing(entity.asEntityPlayer()) else 0
 
-        val distanceText = if (distanceValue.get()) "§7${mc.thePlayer.getDistanceToEntity(entity).roundToInt()}m " else ""
-        val pingText = if (pingValue.get() && entity is EntityPlayer) (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms §7" else ""
+        val distanceText = if (distanceValue.get()) "§7${thePlayer.getDistanceToEntity(entity).roundToInt()}m " else ""
+        val pingText = if (pingValue.get() && classProvider.isEntityPlayer(entity)) (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms §7" else ""
         val healthText = if (healthValue.get()) "§7§c " + entity.health.toInt() + " HP" else ""
         val botText = if (bot) " §c§lBot" else ""
 
@@ -107,7 +106,7 @@ class NameTags : Module() {
 
 
         // Scale
-        var distance = mc.thePlayer.getDistanceToEntity(entity) * 0.25f
+        var distance = thePlayer.getDistanceToEntity(entity) * 0.25f
 
         if (distance < 1F)
             distance = 1F
@@ -125,9 +124,9 @@ class NameTags : Module() {
         glEnable(GL_BLEND)
 
         if (borderValue.get())
-            quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F, 2F, Color(255, 255, 255, 90).rgb, Integer.MIN_VALUE)
+            quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.fontHeight + 2F, 2F, Color(255, 255, 255, 90).rgb, Integer.MIN_VALUE)
         else
-            quickDrawRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F, Integer.MIN_VALUE)
+            quickDrawRect(-width - 2F, -2F, width + 4F, fontRenderer.fontHeight + 2F, Integer.MIN_VALUE)
 
         glEnable(GL_TEXTURE_2D)
 
@@ -136,18 +135,18 @@ class NameTags : Module() {
 
         AWTFontRenderer.assumeNonVolatile = false
 
-        if (armorValue.get() && entity is EntityPlayer) {
-            for (index in 0..4) {
-                if (entity.getEquipmentInSlot(index) == null)
-                    continue
+        if (armorValue.get() && classProvider.isEntityPlayer(entity)) {
+            mc.renderItem.zLevel = -147F
 
-                mc.renderItem.zLevel = -147F
-                mc.renderItem.renderItemAndEffectIntoGUI(entity.getEquipmentInSlot(index), -50 + index * 20, -22)
+            for (index in 0..4) {
+                val equipmentInSlot = entity.getEquipmentInSlot(index) ?: continue
+
+                mc.renderItem.renderItemAndEffectIntoGUI(equipmentInSlot, -50 + index * 20, -22)
             }
 
-            enableAlpha()
-            disableBlend()
-            enableTexture2D()
+            glEnable(GL_ALPHA_TEST)
+            glDisable(GL_BLEND)
+            glEnable(GL_TEXTURE_2D)
         }
 
         // Pop

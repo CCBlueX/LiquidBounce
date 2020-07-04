@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.login.UserUtils.getUUID
-import net.minecraft.util.Session
 import java.net.Proxy
 import java.util.*
 
@@ -30,7 +29,7 @@ object LoginUtils : MinecraftInstance() {
 
         return try {
             userAuthentication.logIn()
-            mc.session = Session(userAuthentication.selectedProfile.name,
+            mc.session = classProvider.createSession(userAuthentication.selectedProfile.name,
                     userAuthentication.selectedProfile.id.toString(), userAuthentication.authenticatedToken, "mojang")
             LiquidBounce.eventManager.callEvent(SessionEvent())
             LoginResult.LOGGED
@@ -50,7 +49,7 @@ object LoginUtils : MinecraftInstance() {
 
     @JvmStatic
     fun loginCracked(username: String?) {
-        mc.session = Session(username, getUUID(username!!), "-", "legacy")
+        mc.session = classProvider.createSession(username!!, getUUID(username), "-", "legacy")
         LiquidBounce.eventManager.callEvent(SessionEvent())
     }
 
@@ -76,7 +75,7 @@ object LoginUtils : MinecraftInstance() {
 
         val username = UserUtils.getUsername(uuid) ?: return LoginResult.INVALID_ACCOUNT_DATA
 
-        mc.session = Session(username, uuid, accessToken, "mojang")
+        mc.session = classProvider.createSession(username, uuid, accessToken, "mojang")
         LiquidBounce.eventManager.callEvent(SessionEvent())
 
         return LoginResult.LOGGED

@@ -5,13 +5,12 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
+import net.ccbluex.liquidbounce.api.enums.MaterialType
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.material.Material
-import net.minecraft.client.renderer.GlStateManager
 import org.lwjgl.opengl.GL11
 
 /**
@@ -33,7 +32,7 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
             GL11.glPushMatrix()
 
             val renderItem = mc.renderItem
-            val isInsideWater = mc.thePlayer.isInsideOfMaterial(Material.water)
+            val isInsideWater = mc.thePlayer!!.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.WATER))
 
             var x = 1
             var y = if (isInsideWater) -10 else 0
@@ -41,7 +40,7 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
             val mode = modeValue.get()
 
             for (index in 3 downTo 0) {
-                val stack = mc.thePlayer.inventory.armorInventory[index] ?: continue
+                val stack = mc.thePlayer!!.inventory.armorInventory[index] ?: continue
 
                 renderItem.renderItemIntoGUI(stack, x, y)
                 renderItem.renderItemOverlays(mc.fontRendererObj, stack, x, y)
@@ -51,10 +50,10 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
                     y += 18
             }
 
-            GlStateManager.enableAlpha()
-            GlStateManager.disableBlend()
-            GlStateManager.disableLighting()
-            GlStateManager.disableCull()
+            GL11.glEnable(GL11.GL_ALPHA)
+            GL11.glDisable(GL11.GL_BLEND)
+            GL11.glDisable(GL11.GL_LIGHTING)
+            GL11.glDisable(GL11.GL_CULL_FACE)
             GL11.glPopMatrix()
         }
 

@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
 
-class VClipCommand : Command("vclip", emptyArray()) {
+class VClipCommand : Command("vclip") {
     /**
      * Execute commands with provided [args]
      */
@@ -15,7 +15,9 @@ class VClipCommand : Command("vclip", emptyArray()) {
         if (args.size > 1) {
             try {
                 val y = args[1].toDouble()
-                val entity = if(mc.thePlayer.isRiding) mc.thePlayer.ridingEntity else mc.thePlayer
+                val thePlayer = mc.thePlayer ?: return
+
+                val entity = if (thePlayer.isRiding) thePlayer.ridingEntity!! else thePlayer
 
                 entity.setPosition(entity.posX, entity.posY + y, entity.posZ)
                 chat("You were teleported.")

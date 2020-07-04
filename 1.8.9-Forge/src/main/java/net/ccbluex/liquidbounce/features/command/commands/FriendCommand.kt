@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 
-class FriendCommand : Command("friend", arrayOf("friends")) {
+class FriendCommand : Command("friend", "friends") {
     /**
      * Execute commands with provided [args]
      */
@@ -86,9 +86,9 @@ class FriendCommand : Command("friend", arrayOf("friends")) {
             2 -> {
                 when (args[0].toLowerCase()) {
                     "add" -> {
-                        return mc.theWorld.playerEntities
-                            .map { it.name }
-                            .filter { it.startsWith(args[1], true) }
+                        return mc.theWorld!!.playerEntities
+                                .filter { (it.name?.startsWith(args[1], true) ?: false) }
+                                .map { it.name!! }
                     }
                     "remove" -> {
                         return LiquidBounce.fileManager.friendsConfig.friends

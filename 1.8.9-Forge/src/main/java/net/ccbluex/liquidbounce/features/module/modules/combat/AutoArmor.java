@@ -112,7 +112,7 @@ public class AutoArmor extends Module {
         if (!isArmorSlot && item < 9 && hotbarValue.get() && !classProvider.isGuiInventory(mc.getCurrentScreen())) {
             mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(item));
             mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(mc.getThePlayer().getInventory().getStackInSlot(item)));
-            mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(mc.getThePlayer().getInventory().getCurrentItemInHand()));
+            mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(mc.getThePlayer().getInventory().getCurrentItem()));
 
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 

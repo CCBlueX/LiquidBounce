@@ -15,29 +15,33 @@ import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityOtherPlayerMP
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.render.ITessellator
 import net.ccbluex.liquidbounce.api.minecraft.client.render.IThreadDownloadImageData
 import net.ccbluex.liquidbounce.api.minecraft.client.render.WIImageBuffer
+import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.IDynamicTexture
 import net.ccbluex.liquidbounce.api.minecraft.client.render.vertex.IVertexFormat
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexBuffer
+import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
 import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.nbt.IJsonToNBT
-import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagCompound
-import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagList
-import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagString
+import net.ccbluex.liquidbounce.api.minecraft.nbt.*
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
+import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.stats.IStatList
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
+import java.awt.image.BufferedImage
 import java.io.File
 
 interface IClassProvider {
@@ -49,28 +53,42 @@ interface IClassProvider {
     fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer
     fun createChatComponentText(text: String): IIChatComponent
     fun createClickEvent(action: IClickEvent.WAction, value: String): IClickEvent
+    fun createGuiTextField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField
+    fun createGuiPasswordField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField
+    fun createGuiButton(id: Int, x: Int, y: Int, width: Int, height: Int, text: String): IGuiButton
+    fun createGuiButton(id: Int, x: Int, y: Int, text: String): IGuiButton
+    fun createSession(name: String, uuid: String, accessToken: String, accountType: String): ISession
+    fun createDynamicTexture(image: BufferedImage): IDynamicTexture
 
     fun createItem(): IItem
     fun createItemStack(item: IItem, amount: Int, meta: Int): IItemStack
     fun createItemStack(item: IItem): IItemStack
+    fun createItemStack(blockEnum: IBlock): IItemStack
     fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB
     fun createScaledResolution(mc: IMinecraft): IScaledResolution
     fun createNBTTagCompound(): INBTTagCompound
     fun createNBTTagList(): INBTTagList
     fun createNBTTagString(string: String): INBTTagString
+    fun createNBTTagDouble(value: Double): INBTTagDouble
     fun createEntityOtherPlayerMP(world: IWorldClient, GameProfile: GameProfile): IEntityOtherPlayerMP
+    fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect
+    fun createGuiOptions(parentScreen: IGuiScreen, gameSettings: IGameSettings): IGuiScreen
+    fun createGuiSelectWorld(parentScreen: IGuiScreen): IGuiScreen
+    fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen
+    fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen
 
     fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange
     fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement
     fun createCPacketPlayerBlockPlacement(positionIn: WBlockPos, placedBlockDirectionIn: Int, stackIn: IItemStack?, facingXIn: Float, facingYIn: Float, facingZIn: Float): ICPacketPlayerBlockPlacement
     fun createCPacketPlayerPosLook(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayerPosLook
     fun createCPacketClientStatus(state: ICPacketClientStatus.WEnumState): ICPacketClientStatus
-    fun createCPacketPlayerDigging(wAction: ICPacketPlayerDigging.WAction, pos: WBlockPos, facing: WEnumFacing): ICPacketPlayerDigging
+    fun createCPacketPlayerDigging(wAction: ICPacketPlayerDigging.WAction, pos: WBlockPos, facing: IEnumFacing): ICPacketPlayerDigging
     fun createCPacketPlayerPosition(x: Double, negativeInfinity: Double, z: Double, onGround: Boolean): ICPacketPlayerPosition
     fun createICPacketResourcePackStatus(hash: String, status: ICPacketResourcePackStatus.WAction): ICPacketResourcePackStatus
     fun createCPacketPlayerLook(yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayerLook
     fun createCPacketUseEntity(player: IEntity, wAction: ICPacketUseEntity.WAction): ICPacketUseEntity
     fun createCPacketUseEntity(entity: IEntity, positionVector: WVec3): ICPacketUseEntity
+    fun createCPacketCreativeInventoryAction(slot: Int, itemStack: IItemStack): IPacket
     fun createCPacketEntityAction(player: IEntity, wAction: ICPacketEntityAction.WAction): ICPacketEntityAction
     fun createCPacketCustomPayload(channel: String, payload: IPacketBuffer): IPacket
     fun createCPacketCloseWindow(windowId: Int): ICPacketCloseWindow
@@ -95,6 +113,16 @@ interface IClassProvider {
     fun isEntityTNTPrimed(it: Any?): Boolean
     fun isEntityBoat(it: Any?): Boolean
     fun isEntityMinecart(it: Any?): Boolean
+    fun isEntityItem(it: Any?): Boolean
+    fun isEntityArrow(it: Any?): Boolean
+    fun isEntityFallingBlock(it: Any?): Boolean
+    fun isEntityMinecartChest(it: Any?): Boolean
+
+    fun isTileEntityChest(it: Any?): Boolean
+    fun isTileEntityEnderChest(it: Any?): Boolean
+    fun isTileEntityFurnace(it: Any?): Boolean
+    fun isTileEntityDispenser(it: Any?): Boolean
+    fun isTileEntityHopper(it: Any?): Boolean
 
     fun isSPacketEntity(obj: Any?): Boolean
     fun isSPacketResourcePackSend(obj: Any?): Boolean
@@ -117,6 +145,9 @@ interface IClassProvider {
     fun isCPacketEntityAction(obj: Any?): Boolean
     fun isSPacketWindowItems(obj: Any?): Boolean
     fun isCPacketHeldItemChange(obj: Any?): Boolean
+    fun isCPacketPlayerLook(obj: Any?): Boolean
+    fun isCPacketCustomPayload(obj: Any?): Boolean
+    fun isCPacketHandshake(obj: Any?): Boolean
 
     fun isItemSword(item: Any?): Boolean
     fun isItemTool(item: Any?): Boolean
@@ -135,6 +166,8 @@ interface IClassProvider {
     fun isItemBoat(obj: Any?): Boolean
     fun isItemMinecart(obj: Any?): Boolean
     fun isItemAppleGold(obj: Any?): Boolean
+    fun isItemSnowball(obj: Any?): Boolean
+    fun isItemEgg(obj: Any?): Boolean
 
     fun isBlockAir(item: Any?): Boolean
     fun isBlockFence(item: Any?): Boolean
@@ -157,11 +190,13 @@ interface IClassProvider {
     fun isGuiChat(obj: Any?): Boolean
     fun isGuiIngameMenu(obj: Any?): Boolean
     fun isGuiChest(obj: Any?): Boolean
+    fun isGuiHudDesigner(obj: Any?): Boolean
     fun isClickGui(obj: Any?): Boolean
 
     fun isFontRenderer(item: Any?): Boolean
 
     fun getPotionEnum(type: PotionType): IPotion
+    fun getEnumFacing(type: EnumFacingType): IEnumFacing
     fun getBlockEnum(type: BlockType): IBlock
     fun getMaterialEnum(type: MaterialType): IMaterial
     fun getStatEnum(type: StatType): IStatList
@@ -171,4 +206,5 @@ interface IClassProvider {
 
     fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer
     fun wrapGuiScreen(clickGui: WrappedGuiScreen): IGuiScreen
+    fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer
 }

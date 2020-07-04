@@ -117,8 +117,7 @@ class AntiBot : Module() {
             if (!classProvider.isEntityPlayer(entity)) return false
             val antiBot = LiquidBounce.moduleManager.getModule(AntiBot::class.java) as AntiBot?
             if (antiBot == null || !antiBot.state) return false
-            if (antiBot.colorValue.get() && !entity.displayName.formattedText
-                            .replace("§r", "").contains("§")) return true
+            if (antiBot.colorValue.get() && !entity.displayName!!.formattedText.replace("§r", "").contains("§")) return true
             if (antiBot.livingTimeValue.get() && entity.ticksExisted < antiBot.livingTimeTicksValue.get()) return true
             if (antiBot.groundValue.get() && !antiBot.ground.contains(entity.entityId)) return true
             if (antiBot.airValue.get() && !antiBot.air.contains(entity.entityId)) return true
@@ -139,7 +138,7 @@ class AntiBot : Module() {
             if (antiBot.invalidGroundValue.get() && antiBot.invalidGround.getOrDefault(entity.entityId, 0) >= 10) return true
             if (antiBot.tabValue.get()) {
                 val equals = antiBot.tabModeValue.get().equals("Equals", ignoreCase = true)
-                val targetName = stripColor(entity.displayName.formattedText)
+                val targetName = stripColor(entity.displayName!!.formattedText)
                 if (targetName != null) {
                     for (networkPlayerInfo in mc.netHandler.playerInfoMap) {
                         val networkName = stripColor(EntityUtils.getName(networkPlayerInfo)) ?: continue

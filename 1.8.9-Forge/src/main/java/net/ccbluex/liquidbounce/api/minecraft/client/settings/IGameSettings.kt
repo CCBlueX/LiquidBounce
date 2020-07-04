@@ -9,6 +9,8 @@ package net.ccbluex.liquidbounce.api.minecraft.client.settings
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.WEnumPlayerModelParts
 
 interface IGameSettings {
+    var entityShadows: Boolean
+    var gammaSetting: Float
     val modelParts: Set<WEnumPlayerModelParts>
     val mouseSensitivity: Float
 

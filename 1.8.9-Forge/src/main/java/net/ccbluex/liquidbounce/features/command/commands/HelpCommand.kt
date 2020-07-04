@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils
 
-class HelpCommand : Command("help", emptyArray()) {
+class HelpCommand : Command("help") {
     /**
      * Execute commands with provided [args]
      */

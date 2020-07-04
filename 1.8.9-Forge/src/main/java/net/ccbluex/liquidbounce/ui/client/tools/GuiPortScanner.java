@@ -5,12 +5,13 @@
  */
 package net.ccbluex.liquidbounce.ui.client.tools;
 
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen;
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
+import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.TabUtils;
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.GuiTextField;
 import org.lwjgl.input.Keyboard;
 
 import javax.swing.*;
@@ -23,31 +24,24 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GuiPortScanner extends GuiScreen {
+public class GuiPortScanner extends WrappedGuiScreen {
 
-    private final GuiScreen prevGui;
-
-    private GuiTextField hostField;
-    private GuiTextField minPortField;
-    private GuiTextField maxPortField;
-    private GuiTextField threadsField;
-    private GuiButton buttonToggle;
-
+    private final IGuiScreen prevGui;
+    private final List<Integer> ports = new ArrayList<>();
+    private IGuiTextField hostField;
+    private IGuiTextField minPortField;
+    private IGuiTextField maxPortField;
+    private IGuiTextField threadsField;
+    private IGuiButton buttonToggle;
     private boolean running;
-
     private String status = "§7Waiting...";
-
     private String host;
-
     private int currentPort;
     private int maxPort;
     private int minPort;
-
     private int checkedPort;
 
-    private final List<Integer> ports = new ArrayList<>();
-
-    public GuiPortScanner(final GuiScreen prevGui) {
+    public GuiPortScanner(final IGuiScreen prevGui) {
         this.prevGui = prevGui;
     }
 
@@ -55,83 +49,85 @@ public class GuiPortScanner extends GuiScreen {
     public void initGui() {
         Keyboard.enableRepeatEvents(true);
 
-        hostField = new GuiTextField(0, Fonts.font40, width / 2 - 100, 60, 200, 20);
+        hostField = classProvider.createGuiTextField(0, Fonts.font40, representedScreen.getWidth() / 2 - 100, 60, 200, 20);
         hostField.setFocused(true);
         hostField.setMaxStringLength(Integer.MAX_VALUE);
         hostField.setText("localhost");
 
-        minPortField = new GuiTextField(1, Fonts.font40, width / 2 - 100, 90, 90, 20);
+        minPortField = classProvider.createGuiTextField(1, Fonts.font40, representedScreen.getHeight() / 2 - 100, 90, 90, 20);
         minPortField.setMaxStringLength(5);
         minPortField.setText(String.valueOf(1));
 
-        maxPortField = new GuiTextField(2, Fonts.font40, width / 2 + 10, 90, 90, 20);
+        maxPortField = classProvider.createGuiTextField(2, Fonts.font40, representedScreen.getWidth() / 2 + 10, 90, 90, 20);
         maxPortField.setMaxStringLength(5);
         maxPortField.setText(String.valueOf(65535));
 
-        threadsField = new GuiTextField(3, Fonts.font40, width / 2 - 100, 120, 200, 20);
+        threadsField = classProvider.createGuiTextField(3, Fonts.font40, representedScreen.getWidth() / 2 - 100, 120, 200, 20);
         threadsField.setMaxStringLength(Integer.MAX_VALUE);
         threadsField.setText(String.valueOf(500));
 
-        buttonList.add(buttonToggle = new GuiButton(1, width / 2 - 100, height / 4 + 95, running ? "Stop" : "Start"));
-        buttonList.add(new GuiButton(0, width / 2 - 100, height / 4 + 120, "Back"));
-        buttonList.add(new GuiButton(2, width / 2 - 100, height / 4 + 155, "Export"));
+        representedScreen.getButtonList().add(buttonToggle = classProvider.createGuiButton(1, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 95, running ? "Stop" : "Start"));
+        representedScreen.getButtonList().add(classProvider.createGuiButton(0, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 120, "Back"));
+        representedScreen.getButtonList().add(classProvider.createGuiButton(2, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 155, "Export"));
+
         super.initGui();
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawBackground(0);
+        representedScreen.drawBackground(0);
 
-        drawCenteredString(Fonts.font40, "Port Scanner", width / 2, 34, 0xffffff);
-        drawCenteredString(Fonts.font35, running ? "§7" + checkedPort + " §8/ §7" + maxPort : status == null ? "" : status, width / 2, height / 4 + 80, 0xffffff);
+        Fonts.font40.drawCenteredString("Port Scanner", representedScreen.getWidth() / 2.0f, 34, 0xffffff);
+        Fonts.font35.drawCenteredString(running ? "§7" + checkedPort + " §8/ §7" + maxPort : status == null ? "" : status, representedScreen.getWidth() / 2.0f, representedScreen.getHeight() / 4.0f + 80, 0xffffff);
 
-        buttonToggle.displayString = running ? "Stop" : "Start";
+        buttonToggle.setDisplayString(running ? "Stop" : "Start");
 
         hostField.drawTextBox();
         minPortField.drawTextBox();
         maxPortField.drawTextBox();
         threadsField.drawTextBox();
 
-        drawString(Fonts.font40, "§c§lPorts:", 2, 2, Color.WHITE.hashCode());
+        Fonts.font40.drawString("§c§lPorts:", 2, 2, Color.WHITE.hashCode());
 
-        synchronized(ports) {
+        synchronized (ports) {
             int i = 12;
 
-            for(final Integer integer : ports) {
-                drawString(Fonts.font35, String.valueOf(integer), 2, i, Color.WHITE.hashCode());
-                i += Fonts.font35.FONT_HEIGHT;
+            for (final Integer integer : ports) {
+                Fonts.font35.drawString(String.valueOf(integer), 2, i, Color.WHITE.hashCode());
+                i += Fonts.font35.getFontHeight();
             }
         }
+
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
-        switch(button.id) {
+    protected void actionPerformed(IGuiButton button) throws IOException {
+        switch (button.getId()) {
             case 0:
                 mc.displayGuiScreen(prevGui);
                 break;
             case 1:
-                if(running) {
+                if (running) {
                     running = false;
-                }else{
+                } else {
                     host = hostField.getText();
 
-                    if(host.isEmpty()) {
+                    if (host.isEmpty()) {
                         status = "§cInvalid host";
                         return;
                     }
 
                     try {
                         minPort = Integer.parseInt(minPortField.getText());
-                    }catch(final NumberFormatException e) {
+                    } catch (final NumberFormatException e) {
                         status = "§cInvalid min port";
                         return;
                     }
 
                     try {
                         maxPort = Integer.parseInt(maxPortField.getText());
-                    }catch(final NumberFormatException e) {
+                    } catch (final NumberFormatException e) {
                         status = "§cInvalid max port";
                         return;
                     }
@@ -139,7 +135,7 @@ public class GuiPortScanner extends GuiScreen {
                     int threads;
                     try {
                         threads = Integer.parseInt(threadsField.getText());
-                    }catch(final NumberFormatException e) {
+                    } catch (final NumberFormatException e) {
                         status = "§cInvalid threads";
                         return;
                     }
@@ -149,10 +145,10 @@ public class GuiPortScanner extends GuiScreen {
                     currentPort = minPort - 1;
                     checkedPort = minPort;
 
-                    for(int i = 0; i < threads; i++) {
+                    for (int i = 0; i < threads; i++) {
                         new Thread(() -> {
                             try {
-                                while(running && currentPort < maxPort) {
+                                while (running && currentPort < maxPort) {
                                     currentPort++;
 
                                     final int port = currentPort;
@@ -162,20 +158,20 @@ public class GuiPortScanner extends GuiScreen {
                                         socket.connect(new InetSocketAddress(host, port), 500);
                                         socket.close();
 
-                                        synchronized(ports) {
-                                            if(!ports.contains(port))
+                                        synchronized (ports) {
+                                            if (!ports.contains(port))
                                                 ports.add(port);
                                         }
-                                    }catch(final Exception ignored) {
+                                    } catch (final Exception ignored) {
                                     }
 
-                                    if(checkedPort < port)
+                                    if (checkedPort < port)
                                         checkedPort = port;
                                 }
 
                                 running = false;
-                                buttonToggle.displayString = "Start";
-                            }catch(final Exception e) {
+                                buttonToggle.setDisplayString("Start");
+                            } catch (final Exception e) {
                                 status = "§a§l" + e.getClass().getSimpleName() + ": §c" + e.getMessage();
                             }
                         }).start();
@@ -184,7 +180,7 @@ public class GuiPortScanner extends GuiScreen {
                     running = true;
                 }
 
-                buttonToggle.displayString = running ? "Stop" : "Start";
+                buttonToggle.setDisplayString(running ? "Stop" : "Start");
                 break;
             case 2:
                 final File selectedFile = MiscUtils.saveFileChooser();
@@ -219,27 +215,27 @@ public class GuiPortScanner extends GuiScreen {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        if(Keyboard.KEY_ESCAPE == keyCode) {
+        if (Keyboard.KEY_ESCAPE == keyCode) {
             mc.displayGuiScreen(prevGui);
             return;
         }
 
-        if(Keyboard.KEY_TAB == keyCode)
+        if (Keyboard.KEY_TAB == keyCode)
             TabUtils.tab(hostField, minPortField, maxPortField);
 
-        if(running)
+        if (running)
             return;
 
-        if(hostField.isFocused())
+        if (hostField.isFocused())
             hostField.textboxKeyTyped(typedChar, keyCode);
 
-        if(minPortField.isFocused() && !Character.isLetter(typedChar))
+        if (minPortField.isFocused() && !Character.isLetter(typedChar))
             minPortField.textboxKeyTyped(typedChar, keyCode);
 
-        if(maxPortField.isFocused() && !Character.isLetter(typedChar))
+        if (maxPortField.isFocused() && !Character.isLetter(typedChar))
             maxPortField.textboxKeyTyped(typedChar, keyCode);
 
-        if(threadsField.isFocused() && !Character.isLetter(typedChar))
+        if (threadsField.isFocused() && !Character.isLetter(typedChar))
             threadsField.textboxKeyTyped(typedChar, keyCode);
         super.keyTyped(typedChar, keyCode);
     }

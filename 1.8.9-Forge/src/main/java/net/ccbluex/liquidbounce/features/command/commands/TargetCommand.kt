@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.EntityUtils
 
-class TargetCommand : Command("target", emptyArray()) {
+class TargetCommand : Command("target") {
     /**
      * Execute commands with provided [args]
      */

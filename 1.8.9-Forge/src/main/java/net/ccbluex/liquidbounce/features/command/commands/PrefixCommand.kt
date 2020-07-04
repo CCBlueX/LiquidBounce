@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 
-class PrefixCommand : Command("prefix", emptyArray()) {
+class PrefixCommand : Command("prefix") {
     /**
      * Execute commands with provided [args]
      */

@@ -24,5 +24,9 @@ object WMathHelper {
         return value
     }
 
+    @JvmStatic
+    inline fun clamp_float(num: Float, min: Float, max: Float): Float {
+        return if (num < min) min else if (num > max) max else num
+    }
 
 }

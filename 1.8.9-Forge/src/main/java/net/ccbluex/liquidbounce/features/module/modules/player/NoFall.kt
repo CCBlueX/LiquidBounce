@@ -7,9 +7,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.BlockType
+import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.ItemType
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumFacing
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3i
 import net.ccbluex.liquidbounce.event.*
@@ -212,9 +212,9 @@ class NoFall : Module() {
             if (classProvider.isItemBucket(stack!!.item)) {
                 mc.playerController.sendUseItem(mc.thePlayer!!, mc.theWorld!!, stack)
             } else {
-                val dirVec: WVec3i = WEnumFacing.UP.directionVec
+                val dirVec: WVec3i = classProvider.getEnumFacing(EnumFacingType.UP).directionVec
 
-                if (mc.playerController.onPlayerRightClick(mc.thePlayer!!, mc.theWorld!!, stack, currentMlgBlock!!, WEnumFacing.UP, WVec3(dirVec.x * 0.5, dirVec.y * 0.5, dirVec.z * 0.5).add(WVec3(currentMlgBlock!!)))) {
+                if (mc.playerController.onPlayerRightClick(mc.thePlayer!!, mc.theWorld!!, stack, currentMlgBlock!!, classProvider.getEnumFacing(EnumFacingType.UP), WVec3(dirVec.x * 0.5, dirVec.y * 0.5, dirVec.z * 0.5).add(WVec3(currentMlgBlock!!)))) {
                     mlgTimer.reset()
                 }
             }

@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
 
-class LoginCommand : Command("login", emptyArray()) {
+class LoginCommand : Command("login") {
     /**
      * Execute commands with provided [args]
      */
@@ -31,7 +31,7 @@ class LoginCommand : Command("login", emptyArray()) {
             if (mc.isIntegratedServerRunning)
                 return
 
-            mc.theWorld.sendQuittingDisconnectingPacket()
+            mc.theWorld!!.sendQuittingDisconnectingPacket()
             ServerUtils.connectToLastServer()
         }
     }

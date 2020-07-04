@@ -6,11 +6,8 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.minecraft.enchantment.Enchantment
-import net.minecraft.enchantment.EnumEnchantmentType
 
-class EnchantCommand : Command("enchant", emptyArray()) {
+class EnchantCommand : Command("enchant") {
     /**
      * Execute commands with provided [args]
      */
@@ -21,17 +18,17 @@ class EnchantCommand : Command("enchant", emptyArray()) {
                 return
             }
 
-            val item = mc.thePlayer.heldItem
+            val item = mc.thePlayer?.heldItem
 
-            if (item == null || item.item == null) {
+            if (item?.item == null) {
                 chat("§c§lError: §3You need to hold an item.")
                 return
             }
 
-            val enchantID = try {
-                args[1].toInt()
+            val enchantID: Short = try {
+                args[1].toShort()
             } catch (e: NumberFormatException) {
-                val enchantment = Enchantment.getEnchantmentByLocation(args[1])
+                val enchantment = functions.getEnchantmentByLocation(args[1])
 
                 if (enchantment == null) {
                     chat("There is no enchantment with the name '${args[1]}'")
@@ -41,7 +38,8 @@ class EnchantCommand : Command("enchant", emptyArray()) {
                 enchantment.effectId
             }
 
-            val enchantment = Enchantment.getEnchantmentById(enchantID)
+            val enchantment = functions.getEnchantmentById(enchantID)
+
             if (enchantment == null) {
                 chat("There is no enchantment with the ID '$enchantID'")
                 return
@@ -66,9 +64,9 @@ class EnchantCommand : Command("enchant", emptyArray()) {
 
         return when (args.size) {
             1 -> {
-                return Enchantment.func_181077_c()
-                    .map { it.resourcePath.toLowerCase() }
-                    .filter { it.startsWith(args[0], true) }
+                return functions.getEnchantments()
+                        .map { it.resourcePath.toLowerCase() }
+                        .filter { it.startsWith(args[0], true) }
             }
             else -> emptyList()
         }

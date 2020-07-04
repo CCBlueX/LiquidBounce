@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.api.util
 
-open class WrappedCollection<O, T>(val wrapped: Collection<O>, val unwrapper: (T) -> O, val wrapper: (O) -> T) : Collection<T> {
+open class WrappedCollection<O, T, C : Collection<O>>(val wrapped: C, val unwrapper: (T) -> O, val wrapper: (O) -> T) : Collection<T> {
     override val size: Int
         get() = wrapped.size
 

@@ -16,6 +16,6 @@ class NoBob : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        mc.thePlayer.distanceWalkedModified = 0f
+        mc.thePlayer?.distanceWalkedModified = 0f
     }
 }

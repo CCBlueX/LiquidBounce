@@ -6,10 +6,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumFacing
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -147,13 +147,13 @@ class Nuker : Module() {
                 // Start block breaking
                 if (currentDamage == 0F) {
                     mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK,
-                            blockPos, WEnumFacing.DOWN))
+                            blockPos, classProvider.getEnumFacing(EnumFacingType.DOWN)))
 
                     // End block break if able to break instant
                     if (block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, blockPos) >= 1F) {
                         currentDamage = 0F
                         thePlayer.swingItem()
-                        mc.playerController.onPlayerDestroyBlock(blockPos, WEnumFacing.DOWN)
+                        mc.playerController.onPlayerDestroyBlock(blockPos, classProvider.getEnumFacing(EnumFacingType.DOWN))
                         blockHitDelay = hitDelayValue.get()
                         validBlocks -= blockPos
                         nuke++
@@ -168,8 +168,8 @@ class Nuker : Module() {
 
                 // End of breaking block
                 if (currentDamage >= 1F) {
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos, WEnumFacing.DOWN))
-                    mc.playerController.onPlayerDestroyBlock(blockPos, WEnumFacing.DOWN)
+                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+                    mc.playerController.onPlayerDestroyBlock(blockPos, classProvider.getEnumFacing(EnumFacingType.DOWN))
                     blockHitDelay = hitDelayValue.get()
                     currentDamage = 0F
                 }
@@ -200,16 +200,16 @@ class Nuker : Module() {
 
                                 // Check if block is visible
                                 rayTrace != null && rayTrace.blockPos == pos
-                            }else true // Done
-                        }else false // Bad block
+                            } else true // Done
+                        } else false // Bad block
                     }
-                    .forEach { (pos, block) ->
+                    .forEach { (pos, _) ->
                         // Instant break block
                         mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK,
-                                pos, WEnumFacing.DOWN))
+                                pos, classProvider.getEnumFacing(EnumFacingType.DOWN)))
                         thePlayer.swingItem()
                         mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK,
-                                pos, WEnumFacing.DOWN))
+                                pos, classProvider.getEnumFacing(EnumFacingType.DOWN)))
                         attackedBlocks.add(pos)
                     }
         }

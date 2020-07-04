@@ -5,14 +5,13 @@
  */
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub
 
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
+import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
-import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.minecraft.client.gui.Gui
-import net.minecraft.client.gui.GuiButton
-import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.gui.GuiTextField
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpDelete
@@ -22,19 +21,19 @@ import org.apache.http.message.BasicHeader
 import org.lwjgl.input.Keyboard
 import kotlin.concurrent.thread
 
-class GuiDonatorCape(private val prevGui : GuiAltManager) : GuiScreen() {
+class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen() {
 
     // Data Storage
     companion object {
-        var transferCode : String = ""
-        var capeEnabled : Boolean = true
+        var transferCode: String = ""
+        var capeEnabled: Boolean = true
     }
 
     // Buttons
-    private lateinit var stateButton: GuiButton
+    private lateinit var stateButton: IGuiButton
 
     // User Input Fields
-    private lateinit var transferCodeField : GuiTextField
+    private lateinit var transferCodeField: IGuiTextField
 
     // Status
     private var status = ""
@@ -49,14 +48,14 @@ class GuiDonatorCape(private val prevGui : GuiAltManager) : GuiScreen() {
         Keyboard.enableRepeatEvents(true)
 
         // Add buttons to screen
-        stateButton = GuiButton(1, width / 2 - 100, 105, "Disable Cape")
+        stateButton = classProvider.createGuiButton(1, representedScreen.width / 2 - 100, 105, "Disable Cape")
 
-        buttonList.add(stateButton)
-        buttonList.add(GuiButton(2, width / 2 - 100, height / 4 + 96, "Donate to get Cape"))
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 120, "Back"))
+        representedScreen.buttonList.add(stateButton)
+        representedScreen.buttonList.add(classProvider.createGuiButton(2, representedScreen.width / 2 - 100, representedScreen.height / 4 + 96, "Donate to get Cape"))
+        representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 - 100, representedScreen.height / 4 + 120, "Back"))
 
         // Add fields to screen
-        transferCodeField = GuiPasswordField(666, Fonts.font40, width / 2 - 100, 80, 200, 20)
+        transferCodeField = classProvider.createGuiPasswordField(666, Fonts.font40, representedScreen.width / 2 - 100, 80, 200, 20)
         transferCodeField.isFocused = true
         transferCodeField.maxStringLength = Integer.MAX_VALUE
         transferCodeField.text = transferCode
@@ -70,17 +69,17 @@ class GuiDonatorCape(private val prevGui : GuiAltManager) : GuiScreen() {
      */
     override fun drawScreen(mouseX : Int, mouseY : Int, partialTicks : Float) {
         // Draw background to screen
-        drawBackground(0)
-        Gui.drawRect(30, 30, width - 30, height - 30, Integer.MIN_VALUE)
+        representedScreen.drawBackground(0)
+        RenderUtils.drawRect(30.0f, 30.0f, representedScreen.width - 30.0f, representedScreen.height - 30.0f, Integer.MIN_VALUE)
 
         // Draw title and status
-        drawCenteredString(Fonts.font35, "Donator Cape", width / 2, 36, 0xffffff)
-        drawCenteredString(Fonts.font35, status, width / 2, height / 4 + 80, 0xffffff)
+        Fonts.font35.drawCenteredString("Donator Cape", representedScreen.width / 2.0f, 36.0f, 0xffffff)
+        Fonts.font35.drawCenteredString(status, representedScreen.width / 2.0f, representedScreen.height / 4.0f + 80, 0xffffff)
 
         // Draw fields
         transferCodeField.drawTextBox()
 
-        drawCenteredString(Fonts.font40, "§7Transfer Code:", width / 2 - 65, 66, 0xffffff)
+        Fonts.font40.drawCenteredString("§7Transfer Code:", representedScreen.width / 2.0f - 65, 66.0f, 0xffffff)
 
         stateButton.displayString = if (capeEnabled) {
             "Disable Cape"
@@ -95,18 +94,18 @@ class GuiDonatorCape(private val prevGui : GuiAltManager) : GuiScreen() {
     /**
      * Handle button actions
      */
-    override fun actionPerformed(button : GuiButton) {
-        if(!button.enabled) return
+    override fun actionPerformed(button: IGuiButton) {
+        if (!button.enabled) return
 
-        when(button.id) {
-            0 -> mc.displayGuiScreen(prevGui)
+        when (button.id) {
+            0 -> mc.displayGuiScreen(prevGui.representedScreen)
             1 -> {
                 stateButton.enabled = false
 
                 thread {
                     val httpClient = HttpClients.createDefault()
                     val headers = arrayOf(
-                        BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"),
+                            BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"),
                             BasicHeader(HttpHeaders.AUTHORIZATION, transferCodeField.text)
                     )
                     val request = if (capeEnabled) {
@@ -138,7 +137,6 @@ class GuiDonatorCape(private val prevGui : GuiAltManager) : GuiScreen() {
         }
 
         // Call sub method
-        super.actionPerformed(button)
     }
 
     /**
@@ -148,7 +146,7 @@ class GuiDonatorCape(private val prevGui : GuiAltManager) : GuiScreen() {
         // Check if user want to escape from screen
         if(Keyboard.KEY_ESCAPE == keyCode) {
             // Send back to prev screen
-            mc.displayGuiScreen(prevGui)
+            mc.displayGuiScreen(prevGui.representedScreen)
 
             // Quit
             return

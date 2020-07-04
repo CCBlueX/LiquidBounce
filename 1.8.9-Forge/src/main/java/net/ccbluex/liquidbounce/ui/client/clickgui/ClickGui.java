@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -210,11 +211,11 @@ public class ClickGui extends WrappedGuiScreen {
         this.mouseX = mouseX;
         this.mouseY = mouseY;
 
-        drawDefaultBackground();
+        representedScreen.drawDefaultBackground();
 
-        RenderUtils.drawImage(hudIcon, 9, height - 41, 32, 32);
+        RenderUtils.drawImage(hudIcon, 9, representedScreen.getHeight() - 41, 32, 32);
 
-        GlStateManager.scale(scale, scale, scale);
+        GL11.glScaled(scale, scale, scale);
 
         for (final Panel panel : panels) {
             panel.updateFade(RenderUtils.deltaTime);
@@ -240,9 +241,9 @@ public class ClickGui extends WrappedGuiScreen {
                     break;
         }
 
-        GlStateManager.disableLighting();
-        RenderHelper.disableStandardItemLighting();
-        GlStateManager.scale(1, 1, 1);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        functions.disableStandardItemLighting();
+        GL11.glScaled(1, 1, 1);
 
         AWTFontRenderer.Companion.setAssumeNonVolatile(false);
 
@@ -288,7 +289,6 @@ public class ClickGui extends WrappedGuiScreen {
         for (Panel panel : panels) {
             panel.mouseReleased(mouseX, mouseY, state);
         }
-        super.mouseReleased(mouseX, mouseY, state);
     }
 
     @Override

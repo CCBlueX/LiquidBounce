@@ -22,8 +22,8 @@ class Frame : SpeedMode("Frame") {
                 if (motionTicks == 1) {
                     tickTimer.reset()
                     if (move) {
-                        mc.thePlayer!!.motionX = 0
-                        mc.thePlayer!!.motionZ = 0
+                        mc.thePlayer!!.motionX = 0.0
+                        mc.thePlayer!!.motionZ = 0.0
                         move = false
                     }
                     motionTicks = 0

@@ -13,8 +13,13 @@ import java.util.*
 
 @Suppress("INAPPLICABLE_JVM_NAME")
 interface IEntity {
+    var distanceWalkedOnStepModified: Float
+    var distanceWalkedModified: Float
+
+    @get:JvmName("isSneaking")
+    val sneaking: Boolean
     var stepHeight: Float
-    val horizontalFacing: WEnumFacing
+    val horizontalFacing: IEnumFacing
     val lookVec: WVec3?
     var isDead: Boolean
     val isCollidedVertically: Boolean
@@ -36,6 +41,7 @@ interface IEntity {
     var isInWeb: Boolean
     val isInLava: Boolean
     val width: Float
+    val height: Float
     var onGround: Boolean
     val ridingEntity: IEntity?
     val collisionBorderSize: Float
@@ -93,4 +99,5 @@ interface IEntity {
     fun getLook(partialTicks: Float): WVec3
     fun isInsideOfMaterial(material: IMaterial): Boolean
     fun copyLocationAndAnglesFrom(player: IEntityPlayerSP)
+    fun setPositionAndRotation(oldX: Double, oldY: Double, oldZ: Double, rotationYaw: Float, rotationPitch: Float)
 }

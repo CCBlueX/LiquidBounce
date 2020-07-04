@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.util.IWrappedArray
 
 interface IInventoryPlayer {
-    val mainInventory: IWrappedArray<IItemStack>
+    val mainInventory: IWrappedArray<IItemStack?>
     val armorInventory: IWrappedArray<IItemStack?>
     var currentItem: Int
 

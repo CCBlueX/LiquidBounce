@@ -5,9 +5,9 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
-import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.gui.IGuiButton;
 import net.minecraft.client.gui.inventory.GuiEditSign;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.tileentity.TileEntitySign;
@@ -32,9 +32,9 @@ public class MixinGuiEditSign extends GuiScreen {
     @Shadow
     private TileEntitySign tileSign;
     @Shadow
-    private GuiButton doneBtn;
+    private IGuiButton doneBtn;
     private boolean enabled;
-    private GuiButton toggleButton;
+    private IGuiButton toggleButton;
 
     private GuiTextField signCommand1;
     private GuiTextField signCommand2;
@@ -43,7 +43,7 @@ public class MixinGuiEditSign extends GuiScreen {
 
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(final CallbackInfo callbackInfo) {
-        buttonList.add(toggleButton = new GuiButton(1, this.width / 2 - 100, this.height / 4 + 145, enabled ? "Disable Formatting codes" : "Enable Formatting codes"));
+        buttonList.add(toggleButton = new classProvider.createGuiButton(1, this.width / 2 - 100, this.height / 4 + 145, enabled ? "Disable Formatting codes" : "Enable Formatting codes"));
 
         this.signCommand1 = new GuiTextField(0, fontRendererObj, this.width / 2 - 100, height - 15, 200, 10);
         this.signCommand2 = new GuiTextField(1, fontRendererObj, this.width / 2 - 100, height - 15 * 2, 200, 10);
@@ -57,16 +57,16 @@ public class MixinGuiEditSign extends GuiScreen {
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
-    private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
-        switch(button.id) {
+    private void actionPerformed(IGuiButton button, CallbackInfo callbackInfo) {
+        switch (button.id) {
             case 0:
-                if(!signCommand1.getText().isEmpty())
+                if (!signCommand1.getText().isEmpty())
                     tileSign.signText[0].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand1.getText())));
 
-                if(!signCommand2.getText().isEmpty())
+                if (!signCommand2.getText().isEmpty())
                     tileSign.signText[1].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand2.getText())));
 
-                if(!signCommand3.getText().isEmpty())
+                if (!signCommand3.getText().isEmpty())
                     tileSign.signText[2].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand3.getText())));
 
                 if(!signCommand4.getText().isEmpty())

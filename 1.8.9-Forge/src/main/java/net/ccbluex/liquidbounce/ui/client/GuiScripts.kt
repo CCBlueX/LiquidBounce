@@ -6,13 +6,14 @@
 package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
+import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
+import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.minecraft.client.gui.GuiButton
-import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.gui.GuiSlot
 import org.apache.commons.io.IOUtils
 import org.lwjgl.input.Keyboard
 import java.awt.Color
@@ -23,35 +24,36 @@ import java.net.URL
 import java.util.*
 import java.util.zip.ZipFile
 
-class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
+class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
     private lateinit var list: GuiList
 
     override fun initGui() {
-        list = GuiList(this)
-        list.registerScrollButtons(7, 8)
+        list = GuiList(representedScreen)
+        list.represented.registerScrollButtons(7, 8)
         list.elementClicked(-1, false, 0, 0)
 
         val j = 22
-        this.buttonList.add(GuiButton(0, width - 80, height - 65, 70, 20, "Back"))
-        this.buttonList.add(GuiButton(1, width - 80, j + 24, 70, 20, "Import"))
-        this.buttonList.add(GuiButton(2, width - 80, j + 24 * 2, 70, 20, "Delete"))
-        this.buttonList.add(GuiButton(3, width - 80, j + 24 * 3, 70, 20, "Reload"))
-        this.buttonList.add(GuiButton(4, width - 80, j + 24 * 4, 70, 20, "Folder"))
-        this.buttonList.add(GuiButton(5, width - 80, j + 24 * 5, 70, 20, "Docs"))
-        this.buttonList.add(GuiButton(6, width - 80, j + 24 * 6, 70, 20, "Find Scripts"))
+        representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width - 80, representedScreen.height - 65, 70, 20, "Back"))
+        representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width - 80, j + 24, 70, 20, "Import"))
+        representedScreen.buttonList.add(classProvider.createGuiButton(2, representedScreen.width - 80, j + 24 * 2, 70, 20, "Delete"))
+        representedScreen.buttonList.add(classProvider.createGuiButton(3, representedScreen.width - 80, j + 24 * 3, 70, 20, "Reload"))
+        representedScreen.buttonList.add(classProvider.createGuiButton(4, representedScreen.width - 80, j + 24 * 4, 70, 20, "Folder"))
+        representedScreen.buttonList.add(classProvider.createGuiButton(5, representedScreen.width - 80, j + 24 * 5, 70, 20, "Docs"))
+        representedScreen.buttonList.add(classProvider.createGuiButton(6, representedScreen.width - 80, j + 24 * 6, 70, 20, "Find Scripts"))
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        drawBackground(0)
+        representedScreen.drawBackground(0)
 
-        list.drawScreen(mouseX, mouseY, partialTicks)
+        list.represented.drawScreen(mouseX, mouseY, partialTicks)
 
-        drawCenteredString(Fonts.font40, "§9§lScripts", width / 2, 28, 0xffffff)
+        Fonts.font40.drawCenteredString("§9§lScripts", representedScreen.width / 2.0f, 28.0f, 0xffffff)
+
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
-    override fun actionPerformed(button: GuiButton) {
+    override fun actionPerformed(button: IGuiButton) {
         when (button.id) {
             0 -> mc.displayGuiScreen(prevGui)
             1 -> try {
@@ -151,11 +153,11 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun handleMouseInput() {
         super.handleMouseInput()
-        list.handleMouseInput()
+        list.represented.handleMouseInput()
     }
 
-    private inner class GuiList(gui: GuiScreen) :
-            GuiSlot(mc, gui.width, gui.height, 40, gui.height - 40, 30) {
+    private inner class GuiList(gui: IGuiScreen) :
+            WrappedGuiSlot(mc, gui.width, gui.height, 40, gui.height - 40, 30) {
 
         private var selectedSlot = 0
 
@@ -171,8 +173,8 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
         override fun drawSlot(id: Int, x: Int, y: Int, var4: Int, var5: Int, var6: Int) {
             val script = LiquidBounce.scriptManager.scripts[id]
-            drawCenteredString(Fonts.font40, "§9" + script.scriptName + " §7v" + script.scriptVersion, width / 2, y + 2, Color.LIGHT_GRAY.rgb)
-            drawCenteredString(Fonts.font40, "by §c" + script.scriptAuthors.joinToString(", "), width / 2, y + 15, Color.LIGHT_GRAY.rgb)
+            Fonts.font40.drawCenteredString("§9" + script.scriptName + " §7v" + script.scriptVersion, representedScreen.width / 2.0f, y + 2.0f, Color.LIGHT_GRAY.rgb)
+            Fonts.font40.drawCenteredString("by §c" + script.scriptAuthors.joinToString(", "), representedScreen.width / 2.0f, y + 15.0f, Color.LIGHT_GRAY.rgb)
         }
 
         override fun drawBackground() { }

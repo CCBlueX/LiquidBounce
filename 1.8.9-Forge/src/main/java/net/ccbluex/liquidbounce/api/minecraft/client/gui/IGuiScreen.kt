@@ -6,16 +6,21 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.client.gui
 
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiContainer
 
-interface IGuiScreen {
-    val height: Int
-    val width: Int
+interface IGuiScreen : IGui {
+    val fontRendererObj: IFontRenderer
+    val buttonList: MutableList<IGuiButton>
 
     fun asGuiContainer(): IGuiContainer
     fun asGuiGameOver(): IGuiGameOver
+    fun asGuiChest(): IGuiChest
 
     // Non-virtual calls. Used for GuiScreen-Wrapping
     fun superInitGui()
     fun superMouseReleased(mouseX: Int, mouseY: Int, state: Int)
+    fun drawBackground(i: Int)
+    fun superOnGuiClosed()
+    fun drawDefaultBackground()
 }

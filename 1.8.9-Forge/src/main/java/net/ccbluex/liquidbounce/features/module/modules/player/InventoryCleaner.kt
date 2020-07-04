@@ -222,10 +222,10 @@ class InventoryCleaner : Module() {
 
         when (type.toLowerCase()) {
             "sword", "pickaxe", "axe" -> {
-                val currentTypeChecker: (IItem?) -> Boolean = when {
-                    type.equals("Sword", ignoreCase = true) -> classProvider::isItemSword
-                    type.equals("Pickaxe", ignoreCase = true) -> classProvider::isItemPickaxe
-                    type.equals("Axe", ignoreCase = true) -> classProvider::isItemAxe
+                val currentTypeChecker: ((IItem?) -> Boolean) = when {
+                    type.equals("Sword", ignoreCase = true) -> { item: IItem? -> classProvider.isItemSword(item) }
+                    type.equals("Pickaxe", ignoreCase = true) -> { obj: IItem? -> classProvider.isItemPickaxe(obj) }
+                    type.equals("Axe", ignoreCase = true) -> { obj: IItem? -> classProvider.isItemAxe(obj) }
                     else -> return null
                 }
 
@@ -234,7 +234,7 @@ class InventoryCleaner : Module() {
                 else -1
 
                 thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
-                    if (currentTypeChecker(itemStack.item) && !type(index).equals(type, ignoreCase = true)) {
+                    if (itemStack != null && currentTypeChecker(itemStack.item) && !type(index).equals(type, ignoreCase = true)) {
                         if (bestWeapon == -1) {
                             bestWeapon = index
                         } else {
@@ -282,61 +282,71 @@ class InventoryCleaner : Module() {
 
             "food" -> {
                 thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-                    val item = stack.item
+                    if (stack != null) {
+                        val item = stack.item
 
-                    if (classProvider.isItemFood(item) && !classProvider.isItemAppleGold(item) && !type(index).equals("Food", ignoreCase = true)) {
-                        val replaceCurr = slotStack == null || !classProvider.isItemFood(item)
+                        if (classProvider.isItemFood(item) && !classProvider.isItemAppleGold(item) && !type(index).equals("Food", ignoreCase = true)) {
+                            val replaceCurr = slotStack == null || !classProvider.isItemFood(item)
 
-                        return if (replaceCurr) index else null
+                            return if (replaceCurr) index else null
+                        }
                     }
                 }
             }
 
             "block" -> {
                 thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-                    val item = stack.item!!
+                    if (stack != null) {
+                        val item = stack.item!!
 
-                    if (classProvider.isItemBlock(item) && !InventoryUtils.BLOCK_BLACKLIST.contains(item.asItemBlock().block) &&
-                            !type(index).equals("Block", ignoreCase = true)) {
-                        val replaceCurr = slotStack == null || !classProvider.isItemBlock(item)
+                        if (classProvider.isItemBlock(item) && !InventoryUtils.BLOCK_BLACKLIST.contains(item.asItemBlock().block) &&
+                                !type(index).equals("Block", ignoreCase = true)) {
+                            val replaceCurr = slotStack == null || !classProvider.isItemBlock(item)
 
-                        return if (replaceCurr) index else null
+                            return if (replaceCurr) index else null
+                        }
                     }
                 }
             }
 
             "water" -> {
                 thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-                    val item = stack.item!!
+                    if (stack != null) {
+                        val item = stack.item!!
 
-                    if (classProvider.isItemBucket(item) && item.asItemBucket().isFull == classProvider.getBlockEnum(BlockType.FLOWING_WATER) && !type(index).equals("Water", ignoreCase = true)) {
-                        val replaceCurr = slotStack == null || !classProvider.isItemBucket(item) || (slotStack.item!!.asItemBucket()).isFull != classProvider.getBlockEnum(BlockType.FLOWING_WATER)
+                        if (classProvider.isItemBucket(item) && item.asItemBucket().isFull == classProvider.getBlockEnum(BlockType.FLOWING_WATER) && !type(index).equals("Water", ignoreCase = true)) {
+                            val replaceCurr = slotStack == null || !classProvider.isItemBucket(item) || (slotStack.item!!.asItemBucket()).isFull != classProvider.getBlockEnum(BlockType.FLOWING_WATER)
 
-                        return if (replaceCurr) index else null
+                            return if (replaceCurr) index else null
+                        }
                     }
                 }
             }
 
             "gapple" -> {
                 thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-                    val item = stack.item!!
+                    if (stack != null) {
+                        val item = stack.item!!
 
-                    if (classProvider.isItemAppleGold(item) && !type(index).equals("Gapple", ignoreCase = true)) {
-                        val replaceCurr = slotStack == null || !classProvider.isItemAppleGold(slotStack.item)
+                        if (classProvider.isItemAppleGold(item) && !type(index).equals("Gapple", ignoreCase = true)) {
+                            val replaceCurr = slotStack == null || !classProvider.isItemAppleGold(slotStack.item)
 
-                        return if (replaceCurr) index else null
+                            return if (replaceCurr) index else null
+                        }
                     }
                 }
             }
 
             "pearl" -> {
                 thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-                    val item = stack.item
+                    if (stack != null) {
+                        val item = stack.item
 
-                    if (classProvider.isItemEnderPearl(item) && !type(index).equals("Pearl", ignoreCase = true)) {
-                        val replaceCurr = slotStack == null || !classProvider.isItemEnderPearl(slotStack.item)
+                        if (classProvider.isItemEnderPearl(item) && !type(index).equals("Pearl", ignoreCase = true)) {
+                            val replaceCurr = slotStack == null || !classProvider.isItemEnderPearl(slotStack.item)
 
-                        return if (replaceCurr) index else null
+                            return if (replaceCurr) index else null
+                        }
                     }
                 }
             }

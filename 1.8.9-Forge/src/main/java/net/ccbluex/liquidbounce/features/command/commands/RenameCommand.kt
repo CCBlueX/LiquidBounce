@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 
-class RenameCommand : Command("rename", emptyArray()) {
+class RenameCommand : Command("rename") {
     /**
      * Execute commands with provided [args]
      */
@@ -20,8 +20,9 @@ class RenameCommand : Command("rename", emptyArray()) {
                 return
             }
 
-            val item = mc.thePlayer.heldItem
-            if (item == null || item.item == null) {
+            val item = mc.thePlayer!!.heldItem
+
+            if (item?.item == null) {
                 chat("§c§lError: §3You need to hold a item.")
                 return
             }

@@ -41,11 +41,13 @@ class Aimbot : Module() {
         if (onClickValue.get() && clickTimer.hasTimePassed(500L))
             return
 
+        val thePlayer = mc.thePlayer ?: return
+
         val range = rangeValue.get()
         val entity = mc.theWorld!!.loadedEntityList
                 .filter {
-                    EntityUtils.isSelected(it, true) && mc.thePlayer!!.canEntityBeSeen(it) &&
-                            mc.thePlayer!!.getDistanceToEntityBox(it) <= range && RotationUtils.getRotationDifference(it) <= fovValue.get()
+                    EntityUtils.isSelected(it, true) && thePlayer.canEntityBeSeen(it) &&
+                            thePlayer.getDistanceToEntityBox(it) <= range && RotationUtils.getRotationDifference(it) <= fovValue.get()
                 }
                 .minBy { RotationUtils.getRotationDifference(it) } ?: return
 
@@ -53,7 +55,7 @@ class Aimbot : Module() {
             return
 
         val rotation = RotationUtils.limitAngleChange(
-                Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch),
+                Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch),
                 if (centerValue.get())
                     RotationUtils.toRotation(RotationUtils.getCenter(entity.entityBoundingBox), true)
                 else
@@ -62,7 +64,7 @@ class Aimbot : Module() {
                 (turnSpeedValue.get() + Math.random()).toFloat()
         )
 
-        rotation.toPlayer(mc.thePlayer)
+        rotation.toPlayer(thePlayer)
 
         if (jitterValue.get()) {
             val yaw = Random.nextBoolean()
@@ -71,14 +73,14 @@ class Aimbot : Module() {
             val pitchNegative = Random.nextBoolean()
 
             if (yaw)
-                mc.thePlayer.rotationYaw += if (yawNegative) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
+                thePlayer.rotationYaw += if (yawNegative) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
 
             if (pitch) {
-                mc.thePlayer.rotationPitch += if (pitchNegative) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
-                if (mc.thePlayer.rotationPitch > 90)
-                    mc.thePlayer.rotationPitch = 90F
-                else if (mc.thePlayer.rotationPitch < -90)
-                    mc.thePlayer.rotationPitch = -90F
+                thePlayer.rotationPitch += if (pitchNegative) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
+                if (thePlayer.rotationPitch > 90)
+                    thePlayer.rotationPitch = 90F
+                else if (thePlayer.rotationPitch < -90)
+                    thePlayer.rotationPitch = -90F
             }
         }
     }

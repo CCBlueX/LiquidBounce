@@ -18,11 +18,10 @@ interface IEntityPlayerSP : IAbstractClientPlayer {
     val sendQueue: IINetHandlerPlayClient
     val movementInput: IMovementInput
 
-    @get:JvmName("isSneaking")
-    val sneaking: Boolean
     var serverSprintState: Boolean
 
     fun sendChatMessage(msg: String)
     fun respawnPlayer()
     fun addChatMessage(component: IIChatComponent)
+    fun closeScreen()
 }

@@ -7,5 +7,11 @@
 package net.ccbluex.liquidbounce.api.minecraft.client.multiplayer
 
 interface IServerData {
+    val pingToServer: Int
+    val version: Int
+    val gameVersionString: String
+    val serverMOTD: String
+    val populationInfo: Int
+    val serverName: String
     val serverIP: String
 }

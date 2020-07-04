@@ -29,10 +29,8 @@ import static org.lwjgl.opengl.GL11.*;
 
 public final class RenderUtils extends MinecraftInstance {
     private static final Map<Integer, Boolean> glCapMap = new HashMap<>();
-
-    public static int deltaTime;
-
     private static final int[] DISPLAY_LISTS_2D = new int[4];
+    public static int deltaTime;
 
     static {
         for (int i = 0; i < DISPLAY_LISTS_2D.length; i++) {
@@ -319,10 +317,30 @@ public final class RenderUtils extends MinecraftInstance {
         glColor(color);
         glBegin(GL_QUADS);
 
-        glVertex2d(x2, y);
-        glVertex2d(x, y);
-        glVertex2d(x, y2);
-        glVertex2d(x2, y2);
+        glVertex2f(x2, y);
+        glVertex2f(x, y);
+        glVertex2f(x, y2);
+        glVertex2f(x2, y2);
+        glEnd();
+
+        glEnable(GL_TEXTURE_2D);
+        glDisable(GL_BLEND);
+        glDisable(GL_LINE_SMOOTH);
+    }
+
+    public static void drawRect(final int x, final int y, final int x2, final int y2, final int color) {
+        glEnable(GL_BLEND);
+        glDisable(GL_TEXTURE_2D);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_LINE_SMOOTH);
+
+        glColor(color);
+        glBegin(GL_QUADS);
+
+        glVertex2i(x2, y);
+        glVertex2i(x, y);
+        glVertex2i(x, y2);
+        glVertex2i(x2, y2);
         glEnd();
 
         glEnable(GL_TEXTURE_2D);
@@ -613,7 +631,7 @@ public final class RenderUtils extends MinecraftInstance {
 
     /**
      * GL CAP MANAGER
-     *
+     * <p>
      * TODO: Remove gl cap manager and replace by something better
      */
 
@@ -649,5 +667,18 @@ public final class RenderUtils extends MinecraftInstance {
             glEnable(cap);
         else
             glDisable(cap);
+    }
+
+    public static void drawScaledCustomSizeModalRect(int x, int y, float u, float v, int uWidth, int vHeight, int width, int height, float tileWidth, float tileHeight) {
+        float f = 1.0F / tileWidth;
+        float f1 = 1.0F / tileHeight;
+        ITessellator tessellator = classProvider.getTessellatorInstance();
+        IWorldRenderer worldrenderer = tessellator.getWorldRenderer();
+        worldrenderer.begin(7, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX));
+        worldrenderer.pos(x, y + height, 0.0D).tex(u * f, (v + (float) vHeight) * f1).endVertex();
+        worldrenderer.pos(x + width, y + height, 0.0D).tex((u + (float) uWidth) * f, (v + (float) vHeight) * f1).endVertex();
+        worldrenderer.pos(x + width, y, 0.0D).tex((u + (float) uWidth) * f, v * f1).endVertex();
+        worldrenderer.pos(x, y, 0.0D).tex(u * f, v * f1).endVertex();
+        tessellator.draw();
     }
 }

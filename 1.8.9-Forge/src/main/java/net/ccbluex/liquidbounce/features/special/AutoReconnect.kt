@@ -6,10 +6,6 @@
 
 package net.ccbluex.liquidbounce.features.special
 
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
-
-@SideOnly(Side.CLIENT)
 object AutoReconnect {
     const val MAX = 60000
     const val MIN = 1000

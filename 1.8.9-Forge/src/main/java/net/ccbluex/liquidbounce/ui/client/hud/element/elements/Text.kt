@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -86,25 +85,27 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
         }
 
     private fun getReplacement(str: String): String? {
-        if (mc.thePlayer != null) {
+        val thePlayer = mc.thePlayer
+
+        if (thePlayer != null) {
             when (str) {
-                "x" -> return DECIMAL_FORMAT.format(mc.thePlayer.posX)
-                "y" -> return DECIMAL_FORMAT.format(mc.thePlayer.posY)
-                "z" -> return DECIMAL_FORMAT.format(mc.thePlayer.posZ)
-                "xdp" -> return mc.thePlayer.posX.toString()
-                "ydp" -> return mc.thePlayer.posY.toString()
-                "zdp" -> return mc.thePlayer.posZ.toString()
-                "velocity" -> return DECIMAL_FORMAT.format(sqrt(mc.thePlayer.motionX * mc.thePlayer.motionX + mc.thePlayer.motionZ * mc.thePlayer.motionZ))
-                "ping" -> return EntityUtils.getPing(mc.thePlayer).toString()
+                "x" -> return DECIMAL_FORMAT.format(thePlayer.posX)
+                "y" -> return DECIMAL_FORMAT.format(thePlayer.posY)
+                "z" -> return DECIMAL_FORMAT.format(thePlayer.posZ)
+                "xdp" -> return thePlayer.posX.toString()
+                "ydp" -> return thePlayer.posY.toString()
+                "zdp" -> return thePlayer.posZ.toString()
+                "velocity" -> return DECIMAL_FORMAT.format(sqrt(thePlayer.motionX * thePlayer.motionX + thePlayer.motionZ * thePlayer.motionZ))
+                "ping" -> return EntityUtils.getPing(thePlayer).toString()
             }
         }
 
         return when (str) {
-            "username" -> mc.getSession().username
+            "username" -> mc.session.username
             "clientName" -> LiquidBounce.CLIENT_NAME
             "clientVersion" -> "b${LiquidBounce.CLIENT_VERSION}"
             "clientCreator" -> LiquidBounce.CLIENT_CREATOR
-            "fps" -> Minecraft.getDebugFPS().toString()
+            "fps" -> mc.debugFPS.toString()
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
             "serverIp" -> ServerUtils.getRemoteIp()
@@ -159,12 +160,12 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
             fontRenderer.drawString(displayText, 0F, 0F, if (rainbow)
                 0 else color, shadow.get())
 
-            if (editMode && mc.currentScreen is GuiHudDesigner && editTicks <= 40)
+            if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40)
                 fontRenderer.drawString("_", fontRenderer.getStringWidth(displayText) + 2F,
                         0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else color, shadow.get())
         }
 
-        if (editMode && mc.currentScreen !is GuiHudDesigner) {
+        if (editMode && !classProvider.isGuiHudDesigner(mc.currentScreen)) {
             editMode = false
             updateElement()
         }
@@ -173,7 +174,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
                 -2F,
                 -2F,
                 fontRenderer.getStringWidth(displayText) + 2F,
-                fontRenderer.FONT_HEIGHT.toFloat()
+                fontRenderer.fontHeight
         )
     }
 
@@ -196,7 +197,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
     }
 
     override fun handleKey(c: Char, keyCode: Int) {
-        if (editMode && mc.currentScreen is GuiHudDesigner) {
+        if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen)) {
             if (keyCode == Keyboard.KEY_BACK) {
                 if (displayString.get().isNotEmpty())
                     displayString.set(displayString.get().substring(0, displayString.get().length - 1))
@@ -205,7 +206,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
                 return
             }
 
-            if (ChatAllowedCharacters.isAllowedCharacter(c) || c == '§')
+            if (ColorUtils.isAllowedCharacter(c) || c == '§')
                 displayString.set(displayString.get() + c)
 
             updateElement()

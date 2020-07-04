@@ -1,3 +1,9 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
+
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import net.ccbluex.liquidbounce.ui.font.Fonts;
@@ -5,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.IGuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.fml.client.config.GuiButtonExt;
 import net.minecraftforge.fml.relauncher.Side;
@@ -17,17 +23,17 @@ import java.awt.*;
 
 @Mixin(GuiButtonExt.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinGuiButtonExt extends GuiButton {
-   private float cut;
-   private float alpha;
+public abstract class MixinGuiButtonExt extends IGuiButton {
+    private float cut;
+    private float alpha;
 
-   public MixinGuiButtonExt(int p_i1020_1_, int p_i1020_2_, int p_i1020_3_, String p_i1020_4_) {
-      super(p_i1020_1_, p_i1020_2_, p_i1020_3_, p_i1020_4_);
-   }
+    public MixinGuiButtonExt(int p_i1020_1_, int p_i1020_2_, int p_i1020_3_, String p_i1020_4_) {
+        super(p_i1020_1_, p_i1020_2_, p_i1020_3_, p_i1020_4_);
+    }
 
-   public MixinGuiButtonExt(int p_i46323_1_, int p_i46323_2_, int p_i46323_3_, int p_i46323_4_,
-                            int p_i46323_5_, String p_i46323_6_) {
-      super(p_i46323_1_, p_i46323_2_, p_i46323_3_, p_i46323_4_, p_i46323_5_, p_i46323_6_);
+    public MixinGuiButtonExt(int p_i46323_1_, int p_i46323_2_, int p_i46323_3_, int p_i46323_4_,
+                             int p_i46323_5_, String p_i46323_6_) {
+        super(p_i46323_1_, p_i46323_2_, p_i46323_3_, p_i46323_4_, p_i46323_5_, p_i46323_6_);
    }
 
    /**

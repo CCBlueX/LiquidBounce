@@ -12,8 +12,6 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.login.UserUtils
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpPatch
@@ -23,7 +21,6 @@ import org.apache.http.message.BasicHeader
 import org.json.JSONObject
 import kotlin.concurrent.thread
 
-@SideOnly(Side.CLIENT)
 class DonatorCape : Listenable, MinecraftInstance() {
 
     @EventTarget
@@ -33,7 +30,7 @@ class DonatorCape : Listenable, MinecraftInstance() {
             return
 
         thread {
-            val uuid = mc.session.playerID
+            val uuid = mc.session.playerId
             val username = mc.session.username
 
             val httpClient = HttpClients.createDefault()

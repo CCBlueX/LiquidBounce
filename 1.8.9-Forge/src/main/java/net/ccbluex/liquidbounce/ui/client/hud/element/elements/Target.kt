@@ -7,6 +7,8 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -15,10 +17,6 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.FloatValue
-import net.minecraft.client.gui.Gui
-import net.minecraft.entity.Entity
-import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.text.DecimalFormat
@@ -37,18 +35,18 @@ class Target : Element() {
     private val fadeSpeed = FloatValue("FadeSpeed", 2F, 1F, 9F)
 
     private var easingHealth: Float = 0F
-    private var lastTarget: Entity? = null
+    private var lastTarget: IEntity? = null
 
     override fun drawElement(): Border {
         val target = (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target
 
-        if (target is EntityPlayer) {
+        if (classProvider.isEntityPlayer(target) && target != null) {
             if (target != lastTarget || easingHealth < 0 || easingHealth > target.maxHealth ||
                     abs(easingHealth - target.health) < 0.01) {
                 easingHealth = target.health
             }
 
-            val width = (38 + Fonts.font40.getStringWidth(target.name))
+            val width = (38 + (target.name?.let(Fonts.font40::getStringWidth) ?: 0))
                     .coerceAtLeast(118)
                     .toFloat()
 
@@ -71,8 +69,8 @@ class Target : Element() {
 
             easingHealth += ((target.health - easingHealth) / 2.0F.pow(10.0F - fadeSpeed.get())) * RenderUtils.deltaTime
 
-            Fonts.font40.drawString(target.name, 36, 3, 0xffffff)
-            Fonts.font35.drawString("Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
+            target.name?.let { Fonts.font40.drawString(it, 36, 3, 0xffffff) }
+            Fonts.font35.drawString("Distance: ${decimalFormat.format(mc.thePlayer!!.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
 
             // Draw info
             val playerInfo = mc.netHandler.getPlayerInfo(target.uniqueID)
@@ -90,10 +88,10 @@ class Target : Element() {
         return Border(0F, 0F, 120F, 36F)
     }
 
-    private fun drawHead(skin: ResourceLocation, width: Int, height: Int) {
+    private fun drawHead(skin: IResourceLocation, width: Int, height: Int) {
         GL11.glColor4f(1F, 1F, 1F, 1F)
         mc.textureManager.bindTexture(skin)
-        Gui.drawScaledCustomSizeModalRect(2, 2, 8F, 8F, 8, 8, width, height,
+        RenderUtils.drawScaledCustomSizeModalRect(2, 2, 8F, 8F, 8, 8, width, height,
                 64F, 64F)
     }
 

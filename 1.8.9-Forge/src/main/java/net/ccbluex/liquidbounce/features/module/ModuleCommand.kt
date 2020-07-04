@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.block.Block
 
 /**
  * Module command
@@ -17,7 +16,7 @@ import net.minecraft.block.Block
  * @author SenkJu
  */
 class ModuleCommand(val module: Module, val values: List<Value<*>> = module.values) :
-    Command(module.name.toLowerCase(), emptyArray()) {
+        Command(module.name.toLowerCase()) {
 
     init {
         if (values.isEmpty())
@@ -66,15 +65,17 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                     is BlockValue -> {
                         var id: Int
 
-                        try {
-                            id = args[2].toInt()
+                        id = try {
+                            args[2].toInt()
                         } catch (exception: NumberFormatException) {
-                            id = Block.getIdFromBlock(Block.getBlockFromName(args[2]))
+                            val tmpId = functions.getBlockFromName(args[2])?.let { functions.getIdFromBlock(it) }
 
-                            if (id <= 0) {
+                            if (tmpId == null || tmpId <= 0) {
                                 chat("§7Block §8${args[2]}§7 does not exist!")
                                 return
                             }
+
+                            tmpId
                         }
 
                         value.set(id)
@@ -113,9 +114,9 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
             2 -> {
                 when(module.getValue(args[0])) {
                     is BlockValue -> {
-                        return Block.blockRegistry.keys
-                            .map { it.resourcePath.toLowerCase() }
-                            .filter { it.startsWith(args[1], true) }
+                        return functions.getItemRegistryKeys()
+                                .map { it.resourcePath.toLowerCase() }
+                                .filter { it.startsWith(args[1], true) }
                     }
                     is ListValue -> {
                         values.forEach { value ->

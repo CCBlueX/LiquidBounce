@@ -6,6 +6,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.enums.BlockType
+import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.EventState
@@ -23,13 +25,6 @@ import net.ccbluex.liquidbounce.value.BlockValue
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.block.Block
-import net.minecraft.client.gui.inventory.GuiContainer
-import net.minecraft.init.Blocks
-import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.Vec3
 
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
 object ChestAura : Module() {
@@ -38,7 +33,7 @@ object ChestAura : Module() {
     private val delayValue = IntegerValue("Delay", 100, 50, 200)
     private val throughWallsValue = BoolValue("ThroughWalls", true)
     private val visualSwing = BoolValue("VisualSwing", true)
-    private val chestValue = BlockValue("Chest", Block.getIdFromBlock(Blocks.chest))
+    private val chestValue = BlockValue("Chest", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.CHEST)))
     private val rotationsValue = BoolValue("Rotations", true)
 
     private var currentBlock: WBlockPos? = null
@@ -56,7 +51,7 @@ object ChestAura : Module() {
 
         when (event.eventState) {
             EventState.PRE -> {
-                if (mc.currentScreen is GuiContainer)
+                if (classProvider.isGuiContainer(mc.currentScreen))
                     timer.reset()
 
                 val radius = rangeValue.get() + 1
@@ -66,7 +61,7 @@ object ChestAura : Module() {
 
                 currentBlock = BlockUtils.searchBlocks(radius.toInt())
                         .filter {
-                            Block.getIdFromBlock(it.value) == chestValue.get() && !clickedBlocks.contains(it.key)
+                            functions.getIdFromBlock(it.value) == chestValue.get() && !clickedBlocks.contains(it.key)
                                     && BlockUtils.getCenterDistance(it.key) < rangeValue.get()
                         }
                         .filter {
@@ -75,7 +70,7 @@ object ChestAura : Module() {
 
                             val blockPos = it.key
                             val movingObjectPosition = theWorld.rayTraceBlocks(eyesPos,
-                                    blockPos.getVec(), false, true, false)
+                                    blockPos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
 
                             movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
                         }
@@ -87,12 +82,12 @@ object ChestAura : Module() {
             }
 
             EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get().toLong())) {
-                if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, mc.thePlayer.heldItem, currentBlock,
-                                EnumFacing.DOWN, currentBlock!!.getVec())) {
+                if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld!!, thePlayer.heldItem!!, currentBlock!!,
+                                classProvider.getEnumFacing(EnumFacingType.DOWN), currentBlock!!.getVec())) {
                     if (visualSwing.get())
-                        mc.thePlayer.swingItem()
+                        thePlayer.swingItem()
                     else
-                        mc.netHandler.addToSendQueue(C0APacketAnimation())
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
 
                     clickedBlocks.add(currentBlock!!)
                     currentBlock = null

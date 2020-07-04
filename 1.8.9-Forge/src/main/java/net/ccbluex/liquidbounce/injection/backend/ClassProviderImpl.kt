@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
-import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.client.gui.FontRenderer
 import net.minecraft.client.renderer.IImageBuffer
 import net.minecraft.client.renderer.Tessellator

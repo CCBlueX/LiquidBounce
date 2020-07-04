@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumFacing
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
@@ -71,11 +70,11 @@ class LongJump : Module() {
                             var x = 0.0
                             var z = 0.0
 
-                            when (horizontalFacing) {
-                                WEnumFacing.NORTH -> z = -value
-                                WEnumFacing.EAST -> x = +value
-                                WEnumFacing.SOUTH -> z = +value
-                                WEnumFacing.WEST -> x = -value
+                            when {
+                                horizontalFacing.isNorth() -> z = -value
+                                horizontalFacing.isEast() -> x = +value
+                                horizontalFacing.isSouth() -> z = +value
+                                horizontalFacing.isWest() -> x = -value
                                 else -> {
                                 }
                             }

@@ -13,26 +13,24 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.util.ResourceLocation
 
-class TacoCommand : Command("taco", emptyArray()), Listenable {
+class TacoCommand : Command("taco"), Listenable {
     private var toggle = false
     private var image = 0
     private var running = 0f
     private val tacoTextures = arrayOf(
-            ResourceLocation("liquidbounce/taco/1.png"),
-            ResourceLocation("liquidbounce/taco/2.png"),
-            ResourceLocation("liquidbounce/taco/3.png"),
-            ResourceLocation("liquidbounce/taco/4.png"),
-            ResourceLocation("liquidbounce/taco/5.png"),
-            ResourceLocation("liquidbounce/taco/6.png"),
-            ResourceLocation("liquidbounce/taco/7.png"),
-            ResourceLocation("liquidbounce/taco/8.png"),
-            ResourceLocation("liquidbounce/taco/9.png"),
-            ResourceLocation("liquidbounce/taco/10.png"),
-            ResourceLocation("liquidbounce/taco/11.png"),
-            ResourceLocation("liquidbounce/taco/12.png")
+            classProvider.createResourceLocation("liquidbounce/taco/1.png"),
+            classProvider.createResourceLocation("liquidbounce/taco/2.png"),
+            classProvider.createResourceLocation("liquidbounce/taco/3.png"),
+            classProvider.createResourceLocation("liquidbounce/taco/4.png"),
+            classProvider.createResourceLocation("liquidbounce/taco/5.png"),
+            classProvider.createResourceLocation("liquidbounce/taco/6.png"),
+            classProvider.createResourceLocation("liquidbounce/taco/7.png"),
+            classProvider.createResourceLocation("liquidbounce/taco/8.png"),
+            classProvider.createResourceLocation("liquidbounce/taco/9.png"),
+            classProvider.createResourceLocation("liquidbounce/taco/10.png"),
+            classProvider.createResourceLocation("liquidbounce/taco/11.png"),
+            classProvider.createResourceLocation("liquidbounce/taco/12.png")
     )
 
     init {
@@ -53,7 +51,7 @@ class TacoCommand : Command("taco", emptyArray()), Listenable {
             return
 
         running += 0.15f * RenderUtils.deltaTime
-        val scaledResolution = ScaledResolution(mc)
+        val scaledResolution = classProvider.createScaledResolution(mc)
         RenderUtils.drawImage(tacoTextures[image], running.toInt(), scaledResolution.scaledHeight - 60, 64, 32)
         if (scaledResolution.scaledWidth <= running)
             running = -64f

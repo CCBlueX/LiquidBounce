@@ -7,13 +7,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.MaterialType
-import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.Collidable
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -36,12 +34,7 @@ class LiquidWalk : Module() {
         if (thePlayer == null || thePlayer.sneaking) return
 
         when (modeValue.get().toLowerCase()) {
-            "ncp", "vanilla" -> if (collideBlock(thePlayer.entityBoundingBox, object : Collidable {
-                        override fun collideBlock(block: IBlock?): Boolean {
-                            return classProvider.isBlockLiquid(block)
-                        }
-                    }
-                    ) && thePlayer.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.AIR)) && !thePlayer.sneaking) thePlayer.motionY = 0.08
+            "ncp", "vanilla" -> if (collideBlock(thePlayer.entityBoundingBox, classProvider::isBlockLiquid) && thePlayer.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.AIR)) && !thePlayer.sneaking) thePlayer.motionY = 0.08
             "aac" -> {
                 val blockPos = thePlayer.position.down()
                 if (!thePlayer.onGround && getBlock(blockPos) == classProvider.getBlockEnum(BlockType.WATER) || thePlayer.isInWater) {
@@ -100,11 +93,7 @@ class LiquidWalk : Module() {
         if (mc.thePlayer == null)
             return
 
-        if (classProvider.isBlockLiquid(event.block) && !collideBlock(mc.thePlayer!!.entityBoundingBox, object : Collidable {
-                    override fun collideBlock(block: IBlock?): Boolean {
-                        return classProvider.isBlockLiquid(block)
-                    }
-                }) && !mc.thePlayer!!.sneaking) {
+        if (classProvider.isBlockLiquid(event.block) && !collideBlock(mc.thePlayer!!.entityBoundingBox, classProvider::isBlockLiquid) && !mc.thePlayer!!.sneaking) {
             when (modeValue.get().toLowerCase()) {
                 "ncp", "vanilla" -> event.boundingBox = classProvider.createAxisAlignedBB(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.toDouble(), event.y + 1.toDouble(), event.z + 1.toDouble())
             }
@@ -121,11 +110,7 @@ class LiquidWalk : Module() {
         if (classProvider.isCPacketPlayer(event.packet)) {
             val packetPlayer = event.packet.asCPacketPlayer()
 
-            if (collideBlock(classProvider.createAxisAlignedBB(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ), object : Collidable {
-                        override fun collideBlock(block: IBlock?): Boolean {
-                            return classProvider.isBlockLiquid(block)
-                        }
-                    })) {
+            if (collideBlock(classProvider.createAxisAlignedBB(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ), classProvider::isBlockLiquid)) {
                 nextTick = !nextTick
                 if (nextTick) packetPlayer.y -= 0.001
             }

@@ -11,8 +11,8 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
+import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumFacing
 
 /**
  * Called when player attacks other entity
@@ -37,7 +37,7 @@ class BlockBBEvent(blockPos: WBlockPos, val block: IBlock, var boundingBox: IAxi
 /**
  * Called when player clicks a block
  */
-class ClickBlockEvent(val clickedBlock: WBlockPos?, val WEnumFacing: WEnumFacing?) : Event()
+class ClickBlockEvent(val clickedBlock: WBlockPos?, val WEnumFacing: IEnumFacing?) : Event()
 
 /**
  * Called when client is shutting down

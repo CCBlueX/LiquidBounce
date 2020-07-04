@@ -6,9 +6,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.enums.EnumFacingType
+import net.ccbluex.liquidbounce.api.enums.StatType
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumFacing
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
@@ -30,12 +32,12 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.stats.StatList
-import net.minecraft.util.*
 import org.lwjgl.input.Keyboard
+import org.lwjgl.opengl.GL11
 import java.awt.Color
+import kotlin.math.atan2
+import kotlin.math.sqrt
+import kotlin.math.truncate
 
 @ModuleInfo(name = "Tower", description = "Automatically builds a tower beneath you.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_O)
 class Tower : Module() {
@@ -146,7 +148,7 @@ class Tower : Module() {
     //Send jump packets, bypasses Hypixel.
     private fun fakeJump() {
         mc.thePlayer!!.isAirBorne = true
-        mc.thePlayer!!.triggerAchievement(StatList.jumpStat)
+        mc.thePlayer!!.triggerAchievement(classProvider.getStatEnum(StatType.JUMP_STAT))
     }
 
     /**
@@ -171,7 +173,7 @@ class Tower : Module() {
                 fakeJump()
                 thePlayer.motionY = 0.42
             } else if (thePlayer.motionY < 0.23) {
-                thePlayer.setPosition(thePlayer.posX, thePlayer.posY.toInt(), thePlayer.posZ) // TODO: toInt() required?
+                thePlayer.setPosition(thePlayer.posX, truncate(thePlayer.posY), thePlayer.posZ)
             }
             "packet" -> if (thePlayer.onGround && timer.hasTimePassed(2)) {
                 fakeJump()
@@ -184,7 +186,7 @@ class Tower : Module() {
             }
             "teleport" -> {
                 if (teleportNoMotionValue.get()) {
-                    thePlayer.motionY = 0.0 // TODO: Used to be an int?
+                    thePlayer.motionY = 0.0
                 }
                 if ((thePlayer.onGround || !teleportGroundValue.get()) && timer.hasTimePassed(teleportDelayValue.get())) {
                     fakeJump()
@@ -200,7 +202,7 @@ class Tower : Module() {
                 }
                 if (thePlayer.posY > jumpGround + constantMotionJumpGroundValue.get()) {
                     fakeJump()
-                    thePlayer.setPosition(thePlayer.posX, thePlayer.posY.toInt(), thePlayer.posZ) // TODO: toInt() required?
+                    thePlayer.setPosition(thePlayer.posX, truncate(thePlayer.posY), thePlayer.posZ) // TODO: toInt() required?
                     thePlayer.motionY = constantMotionValue.get().toDouble()
                     jumpGround = thePlayer.posY
                 }
@@ -243,11 +245,11 @@ class Tower : Module() {
             if (blockSlot == -1) return
 
             mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
-            itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).getStack()
+            itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
         }
 
         // Place block
-        if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld!!, itemStack, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3)) {
+        if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld!!, itemStack!!, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3)) {
             if (swingValue.get()) {
                 thePlayer.swingItem()
             } else {
@@ -274,10 +276,15 @@ class Tower : Module() {
 
         val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
         var placeRotation: PlaceRotation? = null
-        for (side in WEnumFacing.values()) {
+        for (facingType in EnumFacingType.values()) {
+            val side = classProvider.getEnumFacing(facingType)
             val neighbor = blockPosition.offset(side)
-            if (!canBeClicked(neighbor)) continue
-            val dirVec = Vec3(side.directionVec)
+
+            if (!canBeClicked(neighbor))
+                continue
+
+            val dirVec = WVec3(side.directionVec)
+
             var xSearch = 0.1
             while (xSearch < 0.9) {
                 var ySearch = 0.1
@@ -287,8 +294,8 @@ class Tower : Module() {
                         val posVec = WVec3(blockPosition).addVector(xSearch, ySearch, zSearch)
                         val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
                         val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
-                        if (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false,
-                                        true, false) != null) {
+                        if (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, stopOnLiquid = false,
+                                        ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) != null) {
                             zSearch += 0.1
                             continue
                         }
@@ -297,15 +304,16 @@ class Tower : Module() {
                         val diffX = hitVec.xCoord - eyesPos.xCoord
                         val diffY = hitVec.yCoord - eyesPos.yCoord
                         val diffZ = hitVec.zCoord - eyesPos.zCoord
-                        val diffXZ = MathHelper.sqrt_double(diffX * diffX + diffZ * diffZ).toDouble()
+                        val diffXZ = sqrt(diffX * diffX + diffZ * diffZ)
+
                         val rotation = Rotation(
-                                MathHelper.wrapAngleTo180_float(Math.toDegrees(Math.atan2(diffZ, diffX)).toFloat() - 90f),
-                                MathHelper.wrapAngleTo180_float((-Math.toDegrees(Math.atan2(diffY, diffXZ))).toFloat())
+                                WMathHelper.wrapAngleTo180_float(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f),
+                                WMathHelper.wrapAngleTo180_float((-Math.toDegrees(atan2(diffY, diffXZ))).toFloat())
                         )
                         val rotationVector = RotationUtils.getVectorForRotation(rotation)
                         val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
-                        val obj = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false,
-                                false, true)
+                        val obj = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, stopOnLiquid = false,
+                                ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
                         if (!(obj!!.typeOfHit == IMovingObjectPosition.WMovingObjectType.BLOCK && obj.blockPos == neighbor)) {
                             zSearch += 0.1
                             continue
@@ -345,21 +353,24 @@ class Tower : Module() {
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
         if (counterDisplayValue.get()) {
-            GlStateManager.pushMatrix()
+            GL11.glPushMatrix()
             val blockOverlay = LiquidBounce.moduleManager.getModule(BlockOverlay::class.java) as BlockOverlay
             if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) {
-                GlStateManager.translate(0f, 15f, 0f)
+                GL11.glTranslatef(0f, 15f, 0f)
             }
             val info = "Blocks: §7$blocksAmount"
-            val scaledResolution = ScaledResolution(mc)
+            val scaledResolution = classProvider.createScaledResolution(mc)
+
             RenderUtils.drawBorderedRect(scaledResolution.scaledWidth / 2 - 2.toFloat(),
                     scaledResolution.scaledHeight / 2 + 5.toFloat(),
                     scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2.toFloat(),
                     scaledResolution.scaledHeight / 2 + 16.toFloat(), 3f, Color.BLACK.rgb, Color.BLACK.rgb)
-            GlStateManager.resetColor()
+
+            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+
             Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2.toFloat(),
                     scaledResolution.scaledHeight / 2 + 7.toFloat(), Color.WHITE.rgb)
-            GlStateManager.popMatrix()
+            GL11.glPopMatrix()
         }
     }
 
@@ -375,7 +386,7 @@ class Tower : Module() {
         get() {
             var amount = 0
             for (i in 36..44) {
-                val itemStack = mc.thePlayer!!.inventoryContainer.getSlot(i).getStack()
+                val itemStack = mc.thePlayer!!.inventoryContainer.getSlot(i).stack
                 if (itemStack != null && classProvider.isItemBlock(itemStack.item)) {
                     val block = itemStack.item!!.asItemBlock().block
                     if (mc.thePlayer!!.heldItem == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block)) {

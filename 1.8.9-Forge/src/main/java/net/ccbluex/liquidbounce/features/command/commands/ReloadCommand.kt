@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.font.Fonts
 
-class ReloadCommand : Command("reload", arrayOf("configreload")) {
+class ReloadCommand : Command("reload", "configreload") {
     /**
      * Execute commands with provided [args]
      */

@@ -17,7 +17,7 @@ import kotlin.math.sqrt
 /**
  * Rotations
  */
-data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance {
+data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
 
     /**
      * Set rotations to [player]

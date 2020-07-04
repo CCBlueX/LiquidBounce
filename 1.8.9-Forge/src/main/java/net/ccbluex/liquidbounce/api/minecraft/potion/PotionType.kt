@@ -18,5 +18,6 @@ enum class PotionType {
     MOVE_SLOWDOWN,
     HARM,
     WITHER,
-    POISON
+    POISON,
+    NIGHT_VISION
 }
