@@ -23,7 +23,7 @@ import kotlin.concurrent.thread
 class ClientRichPresence : MinecraftInstance() {
 
     // IPC Client
-    private var ipcClient: IPCClient
+    private var ipcClient: IPCClient? = null
 
     private var appID = 0L
     private val assets = mutableMapOf<String, String>()
@@ -32,18 +32,17 @@ class ClientRichPresence : MinecraftInstance() {
     // Status of running
     private var running: Boolean = false
 
-    init {
-        loadConfiguration()
-        ipcClient = IPCClient(appID)
-    }
-
     /**
      * Setup Discord RPC
      */
     fun setup() {
         try {
             running = true
-            ipcClient.setListener(object : IPCListener {
+
+            loadConfiguration()
+
+            ipcClient = IPCClient(appID)
+            ipcClient?.setListener(object : IPCListener {
 
                 /**
                  * Fired whenever an [IPCClient] is ready and connected to Discord.
@@ -74,7 +73,7 @@ class ClientRichPresence : MinecraftInstance() {
                 }
 
             })
-            ipcClient.connect()
+            ipcClient?.connect()
         } catch (e: Throwable) {
             ClientUtils.getLogger().error("Failed to setup Discord RPC.", e)
         }
@@ -104,20 +103,20 @@ class ClientRichPresence : MinecraftInstance() {
         }
 
         // Check ipc client is connected and send rpc
-        if (ipcClient.status == PipeStatus.CONNECTED)
-            ipcClient.sendRichPresence(builder.build())
+        if (ipcClient?.status == PipeStatus.CONNECTED)
+            ipcClient?.sendRichPresence(builder.build())
     }
 
     /**
      * Shutdown ipc client
      */
     fun shutdown() {
-        if (ipcClient.status != PipeStatus.CONNECTED) {
+        if (ipcClient?.status != PipeStatus.CONNECTED) {
             return
         }
 
         try {
-            ipcClient.close()
+            ipcClient?.close()
         } catch (e: Throwable) {
             ClientUtils.getLogger().error("Failed to close Discord RPC.", e)
         }
