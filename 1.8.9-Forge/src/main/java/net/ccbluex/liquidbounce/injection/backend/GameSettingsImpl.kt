@@ -53,3 +53,6 @@ class GameSettingsImpl(val wrapped: GameSettings) : IGameSettings {
 
     override fun setModelPartEnabled(modelParts: WEnumPlayerModelParts, enabled: Boolean) = wrapped.setModelPartEnabled(modelParts.unwrap(), enabled)
 }
+
+inline fun IGameSettings.unwrap(): GameSettings = (this as GameSettingsImpl).wrapped
+inline fun GameSettings.wrap(): IGameSettings = GameSettingsImpl(this)

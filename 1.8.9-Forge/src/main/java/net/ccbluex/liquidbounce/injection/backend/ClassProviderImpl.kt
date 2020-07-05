@@ -44,16 +44,19 @@ import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.injection.backend.utils.GuiPasswordField
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
-import net.minecraft.client.gui.FontRenderer
-import net.minecraft.client.gui.GuiButton
-import net.minecraft.client.gui.GuiTextField
-import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.block.material.Material
+import net.minecraft.client.entity.EntityOtherPlayerMP
+import net.minecraft.client.gui.*
 import net.minecraft.client.renderer.IImageBuffer
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.ThreadDownloadImageData
 import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats
+import net.minecraft.enchantment.Enchantment
+import net.minecraft.entity.passive.EntityAnimal
 import net.minecraft.event.ClickEvent
 import net.minecraft.init.Blocks
+import net.minecraft.init.Items
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
@@ -61,10 +64,14 @@ import net.minecraft.nbt.NBTTagDouble
 import net.minecraft.nbt.NBTTagList
 import net.minecraft.nbt.NBTTagString
 import net.minecraft.network.PacketBuffer
-import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.ChatComponentText
-import net.minecraft.util.ResourceLocation
-import net.minecraft.util.Session
+import net.minecraft.network.play.client.C09PacketHeldItemChange
+import net.minecraft.network.play.server.S14PacketEntity
+import net.minecraft.potion.Potion
+import net.minecraft.potion.PotionEffect
+import net.minecraft.stats.StatList
+import net.minecraft.tileentity.TileEntityChest
+import net.minecraft.util.*
+import net.minecraftforge.fml.client.GuiModList
 import java.awt.image.BufferedImage
 import java.io.File
 
@@ -121,33 +128,19 @@ object ClassProviderImpl : IClassProvider {
 
     override fun createNBTTagDouble(value: Double): INBTTagDouble = NBTTagDoubleImpl(NBTTagDouble(value))
 
-    override fun createEntityOtherPlayerMP(world: IWorldClient, GameProfile: GameProfile): IEntityOtherPlayerMP {
-        TODO("Not yet implemented")
-    }
+    override fun createEntityOtherPlayerMP(world: IWorldClient, gameProfile: GameProfile): IEntityOtherPlayerMP = EntityOtherPlayerMPImpl(EntityOtherPlayerMP(world.unwrap(), gameProfile))
 
-    override fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect {
-        TODO("Not yet implemented")
-    }
+    override fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect = PotionEffectImpl(PotionEffect(id, time, strength))
 
-    override fun createGuiOptions(parentScreen: IGuiScreen, gameSettings: IGameSettings): IGuiScreen {
-        TODO("Not yet implemented")
-    }
+    override fun createGuiOptions(parentScreen: IGuiScreen, gameSettings: IGameSettings): IGuiScreen = GuiScreenImpl(GuiOptions(parentScreen.unwrap(), gameSettings.unwrap()))
 
-    override fun createGuiSelectWorld(parentScreen: IGuiScreen): IGuiScreen {
-        TODO("Not yet implemented")
-    }
+    override fun createGuiSelectWorld(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiSelectWorld(parentScreen.unwrap()))
 
-    override fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen {
-        TODO("Not yet implemented")
-    }
+    override fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiMultiplayer(parentScreen.unwrap()))
 
-    override fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen {
-        TODO("Not yet implemented")
-    }
+    override fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiModList(parentScreen.unwrap()))
 
-    override fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(C09PacketHeldItemChange(slot))
 
     override fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement {
         TODO("Not yet implemented")
@@ -225,9 +218,7 @@ object ClassProviderImpl : IClassProvider {
         TODO("Not yet implemented")
     }
 
-    override fun isEntityAnimal(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityAnimal(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityAnimal
 
     override fun isEntitySquid(obj: Any?): Boolean {
         TODO("Not yet implemented")
@@ -301,9 +292,7 @@ object ClassProviderImpl : IClassProvider {
         TODO("Not yet implemented")
     }
 
-    override fun isTileEntityChest(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isTileEntityChest(it: Any?): Boolean = it is TileEntityImpl && it.wrapped is TileEntityChest
 
     override fun isTileEntityEnderChest(it: Any?): Boolean {
         TODO("Not yet implemented")
@@ -321,9 +310,7 @@ object ClassProviderImpl : IClassProvider {
         TODO("Not yet implemented")
     }
 
-    override fun isSPacketEntity(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isSPacketEntity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S14PacketEntity
 
     override fun isSPacketResourcePackSend(obj: Any?): Boolean {
         TODO("Not yet implemented")
@@ -574,7 +561,7 @@ object ClassProviderImpl : IClassProvider {
     }
 
     override fun isGuiHudDesigner(obj: Any?): Boolean {
-        TODO("Not yet implemented")
+        TODO("Implement GUI Wrappers")
     }
 
     override fun isClickGui(obj: Any?): Boolean {
@@ -584,11 +571,34 @@ object ClassProviderImpl : IClassProvider {
     override fun isFontRenderer(item: Any?): Boolean = item is FontRenderer
 
     override fun getPotionEnum(type: PotionType): IPotion {
-        TODO("Not yet implemented")
+        return PotionImpl(when (type) {
+            PotionType.HEAL -> Potion.heal
+            PotionType.REGENERATION -> Potion.regeneration
+            PotionType.BLINDNESS -> Potion.blindness
+            PotionType.MOVE_SPEED -> Potion.moveSpeed
+            PotionType.HUNGER -> Potion.hunger
+            PotionType.DIG_SLOWDOWN -> Potion.digSlowdown
+            PotionType.CONFUSION -> Potion.confusion
+            PotionType.WEAKNESS -> Potion.weakness
+            PotionType.MOVE_SLOWDOWN -> Potion.moveSlowdown
+            PotionType.HARM -> Potion.harm
+            PotionType.WITHER -> Potion.wither
+            PotionType.POISON -> Potion.poison
+            PotionType.NIGHT_VISION -> Potion.nightVision
+        })
     }
 
     override fun getEnumFacing(type: EnumFacingType): IEnumFacing {
-        TODO("Not yet implemented")
+        return EnumFacingImpl(
+                when (type) {
+                    EnumFacingType.DOWN -> EnumFacing.DOWN
+                    EnumFacingType.UP -> EnumFacing.UP
+                    EnumFacingType.NORTH -> EnumFacing.NORTH
+                    EnumFacingType.SOUTH -> EnumFacing.SOUTH
+                    EnumFacingType.WEST -> EnumFacing.WEST
+                    EnumFacingType.EAST -> EnumFacing.EAST
+                }
+        )
     }
 
     override fun getBlockEnum(type: BlockType): IBlock {
@@ -655,23 +665,57 @@ object ClassProviderImpl : IClassProvider {
     }
 
     override fun getMaterialEnum(type: MaterialType): IMaterial {
-        TODO("Not yet implemented")
+        return MaterialImpl(
+                when (type) {
+                    MaterialType.AIR -> Material.air
+                    MaterialType.WATER -> Material.water
+                    MaterialType.LAVA -> Material.lava
+                }
+        )
     }
 
     override fun getStatEnum(type: StatType): IStatBase {
-        TODO("Not yet implemented")
+        return StatBaseImpl(
+                when (type) {
+                    StatType.JUMP_STAT -> StatList.jumpStat
+                }
+        )
     }
 
     override fun getItemEnum(type: ItemType): IItem {
-        TODO("Not yet implemented")
+        return ItemImpl(
+                when (type) {
+                    ItemType.MUSHROOM_STEW -> Items.mushroom_stew
+                    ItemType.BOWL -> Items.bowl
+                    ItemType.FLINT_AND_STEEL -> Items.flint_and_steel
+                    ItemType.LAVA_BUCKET -> Items.lava_bucket
+                    ItemType.WRITABLE_BOOK -> Items.writable_book
+                    ItemType.WATER_BUCKET -> Items.water_bucket
+                    ItemType.COMMAND_BLOCK_MINECART -> Items.command_block_minecart
+                    ItemType.POTION_ITEM -> Items.potionitem
+                    ItemType.SKULL -> Items.skull
+                    ItemType.ARMOR_STAND -> Items.armor_stand
+                }
+        )
     }
 
     override fun getEnchantmentEnum(type: EnchantmentType): IEnchantment {
-        TODO("Not yet implemented")
+        return EnchantmentImpl(
+                when (type) {
+                    EnchantmentType.SHARPNESS -> Enchantment.sharpness
+                    EnchantmentType.POWER -> Enchantment.power
+                }
+        )
     }
 
     override fun getVertexFormatEnum(type: WDefaultVertexFormats): IVertexFormat {
-        TODO("Not yet implemented")
+        return VertexFormatImpl(
+                when (type) {
+                    WDefaultVertexFormats.POSITION -> DefaultVertexFormats.POSITION
+                    WDefaultVertexFormats.POSITION_TEX -> DefaultVertexFormats.POSITION_TEX
+                    WDefaultVertexFormats.POSITION_COLOR -> DefaultVertexFormats.POSITION_COLOR
+                }
+        )
     }
 
     override fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer {
