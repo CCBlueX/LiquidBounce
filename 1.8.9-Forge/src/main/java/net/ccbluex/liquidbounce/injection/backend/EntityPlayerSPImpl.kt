@@ -24,7 +24,7 @@ open class EntityPlayerSPImpl<T : EntityPlayerSP>(wrapped: T) : AbstractClientPl
             wrapped.horseJumpPower = value
         }
     override val sendQueue: IINetHandlerPlayClient
-        get() = TODO("Not yet implemented")
+        get() = wrapped.sendQueue.wrap()
     override val movementInput: IMovementInput
         get() = wrapped.movementInput.wrap()
     override val sneaking: Boolean
@@ -43,3 +43,6 @@ open class EntityPlayerSPImpl<T : EntityPlayerSP>(wrapped: T) : AbstractClientPl
 
     override fun closeScreen() = wrapped.closeScreen()
 }
+
+inline fun IEntityPlayerSP.unwrap(): EntityPlayerSP = (this as EntityPlayerSPImpl<*>).wrapped
+inline fun EntityPlayerSP.wrap(): IEntityPlayerSP = EntityPlayerSPImpl(this)

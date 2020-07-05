@@ -14,7 +14,6 @@ import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
-import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.block.Block
 
 class BlockImpl(val wrapped: Block) : IBlock {
@@ -50,3 +49,6 @@ class BlockImpl(val wrapped: Block) : IBlock {
 
     override fun getIdFromBlock(block: IBlock): Int = Block.getIdFromBlock(block.unwrap())
 }
+
+inline fun IBlock.unwrap(): Block = (this as BlockImpl).wrapped
+inline fun Block.wrap(): IBlock = BlockImpl(this)

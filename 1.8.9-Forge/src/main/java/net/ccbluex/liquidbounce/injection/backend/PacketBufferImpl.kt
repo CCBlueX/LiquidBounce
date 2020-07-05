@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
-import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
 import net.minecraft.network.PacketBuffer
 
 class PacketBufferImpl(val wrapped: PacketBuffer) : IPacketBuffer {
@@ -26,3 +25,6 @@ class PacketBufferImpl(val wrapped: PacketBuffer) : IPacketBuffer {
         return this
     }
 }
+
+inline fun IPacketBuffer.unwrap(): PacketBuffer = (this as PacketBufferImpl).wrapped
+inline fun PacketBuffer.wrap(): IPacketBuffer = PacketBufferImpl(this)

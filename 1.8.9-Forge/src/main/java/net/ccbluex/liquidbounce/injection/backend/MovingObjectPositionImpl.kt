@@ -27,5 +27,5 @@ class MovingObjectPositionImpl(val wrapped: MovingObjectPosition) : IMovingObjec
         get() = wrapped.typeOfHit.wrap()
 }
 
-
-
+inline fun IMovingObjectPosition.unwrap(): MovingObjectPosition = (this as MovingObjectPositionImpl).wrapped
+inline fun MovingObjectPosition.wrap(): IMovingObjectPosition = MovingObjectPositionImpl(this)

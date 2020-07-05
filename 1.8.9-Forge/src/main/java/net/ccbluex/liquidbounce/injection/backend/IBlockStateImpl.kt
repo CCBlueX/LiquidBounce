@@ -14,3 +14,6 @@ class IBlockStateImpl(val wrapped: IBlockState) : IIBlockState {
     override val block: IBlock
         get() = BlockImpl(wrapped.block)
 }
+
+inline fun IIBlockState.unwrap(): IBlockState = (this as IBlockStateImpl).wrapped
+inline fun IBlockState.wrap(): IIBlockState = IBlockStateImpl(this)

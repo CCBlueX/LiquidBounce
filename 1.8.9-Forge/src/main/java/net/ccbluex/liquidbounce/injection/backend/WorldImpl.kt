@@ -19,12 +19,11 @@ import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.api.minecraft.world.border.IWorldBorder
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
-import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.entity.Entity
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.world.World
 
-class WorldImpl(val wrapped: World) : IWorld {
+open class WorldImpl<T : World>(val wrapped: T) : IWorld {
     override val scoreboard: IScoreboard
         get() = wrapped.scoreboard.wrap()
 
@@ -71,3 +70,5 @@ class WorldImpl(val wrapped: World) : IWorld {
     override fun getChunkFromChunkCoords(x: Int, z: Int): IChunk = wrapped.getChunkFromChunkCoords(x, z).wrap()
 }
 
+inline fun IWorld.unwrap(): World = (this as WorldImpl<*>).wrapped
+inline fun World.wrap(): IWorld = WorldImpl(this)

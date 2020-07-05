@@ -22,3 +22,6 @@ class KeyBindingImpl(val wrapped: KeyBinding) : IKeyBinding {
 
     override fun onTick(keyCode: Int) = KeyBinding.onTick(keyCode)
 }
+
+inline fun IKeyBinding.unwrap(): KeyBinding = (this as KeyBindingImpl).wrapped
+inline fun KeyBinding.wrap(): IKeyBinding = KeyBindingImpl(this)

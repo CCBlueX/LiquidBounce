@@ -10,6 +10,8 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiContainer
 
 interface IGuiScreen : IGui {
+    val width: Int
+    val height: Int
     val fontRendererObj: IFontRenderer
     val buttonList: MutableList<IGuiButton>
 
@@ -18,9 +20,7 @@ interface IGuiScreen : IGui {
     fun asGuiChest(): IGuiChest
 
     // Non-virtual calls. Used for GuiScreen-Wrapping
-    fun superInitGui()
     fun superMouseReleased(mouseX: Int, mouseY: Int, state: Int)
     fun drawBackground(i: Int)
-    fun superOnGuiClosed()
     fun drawDefaultBackground()
 }

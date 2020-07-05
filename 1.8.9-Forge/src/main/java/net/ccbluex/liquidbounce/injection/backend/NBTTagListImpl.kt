@@ -9,8 +9,6 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTBase
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagCompound
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagList
-import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
-import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.nbt.NBTTagList
 
 class NBTTagListImpl(wrapped: NBTTagList) : NBTBaseImpl<NBTTagList>(wrapped), INBTTagList {
@@ -19,3 +17,6 @@ class NBTTagListImpl(wrapped: NBTTagList) : NBTBaseImpl<NBTTagList>(wrapped), IN
     override fun getCompoundTagAt(index: Int): INBTTagCompound = wrapped.getCompoundTagAt(index).wrap()
     override fun appendTag(createNBTTagString: INBTBase) = wrapped.appendTag(createNBTTagString.unwrap())
 }
+
+inline fun INBTTagList.unwrap(): NBTTagList = (this as NBTTagListImpl).wrapped
+inline fun NBTTagList.wrap(): INBTTagList = NBTTagListImpl(this)

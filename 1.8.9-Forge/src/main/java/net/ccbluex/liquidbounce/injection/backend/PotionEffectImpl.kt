@@ -20,3 +20,6 @@ class PotionEffectImpl(val wrapped: PotionEffect) : IPotionEffect {
     override val potionID: Int
         get() = wrapped.potionID
 }
+
+inline fun IPotionEffect.unwrap(): PotionEffect = (this as PotionEffectImpl).wrapped
+inline fun PotionEffect.wrap(): IPotionEffect = PotionEffectImpl(this)

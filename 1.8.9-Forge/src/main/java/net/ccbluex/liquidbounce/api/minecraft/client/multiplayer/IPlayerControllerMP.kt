@@ -25,9 +25,9 @@ interface IPlayerControllerMP {
 
     fun windowClick(windowId: Int, slot: Int, mouseButton: Int, mode: Int, player: IEntityPlayerSP)
     fun updateController()
-    fun sendUseItem(playerSP: IEntityPlayer, theWorld: IWorld, itemStack: IItemStack)
+    fun sendUseItem(playerSP: IEntityPlayer, theWorld: IWorld, itemStack: IItemStack): Boolean
     fun onPlayerRightClick(playerSP: IEntityPlayerSP, theWorld: IWorldClient, itemStack: IItemStack?, position: WBlockPos, sideOpposite: IEnumFacing, hitVec: WVec3): Boolean
     fun onStoppedUsingItem(thePlayer: IEntityPlayerSP)
-    fun clickBlock(blockPos: WBlockPos, enumFacing: IEnumFacing)
+    fun clickBlock(blockPos: WBlockPos, enumFacing: IEnumFacing): Boolean
     fun onPlayerDestroyBlock(blockPos: WBlockPos, enumFacing: IEnumFacing): Boolean
 }

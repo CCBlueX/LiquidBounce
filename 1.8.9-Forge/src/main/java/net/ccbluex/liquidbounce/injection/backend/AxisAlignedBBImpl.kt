@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
-import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.util.AxisAlignedBB
 
 class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB {
@@ -52,3 +51,6 @@ class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB {
         get() = wrapped.maxZ
 
 }
+
+inline fun IAxisAlignedBB.unwrap(): AxisAlignedBB = (this as AxisAlignedBBImpl).wrapped
+inline fun AxisAlignedBB.wrap(): IAxisAlignedBB = AxisAlignedBBImpl(this)

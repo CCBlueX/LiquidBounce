@@ -8,8 +8,6 @@ package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.item.*
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
-import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
-import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.item.*
 
 open class ItemImpl<T : Item>(val wrapped: T) : IItem {
@@ -24,3 +22,6 @@ open class ItemImpl<T : Item>(val wrapped: T) : IItem {
     override fun asItemSword(): IItemSword = ItemSwordImpl(wrapped as ItemSword)
     override fun asItemBucket(): IItemBucket = ItemBucketImpl(wrapped as ItemBucket)
 }
+
+inline fun IItem.unwrap(): Item = (this as ItemImpl<*>).wrapped
+inline fun Item.wrap(): IItem = ItemImpl(this)

@@ -42,14 +42,29 @@ import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
+import net.ccbluex.liquidbounce.injection.backend.utils.GuiPasswordField
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
-import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.client.gui.FontRenderer
+import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.GuiTextField
+import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.IImageBuffer
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.ThreadDownloadImageData
+import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.event.ClickEvent
 import net.minecraft.init.Blocks
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.nbt.NBTTagCompound
+import net.minecraft.nbt.NBTTagDouble
+import net.minecraft.nbt.NBTTagList
+import net.minecraft.nbt.NBTTagString
+import net.minecraft.network.PacketBuffer
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.ChatComponentText
 import net.minecraft.util.ResourceLocation
+import net.minecraft.util.Session
 import java.awt.image.BufferedImage
 import java.io.File
 
@@ -68,81 +83,43 @@ object ClassProviderImpl : IClassProvider {
         }))
     }
 
-    override fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer {
-        TODO("Not yet implemented")
-    }
+    override fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer = PacketBufferImpl(PacketBuffer(buffer))
 
-    override fun createChatComponentText(text: String): IIChatComponent {
-        TODO("Not yet implemented")
-    }
+    override fun createChatComponentText(text: String): IIChatComponent = IChatComponentImpl(ChatComponentText(text))
 
-    override fun createClickEvent(action: IClickEvent.WAction, value: String): IClickEvent {
-        TODO("Not yet implemented")
-    }
+    override fun createClickEvent(action: IClickEvent.WAction, value: String): IClickEvent = ClickEventImpl(ClickEvent(action.unwrap(), value))
 
-    override fun createGuiTextField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField {
-        TODO("Not yet implemented")
-    }
+    override fun createGuiTextField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField = GuiTextFieldImpl(GuiTextField(id, iFontRenderer.unwrap(), x, y, width, height))
 
-    override fun createGuiPasswordField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField {
-        TODO("Not yet implemented")
-    }
+    override fun createGuiPasswordField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField = GuiTextFieldImpl(GuiPasswordField(id, iFontRenderer.unwrap(), x, y, width, height))
 
-    override fun createGuiButton(id: Int, x: Int, y: Int, width: Int, height: Int, text: String): IGuiButton {
-        TODO("Not yet implemented")
-    }
+    override fun createGuiButton(id: Int, x: Int, y: Int, width: Int, height: Int, text: String): IGuiButton = GuiButtonImpl(GuiButton(id, x, y, width, height, text))
 
-    override fun createGuiButton(id: Int, x: Int, y: Int, text: String): IGuiButton {
-        TODO("Not yet implemented")
-    }
+    override fun createGuiButton(id: Int, x: Int, y: Int, text: String): IGuiButton = GuiButtonImpl(GuiButton(id, x, y, text))
 
-    override fun createSession(name: String, uuid: String, accessToken: String, accountType: String): ISession {
-        TODO("Not yet implemented")
-    }
+    override fun createSession(name: String, uuid: String, accessToken: String, accountType: String): ISession = SessionImpl(Session(name, uuid, accessToken, accountType))
 
-    override fun createDynamicTexture(image: BufferedImage): IDynamicTexture {
-        TODO("Not yet implemented")
-    }
+    override fun createDynamicTexture(image: BufferedImage): IDynamicTexture = DynamicTextureImpl(DynamicTexture(image))
 
-    override fun createItem(): IItem {
-        TODO("Not yet implemented")
-    }
+    override fun createItem(): IItem = ItemImpl(Item())
 
-    override fun createItemStack(item: IItem, amount: Int, meta: Int): IItemStack {
-        TODO("Not yet implemented")
-    }
+    override fun createItemStack(item: IItem, amount: Int, meta: Int): IItemStack = ItemStackImpl(ItemStack(item.unwrap(), amount, meta))
 
-    override fun createItemStack(item: IItem): IItemStack {
-        TODO("Not yet implemented")
-    }
+    override fun createItemStack(item: IItem): IItemStack = ItemStackImpl(ItemStack(item.unwrap()))
 
-    override fun createItemStack(blockEnum: IBlock): IItemStack {
-        TODO("Not yet implemented")
-    }
+    override fun createItemStack(blockEnum: IBlock): IItemStack = ItemStackImpl(ItemStack(blockEnum.unwrap()))
 
-    override fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB {
-        TODO("Not yet implemented")
-    }
+    override fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB = AxisAlignedBBImpl(AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ))
 
-    override fun createScaledResolution(mc: IMinecraft): IScaledResolution {
-        TODO("Not yet implemented")
-    }
+    override fun createScaledResolution(mc: IMinecraft): IScaledResolution = ScaledResolutionImpl(ScaledResolution(mc.unwrap()))
 
-    override fun createNBTTagCompound(): INBTTagCompound {
-        TODO("Not yet implemented")
-    }
+    override fun createNBTTagCompound(): INBTTagCompound = NBTTagCompoundImpl(NBTTagCompound())
 
-    override fun createNBTTagList(): INBTTagList {
-        TODO("Not yet implemented")
-    }
+    override fun createNBTTagList(): INBTTagList = NBTTagListImpl(NBTTagList())
 
-    override fun createNBTTagString(string: String): INBTTagString {
-        TODO("Not yet implemented")
-    }
+    override fun createNBTTagString(string: String): INBTTagString = NBTTagStringImpl(NBTTagString(string))
 
-    override fun createNBTTagDouble(value: Double): INBTTagDouble {
-        TODO("Not yet implemented")
-    }
+    override fun createNBTTagDouble(value: Double): INBTTagDouble = NBTTagDoubleImpl(NBTTagDouble(value))
 
     override fun createEntityOtherPlayerMP(world: IWorldClient, GameProfile: GameProfile): IEntityOtherPlayerMP {
         TODO("Not yet implemented")

@@ -209,3 +209,5 @@ open class EntityImpl<T : Entity>(val wrapped: T) : IEntity {
     override fun setPositionAndRotation(oldX: Double, oldY: Double, oldZ: Double, rotationYaw: Float, rotationPitch: Float) = wrapped.setPositionAndRotation(oldX, oldY, oldZ, rotationYaw, rotationPitch)
 }
 
+inline fun IEntity.unwrap(): Entity = (this as EntityImpl).wrapped
+inline fun Entity.wrap(): IEntity = EntityImpl(this)

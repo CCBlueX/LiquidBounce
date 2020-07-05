@@ -25,8 +25,6 @@ import net.ccbluex.liquidbounce.api.minecraft.renderer.entity.IRenderManager
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.ISession
 import net.ccbluex.liquidbounce.api.minecraft.util.ITimer
-import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
-import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.client.Minecraft
 
 class MinecraftImpl(val wrapped: Minecraft) : IMinecraft {
@@ -61,35 +59,36 @@ class MinecraftImpl(val wrapped: Minecraft) : IMinecraft {
     override val renderManager: IRenderManager
         get() = wrapped.renderManager.wrap()
     override val playerController: IPlayerControllerMP
-        get() = wrapped.playerController.wrap
+        get() = wrapped.playerController.wrap()
     override val currentScreen: IGuiScreen?
-        get() = TODO("Not yet implemented")
+        get() = wrapped.currentScreen?.wrap()
     override var renderViewEntity: IEntity?
         get() = wrapped.renderViewEntity.wrap()
         set(value) {
             wrapped.renderViewEntity = value?.unwrap()
         }
     override val netHandler: IINetHandlerPlayClient
-        get() = TODO("Not yet implemented")
+        get() = wrapped.netHandler.wrap()
     override val theWorld: IWorldClient?
-        get() = TODO("Not yet implemented")
+        get() = wrapped.theWorld?.wrap()
     override val thePlayer: IEntityPlayerSP?
         get() = wrapped.thePlayer?.wrap()
     override val textureManager: ITextureManager
-        get() = TODO("Not yet implemented")
+        get() = wrapped.textureManager.wrap()
     override val isIntegratedServerRunning: Boolean
         get() = wrapped.isIntegratedServerRunning
     override val currentServerData: IServerData?
-        get() = TODO("Not yet implemented")
+        get() = wrapped.currentServerData?.wrap()
     override val gameSettings: IGameSettings
         get() = GameSettingsImpl(wrapped.gameSettings)
     override val fontRendererObj: IFontRenderer
-        get() = TODO("Not yet implemented")
+        get() = wrapped.fontRendererObj.wrap()
 
-    override fun displayGuiScreen(screen: IGuiScreen?) {
-        TODO("Not yet implemented")
-    }
+    override fun displayGuiScreen(screen: IGuiScreen?) = wrapped.displayGuiScreen(screen?.unwrap())
 
     override fun rightClickMouse() = wrapped.rightClickMouse()
     override fun shutdown() = wrapped.shutdown()
 }
+
+inline fun IMinecraft.unwrap(): Minecraft = (this as MinecraftImpl).wrapped
+inline fun Minecraft.wrap(): IMinecraft = MinecraftImpl(this)

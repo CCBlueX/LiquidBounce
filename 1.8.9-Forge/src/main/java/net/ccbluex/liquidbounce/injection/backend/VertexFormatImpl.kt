@@ -10,3 +10,6 @@ import net.ccbluex.liquidbounce.api.minecraft.client.render.vertex.IVertexFormat
 import net.minecraft.client.renderer.vertex.VertexFormat
 
 class VertexFormatImpl(val wrapped: VertexFormat) : IVertexFormat
+
+inline fun IVertexFormat.unwrap(): VertexFormat = (this as VertexFormatImpl).wrapped
+inline fun VertexFormat.wrap(): IVertexFormat = VertexFormatImpl(this)

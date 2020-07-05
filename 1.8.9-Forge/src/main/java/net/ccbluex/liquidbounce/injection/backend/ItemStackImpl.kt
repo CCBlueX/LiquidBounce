@@ -15,8 +15,6 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTBase
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagCompound
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagList
-import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
-import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.minecraft.item.ItemStack
 

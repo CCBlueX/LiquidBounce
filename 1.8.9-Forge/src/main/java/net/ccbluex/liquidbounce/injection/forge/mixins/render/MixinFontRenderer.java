@@ -72,7 +72,7 @@ public class MixinFontRenderer {
     @ModifyVariable(method = "renderString", at = @At("HEAD"), ordinal = 0)
     private String renderString(final String string) {
         if (string == null || LiquidBounce.eventManager == null)
-            return string;
+            return null;
 
         final TextEvent textEvent = new TextEvent(string);
         LiquidBounce.eventManager.callEvent(textEvent);
@@ -82,7 +82,7 @@ public class MixinFontRenderer {
     @ModifyVariable(method = "getStringWidth", at = @At("HEAD"), ordinal = 0)
     private String getStringWidth(final String string) {
         if (string == null || LiquidBounce.eventManager == null)
-            return string;
+            return null;
 
         final TextEvent textEvent = new TextEvent(string);
         LiquidBounce.eventManager.callEvent(textEvent);

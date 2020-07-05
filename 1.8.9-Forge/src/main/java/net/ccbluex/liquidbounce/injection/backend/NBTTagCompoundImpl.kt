@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTBase
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagCompound
-import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
 import net.minecraft.nbt.NBTTagCompound
 
 class NBTTagCompoundImpl(wrapped: NBTTagCompound) : NBTBaseImpl<NBTTagCompound>(wrapped), INBTTagCompound {
@@ -22,3 +21,6 @@ class NBTTagCompoundImpl(wrapped: NBTTagCompound) : NBTBaseImpl<NBTTagCompound>(
 
     override fun setInteger(key: String, value: Int) = wrapped.setInteger(key, value)
 }
+
+inline fun INBTTagCompound.unwrap(): NBTTagCompound = (this as NBTTagCompoundImpl).wrapped
+inline fun NBTTagCompound.wrap(): INBTTagCompound = NBTTagCompoundImpl(this)
