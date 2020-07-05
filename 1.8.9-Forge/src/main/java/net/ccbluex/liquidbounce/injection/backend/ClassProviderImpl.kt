@@ -44,32 +44,48 @@ import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.injection.backend.utils.GuiPasswordField
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
+import net.minecraft.block.*
 import net.minecraft.block.material.Material
 import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.client.gui.*
+import net.minecraft.client.gui.inventory.GuiChest
+import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.client.renderer.IImageBuffer
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.ThreadDownloadImageData
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import net.minecraft.enchantment.Enchantment
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.boss.EntityDragon
+import net.minecraft.entity.item.*
+import net.minecraft.entity.monster.EntityGhast
+import net.minecraft.entity.monster.EntityGolem
+import net.minecraft.entity.monster.EntityMob
+import net.minecraft.entity.monster.EntitySlime
 import net.minecraft.entity.passive.EntityAnimal
+import net.minecraft.entity.passive.EntityBat
+import net.minecraft.entity.passive.EntitySquid
+import net.minecraft.entity.passive.EntityVillager
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.projectile.EntityArrow
 import net.minecraft.event.ClickEvent
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
+import net.minecraft.item.*
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.nbt.NBTTagDouble
 import net.minecraft.nbt.NBTTagList
 import net.minecraft.nbt.NBTTagString
 import net.minecraft.network.PacketBuffer
-import net.minecraft.network.play.client.C09PacketHeldItemChange
-import net.minecraft.network.play.server.S14PacketEntity
+import net.minecraft.network.handshake.client.C00Handshake
+import net.minecraft.network.play.client.*
+import net.minecraft.network.play.server.*
 import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
 import net.minecraft.stats.StatList
-import net.minecraft.tileentity.TileEntityChest
+import net.minecraft.tileentity.*
 import net.minecraft.util.*
 import net.minecraftforge.fml.client.GuiModList
 import java.awt.image.BufferedImage
@@ -220,345 +236,179 @@ object ClassProviderImpl : IClassProvider {
 
     override fun isEntityAnimal(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityAnimal
 
-    override fun isEntitySquid(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntitySquid(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntitySquid
 
-    override fun isEntityBat(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityBat(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityBat
 
-    override fun isEntityGolem(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityGolem(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityGolem
 
-    override fun isEntityMob(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityMob(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMob
 
-    override fun isEntityVillager(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityVillager(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityVillager
 
-    override fun isEntitySlime(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntitySlime(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntitySlime
 
-    override fun isEntityGhast(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityGhast(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityGhast
 
-    override fun isEntityDragon(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityDragon(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityDragon
 
-    override fun isEntityLivingBase(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityLivingBase(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityLivingBase
 
-    override fun isEntityPlayer(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityPlayer(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityPlayer
 
-    override fun isEntityArmorStand(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityArmorStand(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityArmorStand
 
-    override fun isEntityTNTPrimed(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityTNTPrimed(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityTNTPrimed
 
-    override fun isEntityBoat(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityBoat(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityBoat
 
-    override fun isEntityMinecart(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityMinecart(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMinecart
 
-    override fun isEntityItem(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityItem(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityItem
 
-    override fun isEntityArrow(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityArrow(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityArrow
 
-    override fun isEntityFallingBlock(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityFallingBlock(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityFallingBlock
 
-    override fun isEntityMinecartChest(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isEntityMinecartChest(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMinecartChest
 
-    override fun isTileEntityChest(it: Any?): Boolean = it is TileEntityImpl && it.wrapped is TileEntityChest
+    override fun isTileEntityChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityChest
 
-    override fun isTileEntityEnderChest(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isTileEntityEnderChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityEnderChest
 
-    override fun isTileEntityFurnace(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isTileEntityFurnace(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityFurnace
 
-    override fun isTileEntityDispenser(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isTileEntityDispenser(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityDispenser
 
-    override fun isTileEntityHopper(it: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isTileEntityHopper(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityHopper
 
     override fun isSPacketEntity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S14PacketEntity
 
-    override fun isSPacketResourcePackSend(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isSPacketResourcePackSend(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S48PacketResourcePackSend
 
-    override fun isSPacketPlayerPosLook(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isSPacketPlayerPosLook(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S08PacketPlayerPosLook
 
-    override fun isSPacketAnimation(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isSPacketAnimation(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S0BPacketAnimation
 
-    override fun isSPacketEntityVelocity(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isSPacketEntityVelocity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S12PacketEntityVelocity
 
-    override fun isSPacketExplosion(packet: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isSPacketExplosion(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S12PacketEntityVelocity
 
-    override fun isSPacketCloseWindow(packet: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isSPacketCloseWindow(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S2EPacketCloseWindow
 
-    override fun isSPacketTabComplete(packet: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isSPacketTabComplete(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S3APacketTabComplete
 
-    override fun isCPacketPlayer(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketPlayer(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C03PacketPlayer
 
-    override fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C08PacketPlayerBlockPlacement
 
-    override fun isCPacketUseEntity(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketUseEntity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C02PacketUseEntity
 
-    override fun isCPacketCloseWindow(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketCloseWindow(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C0DPacketCloseWindow
 
-    override fun isCPacketChatMessage(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketChatMessage(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C01PacketChatMessage
 
-    override fun isCPacketKeepAlive(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketKeepAlive(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C00PacketKeepAlive
 
-    override fun isCPacketPlayerPosition(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketPlayerPosition(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C03PacketPlayer.C04PacketPlayerPosition
 
-    override fun isCPacketPlayerPosLook(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketPlayerPosLook(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C03PacketPlayer.C06PacketPlayerPosLook
 
-    override fun isCPacketClientStatus(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketClientStatus(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C16PacketClientStatus
 
-    override fun isCPacketAnimation(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketAnimation(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C0APacketAnimation
 
-    override fun isCPacketEntityAction(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketEntityAction(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C0BPacketEntityAction
 
-    override fun isSPacketWindowItems(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isSPacketWindowItems(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S30PacketWindowItems
 
-    override fun isCPacketHeldItemChange(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketHeldItemChange(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C09PacketHeldItemChange
 
-    override fun isCPacketPlayerLook(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketPlayerLook(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C03PacketPlayer.C05PacketPlayerLook
 
-    override fun isCPacketCustomPayload(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketCustomPayload(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C17PacketCustomPayload
 
-    override fun isCPacketHandshake(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isCPacketHandshake(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C00Handshake
 
-    override fun isItemSword(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemSword(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSword
 
-    override fun isItemTool(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemTool(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemTool
 
-    override fun isItemArmor(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemArmor(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemArmor
 
-    override fun isItemPotion(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemPotion(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemPotion
 
-    override fun isItemBlock(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemBlock(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBlock
 
-    override fun isItemBow(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemBow(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBow
 
-    override fun isItemBucket(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemBucket(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBucket
 
-    override fun isItemFood(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemFood(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemFood
 
-    override fun isItemBucketMilk(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemBucketMilk(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBucketMilk
 
-    override fun isItemPickaxe(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemPickaxe(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemPickaxe
 
-    override fun isItemAxe(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemAxe(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemAxe
 
-    override fun isItemBed(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemBed(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBed
 
-    override fun isItemEnderPearl(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemEnderPearl(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemEnderPearl
 
-    override fun isItemEnchantedBook(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemEnchantedBook(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemEnchantedBook
 
-    override fun isItemBoat(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemBoat(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBoat
 
-    override fun isItemMinecart(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemMinecart(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemMinecart
 
-    override fun isItemAppleGold(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemAppleGold(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemAppleGold
 
-    override fun isItemSnowball(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemSnowball(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSnowball
 
-    override fun isItemEgg(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemEgg(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemEgg
 
-    override fun isBlockAir(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isItemFishingRod(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemFishingRod
 
-    override fun isBlockFence(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isBlockAir(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockAir
 
-    override fun isBlockSnow(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isBlockFence(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockFence
 
-    override fun isBlockLadder(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isBlockSnow(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSnow
 
-    override fun isBlockVine(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isBlockLadder(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockLadder
 
-    override fun isBlockSlime(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isBlockVine(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockVine
 
-    override fun isBlockSlab(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isBlockSlime(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSlime
 
-    override fun isBlockStairs(item: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isBlockSlab(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSlab
 
-    override fun isBlockCarpet(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isBlockStairs(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockStairs
 
-    override fun isBlockPane(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isBlockCarpet(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockCarpet
 
-    override fun isBlockLiquid(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isBlockPane(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockPane
 
-    override fun isBlockCactus(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isBlockLiquid(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockLiquid
+
+    override fun isBlockCactus(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockCactus
 
     override fun isBlockBedrock(obj: Any?): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun isItemFishingRod(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isGuiInventory(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiInventory
 
-    override fun isGuiInventory(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isGuiContainer(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiContainer
 
-    override fun isGuiContainer(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isGuiGameOver(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiGameOver
 
-    override fun isGuiGameOver(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isGuiChat(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiChat
 
-    override fun isGuiChat(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isGuiIngameMenu(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiIngameMenu
 
-    override fun isGuiIngameMenu(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun isGuiChest(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isGuiChest(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiChest
 
     override fun isGuiHudDesigner(obj: Any?): Boolean {
         TODO("Implement GUI Wrappers")
@@ -568,7 +418,7 @@ object ClassProviderImpl : IClassProvider {
         TODO("Not yet implemented")
     }
 
-    override fun isFontRenderer(item: Any?): Boolean = item is FontRenderer
+    override fun isFontRenderer(obj: Any?): Boolean = obj is FontRenderer
 
     override fun getPotionEnum(type: PotionType): IPotion {
         return PotionImpl(when (type) {

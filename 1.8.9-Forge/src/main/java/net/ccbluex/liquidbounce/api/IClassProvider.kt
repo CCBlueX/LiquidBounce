@@ -109,29 +109,29 @@ interface IClassProvider {
     fun isEntityDragon(obj: Any?): Boolean
     fun isEntityLivingBase(obj: Any?): Boolean
     fun isEntityPlayer(obj: Any?): Boolean
-    fun isEntityArmorStand(it: Any?): Boolean
-    fun isEntityTNTPrimed(it: Any?): Boolean
-    fun isEntityBoat(it: Any?): Boolean
-    fun isEntityMinecart(it: Any?): Boolean
-    fun isEntityItem(it: Any?): Boolean
-    fun isEntityArrow(it: Any?): Boolean
-    fun isEntityFallingBlock(it: Any?): Boolean
-    fun isEntityMinecartChest(it: Any?): Boolean
+    fun isEntityArmorStand(obj: Any?): Boolean
+    fun isEntityTNTPrimed(obj: Any?): Boolean
+    fun isEntityBoat(obj: Any?): Boolean
+    fun isEntityMinecart(obj: Any?): Boolean
+    fun isEntityItem(obj: Any?): Boolean
+    fun isEntityArrow(obj: Any?): Boolean
+    fun isEntityFallingBlock(obj: Any?): Boolean
+    fun isEntityMinecartChest(obj: Any?): Boolean
 
-    fun isTileEntityChest(it: Any?): Boolean
-    fun isTileEntityEnderChest(it: Any?): Boolean
-    fun isTileEntityFurnace(it: Any?): Boolean
-    fun isTileEntityDispenser(it: Any?): Boolean
-    fun isTileEntityHopper(it: Any?): Boolean
+    fun isTileEntityChest(obj: Any?): Boolean
+    fun isTileEntityEnderChest(obj: Any?): Boolean
+    fun isTileEntityFurnace(obj: Any?): Boolean
+    fun isTileEntityDispenser(obj: Any?): Boolean
+    fun isTileEntityHopper(obj: Any?): Boolean
 
     fun isSPacketEntity(obj: Any?): Boolean
     fun isSPacketResourcePackSend(obj: Any?): Boolean
     fun isSPacketPlayerPosLook(obj: Any?): Boolean
     fun isSPacketAnimation(obj: Any?): Boolean
     fun isSPacketEntityVelocity(obj: Any?): Boolean
-    fun isSPacketExplosion(packet: Any?): Boolean
-    fun isSPacketCloseWindow(packet: Any?): Boolean
-    fun isSPacketTabComplete(packet: Any?): Boolean
+    fun isSPacketExplosion(obj: Any?): Boolean
+    fun isSPacketCloseWindow(obj: Any?): Boolean
+    fun isSPacketTabComplete(obj: Any?): Boolean
     fun isCPacketPlayer(obj: Any?): Boolean
     fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean
     fun isCPacketUseEntity(obj: Any?): Boolean
@@ -149,15 +149,15 @@ interface IClassProvider {
     fun isCPacketCustomPayload(obj: Any?): Boolean
     fun isCPacketHandshake(obj: Any?): Boolean
 
-    fun isItemSword(item: Any?): Boolean
-    fun isItemTool(item: Any?): Boolean
+    fun isItemSword(obj: Any?): Boolean
+    fun isItemTool(obj: Any?): Boolean
     fun isItemArmor(obj: Any?): Boolean
-    fun isItemPotion(item: Any?): Boolean
-    fun isItemBlock(item: Any?): Boolean
-    fun isItemBow(item: Any?): Boolean
-    fun isItemBucket(item: Any?): Boolean
-    fun isItemFood(item: Any?): Boolean
-    fun isItemBucketMilk(item: Any?): Boolean
+    fun isItemPotion(obj: Any?): Boolean
+    fun isItemBlock(obj: Any?): Boolean
+    fun isItemBow(obj: Any?): Boolean
+    fun isItemBucket(obj: Any?): Boolean
+    fun isItemFood(obj: Any?): Boolean
+    fun isItemBucketMilk(obj: Any?): Boolean
     fun isItemPickaxe(obj: Any?): Boolean
     fun isItemAxe(obj: Any?): Boolean
     fun isItemBed(obj: Any?): Boolean
@@ -168,21 +168,21 @@ interface IClassProvider {
     fun isItemAppleGold(obj: Any?): Boolean
     fun isItemSnowball(obj: Any?): Boolean
     fun isItemEgg(obj: Any?): Boolean
+    fun isItemFishingRod(obj: Any?): Boolean
 
-    fun isBlockAir(item: Any?): Boolean
-    fun isBlockFence(item: Any?): Boolean
-    fun isBlockSnow(item: Any?): Boolean
-    fun isBlockLadder(item: Any?): Boolean
-    fun isBlockVine(item: Any?): Boolean
-    fun isBlockSlime(item: Any?): Boolean
-    fun isBlockSlab(item: Any?): Boolean
-    fun isBlockStairs(item: Any?): Boolean
+    fun isBlockAir(obj: Any?): Boolean
+    fun isBlockFence(obj: Any?): Boolean
+    fun isBlockSnow(obj: Any?): Boolean
+    fun isBlockLadder(obj: Any?): Boolean
+    fun isBlockVine(obj: Any?): Boolean
+    fun isBlockSlime(obj: Any?): Boolean
+    fun isBlockSlab(obj: Any?): Boolean
+    fun isBlockStairs(obj: Any?): Boolean
     fun isBlockCarpet(obj: Any?): Boolean
     fun isBlockPane(obj: Any?): Boolean
     fun isBlockLiquid(obj: Any?): Boolean
     fun isBlockCactus(obj: Any?): Boolean
     fun isBlockBedrock(obj: Any?): Boolean
-    fun isItemFishingRod(obj: Any?): Boolean
 
     fun isGuiInventory(obj: Any?): Boolean
     fun isGuiContainer(obj: Any?): Boolean
@@ -193,7 +193,7 @@ interface IClassProvider {
     fun isGuiHudDesigner(obj: Any?): Boolean
     fun isClickGui(obj: Any?): Boolean
 
-    fun isFontRenderer(item: Any?): Boolean
+    fun isFontRenderer(obj: Any?): Boolean
 
     fun getPotionEnum(type: PotionType): IPotion
     fun getEnumFacing(type: EnumFacingType): IEnumFacing
