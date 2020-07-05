@@ -24,7 +24,7 @@ class RichPresence : Module() {
                     rpc.setup()
                 } catch (throwable: Throwable) {
                     ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
-                    ClientUtils.displayChatMessage("§cFailed to setup Discord RPC. (probably a connection problem)")
+                    ClientUtils.displayChatMessage("§cFailed to setup Discord RPC.")
                 }
             }
         }
