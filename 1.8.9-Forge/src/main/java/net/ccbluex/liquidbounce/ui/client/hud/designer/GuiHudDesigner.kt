@@ -44,11 +44,10 @@ class GuiHudDesigner : WrappedGuiScreen() {
                 }
             }
         }
-        super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
-        super.mouseClicked(mouseX, mouseY, mouseButton)
+        representedScreen.superMouseClicked(mouseX, mouseY, mouseButton)
 
         if (buttonAction) {
             buttonAction = false

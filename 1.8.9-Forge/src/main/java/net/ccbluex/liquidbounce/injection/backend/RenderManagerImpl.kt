@@ -16,7 +16,9 @@ import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher
 class RenderManagerImpl(val wrapped: RenderManager) : IRenderManager {
     override var isRenderShadow: Boolean
         get() = wrapped.isRenderShadow
-        set(value) {}
+        set(value) {
+            wrapped.isRenderShadow = value
+        }
     override val viewerPosX: Double
         get() = wrapped.viewerPosX
     override val viewerPosY: Double

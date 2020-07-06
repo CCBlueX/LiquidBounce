@@ -47,6 +47,7 @@ import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
 import net.ccbluex.liquidbounce.injection.backend.utils.*
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.minecraft.block.*
 import net.minecraft.block.material.Material
 import net.minecraft.client.entity.EntityOtherPlayerMP
@@ -375,9 +376,9 @@ object ClassProviderImpl : IClassProvider {
 
     override fun isGuiChest(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiChest
 
-    override fun isGuiHudDesigner(obj: Any?): Boolean = obj is FontRendererWrapper
+    override fun isGuiHudDesigner(obj: Any?): Boolean = obj is GuiScreenImpl<*> && obj.wrapped is GuiScreenWrapper && obj.wrapped.wrapped is GuiHudDesigner
 
-    override fun isClickGui(obj: Any?): Boolean = obj is GuiScreenWrapper && obj.wrapped is ClickGui
+    override fun isClickGui(obj: Any?): Boolean = obj is GuiScreenImpl<*> && obj.wrapped is GuiScreenWrapper && obj.wrapped.wrapped is ClickGui
 
     override fun isFontRenderer(obj: Any?): Boolean = obj is FontRenderer
 

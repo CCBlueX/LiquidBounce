@@ -19,10 +19,10 @@ import net.ccbluex.liquidbounce.api.minecraft.tileentity.ITileEntity
 import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
-import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.block.Block
 import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.OpenGlHelper
 import net.minecraft.client.renderer.RenderHelper
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher
 import net.minecraft.client.resources.I18n
@@ -103,6 +103,9 @@ object ExtractedFunctionsImpl : IExtractedFunctions {
     }
 
     override fun jsonToComponent(toString: String): IIChatComponent = IChatComponent.Serializer.jsonToComponent(toString).wrap()
+    override fun setActiveTextureLightMapTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
+
+    override fun setActiveTextureDefaultTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
 
 
 }

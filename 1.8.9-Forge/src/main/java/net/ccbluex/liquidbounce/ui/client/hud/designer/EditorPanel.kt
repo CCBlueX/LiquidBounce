@@ -119,6 +119,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                 continue
 
             val name = info.name
+
             Fonts.font35.drawString(name, x + 2.0f, y + height.toFloat(), Color.WHITE.rgb)
 
             val stringWidth = Fonts.font35.getStringWidth(name)
@@ -192,6 +193,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         }
 
         RenderUtils.drawRect(x, y, x + width, y + 12, ClickGUI.generateColor().rgb)
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
         Fonts.font35.drawString("§lEditor", x + 2F, y + 3.5f, Color.WHITE.rgb)
     }
 

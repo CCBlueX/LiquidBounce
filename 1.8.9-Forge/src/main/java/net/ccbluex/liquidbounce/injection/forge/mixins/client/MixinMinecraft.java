@@ -91,18 +91,21 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "run", at = @At("HEAD"))
     private void init(CallbackInfo callbackInfo) {
-        if(displayWidth < 1067)
+        if (displayWidth < 1067)
             displayWidth = 1067;
 
-        if(displayHeight < 622)
+        if (displayHeight < 622)
             displayHeight = 622;
+    }
+
+    @Inject(method = "<init>", at = @At(value = "RETURN"))
+    private void injectWrapperInitializator(CallbackInfo ci) {
+        // Set Wrapper
+        LiquidBounce.wrapper = WrapperImpl.INSTANCE;
     }
 
     @Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;checkGLError(Ljava/lang/String;)V", ordinal = 2, shift = At.Shift.AFTER))
     private void startGame(CallbackInfo callbackInfo) {
-        // Set Wrapper
-        LiquidBounce.wrapper = WrapperImpl.INSTANCE;
-
         LiquidBounce.INSTANCE.startClient();
     }
 

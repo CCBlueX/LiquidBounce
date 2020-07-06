@@ -53,7 +53,7 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer {
 
         val currY = y - 3F
 
-        val rainbow = RainbowFontShader.INSTANCE.isInUse
+        val rainbow = RainbowFontShader.isInUse
 
         if (shadow) {
             glUseProgram(0)
@@ -70,7 +70,7 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer {
         if (text.isNullOrEmpty())
             return x.toInt()
 
-        val rainbowShaderId = RainbowFontShader.INSTANCE.programId
+        val rainbowShaderId = RainbowFontShader.programId
 
         if (rainbow)
             glUseProgram(rainbowShaderId)

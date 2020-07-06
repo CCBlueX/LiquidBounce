@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.utils.render.shader.Shader
 import org.lwjgl.opengl.GL20
 import java.io.Closeable
 
-class RainbowFontShader : Shader("rainbow_font_shader.frag"), Closeable {
+object RainbowFontShader : Shader("rainbow_font_shader.frag"), Closeable {
     var isInUse = false
         private set
 
@@ -44,23 +44,17 @@ class RainbowFontShader : Shader("rainbow_font_shader.frag"), Closeable {
             stopShader()
     }
 
-    companion object {
-        @JvmField
-        val INSTANCE = RainbowFontShader()
+    @Suppress("NOTHING_TO_INLINE")
+    @JvmStatic
+    inline fun begin(enable: Boolean, x: Float, y: Float, offset: Float): RainbowFontShader {
+        if (enable) {
+            strengthX = x
+            strengthY = y
+            this.offset = offset
 
-        @Suppress("NOTHING_TO_INLINE")
-        inline fun begin(enable: Boolean, x: Float, y: Float, offset: Float): RainbowFontShader {
-            val instance = INSTANCE
-
-            if (enable) {
-                instance.strengthX = x
-                instance.strengthY = y
-                instance.offset = offset
-
-                instance.startShader()
-            }
-
-            return instance
+            startShader()
         }
+
+        return this
     }
 }

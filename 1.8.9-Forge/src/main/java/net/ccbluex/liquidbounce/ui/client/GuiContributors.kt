@@ -252,7 +252,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
         override fun drawSlot(entryID: Int, p_180791_2_: Int, p_180791_3_: Int, p_180791_4_: Int, mouseXIn: Int, mouseYIn: Int) {
             val credit = credits[entryID]
 
-            Fonts.font40.drawCenteredString(credit.name, representedScreen.width / 2F, p_180791_3_ + 2F, Color.WHITE.rgb, true)
+            Fonts.font40.drawCenteredString(credit.name, represented.width / 2F, p_180791_3_ + 2F, Color.WHITE.rgb, true)
         }
 
         override fun drawBackground() {}

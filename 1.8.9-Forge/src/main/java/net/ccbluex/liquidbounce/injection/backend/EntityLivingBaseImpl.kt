@@ -14,8 +14,6 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
-import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
-import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.potion.PotionEffect
 
@@ -28,9 +26,9 @@ open class EntityLivingBaseImpl<T : EntityLivingBase>(wrapped: T) : EntityImpl<T
             wrapped.prevRotationYawHead = value
         }
     override var renderYawOffset: Float
-        get() = wrapped.prevRotationYawHead
+        get() = wrapped.renderYawOffset
         set(value) {
-            wrapped.prevRotationYawHead = value
+            wrapped.renderYawOffset = value
         }
     override val activePotionEffects: Collection<IPotionEffect>
         get() = WrappedCollection<PotionEffect, IPotionEffect, Collection<PotionEffect>>(wrapped.activePotionEffects, IPotionEffect::unwrap, PotionEffect::wrap)

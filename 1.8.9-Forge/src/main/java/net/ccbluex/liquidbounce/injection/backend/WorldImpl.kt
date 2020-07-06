@@ -6,7 +6,6 @@
 
 package net.ccbluex.liquidbounce.injection.backend
 
-import com.google.common.base.Predicate
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
@@ -40,9 +39,9 @@ open class WorldImpl<T : World>(val wrapped: T) : IWorld {
 
     override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean, ignoreBlockWithoutBoundingBox: Boolean, returnLastUncollidableBlock: Boolean): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock)?.wrap()
 
-    override fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: Predicate<in IEntity>): Collection<IEntity> {
+    override fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: (IEntity?) -> Boolean): Collection<IEntity> {
         return WrappedCollection(
-                wrapped.getEntitiesInAABBexcluding(entityIn?.unwrap(), boundingBox.unwrap()) { predicate.apply(it?.wrap()) },
+                wrapped.getEntitiesInAABBexcluding(entityIn?.unwrap(), boundingBox.unwrap()) { predicate(it?.wrap()) },
                 IEntity::unwrap,
                 Entity::wrap
         )

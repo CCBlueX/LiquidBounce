@@ -17,8 +17,6 @@ import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
 import net.ccbluex.liquidbounce.api.minecraft.tileentity.ITileEntity
 import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
-import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.MinecraftInstance
 
 interface IExtractedFunctions {
     fun getBlockById(id: Int): IBlock?
@@ -41,5 +39,7 @@ interface IExtractedFunctions {
     fun scoreboardFormatPlayerName(scorePlayerTeam: ITeam?, playerName: String): String
     fun disableFastRender()
     fun jsonToComponent(toString: String): IIChatComponent
+    fun setActiveTextureLightMapTexUnit()
+    fun setActiveTextureDefaultTexUnit()
 
 }

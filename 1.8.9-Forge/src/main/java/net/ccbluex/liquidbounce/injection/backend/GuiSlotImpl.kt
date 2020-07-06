@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot
 import net.minecraft.client.gui.GuiSlot
 
 class GuiSlotImpl(val wrapped: GuiSlot) : IGuiSlot {
+    override val width: Int
+        get() = wrapped.width
     override val slotHeight: Int
         get() = wrapped.slotHeight
 

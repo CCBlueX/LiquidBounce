@@ -7,6 +7,7 @@
 package net.ccbluex.liquidbounce.api.minecraft.client.gui
 
 interface IGuiSlot : IGui {
+    val width: Int
     val slotHeight: Int
 
     fun scrollBy(value: Int)

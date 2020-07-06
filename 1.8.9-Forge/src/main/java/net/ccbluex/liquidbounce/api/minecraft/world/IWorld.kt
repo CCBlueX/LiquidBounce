@@ -6,7 +6,6 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.world
 
-import com.google.common.base.Predicate
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
@@ -27,7 +26,7 @@ interface IWorld {
     fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean): IMovingObjectPosition?
     fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean, ignoreBlockWithoutBoundingBox: Boolean, returnLastUncollidableBlock: Boolean): IMovingObjectPosition?
 
-    fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: Predicate<in IEntity>): Collection<IEntity>
+    fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: (IEntity?) -> Boolean): Collection<IEntity>
     fun getBlockState(blockPos: WBlockPos): IIBlockState
     fun getEntitiesWithinAABBExcludingEntity(entity: IEntity?, bb: IAxisAlignedBB): Collection<IEntity>
     fun getCollidingBoundingBoxes(entity: IEntity, bb: IAxisAlignedBB): Collection<IAxisAlignedBB>

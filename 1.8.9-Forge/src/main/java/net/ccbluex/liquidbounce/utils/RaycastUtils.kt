@@ -5,11 +5,11 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import com.google.common.base.Predicates
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import kotlin.math.cos
 import kotlin.math.sin
+
 
 object RaycastUtils : MinecraftInstance() {
 
@@ -32,7 +32,9 @@ object RaycastUtils : MinecraftInstance() {
 
             val entityLook = WVec3((yawSin * pitchCos).toDouble(), pitchSin.toDouble(), (yawCos * pitchCos).toDouble())
             val vector = eyePosition.addVector(entityLook.xCoord * blockReachDistance, entityLook.yCoord * blockReachDistance, entityLook.zCoord * blockReachDistance)
-            val entityList = mc.theWorld!!.getEntitiesInAABBexcluding(renderViewEntity, renderViewEntity.entityBoundingBox.addCoord(entityLook.xCoord * blockReachDistance, entityLook.yCoord * blockReachDistance, entityLook.zCoord * blockReachDistance).expand(1.0, 1.0, 1.0), Predicates.and({ it: IEntity? -> !classProvider.isEntityPlayer(it) || !it!!.asEntityPlayer().spectator }) { obj: IEntity? -> obj!!.canBeCollidedWith() })
+            val entityList = mc.theWorld!!.getEntitiesInAABBexcluding(renderViewEntity, renderViewEntity.entityBoundingBox.addCoord(entityLook.xCoord * blockReachDistance, entityLook.yCoord * blockReachDistance, entityLook.zCoord * blockReachDistance).expand(1.0, 1.0, 1.0)) {
+                it != null && (!classProvider.isEntityPlayer(it) || !it.asEntityPlayer().spectator) && it.canBeCollidedWith()
+            }
 
             var pointedEntity: IEntity? = null
 
@@ -40,8 +42,9 @@ object RaycastUtils : MinecraftInstance() {
                 if (!entityFilter.canRaycast(entity))
                     continue
 
-                val collisionBorderSize = entity.collisionBorderSize
-                val axisAlignedBB = entity.entityBoundingBox.expand(collisionBorderSize.toDouble(), collisionBorderSize.toDouble(), collisionBorderSize.toDouble())
+                val collisionBorderSize = entity.collisionBorderSize.toDouble()
+                val axisAlignedBB = entity.entityBoundingBox.expand(collisionBorderSize, collisionBorderSize, collisionBorderSize)
+
                 val movingObjectPosition = axisAlignedBB.calculateIntercept(eyePosition, vector)
 
                 if (axisAlignedBB.isVecInside(eyePosition)) {

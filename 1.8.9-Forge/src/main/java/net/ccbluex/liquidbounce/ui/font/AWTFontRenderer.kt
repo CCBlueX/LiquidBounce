@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.ui.font
 
 import net.minecraft.client.Minecraft
-import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.texture.TextureUtil
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
@@ -82,17 +81,17 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
         val scale = 0.25
         val reverse = 1 / scale
 
-        GlStateManager.pushMatrix()
-        GlStateManager.scale(scale, scale, scale)
+        GL11.glPushMatrix()
+        GL11.glScaled(scale, scale, scale)
         GL11.glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
-        GlStateManager.bindTexture(textureID)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
 
         val red: Float = (color shr 16 and 0xff) / 255F
         val green: Float = (color shr 8 and 0xff) / 255F
         val blue: Float = (color and 0xff) / 255F
         val alpha: Float = (color shr 24 and 0xff) / 255F
 
-        GlStateManager.color(red, green, blue, alpha)
+        GL11.glColor4f(red, green, blue, alpha)
 
         var currX = 0.0
 
@@ -103,7 +102,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
 
             cached.lastUsage = System.currentTimeMillis()
 
-            GlStateManager.popMatrix()
+            GL11.glPopMatrix()
 
             return
         }
@@ -123,13 +122,13 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
                 GL11.glEnd()
 
                 // Ugly solution, because floating point numbers, but I think that shouldn't be that much of a problem
-                GlStateManager.scale(reverse, reverse, reverse)
+                GL11.glScaled(reverse, reverse, reverse)
                 Minecraft.getMinecraft().fontRendererObj.drawString("$char", currX.toFloat() * scale.toFloat() + 1, 2f, color, false)
                 currX += Minecraft.getMinecraft().fontRendererObj.getStringWidth("$char") * reverse
 
-                GlStateManager.scale(scale, scale, scale)
-                GlStateManager.bindTexture(textureID)
-                GlStateManager.color(red, green, blue, alpha)
+                GL11.glScaled(scale, scale, scale)
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
+                GL11.glColor4f(red, green, blue, alpha)
 
                 GL11.glBegin(GL11.GL_QUADS)
             } else {
@@ -147,7 +146,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
             GL11.glEndList()
         }
 
-        GlStateManager.popMatrix()
+        GL11.glPopMatrix()
     }
 
     /**
