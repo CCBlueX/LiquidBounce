@@ -25,7 +25,7 @@ import java.lang.reflect.Field;
 @SideOnly(Side.CLIENT)
 public class FileManager extends MinecraftInstance {
 
-    public final File dir = new File(mc.mcDataDir, LiquidBounce.CLIENT_NAME + "-1.8");
+    public final File dir = new File(mc.getDataDir(), LiquidBounce.CLIENT_NAME + "-1.8");
     public final File fontsDir = new File(dir, "fonts");
     public final File settingsDir = new File(dir, "settings");
 
@@ -191,8 +191,8 @@ public class FileManager extends MinecraftInstance {
                 if(bufferedImage == null)
                     return;
 
-                LiquidBounce.INSTANCE.setBackground(new ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png"));
-                mc.getTextureManager().loadTexture(LiquidBounce.INSTANCE.getBackground(), new DynamicTexture(bufferedImage));
+                LiquidBounce.INSTANCE.setBackground(classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png"));
+                mc.getTextureManager().loadTexture(LiquidBounce.INSTANCE.getBackground(), classProvider.createDynamicTexture(bufferedImage));
                 ClientUtils.getLogger().info("[FileManager] Loaded background.");
             }catch(final Exception e) {
                 ClientUtils.getLogger().error("[FileManager] Failed to load background.", e);

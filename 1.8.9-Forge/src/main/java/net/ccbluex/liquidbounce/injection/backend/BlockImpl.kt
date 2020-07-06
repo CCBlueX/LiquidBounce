@@ -17,6 +17,8 @@ import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
 import net.minecraft.block.Block
 
 class BlockImpl(val wrapped: Block) : IBlock {
+    override val registryName: String
+        get() = wrapped.registryName
     override var slipperiness: Float
         get() = wrapped.slipperiness
         set(value) {

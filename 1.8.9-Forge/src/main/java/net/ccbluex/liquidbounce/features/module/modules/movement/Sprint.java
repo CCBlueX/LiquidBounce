@@ -28,7 +28,7 @@ public class Sprint extends Module {
 
     @EventTarget
     public void onUpdate(final UpdateEvent event) {
-        if (!MovementUtils.isMoving() || mc.getThePlayer().getSneaking() ||
+        if (!MovementUtils.isMoving() || mc.getThePlayer().isSneaking() ||
                 (blindnessValue.get() && mc.getThePlayer().isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS))) ||
                 (foodValue.get() && !(mc.getThePlayer().getFoodStats().getFoodLevel() > 6.0F || mc.getThePlayer().getCapabilities().getAllowFlying()))
                 || (checkServerSide.get() && (mc.getThePlayer().getOnGround() || !checkServerSideGround.get())

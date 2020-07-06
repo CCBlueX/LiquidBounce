@@ -31,8 +31,6 @@ class GuiMainMenu : WrappedGuiScreen() {
         representedScreen.buttonList.add(classProvider.createGuiButton(108, representedScreen.width / 2 - 100, defaultHeight + 24 * 3, "Contributors"))
         representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 - 100, defaultHeight + 24 * 4, 98, 20, functions.formatI18n("menu.options")))
         representedScreen.buttonList.add(classProvider.createGuiButton(4, representedScreen.width / 2 + 2, defaultHeight + 24 * 4, 98, 20, functions.formatI18n("menu.quit")))
-
-        super.initGui()
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
@@ -42,7 +40,8 @@ class GuiMainMenu : WrappedGuiScreen() {
 
         Fonts.fontBold180.drawCenteredString(LiquidBounce.CLIENT_NAME, representedScreen.width / 2F, representedScreen.height / 8F, 4673984, true)
         Fonts.font35.drawCenteredString("b" + LiquidBounce.CLIENT_VERSION, representedScreen.width / 2F + 148, representedScreen.height / 8F + Fonts.font35.fontHeight, 0xffffff, true)
-        super.drawScreen(mouseX, mouseY, partialTicks)
+
+        representedScreen.superDrawScreen(mouseX, mouseY, partialTicks)
     }
 
     override fun actionPerformed(button: IGuiButton) {
@@ -58,6 +57,4 @@ class GuiMainMenu : WrappedGuiScreen() {
             108 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiContributors(this.representedScreen)))
         }
     }
-
-    override fun keyTyped(typedChar: Char, keyCode: Int) {}
 }

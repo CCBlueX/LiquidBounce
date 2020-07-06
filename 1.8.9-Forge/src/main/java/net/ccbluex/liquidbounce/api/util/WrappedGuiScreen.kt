@@ -15,30 +15,36 @@ abstract class WrappedGuiScreen : MinecraftInstance() {
     lateinit var representedScreen: IGuiScreen
 
     open fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-
+        representedScreen.superDrawScreen(mouseX, mouseY, partialTicks)
     }
 
-    open fun initGui() {}
+    open fun initGui() {
+    }
 
     @Throws(IOException::class)
-    protected open fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
+    open fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
+        representedScreen.superMouseClicked(mouseX, mouseY, mouseButton)
     }
 
-    open fun updateScreen() {}
+    open fun updateScreen() {  }
 
     @Throws(IOException::class)
     open fun handleMouseInput() {
+        representedScreen.superHandleMouseInput()
     }
 
     @Throws(IOException::class)
-    protected open fun keyTyped(typedChar: Char, keyCode: Int) {
+    open fun keyTyped(typedChar: Char, keyCode: Int) {
+        representedScreen.superKeyTyped(typedChar, keyCode)
     }
 
     @Throws(IOException::class)
-    protected open fun actionPerformed(button: IGuiButton) {
+    open fun actionPerformed(button: IGuiButton) {
     }
 
     open fun onGuiClosed() {}
-    protected open fun mouseReleased(mouseX: Int, mouseY: Int, state: Int) {}
+    open fun mouseReleased(mouseX: Int, mouseY: Int, state: Int) {
+        representedScreen.superMouseReleased(mouseX, mouseY, state)
+    }
     open fun doesGuiPauseGame(): Boolean = false
 }

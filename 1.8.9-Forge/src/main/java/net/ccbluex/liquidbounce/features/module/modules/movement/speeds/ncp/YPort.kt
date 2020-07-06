@@ -29,7 +29,7 @@ class YPort : SpeedMode("YPort") {
         val xDist = mc.thePlayer!!.posX - mc.thePlayer!!.prevPosX
         val zDist = mc.thePlayer!!.posZ - mc.thePlayer!!.prevPosZ
         lastDist = sqrt(xDist * xDist + zDist * zDist)
-        if (!MovementUtils.isMoving()) safeJump = true else if (mc.thePlayer!!.onGround) safeJump = false
+        if (!MovementUtils.isMoving) safeJump = true else if (mc.thePlayer!!.onGround) safeJump = false
     }
 
     override fun onUpdate() {}

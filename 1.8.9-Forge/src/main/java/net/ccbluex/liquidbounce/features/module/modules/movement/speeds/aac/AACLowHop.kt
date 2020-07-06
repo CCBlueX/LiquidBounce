@@ -19,7 +19,7 @@ class AACLowHop : SpeedMode("AACLowHop") {
     override fun onMotion() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (MovementUtils.isMoving()) {
+        if (MovementUtils.isMoving) {
             if (thePlayer.onGround) {
                 if (legitJump) {
                     thePlayer.jump()

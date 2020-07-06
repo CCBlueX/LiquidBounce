@@ -21,13 +21,21 @@ import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.ITextureMana
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IEntityRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IRenderGlobal
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
+import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import net.ccbluex.liquidbounce.api.minecraft.renderer.entity.IRenderManager
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.ISession
 import net.ccbluex.liquidbounce.api.minecraft.util.ITimer
 import net.minecraft.client.Minecraft
+import java.io.File
 
 class MinecraftImpl(val wrapped: Minecraft) : IMinecraft {
+    override val framebuffer: IFramebuffer
+        get() = wrapped.framebuffer.wrap()
+    override val isFullScreen: Boolean
+        get() = TODO("Not yet implemented")
+    override val dataDir: File
+        get() = wrapped.mcDataDir
     override val debugFPS: Int
         get() = Minecraft.getDebugFPS()
     override val renderGlobal: IRenderGlobal
@@ -88,6 +96,9 @@ class MinecraftImpl(val wrapped: Minecraft) : IMinecraft {
 
     override fun rightClickMouse() = wrapped.rightClickMouse()
     override fun shutdown() = wrapped.shutdown()
+    override fun toggleFullscreen() {
+        TODO("Not yet implemented")
+    }
 }
 
 inline fun IMinecraft.unwrap(): Minecraft = (this as MinecraftImpl).wrapped

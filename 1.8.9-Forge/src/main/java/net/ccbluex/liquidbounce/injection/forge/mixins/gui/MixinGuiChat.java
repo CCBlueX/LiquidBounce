@@ -105,7 +105,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
      *
      * @author derech1e
      */
-    @Inject(method = "onAutocompleteResponse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiChat;autocompletePlayerNames(F)V", shift = At.Shift.BEFORE), cancellable = true)
+    @Inject(method = "onAutocompleteResponse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiChat;autocompletePlayerNames()V", shift = At.Shift.BEFORE), cancellable = true)
     private void onAutocompleteResponse(String[] autoCompleteResponse, CallbackInfo callbackInfo) {
         if (LiquidBounce.commandManager.getLatestAutoComplete().length != 0) callbackInfo.cancel();
     }

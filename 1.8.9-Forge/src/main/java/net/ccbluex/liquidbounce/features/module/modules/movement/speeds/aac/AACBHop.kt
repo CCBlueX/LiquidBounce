@@ -18,7 +18,7 @@ class AACBHop : SpeedMode("AACBHop") {
         if (thePlayer.isInWater)
             return
 
-        if (MovementUtils.isMoving()) {
+        if (MovementUtils.isMoving) {
             mc.timer.timerSpeed = 1.08f
 
             if (thePlayer.onGround) {

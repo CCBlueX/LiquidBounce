@@ -5,13 +5,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat;
 
+import net.ccbluex.liquidbounce.api.enums.EnumFacingType;
 import net.ccbluex.liquidbounce.api.enums.ItemType;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack;
+import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing;
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos;
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumFacing;
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3;
 import net.ccbluex.liquidbounce.event.EventTarget;
@@ -89,7 +90,9 @@ public class Ignite extends Module {
 
                    mc.getPlayerController().sendUseItem(thePlayer, theWorld, itemStack);
                } else {
-                   for (final WEnumFacing side : WEnumFacing.values()) {
+                   for (EnumFacingType enumFacingType : EnumFacingType.values()) {
+                       IEnumFacing side = classProvider.getEnumFacing(enumFacingType);
+
                        final WBlockPos neighbor = blockPos.offset(side);
 
                        if (!BlockUtils.canBeClicked(neighbor)) continue;

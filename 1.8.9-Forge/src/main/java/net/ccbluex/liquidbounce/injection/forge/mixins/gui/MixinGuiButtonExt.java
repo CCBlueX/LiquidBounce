@@ -6,12 +6,13 @@
 
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
+import net.ccbluex.liquidbounce.injection.backend.FontRendererImpl;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.IGuiButton;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.fml.client.config.GuiButtonExt;
 import net.minecraftforge.fml.relauncher.Side;
@@ -23,7 +24,7 @@ import java.awt.*;
 
 @Mixin(GuiButtonExt.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinGuiButtonExt extends IGuiButton {
+public abstract class MixinGuiButtonExt extends GuiButton {
     private float cut;
     private float alpha;
 
@@ -43,7 +44,7 @@ public abstract class MixinGuiButtonExt extends IGuiButton {
    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
       if (visible) {
          final FontRenderer fontRenderer =
-            mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRendererObj : Fonts.font35;
+            mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRendererObj : ((FontRendererImpl) Fonts.font35).getWrapped();
          hovered = (mouseX >= this.xPosition && mouseY >= this.yPosition &&
                     mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height);
 

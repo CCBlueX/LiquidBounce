@@ -31,7 +31,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
         representedScreen.drawBackground(0)
 
         var i = representedScreen.height / 4 + 40
-        RenderUtils.drawRect(representedScreen.width / 2.0f - 115, i - 5.0f, representedScreen.width / 2.0f + 115, representedScreen.height / 4.0f + 43 + if (status.keys.isEmpty()) 10.0f else status.keys.size * Fonts.font40.fontHeight, Integer.MIN_VALUE)
+        RenderUtils.drawRect(representedScreen.width / 2.0f - 115, i - 5.0f, representedScreen.width / 2.0f + 115, representedScreen.height / 4.0f + 43 + if (status.keys.isEmpty()) 10 else status.keys.size * Fonts.font40.fontHeight, Integer.MIN_VALUE)
 
         if (status.isEmpty()) {
             Fonts.font40.drawCenteredString("Loading...", representedScreen.width / 2.0f, representedScreen.height / 4.0f + 40, Color.WHITE.rgb)

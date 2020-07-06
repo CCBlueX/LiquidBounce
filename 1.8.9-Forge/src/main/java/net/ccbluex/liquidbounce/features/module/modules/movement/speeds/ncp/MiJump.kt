@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class MiJump : SpeedMode("MiJump") {
     override fun onMotion() {
-        if (!MovementUtils.isMoving()) return
+        if (!MovementUtils.isMoving) return
         if (mc.thePlayer!!.onGround && !mc.thePlayer!!.movementInput.jump) {
             mc.thePlayer!!.motionY += 0.1
             val multiplier = 1.8

@@ -91,7 +91,7 @@ class Velocity : Module() {
                     return
 
                 if (!thePlayer.onGround) {
-                    MovementUtils.strafe(MovementUtils.getSpeed() * reverseStrengthValue.get())
+                    MovementUtils.strafe(MovementUtils.speed * reverseStrengthValue.get())
                 } else if (velocityTimer.hasTimePassed(80L))
                     velocityInput = false
             }

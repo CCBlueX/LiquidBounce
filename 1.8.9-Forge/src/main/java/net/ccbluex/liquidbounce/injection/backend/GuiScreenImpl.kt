@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiContainer
 import net.ccbluex.liquidbounce.api.util.WrappedMutableList
+import net.ccbluex.liquidbounce.injection.backend.utils.GuiScreenWrapper
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiGameOver
 import net.minecraft.client.gui.GuiScreen
@@ -31,13 +32,17 @@ open class GuiScreenImpl<T : GuiScreen>(wrapped: T) : GuiImpl<T>(wrapped), IGuiS
 
     override fun asGuiChest(): IGuiChest = GuiChestImpl(wrapped as GuiChest)
 
-    override fun superMouseReleased(mouseX: Int, mouseY: Int, state: Int) {
-        TODO("Not yet implemented")
-    }
+    override fun superMouseReleased(mouseX: Int, mouseY: Int, state: Int) = (wrapped as GuiScreenWrapper).superMouseReleased(mouseX, mouseY, state)
 
     override fun drawBackground(i: Int) = wrapped.drawBackground(i)
 
     override fun drawDefaultBackground() = wrapped.drawDefaultBackground()
+    override fun superKeyTyped(typedChar: Char, keyCode: Int) = (wrapped as GuiScreenWrapper).superKeyTyped(typedChar, keyCode)
+
+    override fun superHandleMouseInput() = (wrapped as GuiScreenWrapper).superHandleMouseInput()
+
+    override fun superMouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) = (wrapped as GuiScreenWrapper).superMouseClicked(mouseX, mouseY, mouseButton)
+    override fun superDrawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) = (wrapped as GuiScreenWrapper).superDrawScreen(mouseX, mouseY, partialTicks)
 
     override var height: Int
         get() = wrapped.height

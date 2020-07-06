@@ -608,7 +608,7 @@ class Fly : Module() {
                 }
             }
             "boosthypixel" -> {
-                if (!MovementUtils.isMoving()) {
+                if (!MovementUtils.isMoving) {
                     event.x = 0.0
                     event.z = 0.0
                     return
@@ -639,7 +639,7 @@ class Fly : Module() {
 
                 moveSpeed = max(moveSpeed, 0.3)
 
-                val yaw = MovementUtils.getDirection()
+                val yaw = MovementUtils.direction
 
                 event.x = -sin(yaw) * moveSpeed
                 event.z = cos(yaw) * moveSpeed

@@ -74,10 +74,8 @@ object LiquidBounce {
     /**
      * Execute if client will be started
      */
-    fun startClient(wrapper: Wrapper) {
+    fun startClient() {
         isStarting = true
-
-        this.wrapper = wrapper
 
         ClientUtils.getLogger().info("Starting $CLIENT_NAME b$CLIENT_VERSION, by $CLIENT_CREATOR")
 

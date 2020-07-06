@@ -62,6 +62,6 @@ class Boost : SpeedMode("Boost") {
     override fun onMove(event: MoveEvent) {}
 
     private fun shouldSpeedUp(): Boolean {
-        return !mc.thePlayer!!.isInLava && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.sneaking && MovementUtils.isMoving()
+        return !mc.thePlayer!!.isInLava && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.sneaking && MovementUtils.isMoving
     }
 }

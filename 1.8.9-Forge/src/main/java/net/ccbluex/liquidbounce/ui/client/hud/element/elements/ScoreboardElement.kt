@@ -104,7 +104,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
 
 
 
-        RenderUtils.drawRect(l1 - 2, -2, 5, (maxHeight + fontRenderer.fontHeight).toInt(), backColor)
+        RenderUtils.drawRect(l1 - 2, -2, 5, (maxHeight + fontRenderer.fontHeight), backColor)
 
         scoreCollection.forEachIndexed { index, score ->
             val team = scoreboard.getPlayersTeam(score.playerName)
@@ -113,7 +113,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
             val scorePoints = "${WEnumChatFormatting.RED}${score.scorePoints}"
 
             val width = 5 - if (rectValue.get()) 4 else 0
-            val height = maxHeight - index * fontRenderer.fontHeight
+            val height = maxHeight - index * fontRenderer.fontHeight.toFloat()
 
             GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
@@ -135,11 +135,11 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
                     else -> rectCustomColor
                 }
 
-                RenderUtils.drawRect(2F, if (index == scoreCollection.size - 1) -2F else height, 5F, if (index == 0) fontRenderer.fontHeight else height + fontRenderer.fontHeight * 2F, rectColor)
+                RenderUtils.drawRect(2F, if (index == scoreCollection.size - 1) -2F else height, 5F, if (index == 0) fontRenderer.fontHeight.toFloat() else height + fontRenderer.fontHeight * 2F, rectColor)
             }
         }
 
-        return Border(-maxWidth.toFloat() - 5 - if (rectValue.get()) 3 else 0, -2F, 5F, maxHeight + fontRenderer.fontHeight)
+        return Border(-maxWidth.toFloat() - 5 - if (rectValue.get()) 3 else 0, -2F, 5F, maxHeight + fontRenderer.fontHeight.toFloat())
     }
 
     private fun backgroundColor() = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(),

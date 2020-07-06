@@ -9,11 +9,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
 import net.ccbluex.liquidbounce.file.FileConfig;
 import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
-import net.minecraft.block.Block;
 
 import java.io.*;
 
@@ -37,7 +37,7 @@ public class XRayConfig extends FileConfig {
     protected void loadConfig() throws IOException {
         final XRay xRay = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
 
-        if(xRay == null) {
+        if (xRay == null) {
             ClientUtils.getLogger().error("[FileManager] Failed to find xray module.");
             return;
         }
@@ -46,9 +46,9 @@ public class XRayConfig extends FileConfig {
 
         xRay.getXrayBlocks().clear();
 
-        for(final JsonElement jsonElement : jsonArray) {
+        for (final JsonElement jsonElement : jsonArray) {
             try {
-                final Block block = Block.getBlockFromName(jsonElement.getAsString());
+                final IBlock block = LiquidBounce.wrapper.getFunctions().getBlockFromName(jsonElement.getAsString());
 
                 if (xRay.getXrayBlocks().contains(block)) {
                     ClientUtils.getLogger().error("[FileManager] Skipped xray block '" + block.getRegistryName() + "' because the block is already added.");
@@ -56,7 +56,7 @@ public class XRayConfig extends FileConfig {
                 }
 
                 xRay.getXrayBlocks().add(block);
-            }catch(final Throwable throwable) {
+            } catch (final Throwable throwable) {
                 ClientUtils.getLogger().error("[FileManager] Failed to add block to xray.", throwable);
             }
         }
@@ -71,15 +71,15 @@ public class XRayConfig extends FileConfig {
     protected void saveConfig() throws IOException {
         final XRay xRay = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
 
-        if(xRay == null) {
+        if (xRay == null) {
             ClientUtils.getLogger().error("[FileManager] Failed to find xray module.");
             return;
         }
 
         final JsonArray jsonArray = new JsonArray();
 
-        for (final Block block : xRay.getXrayBlocks())
-            jsonArray.add(FileManager.PRETTY_GSON.toJsonTree(Block.getIdFromBlock(block)));
+        for (final IBlock block : xRay.getXrayBlocks())
+            jsonArray.add(FileManager.PRETTY_GSON.toJsonTree(LiquidBounce.wrapper.getFunctions().getIdFromBlock(block)));
 
         final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
         printWriter.println(FileManager.PRETTY_GSON.toJson(jsonArray));

@@ -15,7 +15,10 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
 import net.ccbluex.liquidbounce.api.minecraft.tileentity.ITileEntity
+import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
+import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.MinecraftInstance
 
 interface IExtractedFunctions {
     fun getBlockById(id: Int): IBlock?
@@ -36,5 +39,7 @@ interface IExtractedFunctions {
     fun getPotionById(potionID: Int): IPotion
     fun enableStandardItemLighting()
     fun scoreboardFormatPlayerName(scorePlayerTeam: ITeam?, playerName: String): String
+    fun disableFastRender()
+    fun jsonToComponent(toString: String): IIChatComponent
 
 }

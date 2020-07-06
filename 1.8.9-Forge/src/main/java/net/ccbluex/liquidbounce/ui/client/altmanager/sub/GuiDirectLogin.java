@@ -70,7 +70,7 @@ public class GuiDirectLogin extends WrappedGuiScreen {
     }
 
     @Override
-    protected void actionPerformed(IGuiButton button) throws IOException {
+    public void actionPerformed(IGuiButton button) throws IOException {
         if (!button.getEnabled()) return;
 
         switch (button.getId()) {
@@ -132,7 +132,7 @@ public class GuiDirectLogin extends WrappedGuiScreen {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+    public void keyTyped(char typedChar, int keyCode) throws IOException {
         switch (keyCode) {
             case Keyboard.KEY_ESCAPE:
                 mc.displayGuiScreen(prevGui);
@@ -154,7 +154,7 @@ public class GuiDirectLogin extends WrappedGuiScreen {
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         username.mouseClicked(mouseX, mouseY, mouseButton);
         password.mouseClicked(mouseX, mouseY, mouseButton);
         super.mouseClicked(mouseX, mouseY, mouseButton);

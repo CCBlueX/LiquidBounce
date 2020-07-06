@@ -20,7 +20,7 @@ class MineplexGround : SpeedMode("MineplexGround") {
     private var speed = 0f
 
     override fun onMotion() {
-        if (!MovementUtils.isMoving() || !mc.thePlayer!!.onGround || mc.thePlayer!!.inventory.getCurrentItemInHand() == null || mc.thePlayer!!.isUsingItem) return
+        if (!MovementUtils.isMoving || !mc.thePlayer!!.onGround || mc.thePlayer!!.inventory.getCurrentItemInHand() == null || mc.thePlayer!!.isUsingItem) return
         spoofSlot = false
         for (i in 36..44) {
             val itemStack = mc.thePlayer!!.inventory.getStackInSlot(i)
@@ -32,7 +32,7 @@ class MineplexGround : SpeedMode("MineplexGround") {
     }
 
     override fun onUpdate() {
-        if (!MovementUtils.isMoving() || !mc.thePlayer!!.onGround || mc.thePlayer!!.isUsingItem) {
+        if (!MovementUtils.isMoving || !mc.thePlayer!!.onGround || mc.thePlayer!!.isUsingItem) {
             speed = 0f
             return
         }

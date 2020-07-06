@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class CustomSpeed : SpeedMode("Custom") {
     override fun onMotion() {
-        if (MovementUtils.isMoving()) {
+        if (MovementUtils.isMoving) {
             val speed = LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed? ?: return
             mc.timer.timerSpeed = speed.customTimerValue.get()
             when {

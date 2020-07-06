@@ -23,7 +23,7 @@ class NCPFHop : SpeedMode("NCPFHop") {
 
     override fun onMotion() {}
     override fun onUpdate() {
-        if (MovementUtils.isMoving()) {
+        if (MovementUtils.isMoving) {
             if (mc.thePlayer!!.onGround) {
                 mc.thePlayer!!.jump()
                 mc.thePlayer!!.motionX *= 1.01

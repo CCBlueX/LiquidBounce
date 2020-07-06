@@ -12,6 +12,9 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.GhostHand;
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall;
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
 import net.ccbluex.liquidbounce.features.module.modules.world.NoSlowBreak;
+import net.ccbluex.liquidbounce.injection.backend.AxisAlignedBBImplKt;
+import net.ccbluex.liquidbounce.injection.backend.BlockImplKt;
+import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtentionsKt;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockState;
@@ -62,9 +65,10 @@ public abstract class MixinBlock {
     @Overwrite
     public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, AxisAlignedBB mask, List<AxisAlignedBB> list, Entity collidingEntity) {
         AxisAlignedBB axisalignedbb = this.getCollisionBoundingBox(worldIn, pos, state);
-        BlockBBEvent blockBBEvent = new BlockBBEvent(pos, blockState.getBlock(), axisalignedbb);
+        BlockBBEvent blockBBEvent = new BlockBBEvent(BackendExtentionsKt.wrap(pos), BlockImplKt.wrap(blockState.getBlock()), AxisAlignedBBImplKt.wrap(axisalignedbb));
         LiquidBounce.eventManager.callEvent(blockBBEvent);
-        axisalignedbb = blockBBEvent.getBoundingBox();
+        axisalignedbb = blockBBEvent.getBoundingBox() == null ? AxisAlignedBBImplKt.unwrap(blockBBEvent.getBoundingBox()) : null;
+
         if(axisalignedbb != null && mask.intersectsWith(axisalignedbb))
             list.add(axisalignedbb);
     }

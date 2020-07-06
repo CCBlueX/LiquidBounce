@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 
 @Suppress("INAPPLICABLE_JVM_NAME")
 interface IBlock {
+    val registryName: String
     var slipperiness: Float
 
     @get:JvmName("isTransculent")

@@ -13,7 +13,7 @@ class AACYPort : SpeedMode("AACYPort") {
     override fun onMotion() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (MovementUtils.isMoving() && !thePlayer.sneaking) {
+        if (MovementUtils.isMoving && !thePlayer.sneaking) {
             thePlayer.cameraPitch = 0f
 
             if (thePlayer.onGround) {

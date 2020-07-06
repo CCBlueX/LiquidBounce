@@ -10,13 +10,13 @@ package net.ccbluex.liquidbounce.injection.backend.utils
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.WEnumPlayerModelParts
 import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
 import net.ccbluex.liquidbounce.api.util.WrappedMutableList
 import net.minecraft.entity.player.EnumPlayerModelParts
 import net.minecraft.event.ClickEvent
-import net.minecraft.network.play.client.C02PacketUseEntity
+import net.minecraft.network.play.client.*
 import net.minecraft.util.*
 import net.minecraft.world.WorldSettings
 
@@ -156,5 +156,45 @@ inline fun ICPacketUseEntity.WAction.unwrap(): C02PacketUseEntity.Action {
 inline fun IClickEvent.WAction.unwrap(): ClickEvent.Action {
     return when (this) {
         IClickEvent.WAction.OPEN_URL -> ClickEvent.Action.OPEN_URL
+    }
+}
+
+inline fun ICPacketClientStatus.WEnumState.unwrap(): C16PacketClientStatus.EnumState {
+    return when (this) {
+        ICPacketClientStatus.WEnumState.PERFORM_RESPAWN -> C16PacketClientStatus.EnumState.PERFORM_RESPAWN
+        ICPacketClientStatus.WEnumState.REQUEST_STATS -> C16PacketClientStatus.EnumState.REQUEST_STATS
+        ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT -> C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
+    }
+}
+
+inline fun ICPacketPlayerDigging.WAction.unwrap(): C07PacketPlayerDigging.Action {
+    return when (this) {
+        ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK -> C07PacketPlayerDigging.Action.START_DESTROY_BLOCK
+        ICPacketPlayerDigging.WAction.ABORT_DESTROY_BLOCK -> C07PacketPlayerDigging.Action.ABORT_DESTROY_BLOCK
+        ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK -> C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK
+        ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS -> C07PacketPlayerDigging.Action.DROP_ALL_ITEMS
+        ICPacketPlayerDigging.WAction.DROP_ITEM -> C07PacketPlayerDigging.Action.DROP_ITEM
+        ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM -> C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
+    }
+}
+
+inline fun ICPacketResourcePackStatus.WAction.unwrap(): C19PacketResourcePackStatus.Action {
+    return when (this) {
+        ICPacketResourcePackStatus.WAction.SUCCESSFULLY_LOADED -> C19PacketResourcePackStatus.Action.SUCCESSFULLY_LOADED
+        ICPacketResourcePackStatus.WAction.DECLINED -> C19PacketResourcePackStatus.Action.DECLINED
+        ICPacketResourcePackStatus.WAction.FAILED_DOWNLOAD -> C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD
+        ICPacketResourcePackStatus.WAction.ACCEPTED -> C19PacketResourcePackStatus.Action.ACCEPTED
+    }
+}
+
+inline fun ICPacketEntityAction.WAction.unwrap(): C0BPacketEntityAction.Action {
+    return when (this) {
+        ICPacketEntityAction.WAction.START_SNEAKING -> C0BPacketEntityAction.Action.START_SNEAKING
+        ICPacketEntityAction.WAction.STOP_SNEAKING -> C0BPacketEntityAction.Action.STOP_SNEAKING
+        ICPacketEntityAction.WAction.STOP_SLEEPING -> C0BPacketEntityAction.Action.STOP_SLEEPING
+        ICPacketEntityAction.WAction.START_SPRINTING -> C0BPacketEntityAction.Action.START_SPRINTING
+        ICPacketEntityAction.WAction.STOP_SPRINTING -> C0BPacketEntityAction.Action.STOP_SPRINTING
+        ICPacketEntityAction.WAction.RIDING_JUMP -> C0BPacketEntityAction.Action.RIDING_JUMP
+        ICPacketEntityAction.WAction.OPEN_INVENTORY -> C0BPacketEntityAction.Action.OPEN_INVENTORY
     }
 }

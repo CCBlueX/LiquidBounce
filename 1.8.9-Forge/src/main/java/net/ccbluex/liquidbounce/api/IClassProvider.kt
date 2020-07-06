@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.render.ITessellator
 import net.ccbluex.liquidbounce.api.minecraft.client.render.IThreadDownloadImageData
@@ -40,7 +41,9 @@ import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
+import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
+import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
 import java.awt.image.BufferedImage
 import java.io.File
 
@@ -76,21 +79,22 @@ interface IClassProvider {
     fun createGuiSelectWorld(parentScreen: IGuiScreen): IGuiScreen
     fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen
     fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen
+    fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen
 
     fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange
     fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement
     fun createCPacketPlayerBlockPlacement(positionIn: WBlockPos, placedBlockDirectionIn: Int, stackIn: IItemStack?, facingXIn: Float, facingYIn: Float, facingZIn: Float): ICPacketPlayerBlockPlacement
     fun createCPacketPlayerPosLook(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayerPosLook
     fun createCPacketClientStatus(state: ICPacketClientStatus.WEnumState): ICPacketClientStatus
-    fun createCPacketPlayerDigging(wAction: ICPacketPlayerDigging.WAction, pos: WBlockPos, facing: IEnumFacing): ICPacketPlayerDigging
-    fun createCPacketPlayerPosition(x: Double, negativeInfinity: Double, z: Double, onGround: Boolean): ICPacketPlayerPosition
-    fun createICPacketResourcePackStatus(hash: String, status: ICPacketResourcePackStatus.WAction): ICPacketResourcePackStatus
-    fun createCPacketPlayerLook(yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayerLook
+    fun createCPacketPlayerDigging(wAction: ICPacketPlayerDigging.WAction, pos: WBlockPos, facing: IEnumFacing): IPacket
+    fun createCPacketPlayerPosition(x: Double, negativeInfinity: Double, z: Double, onGround: Boolean): ICPacketPlayer
+    fun createICPacketResourcePackStatus(hash: String, status: ICPacketResourcePackStatus.WAction): IPacket
+    fun createCPacketPlayerLook(yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayer
     fun createCPacketUseEntity(player: IEntity, wAction: ICPacketUseEntity.WAction): ICPacketUseEntity
     fun createCPacketUseEntity(entity: IEntity, positionVector: WVec3): ICPacketUseEntity
     fun createCPacketCreativeInventoryAction(slot: Int, itemStack: IItemStack): IPacket
     fun createCPacketEntityAction(player: IEntity, wAction: ICPacketEntityAction.WAction): ICPacketEntityAction
-    fun createCPacketCustomPayload(channel: String, payload: IPacketBuffer): IPacket
+    fun createCPacketCustomPayload(channel: String, payload: IPacketBuffer): ICPacketCustomPayload
     fun createCPacketCloseWindow(windowId: Int): ICPacketCloseWindow
     fun createCPacketCloseWindow(): ICPacketCloseWindow
     fun createCPacketPlayer(onGround: Boolean): ICPacketPlayer
@@ -207,4 +211,6 @@ interface IClassProvider {
     fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer
     fun wrapGuiScreen(clickGui: WrappedGuiScreen): IGuiScreen
     fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer
+    fun wrapCreativeTab(name: String, wrappedCreativeTabs: WrappedCreativeTabs)
+    fun wrapGuiSlot(wrappedGuiSlot: WrappedGuiSlot, mc: IMinecraft, width: Int, height: Int, top: Int, bottom: Int, slotHeight: Int)
 }

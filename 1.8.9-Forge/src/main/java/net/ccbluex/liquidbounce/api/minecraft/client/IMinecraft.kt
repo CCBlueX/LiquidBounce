@@ -20,12 +20,17 @@ import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.ITextureMana
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IEntityRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IRenderGlobal
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
+import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import net.ccbluex.liquidbounce.api.minecraft.renderer.entity.IRenderManager
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.ISession
 import net.ccbluex.liquidbounce.api.minecraft.util.ITimer
+import java.io.File
 
 interface IMinecraft {
+    val framebuffer: IFramebuffer
+    val isFullScreen: Boolean
+    val dataDir: File
     val debugFPS: Int
     val renderGlobal: IRenderGlobal
     val renderItem: IRenderItem
@@ -53,4 +58,5 @@ interface IMinecraft {
     fun displayGuiScreen(screen: IGuiScreen?)
     fun rightClickMouse()
     fun shutdown()
+    fun toggleFullscreen()
 }

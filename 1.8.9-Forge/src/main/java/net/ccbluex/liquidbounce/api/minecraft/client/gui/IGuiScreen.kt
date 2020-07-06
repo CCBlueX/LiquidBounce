@@ -23,4 +23,8 @@ interface IGuiScreen : IGui {
     fun superMouseReleased(mouseX: Int, mouseY: Int, state: Int)
     fun drawBackground(i: Int)
     fun drawDefaultBackground()
+    fun superKeyTyped(typedChar: Char, keyCode: Int)
+    fun superHandleMouseInput()
+    fun superMouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
+    fun superDrawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
 }

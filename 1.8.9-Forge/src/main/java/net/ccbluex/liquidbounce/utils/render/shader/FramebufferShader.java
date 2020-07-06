@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils.render.shader;
 
+import net.ccbluex.liquidbounce.api.minecraft.util.IScaledResolution;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
@@ -41,13 +42,13 @@ public abstract class FramebufferShader extends Shader {
         framebuffer = setupFrameBuffer(framebuffer);
         framebuffer.framebufferClear();
         framebuffer.bindFramebuffer(true);
-        entityShadows = mc.gameSettings.entityShadows;
-        mc.gameSettings.entityShadows = false;
-        mc.entityRenderer.setupCameraTransform(partialTicks, 0);
+        entityShadows = mc.getGameSettings().getEntityShadows();
+        mc.getGameSettings().setEntityShadows(false);
+        mc.getEntityRenderer().setupCameraTransform(partialTicks, 0);
     }
 
     public void stopDraw(final Color color, final float radius, final float quality) {
-        mc.gameSettings.entityShadows = entityShadows;
+        mc.getGameSettings().setEntityShadows(entityShadows);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         mc.getFramebuffer().bindFramebuffer(true);
@@ -59,15 +60,15 @@ public abstract class FramebufferShader extends Shader {
         this.radius = radius;
         this.quality = quality;
 
-        mc.entityRenderer.disableLightmap();
+        mc.getEntityRenderer().disableLightmap();
         RenderHelper.disableStandardItemLighting();
 
         startShader();
-        mc.entityRenderer.setupOverlayRendering();
+        mc.getEntityRenderer().setupOverlayRendering();
         drawFramebuffer(framebuffer);
         stopShader();
 
-        mc.entityRenderer.disableLightmap();
+        mc.getEntityRenderer().disableLightmap();
 
         GlStateManager.popMatrix();
         GlStateManager.popAttrib();
@@ -82,7 +83,7 @@ public abstract class FramebufferShader extends Shader {
         if(frameBuffer != null)
             frameBuffer.deleteFramebuffer();
 
-        frameBuffer = new Framebuffer(mc.displayWidth, mc.displayHeight, true);
+        frameBuffer = new Framebuffer(mc.getDisplayWidth(), mc.getDisplayHeight(), true);
 
         return frameBuffer;
     }
@@ -91,7 +92,8 @@ public abstract class FramebufferShader extends Shader {
      * @author TheSlowly
      */
     public void drawFramebuffer(final Framebuffer framebuffer) {
-        final ScaledResolution scaledResolution = new ScaledResolution(mc);
+        final IScaledResolution scaledResolution = classProvider.createScaledResolution(mc);
+
         glBindTexture(GL_TEXTURE_2D, framebuffer.framebufferTexture);
         glBegin(GL_QUADS);
         glTexCoord2d(0, 1);

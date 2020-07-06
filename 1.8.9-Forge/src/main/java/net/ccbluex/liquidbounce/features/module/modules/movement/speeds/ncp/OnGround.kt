@@ -13,7 +13,7 @@ class OnGround : SpeedMode("OnGround") {
     override fun onMotion() {
         val thePlayer = mc.thePlayer
 
-        if (thePlayer == null || !MovementUtils.isMoving())
+        if (thePlayer == null || !MovementUtils.isMoving)
             return
 
         if (thePlayer.fallDistance > 3.994)

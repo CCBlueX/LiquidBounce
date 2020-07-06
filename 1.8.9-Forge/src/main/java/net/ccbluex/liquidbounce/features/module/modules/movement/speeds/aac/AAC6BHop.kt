@@ -18,7 +18,7 @@ class AAC6BHop : SpeedMode("AAC6BHop") {
 
         if (thePlayer.isInWater)
             return
-        if (MovementUtils.isMoving()) {
+        if (MovementUtils.isMoving) {
             if (thePlayer.onGround) {
                 if (legitJump) {
                     thePlayer.motionY = 0.4

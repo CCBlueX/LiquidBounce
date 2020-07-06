@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.render.ITessellator
 import net.ccbluex.liquidbounce.api.minecraft.client.render.IThreadDownloadImageData
@@ -41,9 +42,11 @@ import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
+import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
-import net.ccbluex.liquidbounce.injection.backend.utils.GuiPasswordField
-import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
+import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
+import net.ccbluex.liquidbounce.injection.backend.utils.*
+import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.minecraft.block.*
 import net.minecraft.block.material.Material
 import net.minecraft.client.entity.EntityOtherPlayerMP
@@ -51,6 +54,7 @@ import net.minecraft.client.gui.*
 import net.minecraft.client.gui.inventory.GuiChest
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.client.multiplayer.GuiConnecting
 import net.minecraft.client.renderer.IImageBuffer
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.ThreadDownloadImageData
@@ -155,84 +159,47 @@ object ClassProviderImpl : IClassProvider {
     override fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiMultiplayer(parentScreen.unwrap()))
 
     override fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiModList(parentScreen.unwrap()))
+    override fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen = GuiScreenImpl(GuiConnecting(parent.unwrap(), mc.unwrap(), serverData.unwrap()))
 
     override fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(C09PacketHeldItemChange(slot))
 
-    override fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(C08PacketPlayerBlockPlacement(stack?.unwrap()))
 
-    override fun createCPacketPlayerBlockPlacement(positionIn: WBlockPos, placedBlockDirectionIn: Int, stackIn: IItemStack?, facingXIn: Float, facingYIn: Float, facingZIn: Float): ICPacketPlayerBlockPlacement {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketPlayerBlockPlacement(positionIn: WBlockPos, placedBlockDirectionIn: Int, stackIn: IItemStack?, facingXIn: Float, facingYIn: Float, facingZIn: Float): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(C08PacketPlayerBlockPlacement(positionIn.unwrap(), placedBlockDirectionIn, stackIn?.unwrap(), facingXIn, facingYIn, facingZIn))
 
-    override fun createCPacketPlayerPosLook(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayerPosLook {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketPlayerPosLook(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayerPosLook = CPacketPlayerPosLookImpl(C03PacketPlayer.C06PacketPlayerPosLook(x, y, z, yaw, pitch, onGround))
 
-    override fun createCPacketClientStatus(state: ICPacketClientStatus.WEnumState): ICPacketClientStatus {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketClientStatus(state: ICPacketClientStatus.WEnumState): ICPacketClientStatus = CPacketClientStatusImpl(C16PacketClientStatus(state.unwrap()))
 
-    override fun createCPacketPlayerDigging(wAction: ICPacketPlayerDigging.WAction, pos: WBlockPos, facing: IEnumFacing): ICPacketPlayerDigging {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketPlayerDigging(wAction: ICPacketPlayerDigging.WAction, pos: WBlockPos, facing: IEnumFacing): IPacket = PacketImpl(C07PacketPlayerDigging(wAction.unwrap(), pos.unwrap(), facing.unwrap()))
 
-    override fun createCPacketPlayerPosition(x: Double, negativeInfinity: Double, z: Double, onGround: Boolean): ICPacketPlayerPosition {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketPlayerPosition(x: Double, y: Double, z: Double, onGround: Boolean): ICPacketPlayer = CPacketPlayerImpl(C03PacketPlayer.C04PacketPlayerPosition(x, y, z, onGround))
 
-    override fun createICPacketResourcePackStatus(hash: String, status: ICPacketResourcePackStatus.WAction): ICPacketResourcePackStatus {
-        TODO("Not yet implemented")
-    }
+    override fun createICPacketResourcePackStatus(hash: String, status: ICPacketResourcePackStatus.WAction): IPacket = PacketImpl(C19PacketResourcePackStatus(hash, status.unwrap()))
 
-    override fun createCPacketPlayerLook(yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayerLook {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketPlayerLook(yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayer = CPacketPlayerImpl(C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, onGround))
 
-    override fun createCPacketUseEntity(player: IEntity, wAction: ICPacketUseEntity.WAction): ICPacketUseEntity {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketUseEntity(player: IEntity, wAction: ICPacketUseEntity.WAction): ICPacketUseEntity = CPacketUseEntityImpl(C02PacketUseEntity(player.unwrap(), wAction.unwrap()))
 
-    override fun createCPacketUseEntity(entity: IEntity, positionVector: WVec3): ICPacketUseEntity {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketUseEntity(entity: IEntity, positionVector: WVec3): ICPacketUseEntity = CPacketUseEntityImpl(C02PacketUseEntity(entity.unwrap(), positionVector.unwrap()))
 
-    override fun createCPacketCreativeInventoryAction(slot: Int, itemStack: IItemStack): IPacket {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketCreativeInventoryAction(slot: Int, itemStack: IItemStack): IPacket = PacketImpl(C10PacketCreativeInventoryAction(slot, itemStack.unwrap()))
 
-    override fun createCPacketEntityAction(player: IEntity, wAction: ICPacketEntityAction.WAction): ICPacketEntityAction {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketEntityAction(player: IEntity, wAction: ICPacketEntityAction.WAction): ICPacketEntityAction = CPacketEntityActionImpl(C0BPacketEntityAction(player.unwrap(), wAction.unwrap()))
 
-    override fun createCPacketCustomPayload(channel: String, payload: IPacketBuffer): IPacket {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketCustomPayload(channel: String, payload: IPacketBuffer): ICPacketCustomPayload = CPacketCustomPayloadImpl(C17PacketCustomPayload(channel, payload.unwrap()))
 
-    override fun createCPacketCloseWindow(windowId: Int): ICPacketCloseWindow {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketCloseWindow(windowId: Int): ICPacketCloseWindow = CPacketCloseWindowImpl(C0DPacketCloseWindow(windowId))
 
-    override fun createCPacketCloseWindow(): ICPacketCloseWindow {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketCloseWindow(): ICPacketCloseWindow = CPacketCloseWindowImpl(C0DPacketCloseWindow())
 
-    override fun createCPacketPlayer(onGround: Boolean): ICPacketPlayer {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketPlayer(onGround: Boolean): ICPacketPlayer = CPacketPlayerImpl(C03PacketPlayer(onGround))
 
-    override fun createCPacketTabComplete(text: String): IPacket {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketTabComplete(text: String): IPacket = PacketImpl(C14PacketTabComplete(text))
 
-    override fun createCPacketAnimation(): ICPacketAnimation {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketAnimation(): ICPacketAnimation = CPacketAnimationImpl(C0APacketAnimation())
 
-    override fun createCPacketKeepAlive(): ICPacketKeepAlive {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketKeepAlive(): ICPacketKeepAlive = CPacketKeepAliveImpl(C00PacketKeepAlive())
 
     override fun isEntityAnimal(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityAnimal
 
@@ -394,9 +361,7 @@ object ClassProviderImpl : IClassProvider {
 
     override fun isBlockCactus(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockCactus
 
-    override fun isBlockBedrock(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isBlockBedrock(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped == Blocks.bedrock
 
     override fun isGuiInventory(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiInventory
 
@@ -410,13 +375,9 @@ object ClassProviderImpl : IClassProvider {
 
     override fun isGuiChest(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiChest
 
-    override fun isGuiHudDesigner(obj: Any?): Boolean {
-        TODO("Implement GUI Wrappers")
-    }
+    override fun isGuiHudDesigner(obj: Any?): Boolean = obj is FontRendererWrapper
 
-    override fun isClickGui(obj: Any?): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isClickGui(obj: Any?): Boolean = obj is GuiScreenWrapper && obj.wrapped is ClickGui
 
     override fun isFontRenderer(obj: Any?): Boolean = obj is FontRenderer
 
@@ -554,6 +515,15 @@ object ClassProviderImpl : IClassProvider {
                 when (type) {
                     EnchantmentType.SHARPNESS -> Enchantment.sharpness
                     EnchantmentType.POWER -> Enchantment.power
+                    EnchantmentType.PROTECTION -> Enchantment.protection
+                    EnchantmentType.FEATHER_FALLING -> Enchantment.featherFalling
+                    EnchantmentType.PROJECTILE_PROTECTION -> Enchantment.projectileProtection
+                    EnchantmentType.THORNS -> Enchantment.thorns
+                    EnchantmentType.FIRE_PROTECTION -> Enchantment.fireProtection
+                    EnchantmentType.RESPIRATION -> Enchantment.respiration
+                    EnchantmentType.AQUA_AFFINITY -> Enchantment.aquaAffinity
+                    EnchantmentType.BLAST_PROTECTION -> Enchantment.blastProtection
+                    EnchantmentType.UNBREAKING -> Enchantment.unbreaking
                 }
         )
     }
@@ -568,16 +538,23 @@ object ClassProviderImpl : IClassProvider {
         )
     }
 
-    override fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer {
-        TODO("Not yet implemented")
-    }
+    override fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer = FontRendererImpl(FontRendererWrapper(fontRenderer))
 
     override fun wrapGuiScreen(clickGui: WrappedGuiScreen): IGuiScreen {
-        TODO("Not yet implemented")
+        val instance = GuiScreenImpl(GuiScreenWrapper(clickGui))
+
+        clickGui.representedScreen = instance
+
+        return instance
     }
 
-    override fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer {
-        TODO("Not yet implemented")
+    override fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer = SafeVertexBuffer(vertexFormat.unwrap()).wrap()
+    override fun wrapCreativeTab(name: String, wrappedCreativeTabs: WrappedCreativeTabs) {
+        wrappedCreativeTabs.representedType = CreativeTabsImpl(CreativeTabsWrapper(wrappedCreativeTabs, name))
+    }
+
+    override fun wrapGuiSlot(wrappedGuiSlot: WrappedGuiSlot, mc: IMinecraft, width: Int, height: Int, top: Int, bottom: Int, slotHeight: Int) {
+        GuiSlotWrapper(wrappedGuiSlot, mc, width, height,  top, bottom, slotHeight)
     }
 
 }

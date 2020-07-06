@@ -81,7 +81,7 @@ class InventoryCleaner : Module() {
 
         if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) ||
                 !classProvider.isGuiInventory(mc.currentScreen) && invOpenValue.get() ||
-                noMoveValue.get() && MovementUtils.isMoving() ||
+                noMoveValue.get() && MovementUtils.isMoving ||
                 thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0)
             return
 

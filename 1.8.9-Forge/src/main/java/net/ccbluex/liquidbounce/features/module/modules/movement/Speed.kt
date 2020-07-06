@@ -96,7 +96,7 @@ class Speed : Module() {
         if (thePlayer.sneaking)
             return
 
-        if (MovementUtils.isMoving()) {
+        if (MovementUtils.isMoving) {
             thePlayer.sprinting = true
         }
 
@@ -110,7 +110,7 @@ class Speed : Module() {
         if (thePlayer.sneaking || event.eventState != EventState.PRE)
             return
 
-        if (MovementUtils.isMoving())
+        if (MovementUtils.isMoving)
             thePlayer.sprinting = true
 
         mode?.onMotion()

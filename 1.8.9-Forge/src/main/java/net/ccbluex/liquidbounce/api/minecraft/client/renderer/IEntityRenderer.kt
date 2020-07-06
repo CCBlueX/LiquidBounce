@@ -16,4 +16,6 @@ interface IEntityRenderer {
     fun isShaderActive(): Boolean
     fun loadShader(resourceLocation: IResourceLocation)
     fun stopUseShader()
+    fun setupCameraTransform(partialTicks: Float, i: Int)
+    fun setupOverlayRendering()
 }

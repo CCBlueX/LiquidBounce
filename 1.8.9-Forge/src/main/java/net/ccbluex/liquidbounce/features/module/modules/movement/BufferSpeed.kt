@@ -79,7 +79,7 @@ class BufferSpeed : Module() {
             hadFastHop = false
         }
 
-        if (!MovementUtils.isMoving() || thePlayer.sneaking || thePlayer.isInWater || mc.gameSettings.keyBindJump.isKeyDown) {
+        if (!MovementUtils.isMoving || thePlayer.sneaking || thePlayer.isInWater || mc.gameSettings.keyBindJump.isKeyDown) {
             reset()
             return
         }
@@ -184,7 +184,7 @@ class BufferSpeed : Module() {
                         }
                 }
             }
-            val currentSpeed = MovementUtils.getSpeed()
+            val currentSpeed = MovementUtils.speed
 
             if (speed < currentSpeed)
                 speed = currentSpeed.toDouble()
@@ -233,7 +233,7 @@ class BufferSpeed : Module() {
         thePlayer.motionX = thePlayer.motionX * boost
         thePlayer.motionZ = thePlayer.motionX * boost
 
-        speed = MovementUtils.getSpeed().toDouble()
+        speed = MovementUtils.speed.toDouble()
 
         if (speedLimitValue.get() && speed > maxSpeedValue.get())
             speed = maxSpeedValue.get().toDouble()

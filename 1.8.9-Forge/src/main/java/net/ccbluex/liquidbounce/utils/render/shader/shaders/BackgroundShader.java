@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils.render.shader.shaders;
 
+import net.ccbluex.liquidbounce.api.minecraft.util.IScaledResolution;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.ccbluex.liquidbounce.utils.render.shader.Shader;
 import net.minecraft.client.gui.ScaledResolution;
@@ -28,7 +29,7 @@ public final class BackgroundShader extends Shader {
 
     @Override
     public void updateUniforms() {
-        final ScaledResolution scaledResolution = new ScaledResolution(mc);
+        final IScaledResolution scaledResolution = classProvider.createScaledResolution(mc);
 
         final int resolutionID = getUniform("iResolution");
         if(resolutionID > -1)

@@ -15,7 +15,7 @@ class AAC7BHop : SpeedMode("AAC7BHop") {
     override fun onUpdate() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!MovementUtils.isMoving() || thePlayer.ridingEntity != null || thePlayer.hurtTime > 0)
+        if (!MovementUtils.isMoving || thePlayer.ridingEntity != null || thePlayer.hurtTime > 0)
             return
 
         if (thePlayer.onGround) {
@@ -26,7 +26,7 @@ class AAC7BHop : SpeedMode("AAC7BHop") {
             return
         }
 
-        val speed = MovementUtils.getSpeed() * 1.0072
+        val speed = MovementUtils.speed * 1.0072
         val yaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
 
         thePlayer.motionX = -sin(yaw) * speed

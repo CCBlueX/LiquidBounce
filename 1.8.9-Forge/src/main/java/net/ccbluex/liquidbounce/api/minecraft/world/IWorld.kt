@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.api.minecraft.world.border.IWorldBorder
 
 interface IWorld {
+    val isRemote: Boolean
     val scoreboard: IScoreboard
     val worldBorder: IWorldBorder
 

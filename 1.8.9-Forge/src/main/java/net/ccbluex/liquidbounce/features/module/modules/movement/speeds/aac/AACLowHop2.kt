@@ -29,7 +29,7 @@ class AACLowHop2 : SpeedMode("AACLowHop2") {
         if (thePlayer.isInWater)
             return
 
-        if (MovementUtils.isMoving()) {
+        if (MovementUtils.isMoving) {
             mc.timer.timerSpeed = 1.09f
 
             if (thePlayer.onGround) {

@@ -20,7 +20,7 @@ class AAC3BHop : SpeedMode("AAC3BHop") {
         if (thePlayer.isInWater)
             return
 
-        if (MovementUtils.isMoving()) {
+        if (MovementUtils.isMoving) {
             when {
                 thePlayer.onGround -> {
                     if (legitJump) {

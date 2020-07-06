@@ -30,7 +30,7 @@ class LongJump : Module() {
     @EventTarget
     fun onUpdate(event: UpdateEvent?) {
         if (LadderJump.jumped)
-            MovementUtils.strafe(MovementUtils.getSpeed() * 1.08f)
+            MovementUtils.strafe(MovementUtils.speed * 1.08f)
 
         val thePlayer = mc.thePlayer ?: return
 
@@ -50,12 +50,12 @@ class LongJump : Module() {
             run {
                 when (mode.toLowerCase()) {
                     "ncp" -> {
-                        MovementUtils.strafe(MovementUtils.getSpeed() * if (canBoost) ncpBoostValue.get() else 1f)
+                        MovementUtils.strafe(MovementUtils.speed * if (canBoost) ncpBoostValue.get() else 1f)
                         canBoost = false
                     }
                     "aacv1" -> {
                         thePlayer.motionY += 0.05999
-                        MovementUtils.strafe(MovementUtils.getSpeed() * 1.08f)
+                        MovementUtils.strafe(MovementUtils.speed * 1.08f)
                     }
                     "aacv2", "mineplex3" -> {
                         thePlayer.jumpMovementFactor = 0.09f
@@ -103,7 +103,7 @@ class LongJump : Module() {
                 }
             }
         }
-        if (autoJumpValue.get() && thePlayer.onGround && MovementUtils.isMoving()) {
+        if (autoJumpValue.get() && thePlayer.onGround && MovementUtils.isMoving) {
             jumped = true
             thePlayer.jump()
         }
@@ -117,7 +117,7 @@ class LongJump : Module() {
         if (mode.equals("mineplex3", ignoreCase = true)) {
             if (thePlayer.fallDistance != 0.0f)
                 thePlayer.motionY += 0.037
-        } else if (mode.equals("ncp", ignoreCase = true) && !MovementUtils.isMoving() && jumped) {
+        } else if (mode.equals("ncp", ignoreCase = true) && !MovementUtils.isMoving && jumped) {
             thePlayer.motionX = 0.0
             thePlayer.motionZ = 0.0
             event.zeroXZ()

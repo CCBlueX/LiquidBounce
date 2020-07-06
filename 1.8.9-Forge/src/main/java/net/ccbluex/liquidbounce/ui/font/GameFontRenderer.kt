@@ -35,16 +35,16 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer {
         fontHeight = height
     }
 
-    override fun drawString(s: String, x: Float, y: Float, color: Int) = drawString(s, x, y, color, false)
+    override fun drawString(s: String?, x: Float, y: Float, color: Int) = drawString(s, x, y, color, false)
 
-    override fun drawStringWithShadow(text: String, x: Float, y: Float, color: Int) = drawString(text, x, y, color, true)
+    override fun drawStringWithShadow(text: String?, x: Float, y: Float, color: Int) = drawString(text, x, y, color, true)
 
     override fun drawCenteredString(s: String, x: Float, y: Float, color: Int, shadow: Boolean) = drawString(s, x - getStringWidth(s) / 2F, y, color, shadow)
 
     override fun drawCenteredString(s: String, x: Float, y: Float, color: Int) =
             drawStringWithShadow(s, x - getStringWidth(s) / 2F, y, color)
 
-    override fun drawString(text: String, x: Float, y: Float, color: Int, shadow: Boolean): Int {
+    override fun drawString(text: String?, x: Float, y: Float, color: Int, shadow: Boolean): Int {
         var currentText = text
 
         val event = TextEvent(currentText)
@@ -191,7 +191,7 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer {
     override fun getColorCode(charCode: Char) =
             ColorUtils.hexColors[getColorIndex(charCode)]
 
-    override fun getStringWidth(text: String): Int {
+    override fun getStringWidth(text: String?): Int {
         var currentText = text
 
         val event = TextEvent(currentText)

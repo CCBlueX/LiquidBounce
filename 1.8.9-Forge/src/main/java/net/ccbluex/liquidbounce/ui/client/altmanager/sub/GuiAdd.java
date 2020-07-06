@@ -75,7 +75,7 @@ public class GuiAdd extends WrappedGuiScreen {
     }
 
     @Override
-    protected void actionPerformed(IGuiButton button) throws IOException {
+    public void actionPerformed(IGuiButton button) throws IOException {
         if (!button.getEnabled())
             return;
 
@@ -112,7 +112,7 @@ public class GuiAdd extends WrappedGuiScreen {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+    public void keyTyped(char typedChar, int keyCode) throws IOException {
         switch (keyCode) {
             case Keyboard.KEY_ESCAPE:
                 mc.displayGuiScreen(prevGui.representedScreen);
@@ -134,7 +134,7 @@ public class GuiAdd extends WrappedGuiScreen {
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         username.mouseClicked(mouseX, mouseY, mouseButton);
         password.mouseClicked(mouseX, mouseY, mouseButton);
         super.mouseClicked(mouseX, mouseY, mouseButton);
@@ -151,7 +151,6 @@ public class GuiAdd extends WrappedGuiScreen {
     @Override
     public void onGuiClosed() {
         Keyboard.enableRepeatEvents(false);
-        representedScreen.superOnGuiClosed();
     }
 
     private void addAccount(final String name, final String password) {

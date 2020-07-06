@@ -45,7 +45,7 @@ class NoSlow : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         val heldItem = thePlayer.heldItem
-        if (heldItem == null || !classProvider.isItemSword(heldItem.item) || !MovementUtils.isMoving()) {
+        if (heldItem == null || !classProvider.isItemSword(heldItem.item) || !MovementUtils.isMoving) {
             return
         }
         val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura

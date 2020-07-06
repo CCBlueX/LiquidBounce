@@ -172,7 +172,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
                 -2F,
                 -2F,
                 fontRenderer.getStringWidth(displayText) + 2F,
-                fontRenderer.fontHeight
+                fontRenderer.fontHeight.toFloat()
         )
     }
 

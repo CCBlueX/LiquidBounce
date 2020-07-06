@@ -39,7 +39,7 @@ public class GuiAntiForge extends WrappedGuiScreen {
     }
 
     @Override
-    protected void actionPerformed(IGuiButton button) {
+    public void actionPerformed(IGuiButton button) {
         switch (button.getId()) {
             case 1:
                 AntiForge.enabled = !AntiForge.enabled;
@@ -76,7 +76,7 @@ public class GuiAntiForge extends WrappedGuiScreen {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+    public void keyTyped(char typedChar, int keyCode) throws IOException {
         if(Keyboard.KEY_ESCAPE == keyCode) {
             mc.displayGuiScreen(prevGui);
             return;

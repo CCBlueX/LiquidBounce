@@ -22,6 +22,9 @@ class EntityRendererImpl(val wrapped: EntityRenderer) : IEntityRenderer {
     override fun loadShader(resourceLocation: IResourceLocation) = wrapped.loadShader(resourceLocation.unwrap())
 
     override fun stopUseShader() = wrapped.stopUseShader()
+    override fun setupCameraTransform(partialTicks: Float, pass: Int) = wrapped.setupCameraTransform(partialTicks, pass)
+
+    override fun setupOverlayRendering() = wrapped.setupOverlayRendering()
 
 }
 

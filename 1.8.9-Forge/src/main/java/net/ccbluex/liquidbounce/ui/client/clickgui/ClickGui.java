@@ -251,7 +251,7 @@ public class ClickGui extends WrappedGuiScreen {
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         final double scale = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).scaleValue.get();
 
         mouseX /= scale;
@@ -280,7 +280,7 @@ public class ClickGui extends WrappedGuiScreen {
     }
 
     @Override
-    protected void mouseReleased(int mouseX, int mouseY, int state) {
+    public void mouseReleased(int mouseX, int mouseY, int state) {
         final double scale = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).scaleValue.get();
 
         mouseX /= scale;

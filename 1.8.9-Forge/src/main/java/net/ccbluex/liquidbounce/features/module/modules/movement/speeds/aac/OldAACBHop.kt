@@ -13,11 +13,11 @@ class OldAACBHop : SpeedMode("OldAACBHop") {
     override fun onMotion() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (MovementUtils.isMoving()) {
+        if (MovementUtils.isMoving) {
             if (thePlayer.onGround) {
                 MovementUtils.strafe(0.56f)
                 thePlayer.motionY = 0.41999998688697815
-            } else MovementUtils.strafe(MovementUtils.getSpeed() * if (thePlayer.fallDistance > 0.4f) 1.0f else 1.01f)
+            } else MovementUtils.strafe(MovementUtils.speed * if (thePlayer.fallDistance > 0.4f) 1.0f else 1.01f)
         } else {
             thePlayer.motionX = 0.0
             thePlayer.motionZ = 0.0

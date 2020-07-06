@@ -13,3 +13,6 @@ class MaterialImpl(val wrapped: Material) : IMaterial {
     override val isReplaceable: Boolean
         get() = wrapped.isReplaceable
 }
+
+inline fun IMaterial.unwrap(): Material = (this as MaterialImpl).wrapped
+inline fun Material.wrap(): IMaterial = MaterialImpl(this)

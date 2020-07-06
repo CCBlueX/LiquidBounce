@@ -5,9 +5,11 @@
  */
 package net.ccbluex.liquidbounce.utils.item;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.item.ItemArmor;
-import net.minecraft.item.ItemStack;
+import net.ccbluex.liquidbounce.api.enums.EnchantmentType;
+import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment;
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemArmor;
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack;
+import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -15,11 +17,11 @@ import java.util.Comparator;
 
 import static net.ccbluex.liquidbounce.utils.item.ItemUtils.getEnchantmentCount;
 
-public class ArmorComparator implements Comparator<ArmorPiece> {
-    private static final Enchantment[] DAMAGE_REDUCTION_ENCHANTMENTS = {Enchantment.protection, Enchantment.projectileProtection, Enchantment.fireProtection, Enchantment.blastProtection};
+public class ArmorComparator extends MinecraftInstance implements Comparator<ArmorPiece> {
+    private static final IEnchantment[] DAMAGE_REDUCTION_ENCHANTMENTS = {classProvider.getEnchantmentEnum(EnchantmentType.PROTECTION), classProvider.getEnchantmentEnum(EnchantmentType.PROJECTILE_PROTECTION), classProvider.getEnchantmentEnum(EnchantmentType.FIRE_PROTECTION), classProvider.getEnchantmentEnum(EnchantmentType.BLAST_PROTECTION)};
     private static final float[] ENCHANTMENT_FACTORS = {1.5f, 0.4f, 0.39f, 0.38f};
     private static final float[] ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = {0.04f, 0.08f, 0.15f, 0.08f};
-    private static final Enchantment[] OTHER_ENCHANTMENTS = {Enchantment.featherFalling, Enchantment.thorns, Enchantment.respiration, Enchantment.aquaAffinity, Enchantment.unbreaking};
+    private static final IEnchantment[] OTHER_ENCHANTMENTS = {classProvider.getEnchantmentEnum(EnchantmentType.FEATHER_FALLING), classProvider.getEnchantmentEnum(EnchantmentType.THORNS), classProvider.getEnchantmentEnum(EnchantmentType.RESPIRATION), classProvider.getEnchantmentEnum(EnchantmentType.AQUA_AFFINITY), classProvider.getEnchantmentEnum(EnchantmentType.UNBREAKING)};
     private static final float[] OTHER_ENCHANTMENT_FACTORS = {3.0f, 1.0f, 0.1f, 0.05f, 0.01f};
 
     /**
@@ -57,10 +59,10 @@ public class ArmorComparator implements Comparator<ArmorPiece> {
                     return enchantmentCountCmp;
 
                 // Then durability...
-                ItemArmor o1a = ((ItemArmor) o1.getItemStack().getItem());
-                ItemArmor o2a = ((ItemArmor) o2.getItemStack().getItem());
+                IItemArmor o1a = (o1.getItemStack().getItem()).asItemArmor();
+                IItemArmor o2a = (o2.getItemStack().getItem()).asItemArmor();
 
-                int durabilityCmp = Integer.compare(o1a.getArmorMaterial().getDurability(o1a.armorType), o2a.getArmorMaterial().getDurability(o2a.armorType));
+                int durabilityCmp = Integer.compare(o1a.getArmorMaterial().getDurability(o1a.getArmorType()), o2a.getArmorMaterial().getDurability(o2a.getArmorType()));
 
                 if (durabilityCmp != 0) {
                     return durabilityCmp;
@@ -76,17 +78,17 @@ public class ArmorComparator implements Comparator<ArmorPiece> {
         return compare;
     }
 
-    private float getThresholdedDamageReduction(ItemStack itemStack) {
-        ItemArmor item = (ItemArmor) itemStack.getItem();
+    private float getThresholdedDamageReduction(IItemStack itemStack) {
+        IItemArmor item = itemStack.getItem().asItemArmor();
 
-        return getDamageReduction(item.getArmorMaterial().getDamageReductionAmount(item.armorType), 0) * (1 - getThresholdedEnchantmentDamageReduction(itemStack));
+        return getDamageReduction(item.getArmorMaterial().getDamageReductionAmount(item.getArmorType()), 0) * (1 - getThresholdedEnchantmentDamageReduction(itemStack));
     }
 
     private float getDamageReduction(int defensePoints, int toughness) {
         return 1 - Math.min(20.0f, Math.max(defensePoints / 5.0f, defensePoints - 1 / (2 + toughness / 4.0f))) / 25.0f;
     }
 
-    private float getThresholdedEnchantmentDamageReduction(ItemStack itemStack) {
+    private float getThresholdedEnchantmentDamageReduction(IItemStack itemStack) {
         float sum = 0.0f;
 
         for (int i = 0; i < DAMAGE_REDUCTION_ENCHANTMENTS.length; i++) {
@@ -97,7 +99,7 @@ public class ArmorComparator implements Comparator<ArmorPiece> {
 
     }
 
-    private float getEnchantmentThreshold(ItemStack itemStack) {
+    private float getEnchantmentThreshold(IItemStack itemStack) {
         float sum = 0.0f;
 
         for (int i = 0; i < OTHER_ENCHANTMENTS.length; i++) {

@@ -54,7 +54,7 @@ public class GuiChangeName extends WrappedGuiScreen {
     }
 
     @Override
-    protected void actionPerformed(IGuiButton button) throws IOException {
+    public void actionPerformed(IGuiButton button) throws IOException {
         switch (button.getId()) {
             case 0:
                 mc.displayGuiScreen(prevGui.representedScreen);
@@ -80,7 +80,7 @@ public class GuiChangeName extends WrappedGuiScreen {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+    public void keyTyped(char typedChar, int keyCode) throws IOException {
         if(Keyboard.KEY_ESCAPE == keyCode) {
             mc.displayGuiScreen(prevGui.getRepresentedScreen());
             return;
@@ -92,7 +92,7 @@ public class GuiChangeName extends WrappedGuiScreen {
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         name.mouseClicked(mouseX, mouseY, mouseButton);
         super.mouseClicked(mouseX, mouseY, mouseButton);
     }

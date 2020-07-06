@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils;
 
 import com.google.gson.JsonObject;
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.login.client.C01PacketEncryptionResponse;
@@ -25,32 +26,12 @@ public final class ClientUtils extends MinecraftInstance {
 
     private static final Logger logger = LogManager.getLogger("LiquidBounce");
 
-    private static Field fastRenderField;
-
-    static {
-        try {
-            fastRenderField = GameSettings.class.getDeclaredField("ofFastRender");
-
-            if(!fastRenderField.isAccessible())
-                fastRenderField.setAccessible(true);
-        }catch(final NoSuchFieldException ignored) {
-        }
-    }
-
     public static Logger getLogger() {
         return logger;
     }
 
     public static void disableFastRender() {
-        try {
-            if(fastRenderField != null) {
-                if(!fastRenderField.isAccessible())
-                    fastRenderField.setAccessible(true);
-
-                fastRenderField.setBoolean(mc.gameSettings, false);
-            }
-        }catch(final IllegalAccessException ignored) {
-        }
+        LiquidBounce.wrapper.getFunctions().disableFastRender();
     }
 
     public static void sendEncryption(final NetworkManager networkManager, final SecretKey secretKey, final PublicKey publicKey, final S01PacketEncryptionRequest encryptionRequest) {
@@ -58,7 +39,7 @@ public final class ClientUtils extends MinecraftInstance {
     }
 
     public static void displayChatMessage(final String message) {
-        if (mc.thePlayer == null) {
+        if (mc.getThePlayer() == null) {
             getLogger().info("(MCChat)" + message);
             return;
         }
@@ -66,6 +47,6 @@ public final class ClientUtils extends MinecraftInstance {
         final JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("text", message);
 
-        mc.thePlayer.addChatMessage(IChatComponent.Serializer.jsonToComponent(jsonObject.toString()));
+        mc.getThePlayer().addChatMessage(LiquidBounce.wrapper.getFunctions().jsonToComponent(jsonObject.toString()));
     }
 }

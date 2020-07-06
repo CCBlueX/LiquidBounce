@@ -16,9 +16,9 @@ public final class PathUtils extends MinecraftInstance {
     public static List<Vector3d> findBlinkPath(final double tpX, final double tpY, final double tpZ) {
         final List<Vector3d> positions = new ArrayList<>();
 
-        double curX = mc.thePlayer.posX;
-        double curY = mc.thePlayer.posY;
-        double curZ = mc.thePlayer.posZ;
+        double curX = mc.getThePlayer().getPosX();
+        double curY = mc.getThePlayer().getPosY();
+        double curZ = mc.getThePlayer().getPosZ();
         double distance = Math.abs(curX - tpX) + Math.abs(curY - tpY) + Math.abs(curZ - tpZ);
 
         for (int count = 0; distance > 0.0D; count++) {
@@ -49,14 +49,14 @@ public final class PathUtils extends MinecraftInstance {
 
     public static List<Vector3d> findPath(final double tpX, final double tpY, final double tpZ, final double offset) {
         final List<Vector3d> positions = new ArrayList<>();
-        final double steps = Math.ceil(getDistance(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, tpX, tpY, tpZ) / offset);
+        final double steps = Math.ceil(getDistance(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ(), tpX, tpY, tpZ) / offset);
 
-        final double dX = tpX - mc.thePlayer.posX;
-        final double dY = tpY - mc.thePlayer.posY;
-        final double dZ = tpZ - mc.thePlayer.posZ;
+        final double dX = tpX - mc.getThePlayer().getPosX();
+        final double dY = tpY - mc.getThePlayer().getPosY();
+        final double dZ = tpZ - mc.getThePlayer().getPosZ();
 
         for(double d = 1D; d <= steps; ++d) {
-            positions.add(new Vector3d(mc.thePlayer.posX + (dX * d) / steps, mc.thePlayer.posY + (dY * d) / steps, mc.thePlayer.posZ + (dZ * d) / steps));
+            positions.add(new Vector3d(mc.getThePlayer().getPosX() + (dX * d) / steps, mc.getThePlayer().getPosY() + (dY * d) / steps, mc.getThePlayer().getPosZ() + (dZ * d) / steps));
         }
 
         return positions;

@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles;
 
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer;
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI;
 import net.ccbluex.liquidbounce.ui.client.clickgui.Panel;
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement;
@@ -50,9 +51,9 @@ public class NullStyle extends Style {
     public void drawDescription(int mouseX, int mouseY, String text) {
         int textWidth = Fonts.font35.getStringWidth(text);
 
-        RenderUtils.drawRect(mouseX + 9, mouseY, mouseX + textWidth + 14, mouseY + Fonts.font35.FONT_HEIGHT + 3, ClickGUI.generateColor().getRGB());
+        RenderUtils.drawRect(mouseX + 9, mouseY, mouseX + textWidth + 14, mouseY + Fonts.font35.getFontHeight() + 3, ClickGUI.generateColor().getRGB());
         GlStateManager.resetColor();
-        Fonts.font35.drawString(text, mouseX + 12, mouseY + (Fonts.font35.FONT_HEIGHT / 2), Integer.MAX_VALUE);
+        Fonts.font35.drawString(text, mouseX + 12, mouseY + (Fonts.font35.getFontHeight() / 2), Integer.MAX_VALUE);
     }
 
     @Override
@@ -95,7 +96,7 @@ public class NullStyle extends Style {
                                 final BoolValue boolValue = (BoolValue) value;
 
                                 boolValue.set(!boolValue.get());
-                                mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                                mc.getSoundHandler().playSound("gui.button.press", 1.0F);
                             }
                         }
 
@@ -119,7 +120,7 @@ public class NullStyle extends Style {
                         if(mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= yPos + 2 && mouseY <= yPos + 14) {
                             if(Mouse.isButtonDown(0) && moduleElement.isntPressed()) {
                                 listValue.openList = !listValue.openList;
-                                mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                                mc.getSoundHandler().playSound("gui.button.press", 1.0F);
                             }
                         }
 
@@ -137,7 +138,7 @@ public class NullStyle extends Style {
                                 if(mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= yPos + 2 && mouseY <= yPos + 14) {
                                     if(Mouse.isButtonDown(0) && moduleElement.isntPressed()) {
                                         listValue.set(valueOfList);
-                                        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                                        mc.getSoundHandler().playSound("gui.button.press", 1.0F);
                                     }
                                 }
 
@@ -195,14 +196,14 @@ public class NullStyle extends Style {
                         yPos += 22;
                     }else if(value instanceof FontValue) {
                         final FontValue fontValue = (FontValue) value;
-                        final FontRenderer fontRenderer = fontValue.get();
+                        final IFontRenderer fontRenderer = fontValue.get();
 
                         RenderUtils.drawRect(moduleElement.getX() + moduleElement.getWidth() + 4, yPos + 2, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 14, Integer.MIN_VALUE);
 
                         String displayString = "Font: Unknown";
 
-                        if (fontRenderer instanceof GameFontRenderer) {
-                            final GameFontRenderer liquidFontRenderer = (GameFontRenderer) fontRenderer;
+                        if (fontRenderer.isGameFontRenderer()) {
+                            final GameFontRenderer liquidFontRenderer = fontRenderer.getGameFontRenderer();
 
                             displayString = "Font: " + liquidFontRenderer.getDefaultFont().getFont().getName() + " - " + liquidFontRenderer.getDefaultFont().getFont().getSize();
                         }else if(fontRenderer == Fonts.minecraftFont)
@@ -222,13 +223,13 @@ public class NullStyle extends Style {
                             moduleElement.setSettingsWidth(stringWidth + 8);
 
                         if((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= yPos + 4 && mouseY <= yPos + 12) {
-                            final List<FontRenderer> fonts = Fonts.getFonts();
+                            final List<IFontRenderer> fonts = Fonts.getFonts();
 
                             if(Mouse.isButtonDown(0)) {
                                 for(int i = 0; i < fonts.size(); i++) {
-                                    final FontRenderer font = fonts.get(i);
+                                    final IFontRenderer font = fonts.get(i);
 
-                                    if(font == fontRenderer) {
+                                    if(font.equals(fontRenderer)) {
                                         i++;
 
                                         if(i >= fonts.size())
@@ -240,9 +241,9 @@ public class NullStyle extends Style {
                                 }
                             }else{
                                 for(int i = fonts.size() - 1; i >= 0; i--) {
-                                    final FontRenderer font = fonts.get(i);
+                                    final IFontRenderer font = fonts.get(i);
 
-                                    if(font == fontRenderer) {
+                                    if(font.equals(fontRenderer)) {
                                         i--;
 
                                         if(i >= fonts.size())

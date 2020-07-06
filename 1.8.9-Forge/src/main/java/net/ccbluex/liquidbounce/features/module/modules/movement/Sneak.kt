@@ -34,7 +34,7 @@ class Sneak : Module() {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        if (stopMoveValue.get() && MovementUtils.isMoving()) {
+        if (stopMoveValue.get() && MovementUtils.isMoving) {
             if (sneaked) {
                 onDisable()
                 sneaked = false
@@ -47,7 +47,7 @@ class Sneak : Module() {
             "switch" -> {
                 when (event.eventState) {
                     EventState.PRE -> {
-                        if (!MovementUtils.isMoving()) return
+                        if (!MovementUtils.isMoving) return
                         mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
                         mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.STOP_SNEAKING))
                     }

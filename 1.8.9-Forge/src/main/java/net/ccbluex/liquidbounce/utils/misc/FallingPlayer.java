@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.utils.misc;
 
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition;
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos;
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumFacing;
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 import org.jetbrains.annotations.Nullable;
@@ -116,7 +115,7 @@ public class FallingPlayer extends MinecraftInstance {
     private WBlockPos rayTrace(WVec3 start, WVec3 end) {
         IMovingObjectPosition result = mc.getTheWorld().rayTraceBlocks(start, end, true);
 
-        if (result != null && result.getTypeOfHit() == IMovingObjectPosition.WMovingObjectType.BLOCK && result.getSideHit() == WEnumFacing.UP) {
+        if (result != null && result.getTypeOfHit() == IMovingObjectPosition.WMovingObjectType.BLOCK && result.getSideHit().isUp()) {
             return result.getBlockPos();
         }
 

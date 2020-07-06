@@ -22,7 +22,7 @@ class AAC5BHop : SpeedMode("AAC5BHop") {
         if (thePlayer.isInWater)
             return
 
-        if (MovementUtils.isMoving()) {
+        if (MovementUtils.isMoving) {
             when {
                 thePlayer.onGround -> {
                     if (legitJump) {

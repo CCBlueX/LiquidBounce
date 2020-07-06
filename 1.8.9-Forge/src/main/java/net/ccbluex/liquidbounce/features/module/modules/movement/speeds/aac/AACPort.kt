@@ -20,7 +20,7 @@ class AACPort : SpeedMode("AACPort") {
     override fun onUpdate() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!MovementUtils.isMoving())
+        if (!MovementUtils.isMoving)
             return
 
         val f = thePlayer.rotationYaw * 0.017453292f

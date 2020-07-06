@@ -103,7 +103,7 @@ public abstract class Panel extends MinecraftInstance {
 
         if(mouseButton == 1 && isHovering(mouseX, mouseY)) {
             open = !open;
-            mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("random.bow"), 1.0F));
+            mc.getSoundHandler().playSound("random.bow", 1.0F);
             return;
         }
 
@@ -234,7 +234,7 @@ public abstract class Panel extends MinecraftInstance {
     }
 
     boolean isHovering(int mouseX, int mouseY) {
-        final float textWidth = mc.fontRendererObj.getStringWidth(StringUtils.stripControlCodes(name)) - 100F;
-        return mouseX >= x - textWidth / 2F - 19F && mouseX <= x - textWidth / 2F + mc.fontRendererObj.getStringWidth(StringUtils.stripControlCodes(name)) + 19F && mouseY >= y && mouseY <= y + height - (open ? 2 : 0);
+        final float textWidth = mc.getFontRendererObj().getStringWidth(StringUtils.stripControlCodes(name)) - 100F;
+        return mouseX >= x - textWidth / 2F - 19F && mouseX <= x - textWidth / 2F + mc.getFontRendererObj().getStringWidth(StringUtils.stripControlCodes(name)) + 19F && mouseY >= y && mouseY <= y + height - (open ? 2 : 0);
     }
 }

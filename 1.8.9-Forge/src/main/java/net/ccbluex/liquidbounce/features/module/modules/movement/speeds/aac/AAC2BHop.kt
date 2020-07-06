@@ -17,7 +17,7 @@ class AAC2BHop : SpeedMode("AAC2BHop") {
         if (thePlayer.isInWater)
             return
 
-        if (MovementUtils.isMoving()) {
+        if (MovementUtils.isMoving) {
             if (thePlayer.onGround) {
                 thePlayer.jump()
                 thePlayer.motionX *= 1.02

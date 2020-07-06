@@ -179,7 +179,7 @@ public class GuiAltManager extends WrappedGuiScreen {
     }
 
     @Override
-    protected void actionPerformed(IGuiButton button) throws IOException {
+    public void actionPerformed(IGuiButton button) throws IOException {
         if (!button.getEnabled())
             return;
 
@@ -336,7 +336,7 @@ public class GuiAltManager extends WrappedGuiScreen {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+    public void keyTyped(char typedChar, int keyCode) throws IOException {
         if (searchField.isFocused()) {
             searchField.textboxKeyTyped(typedChar, keyCode);
             this.altsList.updateAccounts(searchField.getText());
@@ -374,21 +374,21 @@ public class GuiAltManager extends WrappedGuiScreen {
             }
         }
 
-        representedScreen.keyTyped(typedChar, keyCode);
+        representedScreen.superKeyTyped(typedChar, keyCode);
     }
 
     @Override
     public void handleMouseInput() throws IOException {
-        representedScreen.handleMouseInput();
+        representedScreen.superHandleMouseInput();
 
         altsList.represented.handleMouseInput();
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         searchField.mouseClicked(mouseX, mouseY, mouseButton);
 
-        representedScreen.mouseClicked(mouseX, mouseY, mouseButton);
+        representedScreen.superMouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
@@ -426,7 +426,7 @@ public class GuiAltManager extends WrappedGuiScreen {
         }
 
         @Override
-        protected boolean isSelected(int id) {
+        public boolean isSelected(int id) {
             return selectedSlot == id;
         }
 
@@ -441,12 +441,12 @@ public class GuiAltManager extends WrappedGuiScreen {
         }
 
         @Override
-        protected int getSize() {
+        public int getSize() {
             return accounts.size();
         }
 
         @Override
-        protected void elementClicked(int var1, boolean doubleClick, int var3, int var4) {
+        public void elementClicked(int var1, boolean doubleClick, int var3, int var4) {
             selectedSlot = var1;
 
             if (doubleClick) {
@@ -468,7 +468,7 @@ public class GuiAltManager extends WrappedGuiScreen {
         }
 
         @Override
-        protected void drawSlot(int id, int x, int y, int var4, int var5, int var6) {
+        public void drawSlot(int id, int x, int y, int var4, int var5, int var6) {
             final MinecraftAccount minecraftAccount = accounts.get(id);
 
             Fonts.font40.drawCenteredString(minecraftAccount.getAccountName() == null ? minecraftAccount.getName() : minecraftAccount.getAccountName(), (representedScreen.getWidth() / 2), y + 2, Color.WHITE.getRGB(), true);
@@ -476,7 +476,7 @@ public class GuiAltManager extends WrappedGuiScreen {
         }
 
         @Override
-        protected void drawBackground() {
+        public void drawBackground() {
         }
     }
 

@@ -19,7 +19,7 @@ class AAC4BHop : SpeedMode("AAC4BHop") {
     override fun onTick() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (MovementUtils.isMoving()) {
+        if (MovementUtils.isMoving) {
             if (legitHop) {
                 if (thePlayer.onGround) {
                     thePlayer.jump()

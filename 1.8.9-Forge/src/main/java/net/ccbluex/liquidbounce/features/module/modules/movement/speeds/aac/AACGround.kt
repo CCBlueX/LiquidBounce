@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class AACGround : SpeedMode("AACGround") {
     override fun onUpdate() {
-        if (!MovementUtils.isMoving())
+        if (!MovementUtils.isMoving)
             return
 
         mc.timer.timerSpeed = (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?)!!.aacGroundTimerValue.get()

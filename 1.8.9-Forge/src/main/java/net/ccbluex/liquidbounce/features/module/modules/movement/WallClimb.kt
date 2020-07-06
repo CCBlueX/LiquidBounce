@@ -96,7 +96,7 @@ class WallClimb : Module() {
             val packetPlayer = event.packet.asCPacketPlayer()
 
             if (glitch) {
-                val yaw = MovementUtils.getDirection().toFloat()
+                val yaw = MovementUtils.direction.toFloat()
                 packetPlayer.x = packetPlayer.x - sin(yaw) * 0.00000001
                 packetPlayer.z = packetPlayer.z + cos(yaw) * 0.00000001
                 glitch = false
