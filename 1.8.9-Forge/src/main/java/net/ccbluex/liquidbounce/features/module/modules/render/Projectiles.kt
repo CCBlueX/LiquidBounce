@@ -192,7 +192,7 @@ class Projectiles : Module() {
 
             // Check all possible entities
             for (possibleEntity in collidedEntities) {
-                if (possibleEntity.canBeCollidedWith() && possibleEntity !== thePlayer) {
+                if (possibleEntity.canBeCollidedWith() && possibleEntity != thePlayer) {
                     val possibleEntityBoundingBox = possibleEntity.entityBoundingBox
                             .expand(size.toDouble(), size.toDouble(), size.toDouble())
 

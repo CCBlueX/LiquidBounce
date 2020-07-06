@@ -15,6 +15,10 @@ class ScoreImpl(val wrapped: Score) : IScore {
     override val playerName: String
         get() = wrapped.playerName
 
+
+    override fun equals(other: Any?): Boolean {
+        return other is ScoreImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IScore.unwrap(): Score = (this as ScoreImpl).wrapped

@@ -11,7 +11,10 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.MultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.world.FastPlace;
-import net.ccbluex.liquidbounce.injection.backend.*;
+import net.ccbluex.liquidbounce.injection.backend.EnumFacingImplKt;
+import net.ccbluex.liquidbounce.injection.backend.GuiScreenImplKt;
+import net.ccbluex.liquidbounce.injection.backend.WorldClientImplKt;
+import net.ccbluex.liquidbounce.injection.backend.WrapperImpl;
 import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtentionsKt;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
 import net.ccbluex.liquidbounce.ui.client.GuiUpdate;
@@ -30,7 +33,6 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Util;
 import net.minecraftforge.fml.relauncher.Side;
@@ -208,7 +210,7 @@ public abstract class MixinMinecraft {
             MiniMapRegister.INSTANCE.unloadAllChunks();
         }
 
-        LiquidBounce.eventManager.callEvent(new WorldEvent(WorldClientImplKt.wrap(p_loadWorld_1_)));
+        LiquidBounce.eventManager.callEvent(new WorldEvent(p_loadWorld_1_ == null ? null : WorldClientImplKt.wrap(p_loadWorld_1_)));
     }
 
     /**

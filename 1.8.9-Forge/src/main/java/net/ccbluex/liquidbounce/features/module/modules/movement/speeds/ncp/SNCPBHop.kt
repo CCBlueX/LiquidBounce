@@ -56,7 +56,7 @@ class SNCPBHop : SpeedMode("SNCPBHop") {
             event.y = event.y - 0.09316090325960147
             mc.thePlayer!!.posY -= 0.09316090325960147
         }
-        if (level == 1 && (mc.thePlayer!!.moveForward !== 0.0f || mc.thePlayer!!.moveStrafing !== 0.0f)) {
+        if (level == 1 && (mc.thePlayer!!.moveForward != 0.0f || mc.thePlayer!!.moveStrafing != 0.0f)) {
             level = 2
             moveSpeed = 1.35 * baseMoveSpeed - 0.01
         } else if (level == 2) {

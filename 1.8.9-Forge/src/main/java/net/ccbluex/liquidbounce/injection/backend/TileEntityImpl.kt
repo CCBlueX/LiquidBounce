@@ -15,6 +15,9 @@ class TileEntityImpl(val wrapped: TileEntity) : ITileEntity {
     override val pos: WBlockPos
         get() = wrapped.pos.wrap()
 
+    override fun equals(other: Any?): Boolean {
+        return other is TileEntityImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun ITileEntity.unwrap(): TileEntity = (this as TileEntityImpl).wrapped

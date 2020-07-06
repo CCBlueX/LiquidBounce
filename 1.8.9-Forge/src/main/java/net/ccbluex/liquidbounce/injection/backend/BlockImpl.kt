@@ -50,6 +50,9 @@ class BlockImpl(val wrapped: Block) : IBlock {
     override fun getPlayerRelativeBlockHardness(thePlayer: IEntityPlayerSP, theWorld: IWorld, blockPos: WBlockPos): Float = wrapped.getPlayerRelativeBlockHardness(thePlayer.unwrap(), theWorld.unwrap(), blockPos.unwrap())
 
     override fun getIdFromBlock(block: IBlock): Int = Block.getIdFromBlock(block.unwrap())
+    override fun equals(other: Any?): Boolean {
+        return other is BlockImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IBlock.unwrap(): Block = (this as BlockImpl).wrapped

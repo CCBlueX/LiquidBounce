@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.renderer.entity.IRenderManager
 import net.ccbluex.liquidbounce.api.minecraft.tileentity.ITileEntity
-import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
 import net.minecraft.client.renderer.entity.RenderManager
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher
 
@@ -44,6 +43,10 @@ class RenderManagerImpl(val wrapped: RenderManager) : IRenderManager {
 
     override fun renderEntityWithPosYaw(entityLivingBase: IEntityLivingBase, d: Double, d1: Double, d2: Double, fl: Float, fl1: Float) = wrapped.renderEntityWithPosYaw(entityLivingBase.unwrap(), d, d1, d2, fl, fl1)
 
+
+    override fun equals(other: Any?): Boolean {
+        return other is RenderManagerImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IRenderManager.unwrap(): RenderManager = (this as RenderManagerImpl).wrapped

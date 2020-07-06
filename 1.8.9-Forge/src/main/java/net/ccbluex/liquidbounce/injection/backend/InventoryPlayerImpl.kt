@@ -29,6 +29,9 @@ class InventoryPlayerImpl(val wrapped: InventoryPlayer) : IInventoryPlayer {
 
     override fun getCurrentItemInHand(): IItemStack? = wrapped.getCurrentItem()?.wrap()
 
+    override fun equals(other: Any?): Boolean {
+        return other is InventoryPlayerImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IInventoryPlayer.unwrap(): InventoryPlayer = (this as InventoryPlayerImpl).wrapped

@@ -50,6 +50,9 @@ class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB {
     override val maxZ: Double
         get() = wrapped.maxZ
 
+    override fun equals(other: Any?): Boolean {
+        return other is AxisAlignedBBImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IAxisAlignedBB.unwrap(): AxisAlignedBB = (this as AxisAlignedBBImpl).wrapped

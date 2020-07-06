@@ -20,6 +20,10 @@ class ScoreboardImpl(val wrapped: Scoreboard) : IScoreboard {
     override fun getObjectiveInDisplaySlot(index: Int): IScoreObjective? = wrapped.getObjectiveInDisplaySlot(index)?.wrap()
 
     override fun getSortedScores(objective: IScoreObjective): Collection<IScore> = WrappedCollection(wrapped.getSortedScores(objective.unwrap()), IScore::unwrap, Score::wrap)
+
+    override fun equals(other: Any?): Boolean {
+        return other is ScoreboardImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IScoreboard.unwrap(): Scoreboard = (this as ScoreboardImpl).wrapped

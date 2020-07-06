@@ -29,6 +29,9 @@ class EnumFacingImpl(val wrapped: EnumFacing) : IEnumFacing {
     override val axisOrdinal: Int
         get() = wrapped.axis.ordinal
 
+    override fun equals(other: Any?): Boolean {
+        return other is EnumFacingImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IEnumFacing.unwrap(): EnumFacing = (this as EnumFacingImpl).wrapped

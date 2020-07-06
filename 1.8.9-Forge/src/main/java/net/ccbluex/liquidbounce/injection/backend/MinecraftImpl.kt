@@ -33,7 +33,7 @@ class MinecraftImpl(val wrapped: Minecraft) : IMinecraft {
     override val framebuffer: IFramebuffer
         get() = wrapped.framebuffer.wrap()
     override val isFullScreen: Boolean
-        get() = TODO("Not yet implemented")
+        get() = wrapped.isFullScreen
     override val dataDir: File
         get() = wrapped.mcDataDir
     override val debugFPS: Int
@@ -96,8 +96,10 @@ class MinecraftImpl(val wrapped: Minecraft) : IMinecraft {
 
     override fun rightClickMouse() = wrapped.rightClickMouse()
     override fun shutdown() = wrapped.shutdown()
-    override fun toggleFullscreen() {
-        TODO("Not yet implemented")
+    override fun toggleFullscreen() = wrapped.toggleFullscreen()
+
+    override fun equals(other: Any?): Boolean {
+        return other is MinecraftImpl && other.wrapped == this.wrapped
     }
 }
 

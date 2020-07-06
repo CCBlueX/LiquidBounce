@@ -187,8 +187,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 double xDiff = this.posX - this.lastReportedPosX;
                 double yDiff = this.getEntityBoundingBox().minY - this.lastReportedPosY;
                 double zDiff = this.posZ - this.lastReportedPosZ;
-                double yawDiff = (double) (yaw - lastReportedYaw);
-                double pitchDiff = (double) (pitch - lastReportedPitch);
+                double yawDiff = yaw - lastReportedYaw;
+                double pitchDiff = pitch - lastReportedPitch;
                 boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || this.positionUpdateTicks >= 20;
                 boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
 
@@ -373,11 +373,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         if (this.capabilities.isFlying && this.isCurrentViewEntity()) {
             if (this.movementInput.sneak) {
-                this.motionY -= (double) (this.capabilities.getFlySpeed() * 3.0F);
+                this.motionY -= this.capabilities.getFlySpeed() * 3.0F;
             }
 
             if (this.movementInput.jump) {
-                this.motionY += (double) (this.capabilities.getFlySpeed() * 3.0F);
+                this.motionY += this.capabilities.getFlySpeed() * 3.0F;
             }
         }
 
@@ -458,6 +458,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             if (flag || moveEvent.isSafeWalk()) {
                 double d6;
 
+                //noinspection ConstantConditions
                 for (d6 = 0.05D; x != 0.0D && this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().offset(x, -1.0D, 0.0D)).isEmpty(); d3 = x) {
                     if (x < d6 && x >= -d6) {
                         x = 0.0D;
@@ -468,6 +469,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     }
                 }
 
+                //noinspection ConstantConditions
                 for (; z != 0.0D && this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().offset(0.0D, -1.0D, z)).isEmpty(); d5 = z) {
                     if (z < d6 && z >= -d6) {
                         z = 0.0D;
@@ -478,6 +480,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     }
                 }
 
+                //noinspection ConstantConditions
                 for (; x != 0.0D && z != 0.0D && this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().offset(x, -1.0D, z)).isEmpty(); d5 = z) {
                     if (x < d6 && x >= -d6) {
                         x = 0.0D;
@@ -499,6 +502,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 }
             }
 
+            //noinspection ConstantConditions
             List<AxisAlignedBB> list1 = this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().addCoord(x, y, z));
             AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
 
@@ -530,6 +534,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 AxisAlignedBB axisalignedbb3 = this.getEntityBoundingBox();
                 this.setEntityBoundingBox(axisalignedbb);
                 y = stepEvent.getStepHeight();
+                //noinspection ConstantConditions
                 List<AxisAlignedBB> list = this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().addCoord(d3, y, d5));
                 AxisAlignedBB axisalignedbb4 = this.getEntityBoundingBox();
                 AxisAlignedBB axisalignedbb5 = axisalignedbb4.addCoord(d3, 0.0D, d5);
@@ -642,6 +647,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             }
 
             if (d4 != y) {
+                //noinspection ConstantConditions
                 block1.onLanded(this.worldObj, (Entity) (Object) this);
             }
 
@@ -654,7 +660,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     d13 = 0.0D;
                 }
 
-                if (block1 != null && this.onGround) {
+                if (this.onGround) {
+                    //noinspection ConstantConditions
                     block1.onEntityCollidedWithBlock(this.worldObj, blockpos, (Entity) (Object) this);
                 }
 

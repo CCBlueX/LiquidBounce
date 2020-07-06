@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
-import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
@@ -234,11 +233,8 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
             WrappedGuiSlot(mc, gui.width / 4, gui.height, 40, gui.height - 40, 15) {
 
         init {
-            @Suppress("CAST_NEVER_SUCCEEDS")
-            val mixin = this as IMixinGuiSlot
-
-            mixin.setListWidth(gui.width * 3 / 13)
-            mixin.setEnableScissor(true)
+            this.represented.setListWidth(gui.width * 3 / 13)
+            this.represented.setEnableScissor(true)
         }
 
         private var selectedSlot = 0

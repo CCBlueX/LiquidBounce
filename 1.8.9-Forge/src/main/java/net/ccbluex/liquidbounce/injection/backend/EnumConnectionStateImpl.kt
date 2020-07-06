@@ -13,6 +13,9 @@ class EnumConnectionStateImpl(val wrapped: EnumConnectionState) : IEnumConnectio
     override val isHandshake: Boolean
         get() = wrapped == EnumConnectionState.HANDSHAKING
 
+    override fun equals(other: Any?): Boolean {
+        return other is EnumConnectionStateImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IEnumConnectionState.unwrap(): EnumConnectionState = (this as EnumConnectionStateImpl).wrapped

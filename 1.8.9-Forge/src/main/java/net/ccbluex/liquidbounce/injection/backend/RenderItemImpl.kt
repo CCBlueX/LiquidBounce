@@ -24,6 +24,10 @@ class RenderItemImpl(val wrapped: RenderItem) : IRenderItem {
 
     override fun renderItemOverlays(fontRenderer: IFontRenderer, stack: IItemStack, x: Int, y: Int) = wrapped.renderItemOverlays(fontRenderer.unwrap(), stack.unwrap(), x, y)
 
+
+    override fun equals(other: Any?): Boolean {
+        return other is RenderItemImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IRenderItem.unwrap(): RenderItem = (this as RenderItemImpl).wrapped

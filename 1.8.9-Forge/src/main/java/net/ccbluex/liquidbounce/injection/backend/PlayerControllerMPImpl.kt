@@ -55,6 +55,10 @@ class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControlle
 
     override fun onPlayerDestroyBlock(blockPos: WBlockPos, enumFacing: IEnumFacing): Boolean = wrapped.onPlayerDestroyBlock(blockPos.unwrap(), enumFacing.unwrap())
 
+
+    override fun equals(other: Any?): Boolean {
+        return other is PlayerControllerMPImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IPlayerControllerMP.unwrap(): PlayerControllerMP = (this as PlayerControllerMPImpl).wrapped

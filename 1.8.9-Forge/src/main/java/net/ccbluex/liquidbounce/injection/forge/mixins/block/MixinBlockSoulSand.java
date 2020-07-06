@@ -15,6 +15,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Objects;
+
 @Mixin(BlockSoulSand.class)
 @SideOnly(Side.CLIENT)
 public class MixinBlockSoulSand {
@@ -23,7 +25,7 @@ public class MixinBlockSoulSand {
     private void onEntityCollidedWithBlock(CallbackInfo callbackInfo) {
         final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
 
-        if(noSlow.getState() && noSlow.getSoulsandValue().get())
+        if (Objects.requireNonNull(noSlow).getState() && noSlow.getSoulsandValue().get())
             callbackInfo.cancel();
     }
 }

@@ -14,4 +14,6 @@ interface IGuiSlot : IGui {
     fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
     fun elementClicked(index: Int, doubleClick: Boolean, var3: Int, var4: Int)
     fun handleMouseInput()
+    fun setListWidth(width: Int)
+    fun setEnableScissor(flag: Boolean)
 }

@@ -34,6 +34,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
+import java.util.Objects;
 
 @Mixin(EntityRenderer.class)
 @SideOnly(Side.CLIENT)
@@ -92,7 +93,7 @@ public abstract class MixinEntityRenderer {
                     GlStateManager.rotate(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, -1.0F, 0.0F, 0.0F);
                 }
             }else if(this.mc.gameSettings.thirdPersonView > 0) {
-                double d3 = (double) (this.thirdPersonDistanceTemp + (this.thirdPersonDistance - this.thirdPersonDistanceTemp) * partialTicks);
+                double d3 = this.thirdPersonDistanceTemp + (this.thirdPersonDistance - this.thirdPersonDistanceTemp) * partialTicks;
 
                 if(this.mc.gameSettings.debugCamEnable) {
                     GlStateManager.translate(0.0F, 0.0F, (float) (-d3));
@@ -191,29 +192,28 @@ public abstract class MixinEntityRenderer {
             this.pointedEntity = null;
             Vec3 vec33 = null;
             float f = 1.0F;
-            List<Entity> list = this.mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(vec31.xCoord * d0, vec31.yCoord * d0, vec31.zCoord * d0).expand((double) f, (double) f, (double) f), Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_.canBeCollidedWith()));
+            List<Entity> list = this.mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(vec31.xCoord * d0, vec31.yCoord * d0, vec31.zCoord * d0).expand(f, f, f), Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith()));
             double d2 = d1;
 
-            for(int j = 0; j < list.size(); ++j) {
-                Entity entity1 = (Entity) list.get(j);
+            for (Entity entity1 : list) {
                 float f1 = entity1.getCollisionBorderSize();
-                AxisAlignedBB axisalignedbb = entity1.getEntityBoundingBox().expand((double) f1, (double) f1, (double) f1);
+                AxisAlignedBB axisalignedbb = entity1.getEntityBoundingBox().expand(f1, f1, f1);
                 MovingObjectPosition movingobjectposition = axisalignedbb.calculateIntercept(vec3, vec32);
-                if(axisalignedbb.isVecInside(vec3)) {
-                    if(d2 >= 0.0D) {
+                if (axisalignedbb.isVecInside(vec3)) {
+                    if (d2 >= 0.0D) {
                         this.pointedEntity = entity1;
                         vec33 = movingobjectposition == null ? vec3 : movingobjectposition.hitVec;
                         d2 = 0.0D;
                     }
-                }else if(movingobjectposition != null) {
+                } else if (movingobjectposition != null) {
                     double d3 = vec3.distanceTo(movingobjectposition.hitVec);
-                    if(d3 < d2 || d2 == 0.0D) {
-                        if(entity1 == entity.ridingEntity && !entity.canRiderInteract()) {
-                            if(d2 == 0.0D) {
+                    if (d3 < d2 || d2 == 0.0D) {
+                        if (entity1 == entity.ridingEntity && !entity.canRiderInteract()) {
+                            if (d2 == 0.0D) {
                                 this.pointedEntity = entity1;
                                 vec33 = movingobjectposition.hitVec;
                             }
-                        }else{
+                        } else {
                             this.pointedEntity = entity1;
                             vec33 = movingobjectposition.hitVec;
                             d2 = d3;
@@ -224,7 +224,7 @@ public abstract class MixinEntityRenderer {
 
             if (this.pointedEntity != null && flag && vec3.distanceTo(vec33) > (reach.getState() ? reach.getCombatReachValue().get() : 3.0D)) {
                 this.pointedEntity = null;
-                this.mc.objectMouseOver = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, vec33, (EnumFacing) null, new BlockPos(vec33));
+                this.mc.objectMouseOver = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, Objects.requireNonNull(vec33), null, new BlockPos(vec33));
             }
 
             if(this.pointedEntity != null && (d2 < d1 || this.mc.objectMouseOver == null)) {

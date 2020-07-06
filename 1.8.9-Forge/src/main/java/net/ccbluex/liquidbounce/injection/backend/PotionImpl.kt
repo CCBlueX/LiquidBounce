@@ -16,6 +16,10 @@ class PotionImpl(val wrapped: Potion) : IPotion {
         get() = wrapped.id
     override val name: String
         get() = wrapped.name
+
+    override fun equals(other: Any?): Boolean {
+        return other is PotionImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IPotion.unwrap(): Potion = (this as PotionImpl).wrapped

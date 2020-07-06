@@ -7,6 +7,7 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
+import net.ccbluex.liquidbounce.injection.backend.utils.FontRendererWrapper
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
 import net.minecraft.client.gui.FontRenderer
 
@@ -27,14 +28,13 @@ class FontRendererImpl(val wrapped: FontRenderer) : IFontRenderer {
 
     override fun drawStringWithShadow(text: String, x: Int, y: Int, color: Int) = wrapped.drawStringWithShadow(text, x.toFloat(), y.toFloat(), color)
 
-    override fun isGameFontRenderer(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isGameFontRenderer(): Boolean = wrapped is FontRendererWrapper
 
-    override fun getGameFontRenderer(): GameFontRenderer {
-        TODO("Not yet implemented")
-    }
+    override fun getGameFontRenderer(): GameFontRenderer = (wrapped as FontRendererWrapper).wrapped as GameFontRenderer
 
+    override fun equals(other: Any?): Boolean {
+        return other is FontRendererImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IFontRenderer.unwrap(): FontRenderer = (this as FontRendererImpl).wrapped

@@ -16,6 +16,10 @@ class ScoreObjectiveImpl(val wrapped: ScoreObjective) : IScoreObjective {
     override val scoreboard: IScoreboard
         get() = wrapped.scoreboard.wrap()
 
+
+    override fun equals(other: Any?): Boolean {
+        return other is ScoreObjectiveImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IScoreObjective.unwrap(): ScoreObjective = (this as ScoreObjectiveImpl).wrapped

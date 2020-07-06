@@ -17,6 +17,10 @@ class ChunkImpl(val wrapped: Chunk) : IChunk {
     override fun getEntitiesWithinAABBForEntity(thePlayer: IEntityPlayerSP, arrowBox: IAxisAlignedBB, collidedEntities: MutableList<IEntity>, nothing: Nothing?) {
         return wrapped.getEntitiesWithinAABBForEntity(thePlayer.unwrap(), arrowBox.unwrap(), collidedEntities.unwrap(), null)
     }
+
+    override fun equals(other: Any?): Boolean {
+        return other is ChunkImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IChunk.unwrap(): Chunk = (this as ChunkImpl).wrapped

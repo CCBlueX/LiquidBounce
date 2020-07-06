@@ -26,6 +26,9 @@ class EntityRendererImpl(val wrapped: EntityRenderer) : IEntityRenderer {
 
     override fun setupOverlayRendering() = wrapped.setupOverlayRendering()
 
+    override fun equals(other: Any?): Boolean {
+        return other is EntityRendererImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IEntityRenderer.unwrap(): EntityRenderer = (this as EntityRendererImpl).wrapped

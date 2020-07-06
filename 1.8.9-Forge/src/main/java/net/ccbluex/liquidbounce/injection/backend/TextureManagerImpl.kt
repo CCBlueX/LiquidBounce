@@ -15,6 +15,10 @@ class TextureManagerImpl(val wrapped: TextureManager) : ITextureManager {
     override fun loadTexture(textureLocation: IResourceLocation, textureObj: IAbstractTexture): Boolean = wrapped.loadTexture(textureLocation.unwrap(), textureObj.unwrap())
 
     override fun bindTexture(image: IResourceLocation) = wrapped.bindTexture(image.unwrap())
+
+    override fun equals(other: Any?): Boolean {
+        return other is TextureManagerImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun ITextureManager.unwrap(): TextureManager = (this as TextureManagerImpl).wrapped

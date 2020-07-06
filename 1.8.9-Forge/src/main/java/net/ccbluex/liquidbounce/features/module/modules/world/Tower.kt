@@ -117,7 +117,7 @@ class Tower : Module() {
             place()
         }
 
-        if (eventState === EventState.PRE) {
+        if (eventState == EventState.PRE) {
             placeInfo = null
             timer.update()
 

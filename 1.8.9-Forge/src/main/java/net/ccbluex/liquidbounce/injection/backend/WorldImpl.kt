@@ -70,6 +70,10 @@ open class WorldImpl<T : World>(val wrapped: T) : IWorld {
 
     override fun getCollisionBoxes(bb: IAxisAlignedBB): Collection<IAxisAlignedBB> = WrappedCollection(wrapped.getCollisionBoxes(bb.unwrap()), IAxisAlignedBB::unwrap, AxisAlignedBB::wrap)
     override fun getChunkFromChunkCoords(x: Int, z: Int): IChunk = wrapped.getChunkFromChunkCoords(x, z).wrap()
+
+    override fun equals(other: Any?): Boolean {
+        return other is WorldImpl<*> && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IWorld.unwrap(): World = (this as WorldImpl<*>).wrapped

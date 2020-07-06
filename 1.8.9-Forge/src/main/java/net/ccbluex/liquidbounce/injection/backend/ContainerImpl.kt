@@ -15,6 +15,10 @@ class ContainerImpl(val wrapped: Container) : IContainer {
         get() = wrapped.windowId
 
     override fun getSlot(id: Int): ISlot = wrapped.getSlot(id).wrap()
+
+    override fun equals(other: Any?): Boolean {
+        return other is ContainerImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IContainer.unwrap(): Container = (this as ContainerImpl).wrapped

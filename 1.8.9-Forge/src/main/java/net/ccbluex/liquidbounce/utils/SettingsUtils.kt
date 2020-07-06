@@ -1,3 +1,9 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
+
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -135,7 +141,7 @@ object SettingsUtils {
         val stringBuilder = StringBuilder()
 
         LiquidBounce.moduleManager.modules.filter {
-            it.category !== ModuleCategory.RENDER && it !is NameProtect && it !is Spammer
+            it.category != ModuleCategory.RENDER && it !is NameProtect && it !is Spammer
         }.forEach {
             if (values)
                 it.values.forEach { value -> stringBuilder.append(it.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n") }

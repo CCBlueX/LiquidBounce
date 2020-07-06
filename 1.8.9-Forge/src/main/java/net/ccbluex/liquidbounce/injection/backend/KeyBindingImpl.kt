@@ -21,6 +21,10 @@ class KeyBindingImpl(val wrapped: KeyBinding) : IKeyBinding {
         get() = wrapped.isKeyDown
 
     override fun onTick(keyCode: Int) = KeyBinding.onTick(keyCode)
+
+    override fun equals(other: Any?): Boolean {
+        return other is KeyBindingImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IKeyBinding.unwrap(): KeyBinding = (this as KeyBindingImpl).wrapped

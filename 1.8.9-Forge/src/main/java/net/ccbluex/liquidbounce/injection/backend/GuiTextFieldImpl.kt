@@ -37,6 +37,10 @@ class GuiTextFieldImpl(val wrapped: GuiTextField) : IGuiTextField {
     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) = wrapped.mouseClicked(mouseX, mouseY, mouseButton)
 
     override fun keyTyped(typedChar: Char, keyCode: Int) = wrapped.textboxKeyTyped(typedChar, keyCode)
+
+    override fun equals(other: Any?): Boolean {
+        return other is GuiTextFieldImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IGuiTextField.unwrap(): GuiTextField = (this as GuiTextFieldImpl).wrapped

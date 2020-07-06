@@ -538,7 +538,7 @@ public class Scaffold extends Module {
             if (itemStack != null && classProvider.isItemBlock(itemStack.getItem())) {
                 final IBlock block = (itemStack.getItem().asItemBlock()).getBlock();
 
-                if (mc.getThePlayer().getHeldItem() == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block))
+                if (mc.getThePlayer().getHeldItem().equals(itemStack) || !InventoryUtils.BLOCK_BLACKLIST.contains(block))
                     amount += itemStack.getStackSize();
             }
         }

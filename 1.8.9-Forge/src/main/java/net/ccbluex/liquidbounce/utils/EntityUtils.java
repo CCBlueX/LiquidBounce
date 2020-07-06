@@ -24,7 +24,7 @@ public final class EntityUtils extends MinecraftInstance {
     public static boolean targetDead = false;
 
     public static boolean isSelected(final IEntity entity, final boolean canAttackCheck) {
-        if (classProvider.isEntityLivingBase(entity) && (targetDead || entity.isEntityAlive()) && entity != mc.getThePlayer()) {
+        if (classProvider.isEntityLivingBase(entity) && (targetDead || entity.isEntityAlive()) && entity != null && !entity.equals(mc.getThePlayer())) {
             if (targetInvisible || !entity.isInvisible()) {
                 if (targetPlayer && classProvider.isEntityPlayer(entity)) {
                     IEntityPlayer entityPlayer = entity.asEntityPlayer();

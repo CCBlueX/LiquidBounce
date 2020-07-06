@@ -42,4 +42,8 @@ class WorldRendererImpl(val wrapped: WorldRenderer) : IWorldRenderer {
     override fun finishDrawing() = wrapped.finishDrawing()
 
     override fun reset() = wrapped.reset()
+
+    override fun equals(other: Any?): Boolean {
+        return other is WorldRendererImpl && other.wrapped == this.wrapped
+    }
 }

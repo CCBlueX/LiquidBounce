@@ -12,6 +12,10 @@ import net.minecraft.block.material.Material
 class MaterialImpl(val wrapped: Material) : IMaterial {
     override val isReplaceable: Boolean
         get() = wrapped.isReplaceable
+
+    override fun equals(other: Any?): Boolean {
+        return other is MaterialImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IMaterial.unwrap(): Material = (this as MaterialImpl).wrapped

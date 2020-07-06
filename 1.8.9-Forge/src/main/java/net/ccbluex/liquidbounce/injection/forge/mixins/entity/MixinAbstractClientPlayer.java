@@ -47,15 +47,15 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
     private void getFovModifier(CallbackInfoReturnable<Float> callbackInfoReturnable) {
         final NoFOV fovModule = (NoFOV) LiquidBounce.moduleManager.getModule(NoFOV.class);
 
-        if(fovModule.getState()) {
+        if (Objects.requireNonNull(fovModule).getState()) {
             float newFOV = fovModule.getFovValue().get();
 
-            if(!this.isUsingItem()) {
+            if (!this.isUsingItem()) {
                 callbackInfoReturnable.setReturnValue(newFOV);
                 return;
             }
 
-            if(this.getItemInUse().getItem() != Items.bow) {
+            if (this.getItemInUse().getItem() != Items.bow) {
                 callbackInfoReturnable.setReturnValue(newFOV);
                 return;
             }
@@ -72,7 +72,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
     private void getSkin(CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable) {
         final NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.getModule(NameProtect.class);
 
-        if(nameProtect.getState() && nameProtect.skinProtectValue.get()) {
+        if (Objects.requireNonNull(nameProtect).getState() && nameProtect.skinProtectValue.get()) {
             if (!nameProtect.allPlayersValue.get() && !Objects.equals(getGameProfile().getName(), Minecraft.getMinecraft().thePlayer.getGameProfile().getName()))
                 return;
 

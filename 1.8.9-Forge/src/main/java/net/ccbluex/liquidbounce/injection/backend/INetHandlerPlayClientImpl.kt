@@ -26,6 +26,9 @@ class INetHandlerPlayClientImpl(val wrapped: NetHandlerPlayClient) : IINetHandle
 
     override fun addToSendQueue(packet: IPacket) = wrapped.addToSendQueue(packet.unwrap())
 
+    override fun equals(other: Any?): Boolean {
+        return other is INetHandlerPlayClientImpl && other.wrapped == this.wrapped
+    }
 }
 
 inline fun IINetHandlerPlayClient.unwrap(): INetHandlerPlayClient = (this as INetHandlerPlayClientImpl).wrapped
