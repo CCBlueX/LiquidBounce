@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.minecraft.util.ResourceLocation
+import kotlin.concurrent.thread
 
 object LiquidBounce {
 
@@ -88,7 +89,7 @@ object LiquidBounce {
         eventManager.registerListener(DonatorCape())
         eventManager.registerListener(InventoryUtils())
 
-        // Setup Discord RPC
+        // Init Discord RPC
         clientRichPresence = ClientRichPresence()
 
         // Create command manager
@@ -161,6 +162,17 @@ object LiquidBounce {
 
         // Load generators
         GuiAltManager.loadGenerators()
+
+        // Setup Discord RPC
+        if (clientRichPresence.showRichPresenceValue) {
+            thread {
+                try {
+                    clientRichPresence.setup()
+                } catch (throwable: Throwable) {
+                    ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
+                }
+            }
+        }
 
         // Set is starting status
         isStarting = false
