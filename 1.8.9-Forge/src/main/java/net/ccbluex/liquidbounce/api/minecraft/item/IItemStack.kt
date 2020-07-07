@@ -6,7 +6,6 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.item
 
-import com.google.common.collect.Multimap
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
 import net.ccbluex.liquidbounce.api.minecraft.entity.ai.attributes.IAttributeModifier
@@ -18,7 +17,6 @@ interface IItemStack {
     val displayName: String
     val unlocalizedName: String
     val maxItemUseDuration: Int
-    val attributeModifiers: Multimap<String, IAttributeModifier>
     val enchantmentTagList: INBTTagList?
     var tagCompound: INBTTagCompound?
     val stackSize: Int
@@ -30,6 +28,7 @@ interface IItemStack {
     fun setTagInfo(key: String, nbt: INBTBase)
     fun setStackDisplayName(displayName: String): IItemStack
     fun addEnchantment(enchantment: IEnchantment, level: Int)
+    fun getAttributeModifier(key: String): Collection<IAttributeModifier>
 
     companion object {
         inline fun IItemStack.isSplash() = (this.itemDamage and 16384) != 0

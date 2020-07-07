@@ -198,8 +198,6 @@ interface IClassProvider {
     fun isGuiHudDesigner(obj: Any?): Boolean
     fun isClickGui(obj: Any?): Boolean
 
-    fun isFontRenderer(obj: Any?): Boolean
-
     fun getPotionEnum(type: PotionType): IPotion
     fun getEnumFacing(type: EnumFacingType): IEnumFacing
     fun getBlockEnum(type: BlockType): IBlock

@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.value.FontValue
 class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
               side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side) {
 
-    private val fontValue = FontValue("Font", Fonts.font35!!)
+    private val fontValue = FontValue("Font", Fonts.font35)
     private val shadow = BoolValue("Shadow", true)
 
     /**

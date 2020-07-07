@@ -68,8 +68,7 @@ public class Ignite extends Module {
 
                mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(fireInHotbar - 36));
 
-               final IItemStack itemStack =
-                       mc.getThePlayer().getInventory().getStackInSlot(fireInHotbar);
+               final IItemStack itemStack = mc.getThePlayer().getInventory().getStackInSlot(fireInHotbar);
 
                if (classProvider.isItemBucket(itemStack.getItem())) {
                    final double diffX = blockPos.getX() + 0.5D - mc.getThePlayer().getPosX();

@@ -102,7 +102,7 @@ public class Fonts extends MinecraftInstance {
 
                 Object o = field.get(null);
 
-                if (classProvider.isFontRenderer(o)) {
+                if (o instanceof IFontRenderer) {
                     FontDetails fontDetails = field.getAnnotation(FontDetails.class);
 
                     if (fontDetails.fontName().equals(name) && fontDetails.fontSize() == size)

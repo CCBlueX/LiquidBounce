@@ -32,7 +32,7 @@ class NameTags : Module() {
     private val distanceValue = BoolValue("Distance", false)
     private val armorValue = BoolValue("Armor", true)
     private val clearNamesValue = BoolValue("ClearNames", false)
-    private val fontValue = FontValue("Font", Fonts.font40!!)
+    private val fontValue = FontValue("Font", Fonts.font40)
     private val borderValue = BoolValue("Border", true)
     private val scaleValue = FloatValue("Scale", 1F, 1F, 4F)
 

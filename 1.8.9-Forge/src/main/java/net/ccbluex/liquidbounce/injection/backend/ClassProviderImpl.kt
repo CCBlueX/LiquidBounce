@@ -381,8 +381,6 @@ object ClassProviderImpl : IClassProvider {
 
     override fun isClickGui(obj: Any?): Boolean = obj is GuiScreenImpl<*> && obj.wrapped is GuiScreenWrapper && obj.wrapped.wrapped is ClickGui
 
-    override fun isFontRenderer(obj: Any?): Boolean = obj is FontRenderer
-
     override fun getPotionEnum(type: PotionType): IPotion {
         return PotionImpl(when (type) {
             PotionType.HEAL -> Potion.heal

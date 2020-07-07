@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
-import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -141,12 +140,12 @@ class InventoryCleaner : Module() {
                     }
                 }
 
-                val damage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
+                val damage = (itemStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount
                         ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 
                 items(0, 45).none { (_, stack) ->
                     stack != itemStack && stack.javaClass == itemStack.javaClass
-                            && damage <= (stack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
+                            && damage <= (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount
                             ?: 0.0) + 1.25 * ItemUtils.getEnchantment(stack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
                 }
             } else if (classProvider.isItemBow(item)) {
@@ -238,12 +237,12 @@ class InventoryCleaner : Module() {
                         if (bestWeapon == -1) {
                             bestWeapon = index
                         } else {
-                            val currDamage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
+                            val currDamage = (itemStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount
                                     ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 
                             val bestStack = thePlayer.inventory.getStackInSlot(bestWeapon)
                                     ?: return@forEachIndexed
-                            val bestDamage = (bestStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
+                            val bestDamage = (bestStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount
                                     ?: 0.0) + 1.25 * ItemUtils.getEnchantment(bestStack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 
                             if (bestDamage < currDamage)
@@ -362,13 +361,13 @@ class InventoryCleaner : Module() {
         val items = mutableMapOf<Int, IItemStack>()
 
         for (i in end - 1 downTo start) {
-            val itemStack = mc.thePlayer?.inventory?.getStackInSlot(i) ?: continue
+            val itemStack = mc.thePlayer?.inventoryContainer?.getSlot(i)?.stack ?: continue
             itemStack.item ?: continue
 
             if (i in 36..44 && type(i).equals("Ignore", ignoreCase = true))
                 continue
 
-            if (System.currentTimeMillis() - (itemStack as IMixinItemStack).itemDelay >= itemDelayValue.get())
+            if (System.currentTimeMillis() - (itemStack).itemDelay >= itemDelayValue.get())
                 items[i] = itemStack
         }
 

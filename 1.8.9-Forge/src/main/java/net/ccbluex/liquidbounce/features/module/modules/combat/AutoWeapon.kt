@@ -50,8 +50,7 @@ class AutoWeapon : Module() {
                     .map { Pair(it, thePlayer.inventory.getStackInSlot(it)) }
                     .filter { it.second != null && (classProvider.isItemSword(it.second?.item) || classProvider.isItemTool(it.second?.item)) }
                     .maxBy {
-                        (it.second!!.attributeModifiers["generic.attackDamage"].first()?.amount
-                                ?: 0.0) + 1.25 * ItemUtils.getEnchantment(it.second, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
+                        it.second!!.getAttributeModifier("generic.attackDamage").first().amount + 1.25 * ItemUtils.getEnchantment(it.second, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
                     } ?: return
 
             if (slot == thePlayer.inventory.currentItem) // If in hand no need to swap
