@@ -20,5 +20,5 @@ class GuiSlotWrapper(val wrapped: WrappedGuiSlot, mc: IMinecraft, width: Int, he
 
     override fun drawBackground() = wrapped.drawBackground()
 
-    override fun elementClicked(slotIndex: Int, isDoubleClick: Boolean, mouseX: Int, mouseY: Int) = wrapped.elementClicked(slotIndex, isDoubleClick, mouseX, mouseY)
+    public override fun elementClicked(slotIndex: Int, isDoubleClick: Boolean, mouseX: Int, mouseY: Int) = wrapped.elementClicked(slotIndex, isDoubleClick, mouseX, mouseY)
 }

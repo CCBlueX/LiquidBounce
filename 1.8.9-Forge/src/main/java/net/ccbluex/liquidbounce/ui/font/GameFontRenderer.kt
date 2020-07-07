@@ -11,8 +11,8 @@ import net.ccbluex.liquidbounce.event.TextEvent
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
+import net.minecraft.client.renderer.GlStateManager
 import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL14
 import org.lwjgl.opengl.GL20.glUseProgram
 import java.awt.Color
 import java.awt.Font
@@ -75,11 +75,11 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer {
         if (rainbow)
             glUseProgram(rainbowShaderId)
 
-        GL11.glTranslatef(x - 1.5f, y + 0.5f, 0.0f)
-        GL11.glEnable(GL11.GL_ALPHA_TEST)
-        GL11.glEnable(GL11.GL_BLEND)
-        GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
+        GlStateManager.translate(x - 1.5, y + 0.5, 0.0)
+        GlStateManager.enableAlpha()
+        GlStateManager.enableBlend()
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+        GlStateManager.enableTexture2D()
 
         var currentColor = color
 
@@ -181,9 +181,9 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer {
             defaultFont.drawString(text, 0.0, 0.0, currentColor)
         }
 
-        GL11.glDisable(GL11.GL_BLEND)
-        GL11.glTranslated(-(x - 1.5), -(y + 0.5), 0.0)
-        GL11.glColor4f(1f, 1f, 1f, 1f)
+        GlStateManager.disableBlend()
+        GlStateManager.translate(-(x - 1.5), -(y + 0.5), 0.0)
+        GlStateManager.color(1f, 1f, 1f, 1f)
 
         return (x + getStringWidth(text)).toInt()
     }

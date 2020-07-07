@@ -75,7 +75,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
                 GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, avatar.textureId)
+                classProvider.getGlStateManager().bindTexture(avatar.textureId)
 
 
                 GL11.glBegin(GL11.GL_QUADS)
@@ -91,7 +91,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
                 GL11.glEnd()
 
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
+                classProvider.getGlStateManager().bindTexture(0)
 
                 GL11.glDisable(GL11.GL_BLEND)
 

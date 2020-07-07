@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.render.IThreadDownloadImage
 import net.ccbluex.liquidbounce.api.minecraft.client.render.WIImageBuffer
 import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.IDynamicTexture
 import net.ccbluex.liquidbounce.api.minecraft.client.render.vertex.IVertexFormat
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexBuffer
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
@@ -213,4 +214,5 @@ interface IClassProvider {
     fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer
     fun wrapCreativeTab(name: String, wrappedCreativeTabs: WrappedCreativeTabs)
     fun wrapGuiSlot(wrappedGuiSlot: WrappedGuiSlot, mc: IMinecraft, width: Int, height: Int, top: Int, bottom: Int, slotHeight: Int)
+    fun getGlStateManager(): IGlStateManager
 }

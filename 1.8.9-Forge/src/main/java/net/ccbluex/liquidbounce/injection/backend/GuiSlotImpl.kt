@@ -7,6 +7,7 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiSlot
+import net.ccbluex.liquidbounce.injection.backend.utils.GuiSlotWrapper
 import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot
 import net.minecraft.client.gui.GuiSlot
 
@@ -22,7 +23,7 @@ class GuiSlotImpl(val wrapped: GuiSlot) : IGuiSlot {
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) = wrapped.drawScreen(mouseX, mouseY, partialTicks)
 
-    override fun elementClicked(index: Int, doubleClick: Boolean, var3: Int, var4: Int) = wrapped.elementClicked(index, doubleClick, var3, var4)
+    override fun elementClicked(index: Int, doubleClick: Boolean, var3: Int, var4: Int) = (wrapped as GuiSlotWrapper).elementClicked(index, doubleClick, var3, var4)
 
     override fun handleMouseInput() = wrapped.handleMouseInput()
     override fun setListWidth(width: Int) = (wrapped as IMixinGuiSlot).setListWidth(width)

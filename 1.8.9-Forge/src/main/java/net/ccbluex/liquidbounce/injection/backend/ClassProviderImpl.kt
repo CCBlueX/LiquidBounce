@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.render.IThreadDownloadImage
 import net.ccbluex.liquidbounce.api.minecraft.client.render.WIImageBuffer
 import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.IDynamicTexture
 import net.ccbluex.liquidbounce.api.minecraft.client.render.vertex.IVertexFormat
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexBuffer
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
@@ -555,7 +556,9 @@ object ClassProviderImpl : IClassProvider {
     }
 
     override fun wrapGuiSlot(wrappedGuiSlot: WrappedGuiSlot, mc: IMinecraft, width: Int, height: Int, top: Int, bottom: Int, slotHeight: Int) {
-        GuiSlotWrapper(wrappedGuiSlot, mc, width, height,  top, bottom, slotHeight)
+        GuiSlotWrapper(wrappedGuiSlot, mc, width, height, top, bottom, slotHeight)
     }
+
+    override fun getGlStateManager(): IGlStateManager = GlStateManagerImpl
 
 }

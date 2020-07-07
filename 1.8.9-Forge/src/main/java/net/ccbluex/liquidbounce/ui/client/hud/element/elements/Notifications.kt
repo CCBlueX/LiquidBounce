@@ -110,6 +110,5 @@ class Notification(private val message: String) {
             FadeState.END -> LiquidBounce.hud.removeNotification(this)
         }
     }
-
 }
 
