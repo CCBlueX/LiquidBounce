@@ -152,6 +152,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
                     val rainbow = colorMode.equals("Rainbow", ignoreCase = true)
 
+                    classProvider.getGlStateManager().resetColor()
                     RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
                         fontRenderer.drawString(displayString, xPos - if (rectMode.equals("right", true)) 3 else 0, yPos + textY, when {
                             rainbow -> 0
@@ -215,6 +216,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
                     val rainbow = colorMode.equals("Rainbow", ignoreCase = true)
 
+                    classProvider.getGlStateManager().resetColor()
                     RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
                         fontRenderer.drawString(displayString, xPos, yPos + textY, when {
                             rainbow -> 0

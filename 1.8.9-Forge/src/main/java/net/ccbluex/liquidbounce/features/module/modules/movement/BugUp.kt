@@ -146,6 +146,6 @@ class BugUp : Module() {
 
         RenderUtils.renderNameTag("${fallDist}m (~${max(0, fallDist - 3)} damage)", x + 0.5, y + 1.7, z + 0.5)
 
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+        classProvider.getGlStateManager().resetColor()
     }
 }

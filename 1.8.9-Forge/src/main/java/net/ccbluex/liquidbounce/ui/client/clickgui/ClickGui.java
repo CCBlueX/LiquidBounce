@@ -241,7 +241,7 @@ public class ClickGui extends WrappedGuiScreen {
                     break;
         }
 
-        GL11.glDisable(GL11.GL_LIGHTING);
+        classProvider.getGlStateManager().disableLighting();
         functions.disableStandardItemLighting();
         GL11.glScaled(1, 1, 1);
 

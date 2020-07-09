@@ -6,8 +6,6 @@
 package net.ccbluex.liquidbounce.utils.render.shader;
 
 import net.ccbluex.liquidbounce.api.minecraft.util.IScaledResolution;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.shader.Framebuffer;
 
@@ -34,10 +32,10 @@ public abstract class FramebufferShader extends Shader {
     }
 
     public void startDraw(final float partialTicks) {
-        GlStateManager.enableAlpha();
+        classProvider.getGlStateManager().enableAlpha();
 
-        GlStateManager.pushMatrix();
-        GlStateManager.pushAttrib();
+        classProvider.getGlStateManager().pushMatrix();
+        classProvider.getGlStateManager().pushAttrib();
 
         framebuffer = setupFrameBuffer(framebuffer);
         framebuffer.framebufferClear();
@@ -70,8 +68,8 @@ public abstract class FramebufferShader extends Shader {
 
         mc.getEntityRenderer().disableLightmap();
 
-        GlStateManager.popMatrix();
-        GlStateManager.popAttrib();
+        classProvider.getGlStateManager().popMatrix();
+        classProvider.getGlStateManager().popAttrib();
     }
 
     /**

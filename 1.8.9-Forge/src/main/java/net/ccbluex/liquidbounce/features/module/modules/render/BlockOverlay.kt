@@ -20,7 +20,6 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL14
 import java.awt.Color
 
 @ModuleInfo(name = "BlockOverlay", description = "Allows you to change the design of the block overlay.", category = ModuleCategory.RENDER)
@@ -51,11 +50,11 @@ class BlockOverlay : Module() {
         val color = if (colorRainbow.get()) rainbow(0.4F) else Color(colorRedValue.get(),
                 colorGreenValue.get(), colorBlueValue.get(), (0.4F * 255).toInt())
 
-        GL11.glEnable(GL11.GL_BLEND)
-        GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+        classProvider.getGlStateManager().enableBlend()
+        classProvider.getGlStateManager().tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
         RenderUtils.glColor(color)
         GL11.glLineWidth(2F)
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
+        classProvider.getGlStateManager().disableTexture2D()
         GL11.glDepthMask(false)
 
         block.setBlockBoundsBasedOnState(mc.theWorld!!, blockPos)
@@ -73,9 +72,9 @@ class BlockOverlay : Module() {
         RenderUtils.drawSelectionBoundingBox(axisAlignedBB)
         RenderUtils.drawFilledBox(axisAlignedBB)
         GL11.glDepthMask(true)
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_BLEND)
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+        classProvider.getGlStateManager().enableTexture2D()
+        classProvider.getGlStateManager().disableBlend()
+        classProvider.getGlStateManager().resetColor()
     }
 
     @EventTarget
@@ -95,7 +94,7 @@ class BlockOverlay : Module() {
                     3F, Color.BLACK.rgb, Color.BLACK.rgb
             )
 
-            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+            classProvider.getGlStateManager().resetColor()
             Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2f, scaledResolution.scaledHeight / 2f + 7f, Color.WHITE.rgb, false)
         }
     }

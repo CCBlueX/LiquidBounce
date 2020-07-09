@@ -426,7 +426,7 @@ public class Scaffold extends Module {
                     (scaledResolution.getScaledWidth() / 2.0f) + Fonts.font40.getStringWidth(info) + 2,
                     (scaledResolution.getScaledHeight() / 2.0f) + 16, 3, Color.BLACK.getRGB(), Color.BLACK.getRGB());
 
-            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            classProvider.getGlStateManager().resetColor();
 
             Fonts.font40.drawString(info, scaledResolution.getScaledWidth() / 2.0f,
                     scaledResolution.getScaledHeight() / 2.0f + 7, Color.WHITE.getRGB());

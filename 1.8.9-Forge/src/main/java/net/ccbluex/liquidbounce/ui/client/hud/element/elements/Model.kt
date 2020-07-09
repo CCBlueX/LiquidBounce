@@ -12,9 +12,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.renderer.GlStateManager
 import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL12
 import kotlin.math.abs
 import kotlin.math.atan
 
@@ -83,8 +81,8 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
      * Draw [entityLivingBase] to screen
      */
     private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: IEntityLivingBase) {
-        GL11.glColor4f(1F, 1F, 1F, 1F)
-        GL11.glEnable(GL11.GL_COLOR_MATERIAL)
+        classProvider.getGlStateManager().resetColor()
+        classProvider.getGlStateManager().enableColorMaterial()
         GL11.glPushMatrix()
         GL11.glTranslatef(0F, 0F, 50F)
         GL11.glScalef(-50F, 50F, 50F)
@@ -123,10 +121,10 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
 
         GL11.glPopMatrix()
         functions.disableStandardItemLighting()
-        GL11.glDisable(GL12.GL_RESCALE_NORMAL)
+        classProvider.getGlStateManager().disableRescaleNormal()
         functions.setActiveTextureLightMapTexUnit()
-        GlStateManager.disableTexture2D()
+        classProvider.getGlStateManager().disableTexture2D()
         functions.setActiveTextureDefaultTexUnit()
-        GlStateManager.resetColor()
+        classProvider.getGlStateManager().resetColor()
     }
 }

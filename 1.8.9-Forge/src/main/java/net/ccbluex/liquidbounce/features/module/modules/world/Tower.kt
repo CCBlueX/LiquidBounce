@@ -366,7 +366,7 @@ class Tower : Module() {
                     scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2.toFloat(),
                     scaledResolution.scaledHeight / 2 + 16.toFloat(), 3f, Color.BLACK.rgb, Color.BLACK.rgb)
 
-            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+            classProvider.getGlStateManager().resetColor()
 
             Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2.toFloat(),
                     scaledResolution.scaledHeight / 2 + 7.toFloat(), Color.WHITE.rgb)

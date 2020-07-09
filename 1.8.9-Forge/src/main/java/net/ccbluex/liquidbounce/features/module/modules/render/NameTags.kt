@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
+import net.minecraft.client.renderer.GlStateManager.*
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.roundToInt
@@ -144,9 +145,9 @@ class NameTags : Module() {
                 mc.renderItem.renderItemAndEffectIntoGUI(equipmentInSlot, -50 + index * 20, -22)
             }
 
-            glEnable(GL_ALPHA_TEST)
-            glDisable(GL_BLEND)
-            glEnable(GL_TEXTURE_2D)
+            enableAlpha()
+            disableBlend()
+            enableTexture2D()
         }
 
         // Pop

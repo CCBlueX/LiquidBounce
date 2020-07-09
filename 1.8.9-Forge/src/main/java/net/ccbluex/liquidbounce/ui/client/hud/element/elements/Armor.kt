@@ -50,10 +50,10 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
                     y += 18
             }
 
-            GL11.glEnable(GL11.GL_ALPHA_TEST)
-            GL11.glDisable(GL11.GL_BLEND)
-            GL11.glDisable(GL11.GL_LIGHTING)
-            GL11.glDisable(GL11.GL_CULL_FACE)
+            classProvider.getGlStateManager().enableAlpha()
+            classProvider.getGlStateManager().disableBlend()
+            classProvider.getGlStateManager().disableLighting()
+            classProvider.getGlStateManager().disableCull()
             GL11.glPopMatrix()
         }
 

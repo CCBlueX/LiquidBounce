@@ -420,9 +420,9 @@ public final class RenderUtils extends MinecraftInstance {
     }
 
     public static void drawCircle(float x, float y, float radius, int start, int end) {
-        glEnable(GL_BLEND);
-        glDisable(GL_TEXTURE_2D);
-        GL14.glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+        classProvider.getGlStateManager().enableBlend();
+        classProvider.getGlStateManager().disableTexture2D();
+        classProvider.getGlStateManager().tryBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
         glColor(Color.WHITE);
 
         glEnable(GL_LINE_SMOOTH);
@@ -434,8 +434,8 @@ public final class RenderUtils extends MinecraftInstance {
         glEnd();
         glDisable(GL_LINE_SMOOTH);
 
-        glEnable(GL_TEXTURE_2D);
-        glDisable(GL_BLEND);
+        classProvider.getGlStateManager().enableTexture2D();
+        classProvider.getGlStateManager().disableBlend();
     }
 
     public static void drawFilledCircle(final int xx, final int yy, final float radius, final Color color) {

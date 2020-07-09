@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.utils.render.CustomTexture
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL14
 import java.awt.Color
 import java.text.DecimalFormat
 import java.text.NumberFormat
@@ -68,10 +67,10 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
             if (avatar != null) {
                 GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
 
-                GL11.glEnable(GL11.GL_ALPHA_TEST)
-                GL11.glEnable(GL11.GL_BLEND)
-                GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
-                GL11.glEnable(GL11.GL_TEXTURE_2D)
+                classProvider.getGlStateManager().enableAlpha()
+                classProvider.getGlStateManager().enableBlend()
+                classProvider.getGlStateManager().tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+                classProvider.getGlStateManager().enableTexture2D()
 
                 GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
@@ -93,7 +92,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
                 classProvider.getGlStateManager().bindTexture(0)
 
-                GL11.glDisable(GL11.GL_BLEND)
+                classProvider.getGlStateManager().disableBlend()
 
                 infoOffset = imageSize
 
@@ -108,7 +107,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
             for (s in credit.contributions) {
                 y += Fonts.font40.fontHeight.toInt() + 2
 
-                GL11.glDisable(GL11.GL_TEXTURE_2D)
+                classProvider.getGlStateManager().disableTexture2D()
                 GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
                 GL11.glBegin(GL11.GL_LINES)
 

@@ -34,4 +34,8 @@ enum class WEnumChatFormatting(val formattingName: String, val formattingCodeIn:
 
 
     constructor(formattingName: String, formattingCodeIn: Char, fancyStylingIn: Boolean) : this(formattingName, formattingCodeIn, fancyStylingIn, -1)
+
+    override fun toString(): String {
+        return "\u00A7$formattingCodeIn"
+    }
 }
