@@ -5,17 +5,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat;
 
+import net.ccbluex.liquidbounce.api.enums.WEnumHand;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack;
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketClientStatus;
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
+import net.ccbluex.liquidbounce.utils.CrossVersionUtilsKt;
 import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator;
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece;
+import net.ccbluex.liquidbounce.utils.item.ItemUtils;
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
@@ -24,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static net.ccbluex.liquidbounce.utils.CrossVersionUtilsKt.createOpenInventoryPacket;
 
 @ModuleInfo(name = "AutoArmor", description = "Automatically equips the best armor in your inventory.", category = ModuleCategory.COMBAT)
 public class AutoArmor extends Module {
@@ -90,12 +94,12 @@ public class AutoArmor extends Module {
 
             final ArmorPiece oldArmor = new ArmorPiece(mc.getThePlayer().getInventory().armorItemInSlot(armorSlot), -1);
 
-            if (oldArmor.getItemStack() == null || !classProvider.isItemArmor(oldArmor.getItemStack().getItem()) ||
+            if (ItemUtils.isStackEmpty(oldArmor.getItemStack()) || !classProvider.isItemArmor(oldArmor.getItemStack().getItem()) ||
                     ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) {
-                if (oldArmor.getItemStack() != null && move(8 - armorSlot, true))
+                if (!ItemUtils.isStackEmpty(oldArmor.getItemStack()) && move(8 - armorSlot, true))
                     return;
 
-                if (mc.getThePlayer().getInventory().armorItemInSlot(armorSlot) == null && move(armorPiece.getSlot(), false))
+                if (ItemUtils.isStackEmpty(mc.getThePlayer().getInventory().armorItemInSlot(armorSlot)) && move(armorPiece.getSlot(), false))
                     return;
             }
         }
@@ -111,7 +115,7 @@ public class AutoArmor extends Module {
     private boolean move(int item, boolean isArmorSlot) {
         if (!isArmorSlot && item < 9 && hotbarValue.get() && !classProvider.isGuiInventory(mc.getCurrentScreen())) {
             mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(item));
-            mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(mc.getThePlayer().getInventory().getStackInSlot(item)));
+            mc.getNetHandler().addToSendQueue(CrossVersionUtilsKt.createUseItemPacket(mc.getThePlayer().getInventoryContainer().getSlot(item).getStack(), WEnumHand.MAIN_HAND));
             mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(mc.getThePlayer().getInventory().getCurrentItem()));
 
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
@@ -121,9 +125,9 @@ public class AutoArmor extends Module {
             final boolean openInventory = simulateInventory.get() && !classProvider.isGuiInventory(mc.getCurrentScreen());
 
             if (openInventory)
-                mc.getNetHandler().addToSendQueue(classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT));
+                mc.getNetHandler().addToSendQueue(createOpenInventoryPacket());
 
-            mc.getPlayerController().windowClick(mc.getThePlayer().getInventoryContainer().getWindowId(), isArmorSlot ? item : (item < 9 ? item + 36 : item), 0, 1, mc.getThePlayer());
+            mc.getPlayerController().windowClick(mc.getThePlayer().getInventoryContainer().getWindowId(), (isArmorSlot ? item : (item < 9 ? item + 36 : item)), 0, 1, mc.getThePlayer());
 
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 

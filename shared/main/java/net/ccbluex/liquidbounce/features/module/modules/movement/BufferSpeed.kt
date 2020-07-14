@@ -251,8 +251,10 @@ class BufferSpeed : Module() {
             for (blockPos in blocks) {
                 val blockState = theWorld!!.getBlockState(blockPos)
 
-                if (blockState.block.blockBoundsMaxY ==
-                        blockState.block.blockBoundsMinY + 1 &&
+                val collisionBoundingBox = blockState.block.getCollisionBoundingBox(theWorld, blockPos, blockState)
+
+                if ((collisionBoundingBox == null || collisionBoundingBox.maxX ==
+                                collisionBoundingBox.minY + 1) &&
                         !blockState.block.isTranslucent(blockState) && blockState.block == classProvider.getBlockEnum(BlockType.WATER) &&
                         !classProvider.isBlockSlab(blockState.block) || blockState.block == classProvider.getBlockEnum(BlockType.BARRIER)) return true
             }

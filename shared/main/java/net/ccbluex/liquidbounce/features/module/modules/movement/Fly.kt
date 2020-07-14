@@ -617,7 +617,7 @@ class Fly : Module() {
                     return
 
                 val amplifier = 1 + (if (mc.thePlayer!!.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) 0.2 *
-                        (mc.thePlayer!!.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED)).amplifier + 1.0) else 0.0)
+                        (mc.thePlayer!!.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier + 1.0) else 0.0)
 
                 val baseSpeed = 0.29 * amplifier
 

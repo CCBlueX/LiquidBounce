@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnchantmentType
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketClientStatus
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -19,6 +18,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
@@ -103,7 +103,7 @@ class InventoryCleaner : Module() {
             val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
 
             if (openInventory)
-                mc.netHandler.addToSendQueue(classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT))
+                mc.netHandler.addToSendQueue(createOpenInventoryPacket())
 
             mc.playerController.windowClick(thePlayer.openContainer!!.windowId, garbageItem, 1, 4, thePlayer)
 
@@ -200,7 +200,7 @@ class InventoryCleaner : Module() {
                 val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
 
                 if (openInventory)
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT))
+                    mc.netHandler.addToSendQueue(createOpenInventoryPacket())
 
                 mc.playerController.windowClick(0, if (bestItem < 9) bestItem + 36 else bestItem, index,
                         2, thePlayer)
@@ -362,7 +362,9 @@ class InventoryCleaner : Module() {
 
         for (i in end - 1 downTo start) {
             val itemStack = mc.thePlayer?.inventoryContainer?.getSlot(i)?.stack ?: continue
-            itemStack.item ?: continue
+
+            if (ItemUtils.isStackEmpty(itemStack))
+                continue
 
             if (i in 36..44 && type(i).equals("Ignore", ignoreCase = true))
                 continue

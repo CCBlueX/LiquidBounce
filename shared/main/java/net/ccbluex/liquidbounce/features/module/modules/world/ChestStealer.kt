@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
+import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -89,7 +90,7 @@ class ChestStealer : Module() {
     fun onRender3D(event: Render3DEvent?) {
         val thePlayer = mc.thePlayer!!
 
-        if (!(classProvider.isGuiChest(mc.currentScreen) && mc.currentScreen != null) || !delayTimer.hasTimePassed(nextDelay)) {
+        if (!classProvider.isGuiChest(mc.currentScreen) || mc.currentScreen == null || !delayTimer.hasTimePassed(nextDelay)) {
             autoCloseTimer.reset()
             return
         }
@@ -101,14 +102,14 @@ class ChestStealer : Module() {
             return
 
         // Chest title
-        if (chestTitleValue.get() && (screen.lowerChestInventory == null || !screen.lowerChestInventory!!.name.contains(classProvider.createItemStack(functions.getObjectFromItemRegistry(classProvider.createResourceLocation("minecraft:chest"))).displayName)))
+        if (chestTitleValue.get() && (screen.lowerChestInventory == null || !screen.lowerChestInventory!!.name.contains(classProvider.createItemStack(functions.getObjectFromItemRegistry(classProvider.createResourceLocation("minecraft:chest"))!!).displayName)))
             return
 
         // inventory cleaner
         val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 
         // Is empty?
-        if (!isEmpty(screen) && !(closeOnFullValue.get() && fullInventory)) {
+        if (!isEmpty(screen) && (!closeOnFullValue.get() || !fullInventory)) {
             autoCloseTimer.reset()
 
             // Randomized
@@ -180,5 +181,5 @@ class ChestStealer : Module() {
     }
 
     private val fullInventory: Boolean
-        get() = mc.thePlayer?.inventory?.mainInventory?.none { it == null } ?: false
+        get() = mc.thePlayer?.inventory?.mainInventory?.none(ItemUtils::isStackEmpty) ?: false
 }

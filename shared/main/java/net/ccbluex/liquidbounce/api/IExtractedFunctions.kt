@@ -22,7 +22,7 @@ interface IExtractedFunctions {
     fun getBlockById(id: Int): IBlock?
     fun getIdFromBlock(block: IBlock): Int
     fun getModifierForCreature(heldItem: IItemStack?, creatureAttribute: IEnumCreatureAttribute): Float
-    fun getObjectFromItemRegistry(res: IResourceLocation): IItem
+    fun getObjectFromItemRegistry(res: IResourceLocation): IItem?
     fun renderTileEntity(tileEntity: ITileEntity, partialTicks: Float, destroyStage: Int)
     fun getBlockFromName(name: String): IBlock?
     fun getItemByName(name: String): IItem?

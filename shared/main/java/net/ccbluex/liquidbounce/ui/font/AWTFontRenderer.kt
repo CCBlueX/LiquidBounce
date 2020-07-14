@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.injection.backend.WrapperImpl.classProvider
-import net.minecraft.client.Minecraft
+import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.client.renderer.texture.TextureUtil
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
@@ -21,7 +21,7 @@ import java.awt.image.BufferedImage
  * Generate new bitmap based font renderer
  */
 @SideOnly(Side.CLIENT)
-class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
+class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) : MinecraftInstance() {
 
     companion object {
         var assumeNonVolatile: Boolean = false
@@ -124,8 +124,8 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) {
 
                 // Ugly solution, because floating point numbers, but I think that shouldn't be that much of a problem
                 GL11.glScaled(reverse, reverse, reverse)
-                Minecraft.getMinecraft().fontRendererObj.drawString("$char", currX.toFloat() * scale.toFloat() + 1, 2f, color, false)
-                currX += Minecraft.getMinecraft().fontRendererObj.getStringWidth("$char") * reverse
+                mc.fontRendererObj.drawString("$char", currX.toFloat() * scale.toFloat() + 1, 2f, color, false)
+                currX += mc.fontRendererObj.getStringWidth("$char") * reverse
 
                 GL11.glScaled(scale, scale, scale)
                 classProvider.getGlStateManager().bindTexture(textureID)

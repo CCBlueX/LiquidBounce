@@ -45,8 +45,12 @@ import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
 import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
+import net.ccbluex.liquidbounce.injection.backend.ClassProviderImpl.createCPacketTryUseItem
+import net.ccbluex.liquidbounce.injection.backend.PacketImpl
 import java.awt.image.BufferedImage
 import java.io.File
+import java.security.PublicKey
+import javax.crypto.SecretKey
 
 interface IClassProvider {
     val tessellatorInstance: ITessellator
@@ -83,6 +87,11 @@ interface IClassProvider {
     fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen
 
     fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange
+
+    /**
+     * Only available for 1.8.9, can be replaced with [createCPacketTryUseItem] in later versions
+     */
+    @SupportsMinecraftVersions(value = [MinecraftVersion.MC_1_8])
     fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement
     fun createCPacketPlayerBlockPlacement(positionIn: WBlockPos, placedBlockDirectionIn: Int, stackIn: IItemStack?, facingXIn: Float, facingYIn: Float, facingZIn: Float): ICPacketPlayerBlockPlacement
     fun createCPacketPlayerPosLook(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayerPosLook
@@ -174,6 +183,7 @@ interface IClassProvider {
     fun isItemSnowball(obj: Any?): Boolean
     fun isItemEgg(obj: Any?): Boolean
     fun isItemFishingRod(obj: Any?): Boolean
+    fun isItemAir(obj: Any?): Boolean
 
     fun isBlockAir(obj: Any?): Boolean
     fun isBlockFence(obj: Any?): Boolean
@@ -213,4 +223,8 @@ interface IClassProvider {
     fun wrapCreativeTab(name: String, wrappedCreativeTabs: WrappedCreativeTabs)
     fun wrapGuiSlot(wrappedGuiSlot: WrappedGuiSlot, mc: IMinecraft, width: Int, height: Int, top: Int, bottom: Int, slotHeight: Int)
     fun getGlStateManager(): IGlStateManager
+    fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket
+
+    @SupportsMinecraftVersions(value = [MinecraftVersion.MC_1_12])
+    fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*>
 }

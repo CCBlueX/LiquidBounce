@@ -7,9 +7,10 @@
 package net.ccbluex.liquidbounce.api.minecraft.client.entity.player
 
 import com.mojang.authlib.GameProfile
+import net.ccbluex.liquidbounce.api.MinecraftVersion
+import net.ccbluex.liquidbounce.api.SupportsMinecraftVersions
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.entity.player.IInventoryPlayer
 import net.ccbluex.liquidbounce.api.minecraft.entity.player.IPlayerCapabilities
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
@@ -52,6 +53,9 @@ interface IEntityPlayer : IEntityLivingBase {
     fun attackTargetEntityWithCurrentItem(entity: IEntity)
     fun fall(distance: Float, damageMultiplier: Float)
     fun triggerAchievement(stat: IStatBase)
-    fun clonePlayer(player: IEntityPlayerSP, respawnFromEnd: Boolean)
     fun jump()
+
+    @SupportsMinecraftVersions(value = [MinecraftVersion.MC_1_12])
+    fun getCooledAttackStrength(fl: Float): Float
+    fun resetCooldown()
 }

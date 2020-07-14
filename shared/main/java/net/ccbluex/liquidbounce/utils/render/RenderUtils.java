@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.render.ITessellator;
 import net.ccbluex.liquidbounce.api.minecraft.client.render.IWorldRenderer;
 import net.ccbluex.liquidbounce.api.minecraft.renderer.entity.IRenderManager;
 import net.ccbluex.liquidbounce.api.minecraft.util.*;
+import net.ccbluex.liquidbounce.injection.backend.Backend;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
@@ -92,7 +93,11 @@ public final class RenderUtils extends MinecraftInstance {
             final double posY = player.getLastTickPosY() + (player.getPosY() - player.getLastTickPosY()) * (double) timer.getRenderPartialTicks();
             final double posZ = player.getLastTickPosZ() + (player.getPosZ() - player.getLastTickPosZ()) * (double) timer.getRenderPartialTicks();
 
-            axisAlignedBB = block.getSelectedBoundingBox(mc.getTheWorld(), blockPos)
+            if (Backend.MINECRAFT_VERSION_MINOR < 12) {
+                block.setBlockBoundsBasedOnState(mc.getTheWorld(), blockPos);
+            }
+
+            axisAlignedBB = block.getSelectedBoundingBox(mc.getTheWorld(), mc.getTheWorld().getBlockState(blockPos), blockPos)
                     .expand(0.0020000000949949026D, 0.0020000000949949026D, 0.0020000000949949026D)
                     .offset(-posX, -posY, -posZ);
         }

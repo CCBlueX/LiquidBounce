@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
@@ -57,7 +58,10 @@ class BlockOverlay : Module() {
         classProvider.getGlStateManager().disableTexture2D()
         GL11.glDepthMask(false)
 
-        block.setBlockBoundsBasedOnState(mc.theWorld!!, blockPos)
+        @Suppress("ConstantConditionIf")
+        if (Backend.MINECRAFT_VERSION_MINOR < 12) {
+            block.setBlockBoundsBasedOnState(mc.theWorld!!, blockPos)
+        }
 
         val thePlayer = mc.thePlayer ?: return
 
@@ -65,7 +69,7 @@ class BlockOverlay : Module() {
         val y = thePlayer.lastTickPosY + (thePlayer.posY - thePlayer.lastTickPosY) * partialTicks
         val z = thePlayer.lastTickPosZ + (thePlayer.posZ - thePlayer.lastTickPosZ) * partialTicks
 
-        val axisAlignedBB = block.getSelectedBoundingBox(mc.theWorld!!, blockPos)
+        val axisAlignedBB = block.getSelectedBoundingBox(mc.theWorld!!, mc.theWorld!!.getBlockState(blockPos), blockPos)
                 .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
                 .offset(-x, -y, -z)
 

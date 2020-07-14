@@ -39,7 +39,7 @@ public final class ItemUtils extends MinecraftInstance {
             for (int mode = 0; mode <= Math.min(12, itemArguments.length() - 2); ++mode) {
                 args = itemArguments.substring(mode).split(Pattern.quote(" "));
                 IResourceLocation resourcelocation = classProvider.createResourceLocation(args[0]);
-                item = itemInstance.getObjectFromItemRegistry(resourcelocation);
+                item = functions.getObjectFromItemRegistry(resourcelocation);
 
                 if (item != null)
                     break;
@@ -97,5 +97,9 @@ public final class ItemUtils extends MinecraftInstance {
         }
 
         return c;
+    }
+
+    public static boolean isStackEmpty(IItemStack stack) {
+        return stack == null || classProvider.isItemAir(stack.getItem());
     }
 }

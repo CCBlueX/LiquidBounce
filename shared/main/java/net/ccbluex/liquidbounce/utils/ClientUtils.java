@@ -7,18 +7,14 @@ package net.ccbluex.liquidbounce.utils;
 
 import com.google.gson.JsonObject;
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.minecraft.client.settings.GameSettings;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.login.client.C01PacketEncryptionResponse;
-import net.minecraft.network.login.server.S01PacketEncryptionRequest;
-import net.minecraft.util.IChatComponent;
+import net.ccbluex.liquidbounce.api.minecraft.INetworkManager;
+import net.ccbluex.liquidbounce.api.minecraft.network.login.server.ISPacketEncryptionRequest;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.crypto.SecretKey;
-import java.lang.reflect.Field;
 import java.security.PublicKey;
 
 @SideOnly(Side.CLIENT)
@@ -34,8 +30,12 @@ public final class ClientUtils extends MinecraftInstance {
         LiquidBounce.wrapper.getFunctions().disableFastRender();
     }
 
-    public static void sendEncryption(final NetworkManager networkManager, final SecretKey secretKey, final PublicKey publicKey, final S01PacketEncryptionRequest encryptionRequest) {
-        networkManager.sendPacket(new C01PacketEncryptionResponse(secretKey, publicKey, encryptionRequest.getVerifyToken()), p_operationComplete_1_ -> networkManager.enableEncryption(secretKey));
+    public static void sendEncryption(final INetworkManager networkManager, final SecretKey secretKey, final PublicKey publicKey, final ISPacketEncryptionRequest encryptionRequest) {
+        networkManager.sendPacket(classProvider.createCPacketEncryptionResponse(secretKey, publicKey, encryptionRequest.getVerifyToken()), () -> {
+            networkManager.enableEncryption(secretKey);
+
+            return null;
+        });
     }
 
     public static void displayChatMessage(final String message) {

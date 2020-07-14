@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.utils;
 
-import net.minecraft.util.MathHelper;
-
 import javax.vecmath.Vector3d;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +64,7 @@ public final class PathUtils extends MinecraftInstance {
         final double xDiff = x1 - x2;
         final double yDiff = y1 - y2;
         final double zDiff = z1 - z2;
-        return MathHelper.sqrt_double(xDiff * xDiff + yDiff * yDiff + zDiff * zDiff);
+
+        return Math.sqrt(xDiff * xDiff + yDiff * yDiff + zDiff * zDiff);
     }
 }

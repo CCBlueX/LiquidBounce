@@ -38,7 +38,8 @@ class FreeCam : Module() {
         val playerMP = classProvider.createEntityOtherPlayerMP(mc.theWorld!!, thePlayer.gameProfile)
 
 
-        playerMP.clonePlayer(thePlayer, true)
+        playerMP.rotationYawHead = thePlayer.rotationYawHead;
+        playerMP.renderYawOffset = thePlayer.renderYawOffset;
         playerMP.rotationYawHead = thePlayer.rotationYawHead
         playerMP.copyLocationAndAnglesFrom(thePlayer)
 

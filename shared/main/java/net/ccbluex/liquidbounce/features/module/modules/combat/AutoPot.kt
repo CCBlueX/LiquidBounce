@@ -5,8 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack.Companion.isSplash
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketClientStatus
+import net.ccbluex.liquidbounce.api.enums.WEnumHand
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.event.EventState.POST
 import net.ccbluex.liquidbounce.event.EventState.PRE
@@ -15,9 +14,7 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.Rotation
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -97,7 +94,7 @@ class AutoPot : Module() {
                     val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
 
                     if (openInventory)
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT))
+                        mc.netHandler.addToSendQueue(createOpenInventoryPacket())
 
                     mc.playerController.windowClick(0, potionInInventory, 0, 1, thePlayer)
 
@@ -112,7 +109,7 @@ class AutoPot : Module() {
                     val itemStack = thePlayer.inventory.getStackInSlot(potion)
 
                     if (itemStack != null) {
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(itemStack))
+                        mc.netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
                         mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
                         msTimer.reset()
@@ -128,9 +125,9 @@ class AutoPot : Module() {
         val thePlayer = mc.thePlayer!!
 
         for (i in startSlot until endSlot) {
-            val stack = thePlayer.inventory.getStackInSlot(i)
+            val stack = thePlayer.inventoryContainer.getSlot(i).stack
 
-            if (stack == null || !classProvider.isItemPotion(stack.item) || stack.isSplash())
+            if (stack == null || !classProvider.isItemPotion(stack.item) || !stack.isSplash())
                 continue
 
             val itemPotion = stack.item!!.asItemPotion()

@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.item
 
-import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
+import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
 import net.ccbluex.liquidbounce.api.minecraft.entity.ai.attributes.IAttributeModifier
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTBase
@@ -24,13 +24,10 @@ interface IItemStack {
     val item: IItem?
     val itemDelay: Long
 
-    fun getStrVsBlock(block: IBlock): Float
+    fun getStrVsBlock(block: IIBlockState): Float
     fun setTagInfo(key: String, nbt: INBTBase)
     fun setStackDisplayName(displayName: String): IItemStack
     fun addEnchantment(enchantment: IEnchantment, level: Int)
     fun getAttributeModifier(key: String): Collection<IAttributeModifier>
-
-    companion object {
-        inline fun IItemStack.isSplash() = (this.itemDamage and 16384) != 0
-    }
+    fun isSplash(): Boolean
 }

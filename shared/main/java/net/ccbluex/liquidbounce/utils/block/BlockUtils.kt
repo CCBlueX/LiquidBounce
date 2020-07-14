@@ -27,7 +27,11 @@ object BlockUtils : MinecraftInstance() {
      * Get material from [blockPos]
      */
     @JvmStatic
-    inline fun getMaterial(blockPos: WBlockPos): IMaterial? = getBlock(blockPos)?.material
+    inline fun getMaterial(blockPos: WBlockPos): IMaterial? {
+        val state = getState(blockPos)
+
+        return state?.block?.getMaterial(state)
+    }
 
     /**
      * Check [blockPos] is replaceable
@@ -133,7 +137,7 @@ object BlockUtils : MinecraftInstance() {
                 val block = getBlock(blockPos)
 
                 if (collide(block)) {
-                    val boundingBox = block?.getCollisionBoundingBox(world, blockPos, getState(blockPos))
+                    val boundingBox = getState(blockPos)?.let { block?.getCollisionBoundingBox(world, blockPos, it) }
                             ?: continue
 
                     if (thePlayer.entityBoundingBox.intersectsWith(boundingBox))

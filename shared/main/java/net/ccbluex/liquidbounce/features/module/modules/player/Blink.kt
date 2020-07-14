@@ -43,7 +43,8 @@ class Blink : Module() {
             val faker: IEntityOtherPlayerMP = classProvider.createEntityOtherPlayerMP(mc.theWorld!!, thePlayer.gameProfile)
 
 
-            faker.clonePlayer(thePlayer, true)
+            faker.rotationYawHead = thePlayer.rotationYawHead;
+            faker.renderYawOffset = thePlayer.renderYawOffset;
             faker.copyLocationAndAnglesFrom(thePlayer)
             faker.rotationYawHead = thePlayer.rotationYawHead
             mc.theWorld!!.addEntityToWorld(-1337, faker)

@@ -24,8 +24,6 @@ inline fun WVec3.unwrap(): Vec3 = Vec3(this.xCoord, this.yCoord, this.zCoord)
 inline fun WVec3i.unwrap(): Vec3i = Vec3i(this.x, this.y, this.z)
 inline fun WBlockPos.unwrap(): BlockPos = BlockPos(this.x, this.y, this.z)
 
-inline fun <O, T> MutableList<O>.unwrap(): MutableList<T> = ((this as WrappedMutableList<O, T, *>).wrapped) as MutableList<T>
-
 inline fun BlockPos.wrap(): WBlockPos = WBlockPos(this.x, this.y, this.z)
 inline fun Vec3.wrap(): WVec3 = WVec3(this.xCoord, this.yCoord, this.zCoord)
 inline fun Vec3i.wrap(): WVec3i = WVec3i(this.x, this.y, this.z)

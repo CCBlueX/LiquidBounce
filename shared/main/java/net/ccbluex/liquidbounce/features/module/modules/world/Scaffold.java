@@ -506,7 +506,7 @@ public class Scaffold extends Module {
                         final WVec3 vector = eyesPos.addVector(rotationVector.getXCoord() * 4, rotationVector.getYCoord() * 4, rotationVector.getZCoord() * 4);
                         final IMovingObjectPosition obj = mc.getTheWorld().rayTraceBlocks(eyesPos, vector, false, false, true);
 
-                        if (!(obj.getTypeOfHit() == IMovingObjectPosition.WMovingObjectType.BLOCK && obj.getBlockPos().equals(neighbor)))
+                        if (obj.getTypeOfHit() != IMovingObjectPosition.WMovingObjectType.BLOCK || !obj.getBlockPos().equals(neighbor))
                             continue;
 
                         if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation.getRotation()))
@@ -533,7 +533,7 @@ public class Scaffold extends Module {
         int amount = 0;
 
         for (int i = 36; i < 45; i++) {
-            final IItemStack itemStack = mc.getThePlayer().getInventory().getStackInSlot(i);
+            final IItemStack itemStack = mc.getThePlayer().getInventoryContainer().getSlot(i).getStack();
 
             if (itemStack != null && classProvider.isItemBlock(itemStack.getItem())) {
                 final IBlock block = (itemStack.getItem().asItemBlock()).getBlock();

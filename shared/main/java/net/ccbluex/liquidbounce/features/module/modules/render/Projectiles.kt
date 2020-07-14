@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.api.enums.MaterialType
 import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack.Companion.isSplash
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
@@ -210,8 +209,10 @@ class Projectiles : Module() {
             posY += motionY
             posZ += motionZ
 
+            val blockState = theWorld.getBlockState(WBlockPos(posX, posY, posZ))
+
             // Check is next position water
-            if (theWorld.getBlockState(WBlockPos(posX, posY, posZ)).block.material == classProvider.getMaterialEnum(MaterialType.WATER)) {
+            if (blockState.block.getMaterial(blockState) == classProvider.getMaterialEnum(MaterialType.WATER)) {
                 // Update motion
                 motionX *= 0.6
                 motionY *= 0.6

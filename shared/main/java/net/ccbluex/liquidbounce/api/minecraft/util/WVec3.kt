@@ -53,5 +53,27 @@ class WVec3(
         return WVec3(d0, d1, d2)
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as WVec3
+
+        if (xCoord != other.xCoord) return false
+        if (yCoord != other.yCoord) return false
+        if (zCoord != other.zCoord) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = xCoord.hashCode()
+        result = 31 * result + yCoord.hashCode()
+        result = 31 * result + zCoord.hashCode()
+        return result
+    }
+
     constructor(blockPos: WVec3i) : this(blockPos.x.toDouble(), blockPos.y.toDouble(), blockPos.z.toDouble())
+
+
 }

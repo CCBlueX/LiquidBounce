@@ -7,9 +7,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
+import net.ccbluex.liquidbounce.api.enums.WEnumHand
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketClientStatus
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
@@ -23,9 +23,8 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
-import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.RaycastUtils
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.injection.backend.Backend
+import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -68,6 +67,7 @@ class KillAura : Module() {
     }
 
     private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
+    private val cooldownValue = FloatValue("Cooldown", 1f, 0f, 1f)
 
     // Range
     private val rangeValue = FloatValue("Range", 3.7f, 1f, 8f)
@@ -305,7 +305,7 @@ class KillAura : Module() {
             return
         }
 
-        if (target != null && currentTarget != null) {
+        if (target != null && currentTarget != null && mc.thePlayer!!.getCooledAttackStrength(0.0F) >= cooldownValue.get()) {
             while (clicks > 0) {
                 runAttack()
                 clicks--
@@ -415,7 +415,7 @@ class KillAura : Module() {
 
         // Open inventory
         if (openInventory)
-            mc.netHandler.addToSendQueue(classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT))
+            mc.netHandler.addToSendQueue(createOpenInventoryPacket())
     }
 
     /**
@@ -558,6 +558,11 @@ class KillAura : Module() {
 
             startBlocking(entity, interactAutoBlockValue.get())
         }
+
+        @Suppress("ConstantConditionIf")
+        if (Backend.MINECRAFT_VERSION_MINOR == 12) {
+            thePlayer.resetCooldown()
+        }
     }
 
     /**
@@ -636,7 +641,7 @@ class KillAura : Module() {
             mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(interactEntity, ICPacketUseEntity.WAction.INTERACT))
         }
 
-        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(mc.thePlayer!!.inventory.getCurrentItemInHand()))
+        mc.netHandler.addToSendQueue(createUseItemPacket(mc.thePlayer!!.inventory.getCurrentItemInHand(), WEnumHand.MAIN_HAND))
         blockingStatus = true
     }
 
