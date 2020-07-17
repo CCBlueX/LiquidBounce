@@ -96,6 +96,8 @@ import net.minecraft.util.*
 import net.minecraftforge.fml.client.GuiModList
 import java.awt.image.BufferedImage
 import java.io.File
+import java.security.PublicKey
+import javax.crypto.SecretKey
 
 object ClassProviderImpl : IClassProvider {
     override val tessellatorInstance: ITessellator
@@ -339,6 +341,9 @@ object ClassProviderImpl : IClassProvider {
 
     override fun isItemFishingRod(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemFishingRod
 
+    // ItemAir is not a thing in 1.8.9
+    override fun isItemAir(obj: Any?): Boolean = false
+
     override fun isBlockAir(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockAir
 
     override fun isBlockFence(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockFence
@@ -558,5 +563,12 @@ object ClassProviderImpl : IClassProvider {
     }
 
     override fun getGlStateManager(): IGlStateManager = GlStateManagerImpl
+    override fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket {
+        TODO("Not yet implemented")
+    }
+
+    override fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*> {
+        TODO("Not yet implemented")
+    }
 
 }

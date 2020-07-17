@@ -16,7 +16,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sneak;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
+import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
+import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
@@ -27,7 +29,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.crash.CrashReport;
@@ -111,6 +112,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
     private int autoJumpTime;
     @Shadow
     private boolean wasFallFlying;
+    @Shadow
+    private boolean prevOnGround;
+    @Shadow
+    private boolean autoJumpEnabled;
 
     @Shadow
     public abstract void playSound(SoundEvent soundIn, float volume, float pitch);
@@ -153,95 +158,96 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
      */
     @Overwrite
     public void onUpdateWalkingPlayer() {
-        try {
-            LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE));
+        LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE));
 
-            final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.getModule(InventoryMove.class);
-            final Sneak sneak = (Sneak) LiquidBounce.moduleManager.getModule(Sneak.class);
-            final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || LiquidBounce.moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
+        final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.getModule(InventoryMove.class);
+        final Sneak sneak = (Sneak) LiquidBounce.moduleManager.getModule(Sneak.class);
+        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || LiquidBounce.moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
 
-            boolean sprinting = this.isSprinting() && !fakeSprint;
+        boolean clientSprintState = this.isSprinting() && !fakeSprint;
 
-            if (sprinting != this.serverSprintState) {
-                if (sprinting)
-                    this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.START_SPRINTING));
-                else
-                    this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.STOP_SPRINTING));
-
-                this.serverSprintState = sprinting;
+        if (clientSprintState != this.serverSprintState) {
+            if (clientSprintState) {
+                this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.START_SPRINTING));
+            } else {
+                this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.STOP_SPRINTING));
             }
 
-            boolean sneaking = this.isSneaking();
-
-            if (sneaking != this.serverSneakState && (!sneak.getState() || sneak.modeValue.get().equalsIgnoreCase("Legit"))) {
-                if (sneaking)
-                    this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.START_SNEAKING));
-                else
-                    this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.STOP_SNEAKING));
-
-                this.serverSneakState = sneaking;
-            }
-
-            if (this.isCurrentViewEntity()) {
-                float yaw = rotationYaw;
-                float pitch = rotationPitch;
-                float lastReportedYaw = RotationUtils.serverRotation.getYaw();
-                float lastReportedPitch = RotationUtils.serverRotation.getPitch();
-
-                final Derp derp = (Derp) LiquidBounce.moduleManager.getModule(Derp.class);
-                if (derp.getState()) {
-                    float[] rot = derp.getRotation();
-                    yaw = rot[0];
-                    pitch = rot[1];
-                }
-
-                if (RotationUtils.targetRotation != null) {
-                    yaw = RotationUtils.targetRotation.getYaw();
-                    pitch = RotationUtils.targetRotation.getPitch();
-                }
-
-                double xDiff = this.posX - this.lastReportedPosX;
-                double yDiff = this.getEntityBoundingBox().minY - this.lastReportedPosY;
-                double zDiff = this.posZ - this.lastReportedPosZ;
-                double yawDiff = yaw - lastReportedYaw;
-                double pitchDiff = pitch - lastReportedPitch;
-                boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || this.positionUpdateTicks >= 20;
-                boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
-
-                if (this.ridingEntity == null) {
-                    if (moved && rotated) {
-                        this.connection.sendPacket(new CPacketPlayer.PositionRotation(this.posX, this.getEntityBoundingBox().minY, this.posZ, yaw, pitch, this.onGround));
-                    } else if (moved) {
-                        this.connection.sendPacket(new CPacketPlayer.Position(this.posX, this.getEntityBoundingBox().minY, this.posZ, this.onGround));
-                    } else if (rotated) {
-                        this.connection.sendPacket(new CPacketPlayer.Rotation(yaw, pitch, this.onGround));
-                    } else {
-                        this.connection.sendPacket(new CPacketPlayer(this.onGround));
-                    }
-                } else {
-                    this.connection.sendPacket(new CPacketPlayer.PositionRotation(this.motionX, -999.0D, this.motionZ, yaw, pitch, this.onGround));
-                    moved = false;
-                }
-
-                ++this.positionUpdateTicks;
-
-                if (moved) {
-                    this.lastReportedPosX = this.posX;
-                    this.lastReportedPosY = this.getEntityBoundingBox().minY;
-                    this.lastReportedPosZ = this.posZ;
-                    this.positionUpdateTicks = 0;
-                }
-
-                if (rotated) {
-                    this.lastReportedYaw = this.rotationYaw;
-                    this.lastReportedPitch = this.rotationPitch;
-                }
-            }
-
-            LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST));
-        } catch (final Exception e) {
-            e.printStackTrace();
+            this.serverSprintState = clientSprintState;
         }
+
+        boolean flag1 = this.isSneaking();
+
+        if (flag1 != this.serverSneakState && (!sneak.getState() || sneak.modeValue.get().equalsIgnoreCase("Legit"))) {
+            if (flag1) {
+                this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.START_SNEAKING));
+            } else {
+                this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.STOP_SNEAKING));
+            }
+
+            this.serverSneakState = flag1;
+        }
+
+        if (this.isCurrentViewEntity()) {
+            float yaw = rotationYaw;
+            float pitch = rotationPitch;
+            float lastReportedYaw = RotationUtils.serverRotation.getYaw();
+            float lastReportedPitch = RotationUtils.serverRotation.getPitch();
+
+            final Derp derp = (Derp) LiquidBounce.moduleManager.getModule(Derp.class);
+            if (derp.getState()) {
+                float[] rot = derp.getRotation();
+                yaw = rot[0];
+                pitch = rot[1];
+            }
+
+            if (RotationUtils.targetRotation != null) {
+                yaw = RotationUtils.targetRotation.getYaw();
+                pitch = RotationUtils.targetRotation.getPitch();
+            }
+
+            AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
+            double xDiff = this.posX - this.lastReportedPosX;
+            double yDiff = axisalignedbb.minY - this.lastReportedPosY;
+            double zDiff = this.posZ - this.lastReportedPosZ;
+            double yawDiff = yaw - lastReportedYaw;
+            double pitchDiff = pitch - lastReportedPitch;
+
+            ++this.positionUpdateTicks;
+
+            boolean flag2 = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || this.positionUpdateTicks >= 20;
+            boolean flag3 = yawDiff != 0.0D || pitchDiff != 0.0D;
+
+            if (this.isRiding()) {
+                this.connection.sendPacket(new CPacketPlayer.PositionRotation(this.motionX, -999.0D, this.motionZ, this.rotationYaw, this.rotationPitch, this.onGround));
+                flag2 = false;
+            } else if (flag2 && flag3) {
+                this.connection.sendPacket(new CPacketPlayer.PositionRotation(this.posX, axisalignedbb.minY, this.posZ, this.rotationYaw, this.rotationPitch, this.onGround));
+            } else if (flag2) {
+                this.connection.sendPacket(new CPacketPlayer.Position(this.posX, axisalignedbb.minY, this.posZ, this.onGround));
+            } else if (flag3) {
+                this.connection.sendPacket(new CPacketPlayer.Rotation(this.rotationYaw, this.rotationPitch, this.onGround));
+            } else if (this.prevOnGround != this.onGround) {
+                this.connection.sendPacket(new CPacketPlayer(this.onGround));
+            }
+
+            if (flag2) {
+                this.lastReportedPosX = this.posX;
+                this.lastReportedPosY = axisalignedbb.minY;
+                this.lastReportedPosZ = this.posZ;
+                this.positionUpdateTicks = 0;
+            }
+
+            if (flag3) {
+                this.lastReportedYaw = this.rotationYaw;
+                this.lastReportedPitch = this.rotationPitch;
+            }
+
+            this.prevOnGround = this.onGround;
+            this.autoJumpEnabled = this.mc.gameSettings.autoJump;
+        }
+
+        LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST));
     }
 
     @Inject(method = "swingArm", at = @At("HEAD"), cancellable = true)
@@ -291,7 +297,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     this.closeScreen();
                 }
 
-                this.mc.displayGuiScreen((GuiScreen) null);
+                this.mc.displayGuiScreen(null);
             }
 
             if (this.timeInPortal == 0.0F) {
@@ -377,6 +383,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             this.setSprinting(true);
         }
 
+        final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.getModule(Scaffold.class);
+
+        if ((scaffold.getState() && !scaffold.sprintValue.get()) || (sprint.getState() && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.player.rotationYaw, mc.player.rotationPitch)) > 30))
+            this.setSprinting(false);
+
         if (this.isSprinting() && (this.movementInput.moveForward < 0.8F || this.collidedHorizontally || !flag4)) {
             this.setSprinting(false);
         }
@@ -412,11 +423,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             if (this.movementInput.sneak) {
                 this.movementInput.moveStrafe = (float) ((double) this.movementInput.moveStrafe / 0.3D);
                 this.movementInput.moveForward = (float) ((double) this.movementInput.moveForward / 0.3D);
-                this.motionY -= (double) (this.capabilities.getFlySpeed() * 3.0F);
+                this.motionY -= this.capabilities.getFlySpeed() * 3.0F;
             }
 
             if (this.movementInput.jump) {
-                this.motionY += (double) (this.capabilities.getFlySpeed() * 3.0F);
+                this.motionY += this.capabilities.getFlySpeed() * 3.0F;
             }
         }
 
@@ -540,8 +551,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             double d4 = z;
 
             //noinspection ConstantConditions
-            if ((type == MoverType.SELF || type == MoverType.PLAYER) && this.onGround && this.isSneaking() && ((Object) this) instanceof EntityPlayer) {
-                for (double d5 = 0.05D; x != 0.0D && this.world.getCollisionBoxes((EntityPlayerSP) (Object) this, this.getEntityBoundingBox().offset(x, (double) (-this.stepHeight), 0.0D)).isEmpty(); d2 = x) {
+            if ((type == MoverType.SELF || type == MoverType.PLAYER) && (this.onGround && this.isSneaking() || moveEvent.isSafeWalk()) && ((Object) this) instanceof EntityPlayer) {
+                for (double d5 = 0.05D; x != 0.0D && this.world.getCollisionBoxes((EntityPlayerSP) (Object) this, this.getEntityBoundingBox().offset(x, -this.stepHeight, 0.0D)).isEmpty(); d2 = x) {
                     if (x < 0.05D && x >= -0.05D) {
                         x = 0.0D;
                     } else if (x > 0.0D) {
@@ -551,7 +562,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     }
                 }
 
-                for (; z != 0.0D && this.world.getCollisionBoxes((EntityPlayerSP) (Object) this, this.getEntityBoundingBox().offset(0.0D, (double) (-this.stepHeight), z)).isEmpty(); d4 = z) {
+                for (; z != 0.0D && this.world.getCollisionBoxes((EntityPlayerSP) (Object) this, this.getEntityBoundingBox().offset(0.0D, -this.stepHeight, z)).isEmpty(); d4 = z) {
                     if (z < 0.05D && z >= -0.05D) {
                         z = 0.0D;
                     } else if (z > 0.0D) {
@@ -561,7 +572,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     }
                 }
 
-                for (; x != 0.0D && z != 0.0D && this.world.getCollisionBoxes((EntityPlayerSP) (Object) this, this.getEntityBoundingBox().offset(x, (double) (-this.stepHeight), z)).isEmpty(); d4 = z) {
+                for (; x != 0.0D && z != 0.0D && this.world.getCollisionBoxes((EntityPlayerSP) (Object) this, this.getEntityBoundingBox().offset(x, -this.stepHeight, z)).isEmpty(); d4 = z) {
                     if (x < 0.05D && x >= -0.05D) {
                         x = 0.0D;
                     } else if (x > 0.0D) {
@@ -589,7 +600,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 int k = 0;
 
                 for (int l = list1.size(); k < l; ++k) {
-                    y = ((AxisAlignedBB) list1.get(k)).calculateYOffset(this.getEntityBoundingBox(), y);
+                    y = list1.get(k).calculateYOffset(this.getEntityBoundingBox(), y);
                 }
 
                 this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
@@ -599,7 +610,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 int j5 = 0;
 
                 for (int l5 = list1.size(); j5 < l5; ++j5) {
-                    x = ((AxisAlignedBB) list1.get(j5)).calculateXOffset(this.getEntityBoundingBox(), x);
+                    x = list1.get(j5).calculateXOffset(this.getEntityBoundingBox(), x);
                 }
 
                 if (x != 0.0D) {
@@ -611,7 +622,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 int k5 = 0;
 
                 for (int i6 = list1.size(); k5 < i6; ++k5) {
-                    z = ((AxisAlignedBB) list1.get(k5)).calculateZOffset(this.getEntityBoundingBox(), z);
+                    z = list1.get(k5).calculateZOffset(this.getEntityBoundingBox(), z);
                 }
 
                 if (z != 0.0D) {
@@ -638,7 +649,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 int j1 = 0;
 
                 for (int k1 = list.size(); j1 < k1; ++j1) {
-                    d8 = ((AxisAlignedBB) list.get(j1)).calculateYOffset(axisalignedbb3, d8);
+                    d8 = list.get(j1).calculateYOffset(axisalignedbb3, d8);
                 }
 
                 axisalignedbb2 = axisalignedbb2.offset(0.0D, d8, 0.0D);
@@ -646,7 +657,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 int l1 = 0;
 
                 for (int i2 = list.size(); l1 < i2; ++l1) {
-                    d18 = ((AxisAlignedBB) list.get(l1)).calculateXOffset(axisalignedbb2, d18);
+                    d18 = list.get(l1).calculateXOffset(axisalignedbb2, d18);
                 }
 
                 axisalignedbb2 = axisalignedbb2.offset(d18, 0.0D, 0.0D);
@@ -654,7 +665,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 int j2 = 0;
 
                 for (int k2 = list.size(); j2 < k2; ++j2) {
-                    d19 = ((AxisAlignedBB) list.get(j2)).calculateZOffset(axisalignedbb2, d19);
+                    d19 = list.get(j2).calculateZOffset(axisalignedbb2, d19);
                 }
 
                 axisalignedbb2 = axisalignedbb2.offset(0.0D, 0.0D, d19);
@@ -663,7 +674,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 int l2 = 0;
 
                 for (int i3 = list.size(); l2 < i3; ++l2) {
-                    d20 = ((AxisAlignedBB) list.get(l2)).calculateYOffset(axisalignedbb4, d20);
+                    d20 = list.get(l2).calculateYOffset(axisalignedbb4, d20);
                 }
 
                 axisalignedbb4 = axisalignedbb4.offset(0.0D, d20, 0.0D);
@@ -671,7 +682,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 int j3 = 0;
 
                 for (int k3 = list.size(); j3 < k3; ++j3) {
-                    d21 = ((AxisAlignedBB) list.get(j3)).calculateXOffset(axisalignedbb4, d21);
+                    d21 = list.get(j3).calculateXOffset(axisalignedbb4, d21);
                 }
 
                 axisalignedbb4 = axisalignedbb4.offset(d21, 0.0D, 0.0D);
@@ -679,7 +690,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 int l3 = 0;
 
                 for (int i4 = list.size(); l3 < i4; ++l3) {
-                    d22 = ((AxisAlignedBB) list.get(l3)).calculateZOffset(axisalignedbb4, d22);
+                    d22 = list.get(l3).calculateZOffset(axisalignedbb4, d22);
                 }
 
                 axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, d22);
@@ -701,7 +712,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 int j4 = 0;
 
                 for (int k4 = list.size(); j4 < k4; ++j4) {
-                    y = ((AxisAlignedBB) list.get(j4)).calculateYOffset(this.getEntityBoundingBox(), y);
+                    y = list.get(j4).calculateYOffset(this.getEntityBoundingBox(), y);
                 }
 
                 this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
@@ -777,7 +788,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
                     if (this.isInWater()) {
                         Entity entity = this.isBeingRidden() && this.getControllingPassenger() != null ? this.getControllingPassenger() : (EntityPlayerSP) (Object) this;
-                        float f = entity == (EntityPlayerSP) (Object) this ? 0.35F : 0.4F;
+                        float f = entity == (Object) this ? 0.35F : 0.4F;
                         float f1 = MathHelper.sqrt(entity.motionX * entity.motionX * 0.20000000298023224D + entity.motionY * entity.motionY + entity.motionZ * entity.motionZ * 0.20000000298023224D) * f;
 
                         if (f1 > 1.0F) {

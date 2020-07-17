@@ -67,7 +67,7 @@ class AntiBot : Module() {
             val packetEntity = packet.asSPacketEntity()
             val entity = packetEntity.getEntity(mc.theWorld!!)
 
-            if (classProvider.isEntityPlayer(entity)) {
+            if (classProvider.isEntityPlayer(entity) && entity != null) {
                 if (packetEntity.onGround && !ground.contains(entity.entityId))
                     ground.add(entity.entityId)
                 if (!packetEntity.onGround && !air.contains(entity.entityId))

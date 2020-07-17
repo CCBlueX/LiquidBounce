@@ -65,10 +65,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.boss.EntityDragon
 import net.minecraft.entity.item.*
-import net.minecraft.entity.monster.EntityGhast
-import net.minecraft.entity.monster.EntityGolem
-import net.minecraft.entity.monster.EntityMob
-import net.minecraft.entity.monster.EntitySlime
+import net.minecraft.entity.monster.*
 import net.minecraft.entity.passive.EntityAnimal
 import net.minecraft.entity.passive.EntityBat
 import net.minecraft.entity.passive.EntitySquid
@@ -216,7 +213,7 @@ object ClassProviderImpl : IClassProvider {
 
     override fun createCPacketTabComplete(text: String): IPacket = PacketImpl(CPacketTabComplete(text, null, false))
 
-    override fun createCPacketAnimation(): ICPacketAnimation = CPacketAnimationImpl(CPacketAnimation())
+    override fun createCPacketAnimation(): ICPacketAnimation = CPacketAnimationImpl(CPacketAnimation(EnumHand.MAIN_HAND))
 
     override fun createCPacketKeepAlive(): ICPacketKeepAlive = CPacketKeepAliveImpl(CPacketKeepAlive())
 
@@ -257,6 +254,7 @@ object ClassProviderImpl : IClassProvider {
     override fun isEntityFallingBlock(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityFallingBlock
 
     override fun isEntityMinecartChest(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMinecartChest
+    override fun isEntityShulker(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityShulker
 
     override fun isTileEntityChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityChest
 
@@ -267,6 +265,7 @@ object ClassProviderImpl : IClassProvider {
     override fun isTileEntityDispenser(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityDispenser
 
     override fun isTileEntityHopper(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityHopper
+    override fun isTileEntityShulkerBox(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityShulkerBox
 
     override fun isSPacketEntity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketEntity
 

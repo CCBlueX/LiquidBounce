@@ -131,6 +131,7 @@ interface IClassProvider {
     fun isEntityArrow(obj: Any?): Boolean
     fun isEntityFallingBlock(obj: Any?): Boolean
     fun isEntityMinecartChest(obj: Any?): Boolean
+    fun isEntityShulker(obj: Any?): Boolean
 
     fun isTileEntityChest(obj: Any?): Boolean
     fun isTileEntityEnderChest(obj: Any?): Boolean
@@ -227,4 +228,5 @@ interface IClassProvider {
 
     @SupportsMinecraftVersions(value = [MinecraftVersion.MC_1_12])
     fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*>
+    fun isTileEntityShulkerBox(obj: Any?): Boolean
 }

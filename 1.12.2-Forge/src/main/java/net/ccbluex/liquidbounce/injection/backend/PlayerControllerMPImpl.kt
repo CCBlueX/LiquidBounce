@@ -19,21 +19,14 @@ import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
 import net.ccbluex.liquidbounce.injection.backend.utils.toClickType
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
 import net.ccbluex.liquidbounce.injection.backend.utils.wrap
-import net.minecraft.block.BlockCommandBlock
-import net.minecraft.block.BlockStructure
-import net.minecraft.block.state.IBlockState
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.PlayerControllerMP
-import net.minecraft.item.ItemBlock
-import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.CPacketPlayerTryUseItem
-import net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock
 import net.minecraft.util.EnumActionResult
 import net.minecraft.util.EnumHand
 import net.minecraft.world.GameType
 import net.minecraftforge.common.ForgeHooks
 import net.minecraftforge.event.ForgeEventFactory
-import net.minecraftforge.fml.common.eventhandler.Event
 
 class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControllerMP {
     override val isNotCreative: Boolean
@@ -103,91 +96,7 @@ class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControlle
     }
 
     override fun onPlayerRightClick(playerSP: IEntityPlayerSP, wWorld: IWorldClient, wItemStack: IItemStack?, wPosition: WBlockPos, wSideOpposite: IEnumFacing, wHitVec: WVec3): Boolean {
-        val player = playerSP.unwrap()
-        val world = wWorld.unwrap()
-        val itemStack = wItemStack?.unwrap()
-        val hand = EnumHand.MAIN_HAND
-        val direction = wSideOpposite.unwrap()
-        val vec = wHitVec.unwrap()
-        val pos = wPosition.unwrap()
-
-        wrapped.syncCurrentPlayItem()
-
-        val itemstack: ItemStack = player.getHeldItem(hand)
-        val f = (vec.x - pos.x.toDouble())
-        val f1 = (vec.y - pos.y.toDouble())
-        val f2 = (vec.z - pos.z.toDouble())
-        var flag = false
-
-        return EnumActionResult.SUCCESS == if (!world.worldBorder.contains(pos)) {
-            return false
-        } else {
-            val event = ForgeHooks
-                    .onRightClickBlock(player, hand, pos, direction, ForgeHooks.rayTraceEyeHitVec(player, wrapped.blockReachDistance + 1.toDouble()))
-            if (event.isCanceled) {
-                // Give the server a chance to fire event as well. That way server event is not dependant on client event.
-                player.connection.sendPacket(CPacketPlayerTryUseItemOnBlock(pos, direction, hand, f.toFloat(), f1.toFloat(), f2.toFloat()))
-                return event.cancellationResult == EnumActionResult.SUCCESS
-            }
-            var result: EnumActionResult? = EnumActionResult.PASS
-
-            if (wrapped.currentGameType != GameType.SPECTATOR) {
-                val ret = itemstack.onItemUseFirst(player, world, pos, hand, direction, f.toFloat(), f1.toFloat(), f2.toFloat())
-
-                if (ret != EnumActionResult.PASS) {
-                    // The server needs to process the item use as well. Otherwise onItemUseFirst won't ever be called on the server without causing weird bugs
-                    player.connection.sendPacket(CPacketPlayerTryUseItemOnBlock(pos, direction, hand, f.toFloat(), f1.toFloat(), f2.toFloat()))
-                    return ret == EnumActionResult.SUCCESS
-                }
-
-                val iblockstate: IBlockState = world.getBlockState(pos)
-                val bypass = player.heldItemMainhand.doesSneakBypassUse(world, pos, player) && player.heldItemOffhand.doesSneakBypassUse(world, pos, player)
-                if (!player.isSneaking || bypass || event.useBlock == Event.Result.ALLOW) {
-                    if (event.useBlock != Event.Result.DENY) flag = iblockstate.block.onBlockActivated(world, pos, iblockstate, player, hand, direction, f.toFloat(), f1.toFloat(), f2.toFloat())
-                    if (flag) result = EnumActionResult.SUCCESS
-                }
-                if (!flag && itemstack.item is ItemBlock) {
-                    val itemblock = itemstack.item as ItemBlock
-                    if (!itemblock.canPlaceBlockOnSide(world, pos, direction, player, itemstack)) {
-                        return false
-                    }
-                }
-            }
-            player.connection.sendPacket(CPacketPlayerTryUseItemOnBlock(pos, direction, hand, f.toFloat(), f1.toFloat(), f2.toFloat()))
-
-            if (!flag && currentGameType != GameType.SPECTATOR || event.useItem == Event.Result.ALLOW) {
-                if (itemstack.isEmpty) {
-                    return false
-                } else if (player.cooldownTracker.hasCooldown(itemstack.item)) {
-                    return false
-                } else {
-                    if (itemstack.item is ItemBlock && !player.canUseCommandBlock()) {
-                        val block = (itemstack.item as ItemBlock).block
-                        if (block is BlockCommandBlock || block is BlockStructure) {
-                            return false
-                        }
-                    }
-                    if (wrapped.currentGameType.isCreative) {
-                        val i = itemstack.metadata
-                        val j = itemstack.count
-                        if (event.useItem != Event.Result.DENY) {
-                            val enumactionresult = itemstack.onItemUse(player, world, pos, hand, direction, f.toFloat(), f1.toFloat(), f2.toFloat())
-                            itemstack.itemDamage = i
-                            itemstack.count = j
-
-                            enumactionresult
-                        } else result
-                    } else {
-                        val copyForUse = itemstack.copy()
-                        if (event.useItem != Event.Result.DENY) result = itemstack.onItemUse(player, world, pos, hand, direction, f.toFloat(), f1.toFloat(), f2.toFloat())
-                        if (itemstack.isEmpty) ForgeEventFactory.onPlayerDestroyItem(player, copyForUse, hand)
-                        result
-                    }
-                }
-            } else {
-                EnumActionResult.SUCCESS
-            }
-        }
+        return wrapped.processRightClickBlock(playerSP.unwrap(), wWorld.unwrap(), wPosition.unwrap(), wSideOpposite.unwrap(), wHitVec.unwrap(), EnumHand.MAIN_HAND) == EnumActionResult.SUCCESS
     }
 
     override fun onStoppedUsingItem(thePlayer: IEntityPlayerSP) = wrapped.onStoppedUsingItem(thePlayer.unwrap())

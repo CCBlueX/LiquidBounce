@@ -90,9 +90,11 @@ open class EntityPlayerImpl<T : EntityPlayer>(wrapped: T) : EntityLivingBaseImpl
 
     override fun triggerAchievement(stat: IStatBase) = wrapped.triggerAchievement(stat.unwrap())
 
-    override fun clonePlayer(player: IEntityPlayerSP, respawnFromEnd: Boolean) = wrapped.clonePlayer(player.unwrap(), respawnFromEnd)
-
     override fun jump() = wrapped.jump()
+
+    override fun getCooledAttackStrength(fl: Float): Float = Backend.BACKEND_UNSUPPORTED()
+
+    override fun resetCooldown() = Backend.BACKEND_UNSUPPORTED()
 
 }
 

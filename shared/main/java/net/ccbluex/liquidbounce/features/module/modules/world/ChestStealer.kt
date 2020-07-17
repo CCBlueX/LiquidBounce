@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
 import net.ccbluex.liquidbounce.api.minecraft.inventory.ISlot
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -140,8 +141,7 @@ class ChestStealer : Module() {
 
                 val stack = slot.stack
 
-                if (delayTimer.hasTimePassed(nextDelay) && stack != null &&
-                        (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))) {
+                if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack, inventoryCleaner)) {
                     move(screen, slot)
                 }
             }
@@ -155,8 +155,12 @@ class ChestStealer : Module() {
     private fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (classProvider.isSPacketWindowItems(classProvider))
+        if (classProvider.isSPacketWindowItems(packet))
             contentReceived = packet.asSPacketWindowItems().windowId
+    }
+
+    private inline fun shouldTake(stack: IItemStack?, inventoryCleaner: InventoryCleaner): Boolean {
+        return stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))
     }
 
     private fun move(screen: IGuiChest, slot: ISlot) {
@@ -171,9 +175,9 @@ class ChestStealer : Module() {
         for (i in 0 until chest.inventoryRows * 9) {
             val slot = chest.inventorySlots!!.getSlot(i)
 
-
             val stack = slot.stack
-            if (stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1)))
+
+            if (shouldTake(stack, inventoryCleaner))
                 return false
         }
 

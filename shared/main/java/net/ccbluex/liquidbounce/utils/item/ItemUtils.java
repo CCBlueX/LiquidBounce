@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack;
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagCompound;
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
+import org.jetbrains.annotations.Contract;
 
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -99,6 +100,7 @@ public final class ItemUtils extends MinecraftInstance {
         return c;
     }
 
+    @Contract("null -> true")
     public static boolean isStackEmpty(IItemStack stack) {
         return stack == null || classProvider.isItemAir(stack.getItem());
     }

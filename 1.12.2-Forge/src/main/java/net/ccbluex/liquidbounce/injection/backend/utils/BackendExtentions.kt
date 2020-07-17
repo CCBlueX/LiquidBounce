@@ -210,6 +210,8 @@ inline fun Int.toEntityEquipmentSlot(): EntityEquipmentSlot {
         1 -> EntityEquipmentSlot.LEGS
         2 -> EntityEquipmentSlot.CHEST
         3 -> EntityEquipmentSlot.HEAD
+        4 -> EntityEquipmentSlot.MAINHAND
+        5 -> EntityEquipmentSlot.OFFHAND
         else -> throw IllegalArgumentException("Invalid armorType $this")
     }
 }

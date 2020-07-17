@@ -14,8 +14,6 @@ open class ItemImpl<T : Item>(val wrapped: T) : IItem {
     override val unlocalizedName: String
         get() = wrapped.unlocalizedName
 
-    override fun getObjectFromItemRegistry(location: IResourceLocation): IItem? = Item.itemRegistry.getObject(location.unwrap())?.wrap()
-
     override fun asItemArmor(): IItemArmor = ItemArmorImpl(wrapped as ItemArmor)
     override fun asItemPotion(): IItemPotion = ItemPotionImpl(wrapped as ItemPotion)
     override fun asItemBlock(): IItemBlock = ItemBlockImpl(wrapped as ItemBlock)

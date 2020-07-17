@@ -305,7 +305,7 @@ class KillAura : Module() {
             return
         }
 
-        if (target != null && currentTarget != null && mc.thePlayer!!.getCooledAttackStrength(0.0F) >= cooldownValue.get()) {
+        if (target != null && currentTarget != null && (Backend.MINECRAFT_VERSION_MINOR == 8 || mc.thePlayer!!.getCooledAttackStrength(0.0F) >= cooldownValue.get())) {
             while (clicks > 0) {
                 runAttack()
                 clicks--
@@ -517,9 +517,13 @@ class KillAura : Module() {
         LiquidBounce.eventManager.callEvent(AttackEvent(entity))
 
         // Attack target
-        if (swingValue.get())
+        if (swingValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8)
             thePlayer.swingItem()
+
         mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(entity, ICPacketUseEntity.WAction.ATTACK))
+
+        if (swingValue.get() && Backend.MINECRAFT_VERSION_MINOR != 8)
+            thePlayer.swingItem()
 
         if (keepSprintValue.get()) {
             // Critical Effect
@@ -560,7 +564,7 @@ class KillAura : Module() {
         }
 
         @Suppress("ConstantConditionIf")
-        if (Backend.MINECRAFT_VERSION_MINOR == 12) {
+        if (Backend.MINECRAFT_VERSION_MINOR != 8) {
             thePlayer.resetCooldown()
         }
     }

@@ -14,20 +14,20 @@ import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.util.ChatStyle
 
 class ChatStyleImpl(val wrapped: ChatStyle) : IChatStyle {
-    override var chatClickEvent: IClickEvent
-        get() = wrapped.chatClickEvent.wrap()
+    override var chatClickEvent: IClickEvent?
+        get() = wrapped.chatClickEvent?.wrap()
         set(value) {
-            wrapped.chatClickEvent = value.unwrap()
+            wrapped.chatClickEvent = value?.unwrap()
         }
     override var underlined: Boolean
         get() = wrapped.underlined
         set(value) {
             wrapped.underlined = value
         }
-    override var color: WEnumChatFormatting
-        get() = wrapped.color.wrap()
+    override var color: WEnumChatFormatting?
+        get() = wrapped.color?.wrap()
         set(value) {
-            wrapped.color = value.unwrap()
+            wrapped.color = value?.unwrap()
         }
 
     override fun equals(other: Any?): Boolean {

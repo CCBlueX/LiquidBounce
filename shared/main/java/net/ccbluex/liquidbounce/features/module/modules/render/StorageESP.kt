@@ -30,6 +30,7 @@ class StorageESP : Module() {
     private val furnaceValue = BoolValue("Furnace", true)
     private val dispenserValue = BoolValue("Dispenser", true)
     private val hopperValue = BoolValue("Hopper", true)
+    private val shulkerBoxValue = BoolValue("ShulkerBox", true)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -46,14 +47,16 @@ class StorageESP : Module() {
             mc.gameSettings.gammaSetting = 100000.0f
 
             for (tileEntity in mc.theWorld!!.loadedTileEntityList) {
-                var color: Color? = null
+                val color: Color = when {
+                    chestValue.get() && classProvider.isTileEntityChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color(0, 66, 255)
+                    enderChestValue.get() && classProvider.isTileEntityEnderChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color.MAGENTA
+                    furnaceValue.get() && classProvider.isTileEntityFurnace(tileEntity) -> Color.BLACK
+                    dispenserValue.get() && classProvider.isTileEntityDispenser(tileEntity) -> Color.BLACK
+                    hopperValue.get() && classProvider.isTileEntityHopper(tileEntity) -> Color.GRAY
+                    shulkerBoxValue.get() && classProvider.isTileEntityShulkerBox(tileEntity) -> Color(0x6e, 0x4d, 0x6e).brighter()
+                    else -> null
+                } ?: continue
 
-                if (chestValue.get() && classProvider.isTileEntityChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos)) color = Color(0, 66, 255)
-                if (enderChestValue.get() && classProvider.isTileEntityEnderChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos)) color = Color.MAGENTA
-                if (furnaceValue.get() && classProvider.isTileEntityFurnace(tileEntity)) color = Color.BLACK
-                if (dispenserValue.get() && classProvider.isTileEntityDispenser(tileEntity)) color = Color.BLACK
-                if (hopperValue.get() && classProvider.isTileEntityHopper(tileEntity)) color = Color.GRAY
-                if (color == null) continue
                 if (!(classProvider.isTileEntityChest(tileEntity) || classProvider.isTileEntityChest(tileEntity))) {
                     RenderUtils.drawBlockBox(tileEntity.pos, color, !mode.equals("otherbox", ignoreCase = true))
                     continue

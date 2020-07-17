@@ -192,6 +192,9 @@ class ModuleManager : Listenable {
      * Register [module]
      */
     fun registerModule(module: Module) {
+        if (!module.isSupported)
+            return
+
         modules += module
         moduleClassMap[module.javaClass] = module
 

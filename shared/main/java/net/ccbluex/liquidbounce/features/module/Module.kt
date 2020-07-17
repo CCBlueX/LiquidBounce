@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
@@ -14,6 +15,7 @@ import net.ccbluex.liquidbounce.value.Value
 import org.lwjgl.input.Keyboard
 
 open class Module : MinecraftInstance(), Listenable {
+    var isSupported: Boolean
 
     // Module information
     // TODO: Remove ModuleInfo and change to constructor (#Kotlin)
@@ -47,12 +49,14 @@ open class Module : MinecraftInstance(), Listenable {
         keyBind = moduleInfo.keyBind
         array = moduleInfo.array
         canEnable = moduleInfo.canEnable
+        isSupported = Backend.REPRESENTED_BACKEND_VERSION in moduleInfo.supportedVersions
     }
 
     // Current state of module
     var state = false
         set(value) {
-            if (field == value) return
+            if (field == value)
+                return
 
             // Call toggle
             onToggle(value)

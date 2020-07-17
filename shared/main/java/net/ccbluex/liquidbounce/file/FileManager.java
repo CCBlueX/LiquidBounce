@@ -9,10 +9,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.file.configs.*;
+import net.ccbluex.liquidbounce.injection.backend.Backend;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -25,7 +24,7 @@ import java.lang.reflect.Field;
 @SideOnly(Side.CLIENT)
 public class FileManager extends MinecraftInstance {
 
-    public final File dir = new File(mc.getDataDir(), LiquidBounce.CLIENT_NAME + "-1.8");
+    public final File dir = new File(mc.getDataDir(), LiquidBounce.CLIENT_NAME + "-" + Backend.MINECRAFT_VERSION_MAJOR + "." + Backend.MINECRAFT_VERSION_MINOR);
     public final File fontsDir = new File(dir, "fonts");
     public final File settingsDir = new File(dir, "settings");
 

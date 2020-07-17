@@ -192,7 +192,6 @@ inline fun ICPacketEntityAction.WAction.unwrap(): C0BPacketEntityAction.Action {
         ICPacketEntityAction.WAction.STOP_SLEEPING -> C0BPacketEntityAction.Action.STOP_SLEEPING
         ICPacketEntityAction.WAction.START_SPRINTING -> C0BPacketEntityAction.Action.START_SPRINTING
         ICPacketEntityAction.WAction.STOP_SPRINTING -> C0BPacketEntityAction.Action.STOP_SPRINTING
-        ICPacketEntityAction.WAction.RIDING_JUMP -> C0BPacketEntityAction.Action.RIDING_JUMP
         ICPacketEntityAction.WAction.OPEN_INVENTORY -> C0BPacketEntityAction.Action.OPEN_INVENTORY
     }
 }

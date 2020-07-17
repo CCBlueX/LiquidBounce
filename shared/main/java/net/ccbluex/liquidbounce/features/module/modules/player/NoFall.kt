@@ -184,7 +184,7 @@ class NoFall : Module() {
                 var index = -1
 
                 for (i in 36..44) {
-                    val itemStack = mc.thePlayer!!.inventory.getStackInSlot(i)
+                    val itemStack = mc.thePlayer!!.inventoryContainer.getSlot(i).stack
 
                     if (itemStack != null && (itemStack.item == classProvider.getItemEnum(ItemType.WATER_BUCKET) || classProvider.isItemBlock(itemStack.item) && (itemStack.item?.asItemBlock())?.block == classProvider.getBlockEnum(BlockType.WEB))) {
                         index = i - 36
@@ -214,7 +214,7 @@ class NoFall : Module() {
             } else {
                 val dirVec: WVec3i = classProvider.getEnumFacing(EnumFacingType.UP).directionVec
 
-                if (mc.playerController.onPlayerRightClick(mc.thePlayer!!, mc.theWorld!!, stack, currentMlgBlock!!, classProvider.getEnumFacing(EnumFacingType.UP), WVec3(dirVec.x * 0.5, dirVec.y * 0.5, dirVec.z * 0.5).add(WVec3(currentMlgBlock!!)))) {
+                if (mc.playerController.sendUseItem(mc.thePlayer!!, mc.theWorld!!, stack)) {
                     mlgTimer.reset()
                 }
             }

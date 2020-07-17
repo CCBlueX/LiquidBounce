@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(GuiContainer.class)
-public abstract class MixinContainer implements IMixinGuiContainer {
+public abstract class MixinGuiContainer implements IMixinGuiContainer {
     @Shadow
     protected abstract void handleMouseClick(Slot p_handleMouseClick_1_, int p_handleMouseClick_2_, int p_handleMouseClick_3_, ClickType p_handleMouseClick_4_);
 

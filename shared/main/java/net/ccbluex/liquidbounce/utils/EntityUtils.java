@@ -65,7 +65,7 @@ public final class EntityUtils extends MinecraftInstance {
 
     public static boolean isMob(final IEntity entity) {
         return classProvider.isEntityMob(entity) || classProvider.isEntityVillager(entity) || classProvider.isEntitySlime(entity)
-                || classProvider.isEntityGhast(entity) || classProvider.isEntityDragon(entity);
+                || classProvider.isEntityGhast(entity) || classProvider.isEntityDragon(entity) || classProvider.isEntityShulker(entity);
     }
 
     public static String getName(final INetworkPlayerInfo networkPlayerInfoIn) {

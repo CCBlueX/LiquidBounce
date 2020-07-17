@@ -99,7 +99,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
             Tessellator tessellator = Tessellator.getInstance();
             BufferBuilder bufferbuilder = tessellator.getBuffer();
             // Forge: background rendering moved into separate method.
-            this.drawContainerBackground(tessellator);
+//            this.drawContainerBackground(tessellator);
             int k = this.left + this.width / 2 - this.getListWidth() / 2 + 2;
             int l = this.top + 4 - (int) this.amountScrolled;
 
@@ -127,17 +127,17 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
             GlStateManager.shadeModel(7425);
             GlStateManager.disableTexture2D();
             int i1 = 4;
-            bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-            bufferbuilder.pos(this.left, this.top + i1, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 0).endVertex();
-            bufferbuilder.pos(this.right, this.top + i1, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 0).endVertex();
-            bufferbuilder.pos(this.right, this.top, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 255).endVertex();
-            bufferbuilder.pos(this.left, this.top, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 255).endVertex();
+            bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR);
+            bufferbuilder.pos(this.left, this.top + i1, 0.0D).color(0, 0, 0, 0).endVertex();
+            bufferbuilder.pos(this.right, this.top + i1, 0.0D).color(0, 0, 0, 0).endVertex();
+            bufferbuilder.pos(this.right, this.top, 0.0D).color(0, 0, 0, 255).endVertex();
+            bufferbuilder.pos(this.left, this.top, 0.0D).color(0, 0, 0, 255).endVertex();
             tessellator.draw();
-            bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-            bufferbuilder.pos(this.left, this.bottom, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 255).endVertex();
-            bufferbuilder.pos(this.right, this.bottom, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 255).endVertex();
-            bufferbuilder.pos(this.right, this.bottom - i1, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 0).endVertex();
-            bufferbuilder.pos(this.left, this.bottom - i1, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 0).endVertex();
+            bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR);
+            bufferbuilder.pos(this.left, this.bottom, 0.0D).color(0, 0, 0, 255).endVertex();
+            bufferbuilder.pos(this.right, this.bottom, 0.0D).color(0, 0, 0, 255).endVertex();
+            bufferbuilder.pos(this.right, this.bottom - i1, 0.0D).color(0, 0, 0, 0).endVertex();
+            bufferbuilder.pos(this.left, this.bottom - i1, 0.0D).color(0, 0, 0, 0).endVertex();
             tessellator.draw();
             int j1 = this.getMaxScroll();
 

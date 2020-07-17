@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.api.minecraft.block.material.IMaterial
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
@@ -24,24 +25,14 @@ class BlockImpl(val wrapped: Block) : IBlock {
         set(value) {
             wrapped.slipperiness = value
         }
-    override val translucent: Boolean
-        get() = wrapped.isTranslucent
-    override val blockBoundsMinY: Double
-        get() = wrapped.blockBoundsMinY
-    override val blockBoundsMaxY: Double
-        get() = wrapped.blockBoundsMaxY
     override val defaultState: IIBlockState?
-        get() = IBlockStateImpl(wrapped.defaultState)
+        get() = wrapped.defaultState?.wrap()
     override val localizedName: String
         get() = wrapped.localizedName
-    override val material: IMaterial?
-        get() = wrapped.material?.let(::MaterialImpl)
-    override val fullCube: Boolean
-        get() = wrapped.isFullCube
 
-    override fun getSelectedBoundingBox(world: IWorld, blockPos: WBlockPos): IAxisAlignedBB = AxisAlignedBBImpl(wrapped.getSelectedBoundingBox(world.unwrap(), blockPos.unwrap()))
+    override fun getSelectedBoundingBox(world: IWorld, blockState: IIBlockState, blockPos: WBlockPos): IAxisAlignedBB = AxisAlignedBBImpl(wrapped.getSelectedBoundingBox(world.unwrap(), blockPos.unwrap()))
 
-    override fun getCollisionBoundingBox(world: IWorld, pos: WBlockPos, state: IIBlockState?): IAxisAlignedBB? = wrapped.getCollisionBoundingBox(world.unwrap(), pos.unwrap(), state?.unwrap()).wrap()
+    override fun getCollisionBoundingBox(world: IWorld, pos: WBlockPos, state: IIBlockState): IAxisAlignedBB? = wrapped.getCollisionBoundingBox(world.unwrap(), pos.unwrap(), state?.unwrap()).wrap()
 
     override fun canCollideCheck(state: IIBlockState?, hitIfLiquid: Boolean): Boolean = wrapped.canCollideCheck(state?.unwrap(), hitIfLiquid)
 
@@ -50,6 +41,14 @@ class BlockImpl(val wrapped: Block) : IBlock {
     override fun getPlayerRelativeBlockHardness(thePlayer: IEntityPlayerSP, theWorld: IWorld, blockPos: WBlockPos): Float = wrapped.getPlayerRelativeBlockHardness(thePlayer.unwrap(), theWorld.unwrap(), blockPos.unwrap())
 
     override fun getIdFromBlock(block: IBlock): Int = Block.getIdFromBlock(block.unwrap())
+    override fun isTranslucent(blockState: IIBlockState): Boolean = wrapped.isTranslucent
+
+    override fun getMapColor(blockState: IIBlockState, theWorld: IWorldClient, bp: WBlockPos): Int = wrapped.getMapColor(blockState.unwrap()).colorValue
+
+    override fun getMaterial(state: IIBlockState): IMaterial? = wrapped.material?.wrap()
+
+    override fun isFullCube(state: IIBlockState): Boolean = wrapped.isFullCube
+
     override fun equals(other: Any?): Boolean {
         return other is BlockImpl && other.wrapped == this.wrapped
     }

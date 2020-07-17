@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 @ModuleInfo(name = "InventoryMove", description = "Allows you to walk while an inventory is opened.", category = ModuleCategory.MOVEMENT)
 class InventoryMove : Module() {
 
-    private val noDetectableValue = BoolValue("NoDetectable", false)
+    private val undetectable = BoolValue("Undetectable", false)
     val aacAdditionProValue = BoolValue("AACAdditionPro", false)
     private val noMoveClicksValue = BoolValue("NoMoveClicks", false)
 
@@ -32,7 +32,11 @@ class InventoryMove : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (!classProvider.isGuiChat(mc.currentScreen) && !classProvider.isGuiIngameMenu(mc.currentScreen) && (!noDetectableValue.get() || !classProvider.isGuiContainer(mc.currentScreen))) {
+        tick()
+    }
+
+    fun tick() {
+        if (!classProvider.isGuiChat(mc.currentScreen) && !classProvider.isGuiIngameMenu(mc.currentScreen) && (!undetectable.get() || !classProvider.isGuiContainer(mc.currentScreen))) {
             for (affectedBinding in affectedBindings) {
                 affectedBinding.pressed = mc.gameSettings.isKeyDown(affectedBinding)
             }
