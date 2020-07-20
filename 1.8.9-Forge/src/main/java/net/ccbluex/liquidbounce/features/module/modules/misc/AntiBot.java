@@ -53,7 +53,7 @@ public class AntiBot extends Module {
     private final BoolValue duplicateInWorldValue = new BoolValue("DuplicateInWorld", false);
     private final BoolValue duplicateInTabValue = new BoolValue("DuplicateInTab", false);
     private final BoolValue allwaysInRadiusValue = new BoolValue("AlwaysInRadius", false);
-    private final FloatValue allwaysMinRadiusValue = new FloatValue("AlwaysInRadiusBlocks", 20F, 5F, 30F);
+    private final FloatValue allwaysRadiusValue = new FloatValue("AlwaysInRadiusBlocks", 20F, 5F, 30F);
 
     private final List<Integer> ground = new ArrayList<>();
     private final List<Integer> air = new ArrayList<>();
@@ -102,7 +102,7 @@ public class AntiBot extends Module {
                 if (entity.isInvisible() && !invisible.contains(entity.getEntityId()))
                     invisible.add(entity.getEntityId());
 
-                if (!notAlwaysInRadius.contains(entity.getEntityId()) && mc.thePlayer.getDistanceToEntity(entity) > allwaysMinRadiusValue.get()) {
+                if (!notAlwaysInRadius.contains(entity.getEntityId()) && mc.thePlayer.getDistanceToEntity(entity) > allwaysRadiusValue.get()) {
                     notAlwaysInRadius.add(entity.getEntityId());
                 }
             }
