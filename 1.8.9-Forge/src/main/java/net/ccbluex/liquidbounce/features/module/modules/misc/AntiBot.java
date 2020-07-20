@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.event.WorldEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.script.api.global.Chat;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
@@ -53,8 +52,8 @@ public class AntiBot extends Module {
     private final BoolValue needHitValue = new BoolValue("NeedHit", false);
     private final BoolValue duplicateInWorldValue = new BoolValue("DuplicateInWorld", false);
     private final BoolValue duplicateInTabValue = new BoolValue("DuplicateInTab", false);
-    private final BoolValue allwaysInRadiusValue = new BoolValue("AllwaysInRadius", false);
-    private final FloatValue allwaysMinRadiusValue = new FloatValue("AllwaysInRadiusBlocks", 20F, 5F, 30F);
+    private final BoolValue allwaysInRadiusValue = new BoolValue("AlwaysInRadius", false);
+    private final FloatValue allwaysMinRadiusValue = new FloatValue("AlwaysInRadiusBlocks", 20F, 5F, 30F);
 
     private final List<Integer> ground = new ArrayList<>();
     private final List<Integer> air = new ArrayList<>();
@@ -62,7 +61,7 @@ public class AntiBot extends Module {
     private final List<Integer> swing = new ArrayList<>();
     private final List<Integer> invisible = new ArrayList<>();
     private final List<Integer> hitted = new ArrayList<>();
-    private final List<Integer> notAllwaysInRadius = new ArrayList<>();
+    private final List<Integer> notAlwaysInRadius = new ArrayList<>();
 
     @Override
     public void onDisable() {
@@ -103,8 +102,8 @@ public class AntiBot extends Module {
                 if (entity.isInvisible() && !invisible.contains(entity.getEntityId()))
                     invisible.add(entity.getEntityId());
 
-                if (!notAllwaysInRadius.contains(entity.getEntityId()) && mc.thePlayer.getDistanceToEntity(entity) > allwaysMinRadiusValue.get()) {
-                    notAllwaysInRadius.add(entity.getEntityId());
+                if (!notAlwaysInRadius.contains(entity.getEntityId()) && mc.thePlayer.getDistanceToEntity(entity) > allwaysMinRadiusValue.get()) {
+                    notAlwaysInRadius.add(entity.getEntityId());
                 }
             }
         }
@@ -137,7 +136,7 @@ public class AntiBot extends Module {
         ground.clear();
         invalidGround.clear();
         invisible.clear();
-        notAllwaysInRadius.clear();
+        notAlwaysInRadius.clear();
     }
 
     public static boolean isBot(final EntityLivingBase entity) {
@@ -232,7 +231,7 @@ public class AntiBot extends Module {
                 return true;
         }
 
-        if (antiBot.allwaysInRadiusValue.get() && !antiBot.notAllwaysInRadius.contains(entity.getEntityId()))
+        if (antiBot.allwaysInRadiusValue.get() && !antiBot.notAlwaysInRadius.contains(entity.getEntityId()))
             return true;
 
         return entity.getName().isEmpty() || entity.getName().equals(mc.thePlayer.getName());
