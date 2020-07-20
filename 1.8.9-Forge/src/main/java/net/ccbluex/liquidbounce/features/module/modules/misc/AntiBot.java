@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
+import net.ccbluex.liquidbounce.value.FloatValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
 import net.ccbluex.liquidbounce.value.ListValue;
 import net.minecraft.client.network.NetworkPlayerInfo;
@@ -34,7 +35,7 @@ import java.util.Map;
 @ModuleInfo(name = "AntiBot", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
 public class AntiBot extends Module {
     private final BoolValue tabValue = new BoolValue("Tab", true);
-    private final ListValue tabModeValue = new ListValue("TabMode", new String[] {"Equals", "Contains"}, "Contains");
+    private final ListValue tabModeValue = new ListValue("TabMode", new String[]{"Equals", "Contains"}, "Contains");
     private final BoolValue entityIDValue = new BoolValue("EntityID", true);
     private final BoolValue colorValue = new BoolValue("Color", false);
     private final BoolValue livingTimeValue = new BoolValue("LivingTime", false);
@@ -51,6 +52,8 @@ public class AntiBot extends Module {
     private final BoolValue needHitValue = new BoolValue("NeedHit", false);
     private final BoolValue duplicateInWorldValue = new BoolValue("DuplicateInWorld", false);
     private final BoolValue duplicateInTabValue = new BoolValue("DuplicateInTab", false);
+    private final BoolValue allwaysInRadiusValue = new BoolValue("AllwaysInRadius", false);
+    private final FloatValue allwaysRadiusValue = new FloatValue("AllwaysRadius", 7F, 0F, 20F);
 
     private final List<Integer> ground = new ArrayList<>();
     private final List<Integer> air = new ArrayList<>();
@@ -58,6 +61,7 @@ public class AntiBot extends Module {
     private final List<Integer> swing = new ArrayList<>();
     private final List<Integer> invisible = new ArrayList<>();
     private final List<Integer> hitted = new ArrayList<>();
+    private final List<Integer> notAllwaysInRadius = new ArrayList<>();
 
     @Override
     public void onDisable() {
@@ -67,26 +71,26 @@ public class AntiBot extends Module {
 
     @EventTarget
     public void onPacket(final PacketEvent event) {
-        if(mc.thePlayer == null || mc.theWorld == null)
+        if (mc.thePlayer == null || mc.theWorld == null)
             return;
 
         final Packet<?> packet = event.getPacket();
 
-        if(packet instanceof S14PacketEntity) {
+        if (packet instanceof S14PacketEntity) {
             final S14PacketEntity packetEntity = (S14PacketEntity) event.getPacket();
             final Entity entity = packetEntity.getEntity(mc.theWorld);
 
-            if(entity instanceof EntityPlayer) {
-                if(packetEntity.getOnGround() && !ground.contains(entity.getEntityId()))
+            if (entity instanceof EntityPlayer) {
+                if (packetEntity.getOnGround() && !ground.contains(entity.getEntityId()))
                     ground.add(entity.getEntityId());
 
-                if(!packetEntity.getOnGround() && !air.contains(entity.getEntityId()))
+                if (!packetEntity.getOnGround() && !air.contains(entity.getEntityId()))
                     air.add(entity.getEntityId());
 
-                if(packetEntity.getOnGround()) {
-                    if(entity.prevPosY != entity.posY)
+                if (packetEntity.getOnGround()) {
+                    if (entity.prevPosY != entity.posY)
                         invalidGround.put(entity.getEntityId(), invalidGround.getOrDefault(entity.getEntityId(), 0) + 1);
-                }else{
+                } else {
                     final int currentVL = invalidGround.getOrDefault(entity.getEntityId(), 0) / 2;
 
                     if (currentVL <= 0)
@@ -95,16 +99,20 @@ public class AntiBot extends Module {
                         invalidGround.put(entity.getEntityId(), currentVL);
                 }
 
-                if(entity.isInvisible() && !invisible.contains(entity.getEntityId()))
+                if (entity.isInvisible() && !invisible.contains(entity.getEntityId()))
                     invisible.add(entity.getEntityId());
+
+                if (allwaysInRadiusValue.get() && mc.thePlayer.getDistanceToEntity(entity) > allwaysRadiusValue.get()) {
+                    notAllwaysInRadius.add(entity.getEntityId());
+                }
             }
         }
 
-        if(packet instanceof S0BPacketAnimation) {
+        if (packet instanceof S0BPacketAnimation) {
             final S0BPacketAnimation packetAnimation = (S0BPacketAnimation) event.getPacket();
             final Entity entity = mc.theWorld.getEntityByID(packetAnimation.getEntityID());
 
-            if(entity instanceof EntityLivingBase && packetAnimation.getAnimationType() == 0 && !swing.contains(entity.getEntityId()))
+            if (entity instanceof EntityLivingBase && packetAnimation.getAnimationType() == 0 && !swing.contains(entity.getEntityId()))
                 swing.add(entity.getEntityId());
         }
     }
@@ -113,7 +121,7 @@ public class AntiBot extends Module {
     public void onAttack(final AttackEvent e) {
         final Entity entity = e.getTargetEntity();
 
-        if(entity instanceof EntityLivingBase && !hitted.contains(entity.getEntityId()))
+        if (entity instanceof EntityLivingBase && !hitted.contains(entity.getEntityId()))
             hitted.add(entity.getEntityId());
     }
 
@@ -128,6 +136,7 @@ public class AntiBot extends Module {
         ground.clear();
         invalidGround.clear();
         invisible.clear();
+        notAllwaysInRadius.clear();
     }
 
     public static boolean isBot(final EntityLivingBase entity) {
@@ -152,22 +161,22 @@ public class AntiBot extends Module {
         if (antiBot.airValue.get() && !antiBot.air.contains(entity.getEntityId()))
             return true;
 
-        if(antiBot.swingValue.get() && !antiBot.swing.contains(entity.getEntityId()))
+        if (antiBot.swingValue.get() && !antiBot.swing.contains(entity.getEntityId()))
             return true;
 
-        if(antiBot.healthValue.get() && entity.getHealth() > 20F)
+        if (antiBot.healthValue.get() && entity.getHealth() > 20F)
             return true;
 
-        if(antiBot.entityIDValue.get() && (entity.getEntityId() >= 1000000000 || entity.getEntityId() <= -1))
+        if (antiBot.entityIDValue.get() && (entity.getEntityId() >= 1000000000 || entity.getEntityId() <= -1))
             return true;
 
-        if(antiBot.derpValue.get() && (entity.rotationPitch > 90F || entity.rotationPitch < -90F))
+        if (antiBot.derpValue.get() && (entity.rotationPitch > 90F || entity.rotationPitch < -90F))
             return true;
 
-        if(antiBot.wasInvisibleValue.get() && antiBot.invisible.contains(entity.getEntityId()))
+        if (antiBot.wasInvisibleValue.get() && antiBot.invisible.contains(entity.getEntityId()))
             return true;
 
-        if(antiBot.armorValue.get()) {
+        if (antiBot.armorValue.get()) {
             final EntityPlayer player = (EntityPlayer) entity;
 
             if (player.inventory.armorInventory[0] == null && player.inventory.armorInventory[1] == null &&
@@ -175,20 +184,20 @@ public class AntiBot extends Module {
                 return true;
         }
 
-        if(antiBot.pingValue.get()) {
+        if (antiBot.pingValue.get()) {
             EntityPlayer player = (EntityPlayer) entity;
 
-            if(mc.getNetHandler().getPlayerInfo(player.getUniqueID()).getResponseTime() == 0)
+            if (mc.getNetHandler().getPlayerInfo(player.getUniqueID()).getResponseTime() == 0)
                 return true;
         }
 
-        if(antiBot.needHitValue.get() && !antiBot.hitted.contains(entity.getEntityId()))
+        if (antiBot.needHitValue.get() && !antiBot.hitted.contains(entity.getEntityId()))
             return true;
 
-        if(antiBot.invalidGroundValue.get() && antiBot.invalidGround.getOrDefault(entity.getEntityId(), 0) >= 10)
+        if (antiBot.invalidGroundValue.get() && antiBot.invalidGround.getOrDefault(entity.getEntityId(), 0) >= 10)
             return true;
 
-        if(antiBot.tabValue.get()) {
+        if (antiBot.tabValue.get()) {
             final boolean equals = antiBot.tabModeValue.get().equalsIgnoreCase("Equals");
             final String targetName = ColorUtils.stripColor(entity.getDisplayName().getFormattedText());
 
@@ -207,7 +216,7 @@ public class AntiBot extends Module {
             }
         }
 
-        if(antiBot.duplicateInWorldValue.get()) {
+        if (antiBot.duplicateInWorldValue.get()) {
             if (mc.theWorld.loadedEntityList.stream()
                     .filter(currEntity -> currEntity instanceof EntityPlayer && ((EntityPlayer) currEntity)
                             .getDisplayNameString().equals(((EntityPlayer) currEntity).getDisplayNameString()))
@@ -215,12 +224,15 @@ public class AntiBot extends Module {
                 return true;
         }
 
-        if(antiBot.duplicateInTabValue.get()) {
+        if (antiBot.duplicateInTabValue.get()) {
             if (mc.getNetHandler().getPlayerInfoMap().stream()
                     .filter(networkPlayer -> entity.getName().equals(ColorUtils.stripColor(EntityUtils.getName(networkPlayer))))
                     .count() > 1)
                 return true;
         }
+
+        if (antiBot.allwaysInRadiusValue.get() && !antiBot.notAllwaysInRadius.contains(entity.getEntityId()))
+            return true;
 
         return entity.getName().isEmpty() || entity.getName().equals(mc.thePlayer.getName());
     }
