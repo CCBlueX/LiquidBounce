@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.event.WorldEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
+import net.ccbluex.liquidbounce.script.api.global.Chat;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
@@ -53,7 +54,7 @@ public class AntiBot extends Module {
     private final BoolValue duplicateInWorldValue = new BoolValue("DuplicateInWorld", false);
     private final BoolValue duplicateInTabValue = new BoolValue("DuplicateInTab", false);
     private final BoolValue allwaysInRadiusValue = new BoolValue("AllwaysInRadius", false);
-    private final FloatValue allwaysRadiusValue = new FloatValue("AllwaysRadius", 7F, 0F, 20F);
+    private final FloatValue allwaysMinRadiusValue = new FloatValue("AllwaysInRadiusBlocks", 20F, 5F, 30F);
 
     private final List<Integer> ground = new ArrayList<>();
     private final List<Integer> air = new ArrayList<>();
@@ -102,7 +103,7 @@ public class AntiBot extends Module {
                 if (entity.isInvisible() && !invisible.contains(entity.getEntityId()))
                     invisible.add(entity.getEntityId());
 
-                if (allwaysInRadiusValue.get() && mc.thePlayer.getDistanceToEntity(entity) > allwaysRadiusValue.get()) {
+                if (!notAllwaysInRadius.contains(entity.getEntityId()) && mc.thePlayer.getDistanceToEntity(entity) > allwaysMinRadiusValue.get()) {
                     notAllwaysInRadius.add(entity.getEntityId());
                 }
             }
