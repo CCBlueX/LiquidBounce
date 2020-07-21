@@ -56,10 +56,9 @@ public abstract class MixinGuiInGame extends MixinGui {
         final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
 
         if (Minecraft.getMinecraft().getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.getBlackHotbarValue().get()) {
-
             EntityPlayer entityPlayer = (EntityPlayer) this.mc.getRenderViewEntity();
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            ItemStack itemstack = entityPlayer.getHeldItemOffhand();
+            ItemStack offHandItemStack = entityPlayer.getHeldItemOffhand();
             EnumHandSide enumhandside = entityPlayer.getPrimaryHand().opposite();
             int middleScreen = sr.getScaledWidth() / 2;
             float f = this.zLevel;
@@ -73,12 +72,17 @@ public abstract class MixinGuiInGame extends MixinGui {
 
             this.mc.getTextureManager().bindTexture(WIDGETS_TEX_PATH);
 
-            if (!itemstack.isEmpty()) {
+            if (!offHandItemStack.isEmpty()) {
+                int x;
+
                 if (enumhandside == EnumHandSide.LEFT) {
-                    this.drawTexturedModalRect(middleScreen - 91 - 29, sr.getScaledHeight() - 23, 24, 22, 29, 24);
+                    x = middleScreen - 91 - 29;
                 } else {
-                    this.drawTexturedModalRect(middleScreen + 91, sr.getScaledHeight() - 23, 53, 22, 29, 24);
+                    x = middleScreen + 91;
                 }
+
+                int y = sr.getScaledHeight() - 23;
+                GuiIngame.drawRect(x, y, x + 29, y + 24, Integer.MIN_VALUE);
             }
 
             this.zLevel = f;
@@ -93,13 +97,13 @@ public abstract class MixinGuiInGame extends MixinGui {
                 this.renderHotbarItem(i1, j1, partialTicks, entityPlayer, entityPlayer.inventory.mainInventory.get(l));
             }
 
-            if (!itemstack.isEmpty()) {
+            if (!offHandItemStack.isEmpty()) {
                 int l1 = sr.getScaledHeight() - 16 - 3;
 
                 if (enumhandside == EnumHandSide.LEFT) {
-                    this.renderHotbarItem(middleScreen - 91 - 26, l1, partialTicks, entityPlayer, itemstack);
+                    this.renderHotbarItem(middleScreen - 91 - 26, l1, partialTicks, entityPlayer, offHandItemStack);
                 } else {
-                    this.renderHotbarItem(middleScreen + 91 + 10, l1, partialTicks, entityPlayer, itemstack);
+                    this.renderHotbarItem(middleScreen + 91 + 10, l1, partialTicks, entityPlayer, offHandItemStack);
                 }
             }
 
@@ -125,12 +129,19 @@ public abstract class MixinGuiInGame extends MixinGui {
             RenderHelper.disableStandardItemLighting();
             GlStateManager.disableRescaleNormal();
             GlStateManager.disableBlend();
+
+            callRender2DEvent(partialTicks);
+            callbackInfo.cancel();
         }
     }
 
 
     @Inject(method = "renderHotbar", at = @At("RETURN"))
     private void renderTooltipPost(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
+        callRender2DEvent(partialTicks);
+    }
+
+    private void callRender2DEvent(float partialTicks) {
         if (!ClassUtils.hasClass("net.labymod.api.LabyModAPI")) {
             LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
             AWTFontRenderer.Companion.garbageCollectionTick();

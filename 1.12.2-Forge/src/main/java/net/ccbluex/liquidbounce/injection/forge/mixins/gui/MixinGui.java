@@ -10,5 +10,5 @@ public abstract class MixinGui {
     protected float zLevel;
 
     @Shadow
-    public abstract void drawTexturedModalRect(int p_drawTexturedModalRect_1_, int p_drawTexturedModalRect_2_, int p_drawTexturedModalRect_3_, int p_drawTexturedModalRect_4_, int p_drawTexturedModalRect_5_, int p_drawTexturedModalRect_6_);
+    public abstract void drawTexturedModalRect(int x, int y, int textureX, int textureY, int width, int height);
 }

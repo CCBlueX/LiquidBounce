@@ -43,7 +43,10 @@ public class MixinResourcePackRepository {
             for (File resourcePackFile : resourcePacksInFolder) {
                 if (count++ >= 10) {
                     LOGGER.info("Deleting old server resource pack " + resourcePackFile.getName());
-                    FileUtils.deleteQuietly(resourcePackFile);
+                    try {
+                        resourcePackFile.delete();
+                    } catch (Throwable ignored) {
+                    }
                 }
             }
         } catch (final Throwable e) {

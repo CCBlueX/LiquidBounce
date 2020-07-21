@@ -24,7 +24,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
     override fun initGui() {
         representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 145, "Back"))
 
-        thread { loadInformations() }
+        thread { loadInformation() }
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
@@ -38,8 +38,8 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
         } else {
             for (server in status.keys) {
                 val color = status[server]
-                Fonts.font40.drawCenteredString("§c§l$server: ${if (color.equals("red", ignoreCase = true)) "§c" else if (color.equals("yellow", ignoreCase = true)) "§e" else "§a"}${if (color.equals("red", ignoreCase = true)) "Offline" else if (color.equals("yellow", ignoreCase = true)) "Slow" else "Online"}", representedScreen.width / 2.0f, i.toFloat(), Color.WHITE.rgb)
-                i += Fonts.font40.fontHeight.toInt()
+                Fonts.font40.drawCenteredString("$server: ${if (color.equals("red", ignoreCase = true)) "§c" else if (color.equals("yellow", ignoreCase = true)) "§e" else "§a"}${if (color.equals("red", ignoreCase = true)) "Offline" else if (color.equals("yellow", ignoreCase = true)) "Slow" else "Online"}", representedScreen.width / 2.0f, i.toFloat(), Color.WHITE.rgb)
+                i += Fonts.font40.fontHeight
             }
         }
 
@@ -48,7 +48,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
-    private fun loadInformations() {
+    private fun loadInformation() {
         status.clear()
 
         try {

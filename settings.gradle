@@ -1,4 +1,9 @@
 rootProject.name = 'LiquidBounce'
-include '1.12.2-Forge'
-//include '1.8.9-Forge'
+
+if (System.getenv()['mcversion'] == "1.12") {
+    include '1.12.2-Forge'
+} else {
+    include '1.8.9-Forge'
+}
+
 // include '1.8.9-Vanilla'

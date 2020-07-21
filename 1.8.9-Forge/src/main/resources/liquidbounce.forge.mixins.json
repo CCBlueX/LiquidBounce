@@ -19,6 +19,8 @@
     "entity.MixinEntityPlayer",
     "entity.MixinEntityPlayerSP",
     "entity.MixinPlayerControllerMP",
+    "fml.MixinSplashProgress",
+    "fml.MixinSplashProgressAC3",
     "gui.MixinGuiButton",
     "gui.MixinGuiButtonExt",
     "gui.MixinGuiChat",

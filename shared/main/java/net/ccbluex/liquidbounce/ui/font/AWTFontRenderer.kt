@@ -21,8 +21,7 @@ import java.awt.image.BufferedImage
  * Generate new bitmap based font renderer
  */
 @SideOnly(Side.CLIENT)
-class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) : MinecraftInstance() {
-
+class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, var loadingScreen: Boolean = false) : MinecraftInstance() {
     companion object {
         var assumeNonVolatile: Boolean = false
         val activeFontRenderers: ArrayList<AWTFontRenderer> = ArrayList()
@@ -57,7 +56,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) :
 
     private val cachedStrings: HashMap<String, CachedFont> = HashMap()
 
-    private var textureID = 0
+    private var textureID = -1
     private var textureWidth = 0
     private var textureHeight = 0
 
@@ -85,7 +84,11 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) :
         GL11.glPushMatrix()
         GL11.glScaled(scale, scale, scale)
         GL11.glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
-        classProvider.getGlStateManager().bindTexture(textureID)
+
+        if (this.loadingScreen)
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+        else
+            classProvider.getGlStateManager().bindTexture(textureID)
 
         val red: Float = (color shr 16 and 0xff) / 255F
         val green: Float = (color shr 8 and 0xff) / 255F
@@ -128,7 +131,12 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) :
                 currX += mc.fontRendererObj.getStringWidth("$char") * reverse
 
                 GL11.glScaled(scale, scale, scale)
-                classProvider.getGlStateManager().bindTexture(textureID)
+
+                if (this.loadingScreen)
+                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+                else
+                    classProvider.getGlStateManager().bindTexture(textureID)
+
                 GL11.glColor4f(red, green, blue, alpha)
 
                 GL11.glBegin(GL11.GL_QUADS)
@@ -280,6 +288,19 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255) :
         }
 
         return width / 2
+    }
+
+    fun delete() {
+        if (textureID != -1) {
+            GL11.glDeleteTextures(textureID)
+            textureID = -1
+        }
+
+        activeFontRenderers.remove(this)
+    }
+
+    fun finalize() {
+        delete()
     }
 
     /**

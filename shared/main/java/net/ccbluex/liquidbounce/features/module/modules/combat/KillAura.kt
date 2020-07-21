@@ -694,4 +694,7 @@ class KillAura : Module() {
      */
     override val tag: String?
         get() = targetModeValue.get()
+
+    val isBlockingChestAura: Boolean
+        get() = state && target != null
 }

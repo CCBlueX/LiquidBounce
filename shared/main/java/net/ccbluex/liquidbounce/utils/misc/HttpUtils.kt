@@ -6,8 +6,9 @@
 
 package net.ccbluex.liquidbounce.utils.misc
 
-import org.apache.commons.io.FileUtils
+import com.google.common.io.ByteStreams
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
@@ -66,6 +67,6 @@ object HttpUtils {
 
     @Throws(IOException::class)
     @JvmStatic
-    fun download(url: String, file: File) = FileUtils.copyInputStreamToFile(make(url, "GET").inputStream, file)
+    fun download(url: String, file: File) = FileOutputStream(file).use { ByteStreams.copy(make(url, "GET").inputStream, it) }
 
 }

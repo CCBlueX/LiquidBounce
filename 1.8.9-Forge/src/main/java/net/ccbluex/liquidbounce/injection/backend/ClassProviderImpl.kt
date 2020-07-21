@@ -47,6 +47,7 @@ import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
 import net.ccbluex.liquidbounce.injection.backend.utils.*
+import net.ccbluex.liquidbounce.injection.backend.utils.SafeVertexBuffer
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.minecraft.block.*
@@ -86,6 +87,7 @@ import net.minecraft.nbt.NBTTagList
 import net.minecraft.nbt.NBTTagString
 import net.minecraft.network.PacketBuffer
 import net.minecraft.network.handshake.client.C00Handshake
+import net.minecraft.network.login.client.C01PacketEncryptionResponse
 import net.minecraft.network.play.client.*
 import net.minecraft.network.play.server.*
 import net.minecraft.potion.Potion
@@ -242,6 +244,7 @@ object ClassProviderImpl : IClassProvider {
     override fun isEntityFallingBlock(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityFallingBlock
 
     override fun isEntityMinecartChest(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMinecartChest
+    override fun isEntityShulker(obj: Any?): Boolean = false
 
     override fun isTileEntityChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityChest
 
@@ -563,12 +566,10 @@ object ClassProviderImpl : IClassProvider {
     }
 
     override fun getGlStateManager(): IGlStateManager = GlStateManagerImpl
-    override fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket = PacketImpl(C01PacketEncryptionResponse(secretKey, publicKey, VerifyToken))
 
-    override fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*> {
-        TODO("Not yet implemented")
-    }
+    override fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*> = Backend.BACKEND_UNSUPPORTED()
+
+    override fun isTileEntityShulkerBox(obj: Any?): Boolean = false
 
 }

@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
@@ -43,7 +44,7 @@ object ChestAura : Module() {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        if (LiquidBounce.moduleManager[Blink::class.java]!!.state)
+        if (LiquidBounce.moduleManager[Blink::class.java].state || (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).isBlockingChestAura)
             return
 
         val thePlayer = mc.thePlayer!!
