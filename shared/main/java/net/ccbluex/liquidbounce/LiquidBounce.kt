@@ -102,12 +102,13 @@ object LiquidBounce {
         moduleManager = ModuleManager()
         moduleManager.registerModules()
 
-        // Remapper
         try {
+            // Remapper
             loadSrg()
 
             // ScriptManager
             scriptManager = ScriptManager()
+            scriptManager.refreshAuthority()
             scriptManager.loadScripts()
             scriptManager.enableScripts()
         } catch (throwable: Throwable) {

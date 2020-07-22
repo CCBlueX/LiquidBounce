@@ -22,7 +22,7 @@ import java.util.Iterator;
 
 import static org.lwjgl.opengl.GL11.*;
 
-@Mixin(targets = "net/minecraftforge/fml/client/SplashProgress$3")
+@Mixin(targets = "net/minecraftforge/fml/client/SplashProgress$3", remap = false)
 public abstract class MixinSplashProgressAC3 {
     private final EasingObject[] easingObjects = new EasingObject[3];
 

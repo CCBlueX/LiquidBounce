@@ -334,7 +334,7 @@ public class Scaffold extends Module {
                 return;
 
             mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36));
-            itemStack = mc.getThePlayer().getInventory().getStackInSlot(blockSlot);
+            itemStack = mc.getThePlayer().getInventoryContainer().getSlot(blockSlot).getStack();
         }
 
 
@@ -538,7 +538,9 @@ public class Scaffold extends Module {
             if (itemStack != null && classProvider.isItemBlock(itemStack.getItem())) {
                 final IBlock block = (itemStack.getItem().asItemBlock()).getBlock();
 
-                if (mc.getThePlayer().getHeldItem().equals(itemStack) || !InventoryUtils.BLOCK_BLACKLIST.contains(block))
+                IItemStack heldItem = mc.getThePlayer().getHeldItem();
+
+                if (heldItem != null && heldItem.equals(itemStack) || !InventoryUtils.BLOCK_BLACKLIST.contains(block))
                     amount += itemStack.getStackSize();
             }
         }
