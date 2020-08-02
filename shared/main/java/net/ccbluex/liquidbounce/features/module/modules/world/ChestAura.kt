@@ -83,7 +83,7 @@ object ChestAura : Module() {
             }
 
             EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get().toLong())) {
-                if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld!!, thePlayer.heldItem!!, currentBlock!!,
+                if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld!!, thePlayer.heldItem, currentBlock!!,
                                 classProvider.getEnumFacing(EnumFacingType.DOWN), currentBlock!!.getVec())) {
                     if (visualSwing.get())
                         thePlayer.swingItem()
