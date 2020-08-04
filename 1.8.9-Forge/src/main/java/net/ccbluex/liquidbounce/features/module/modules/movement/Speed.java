@@ -102,6 +102,7 @@ public class Speed extends Module {
     public final BoolValue customStrafeValue = new BoolValue("CustomStrafe", true);
     public final BoolValue resetXZValue = new BoolValue("CustomResetXZ", false);
     public final BoolValue resetYValue = new BoolValue("CustomResetY", false);
+    public final BoolValue HypixelSpoof = new BoolValue("HypixelSpoof", false);
 
     public final FloatValue portMax = new FloatValue("AAC-PortLength", 1, 1, 20);
     public final FloatValue aacGroundTimerValue = new FloatValue("AACGround-Timer", 3F, 1.1F, 10F);
