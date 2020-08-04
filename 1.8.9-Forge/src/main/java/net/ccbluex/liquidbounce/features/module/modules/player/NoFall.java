@@ -168,6 +168,7 @@ public class NoFall extends Module {
                           && !mc.thePlayer.isOnLadder() 
                             && mc.thePlayer.fallDistance > 2
                                 && !mc.thePlayer.isInWater() && !mc.thePlayer.isInWeb){
+            //credit -> kody and niviaC
             //Don't implement nofall on Liquid
                 if (BlockUtils.collideBlock(mc.thePlayer.getEntityBoundingBox(), block -> block instanceof BlockLiquid) ||
                     BlockUtils.collideBlock(new AxisAlignedBB(mc.thePlayer.getEntityBoundingBox().maxX, mc.thePlayer.getEntityBoundingBox().maxY, mc.thePlayer.getEntityBoundingBox().maxZ, mc.thePlayer.getEntityBoundingBox().minX, mc.thePlayer.getEntityBoundingBox().minY - 0.01D, mc.thePlayer.getEntityBoundingBox().minZ), block -> block instanceof BlockLiquid))
