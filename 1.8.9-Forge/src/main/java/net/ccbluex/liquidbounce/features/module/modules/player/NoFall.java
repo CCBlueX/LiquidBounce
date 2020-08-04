@@ -31,7 +31,7 @@ import net.minecraft.util.*;
 
 @ModuleInfo(name = "NoFall", description = "Prevents you from taking fall damage.", category = ModuleCategory.PLAYER)
 public class NoFall extends Module {
-    public final ListValue modeValue = new ListValue("Mode", new String[]{"SpoofGround", "NoGround", "Packet", "MLG", "AAC", "LAAC", "AAC3.3.11", "AAC3.3.15", "Spartan", "CubeCraft", "Hypixel"}, "SpoofGround");
+    public final ListValue modeValue = new ListValue("Mode", new String[]{"SpoofGround", "NoGround", "Packet", "HypixelLatest", "MLG", "AAC", "LAAC", "AAC3.3.11", "AAC3.3.15", "Spartan", "CubeCraft", "Hypixel"}, "SpoofGround");
     private final FloatValue minFallDistance = new FloatValue("MinMLGHeight", 5F, 2F, 50F);
     private final TickTimer spartanTimer = new TickTimer();
     private final TickTimer mlgTimer = new TickTimer();
@@ -162,6 +162,21 @@ public class NoFall extends Module {
 
     @EventTarget
     private void onMotionUpdate(MotionEvent event) {
+        if (modeValue.get().equalsIgnoreCase("HypixelLatest")
+                    && event.getEventState() == EventState.PRE 
+                      && !mc.thePlayer.onGround 
+                          && !mc.thePlayer.isOnLadder() 
+                            && mc.thePlayer.fallDistance > 2
+                                && !mc.thePlayer.isInWater() && !mc.thePlayer.isInWeb){
+            //Don't implement nofall on Liquid
+                if (BlockUtils.collideBlock(mc.thePlayer.getEntityBoundingBox(), block -> block instanceof BlockLiquid) ||
+                    BlockUtils.collideBlock(new AxisAlignedBB(mc.thePlayer.getEntityBoundingBox().maxX, mc.thePlayer.getEntityBoundingBox().maxY, mc.thePlayer.getEntityBoundingBox().maxZ, mc.thePlayer.getEntityBoundingBox().minX, mc.thePlayer.getEntityBoundingBox().minY - 0.01D, mc.thePlayer.getEntityBoundingBox().minZ), block -> block instanceof BlockLiquid))
+                return;
+                 mc.getNetHandler().addToSendQueue(new C03PacketPlayer(true));
+                 mc.getNetHandler().addToSendQueue(new C03PacketPlayer(mc.thePlayer.onGround));
+        }
+
+
         if (!modeValue.get().equalsIgnoreCase("MLG"))
             return;
 
