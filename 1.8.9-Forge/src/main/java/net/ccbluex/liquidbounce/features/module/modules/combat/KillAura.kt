@@ -90,6 +90,7 @@ class KillAura : Module() {
 
     // AutoBlock
     private val autoBlockValue = BoolValue("AutoBlock", false)
+    private val autoBlockModeValue = ListValue("BlockMode", arrayOf("Hypixel", "Normal"), "Normal")    
     private val interactAutoBlockValue = BoolValue("InteractAutoBlock", true)
     private val delayedBlockValue = BoolValue("DelayedBlock", true)
     private val blockRate = IntegerValue("BlockRate", 100, 1, 100)
@@ -628,7 +629,11 @@ class KillAura : Module() {
             mc.netHandler.addToSendQueue(C02PacketUseEntity(interactEntity, C02PacketUseEntity.Action.INTERACT))
         }
 
-        mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getCurrentItem()))
+        if(autoBlockModeValue.get().equals("Hypixel", ignoreCase = true))
+                mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(new BlockPos(-1, -1, -1),
+					255, Minecraft.thePlayer.inventory.getCurrentItem(), 0, 0, 0))
+            else
+                mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(Minecraft.thePlayer.inventory.getCurrentItem()))
         blockingStatus = true
     }
 
