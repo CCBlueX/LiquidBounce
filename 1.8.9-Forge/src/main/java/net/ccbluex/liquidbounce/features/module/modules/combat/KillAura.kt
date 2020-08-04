@@ -631,7 +631,7 @@ class KillAura : Module() {
 
         if(autoBlockModeValue.get().equals("Hypixel", ignoreCase = true))
                 mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(new BlockPos(-1, -1, -1),
-					255, Minecraft.thePlayer.inventory.getCurrentItem(), 0, 0, 0))
+					255, mc.thePlayer.inventory.getCurrentItem(), 0, 0, 0))
             else
                 mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(Minecraft.thePlayer.inventory.getCurrentItem()))
         blockingStatus = true
