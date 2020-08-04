@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sneak;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
+import net.ccbluex.liquidbounce.features.module.modules.movement.Speed;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
@@ -142,6 +143,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
             final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.getModule(InventoryMove.class);
             final Sneak sneak = (Sneak) LiquidBounce.moduleManager.getModule(Sneak.class);
+            final Sneak speed = (Speed) LiquidBounce.moduleManager.getModule(Speed.class);
             final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || LiquidBounce.moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
 
             boolean sprinting = this.isSprinting() && !fakeSprint;
@@ -191,16 +193,17 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 double pitchDiff = (double) (pitch - lastReportedPitch);
                 boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || this.positionUpdateTicks >= 20;
                 boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
-
+                boolean shouldspoof = speed.getState() && speed.HypixelSpoof.get() && this.onGround;
+                
                 if (this.ridingEntity == null) {
                     if (moved && rotated) {
-                        this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.posX, this.getEntityBoundingBox().minY, this.posZ, yaw, pitch, this.onGround));
+                        this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.posX, shouldspoof ? this.getEntityBoundingBox().minY + ThreadLocalRandom.current().nextFloat() / 1000 : this.getEntityBoundingBox().minY, this.posZ, yaw, pitch, shouldspoof ? false : this.onGround));
                     } else if (moved) {
-                        this.sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(this.posX, this.getEntityBoundingBox().minY, this.posZ, this.onGround));
+                        this.sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(this.posX, shouldspoof ? this.getEntityBoundingBox().minY + ThreadLocalRandom.current().nextFloat() / 1000 : this.getEntityBoundingBox().minY, this.posZ, shouldspoof ? false : this.onGround));
                     } else if (rotated) {
-                        this.sendQueue.addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, this.onGround));
+                        this.sendQueue.addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, shouldspoof ? false : this.onGround));
                     } else {
-                        this.sendQueue.addToSendQueue(new C03PacketPlayer(this.onGround));
+                        this.sendQueue.addToSendQueue(new C03PacketPlayer(shouldspoof ? false : this.onGround));
                     }
                 } else {
                     this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.motionX, -999.0D, this.motionZ, yaw, pitch, this.onGround));
