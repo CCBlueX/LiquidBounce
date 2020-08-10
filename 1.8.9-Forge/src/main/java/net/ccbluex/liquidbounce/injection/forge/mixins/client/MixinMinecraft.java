@@ -16,7 +16,9 @@ import net.ccbluex.liquidbounce.injection.backend.GuiScreenImplKt;
 import net.ccbluex.liquidbounce.injection.backend.WorldClientImplKt;
 import net.ccbluex.liquidbounce.injection.backend.WrapperImpl;
 import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtentionsKt;
+import net.ccbluex.liquidbounce.injection.forge.SplashProgressLock;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
+import net.ccbluex.liquidbounce.ui.client.GuiUnsignedScripts;
 import net.ccbluex.liquidbounce.ui.client.GuiUpdate;
 import net.ccbluex.liquidbounce.ui.client.GuiWelcome;
 import net.ccbluex.liquidbounce.utils.CPSCounter;
@@ -109,9 +111,26 @@ public abstract class MixinMinecraft {
         LiquidBounce.INSTANCE.startClient();
     }
 
+    @Inject(method = "startGame", at = @At(value = "NEW", target = "net/minecraft/client/renderer/texture/TextureManager"))
+    private void waitForLock(CallbackInfo ci) {
+        long end = System.currentTimeMillis() + 20000;
+
+        while (end < System.currentTimeMillis() && SplashProgressLock.INSTANCE.isAnimationRunning()) {
+            synchronized (SplashProgressLock.INSTANCE) {
+                try {
+                    SplashProgressLock.INSTANCE.wait(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     @Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;displayGuiScreen(Lnet/minecraft/client/gui/GuiScreen;)V", shift = At.Shift.AFTER))
     private void afterMainScreen(CallbackInfo callbackInfo) {
-        if (LiquidBounce.fileManager.firstStart)
+        if (!LiquidBounce.scriptManager.getLateInitScripts().isEmpty())
+            LiquidBounce.wrapper.getMinecraft().displayGuiScreen(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiUnsignedScripts()));
+        else if (LiquidBounce.fileManager.firstStart)
             LiquidBounce.wrapper.getMinecraft().displayGuiScreen(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiWelcome()));
         else if (LiquidBounce.INSTANCE.getLatestVersion() > LiquidBounce.CLIENT_VERSION - (LiquidBounce.IN_DEV ? 1 : 0))
             LiquidBounce.wrapper.getMinecraft().displayGuiScreen(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiUpdate()));

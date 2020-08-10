@@ -12,22 +12,28 @@ import jdk.nashorn.api.scripting.ScriptUtils
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.script.api.*
+import net.ccbluex.liquidbounce.script.api.ScriptCommand
+import net.ccbluex.liquidbounce.script.api.ScriptModule
+import net.ccbluex.liquidbounce.script.api.ScriptTab
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.script.api.global.Item
 import net.ccbluex.liquidbounce.script.api.global.Setting
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.io.File
+import java.nio.charset.Charset
+import java.security.KeyFactory
+import java.security.MessageDigest
+import java.security.spec.X509EncodedKeySpec
 import java.util.*
 import java.util.function.Function
+import javax.crypto.Cipher
 import javax.script.ScriptEngine
 import kotlin.collections.HashMap
 
 class Script(val scriptFile: File) : MinecraftInstance() {
-
     private val scriptEngine: ScriptEngine
-    private val scriptText = scriptFile.readText()
+    private val scriptText: String
 
     // Script information
     lateinit var scriptName: String
@@ -35,11 +41,62 @@ class Script(val scriptFile: File) : MinecraftInstance() {
     lateinit var scriptAuthors: Array<String>
 
     private var state = false
+
     private val events = HashMap<String, JSObject>()
+
     private val registeredModules = mutableListOf<Module>()
     private val registeredCommands = mutableListOf<Command>()
 
+    val isSignatureValid: Boolean
+
+    companion object {
+        /**
+         * Throws an exception when the script is invalid
+         */
+        fun checkSignature(scriptText: String): String {
+            val indexOfLinebreak = scriptText.indexOf('\n')
+            val signature = scriptText.subSequence("// ".length, indexOfLinebreak)
+
+            val split = signature.split(" ")
+
+            val decoder = Base64.getDecoder()
+
+            val publicKey = decoder.decode(split[0])
+            val encryptedSha512Hash = decoder.decode(split[1])
+
+            val rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding")
+            val sha512 = MessageDigest.getInstance("SHA-512")
+
+            rsa.init(Cipher.DECRYPT_MODE, KeyFactory.getInstance("RSA").generatePublic(X509EncodedKeySpec(publicKey)))
+
+            if (!Arrays.equals(sha512.digest(scriptText.substring(indexOfLinebreak + 1, scriptText.length).toByteArray(Charset.forName("UTF-8"))), rsa.doFinal(encryptedSha512Hash))) {
+                throw IllegalStateException("Encrypted hash doesn't match")
+            }
+
+            return scriptText
+        }
+    }
+
     init {
+        var isSignatureValid = false
+
+        var scriptText = scriptFile.readText()
+
+        if (scriptFile.name.endsWith(".signed.js")) {
+            try {
+                checkSignature(scriptText)
+
+                scriptText = scriptText.substring(scriptText.indexOf('\n') + 1)
+
+                isSignatureValid = true
+            } catch (e: Throwable) {
+                throw IllegalStateException("Failed to verify signature", e)
+            }
+        }
+
+        this.isSignatureValid = isSignatureValid
+        this.scriptText = scriptText
+
         val engineFlags = getMagicComment("engine_flags")?.split(",")?.toTypedArray() ?: emptyArray()
         scriptEngine = NashornScriptEngineFactory().getScriptEngine(*engineFlags)
 
@@ -58,10 +115,14 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         scriptEngine.put("registerScript", RegisterScript())
 
         supportLegacyScripts()
+    }
 
+    fun initScript() {
         scriptEngine.eval(scriptText)
 
         callEvent("load")
+
+        ClientUtils.getLogger().info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -130,6 +191,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
             if (!it.startsWith(magicPrefix)) return null
 
             val commentData = it.substring(magicPrefix.length).split("=", limit = 2)
+
             if (commentData.first().trim() == name) {
                 return commentData.last().trim()
             }
@@ -187,7 +249,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
      * @param scriptFile Path to the file to be imported.
      */
     fun import(scriptFile: String) {
-        scriptEngine.eval(File(LiquidBounce.scriptManager.scriptsFolder, scriptFile).readText())
+        scriptEngine.eval(checkSignature(File(LiquidBounce.scriptManager.scriptsFolder, scriptFile).readText()))
     }
 
     /**

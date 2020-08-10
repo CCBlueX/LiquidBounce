@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.fml;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.injection.forge.SplashProgressLock;
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.AnimationLoader;
 import net.ccbluex.liquidbounce.utils.LazySVGRenderer;
@@ -129,6 +130,13 @@ public abstract class MixinSplashProgressAC3 {
             e.printStackTrace();
         }
         //</editor-fold>
+
+        // At this point, minecraft can start it's initialization
+
+        synchronized (SplashProgressLock.INSTANCE) {
+            SplashProgressLock.INSTANCE.setAnimationRunning(false);
+            SplashProgressLock.INSTANCE.notifyAll();
+        }
 
 
 //        glDisable(GL_TEXTURE_2D);

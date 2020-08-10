@@ -117,12 +117,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
                         LiquidBounce.commandManager = CommandManager()
                         LiquidBounce.commandManager.registerCommands()
                         LiquidBounce.isStarting = true
-                        LiquidBounce.scriptManager.disableScripts()
-                        LiquidBounce.scriptManager.unloadScripts()
-                        for(module in LiquidBounce.moduleManager.modules)
-                            LiquidBounce.moduleManager.generateCommand(module)
-                        LiquidBounce.scriptManager.loadScripts()
-                        LiquidBounce.scriptManager.enableScripts()
+                        LiquidBounce.scriptManager.reloadScripts()
                         LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.modulesConfig)
                         LiquidBounce.isStarting = false
                         LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.valuesConfig)

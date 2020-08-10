@@ -487,7 +487,7 @@ public final class RenderUtils extends MinecraftInstance {
     /**
      * Draws a textured rectangle at z = 0. Args: x, y, u, v, width, height, textureWidth, textureHeight
      */
-    public static void drawModalRectWithCustomSizedTexture(int x, int y, float u, float v, int width, int height, float textureWidth, float textureHeight) {
+    public static void drawModalRectWithCustomSizedTexture(float x, float y, float u, float v, float width, float height, float textureWidth, float textureHeight) {
         float f = 1.0F / textureWidth;
         float f1 = 1.0F / textureHeight;
         ITessellator tessellator = classProvider.getTessellatorInstance();

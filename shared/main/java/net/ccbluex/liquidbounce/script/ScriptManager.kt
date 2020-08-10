@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.script
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.file.FileManager
+import net.ccbluex.liquidbounce.ui.client.GuiUnsignedScripts
 import net.ccbluex.liquidbounce.utils.BarrageFile
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
@@ -23,6 +24,11 @@ class ScriptManager {
     private lateinit var allowedPublicKeys: List<ByteArray>
     val scripts = mutableListOf<Script>()
 
+    /**
+     * A list of scripts that are unsigned and require the ok of the user
+     */
+    val lateInitScripts = mutableListOf<Script>()
+
     val scriptsFolder = File(LiquidBounce.fileManager.dir, "scripts")
     private val scriptFileExtension = ".js"
 
@@ -33,7 +39,7 @@ class ScriptManager {
         if (!scriptsFolder.exists())
             scriptsFolder.mkdir()
 
-        scriptsFolder.listFiles(FileFilter { it.name.endsWith(scriptFileExtension) }).forEach { loadScript(it) }
+        scriptsFolder.listFiles(FileFilter { it.name.endsWith(scriptFileExtension) })?.forEach(this@ScriptManager::loadScript)
     }
 
     /**
@@ -48,8 +54,17 @@ class ScriptManager {
      */
     fun loadScript(scriptFile: File) {
         try {
-            scripts.add(Script(scriptFile))
-            ClientUtils.getLogger().info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
+            val script = Script(scriptFile)
+
+            if (script.isSignatureValid) {
+                script.initScript()
+
+                scripts.add(script)
+            } else {
+                lateInitScripts.add(script)
+
+                ClientUtils.getLogger().info("[ScriptAPI] Postponed the initialization of '${scriptFile.name}'.")
+            }
         } catch (t: Throwable) {
             ClientUtils.getLogger().error("[ScriptAPI] Failed to load script '${scriptFile.name}'.", t)
         }
@@ -101,6 +116,8 @@ class ScriptManager {
         unloadScripts()
         loadScripts()
         enableScripts()
+
+        LiquidBounce.wrapper.minecraft.displayGuiScreen(LiquidBounce.wrapper.classProvider.wrapGuiScreen(GuiUnsignedScripts()))
 
         ClientUtils.getLogger().info("[ScriptAPI]  Successfully reloaded scripts.")
     }
