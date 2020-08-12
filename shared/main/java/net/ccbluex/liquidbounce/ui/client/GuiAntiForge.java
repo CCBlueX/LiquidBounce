@@ -70,7 +70,7 @@ public class GuiAntiForge extends WrappedGuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         representedScreen.drawBackground(0);
-        Fonts.fontBold180.drawCenteredString("AntiForge", (int) (representedScreen.getWidth() / 2F), (int) (representedScreen.getHeight() / 8F + 5F), 4673984, true);
+        Fonts.fontBold180.drawCenteredString("AntiForge", (int) (representedScreen.getWidth() / 2F), (int) (representedScreen.getHeight() / 8F + 5F), 0xFFFFFFFF.toInt(), true);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
