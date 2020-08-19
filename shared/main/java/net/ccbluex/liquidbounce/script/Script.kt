@@ -67,6 +67,9 @@ class Script(val scriptFile: File) : MinecraftInstance() {
             val rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding")
             val sha512 = MessageDigest.getInstance("SHA-512")
 
+            if (!LiquidBounce.scriptManager.allowedPublicKeys.any { Arrays.equals(sha512.digest(publicKey), it) })
+                throw IllegalStateException("Unknown public key (Try updating the script)")
+
             rsa.init(Cipher.DECRYPT_MODE, KeyFactory.getInstance("RSA").generatePublic(X509EncodedKeySpec(publicKey)))
 
             if (!Arrays.equals(sha512.digest(scriptText.substring(indexOfLinebreak + 1, scriptText.length).toByteArray(Charset.forName("UTF-8"))), rsa.doFinal(encryptedSha512Hash))) {
@@ -249,7 +252,20 @@ class Script(val scriptFile: File) : MinecraftInstance() {
      * @param scriptFile Path to the file to be imported.
      */
     fun import(scriptFile: String) {
-        scriptEngine.eval(checkSignature(File(LiquidBounce.scriptManager.scriptsFolder, scriptFile).readText()))
+        val fileName = if (isSignatureValid) {
+            if (scriptFile.contains(".")) {
+                val idx = scriptFile.lastIndexOf('.')
+                scriptFile.substring(0, idx) + ".signed" + scriptFile.substring(idx)
+            } else {
+                "$scriptFile.signed"
+            }
+        } else {
+            scriptFile
+        }
+
+        val scriptText = File(LiquidBounce.scriptManager.scriptsFolder, fileName).readText()
+
+        scriptEngine.eval(if (isSignatureValid) checkSignature(scriptText) else scriptText)
     }
 
     /**

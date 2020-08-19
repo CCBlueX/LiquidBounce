@@ -21,7 +21,7 @@ import java.util.*
 
 class ScriptManager {
 
-    private lateinit var allowedPublicKeys: List<ByteArray>
+    lateinit var allowedPublicKeys: List<ByteArray>
     val scripts = mutableListOf<Script>()
 
     /**
@@ -117,7 +117,10 @@ class ScriptManager {
         loadScripts()
         enableScripts()
 
-        LiquidBounce.wrapper.minecraft.displayGuiScreen(LiquidBounce.wrapper.classProvider.wrapGuiScreen(GuiUnsignedScripts()))
+        if (LiquidBounce.scriptManager.lateInitScripts.isNotEmpty()) {
+            LiquidBounce.wrapper.minecraft.displayGuiScreen(LiquidBounce.wrapper.classProvider.wrapGuiScreen(GuiUnsignedScripts()))
+        }
+
 
         ClientUtils.getLogger().info("[ScriptAPI]  Successfully reloaded scripts.")
     }
