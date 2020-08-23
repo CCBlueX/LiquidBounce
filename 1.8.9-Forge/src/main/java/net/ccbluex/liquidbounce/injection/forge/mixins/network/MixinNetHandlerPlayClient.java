@@ -9,6 +9,7 @@ import io.netty.buffer.Unpooled;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EntityMovementEvent;
 import net.ccbluex.liquidbounce.features.special.AntiForge;
+import net.ccbluex.liquidbounce.injection.backend.EntityImplKt;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
@@ -99,6 +100,6 @@ public abstract class MixinNetHandlerPlayClient {
         final Entity entity = packetIn.getEntity(this.clientWorldController);
 
         if(entity != null)
-            LiquidBounce.eventManager.callEvent(new EntityMovementEvent(entity));
+            LiquidBounce.eventManager.callEvent(new EntityMovementEvent(EntityImplKt.wrap(entity)));
     }
 }

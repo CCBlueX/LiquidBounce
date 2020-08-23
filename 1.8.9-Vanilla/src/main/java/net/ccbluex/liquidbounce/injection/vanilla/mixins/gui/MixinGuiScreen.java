@@ -42,7 +42,7 @@ public abstract class MixinGuiScreen {
     public Minecraft mc;
 
     @Shadow
-    protected List<GuiButton> buttonList;
+    protected List<IGuiButton> buttonList;
 
     @Shadow
     public int width;
@@ -147,11 +147,11 @@ public abstract class MixinGuiScreen {
      * @reason Making it possible for other mixins to receive actions
      */
     @Overwrite
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(IGuiButton button) throws IOException {
         this.injectedActionPerformed(button);
     }
 
-    protected void injectedActionPerformed(GuiButton button) {
+    protected void injectedActionPerformed(IGuiButton button) {
 
     }
 }

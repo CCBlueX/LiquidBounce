@@ -1,5 +1,12 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
+
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
+import net.ccbluex.liquidbounce.injection.backend.FontRendererImpl;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -18,16 +25,16 @@ import java.awt.*;
 @Mixin(GuiButtonExt.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinGuiButtonExt extends GuiButton {
-   private float cut;
-   private float alpha;
+    private float cut;
+    private float alpha;
 
-   public MixinGuiButtonExt(int p_i1020_1_, int p_i1020_2_, int p_i1020_3_, String p_i1020_4_) {
-      super(p_i1020_1_, p_i1020_2_, p_i1020_3_, p_i1020_4_);
-   }
+    public MixinGuiButtonExt(int p_i1020_1_, int p_i1020_2_, int p_i1020_3_, String p_i1020_4_) {
+        super(p_i1020_1_, p_i1020_2_, p_i1020_3_, p_i1020_4_);
+    }
 
-   public MixinGuiButtonExt(int p_i46323_1_, int p_i46323_2_, int p_i46323_3_, int p_i46323_4_,
-                            int p_i46323_5_, String p_i46323_6_) {
-      super(p_i46323_1_, p_i46323_2_, p_i46323_3_, p_i46323_4_, p_i46323_5_, p_i46323_6_);
+    public MixinGuiButtonExt(int p_i46323_1_, int p_i46323_2_, int p_i46323_3_, int p_i46323_4_,
+                             int p_i46323_5_, String p_i46323_6_) {
+        super(p_i46323_1_, p_i46323_2_, p_i46323_3_, p_i46323_4_, p_i46323_5_, p_i46323_6_);
    }
 
    /**
@@ -37,7 +44,7 @@ public abstract class MixinGuiButtonExt extends GuiButton {
    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
       if (visible) {
          final FontRenderer fontRenderer =
-            mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRendererObj : Fonts.font35;
+            mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRendererObj : ((FontRendererImpl) Fonts.font35).getWrapped();
          hovered = (mouseX >= this.xPosition && mouseY >= this.yPosition &&
                     mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height);
 

@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.utils.ServerUtils;
 import net.ccbluex.liquidbounce.utils.login.LoginUtils;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.IGuiButton;
 import net.minecraft.client.gui.GuiDisconnected;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -39,21 +39,21 @@ public abstract class MixinGuiDisconnect extends MixinGuiScreen {
     @Shadow
     private int field_175353_i;
 
-    private GuiButton reconnectButton;
-    private GuiButton forgeBypassButton;
+    private IGuiButton reconnectButton;
+    private IGuiButton forgeBypassButton;
     private int reconnectTimer;
 
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(CallbackInfo callbackInfo) {
         reconnectTimer = 0;
-        buttonList.add(reconnectButton = new GuiButton(1, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 22, "Reconnect"));
-        buttonList.add(new GuiButton(3, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
-        buttonList.add(new GuiButton(4, this.width / 2 + 2, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, "Random username"));
-        buttonList.add(forgeBypassButton = new GuiButton(2, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 66, "Bypass AntiForge: " + (AntiForge.enabled ? "On" : "Off")));
+        buttonList.add(reconnectButton = new classProvider.createGuiButton(1, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 22, "Reconnect"));
+        buttonList.add(new classProvider.createGuiButton(3, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
+        buttonList.add(new classProvider.createGuiButton(4, this.width / 2 + 2, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, "Random username"));
+        buttonList.add(forgeBypassButton = new classProvider.createGuiButton(2, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 66, "Bypass AntiForge: " + (AntiForge.enabled ? "On" : "Off")));
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
-    private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
+    private void actionPerformed(IGuiButton button, CallbackInfo callbackInfo) {
         switch (button.id) {
             case 1:
                 ServerUtils.connectToLastServer();

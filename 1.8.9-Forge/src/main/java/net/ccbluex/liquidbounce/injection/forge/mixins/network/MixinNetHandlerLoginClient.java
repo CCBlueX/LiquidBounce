@@ -7,6 +7,9 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.network;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import net.ccbluex.liquidbounce.injection.backend.NetworkManagerImplKt;
+import net.ccbluex.liquidbounce.injection.backend.PacketImplKt;
+import net.ccbluex.liquidbounce.injection.backend.SPacketEncryptionRequestImplKt;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.mcleaks.MCLeaks;
 import net.mcleaks.Session;
@@ -101,7 +104,7 @@ public class MixinNetHandlerLoginClient {
                 return;
             }
 
-            ClientUtils.sendEncryption(networkManager, secretkey, publickey, packetIn);
+            ClientUtils.sendEncryption(NetworkManagerImplKt.wrap(networkManager), secretkey, publickey, SPacketEncryptionRequestImplKt.wrap(packetIn));
             callbackInfo.cancel();
         }
     }

@@ -36,6 +36,13 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 compileJava.options.encoding = 'UTF-8'
 
+sourceSets {
+    main.java.srcDirs += 'src/main/java'
+    main.java.srcDirs += '../shared/main/java'
+    main.resources.srcDirs += '../shared/main/resources'
+}
+
+
 compileKotlin {
     kotlinOptions {
         jvmTarget = '1.8'
@@ -84,6 +91,12 @@ dependencies {
     implementation 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
     compile 'com.github.TheAltening:API-Java:api-2.0-SNAPSHOT'
     compile 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
+    compile('commons-io:commons-io') {
+        version {
+            strictly '2.5'
+        }
+    }
+    compile group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.13'
 
     compile fileTree(include: ['*.jar'], dir: 'libs')
 }
@@ -132,6 +145,7 @@ shadowJar {
         include(dependency('org.scijava:native-lib-loader'))
         include(dependency('com.kohlschutter.junixsocket:junixsocket-common'))
         include(dependency('com.kohlschutter.junixsocket:junixsocket-native-common'))
+        include(dependency('org.apache.xmlgraphics:batik-rasterizer'))
 
         include(dependency('org.jetbrains.kotlin:kotlin-stdlib'))
 
