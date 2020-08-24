@@ -30,7 +30,7 @@ class GuiModsMenu(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         representedScreen.drawBackground(0)
 
-        Fonts.fontBold180.drawCenteredString("Mods", representedScreen.width / 2F, representedScreen.height / 8F + 5F, 0xFFFFFFFF.toInt(), true)
+        Fonts.fontBold180.drawCenteredString("Mods", representedScreen.width / 2F, representedScreen.height / 8F + 5F, 4673984, true)
 
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
