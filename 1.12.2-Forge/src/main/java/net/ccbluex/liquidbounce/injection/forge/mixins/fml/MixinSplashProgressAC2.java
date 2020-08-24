@@ -1,10 +1,10 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.fml;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.injection.utils.EasingObject;
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.AnimationLoader;
 import net.ccbluex.liquidbounce.utils.LazySVGRenderer;
+import net.ccbluex.liquidbounce.utils.render.EasingObject;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.fml.common.ProgressManager;
 import org.lwjgl.opengl.Display;
