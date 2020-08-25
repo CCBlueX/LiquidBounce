@@ -266,7 +266,7 @@ object ClassProviderImpl : IClassProvider {
 
     override fun isSPacketEntityVelocity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S12PacketEntityVelocity
 
-    override fun isSPacketExplosion(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S12PacketEntityVelocity
+    override fun isSPacketExplosion(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S27PacketExplosion
 
     override fun isSPacketCloseWindow(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S2EPacketCloseWindow
 

@@ -195,9 +195,7 @@ class Velocity : Module() {
                     event.cancelEvent()
                 }
             }
-        }
-
-        if (classProvider.isSPacketExplosion(packet)) {
+        } else if (classProvider.isSPacketExplosion(packet)) {
             // TODO: Support velocity for explosions
             event.cancelEvent()
         }
