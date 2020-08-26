@@ -143,7 +143,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
             final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.getModule(InventoryMove.class);
             final Sneak sneak = (Sneak) LiquidBounce.moduleManager.getModule(Sneak.class);
-            final Sneak speed = (Speed) LiquidBounce.moduleManager.getModule(Speed.class);
+            final Speed speed = (Speed) LiquidBounce.moduleManager.getModule(Speed.class);
             final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || LiquidBounce.moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
 
             boolean sprinting = this.isSprinting() && !fakeSprint;
