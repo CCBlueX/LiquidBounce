@@ -18,6 +18,7 @@ public class MixinWorldClient {
     @ModifyVariable(method = "doVoidFogParticles", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;randomDisplayTick(Lnet/minecraft/world/World;Lnet/minecraft/util/BlockPos;Lnet/minecraft/block/state/IBlockState;Ljava/util/Random;)V", shift = At.Shift.AFTER), ordinal = 0)
     private boolean handleBarriers(final boolean flag) {
         final TrueSight trueSight = (TrueSight) LiquidBounce.moduleManager.getModule(TrueSight.class);
+
         return flag || trueSight.getState() && trueSight.getBarriersValue().get();
     }
 }

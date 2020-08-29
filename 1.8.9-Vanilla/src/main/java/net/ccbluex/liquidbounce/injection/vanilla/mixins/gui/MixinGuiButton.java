@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.IGuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.awt.*;
 
 
-@Mixin(GuiButton.class)
+@Mixin(IGuiButton.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinGuiButton extends Gui {
 

@@ -5,9 +5,9 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
-import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiEditSign;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.tileentity.TileEntitySign;
@@ -58,15 +58,15 @@ public class MixinGuiEditSign extends GuiScreen {
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
     private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
-        switch(button.id) {
+        switch (button.id) {
             case 0:
-                if(!signCommand1.getText().isEmpty())
+                if (!signCommand1.getText().isEmpty())
                     tileSign.signText[0].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand1.getText())));
 
-                if(!signCommand2.getText().isEmpty())
+                if (!signCommand2.getText().isEmpty())
                     tileSign.signText[1].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand2.getText())));
 
-                if(!signCommand3.getText().isEmpty())
+                if (!signCommand3.getText().isEmpty())
                     tileSign.signText[2].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand3.getText())));
 
                 if(!signCommand4.getText().isEmpty())

@@ -4,7 +4,7 @@
     "name": "LiquidBounce",
     "description": "",
     "version": "${version}",
-    "mcversion": "${mcversion}",
+    "mcversion": "1.8.9",
     "url": "https://liquidbounce.net",
     "updateUrl": "",
     "authorList": ["CCBlueX"],

@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ComponentOnHover;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
+import net.ccbluex.liquidbounce.injection.backend.ResourceLocationImplKt;
 import net.ccbluex.liquidbounce.ui.client.GuiBackground;
 import net.ccbluex.liquidbounce.utils.render.ParticleUtils;
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader;
@@ -67,7 +68,7 @@ public abstract class MixinGuiScreen {
     private void drawWorldBackground(final CallbackInfo callbackInfo) {
         final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
 
-        if(hud.inventoryParticle.get() && mc.thePlayer != null) {
+        if(hud.getInventoryParticle().get() && mc.thePlayer != null) {
             final ScaledResolution scaledResolution = new ScaledResolution(mc);
             final int width = scaledResolution.getScaledWidth();
             final int height = scaledResolution.getScaledHeight();
@@ -102,7 +103,7 @@ public abstract class MixinGuiScreen {
                 final int width = scaledResolution.getScaledWidth();
                 final int height = scaledResolution.getScaledHeight();
 
-                mc.getTextureManager().bindTexture(LiquidBounce.INSTANCE.getBackground());
+                mc.getTextureManager().bindTexture(ResourceLocationImplKt.unwrap(LiquidBounce.INSTANCE.getBackground()));
                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
                 Gui.drawScaledCustomSizeModalRect(0, 0, 0.0F, 0.0F, width, height, width, height, width, height);
             }

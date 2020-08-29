@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 
@@ -186,13 +187,13 @@ public abstract class MixinEntity {
     private void getCollisionBorderSize(final CallbackInfoReturnable<Float> callbackInfoReturnable) {
         final HitBox hitBox = (HitBox) LiquidBounce.moduleManager.getModule(HitBox.class);
 
-        if (hitBox.getState())
+        if (Objects.requireNonNull(hitBox).getState())
             callbackInfoReturnable.setReturnValue(0.1F + hitBox.getSizeValue().get());
     }
 
     @Inject(method = "setAngles", at = @At("HEAD"), cancellable = true)
     private void setAngles(final float yaw, final float pitch, final CallbackInfo callbackInfo) {
-        if (LiquidBounce.moduleManager.getModule(NoPitchLimit.class).getState()) {
+        if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(NoPitchLimit.class)).getState()) {
             callbackInfo.cancel();
 
             float f = this.rotationPitch;
@@ -206,7 +207,8 @@ public abstract class MixinEntity {
 
     @Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
     private void handleRotations(float strafe, float forward, float friction, final CallbackInfo callbackInfo) {
-        if ((Entity) (Object) this != Minecraft.getMinecraft().thePlayer)
+        //noinspection ConstantConditions
+        if ((Object) this != Minecraft.getMinecraft().thePlayer)
             return;
 
         final StrafeEvent strafeEvent = new StrafeEvent(strafe, forward, friction);
