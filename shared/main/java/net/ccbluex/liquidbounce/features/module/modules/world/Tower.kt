@@ -238,7 +238,7 @@ class Tower : Module() {
         // AutoBlock
         var blockSlot = -1
         var itemStack = thePlayer.heldItem
-        if (itemStack == null || !classProvider.isItemBlock(itemStack.item)) {
+        if (itemStack == null || !classProvider.isItemBlock(itemStack.item) || classProvider.isBlockBush(itemStack.item?.asItemBlock()?.block)) {
             if (!autoBlockValue.get()) return
 
             blockSlot = InventoryUtils.findAutoBlockBlock()
