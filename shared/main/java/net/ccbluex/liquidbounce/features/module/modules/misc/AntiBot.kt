@@ -19,9 +19,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import java.util.*
+
 
 @ModuleInfo(name = "AntiBot", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
 class AntiBot : Module() {
@@ -43,6 +45,8 @@ class AntiBot : Module() {
     private val needHitValue = BoolValue("NeedHit", false)
     private val duplicateInWorldValue = BoolValue("DuplicateInWorld", false)
     private val duplicateInTabValue = BoolValue("DuplicateInTab", false)
+    private val allwaysInRadiusValue = BoolValue("AlwaysInRadius", false)
+    private val allwaysRadiusValue = FloatValue("AlwaysInRadiusBlocks", 20f, 5f, 30f)
 
     private val ground: MutableList<Int> = ArrayList()
     private val air: MutableList<Int> = ArrayList()
@@ -50,6 +54,7 @@ class AntiBot : Module() {
     private val swing: MutableList<Int> = ArrayList()
     private val invisible: MutableList<Int> = ArrayList()
     private val hitted: MutableList<Int> = ArrayList()
+    private val notAlwaysInRadius: MutableList<Int> = ArrayList()
 
     override fun onDisable() {
         clearAll()
@@ -83,6 +88,10 @@ class AntiBot : Module() {
                         invalidGround[entity.entityId] = currentVL
                 }
                 if (entity.invisible && !invisible.contains(entity.entityId)) invisible.add(entity.entityId)
+
+                if (!notAlwaysInRadius.contains(entity.entityId) && mc.thePlayer!!.getDistanceToEntity(entity) > allwaysRadiusValue.get())
+                    notAlwaysInRadius.add(entity.entityId);
+
             }
         }
         if (classProvider.isSPacketAnimation(packet)) {
@@ -109,6 +118,7 @@ class AntiBot : Module() {
         ground.clear()
         invalidGround.clear()
         invisible.clear()
+        notAlwaysInRadius.clear();
     }
 
     companion object {
@@ -160,6 +170,8 @@ class AntiBot : Module() {
                                 .filter { networkPlayer: INetworkPlayerInfo? -> entity.name == stripColor(EntityUtils.getName(networkPlayer)) }
                                 .count() > 1) return true
             }
+            if (antiBot.allwaysInRadiusValue.get() && !antiBot.notAlwaysInRadius.contains(entity.entityId))
+                return true;
             return entity.name!!.isEmpty() || entity.name == mc.thePlayer!!.name
         }
     }
