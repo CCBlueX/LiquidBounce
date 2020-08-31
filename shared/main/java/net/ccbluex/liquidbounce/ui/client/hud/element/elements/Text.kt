@@ -95,9 +95,9 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
                 "zdp" -> return thePlayer.posZ.toString()
                 "velocity" -> return DECIMAL_FORMAT.format(sqrt(thePlayer.motionX * thePlayer.motionX + thePlayer.motionZ * thePlayer.motionZ))
                 "ping" -> return EntityUtils.getPing(thePlayer).toString()
-                "health" -> thePlayer.health
-                "maxHealth" -> thePlayer.maxHealth
-                "food" -> thePlayer.foodStats.foodLevel
+                "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
+                "maxHealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
+                "food" -> return thePlayer.foodStats.foodLevel.toString()
             }
         }
 
