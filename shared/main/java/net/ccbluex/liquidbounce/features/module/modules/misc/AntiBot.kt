@@ -159,8 +159,10 @@ object AntiBot : Module() {
             if (classProvider.isEntityPlayer(entity) && entity != null) {
                 if (packetEntity.onGround && !ground.contains(entity.entityId))
                     ground.add(entity.entityId)
+
                 if (!packetEntity.onGround && !air.contains(entity.entityId))
                     air.add(entity.entityId)
+
                 if (packetEntity.onGround) {
                     if (entity.prevPosY != entity.posY)
                         invalidGround[entity.entityId] = invalidGround.getOrDefault(entity.entityId, 0) + 1
@@ -171,24 +173,31 @@ object AntiBot : Module() {
                     else
                         invalidGround[entity.entityId] = currentVL
                 }
-                if (entity.invisible && !invisible.contains(entity.entityId)) invisible.add(entity.entityId)
+
+                if (entity.invisible && !invisible.contains(entity.entityId))
+                    invisible.add(entity.entityId)
 
                 if (!notAlwaysInRadius.contains(entity.entityId) && mc.thePlayer!!.getDistanceToEntity(entity) > allwaysRadiusValue.get())
                     notAlwaysInRadius.add(entity.entityId);
-
             }
         }
+
         if (classProvider.isSPacketAnimation(packet)) {
             val packetAnimation = packet.asSPacketAnimation()
             val entity = mc.theWorld!!.getEntityByID(packetAnimation.entityID)
-            if (entity != null && classProvider.isEntityLivingBase(entity) && packetAnimation.animationType == 0 && !swing.contains(entity.entityId)) swing.add(entity.entityId)
+
+            if (entity != null && classProvider.isEntityLivingBase(entity) && packetAnimation.animationType == 0
+                    && !swing.contains(entity.entityId))
+                swing.add(entity.entityId)
         }
     }
 
     @EventTarget
     fun onAttack(e: AttackEvent) {
         val entity = e.targetEntity
-        if (entity != null && classProvider.isEntityLivingBase(entity) && !hitted.contains(entity.entityId)) hitted.add(entity.entityId)
+
+        if (entity != null && classProvider.isEntityLivingBase(entity) && !hitted.contains(entity.entityId))
+            hitted.add(entity.entityId)
     }
 
     @EventTarget
@@ -204,4 +213,5 @@ object AntiBot : Module() {
         invisible.clear()
         notAlwaysInRadius.clear();
     }
+
 }
