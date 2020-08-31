@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketEntity
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -18,19 +19,14 @@ import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "Sneak", description = "Automatically sneaks all the time.", category = ModuleCategory.MOVEMENT)
 class Sneak : Module() {
+
     @JvmField
     val modeValue = ListValue("Mode", arrayOf("Legit", "Vanilla", "Switch", "MineSecure"), "MineSecure")
-
     @JvmField
     val stopMoveValue = BoolValue("StopMove", false)
-    private var sneaked = false
-    override fun onEnable() {
-        val thePlayer = mc.thePlayer ?: return
 
-        if ("vanilla".equals(modeValue.get(), ignoreCase = true)) {
-            mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
-        }
-    }
+    private var sneaked = false
+    private var sneaking = false
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
@@ -39,15 +35,26 @@ class Sneak : Module() {
                 onDisable()
                 sneaked = false
             }
+
             return
         }
+
         sneaked = true
+
         when (modeValue.get().toLowerCase()) {
             "legit" -> mc.gameSettings.keyBindSneak.pressed = true
+            "vanilla" -> {
+                if (sneaking)
+                    return
+
+                mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
+            }
             "switch" -> {
+                if (!MovementUtils.isMoving)
+                    return
+
                 when (event.eventState) {
                     EventState.PRE -> {
-                        if (!MovementUtils.isMoving) return
                         mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
                         mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.STOP_SNEAKING))
                     }
@@ -66,6 +73,11 @@ class Sneak : Module() {
         }
     }
 
+    @EventTarget
+    fun onWorld(worldEvent: WorldEvent) {
+        sneaking = false
+    }
+
     override fun onDisable() {
         val player = mc.thePlayer ?: return
 
@@ -79,6 +91,8 @@ class Sneak : Module() {
                 mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.STOP_SNEAKING))
             }
         }
+        sneaking = false
         super.onDisable()
     }
+
 }
