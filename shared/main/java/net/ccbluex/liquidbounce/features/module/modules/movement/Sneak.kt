@@ -25,21 +25,15 @@ class Sneak : Module() {
     @JvmField
     val stopMoveValue = BoolValue("StopMove", false)
 
-    private var sneaked = false
     private var sneaking = false
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
         if (stopMoveValue.get() && MovementUtils.isMoving) {
-            if (sneaked) {
+            if (sneaking)
                 onDisable()
-                sneaked = false
-            }
-
             return
         }
-
-        sneaked = true
 
         when (modeValue.get().toLowerCase()) {
             "legit" -> mc.gameSettings.keyBindSneak.pressed = true
@@ -49,10 +43,8 @@ class Sneak : Module() {
 
                 mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
             }
-            "switch" -> {
-                if (!MovementUtils.isMoving)
-                    return
 
+            "switch" -> {
                 when (event.eventState) {
                     EventState.PRE -> {
                         mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
@@ -64,6 +56,7 @@ class Sneak : Module() {
                     }
                 }
             }
+
             "minesecure" -> {
                 if (event.eventState == EventState.PRE)
                     return
@@ -87,12 +80,8 @@ class Sneak : Module() {
                     mc.gameSettings.keyBindSneak.pressed = false
                 }
             }
-            "vanilla", "switch", "minesecure" -> {
-                mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.STOP_SNEAKING))
-            }
+            "vanilla", "switch", "minesecure" -> mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.STOP_SNEAKING))
         }
         sneaking = false
-        super.onDisable()
     }
-
 }
