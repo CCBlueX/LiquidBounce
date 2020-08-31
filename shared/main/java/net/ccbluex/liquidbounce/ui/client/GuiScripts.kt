@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.LazySVGRenderer
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import org.apache.commons.io.IOUtils
 import org.lwjgl.input.Keyboard
@@ -28,7 +27,6 @@ import java.util.zip.ZipFile
 class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
     private lateinit var list: GuiList
-    private val biohazardIcon: LazySVGRenderer = LazySVGRenderer("/assets/minecraft/liquidbounce/biohazard.svg")
 
     override fun initGui() {
         list = GuiList(representedScreen)

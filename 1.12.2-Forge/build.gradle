@@ -97,7 +97,6 @@ dependencies {
             strictly '2.5'
         }
     }
-    compile group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.13'
 
     compile fileTree(include: ['*.jar'], dir: 'libs')
 }
