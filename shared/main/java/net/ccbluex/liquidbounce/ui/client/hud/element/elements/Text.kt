@@ -86,7 +86,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
         val thePlayer = mc.thePlayer
 
         if (thePlayer != null) {
-            when (str) {
+            when (str.toLowerCase()) {
                 "x" -> return DECIMAL_FORMAT.format(thePlayer.posX)
                 "y" -> return DECIMAL_FORMAT.format(thePlayer.posY)
                 "z" -> return DECIMAL_FORMAT.format(thePlayer.posZ)
@@ -96,20 +96,20 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
                 "velocity" -> return DECIMAL_FORMAT.format(sqrt(thePlayer.motionX * thePlayer.motionX + thePlayer.motionZ * thePlayer.motionZ))
                 "ping" -> return EntityUtils.getPing(thePlayer).toString()
                 "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
-                "maxHealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
+                "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
                 "food" -> return thePlayer.foodStats.foodLevel.toString()
             }
         }
 
-        return when (str) {
+        return when (str.toLowerCase()) {
             "username" -> mc.session.username
-            "clientName" -> LiquidBounce.CLIENT_NAME
-            "clientVersion" -> "b${LiquidBounce.CLIENT_VERSION}"
-            "clientCreator" -> LiquidBounce.CLIENT_CREATOR
+            "clientname" -> LiquidBounce.CLIENT_NAME
+            "clientversion" -> "b${LiquidBounce.CLIENT_VERSION}"
+            "clientcreator" -> LiquidBounce.CLIENT_CREATOR
             "fps" -> mc.debugFPS.toString()
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
-            "serverIp" -> ServerUtils.getRemoteIp()
+            "serverip" -> ServerUtils.getRemoteIp()
             "cps", "lcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.LEFT).toString()
             "mcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.MIDDLE).toString()
             "rcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.RIGHT).toString()
