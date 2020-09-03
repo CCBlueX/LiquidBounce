@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -54,10 +55,10 @@ class Tracers : Module() {
 
                 val colorMode = colorMode.get().toLowerCase()
                 val color = when {
-                    EntityUtils.isFriend(entity) -> Color(0, 0, 255, 150)
-                    colorMode.equals("custom") -> Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 150)
-                    colorMode.equals("distancecolor") -> Color(255 - dist, dist, 0, 150)
-                    colorMode.equals("rainbow") -> ColorUtils.rainbow()
+                    classProvider.isEntityPlayer(entity) && entity.asEntityPlayer().isClientFriend() -> Color(0, 0, 255, 150)
+                    colorMode == "custom" -> Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 150)
+                    colorMode == "distancecolor" -> Color(255 - dist, dist, 0, 150)
+                    colorMode == "rainbow" -> ColorUtils.rainbow()
                     else -> Color(255, 255, 255, 150)
                 }
 

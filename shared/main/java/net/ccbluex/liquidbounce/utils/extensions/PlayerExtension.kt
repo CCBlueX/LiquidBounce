@@ -5,11 +5,13 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -39,4 +41,26 @@ fun getNearestPointBB(eye: WVec3, box: IAxisAlignedBB): WVec3 {
 fun IEntityPlayer.getPing(): Int {
     val playerInfo = MinecraftInstance.mc.netHandler.getPlayerInfo(uniqueID)
     return playerInfo?.responseTime ?: 0
+}
+
+fun IEntity.isAnimal(): Boolean {
+    return MinecraftInstance.classProvider.isEntityAnimal(this) ||
+            MinecraftInstance.classProvider.isEntitySquid(this) ||
+            MinecraftInstance.classProvider.isEntityGolem(this) ||
+            MinecraftInstance.classProvider.isEntityBat(this)
+}
+
+fun IEntity.isMob(): Boolean {
+    return MinecraftInstance.classProvider.isEntityMob(this) ||
+            MinecraftInstance.classProvider.isEntityVillager(this) ||
+            MinecraftInstance.classProvider.isEntitySlime(this)
+            || MinecraftInstance.classProvider.isEntityGhast(this) ||
+            MinecraftInstance.classProvider.isEntityDragon(this) ||
+            MinecraftInstance.classProvider.isEntityShulker(this)
+}
+
+fun IEntityPlayer.isClientFriend(): Boolean {
+    val entityName = name ?: return false
+
+    return LiquidBounce.fileManager.friendsConfig.isFriend(stripColor(entityName))
 }

@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.extensions.getFullName
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -116,7 +116,7 @@ object AntiBot : Module() {
 
             if (targetName != null) {
                 for (networkPlayerInfo in mc.netHandler.playerInfoMap) {
-                    val networkName = stripColor(EntityUtils.getName(networkPlayerInfo)) ?: continue
+                    val networkName = stripColor(networkPlayerInfo.getFullName()) ?: continue
 
                     if (if (equals) targetName == networkName else targetName.contains(networkName))
                         return false
@@ -131,7 +131,7 @@ object AntiBot : Module() {
             return true
 
         if (duplicateInTabValue.get() &&
-                mc.netHandler.playerInfoMap.filter { entity.name == stripColor(EntityUtils.getName(it)) }.count() > 1)
+                mc.netHandler.playerInfoMap.filter { entity.name == stripColor(it.getFullName()) }.count() > 1)
             return true
 
         if (allwaysInRadiusValue.get() && !notAlwaysInRadius.contains(entity.entityId))

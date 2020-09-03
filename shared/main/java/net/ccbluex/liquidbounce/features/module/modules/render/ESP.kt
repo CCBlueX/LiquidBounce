@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer.Companion.getColorIndex
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -162,8 +163,11 @@ class ESP : Module() {
             if (entity != null && classProvider.isEntityLivingBase(entity)) {
                 val entityLivingBase = entity.asEntityLivingBase()
 
-                if (entityLivingBase.hurtTime > 0) return Color.RED
-                if (EntityUtils.isFriend(entityLivingBase)) return Color.BLUE
+                if (entityLivingBase.hurtTime > 0)
+                    return Color.RED
+                if (classProvider.isEntityPlayer(entityLivingBase) && entityLivingBase.asEntityPlayer().isClientFriend())
+                    return Color.BLUE
+
                 if (colorTeam.get()) {
                     val chars: CharArray = (entityLivingBase.displayName ?: return@run).formattedText.toCharArray()
                     var color = Int.MAX_VALUE
@@ -174,10 +178,12 @@ class ESP : Module() {
                         color = ColorUtils.hexColors[index]
                         break
                     }
+
                     return Color(color)
                 }
             }
         }
+
         return if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
     }
 

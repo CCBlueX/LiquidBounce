@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.utils;
+package net.ccbluex.liquidbounce.utils.render;
 
 import net.ccbluex.liquidbounce.utils.lzma.LZMA.Decoder;
 import net.minecraft.client.renderer.texture.AbstractTexture;

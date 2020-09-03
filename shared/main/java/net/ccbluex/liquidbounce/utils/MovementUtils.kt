@@ -10,6 +10,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 object MovementUtils : MinecraftInstance() {
+
     val speed: Float
         get() = sqrt(mc.thePlayer!!.motionX * mc.thePlayer!!.motionX + mc.thePlayer!!.motionZ * mc.thePlayer!!.motionZ).toFloat()
 
