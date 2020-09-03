@@ -77,13 +77,4 @@ public final class EntityUtils extends MinecraftInstance {
 
         return team == null ? name : team.formatString(name);
     }
-
-    public static int getPing(final IEntityPlayer entityPlayer) {
-        if (entityPlayer == null)
-            return 0;
-
-        final INetworkPlayerInfo networkPlayerInfo = mc.getNetHandler().getPlayerInfo(entityPlayer.getUniqueID());
-
-        return networkPlayerInfo == null ? 0 : networkPlayerInfo.getResponseTime();
-    }
 }

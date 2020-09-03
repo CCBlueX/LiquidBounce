@@ -12,8 +12,8 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.CPSCounter
-import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.ServerUtils
+import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.value.*
@@ -94,7 +94,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
                 "ydp" -> return thePlayer.posY.toString()
                 "zdp" -> return thePlayer.posZ.toString()
                 "velocity" -> return DECIMAL_FORMAT.format(sqrt(thePlayer.motionX * thePlayer.motionX + thePlayer.motionZ * thePlayer.motionZ))
-                "ping" -> return EntityUtils.getPing(thePlayer).toString()
+                "ping" -> return thePlayer.getPing().toString()
                 "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
                 "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
                 "food" -> return thePlayer.foodStats.foodLevel.toString()
