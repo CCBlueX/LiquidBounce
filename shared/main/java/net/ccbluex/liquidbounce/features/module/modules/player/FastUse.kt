@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 @ModuleInfo(name = "FastUse", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
 class FastUse : Module() {
 
-    private val modeValue = ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "CustomDelay"), "NCP")
+    private val modeValue = ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
 
     private val noMoveValue = BoolValue("NoMove", false)
 
@@ -70,7 +70,7 @@ class FastUse : Module() {
                     usedTimer = true
                 }
 
-                "customdelay" -> {
+                "custom" -> {
                     mc.timer.timerSpeed = customTimer.get()
                     usedTimer = true
 
