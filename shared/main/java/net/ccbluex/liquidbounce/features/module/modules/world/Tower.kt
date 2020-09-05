@@ -55,7 +55,7 @@ class Tower : Module() {
     private val keepRotationValue = BoolValue("KeepRotation", false)
     private val onJumpValue = BoolValue("OnJump", false)
     private val placeModeValue = ListValue("PlaceTiming", arrayOf("Pre", "Post"), "Post")
-    private val timerValue = FloatValue("Timer", 1f, 0f, 10f)
+    private val timerValue = FloatValue("Timer", 1f, 0.01f, 10f)
 
     // Jump mode
     private val jumpMotionValue = FloatValue("JumpMotion", 0.42f, 0.3681289f, 0.79f)
