@@ -37,7 +37,7 @@ public final class BackgroundShader extends Shader {
         final int timeID = getUniform("iTime");
         if(timeID > -1) GL20.glUniform1f(timeID, time);
 
-        time += 0.005F * RenderUtils.deltaTime;
+        time += 0.003F * RenderUtils.deltaTime;
     }
 
 }
