@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayer
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
@@ -650,8 +651,27 @@ class KillAura : Module() {
      */
     private fun startBlocking(interactEntity: IEntity, interact: Boolean) {
         if (interact) {
-            // val vec3 = Vec3(movingObject.hitVec.xCoord - interactEntity.posX, movingObject.hitVec.yCoord - interactEntity.posY, movingObject.hitVec.zCoord - interactEntity.posZ)
-            mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(interactEntity, interactEntity.positionVector))
+            val positionEye = mc.renderViewEntity?.getPositionEyes(1F)
+
+            val expandSize = interactEntity.collisionBorderSize.toDouble()
+            val boundingBox = interactEntity.entityBoundingBox.expand(expandSize, expandSize, expandSize)
+
+            val (yaw, pitch) = RotationUtils.targetRotation ?: Rotation(mc.thePlayer!!.rotationYaw, mc.thePlayer!!.rotationPitch)
+            val yawCos = cos(-yaw * 0.017453292F - Math.PI.toFloat())
+            val yawSin = sin(-yaw * 0.017453292F - Math.PI.toFloat())
+            val pitchCos = -cos(-pitch * 0.017453292F)
+            val pitchSin = sin(-pitch * 0.017453292F)
+            val range = min(maxRange.toDouble(), mc.thePlayer!!.getDistanceToEntityBox(interactEntity)) + 1
+            val lookAt = positionEye!!.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
+
+            val movingObject = boundingBox.calculateIntercept(positionEye, lookAt) ?: return
+            val hitVec = movingObject.hitVec
+
+            mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(interactEntity, WVec3(
+                    hitVec.xCoord - interactEntity.posX,
+                    hitVec.yCoord - interactEntity.posY,
+                    hitVec.zCoord - interactEntity.posZ)
+            ))
             mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(interactEntity, ICPacketUseEntity.WAction.INTERACT))
         }
 
