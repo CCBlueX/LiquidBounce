@@ -17,13 +17,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Objects;
+
 @SideOnly(Side.CLIENT)
 @Mixin(BlockLiquid.class)
 public class MixinBlockLiquid {
 
     @Inject(method = "canCollideCheck", at = @At("HEAD"), cancellable = true)
     private void onCollideCheck(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (LiquidBounce.moduleManager.getModule(Liquids.class).getState())
+        if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(Liquids.class)).getState())
             callbackInfoReturnable.setReturnValue(true);
     }
 
