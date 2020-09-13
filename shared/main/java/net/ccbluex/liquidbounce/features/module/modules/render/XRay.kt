@@ -99,14 +99,14 @@ class XRay : Module() {
                                 val block = try {
                                     functions.getBlockById(args[2].toInt())
                                 } catch (exception: NumberFormatException) {
-                                    val b = functions.getBlockFromName(args[2])
+                                    val tmpBlock = functions.getBlockFromName(args[2])
 
-                                    if (b == null || functions.getIdFromBlock(b) <= 0) {
+                                    if (tmpBlock == null || functions.getIdFromBlock(tmpBlock) <= 0) {
                                         chat("§7Block §8${args[2]}§7 does not exist!")
                                         return
                                     }
 
-                                    b
+                                    tmpBlock
                                 }
 
                                 if (block == null || !xrayBlocks.contains(block)) {

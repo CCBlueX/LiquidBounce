@@ -6,8 +6,10 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.world.Liquids;
 import net.minecraft.block.BlockLiquid;
+import net.minecraft.util.Vec3;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,5 +27,14 @@ public class MixinBlockLiquid {
     private void onCollideCheck(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(Liquids.class)).getState())
             callbackInfoReturnable.setReturnValue(true);
+    }
+
+    @Inject(method = "modifyAcceleration", at = @At("HEAD"), cancellable = true)
+    private void onModifyAcceleration(CallbackInfoReturnable<Vec3> callbackInfoReturnable) {
+        final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
+
+        if (noSlow.getState() && noSlow.getLiquidPushValue().get()) {
+            callbackInfoReturnable.setReturnValue(new Vec3(0.0D, 0.0D, 0.0D));
+        }
     }
 }

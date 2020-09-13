@@ -42,6 +42,8 @@ class NoSlow : Module() {
     // Soulsand
     val soulsandValue = BoolValue("Soulsand", true)
 
+    val liquidPushValue = BoolValue("LiquidPush", true)
+
     @EventTarget
     fun onMotion(event: MotionEvent) {
         val thePlayer = mc.thePlayer ?: return
