@@ -12,6 +12,7 @@ import jdk.nashorn.api.scripting.ScriptUtils
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.injection.backend.unwrap
 import net.ccbluex.liquidbounce.script.api.ScriptCommand
 import net.ccbluex.liquidbounce.script.api.ScriptModule
 import net.ccbluex.liquidbounce.script.api.ScriptTab
@@ -51,7 +52,8 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         scriptEngine.put("Item", StaticClass.forClass(Item::class.java))
 
         // Global instances
-        scriptEngine.put("mc", mc)
+        scriptEngine.put("mc", mc.unwrap())
+        scriptEngine.put("imc", mc)
         scriptEngine.put("moduleManager", LiquidBounce.moduleManager)
         scriptEngine.put("commandManager", LiquidBounce.commandManager)
         scriptEngine.put("scriptManager", LiquidBounce.scriptManager)
