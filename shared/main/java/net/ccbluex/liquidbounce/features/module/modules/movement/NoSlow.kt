@@ -11,10 +11,7 @@ import net.ccbluex.liquidbounce.api.enums.WEnumHand
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.MotionEvent
-import net.ccbluex.liquidbounce.event.SlowDownEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -28,6 +25,8 @@ import net.ccbluex.liquidbounce.value.FloatValue
         category = ModuleCategory.MOVEMENT)
 class NoSlow : Module() {
 
+    // Highly customizable values
+
     private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1.0F, 0.2F, 1.0F)
     private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1.0F, 0.2F, 1.0F)
 
@@ -37,29 +36,30 @@ class NoSlow : Module() {
     private val bowForwardMultiplier = FloatValue("BowForwardMultiplier", 1.0F, 0.2F, 1.0F)
     private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1.0F, 0.2F, 1.0F)
 
+    // NCP mode
     private val packet = BoolValue("Packet", true)
 
-    // Soulsand
+    // Blocks
     val soulsandValue = BoolValue("Soulsand", true)
-
     val liquidPushValue = BoolValue("LiquidPush", true)
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
         val thePlayer = mc.thePlayer ?: return
+        val heldItem = thePlayer.heldItem ?: return
 
-        val heldItem = thePlayer.heldItem
-        if (heldItem == null || !classProvider.isItemSword(heldItem.item) || !MovementUtils.isMoving) {
+        if (!classProvider.isItemSword(heldItem.item) || !MovementUtils.isMoving)
             return
-        }
-        val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-        if (!thePlayer.isBlocking && !killAura.blockingStatus) {
+
+        val aura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
+        if (!thePlayer.isBlocking && !aura.blockingStatus)
             return
-        }
+
         if (this.packet.get()) {
             when (event.eventState) {
                 EventState.PRE -> {
-                    val digging = classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN))
+                    val digging = classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM,
+                            WBlockPos(-1, -1, -1), classProvider.getEnumFacing(EnumFacingType.DOWN))
                     mc.netHandler.addToSendQueue(digging)
                 }
                 EventState.POST -> {
