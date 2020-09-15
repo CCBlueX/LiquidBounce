@@ -100,7 +100,6 @@ class ModuleManager : Listenable {
                 Timer::class.java,
                 Sneak::class.java,
                 SkinDerp::class.java,
-                Paralyze::class.java,
                 GhostHand::class.java,
                 AutoWalk::class.java,
                 AutoBreak::class.java,
