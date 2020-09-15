@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.discord
+package net.ccbluex.liquidbounce.features.special
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
