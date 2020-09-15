@@ -16,10 +16,15 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
+import net.ccbluex.liquidbounce.injection.backend.Backend
+import net.ccbluex.liquidbounce.injection.backend.WrapperImpl
+import net.ccbluex.liquidbounce.injection.backend.unwrap
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.createUseItemPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 
 @ModuleInfo(name = "NoSlow", description = "Cancels slowness effects caused by soulsand and using items.",
         category = ModuleCategory.MOVEMENT)
@@ -55,15 +60,14 @@ class NoSlow : Module() {
         if (!thePlayer.isBlocking && !aura.blockingStatus)
             return
 
-        if (this.packet.get()) {
+        if (this.packet.get() && Backend.MINECRAFT_VERSION_MINOR == 8) {
             when (event.eventState) {
                 EventState.PRE -> {
-                    val digging = classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM,
-                            WBlockPos(-1, -1, -1), classProvider.getEnumFacing(EnumFacingType.DOWN))
+                    val digging = classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), classProvider.getEnumFacing(EnumFacingType.DOWN))
                     mc.netHandler.addToSendQueue(digging)
                 }
                 EventState.POST -> {
-                    val blockPlace = createUseItemPacket(thePlayer.inventory.getCurrentItemInHand(), WEnumHand.MAIN_HAND)
+                    val blockPlace = classProvider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F)
                     mc.netHandler.addToSendQueue(blockPlace)
                 }
             }
