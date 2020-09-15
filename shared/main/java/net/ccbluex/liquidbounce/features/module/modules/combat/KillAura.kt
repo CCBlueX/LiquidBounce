@@ -685,7 +685,7 @@ class KillAura : Module() {
      */
     private fun stopBlocking() {
         if (blockingStatus) {
-            mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+            mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, if(MovementUtils.isMoving) WBlockPos(-1, -1, -1) else WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
             blockingStatus = false
         }
     }
