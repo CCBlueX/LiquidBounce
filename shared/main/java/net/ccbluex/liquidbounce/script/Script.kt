@@ -53,10 +53,14 @@ class Script(val scriptFile: File) : MinecraftInstance() {
 
         // Global instances
         scriptEngine.put("mc", mc.unwrap())
-        scriptEngine.put("imc", mc)
+
         scriptEngine.put("moduleManager", LiquidBounce.moduleManager)
         scriptEngine.put("commandManager", LiquidBounce.commandManager)
         scriptEngine.put("scriptManager", LiquidBounce.scriptManager)
+
+        // Cross version instances
+        scriptEngine.put("imc", mc)
+        scriptEngine.put("classProvider", classProvider)
 
         // Global functions
         scriptEngine.put("registerScript", RegisterScript())
