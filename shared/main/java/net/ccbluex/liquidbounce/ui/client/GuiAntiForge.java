@@ -48,17 +48,17 @@ public class GuiAntiForge extends WrappedGuiScreen {
                 break;
             case 2:
                 AntiForge.blockFML = !AntiForge.blockFML;
-                enabledButton.setDisplayString("Block FML (" + (AntiForge.blockFML ? "On" : "Off") + ")");
+                fmlButton.setDisplayString("Block FML (" + (AntiForge.blockFML ? "On" : "Off") + ")");
                 LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 3:
                 AntiForge.blockProxyPacket = !AntiForge.blockProxyPacket;
-                enabledButton.setDisplayString("Block FML Proxy Packet (" + (AntiForge.blockProxyPacket ? "On" : "Off") + ")");
+                proxyButton.setDisplayString("Block FML Proxy Packet (" + (AntiForge.blockProxyPacket ? "On" : "Off") + ")");
                 LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 4:
                 AntiForge.blockPayloadPackets = !AntiForge.blockPayloadPackets;
-                enabledButton.setDisplayString("Block Payload Packets (" + (AntiForge.blockPayloadPackets ? "On" : "Off") + ")");
+                payloadButton.setDisplayString("Block Payload Packets (" + (AntiForge.blockPayloadPackets ? "On" : "Off") + ")");
                 LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 0:

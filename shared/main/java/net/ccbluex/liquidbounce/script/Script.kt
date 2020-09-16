@@ -12,6 +12,7 @@ import jdk.nashorn.api.scripting.ScriptUtils
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.injection.backend.unwrap
 import net.ccbluex.liquidbounce.script.api.ScriptCommand
 import net.ccbluex.liquidbounce.script.api.ScriptModule
 import net.ccbluex.liquidbounce.script.api.ScriptTab
@@ -21,19 +22,13 @@ import net.ccbluex.liquidbounce.script.api.global.Setting
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.io.File
-import java.nio.charset.Charset
-import java.security.KeyFactory
-import java.security.MessageDigest
-import java.security.spec.X509EncodedKeySpec
-import java.util.*
 import java.util.function.Function
-import javax.crypto.Cipher
 import javax.script.ScriptEngine
-import kotlin.collections.HashMap
 
 class Script(val scriptFile: File) : MinecraftInstance() {
+
     private val scriptEngine: ScriptEngine
-    private val scriptText: String
+    private val scriptText: String = scriptFile.readText()
 
     // Script information
     lateinit var scriptName: String
@@ -47,59 +42,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
     private val registeredModules = mutableListOf<Module>()
     private val registeredCommands = mutableListOf<Command>()
 
-    val isSignatureValid: Boolean
-
-    companion object {
-        /**
-         * Throws an exception when the script is invalid
-         */
-        fun checkSignature(scriptText: String): String {
-            val indexOfLinebreak = scriptText.indexOf('\n')
-            val signature = scriptText.subSequence("// ".length, indexOfLinebreak)
-
-            val split = signature.split(" ")
-
-            val decoder = Base64.getDecoder()
-
-            val publicKey = decoder.decode(split[0])
-            val encryptedSha512Hash = decoder.decode(split[1])
-
-            val rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding")
-            val sha512 = MessageDigest.getInstance("SHA-512")
-
-            if (!LiquidBounce.scriptManager.allowedPublicKeys.any { Arrays.equals(sha512.digest(publicKey), it) })
-                throw IllegalStateException("Unknown public key (Try updating the script)")
-
-            rsa.init(Cipher.DECRYPT_MODE, KeyFactory.getInstance("RSA").generatePublic(X509EncodedKeySpec(publicKey)))
-
-            if (!Arrays.equals(sha512.digest(scriptText.substring(indexOfLinebreak + 1, scriptText.length).toByteArray(Charset.forName("UTF-8"))), rsa.doFinal(encryptedSha512Hash))) {
-                throw IllegalStateException("Encrypted hash doesn't match")
-            }
-
-            return scriptText
-        }
-    }
-
     init {
-        var isSignatureValid = false
-
-        var scriptText = scriptFile.readText()
-
-        if (scriptFile.name.endsWith(".signed.js")) {
-            try {
-                checkSignature(scriptText)
-
-                scriptText = scriptText.substring(scriptText.indexOf('\n') + 1)
-
-                isSignatureValid = true
-            } catch (e: Throwable) {
-                throw IllegalStateException("Failed to verify signature", e)
-            }
-        }
-
-        this.isSignatureValid = isSignatureValid
-        this.scriptText = scriptText
-
         val engineFlags = getMagicComment("engine_flags")?.split(",")?.toTypedArray() ?: emptyArray()
         scriptEngine = NashornScriptEngineFactory().getScriptEngine(*engineFlags)
 
@@ -109,10 +52,15 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         scriptEngine.put("Item", StaticClass.forClass(Item::class.java))
 
         // Global instances
-        scriptEngine.put("mc", mc)
+        scriptEngine.put("mc", mc.unwrap())
+
         scriptEngine.put("moduleManager", LiquidBounce.moduleManager)
         scriptEngine.put("commandManager", LiquidBounce.commandManager)
         scriptEngine.put("scriptManager", LiquidBounce.scriptManager)
+
+        // Cross version instances
+        scriptEngine.put("imc", mc)
+        scriptEngine.put("classProvider", classProvider)
 
         // Global functions
         scriptEngine.put("registerScript", RegisterScript())
@@ -252,20 +200,9 @@ class Script(val scriptFile: File) : MinecraftInstance() {
      * @param scriptFile Path to the file to be imported.
      */
     fun import(scriptFile: String) {
-        val fileName = if (isSignatureValid) {
-            if (scriptFile.contains(".")) {
-                val idx = scriptFile.lastIndexOf('.')
-                scriptFile.substring(0, idx) + ".signed" + scriptFile.substring(idx)
-            } else {
-                "$scriptFile.signed"
-            }
-        } else {
-            scriptFile
-        }
+        val scriptText = File(LiquidBounce.scriptManager.scriptsFolder, scriptFile).readText()
 
-        val scriptText = File(LiquidBounce.scriptManager.scriptsFolder, fileName).readText()
-
-        scriptEngine.eval(if (isSignatureValid) checkSignature(scriptText) else scriptText)
+        scriptEngine.eval(scriptText)
     }
 
     /**

@@ -118,6 +118,9 @@ class ScriptModule(private val moduleObject: JSObject) : Module() {
     @EventTarget
     fun onSlowDown(slowDownEvent: SlowDownEvent) = callEvent("slowDown", slowDownEvent)
 
+    @EventTarget
+    fun onShutdown(shutdownEvent: ClientShutdownEvent) = callEvent("shutdown")
+
     /**
      * Calls the handler of a registered event.
      * @param eventName Name of the event to be called.

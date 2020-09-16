@@ -13,12 +13,9 @@ import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.LazySVGRenderer
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import org.apache.commons.io.IOUtils
 import org.lwjgl.input.Keyboard
-import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.awt.Desktop
 import java.io.File
@@ -30,7 +27,6 @@ import java.util.zip.ZipFile
 class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
     private lateinit var list: GuiList
-    private val biohazardIcon: LazySVGRenderer = LazySVGRenderer("/assets/minecraft/liquidbounce/biohazard.svg")
 
     override fun initGui() {
         list = GuiList(representedScreen)
@@ -178,24 +174,8 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
         override fun drawSlot(id: Int, x: Int, y: Int, var4: Int, var5: Int, var6: Int) {
             val script = LiquidBounce.scriptManager.scripts[id]
 
-            var x = Fonts.font40.drawCenteredString((if (script.isSignatureValid) "§9" else "§c") + script.scriptName + " §7v" + script.scriptVersion, representedScreen.width / 2.0f, y + 2.0f, Color.LIGHT_GRAY.rgb)
-            x = Fonts.font40.drawCenteredString("by §c" + script.scriptAuthors.joinToString(", "), representedScreen.width / 2.0f, y + 15.0f, Color.LIGHT_GRAY.rgb).coerceAtLeast(x)
-
-            if (!script.isSignatureValid) {
-                val width = Fonts.font40.fontHeight * 2 + 6
-
-                classProvider.getGlStateManager().bindTexture(biohazardIcon.getTexture(width * classProvider.createScaledResolution(mc).scaleFactor).glTextureId)
-
-                GL11.glColor4f(1.0f, 0.0f, 0.0f, 1.0f)
-
-                GL11.glDisable(GL11.GL_DEPTH_TEST);
-                GL11.glEnable(GL11.GL_BLEND);
-                GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-
-                RenderUtils.drawModalRectWithCustomSizedTexture(x.toFloat() + 3, y.toFloat() + 1, 0.0f, 0.0f, width.toFloat(), width.toFloat(), width.toFloat(), width.toFloat())
-
-                classProvider.getGlStateManager().bindTexture(0)
-            }
+            Fonts.font40.drawCenteredString("§9" + script.scriptName + " §7v" + script.scriptVersion, representedScreen.width / 2.0f, y + 2.0f, Color.LIGHT_GRAY.rgb)
+            Fonts.font40.drawCenteredString("by §c" + script.scriptAuthors.joinToString(", "), representedScreen.width / 2.0f, y + 15.0f, Color.LIGHT_GRAY.rgb).coerceAtLeast(x)
         }
 
         override fun drawBackground() { }

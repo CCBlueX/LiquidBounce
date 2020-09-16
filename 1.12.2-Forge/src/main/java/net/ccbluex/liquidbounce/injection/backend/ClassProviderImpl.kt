@@ -382,6 +382,8 @@ object ClassProviderImpl : IClassProvider {
 
     override fun isBlockBedrock(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped == Blocks.BEDROCK
 
+    override fun isBlockBush(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockBush
+
     override fun isGuiInventory(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiInventory
 
     override fun isGuiContainer(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiContainer

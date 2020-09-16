@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import kotlin.concurrent.thread
 
 object LiquidBounce {
 
@@ -67,7 +68,7 @@ object LiquidBounce {
     var background: IResourceLocation? = null
 
     // Discord RPC
-    private lateinit var clientRichPresence: ClientRichPresence
+    lateinit var clientRichPresence: ClientRichPresence
 
     lateinit var wrapper: Wrapper
 
@@ -92,6 +93,9 @@ object LiquidBounce {
         eventManager.registerListener(DonatorCape())
         eventManager.registerListener(InventoryUtils())
 
+        // Init Discord RPC
+        clientRichPresence = ClientRichPresence()
+
         // Create command manager
         commandManager = CommandManager()
 
@@ -108,7 +112,6 @@ object LiquidBounce {
 
             // ScriptManager
             scriptManager = ScriptManager()
-            scriptManager.refreshAuthority()
             scriptManager.loadScripts()
             scriptManager.enableScripts()
         } catch (throwable: Throwable) {
@@ -140,14 +143,6 @@ object LiquidBounce {
             ClientUtils.getLogger().error("Failed to register cape service", throwable)
         }
 
-        // Setup Discord RPC
-        try {
-            clientRichPresence = ClientRichPresence()
-            clientRichPresence.setup()
-        } catch (throwable: Throwable) {
-            ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
-        }
-
         // Set HUD
         hud = createDefault()
         fileManager.loadConfig(fileManager.hudConfig)
@@ -171,6 +166,17 @@ object LiquidBounce {
 
         // Load generators
         GuiAltManager.loadGenerators()
+
+        // Setup Discord RPC
+        if (clientRichPresence.showRichPresenceValue) {
+            thread {
+                try {
+                    clientRichPresence.setup()
+                } catch (throwable: Throwable) {
+                    ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
+                }
+            }
+        }
 
         // Set is starting status
         isStarting = false

@@ -148,12 +148,4 @@ object BlockUtils : MinecraftInstance() {
         return false
     }
 
-
-//    interface Collidable {
-//
-//        /**
-//         * Check if [block] is collidable
-//         */
-//        fun collideBlock(block: IBlock?): Boolean
-//    }
 }

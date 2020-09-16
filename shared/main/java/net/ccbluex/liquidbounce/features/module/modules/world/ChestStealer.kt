@@ -50,6 +50,7 @@ class ChestStealer : Module() {
             nextDelay = TimeUtils.randomDelay(get(), maxDelayValue.get())
         }
     }
+    private val delayOnFirstValue = BoolValue("DelayOnFirst", false)
 
     private val takeRandomizedValue = BoolValue("TakeRandomized", false)
     private val onlyItemsValue = BoolValue("OnlyItems", false)
@@ -91,7 +92,14 @@ class ChestStealer : Module() {
     fun onRender3D(event: Render3DEvent?) {
         val thePlayer = mc.thePlayer!!
 
-        if (!classProvider.isGuiChest(mc.currentScreen) || mc.currentScreen == null || !delayTimer.hasTimePassed(nextDelay)) {
+        if (!classProvider.isGuiChest(mc.currentScreen) || mc.currentScreen == null) {
+            if (delayOnFirstValue.get())
+                delayTimer.reset()
+            autoCloseTimer.reset()
+            return
+        }
+
+        if (!delayTimer.hasTimePassed(nextDelay)) {
             autoCloseTimer.reset()
             return
         }

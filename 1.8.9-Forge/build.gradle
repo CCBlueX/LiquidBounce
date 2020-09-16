@@ -96,7 +96,6 @@ dependencies {
             strictly '2.5'
         }
     }
-    compile group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.13'
 
     compile fileTree(include: ['*.jar'], dir: 'libs')
 }
@@ -145,7 +144,6 @@ shadowJar {
         include(dependency('org.scijava:native-lib-loader'))
         include(dependency('com.kohlschutter.junixsocket:junixsocket-common'))
         include(dependency('com.kohlschutter.junixsocket:junixsocket-native-common'))
-        include(dependency('org.apache.xmlgraphics:batik-rasterizer'))
 
         include(dependency('org.jetbrains.kotlin:kotlin-stdlib'))
 

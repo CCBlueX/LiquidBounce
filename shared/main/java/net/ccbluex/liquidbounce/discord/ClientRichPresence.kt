@@ -22,6 +22,8 @@ import kotlin.concurrent.thread
 
 class ClientRichPresence : MinecraftInstance() {
 
+    var showRichPresenceValue = true
+
     // IPC Client
     private var ipcClient: IPCClient? = null
 
@@ -111,6 +113,10 @@ class ClientRichPresence : MinecraftInstance() {
      * Shutdown ipc client
      */
     fun shutdown() {
+        if (ipcClient?.status != PipeStatus.CONNECTED) {
+            return
+        }
+
         try {
             ipcClient?.close()
         } catch (e: Throwable) {

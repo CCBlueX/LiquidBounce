@@ -62,7 +62,6 @@ class ModuleManager : Listenable {
                 Sprint::class.java,
                 Teams::class.java,
                 NoRotateSet::class.java,
-                AntiBot::class.java,
                 ChestStealer::class.java,
                 Scaffold::class.java,
                 CivBreak::class.java,
@@ -101,7 +100,6 @@ class ModuleManager : Listenable {
                 Timer::class.java,
                 Sneak::class.java,
                 SkinDerp::class.java,
-                Paralyze::class.java,
                 GhostHand::class.java,
                 AutoWalk::class.java,
                 AutoBreak::class.java,
@@ -184,6 +182,7 @@ class ModuleManager : Listenable {
         registerModule(NoScoreboard)
         registerModule(Fucker)
         registerModule(ChestAura)
+        registerModule(AntiBot)
 
         ClientUtils.getLogger().info("[ModuleManager] Loaded ${modules.size} modules.")
     }

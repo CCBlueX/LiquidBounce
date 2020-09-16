@@ -199,6 +199,7 @@ interface IClassProvider {
     fun isBlockLiquid(obj: Any?): Boolean
     fun isBlockCactus(obj: Any?): Boolean
     fun isBlockBedrock(obj: Any?): Boolean
+    fun isBlockBush(obj: Any?): Boolean
 
     fun isGuiInventory(obj: Any?): Boolean
     fun isGuiContainer(obj: Any?): Boolean

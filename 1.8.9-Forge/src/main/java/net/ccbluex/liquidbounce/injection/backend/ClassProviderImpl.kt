@@ -47,7 +47,6 @@ import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
 import net.ccbluex.liquidbounce.injection.backend.utils.*
-import net.ccbluex.liquidbounce.injection.backend.utils.SafeVertexBuffer
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.minecraft.block.*
@@ -372,6 +371,8 @@ object ClassProviderImpl : IClassProvider {
     override fun isBlockCactus(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockCactus
 
     override fun isBlockBedrock(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped == Blocks.bedrock
+
+    override fun isBlockBush(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockBush
 
     override fun isGuiInventory(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiInventory
 

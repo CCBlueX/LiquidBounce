@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.IScaledResolution;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.ccbluex.liquidbounce.utils.render.shader.Shader;
 import net.minecraft.client.gui.ScaledResolution;
+import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL20;
 
 public final class BackgroundShader extends Shader {
@@ -29,15 +30,13 @@ public final class BackgroundShader extends Shader {
 
     @Override
     public void updateUniforms() {
-        final IScaledResolution scaledResolution = classProvider.createScaledResolution(mc);
-
         final int resolutionID = getUniform("iResolution");
         if(resolutionID > -1)
-            GL20.glUniform2f(resolutionID, (float) scaledResolution.getScaledWidth() * 2, (float) scaledResolution.getScaledHeight() * 2);
+            GL20.glUniform2f(resolutionID, (float) Display.getWidth(), (float) Display.getHeight());
         final int timeID = getUniform("iTime");
         if(timeID > -1) GL20.glUniform1f(timeID, time);
 
-        time += 0.005F * RenderUtils.deltaTime;
+        time += 0.003F * RenderUtils.deltaTime;
     }
 
 }

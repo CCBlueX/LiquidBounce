@@ -174,7 +174,7 @@ class InventoryCleaner : Module() {
             } else if (itemStack.unlocalizedName == "item.compass") {
                 items(0, 45).none { (_, stack) -> itemStack != stack && stack.unlocalizedName == "item.compass" }
             } else classProvider.isItemFood(item) || itemStack.unlocalizedName == "item.arrow" ||
-                    classProvider.isItemBlock(item) && !itemStack.unlocalizedName.contains("flower") ||
+                    classProvider.isItemBlock(item) && !classProvider.isBlockBush(item?.asItemBlock()?.block) ||
                     classProvider.isItemBed(item) || itemStack.unlocalizedName == "item.diamond" || itemStack.unlocalizedName == "item.ingotIron" ||
                     classProvider.isItemPotion(item) || classProvider.isItemEnderPearl(item) || classProvider.isItemEnchantedBook(item) || classProvider.isItemBucket(item) || itemStack.unlocalizedName == "item.stick" ||
                     ignoreVehiclesValue.get() && (classProvider.isItemBoat(item) || classProvider.isItemMinecart(item))

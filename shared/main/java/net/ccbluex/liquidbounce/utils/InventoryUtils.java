@@ -59,19 +59,20 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
                 final IItemBlock itemBlock = itemStack.getItem().asItemBlock();
                 final IBlock block = itemBlock.getBlock();
 
-                if (block.isFullCube(block.getDefaultState()) && !BLOCK_BLACKLIST.contains(block))
+                if (block.isFullCube(block.getDefaultState()) && !BLOCK_BLACKLIST.contains(block)
+                        && !classProvider.isBlockBush(block))
                     return i;
             }
         }
 
         for (int i = 36; i < 45; i++) {
-            final IItemStack itemStack = mc.getThePlayer().getInventory().getStackInSlot(i);
+            final IItemStack itemStack = mc.getThePlayer().getInventoryContainer().getSlot(i).getStack();
 
             if (itemStack != null && classProvider.isItemBlock(itemStack.getItem()) && itemStack.getStackSize() > 0) {
                 final IItemBlock itemBlock = itemStack.getItem().asItemBlock();
                 final IBlock block = itemBlock.getBlock();
 
-                if (!BLOCK_BLACKLIST.contains(block))
+                if (!BLOCK_BLACKLIST.contains(block) && !classProvider.isBlockBush(block))
                     return i;
             }
         }

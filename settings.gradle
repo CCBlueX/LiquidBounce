@@ -5,5 +5,3 @@ if (System.getenv()['mcversion'] == "1.12") {
 } else {
     include '1.8.9-Forge'
 }
-
-// include '1.8.9-Vanilla'

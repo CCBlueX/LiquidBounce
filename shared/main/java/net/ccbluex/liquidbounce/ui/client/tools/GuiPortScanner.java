@@ -54,7 +54,7 @@ public class GuiPortScanner extends WrappedGuiScreen {
         hostField.setMaxStringLength(Integer.MAX_VALUE);
         hostField.setText("localhost");
 
-        minPortField = classProvider.createGuiTextField(1, Fonts.font40, representedScreen.getHeight() / 2 - 100, 90, 90, 20);
+        minPortField = classProvider.createGuiTextField(1, Fonts.font40, representedScreen.getWidth() / 2 - 100, 90, 90, 20);
         minPortField.setMaxStringLength(5);
         minPortField.setText(String.valueOf(1));
 

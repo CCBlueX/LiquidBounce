@@ -55,7 +55,7 @@ class Tower : Module() {
     private val keepRotationValue = BoolValue("KeepRotation", false)
     private val onJumpValue = BoolValue("OnJump", false)
     private val placeModeValue = ListValue("PlaceTiming", arrayOf("Pre", "Post"), "Post")
-    private val timerValue = FloatValue("Timer", 1f, 0f, 10f)
+    private val timerValue = FloatValue("Timer", 1f, 0.01f, 10f)
 
     // Jump mode
     private val jumpMotionValue = FloatValue("JumpMotion", 0.42f, 0.3681289f, 0.79f)
@@ -238,7 +238,7 @@ class Tower : Module() {
         // AutoBlock
         var blockSlot = -1
         var itemStack = thePlayer.heldItem
-        if (itemStack == null || !classProvider.isItemBlock(itemStack.item)) {
+        if (itemStack == null || !classProvider.isItemBlock(itemStack.item) || classProvider.isBlockBush(itemStack.item?.asItemBlock()?.block)) {
             if (!autoBlockValue.get()) return
 
             blockSlot = InventoryUtils.findAutoBlockBlock()

@@ -12,8 +12,8 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.CPSCounter
-import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.ServerUtils
+import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.value.*
@@ -86,7 +86,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
         val thePlayer = mc.thePlayer
 
         if (thePlayer != null) {
-            when (str) {
+            when (str.toLowerCase()) {
                 "x" -> return DECIMAL_FORMAT.format(thePlayer.posX)
                 "y" -> return DECIMAL_FORMAT.format(thePlayer.posY)
                 "z" -> return DECIMAL_FORMAT.format(thePlayer.posZ)
@@ -94,19 +94,22 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
                 "ydp" -> return thePlayer.posY.toString()
                 "zdp" -> return thePlayer.posZ.toString()
                 "velocity" -> return DECIMAL_FORMAT.format(sqrt(thePlayer.motionX * thePlayer.motionX + thePlayer.motionZ * thePlayer.motionZ))
-                "ping" -> return EntityUtils.getPing(thePlayer).toString()
+                "ping" -> return thePlayer.getPing().toString()
+                "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
+                "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
+                "food" -> return thePlayer.foodStats.foodLevel.toString()
             }
         }
 
-        return when (str) {
+        return when (str.toLowerCase()) {
             "username" -> mc.session.username
-            "clientName" -> LiquidBounce.CLIENT_NAME
-            "clientVersion" -> "b${LiquidBounce.CLIENT_VERSION}"
-            "clientCreator" -> LiquidBounce.CLIENT_CREATOR
+            "clientname" -> LiquidBounce.CLIENT_NAME
+            "clientversion" -> "b${LiquidBounce.CLIENT_VERSION}"
+            "clientcreator" -> LiquidBounce.CLIENT_CREATOR
             "fps" -> mc.debugFPS.toString()
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
-            "serverIp" -> ServerUtils.getRemoteIp()
+            "serverip" -> ServerUtils.getRemoteIp()
             "cps", "lcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.LEFT).toString()
             "mcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.MIDDLE).toString()
             "rcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.RIGHT).toString()
