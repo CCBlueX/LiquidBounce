@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.commands.*
 import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
 import net.ccbluex.liquidbounce.features.command.shortcuts.ShortcutParser
+import net.ccbluex.liquidbounce.features.command.special.*
 import net.ccbluex.liquidbounce.utils.ClientUtils
 
 class CommandManager {
@@ -49,6 +50,11 @@ class CommandManager {
         registerCommand(PrefixCommand())
         registerCommand(ShortcutCommand())
         registerCommand(HideCommand())
+        registerCommand(XrayCommand())
+        registerCommand(LiquidChatCommand())
+        registerCommand(PrivateChatCommand())
+        registerCommand(ChatTokenCommand())
+        registerCommand(ChatAdminCommand())
     }
 
     /**
