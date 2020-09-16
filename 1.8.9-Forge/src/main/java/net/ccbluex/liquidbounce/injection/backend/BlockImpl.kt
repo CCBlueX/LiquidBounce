@@ -32,7 +32,7 @@ class BlockImpl(val wrapped: Block) : IBlock {
 
     override fun getSelectedBoundingBox(world: IWorld, blockState: IIBlockState, blockPos: WBlockPos): IAxisAlignedBB = AxisAlignedBBImpl(wrapped.getSelectedBoundingBox(world.unwrap(), blockPos.unwrap()))
 
-    override fun getCollisionBoundingBox(world: IWorld, pos: WBlockPos, state: IIBlockState): IAxisAlignedBB? = wrapped.getCollisionBoundingBox(world.unwrap(), pos.unwrap(), state?.unwrap()).wrap()
+    override fun getCollisionBoundingBox(world: IWorld, pos: WBlockPos, state: IIBlockState): IAxisAlignedBB? = wrapped.getCollisionBoundingBox(world?.unwrap(), pos.unwrap(), state?.unwrap())?.wrap()
 
     override fun canCollideCheck(state: IIBlockState?, hitIfLiquid: Boolean): Boolean = wrapped.canCollideCheck(state?.unwrap(), hitIfLiquid)
 
