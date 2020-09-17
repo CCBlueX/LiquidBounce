@@ -43,7 +43,7 @@ public class Scaffold extends Module {
      */
 
     // Mode
-    public final ListValue modeValue = new ListValue("Mode", new String[] {"Normal", "Rewinside", "Expand"}, "Normal");
+    public final ListValue modeValue = new ListValue("Mode", new String[]{"Normal", "Rewinside", "Expand"}, "Normal");
 
     // Delay
     private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 0, 0, 1000) {
@@ -51,7 +51,7 @@ public class Scaffold extends Module {
         protected void onChanged(final Integer oldValue, final Integer newValue) {
             final int i = minDelayValue.get();
 
-            if(i > newValue)
+            if (i > newValue)
                 set(i);
         }
     };
@@ -61,7 +61,7 @@ public class Scaffold extends Module {
         protected void onChanged(final Integer oldValue, final Integer newValue) {
             final int i = maxDelayValue.get();
 
-            if(i < newValue)
+            if (i < newValue)
                 set(i);
         }
     };
@@ -93,7 +93,7 @@ public class Scaffold extends Module {
 
     // Zitter
     private final BoolValue zitterValue = new BoolValue("Zitter", false);
-    private final ListValue zitterModeValue = new ListValue("ZitterMode", new String[] {"Teleport", "Smooth"}, "Teleport");
+    private final ListValue zitterModeValue = new ListValue("ZitterMode", new String[]{"Teleport", "Smooth"}, "Teleport");
     private final FloatValue zitterSpeed = new FloatValue("ZitterSpeed", 0.13F, 0.1F, 0.3F);
     private final FloatValue zitterStrength = new FloatValue("ZitterStrength", 0.072F, 0.05F, 0.2F);
 
@@ -334,7 +334,8 @@ public class Scaffold extends Module {
             if (blockSlot == -1)
                 return;
 
-            mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36));
+            if (blockSlot - 36 != slot)
+                mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36));
             itemStack = mc.getThePlayer().getInventoryContainer().getSlot(blockSlot).getStack();
         }
 
