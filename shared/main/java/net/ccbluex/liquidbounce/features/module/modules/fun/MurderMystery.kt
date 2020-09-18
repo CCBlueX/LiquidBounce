@@ -5,6 +5,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.minecraft.entity.Entity
@@ -23,7 +24,7 @@ class MurderMystery : Module() {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         for (entity in mc.theWorld!!.loadedEntityList) {
-            if(!classProvider.isEntityLivingBase(entity)) continue
+            if(!classProvider.isEntityLivingBase(entity) || AntiBot.isBot(entity.asEntityLivingBase())) continue
 //            isMurderer(entity)
         }
     }
