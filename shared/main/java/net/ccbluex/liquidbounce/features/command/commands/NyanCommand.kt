@@ -1,8 +1,3 @@
-/*
- * LiquidBounce Hacked Client
- * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
- */
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -13,28 +8,23 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.util.ResourceLocation
 
-class NyanCommand : Command("nyan", emptyArray()), Listenable {
+class NyanCommand : Command("nyan"), Listenable {
     private var toggle = false
     private var image = 0
     private var running = 0f
     private val nyanTextures = arrayOf(
-            ResourceLocation("liquidbounce/nyan/1.png"),
-            ResourceLocation("liquidbounce/nyan/2.png"),
-            ResourceLocation("liquidbounce/nyan/3.png"),
-            ResourceLocation("liquidbounce/nyan/4.png"),
-            ResourceLocation("liquidbounce/nyan/5.png")
+            classProvider.createResourceLocation("liquidbounce/nyan/1.png"),
+            classProvider.createResourceLocation("liquidbounce/nyan/2.png"),
+            classProvider.createResourceLocation("liquidbounce/nyan/3.png"),
+            classProvider.createResourceLocation("liquidbounce/nyan/4.png"),
+            classProvider.createResourceLocation("liquidbounce/nyan/5.png")
     )
 
     init {
         LiquidBounce.eventManager.registerListener(this)
     }
 
-    /**
-     * Execute commands with provided [args]
-     */
     override fun execute(args: Array<String>) {
         toggle = !toggle
         ClientUtils.displayChatMessage(if (toggle) "§anyan nyan nyan. :)" else "§cYou made the little nyan sad! :(")
@@ -46,8 +36,8 @@ class NyanCommand : Command("nyan", emptyArray()), Listenable {
             return
 
         running += 0.15f * RenderUtils.deltaTime
-        val scaledResolution = ScaledResolution(mc)
-        RenderUtils.drawImage(nyanTextures[image], running.toInt(), scaledResolution.scaledHeight - 60, 64, 24)
+        val scaledResolution = classProvider.createScaledResolution(mc)
+        RenderUtils.drawImage(nyanTextures[image], running.toInt(), scaledResolution.scaledHeight - 60, 64, 32)
         if (scaledResolution.scaledWidth <= running)
             running = -64f
     }
