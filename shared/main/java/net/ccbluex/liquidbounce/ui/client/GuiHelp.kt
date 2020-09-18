@@ -14,7 +14,7 @@ import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
-class GuiWelcome : WrappedGuiScreen() {
+class GuiHelp : WrappedGuiScreen() {
 
     override fun initGui() {
         representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height - 80, "Ok"))

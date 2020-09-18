@@ -16,7 +16,7 @@ class CommandManager {
     val commands = mutableListOf<Command>()
     var latestAutoComplete: Array<String> = emptyArray()
 
-    var prefix = '.'
+    var prefix = '`'
 
     /**
      * Register all default commands

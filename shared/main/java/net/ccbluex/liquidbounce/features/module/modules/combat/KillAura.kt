@@ -54,7 +54,7 @@ class KillAura : Module() {
      */
 
     // CPS - Attack speed
-    private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
+    private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 12, 1, 20) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = minCPS.get()
             if (i > newValue) set(i)
@@ -63,7 +63,7 @@ class KillAura : Module() {
         }
     }
 
-    private val minCPS: IntegerValue = object : IntegerValue("MinCPS", 5, 1, 20) {
+    private val minCPS: IntegerValue = object : IntegerValue("MinCPS", 8, 1, 20) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = maxCPS.get()
             if (i < newValue) set(i)
@@ -72,26 +72,26 @@ class KillAura : Module() {
         }
     }
 
-    private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
+    private val hurtTimeValue = IntegerValue("HurtTime", 7, 0, 10)
     private val cooldownValue = FloatValue("Cooldown", 1f, 0f, 1f)
 
     // Range
-    private val rangeValue = FloatValue("Range", 3.7f, 1f, 8f)
-    private val throughWallsRangeValue = FloatValue("ThroughWallsRange", 3f, 0f, 8f)
+    private val rangeValue = FloatValue("Range", 3.0f, 1f, 8f)
+    private val throughWallsRangeValue = FloatValue("ThroughWallsRange", 0f, 0f, 8f)
     private val rangeSprintReducementValue = FloatValue("RangeSprintReducement", 0f, 0f, 0.4f)
 
     // Modes
-    private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Distance")
-    private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
+    private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Direction")
+    private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Single")
 
     // Bypass
     private val swingValue = BoolValue("Swing", true)
-    private val keepSprintValue = BoolValue("KeepSprint", true)
+    private val keepSprintValue = BoolValue("KeepSprint", false)
 
     // AutoBlock
-    private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Packet", "AfterTick"), "Packet")
-    private val interactAutoBlockValue = BoolValue("InteractAutoBlock", true)
-    private val blockRate = IntegerValue("BlockRate", 100, 1, 100)
+    private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Packet", "AfterTick"), "Off")
+    private val interactAutoBlockValue = BoolValue("InteractAutoBlock", false)
+    private val blockRate = IntegerValue("BlockRate", 0, 0, 100)
 
     // Raycast
     private val raycastValue = BoolValue("RayCast", true)
@@ -99,31 +99,31 @@ class KillAura : Module() {
     private val livingRaycastValue = BoolValue("LivingRayCast", true)
 
     // Bypass
-    private val aacValue = BoolValue("AAC", false)
+    private val aacValue = BoolValue("AAC", true)
 
     // Turn Speed
-    private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 0f, 180f) {
+    private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 40f, 0f, 180f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
             val v = minTurnSpeed.get()
             if (v > newValue) set(v)
         }
     }
 
-    private val minTurnSpeed: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 0f, 180f) {
+    private val minTurnSpeed: FloatValue = object : FloatValue("MinTurnSpeed", 20f, 0f, 180f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
             val v = maxTurnSpeed.get()
             if (v < newValue) set(v)
         }
     }
 
-    private val silentRotationValue = BoolValue("SilentRotation", true)
+    private val silentRotationValue = BoolValue("SilentRotation", false)
     private val rotationStrafeValue = ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off")
-    private val randomCenterValue = BoolValue("RandomCenter", true)
+    private val randomCenterValue = BoolValue("RandomCenter", false)
     private val outborderValue = BoolValue("Outborder", false)
-    private val fovValue = FloatValue("FOV", 180f, 0f, 180f)
+    private val fovValue = FloatValue("FOV", 40f, 0f, 180f)
 
     // Predict
-    private val predictValue = BoolValue("Predict", true)
+    private val predictValue = BoolValue("Predict", false)
 
     private val maxPredictSize: FloatValue = object : FloatValue("MaxPredictSize", 1f, 0.1f, 5f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
