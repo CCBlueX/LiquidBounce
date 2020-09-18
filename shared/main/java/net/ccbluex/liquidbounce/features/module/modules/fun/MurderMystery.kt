@@ -27,7 +27,6 @@ class MurderMystery : Module() {
             if(!classProvider.isEntityLivingBase(entity)) continue
 //            isMurderer(entity)
         }
-        ClientUtils.displayChatMessage("Checking for murderer...")
     }
 
 //    fun isMurderer(entity: EntityLivingBase) {
@@ -46,6 +45,10 @@ class MurderMystery : Module() {
                 ClientUtils.displayChatMessage("Murderer is $murderer")
             }
         }
+    }
+
+    override fun onEnable() {
+        ClientUtils.displayChatMessage("Searching for murderer")
     }
 
 }
