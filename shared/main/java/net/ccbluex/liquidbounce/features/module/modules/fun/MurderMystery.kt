@@ -8,6 +8,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.item.ItemSword
 
@@ -16,10 +17,11 @@ class MurderMystery : Module() {
 
     private val toolValue = BoolValue("Tools", true)
     private val miscValue = BoolValue("Misc", true)
+    private val modeValue = ListValue("Mode", arrayOf("Single", "Double"), "Single")
 
     // globals
     private var murderer = ""
-    private val customMessage = "The murderer is ${murderer} lol"
+    private var reason = "error"
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -42,7 +44,8 @@ class MurderMystery : Module() {
         for(i in 0..9) {
             if(entity.inventory.get(i).item is ItemSword && murderer != entity.name) {
                 murderer = entity.name
-                ClientUtils.displayChatMessage("Murderer is $murderer")
+                reason = "Holding a sword"
+                ClientUtils.displayChatMessage("The murderer is $murderer. $reason")
             }
         }
     }
