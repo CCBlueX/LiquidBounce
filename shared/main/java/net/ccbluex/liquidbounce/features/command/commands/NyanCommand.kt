@@ -37,7 +37,7 @@ class NyanCommand : Command("nyan"), Listenable {
 
         running += 0.15f * RenderUtils.deltaTime
         val scaledResolution = classProvider.createScaledResolution(mc)
-        RenderUtils.drawImage(nyanTextures[image], running.toInt(), scaledResolution.scaledHeight - 60, 64, 32)
+        RenderUtils.drawImage(nyanTextures[image], running.toInt(), scaledResolution.scaledHeight - 60, 64, 24)
         if (scaledResolution.scaledWidth <= running)
             running = -64f
     }

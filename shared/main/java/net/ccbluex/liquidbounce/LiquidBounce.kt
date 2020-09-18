@@ -173,15 +173,15 @@ object LiquidBounce {
         GuiAltManager.loadGenerators()
 
         // Setup Discord RPC
-        if (clientRichPresence.showRichPresenceValue) {
-            thread {
-                try {
-                    clientRichPresence.setup()
-                } catch (throwable: Throwable) {
-                    ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
-                }
-            }
-        }
+//        if (clientRichPresence.showRichPresenceValue) {
+//            thread {
+//                try {
+//                    clientRichPresence.setup()
+//                } catch (throwable: Throwable) {
+//                    ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
+//                }
+//            }
+//        }
 
         // Set is starting status
         isStarting = false
