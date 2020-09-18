@@ -45,7 +45,7 @@ import java.awt.Color
 import java.util.*
 import kotlin.math.*
 
-@ModuleInfo(name = "KillAura", description = "Automatically attacks targets around you.",
+@ModuleInfo(name = "KittenKiller", description = "Automatically attacks targets around you.",
         category = ModuleCategory.COMBAT)
 class KillAura : Module() {
 

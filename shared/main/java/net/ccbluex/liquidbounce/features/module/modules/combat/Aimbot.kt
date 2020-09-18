@@ -20,15 +20,15 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import kotlin.random.Random
 
-@ModuleInfo(name = "Aimbot", description = "Automatically faces selected entities around you.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "KittenA", description = "Automatically faces selected entities around you.", category = ModuleCategory.COMBAT)
 class Aimbot : Module() {
 
     private val rangeValue = FloatValue("Range", 4.4F, 1F, 8F)
     private val turnSpeedValue = FloatValue("TurnSpeed", 2F, 1F, 180F)
-    private val fovValue = FloatValue("FOV", 180F, 1F, 180F)
+    private val fovValue = FloatValue("FOV", 40F, 1F, 180F)
     private val centerValue = BoolValue("Center", false)
     private val lockValue = BoolValue("Lock", true)
-    private val onClickValue = BoolValue("OnClick", false)
+    private val onClickValue = BoolValue("OnClick", true)
     private val jitterValue = BoolValue("Jitter", false)
 
     private val clickTimer = MSTimer()

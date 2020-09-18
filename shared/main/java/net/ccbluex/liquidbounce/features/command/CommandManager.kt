@@ -37,6 +37,7 @@ class CommandManager {
         registerCommand(UsernameCommand())
         registerCommand(TargetCommand())
         registerCommand(TacoCommand())
+        registerCommand(NyanCommand())
         registerCommand(BindsCommand())
         registerCommand(HoloStandCommand())
         registerCommand(PanicCommand())
