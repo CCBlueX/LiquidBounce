@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer.Companion.getColorIndex
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
@@ -33,7 +34,7 @@ import java.awt.Color
 @ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
 class ESP : Module() {
     @JvmField
-    val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"), "Box")
+    val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"), "Outline")
 
     @JvmField
     val outlineWidth = FloatValue("Outline-Width", 3f, 0.5f, 5f)
@@ -166,21 +167,28 @@ class ESP : Module() {
                 if (entityLivingBase.hurtTime > 0)
                     return Color.RED
                 if (classProvider.isEntityPlayer(entityLivingBase) && entityLivingBase.asEntityPlayer().isClientFriend())
-                    return Color.BLUE
+                    return Color.GREEN
 
-                if (colorTeam.get()) {
-                    val chars: CharArray = (entityLivingBase.displayName ?: return@run).formattedText.toCharArray()
-                    var color = Int.MAX_VALUE
-                    for (i in chars.indices) {
-                        if (chars[i] != '§' || i + 1 >= chars.size) continue
-                        val index = getColorIndex(chars[i + 1])
-                        if (index < 0 || index > 15) continue
-                        color = ColorUtils.hexColors[index]
-                        break
-                    }
-
-                    return Color(color)
+                if(AntiBot.isBot(entityLivingBase)) {
+                    return Color.white;
                 }
+                else {
+                    return Color.BLUE;
+                }
+
+//                if (colorTeam.get()) {
+//                    val chars: CharArray = (entityLivingBase.displayName ?: return@run).formattedText.toCharArray()
+//                    var color = Int.MAX_VALUE
+//                    for (i in chars.indices) {
+//                        if (chars[i] != '§' || i + 1 >= chars.size) continue
+//                        val index = getColorIndex(chars[i + 1])
+//                        if (index < 0 || index > 15) continue
+//                        color = ColorUtils.hexColors[index]
+//                        break
+//                    }
+//
+//                    return Color(color)
+//                }
             }
         }
 
