@@ -50,6 +50,10 @@ object LiquidBounce {
 
     var isStarting = false
 
+    // Skinfo
+    const val NEW_NAME = "Cashewmod"
+    const val NEW_VERSION = 4.0f
+
     // Managers
     lateinit var moduleManager: ModuleManager
     lateinit var commandManager: CommandManager
@@ -79,7 +83,7 @@ object LiquidBounce {
     fun startClient() {
         isStarting = true
 
-        ClientUtils.getLogger().info("Starting $CLIENT_NAME b$CLIENT_VERSION, by $CLIENT_CREATOR")
+        ClientUtils.getLogger().info("Starting...")
 
         // Create file manager
         fileManager = FileManager()
