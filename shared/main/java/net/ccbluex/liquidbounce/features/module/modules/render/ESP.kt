@@ -37,7 +37,7 @@ class ESP : Module() {
     val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"), "Outline")
 
     @JvmField
-    val outlineWidth = FloatValue("Outline-Width", 3f, 0.5f, 5f)
+    val outlineWidth = FloatValue("Outline-Width", 4f, 0.5f, 5f)
 
     @JvmField
     val wireframeWidth = FloatValue("WireFrame-Width", 2f, 0.5f, 5f)
