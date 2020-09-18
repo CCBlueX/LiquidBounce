@@ -176,7 +176,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                                         rectColor)
                                 rectMode.equals("right", true) -> RenderUtils.drawRect(-3F, yPos, 0F,
                                         yPos + textHeight, rectColor)
-                                rectMode.equals("centre", true) -> RenderUtils.drawBorderedRect(xPos -5, yPos, 0F, yPos + textHeight, 3f, rectColor, Color(0, 0, 0, 0).rgb)
+                                rectMode.equals("centre", true) -> RenderUtils.drawBorder(xPos -5, yPos, 0F, yPos + textHeight, 3f, rectColor)
                             }
                         }
                     }

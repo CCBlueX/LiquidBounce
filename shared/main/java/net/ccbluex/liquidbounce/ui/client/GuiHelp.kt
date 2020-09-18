@@ -17,7 +17,7 @@ import java.awt.Color
 class GuiHelp : WrappedGuiScreen() {
 
     override fun initGui() {
-        representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height - 80, "Ok"))
+        representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height - 80, "❤"))
 
     }
 
@@ -26,7 +26,12 @@ class GuiHelp : WrappedGuiScreen() {
 
         val font = Fonts.font35
 
-        font.drawCenteredString("Help incomplete", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
+        font.drawCenteredString("Catclipper - N", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
+        font.drawCenteredString("Spectator - U", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
+        font.drawCenteredString("ToggleSprint - M", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
+        font.drawCenteredString("Climb Vines - L", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
+        font.drawCenteredString("Reveal Cmd - K", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
+
 
         super.drawScreen(mouseX, mouseY, partialTicks)
 

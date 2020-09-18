@@ -15,13 +15,14 @@ import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
+import org.lwjgl.input.Keyboard;
 
-@ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_M)
 public class Sprint extends Module {
 
-    public final BoolValue allDirectionsValue = new BoolValue("AllDirections", true);
-    public final BoolValue blindnessValue = new BoolValue("Blindness", true);
-    public final BoolValue foodValue = new BoolValue("Food", true);
+    public final BoolValue allDirectionsValue = new BoolValue("AllDirections", false);
+    public final BoolValue blindnessValue = new BoolValue("Blindness", false);
+    public final BoolValue foodValue = new BoolValue("Food", false);
 
     public final BoolValue checkServerSide = new BoolValue("CheckServerSide", false);
     public final BoolValue checkServerSideGround = new BoolValue("CheckServerSideOnlyGround", false);

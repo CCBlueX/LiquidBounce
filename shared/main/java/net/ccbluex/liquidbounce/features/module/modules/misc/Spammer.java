@@ -23,7 +23,7 @@ import java.util.Random;
 @ModuleInfo(name = "Spammer", description = "Spams the chat with a given message.", category = ModuleCategory.MISC)
 public class Spammer extends Module {
 
-    private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 1000, 0, 5000) {
+    private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 50000, 0, 50000) {
         @Override
         protected void onChanged(final Integer oldValue, final Integer newValue) {
             final int minDelayValueObject = minDelayValue.get();
@@ -34,7 +34,7 @@ public class Spammer extends Module {
         }
     };
 
-    private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 500, 0, 5000) {
+    private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 50000, 0, 50000) {
 
         @Override
         protected void onChanged(final Integer oldValue, final Integer newValue) {
@@ -46,8 +46,8 @@ public class Spammer extends Module {
         }
     };
 
-    private final TextValue messageValue = new TextValue("Message", LiquidBounce.CLIENT_NAME + " Client | liquidbounce(.net) | CCBlueX on yt");
-    private final BoolValue customValue = new BoolValue("Custom", false);
+    private final TextValue messageValue = new TextValue("Message", "Where is the library lol");
+    private final BoolValue customValue = new BoolValue("Custom", true);
 
     private final MSTimer msTimer = new MSTimer();
     private long delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());

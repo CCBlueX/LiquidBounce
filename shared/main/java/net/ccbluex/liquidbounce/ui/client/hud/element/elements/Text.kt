@@ -53,7 +53,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
             return text
         }
         fun username(): Text {
-            val text = Text(x = 2.0, y = 12.0, scale = 1F)
+            val text = Text(x = 2.0, y = 19.0, scale = 1F)
 
             text.displayString.set("%username%")
             text.shadow.set(false)
