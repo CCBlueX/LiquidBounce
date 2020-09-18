@@ -45,7 +45,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
         fun defaultClient(): Text {
             val text = Text(x = 2.0, y = 2.0, scale = 1.5F)
 
-            text.displayString.set("%clientName%")
+            text.displayString.set("%clientName% %clientVersion%")
             text.shadow.set(false)
             text.fontValue.set(Fonts.font40)
             text.setColor(Color(0, 111, 255))

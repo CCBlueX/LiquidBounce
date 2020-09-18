@@ -10,5 +10,5 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import org.lwjgl.input.Keyboard
 
-@ModuleInfo(name = "RevealCmd", description = "Allows you to see onclick action and value of chat message components when hovered.", category = ModuleCategory.MISC, keyBind = Keyboard.KEY_K)
+@ModuleInfo(name = "RevealCommandd", description = "Allows you to see onclick action and value of chat message components when hovered.", category = ModuleCategory.MISC, keyBind = Keyboard.KEY_K)
 class ComponentOnHover : Module()
