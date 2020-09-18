@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -26,18 +27,18 @@ class GuiHelp : WrappedGuiScreen() {
 
         val font = Fonts.font35
 
-        font.drawCenteredString("Catclipper - N", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
-        font.drawCenteredString("Spectator - U", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
-        font.drawCenteredString("ToggleSprint - M", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
-        font.drawCenteredString("Climb Vines - L", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
-        font.drawCenteredString("Reveal Cmd - K", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
+        font.drawCenteredString("Catclipper - N", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, false)
+        font.drawCenteredString("Spectator - U", representedScreen.width / 2F, representedScreen.height / 8F + 80, 0xffffff, false)
+        font.drawCenteredString("ToggleSprint - M", representedScreen.width / 2F, representedScreen.height / 8F + 90, 0xffffff, false)
+        font.drawCenteredString("Climb Vines - L", representedScreen.width / 2F, representedScreen.height / 8F + 100, 0xffffff, false)
+        font.drawCenteredString("Reveal Cmd - K", representedScreen.width / 2F, representedScreen.height / 8F + 110, 0xffffff, false)
 
 
         super.drawScreen(mouseX, mouseY, partialTicks)
 
         // Title
         GL11.glScalef(2F, 2F, 2F)
-        Fonts.font40.drawCenteredString("Welcome, ${mc.session.username}!", representedScreen.width / 2 / 2F, representedScreen.height / 8F / 2 + 20, Color(0, 140, 255).rgb, true)
+        Fonts.font40.drawCenteredString("Welcome, ${mc.session.username}!", representedScreen.width / 2 / 2F, representedScreen.height / 8F / 2 + 20, ColorUtils.rainbow().rgb, true)
     }
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
