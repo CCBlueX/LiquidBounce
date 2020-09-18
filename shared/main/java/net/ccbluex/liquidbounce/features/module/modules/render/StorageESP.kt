@@ -27,10 +27,10 @@ class StorageESP : Module() {
     private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Outline", "ShaderOutline", "ShaderGlow", "2D", "WireFrame"), "Outline")
     private val chestValue = BoolValue("Chest", true)
     private val enderChestValue = BoolValue("EnderChest", true)
-    private val furnaceValue = BoolValue("Furnace", true)
-    private val dispenserValue = BoolValue("Dispenser", true)
-    private val hopperValue = BoolValue("Hopper", true)
-    private val shulkerBoxValue = BoolValue("ShulkerBox", true)
+    private val furnaceValue = BoolValue("Furnace", false)
+    private val dispenserValue = BoolValue("Dispenser", false)
+    private val hopperValue = BoolValue("Hopper", false)
+    private val shulkerBoxValue = BoolValue("ShulkerBox", false)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -48,8 +48,8 @@ class StorageESP : Module() {
 
             for (tileEntity in mc.theWorld!!.loadedTileEntityList) {
                 val color: Color = when {
-                    chestValue.get() && classProvider.isTileEntityChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color(0, 66, 255)
-                    enderChestValue.get() && classProvider.isTileEntityEnderChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color.MAGENTA
+                    chestValue.get() && classProvider.isTileEntityChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color(40, 120, 40)
+                    enderChestValue.get() && classProvider.isTileEntityEnderChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color(120, 40, 120)
                     furnaceValue.get() && classProvider.isTileEntityFurnace(tileEntity) -> Color.BLACK
                     dispenserValue.get() && classProvider.isTileEntityDispenser(tileEntity) -> Color.BLACK
                     hopperValue.get() && classProvider.isTileEntityHopper(tileEntity) -> Color.GRAY
