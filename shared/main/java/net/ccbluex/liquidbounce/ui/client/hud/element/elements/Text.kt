@@ -43,12 +43,23 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
          * Create default element
          */
         fun defaultClient(): Text {
-            val text = Text(x = 2.0, y = 2.0, scale = 2F)
+            val text = Text(x = 2.0, y = 2.0, scale = 1.5F)
 
             text.displayString.set("%clientName%")
-            text.shadow.set(true)
+            text.shadow.set(false)
             text.fontValue.set(Fonts.font40)
             text.setColor(Color(0, 111, 255))
+
+            return text
+        }
+        fun username(): Text {
+            val text = Text(x = 2.0, y = 12.0, scale = 1F)
+
+            text.displayString.set("%username%")
+            text.shadow.set(false)
+            text.fontValue.set(Fonts.font40)
+            text.rainbow.set(false)
+            text.setColor(Color(180, 50, 120))
 
             return text
         }
@@ -59,7 +70,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
     private val redValue = IntegerValue("Red", 255, 0, 255)
     private val greenValue = IntegerValue("Green", 255, 0, 255)
     private val blueValue = IntegerValue("Blue", 255, 0, 255)
-    private val rainbow = BoolValue("Rainbow", false)
+    private val rainbow = BoolValue("Rainbow", true)
     private val rainbowX = FloatValue("Rainbow-X", -1000F, -2000F, 2000F)
     private val rainbowY = FloatValue("Rainbow-Y", -1000F, -2000F, 2000F)
     private val shadow = BoolValue("Shadow", true)
@@ -103,8 +114,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
 
         return when (str.toLowerCase()) {
             "username" -> mc.session.username
-            "clientname" -> LiquidBounce.CLIENT_NAME
-            "clientversion" -> "b${LiquidBounce.CLIENT_VERSION}"
+            "clientname" -> LiquidBounce.NEW_NAME
+            "clientversion" -> "v${LiquidBounce.NEW_VERSION}"
             "clientcreator" -> LiquidBounce.CLIENT_CREATOR
             "fps" -> mc.debugFPS.toString()
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())

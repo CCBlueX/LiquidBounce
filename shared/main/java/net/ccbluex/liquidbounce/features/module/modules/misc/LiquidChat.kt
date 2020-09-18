@@ -34,7 +34,7 @@ import kotlin.concurrent.thread
 class LiquidChat : Module() {
 
     init {
-        state = true
+        state = false
         array = false
     }
 

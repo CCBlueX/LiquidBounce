@@ -46,7 +46,7 @@ import java.util.*
 import kotlin.math.*
 
 @ModuleInfo(name = "KillAura", description = "Automatically attacks targets around you.",
-        category = ModuleCategory.COMBAT, keyBind = Keyboard.KEY_R)
+        category = ModuleCategory.COMBAT)
 class KillAura : Module() {
 
     /**
