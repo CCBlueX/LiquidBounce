@@ -46,6 +46,8 @@ class GuiWelcome : WrappedGuiScreen() {
     override fun actionPerformed(button: IGuiButton) {
         if (button.id == 1) {
             mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiMainMenu()))
+        }
+        if(button.id == 2) {
             mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiHelp()))
         }
     }

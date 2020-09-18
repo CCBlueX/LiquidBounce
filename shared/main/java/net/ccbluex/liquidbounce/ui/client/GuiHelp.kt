@@ -18,7 +18,6 @@ class GuiHelp : WrappedGuiScreen() {
 
     override fun initGui() {
         representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height - 80, "Ok"))
-        representedScreen.buttonList.add(classProvider.createGuiButton(2, representedScreen.width / 2 - 100, representedScreen.height - 40, "Help"))
 
     }
 
@@ -27,7 +26,7 @@ class GuiHelp : WrappedGuiScreen() {
 
         val font = Fonts.font35
 
-        font.drawCenteredString("Thank you for downloading and installing our client!", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
+        font.drawCenteredString("Help incomplete", representedScreen.width / 2F, representedScreen.height / 8F + 70, 0xffffff, true)
 
         super.drawScreen(mouseX, mouseY, partialTicks)
 
@@ -46,7 +45,6 @@ class GuiHelp : WrappedGuiScreen() {
     override fun actionPerformed(button: IGuiButton) {
         if (button.id == 1) {
             mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiMainMenu()))
-            mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiHelp()))
         }
     }
 }
