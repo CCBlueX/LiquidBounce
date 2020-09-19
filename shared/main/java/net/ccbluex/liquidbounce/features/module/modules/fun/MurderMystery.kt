@@ -26,8 +26,8 @@ class MurderMystery : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        for (entity in mc.theWorld!!.loadedEntityList) {
-            if(!classProvider.isEntityLivingBase(entity) || AntiBot.isBot(entity.asEntityLivingBase())) continue
+        for (entity in mc.theWorld!!.playerEntities) {
+            if(AntiBot.isBot(entity)) continue
             isMurderer(entity)
         }
     }
