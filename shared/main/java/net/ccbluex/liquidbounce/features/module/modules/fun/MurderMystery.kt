@@ -46,7 +46,6 @@ class MurderMystery : Module() {
             ClientUtils.displayChatMessage(e.message)
             MurderMystery().state = false
         }
-
     }
 
     override fun onEnable() {

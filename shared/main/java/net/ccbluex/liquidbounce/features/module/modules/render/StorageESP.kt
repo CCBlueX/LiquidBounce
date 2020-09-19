@@ -57,7 +57,7 @@ class StorageESP : Module() {
                     else -> null
                 } ?: continue
 
-                if (!(classProvider.isTileEntityChest(tileEntity) || classProvider.isTileEntityChest(tileEntity))) {
+                if (!(classProvider.isTileEntityChest(tileEntity) || classProvider.isTileEntityEnderChest(tileEntity))) {
                     RenderUtils.drawBlockBox(tileEntity.pos, color, !mode.equals("otherbox", ignoreCase = true))
                     continue
                 }
