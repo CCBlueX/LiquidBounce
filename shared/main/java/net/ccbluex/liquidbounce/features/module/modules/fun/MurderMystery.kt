@@ -2,7 +2,6 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -10,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.item.Item
 import net.minecraft.item.ItemSword
 import java.lang.Exception
 
@@ -21,11 +21,12 @@ class MurderMystery : Module() {
     private val modeValue = ListValue("Mode", arrayOf("Single", "Double"), "Single")
 
     // globals
+    private var itemList = listOf<Item>()
     private var murderer = ""
     private var reason = "error"
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent) {
+    fun onUpdate() {
         for (entity in mc.theWorld!!.playerEntities) {
             if(AntiBot.isBot(entity)) continue
             isMurderer(entity)
@@ -53,6 +54,8 @@ class MurderMystery : Module() {
     }
 
     override fun onDisable() {
+        //empties the list i think lol idk
+        itemList = listOf()
         ClientUtils.displayChatMessage("kk good luck ♥")
     }
 
