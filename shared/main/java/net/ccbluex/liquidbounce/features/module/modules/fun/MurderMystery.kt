@@ -27,15 +27,15 @@ class MurderMystery : Module() {
 
     @EventTarget
     fun onUpdate() {
-        for (entity in mc.theWorld!!.playerEntities) {
-            if(AntiBot.isBot(entity)) continue
+        for (entity in mc.theWorld!!.loadedEntityList) {
+            if(AntiBot.isBot(entity.asEntityLivingBase())) continue
             isMurderer(entity)
         }
     }
 
     fun isMurderer(entity: IEntity) {
         try {
-            if(entity.asEntityPlayer().heldItem!!.item is ItemSword && murderer != entity.name) {
+            if(entity.asEntityPlayer().heldItem!!.item is ItemSword && murderer != entity.name.toString()) {
                 murderer = entity.name.toString()
                 reason = "Holding a sword"
                 ClientUtils.displayChatMessage("The murderer is $murderer. $reason")
@@ -58,5 +58,4 @@ class MurderMystery : Module() {
         itemList = listOf()
         ClientUtils.displayChatMessage("kk good luck ♥")
     }
-
 }
