@@ -156,7 +156,10 @@ class StorageESP : Module() {
         try {
             val renderManager = mc.renderManager
             for (entity in mc.theWorld!!.loadedTileEntityList) {
-                if (!classProvider.isTileEntityChest(entity))
+                if (!(
+                    classProvider.isTileEntityChest(entity) && chestValue.get() ||
+                    classProvider.isTileEntityEnderChest(entity) && enderChestValue.get()
+                    ))
                     continue
                 if (clickedBlocks.contains(entity.pos))
                     continue
