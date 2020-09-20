@@ -60,7 +60,7 @@ class AutoClicker : Module() {
                 if (!(heldItemName.contains("sword") ||
                     (heldItemName.contains("axe") && !heldItemName.contains("pick")))
                     && weaponOnlyValue.get()) return
-            } catch (e: Exception) { return }
+            } catch (e: Exception) {}
 
 
             mc.gameSettings.keyBindAttack.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
