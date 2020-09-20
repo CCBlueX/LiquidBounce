@@ -169,30 +169,32 @@ class ESP : Module() {
                 val entityLivingBase = entity.asEntityLivingBase()
 
                 if (entityLivingBase.hurtTime > 0)
-                    return Color.RED
+                    return Color(240, 80, 80, 255)
                 if (classProvider.isEntityPlayer(entityLivingBase) && entityLivingBase.asEntityPlayer().isClientFriend())
-                    return Color.GREEN
+                    return Color(80, 240, 80, 255)
 
-                if(AntiBot.isBot(entityLivingBase)) {
-                    return Color.white;
+                if(!colorTeam.get()) {
+                    if(AntiBot.isBot(entityLivingBase)) {
+                        return Color.white;
+                    }
+                    else {
+                        return Color.BLUE;
+                    }
                 }
-                else {
-                    return Color.BLUE;
-                }
+                
+                if (colorTeam.get()) {
+                    val chars: CharArray = (entityLivingBase.displayName ?: return@run).formattedText.toCharArray()
+                    var color = Int.MAX_VALUE
+                    for (i in chars.indices) {
+                        if (chars[i] != '§' || i + 1 >= chars.size) continue
+                        val index = getColorIndex(chars[i + 1])
+                        if (index < 0 || index > 15) continue
+                        color = ColorUtils.hexColors[index]
+                        break
+                    }
 
-//                if (colorTeam.get()) {
-//                    val chars: CharArray = (entityLivingBase.displayName ?: return@run).formattedText.toCharArray()
-//                    var color = Int.MAX_VALUE
-//                    for (i in chars.indices) {
-//                        if (chars[i] != '§' || i + 1 >= chars.size) continue
-//                        val index = getColorIndex(chars[i + 1])
-//                        if (index < 0 || index > 15) continue
-//                        color = ColorUtils.hexColors[index]
-//                        break
-//                    }
-//
-//                    return Color(color)
-//                }
+                    return Color(color)
+                }
             }
         }
 
