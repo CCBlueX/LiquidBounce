@@ -27,14 +27,15 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import org.lwjgl.util.vector.Vector3f
 import java.awt.Color
 
-@ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "CatFriends", description = "Allows you to see friends through walls.", category = ModuleCategory.RENDER, keyBind = Keyboard.KEY_Y)
 class ESP : Module() {
     @JvmField
-    val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"), "Outline")
+    val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"), "OtherBox")
 
     @JvmField
     val outlineWidth = FloatValue("Outline-Width", 4f, 0.5f, 5f)
@@ -48,6 +49,7 @@ class ESP : Module() {
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
     private val colorRainbow = BoolValue("Rainbow", false)
     private val colorTeam = BoolValue("Team", false)
+    private val friendOnlyValue = BoolValue("Friendonly", true)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent?) {
@@ -79,6 +81,7 @@ class ESP : Module() {
         for (entity in mc.theWorld!!.loadedEntityList) {
             if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
                 val entityLiving = entity.asEntityLivingBase()
+                if(!entity.asEntityPlayer().isClientFriend() && friendOnlyValue.get()) continue
                 val color = getColor(entityLiving)
 
                 when (mode.toLowerCase()) {
@@ -146,6 +149,7 @@ class ESP : Module() {
         try {
             for (entity in mc.theWorld!!.loadedEntityList) {
                 if (!EntityUtils.isSelected(entity, false)) continue
+                if(!entity.asEntityPlayer().isClientFriend() && friendOnlyValue.get()) continue
                 mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
             }
         } catch (ex: Exception) {

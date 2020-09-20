@@ -20,7 +20,7 @@ object EntityUtils : MinecraftInstance() {
     var targetInvisible = false
 
     @JvmField
-    var targetPlayer = false
+    var targetPlayer = true
 
     @JvmField
     var targetMobs = false
