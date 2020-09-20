@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -82,8 +81,7 @@ class InventoryCleaner : Module() {
         if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) ||
                 !classProvider.isGuiInventory(mc.currentScreen) && invOpenValue.get() ||
                 noMoveValue.get() && MovementUtils.isMoving ||
-                thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0
-                || (LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor).isLocked)
+                thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0)
             return
 
         if (sortValue.get())

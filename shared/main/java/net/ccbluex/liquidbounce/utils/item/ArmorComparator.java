@@ -68,8 +68,15 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
                     return durabilityCmp;
                 }
 
-                // Last comparision: Enchantability
-                return Integer.compare(o1a.getArmorMaterial().getEnchantability(), o2a.getArmorMaterial().getEnchantability());
+                // Then Enchantability
+                int echantabilityCount = Integer.compare(o1a.getArmorMaterial().getEnchantability(), o2a.getArmorMaterial().getEnchantability());
+
+                if(echantabilityCount != 0) {
+                    return echantabilityCount;
+                }
+
+                //Last comparision: Item Damage
+                return Integer.compare(o2.getItemStack().getItemDamage(), o1.getItemStack().getItemDamage());
             }
 
             return otherEnchantmentCmp;
