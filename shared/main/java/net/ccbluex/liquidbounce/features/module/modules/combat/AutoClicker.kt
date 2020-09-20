@@ -42,6 +42,7 @@ class AutoClicker : Module() {
     private val rightValue = BoolValue("Right", true)
     private val leftValue = BoolValue("Left", true)
     private val jitterValue = BoolValue("Jitter", false)
+    private val weaponOnlyValue = BoolValue("WeaponOnly", true)
 
     private var rightDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
     private var rightLastSwing = 0L
@@ -53,6 +54,15 @@ class AutoClicker : Module() {
         // Left click
         if (mc.gameSettings.keyBindAttack.isKeyDown && leftValue.get() &&
                 System.currentTimeMillis() - leftLastSwing >= leftDelay && mc.playerController.curBlockDamageMP == 0F) {
+
+            try {
+                val heldItemName = mc.thePlayer!!.heldItem!!.displayName.toLowerCase()
+                if (!(heldItemName.contains("sword") ||
+                    (heldItemName.contains("axe") && !heldItemName.contains("pick")))
+                    && weaponOnlyValue.get()) return
+            } catch (e: Exception) { return }
+
+
             mc.gameSettings.keyBindAttack.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
 
             leftLastSwing = System.currentTimeMillis()
