@@ -244,7 +244,8 @@ class Tower : Module() {
             blockSlot = InventoryUtils.findAutoBlockBlock()
             if (blockSlot == -1) return
 
-            mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
+            if (blockSlot - 36 != slot)
+                mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
             itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
         }
 
