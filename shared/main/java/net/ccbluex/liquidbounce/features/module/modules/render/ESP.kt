@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer.Companion.getColorIndex
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
@@ -47,6 +48,7 @@ class ESP : Module() {
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
     private val colorRainbow = BoolValue("Rainbow", false)
     private val colorTeam = BoolValue("Team", false)
+    private val botValue = BoolValue("Bots", true)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent?) {
@@ -75,7 +77,9 @@ class ESP : Module() {
             GL11.glLineWidth(1.0f)
         }
         //</editor-fold>
+
         for (entity in mc.theWorld!!.loadedEntityList) {
+            if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
             if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
                 val entityLiving = entity.asEntityLivingBase()
                 val color = getColor(entityLiving)
@@ -144,6 +148,7 @@ class ESP : Module() {
         renderNameTags = false
         try {
             for (entity in mc.theWorld!!.loadedEntityList) {
+                if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
                 if (!EntityUtils.isSelected(entity, false)) continue
                 mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
             }
