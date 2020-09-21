@@ -35,18 +35,19 @@ import java.awt.Color
 @ModuleInfo(name = "CatFriends", description = "Allows you to see friends through walls.", category = ModuleCategory.RENDER, keyBind = Keyboard.KEY_Y)
 class ESP : Module() {
     @JvmField
-    val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"), "OtherBox")
+    val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"), "ShaderOutline")
 
     @JvmField
     val outlineWidth = FloatValue("Outline-Width", 4f, 0.5f, 5f)
 
     @JvmField
     val wireframeWidth = FloatValue("WireFrame-Width", 2f, 0.5f, 5f)
-    private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
+    private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 2f, 1f, 2f)
     private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
-    private val colorRedValue = IntegerValue("R", 255, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 255, 0, 255)
-    private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+    private val colorRedValue = IntegerValue("R", 40, 0, 255)
+    private val colorGreenValue = IntegerValue("G", 140, 0, 255)
+    private val colorBlueValue = IntegerValue("B", 70, 0, 255)
+    private val colorPreview = Color(40, 140, 70)
     private val colorRainbow = BoolValue("Rainbow", false)
     private val colorTeam = BoolValue("Team", false)
     private val friendOnlyValue = BoolValue("Friendonly", true)
