@@ -39,7 +39,7 @@ import kotlin.math.atan2
 import kotlin.math.sqrt
 import kotlin.math.truncate
 
-@ModuleInfo(name = "Tower", description = "Automatically builds a tower beneath you.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_O)
+@ModuleInfo(name = "Tower", description = "Automatically builds a tower beneath you.", category = ModuleCategory.WORLD)
 class Tower : Module() {
     /**
      * OPTIONS

@@ -38,47 +38,47 @@ class ClientRichPresence : MinecraftInstance() {
      * Setup Discord RPC
      */
     fun setup() {
-        try {
-            running = true
-
-            loadConfiguration()
-
-            ipcClient = IPCClient(appID)
-            ipcClient?.setListener(object : IPCListener {
-
-                /**
-                 * Fired whenever an [IPCClient] is ready and connected to Discord.
-                 *
-                 * @param client The now ready IPCClient.
-                 */
-                override fun onReady(client: IPCClient?) {
-                    thread {
-                        while (running) {
-                            update()
-
-                            try {
-                                Thread.sleep(1000L)
-                            } catch (ignored: InterruptedException) {
-                            }
-                        }
-                    }
-                }
-
-                /**
-                 * Fired whenever an [IPCClient] has closed.
-                 *
-                 * @param client The now closed IPCClient.
-                 * @param json A [JSONObject] with close data.
-                 */
-                override fun onClose(client: IPCClient?, json: JSONObject?) {
-                    running = false
-                }
-
-            })
-            ipcClient?.connect()
-        } catch (e: Throwable) {
-            ClientUtils.getLogger().error("Failed to setup Discord RPC.", e)
-        }
+//        try {
+//            running = true
+//
+//            loadConfiguration()
+//
+//            ipcClient = IPCClient(appID)
+//            ipcClient?.setListener(object : IPCListener {
+//
+//                /**
+//                 * Fired whenever an [IPCClient] is ready and connected to Discord.
+//                 *
+//                 * @param client The now ready IPCClient.
+//                 */
+//                override fun onReady(client: IPCClient?) {
+//                    thread {
+//                        while (running) {
+//                            update()
+//
+//                            try {
+//                                Thread.sleep(1000L)
+//                            } catch (ignored: InterruptedException) {
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                /**
+//                 * Fired whenever an [IPCClient] has closed.
+//                 *
+//                 * @param client The now closed IPCClient.
+//                 * @param json A [JSONObject] with close data.
+//                 */
+//                override fun onClose(client: IPCClient?, json: JSONObject?) {
+//                    running = false
+//                }
+//
+//            })
+//            ipcClient?.connect()
+//        } catch (e: Throwable) {
+//            ClientUtils.getLogger().error("Failed to setup Discord RPC.", e)
+//        }
 
     }
 
@@ -86,42 +86,42 @@ class ClientRichPresence : MinecraftInstance() {
      * Update rich presence
      */
     fun update() {
-        val builder = RichPresence.Builder()
-
-        // Set playing time
-        builder.setStartTimestamp(timestamp)
-
-        // Check assets contains logo and set logo
-        if (assets.containsKey("logo"))
-            builder.setLargeImage(assets["logo"], "MC ${LiquidBounce.MINECRAFT_VERSION} - ${LiquidBounce.CLIENT_NAME} b${LiquidBounce.CLIENT_VERSION}")
-
-        // Check user is ingame
-        if (mc.thePlayer != null) {
-            val serverData = mc.currentServerData
-
-            // Set display infos
-            builder.setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else serverData.serverIP}")
-            builder.setState("Enabled ${LiquidBounce.moduleManager.modules.count { it.state }} of ${LiquidBounce.moduleManager.modules.size} modules")
-        }
-
-        // Check ipc client is connected and send rpc
-        if (ipcClient?.status == PipeStatus.CONNECTED)
-            ipcClient?.sendRichPresence(builder.build())
+//        val builder = RichPresence.Builder()
+//
+//        // Set playing time
+//        builder.setStartTimestamp(timestamp)
+//
+//        // Check assets contains logo and set logo
+//        if (assets.containsKey("logo"))
+//            builder.setLargeImage(assets["logo"], "MC ${LiquidBounce.MINECRAFT_VERSION} - ${LiquidBounce.CLIENT_NAME} b${LiquidBounce.CLIENT_VERSION}")
+//
+//        // Check user is ingame
+//        if (mc.thePlayer != null) {
+//            val serverData = mc.currentServerData
+//
+//            // Set display infos
+//            builder.setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else serverData.serverIP}")
+//            builder.setState("Enabled ${LiquidBounce.moduleManager.modules.count { it.state }} of ${LiquidBounce.moduleManager.modules.size} modules")
+//        }
+//
+//        // Check ipc client is connected and send rpc
+//        if (ipcClient?.status == PipeStatus.CONNECTED)
+//            ipcClient?.sendRichPresence(builder.build())
     }
 
     /**
      * Shutdown ipc client
      */
     fun shutdown() {
-        if (ipcClient?.status != PipeStatus.CONNECTED) {
-            return
-        }
-
-        try {
-            ipcClient?.close()
-        } catch (e: Throwable) {
-            ClientUtils.getLogger().error("Failed to close Discord RPC.", e)
-        }
+//        if (ipcClient?.status != PipeStatus.CONNECTED) {
+//            return
+//        }
+//
+//        try {
+//            ipcClient?.close()
+//        } catch (e: Throwable) {
+//            ClientUtils.getLogger().error("Failed to close Discord RPC.", e)
+//        }
     }
 
     /**
@@ -130,18 +130,18 @@ class ClientRichPresence : MinecraftInstance() {
      * @throws IOException If reading failed
      */
     private fun loadConfiguration() {
-        // Read from web and convert to json object
-        val json = JsonParser().parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/discord.json"))
-
-        if (json !is JsonObject)
-            return
-
-        // Check has app id
-        if (json.has("appID"))
-            appID = json.get("appID").asLong
-
-        // Import all asset names
-        for ((key, value) in json.get("assets").asJsonObject.entrySet())
-            assets[key] = value.asString
+//        // Read from web and convert to json object
+//        val json = JsonParser().parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/discord.json"))
+//
+//        if (json !is JsonObject)
+//            return
+//
+//        // Check has app id
+//        if (json.has("appID"))
+//            appID = json.get("appID").asLong
+//
+//        // Import all asset names
+//        for ((key, value) in json.get("assets").asJsonObject.entrySet())
+//            assets[key] = value.asString
     }
 }

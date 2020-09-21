@@ -19,6 +19,11 @@ import org.lwjgl.input.Mouse
 class MidClick : Module() {
     private var wasDown = false
 
+    init {
+        state = true
+        array = false
+    }
+
     @EventTarget
     fun onRender(event: Render2DEvent?) {
         if (mc.currentScreen != null)
@@ -34,15 +39,15 @@ class MidClick : Module() {
                 if (!friendsConfig.isFriend(playerName)) {
                     friendsConfig.addFriend(playerName)
                     LiquidBounce.fileManager.saveConfig(friendsConfig)
-                    ClientUtils.displayChatMessage("§a§l$playerName§c was added to your friends.")
+                    ClientUtils.displayChatMessage("§a§l$playerName§c was added to your friends list.")
                 } else {
                     friendsConfig.removeFriend(playerName)
                     LiquidBounce.fileManager.saveConfig(friendsConfig)
-                    ClientUtils.displayChatMessage("§a§l$playerName§c was removed from your friends.")
+                    ClientUtils.displayChatMessage("§a§l$playerName§c was removed from your friends list.")
                 }
 
             } else
-                ClientUtils.displayChatMessage("§c§lError: §aYou need to select a player.")
+                ClientUtils.displayChatMessage("§b§lError: §aYou need to select a player.")
         }
         wasDown = Mouse.isButtonDown(2)
     }

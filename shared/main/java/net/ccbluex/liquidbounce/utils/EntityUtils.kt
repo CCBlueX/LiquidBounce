@@ -23,7 +23,7 @@ object EntityUtils : MinecraftInstance() {
     var targetPlayer = true
 
     @JvmField
-    var targetMobs = true
+    var targetMobs = false
 
     @JvmField
     var targetAnimals = false

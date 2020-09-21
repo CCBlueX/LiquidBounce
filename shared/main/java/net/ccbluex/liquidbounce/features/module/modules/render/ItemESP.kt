@@ -22,11 +22,12 @@ import java.awt.Color
 
 @ModuleInfo(name = "ItemESP", description = "Allows you to see items through walls.", category = ModuleCategory.RENDER)
 class ItemESP : Module() {
-    private val modeValue = ListValue("Mode", arrayOf("Box", "ShaderOutline"), "Box")
+    private val modeValue = ListValue("Mode", arrayOf("Box", "ShaderOutline"), "ShaderOutline")
     private val colorRedValue = IntegerValue("R", 0, 0, 255)
     private val colorGreenValue = IntegerValue("G", 255, 0, 255)
     private val colorBlueValue = IntegerValue("B", 0, 0, 255)
     private val colorRainbow = BoolValue("Rainbow", true)
+    private val arrowValue = BoolValue("Arrow", false)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent?) {
@@ -34,7 +35,7 @@ class ItemESP : Module() {
             val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
             for (entity in mc.theWorld!!.loadedEntityList) {
-                if (!(classProvider.isEntityItem(entity) || classProvider.isEntityArrow(entity)))
+                if (!(classProvider.isEntityItem(entity) || classProvider.isEntityArrow(entity) && arrowValue.get()))
                     continue
 
                 RenderUtils.drawEntityBox(entity, color, true)
@@ -48,7 +49,7 @@ class ItemESP : Module() {
             OutlineShader.OUTLINE_SHADER.startDraw(event.partialTicks)
             try {
                 for (entity in mc.theWorld!!.loadedEntityList) {
-                    if (!(classProvider.isEntityItem(entity) || classProvider.isEntityArrow(entity)))
+                    if (!(classProvider.isEntityItem(entity) || classProvider.isEntityArrow(entity) && arrowValue.get()))
                         continue
 
                     mc.renderManager.renderEntityStatic(entity, event.partialTicks, true)

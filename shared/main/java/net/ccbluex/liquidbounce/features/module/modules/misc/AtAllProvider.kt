@@ -20,13 +20,13 @@ import java.util.concurrent.LinkedBlockingQueue
 
 @ModuleInfo(name = "AtAllProvider", description = "Automatically mentions everyone on the server when using '@a' in your message.", category = ModuleCategory.MISC)
 class AtAllProvider : Module() {
-    private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 500, 0, 20000) {
+    private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 1000, 0, 20000) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = maxDelayValue.get()
             if (i < newValue) set(i)
         }
     }
-    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0, 20000) {
+    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 2000, 0, 20000) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = minDelayValue.get()
             if (i > newValue) set(i)

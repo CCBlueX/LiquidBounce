@@ -17,9 +17,9 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import kotlin.random.Random
 
-@ModuleInfo(name = "AutoClicker", description = "Constantly clicks when holding down a mouse button.", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "KittenC", description = "Constantly clicks when holding down a mouse button.", category = ModuleCategory.COMBAT)
 class AutoClicker : Module() {
-    private val maxCPSValue: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
+    private val maxCPSValue: IntegerValue = object : IntegerValue("MaxCPS", 12, 1, 20) {
 
         override fun onChanged(oldValue: Int, newValue: Int) {
             val minCPS = minCPSValue.get()
@@ -29,7 +29,7 @@ class AutoClicker : Module() {
 
     }
 
-    private val minCPSValue: IntegerValue = object : IntegerValue("MinCPS", 5, 1, 20) {
+    private val minCPSValue: IntegerValue = object : IntegerValue("MinCPS", 8, 1, 20) {
 
         override fun onChanged(oldValue: Int, newValue: Int) {
             val maxCPS = maxCPSValue.get()
@@ -39,7 +39,7 @@ class AutoClicker : Module() {
 
     }
 
-    private val rightValue = BoolValue("Right", true)
+    private val rightValue = BoolValue("Right", false)
     private val leftValue = BoolValue("Left", true)
     private val jitterValue = BoolValue("Jitter", false)
     private val weaponOnlyValue = BoolValue("WeaponOnly", true)

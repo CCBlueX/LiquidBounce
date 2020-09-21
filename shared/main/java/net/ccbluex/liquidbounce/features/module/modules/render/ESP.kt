@@ -27,28 +27,32 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import org.lwjgl.util.vector.Vector3f
 import java.awt.Color
 
-@ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "CatFriends", description = "Allows you to see friends through walls.", category = ModuleCategory.RENDER, keyBind = Keyboard.KEY_Y)
 class ESP : Module() {
     @JvmField
-    val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"), "Box")
+    val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"), "ShaderOutline")
 
     @JvmField
-    val outlineWidth = FloatValue("Outline-Width", 3f, 0.5f, 5f)
+    val outlineWidth = FloatValue("Outline-Width", 4f, 0.5f, 5f)
 
     @JvmField
     val wireframeWidth = FloatValue("WireFrame-Width", 2f, 0.5f, 5f)
-    private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
+    private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 2f, 1f, 2f)
     private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
-    private val colorRedValue = IntegerValue("R", 255, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 255, 0, 255)
-    private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+    private val colorRedValue = IntegerValue("R", 40, 0, 255)
+    private val colorGreenValue = IntegerValue("G", 140, 0, 255)
+    private val colorBlueValue = IntegerValue("B", 70, 0, 255)
+    private val colorPreview = Color(40, 140, 70)
     private val colorRainbow = BoolValue("Rainbow", false)
     private val colorTeam = BoolValue("Team", false)
+
     private val botValue = BoolValue("Bots", true)
+    private val friendOnlyValue = BoolValue("Friendonly", true)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent?) {
@@ -82,6 +86,7 @@ class ESP : Module() {
             if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
             if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
                 val entityLiving = entity.asEntityLivingBase()
+                if(!entity.asEntityPlayer().isClientFriend() && friendOnlyValue.get()) continue
                 val color = getColor(entityLiving)
 
                 when (mode.toLowerCase()) {
@@ -150,6 +155,7 @@ class ESP : Module() {
             for (entity in mc.theWorld!!.loadedEntityList) {
                 if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
                 if (!EntityUtils.isSelected(entity, false)) continue
+                if(!entity.asEntityPlayer().isClientFriend() && friendOnlyValue.get()) continue
                 mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
             }
         } catch (ex: Exception) {
@@ -169,10 +175,19 @@ class ESP : Module() {
                 val entityLivingBase = entity.asEntityLivingBase()
 
                 if (entityLivingBase.hurtTime > 0)
-                    return Color.RED
+                    return Color(240, 80, 80, 255)
                 if (classProvider.isEntityPlayer(entityLivingBase) && entityLivingBase.asEntityPlayer().isClientFriend())
-                    return Color.BLUE
+                    return Color(80, 240, 80, 255)
 
+                if(!colorTeam.get()) {
+                    if(AntiBot.isBot(entityLivingBase)) {
+                        return Color.white;
+                    }
+                    else {
+                        return Color.BLUE;
+                    }
+                }
+                
                 if (colorTeam.get()) {
                     val chars: CharArray = (entityLivingBase.displayName ?: return@run).formattedText.toCharArray()
                     var color = Int.MAX_VALUE

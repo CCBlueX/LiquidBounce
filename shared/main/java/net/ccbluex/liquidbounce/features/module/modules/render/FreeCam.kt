@@ -1,8 +1,3 @@
-/*
- * LiquidBounce Hacked Client
- * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
- */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityOtherPlayerMP
@@ -15,8 +10,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import org.lwjgl.input.Keyboard
 
-@ModuleInfo(name = "FreeCam", description = "Allows you to move out of your body.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "Spectator", description = "Allows you to move out of your body.", category = ModuleCategory.RENDER, keyBind = Keyboard.KEY_U)
 class FreeCam : Module() {
     private val speedValue = FloatValue("Speed", 0.8f, 0.1f, 2f)
     private val flyValue = BoolValue("Fly", true)
@@ -27,6 +23,8 @@ class FreeCam : Module() {
     private var oldX = 0.0
     private var oldY = 0.0
     private var oldZ = 0.0
+    private var oldPitch = 0.0
+    private var oldYaw = 0.0
 
     override fun onEnable() {
         val thePlayer = mc.thePlayer ?: return
@@ -34,6 +32,8 @@ class FreeCam : Module() {
         oldX = thePlayer.posX
         oldY = thePlayer.posY
         oldZ = thePlayer.posZ
+        oldPitch = thePlayer.rotationPitch + 0.0
+        oldYaw = thePlayer.rotationYaw + 0.0
 
         val playerMP = classProvider.createEntityOtherPlayerMP(mc.theWorld!!, thePlayer.gameProfile)
 
