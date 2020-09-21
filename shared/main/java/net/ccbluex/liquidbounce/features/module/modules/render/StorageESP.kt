@@ -57,7 +57,7 @@ class StorageESP : Module() {
                     else -> null
                 } ?: continue
 
-                if (!(classProvider.isTileEntityChest(tileEntity) || classProvider.isTileEntityChest(tileEntity))) {
+                if (!(classProvider.isTileEntityChest(tileEntity) || classProvider.isTileEntityEnderChest(tileEntity))) {
                     RenderUtils.drawBlockBox(tileEntity.pos, color, !mode.equals("otherbox", ignoreCase = true))
                     continue
                 }
@@ -156,7 +156,8 @@ class StorageESP : Module() {
         try {
             val renderManager = mc.renderManager
             for (entity in mc.theWorld!!.loadedTileEntityList) {
-                if (!classProvider.isTileEntityChest(entity))
+                if (!(classProvider.isTileEntityChest(entity) && chestValue.get() ||
+                    classProvider.isTileEntityEnderChest(entity) && enderChestValue.get()))
                     continue
                 if (clickedBlocks.contains(entity.pos))
                     continue
