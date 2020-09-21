@@ -38,6 +38,7 @@ class NameTags : Module() {
     private val fontValue = FontValue("Font", Fonts.font40)
     private val borderValue = BoolValue("Border", true)
     private val scaleValue = FloatValue("Scale", 1F, 1F, 4F)
+    private val botValue = BoolValue("Bots", true)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -55,8 +56,8 @@ class NameTags : Module() {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         for (entity in mc.theWorld!!.loadedEntityList) {
-            if (!EntityUtils.isSelected(entity, false))
-                continue
+            if (!EntityUtils.isSelected(entity, false)) continue
+            if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
 
             renderNameTag(entity.asEntityLivingBase(),
                     if (clearNamesValue.get())
