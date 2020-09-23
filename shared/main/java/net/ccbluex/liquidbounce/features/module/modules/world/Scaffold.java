@@ -150,6 +150,7 @@ public class Scaffold extends Module {
         if (mc.getThePlayer() == null) return;
 
         launchY = (int) mc.getThePlayer().getPosY();
+        slot = mc.getThePlayer().getInventory().getCurrentItem();
     }
 
     /**

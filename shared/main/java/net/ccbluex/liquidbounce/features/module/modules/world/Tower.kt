@@ -89,6 +89,10 @@ class Tower : Module() {
 
     // AutoBlock
     private var slot = 0
+    override fun onEnable() {
+        slot = mc.thePlayer!!.inventory.currentItem
+    }
+
     override fun onDisable() {
         val thePlayer = mc.thePlayer ?: return
 
