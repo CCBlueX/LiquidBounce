@@ -511,7 +511,11 @@ public class Scaffold extends Module {
                 return;
 
             if (blockSlot - 36 != slot)
-                mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36));
+                if (AutoBlockValue.get().equalsIgnoreCase("Spoof")) {
+                    mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36));
+                } else {
+                    mc.getThePlayer().getInventory().setCurrentItem(blockSlot - 36);
+                }
             itemStack = mc.getThePlayer().getInventoryContainer().getSlot(blockSlot).getStack();
         }
 
