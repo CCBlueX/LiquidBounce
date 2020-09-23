@@ -58,7 +58,7 @@ public class AutoArmor extends Module {
     private final BoolValue simulateInventory = new BoolValue("SimulateInventory", true);
     private final BoolValue noMoveValue = new BoolValue("NoMove", false);
     private final BoolValue hotbarValue = new BoolValue("Hotbar", true);
-    private final BoolValue dropOldValue = new BoolValue("DropOld", true);
+    private final BoolValue dropOldValue = new BoolValue("DropOnFullInventory", true);
 
     private final MSTimer START_TIMER = new MSTimer();
     private long delay;

@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnchantmentType
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
@@ -21,6 +20,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -34,29 +34,31 @@ class InventoryCleaner : Module() {
      * OPTIONS
      */
 
-    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 600, 0, 1000) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            val minCPS = minDelayValue.get()
-            if (minCPS > newValue) set(minCPS)
-        }
-    }
-
     private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 400, 0, 1000) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val maxDelay = maxDelayValue.get()
             if (maxDelay < newValue) set(maxDelay)
         }
     }
+    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 600, 0, 1000) {
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            val minCPS = minDelayValue.get()
+            if (minCPS > newValue) set(minCPS)
+        }
+    }
+    private val startDelayValue = IntegerValue("StartDelay", 0, 0, 5000)
+    private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
     private val invOpenValue = BoolValue("InvOpen", false)
     private val simulateInventory = BoolValue("SimulateInventory", true)
     private val noMoveValue = BoolValue("NoMove", false)
     private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
     private val hotbarValue = BoolValue("Hotbar", true)
-    private val randomSlotValue = BoolValue("RandomSlot", false)
     private val sortValue = BoolValue("Sort", true)
-    private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
+    private val noCleanValue = BoolValue("NoClean", false)
 
+    private val dropTypValue = ListValue("DropTyp", arrayOf("Normal", "Reverse", "Random"), "Normal")
+    private val orderPriorityValue = ListValue("OrderPriority", arrayOf("Clean-Sort-Armor", "Clean-Armor-Sort", "Armor-Sort-Clean", "Sort-Armor-Clean"), "Sort-Armor-Clean")
     private val items = arrayOf("None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water", "Gapple", "Pearl")
     private val sortSlot1Value = ListValue("SortSlot-1", items, "Sword")
     private val sortSlot2Value = ListValue("SortSlot-2", items, "Bow")
@@ -73,6 +75,7 @@ class InventoryCleaner : Module() {
      */
 
     private var delay = 0L
+    private val START_TIMER = MSTimer()
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -93,9 +96,12 @@ class InventoryCleaner : Module() {
                     .keys
                     .toMutableList()
 
-            // Shuffle items
-            if (randomSlotValue.get())
-                garbageItems.shuffle()
+            // Set dropTyp
+            when(dropTypValue.get().toLowerCase()) {
+                "normal" -> garbageItems.sort()
+                "reverse" -> garbageItems.reversed()
+                "random" -> garbageItems.shuffle()
+            }
 
             val garbageItem = garbageItems.firstOrNull() ?: break
 
