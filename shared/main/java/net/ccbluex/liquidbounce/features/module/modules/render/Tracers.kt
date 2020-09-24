@@ -12,10 +12,12 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -33,6 +35,8 @@ class Tracers : Module() {
     private val colorGreenValue = IntegerValue("G", 160, 0, 255)
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
 
+    private val botValue = BoolValue("Bots", true)
+
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         val thePlayer = mc.thePlayer ?: return
@@ -48,6 +52,7 @@ class Tracers : Module() {
         GL11.glBegin(GL11.GL_LINES)
 
         for (entity in mc.theWorld!!.loadedEntityList) {
+            if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
             if (entity != thePlayer && EntityUtils.isSelected(entity, false)) {
                 var dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt()
 

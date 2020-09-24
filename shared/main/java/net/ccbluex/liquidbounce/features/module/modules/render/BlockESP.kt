@@ -30,6 +30,7 @@ class BlockESP : Module() {
     private val modeValue = ListValue("Mode", arrayOf("Box", "2D"), "Box")
     private val blockValue = BlockValue("Block", 168)
     private val radiusValue = IntegerValue("Radius", 40, 5, 120)
+    private val blockLimitValue = IntegerValue("BlockLimit", 256, 0, 2056)
     private val colorRedValue = IntegerValue("R", 255, 0, 255)
     private val colorGreenValue = IntegerValue("G", 179, 0, 255)
     private val colorBlueValue = IntegerValue("B", 72, 0, 255)
@@ -62,7 +63,7 @@ class BlockESP : Module() {
                             val blockPos = WBlockPos(xPos, yPos, zPos)
                             val block = getBlock(blockPos)
 
-                            if (block == selectedBlock) blockList.add(blockPos)
+                            if (block == selectedBlock && blockList.size < blockLimitValue.get()) blockList.add(blockPos)
                         }
                     }
                 }

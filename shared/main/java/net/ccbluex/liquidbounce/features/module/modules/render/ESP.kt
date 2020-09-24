@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer.Companion.getColorIndex
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
@@ -29,6 +30,8 @@ import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.opengl.GL11
 import org.lwjgl.util.vector.Vector3f
 import java.awt.Color
+import kotlin.math.max
+import kotlin.math.min
 
 @ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
 class ESP : Module() {
@@ -47,6 +50,7 @@ class ESP : Module() {
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
     private val colorRainbow = BoolValue("Rainbow", false)
     private val colorTeam = BoolValue("Team", false)
+    private val botValue = BoolValue("Bots", true)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent?) {
@@ -76,6 +80,7 @@ class ESP : Module() {
         }
         //</editor-fold>
         for (entity in mc.theWorld!!.loadedEntityList) {
+            if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
             if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
                 val entityLiving = entity.asEntityLivingBase()
                 val color = getColor(entityLiving)
@@ -107,10 +112,10 @@ class ESP : Module() {
                         for (boxVertex in boxVertices) {
                             val screenPos = WorldToScreen.worldToScreen(Vector3f(boxVertex[0].toFloat(), boxVertex[1].toFloat(), boxVertex[2].toFloat()), mvMatrix, projectionMatrix, mc.displayWidth, mc.displayHeight)
                                     ?: continue
-                            minX = Math.min(screenPos.x, minX)
-                            minY = Math.min(screenPos.y, minY)
-                            maxX = Math.max(screenPos.x, maxX)
-                            maxY = Math.max(screenPos.y, maxY)
+                            minX = min(screenPos.x, minX)
+                            minY = min(screenPos.y, minY)
+                            maxX = max(screenPos.x, maxX)
+                            maxY = max(screenPos.y, maxY)
                         }
                         if (minX > 0 || minY > 0 || maxX <= mc.displayWidth || maxY <= mc.displayWidth) {
                             GL11.glColor4f(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f)
@@ -144,6 +149,7 @@ class ESP : Module() {
         renderNameTags = false
         try {
             for (entity in mc.theWorld!!.loadedEntityList) {
+                if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
                 if (!EntityUtils.isSelected(entity, false)) continue
                 mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
             }
