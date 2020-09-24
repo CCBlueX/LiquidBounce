@@ -5,8 +5,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnchantmentType
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -16,7 +18,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
@@ -54,11 +56,9 @@ class InventoryCleaner : Module() {
     private val noMoveValue = BoolValue("NoMove", false)
     private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
     private val hotbarValue = BoolValue("Hotbar", true)
-    private val sortValue = BoolValue("Sort", true)
-    private val noCleanValue = BoolValue("NoClean", false)
 
-    private val dropTypValue = ListValue("DropTyp", arrayOf("Normal", "Reverse", "Random"), "Normal")
-    private val orderPriorityValue = ListValue("OrderPriority", arrayOf("Clean-Sort-Armor", "Clean-Armor-Sort", "Armor-Sort-Clean", "Sort-Armor-Clean"), "Sort-Armor-Clean")
+    private val dropTypeValue = ListValue("DropType", arrayOf("Normal", "Reverse", "Random"), "Normal")
+    private val workOrderValue = ListValue("WorkOrder", arrayOf("Clean-Sort", "Sort-Clean", "Only-Sort", "Only-Clean"), "Clean-Sort")
     private val items = arrayOf("None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water", "Gapple", "Pearl")
     private val sortSlot1Value = ListValue("SortSlot-1", items, "Sword")
     private val sortSlot2Value = ListValue("SortSlot-2", items, "Bow")
@@ -76,20 +76,55 @@ class InventoryCleaner : Module() {
 
     private var delay = 0L
     private val START_TIMER = MSTimer()
+    private var isSortDone = false
+
+    /*
+    ToDo:
+    - workOrder/Sort Rework, so that Items get also switched when the slot is not empty
+    - isStackUseful improvement so that it not check an item more rather a whole inventory. The Cheststealer analyse the best items before it takes the items -> to verify if it works: loot with an empty inventory a Chest
+    - Item-Blacklist-Command
+    Hint: Autoarmor should work fine
+     */
+
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
+        if (mc.thePlayer == null || mc.theWorld == null || mc.thePlayer!!.openContainer != null && mc.thePlayer!!.openContainer!!.windowId != 0) return
 
-        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) ||
-                !classProvider.isGuiInventory(mc.currentScreen) && invOpenValue.get() ||
-                noMoveValue.get() && MovementUtils.isMoving ||
-                thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0)
+        val autoArmor = LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor
+        if (!autoArmor.isDone)
             return
 
-        if (sortValue.get())
-            sortHotbar()
+        //Reset start timer
+        if ((noMoveValue.get() && isMoving) || (!classProvider.isGuiInventory(mc.currentScreen) && invOpenValue.get()))
+            START_TIMER.reset()
 
+        //Check if time has passed
+        if (!START_TIMER.hasTimePassed(startDelayValue.get().toLong()) || !InventoryUtils.CLICK_TIMER.hasTimePassed(delay))
+            return
+
+        when (workOrderValue.get().toLowerCase()) {
+            "clean-sort" -> {
+                cleanInv(thePlayer)
+                sortHotbar()
+            }
+            "sort-clean" -> {
+                sortHotbar()
+                if (isSortDone)
+                    cleanInv(thePlayer)
+            }
+            "only-sort" -> {
+                sortHotbar()
+            }
+            "only-clean" -> {
+                cleanInv(thePlayer)
+            }
+        }
+        autoArmor.DONE = false
+    }
+
+    private fun cleanInv(thePlayer: IEntityPlayerSP) {
         while (InventoryUtils.CLICK_TIMER.hasTimePassed(delay)) {
             val garbageItems = items(9, if (hotbarValue.get()) 45 else 36)
                     .filter { !isUseful(it.value, it.key) }
@@ -97,7 +132,7 @@ class InventoryCleaner : Module() {
                     .toMutableList()
 
             // Set dropTyp
-            when(dropTypValue.get().toLowerCase()) {
+            when (dropTypeValue.get().toLowerCase()) {
                 "normal" -> garbageItems.sort()
                 "reverse" -> garbageItems.reversed()
                 "random" -> garbageItems.shuffle()
@@ -118,6 +153,7 @@ class InventoryCleaner : Module() {
 
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
         }
+        isSortDone = false
     }
 
     /**
@@ -171,7 +207,7 @@ class InventoryCleaner : Module() {
                         if (armor.armorType != currArmor.armorType)
                             false
                         else
-                            AutoArmor.ARMOR_COMPARATOR.compare(currArmor, armor) <= 0
+                            AutoArmor().ARMOR_COMPARATOR.compare(currArmor, armor) <= 0
                     } else
                         false
                 }
@@ -197,6 +233,7 @@ class InventoryCleaner : Module() {
      * Sort hotbar
      */
     private fun sortHotbar() {
+        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay)) return
         for (index in 0..8) {
             val thePlayer = mc.thePlayer ?: return
 
@@ -218,6 +255,7 @@ class InventoryCleaner : Module() {
                 break
             }
         }
+        isSortDone = true
     }
 
     private fun findBetterItem(targetSlot: Int, slotStack: IItemStack?): Int? {
