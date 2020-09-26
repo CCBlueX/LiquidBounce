@@ -121,7 +121,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
                         LiquidBounce.scriptManager.disableScripts()
                         LiquidBounce.scriptManager.unloadScripts()
                         for(module in LiquidBounce.moduleManager.modules)
-                        LiquidBounce.moduleManager.generateCommand(module)
+                            LiquidBounce.moduleManager.generateCommand(module)
                         LiquidBounce.scriptManager.reloadScripts()
                         Fonts.loadFonts()
                         LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.modulesConfig)
