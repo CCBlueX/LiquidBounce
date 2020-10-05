@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
-import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 
 class RenameCommand : Command("rename") {
     /**
