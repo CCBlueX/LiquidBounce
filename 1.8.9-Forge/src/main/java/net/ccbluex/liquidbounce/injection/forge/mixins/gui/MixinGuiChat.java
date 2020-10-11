@@ -13,6 +13,7 @@ import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.util.IChatComponent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -32,6 +33,8 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
     protected GuiTextField inputField;
     @Shadow
     private int sentHistoryCursor;
+    @Shadow
+    private String defaultInputFieldText;
     
     @Shadow
     private List<String> foundPlayerNames;
