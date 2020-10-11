@@ -30,7 +30,9 @@ import java.util.List;
 public abstract class MixinGuiChat extends MixinGuiScreen {
     @Shadow
     protected GuiTextField inputField;
-
+    @Shadow
+    private int sentHistoryCursor;
+    
     @Shadow
     private List<String> foundPlayerNames;
     @Shadow
@@ -41,8 +43,15 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
     @Shadow
     public abstract void onAutocompleteResponse(String[] p_onAutocompleteResponse_1_);
 
-    @Inject(method = "initGui", at = @At("RETURN"))
-    private void init(CallbackInfo callbackInfo) {
+    @Overwrite
+    public void initGui() {
+        Keyboard.enableRepeatEvents(true);
+        this.sentHistoryCursor = this.mc.ingameGUI.getChatGUI().getSentMessages().size();
+        (this.inputField = new GuiTextField(0, this.fontRendererObj, 4, this.height - 12, this.width - 4, 12)).setMaxStringLength(2147483647);
+        this.inputField.setEnableBackgroundDrawing(false);
+        this.inputField.setFocused(true);
+        this.inputField.setText(this.defaultInputFieldText);
+        this.inputField.setCanLoseFocus(false);
         inputField.yPosition = height + 1;
         yPosOfInputField = inputField.yPosition;
     }
@@ -51,11 +60,6 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
     private void updateLength(CallbackInfo callbackInfo) {
         if (!inputField.getText().startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix()))) return;
         LiquidBounce.commandManager.autoComplete(inputField.getText());
-
-        if (!inputField.getText().startsWith(LiquidBounce.commandManager.getPrefix() + "lc"))
-            inputField.setMaxStringLength(10000);
-        else
-            inputField.setMaxStringLength(100);
     }
 
     @Inject(method = "updateScreen", at = @At("HEAD"))
