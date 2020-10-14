@@ -28,13 +28,15 @@ import java.util.*
 class ProphuntESP : Module() {
     val blocks: MutableMap<WBlockPos, Long> = HashMap()
 
+    private val modeValue = ListValue("Mode", arrayOf("box", "otherbox", "shaderoutline", "shaderglow"), "otherbox")
+    private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
+    private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
     private val colorRedValue = IntegerValue("R", 0, 0, 255)
     private val colorGreenValue = IntegerValue("G", 90, 0, 255)
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
     private val colorRainbow = BoolValue("Rainbow", false)
-    private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
-    private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
-    private val modeValue = ListValue("Mode", arrayOf("box", "otherbox", "shaderoutline", "shaderglow"), "otherbox")
+
+
 
     override fun onDisable() {
         synchronized(blocks) { blocks.clear() }
@@ -42,12 +44,13 @@ class ProphuntESP : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent?) {
+        val mode = modeValue.get()
         val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
         for (entity in mc.theWorld!!.loadedEntityList) {
-            if(!modeValue.get().equals("box", true) || !modeValue.get().equals("otherbox", true)) break
+            if(!mode.equals("box", true) || !mode.equals("otherbox", true)) break
             if (!classProvider.isEntityFallingBlock(entity)) continue
 
-            RenderUtils.drawEntityBox(entity, color, modeValue.get().equals("box", true))
+            RenderUtils.drawEntityBox(entity, color, mode.equals("box", true))
         }
         synchronized(blocks) {
             val iterator: MutableIterator<Map.Entry<WBlockPos, Long>> = blocks.entries.iterator()
@@ -60,7 +63,7 @@ class ProphuntESP : Module() {
                     continue
                 }
 
-                RenderUtils.drawBlockBox(entry.key, color, modeValue.get().equals("box", true))
+                RenderUtils.drawBlockBox(entry.key, color, mode.equals("box", true))
             }
         }
     }
