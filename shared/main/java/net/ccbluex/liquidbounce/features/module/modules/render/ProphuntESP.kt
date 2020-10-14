@@ -32,7 +32,7 @@ class ProphuntESP : Module() {
     private val colorGreenValue = IntegerValue("G", 90, 0, 255)
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
     private val colorRainbow = BoolValue("Rainbow", false)
-    private val shaderOutlineRadius = FloatVaslue("ShaderOutline-Radius", 1.35f, 1f, 2f)
+    private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
     private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
     private val modeValue = ListValue("Mode", arrayOf("box", "otherbox", "shaderoutline", "shaderglow"), "otherbox")
 
