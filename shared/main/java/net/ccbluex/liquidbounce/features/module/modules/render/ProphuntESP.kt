@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import java.awt.Color
@@ -30,7 +31,9 @@ class ProphuntESP : Module() {
     private val colorRedValue = IntegerValue("R", 0, 0, 255)
     private val colorGreenValue = IntegerValue("G", 90, 0, 255)
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
-    private val colorRainbow = BoolValue("Rainbow", true)
+    private val colorRainbow = BoolValue("Rainbow", false)
+    private val shaderOutlineRadius = FloatVaslue("ShaderOutline-Radius", 1.35f, 1f, 2f)
+    private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
     private val modeValue = ListValue("Mode", arrayOf("box", "otherbox", "shaderoutline", "shaderglow"), "otherbox")
 
     override fun onDisable() {
@@ -63,7 +66,8 @@ class ProphuntESP : Module() {
     }
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        val shader = when(modeValue.get()) {
+        val mode = modeValue.get()
+        val shader = when(mode) {
             "shaderoutline" -> OutlineShader.OUTLINE_SHADER
             "shaderglow" -> GlowShader.GLOW_SHADER
             else -> null
@@ -80,6 +84,7 @@ class ProphuntESP : Module() {
         }
 
         val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
-        shader.stopDraw(color, 1.5F, 1f)
+        val radius = if (mode.equals("shaderoutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("shaderglow", ignoreCase = true)) shaderGlowRadius.get() else 1f
+        shader.stopDraw(color, radius, 1f)
     }
 }
