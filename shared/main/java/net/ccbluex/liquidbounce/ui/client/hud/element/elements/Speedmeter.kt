@@ -32,7 +32,7 @@ class Speedmeter(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
     private val width = IntegerValue("Width", 150, 100, 300)
     private val thickness = FloatValue("Thickness", 2F, 1F, 3F)
     private val colorRedValue = IntegerValue("R", 0, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 160, 0, 255)
+    private val colorGreenValue = IntegerValue("G", 111, 0, 255)
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
 
     private val speedList = ArrayList<Double>()
