@@ -33,7 +33,7 @@ open class HUD : MinecraftInstance() {
                 ScoreboardElement::class.java,
                 Target::class.java,
                 Radar::class.java,
-                Speedmeter::class.java
+                SpeedGraph::class.java
         )
 
         /**
@@ -48,7 +48,7 @@ open class HUD : MinecraftInstance() {
                 .addElement(Armor())
                 .addElement(Effects())
                 .addElement(Notifications())
-                .addElement(Speedmeter())
+                .addElement(SpeedGraph())
 
     }
 
