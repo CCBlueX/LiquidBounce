@@ -23,8 +23,6 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.createUseItemPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
-import net.minecraft.network.play.client.C07PacketPlayerDigging
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 
 @ModuleInfo(name = "NoSlow", description = "Cancels slowness effects caused by soulsand and using items.",
         category = ModuleCategory.MOVEMENT)
