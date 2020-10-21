@@ -46,7 +46,7 @@ public abstract class MixinMinecraftClient {
      *
      * @param callback not needed
      */
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;onResolutionChanged()V"))
+    @Inject(method = "<init>", at = @At("RETURN"))
     private void startClient(final CallbackInfo callback) {
         LiquidBounce.INSTANCE.start();
     }
