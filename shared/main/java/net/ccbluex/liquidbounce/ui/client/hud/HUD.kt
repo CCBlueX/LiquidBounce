@@ -32,7 +32,8 @@ open class HUD : MinecraftInstance() {
                 Text::class.java,
                 ScoreboardElement::class.java,
                 Target::class.java,
-                Radar::class.java
+                Radar::class.java,
+                SpeedGraph::class.java
         )
 
         /**
@@ -47,6 +48,7 @@ open class HUD : MinecraftInstance() {
                 .addElement(Armor())
                 .addElement(Effects())
                 .addElement(Notifications())
+                .addElement(SpeedGraph())
 
     }
 
@@ -71,10 +73,10 @@ open class HUD : MinecraftInstance() {
                     } catch (ex: Exception) {
                         ClientUtils.getLogger()
                                 .error("Something went wrong while drawing ${it.name} element in HUD.", ex)
-            }
+                    }
 
-            GL11.glPopMatrix()
-        }
+                    GL11.glPopMatrix()
+                }
     }
 
     /**
