@@ -5,12 +5,15 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.event.EventManager
 import org.apache.logging.log4j.LogManager
 
 object LiquidBounce {
 
     const val CLIENT_NAME = "LiquidBounce"
     const val CLIENT_VERSION = "1.0.0" // TODO: Might use a semver library (yes/no?)
+
+    val eventManager = EventManager()
 
     val logger = LogManager.getLogger(CLIENT_NAME)!!
 
