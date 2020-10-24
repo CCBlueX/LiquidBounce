@@ -460,7 +460,7 @@ public class Scaffold extends Module {
         final WBlockPos blockPosition = shouldGoDown ? (mc.getThePlayer().getPosY() == (int) mc.getThePlayer().getPosY() + 0.5D ?
                 new WBlockPos(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY() - 0.6D, mc.getThePlayer().getPosZ())
                 : new WBlockPos(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY() - 0.6D, mc.getThePlayer().getPosZ()).down()) :
-                (sameYValue.get() && launchY >= mc.getThePlayer().getPosY() ? (new WBlockPos(mc.getThePlayer().getPosX(), launchY - 1, mc.getThePlayer().getPosZ())) :
+                (sameYValue.get() && launchY <= mc.getThePlayer().getPosY() ? (new WBlockPos(mc.getThePlayer().getPosX(), launchY - 1, mc.getThePlayer().getPosZ())) :
                         (mc.getThePlayer().getPosY() == (int) mc.getThePlayer().getPosY() + 0.5D ? new WBlockPos(mc.getThePlayer())
                                 : new WBlockPos(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ()).down()));
 
