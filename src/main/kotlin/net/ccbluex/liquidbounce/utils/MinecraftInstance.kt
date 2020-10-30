@@ -16,38 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.event
 
-/**
- * A callable event
- */
-open class Event
+package net.ccbluex.liquidbounce.utils
 
-/**
- * A cancellable event
- */
-open class CancellableEvent : Event() {
+import net.minecraft.client.MinecraftClient
 
-    /**
-     * Let you know if the event is cancelled
-     *
-     * @return state of cancel
-     */
-    var isCancelled: Boolean = false
-        private set
-
-    /**
-     * Allows you to cancel a event
-     */
-    fun cancelEvent() {
-        isCancelled = true
-    }
-
-}
-
-/**
- * State of event. Might be PRE or POST.
- */
-enum class EventState(val stateName: String) {
-    PRE("PRE"), POST("POST")
-}
+val mc = MinecraftClient.getInstance()!!

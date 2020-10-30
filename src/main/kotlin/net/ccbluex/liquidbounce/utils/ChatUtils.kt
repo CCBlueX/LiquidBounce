@@ -16,38 +16,27 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.event
 
-/**
- * A callable event
- */
-open class Event
+package net.ccbluex.liquidbounce.utils
 
-/**
- * A cancellable event
- */
-open class CancellableEvent : Event() {
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.minecraft.text.Text
+import org.apache.logging.log4j.Logger
 
-    /**
-     * Let you know if the event is cancelled
-     *
-     * @return state of cancel
-     */
-    var isCancelled: Boolean = false
-        private set
 
-    /**
-     * Allows you to cancel a event
-     */
-    fun cancelEvent() {
-        isCancelled = true
-    }
+val logger: Logger
+    get() = LiquidBounce.logger
+private const val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] §3"
 
+fun chat(message: String) {
+    displayChatMessage(clientPrefix + message)
 }
 
-/**
- * State of event. Might be PRE or POST.
- */
-enum class EventState(val stateName: String) {
-    PRE("PRE"), POST("POST")
+private fun displayChatMessage(message: String) {
+    if (mc.player == null) {
+        logger.info("(MCChat)$message")
+        return
+    }
+
+    mc.inGameHud.chatHud.addMessage(Text.of(message))
 }
