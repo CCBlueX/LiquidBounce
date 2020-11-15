@@ -1,14 +1,14 @@
 # Project LiquidBounce Coding Standards
-Everyone is invited to participate in the development of LiquidBounce with pull requests and to open issues on our [separate repository](https://github.com/CCBlueX/LiquidBounce1.8-Issues). However, we have to enforce certain standards to keep our code readable, consistent and easier to maintain.
+We invite everyone to participate in the development of LiquidBounce by submitting pull requests and opening issues on this repository. However, we have to enforce certain standards to keep our code readable, consistent and easier to maintain.
 
 We kindly ask you to use [Kotlin](https://kotlinlang.org/) instead of Java for new code, if possible. In the long term, it is our goal to largely migrate LiquidBounce to Kotlin.
 
 Contributors: https://github.com/CCBlueX/LiquidBounce/graphs/contributors
 
 ## General
-This section lists the official conventions of the languages Kotlin and Java. This project tries to follow them as closely as possible and we expect outside developers to do the same when working on the client.
+This section lists the official conventions of the languages Kotlin and Java. This project tries to follow them as closely as possible, and we expect outside developers to do the same when working on the client.
 
-**Additional, non-standard conventions are listed below. These must also be followed.**
+**Additional, non-standard conventions will be listed below and must also be followed.**
 
 ### Kotlin
 * Follow Kotlin's official [code conventions](https://kotlinlang.org/docs/reference/coding-conventions.html#coding-conventions).
@@ -28,27 +28,40 @@ If parts of the codebase that are currently still written in Java can be ported 
 To document the ownership of a file, we include the following text in all code files *(.kt and .java)* at the beginning of the file:
 ```kotlin
 /*
- * LiquidBounce Hacked Client
- * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2020 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 ```
- 
-### Tags
-`@author <author-name>` tags are allowed, but minimize its usage as much as possible.
 
-No other tags are allowed.
+### Tags
+You are allowed to use the `@author <author-name>` tag, but try to limit its usage as much as possible.
+
+You aren't allowed to use any other tags.
 
 # Packages
 ### Naming
 Our naming of packages follows the following format:
 * `country.company-name.product-name`
 
-*Example:* 
+*Example:*
 * `net.ccbluex.liquidbounce`
 
 If your code is self-contained and not designed exclusively for LiquidBounce, we may allow you to include it in a separate package outside `net.ccbluex.liquidbounce`. Please note that we have to decide on a case by case basis.
-  
+
 *Example:*
 `net.vitox` instead of `net.ccbluex`
 
