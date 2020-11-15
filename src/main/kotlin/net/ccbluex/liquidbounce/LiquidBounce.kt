@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.command.CommandManager
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.module.ModuleManager
 import org.apache.logging.log4j.LogManager
 
 object LiquidBounce {
@@ -27,6 +29,8 @@ object LiquidBounce {
     const val CLIENT_VERSION = "1.0.0" // TODO: Might use a semver library (yes/no?)
 
     val eventManager = EventManager()
+    val commandManager = CommandManager()
+    val moduleManager = ModuleManager()
 
     val logger = LogManager.getLogger(CLIENT_NAME)!!
 
@@ -36,6 +40,8 @@ object LiquidBounce {
     fun start() {
         // TODO: start client huh
 
+        commandManager.registerCommands()
+        moduleManager.registerClientModules()
     }
 
     /**

@@ -5,7 +5,10 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [],
   "client": [
-    "MixinMinecraftClient"
+    "MixinMinecraftClient",
+    "MixinInGameHud",
+    "MixinClientConnection",
+    "MixinScreen"
   ],
   "server": [],
   "injectors": {

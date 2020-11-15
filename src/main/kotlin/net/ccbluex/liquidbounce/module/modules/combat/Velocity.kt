@@ -17,30 +17,21 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.minecraft.text.Text
-import org.apache.logging.log4j.Logger
+import net.ccbluex.liquidbounce.event.PacketReceiveEvent
+import net.ccbluex.liquidbounce.module.Module
+import net.ccbluex.liquidbounce.module.Category
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 
-val logger: Logger
-    get() = LiquidBounce.logger
+object Velocity : Module("Velocity", Category.COMBAT) {
 
-// Chat formatting
-const val defaultColor = "§3"
-const val variableColor = "§7"
-const val statusColor = "§5"
-private const val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] $defaultColor"
+    val packetReceiveHandler = handler<PacketReceiveEvent> {
+        val packet = it.packet
 
-fun chat(message: String) {
-    displayChatMessage(clientPrefix + message)
-}
-
-private fun displayChatMessage(message: String) {
-    if (mc.player == null) {
-        logger.info("(Chat) $message")
-        return
+        if (packet is EntityVelocityUpdateS2CPacket && packet.id == mc.player?.entityId) {
+            it.cancelEvent()
+        }
     }
 
-    mc.inGameHud.chatHud.addMessage(Text.of(message))
 }

@@ -17,30 +17,17 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.module
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.minecraft.text.Text
-import org.apache.logging.log4j.Logger
+enum class Category(readableName: String) {
 
-val logger: Logger
-    get() = LiquidBounce.logger
+    COMBAT("Combat"),
+    PLAYER("Player"),
+    MOVEMENT("Movement"),
+    RENDER("Render"),
+    WORLD("World"),
+    MISC("Misc"),
+    EXPLOIT("Exploit"),
+    FUN("Fun")
 
-// Chat formatting
-const val defaultColor = "§3"
-const val variableColor = "§7"
-const val statusColor = "§5"
-private const val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] $defaultColor"
-
-fun chat(message: String) {
-    displayChatMessage(clientPrefix + message)
-}
-
-private fun displayChatMessage(message: String) {
-    if (mc.player == null) {
-        logger.info("(Chat) $message")
-        return
-    }
-
-    mc.inGameHud.chatHud.addMessage(Text.of(message))
 }

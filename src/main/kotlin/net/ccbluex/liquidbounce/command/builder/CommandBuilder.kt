@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.command.CommandHandler
 import net.ccbluex.liquidbounce.command.Parameter
 
 class CommandBuilder private constructor(val name: String) {
+
     private var description: String? = null
     private var aliases: Array<out String> = emptyArray()
     private var parameters: ArrayList<Parameter<*>> = ArrayList()

@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.command.Parameter
 import net.ccbluex.liquidbounce.command.ParameterValidationResult
 import net.ccbluex.liquidbounce.command.ParameterVerifier
 
-
 class ParameterBuilder<T> private constructor(val name: String) {
+
     private var description: String? = null
     private var verifier: ParameterVerifier<T>? = null
     private var required: Boolean? = null

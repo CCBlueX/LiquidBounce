@@ -17,30 +17,25 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.module
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.minecraft.text.Text
-import org.apache.logging.log4j.Logger
+import net.ccbluex.liquidbounce.module.modules.combat.Velocity
+import net.ccbluex.liquidbounce.module.modules.movement.Fly
+import net.ccbluex.liquidbounce.module.modules.render.HUD
 
-val logger: Logger
-    get() = LiquidBounce.logger
+/**
+ * A fairly simple module manager
+ */
+class ModuleManager : Iterable<Module> {
 
-// Chat formatting
-const val defaultColor = "§3"
-const val variableColor = "§7"
-const val statusColor = "§5"
-private const val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] $defaultColor"
+    val modules = mutableListOf<Module>()
 
-fun chat(message: String) {
-    displayChatMessage(clientPrefix + message)
-}
-
-private fun displayChatMessage(message: String) {
-    if (mc.player == null) {
-        logger.info("(Chat) $message")
-        return
+    fun registerClientModules() {
+        modules.add(HUD)
+        modules.add(Fly)
+        modules.add(Velocity)
     }
 
-    mc.inGameHud.chatHud.addMessage(Text.of(message))
+    override fun iterator() = modules.iterator()
+
 }

@@ -19,19 +19,24 @@
 
 package net.ccbluex.liquidbounce.command
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.command.commands.FriendCommand
-import net.ccbluex.liquidbounce.command.commands.HurtCommand
+import net.ccbluex.liquidbounce.command.commands.ToggleCommand
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.SendChatEvent
+import net.ccbluex.liquidbounce.utils.chat
 
+class CommandManager : Listenable {
 
-object CommandManager {
+    private var prefix = "."
     private val commands: ArrayList<Command> = ArrayList()
 
     init {
-        initCommands()
+        // TODO: Add command execution
     }
 
-    private fun initCommands() {
-        commands.add(HurtCommand.createCommand())
+    fun registerCommands() {
+        commands.add(ToggleCommand.createCommand())
         commands.add(FriendCommand.createCommand())
     }
 
@@ -65,5 +70,10 @@ object CommandManager {
         // If no match was found, currentCommand is the subcommand that we searched for
         return currentCommand
     }
+
+    /**
+     * Always listen to events
+     */
+    override fun handleEvents() = true
 
 }
