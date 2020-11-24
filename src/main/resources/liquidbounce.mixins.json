@@ -8,7 +8,8 @@
     "MixinMinecraftClient",
     "MixinInGameHud",
     "MixinClientConnection",
-    "MixinScreen"
+    "MixinScreen",
+    "MixinKeyboard"
   ],
   "server": [],
   "injectors": {

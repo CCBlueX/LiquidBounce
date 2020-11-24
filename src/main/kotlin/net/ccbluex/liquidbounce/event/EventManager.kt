@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import java.util.*
 
 /**
@@ -65,7 +66,7 @@ class EventManager {
         for (eventHook in target) {
             if (!eventHook.ignoresCondition && !eventHook.handlerClass.handleEvents())
                 continue
-            
+
             eventHook.handler(event)
         }
     }

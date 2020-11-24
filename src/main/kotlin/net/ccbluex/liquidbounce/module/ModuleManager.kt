@@ -19,16 +19,27 @@
 
 package net.ccbluex.liquidbounce.module
 
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.KeyEvent
+import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.module.modules.render.HUD
+import org.lwjgl.glfw.GLFW
 
 /**
  * A fairly simple module manager
  */
-class ModuleManager : Iterable<Module> {
+class ModuleManager : Iterable<Module>, Listenable {
 
     val modules = mutableListOf<Module>()
+
+    val keyHandler = LiquidBounce.eventManager.handler<KeyEvent>(this) { ev ->
+        if(ev.action == GLFW.GLFW_PRESS) {
+            filter { it.bind == ev.key.code }
+                .forEach { it.state = !it.state }
+        }
+    }
 
     fun registerClientModules() {
         modules.add(HUD)
@@ -37,5 +48,6 @@ class ModuleManager : Iterable<Module> {
     }
 
     override fun iterator() = modules.iterator()
+    override fun handleEvents() = true
 
 }

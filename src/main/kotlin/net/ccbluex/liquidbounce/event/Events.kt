@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.network.Packet
 
@@ -28,3 +29,5 @@ class RenderHudEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event
 class PacketReceiveEvent(val packet: Packet<*>) : CancellableEvent()
 
 class PacketSendEvent(val packet: Packet<*>) : CancellableEvent()
+
+class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()

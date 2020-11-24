@@ -23,8 +23,9 @@ import net.ccbluex.liquidbounce.event.PacketReceiveEvent
 import net.ccbluex.liquidbounce.module.Module
 import net.ccbluex.liquidbounce.module.Category
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import org.lwjgl.glfw.GLFW
 
-object Velocity : Module("Velocity", Category.COMBAT) {
+object Velocity : Module("Velocity", Category.COMBAT, bind = GLFW.GLFW_KEY_V) {
 
     val packetReceiveHandler = handler<PacketReceiveEvent> {
         val packet = it.packet

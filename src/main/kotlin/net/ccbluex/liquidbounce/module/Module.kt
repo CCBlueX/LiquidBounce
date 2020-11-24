@@ -24,8 +24,9 @@ import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventHook
 import net.ccbluex.liquidbounce.event.Listenable
 import net.minecraft.client.MinecraftClient
+import org.lwjgl.glfw.GLFW
 
-open class Module(val name: String, val category: Category, val bind: String = "", defaultState: Boolean = false) : Listenable {
+open class Module(val name: String, val category: Category, val bind: Int = GLFW.GLFW_KEY_UNKNOWN, defaultState: Boolean = false) : Listenable {
 
     var state: Boolean = defaultState
         set(value) {
