@@ -89,6 +89,8 @@ class Speed : Module() {
     val aacGroundTimerValue = FloatValue("AACGround-Timer", 3f, 1.1f, 10f)
     val cubecraftPortLengthValue = FloatValue("CubeCraft-PortLength", 1f, 0.1f, 2f)
     val mineplexGroundSpeedValue = FloatValue("MineplexGround-Speed", 0.5f, 0.1f, 1f)
+    val matrixSpeedValue = FloatValue("Matrix-Speed", 0.02f, 0.02f, 1f)
+    val matrixTimerValue = FloatValue("Matrix-Timer", 1f, 0.1f, 2f)
 
     @EventTarget
     fun onUpdate(event: UpdateEvent?) {
