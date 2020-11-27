@@ -16,7 +16,7 @@ class AAC3BHop : SpeedMode("AAC3BHop") {
         val thePlayer = mc.thePlayer ?: return
 
         mc.timer.timerSpeed = 1f
-
+        
         if (thePlayer.isInWater)
             return
 
@@ -28,10 +28,8 @@ class AAC3BHop : SpeedMode("AAC3BHop") {
                         legitJump = false
                         return
                     }
-
                     thePlayer.motionY = 0.3852
                     thePlayer.onGround = false
-
                     MovementUtils.strafe(0.374f)
                 }
                 thePlayer.motionY < 0.0 -> {
@@ -50,4 +48,8 @@ class AAC3BHop : SpeedMode("AAC3BHop") {
     override fun onMotion() {}
     override fun onUpdate() {}
     override fun onMove(event: MoveEvent) {}
+    override fun onDisable() {
+        mc.thePlayer!!.speedInAir = 0.02f
+        mc.timer.timerSpeed = 1f
+    }
 }
