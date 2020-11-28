@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "LongJump", description = "Allows you to jump further.", category = ModuleCategory.MOVEMENT)
 class LongJump : Module() {
-    private val modeValue = ListValue("Mode", arrayOf("NCP", "AACv1", "AACv2", "AACv3", "Mineplex", "Mineplex2", "Mineplex3"), "NCP")
+    private val modeValue = ListValue("Mode", arrayOf("NCP", "AACv1", "AACv2", "AACv3", "Mineplex", "Mineplex2", "Mineplex3", "Redesky"), "NCP")
     private val ncpBoostValue = FloatValue("NCPBoost", 4.25f, 1f, 10f)
     private val autoJumpValue = BoolValue("AutoJump", false)
     private var jumped = false
@@ -99,6 +99,10 @@ class LongJump : Module() {
                         }
 
                         MovementUtils.strafe()
+                    }
+                    "redesky" -> {
+                        thePlayer.jumpMovementFactor = 0.15f
+                        thePlayer.motionY += 0.05f
                     }
                 }
             }
