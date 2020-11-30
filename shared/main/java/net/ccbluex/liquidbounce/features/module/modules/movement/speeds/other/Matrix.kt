@@ -18,12 +18,10 @@ class Matrix : SpeedMode("Matrix") {
         if (MovementUtils.isMoving) {
             if (mc.thePlayer!!.onGround) {
                 mc.thePlayer!!.jump()
-                mc.thePlayer!!.speedInAir = (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?)!!.matrixSpeedValue.get()
-                mc.timer.timerSpeed = (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?)!!.matrixTimerValue.get()
+                mc.thePlayer!!.speedInAir = 0.0209f
+                mc.timer.timerSpeed = 1.055f
             }    
         } else {
-            mc.thePlayer!!.motionX = 0.0
-            mc.thePlayer!!.motionZ = 0.0
             mc.timer.timerSpeed = 1f    
         }
     }
