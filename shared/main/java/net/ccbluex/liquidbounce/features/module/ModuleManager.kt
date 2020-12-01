@@ -48,8 +48,6 @@ class ModuleManager : Listenable {
                 BowAimbot::class.java,
                 Criticals::class.java,
                 KillAura::class.java,
-				AntiLevitation::class.java,
-				XRayBypass::class.java,
                 Trigger::class.java,
                 Velocity::class.java,
                 Fly::class.java,
