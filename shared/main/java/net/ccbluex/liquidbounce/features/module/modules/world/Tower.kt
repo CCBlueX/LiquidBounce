@@ -47,8 +47,7 @@ class Tower : Module() {
     private val modeValue = ListValue("Mode", arrayOf(
             "Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4"
     ), "Motion")
-    private val autoBlockValue = BoolValue("AutoBlock", true)
-    private val stayAutoBlock = BoolValue("StayAutoBlock", false)
+    private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Spoof", "Switch"), "Spoof")
     private val swingValue = BoolValue("Swing", true)
     private val stopWhenBlockAbove = BoolValue("StopWhenBlockAbove", false)
     private val rotationsValue = BoolValue("Rotations", true)
@@ -89,12 +88,24 @@ class Tower : Module() {
 
     // AutoBlock
     private var slot = 0
+    private var oldslot = 0
+    override fun onEnable() {
+        val thePlayer = mc.thePlayer ?: return
+        
+        oldslot = thePlayer.inventory.currentItem
+
+    }
     override fun onDisable() {
         val thePlayer = mc.thePlayer ?: return
 
         mc.timer.timerSpeed = 1f
         lockRotation = null
-
+        
+        if (autoBlockValue.get().equals("Switch", true)) {
+            mc.thePlayer!!.inventory.currentItem = oldslot
+            mc.playerController.updateController()
+        }
+        
         if (slot != thePlayer.inventory.currentItem) {
             mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
         }
@@ -121,7 +132,7 @@ class Tower : Module() {
             placeInfo = null
             timer.update()
 
-            val update = if (autoBlockValue.get()) {
+            val update = if (!autoBlockValue.get().equals("Off", ignoreCase = true)) {
                 InventoryUtils.findAutoBlockBlock() != -1 || thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
             } else {
                 thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
@@ -239,12 +250,19 @@ class Tower : Module() {
         var blockSlot = -1
         var itemStack = thePlayer.heldItem
         if (itemStack == null || !classProvider.isItemBlock(itemStack.item) || classProvider.isBlockBush(itemStack.item?.asItemBlock()?.block)) {
-            if (!autoBlockValue.get()) return
+            if (autoBlockValue.get().equals("Off", ignoreCase = true))
+                return
 
             blockSlot = InventoryUtils.findAutoBlockBlock()
             if (blockSlot == -1) return
 
-            mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
+            if (autoBlockValue.get().equals("Spoof", true)) {
+                if (blockSlot - 36 != slot)
+                    mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
+            } else {
+                mc.thePlayer!!.inventory.currentItem = blockSlot - 36
+                mc.playerController.updateController()
+            }
             itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
         }
 
@@ -257,11 +275,6 @@ class Tower : Module() {
             }
         }
         placeInfo = null
-
-        // Switch back to old slot when using auto block
-        if (!stayAutoBlock.get() && blockSlot >= 0) {
-            mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
-        }
     }
 
     /**
