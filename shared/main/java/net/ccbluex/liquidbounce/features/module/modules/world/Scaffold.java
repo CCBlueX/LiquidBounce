@@ -183,6 +183,7 @@ public class Scaffold extends Module {
 
     // Auto block slot
     private int slot;
+    private int oldslot;
 
     // Zitter Smooth
     private boolean zitterDirection;
@@ -205,6 +206,8 @@ public class Scaffold extends Module {
     @Override
     public void onEnable() {
         if (mc.getThePlayer() == null) return;
+        
+        oldslot = mc.getThePlayer().getInventory().getCurrentItem();
 
         launchY = (int) mc.getThePlayer().getPosY();
     }
@@ -539,12 +542,6 @@ public class Scaffold extends Module {
             else
                 mc.getNetHandler().addToSendQueue(classProvider.createCPacketAnimation());
         }
-
-        /*
-        if (!stayAutoBlock.get() && blockSlot >= 0)
-            mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(mc.getThePlayer().getInventory().getCurrentItem()));
-         */
-
         // Reset
         this.targetPlace = null;
     }
@@ -562,6 +559,11 @@ public class Scaffold extends Module {
             if (eagleSneaking)
                 mc.getNetHandler().addToSendQueue(classProvider.createCPacketEntityAction(mc.getThePlayer(), ICPacketEntityAction.WAction.STOP_SNEAKING));
         }
+        
+        if(autoBlockValue.get().equalsIgnoreCase("Switch")) {
+            mc.getThePlayer().getInventory().setCurrentItem(oldslot);
+            mc.getPlayerController().updateController();
+        }    
 
         if (!mc.getGameSettings().isKeyDown(mc.getGameSettings().getKeyBindRight()))
             mc.getGameSettings().getKeyBindRight().setPressed(false);
