@@ -60,6 +60,7 @@ class Speed : Module() {
             SpectreBHop(),
             SpectreOnGround(),
             TeleportCubeCraft(),  // Server
+            Jartex(),
             HiveHop(),
             HypixelHop(),
             MineplexGround(),  // Other
