@@ -18,8 +18,10 @@ class Matrix : SpeedMode("Matrix") {
         if (MovementUtils.isMoving) {
             if (mc.thePlayer!!.onGround) {
                 mc.thePlayer!!.jump()
-                mc.thePlayer!!.speedInAir = 0.0209f
+                mc.thePlayer!!.speedInAir = 0.02098f
                 mc.timer.timerSpeed = 1.055f
+            } else {
+                MovementUtils.strafe(MovementUtils.speed)
             }    
         } else {
             mc.timer.timerSpeed = 1f    
