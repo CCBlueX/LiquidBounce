@@ -29,13 +29,13 @@ class Mineplex : SpeedMode("Mineplex") {
            speed1 = 0
         } else {
             if(wfg) {
-              speed1 = speed2 + 0.46532
+              speed1 = speed2 + (0.46532 * Math.min(mc.thePlayer!!.fallDistance, 1))
               wfg = false
             } else {
-              speed1 = (distance * 0.946)
+              speed1 = (distance * (mc.thePlayer!!.fallDistance > 1.5 ? 0.85 : 0.946))
             }
         }
-        MovementUtils.strafe(Math.max(Math.min(speed1, 5), wfg ? 0 : 0.399900111))
+        MovementUtils.strafe(Math.max(Math.min(speed1, 2), wfg ? 0 : 0.399900111))
     }
     
     override fun onMotion() {}
