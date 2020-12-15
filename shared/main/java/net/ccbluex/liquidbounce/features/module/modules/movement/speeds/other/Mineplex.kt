@@ -35,8 +35,7 @@ class Mineplex : SpeedMode("Mineplex") {
               speed1 = (distance * 0.946)
             }
         }
-        val max = 5
-        MovementUtils.strafe(Math.max(Math.min(speed1, max), wfg ? 0 : 0.399900111))
+        MovementUtils.strafe(Math.max(Math.min(speed1, 5), wfg ? 0 : 0.399900111))
     }
     
     override fun onMotion() {}
