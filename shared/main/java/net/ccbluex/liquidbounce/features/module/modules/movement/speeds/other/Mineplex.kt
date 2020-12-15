@@ -16,6 +16,7 @@ class Mineplex : SpeedMode("Mineplex") {
     val speed1 = 0
     val speed2 = 0
     val wfg = false
+    val fallDistance = 0
     
     override fun onUpdate() {
         val x = mc.thePlayer!!.posX - mc.thePlayer!!.prevPosX
@@ -29,11 +30,12 @@ class Mineplex : SpeedMode("Mineplex") {
            speed1 = 0
         } else {
             if(wfg) {
-              speed1 = speed2 + (0.46532 * Math.min(mc.thePlayer!!.fallDistance, 1))
+              speed1 = speed2 + (0.46532 * Math.min(fallDistance, 1))
               wfg = false
             } else {
-              speed1 = (distance * (mc.thePlayer!!.fallDistance > 1.5 ? 0.85 : 0.946))
+              speed1 = (distance * 0.936)
             }
+            fallDistance = mc.thePlayer!!.fallDistance
         }
         MovementUtils.strafe(Math.max(Math.min(speed1, 2), wfg ? 0 : 0.399900111))
     }
@@ -44,5 +46,6 @@ class Mineplex : SpeedMode("Mineplex") {
         speed1 = 0
         speed2 = 0
         wfg = false
+        fallDistance = 0
     }
 }
