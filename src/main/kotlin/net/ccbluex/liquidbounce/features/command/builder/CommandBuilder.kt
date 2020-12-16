@@ -17,11 +17,11 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.command.builder
+package net.ccbluex.liquidbounce.features.command.builder
 
-import net.ccbluex.liquidbounce.command.Command
-import net.ccbluex.liquidbounce.command.CommandHandler
-import net.ccbluex.liquidbounce.command.Parameter
+import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandHandler
+import net.ccbluex.liquidbounce.features.command.Parameter
 
 class CommandBuilder private constructor(val name: String) {
 

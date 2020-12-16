@@ -17,14 +17,11 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.command
+package net.ccbluex.liquidbounce.features.command
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.command.commands.FriendCommand
-import net.ccbluex.liquidbounce.command.commands.ToggleCommand
+import net.ccbluex.liquidbounce.features.command.commands.FriendCommand
+import net.ccbluex.liquidbounce.features.command.commands.ToggleCommand
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.SendChatEvent
-import net.ccbluex.liquidbounce.utils.chat
 
 class CommandManager : Listenable {
 

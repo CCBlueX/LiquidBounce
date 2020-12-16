@@ -17,11 +17,11 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.command.commands
+package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.command.Command
-import net.ccbluex.liquidbounce.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 
 object FriendCommand {
 

@@ -16,16 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.utils.extensions
 
-package net.ccbluex.liquidbounce.module.modules.movement
+import net.minecraft.client.network.ClientPlayerEntity
 
-import net.ccbluex.liquidbounce.module.Module
-import net.ccbluex.liquidbounce.module.Category
-
-object Fly : Module("Fly", Category.MOVEMENT) {
-
-    override fun toggled() {
-        mc.player!!.abilities.flying = state
-    }
-
-}
+val ClientPlayerEntity.moving
+    get() = input.movementForward != 0.0f || input.movementSideways != 0.0f

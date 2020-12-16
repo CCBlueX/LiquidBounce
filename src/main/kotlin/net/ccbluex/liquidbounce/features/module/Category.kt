@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.module
+package net.ccbluex.liquidbounce.features.module
 
 enum class Category(readableName: String) {
 

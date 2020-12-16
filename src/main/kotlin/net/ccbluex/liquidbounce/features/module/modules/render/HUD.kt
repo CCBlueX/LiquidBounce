@@ -16,14 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
-package net.ccbluex.liquidbounce.module.modules.render
+package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.RenderHudEvent
-import net.ccbluex.liquidbounce.module.Module
-import net.ccbluex.liquidbounce.module.Category
-import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.Category
 
 object HUD : Module("HUD", Category.RENDER, defaultState = true) {
 

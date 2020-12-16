@@ -17,16 +17,19 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.module
+package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventHook
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.Sequence
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.glfw.GLFW
 
-open class Module(val name: String, val category: Category, val bind: Int = GLFW.GLFW_KEY_UNKNOWN, defaultState: Boolean = false) : Listenable {
+open class Module(val name: String, val category: Category, val bind: Int = GLFW.GLFW_KEY_UNKNOWN,
+                  defaultState: Boolean = false) : Listenable, Configurable(name) {
 
     var state: Boolean = defaultState
         set(value) {
@@ -34,10 +37,8 @@ open class Module(val name: String, val category: Category, val bind: Int = GLFW
             toggled()
         }
 
-    companion object {
-        @JvmStatic
-        val mc = MinecraftClient.getInstance()
-    }
+    protected val mc: MinecraftClient
+        get() = net.ccbluex.liquidbounce.utils.mc
 
     // TODO: make event instead of function
     open fun toggled() { }
@@ -48,6 +49,11 @@ open class Module(val name: String, val category: Category, val bind: Int = GLFW
     inline fun <reified T: Event> handler(ignoreCondition: Boolean = false, noinline eventHandler: (T) -> Unit) {
         LiquidBounce.eventManager.registerEventHook(T::class.java, EventHook(this, eventHandler, ignoreCondition))
     }
+
+    /**
+     * Launch a new sequence
+     */
+    fun sequence(handler: suspend Sequence.() -> Unit) = Sequence(handler)
 
     /**
      * Events should be handled when module is enabled

@@ -17,14 +17,15 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.module
+package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.module.modules.combat.Velocity
-import net.ccbluex.liquidbounce.module.modules.movement.Fly
-import net.ccbluex.liquidbounce.module.modules.render.HUD
+import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
+import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
+import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
+import net.ccbluex.liquidbounce.features.module.modules.render.HUD
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -32,8 +33,13 @@ import org.lwjgl.glfw.GLFW
  */
 class ModuleManager : Iterable<Module>, Listenable {
 
-    val modules = mutableListOf<Module>()
+    private val modules = mutableListOf<Module>()
 
+    private val configurable = LiquidBounce.configSystem.root("modules", modules)
+
+    /**
+     * Handle key input for module binds
+     */
     val keyHandler = LiquidBounce.eventManager.handler<KeyEvent>(this) { ev ->
         if(ev.action == GLFW.GLFW_PRESS) {
             filter { it.bind == ev.key.code }
@@ -41,13 +47,17 @@ class ModuleManager : Iterable<Module>, Listenable {
         }
     }
 
-    fun registerClientModules() {
-        modules.add(HUD)
-        modules.add(Fly)
-        modules.add(Velocity)
+    /**
+     * Register inbuilt client modules
+     */
+    fun registerInbuilt() {
+        modules += HUD
+        modules += Fly
+        modules += Velocity
+        modules += Speed
     }
 
     override fun iterator() = modules.iterator()
-    override fun handleEvents() = true
 
+    override fun handleEvents() = true
 }

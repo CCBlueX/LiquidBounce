@@ -28,6 +28,8 @@ class EventManager {
 
     private val registry = HashMap<Class<out Event>, MutableList<EventHook<in Event>>>()
 
+    private val sequenceTicker = SequenceTicker(this)
+
     /**
      * Registers an event hook for events of type [T]
      */

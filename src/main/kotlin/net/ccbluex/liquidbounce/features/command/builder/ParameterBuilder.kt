@@ -17,12 +17,12 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.command.builder
+package net.ccbluex.liquidbounce.features.command.builder
 
-import net.ccbluex.liquidbounce.command.AutoCompletionHandler
-import net.ccbluex.liquidbounce.command.Parameter
-import net.ccbluex.liquidbounce.command.ParameterValidationResult
-import net.ccbluex.liquidbounce.command.ParameterVerifier
+import net.ccbluex.liquidbounce.features.command.AutoCompletionHandler
+import net.ccbluex.liquidbounce.features.command.Parameter
+import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
+import net.ccbluex.liquidbounce.features.command.ParameterVerifier
 
 class ParameterBuilder<T> private constructor(val name: String) {
 

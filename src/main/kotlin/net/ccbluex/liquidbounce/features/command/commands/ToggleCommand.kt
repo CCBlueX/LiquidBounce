@@ -1,9 +1,9 @@
-package net.ccbluex.liquidbounce.command.commands
+package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.command.Command
-import net.ccbluex.liquidbounce.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.defaultColor
 import net.ccbluex.liquidbounce.utils.statusColor
