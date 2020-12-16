@@ -9,7 +9,8 @@
     "MixinInGameHud",
     "MixinClientConnection",
     "MixinScreen",
-    "MixinKeyboard"
+    "MixinKeyboard",
+    "MixinClientPlayerEntity"
   ],
   "server": [],
   "injectors": {

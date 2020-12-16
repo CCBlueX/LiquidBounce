@@ -22,6 +22,8 @@ import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.network.Packet
 
+class EntityTickEvent : Event()
+
 class SendChatEvent(val message: String) : CancellableEvent()
 
 class RenderHudEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
