@@ -19,12 +19,10 @@
 
 package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.event.EventHook
-import net.ccbluex.liquidbounce.event.Handler
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.glfw.GLFW
 
@@ -44,21 +42,11 @@ open class Module(val name: String, val category: Category, val bind: Int = GLFW
 
     /**
      * Registers an event hook for events of type [T]
-     */
-    inline fun <reified T : Event> handler(ignoreCondition: Boolean = false, noinline handler: Handler<T>) {
-        LiquidBounce.eventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
-    }
-
-    /**
-     * Registers an event hook for events of type [T]
      *
      * TODO: Check on performance and memory usage
      */
-    inline fun <reified T : Event> sequenceHandler(
-        ignoreCondition: Boolean = false,
-        noinline eventHandler: SuspendableHandler<T>
-    ) {
-        handler<T> { event -> Sequence(eventHandler, event) }
+    inline fun <reified T : Event> sequenceHandler(ignoreCondition: Boolean = false, noinline eventHandler: SuspendableHandler<T>) {
+        handler<T>(ignoreCondition) { event -> Sequence(eventHandler, event) }
     }
 
     /**

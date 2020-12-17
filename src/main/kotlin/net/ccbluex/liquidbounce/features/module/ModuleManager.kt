@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
@@ -43,7 +44,7 @@ class ModuleManager : Iterable<Module>, Listenable {
     /**
      * Handle key input for module binds
      */
-    val keyHandler = LiquidBounce.eventManager.handler<KeyEvent>(this) { ev ->
+    val keyHandler = handler<KeyEvent> { ev ->
         if (ev.action == GLFW.GLFW_PRESS) {
             filter { it.bind == ev.key.code }
                 .forEach { it.state = !it.state }
@@ -53,7 +54,7 @@ class ModuleManager : Iterable<Module>, Listenable {
     /**
      * Tick sequences
      */
-    val entityTickHandler = LiquidBounce.eventManager.handler<EntityTickEvent>(this, false) {
+    val entityTickHandler = handler<EntityTickEvent>(false) {
         for (sequence in sequences) {
             sequence.tick()
         }

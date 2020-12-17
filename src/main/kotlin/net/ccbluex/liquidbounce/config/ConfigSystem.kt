@@ -19,15 +19,10 @@
 package net.ccbluex.liquidbounce.config
 
 import com.google.gson.GsonBuilder
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
 import java.io.File
-import java.lang.reflect.Type
-import kotlin.reflect.typeOf
 
 /**
  * A config system which uses configurables
@@ -58,6 +53,13 @@ class ConfigSystem {
      */
     fun root(name: String, sub: MutableList<out Configurable> = mutableListOf()) {
         configurables += Configurable(name, sub)
+    }
+
+    /**
+     * Add a root configurable
+     */
+    fun root(configurable: Configurable) {
+        configurables += configurable
     }
 
     /**
