@@ -18,18 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.boolean
-import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.event.PacketReceiveEvent
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.utils.chat
+import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import org.lwjgl.glfw.GLFW
 
 object Velocity : Module("Velocity", Category.COMBAT, bind = GLFW.GLFW_KEY_L) {
 
-    val packetReceiveHandler = handler<PacketReceiveEvent> {
+    val packetReceiveHandler = sequenceHandler<PacketReceiveEvent> {
         val packet = it.packet
 
         if (packet is EntityVelocityUpdateS2CPacket && packet.id == mc.player?.entityId) {

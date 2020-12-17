@@ -20,21 +20,18 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.boolean
 import net.ccbluex.liquidbounce.event.EntityTickEvent
-import net.ccbluex.liquidbounce.event.PacketReceiveEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.extensions.moving
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import org.lwjgl.glfw.GLFW
 import kotlin.math.cos
 import kotlin.math.sin
 
 object Speed : Module("Speed", Category.COMBAT, bind = GLFW.GLFW_KEY_V) {
 
-    private var boost by boolean("Boost", true)
+    private var port by boolean("yPort", true)
 
-    val packetReceiveHandler = handler<EntityTickEvent> {
+    val tickHandler = sequenceHandler<EntityTickEvent> {
         if (mc.player!!.isOnGround && mc.player!!.moving) {
             val angle = Math.toRadians(mc.player!!.yaw.toDouble())
             val x = -sin(angle) * 0.4
@@ -42,7 +39,7 @@ object Speed : Module("Speed", Category.COMBAT, bind = GLFW.GLFW_KEY_V) {
 
             mc.player!!.setVelocity(x, 0.42, z)
 
-            sequence {
+            if (port) {
                 wait(1)
                 mc.player!!.setVelocity(x, -1.0, z)
             }

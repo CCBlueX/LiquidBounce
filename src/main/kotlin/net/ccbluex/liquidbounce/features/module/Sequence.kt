@@ -16,35 +16,25 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.event
+package net.ccbluex.liquidbounce.features.module
 
 import com.google.common.collect.Lists
 import kotlinx.coroutines.*
-import net.ccbluex.liquidbounce.utils.chat
+import net.ccbluex.liquidbounce.event.Event
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 // Running sequences
-private val sequences = Lists.newCopyOnWriteArrayList<Sequence>()
+internal val sequences = Lists.newCopyOnWriteArrayList<Sequence<*>>()
 
-class SequenceTicker(manager: EventManager) : Listenable {
+typealias SuspendableHandler<T> = suspend Sequence<T>.(T) -> Unit
 
-    val entityTickHandler = manager.handler<EntityTickEvent>(this, false) {
-        for (sequence in sequences) {
-            sequence.tick()
-        }
-    }
-
-    override fun handleEvents() = true
-
-}
-
-class Sequence(val handler: suspend Sequence.() -> Unit) {
+class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T) {
 
     private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
         sequences += this@Sequence
-        handler()
+        handler(event)
         sequences -= this@Sequence
     }
 

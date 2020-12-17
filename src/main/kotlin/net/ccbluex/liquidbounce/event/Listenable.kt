@@ -27,4 +27,6 @@ interface Listenable {
 
 }
 
-open class EventHook<T: Event>(val handlerClass: Listenable, val handler: (T) -> Unit, val ignoresCondition: Boolean)
+typealias Handler<T> = (T) -> Unit
+
+class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean)

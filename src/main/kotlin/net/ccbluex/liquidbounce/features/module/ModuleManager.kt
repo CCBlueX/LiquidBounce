@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
@@ -35,15 +36,26 @@ class ModuleManager : Iterable<Module>, Listenable {
 
     private val modules = mutableListOf<Module>()
 
-    private val configurable = LiquidBounce.configSystem.root("modules", modules)
+    init {
+        LiquidBounce.configSystem.root("modules", modules)
+    }
 
     /**
      * Handle key input for module binds
      */
     val keyHandler = LiquidBounce.eventManager.handler<KeyEvent>(this) { ev ->
-        if(ev.action == GLFW.GLFW_PRESS) {
+        if (ev.action == GLFW.GLFW_PRESS) {
             filter { it.bind == ev.key.code }
                 .forEach { it.state = !it.state }
+        }
+    }
+
+    /**
+     * Tick sequences
+     */
+    val entityTickHandler = LiquidBounce.eventManager.handler<EntityTickEvent>(this, false) {
+        for (sequence in sequences) {
+            sequence.tick()
         }
     }
 

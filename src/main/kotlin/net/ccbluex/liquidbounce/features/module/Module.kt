@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventHook
+import net.ccbluex.liquidbounce.event.Handler
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.Sequence
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.glfw.GLFW
 
@@ -40,20 +40,26 @@ open class Module(val name: String, val category: Category, val bind: Int = GLFW
     protected val mc: MinecraftClient
         get() = net.ccbluex.liquidbounce.utils.mc
 
-    // TODO: make event instead of function
     open fun toggled() { }
 
     /**
      * Registers an event hook for events of type [T]
      */
-    inline fun <reified T: Event> handler(ignoreCondition: Boolean = false, noinline eventHandler: (T) -> Unit) {
-        LiquidBounce.eventManager.registerEventHook(T::class.java, EventHook(this, eventHandler, ignoreCondition))
+    inline fun <reified T : Event> handler(ignoreCondition: Boolean = false, noinline handler: Handler<T>) {
+        LiquidBounce.eventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
     }
 
     /**
-     * Launch a new sequence
+     * Registers an event hook for events of type [T]
+     *
+     * TODO: Check on performance and memory usage
      */
-    fun sequence(handler: suspend Sequence.() -> Unit) = Sequence(handler)
+    inline fun <reified T : Event> sequenceHandler(
+        ignoreCondition: Boolean = false,
+        noinline eventHandler: SuspendableHandler<T>
+    ) {
+        handler<T> { event -> Sequence(eventHandler, event) }
+    }
 
     /**
      * Events should be handled when module is enabled
