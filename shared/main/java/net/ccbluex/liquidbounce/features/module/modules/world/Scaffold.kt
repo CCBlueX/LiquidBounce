@@ -176,6 +176,7 @@ class Scaffold : Module() {
 
     // AutoBlock
     private var slot = 0
+    private var oldslot = 0
 
     // Zitter Direction
     private var zitterDirection = false
@@ -196,6 +197,8 @@ class Scaffold : Module() {
     override fun onEnable() {
         if (mc.thePlayer == null) return
         launchY = mc.thePlayer!!.posY.toInt()
+
+        oldslot = mc.thePlayer!!.inventory.currentItem
     }
 
 // UPDATE EVENTS
@@ -513,6 +516,12 @@ class Scaffold : Module() {
             if (eagleSneaking)
                 mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.STOP_SNEAKING))
         }
+
+        if(autoBlockValue.get().equals("Switch", ignoreCase = true)) {
+            mc.thePlayer!!.inventory.currentItem = oldslot
+            mc.playerController.updateController()
+        }
+
         if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindRight))
             mc.gameSettings.keyBindRight.pressed = false
         if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindLeft))
@@ -604,12 +613,10 @@ class Scaffold : Module() {
         var zSearchFace = 0.0
         val eyesPos = WVec3(mc.thePlayer!!.posX, mc.thePlayer!!.entityBoundingBox.minY + mc.thePlayer!!.eyeHeight, mc.thePlayer!!.posZ)
         var placeRotation: PlaceRotation? = null
-            
         for (facingType in EnumFacingType.values()) {
             val side = classProvider.getEnumFacing(facingType)
             val neighbor = blockPosition.offset(side)
-            if (!canBeClicked(neighbor)) 
-                continue
+            if (!canBeClicked(neighbor)) continue
             val dirVec = WVec3(side.directionVec)
             var xSearch = 0.5 - xzRV / 2
             while (xSearch <= 0.5 + xzRV / 2) {
@@ -662,19 +669,18 @@ class Scaffold : Module() {
                 for (facingType in EnumFacingType.values()) {
                     val side = classProvider.getEnumFacing(facingType)
                     val neighbor = blockPosition.offset(side)
-                    if (!canBeClicked(neighbor)) 
-                        continue                        
+                    if (!canBeClicked(neighbor)) continue
                     val dirVec = WVec3(side.directionVec)
                     val posVec = WVec3(blockPosition).addVector(xSearchFace, ySearchFace, zSearchFace)
                     val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
                     val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
                     if (checks && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null))
-                        continue                        
+                        continue
                     val rotationVector = RotationUtils.getVectorForRotation(limitedRotation)
                     val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
                     val obj = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false, false, true)
                     if (!(obj!!.typeOfHit === IMovingObjectPosition.WMovingObjectType.BLOCK && obj!!.blockPos!! == neighbor))
-                        continue                 
+                        continue
                     facesBlock = true
                     break
                 }
