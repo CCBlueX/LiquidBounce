@@ -66,6 +66,7 @@ class Fly : Module() {
             "Mineplex",
             "NeruxVace",
             "Minesucht",
+            "Redesky",
 
             // Spartan
             "Spartan",
@@ -99,6 +100,7 @@ class Fly : Module() {
     private val hypixelBoostTimer = FloatValue("Hypixel-BoostTimer", 1f, 0f, 5f)
     private val mineplexSpeedValue = FloatValue("MineplexSpeed", 1f, 0.5f, 10f)
     private val neruxVaceTicks = IntegerValue("NeruxVace-Ticks", 6, 0, 20)
+    private val redeskyHeight = FloatValue("Redesky-Height", 4f, 1f, 7f)
 
     // Visuals
     private val markValue = BoolValue("Mark", true)
@@ -214,6 +216,11 @@ class Fly : Module() {
                     lastDistance = 0.0
                     failedStart = false
                 }
+                "redesky" -> {
+                    if(mc.thePlayer!!.onGround) {
+                        redeskyVClip1(redeskyHeight.get())
+                    }
+                }
             }
         }
 
@@ -233,6 +240,7 @@ class Fly : Module() {
 
     override fun onDisable() {
         wasDead = false
+        redeskySpeed(0)
 
         val thePlayer = mc.thePlayer ?: return
 
@@ -245,6 +253,9 @@ class Fly : Module() {
             thePlayer.motionX = 0.0
             thePlayer.motionY = 0.0
             thePlayer.motionZ = 0.0
+        }
+        if(mode.equals("Redesky", ignoreCase = true)) {
+            redeskyHClip2(0.0)
         }
 
         thePlayer.capabilities.isFlying = false
@@ -534,6 +545,15 @@ class Fly : Module() {
 
                     MovementUtils.strafe(vanillaSpeed)
                 }
+                "redesky" -> {
+                    mc.timer.timerSpeed = 0.3f
+                    redeskyHClip2(7.0)
+                    redeskyVClip2(10.0)
+                    redeskyVClip1(-0.5f)
+                    redeskyHClip1(2.0)
+                    redeskySpeed(1)
+                    mc.thePlayer!!.motionY = -0.01
+                }
             }
         }
     }
@@ -694,6 +714,30 @@ class Fly : Module() {
         }
         mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(mc.thePlayer!!.posX, mc.thePlayer!!.posY, mc.thePlayer!!.posZ, true))
         groundTimer.reset()
+    }
+
+    private fun redeskyVClip1(vertical: Float) {
+        mc.thePlayer!!.setPosition(mc.thePlayer!!.posX, mc.thePlayer!!.posY + vertical, mc.thePlayer!!.posZ)
+    }
+
+    private fun redeskyHClip1(horizontal: Double) {
+        val playerYaw = Math.toRadians(mc.thePlayer!!.rotationYaw.toDouble())
+        mc.thePlayer!!.setPosition(mc.thePlayer!!.posX + horizontal * -sin(playerYaw), mc.thePlayer!!.posY, mc.thePlayer!!.posZ + horizontal * cos(playerYaw))
+    }
+
+    private fun redeskyHClip2(horizontal: Double) {
+        val playerYaw = Math.toRadians(mc.thePlayer!!.rotationYaw.toDouble())
+        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(mc.thePlayer!!.posX + horizontal * -sin(playerYaw), mc.thePlayer!!.posY, mc.thePlayer!!.posZ + horizontal * cos(playerYaw), false))
+    }
+
+    private fun redeskyVClip2(vertical: Double) {
+        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(mc.thePlayer!!.posX, mc.thePlayer!!.posY + vertical, mc.thePlayer!!.posZ, false))
+    }
+
+    private fun redeskySpeed(speed: Int) {
+        val playerYaw = Math.toRadians(mc.thePlayer!!.rotationYaw.toDouble())
+        mc.thePlayer!!.motionX = speed * -sin(playerYaw)
+        mc.thePlayer!!.motionZ = speed * cos(playerYaw)
     }
 
     // TODO: Make better and faster calculation lol
