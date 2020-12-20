@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
-@ModuleInfo(name = "Strafe", description = "Allows you to freely move in mid air", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "Strafe", description = "Allows you to freely move in mid air.", category = ModuleCategory.MOVEMENT)
 class Strafe : Module() {
 
     var jump: Boolean = false
