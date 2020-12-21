@@ -12,16 +12,16 @@ version = project.mod_version
 group = project.maven_group
 
 minecraft {
+    accessWidener "src/main/resources/liquidbounce.accesswidener"
 }
 
-
 repositories {
+    mavenCentral()
     maven { url = "http://maven.fabricmc.net/" }
     maven { url = "https://jitpack.io" }
 }
 
 dependencies {
-    //to change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
@@ -32,11 +32,12 @@ dependencies {
 
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    // => optional mods
-
-    // Sodium (like OptiFine)
-    // Not supported yet (waiting for 1.16.3 support).
-    // modImplementation "com.github.jellysquid3:sodium-fabric:1.16.x~dev-SNAPSHOT"
+    implementation ('com.thealtening.api:api:4.1.0') {
+        exclude group: 'com.google.code.gson', module: 'gson'
+    }
+    implementation ('com.thealtening.auth:auth:3.0.2') {
+        exclude group: 'com.google.code.gson', module: 'gson'
+    }
 
 }
 

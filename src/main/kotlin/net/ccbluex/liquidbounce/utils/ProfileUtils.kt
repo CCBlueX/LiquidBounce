@@ -16,31 +16,28 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.minecraft.text.Text
-import org.apache.logging.log4j.Logger
+import com.google.gson.JsonParser
 
-val logger: Logger
-    get() = LiquidBounce.logger
+object ProfileUtils {
 
-// Chat formatting
-const val defaultColor = "§3"
-const val variableColor = "§7"
-const val statusColor = "§5"
-private const val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] $defaultColor"
+    /**
+     * Get UUID of username
+     */
+    fun getUUID(username: String): String {
+        // TODO: Use GameProfileSerializer from authlib
 
-fun chat(message: String) {
-    displayChatMessage(clientPrefix + message)
-}
+        // Make a http connection to Mojang API and ask for UUID of username
+        val text = HttpUtils.get("https://api.mojang.com/users/profiles/minecraft/$username")
 
-private fun displayChatMessage(message: String) {
-    if (mc.player == null) {
-        logger.info("(Chat) $message")
-        return
+        // Read response content and get id from json
+        val jsonElement = JsonParser().parse(text)
+
+        if(jsonElement.isJsonObject) {
+            return jsonElement.asJsonObject.get("id").asString
+        }
+        return ""
     }
 
-    mc.inGameHud.chatHud.addMessage(Text.of(message))
 }

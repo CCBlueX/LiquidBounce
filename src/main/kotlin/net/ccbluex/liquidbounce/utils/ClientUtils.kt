@@ -17,9 +17,29 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.extensions
+package net.ccbluex.liquidbounce.utils
 
-import net.minecraft.client.network.ClientPlayerEntity
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.utils.extensions.asText
+import net.minecraft.client.MinecraftClient
+import org.apache.logging.log4j.Logger
 
-val ClientPlayerEntity.moving
-    get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
+val mc = MinecraftClient.getInstance()!!
+
+val logger: Logger
+    get() = LiquidBounce.logger
+
+// Chat formatting
+const val defaultColor = "§3"
+const val variableColor = "§7"
+const val statusColor = "§5"
+private const val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] $defaultColor"
+
+fun chat(message: String) {
+    if (mc.player == null) {
+        logger.info("(Chat) $message")
+        return
+    }
+
+    mc.inGameHud.chatHud.addMessage("$clientPrefix$message".asText())
+}

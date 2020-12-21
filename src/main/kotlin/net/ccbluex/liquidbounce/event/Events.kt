@@ -33,3 +33,5 @@ class PacketReceiveEvent(val packet: Packet<*>) : CancellableEvent()
 class PacketSendEvent(val packet: Packet<*>) : CancellableEvent()
 
 class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
+
+class SessionEvent : Event()
