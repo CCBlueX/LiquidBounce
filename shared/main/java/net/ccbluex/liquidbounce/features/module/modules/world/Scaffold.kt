@@ -38,10 +38,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
+import kotlin.math.*
 
 @ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_I)
 class Scaffold : Module() {
@@ -97,6 +94,7 @@ class Scaffold : Module() {
     // xz + y range
     private val xzRangeValue = FloatValue("xzRange", 0.8f, 0f, 1f)
     private val yRangeValue = FloatValue("yRange", 0.8f, 0f, 1f)
+    private val minDiffValue = FloatValue("MinDiff", 0.0f, 0.0f, 0.2f)
 
     // Search Accuracy
     private val searchAccuracyValue: IntegerValue = object : IntegerValue("SearchAccuracy", 8, 1, 16) {
@@ -638,6 +636,11 @@ class Scaffold : Module() {
                             val diffY = hitVec.yCoord - eyesPos.yCoord
                             val diffZ: Double = if (staticYawMode && i == 1) 0.0 else hitVec.zCoord - eyesPos.zCoord
                             val diffXZ = sqrt(diffX * diffX + diffZ * diffZ)
+                            if(!side.isUp() && minDiffValue.get() > 0) {
+                                val diff: Double = abs(if (side.isNorth() || side.isSouth()) diffZ else diffX)
+                                if (diff < minDiffValue.get() || diff > 0.3f)
+                                    continue
+                            }
                             val pitch = if (staticPitchMode) staticPitch else wrapAngleTo180_float((-Math.toDegrees(atan2(diffY, diffXZ))).toFloat())
                             val rotation = Rotation(wrapAngleTo180_float(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f + if (staticYawMode) staticYawOffset else 0f), pitch)
                             val rotationVector = RotationUtils.getVectorForRotation(rotation)
