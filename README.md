@@ -2,7 +2,7 @@
 A free mixin-based injection hacked-client for Minecraft using FabricMC.
 
 Website: https://liquidbounce.net \
-Forum: https://forums.ccbluex.net/index.php \
+Forum: https://forums.ccbluex.net \
 Discord: https://discord.gg/gdQ82He \
 YouTube: https://youtube.com/CCBlueX \
 Twitter: https://twitter.com/CCBlueX 
