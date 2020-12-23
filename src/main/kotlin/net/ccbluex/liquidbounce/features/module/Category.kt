@@ -28,6 +28,6 @@ enum class Category(readableName: String) {
     WORLD("World"),
     MISC("Misc"),
     EXPLOIT("Exploit"),
-    FUN("Fun")
+    GHOST("Ghost"),
 
 }
