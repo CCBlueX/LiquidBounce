@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import java.lang.Math.sqrt
 
 @ModuleInfo(name = "Strafe", description = "Allows you to freely move in mid air.", category = ModuleCategory.MOVEMENT)
 class Strafe : Module() {
@@ -17,9 +18,9 @@ class Strafe : Module() {
     var wasDown: Boolean = false
 
     val strafeStrengthValue = FloatValue("StrafeStrength", 0.5F, 0F, 1F)
-    val  noMoveStopValue = BoolValue("NoMoveStop", false)
-    val  onGroundStrafeValue = BoolValue("OnGroundStrafe", false)
-    val  allDirectionsJumpsValue = BoolValue("AllDirectionsJumps", false)
+    val noMoveStopValue = BoolValue("NoMoveStop", false)
+    val onGroundStrafeValue = BoolValue("OnGroundStrafe", false)
+    val allDirectionsJumpsValue = BoolValue("AllDirectionsJumps", false)
 
     override fun onEnable() {
         wasDown = false
@@ -27,7 +28,8 @@ class Strafe : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.thePlayer!!.onGround && mc.gameSettings.keyBindJump.isKeyDown && allDirectionsJumpsValue.get() && MovementUtils.isMoving && !(mc.thePlayer!!.isInWater || mc.thePlayer!!.isInLava || mc.thePlayer!!.isOnLadder || mc.thePlayer!!.isInWeb)) {
+        if (mc.thePlayer!!.onGround && mc.gameSettings.keyBindJump.isKeyDown && allDirectionsJumpsValue.get() &&
+            MovementUtils.isMoving && !(mc.thePlayer!!.isInWater || mc.thePlayer!!.isInLava || mc.thePlayer!!.isOnLadder || mc.thePlayer!!.isInWeb)) {
             if (mc.gameSettings.keyBindJump.isKeyDown) {
                 mc.gameSettings.keyBindJump.pressed = false
                 this.wasDown = true
@@ -44,35 +46,36 @@ class Strafe : Module() {
             this.jump = false
         }
     }
+
     @EventTarget
-    fun onStrafe(event: StrafeEvent){
-        var shotSpeed = Math.sqrt((mc2.player.motionX * mc2.player.motionX) + (mc2.player.motionZ * mc2.player.motionZ))
-        var speed = (shotSpeed * strafeStrengthValue.get())
-        var motionX = (mc2.player.motionX * (1 - strafeStrengthValue.get()))
-        var motionZ = (mc2.player.motionZ * (1 - strafeStrengthValue.get()))
+    fun onStrafe(event: StrafeEvent) {
+        val shotSpeed =
+            sqrt((mc.thePlayer!!.motionX * mc.thePlayer!!.motionX) + (mc.thePlayer!!.motionZ * mc.thePlayer!!.motionZ))
+        val speed = (shotSpeed * strafeStrengthValue.get())
+        val motionX = (mc.thePlayer!!.motionX * (1 - strafeStrengthValue.get()))
+        val motionZ = (mc.thePlayer!!.motionZ * (1 - strafeStrengthValue.get()))
         if (!MovementUtils.isMoving) {
             if (noMoveStopValue.get()) {
-                mc2.player.motionX = 0.0
-                mc2.player.motionZ = 0.0
+                mc.thePlayer!!.motionX = 0.0
+                mc.thePlayer!!.motionZ = 0.0
             }
             return
         }
-        if (!mc2.player.onGround || onGroundStrafeValue.get()) {
+        if (!mc.thePlayer!!.onGround || onGroundStrafeValue.get()) {
             var yaw = getMoveYaw()
-            mc2.player.motionX = (((-Math.sin(Math.toRadians(yaw.toDouble())) * speed) + motionX))
-            mc2.player.motionZ = (((Math.cos(Math.toRadians(yaw.toDouble())) * speed) + motionZ))
+            mc.thePlayer!!.motionX = (((-Math.sin(Math.toRadians(yaw.toDouble())) * speed) + motionX))
+            mc.thePlayer!!.motionZ = (((Math.cos(Math.toRadians(yaw.toDouble())) * speed) + motionZ))
         }
     }
 
-    fun getMoveYaw(): Float {
-        var moveYaw = mc2.player.rotationYaw
-        if (mc2.player.moveForward != 0f && mc2.player.moveStrafing == 0f) {
-            moveYaw = if (mc2.player.moveForward > 0) 0F else 180.toFloat()
-        } else if (mc2.player.moveForward != 0f && mc2.player.moveStrafing != 0f) {
-            if (mc2.player.moveForward > 0) moveYaw = if (mc2.player.moveStrafing > 0) (-45).toFloat() else 45.toFloat() else moveYaw = if (mc2.player.moveStrafing > 0) (-45).toFloat() else 45.toFloat()
-            moveYaw = if (mc2.player.moveForward > 0) 0F else 180.toFloat()
-        } else if (mc2.player.moveStrafing != 0f && mc2.player.moveForward == 0f) {
-            moveYaw = if (mc2.player.moveStrafing > 0) (-90).toFloat() else 90.toFloat()
+    private fun getMoveYaw(): Float {
+        var moveYaw = mc.thePlayer!!.rotationYaw
+        if (mc.thePlayer!!.moveForward != 0f && mc.thePlayer!!.moveStrafing == 0f) {
+            moveYaw = if (mc.thePlayer!!.moveForward > 0) 0F else 180.toFloat()
+        } else if (mc.thePlayer!!.moveForward != 0f && mc.thePlayer!!.moveStrafing != 0f) {
+            moveYaw = if (mc.thePlayer!!.moveForward > 0) 0F else 180.toFloat()
+        } else if (mc.thePlayer!!.moveStrafing != 0f && mc.thePlayer!!.moveForward == 0f) {
+            moveYaw = if (mc.thePlayer!!.moveStrafing > 0) (-90).toFloat() else 90.toFloat()
         }
         return moveYaw
     }
