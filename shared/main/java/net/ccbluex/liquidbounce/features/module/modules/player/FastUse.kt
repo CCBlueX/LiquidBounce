@@ -69,7 +69,7 @@ class FastUse : Module() {
                     mc.timer.timerSpeed = 1.22F
                     usedTimer = true
                 }
-
+                
                 "custom" -> {
                     mc.timer.timerSpeed = customTimer.get()
                     usedTimer = true
