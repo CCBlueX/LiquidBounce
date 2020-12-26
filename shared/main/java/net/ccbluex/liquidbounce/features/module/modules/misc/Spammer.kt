@@ -62,21 +62,23 @@ class Spammer: Module() {
     private fun replace(`object`: String): String {
         val r = Random
 
-        while(`object`.contains("%f"))
-            `object`.substring(0, `object`.indexOf("%f")) + r.nextFloat() + `object`.substring(`object`.indexOf("%f") + "%f".length)
-
-        while(`object`.contains("%i"))
-            `object`.substring(0, `object`.indexOf("%i")) + r.nextInt(10000) + `object`.substring(`object`.indexOf("%i") + "%i".length)
-
-        while(`object`.contains("%s"))
-            `object`.substring(0, `object`.indexOf("%s")) + RandomUtils.randomString(r.nextInt(8) + 1) + `object`.substring(`object`.indexOf("%s") + "%s".length)
-
-        while(`object`.contains("%ss"))
-            `object`.substring(0, `object`.indexOf("%ss")) + RandomUtils.randomString(r.nextInt(4) + 1) + `object`.substring(`object`.indexOf("%ss") + "%ss".length)
-
-        while(`object`.contains("%ls"))
-            `object`.substring(0, `object`.indexOf("%ls")) + RandomUtils.randomString(r.nextInt(15) + 1) + `object`.substring(`object`.indexOf("%ls") + "%ls".length)
+        when(`object`) {
+            "%f" -> {
+                `object`.substring(0, `object`.indexOf("%f")) + r.nextFloat() + `object`.substring(`object`.indexOf("%f") + "%f".length)
+            }
+            "%i" -> {
+                `object`.substring(0, `object`.indexOf("%i")) + r.nextInt(10000) + `object`.substring(`object`.indexOf("%i") + "%i".length)
+            }
+            "%s" -> {
+                `object`.substring(0, `object`.indexOf("%s")) + RandomUtils.randomString(r.nextInt(8) + 1) + `object`.substring(`object`.indexOf("%s") + "%s".length)
+            }
+            "%ss" -> {
+                `object`.substring(0, `object`.indexOf("%ss")) + RandomUtils.randomString(r.nextInt(4) + 1) + `object`.substring(`object`.indexOf("%ss") + "%ss".length)
+            }
+            "%ls" -> {
+                `object`.substring(0, `object`.indexOf("%ls")) + RandomUtils.randomString(r.nextInt(15) + 1) + `object`.substring(`object`.indexOf("%ls") + "%ls".length)
+            }
+        }
         return `object`
     }
-
 }
