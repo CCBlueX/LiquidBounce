@@ -41,11 +41,9 @@ class Mineplex : SpeedMode("Mineplex") {
     }
 
     override fun onMotion() {
-        TODO("Not yet implemented")
     }
 
     override fun onMove(event: MoveEvent) {
-        TODO("Not yet implemented")
     }
 
     override fun onDisable() {
