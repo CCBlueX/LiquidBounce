@@ -29,8 +29,8 @@ class ProphuntESP : Module() {
     val blocks: MutableMap<WBlockPos, Long> = HashMap()
 
     private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "ShaderOutline", "ShaderGlow"), "OtherBox")
-    private val ShaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
-    private val ShaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
+    private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
+    private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
     private val colorRedValue = IntegerValue("R", 0, 0, 255)
     private val colorGreenValue = IntegerValue("G", 90, 0, 255)
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
@@ -85,7 +85,7 @@ class ProphuntESP : Module() {
         }
 
         val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
-        val radius = if (mode.equals("ShaderOutline", ignoreCase = true)) ShaderOutlineRadius.get() else if (mode.equals("ShaderGlow", ignoreCase = true)) ShaderGlowRadius.get() else 1f
+        val radius = if (mode.equals("ShaderOutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("ShaderGlow", ignoreCase = true)) shaderGlowRadius.get() else 1f
         shader.stopDraw(color, radius, 1f)
     }
 }
