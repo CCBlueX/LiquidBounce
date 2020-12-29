@@ -59,7 +59,6 @@ class ESP : Module() {
         val projectionMatrix = WorldToScreen.getMatrix(GL11.GL_PROJECTION_MATRIX)
         val real2d = mode.equals("real2d", ignoreCase = true)
 
-        //<editor-fold desc="Real2D-Setup">
         if (real2d) {
             GL11.glPushAttrib(GL11.GL_ENABLE_BIT)
             GL11.glEnable(GL11.GL_BLEND)
@@ -78,9 +77,9 @@ class ESP : Module() {
             GL11.glDepthMask(true)
             GL11.glLineWidth(1.0f)
         }
-        //</editor-fold>
+
         for (entity in mc.theWorld!!.loadedEntityList) {
-            if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
+            if (!classProvider.isEntityLivingBase(entity) || !botValue.get() && AntiBot.isBot(entity.asEntityLivingBase())) continue
             if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
                 val entityLiving = entity.asEntityLivingBase()
                 val color = getColor(entityLiving)
@@ -130,6 +129,7 @@ class ESP : Module() {
                 }
             }
         }
+
         if (real2d) {
             GL11.glEnable(GL11.GL_DEPTH_TEST)
             GL11.glMatrixMode(GL11.GL_PROJECTION)
