@@ -52,7 +52,7 @@ class Tracers : Module() {
         GL11.glBegin(GL11.GL_LINES)
 
         for (entity in mc.theWorld!!.loadedEntityList) {
-            if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
+            if (!classProvider.isEntityLivingBase(entity) || !botValue.get() && AntiBot.isBot(entity.asEntityLivingBase())) continue
             if (entity != thePlayer && EntityUtils.isSelected(entity, false)) {
                 var dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt()
 

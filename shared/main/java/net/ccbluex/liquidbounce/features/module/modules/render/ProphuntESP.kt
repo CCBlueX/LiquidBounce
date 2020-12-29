@@ -28,15 +28,13 @@ import java.util.*
 class ProphuntESP : Module() {
     val blocks: MutableMap<WBlockPos, Long> = HashMap()
 
-    private val modeValue = ListValue("Mode", arrayOf("box", "otherbox", "shaderoutline", "shaderglow"), "otherbox")
+    private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "ShaderOutline", "ShaderGlow"), "OtherBox")
     private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
     private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
     private val colorRedValue = IntegerValue("R", 0, 0, 255)
     private val colorGreenValue = IntegerValue("G", 90, 0, 255)
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
     private val colorRainbow = BoolValue("Rainbow", false)
-
-
 
     override fun onDisable() {
         synchronized(blocks) { blocks.clear() }
@@ -47,10 +45,10 @@ class ProphuntESP : Module() {
         val mode = modeValue.get()
         val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
         for (entity in mc.theWorld!!.loadedEntityList) {
-            if(!mode.equals("box", true) || !mode.equals("otherbox", true)) break
+            if(!mode.equals("Box", true) || !mode.equals("OtherBox", true)) break
             if (!classProvider.isEntityFallingBlock(entity)) continue
 
-            RenderUtils.drawEntityBox(entity, color, mode.equals("box", true))
+            RenderUtils.drawEntityBox(entity, color, mode.equals("Box", true))
         }
         synchronized(blocks) {
             val iterator: MutableIterator<Map.Entry<WBlockPos, Long>> = blocks.entries.iterator()
@@ -63,7 +61,7 @@ class ProphuntESP : Module() {
                     continue
                 }
 
-                RenderUtils.drawBlockBox(entry.key, color, mode.equals("box", true))
+                RenderUtils.drawBlockBox(entry.key, color, mode.equals("Box", true))
             }
         }
     }
@@ -71,8 +69,8 @@ class ProphuntESP : Module() {
     fun onRender2D(event: Render2DEvent) {
         val mode = modeValue.get()
         val shader = when(mode) {
-            "shaderoutline" -> OutlineShader.OUTLINE_SHADER
-            "shaderglow" -> GlowShader.GLOW_SHADER
+            "ShaderOutline" -> OutlineShader.OUTLINE_SHADER
+            "ShaderGlow" -> GlowShader.GLOW_SHADER
             else -> null
         } ?: return
 
@@ -87,7 +85,7 @@ class ProphuntESP : Module() {
         }
 
         val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
-        val radius = if (mode.equals("shaderoutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("shaderglow", ignoreCase = true)) shaderGlowRadius.get() else 1f
+        val radius = if (mode.equals("ShaderOutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("ShaderGlow", ignoreCase = true)) shaderGlowRadius.get() else 1f
         shader.stopDraw(color, radius, 1f)
     }
 }
