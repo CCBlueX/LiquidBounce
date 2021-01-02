@@ -4,7 +4,7 @@
  * https://github.com/CCBlueX/LiquidBounce/
  */
 
-@file:Suppress("NAME_SHADOWING", "BooleanLiteralArgument")
+@file:Suppress("BooleanLiteralArgument")
 
 package net.ccbluex.liquidbounce.features.module.modules.world
 
@@ -64,7 +64,7 @@ class Scaffold : Module() {
     private val placeableDelay = BoolValue("PlaceableDelay", true)
 
     // Autoblock
-    private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Spoof", "Switch"), "Spoof")
+    private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Matrix", "Spoof", "Switch"), "Spoof")
 
     // Basic stuff
     @JvmField
@@ -478,13 +478,22 @@ class Scaffold : Module() {
 
             if (blockSlot == -1)
                 return
-
-            if (autoBlockValue.get().equals("Spoof", true)) {
-                if (blockSlot - 36 != slot)
+            when(autoBlockValue.get()) {
+                "Off" -> {
+                    return
+                }
+                "Matrix" -> {
+                    if(blockSlot - 36 != slot) {
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
+                    }
+                }
+                "Spoof" -> {
                     mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
-            } else {
-                mc.thePlayer!!.inventory.currentItem = blockSlot - 36
-                mc.playerController.updateController()
+                }
+                "Switch" -> {
+                    mc.thePlayer!!.inventory.currentItem = blockSlot - 36
+                    mc.playerController.updateController()
+                }
             }
             itemStack = mc.thePlayer!!.inventoryContainer.getSlot(blockSlot).stack
         }
@@ -502,6 +511,9 @@ class Scaffold : Module() {
                 mc.thePlayer!!.swingItem()
             else
                 mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
+        }
+        if(autoBlockValue.get().equals("Spoof", true)) {
+            mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(mc.thePlayer!!.inventory.currentItem))
         }
         targetPlace = null
     }
@@ -535,7 +547,7 @@ class Scaffold : Module() {
             mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(mc.thePlayer!!.inventory.currentItem))
     }
 
-// Entity movement event
+    // Entity movement event
     /** @param event */
     @EventTarget
     fun onMove(event: MoveEvent) {
@@ -704,19 +716,19 @@ class Scaffold : Module() {
     }
     // RETURN HOTBAR AMOUNT
     private val blocksAmount: Int
-        get() {
-            var amount = 0
-            for (i in 36..44) {
-                val itemStack: IItemStack? = mc.thePlayer!!.inventoryContainer.getSlot(i).stack
-                if (itemStack != null && classProvider.isItemBlock(itemStack.item)) {
-                    val block: IBlock = (itemStack.item!!.asItemBlock()).block
-                    val heldItem: IItemStack? = mc.thePlayer!!.heldItem
-                    if (heldItem != null && heldItem == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block) && !classProvider.isBlockBush(block))
-                        amount += itemStack.stackSize
-                }
+    get() {
+        var amount = 0
+        for (i in 36..44) {
+            val itemStack: IItemStack? = mc.thePlayer!!.inventoryContainer.getSlot(i).stack
+            if (itemStack != null && classProvider.isItemBlock(itemStack.item)) {
+                val block: IBlock = (itemStack.item!!.asItemBlock()).block
+                val heldItem: IItemStack? = mc.thePlayer!!.heldItem
+                if (heldItem != null && heldItem == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block) && !classProvider.isBlockBush(block))
+                    amount += itemStack.stackSize
             }
-            return amount
         }
+        return amount
+    }
     override val tag: String
         get() = modeValue.get()
 }
