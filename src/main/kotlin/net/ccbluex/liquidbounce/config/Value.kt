@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.config
 
-import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
@@ -62,8 +61,14 @@ fun Configurable.boolean(name: String, default: Boolean = false) = Value(name, v
 fun Configurable.float(name: String, default: Float = 1.0f,
                        range: ClosedFloatingPointRange<Float> = 0.0f..default) = Value(name, value = default).apply { values.add(this) }
 
+fun Configurable.floatRange(name: String, default: ClosedFloatingPointRange<Float> = 0.0f..1.0f,
+                       range: ClosedFloatingPointRange<Float> = default) = Value(name, value = default).apply { values.add(this) }
+
 fun Configurable.int(name: String, default: Int = 1,
                      range: IntRange = 0..default) = Value(name, value = default).apply { values.add(this) }
+
+fun Configurable.intRange(name: String, default: IntRange = 0..1,
+                          range: IntRange = default) = Value(name, value = default).apply { values.add(this) }
 
 fun Configurable.text(name: String, default: String = "") = Value(name, value = default).apply { values.add(this) }
 
