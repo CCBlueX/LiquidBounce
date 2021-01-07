@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.command
 import java.util.*
 import kotlin.collections.ArrayList
 
-typealias CommandHandler = (List<Any>) -> Boolean
+typealias CommandHandler = (Array<Any>) -> Boolean
 
 class Command(
     val name: String,

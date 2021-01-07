@@ -44,7 +44,7 @@ object HurtCommand {
     }
 
     @JvmStatic
-    private fun onCommand(it: List<Any>): Boolean {
+    private fun onCommand(it: Array<Any>): Boolean {
         val damage = it[0] as Int
 
         // Latest NoCheatPlus damage exploit

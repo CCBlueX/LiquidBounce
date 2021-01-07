@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.command
 
 
 class ParameterValidationResult<T> private constructor(
-    private val errorMessage: String?,
-    private val mappedResult: T?
+    val errorMessage: String?,
+    val mappedResult: T?
 ) {
 
     companion object {

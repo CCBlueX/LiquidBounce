@@ -82,6 +82,8 @@ class ParameterBuilder<T> private constructor(val name: String) {
     /**
      * Marks this parameter as a vararg.
      *
+     * The values are stored in an array
+     *
      * Only allowed at the end.
      */
     fun vararg(): ParameterBuilder<T> {
@@ -111,6 +113,10 @@ class ParameterBuilder<T> private constructor(val name: String) {
     fun build(): Parameter<T> {
         if (this.useMinecraftAutoCompletion && autocompletionHandler == null) {
             throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")
+        }
+
+        if (required == true && vararg) {
+            throw IllegalArgumentException("Varargs cannot be required")
         }
 
         return Parameter(
