@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.command
+package net.ccbluex.liquidbounce.features.command
 
 
 class ParameterValidationResult<T> private constructor(

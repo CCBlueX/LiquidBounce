@@ -16,23 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.event
+package net.ccbluex.liquidbounce.config
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import com.google.gson.*
 
-interface Listenable {
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FIELD)
+annotation class Exclude
 
-    /**
-     * Allows to disable event handling when condition is false.
-     */
-    fun handleEvents(): Boolean
-
+class ExcludeStrategy : ExclusionStrategy {
+    override fun shouldSkipClass(clazz: Class<*>?) = false
+    override fun shouldSkipField(field: FieldAttributes) = field.getAnnotation(Exclude::class.java) != null
 }
-
-inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, noinline handler: Handler<T>) {
-    LiquidBounce.eventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
-}
-
-typealias Handler<T> = (T) -> Unit
-
-class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean)

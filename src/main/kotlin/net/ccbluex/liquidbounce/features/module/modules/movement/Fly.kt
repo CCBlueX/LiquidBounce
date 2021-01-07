@@ -16,23 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.event
+package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.Category
+import org.lwjgl.glfw.GLFW
 
-interface Listenable {
+object Fly : Module("Fly", Category.MOVEMENT, bind = GLFW.GLFW_KEY_R) {
 
-    /**
-     * Allows to disable event handling when condition is false.
-     */
-    fun handleEvents(): Boolean
+    override fun toggled() {
+        mc.player!!.abilities.flying = state
+    }
 
 }
-
-inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, noinline handler: Handler<T>) {
-    LiquidBounce.eventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
-}
-
-typealias Handler<T> = (T) -> Unit
-
-class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean)

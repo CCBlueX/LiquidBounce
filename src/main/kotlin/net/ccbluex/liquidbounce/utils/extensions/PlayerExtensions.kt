@@ -16,23 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.event
 
-import net.ccbluex.liquidbounce.LiquidBounce
+package net.ccbluex.liquidbounce.utils.extensions
 
-interface Listenable {
+import net.minecraft.client.network.ClientPlayerEntity
 
-    /**
-     * Allows to disable event handling when condition is false.
-     */
-    fun handleEvents(): Boolean
-
-}
-
-inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, noinline handler: Handler<T>) {
-    LiquidBounce.eventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
-}
-
-typealias Handler<T> = (T) -> Unit
-
-class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean)
+val ClientPlayerEntity.moving
+    get() = input.movementForward != 0.0f || input.movementSideways != 0.0f

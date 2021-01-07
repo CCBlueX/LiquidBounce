@@ -16,23 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.event
 
-import net.ccbluex.liquidbounce.LiquidBounce
+package net.ccbluex.liquidbounce.features.module
 
-interface Listenable {
+enum class Category(readableName: String) {
 
-    /**
-     * Allows to disable event handling when condition is false.
-     */
-    fun handleEvents(): Boolean
+    COMBAT("Combat"),
+    PLAYER("Player"),
+    MOVEMENT("Movement"),
+    RENDER("Render"),
+    WORLD("World"),
+    MISC("Misc"),
+    EXPLOIT("Exploit"),
+    FUN("Fun")
 
 }
-
-inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, noinline handler: Handler<T>) {
-    LiquidBounce.eventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
-}
-
-typealias Handler<T> = (T) -> Unit
-
-class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean)

@@ -16,27 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.minecraft.text.Text
-import org.apache.logging.log4j.Logger
+import net.ccbluex.liquidbounce.event.RenderHudEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 
+object HUD : Module("HUD", Category.RENDER, defaultState = true) {
 
-val logger: Logger
-    get() = LiquidBounce.logger
-private const val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] §3"
+    val renderHandler = handler<RenderHudEvent> {
+        mc.textRenderer.drawWithShadow(it.matrixStack, "LiquidBounce", 2F, 2F, 0xfffff)
 
-fun chat(message: String) {
-    displayChatMessage(clientPrefix + message)
-}
-
-private fun displayChatMessage(message: String) {
-    if (mc.player == null) {
-        logger.info("(MCChat)$message")
-        return
+        LiquidBounce.moduleManager.filter { it.state }.forEachIndexed { index, module ->
+            val width = mc.textRenderer.getWidth(module.name)
+            mc.textRenderer.drawWithShadow(it.matrixStack, module.name, mc.window.scaledWidth - width - 2F, 2F + (mc.textRenderer.fontHeight * index), 0xfffff)
+        }
     }
 
-    mc.inGameHud.chatHud.addMessage(Text.of(message))
 }

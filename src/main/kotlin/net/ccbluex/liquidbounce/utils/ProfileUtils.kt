@@ -16,23 +16,28 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.event
+package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import com.google.gson.JsonParser
 
-interface Listenable {
+object ProfileUtils {
 
     /**
-     * Allows to disable event handling when condition is false.
+     * Get UUID of username
      */
-    fun handleEvents(): Boolean
+    fun getUUID(username: String): String {
+        // TODO: Use GameProfileSerializer from authlib
+
+        // Make a http connection to Mojang API and ask for UUID of username
+        val text = HttpUtils.get("https://api.mojang.com/users/profiles/minecraft/$username")
+
+        // Read response content and get id from json
+        val jsonElement = JsonParser().parse(text)
+
+        if(jsonElement.isJsonObject) {
+            return jsonElement.asJsonObject.get("id").asString
+        }
+        return ""
+    }
 
 }
-
-inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, noinline handler: Handler<T>) {
-    LiquidBounce.eventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
-}
-
-typealias Handler<T> = (T) -> Unit
-
-class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean)

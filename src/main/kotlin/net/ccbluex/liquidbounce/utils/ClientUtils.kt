@@ -16,23 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.event
+
+package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.utils.extensions.asText
+import net.minecraft.client.MinecraftClient
+import org.apache.logging.log4j.Logger
 
-interface Listenable {
+val mc = MinecraftClient.getInstance()!!
 
-    /**
-     * Allows to disable event handling when condition is false.
-     */
-    fun handleEvents(): Boolean
+val logger: Logger
+    get() = LiquidBounce.logger
 
+// Chat formatting
+const val defaultColor = "§3"
+const val variableColor = "§7"
+const val statusColor = "§5"
+private const val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] $defaultColor"
+
+fun chat(message: String) {
+    if (mc.player == null) {
+        logger.info("(Chat) $message")
+        return
+    }
+
+    mc.inGameHud.chatHud.addMessage("$clientPrefix$message".asText())
 }
-
-inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, noinline handler: Handler<T>) {
-    LiquidBounce.eventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
-}
-
-typealias Handler<T> = (T) -> Unit
-
-class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean)

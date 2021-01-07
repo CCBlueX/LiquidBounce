@@ -16,23 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.event
+package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.PacketReceiveEvent
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import org.lwjgl.glfw.GLFW
 
-interface Listenable {
+object Velocity : Module("Velocity", Category.COMBAT, bind = GLFW.GLFW_KEY_L) {
 
-    /**
-     * Allows to disable event handling when condition is false.
-     */
-    fun handleEvents(): Boolean
+    val packetReceiveHandler = sequenceHandler<PacketReceiveEvent> {
+        val packet = it.packet
+
+        if (packet is EntityVelocityUpdateS2CPacket && packet.id == mc.player?.entityId) {
+            it.cancelEvent()
+        }
+    }
 
 }
-
-inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, noinline handler: Handler<T>) {
-    LiquidBounce.eventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
-}
-
-typealias Handler<T> = (T) -> Unit
-
-class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean)

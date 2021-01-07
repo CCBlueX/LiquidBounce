@@ -25,5 +25,6 @@
   },
   "suggests": {
     "flamingo": "*"
-  }
+  },
+  "accessWidener" : "liquidbounce.accesswidener"
 }

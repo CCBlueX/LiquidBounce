@@ -18,32 +18,60 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import org.apache.logging.log4j.LogManager
 
+/**
+ * LiquidBounce
+ *
+ * A free mixin-based injection hacked-client for Minecraft using FabricMC.
+ *
+ * @author kawaiinekololis (@team ccbluex)
+ */
 object LiquidBounce {
 
+    /**
+     * CLIENT INFORMATION
+     *
+     * WARNING: Please read the GNU General Public License
+     */
     const val CLIENT_NAME = "LiquidBounce"
-    const val CLIENT_VERSION = "1.0.0" // TODO: Might use a semver library (yes/no?)
+    const val CLIENT_VERSION = "1.0.0"
 
+    /**
+     * Client feature managers
+     */
     val eventManager = EventManager()
+    val configSystem = ConfigSystem()
+    val commandManager = CommandManager()
+    val moduleManager = ModuleManager()
 
+
+    /**
+     * Client logger to print out console messages
+     *
+     * TODO: Figure out something better to keep track of errors and other useful debug stuff, especially in case of errors.
+     *  It would be useful to also log client messages into own logs or in case of a unsuccessful start to show up a panic/error screen
+     */
     val logger = LogManager.getLogger(CLIENT_NAME)!!
 
     /**
      * Should be executed to start the client.
      */
     fun start() {
-        // TODO: start client huh
-
+        commandManager.registerCommands()
+        moduleManager.registerInbuilt()
+        configSystem.load()
     }
 
     /**
      * Should be executed to stop the client.
      */
     fun stop() {
-        // TODO: stop client
-
+        configSystem.store()
     }
 
 }

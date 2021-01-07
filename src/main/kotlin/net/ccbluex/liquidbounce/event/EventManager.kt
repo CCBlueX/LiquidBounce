@@ -30,7 +30,7 @@ class EventManager {
     /**
      * Registers an event hook for events of type [T]
      */
-    inline fun <reified T: Event> handler(listener: Listenable, ignoreCondition: Boolean = false, noinline eventHandler: (T) -> Unit) {
+    private inline fun <reified T: Event> handler(listener: Listenable, ignoreCondition: Boolean = false, noinline eventHandler: (T) -> Unit) {
         registerEventHook(T::class.java, EventHook(listener, eventHandler, ignoreCondition))
     }
 
@@ -65,7 +65,7 @@ class EventManager {
         for (eventHook in target) {
             if (!eventHook.ignoresCondition && !eventHook.handlerClass.handleEvents())
                 continue
-            
+
             eventHook.handler(event)
         }
     }
