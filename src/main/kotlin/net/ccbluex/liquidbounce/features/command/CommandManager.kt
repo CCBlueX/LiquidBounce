@@ -17,14 +17,67 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.command
+package net.ccbluex.liquidbounce.features.command
 
-import net.ccbluex.liquidbounce.command.commands.FriendCommand
-import net.ccbluex.liquidbounce.command.commands.HurtCommand
+import net.ccbluex.liquidbounce.event.ChatSendEvent
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.command.commands.FriendCommand
+import net.ccbluex.liquidbounce.features.command.commands.ToggleCommand
+import net.ccbluex.liquidbounce.utils.chat
+
 
 class CommandException(message: String, cause: Throwable? = null, val usageInfo: List<String>? = null) :
     Exception(message, cause)
 
+/**
+ * Links minecraft with the command engine
+ */
+object CommandExecutor : Listenable {
+
+    /**
+     * Handles command execution
+     */
+    val chatEventHandler = handler<ChatSendEvent> {
+        if (it.message.startsWith(CommandManager.prefix)) {
+            try {
+                CommandManager.execute(it.message.substring(CommandManager.prefix.length))
+            } catch (e: CommandException) {
+                chat("§c${e.message}")
+                chat("§cUsage: ")
+
+                if (e.usageInfo != null) {
+                    var first = true
+
+                    // Zip the usage info together, e.g.
+                    //  .friend add <name> [<alias>]
+                    //  OR .friend remove <name>
+                    e.usageInfo.forEach { usage ->
+                        chat("§c ${if (first) "" else "OR "}.${usage}")
+
+                        if (first) {
+                            first = false
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                chat("§cAn exception occurred while executing the command: $e")
+            }
+
+            it.cancelEvent()
+        }
+    }
+
+
+    override fun handleEvents(): Boolean = true
+}
+
+/**
+ * Contains routines for handling commands
+ * and the command registry
+ *
+ * @author superblaubeere27 (@team CCBlueX)
+ */
 object CommandManager {
     private val commands: ArrayList<Command> = ArrayList()
 
@@ -40,13 +93,9 @@ object CommandManager {
      */
     val prefix: String = "."
 
-    init {
-        initCommands()
-    }
-
-    private fun initCommands() {
-        addCommand(HurtCommand.createCommand())
+    fun initCommands() {
         addCommand(FriendCommand.createCommand())
+        addCommand(ToggleCommand.createCommand())
     }
 
     fun addCommand(command: Command) {
@@ -83,7 +132,7 @@ object CommandManager {
             return currentCommand
 
         // If currentCommand is null, idx must be 0, so search in all commands
-        val commandSupplier = currentCommand?.first?.subcommands?.asIterable() ?: this.commands
+        val commandSupplier = currentCommand?.first?.subcommands?.asIterable() ?: commands
 
         // Look if something matches the current index, if it does, look if there are further matches
         commandSupplier

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.resource.ClientBuiltinResourcePackProvider;
@@ -44,15 +45,26 @@ import java.io.InputStream;
 @Mixin(MinecraftClient.class)
 public abstract class MixinMinecraftClient {
 
-    @Shadow @Nullable public abstract ClientPlayNetworkHandler getNetworkHandler();
+    @Shadow
+    @Nullable
+    public abstract ClientPlayNetworkHandler getNetworkHandler();
 
-    @Shadow @Nullable private IntegratedServer server;
+    @Shadow
+    @Nullable
+    private IntegratedServer server;
 
-    @Shadow public abstract boolean isConnectedToRealms();
+    @Shadow
+    public abstract boolean isConnectedToRealms();
 
-    @Shadow @Nullable private ServerInfo currentServerEntry;
+    @Shadow
+    @Nullable
+    private ServerInfo currentServerEntry;
 
-    @Shadow public abstract ClientBuiltinResourcePackProvider getResourcePackDownloader();
+    @Shadow
+    public abstract ClientBuiltinResourcePackProvider getResourcePackDownloader();
+
+    @Shadow
+    public abstract void openScreen(Screen screen);
 
     /**
      * Entry point of our hacked client
@@ -62,6 +74,8 @@ public abstract class MixinMinecraftClient {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void startClient(final CallbackInfo callback) {
         LiquidBounce.INSTANCE.start();
+
+//        openScreen(new SciterScreen("Hallo", true));
     }
 
     /**

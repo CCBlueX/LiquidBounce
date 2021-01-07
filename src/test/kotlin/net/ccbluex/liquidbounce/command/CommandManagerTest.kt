@@ -19,8 +19,10 @@
 
 package net.ccbluex.liquidbounce.command
 
-import net.ccbluex.liquidbounce.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll

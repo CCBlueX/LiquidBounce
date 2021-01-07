@@ -18,9 +18,10 @@
  */
 package net.ccbluex.liquidbounce
 
-import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.features.command.CommandExecutor
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import org.apache.logging.log4j.LogManager
 
@@ -29,7 +30,7 @@ import org.apache.logging.log4j.LogManager
  *
  * A free mixin-based injection hacked-client for Minecraft using FabricMC.
  *
- * @author kawaiinekololis (@team ccbluex)
+ * @author kawaiinekololis (@team CCBlueX)
  */
 object LiquidBounce {
 
@@ -46,7 +47,6 @@ object LiquidBounce {
      */
     val eventManager = EventManager()
     val configSystem = ConfigSystem()
-    val commandManager = CommandManager()
     val moduleManager = ModuleManager()
 
 
@@ -62,7 +62,10 @@ object LiquidBounce {
      * Should be executed to start the client.
      */
     fun start() {
-        commandManager.registerCommands()
+        CommandManager.initCommands()
+        // Initialize the executor
+        CommandExecutor
+
         moduleManager.registerInbuilt()
         configSystem.load()
     }
