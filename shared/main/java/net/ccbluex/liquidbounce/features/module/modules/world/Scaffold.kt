@@ -203,7 +203,7 @@ class Scaffold : Module() {
     override fun onEnable() {
         if (mc.thePlayer == null) return
         launchY = mc.thePlayer!!.posY.toInt()
-
+        slot = mc.thePlayer!!.inventory.currentItem
         //oldslot = mc.thePlayer!!.inventory.currentItem
     }
 
