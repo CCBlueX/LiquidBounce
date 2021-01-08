@@ -44,10 +44,12 @@ class Tower : Module() {
     /**
      * OPTIONS
      */
-    private val modeValue = ListValue("Mode", arrayOf(
-        "Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4"
-    ), "Motion")
-    private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Matrix", "Spoof", "Switch"), "Spoof")
+    private val modeValue = ListValue(
+        "Mode", arrayOf(
+            "Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4"
+        ), "Motion"
+    )
+    private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
     private val swingValue = BoolValue("Swing", true)
     private val stopWhenBlockAbove = BoolValue("StopWhenBlockAbove", false)
     private val rotationsValue = BoolValue("Rotations", true)
@@ -88,11 +90,13 @@ class Tower : Module() {
 
     // AutoBlock
     private var slot = 0
-    private var oldslot = 0
+
+    //private var oldslot = 0
     override fun onEnable() {
         val thePlayer = mc.thePlayer ?: return
 
-        oldslot = thePlayer.inventory.currentItem
+        slot = mc.thePlayer!!.inventory.currentItem
+        //oldslot = thePlayer.inventory.currentItem
 
     }
 
@@ -102,10 +106,10 @@ class Tower : Module() {
         mc.timer.timerSpeed = 1f
         lockRotation = null
 
-        if (autoBlockValue.get().equals("Switch", true)) {
+        /*if (autoBlockValue.get().equals("Switch", true)) {
             mc.thePlayer!!.inventory.currentItem = oldslot
             mc.playerController.updateController()
-        }
+        }*/
 
         if (slot != thePlayer.inventory.currentItem) {
             mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
@@ -255,36 +259,47 @@ class Tower : Module() {
             blockSlot = InventoryUtils.findAutoBlockBlock()
             if (blockSlot == -1) return
 
-            when(autoBlockValue.get()) {
+            when (autoBlockValue.get()) {
                 "Off" -> {
                     return
                 }
-                "Matrix" -> {
+                "Pick" -> {
+                    mc.thePlayer!!.inventory.currentItem = blockSlot - 36
+                    mc.playerController.updateController()
+                }
+                "Spoof" -> {
                     if (blockSlot - 36 != slot) {
                         mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
                     }
                 }
-                "Spoof" -> {
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
-                }
                 "Switch" -> {
-                    mc.thePlayer!!.inventory.currentItem = blockSlot - 36
-                    mc.playerController.updateController()
+                    if (blockSlot - 36 != slot) {
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
+                    }
                 }
             }
             itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
         }
 
         // Place block
-        if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld!!, itemStack!!, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3)) {
+        if (mc.playerController.onPlayerRightClick(
+                thePlayer,
+                mc.theWorld!!,
+                itemStack!!,
+                placeInfo!!.blockPos,
+                placeInfo!!.enumFacing,
+                placeInfo!!.vec3
+            )
+        ) {
             if (swingValue.get()) {
                 thePlayer.swingItem()
             } else {
                 mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
             }
         }
-        if(autoBlockValue.get().equals("Spoof", true)) {
-            mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(mc.thePlayer!!.inventory.currentItem))
+        if (autoBlockValue.get().equals("Switch", true)) {
+            if (slot != mc.thePlayer!!.inventory.currentItem)
+                mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(mc.thePlayer!!.inventory.currentItem))
         }
         placeInfo = null
     }
