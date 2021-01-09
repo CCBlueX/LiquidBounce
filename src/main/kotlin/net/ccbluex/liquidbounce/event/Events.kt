@@ -24,11 +24,6 @@ import net.minecraft.network.Packet
 
 class EntityTickEvent : Event()
 
-/**
- * Called when a chat message is sent by the user
- *
- * @param message The message
- */
 class ChatSendEvent(val message: String) : CancellableEvent()
 
 class RenderHudEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
@@ -40,5 +35,3 @@ class PacketSendEvent(val packet: Packet<*>) : CancellableEvent()
 class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
 
 class SessionEvent : Event()
-
-class SendChatEvent(val message: String) : CancellableEvent()

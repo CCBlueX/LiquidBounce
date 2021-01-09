@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.event.SendChatEvent;
+import net.ccbluex.liquidbounce.event.ChatSendEvent;
 import net.minecraft.client.gui.screen.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,7 +37,7 @@ public class MixinScreen {
      */
     @Inject(method = "sendMessage(Ljava/lang/String;)V", at = @At("HEAD"), cancellable = true)
     private void handleChatMessage(String message, final CallbackInfo callbackInfo) {
-        final SendChatEvent sendChatEvent = new SendChatEvent(message);
+        final ChatSendEvent sendChatEvent = new ChatSendEvent(message);
         LiquidBounce.INSTANCE.getEventManager().callEvent(sendChatEvent);
         if (sendChatEvent.isCancelled())
             callbackInfo.cancel();
