@@ -30,7 +30,7 @@ fn get_element_handle_from_long(long: u64) -> sciter::HELEMENT {
 }
 
 fn throw_sciter_exception(env: &JNIEnv, msg: String) {
-    env.throw_new("net/ccbluex/liquidbounce/renderer/natives/SciterException", msg).unwrap()
+    env.throw_new("net/ccbluex/liquidbounce/sciter/natives/SciterException", msg).unwrap()
 }
 
 #[no_mangle]
