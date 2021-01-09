@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.renderer.natives
+package net.ccbluex.liquidbounce.sciter.natives
 
-import net.ccbluex.liquidbounce.renderer.natives.SciterNative.render0
+import net.ccbluex.liquidbounce.sciter.natives.SciterNative.render0
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL12
@@ -59,8 +59,9 @@ object SciterNative {
 }
 
 class Sciter(private val windowHandle: Long) {
-    val textureID: Int = GL11.glGenTextures()
-    private var startTime: Long = 0
+
+    val textureID = GL11.glGenTextures()
+    private var startTime = 0L
     private var initialized = false
     private var currentWidth = 0
     private var currentHeight = 0
@@ -69,18 +70,10 @@ class Sciter(private val windowHandle: Long) {
 
     init {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID) //Bind texture ID
-
-        //Setup wrap mode
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE)
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE)
-
-        //Setup texture scaling filtering
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST)
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST)
-        GL11.glTexParameteri(3553, 33085, 0)
-        GL11.glTexParameterf(3553, 33082, 0.0f)
-        GL11.glTexParameterf(3553, 33083, 0.toFloat())
-        GL11.glTexParameterf(3553, 34049, 0.0f)
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0) //Bind texture ID
     }
 

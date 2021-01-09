@@ -1,11 +1,12 @@
-use jni::*;
-use jni::objects::{JClass, JString, JByteBuffer, JObject};
-use std::ffi::CStr;
-use std::result::Result;
-use sciter::windowless::{handle_message, Message, PaintLayer, MouseEvent, MOUSE_EVENTS, MOUSE_BUTTONS, KEYBOARD_STATES, RenderEvent, KeyboardEvent, KEY_EVENTS};
 use std::borrow::Cow;
+use std::ffi::CStr;
 use std::fmt::{Display, Formatter};
+use std::result::Result;
+
+use jni::*;
+use jni::objects::{JByteBuffer, JClass, JObject, JString};
 use jni::sys::JNI_GetCreatedJavaVMs;
+use sciter::windowless::{handle_message, KEY_EVENTS, KEYBOARD_STATES, KeyboardEvent, Message, MOUSE_BUTTONS, MOUSE_EVENTS, MouseEvent, PaintLayer, RenderEvent};
 
 #[derive(Debug)]
 struct SciterWrapperError {
@@ -33,7 +34,7 @@ fn throw_sciter_exception(env: &JNIEnv, msg: String) {
 }
 
 #[no_mangle]
-pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNative_init0(env: JNIEnv, _class: JClass, window_handle: u64, jni_library_location: JString) {
+pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_init0(env: JNIEnv, _class: JClass, window_handle: u64, jni_library_location: JString) {
     println!("INIT");
 
     match init(&env, jni_library_location, window_handle) {
@@ -48,41 +49,41 @@ fn fix_modifier(mods: u32) -> u32 {
 }
 
 #[no_mangle]
-pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNative_draw0(env: JNIEnv, _class: JClass, window_handle: u64) {
+pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_draw0(env: JNIEnv, _class: JClass, window_handle: u64) {
     println!("DRAW");
     handle_message(get_window_handle_from_long(window_handle), Message::Paint(PaintLayer { element: get_element_handle_from_long(window_handle), is_foreground: true }));
 }
 
 #[no_mangle]
-pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNative_heartbit0(env: JNIEnv, _class: JClass, window_handle: u64, time_delta: u32) {
+pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_heartbit0(env: JNIEnv, _class: JClass, window_handle: u64, time_delta: u32) {
     println!("HEART BIT");
 
     handle_message(get_window_handle_from_long(window_handle), Message::Heartbit { milliseconds: time_delta });
 }
 
 #[no_mangle]
-pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNative_setResolution0(env: JNIEnv, _class: JClass, window_handle: u64, ppi: u32) {
+pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_setResolution0(env: JNIEnv, _class: JClass, window_handle: u64, ppi: u32) {
     println!("RESOLUTION {}", ppi);
 
     handle_message(get_window_handle_from_long(window_handle), Message::Resolution { ppi });
 }
 
 #[no_mangle]
-pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNative_setSize0(env: JNIEnv, _class: JClass, window_handle: u64, width: u32, height: u32) {
+pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_setSize0(env: JNIEnv, _class: JClass, window_handle: u64, width: u32, height: u32) {
     println!("SET SIZE {} {}", width, height);
 
     handle_message(get_window_handle_from_long(window_handle), Message::Size { width, height });
 }
 
 #[no_mangle]
-pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNative_destroy0(env: JNIEnv, _class: JClass, window_handle: u64) {
+pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_destroy0(env: JNIEnv, _class: JClass, window_handle: u64) {
     println!("DESTROY");
 
     handle_message(get_window_handle_from_long(window_handle), Message::Destroy);
 }
 
 #[no_mangle]
-pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNative_loadHTML0(env: JNIEnv, _class: JClass, window_handle: u64, html: JString, uri: JString) {
+pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_loadHTML0(env: JNIEnv, _class: JClass, window_handle: u64, html: JString, uri: JString) {
     println!("LOAD HTML");
 
     match load_html(&env, window_handle, html, uri) {
@@ -118,7 +119,7 @@ fn load_html(env: &JNIEnv, window_handle: u64, html: JString, uri: JString) -> R
 }
 
 #[no_mangle]
-pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNative_render0(env: JNIEnv, _class: JClass, window_handle: u64, framebuffer_pointer: u64, framebuffer_size: u32) {
+pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_render0(env: JNIEnv, _class: JClass, window_handle: u64, framebuffer_pointer: u64, framebuffer_size: u32) {
     println!("RENDER");
 
     let on_render = move |bitmap_area: &sciter::types::RECT, bitmap_data: &[u8]|
@@ -145,7 +146,7 @@ pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNati
 }
 
 #[no_mangle]
-pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNative_mouseEvent0(env: JNIEnv, _class: JClass, window_handle: u64, x: i32, y: i32, button: u32) {
+pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_mouseEvent0(env: JNIEnv, _class: JClass, window_handle: u64, x: i32, y: i32, button: u32) {
     println!("MOUSE EVENT");
 
     let event = MouseEvent {
@@ -171,7 +172,7 @@ pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNati
 }
 
 #[no_mangle]
-pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNative_mouseButtonEvent0(env: JNIEnv, _class: JClass, window_handle: u64, x: i32, y: i32, keyboard_state: u32, button: u32, released: bool) {
+pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_mouseButtonEvent0(env: JNIEnv, _class: JClass, window_handle: u64, x: i32, y: i32, keyboard_state: u32, button: u32, released: bool) {
     println!("MOUSE BUTTON EVENT");
 
     let event = MouseEvent {
@@ -199,7 +200,7 @@ pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNati
 }
 
 #[no_mangle]
-pub extern "system" fn Java_net_ccbluex_liquidbounce_renderer_natives_SciterNative_keyEvent0(env: JNIEnv, _class: JClass, window_handle: u64, scancode: u32, keyboard_state: u32, event_type: u32) {
+pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_keyEvent0(env: JNIEnv, _class: JClass, window_handle: u64, scancode: u32, keyboard_state: u32, event_type: u32) {
     println!("KEY EVENT");
 
     let event = KeyboardEvent {

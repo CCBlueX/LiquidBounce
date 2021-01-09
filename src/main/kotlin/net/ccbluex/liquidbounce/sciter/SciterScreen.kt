@@ -17,9 +17,10 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.renderer
+package net.ccbluex.liquidbounce.sciter
 
-import net.ccbluex.liquidbounce.renderer.natives.Sciter
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.sciter.natives.Sciter
 import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.screen.Screen
@@ -28,12 +29,20 @@ import net.minecraft.text.LiteralText
 import org.lwjgl.glfw.GLFWNativeWin32
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL13
+import java.io.File
+
+// todo: automatically download and load them
+private val NATIVES = File(LiquidBounce.configSystem.rootFolder, "natives")
+// compile from /src/native/
+val LIBRARY_WRAPPER_LOCATION = File(NATIVES,"sciter_wrapper.dll").absolutePath
+// download from https://sciter.com/download/
+val LIBRARY_SCITER_LOCATION = File(NATIVES, "sciter.dll").absolutePath
 
 class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(LiteralText(name)) {
 
     companion object {
         init {
-            System.load("D:\\Projects\\IntelliJ\\LiquidBounceNG\\src\\native\\target\\release\\native.dll")
+            System.load(LIBRARY_WRAPPER_LOCATION)
         }
     }
 
@@ -43,7 +52,7 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
     private var keyboardModifiers = 0
 
     init {
-        sciter.init("D:\\Program Files\\sciter\\bin.win\\x64lite\\sciter.dll")
+        sciter.init(LIBRARY_SCITER_LOCATION)
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
@@ -94,16 +103,13 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
         try {
             GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
-//            sciter.draw();
-
-//            sciter.draw();
             GL11.glMatrixMode(GL11.GL_PROJECTION)
             GL11.glPushMatrix()
             sciter.heartBit()
             sciter.render()
             GL11.glPopMatrix()
 
-            GL13.glActiveTexture(GL13.GL_TEXTURE0) // Hey OpenGL, we're about to give commands for texture sampler 0.
+            GL13.glActiveTexture(GL13.GL_TEXTURE0)
 
             GL11.glEnable(GL11.GL_TEXTURE_2D)
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, sciter.textureID)
@@ -142,7 +148,6 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
 
         sciter.setSize(this.width, this.height)
         sciter.setResolution(mc.options.guiScale * 92)
-
 
         sciter.loadHTML("<html><body><h1>Hi.</h1> What the fuck is this?</body></html>", null)
     }
