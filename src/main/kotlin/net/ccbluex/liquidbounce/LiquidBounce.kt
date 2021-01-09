@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.chat.Chat
+import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import org.apache.logging.log4j.LogManager
@@ -48,7 +49,7 @@ object LiquidBounce {
     val eventManager = EventManager
     val configSystem = ConfigSystem
     val moduleManager = ModuleManager
-    val commandManager = CommandManager
+    val commandManager = CommandManager.apply { CommandExecutor() }
     val chat = Chat()
 
 

@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 
 object FriendCommand {
 
-    @JvmStatic
     fun createCommand(): Command {
         return CommandBuilder
             .begin("friend")

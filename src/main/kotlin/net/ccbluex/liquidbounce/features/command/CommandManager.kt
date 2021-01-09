@@ -78,7 +78,6 @@ class CommandExecutor : Listenable {
 object CommandManager {
 
     private val commands = mutableListOf<Command>()
-    private val executor = CommandExecutor()
 
     /**
      * The prefix of the commands.

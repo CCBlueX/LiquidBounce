@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.utils.variableColor
 
 object ToggleCommand {
 
-    @JvmStatic
     fun createCommand(): Command {
         return CommandBuilder
             .begin("toggle")
