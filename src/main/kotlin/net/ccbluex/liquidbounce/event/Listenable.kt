@@ -25,7 +25,7 @@ interface Listenable {
     /**
      * Allows to disable event handling when condition is false.
      */
-    fun handleEvents(): Boolean
+    fun handleEvents() = true
 
 }
 
