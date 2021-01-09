@@ -16,29 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.utils.extensions
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.extensions.asText
-import net.minecraft.client.MinecraftClient
-import org.apache.logging.log4j.Logger
+import net.ccbluex.liquidbounce.utils.mc
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
 
-val mc = MinecraftClient.getInstance()!!
+fun Vec3d.toBlockPos() = BlockPos(this)
 
-val logger: Logger
-    get() = LiquidBounce.logger
+fun BlockPos.getState() = mc.world?.getBlockState(this)
 
-// Chat formatting
-const val defaultColor = "§3"
-const val variableColor = "§7"
-const val statusColor = "§5"
-private const val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] $defaultColor"
-
-fun chat(message: String) {
-    if (mc.player == null) {
-        logger.info("(Chat) $message")
-        return
-    }
-
-    mc.inGameHud.chatHud.addMessage("$clientPrefix$message".asText())
-}
+fun BlockPos.getBlock() = getState()?.block
