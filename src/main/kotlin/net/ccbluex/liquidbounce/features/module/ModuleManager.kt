@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -33,7 +32,7 @@ import org.lwjgl.glfw.GLFW
 /**
  * A fairly simple module manager
  */
-class ModuleManager : Iterable<Module>, Listenable {
+object ModuleManager : Iterable<Module>, Listenable {
 
     private val modules = mutableListOf<Module>()
 
@@ -71,6 +70,4 @@ class ModuleManager : Iterable<Module>, Listenable {
     }
 
     override fun iterator() = modules.iterator()
-
-    override fun handleEvents() = true
 }

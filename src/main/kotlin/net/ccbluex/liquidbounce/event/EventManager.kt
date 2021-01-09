@@ -23,7 +23,7 @@ import java.util.*
 /**
  * A modern and fast event handler using lambda handlers
  */
-class EventManager {
+object EventManager {
 
     private val registry = HashMap<Class<out Event>, MutableList<EventHook<in Event>>>()
 

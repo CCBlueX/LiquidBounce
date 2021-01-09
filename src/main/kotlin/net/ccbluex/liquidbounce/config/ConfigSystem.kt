@@ -29,7 +29,7 @@ import java.io.File
  *
  * @author kawaiinekololis (@team ccbluex)
  */
-class ConfigSystem {
+object ConfigSystem {
 
     // Config directory folder
     val rootFolder = File(mc.runDirectory, "LiquidBounce").apply {
