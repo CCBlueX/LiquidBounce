@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.glfw.GLFW
 
-open class Module(val name: String, val category: Category, val bind: Int = GLFW.GLFW_KEY_UNKNOWN,
+open class Module(val name: String, val category: Category, var bind: Int = GLFW.GLFW_KEY_UNKNOWN,
                   defaultState: Boolean = false) : Listenable, Configurable(name) {
 
     var state: Boolean = defaultState

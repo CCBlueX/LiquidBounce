@@ -22,7 +22,9 @@ package net.ccbluex.liquidbounce.features.command
 import net.ccbluex.liquidbounce.event.ChatSendEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.command.commands.BindCommand
 import net.ccbluex.liquidbounce.features.command.commands.FriendCommand
+import net.ccbluex.liquidbounce.features.command.commands.HelpCommand
 import net.ccbluex.liquidbounce.features.command.commands.ToggleCommand
 import net.ccbluex.liquidbounce.utils.chat
 
@@ -94,6 +96,8 @@ object CommandManager {
     fun registerInbuilt() {
         addCommand(FriendCommand.createCommand())
         addCommand(ToggleCommand.createCommand())
+        addCommand(HelpCommand.createCommand())
+        addCommand(BindCommand.createCommand())
     }
 
     fun addCommand(command: Command) {
