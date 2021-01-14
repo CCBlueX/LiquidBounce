@@ -1,6 +1,3 @@
-# We need your help!
-Are you a developer and interested in earning some money while supporting LiquidBounce's development at the same time? We offer **$100** to the first person who manages to integrate the [Sciter](https://sciter.com) rendering engine into Minecraft 1.16.4. For more information, click [here](https://github.com/CCBlueX/LiquidBounce/issues/329).
-
 # LiquidBounce
 A free mixin-based injection hacked-client for Minecraft using Minecraft Forge, supporting versions 1.12.2 and 1.8.9, and soon will support 1.16.3.
 
