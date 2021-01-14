@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import net.ccbluex.liquidbounce.LiquidBounce
-
 interface Listenable {
 
     /**
@@ -30,7 +28,7 @@ interface Listenable {
 }
 
 inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, noinline handler: Handler<T>) {
-    LiquidBounce.eventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
+    EventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
 }
 
 typealias Handler<T> = (T) -> Unit

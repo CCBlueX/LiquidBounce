@@ -31,6 +31,14 @@ class EntityTickEvent : Event()
  */
 class ChatSendEvent(val message: String) : CancellableEvent()
 
+/**
+ * Calls when a frame is rendered and the modules are supposed to enqueue their render tasks
+ */
+class LiquidBounceRenderEvent : Event()
+
+/**
+ * Called when the Minecraft HUD is rendered (at the beginning). Please don't use it to do anything with the render engine.
+ */
 class RenderHudEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
 
 class PacketReceiveEvent(val packet: Packet<*>) : CancellableEvent()

@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.injection.mixins;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EntityTickEvent;
+import net.ccbluex.liquidbounce.event.EventManager;
 import net.minecraft.client.network.ClientPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,7 +18,7 @@ public class MixinClientPlayerEntity {
      */
     @Inject(method = "tick", at = @At("HEAD"))
     private void hookTickEvent(final CallbackInfo callbackInfo) {
-        LiquidBounce.INSTANCE.getEventManager().callEvent(new EntityTickEvent());
+        EventManager.INSTANCE.callEvent(new EntityTickEvent());
     }
 
 }

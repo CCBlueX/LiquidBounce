@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.RenderHudEvent;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.util.math.MatrixStack;
@@ -33,9 +33,9 @@ public class MixinInGameHud {
     /**
      * Hook render hud event at the top layer
      */
-    @Inject(method = "render", at = @At("RETURN"))
+    @Inject(method = "render", at = @At("HEAD"))
     private void hookRenderEvent(MatrixStack matrices, float tickDelta, final CallbackInfo callbackInfo) {
-        LiquidBounce.INSTANCE.getEventManager().callEvent(new RenderHudEvent(matrices, tickDelta));
+        EventManager.INSTANCE.callEvent(new RenderHudEvent(matrices, tickDelta));
     }
 
 }

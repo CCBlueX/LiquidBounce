@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -45,7 +45,6 @@ object LiquidBounce {
     /**
      * Client feature managers
      */
-    val eventManager = EventManager()
     val configSystem = ConfigSystem()
     val moduleManager = ModuleManager()
 
@@ -65,6 +64,8 @@ object LiquidBounce {
         CommandManager.initCommands()
         // Initialize the executor
         CommandExecutor
+        // Initialize the render engine
+        RenderEngine.init()
 
         moduleManager.registerInbuilt()
         configSystem.load()

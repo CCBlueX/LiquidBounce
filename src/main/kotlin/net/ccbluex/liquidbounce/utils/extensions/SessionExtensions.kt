@@ -26,6 +26,7 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.thealtening.auth.TheAlteningAuthentication
 import com.thealtening.auth.service.AlteningServiceType
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.utils.ProfileUtils
 import net.ccbluex.liquidbounce.utils.mc
@@ -48,7 +49,7 @@ private fun MinecraftSessionService.login(username: String, password: String = "
         userAuthentication.logIn()
         mc.session = Session(userAuthentication.selectedProfile.name, userAuthentication.selectedProfile.id.toString(),
             userAuthentication.authenticatedToken, "mojang")
-        LiquidBounce.eventManager.callEvent(SessionEvent())
+        EventManager.callEvent(SessionEvent())
         LoginResult.LOGGED_IN
     } catch (exception: AuthenticationUnavailableException) {
         LoginResult.UNAVAILABLE_SERVICE
@@ -79,7 +80,7 @@ fun MinecraftSessionService.loginAltening(account: String): LoginResult {
 
 fun MinecraftSessionService.loginCracked(username: String): LoginResult {
     mc.session = Session(username, ProfileUtils.getUUID(username), "-", "legacy")
-    LiquidBounce.eventManager.callEvent(SessionEvent())
+    EventManager.callEvent(SessionEvent())
     return LoginResult.LOGGED_IN
 }
 

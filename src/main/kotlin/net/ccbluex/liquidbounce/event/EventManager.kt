@@ -23,14 +23,18 @@ import java.util.*
 /**
  * A modern and fast event handler using lambda handlers
  */
-class EventManager {
+object EventManager {
 
     private val registry = HashMap<Class<out Event>, MutableList<EventHook<in Event>>>()
 
     /**
      * Registers an event hook for events of type [T]
      */
-    private inline fun <reified T: Event> handler(listener: Listenable, ignoreCondition: Boolean = false, noinline eventHandler: (T) -> Unit) {
+    private inline fun <reified T : Event> handler(
+        listener: Listenable,
+        ignoreCondition: Boolean = false,
+        noinline eventHandler: (T) -> Unit
+    ) {
         registerEventHook(T::class.java, EventHook(listener, eventHandler, ignoreCondition))
     }
 
