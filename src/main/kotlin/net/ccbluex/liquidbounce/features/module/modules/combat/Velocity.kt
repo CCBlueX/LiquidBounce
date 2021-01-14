@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.PacketReceiveEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
@@ -26,10 +27,10 @@ import org.lwjgl.glfw.GLFW
 
 object Velocity : Module("Velocity", Category.COMBAT, bind = GLFW.GLFW_KEY_L) {
 
-    val packetReceiveHandler = sequenceHandler<PacketReceiveEvent> {
+    val packetReceiveHandler = handler<PacketReceiveEvent> {
         val packet = it.packet
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == mc.player?.entityId) {
+        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.entityId) {
             it.cancelEvent()
         }
     }

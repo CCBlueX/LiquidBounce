@@ -21,18 +21,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.renderer.SciterScreen
+import net.ccbluex.liquidbounce.sciter.SciterScreen
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.glfw.GLFW
 
-object ClickGUIModule : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT) {
+object ClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
 
-    override fun toggled() {
-        if (state) {
-            state = false
-
-            MinecraftClient.getInstance().openScreen(SciterScreen("helo"))
-        }
+    override fun enable() {
+        MinecraftClient.getInstance().openScreen(SciterScreen("helo"))
     }
 
 }
