@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2020 CCBlueX
+ * Copyright (c) 2016 - 2021 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,13 @@
 package net.ccbluex.liquidbounce
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
+import net.ccbluex.liquidbounce.sciter.SciterWindow
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -45,8 +48,11 @@ object LiquidBounce {
     /**
      * Client feature managers
      */
-    val configSystem = ConfigSystem()
-    val moduleManager = ModuleManager()
+    val eventManager = EventManager
+    val configSystem = ConfigSystem
+    val moduleManager = ModuleManager
+    val commandManager = CommandManager.apply { CommandExecutor() }
+    val chat = Chat()
 
 
     /**
@@ -68,7 +74,12 @@ object LiquidBounce {
         RenderEngine.init()
 
         moduleManager.registerInbuilt()
+        commandManager.registerInbuilt()
         configSystem.load()
+        chat.connect()
+
+        // open up sciter window
+        SciterWindow
     }
 
     /**

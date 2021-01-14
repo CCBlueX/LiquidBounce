@@ -1,0 +1,20 @@
+[package]
+name = "sciter_wrapper"
+version = "0.1.0"
+authors = ["superblaubeere27 <superblaubeere27@ccbluex.net>", "kawaiinekololis <kawaii.neko.lolis@ccbluex.net>"]
+edition = "2018"
+
+[profile.release]
+lto = true          # Enable Link Time Optimization
+codegen-units = 1   # Reduce number of codegen units to increase optimizations.
+
+[lib]
+name = "sciter_wrapper"
+crate-type = ["dylib"]
+
+[dependencies.sciter-rs]
+version = "0.5.53"
+features = ["windowless", "dynamic"]
+
+[dependencies]
+jni = "0.17.0"

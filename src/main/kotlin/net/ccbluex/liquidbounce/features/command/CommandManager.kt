@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2020 CCBlueX
+ * Copyright (c) 2016 - 2021 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,14 +26,13 @@ import net.ccbluex.liquidbounce.features.command.commands.FriendCommand
 import net.ccbluex.liquidbounce.features.command.commands.ToggleCommand
 import net.ccbluex.liquidbounce.utils.chat
 
-
 class CommandException(message: String, cause: Throwable? = null, val usageInfo: List<String>? = null) :
     Exception(message, cause)
 
 /**
  * Links minecraft with the command engine
  */
-object CommandExecutor : Listenable {
+class CommandExecutor : Listenable {
 
     /**
      * Handles command execution
@@ -68,8 +67,6 @@ object CommandExecutor : Listenable {
         }
     }
 
-
-    override fun handleEvents(): Boolean = true
 }
 
 /**
@@ -79,7 +76,8 @@ object CommandExecutor : Listenable {
  * @author superblaubeere27 (@team CCBlueX)
  */
 object CommandManager {
-    private val commands: ArrayList<Command> = ArrayList()
+
+    private val commands = mutableListOf<Command>()
 
     /**
      * The prefix of the commands.
@@ -91,9 +89,9 @@ object CommandManager {
      * prefix (.)
      * ```
      */
-    val prefix: String = "."
+    val prefix = "."
 
-    fun initCommands() {
+    fun registerInbuilt() {
         addCommand(FriendCommand.createCommand())
         addCommand(ToggleCommand.createCommand())
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2020 CCBlueX
+ * Copyright (c) 2016 - 2021 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.renderer.natives
+package net.ccbluex.liquidbounce.sciter.natives
 
-import net.ccbluex.liquidbounce.renderer.natives.SciterNative.render0
+import net.ccbluex.liquidbounce.sciter.natives.SciterNative.render0
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL12
@@ -59,8 +59,9 @@ object SciterNative {
 }
 
 class Sciter(private val windowHandle: Long) {
-    val textureID: Int = GL11.glGenTextures()
-    private var startTime: Long = 0
+
+    val textureID = GL11.glGenTextures()
+    private var startTime = 0L
     private var initialized = false
     private var currentWidth = 0
     private var currentHeight = 0
@@ -69,18 +70,10 @@ class Sciter(private val windowHandle: Long) {
 
     init {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID) //Bind texture ID
-
-        //Setup wrap mode
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE)
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE)
-
-        //Setup texture scaling filtering
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST)
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST)
-        GL11.glTexParameteri(3553, 33085, 0)
-        GL11.glTexParameterf(3553, 33082, 0.0f)
-        GL11.glTexParameterf(3553, 33083, 0.toFloat())
-        GL11.glTexParameterf(3553, 34049, 0.0f)
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0) //Bind texture ID
     }
 
@@ -135,39 +128,26 @@ class Sciter(private val windowHandle: Long) {
 
     fun mouseMoved(x: Int, y: Int, button: Int) {
         checkInitialized()
-
         SciterNative.mouseEvent0(windowHandle, x, y, button)
     }
 
     fun mouseButtonEvent(x: Int, y: Int, button: Int, released: Boolean, keyboardState: Int) {
         checkInitialized()
-
         SciterNative.mouseButtonEvent0(windowHandle, x, y, keyboardState, button, released)
     }
 
     fun keyEvent(scancode: Int, keyboardState: Int, eventType: Int) {
         checkInitialized()
-
         SciterNative.keyEvent0(windowHandle, scancode, keyboardState, eventType)
     }
 
     fun render() {
+        // causing crashes
+        // draw0(windowHandle)
         checkInitialized()
-
         render0(windowHandle, MemoryUtil.memAddress(framebuffer!!), currentWidth * currentHeight * 4)
 
-//        val bytes = IntArray(this.currentWidth * this.currentHeight)
-//
-//        this.framebuffer!!.asIntBuffer().put(bytes)
-//
-//        val bufferedImage = BufferedImage(this.currentWidth, this.currentHeight, BufferedImage.TYPE_INT_BGR)
-//
-//        bufferedImage.setRGB(0, 0, currentWidth, currentHeight, bytes, 0, currentWidth)
-//
-//        ImageIO.write(bufferedImage, "PNG", File("C:/Users/superblaubeere27/Downloads/asdf.png"))
-
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID) //Bind texture ID
-
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
         GL11.glTexImage2D(
             GL11.GL_TEXTURE_2D,
             0,
@@ -179,9 +159,7 @@ class Sciter(private val windowHandle: Long) {
             GL11.GL_UNSIGNED_BYTE,
             framebuffer
         )
-
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0) //Bind texture ID
-//        draw0(this.windowHandle)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
     }
 
     /**
@@ -190,14 +168,12 @@ class Sciter(private val windowHandle: Long) {
      * @param html HTML-Data
      * @param uri URI of the content, may be null
      */
-    fun loadHTML(html: String, uri: String?) {
-        SciterNative.loadHTML0(windowHandle, html, uri)
-    }
+    fun loadHtml(html: String, uri: String?) = SciterNative.loadHTML0(windowHandle, html, uri)
 
     /**
-     * Throws an [IllegalStateException] if the sciter wasn't initialized yet.
+     * Throws an [IllegalStateException] if sciter is not initialized yet
      */
     private fun checkInitialized() {
-        check(initialized) { "Sciter isn't initialized yet :P" }
+        check(initialized) { "not initialized yet" }
     }
 }

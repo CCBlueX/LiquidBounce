@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2020 CCBlueX
+ * Copyright (c) 2016 - 2021 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,11 +24,6 @@ import net.minecraft.network.Packet
 
 class EntityTickEvent : Event()
 
-/**
- * Called when a chat message is sent by the user
- *
- * @param message The message
- */
 class ChatSendEvent(val message: String) : CancellableEvent()
 
 /**

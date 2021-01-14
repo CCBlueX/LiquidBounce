@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2020 CCBlueX
+ * Copyright (c) 2016 - 2021 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import java.io.File
  *
  * @author kawaiinekololis (@team ccbluex)
  */
-class ConfigSystem {
+object ConfigSystem {
 
     // Config directory folder
     val rootFolder = File(mc.runDirectory, "LiquidBounce").apply {

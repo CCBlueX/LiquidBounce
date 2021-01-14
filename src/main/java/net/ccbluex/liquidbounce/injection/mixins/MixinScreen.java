@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2020 CCBlueX
+ * Copyright (c) 2016 - 2021 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.injection.mixins;
 
 import net.ccbluex.liquidbounce.event.ChatSendEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.event.ChatSendEvent;
 import net.minecraft.client.gui.screen.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,7 +34,7 @@ public class MixinScreen {
     /**
      * Handle user chat messages
      *
-     * @param message      chat message by client user
+     * @param message chat message by client user
      * @param callbackInfo callback
      */
     @Inject(method = "sendMessage(Ljava/lang/String;)V", at = @At("HEAD"), cancellable = true)

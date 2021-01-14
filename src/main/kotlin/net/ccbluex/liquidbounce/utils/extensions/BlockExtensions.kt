@@ -18,6 +18,12 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.minecraft.text.Text
+import net.ccbluex.liquidbounce.utils.mc
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
 
-fun String.asText() = Text.of(this)!!
+fun Vec3d.toBlockPos() = BlockPos(this)
+
+fun BlockPos.getState() = mc.world?.getBlockState(this)
+
+fun BlockPos.getBlock() = getState()?.block
