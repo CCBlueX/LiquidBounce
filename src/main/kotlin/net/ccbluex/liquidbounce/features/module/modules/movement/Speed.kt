@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.extensions.moving
 import org.lwjgl.glfw.GLFW
+import java.lang.Math.toRadians
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -33,12 +34,11 @@ object Speed : Module("Speed", Category.COMBAT, bind = GLFW.GLFW_KEY_V) {
 
     val tickHandler = sequenceHandler<EntityTickEvent> {
         if (player.isOnGround && player.moving) {
-            val angle = Math.toRadians(player.yaw.toDouble())
+            val angle = toRadians(player.yaw.toDouble())
             val x = -sin(angle) * 0.4
             val z = cos(angle) * 0.4
 
             player.setVelocity(x, 0.42, z)
-
             if (port) {
                 wait(1)
                 player.setVelocity(x, -1.0, z)

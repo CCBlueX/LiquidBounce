@@ -20,8 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins;
 
 import io.netty.channel.ChannelHandlerContext;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.PacketReceiveEvent;
-import net.ccbluex.liquidbounce.event.PacketSendEvent;
+import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,7 +39,7 @@ public class MixinClientConnection {
      */
     @Inject(method = "send(Lnet/minecraft/network/Packet;)V", at = @At("HEAD"), cancellable = true)
     private void handleSendingPacket(Packet<?> packet, final CallbackInfo callbackInfo) {
-        PacketSendEvent event = new PacketSendEvent(packet);
+        PacketEvent event = new PacketEvent(packet);
 
         EventManager.INSTANCE.callEvent(event);
 
@@ -56,8 +55,8 @@ public class MixinClientConnection {
      * @param callbackInfo          callback
      */
     @Inject(method = "channelRead0", at = @At("HEAD"), cancellable = true)
-    private void handleRePacket(ChannelHandlerContext channelHandlerContext, Packet<?> packet, CallbackInfo callbackInfo) {
-        PacketReceiveEvent event = new PacketReceiveEvent(packet);
+    private void handleReceivingPacket(ChannelHandlerContext channelHandlerContext, Packet<?> packet, CallbackInfo callbackInfo) {
+        PacketEvent event = new PacketEvent(packet);
 
         EventManager.INSTANCE.callEvent(event);
 
