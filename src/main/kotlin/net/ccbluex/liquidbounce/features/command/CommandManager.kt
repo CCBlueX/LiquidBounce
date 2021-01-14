@@ -32,7 +32,7 @@ class CommandException(message: String, cause: Throwable? = null, val usageInfo:
 /**
  * Links minecraft with the command engine
  */
-class CommandExecutor : Listenable {
+object CommandExecutor : Listenable {
 
     /**
      * Handles command execution

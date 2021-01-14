@@ -24,8 +24,9 @@ import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.renderer.SciterScreen
 import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
-import net.ccbluex.liquidbounce.sciter.SciterWindow
+import net.minecraft.client.MinecraftClient
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -51,7 +52,7 @@ object LiquidBounce {
     val eventManager = EventManager
     val configSystem = ConfigSystem
     val moduleManager = ModuleManager
-    val commandManager = CommandManager.apply { CommandExecutor() }
+    val commandManager = CommandManager
     val chat = Chat()
 
 
@@ -67,7 +68,7 @@ object LiquidBounce {
      * Should be executed to start the client.
      */
     fun start() {
-        CommandManager.initCommands()
+        CommandManager.registerInbuilt()
         // Initialize the executor
         CommandExecutor
         // Initialize the render engine
@@ -79,7 +80,8 @@ object LiquidBounce {
         chat.connect()
 
         // open up sciter window
-        SciterWindow
+//        SciterWindow
+        MinecraftClient.getInstance().openScreen(SciterScreen("helo"))
     }
 
     /**
