@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.sciter.SciterWindow
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -69,6 +70,9 @@ object LiquidBounce {
         commandManager.registerInbuilt()
         configSystem.load()
         chat.connect()
+
+        // open up sciter window
+        SciterWindow
     }
 
     /**

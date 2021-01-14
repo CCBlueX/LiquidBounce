@@ -113,7 +113,7 @@ fn load_html(env: &JNIEnv, window_handle: u64, html: JString, uri: JString) -> R
     //
     //     instance.load_html(html_bytes.to_bytes(), Some(&str));
     // }
-    println!("{}", instance.load_file("file://C:/Users/superblaubeere27/Downloads/index.html"));
+    println!("{}", instance.load_file("file://D:/minimal.html"));
 
     Ok(())
 }

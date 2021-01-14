@@ -128,39 +128,26 @@ class Sciter(private val windowHandle: Long) {
 
     fun mouseMoved(x: Int, y: Int, button: Int) {
         checkInitialized()
-
         SciterNative.mouseEvent0(windowHandle, x, y, button)
     }
 
     fun mouseButtonEvent(x: Int, y: Int, button: Int, released: Boolean, keyboardState: Int) {
         checkInitialized()
-
         SciterNative.mouseButtonEvent0(windowHandle, x, y, keyboardState, button, released)
     }
 
     fun keyEvent(scancode: Int, keyboardState: Int, eventType: Int) {
         checkInitialized()
-
         SciterNative.keyEvent0(windowHandle, scancode, keyboardState, eventType)
     }
 
     fun render() {
+        // causing crashes
+        // draw0(windowHandle)
         checkInitialized()
-
         render0(windowHandle, MemoryUtil.memAddress(framebuffer!!), currentWidth * currentHeight * 4)
 
-//        val bytes = IntArray(this.currentWidth * this.currentHeight)
-//
-//        this.framebuffer!!.asIntBuffer().put(bytes)
-//
-//        val bufferedImage = BufferedImage(this.currentWidth, this.currentHeight, BufferedImage.TYPE_INT_BGR)
-//
-//        bufferedImage.setRGB(0, 0, currentWidth, currentHeight, bytes, 0, currentWidth)
-//
-//        ImageIO.write(bufferedImage, "PNG", File("C:/Users/superblaubeere27/Downloads/asdf.png"))
-
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID) //Bind texture ID
-
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
         GL11.glTexImage2D(
             GL11.GL_TEXTURE_2D,
             0,
@@ -172,9 +159,7 @@ class Sciter(private val windowHandle: Long) {
             GL11.GL_UNSIGNED_BYTE,
             framebuffer
         )
-
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0) //Bind texture ID
-//        draw0(this.windowHandle)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
     }
 
     /**
@@ -183,14 +168,12 @@ class Sciter(private val windowHandle: Long) {
      * @param html HTML-Data
      * @param uri URI of the content, may be null
      */
-    fun loadHTML(html: String, uri: String?) {
-        SciterNative.loadHTML0(windowHandle, html, uri)
-    }
+    fun loadHtml(html: String, uri: String?) = SciterNative.loadHTML0(windowHandle, html, uri)
 
     /**
-     * Throws an [IllegalStateException] if the sciter wasn't initialized yet.
+     * Throws an [IllegalStateException] if sciter is not initialized yet
      */
     private fun checkInitialized() {
-        check(initialized) { "Sciter isn't initialized yet :P" }
+        check(initialized) { "not initialized yet" }
     }
 }
