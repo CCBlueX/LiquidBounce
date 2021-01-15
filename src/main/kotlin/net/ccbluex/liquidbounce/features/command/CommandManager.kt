@@ -34,7 +34,7 @@ class CommandException(message: String, cause: Throwable? = null, val usageInfo:
 /**
  * Links minecraft with the command engine
  */
-class CommandExecutor : Listenable {
+object CommandExecutor : Listenable {
 
     /**
      * Handles command execution
@@ -79,7 +79,7 @@ class CommandExecutor : Listenable {
  */
 object CommandManager {
 
-    private val commands = mutableListOf<Command>()
+    val commands = mutableListOf<Command>()
 
     /**
      * The prefix of the commands.
