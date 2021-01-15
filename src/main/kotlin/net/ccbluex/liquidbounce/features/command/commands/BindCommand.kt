@@ -42,6 +42,7 @@ object BindCommand {
                 } catch(e: Exception) {
                     chat("invalid keybinding.");
                 e.printStackTrace();
+                    return@handler true;
                 }
                 chat("set bind to " + (args[1] as String).toUpperCase())
                 true
