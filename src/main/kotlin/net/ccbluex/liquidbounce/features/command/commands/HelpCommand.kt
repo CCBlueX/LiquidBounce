@@ -14,7 +14,8 @@ object HelpCommand {
             .handler { args ->
 
                 for (a in 0 .. (CommandManager.commands.size / 2)/*Divide it by 2 so it does not show the commands twice*/) {
-                chat(CommandManager.commands.get(a).getFullName());
+                    var command = CommandManager.commands.get(a);
+                chat(command.getFullName() + " - " + command.description);
             }
                 true
             }
