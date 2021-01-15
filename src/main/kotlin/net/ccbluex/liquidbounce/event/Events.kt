@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.network.Packet
@@ -26,12 +27,20 @@ class EntityTickEvent : Event()
 
 class ChatSendEvent(val message: String) : CancellableEvent()
 
+/**
+ * Calls when a frame is rendered and the modules are supposed to enqueue their render tasks
+ */
+class LiquidBounceRenderEvent : Event()
+
+/**
+ * Called when the Minecraft HUD is rendered (at the beginning). Please don't use it to do anything with the render engine.
+ */
 class RenderHudEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
 
-class PacketReceiveEvent(val packet: Packet<*>) : CancellableEvent()
-
-class PacketSendEvent(val packet: Packet<*>) : CancellableEvent()
+class PacketEvent(val packet: Packet<*>) : CancellableEvent()
 
 class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
 
 class SessionEvent : Event()
+
+class ScreenEvent(val screen: Screen?) : Event()

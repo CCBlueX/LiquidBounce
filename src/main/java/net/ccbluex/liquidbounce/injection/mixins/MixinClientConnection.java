@@ -19,9 +19,8 @@
 package net.ccbluex.liquidbounce.injection.mixins;
 
 import io.netty.channel.ChannelHandlerContext;
-import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.event.PacketReceiveEvent;
-import net.ccbluex.liquidbounce.event.PacketSendEvent;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,8 +39,10 @@ public class MixinClientConnection {
      */
     @Inject(method = "send(Lnet/minecraft/network/Packet;)V", at = @At("HEAD"), cancellable = true)
     private void handleSendingPacket(Packet<?> packet, final CallbackInfo callbackInfo) {
-        final PacketSendEvent event = new PacketSendEvent(packet);
-        LiquidBounce.INSTANCE.getEventManager().callEvent(event);
+        PacketEvent event = new PacketEvent(packet);
+
+        EventManager.INSTANCE.callEvent(event);
+
         if (event.isCancelled())
             callbackInfo.cancel();
     }
@@ -50,14 +51,15 @@ public class MixinClientConnection {
      * Handle receiving packets
      *
      * @param channelHandlerContext channel context
-     * @param packet packet to receive
-     * @param callbackInfo callback
+     * @param packet                packet to receive
+     * @param callbackInfo          callback
      */
     @Inject(method = "channelRead0", at = @At("HEAD"), cancellable = true)
-    private void handleRePacket(ChannelHandlerContext channelHandlerContext, Packet<?> packet,
-                                final CallbackInfo callbackInfo) {
-        final PacketReceiveEvent event = new PacketReceiveEvent(packet);
-        LiquidBounce.INSTANCE.getEventManager().callEvent(event);
+    private void handleReceivingPacket(ChannelHandlerContext channelHandlerContext, Packet<?> packet, CallbackInfo callbackInfo) {
+        PacketEvent event = new PacketEvent(packet);
+
+        EventManager.INSTANCE.callEvent(event);
+
         if (event.isCancelled())
             callbackInfo.cancel();
     }

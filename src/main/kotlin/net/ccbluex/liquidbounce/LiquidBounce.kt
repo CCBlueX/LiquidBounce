@@ -24,6 +24,9 @@ import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
+import net.ccbluex.liquidbounce.sciter.SciterScreen
+import net.minecraft.client.MinecraftClient
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -31,7 +34,7 @@ import org.apache.logging.log4j.LogManager
  *
  * A free mixin-based injection hacked-client for Minecraft using FabricMC.
  *
- * @author kawaiinekololis (@team ccbluex)
+ * @author kawaiinekololis (@team CCBlueX)
  */
 object LiquidBounce {
 
@@ -49,7 +52,7 @@ object LiquidBounce {
     val eventManager = EventManager
     val configSystem = ConfigSystem
     val moduleManager = ModuleManager
-    val commandManager = CommandManager.apply { CommandExecutor() }
+    val commandManager = CommandManager
     val chat = Chat()
 
 
@@ -65,10 +68,20 @@ object LiquidBounce {
      * Should be executed to start the client.
      */
     fun start() {
+        CommandManager.registerInbuilt()
+        // Initialize the executor
+        CommandExecutor
+        // Initialize the render engine
+        RenderEngine.init()
+
         moduleManager.registerInbuilt()
         commandManager.registerInbuilt()
         configSystem.load()
         chat.connect()
+
+        // open up sciter window
+//        SciterWindow
+        MinecraftClient.getInstance().openScreen(SciterScreen("hello"))
     }
 
     /**

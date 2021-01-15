@@ -31,19 +31,19 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL13
 import java.io.File
 
-// todo: automatically download and load them
-private val NATIVES = File(LiquidBounce.configSystem.rootFolder, "natives")
-// compile from /src/native/
-val LIBRARY_WRAPPER_LOCATION = File(NATIVES,"sciter_wrapper.dll").absolutePath
-// download from https://sciter.com/download/
-val LIBRARY_SCITER_LOCATION = File(NATIVES, "sciter.dll").absolutePath
-
 class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(LiteralText(name)) {
 
-    companion object {
-        init {
-            System.load(LIBRARY_WRAPPER_LOCATION)
-        }
+    // todo: automatically download and load them
+    private val NATIVES = File(LiquidBounce.configSystem.rootFolder, "natives")
+
+    // compile from /src/native/
+    val LIBRARY_WRAPPER_LOCATION = File(NATIVES, "sciter_wrapper.dll").absolutePath
+
+    // download from https://sciter.com/download/
+    val LIBRARY_SCITER_LOCATION = File(NATIVES, "sciter.dll").absolutePath
+
+    init {
+        System.load(LIBRARY_WRAPPER_LOCATION)
     }
 
     private val sciter: Sciter = Sciter(GLFWNativeWin32.glfwGetWin32Window(MinecraftClient.getInstance().window.handle))
@@ -103,13 +103,16 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
         try {
             GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
+//            sciter.draw();
+
+//            sciter.draw();
             GL11.glMatrixMode(GL11.GL_PROJECTION)
             GL11.glPushMatrix()
             sciter.heartBit()
             sciter.render()
             GL11.glPopMatrix()
 
-            GL13.glActiveTexture(GL13.GL_TEXTURE0)
+            GL13.glActiveTexture(GL13.GL_TEXTURE0) // Hey OpenGL, we're about to give commands for texture sampler 0.
 
             GL11.glEnable(GL11.GL_TEXTURE_2D)
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, sciter.textureID)
@@ -131,7 +134,7 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
 
             GL11.glEnd()
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
-            GL11.glDisable(GL11.GL_TEXTURE_2D)
+//            GL11.glDisable(GL11.GL_TEXTURE_2D)
         } catch (e: Throwable) {
             e.printStackTrace()
         }
@@ -147,9 +150,34 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
         super.init()
 
         sciter.setSize(this.width, this.height)
-        sciter.setResolution(mc.options.guiScale * 92)
+        sciter.setResolution(mc.options.guiScale * 92 / 2)
 
-        sciter.loadHTML("<html><body><h1>Hi.</h1> What the fuck is this?</body></html>", null)
+
+        sciter.loadHtml(
+            """<html lang="en"><head>
+                        <meta charset="UTF-8">
+                        <title>Hello</title>
+                        <style>html, body { background: transparent; } </style>
+                    </head>
+                    <body>
+                        <h1>Sciter Test</h1>
+
+                        <ul>
+                            <li>A</li>
+                            <li>B</li>
+                            <li>Lorem ipsum dolor sit amet</li>
+                        </ul>
+
+                        <button>Helo</button>
+
+                        <input type="checkbox">
+                        <input type="date">
+                        <input type="email">
+                        <input type="file">
+                        <input type="number">
+                        <input type="password">
+                        <input type="text">
+                    </body></html>""", null)
     }
 
     override fun isPauseScreen(): Boolean {
@@ -160,6 +188,6 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
         super.resize(client, width, height)
 
         sciter.setSize(this.width, this.height)
-        sciter.setResolution(mc.options.guiScale * 92)
+        sciter.setResolution(mc.options.guiScale * 92 / 2)
     }
 }

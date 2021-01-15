@@ -16,22 +16,35 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.combat
+package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.config.boolean
+import net.ccbluex.liquidbounce.config.int
+import net.ccbluex.liquidbounce.config.intRange
+import net.ccbluex.liquidbounce.event.EntityTickEvent
+import net.ccbluex.liquidbounce.event.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import org.lwjgl.glfw.GLFW
+import net.minecraft.client.gui.screen.DeathScreen
 
-object Velocity : Module("Velocity", Category.COMBAT, bind = GLFW.GLFW_KEY_L) {
+/**
+ * A auto respawn module
+ *
+ * Automatically respawns the player after dying
+ */
+object AutoRespawn : Module("AutoRespawn", Category.PLAYER) {
 
-    val packetReceiveHandler = handler<PacketEvent> {
-        val packet = it.packet
+    // There is a delay until the button is clickable on the death screen (20 ticks)
+    val delay by int("Delay", 0, 0..20)
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.entityId) {
-            it.cancelEvent()
+    val screenHandler = sequenceHandler<ScreenEvent> {
+        if (it.screen is DeathScreen) {
+            if (delay > 0)
+                wait(delay)
+
+            player.requestRespawn()
+            mc.openScreen(null)
         }
     }
 

@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
+import net.ccbluex.liquidbounce.features.module.modules.player.AutoRespawn
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD
 import org.lwjgl.glfw.GLFW
 
@@ -64,9 +66,11 @@ object ModuleManager : Iterable<Module>, Listenable {
      */
     fun registerInbuilt() {
         modules += HUD
+        modules += ClickGui
         modules += Fly
         modules += Velocity
         modules += Speed
+        modules += AutoRespawn
     }
 
     override fun iterator() = modules.iterator()
