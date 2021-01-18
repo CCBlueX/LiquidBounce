@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.injection.mixins;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.ScreenEvent;
-import net.ccbluex.liquidbounce.renderer.engine.GlyphPage;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;

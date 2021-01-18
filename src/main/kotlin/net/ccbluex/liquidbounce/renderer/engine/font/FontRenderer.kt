@@ -376,7 +376,10 @@ class FontRenderer(
             x += glyph.advanceX
         }
 
-        return x
+        return if (shadow)
+            x + 2.0f
+        else
+            x
     }
 
     private fun drawLine(
