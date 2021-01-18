@@ -14,6 +14,7 @@ object ToggleCommand {
     fun createCommand(): Command {
         return CommandBuilder
             .begin("toggle")
+            .alias("t")
             .description("Allows you to toggle modules")
             .parameter(ParameterBuilder
                 .begin<String>("name")
