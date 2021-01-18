@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.injection.mixins;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.renderer.engine.GlyphPage;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -75,8 +74,6 @@ public abstract class MixinMinecraftClient {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void startClient(final CallbackInfo callback) {
         LiquidBounce.INSTANCE.start();
-
-        System.out.println("Max texture size " + GlyphPage.Companion.getMaxTextureSize().getValue());
 
 //        openScreen(new SciterScreen("Hallo", true));
     }

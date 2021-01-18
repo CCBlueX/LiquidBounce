@@ -25,15 +25,24 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.renderer.engine.Color4b
-import net.ccbluex.liquidbounce.renderer.engine.ColoredPrimitiveRenderTask
-import net.ccbluex.liquidbounce.renderer.engine.Point2D
 import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
-import java.awt.Color
+import net.ccbluex.liquidbounce.renderer.engine.RenderTask
+import net.ccbluex.liquidbounce.renderer.engine.font.FontRenderer
+import java.awt.Font
 
 object HUD : Module("HUD", Category.RENDER, defaultState = true) {
+    val liquidBounceFont: Array<RenderTask> = kotlin.run {
+        val renderer = FontRenderer.createFontRendererWithStyles(Font("Roboto Bold", Font.PLAIN, 45))
+
+        renderer.begin()
+
+        renderer.draw("LiquidBounce", 2f, 0f, Color4b(0, 111, 255, 255), true)
+
+        renderer.commit()
+    }
 
     val renderHandler = handler<RenderHudEvent> {
-        mc.textRenderer.drawWithShadow(it.matrixStack, "LiquidBounce", 2F, 2F, 0xfffff)
+//        mc.textRenderer.drawWithShadow(it.matrixStack, "LiquidBounce", 2F, 2F, 0xfffff)
 
         LiquidBounce.moduleManager.filter { module -> module.state }.forEachIndexed { index, module ->
             val width = mc.textRenderer.getWidth(module.name)
@@ -47,34 +56,9 @@ object HUD : Module("HUD", Category.RENDER, defaultState = true) {
         }
     }
 
+
     val realRenderHandler = handler<LiquidBounceRenderEvent> {
-        val renderTask = ColoredPrimitiveRenderTask(3, ColoredPrimitiveRenderTask.PrimitiveType.Triangle)
-
-        val offset = 100.0f
-        val size = 100.0f
-
-        renderTask.triangle(
-            Point2D(offset + size * 0.5f, offset),
-            Point2D(offset + size * 0.25f, offset + size * 0.5f),
-            Point2D(offset + size * 0.75f, offset + size * 0.5f),
-            Color4b(Color.yellow)
-        )
-
-        renderTask.triangle(
-            Point2D(offset + size * 0.25f, offset + size * 0.5f),
-            Point2D(offset, offset + size * 1.0f),
-            Point2D(offset + size * 0.5f, offset + size * 1.0f),
-            Color4b(Color.yellow)
-        )
-
-        renderTask.triangle(
-            Point2D(offset + size * 0.75f, offset + size * 0.5f),
-            Point2D(offset + size * 0.5f, offset + size * 1.0f),
-            Point2D(offset + size * 1.0f, offset + size * 1.0f),
-            Color4b(Color.yellow)
-        )
-
-        RenderEngine.enqueueForRendering(0, renderTask)
+        RenderEngine.enqueueForRendering(0, liquidBounceFont)
     }
 
 }

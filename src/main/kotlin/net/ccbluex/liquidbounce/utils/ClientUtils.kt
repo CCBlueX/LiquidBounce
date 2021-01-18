@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.extensions.asText
 import net.minecraft.client.MinecraftClient
 import org.apache.logging.log4j.Logger
-import java.io.InputStream
 
 val mc = MinecraftClient.getInstance()!!
 
@@ -56,12 +55,5 @@ fun resourceToString(path: String): String {
     val resourceAsStream =
         Empty::class.java.getResourceAsStream(path) ?: throw IllegalArgumentException("Resource $path not found")
 
-    return resourceAsStream.use(InputStream::readToString)
-}
-
-/**
- * Converts an UTF-8 stream to a string
- */
-fun InputStream.readToString(): String {
-    return String(this.readBytes())
+    return resourceAsStream.use { it.reader().readText() }
 }

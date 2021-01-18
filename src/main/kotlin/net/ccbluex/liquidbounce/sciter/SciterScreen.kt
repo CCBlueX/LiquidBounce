@@ -154,30 +154,30 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
 
 
         sciter.loadHtml(
-            "<html lang=\"en\"><head>\n" +
-                "    <meta charset=\"UTF-8\">\n" +
-                "    <title>Helo</title>\n" +
-                "</head>\n" +
-                "    <h1>Sciter Test</h1>\n" +
-                "\n" +
-                "    <ul>\n" +
-                "        <li>A</li>\n" +
-                "        <li>B</li>\n" +
-                "        <li>Lorem ipsum dolor sit amet</li>\n" +
-                "    </ul>\n" +
-                "\n" +
-                "    <button>Helo</button>\n" +
-                "\n" +
-                "    <input type=\"checkbox\">\n" +
-                "    <input type=\"date\">\n" +
-                "    <input type=\"email\">\n" +
-                "    <input type=\"file\">\n" +
-                "    <input type=\"number\">\n" +
-                "    <input type=\"password\">\n" +
-                "    <input type=\"text\">\n" +
-                "\n" +
-                "\n" +
-                "</body></html>", null
+            """<html lang="en"><head>
+    <meta charset="UTF-8">
+    <title>Helo</title>
+</head>
+    <h1>Sciter Test</h1>
+
+    <ul>
+        <li>A</li>
+        <li>B</li>
+        <li>Lorem ipsum dolor sit amet</li>
+    </ul>
+
+    <button>Helo</button>
+
+    <input type="checkbox">
+    <input type="date">
+    <input type="email">
+    <input type="file">
+    <input type="number">
+    <input type="password">
+    <input type="text">
+
+
+</body></html>""", null
         )
     }
 

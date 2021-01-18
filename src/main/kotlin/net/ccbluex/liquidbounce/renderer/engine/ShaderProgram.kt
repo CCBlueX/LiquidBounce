@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2021 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.renderer.engine
 
 import org.lwjgl.opengl.GL20
@@ -40,7 +59,13 @@ private class Shader(shaderType: ShaderType, source: String) {
      * Failsafe, if someone forgets to cleanup the shader
      */
     protected fun finalize() {
-        delete()
+        if (!wasDeleted) {
+            val id = this.id
+
+            RenderEngine.runOnGlContext {
+                GL20.glDeleteShader(id)
+            }
+        }
     }
 
     /**
@@ -100,15 +125,40 @@ class ShaderProgram(vertexShaderSource: String, fragmentShaderSource: String) {
         // The shaders are linked into a program, we don't want to play with them anymore
         vertexShader.delete()
         fragmentShader.delete()
+    }
 
+    /**
+     * Binds an input field to a VAO index
+     */
+    fun bindAttribLocation(name: String, index: Int) {
+        GL20.glBindAttribLocation(this.id, index, name)
+    }
 
+    /**
+     * Gets the location of the uniform used for glUniform
+     */
+    fun getUniformLocation(name: String): Int {
+        return GL20.glGetUniformLocation(this.id, name)
+    }
+
+    /**
+     * Enabled the shader program
+     */
+    fun use() {
+        GL20.glUseProgram(this.id)
     }
 
     /**
      * Failsafe, if someone forgets to cleanup the shader
      */
     protected fun finalize() {
-        delete()
+        if (!wasDeleted) {
+            val id = this.id
+
+            RenderEngine.runOnGlContext {
+                GL20.glDeleteProgram(id)
+            }
+        }
     }
 
     /**
@@ -116,7 +166,7 @@ class ShaderProgram(vertexShaderSource: String, fragmentShaderSource: String) {
      */
     fun delete() {
         if (!wasDeleted) {
-            GL20.glDeleteShader(this.id)
+            GL20.glDeleteProgram(this.id)
 
             wasDeleted = true
         }
