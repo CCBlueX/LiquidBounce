@@ -24,9 +24,8 @@ import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.renderer.SciterScreen
 import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
-import net.minecraft.client.MinecraftClient
+import net.ccbluex.liquidbounce.utils.extensions.globalEnemyConfigurable
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -71,6 +70,8 @@ object LiquidBounce {
         CommandManager.registerInbuilt()
         // Initialize the executor
         CommandExecutor
+        // Initialize the enemy configurable
+        globalEnemyConfigurable
         // Initialize the render engine
         RenderEngine.init()
 
@@ -78,10 +79,6 @@ object LiquidBounce {
         commandManager.registerInbuilt()
         configSystem.load()
         chat.connect()
-
-        // open up sciter window
-//        SciterWindow
-        MinecraftClient.getInstance().openScreen(SciterScreen("helo"))
     }
 
     /**

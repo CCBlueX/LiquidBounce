@@ -56,10 +56,6 @@ dependencies {
     implementation ('com.thealtening.api:api:4.1.0') {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
-    implementation ('com.thealtening.auth:auth:3.0.2') {
-        exclude group: 'com.google.code.gson', module: 'gson'
-    }
-
 }
 
 processResources {

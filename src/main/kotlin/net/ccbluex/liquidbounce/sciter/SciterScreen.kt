@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.renderer
+package net.ccbluex.liquidbounce.sciter
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.sciter.natives.Sciter
@@ -155,30 +155,29 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
 
         sciter.loadHtml(
             """<html lang="en"><head>
-    <meta charset="UTF-8">
-    <title>Helo</title>
-</head>
-    <h1>Sciter Test</h1>
+                        <meta charset="UTF-8">
+                        <title>Hello</title>
+                        <style>html, body { background: transparent; } </style>
+                    </head>
+                    <body>
+                        <h1>Sciter Test</h1>
 
-    <ul>
-        <li>A</li>
-        <li>B</li>
-        <li>Lorem ipsum dolor sit amet</li>
-    </ul>
+                        <ul>
+                            <li>A</li>
+                            <li>B</li>
+                            <li>Lorem ipsum dolor sit amet</li>
+                        </ul>
 
-    <button>Helo</button>
+                        <button>Helo</button>
 
-    <input type="checkbox">
-    <input type="date">
-    <input type="email">
-    <input type="file">
-    <input type="number">
-    <input type="password">
-    <input type="text">
-
-
-</body></html>""", null
-        )
+                        <input type="checkbox">
+                        <input type="date">
+                        <input type="email">
+                        <input type="file">
+                        <input type="number">
+                        <input type="password">
+                        <input type="text">
+                    </body></html>""", null)
     }
 
     override fun isPauseScreen(): Boolean {

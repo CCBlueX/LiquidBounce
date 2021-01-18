@@ -24,8 +24,12 @@ import org.lwjgl.glfw.GLFW
 
 object Fly : Module("Fly", Category.MOVEMENT, bind = GLFW.GLFW_KEY_R) {
 
-    override fun toggled() {
-        mc.player!!.abilities.flying = state
+    override fun enable() {
+        player.abilities!!.flying = true
+    }
+
+    override fun disable() {
+        player.abilities!!.flying = false
     }
 
 }

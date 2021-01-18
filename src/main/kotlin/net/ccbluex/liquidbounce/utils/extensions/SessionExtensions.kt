@@ -19,12 +19,12 @@
 package net.ccbluex.liquidbounce.utils.extensions
 
 import com.mojang.authlib.Agent
+import com.mojang.authlib.Environment
 import com.mojang.authlib.exceptions.AuthenticationException
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException
 import com.mojang.authlib.minecraft.MinecraftSessionService
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
-import com.thealtening.auth.TheAlteningAuthentication
-import com.thealtening.auth.service.AlteningServiceType
+import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.SessionEvent
@@ -32,16 +32,44 @@ import net.ccbluex.liquidbounce.utils.ProfileUtils
 import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.util.Session
 import java.net.Proxy
+import java.util.*
 
-private val service = TheAlteningAuthentication.mojang()
+enum class GenEnvironments (
+    private val authHost: String,
+    private val accountsHost: String,
+    private val sessionHost: String,
+    private val servicesHost: String
+) : Environment {
 
-private fun MinecraftSessionService.login(username: String, password: String = ""): LoginResult {
+    THE_ALTENING(
+        "http://authserver.thealtening.com",
+        "https://api.mojang.com",
+        "http://sessionserver.thealtening.com",
+        "https://api.minecraftservices.com"
+    );
+
+    override fun getAuthHost() = authHost
+    override fun getAccountsHost() = accountsHost
+    override fun getSessionHost() = sessionHost
+    override fun getServicesHost() = servicesHost
+    override fun getName() = name
+
+    override fun asString() = StringJoiner(", ", "", "")
+        .add("authHost='$authHost'")
+        .add("accountsHost='$accountsHost'")
+        .add("sessionHost='$sessionHost'")
+        .add("servicesHost='$servicesHost'")
+        .add("name='" + getName() + "'")
+        .toString()
+
+}
+
+private fun MinecraftSessionService.login(username: String, password: String = "", environment: Environment): LoginResult {
     if (password.isBlank())
         return loginCracked(username)
 
-    val userAuthentication = YggdrasilAuthenticationService(Proxy.NO_PROXY, "")
-        .createUserAuthentication(Agent.MINECRAFT)
-
+    val authenticationService = YggdrasilAuthenticationService(Proxy.NO_PROXY, "", environment)
+    val userAuthentication = authenticationService.createUserAuthentication(Agent.MINECRAFT)
     userAuthentication.setUsername(username)
     userAuthentication.setPassword(password)
 
@@ -49,6 +77,7 @@ private fun MinecraftSessionService.login(username: String, password: String = "
         userAuthentication.logIn()
         mc.session = Session(userAuthentication.selectedProfile.name, userAuthentication.selectedProfile.id.toString(),
             userAuthentication.authenticatedToken, "mojang")
+        mc.sessionService = authenticationService.createMinecraftSessionService()
         EventManager.callEvent(SessionEvent())
         LoginResult.LOGGED_IN
     } catch (exception: AuthenticationUnavailableException) {
@@ -64,27 +93,17 @@ private fun MinecraftSessionService.login(username: String, password: String = "
     }
 }
 
-fun MinecraftSessionService.loginMojang(username: String, password: String): LoginResult {
-    val oldService = service()
-    service.updateService(AlteningServiceType.MOJANG)
-    return login(username, password)
-        .also { if (it != LoginResult.LOGGED_IN) service.updateService(oldService) }
-}
+fun MinecraftSessionService.loginMojang(username: String, password: String)
+    = login(username, password, YggdrasilEnvironment.PROD)
 
-fun MinecraftSessionService.loginAltening(account: String): LoginResult {
-    val oldService = service()
-    service.updateService(AlteningServiceType.THEALTENING)
-    return login(account, LiquidBounce.CLIENT_NAME)
-        .also { if (it != LoginResult.LOGGED_IN) service.updateService(oldService) }
-}
+fun MinecraftSessionService.loginAltening(account: String)
+    = login(account, LiquidBounce.CLIENT_NAME, GenEnvironments.THE_ALTENING)
 
 fun MinecraftSessionService.loginCracked(username: String): LoginResult {
     mc.session = Session(username, ProfileUtils.getUUID(username), "-", "legacy")
     EventManager.callEvent(SessionEvent())
     return LoginResult.LOGGED_IN
 }
-
-fun MinecraftSessionService.service() = service.service
 
 enum class LoginResult(val readable: String) {
     LOGGED_IN("Successfully logged in"),

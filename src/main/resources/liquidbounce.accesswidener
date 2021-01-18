@@ -1,3 +1,8 @@
 accessWidener	v1	named
 accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/util/Session;
 mutable field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/util/Session;
+
+accessible field net/minecraft/client/gui/screen/DeathScreen ticksSinceDeath I
+
+accessible field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
+mutable field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
