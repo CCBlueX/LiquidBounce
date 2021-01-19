@@ -199,18 +199,17 @@ public class MixinRenderEntityItem
 
 	public final int getModelCount(final ItemStack stack)
 	{
-		int i = 1;
 
 		if (stack.stackSize > 48)
-			i = 5;
+			return 5;
 		else if (stack.stackSize > 32)
-			i = 4;
+			return 4;
 		else if (stack.stackSize > 16)
-			i = 3;
+			return 3;
 		else if (stack.stackSize > 1)
-			i = 2;
+			return 2;
 
-		return i;
+		return 1;
 	}
 
 	public final Fluid getFluid(final EntityItem item)
