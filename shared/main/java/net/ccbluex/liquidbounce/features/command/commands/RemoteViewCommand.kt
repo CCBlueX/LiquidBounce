@@ -27,8 +27,8 @@ class RemoteViewCommand : Command("remoteview", "rv") {
         for (entity in mc.theWorld!!.loadedEntityList) {
             if (targetName == entity.name) {
                 mc.renderViewEntity = entity
-                chat("Now viewing perspective of §8${entity.name}§3.")
-                chat("Execute §8${LiquidBounce.commandManager.prefix}remoteview §3again to go back to yours.")
+                chat("Now viewing perspective of \u00A78${entity.name}\u00A73.")
+                chat("Execute \u00A78${LiquidBounce.commandManager.prefix}remoteview \u00A73again to go back to yours.")
                 break
             }
         }

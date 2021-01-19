@@ -13,7 +13,7 @@ class ChatAdminCommand : Command("chatadmin") {
      */
     override fun execute(args: Array<String>) {
         if (!lChat.state) {
-            chat("§cError: §7LiquidChat is disabled!")
+            chat("\u00A7cError: \u00A77LiquidChat is disabled!")
             return
         }
 

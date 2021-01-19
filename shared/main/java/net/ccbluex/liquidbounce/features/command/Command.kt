@@ -30,27 +30,27 @@ abstract class Command(val command: String, vararg val alias: String) : Minecraf
     /**
      * Print [msg] to chat
      */
-    protected fun chat(msg: String) = ClientUtils.displayChatMessage("§8[§9§l${LiquidBounce.CLIENT_NAME}§8] §3$msg")
+    protected fun chat(msg: String) = ClientUtils.displayChatMessage("\u00A78[\u00A79\u00A7l${LiquidBounce.CLIENT_NAME}\u00A78] \u00A73$msg")
 
     /**
      * Print [syntax] of command to chat
      */
-    protected fun chatSyntax(syntax: String) = ClientUtils.displayChatMessage("§8[§9§l${LiquidBounce.CLIENT_NAME}§8] §3Syntax: §7${LiquidBounce.commandManager.prefix}$syntax")
+    protected fun chatSyntax(syntax: String) = ClientUtils.displayChatMessage("\u00A78[\u00A79\u00A7l${LiquidBounce.CLIENT_NAME}\u00A78] \u00A73Syntax: \u00A77${LiquidBounce.commandManager.prefix}$syntax")
 
     /**
      * Print [syntaxes] of command to chat
      */
     protected fun chatSyntax(syntaxes: Array<String>) {
-        ClientUtils.displayChatMessage("§8[§9§l${LiquidBounce.CLIENT_NAME}§8] §3Syntax:")
+        ClientUtils.displayChatMessage("\u00A78[\u00A79\u00A7l${LiquidBounce.CLIENT_NAME}\u00A78] \u00A73Syntax:")
 
         for (syntax in syntaxes)
-            ClientUtils.displayChatMessage("§8> §7${LiquidBounce.commandManager.prefix}$command ${syntax.toLowerCase()}")
+            ClientUtils.displayChatMessage("\u00A78> \u00A77${LiquidBounce.commandManager.prefix}$command ${syntax.toLowerCase()}")
     }
 
     /**
      * Print a syntax error to chat
      */
-    protected fun chatSyntaxError() = ClientUtils.displayChatMessage("§8[§9§l${LiquidBounce.CLIENT_NAME}§8] §3Syntax error")
+    protected fun chatSyntaxError() = ClientUtils.displayChatMessage("\u00A78[\u00A79\u00A7l${LiquidBounce.CLIENT_NAME}\u00A78] \u00A73Syntax error")
 
     /**
      * Play edit sound

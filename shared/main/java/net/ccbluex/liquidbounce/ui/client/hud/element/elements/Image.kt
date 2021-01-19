@@ -19,107 +19,120 @@ import java.nio.file.Files
 import java.util.*
 import javax.imageio.ImageIO
 
-
 /**
  * CustomHUD image element
  *
  * Draw custom image
  */
 @ElementInfo(name = "Image")
-class Image : Element() {
+class Image : Element()
+{
 
-    companion object {
+	companion object
+	{
 
-        /**
-         * Create default element
-         */
-        fun default(): Image {
-            val image = Image()
+		/**
+		 * Create default element
+		 */
+		fun default(): Image
+		{
+			val image = Image()
 
-            image.x = 0.0
-            image.y = 0.0
+			image.x = 0.0
+			image.y = 0.0
 
-            return image
-        }
+			return image
+		}
 
-    }
+	}
 
-    private val image: TextValue = object : TextValue("Image", "") {
+	private val image: TextValue = object : TextValue("Image", "")
+	{
 
-        override fun fromJson(element: JsonElement) {
-            super.fromJson(element)
+		override fun fromJson(element: JsonElement)
+		{
+			super.fromJson(element)
 
-            if (get().isEmpty())
-                return
+			if (get().isEmpty()) return
 
-            setImage(get())
-        }
+			setImage(get())
+		}
 
-        override fun onChanged(oldValue: String, newValue: String) {
-            if (get().isEmpty())
-                return
+		override fun onChanged(oldValue: String, newValue: String)
+		{
+			if (get().isEmpty()) return
 
-            setImage(get())
-        }
+			setImage(get())
+		}
 
-    }
+	}
 
-    private val resourceLocation = classProvider.createResourceLocation(RandomUtils.randomNumber(128))
-    private var width = 64
-    private var height = 64
+	private val resourceLocation = classProvider.createResourceLocation(RandomUtils.randomNumber(128))
+	private var width = 64
+	private var height = 64
 
-    /**
-     * Draw element
-     */
-    override fun drawElement(): Border {
-        RenderUtils.drawImage(resourceLocation, 0, 0, width / 2, height / 2)
+	/**
+	 * Draw element
+	 */
+	override fun drawElement(): Border
+	{
+		RenderUtils.drawImage(resourceLocation, 0, 0, width / 2, height / 2)
 
-        return Border(0F, 0F, width / 2F, height / 2F)
-    }
+		return Border(0F, 0F, width / 2F, height / 2F)
+	}
 
-    override fun createElement(): Boolean {
-        val file = MiscUtils.openFileChooser() ?: return false
+	override fun createElement(): Boolean
+	{
+		val file = MiscUtils.openFileChooser() ?: return false
 
-        if (!file.exists()) {
-            MiscUtils.showErrorPopup("Error", "The file does not exist.")
-            return false
-        }
+		if (!file.exists())
+		{
+			MiscUtils.showErrorPopup("Error", "The file does not exist.")
+			return false
+		}
 
-        if (file.isDirectory) {
-            MiscUtils.showErrorPopup("Error", "The file is a directory.")
-            return false
-        }
+		if (file.isDirectory)
+		{
+			MiscUtils.showErrorPopup("Error", "The file is a directory.")
+			return false
+		}
 
-        setImage(file)
-        return true
-    }
+		setImage(file)
+		return true
+	}
 
-    private fun setImage(image: String): Image {
-        try {
-            this.image.changeValue(image)
+	private fun setImage(image: String): Image
+	{
+		try
+		{
+			this.image.changeValue(image)
 
-            val byteArrayInputStream = ByteArrayInputStream(Base64.getDecoder().decode(image))
-            val bufferedImage = ImageIO.read(byteArrayInputStream)
-            byteArrayInputStream.close()
+			val byteArrayInputStream = ByteArrayInputStream(Base64.getDecoder().decode(image))
+			val bufferedImage = ImageIO.read(byteArrayInputStream)
+			byteArrayInputStream.close()
 
-            width = bufferedImage.width
-            height = bufferedImage.height
+			width = bufferedImage.width
+			height = bufferedImage.height
 
-            mc.textureManager.loadTexture(resourceLocation, classProvider.createDynamicTexture(bufferedImage))
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return this
-    }
+			mc.textureManager.loadTexture(resourceLocation, classProvider.createDynamicTexture(bufferedImage))
+		} catch (e: Exception)
+		{
+			e.printStackTrace()
+		}
+		return this
+	}
 
-    fun setImage(image: File): Image {
-        try {
-            setImage(Base64.getEncoder().encodeToString(Files.readAllBytes(image.toPath())))
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+	fun setImage(image: File): Image
+	{
+		try
+		{
+			setImage(Base64.getEncoder().encodeToString(Files.readAllBytes(image.toPath())))
+		} catch (e: Exception)
+		{
+			e.printStackTrace()
+		}
 
-        return this
-    }
+		return this
+	}
 
 }

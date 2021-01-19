@@ -51,7 +51,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
                         chat("Applying settings...")
                         SettingsUtils.executeScript(settings)
-                        chat("§6Settings applied successfully")
+                        chat("\u00A76Settings applied successfully")
                         LiquidBounce.hud.addNotification(Notification("Updated Settings"))
                         playEdit()
                     } catch (exception: Exception) {

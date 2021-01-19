@@ -178,7 +178,7 @@ class ESP : Module() {
                     val chars: CharArray = (entityLivingBase.displayName ?: return@run).formattedText.toCharArray()
                     var color = Int.MAX_VALUE
                     for (i in chars.indices) {
-                        if (chars[i] != '§' || i + 1 >= chars.size) continue
+                        if (chars[i] != '\u00A7' || i + 1 >= chars.size) continue
                         val index = getColorIndex(chars[i + 1])
                         if (index < 0 || index > 15) continue
                         color = ColorUtils.hexColors[index]

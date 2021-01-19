@@ -78,7 +78,7 @@ class CommandManager {
             }
         }
 
-        ClientUtils.displayChatMessage("§cCommand not found. Type ${prefix}help to view all commands.")
+        ClientUtils.displayChatMessage("\u00A7cCommand not found. Type ${prefix}help to view all commands.")
     }
 
     /**

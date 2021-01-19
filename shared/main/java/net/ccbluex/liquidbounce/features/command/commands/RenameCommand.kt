@@ -16,20 +16,20 @@ class RenameCommand : Command("rename") {
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
             if (mc.playerController.isNotCreative) {
-                chat("§c§lError: §3You need to be in creative mode.")
+                chat("\u00A7c\u00A7lError: \u00A73You need to be in creative mode.")
                 return
             }
 
             val item = mc.thePlayer!!.heldItem
 
             if (item?.item == null) {
-                chat("§c§lError: §3You need to hold a item.")
+                chat("\u00A7c\u00A7lError: \u00A73You need to hold a item.")
                 return
             }
 
             item.setStackDisplayName(ColorUtils.translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
             mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(36 + mc.thePlayer!!.inventory.currentItem, item))
-            chat("§3Item renamed to '${item.displayName}§3'")
+            chat("\u00A73Item renamed to '${item.displayName}\u00A73'")
             return
         }
 

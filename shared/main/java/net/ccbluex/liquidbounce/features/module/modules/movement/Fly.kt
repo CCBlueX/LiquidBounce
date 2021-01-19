@@ -181,9 +181,9 @@ class Fly : Module() {
                     thePlayer.motionZ *= 0.1
                     thePlayer.swingItem()
                 }
-                "infinitycubecraft" -> ClientUtils.displayChatMessage("§8[§c§lCubeCraft-§a§lFly§8] §aPlace a block before landing.")
+                "infinitycubecraft" -> ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lCubeCraft-\u00A7a\u00A7lFly\u00A78] \u00A7aPlace a block before landing.")
                 "infinityvcubecraft" -> {
-                    ClientUtils.displayChatMessage("§8[§c§lCubeCraft-§a§lFly§8] §aPlace a block before landing.")
+                    ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lCubeCraft-\u00A7a\u00A7lFly\u00A78] \u00A7aPlace a block before landing.")
 
                     thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)
                 }
@@ -444,7 +444,7 @@ class Fly : Module() {
                 } else {
                     mc.timer.timerSpeed = 1.0f
                     state = false
-                    ClientUtils.displayChatMessage("§8[§c§lMineplex-§a§lFly§8] §aSelect an empty slot to fly.")
+                    ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lMineplex-\u00A7a\u00A7lFly\u00A78] \u00A7aSelect an empty slot to fly.")
                 }
                 "aac3.3.12" -> {
                     if (thePlayer.posY < -70) thePlayer.motionY = aacMotion.get().toDouble()
@@ -608,7 +608,7 @@ class Fly : Module() {
             val mode = modeValue.get()
             if (mode.equals("BoostHypixel", ignoreCase = true)) {
                 failedStart = true
-                ClientUtils.displayChatMessage("§8[§c§lBoostHypixel-§a§lFly§8] §cSetback detected.")
+                ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lBoostHypixel-\u00A7a\u00A7lFly\u00A78] \u00A7cSetback detected.")
             }
         }
     }

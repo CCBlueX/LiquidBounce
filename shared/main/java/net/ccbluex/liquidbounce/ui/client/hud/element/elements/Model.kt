@@ -22,109 +22,123 @@ import kotlin.math.atan
  * Draw mini figure of your character to the HUD
  */
 @ElementInfo(name = "Model")
-class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
+class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
+{
 
-    private val yawMode = ListValue("Yaw", arrayOf("Player", "Animation", "Custom"), "Animation")
-    private val customYaw = FloatValue("CustomYaw", 0F, -180F, 180F)
+	private val yawMode = ListValue("Yaw", arrayOf("Player", "Animation", "Custom"), "Animation")
+	private val customYaw = FloatValue("CustomYaw", 0F, -180F, 180F)
 
-    private val pitchMode = ListValue("Pitch", arrayOf("Player", "Custom"), "Player")
-    private val customPitch = FloatValue("CustomPitch", 0F, -90F, 90F)
+	private val pitchMode = ListValue("Pitch", arrayOf("Player", "Custom"), "Player")
+	private val customPitch = FloatValue("CustomPitch", 0F, -90F, 90F)
 
-    private var rotate = 0F
-    private var rotateDirection = false
+	private var rotate = 0F
+	private var rotateDirection = false
 
-    /**
-     * Draw element
-     */
-    override fun drawElement(): Border {
-        val yaw = when (yawMode.get().toLowerCase()) {
-            "player" -> mc.thePlayer!!.rotationYaw
-            "animation" -> {
-                val delta = RenderUtils.deltaTime
+	/**
+	 * Draw element
+	 */
+	override fun drawElement(): Border
+	{
+		val yaw = when (yawMode.get().toLowerCase())
+		{
+			"player" -> mc.thePlayer!!.rotationYaw
 
-                if (rotateDirection) {
-                    if (rotate <= 70F) {
-                        rotate += 0.12F * delta
-                    } else {
-                        rotateDirection = false
-                        rotate = 70F
-                    }
-                } else {
-                    if (rotate >= -70F) {
-                        rotate -= 0.12F * delta
-                    } else {
-                        rotateDirection = true
-                        rotate = -70F
-                    }
-                }
+			"animation" ->
+			{
+				val delta = RenderUtils.deltaTime
 
-                rotate
-            }
-            "custom" -> customYaw.get()
-            else -> 0F
-        }
+				if (rotateDirection)
+				{
+					if (rotate <= 70F)
+					{
+						rotate += 0.12F * delta
+					} else
+					{
+						rotateDirection = false
+						rotate = 70F
+					}
+				} else
+				{
+					if (rotate >= -70F)
+					{
+						rotate -= 0.12F * delta
+					} else
+					{
+						rotateDirection = true
+						rotate = -70F
+					}
+				}
 
-        var pitch = when (pitchMode.get().toLowerCase()) {
-            "player" -> mc.thePlayer!!.rotationPitch
-            "custom" -> customPitch.get()
-            else -> 0F
-        }
+				rotate
+			}
 
-        pitch = if (pitch > 0) -pitch else abs(pitch)
+			"custom" -> customYaw.get()
+			else -> 0F
+		}
 
-        drawEntityOnScreen(yaw, pitch, mc.thePlayer!!)
+		var pitch = when (pitchMode.get().toLowerCase())
+		{
+			"player" -> mc.thePlayer!!.rotationPitch
+			"custom" -> customPitch.get()
+			else -> 0F
+		}
 
-        return Border(30F, 10F, -30F, -100F)
-    }
+		pitch = if (pitch > 0) -pitch else abs(pitch)
 
-    /**
-     * Draw [entityLivingBase] to screen
-     */
-    private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: IEntityLivingBase) {
-        classProvider.getGlStateManager().resetColor()
-        classProvider.getGlStateManager().enableColorMaterial()
-        GL11.glPushMatrix()
-        GL11.glTranslatef(0F, 0F, 50F)
-        GL11.glScalef(-50F, 50F, 50F)
-        GL11.glRotatef(180F, 0F, 0F, 1F)
+		drawEntityOnScreen(yaw, pitch, mc.thePlayer!!)
 
-        val renderYawOffset = entityLivingBase.renderYawOffset
-        val rotationYaw = entityLivingBase.rotationYaw
-        val rotationPitch = entityLivingBase.rotationPitch
-        val prevRotationYawHead = entityLivingBase.prevRotationYawHead
-        val rotationYawHead = entityLivingBase.rotationYawHead
+		return Border(30F, 10F, -30F, -100F)
+	}
 
-        GL11.glRotatef(135F, 0F, 1F, 0F)
-        functions.enableStandardItemLighting()
-        GL11.glRotatef(-135F, 0F, 1F, 0F)
-        GL11.glRotatef(-atan(pitch / 40F) * 20.0F, 1F, 0F, 0F)
+	/**
+	 * Draw [entityLivingBase] to screen
+	 */
+	private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: IEntityLivingBase)
+	{
+		classProvider.getGlStateManager().resetColor()
+		classProvider.getGlStateManager().enableColorMaterial()
+		GL11.glPushMatrix()
+		GL11.glTranslatef(0F, 0F, 50F)
+		GL11.glScalef(-50F, 50F, 50F)
+		GL11.glRotatef(180F, 0F, 0F, 1F)
 
-        entityLivingBase.renderYawOffset = atan(yaw / 40F) * 20F
-        entityLivingBase.rotationYaw = atan(yaw / 40F) * 40F
-        entityLivingBase.rotationPitch = -atan(pitch / 40F) * 20F
-        entityLivingBase.rotationYawHead = entityLivingBase.rotationYaw
-        entityLivingBase.prevRotationYawHead = entityLivingBase.rotationYaw
+		val renderYawOffset = entityLivingBase.renderYawOffset
+		val rotationYaw = entityLivingBase.rotationYaw
+		val rotationPitch = entityLivingBase.rotationPitch
+		val prevRotationYawHead = entityLivingBase.prevRotationYawHead
+		val rotationYawHead = entityLivingBase.rotationYawHead
 
-        GL11.glTranslatef(0F, 0F, 0F)
+		GL11.glRotatef(135F, 0F, 1F, 0F)
+		functions.enableStandardItemLighting()
+		GL11.glRotatef(-135F, 0F, 1F, 0F)
+		GL11.glRotatef(-atan(pitch / 40F) * 20.0F, 1F, 0F, 0F)
 
-        val renderManager = mc.renderManager
-        renderManager.playerViewY = 180F
-        renderManager.isRenderShadow = false
-        renderManager.renderEntityWithPosYaw(entityLivingBase, 0.0, 0.0, 0.0, 0F, 1F)
-        renderManager.isRenderShadow = true
+		entityLivingBase.renderYawOffset = atan(yaw / 40F) * 20F
+		entityLivingBase.rotationYaw = atan(yaw / 40F) * 40F
+		entityLivingBase.rotationPitch = -atan(pitch / 40F) * 20F
+		entityLivingBase.rotationYawHead = entityLivingBase.rotationYaw
+		entityLivingBase.prevRotationYawHead = entityLivingBase.rotationYaw
 
-        entityLivingBase.renderYawOffset = renderYawOffset
-        entityLivingBase.rotationYaw = rotationYaw
-        entityLivingBase.rotationPitch = rotationPitch
-        entityLivingBase.prevRotationYawHead = prevRotationYawHead
-        entityLivingBase.rotationYawHead = rotationYawHead
+		GL11.glTranslatef(0F, 0F, 0F)
 
-        GL11.glPopMatrix()
-        functions.disableStandardItemLighting()
-        classProvider.getGlStateManager().disableRescaleNormal()
-        functions.setActiveTextureLightMapTexUnit()
-        classProvider.getGlStateManager().disableTexture2D()
-        functions.setActiveTextureDefaultTexUnit()
-        classProvider.getGlStateManager().resetColor()
-    }
+		val renderManager = mc.renderManager
+		renderManager.playerViewY = 180F
+		renderManager.isRenderShadow = false
+		renderManager.renderEntityWithPosYaw(entityLivingBase, 0.0, 0.0, 0.0, 0F, 1F)
+		renderManager.isRenderShadow = true
+
+		entityLivingBase.renderYawOffset = renderYawOffset
+		entityLivingBase.rotationYaw = rotationYaw
+		entityLivingBase.rotationPitch = rotationPitch
+		entityLivingBase.prevRotationYawHead = prevRotationYawHead
+		entityLivingBase.rotationYawHead = rotationYawHead
+
+		GL11.glPopMatrix()
+		functions.disableStandardItemLighting()
+		classProvider.getGlStateManager().disableRescaleNormal()
+		functions.setActiveTextureLightMapTexUnit()
+		classProvider.getGlStateManager().disableTexture2D()
+		functions.setActiveTextureDefaultTexUnit()
+		classProvider.getGlStateManager().resetColor()
+	}
 }

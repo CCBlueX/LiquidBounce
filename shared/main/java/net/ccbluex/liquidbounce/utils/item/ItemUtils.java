@@ -30,7 +30,7 @@ public final class ItemUtils extends MinecraftInstance {
      */
     public static IItemStack createItem(String itemArguments) {
         try {
-            itemArguments = itemArguments.replace('&', '§');
+            itemArguments = itemArguments.replace('&', '\u00A7');
             IItem item = classProvider.createItem();
             IItem itemInstance = item;
             String[] args = null;

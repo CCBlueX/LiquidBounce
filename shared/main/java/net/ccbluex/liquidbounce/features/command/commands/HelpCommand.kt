@@ -42,8 +42,8 @@ class HelpCommand : Command("help") {
             return
         }
 
-        chat("§c§lHelp")
-        ClientUtils.displayChatMessage("§7> Page: §8$page / $maxPage")
+        chat("\u00A7c\u00A7lHelp")
+        ClientUtils.displayChatMessage("\u00A77> Page: \u00A78$page / $maxPage")
 
         val commands = LiquidBounce.commandManager.commands.sortedBy { it.command }
 
@@ -51,10 +51,10 @@ class HelpCommand : Command("help") {
         while (i < 8 * page && i < commands.size) {
             val command = commands[i]
 
-            ClientUtils.displayChatMessage("§6> §7${LiquidBounce.commandManager.prefix}${command.command}${if (command.alias.isEmpty()) "" else " §7(§8" + Strings.join(command.alias, "§7, §8") + "§7)"}")
+            ClientUtils.displayChatMessage("\u00A76> \u00A77${LiquidBounce.commandManager.prefix}${command.command}${if (command.alias.isEmpty()) "" else " \u00A77(\u00A78" + Strings.join(command.alias, "\u00A77, \u00A78") + "\u00A77)"}")
             i++
         }
 
-        ClientUtils.displayChatMessage("§a------------\n§7> §c${LiquidBounce.commandManager.prefix}help §8<§7§lpage§8>")
+        ClientUtils.displayChatMessage("\u00A7a------------\n\u00A77> \u00A7c${LiquidBounce.commandManager.prefix}help \u00A78<\u00A77\u00A7lpage\u00A78>")
     }
 }

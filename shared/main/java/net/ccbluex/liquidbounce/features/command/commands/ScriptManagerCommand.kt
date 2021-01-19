@@ -149,8 +149,8 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
         val scriptManager = LiquidBounce.scriptManager
 
         if (scriptManager.scripts.isNotEmpty()) {
-            chat("§c§lScripts")
-            scriptManager.scripts.forEachIndexed { index, script -> chat("$index: §a§l${script.scriptName} §a§lv${script.scriptVersion} §3by §a§l${script.scriptAuthors.joinToString(", ")}") }
+            chat("\u00A7c\u00A7lScripts")
+            scriptManager.scripts.forEachIndexed { index, script -> chat("$index: \u00A7a\u00A7l${script.scriptName} \u00A7a\u00A7lv${script.scriptVersion} \u00A73by \u00A7a\u00A7l${script.scriptAuthors.joinToString(", ")}") }
         }
 
         chatSyntax("scriptmanager <import/delete/reload/folder>")

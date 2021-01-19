@@ -64,7 +64,7 @@ object AntiBot : Module() {
 
         // Anti Bot checks
 
-        if (colorValue.get() && !entity.displayName!!.formattedText.replace("§r", "").contains("§"))
+        if (colorValue.get() && !entity.displayName!!.formattedText.replace("\u00A7r", "").contains("\u00A7"))
             return true
 
         if (livingTimeValue.get() && entity.ticksExisted < livingTimeTicksValue.get())

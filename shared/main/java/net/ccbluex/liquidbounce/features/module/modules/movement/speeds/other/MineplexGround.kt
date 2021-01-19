@@ -37,7 +37,7 @@ class MineplexGround : SpeedMode("MineplexGround") {
             return
         }
         if (!spoofSlot && mc.thePlayer!!.inventory.getCurrentItemInHand() != null) {
-            ClientUtils.displayChatMessage("§8[§c§lMineplex§aSpeed§8] §cYou need one empty slot.")
+            ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lMineplex\u00A7aSpeed\u00A78] \u00A7cYou need one empty slot.")
             return
         }
         val blockPos = WBlockPos(mc.thePlayer!!.posX, mc.thePlayer!!.entityBoundingBox.minY - 1, mc.thePlayer!!.posZ)

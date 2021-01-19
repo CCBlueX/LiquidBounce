@@ -16,7 +16,7 @@ class HoloStandCommand : Command("holostand") {
     override fun execute(args: Array<String>) {
         if (args.size > 4) {
             if (mc.playerController.isNotCreative) {
-                chat("§c§lError: §3You need to be in creative mode.")
+                chat("\u00A7c\u00A7lError: \u00A73You need to be in creative mode.")
                 return
             }
 
@@ -40,7 +40,7 @@ class HoloStandCommand : Command("holostand") {
                 entityTag.setTag("Pos", position)
                 base.setTag("EntityTag", entityTag)
                 itemStack.tagCompound = base
-                itemStack.setStackDisplayName("§c§lHolo§eStand")
+                itemStack.setStackDisplayName("\u00A7c\u00A7lHolo\u00A7eStand")
                 mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(36, itemStack))
 
                 chat("The HoloStand was successfully added to your inventory.")

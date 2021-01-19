@@ -31,12 +31,12 @@ object SettingsUtils {
             val args = s.split(" ").toTypedArray()
 
             if (args.size <= 1) {
-                ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cSyntax error at line '$index' in setting script.\n§8§lLine: §7$s")
+                ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cSyntax error at line '$index' in setting script.\n\u00A78\u00A7lLine: \u00A77$s")
                 return@forEachIndexed
             }
 
             when (args[0]) {
-                "chat" -> ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §e${translateAlternateColorCodes(StringUtils.toCompleteString(args, 1))}")
+                "chat" -> ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7e${translateAlternateColorCodes(StringUtils.toCompleteString(args, 1))}")
                 "unchat" -> ClientUtils.displayChatMessage(translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
 
                 "load" -> {
@@ -47,42 +47,42 @@ object SettingsUtils {
                         "${LiquidBounce.CLIENT_CLOUD}/settings/${urlRaw.toLowerCase()}"
 
                     try {
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loading settings from §a§l$url§7...")
+                        ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Loading settings from \u00A7a\u00A7l$url\u00A77...")
                         executeScript(get(url))
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loaded settings from §a§l$url§7.")
+                        ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Loaded settings from \u00A7a\u00A7l$url\u00A77.")
                     } catch (e: Exception) {
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Failed to load settings from §a§l$url§7.")
+                        ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Failed to load settings from \u00A7a\u00A7l$url\u00A77.")
                     }
                 }
 
                 "targetPlayer", "targetPlayers" -> {
                     EntityUtils.targetPlayer = args[1].equals("true", ignoreCase = true)
-                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetPlayer}§7.")
+                    ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetPlayer}\u00A77.")
                 }
 
                 "targetMobs" -> {
                     EntityUtils.targetMobs = args[1].equals("true", ignoreCase = true)
-                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetMobs}§7.")
+                    ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetMobs}\u00A77.")
                 }
 
                 "targetAnimals" -> {
                     EntityUtils.targetAnimals = args[1].equals("true", ignoreCase = true)
-                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetAnimals}§7.")
+                    ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetAnimals}\u00A77.")
                 }
 
                 "targetInvisible" -> {
                     EntityUtils.targetInvisible = args[1].equals("true", ignoreCase = true)
-                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetInvisible}§7.")
+                    ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetInvisible}\u00A77.")
                 }
 
                 "targetDead" -> {
                     EntityUtils.targetDead = args[1].equals("true", ignoreCase = true)
-                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetDead}§7.")
+                    ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetDead}\u00A77.")
                 }
 
                 else -> {
                     if (args.size != 3) {
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cSyntax error at line '$index' in setting script.\n§8§lLine: §7$s")
+                        ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cSyntax error at line '$index' in setting script.\n\u00A78\u00A7lLine: \u00A77$s")
                         return@forEachIndexed
                     }
 
@@ -92,25 +92,25 @@ object SettingsUtils {
                     val module = LiquidBounce.moduleManager.getModule(moduleName)
 
                     if (module == null) {
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cModule §a§l$moduleName§c was not found!")
+                        ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cModule \u00A7a\u00A7l$moduleName\u00A7c was not found!")
                         return@forEachIndexed
                     }
 
                     if (valueName.equals("toggle", ignoreCase = true)) {
                         module.state = value.equals("true", ignoreCase = true)
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.name} §7was toggled §c§l${if (module.state) "on" else "off"}§7.")
+                        ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name} \u00A77was toggled \u00A7c\u00A7l${if (module.state) "on" else "off"}\u00A77.")
                         return@forEachIndexed
                     }
 
                     if (valueName.equals("bind", ignoreCase = true)) {
                         module.keyBind = Keyboard.getKeyIndex(value)
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.name} §7was bound to §c§l${Keyboard.getKeyName(module.keyBind)}§7.")
+                        ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name} \u00A77was bound to \u00A7c\u00A7l${Keyboard.getKeyName(module.keyBind)}\u00A77.")
                         return@forEachIndexed
                     }
 
                     val moduleValue = module.getValue(valueName)
                     if (moduleValue == null) {
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cValue §a§l$valueName§c don't found in module §a§l$moduleName§c.")
+                        ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cValue \u00A7a\u00A7l$valueName\u00A7c don't found in module \u00A7a\u00A7l$moduleName\u00A7c.")
                         return@forEachIndexed
                     }
 
@@ -123,9 +123,9 @@ object SettingsUtils {
                             is ListValue -> moduleValue.changeValue(value)
                         }
 
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.name}§7 value §8§l${moduleValue.name}§7 set to §c§l$value§7.")
+                        ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name}\u00A77 value \u00A78\u00A7l${moduleValue.name}\u00A77 set to \u00A7c\u00A7l$value\u00A77.")
                     } catch (e: Exception) {
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${e.javaClass.name}§7(${e.message}) §cAn Exception occurred while setting §a§l$value§c to §a§l${moduleValue.name}§c in §a§l${module.name}§c.")
+                        ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${e.javaClass.name}\u00A77(${e.message}) \u00A7cAn Exception occurred while setting \u00A7a\u00A7l$value\u00A7c to \u00A7a\u00A7l${moduleValue.name}\u00A7c in \u00A7a\u00A7l${module.name}\u00A7c.")
                     }
                 }
             }

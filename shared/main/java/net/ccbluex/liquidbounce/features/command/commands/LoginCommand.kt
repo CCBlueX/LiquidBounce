@@ -27,7 +27,7 @@ class LoginCommand : Command("login") {
 
         chat(result)
 
-        if (result.startsWith("§cYour name is now")) {
+        if (result.startsWith("\u00A7cYour name is now")) {
             if (mc.isIntegratedServerRunning)
                 return
 

@@ -57,14 +57,14 @@ class LiquidChat : Module() {
          * Handle connect to web socket
          */
         override fun onConnect() {
-            ClientUtils.displayChatMessage("§7[§a§lChat§7] §9Connecting to chat server...")
+            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Connecting to chat server...")
         }
 
         /**
          * Handle connect to web socket
          */
         override fun onConnected() {
-            ClientUtils.displayChatMessage("§7[§a§lChat§7] §9Connected to chat server!")
+            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Connected to chat server!")
         }
 
         /**
@@ -76,14 +76,14 @@ class LiquidChat : Module() {
          * Handle disconnect
          */
         override fun onDisconnect() {
-            ClientUtils.displayChatMessage("§7[§a§lChat§7] §cDisconnected from chat server!")
+            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cDisconnected from chat server!")
         }
 
         /**
          * Handle logon to web socket with minecraft account
          */
         override fun onLogon() {
-            ClientUtils.displayChatMessage("§7[§a§lChat§7] §9Logging in...")
+            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Logging in...")
         }
 
         /**
@@ -99,13 +99,13 @@ class LiquidChat : Module() {
                         return
                     }
 
-                    val chatComponent = classProvider.createChatComponentText("§7[§a§lChat§7] §9${packet.user.name}: ")
+                    val chatComponent = classProvider.createChatComponentText("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79${packet.user.name}: ")
                     val messageComponent = toChatComponent(packet.content)
                     chatComponent.appendSibling(messageComponent)
 
                     thePlayer.addChatMessage(chatComponent)
                 }
-                is ClientPrivateMessagePacket -> ClientUtils.displayChatMessage("§7[§a§lChat§7] §c(P)§9 ${packet.user.name}: §7${packet.content}")
+                is ClientPrivateMessagePacket -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7c(P)\u00A79 ${packet.user.name}: \u00A77${packet.content}")
                 is ClientErrorPacket -> {
                     val message = when (packet.message) {
                         "NotSupported" -> "This method is not supported!"
@@ -126,23 +126,23 @@ class LiquidChat : Module() {
                         else -> packet.message
                     }
 
-                    ClientUtils.displayChatMessage("§7[§a§lChat§7] §cError: §7$message")
+                    ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cError: \u00A77$message")
                 }
                 is ClientSuccessPacket -> {
                     when (packet.reason) {
                         "Login" -> {
-                            ClientUtils.displayChatMessage("§7[§a§lChat§7] §9Logged in!")
+                            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Logged in!")
 
                             ClientUtils.displayChatMessage("====================================")
-                            ClientUtils.displayChatMessage("§c>> §lLiquidChat")
-                            ClientUtils.displayChatMessage("§7Write message: §a.chat <message>")
-                            ClientUtils.displayChatMessage("§7Write private message: §a.pchat <user> <message>")
+                            ClientUtils.displayChatMessage("\u00A7c>> \u00A7lLiquidChat")
+                            ClientUtils.displayChatMessage("\u00A77Write message: \u00A7a.chat <message>")
+                            ClientUtils.displayChatMessage("\u00A77Write private message: \u00A7a.pchat <user> <message>")
                             ClientUtils.displayChatMessage("====================================")
 
                             loggedIn = true
                         }
-                        "Ban" -> ClientUtils.displayChatMessage("§7[§a§lChat§7] §9Successfully banned user!")
-                        "Unban" -> ClientUtils.displayChatMessage("§7[§a§lChat§7] §9Successfully unbanned user!")
+                        "Ban" -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Successfully banned user!")
+                        "Unban" -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Successfully unbanned user!")
                     }
                 }
                 is ClientNewJWTPacket -> {
@@ -159,7 +159,7 @@ class LiquidChat : Module() {
          * Handle error
          */
         override fun onError(cause: Throwable) {
-            ClientUtils.displayChatMessage("§7[§a§lChat§7] §c§lError: §7${cause.javaClass.name}: ${cause.message}")
+            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7c\u00A7lError: \u00A77${cause.javaClass.name}: ${cause.message}")
         }
     }
 
@@ -194,7 +194,7 @@ class LiquidChat : Module() {
         if (client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
 
         if (jwtValue.get() && jwtToken.isEmpty()) {
-            ClientUtils.displayChatMessage("§7[§a§lChat§7] §cError: §7No token provided!")
+            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cError: \u00A77No token provided!")
             state = false
             return
         }
@@ -211,7 +211,7 @@ class LiquidChat : Module() {
                     client.loginMojang()
             } catch (cause: Exception) {
                 ClientUtils.getLogger().error("LiquidChat error", cause)
-                ClientUtils.displayChatMessage("§7[§a§lChat§7] §cError: §7${cause.javaClass.name}: ${cause.message}")
+                ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cError: \u00A77${cause.javaClass.name}: ${cause.message}")
             }
 
             loginThread = null

@@ -15,12 +15,12 @@ class PrivateChatCommand : Command("pchat", "privatechat", "lcpm") {
     override fun execute(args: Array<String>) {
         if (args.size > 2) {
             if (!lChat.state) {
-                chat("§cError: §7LiquidChat is disabled!")
+                chat("\u00A7cError: \u00A77LiquidChat is disabled!")
                 return
             }
 
             if (!lChat.client.isConnected()) {
-                chat("§cError: §LiquidChat is currently not connected to the server!")
+                chat("\u00A7cError: \u00A7LiquidChat is currently not connected to the server!")
                 return
             }
 

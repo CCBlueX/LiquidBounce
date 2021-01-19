@@ -6,6 +6,7 @@
 
 package net.ccbluex.liquidbounce.api.enums
 
-enum class StatType {
-    JUMP_STAT
+enum class StatType
+{
+	JUMP_STAT
 }

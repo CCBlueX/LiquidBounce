@@ -17,7 +17,7 @@ class GiveCommand : Command("give", "item", "i", "get") {
         val thePlayer = mc.thePlayer ?: return
 
         if (mc.playerController.isNotCreative) {
-            chat("§c§lError: §3You need to be in creative mode.")
+            chat("\u00A7c\u00A7lError: \u00A73You need to be in creative mode.")
             return
         }
 
@@ -49,7 +49,7 @@ class GiveCommand : Command("give", "item", "i", "get") {
 
             if (emptySlot != -1) {
                 mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(emptySlot, itemStack))
-                chat("§7Given [§8${itemStack.displayName}§7] * §8${itemStack.stackSize}§7 to §8${mc.session.username}§7.")
+                chat("\u00A77Given [\u00A78${itemStack.displayName}\u00A77] * \u00A78${itemStack.stackSize}\u00A77 to \u00A78${mc.session.username}\u00A77.")
             } else
                 chat("Your inventory is full.")
             return

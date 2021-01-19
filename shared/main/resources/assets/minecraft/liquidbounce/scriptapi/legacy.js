@@ -21,7 +21,7 @@ script.on("disable", function () {
 script.on("load", function () {
     try {
         script.setScriptName(scriptName);
-        script.setScriptVersion(scriptVersion.toString() + " §7[§4Legacy Script§7]");
+        script.setScriptVersion(scriptVersion.toString() + " \u00A77[\u00A74Legacy Script\u00A77]");
         script.setScriptAuthors([scriptAuthor]);
     } catch (err) {
     }

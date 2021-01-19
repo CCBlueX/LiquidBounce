@@ -27,11 +27,11 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 
                         if (scriptFile.exists()) {
                             try {
-                                chat("§9Loading settings...")
+                                chat("\u00A79Loading settings...")
                                 val settings = scriptFile.readText()
-                                chat("§9Set settings...")
+                                chat("\u00A79Set settings...")
                                 SettingsUtils.executeScript(settings)
-                                chat("§6Settings applied successfully.")
+                                chat("\u00A76Settings applied successfully.")
                                 LiquidBounce.hud.addNotification(Notification("Updated Settings"))
                                 playEdit()
                             } catch (e: IOException) {
@@ -41,7 +41,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
                             return
                         }
 
-                        chat("§cSettings file does not exist!")
+                        chat("\u00A7cSettings file does not exist!")
                         return
                     }
 
@@ -67,13 +67,13 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
                                 return
                             }
 
-                            chat("§9Creating settings...")
+                            chat("\u00A79Creating settings...")
                             val settingsScript = SettingsUtils.generateScript(values, binds, states)
-                            chat("§9Saving settings...")
+                            chat("\u00A79Saving settings...")
                             scriptFile.writeText(settingsScript)
-                            chat("§6Settings saved successfully.")
+                            chat("\u00A76Settings saved successfully.")
                         } catch (throwable: Throwable) {
-                            chat("§cFailed to create local config: §3${throwable.message}")
+                            chat("\u00A7cFailed to create local config: \u00A73${throwable.message}")
                             ClientUtils.getLogger().error("Failed to create local config.", throwable)
                         }
                         return
@@ -89,11 +89,11 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 
                         if (scriptFile.exists()) {
                             scriptFile.delete()
-                            chat("§6Settings file deleted successfully.")
+                            chat("\u00A76Settings file deleted successfully.")
                             return
                         }
 
-                        chat("§cSettings file does not exist!")
+                        chat("\u00A7cSettings file does not exist!")
                         return
                     }
 
@@ -102,7 +102,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
                 }
 
                 args[1].equals("list", ignoreCase = true) -> {
-                    chat("§cSettings:")
+                    chat("\u00A7cSettings:")
 
                     val settings = this.getLocalSettings() ?: return
 

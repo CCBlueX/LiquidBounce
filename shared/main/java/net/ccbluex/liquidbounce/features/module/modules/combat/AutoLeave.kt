@@ -29,7 +29,7 @@ class AutoLeave : Module() {
                 "quit" -> mc.theWorld!!.sendQuittingDisconnectingPacket()
                 "invalidpacket" -> mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !thePlayer.onGround))
                 "selfhurt" -> mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(thePlayer, ICPacketUseEntity.WAction.ATTACK))
-                "illegalchat" -> thePlayer.sendChatMessage(Random().nextInt().toString() + "§§§" + Random().nextInt())
+                "illegalchat" -> thePlayer.sendChatMessage(Random().nextInt().toString() + "\u00A7\u00A7\u00A7" + Random().nextInt())
             }
 
             state = false

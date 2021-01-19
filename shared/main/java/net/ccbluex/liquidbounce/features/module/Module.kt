@@ -92,7 +92,7 @@ open class Module : MinecraftInstance(), Listenable {
         get() = null
 
     val tagName: String
-        get() = "$name${if (tag == null) "" else " §7$tag"}"
+        get() = "$name${if (tag == null) "" else " \u00A77$tag"}"
 
     val colorlessTagName: String
         get() = "$name${if (tag == null) "" else " " + stripColor(tag)}"

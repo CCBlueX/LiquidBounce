@@ -12,43 +12,43 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class ButtonElement extends Element {
 
-    protected String displayName;
-    protected int color = 0xffffff;
+	protected String displayName;
+	protected int color = 0xffffff;
 
-    public int hoverTime;
+	public int hoverTime;
 
-    public ButtonElement(String displayName) {
-        createButton(displayName);
-    }
+	public ButtonElement(String displayName) {
+		createButton(displayName);
+	}
 
-    public void createButton(String displayName) {
-        this.displayName = displayName;
-    }
+	public void createButton(String displayName) {
+		this.displayName = displayName;
+	}
 
-    @Override
-    public void drawScreen(int mouseX, int mouseY, float button) {
-        LiquidBounce.clickGui.style.drawButtonElement(mouseX, mouseY, this);
-        super.drawScreen(mouseX, mouseY, button);
-    }
+	@Override
+	public void drawScreen(int mouseX, int mouseY, float button) {
+		LiquidBounce.clickGui.style.drawButtonElement(mouseX, mouseY, this);
+		super.drawScreen(mouseX, mouseY, button);
+	}
 
-    @Override
-    public int getHeight() {
-        return 16;
-    }
+	@Override
+	public int getHeight() {
+		return 16;
+	}
 
-    public boolean isHovering(int mouseX, int mouseY) {
-        return mouseX >= getX() && mouseX <= getX() + getWidth() && mouseY >= getY() && mouseY <= getY() + 16;
-    }
+	public boolean isHovering(int mouseX, int mouseY) {
+		return mouseX >= getX() && mouseX <= getX() + getWidth() && mouseY >= getY() && mouseY <= getY() + 16;
+	}
 
-    public String getDisplayName() {
-        return displayName;
-    }
+	public String getDisplayName() {
+		return displayName;
+	}
 
-    public void setColor(int color) {
-        this.color = color;
-    }
+	public void setColor(int color) {
+		this.color = color;
+	}
 
-    public int getColor() {
-        return color;
-    }
+	public int getColor() {
+		return color;
+	}
 }

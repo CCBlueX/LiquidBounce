@@ -87,7 +87,7 @@ class BlockOverlay : Module() {
             val blockPos = currentBlock ?: return
             val block = getBlock(blockPos) ?: return
 
-            val info = "${block.localizedName} §7ID: ${functions.getIdFromBlock(block)}"
+            val info = "${block.localizedName} \u00A77ID: ${functions.getIdFromBlock(block)}"
             val scaledResolution = classProvider.createScaledResolution(mc)
 
             RenderUtils.drawBorderedRect(

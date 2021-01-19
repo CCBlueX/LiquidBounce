@@ -42,7 +42,7 @@ class TacoCommand : Command("taco"), Listenable {
      */
     override fun execute(args: Array<String>) {
         toggle = !toggle
-        ClientUtils.displayChatMessage(if (toggle) "§aTACO TACO TACO. :)" else "§cYou made the little taco sad! :(")
+        ClientUtils.displayChatMessage(if (toggle) "\u00A7aTACO TACO TACO. :)" else "\u00A7cYou made the little taco sad! :(")
     }
 
     @EventTarget

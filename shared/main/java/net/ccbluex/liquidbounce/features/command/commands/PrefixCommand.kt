@@ -21,13 +21,13 @@ class PrefixCommand : Command("prefix") {
         val prefix = args[1]
 
         if (prefix.length > 1) {
-            chat("§cPrefix can only be one character long!")
+            chat("\u00A7cPrefix can only be one character long!")
             return
         }
 
         LiquidBounce.commandManager.prefix = prefix.single()
         LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
 
-        chat("Successfully changed command prefix to '§8$prefix§3'")
+        chat("Successfully changed command prefix to '\u00A78$prefix\u00A73'")
     }
 }

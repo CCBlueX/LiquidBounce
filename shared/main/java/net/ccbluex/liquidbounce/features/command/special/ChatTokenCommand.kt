@@ -33,7 +33,7 @@ class ChatTokenCommand : Command("chattoken") {
 
                 args[1].equals("generate", true) -> {
                     if (!lChat.state) {
-                        chat("§cError: §7LiquidChat is disabled!")
+                        chat("\u00A7cError: \u00A77LiquidChat is disabled!")
                         return
                     }
 
@@ -42,12 +42,12 @@ class ChatTokenCommand : Command("chattoken") {
 
                 args[1].equals("copy", true) -> {
                     if (LiquidChat.jwtToken.isEmpty()) {
-                        chat("§cError: §7No token set! Generate one first using '${LiquidBounce.commandManager.prefix}chattoken generate'.")
+                        chat("\u00A7cError: \u00A77No token set! Generate one first using '${LiquidBounce.commandManager.prefix}chattoken generate'.")
                         return
                     }
                     val stringSelection = StringSelection(LiquidChat.jwtToken)
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(stringSelection, stringSelection)
-                    chat("§aCopied to clipboard!")
+                    chat("\u00A7aCopied to clipboard!")
                 }
             }
         } else

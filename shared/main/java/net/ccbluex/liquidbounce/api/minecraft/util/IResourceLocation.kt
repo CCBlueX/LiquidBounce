@@ -6,6 +6,7 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.util
 
-interface IResourceLocation {
-    val resourcePath: String
+interface IResourceLocation
+{
+	val resourcePath: String
 }

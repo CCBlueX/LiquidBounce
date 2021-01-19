@@ -31,17 +31,17 @@ class Teams : Module() {
         val displayName = thePlayer.displayName
 
         if (gommeSWValue.get() && displayName != null && entity.displayName != null) {
-            val targetName = entity.displayName!!.formattedText.replace("§r", "")
-            val clientName = displayName.formattedText.replace("§r", "")
+            val targetName = entity.displayName!!.formattedText.replace("\u00A7r", "")
+            val clientName = displayName.formattedText.replace("\u00A7r", "")
             if (targetName.startsWith("T") && clientName.startsWith("T"))
                 if (targetName[1].isDigit() && clientName[1].isDigit())
                     return targetName[1] == clientName[1]
         }
 
         if (colorValue.get() && displayName != null && entity.displayName != null) {
-            val targetName = entity.displayName!!.formattedText.replace("§r", "")
-            val clientName = displayName.formattedText.replace("§r", "")
-            return targetName.startsWith("§${clientName[1]}")
+            val targetName = entity.displayName!!.formattedText.replace("\u00A7r", "")
+            val clientName = displayName.formattedText.replace("\u00A7r", "")
+            return targetName.startsWith("\u00A7${clientName[1]}")
         }
 
         return false

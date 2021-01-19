@@ -17,7 +17,7 @@ object ColorUtils {
         return character.toInt() != 167 && character.toInt() >= 32 && character.toInt() != 127
     }
 
-    private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
+    private val COLOR_PATTERN = Pattern.compile("(?i)\u00A7[0-9A-FK-OR]")
 
     @JvmField
     val hexColors = IntArray(16)
@@ -45,7 +45,7 @@ object ColorUtils {
 
         for (i in 0 until chars.size - 1) {
             if (chars[i] == '&' && "0123456789AaBbCcDdEeFfKkLlMmNnOoRr".contains(chars[i + 1], true)) {
-                chars[i] = '§'
+                chars[i] = '\u00A7'
                 chars[i + 1] = Character.toLowerCase(chars[i + 1])
             }
         }

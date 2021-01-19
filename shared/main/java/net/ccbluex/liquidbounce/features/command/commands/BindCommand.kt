@@ -20,7 +20,7 @@ class BindCommand : Command("bind") {
             val module = LiquidBounce.moduleManager.getModule(args[1])
 
             if (module == null) {
-                chat("Module §a§l" + args[1] + "§3 not found.")
+                chat("Module \u00A7a\u00A7l" + args[1] + "\u00A73 not found.")
                 return
             }
             // Find key by name and change
@@ -28,7 +28,7 @@ class BindCommand : Command("bind") {
             module.keyBind = key
 
             // Response to user
-            chat("Bound module §a§l${module.name}§3 to key §a§l${Keyboard.getKeyName(key)}§3.")
+            chat("Bound module \u00A7a\u00A7l${module.name}\u00A73 to key \u00A7a\u00A7l${Keyboard.getKeyName(key)}\u00A73.")
             LiquidBounce.hud.addNotification(Notification("Bound ${module.name} to ${Keyboard.getKeyName(key)}"))
             playEdit()
             return

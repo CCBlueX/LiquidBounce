@@ -29,7 +29,7 @@ class FriendCommand : Command("friend", "friends") {
 
                         if (if (args.size > 3) friendsConfig.addFriend(name, StringUtils.toCompleteString(args, 3)) else friendsConfig.addFriend(name)) {
                             LiquidBounce.fileManager.saveConfig(friendsConfig)
-                            chat("§a§l$name§3 was added to your friend list.")
+                            chat("\u00A7a\u00A7l$name\u00A73 was added to your friend list.")
                             playEdit()
                         } else
                             chat("The name is already in the list.")
@@ -45,7 +45,7 @@ class FriendCommand : Command("friend", "friends") {
 
                         if (friendsConfig.removeFriend(name)) {
                             LiquidBounce.fileManager.saveConfig(friendsConfig)
-                            chat("§a§l$name§3 was removed from your friend list.")
+                            chat("\u00A7a\u00A7l$name\u00A73 was removed from your friend list.")
                             playEdit()
                         } else
                             chat("This name is not in the list.")
@@ -67,9 +67,9 @@ class FriendCommand : Command("friend", "friends") {
                     chat("Your Friends:")
 
                     for (friend in friendsConfig.friends)
-                        chat("§7> §a§l${friend.playerName} §c(§7§l${friend.alias}§c)")
+                        chat("\u00A77> \u00A7a\u00A7l${friend.playerName} \u00A7c(\u00A77\u00A7l${friend.alias}\u00A7c)")
 
-                    chat("You have §c${friendsConfig.friends.size}§3 friends.")
+                    chat("You have \u00A7c${friendsConfig.friends.size}\u00A73 friends.")
                     return
                 }
             }

@@ -31,13 +31,13 @@ class ServerInfoCommand : Command("serverinfo"), Listenable {
         val data = mc.currentServerData ?: return
 
         chat("Server infos:")
-        chat("§7Name: §8${data.serverName}")
-        chat("§7IP: §8$ip:$port")
-        chat("§7Players: §8${data.populationInfo}")
-        chat("§7MOTD: §8${data.serverMOTD}")
-        chat("§7ServerVersion: §8${data.gameVersion}")
-        chat("§7ProtocolVersion: §8${data.version}")
-        chat("§7Ping: §8${data.pingToServer}")
+        chat("\u00A77Name: \u00A78${data.serverName}")
+        chat("\u00A77IP: \u00A78$ip:$port")
+        chat("\u00A77Players: \u00A78${data.populationInfo}")
+        chat("\u00A77MOTD: \u00A78${data.serverMOTD}")
+        chat("\u00A77ServerVersion: \u00A78${data.gameVersion}")
+        chat("\u00A77ProtocolVersion: \u00A78${data.version}")
+        chat("\u00A77Ping: \u00A78${data.pingToServer}")
     }
 
     @EventTarget

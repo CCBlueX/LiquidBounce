@@ -398,7 +398,7 @@ class Tower : Module() {
             if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) {
                 GL11.glTranslatef(0f, 15f, 0f)
             }
-            val info = "Blocks: §7$blocksAmount"
+            val info = "Blocks: \u00A77$blocksAmount"
             val scaledResolution = classProvider.createScaledResolution(mc)
 
             RenderUtils.drawBorderedRect(scaledResolution.scaledWidth / 2 - 2.toFloat(),

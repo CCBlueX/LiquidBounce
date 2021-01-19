@@ -49,7 +49,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
             val newValue = !value.get()
             value.set(newValue)
 
-            chat("§7${module.name} §8${args[1]}§7 was toggled ${if (newValue) "§8on§7" else "§8off§7" + "."}")
+            chat("\u00A77${module.name} \u00A78${args[1]}\u00A77 was toggled ${if (newValue) "\u00A78on\u00A77" else "\u00A78off\u00A77" + "."}")
             playEdit()
         } else {
             if (args.size < 3) {
@@ -71,7 +71,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                             val tmpId = functions.getBlockFromName(args[2])?.let { functions.getIdFromBlock(it) }
 
                             if (tmpId == null || tmpId <= 0) {
-                                chat("§7Block §8${args[2]}§7 does not exist!")
+                                chat("\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
                                 return
                             }
 
@@ -79,7 +79,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                         }
 
                         value.set(id)
-                        chat("§7${module.name} §8${args[1].toLowerCase()}§7 was set to §8${BlockUtils.getBlockName(id)}§7.")
+                        chat("\u00A77${module.name} \u00A78${args[1].toLowerCase()}\u00A77 was set to \u00A78${BlockUtils.getBlockName(id)}\u00A77.")
                         playEdit()
                         return
                     }
@@ -96,10 +96,10 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                     is TextValue -> value.set(StringUtils.toCompleteString(args, 2))
                 }
 
-                chat("§7${module.name} §8${args[1]}§7 was set to §8${value.get()}§7.")
+                chat("\u00A77${module.name} \u00A78${args[1]}\u00A77 was set to \u00A78${value.get()}\u00A77.")
                 playEdit()
             } catch (e: NumberFormatException) {
-                chat("§8${args[2]}§7 cannot be converted to number!")
+                chat("\u00A78${args[2]}\u00A77 cannot be converted to number!")
             }
         }
     }

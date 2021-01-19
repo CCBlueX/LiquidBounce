@@ -81,13 +81,13 @@ class NameTags : Module() {
 
         // Modify tag
         val bot = AntiBot.isBot(entity)
-        val nameColor = if (bot) "§3" else if (entity.invisible) "§6" else if (entity.sneaking) "§4" else "§7"
+        val nameColor = if (bot) "\u00A73" else if (entity.invisible) "\u00A76" else if (entity.sneaking) "\u00A74" else "\u00A77"
         val ping = if (classProvider.isEntityPlayer(entity)) entity.asEntityPlayer().getPing() else 0
 
-        val distanceText = if (distanceValue.get()) "§7${thePlayer.getDistanceToEntity(entity).roundToInt()}m " else ""
-        val pingText = if (pingValue.get() && classProvider.isEntityPlayer(entity)) (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms §7" else ""
-        val healthText = if (healthValue.get()) "§7§c " + entity.health.toInt() + " HP" else ""
-        val botText = if (bot) " §c§lBot" else ""
+        val distanceText = if (distanceValue.get()) "\u00A77${thePlayer.getDistanceToEntity(entity).roundToInt()}m " else ""
+        val pingText = if (pingValue.get() && classProvider.isEntityPlayer(entity)) (if (ping > 200) "\u00A7c" else if (ping > 100) "\u00A7e" else "\u00A7a") + ping + "ms \u00A77" else ""
+        val healthText = if (healthValue.get()) "\u00A77\u00A7c " + entity.health.toInt() + " HP" else ""
+        val botText = if (bot) " \u00A7c\u00A7lBot" else ""
 
         val text = "$distanceText$pingText$nameColor$tag$healthText$botText"
 

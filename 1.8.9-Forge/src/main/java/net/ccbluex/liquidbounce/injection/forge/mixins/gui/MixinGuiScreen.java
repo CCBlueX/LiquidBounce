@@ -140,7 +140,7 @@ public abstract class MixinGuiScreen {
         final ClickEvent clickEvent = chatStyle.getChatClickEvent();
         final HoverEvent hoverEvent = chatStyle.getChatHoverEvent();
 
-        drawHoveringText(Collections.singletonList("§c§l" + clickEvent.getAction().getCanonicalName().toUpperCase() + ": §a" + clickEvent.getValue()), x, y - (hoverEvent != null ? 17 : 0));
+        drawHoveringText(Collections.singletonList("\u00A7c\u00A7l" + clickEvent.getAction().getCanonicalName().toUpperCase() + ": \u00A7a" + clickEvent.getValue()), x, y - (hoverEvent != null ? 17 : 0));
     }
 
     /**

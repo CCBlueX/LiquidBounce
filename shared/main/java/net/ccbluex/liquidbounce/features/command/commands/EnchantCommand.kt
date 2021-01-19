@@ -14,14 +14,14 @@ class EnchantCommand : Command("enchant") {
     override fun execute(args: Array<String>) {
         if (args.size > 2) {
             if (mc.playerController.isNotCreative) {
-                chat("§c§lError: §3You need to be in creative mode.")
+                chat("\u00A7c\u00A7lError: \u00A73You need to be in creative mode.")
                 return
             }
 
             val item = mc.thePlayer?.heldItem
 
             if (item?.item == null) {
-                chat("§c§lError: §3You need to hold an item.")
+                chat("\u00A7c\u00A7lError: \u00A73You need to hold an item.")
                 return
             }
 

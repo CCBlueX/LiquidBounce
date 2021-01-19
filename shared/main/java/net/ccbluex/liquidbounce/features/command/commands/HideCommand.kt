@@ -19,9 +19,9 @@ class HideCommand : Command("hide") {
         if (args.size > 1) {
             when {
                 args[1].equals("list", true) -> {
-                    chat("§c§lHidden")
+                    chat("\u00A7c\u00A7lHidden")
                     LiquidBounce.moduleManager.modules.filter { !it.array }.forEach {
-                        ClientUtils.displayChatMessage("§6> §c${it.name}")
+                        ClientUtils.displayChatMessage("\u00A76> \u00A7c${it.name}")
                     }
                     return
                 }
@@ -47,7 +47,7 @@ class HideCommand : Command("hide") {
                     val module = LiquidBounce.moduleManager.getModule(args[1])
 
                     if (module == null) {
-                        chat("Module §a§l${args[1]}§3 not found.")
+                        chat("Module \u00A7a\u00A7l${args[1]}\u00A73 not found.")
                         return
                     }
 
@@ -55,7 +55,7 @@ class HideCommand : Command("hide") {
                     module.array = !module.array
 
                     // Response to user
-                    chat("Module §a§l${module.name}§3 is now §a§l${if (module.array) "visible" else "invisible"}§3 on the array list.")
+                    chat("Module \u00A7a\u00A7l${module.name}\u00A73 is now \u00A7a\u00A7l${if (module.array) "visible" else "invisible"}\u00A73 on the array list.")
                     playEdit()
                     return
                 }

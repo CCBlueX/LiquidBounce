@@ -13,15 +13,20 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.injection.backend.WrapperImpl.classProvider
 
-abstract class WrappedCreativeTabs(val name: String) {
-    lateinit var representedType: ICreativeTabs
+abstract class WrappedCreativeTabs(val name: String)
+{
+	lateinit var representedType: ICreativeTabs
 
-    init {
-        LiquidBounce.wrapper.classProvider.wrapCreativeTab(name, this)
-    }
+	init
+	{
+		LiquidBounce.wrapper.classProvider.wrapCreativeTab(name, this)
+	}
 
-    open fun displayAllReleventItems(items: MutableList<IItemStack>) {}
-    open fun getTranslatedTabLabel(): String = "asdf"
-    open fun getTabIconItem(): IItem = classProvider.getItemEnum(ItemType.WRITABLE_BOOK)
-    open fun hasSearchBar(): Boolean = true
+	open fun displayAllReleventItems(items: MutableList<IItemStack>)
+	{
+	}
+
+	open fun getTranslatedTabLabel(): String = "asdf"
+	open fun getTabIconItem(): IItem = classProvider.getItemEnum(ItemType.WRITABLE_BOOK)
+	open fun hasSearchBar(): Boolean = true
 }

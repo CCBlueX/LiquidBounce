@@ -23,7 +23,7 @@ class XrayCommand : Command("xray") {
                             val tmpBlock = functions.getBlockFromName(args[2])
 
                             if (tmpBlock == null || functions.getIdFromBlock(tmpBlock) <= 0) {
-                                chat("§7Block §8${args[2]}§7 does not exist!")
+                                chat("\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
                                 return
                             }
 
@@ -37,7 +37,7 @@ class XrayCommand : Command("xray") {
 
                         xRay.xrayBlocks.add(block)
                         LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
-                        chat("§7Added block §8${block.localizedName}§7.")
+                        chat("\u00A77Added block \u00A78${block.localizedName}\u00A77.")
                         playEdit()
                     } catch (exception: NumberFormatException) {
                         chatSyntaxError()
@@ -59,7 +59,7 @@ class XrayCommand : Command("xray") {
                             val tmpBlock = functions.getBlockFromName(args[2])
 
                             if (tmpBlock == null || functions.getIdFromBlock(tmpBlock) <= 0) {
-                                chat("§7Block §8${args[2]}§7 does not exist!")
+                                chat("\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
                                 return
                             }
 
@@ -73,7 +73,7 @@ class XrayCommand : Command("xray") {
 
                         xRay.xrayBlocks.remove(block)
                         LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
-                        chat("§7Removed block §8${block.localizedName}§7.")
+                        chat("\u00A77Removed block \u00A78${block.localizedName}\u00A77.")
                         playEdit()
                     } catch (exception: NumberFormatException) {
                         chatSyntaxError()
@@ -86,8 +86,8 @@ class XrayCommand : Command("xray") {
             }
 
             if (args[1].equals("list", ignoreCase = true)) {
-                chat("§8Xray blocks:")
-                xRay.xrayBlocks.forEach { chat("§8${it.localizedName} §7-§c ${functions.getIdFromBlock(it)}") }
+                chat("\u00A78Xray blocks:")
+                xRay.xrayBlocks.forEach { chat("\u00A78${it.localizedName} \u00A77-\u00A7c ${functions.getIdFromBlock(it)}") }
                 return
             }
         }

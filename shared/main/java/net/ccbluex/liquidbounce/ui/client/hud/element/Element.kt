@@ -14,120 +14,141 @@ import kotlin.math.min
 /**
  * CustomHUD element
  */
-abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 1F,
-                       var side: Side = Side.default()) : MinecraftInstance() {
-    val info = javaClass.getAnnotation(ElementInfo::class.java)
-            ?: throw IllegalArgumentException("Passed element with missing element info")
+abstract class Element(
+	var x: Double = 2.0, var y: Double = 2.0, scale: Float = 1F, var side: Side = Side.default()
+) : MinecraftInstance()
+{
+	val info = javaClass.getAnnotation(ElementInfo::class.java) ?: throw IllegalArgumentException("Passed element with missing element info")
 
-    var scale: Float = 1F
-        set(value) {
-            if (info.disableScale)
-                return
+	var scale: Float = 1F
+		set(value)
+		{
+			if (info.disableScale) return
 
-            field = value
-        }
-        get() {
-            if (info.disableScale)
-                return 1.0f
-            return field
-        }
+			field = value
+		}
+		get()
+		{
+			if (info.disableScale) return 1.0f
+			return field
+		}
 
-    init {
-        this.scale = scale
-    }
+	init
+	{
+		this.scale = scale
+	}
 
-    val name: String
-        get() = info.name
+	val name: String
+		get() = info.name
 
-    var renderX: Double
-        get() = when (side.horizontal) {
-            Side.Horizontal.LEFT -> x
-            Side.Horizontal.MIDDLE -> (classProvider.createScaledResolution(mc).scaledWidth / 2) - x
-            Side.Horizontal.RIGHT -> classProvider.createScaledResolution(mc).scaledWidth - x
-        }
-        set(value) = when (side.horizontal) {
-            Side.Horizontal.LEFT -> {
-                x += value
-            }
-            Side.Horizontal.MIDDLE, Side.Horizontal.RIGHT -> {
-                x -= value
-            }
-        }
+	var renderX: Double
+		get() = when (side.horizontal)
+		{
+			Side.Horizontal.LEFT -> x
+			Side.Horizontal.MIDDLE -> (classProvider.createScaledResolution(mc).scaledWidth / 2) - x
+			Side.Horizontal.RIGHT -> classProvider.createScaledResolution(mc).scaledWidth - x
+		}
+		set(value) = when (side.horizontal)
+		{
+			Side.Horizontal.LEFT ->
+			{
+				x += value
+			}
 
-    var renderY: Double
-        get() = when (side.vertical) {
-            Side.Vertical.UP -> y
-            Side.Vertical.MIDDLE -> (classProvider.createScaledResolution(mc).scaledHeight / 2) - y
-            Side.Vertical.DOWN -> classProvider.createScaledResolution(mc).scaledHeight - y
-        }
-        set(value) = when (side.vertical) {
-            Side.Vertical.UP -> {
-                y += value
-            }
-            Side.Vertical.MIDDLE, Side.Vertical.DOWN -> {
-                y -= value
-            }
-        }
+			Side.Horizontal.MIDDLE, Side.Horizontal.RIGHT ->
+			{
+				x -= value
+			}
+		}
 
-    var border: Border? = null
+	var renderY: Double
+		get() = when (side.vertical)
+		{
+			Side.Vertical.UP -> y
+			Side.Vertical.MIDDLE -> (classProvider.createScaledResolution(mc).scaledHeight / 2) - y
+			Side.Vertical.DOWN -> classProvider.createScaledResolution(mc).scaledHeight - y
+		}
+		set(value) = when (side.vertical)
+		{
+			Side.Vertical.UP ->
+			{
+				y += value
+			}
 
-    var drag = false
-    var prevMouseX = 0F
-    var prevMouseY = 0F
+			Side.Vertical.MIDDLE, Side.Vertical.DOWN ->
+			{
+				y -= value
+			}
+		}
 
-    /**
-     * Get all values of element
-     */
-    open val values: List<Value<*>>
-        get() = javaClass.declaredFields.map { valueField ->
-            valueField.isAccessible = true
-            valueField[this]
-        }.filterIsInstance<Value<*>>()
+	var border: Border? = null
 
-    /**
-     * Called when element created
-     */
-    open fun createElement() = true
+	var drag = false
+	var prevMouseX = 0F
+	var prevMouseY = 0F
 
-    /**
-     * Called when element destroyed
-     */
-    open fun destroyElement() {}
+	/**
+	 * Get all values of element
+	 */
+	open val values: List<Value<*>>
+		get() = javaClass.declaredFields.map { valueField ->
+			valueField.isAccessible = true
+			valueField[this]
+		}.filterIsInstance<Value<*>>()
 
-    /**
-     * Draw element
-     */
-    abstract fun drawElement(): Border?
+	/**
+	 * Called when element created
+	 */
+	open fun createElement() = true
 
-    /**
-     * Update element
-     */
-    open fun updateElement() {}
+	/**
+	 * Called when element destroyed
+	 */
+	open fun destroyElement()
+	{
+	}
 
-    /**
-     * Check if [x] and [y] is in element border
-     */
-    open fun isInBorder(x: Double, y: Double): Boolean {
-        val border = border ?: return false
+	/**
+	 * Draw element
+	 */
+	abstract fun drawElement(): Border?
 
-        val minX = min(border.x, border.x2)
-        val minY = min(border.y, border.y2)
+	/**
+	 * Update element
+	 */
+	open fun updateElement()
+	{
+	}
 
-        val maxX = max(border.x, border.x2)
-        val maxY = max(border.y, border.y2)
+	/**
+	 * Check if [x] and [y] is in element border
+	 */
+	open fun isInBorder(x: Double, y: Double): Boolean
+	{
+		val border = border ?: return false
 
-        return minX <= x && minY <= y && maxX >= x && maxY >= y
-    }
+		val minX = min(border.x, border.x2)
+		val minY = min(border.y, border.y2)
 
-    /**
-     * Called when mouse clicked
-     */
-    open fun handleMouseClick(x: Double, y: Double, mouseButton: Int) {}
+		val maxX = max(border.x, border.x2)
+		val maxY = max(border.y, border.y2)
 
-    /**
-     * Called when key pressed
-     */
-    open fun handleKey(c: Char, keyCode: Int) {}
+		return minX <= x && minY <= y && maxX >= x && maxY >= y
+	}
+
+	/**
+	 * Called when mouse clicked
+	 */
+	open fun handleMouseClick(x: Double, y: Double, mouseButton: Int)
+	{
+	}
+
+	/**
+	 * Called when key pressed
+	 */
+	open fun handleKey(c: Char, keyCode: Int)
+	{
+	}
 
 }
 
@@ -142,60 +163,63 @@ annotation class ElementInfo(val name: String, val single: Boolean = false, val 
  *
  * Allows to change default x and y position by side
  */
-class Side(var horizontal: Horizontal, var vertical: Vertical) {
+class Side(var horizontal: Horizontal, var vertical: Vertical)
+{
 
-    companion object {
+	companion object
+	{
 
-        /**
-         * Default element side
-         */
-        fun default() = Side(Horizontal.LEFT, Vertical.UP)
+		/**
+		 * Default element side
+		 */
+		fun default() = Side(Horizontal.LEFT, Vertical.UP)
 
-    }
+	}
 
-    /**
-     * Horizontal side
-     */
-    enum class Horizontal(val sideName: String) {
+	/**
+	 * Horizontal side
+	 */
+	enum class Horizontal(val sideName: String)
+	{
 
-        LEFT("Left"),
-        MIDDLE("Middle"),
-        RIGHT("Right");
+		LEFT("Left"), MIDDLE("Middle"), RIGHT("Right");
 
-        companion object {
+		companion object
+		{
 
-            @JvmStatic
-            fun getByName(name: String) = values().find { it.sideName == name }
+			@JvmStatic
+			fun getByName(name: String) = values().find { it.sideName == name }
 
-        }
+		}
 
-    }
+	}
 
-    /**
-     * Vertical side
-     */
-    enum class Vertical(val sideName: String) {
+	/**
+	 * Vertical side
+	 */
+	enum class Vertical(val sideName: String)
+	{
 
-        UP("Up"),
-        MIDDLE("Middle"),
-        DOWN("Down");
+		UP("Up"), MIDDLE("Middle"), DOWN("Down");
 
-        companion object {
+		companion object
+		{
 
-            @JvmStatic
-            fun getByName(name: String) = values().find { it.sideName == name }
+			@JvmStatic
+			fun getByName(name: String) = values().find { it.sideName == name }
 
-        }
+		}
 
-    }
+	}
 
 }
 
 /**
  * Border of element
  */
-data class Border(val x: Float, val y: Float, val x2: Float, val y2: Float) {
+data class Border(val x: Float, val y: Float, val x2: Float, val y2: Float)
+{
 
-    fun draw() = RenderUtils.drawBorderedRect(x, y, x2, y2, 3F, Int.MIN_VALUE, 0)
+	fun draw() = RenderUtils.drawBorderedRect(x, y, x2, y2, 3F, Int.MIN_VALUE, 0)
 
 }
