@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.MinecraftVersion
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -90,7 +89,6 @@ class SwingAnimation : Module()
 	val slideAngleZ = FloatValue("Slide-AngleZ", 15f, 0f, 135f)
 	val slideXPos = IntegerValue("Slide-X-Pos", -10, -20, 20)
 	val slideYPos = IntegerValue("Slide-Y-Pos", 13, -5, 30)
-
 
 	val exhiAngleX = FloatValue("Exhibobo-SwingAngle", 15f, 0f, 30f)
 	val exhiAngleY = FloatValue("Exhibobo-PushDepth", 0f, 0f, 20f)

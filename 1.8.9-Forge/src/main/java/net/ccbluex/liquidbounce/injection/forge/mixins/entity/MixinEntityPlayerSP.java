@@ -476,9 +476,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			double d3 = x;
 			final double d4 = y;
 			double d5 = z;
-			final boolean flag = onGround && isSneaking();
+			final boolean sneaking = onGround && isSneaking();
 
-			if (flag || moveEvent.isSafeWalk())
+			if (sneaking || moveEvent.isSafeWalk())
 			{
 				final double d6;
 
@@ -664,7 +664,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			if (d4 != y)
 				block1.onLanded(worldObj, (Entity) (Object) this);
 
-			if (canTriggerWalking() && !flag && ridingEntity == null)
+			if (canTriggerWalking() && !sneaking && ridingEntity == null)
 			{
 				final double d12 = posX - d0;
 				double d13 = posY - d1;
