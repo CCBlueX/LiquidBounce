@@ -16,18 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.script.api.global
 
-package net.ccbluex.liquidbounce.features.module
-
-enum class Category(val readableName: String) {
-
-    COMBAT("Combat"),
-    PLAYER("Player"),
-    MOVEMENT("Movement"),
-    RENDER("Render"),
-    WORLD("World"),
-    MISC("Misc"),
-    EXPLOIT("Exploit"),
-    FUN("Fun")
-
+/**
+ * Object used by the script API to provide an easier way of creating items.
+ */
+object Item {
+    // todo: add item create back
 }

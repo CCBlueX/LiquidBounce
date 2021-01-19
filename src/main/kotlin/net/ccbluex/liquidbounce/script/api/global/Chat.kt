@@ -16,18 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.script.api.global
 
-package net.ccbluex.liquidbounce.features.module
+import net.ccbluex.liquidbounce.utils.chat
 
-enum class Category(val readableName: String) {
+/**
+ * Object used by the script API to provide an easier way of calling chat-related methods.
+ */
+object Chat {
 
-    COMBAT("Combat"),
-    PLAYER("Player"),
-    MOVEMENT("Movement"),
-    RENDER("Render"),
-    WORLD("World"),
-    MISC("Misc"),
-    EXPLOIT("Exploit"),
-    FUN("Fun")
+    /**
+     * Prints a message to the chat (client-side)
+     * @param message Message to be printed
+     */
+    @Suppress("unused")
+    @JvmStatic
+    fun print(message: String) = chat(message)
 
 }
