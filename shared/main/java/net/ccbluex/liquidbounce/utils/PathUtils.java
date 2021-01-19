@@ -5,9 +5,8 @@
  */
 package net.ccbluex.liquidbounce.utils;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 import javax.vecmath.Vector3d;
@@ -17,7 +16,6 @@ public final class PathUtils extends MinecraftInstance
 
 	public static Iterable<Vector3d> findBlinkPath(final double tpX, final double tpY, final double tpZ)
 	{
-		final Collection<Vector3d> positions = new ArrayList<>();
 
 		Objects.requireNonNull(mc.getThePlayer(), "mc.thePlayer cannot be null");
 		double curX = mc.getThePlayer().getPosX();
@@ -25,6 +23,7 @@ public final class PathUtils extends MinecraftInstance
 		double curZ = mc.getThePlayer().getPosZ();
 		double distance = Math.abs(curX - tpX) + Math.abs(curY - tpY) + Math.abs(curZ - tpZ);
 
+		final Collection<Vector3d> positions = new ArrayDeque<>();
 		for (int count = 0; distance > 0.0D; count++)
 		{
 			distance = Math.abs(curX - tpX) + Math.abs(curY - tpY) + Math.abs(curZ - tpZ);
@@ -58,15 +57,15 @@ public final class PathUtils extends MinecraftInstance
 		return positions;
 	}
 
-	public static List<Vector3d> findPath(final double tpX, final double tpY, final double tpZ, final double offset)
+	public static Iterable<Vector3d> findPath(final double tpX, final double tpY, final double tpZ, final double offset)
 	{
-		final List<Vector3d> positions = new ArrayList<>();
 		final double steps = Math.ceil(getDistance(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ(), tpX, tpY, tpZ) / offset);
 
 		final double dX = tpX - mc.getThePlayer().getPosX();
 		final double dY = tpY - mc.getThePlayer().getPosY();
 		final double dZ = tpZ - mc.getThePlayer().getPosZ();
 
+		final Collection<Vector3d> positions = new ArrayDeque<>();
 		for (double d = 1D; d <= steps; ++d)
 		{
 			positions.add(new Vector3d(mc.getThePlayer().getPosX() + dX * d / steps, mc.getThePlayer().getPosY() + dY * d / steps, mc.getThePlayer().getPosZ() + dZ * d / steps));
