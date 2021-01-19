@@ -28,7 +28,7 @@ class RenderItemImpl(val wrapped: RenderItem) : IRenderItem
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is RenderItemImpl && other.wrapped == this.wrapped
+		return other is RenderItemImpl && other.wrapped == wrapped
 	}
 }
 

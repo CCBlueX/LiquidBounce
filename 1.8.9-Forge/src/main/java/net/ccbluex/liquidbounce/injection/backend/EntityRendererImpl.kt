@@ -29,7 +29,7 @@ class EntityRendererImpl(val wrapped: EntityRenderer) : IEntityRenderer
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is EntityRendererImpl && other.wrapped == this.wrapped
+		return other is EntityRendererImpl && other.wrapped == wrapped
 	}
 }
 

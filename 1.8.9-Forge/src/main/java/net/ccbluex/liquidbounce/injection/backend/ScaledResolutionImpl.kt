@@ -20,7 +20,7 @@ class ScaledResolutionImpl(val wrapped: ScaledResolution) : IScaledResolution
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is ScaledResolutionImpl && other.wrapped == this.wrapped
+		return other is ScaledResolutionImpl && other.wrapped == wrapped
 	}
 }
 

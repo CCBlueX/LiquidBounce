@@ -18,7 +18,7 @@ class ScoreImpl(val wrapped: Score) : IScore
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is ScoreImpl && other.wrapped == this.wrapped
+		return other is ScoreImpl && other.wrapped == wrapped
 	}
 }
 

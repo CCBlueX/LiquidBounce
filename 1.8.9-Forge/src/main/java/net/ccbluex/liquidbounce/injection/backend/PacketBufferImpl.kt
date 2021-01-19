@@ -31,7 +31,7 @@ class PacketBufferImpl(val wrapped: PacketBuffer) : IPacketBuffer
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is PacketBufferImpl && other.wrapped == this.wrapped
+		return other is PacketBufferImpl && other.wrapped == wrapped
 	}
 }
 

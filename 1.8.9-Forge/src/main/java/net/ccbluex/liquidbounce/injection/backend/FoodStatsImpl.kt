@@ -16,7 +16,7 @@ class FoodStatsImpl(val wrapped: FoodStats) : IFoodStats
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is FoodStatsImpl && other.wrapped == this.wrapped
+		return other is FoodStatsImpl && other.wrapped == wrapped
 	}
 }
 

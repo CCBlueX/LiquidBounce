@@ -6,17 +6,20 @@
 package net.ccbluex.liquidbounce.utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import javax.vecmath.Vector3d;
 
 public final class PathUtils extends MinecraftInstance
 {
 
-	public static List<Vector3d> findBlinkPath(final double tpX, final double tpY, final double tpZ)
+	public static Iterable<Vector3d> findBlinkPath(final double tpX, final double tpY, final double tpZ)
 	{
-		final List<Vector3d> positions = new ArrayList<>();
+		final Collection<Vector3d> positions = new ArrayList<>();
 
+		Objects.requireNonNull(mc.getThePlayer(), "mc.thePlayer cannot be null");
 		double curX = mc.getThePlayer().getPosX();
 		double curY = mc.getThePlayer().getPosY();
 		double curZ = mc.getThePlayer().getPosZ();

@@ -23,7 +23,7 @@ class PotionEffectImpl(val wrapped: PotionEffect) : IPotionEffect
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is PotionEffectImpl && other.wrapped == this.wrapped
+		return other is PotionEffectImpl && other.wrapped == wrapped
 	}
 }
 

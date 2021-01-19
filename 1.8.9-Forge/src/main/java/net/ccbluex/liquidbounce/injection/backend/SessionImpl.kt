@@ -25,7 +25,7 @@ class SessionImpl(val wrapped: Session) : ISession
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is SessionImpl && other.wrapped == this.wrapped
+		return other is SessionImpl && other.wrapped == wrapped
 	}
 }
 

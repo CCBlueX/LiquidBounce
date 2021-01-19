@@ -25,7 +25,7 @@ class ScriptManager
 	{
 		if (!scriptsFolder.exists()) scriptsFolder.mkdir()
 
-		scriptsFolder.listFiles(FileFilter { it.name.endsWith(scriptFileExtension) })?.forEach(this@ScriptManager::loadScript)
+		scriptsFolder.listFiles(FileFilter { it.name.endsWith(scriptFileExtension) })?.forEach(::loadScript)
 	}
 
 	/**

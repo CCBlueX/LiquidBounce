@@ -32,7 +32,7 @@ class EnumFacingImpl(val wrapped: EnumFacing) : IEnumFacing
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is EnumFacingImpl && other.wrapped == this.wrapped
+		return other is EnumFacingImpl && other.wrapped == wrapped
 	}
 }
 

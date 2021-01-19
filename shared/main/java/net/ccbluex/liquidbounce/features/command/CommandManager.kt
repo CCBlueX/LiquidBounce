@@ -94,8 +94,8 @@ class CommandManager
 	 */
 	fun autoComplete(input: String): Boolean
 	{
-		this.latestAutoComplete = this.getCompletions(input) ?: emptyArray()
-		return input.startsWith(this.prefix) && this.latestAutoComplete.isNotEmpty()
+		latestAutoComplete = getCompletions(input) ?: emptyArray()
+		return input.startsWith(prefix) && latestAutoComplete.isNotEmpty()
 	}
 
 	/**
@@ -106,7 +106,7 @@ class CommandManager
 	 */
 	private fun getCompletions(input: String): Array<String>?
 	{
-		if (input.isNotEmpty() && input.toCharArray()[0] == this.prefix)
+		if (input.isNotEmpty() && input.toCharArray()[0] == prefix)
 		{
 			val args = input.split(" ")
 
@@ -128,7 +128,7 @@ class CommandManager
 						it.alias.first { alias -> alias.startsWith(rawInput, true) }
 					}
 
-					this.prefix + alias
+					prefix + alias
 				}.toTypedArray()
 			}
 		}

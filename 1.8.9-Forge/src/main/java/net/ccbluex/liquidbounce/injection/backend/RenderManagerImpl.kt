@@ -50,7 +50,7 @@ class RenderManagerImpl(val wrapped: RenderManager) : IRenderManager
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is RenderManagerImpl && other.wrapped == this.wrapped
+		return other is RenderManagerImpl && other.wrapped == wrapped
 	}
 }
 

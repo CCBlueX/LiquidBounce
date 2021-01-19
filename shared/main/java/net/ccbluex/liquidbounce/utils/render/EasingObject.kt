@@ -9,10 +9,10 @@ class EasingObject(var lastTime: Long = 0, var lastValue: Float = -1.0f, var cur
 		{
 			if (currentValue < this.currentValue)
 			{
-				this.lastValue = currentValue
+				lastValue = currentValue
 			} else
 			{
-				this.lastValue = this.currentValue
+				lastValue = this.currentValue
 			}
 
 			this.currentValue = currentValue

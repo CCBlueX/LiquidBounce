@@ -20,7 +20,7 @@ class CreativeTabsImpl(val wrapped: CreativeTabs) : ICreativeTabs
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is CreativeTabsImpl && other.wrapped == this.wrapped
+		return other is CreativeTabsImpl && other.wrapped == wrapped
 	}
 }
 

@@ -16,7 +16,7 @@ class EnumConnectionStateImpl(val wrapped: EnumConnectionState) : IEnumConnectio
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is EnumConnectionStateImpl && other.wrapped == this.wrapped
+		return other is EnumConnectionStateImpl && other.wrapped == wrapped
 	}
 }
 

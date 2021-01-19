@@ -13,7 +13,7 @@ class StatBaseImpl(val wrapped: StatBase) : IStatBase
 {
 	override fun equals(other: Any?): Boolean
 	{
-		return other is StatBaseImpl && other.wrapped == this.wrapped
+		return other is StatBaseImpl && other.wrapped == wrapped
 	}
 }
 

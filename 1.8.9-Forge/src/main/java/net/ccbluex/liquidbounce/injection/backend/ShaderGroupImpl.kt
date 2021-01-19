@@ -16,7 +16,7 @@ class ShaderGroupImpl(val wrapped: ShaderGroup) : IShaderGroup
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is ShaderGroupImpl && other.wrapped == this.wrapped
+		return other is ShaderGroupImpl && other.wrapped == wrapped
 	}
 }
 

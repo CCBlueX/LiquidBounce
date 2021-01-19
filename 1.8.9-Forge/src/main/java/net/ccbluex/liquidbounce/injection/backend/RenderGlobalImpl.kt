@@ -15,7 +15,7 @@ class RenderGlobalImpl(val wrapped: RenderGlobal) : IRenderGlobal
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is RenderGlobalImpl && other.wrapped == this.wrapped
+		return other is RenderGlobalImpl && other.wrapped == wrapped
 	}
 }
 

@@ -63,7 +63,7 @@ class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControlle
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is PlayerControllerMPImpl && other.wrapped == this.wrapped
+		return other is PlayerControllerMPImpl && other.wrapped == wrapped
 	}
 }
 

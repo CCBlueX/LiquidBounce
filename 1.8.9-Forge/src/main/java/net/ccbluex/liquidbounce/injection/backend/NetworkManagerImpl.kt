@@ -21,7 +21,7 @@ class NetworkManagerImpl(val wrapped: NetworkManager) : INetworkManager
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is NetworkManagerImpl && other.wrapped == this.wrapped
+		return other is NetworkManagerImpl && other.wrapped == wrapped
 	}
 }
 

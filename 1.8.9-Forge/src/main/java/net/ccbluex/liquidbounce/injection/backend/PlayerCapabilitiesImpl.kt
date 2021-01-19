@@ -24,7 +24,7 @@ class PlayerCapabilitiesImpl(val wrapped: PlayerCapabilities) : IPlayerCapabilit
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is PlayerCapabilitiesImpl && other.wrapped == this.wrapped
+		return other is PlayerCapabilitiesImpl && other.wrapped == wrapped
 	}
 }
 

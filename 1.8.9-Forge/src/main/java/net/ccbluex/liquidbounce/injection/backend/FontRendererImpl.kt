@@ -35,7 +35,7 @@ class FontRendererImpl(val wrapped: FontRenderer) : IFontRenderer
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is FontRendererImpl && other.wrapped == this.wrapped
+		return other is FontRendererImpl && other.wrapped == wrapped
 	}
 }
 

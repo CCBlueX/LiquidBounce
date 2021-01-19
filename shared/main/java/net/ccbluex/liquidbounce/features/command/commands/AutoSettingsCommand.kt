@@ -104,7 +104,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
 					callback(autoSettings)
 
-					this.autoSettingFiles = autoSettings
+					autoSettingFiles = autoSettings
 				} catch (e: Exception)
 				{
 					chat("Failed to fetch auto settings list.")
@@ -132,7 +132,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 				{
 					if (autoSettingFiles == null)
 					{
-						this.loadSettings(true, 500) {}
+						loadSettings(true, 500) {}
 					}
 
 					if (autoSettingFiles != null)

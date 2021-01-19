@@ -17,7 +17,7 @@ class SoundHandlerImpl(val wrapped: SoundHandler) : ISoundHandler
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is SoundHandlerImpl && other.wrapped == this.wrapped
+		return other is SoundHandlerImpl && other.wrapped == wrapped
 	}
 }
 

@@ -28,7 +28,7 @@ class ServerDataImpl(val wrapped: ServerData) : IServerData
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is ServerDataImpl && other.wrapped == this.wrapped
+		return other is ServerDataImpl && other.wrapped == wrapped
 	}
 }
 

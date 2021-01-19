@@ -44,7 +44,7 @@ class GuiTextFieldImpl(val wrapped: GuiTextField) : IGuiTextField
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is GuiTextFieldImpl && other.wrapped == this.wrapped
+		return other is GuiTextFieldImpl && other.wrapped == wrapped
 	}
 }
 

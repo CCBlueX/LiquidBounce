@@ -51,15 +51,15 @@ class GuiMainMenu : WrappedGuiScreen()
 	{
 		when (button.id)
 		{
-			0 -> mc.displayGuiScreen(classProvider.createGuiOptions(this.representedScreen, mc.gameSettings))
-			1 -> mc.displayGuiScreen(classProvider.createGuiSelectWorld(this.representedScreen))
-			2 -> mc.displayGuiScreen(classProvider.createGuiMultiplayer(this.representedScreen))
+			0 -> mc.displayGuiScreen(classProvider.createGuiOptions(representedScreen, mc.gameSettings))
+			1 -> mc.displayGuiScreen(classProvider.createGuiSelectWorld(representedScreen))
+			2 -> mc.displayGuiScreen(classProvider.createGuiMultiplayer(representedScreen))
 			4 -> mc.shutdown()
-			100 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiAltManager(this.representedScreen)))
-			101 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiServerStatus(this.representedScreen)))
-			102 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiBackground(this.representedScreen)))
-			103 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiModsMenu(this.representedScreen)))
-			108 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiContributors(this.representedScreen)))
+			100 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiAltManager(representedScreen)))
+			101 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiServerStatus(representedScreen)))
+			102 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiBackground(representedScreen)))
+			103 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiModsMenu(representedScreen)))
+			108 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiContributors(representedScreen)))
 		}
 	}
 }

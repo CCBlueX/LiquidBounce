@@ -17,7 +17,7 @@ class IBlockStateImpl(val wrapped: IBlockState) : IIBlockState
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is IBlockStateImpl && other.wrapped == this.wrapped
+		return other is IBlockStateImpl && other.wrapped == wrapped
 	}
 }
 

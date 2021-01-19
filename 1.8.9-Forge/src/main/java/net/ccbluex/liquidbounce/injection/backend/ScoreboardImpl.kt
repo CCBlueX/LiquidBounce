@@ -24,7 +24,7 @@ class ScoreboardImpl(val wrapped: Scoreboard) : IScoreboard
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is ScoreboardImpl && other.wrapped == this.wrapped
+		return other is ScoreboardImpl && other.wrapped == wrapped
 	}
 }
 

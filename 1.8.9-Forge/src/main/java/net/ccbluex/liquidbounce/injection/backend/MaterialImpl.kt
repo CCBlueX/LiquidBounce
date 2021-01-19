@@ -16,7 +16,7 @@ class MaterialImpl(val wrapped: Material) : IMaterial
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is MaterialImpl && other.wrapped == this.wrapped
+		return other is MaterialImpl && other.wrapped == wrapped
 	}
 }
 

@@ -71,7 +71,7 @@ open class WorldImpl<T : World>(val wrapped: T) : IWorld
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is WorldImpl<*> && other.wrapped == this.wrapped
+		return other is WorldImpl<*> && other.wrapped == wrapped
 	}
 }
 

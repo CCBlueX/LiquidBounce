@@ -52,7 +52,7 @@ class Rotations : Module()
 			thePlayer.rotationYawHead = packetPlayer.yaw
 		} else
 		{
-			if (playerYaw != null) thePlayer.renderYawOffset = this.playerYaw!!
+			if (playerYaw != null) thePlayer.renderYawOffset = playerYaw!!
 
 			thePlayer.rotationYawHead = thePlayer.renderYawOffset
 		}

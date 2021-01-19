@@ -20,13 +20,13 @@ import net.minecraft.network.play.client.*
 import net.minecraft.util.*
 import net.minecraft.world.WorldSettings
 
-inline fun WVec3.unwrap(): Vec3 = Vec3(this.xCoord, this.yCoord, this.zCoord)
-inline fun WVec3i.unwrap(): Vec3i = Vec3i(this.x, this.y, this.z)
-inline fun WBlockPos.unwrap(): BlockPos = BlockPos(this.x, this.y, this.z)
+inline fun WVec3.unwrap(): Vec3 = Vec3(xCoord, yCoord, zCoord)
+inline fun WVec3i.unwrap(): Vec3i = Vec3i(x, y, z)
+inline fun WBlockPos.unwrap(): BlockPos = BlockPos(x, y, z)
 
-inline fun BlockPos.wrap(): WBlockPos = WBlockPos(this.x, this.y, this.z)
-inline fun Vec3.wrap(): WVec3 = WVec3(this.xCoord, this.yCoord, this.zCoord)
-inline fun Vec3i.wrap(): WVec3i = WVec3i(this.x, this.y, this.z)
+inline fun BlockPos.wrap(): WBlockPos = WBlockPos(x, y, z)
+inline fun Vec3.wrap(): WVec3 = WVec3(xCoord, yCoord, zCoord)
+inline fun Vec3i.wrap(): WVec3i = WVec3i(x, y, z)
 
 inline fun MovingObjectPosition.MovingObjectType.wrap(): IMovingObjectPosition.WMovingObjectType
 {

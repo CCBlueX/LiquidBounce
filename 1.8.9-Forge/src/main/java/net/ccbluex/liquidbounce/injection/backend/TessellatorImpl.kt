@@ -19,7 +19,7 @@ class TessellatorImpl(val wrapped: Tessellator) : ITessellator
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is TessellatorImpl && other.wrapped == this.wrapped
+		return other is TessellatorImpl && other.wrapped == wrapped
 	}
 
 }

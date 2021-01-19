@@ -33,7 +33,7 @@ class InventoryPlayerImpl(val wrapped: InventoryPlayer) : IInventoryPlayer
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is InventoryPlayerImpl && other.wrapped == this.wrapped
+		return other is InventoryPlayerImpl && other.wrapped == wrapped
 	}
 }
 

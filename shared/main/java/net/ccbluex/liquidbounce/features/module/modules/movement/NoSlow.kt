@@ -59,7 +59,7 @@ class NoSlow : Module()
 		val aura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
 		if (!thePlayer.isBlocking && !aura.blockingStatus) return
 
-		if (this.packet.get() && Backend.MINECRAFT_VERSION_MINOR == 8)
+		if (packet.get() && Backend.MINECRAFT_VERSION_MINOR == 8)
 		{
 			when (event.eventState)
 			{
@@ -93,17 +93,17 @@ class NoSlow : Module()
 		{
 			classProvider.isItemFood(item) || classProvider.isItemPotion(item) || classProvider.isItemBucketMilk(item) ->
 			{
-				if (isForward) this.consumeForwardMultiplier.get() else this.consumeStrafeMultiplier.get()
+				if (isForward) consumeForwardMultiplier.get() else consumeStrafeMultiplier.get()
 			}
 
 			classProvider.isItemSword(item) ->
 			{
-				if (isForward) this.blockForwardMultiplier.get() else this.blockStrafeMultiplier.get()
+				if (isForward) blockForwardMultiplier.get() else blockStrafeMultiplier.get()
 			}
 
 			classProvider.isItemBow(item) ->
 			{
-				if (isForward) this.bowForwardMultiplier.get() else this.bowStrafeMultiplier.get()
+				if (isForward) bowForwardMultiplier.get() else bowStrafeMultiplier.get()
 			}
 
 			else -> 0.2F

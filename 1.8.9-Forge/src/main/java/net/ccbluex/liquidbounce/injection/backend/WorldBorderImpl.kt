@@ -17,7 +17,7 @@ class WorldBorderImpl(val wrapped: WorldBorder) : IWorldBorder
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is WorldBorderImpl && other.wrapped == this.wrapped
+		return other is WorldBorderImpl && other.wrapped == wrapped
 	}
 }
 

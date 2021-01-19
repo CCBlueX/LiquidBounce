@@ -26,7 +26,7 @@ class KeyBindingImpl(val wrapped: KeyBinding) : IKeyBinding
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is KeyBindingImpl && other.wrapped == this.wrapped
+		return other is KeyBindingImpl && other.wrapped == wrapped
 	}
 }
 

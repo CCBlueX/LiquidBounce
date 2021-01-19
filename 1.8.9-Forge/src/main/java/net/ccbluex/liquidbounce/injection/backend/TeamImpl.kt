@@ -23,7 +23,7 @@ class TeamImpl(val wrapped: Team) : ITeam
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is TeamImpl && other.wrapped == this.wrapped
+		return other is TeamImpl && other.wrapped == wrapped
 	}
 }
 

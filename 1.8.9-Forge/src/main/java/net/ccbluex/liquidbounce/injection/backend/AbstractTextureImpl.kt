@@ -13,7 +13,7 @@ open class AbstractTextureImpl<T : AbstractTexture>(val wrapped: T) : IAbstractT
 {
 	override fun equals(other: Any?): Boolean
 	{
-		return other is AbstractTextureImpl<*> && other.wrapped == this.wrapped
+		return other is AbstractTextureImpl<*> && other.wrapped == wrapped
 	}
 }
 

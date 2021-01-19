@@ -22,7 +22,7 @@ class TimerImpl(val wrapped: Timer) : ITimer
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is TimerImpl && other.wrapped == this.wrapped
+		return other is TimerImpl && other.wrapped == wrapped
 	}
 }
 

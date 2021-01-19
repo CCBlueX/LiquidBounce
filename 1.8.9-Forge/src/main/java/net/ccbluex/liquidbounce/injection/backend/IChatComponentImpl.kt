@@ -31,7 +31,7 @@ class IChatComponentImpl(val wrapped: IChatComponent) : IIChatComponent
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is IChatComponentImpl && other.wrapped == this.wrapped
+		return other is IChatComponentImpl && other.wrapped == wrapped
 	}
 }
 

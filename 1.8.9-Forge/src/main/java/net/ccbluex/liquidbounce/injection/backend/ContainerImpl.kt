@@ -19,7 +19,7 @@ class ContainerImpl(val wrapped: Container) : IContainer
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is ContainerImpl && other.wrapped == this.wrapped
+		return other is ContainerImpl && other.wrapped == wrapped
 	}
 }
 

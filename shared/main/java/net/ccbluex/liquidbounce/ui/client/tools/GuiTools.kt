@@ -24,7 +24,7 @@ class GuiTools(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	{
 		when (button.id)
 		{
-			1 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiPortScanner(this.representedScreen)))
+			1 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiPortScanner(representedScreen)))
 			0 -> mc.displayGuiScreen(prevGui)
 		}
 	}

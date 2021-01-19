@@ -35,7 +35,7 @@ class ChunkImpl(val wrapped: Chunk) : IChunk
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is ChunkImpl && other.wrapped == this.wrapped
+		return other is ChunkImpl && other.wrapped == wrapped
 	}
 }
 

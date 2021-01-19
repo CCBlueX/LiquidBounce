@@ -18,7 +18,7 @@ class TileEntityImpl(val wrapped: TileEntity) : ITileEntity
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is TileEntityImpl && other.wrapped == this.wrapped
+		return other is TileEntityImpl && other.wrapped == wrapped
 	}
 }
 

@@ -58,7 +58,7 @@ class GameSettingsImpl(val wrapped: GameSettings) : IGameSettings
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is GameSettingsImpl && other.wrapped == this.wrapped
+		return other is GameSettingsImpl && other.wrapped == wrapped
 	}
 }
 

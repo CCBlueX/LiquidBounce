@@ -19,7 +19,7 @@ class TextureManagerImpl(val wrapped: TextureManager) : ITextureManager
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is TextureManagerImpl && other.wrapped == this.wrapped
+		return other is TextureManagerImpl && other.wrapped == wrapped
 	}
 }
 

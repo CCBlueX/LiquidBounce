@@ -20,7 +20,7 @@ class ArmorMaterialImpl(val wrapped: ItemArmor.ArmorMaterial) : IArmorMaterial
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is ArmorMaterialImpl && other.wrapped == this.wrapped
+		return other is ArmorMaterialImpl && other.wrapped == wrapped
 	}
 }
 

@@ -33,8 +33,8 @@ class GuiModsMenu(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	{
 		when (val id = button.id)
 		{
-			0 -> mc.displayGuiScreen(classProvider.createGuiModList(this.representedScreen))
-			1 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiScripts(this.representedScreen)))
+			0 -> mc.displayGuiScreen(classProvider.createGuiModList(representedScreen))
+			1 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiScripts(representedScreen)))
 
 			2 ->
 			{

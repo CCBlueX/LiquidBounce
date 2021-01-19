@@ -28,7 +28,7 @@ class NetworkPlayerInfoImpl(val wrapped: NetworkPlayerInfo) : INetworkPlayerInfo
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is NetworkPlayerInfoImpl && other.wrapped == this.wrapped
+		return other is NetworkPlayerInfoImpl && other.wrapped == wrapped
 	}
 }
 

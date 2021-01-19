@@ -20,7 +20,7 @@ class MovementInputImpl(val wrapped: MovementInput) : IMovementInput
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is MovementInputImpl && other.wrapped == this.wrapped
+		return other is MovementInputImpl && other.wrapped == wrapped
 	}
 }
 

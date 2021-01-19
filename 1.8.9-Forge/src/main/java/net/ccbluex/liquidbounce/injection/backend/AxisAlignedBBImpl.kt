@@ -41,7 +41,7 @@ class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is AxisAlignedBBImpl && other.wrapped == this.wrapped
+		return other is AxisAlignedBBImpl && other.wrapped == wrapped
 	}
 }
 

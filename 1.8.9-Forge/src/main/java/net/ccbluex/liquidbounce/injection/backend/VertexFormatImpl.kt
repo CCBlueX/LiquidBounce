@@ -13,7 +13,7 @@ class VertexFormatImpl(val wrapped: VertexFormat) : IVertexFormat
 {
 	override fun equals(other: Any?): Boolean
 	{
-		return other is VertexFormatImpl && other.wrapped == this.wrapped
+		return other is VertexFormatImpl && other.wrapped == wrapped
 	}
 }
 

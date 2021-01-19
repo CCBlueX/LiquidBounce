@@ -24,7 +24,7 @@ class VertexBufferImpl(val wrapped: VertexBuffer) : IVertexBuffer
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is VertexBufferImpl && other.wrapped == this.wrapped
+		return other is VertexBufferImpl && other.wrapped == wrapped
 	}
 }
 

@@ -21,7 +21,7 @@ import kotlin.math.sqrt
  */
 fun IEntity.getDistanceToEntityBox(entity: IEntity): Double
 {
-	val eyes = this.getPositionEyes(1F)
+	val eyes = getPositionEyes(1F)
 	val pos = getNearestPointBB(eyes, entity.entityBoundingBox)
 	val xDist = abs(pos.xCoord - eyes.xCoord)
 	val yDist = abs(pos.yCoord - eyes.yCoord)

@@ -14,7 +14,7 @@ class EnumCreatureAttributeImpl(val wrapped: EnumCreatureAttribute) : IEnumCreat
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is EnumCreatureAttributeImpl && other.wrapped == this.wrapped
+		return other is EnumCreatureAttributeImpl && other.wrapped == wrapped
 	}
 }
 

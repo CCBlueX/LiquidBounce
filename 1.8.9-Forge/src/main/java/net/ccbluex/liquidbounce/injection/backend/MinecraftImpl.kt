@@ -104,7 +104,7 @@ class MinecraftImpl(val wrapped: Minecraft) : IMinecraft
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is MinecraftImpl && other.wrapped == this.wrapped
+		return other is MinecraftImpl && other.wrapped == wrapped
 	}
 }
 

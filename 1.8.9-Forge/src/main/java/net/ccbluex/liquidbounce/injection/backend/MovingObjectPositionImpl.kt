@@ -29,7 +29,7 @@ class MovingObjectPositionImpl(val wrapped: MovingObjectPosition) : IMovingObjec
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is MovingObjectPositionImpl && other.wrapped == this.wrapped
+		return other is MovingObjectPositionImpl && other.wrapped == wrapped
 	}
 }
 

@@ -121,7 +121,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 				{
 					chat("\u00A7cSettings:")
 
-					val settings = this.getLocalSettings() ?: return
+					val settings = getLocalSettings() ?: return
 
 					for (file in settings) chat("> " + file.name)
 					return
@@ -145,7 +145,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 				{
 					"delete", "load" ->
 					{
-						val settings = this.getLocalSettings() ?: return emptyList()
+						val settings = getLocalSettings() ?: return emptyList()
 
 						return settings.map { it.name }.filter { it.startsWith(args[1], true) }
 					}

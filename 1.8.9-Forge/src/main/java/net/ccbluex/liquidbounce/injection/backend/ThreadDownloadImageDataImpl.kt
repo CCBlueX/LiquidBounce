@@ -13,7 +13,7 @@ class ThreadDownloadImageDataImpl<T : ThreadDownloadImageData>(wrapped: T) : Abs
 {
 	override fun equals(other: Any?): Boolean
 	{
-		return other is ThreadDownloadImageDataImpl<*> && other.wrapped == this.wrapped
+		return other is ThreadDownloadImageDataImpl<*> && other.wrapped == wrapped
 	}
 }
 

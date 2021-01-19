@@ -29,7 +29,7 @@ class INetHandlerPlayClientImpl(val wrapped: NetHandlerPlayClient) : IINetHandle
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is INetHandlerPlayClientImpl && other.wrapped == this.wrapped
+		return other is INetHandlerPlayClientImpl && other.wrapped == wrapped
 	}
 }
 

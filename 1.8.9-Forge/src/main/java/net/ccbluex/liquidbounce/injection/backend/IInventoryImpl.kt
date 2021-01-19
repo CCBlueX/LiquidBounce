@@ -16,7 +16,7 @@ class IInventoryImpl(val wrapped: IInventory) : IIInventory
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is IInventoryImpl && other.wrapped == this.wrapped
+		return other is IInventoryImpl && other.wrapped == wrapped
 	}
 }
 

@@ -53,7 +53,7 @@ class BlockImpl(val wrapped: Block) : IBlock
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is BlockImpl && other.wrapped == this.wrapped
+		return other is BlockImpl && other.wrapped == wrapped
 	}
 }
 

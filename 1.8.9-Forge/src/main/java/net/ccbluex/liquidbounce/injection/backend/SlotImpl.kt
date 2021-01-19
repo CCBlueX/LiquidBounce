@@ -19,7 +19,7 @@ class SlotImpl(val wrapped: Slot) : ISlot
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is SlotImpl && other.wrapped == this.wrapped
+		return other is SlotImpl && other.wrapped == wrapped
 	}
 }
 

@@ -94,7 +94,7 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen()
 	{
 		representedScreen.drawBackground(0)
 		Fonts.fontBold180.drawCenteredString(
-			"Background", this.representedScreen.width / 2F, representedScreen.height / 8F + 5F, 4673984, true
+			"Background", representedScreen.width / 2F, representedScreen.height / 8F + 5F, 4673984, true
 		)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)

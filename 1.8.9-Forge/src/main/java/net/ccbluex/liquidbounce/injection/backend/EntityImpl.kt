@@ -228,7 +228,7 @@ open class EntityImpl<T : Entity>(val wrapped: T) : IEntity
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is EntityImpl<*> && other.wrapped == this.wrapped
+		return other is EntityImpl<*> && other.wrapped == wrapped
 	}
 }
 

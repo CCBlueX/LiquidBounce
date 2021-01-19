@@ -23,7 +23,7 @@ open class ItemImpl<T : Item>(val wrapped: T) : IItem
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is ItemImpl<*> && other.wrapped == this.wrapped
+		return other is ItemImpl<*> && other.wrapped == wrapped
 	}
 }
 

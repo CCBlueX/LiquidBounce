@@ -37,7 +37,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	override fun initGui()
 	{
-		list = GuiList(this.representedScreen)
+		list = GuiList(representedScreen)
 		list.represented.registerScrollButtons(7, 8)
 		list.represented.elementClicked(-1, false, 0, 0)
 
@@ -262,8 +262,8 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		init
 		{
-			this.represented.setListWidth(gui.width * 3 / 13)
-			this.represented.setEnableScissor(true)
+			represented.setListWidth(gui.width * 3 / 13)
+			represented.setEnableScissor(true)
 		}
 
 		private var selectedSlot = 0

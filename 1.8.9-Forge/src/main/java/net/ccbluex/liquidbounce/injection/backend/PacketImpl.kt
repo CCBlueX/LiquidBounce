@@ -47,7 +47,7 @@ open class PacketImpl<T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun equals(other: Any?): Boolean
 	{
-		return other is PacketImpl<*> && other.wrapped == this.wrapped
+		return other is PacketImpl<*> && other.wrapped == wrapped
 	}
 }
 
