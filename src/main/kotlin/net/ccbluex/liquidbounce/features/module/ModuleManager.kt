@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.combat.Trigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
@@ -65,13 +66,21 @@ object ModuleManager : Iterable<Module>, Listenable {
      * Register inbuilt client modules
      */
     fun registerInbuilt() {
-        modules += HUD
-        modules += ClickGui
-        modules += Fly
-        modules += Velocity
-        modules += Speed
-        modules += AutoRespawn
+        modules += arrayOf(
+            HUD,
+            ClickGui,
+            Fly,
+            Velocity,
+            Speed,
+            AutoRespawn,
+            Trigger
+        )
+    }
+
+    fun addModule(module: Module) {
+        modules += module
     }
 
     override fun iterator() = modules.iterator()
+
 }
