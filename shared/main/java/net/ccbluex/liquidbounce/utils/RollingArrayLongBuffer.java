@@ -50,12 +50,8 @@ public class RollingArrayLongBuffer
 	public int getTimestampsSince(final long l)
 	{
 		for (int i = 0; i < contents.length; i++)
-		{
 			if (contents[currentIndex < i ? contents.length - i + currentIndex : currentIndex - i] < l)
-			{
 				return i;
-			}
-		}
 
 		// If every element is lower than l, return the array length
 		return contents.length;

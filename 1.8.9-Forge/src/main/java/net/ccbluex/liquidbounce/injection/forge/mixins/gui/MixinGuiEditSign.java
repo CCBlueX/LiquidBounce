@@ -122,30 +122,20 @@ public class MixinGuiEditSign extends GuiScreen
 			return;
 
 		if (keyCode == 200)
-		{
 			editLine = editLine - 1 & 3;
-		}
 
 		if (keyCode == 208 || keyCode == 28 || keyCode == 156)
-		{
 			editLine = editLine + 1 & 3;
-		}
 
 		String s = tileSign.signText[editLine].getUnformattedText();
 		if (keyCode == 14 && s.length() > 0)
-		{
 			s = s.substring(0, s.length() - 1);
-		}
 
 		if ((ChatAllowedCharacters.isAllowedCharacter(typedChar) || enabled && typedChar == '\u00A7') && fontRendererObj.getStringWidth(s + typedChar) <= 90)
-		{
 			s = s + typedChar;
-		}
 
 		tileSign.signText[editLine] = new ChatComponentText(s);
 		if (keyCode == 1)
-		{
 			actionPerformed(doneBtn);
-		}
 	}
 }

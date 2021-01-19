@@ -128,9 +128,7 @@ public class SlowlyStyle extends Style
 					final boolean isNumber = value.get() instanceof Number;
 
 					if (isNumber)
-					{
 						AWTFontRenderer.Companion.setAssumeNonVolatile(false);
-					}
 
 					if (value instanceof BoolValue)
 					{
@@ -194,9 +192,7 @@ public class SlowlyStyle extends Style
 						}
 
 						if (!listValue.openList)
-						{
 							moduleElement.slowlySettingsYPos += 1;
-						}
 					}
 					else if (value instanceof FloatValue)
 					{
@@ -252,9 +248,7 @@ public class SlowlyStyle extends Style
 							final FontInfo objects = Fonts.getFontDetails(fontRenderer);
 
 							if (objects != null)
-							{
 								displayString = objects.getName() + (objects.getFontSize() != -1 ? " - " + objects.getFontSize() : "");
-							}
 						}
 
 						Fonts.font35.drawString(displayString, moduleElement.getX() + moduleElement.getWidth() + 6, moduleElement.slowlySettingsYPos + 2, Color.WHITE.getRGB());
@@ -268,13 +262,10 @@ public class SlowlyStyle extends Style
 							final List<IFontRenderer> fonts = Fonts.getFonts();
 
 							if (Mouse.isButtonDown(0))
-							{
-								for (int i = 0; i < fonts.size(); i++)
-								{
+								for (int i = 0; i < fonts.size(); i++) {
 									final IFontRenderer font = fonts.get(i);
 
-									if (font.equals(fontRenderer))
-									{
+									if (font.equals(fontRenderer)) {
 										i++;
 
 										if (i >= fonts.size())
@@ -284,15 +275,11 @@ public class SlowlyStyle extends Style
 										break;
 									}
 								}
-							}
 							else
-							{
-								for (int i = fonts.size() - 1; i >= 0; i--)
-								{
+								for (int i = fonts.size() - 1; i >= 0; i--) {
 									final IFontRenderer font = fonts.get(i);
 
-									if (font.equals(fontRenderer))
-									{
+									if (font.equals(fontRenderer)) {
 										i--;
 
 										if (i >= fonts.size())
@@ -305,7 +292,6 @@ public class SlowlyStyle extends Style
 										break;
 									}
 								}
-							}
 						}
 
 						moduleElement.slowlySettingsYPos += 11;
@@ -324,9 +310,7 @@ public class SlowlyStyle extends Style
 					}
 
 					if (isNumber)
-					{
 						AWTFontRenderer.Companion.setAssumeNonVolatile(true);
-					}
 				}
 
 				moduleElement.updatePressed();

@@ -83,8 +83,6 @@ public class ClickGUI extends Module
 		final IPacket packet = event.getPacket();
 
 		if (classProvider.isSPacketCloseWindow(packet) && classProvider.isClickGui(mc.getCurrentScreen()))
-		{
 			event.cancelEvent();
-		}
 	}
 }

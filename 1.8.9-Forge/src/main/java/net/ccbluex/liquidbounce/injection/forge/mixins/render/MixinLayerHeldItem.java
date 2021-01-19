@@ -61,31 +61,22 @@ public class MixinLayerHeldItem
 			final EntityPlayer entityplayer = Minecraft.getMinecraft().theWorld.getPlayerEntityByUUID(uuid);
 
 			if (entityplayer != null && entityplayer.isBlocking())
-			{
-				if (entitylivingbaseIn.isSneaking())
-				{
+				if (entitylivingbaseIn.isSneaking()) {
 					((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
 					GlStateManager.translate(-0.58F, 0.3F, -0.2F);
 					GlStateManager.rotate(-24390.0F, 137290.0F, -2009900.0F, -2054900.0F);
-				}
-				else
-				{
+				} else {
 					((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
 					GlStateManager.translate(-0.48F, 0.2F, -0.2F);
 					GlStateManager.rotate(-24390.0F, 137290.0F, -2009900.0F, -2054900.0F);
 				}
-			}
 			else
-			{
 				((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F);
-			}
 
 			GlStateManager.translate(-0.0625F, 0.4375F, 0.0625F);
 
 			if (entitylivingbaseIn instanceof EntityPlayer && ((EntityPlayer) entitylivingbaseIn).fishEntity != null)
-			{
 				itemstack = new ItemStack(Items.fishing_rod, 0);
-			}
 
 			final Item item = itemstack.getItem();
 			final Minecraft minecraft = Minecraft.getMinecraft();
@@ -100,9 +91,7 @@ public class MixinLayerHeldItem
 			}
 
 			if (entitylivingbaseIn.isSneaking())
-			{
 				GlStateManager.translate(0.0F, 0.203125F, 0.0F);
-			}
 
 			minecraft.getItemRenderer().renderItem(entitylivingbaseIn, itemstack, TransformType.THIRD_PERSON);
 			GlStateManager.popMatrix();

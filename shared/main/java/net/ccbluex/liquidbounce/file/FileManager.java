@@ -79,23 +79,16 @@ public class FileManager extends MinecraftInstance
 	public void loadAllConfigs()
 	{
 		for (final Field field : getClass().getDeclaredFields())
-		{
 			if (field.getType() == FileConfig.class)
-			{
-				try
-				{
+				try {
 					if (!field.isAccessible())
 						field.setAccessible(true);
 
 					final FileConfig fileConfig = (FileConfig) field.get(this);
 					loadConfig(fileConfig);
-				}
-				catch (final IllegalAccessException e)
-				{
+				} catch (final IllegalAccessException e) {
 					ClientUtils.getLogger().error("Failed to load config file of field " + field.getName() + ".", e);
 				}
-			}
-		}
 	}
 
 	/**
@@ -143,23 +136,16 @@ public class FileManager extends MinecraftInstance
 	public void saveAllConfigs()
 	{
 		for (final Field field : getClass().getDeclaredFields())
-		{
 			if (field.getType() == FileConfig.class)
-			{
-				try
-				{
+				try {
 					if (!field.isAccessible())
 						field.setAccessible(true);
 
 					final FileConfig fileConfig = (FileConfig) field.get(this);
 					saveConfig(fileConfig);
-				}
-				catch (final IllegalAccessException e)
-				{
+				} catch (final IllegalAccessException e) {
 					ClientUtils.getLogger().error("[FileManager] Failed to save config file of field " + field.getName() + ".", e);
 				}
-			}
-		}
 	}
 
 	/**
@@ -218,9 +204,7 @@ public class FileManager extends MinecraftInstance
 	public void loadBackground()
 	{
 		if (backgroundFile.exists())
-		{
-			try
-			{
+			try {
 				final BufferedImage bufferedImage = ImageIO.read(new FileInputStream(backgroundFile));
 
 				if (bufferedImage == null)
@@ -229,11 +213,8 @@ public class FileManager extends MinecraftInstance
 				LiquidBounce.INSTANCE.setBackground(classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png"));
 				mc.getTextureManager().loadTexture(LiquidBounce.INSTANCE.getBackground(), classProvider.createDynamicTexture(bufferedImage));
 				ClientUtils.getLogger().info("[FileManager] Loaded background.");
-			}
-			catch (final Exception e)
-			{
+			} catch (final Exception e) {
 				ClientUtils.getLogger().error("[FileManager] Failed to load background.", e);
 			}
-		}
 	}
 }

@@ -119,9 +119,7 @@ public class GuiPortScanner extends WrappedGuiScreen
 				break;
 			case 1:
 				if (running)
-				{
 					running = false;
-				}
 				else
 				{
 					host = hostField.getText();
@@ -169,31 +167,24 @@ public class GuiPortScanner extends WrappedGuiScreen
 					checkedPort = minPort;
 
 					for (int i = 0; i < threads; i++)
-					{
 						new Thread(() ->
 						{
-							try
-							{
-								while (running && currentPort < maxPort)
-								{
+							try {
+								while (running && currentPort < maxPort) {
 									currentPort++;
 
 									final int port = currentPort;
 
-									try
-									{
+									try {
 										final Socket socket = new Socket();
 										socket.connect(new InetSocketAddress(host, port), 500);
 										socket.close();
 
-										synchronized (ports)
-										{
+										synchronized (ports) {
 											if (!ports.contains(port))
 												ports.add(port);
 										}
-									}
-									catch (final Exception ignored)
-									{
+									} catch (final Exception ignored) {
 									}
 
 									if (checkedPort < port)
@@ -202,13 +193,10 @@ public class GuiPortScanner extends WrappedGuiScreen
 
 								running = false;
 								buttonToggle.setDisplayString("Start");
-							}
-							catch (final Exception e)
-							{
+							} catch (final Exception e) {
 								status = "\u00A7a\u00A7l" + e.getClass().getSimpleName() + ": \u00A7c" + e.getMessage();
 							}
 						}).start();
-					}
 
 					running = true;
 				}

@@ -111,9 +111,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 			final int k = left + width / 2 - getListWidth() / 2 + 2;
 			final int l = top + 4 - (int) amountScrolled;
 			if (hasListHeader)
-			{
 				drawListHeader(k, l, tessellator);
-			}
 
 			RenderUtils.makeScissorBox(left, top, right, bottom);
 
@@ -155,9 +153,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 				k1 = MathHelper.clamp_int(k1, 32, bottom - top - 8);
 				int l1 = (int) amountScrolled * (bottom - top - k1) / j1 + top;
 				if (l1 < top)
-				{
 					l1 = top;
-				}
 
 				worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
 				worldrenderer.pos(i, bottom, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 255).endVertex();

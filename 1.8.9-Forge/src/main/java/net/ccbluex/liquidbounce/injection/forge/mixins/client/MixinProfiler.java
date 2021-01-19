@@ -23,8 +23,6 @@ public class MixinProfiler
 	private void startSection(final String name, final CallbackInfo callbackInfo)
 	{
 		if (name.equals("bossHealth") && ClassUtils.hasClass("net.labymod.api.LabyModAPI"))
-		{
 			LiquidBounce.eventManager.callEvent(new Render2DEvent(0F));
-		}
 	}
 }

@@ -206,24 +206,14 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				final boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
 
 				if (ridingEntity == null)
-				{
 					if (moved && rotated)
-					{
 						sendQueue.addToSendQueue(new C06PacketPlayerPosLook(posX, getEntityBoundingBox().minY, posZ, yaw, pitch, onGround));
-					}
 					else if (moved)
-					{
 						sendQueue.addToSendQueue(new C04PacketPlayerPosition(posX, getEntityBoundingBox().minY, posZ, onGround));
-					}
 					else if (rotated)
-					{
 						sendQueue.addToSendQueue(new C05PacketPlayerLook(yaw, pitch, onGround));
-					}
 					else
-					{
 						sendQueue.addToSendQueue(new C03PacketPlayer(onGround));
-					}
-				}
 				else
 				{
 					sendQueue.addToSendQueue(new C06PacketPlayerPosLook(motionX, -999.0D, motionZ, yaw, pitch, onGround));
@@ -294,36 +284,26 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			--sprintingTicksLeft;
 
 			if (sprintingTicksLeft == 0)
-			{
 				setSprinting(false);
-			}
 		}
 
 		if (sprintToggleTimer > 0)
-		{
 			--sprintToggleTimer;
-		}
 
 		prevTimeInPortal = timeInPortal;
 
 		if (inPortal)
 		{
 			if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !LiquidBounce.moduleManager.getModule(PortalMenu.class).getState())
-			{
 				mc.displayGuiScreen(null);
-			}
 
 			if (timeInPortal == 0.0F)
-			{
 				mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("portal.trigger"), rand.nextFloat() * 0.4F + 0.8F));
-			}
 
 			timeInPortal += 0.0125F;
 
 			if (timeInPortal >= 1.0F)
-			{
 				timeInPortal = 1.0F;
-			}
 
 			inPortal = false;
 		}
@@ -332,27 +312,19 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			timeInPortal += 0.006666667F;
 
 			if (timeInPortal > 1.0F)
-			{
 				timeInPortal = 1.0F;
-			}
 		}
 		else
 		{
 			if (timeInPortal > 0.0F)
-			{
 				timeInPortal -= 0.05F;
-			}
 
 			if (timeInPortal < 0.0F)
-			{
 				timeInPortal = 0.0F;
-			}
 		}
 
 		if (timeUntilPortal > 0)
-		{
 			--timeUntilPortal;
-		}
 
 		final boolean flag = movementInput.jump;
 		final boolean flag1 = movementInput.sneak;
@@ -382,67 +354,43 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 		final boolean flag3 = !sprint.foodValue.get() || (float) getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
 
 		if (onGround && !flag1 && !flag2 && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness))
-		{
 			if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown())
-			{
 				sprintToggleTimer = 7;
-			}
 			else
-			{
 				setSprinting(true);
-			}
-		}
 
 		if (!isSprinting() && movementInput.moveForward >= f && flag3 && (noSlow.getState() || !isUsingItem()) && !isPotionActive(Potion.blindness) && mc.gameSettings.keyBindSprint.isKeyDown())
-		{
 			setSprinting(true);
-		}
 
 		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.getModule(Scaffold.class);
 		if (scaffold.getState() && !scaffold.sprintValue.get() || sprint.getState() && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)
 			setSprinting(false);
 
 		if (isSprinting() && (!(sprint.getState() && sprint.allDirectionsValue.get()) && movementInput.moveForward < f || isCollidedHorizontally || !flag3))
-		{
 			setSprinting(false);
-		}
 
 		if (capabilities.allowFlying)
-		{
-			if (mc.playerController.isSpectatorMode())
-			{
-				if (!capabilities.isFlying)
-				{
+			if (mc.playerController.isSpectatorMode()) {
+				if (!capabilities.isFlying) {
 					capabilities.isFlying = true;
 					sendPlayerAbilities();
 				}
-			}
-			else if (!flag && movementInput.jump)
-			{
+			} else if (!flag && movementInput.jump)
 				if (flyToggleTimer == 0)
-				{
 					flyToggleTimer = 7;
-				}
-				else
-				{
+				else {
 					capabilities.isFlying = !capabilities.isFlying;
 					sendPlayerAbilities();
 					flyToggleTimer = 0;
 				}
-			}
-		}
 
 		if (capabilities.isFlying && isCurrentViewEntity())
 		{
 			if (movementInput.sneak)
-			{
 				motionY -= capabilities.getFlySpeed() * 3.0F;
-			}
 
 			if (movementInput.jump)
-			{
 				motionY += capabilities.getFlySpeed() * 3.0F;
-			}
 		}
 
 		if (isRidingHorse())
@@ -452,9 +400,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				++horseJumpPowerCounter;
 
 				if (horseJumpPowerCounter == 0)
-				{
 					horseJumpPower = 0.0F;
-				}
 			}
 
 			if (flag && !movementInput.jump)
@@ -472,19 +418,13 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				++horseJumpPowerCounter;
 
 				if (horseJumpPowerCounter < 10)
-				{
 					horseJumpPower = (float) horseJumpPowerCounter * 0.1F;
-				}
 				else
-				{
 					horseJumpPower = 0.8F + 2.0F / (float) (horseJumpPowerCounter - 9) * 0.1F;
-				}
 			}
 		}
 		else
-		{
 			horseJumpPower = 0.0F;
-		}
 
 		super.onLivingUpdate();
 
@@ -544,68 +484,40 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 				// noinspection ConstantConditions
 				for (d6 = 0.05D; x != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, 0.0D)).isEmpty(); d3 = x)
-				{
 					if (x < d6 && x >= -d6)
-					{
 						x = 0.0D;
-					}
 					else if (x > 0.0D)
-					{
 						x -= d6;
-					}
 					else
-					{
 						x += d6;
-					}
-				}
 
 				// noinspection ConstantConditions
 				for (; z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0.0D, -1.0D, z)).isEmpty(); d5 = z)
-				{
 					if (z < d6 && z >= -d6)
-					{
 						z = 0.0D;
-					}
 					else if (z > 0.0D)
-					{
 						z -= d6;
-					}
 					else
-					{
 						z += d6;
-					}
-				}
 
 				// noinspection ConstantConditions
 				for (; x != 0.0D && z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, z)).isEmpty(); d5 = z)
 				{
 					if (x < d6 && x >= -d6)
-					{
 						x = 0.0D;
-					}
 					else if (x > 0.0D)
-					{
 						x -= d6;
-					}
 					else
-					{
 						x += d6;
-					}
 
 					d3 = x;
 
 					if (z < d6 && z >= -d6)
-					{
 						z = 0.0D;
-					}
 					else if (z > 0.0D)
-					{
 						z -= d6;
-					}
 					else
-					{
 						z += d6;
-					}
 				}
 			}
 
@@ -614,24 +526,18 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			final AxisAlignedBB axisalignedbb = getEntityBoundingBox();
 
 			for (final AxisAlignedBB axisalignedbb1 : list1)
-			{
 				y = axisalignedbb1.calculateYOffset(getEntityBoundingBox(), y);
-			}
 
 			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
 			final boolean flag1 = onGround || d4 != y && d4 < 0.0D;
 
 			for (final AxisAlignedBB axisalignedbb2 : list1)
-			{
 				x = axisalignedbb2.calculateXOffset(getEntityBoundingBox(), x);
-			}
 
 			setEntityBoundingBox(getEntityBoundingBox().offset(x, 0.0D, 0.0D));
 
 			for (final AxisAlignedBB axisalignedbb13 : list1)
-			{
 				z = axisalignedbb13.calculateZOffset(getEntityBoundingBox(), z);
-			}
 
 			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, 0.0D, z));
 
@@ -652,50 +558,38 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				double d9 = y;
 
 				for (final AxisAlignedBB axisalignedbb6 : list)
-				{
 					d9 = axisalignedbb6.calculateYOffset(axisalignedbb5, d9);
-				}
 
 				axisalignedbb4 = axisalignedbb4.offset(0.0D, d9, 0.0D);
 				double d15 = d3;
 
 				for (final AxisAlignedBB axisalignedbb7 : list)
-				{
 					d15 = axisalignedbb7.calculateXOffset(axisalignedbb4, d15);
-				}
 
 				axisalignedbb4 = axisalignedbb4.offset(d15, 0.0D, 0.0D);
 				double d16 = d5;
 
 				for (final AxisAlignedBB axisalignedbb8 : list)
-				{
 					d16 = axisalignedbb8.calculateZOffset(axisalignedbb4, d16);
-				}
 
 				axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, d16);
 				AxisAlignedBB axisalignedbb14 = getEntityBoundingBox();
 				double d17 = y;
 
 				for (final AxisAlignedBB axisalignedbb9 : list)
-				{
 					d17 = axisalignedbb9.calculateYOffset(axisalignedbb14, d17);
-				}
 
 				axisalignedbb14 = axisalignedbb14.offset(0.0D, d17, 0.0D);
 				double d18 = d3;
 
 				for (final AxisAlignedBB axisalignedbb10 : list)
-				{
 					d18 = axisalignedbb10.calculateXOffset(axisalignedbb14, d18);
-				}
 
 				axisalignedbb14 = axisalignedbb14.offset(d18, 0.0D, 0.0D);
 				double d19 = d5;
 
 				for (final AxisAlignedBB axisalignedbb11 : list)
-				{
 					d19 = axisalignedbb11.calculateZOffset(axisalignedbb14, d19);
-				}
 
 				axisalignedbb14 = axisalignedbb14.offset(0.0D, 0.0D, d19);
 				final double d20 = d15 * d15 + d16 * d16;
@@ -717,9 +611,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 
 				for (final AxisAlignedBB axisalignedbb12 : list)
-				{
 					y = axisalignedbb12.calculateYOffset(getEntityBoundingBox(), y);
-				}
 
 				setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
 
@@ -731,9 +623,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 					setEntityBoundingBox(axisalignedbb3);
 				}
 				else
-				{
 					LiquidBounce.eventManager.callEvent(new StepConfirmEvent());
-				}
 			}
 
 			worldObj.theProfiler.endSection();
@@ -765,20 +655,14 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			updateFallState(y, onGround, block1, blockpos);
 
 			if (d3 != x)
-			{
 				motionX = 0.0D;
-			}
 
 			if (d5 != z)
-			{
 				motionZ = 0.0D;
-			}
 
+			// noinspection ConstantConditions
 			if (d4 != y)
-			{
-				// noinspection ConstantConditions
 				block1.onLanded(worldObj, (Entity) (Object) this);
-			}
 
 			if (canTriggerWalking() && !flag && ridingEntity == null)
 			{
@@ -787,15 +671,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				final double d14 = posZ - d2;
 
 				if (block1 != Blocks.ladder)
-				{
 					d13 = 0.0D;
-				}
 
+				// noinspection ConstantConditions
 				if (onGround)
-				{
-					// noinspection ConstantConditions
 					block1.onEntityCollidedWithBlock(worldObj, blockpos, (Entity) (Object) this);
-				}
 
 				distanceWalkedModified = (float) ((double) distanceWalkedModified + (double) MathHelper.sqrt_double(d12 * d12 + d14 * d14) * 0.6D);
 				distanceWalkedOnStepModified = (float) ((double) distanceWalkedOnStepModified + (double) MathHelper.sqrt_double(d12 * d12 + d13 * d13 + d14 * d14) * 0.6D);
@@ -809,9 +689,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 						float f = MathHelper.sqrt_double(motionX * motionX * 0.20000000298023224D + motionY * motionY + motionZ * motionZ * 0.20000000298023224D) * 0.35F;
 
 						if (f > 1.0F)
-						{
 							f = 1.0F;
-						}
 
 						playSound(getSwimSound(), f, 1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
 					}
@@ -843,15 +721,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 					setFire(getFire() + 1);
 
 					if (getFire() == 0)
-					{
 						setFire(8);
-					}
 				}
 			}
 			else if (getFire() <= 0)
-			{
 				setFire(-fireResistance);
-			}
 
 			if (flag2 && getFire() > 0)
 			{

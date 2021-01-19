@@ -39,9 +39,7 @@ public class WorldToScreen
 
 		// nPlane = -1, fPlane = 1
 		if (ndcSpacePos.z < -1.0 || ndcSpacePos.z > 1.0)
-		{
 			return null;
-		}
 
 		return new Vector2f(screenX, screenY);
 	}

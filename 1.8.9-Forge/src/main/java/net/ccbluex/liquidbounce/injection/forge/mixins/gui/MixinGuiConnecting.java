@@ -94,9 +94,7 @@ public abstract class MixinGuiConnecting extends GuiScreen
 			try
 			{
 				if (cancel)
-				{
 					return;
-				}
 
 				inetaddress = InetAddress.getByName(ip);
 				networkManager = NetworkManager.createNetworkManagerAndConnect(inetaddress, port, mc.gameSettings.isUsingNativeTransport());
@@ -115,9 +113,7 @@ public abstract class MixinGuiConnecting extends GuiScreen
 			catch (final Exception exception)
 			{
 				if (cancel)
-				{
 					return;
-				}
 
 				logger.error("Couldn't connect to server", exception);
 				String s = exception.toString();
