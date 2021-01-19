@@ -115,14 +115,10 @@ public abstract class MixinBlock
 		if (Objects.requireNonNull(noSlowBreak).getState())
 		{
 			if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(playerIn))
-			{
 				f *= 5.0F;
-			}
 
 			if (noSlowBreak.getAirValue().get() && !playerIn.onGround)
-			{
 				f *= 5.0F;
-			}
 		}
 		else if (playerIn.onGround)
 		{ // NoGround
@@ -130,9 +126,7 @@ public abstract class MixinBlock
 			final Criticals criticals = (Criticals) LiquidBounce.moduleManager.getModule(Criticals.class);
 
 			if (Objects.requireNonNull(noFall).getState() && noFall.modeValue.get().equalsIgnoreCase("NoGround") || Objects.requireNonNull(criticals).getState() && criticals.getModeValue().get().equalsIgnoreCase("NoGround"))
-			{
 				f /= 5F;
-			}
 		}
 
 		callbackInfo.setReturnValue(f);

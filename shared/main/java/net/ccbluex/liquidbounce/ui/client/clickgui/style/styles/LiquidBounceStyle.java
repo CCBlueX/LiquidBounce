@@ -90,9 +90,7 @@ public class LiquidBounceStyle extends Style
 					final boolean isNumber = value.get() instanceof Number;
 
 					if (isNumber)
-					{
 						AWTFontRenderer.Companion.setAssumeNonVolatile(false);
-					}
 
 					if (value instanceof BoolValue)
 					{
@@ -105,15 +103,12 @@ public class LiquidBounceStyle extends Style
 						RenderUtils.drawRect(moduleElement.getX() + moduleElement.getWidth() + 4, yPos + 2, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 14, Integer.MIN_VALUE);
 
 						if (mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= yPos + 2 && mouseY <= yPos + 14)
-						{
-							if (Mouse.isButtonDown(0) && moduleElement.isntPressed())
-							{
+							if (Mouse.isButtonDown(0) && moduleElement.isntPressed()) {
 								final BoolValue boolValue = (BoolValue) value;
 
 								boolValue.set(!boolValue.get());
 								mc.getSoundHandler().playSound("gui.button.press", 1.0F);
 							}
-						}
 
 						GlStateManager.resetColor();
 						Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, ((BoolValue) value).get() ? guiColor : Integer.MAX_VALUE);
@@ -135,13 +130,10 @@ public class LiquidBounceStyle extends Style
 						Fonts.font35.drawString(listValue.openList ? "-" : "+", (int) (moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() - (listValue.openList ? 5 : 6)), yPos + 4, 0xffffff);
 
 						if (mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= yPos + 2 && mouseY <= yPos + 14)
-						{
-							if (Mouse.isButtonDown(0) && moduleElement.isntPressed())
-							{
+							if (Mouse.isButtonDown(0) && moduleElement.isntPressed()) {
 								listValue.openList = !listValue.openList;
 								mc.getSoundHandler().playSound("gui.button.press", 1.0F);
 							}
-						}
 
 						yPos += 12;
 
@@ -157,13 +149,10 @@ public class LiquidBounceStyle extends Style
 								RenderUtils.drawRect(moduleElement.getX() + moduleElement.getWidth() + 4, yPos + 2, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 14, Integer.MIN_VALUE);
 
 								if (mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= yPos + 2 && mouseY <= yPos + 14)
-								{
-									if (Mouse.isButtonDown(0) && moduleElement.isntPressed())
-									{
+									if (Mouse.isButtonDown(0) && moduleElement.isntPressed()) {
 										listValue.set(valueOfList);
 										mc.getSoundHandler().playSound("gui.button.press", 1.0F);
 									}
-								}
 
 								GlStateManager.resetColor();
 								Fonts.font35.drawString(">", moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, Integer.MAX_VALUE);
@@ -187,13 +176,10 @@ public class LiquidBounceStyle extends Style
 						RenderUtils.drawRect(8 + sliderValue, yPos + 15, sliderValue + 11, yPos + 21, guiColor);
 
 						if (mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21)
-						{
-							if (Mouse.isButtonDown(0))
-							{
+							if (Mouse.isButtonDown(0)) {
 								final double i = WMathHelper.clamp_double((mouseX - moduleElement.getX() - moduleElement.getWidth() - 8) / (moduleElement.getSettingsWidth() - 12), 0, 1);
 								floatValue.set(round((float) (floatValue.getMinimum() + (floatValue.getMaximum() - floatValue.getMinimum()) * i)).floatValue());
 							}
-						}
 
 						GlStateManager.resetColor();
 						Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
@@ -214,13 +200,10 @@ public class LiquidBounceStyle extends Style
 						RenderUtils.drawRect(8 + sliderValue, yPos + 15, sliderValue + 11, yPos + 21, guiColor);
 
 						if (mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= yPos + 15 && mouseY <= yPos + 21)
-						{
-							if (Mouse.isButtonDown(0))
-							{
+							if (Mouse.isButtonDown(0)) {
 								final double i = WMathHelper.clamp_double((mouseX - moduleElement.getX() - moduleElement.getWidth() - 8) / (moduleElement.getSettingsWidth() - 12), 0, 1);
 								integerValue.set((int) (integerValue.getMinimum() + (integerValue.getMaximum() - integerValue.getMinimum()) * i));
 							}
-						}
 
 						GlStateManager.resetColor();
 						Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
@@ -248,9 +231,7 @@ public class LiquidBounceStyle extends Style
 							final FontInfo fontInfo = Fonts.getFontDetails(fontRenderer);
 
 							if (fontInfo != null)
-							{
 								displayString = fontInfo.getName() + (fontInfo.getFontSize() != -1 ? " - " + fontInfo.getFontSize() : "");
-							}
 						}
 
 						Fonts.font35.drawString(displayString, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, Color.WHITE.getRGB());
@@ -264,13 +245,10 @@ public class LiquidBounceStyle extends Style
 							final List<IFontRenderer> fonts = Fonts.getFonts();
 
 							if (Mouse.isButtonDown(0))
-							{
-								for (int i = 0; i < fonts.size(); i++)
-								{
+								for (int i = 0; i < fonts.size(); i++) {
 									final IFontRenderer font = fonts.get(i);
 
-									if (font.equals(fontRenderer))
-									{
+									if (font.equals(fontRenderer)) {
 										i++;
 
 										if (i >= fonts.size())
@@ -280,15 +258,11 @@ public class LiquidBounceStyle extends Style
 										break;
 									}
 								}
-							}
 							else
-							{
-								for (int i = fonts.size() - 1; i >= 0; i--)
-								{
+								for (int i = fonts.size() - 1; i >= 0; i--) {
 									final IFontRenderer font = fonts.get(i);
 
-									if (font.equals(fontRenderer))
-									{
+									if (font.equals(fontRenderer)) {
 										i--;
 
 										if (i >= fonts.size())
@@ -301,7 +275,6 @@ public class LiquidBounceStyle extends Style
 										break;
 									}
 								}
-							}
 						}
 
 						yPos += 11;
@@ -321,9 +294,7 @@ public class LiquidBounceStyle extends Style
 					}
 
 					if (isNumber)
-					{
 						AWTFontRenderer.Companion.setAssumeNonVolatile(true);
-					}
 				}
 
 				moduleElement.updatePressed();

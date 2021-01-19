@@ -86,16 +86,11 @@ public class GuiAltManager extends WrappedGuiScreen
 			return "";
 
 		if (altService.getCurrentService() != EnumAltService.MOJANG)
-		{
-			try
-			{
+			try {
 				altService.switchService(EnumAltService.MOJANG);
-			}
-			catch (final NoSuchFieldException | IllegalAccessException e)
-			{
+			} catch (final NoSuchFieldException | IllegalAccessException e) {
 				ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e);
 			}
-		}
 
 		if (minecraftAccount.isCracked())
 		{
@@ -293,12 +288,10 @@ public class GuiAltManager extends WrappedGuiScreen
 					final String[] accountData = line.split(":", 2);
 
 					if (!LiquidBounce.fileManager.accountsConfig.accountExists(accountData[0]))
-					{
 						if (accountData.length > 1)
 							LiquidBounce.fileManager.accountsConfig.addAccount(accountData[0], accountData[1]);
 						else
 							LiquidBounce.fileManager.accountsConfig.addAccount(accountData[0]);
-					}
 				}
 
 				fileReader.close();
@@ -354,16 +347,10 @@ public class GuiAltManager extends WrappedGuiScreen
 					final FileWriter fileWriter = new FileWriter(selectedFile);
 
 					for (final MinecraftAccount account : LiquidBounce.fileManager.accountsConfig.getAccounts())
-					{
 						if (account.isCracked())
-						{
 							fileWriter.write(account.getName() + "\r\n");
-						}
 						else
-						{
 							fileWriter.write(account.getName() + ":" + account.getPassword() + "\r\n");
-						}
-					}
 
 					fileWriter.flush();
 					fileWriter.close();
@@ -475,13 +462,8 @@ public class GuiAltManager extends WrappedGuiScreen
 			accounts = new ArrayList<>();
 
 			for (final MinecraftAccount account : LiquidBounce.fileManager.accountsConfig.getAccounts())
-			{
 				if (account.getName() != null && account.getName().toLowerCase().contains(search) || account.getAccountName() != null && account.getAccountName().toLowerCase().contains(search))
-				{
 					accounts.add(account);
-				}
-
-			}
 		}
 
 		@Override
@@ -514,9 +496,7 @@ public class GuiAltManager extends WrappedGuiScreen
 			selectedSlot = var1;
 
 			if (doubleClick)
-			{
-				if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize() && loginButton.getEnabled())
-				{
+				if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize() && loginButton.getEnabled()) {
 					loginButton.setEnabled(false);
 					randomButton.setEnabled(false);
 
@@ -529,10 +509,8 @@ public class GuiAltManager extends WrappedGuiScreen
 						loginButton.setEnabled(true);
 						randomButton.setEnabled(true);
 					}, "AltManagerLogin").start();
-				}
-				else
+				} else
 					status = "\u00A7cSelect an account.";
-			}
 		}
 
 		@Override

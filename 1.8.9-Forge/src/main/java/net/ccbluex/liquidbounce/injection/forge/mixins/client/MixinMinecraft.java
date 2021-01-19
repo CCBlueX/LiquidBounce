@@ -125,19 +125,13 @@ public abstract class MixinMinecraft
 		final long end = System.currentTimeMillis() + 20000;
 
 		while (end < System.currentTimeMillis() && SplashProgressLock.INSTANCE.isAnimationRunning())
-		{
-			synchronized (SplashProgressLock.INSTANCE)
-			{
-				try
-				{
+			synchronized (SplashProgressLock.INSTANCE) {
+				try {
 					SplashProgressLock.INSTANCE.wait(10000);
-				}
-				catch (final InterruptedException e)
-				{
+				} catch (final InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
-		}
 	}
 
 	@Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;displayGuiScreen(Lnet/minecraft/client/gui/GuiScreen;)V", shift = Shift.AFTER))
@@ -206,9 +200,7 @@ public abstract class MixinMinecraft
 	private void onClickBlock(final CallbackInfo callbackInfo)
 	{
 		if (leftClickCounter == 0 && theWorld.getBlockState(objectMouseOver.getBlockPos()).getBlock().getMaterial() != Material.air)
-		{
 			LiquidBounce.eventManager.callEvent(new ClickBlockEvent(BackendExtentionsKt.wrap(objectMouseOver.getBlockPos()), EnumFacingImplKt.wrap(objectMouseOver.sideHit)));
-		}
 	}
 
 	@Inject(method = "setWindowIcon", at = @At("HEAD"), cancellable = true)
@@ -261,9 +253,7 @@ public abstract class MixinMinecraft
 	private void loadWorld(final WorldClient p_loadWorld_1_, final String p_loadWorld_2_, final CallbackInfo callbackInfo)
 	{
 		if (theWorld != null)
-		{
 			MiniMapRegister.INSTANCE.unloadAllChunks();
-		}
 
 		LiquidBounce.eventManager.callEvent(new WorldEvent(p_loadWorld_1_ == null ? null : WorldClientImplKt.wrap(p_loadWorld_1_)));
 	}
@@ -278,25 +268,18 @@ public abstract class MixinMinecraft
 			leftClickCounter = 0;
 
 		if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || LiquidBounce.moduleManager.getModule(MultiActions.class).getState()))
-		{
-			if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectType.BLOCK)
-			{
+			if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectType.BLOCK) {
 				final BlockPos blockPos = objectMouseOver.getBlockPos();
 
 				if (leftClickCounter == 0)
 					LiquidBounce.eventManager.callEvent(new ClickBlockEvent(BackendExtentionsKt.wrap(blockPos), EnumFacingImplKt.wrap(objectMouseOver.sideHit)));
 
-				if (theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && playerController.onPlayerDamageBlock(blockPos, objectMouseOver.sideHit))
-				{
+				if (theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && playerController.onPlayerDamageBlock(blockPos, objectMouseOver.sideHit)) {
 					effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.sideHit);
 					thePlayer.swingItem();
 				}
-			}
-			else if (!LiquidBounce.moduleManager.getModule(AbortBreaking.class).getState())
-			{
+			} else if (!LiquidBounce.moduleManager.getModule(AbortBreaking.class).getState())
 				playerController.resetBlockRemoving();
-			}
-		}
 	}
 
 	/**

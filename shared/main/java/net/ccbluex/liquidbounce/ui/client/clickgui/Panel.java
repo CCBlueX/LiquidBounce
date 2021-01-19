@@ -87,19 +87,15 @@ public abstract class Panel extends MinecraftInstance
 		int count = 0;
 
 		for (final Element element : elements)
-		{
-			if (++count > scroll && count < scroll + maxElements + 1 && scroll < elements.size())
-			{
+			if (++count > scroll && count < scroll + maxElements + 1 && scroll < elements.size()) {
 				element.setLocation(x, y);
 				element.setWidth(getWidth());
 				if (y <= getY() + fade)
 					element.drawScreen(mouseX, mouseY, button);
 				y += element.getHeight() + 1;
 				element.setVisible(true);
-			}
-			else
+			} else
 				element.setVisible(false);
-		}
 	}
 
 	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton)
@@ -158,9 +154,7 @@ public abstract class Panel extends MinecraftInstance
 					++dragged;
 			}
 			else if (wheel > 0 && dragged >= 1)
-			{
 				--dragged;
-			}
 
 			return true;
 		}

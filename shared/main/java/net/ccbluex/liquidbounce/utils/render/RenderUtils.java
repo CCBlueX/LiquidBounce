@@ -37,9 +37,7 @@ public final class RenderUtils extends MinecraftInstance
 	static
 	{
 		for (int i = 0; i < DISPLAY_LISTS_2D.length; i++)
-		{
 			DISPLAY_LISTS_2D[i] = glGenLists(1);
-		}
 
 		glNewList(DISPLAY_LISTS_2D[0], GL_COMPILE);
 
@@ -99,9 +97,7 @@ public final class RenderUtils extends MinecraftInstance
 			final double posZ = player.getLastTickPosZ() + (player.getPosZ() - player.getLastTickPosZ()) * (double) timer.getRenderPartialTicks();
 
 			if (Backend.MINECRAFT_VERSION_MINOR < 12)
-			{
 				block.setBlockBoundsBasedOnState(mc.getTheWorld(), blockPos);
-			}
 
 			axisAlignedBB = block.getSelectedBoundingBox(mc.getTheWorld(), mc.getTheWorld().getBlockState(blockPos), blockPos).expand(0.0020000000949949026D, 0.0020000000949949026D, 0.0020000000949949026D).offset(-posX, -posY, -posZ);
 		}
@@ -438,9 +434,7 @@ public final class RenderUtils extends MinecraftInstance
 		glLineWidth(2F);
 		glBegin(GL_LINE_STRIP);
 		for (float i = end; i >= start; i -= 360 / 90.0f)
-		{
 			glVertex2f((float) (x + cos(i * PI / 180) * (radius * 1.001F)), (float) (y + sin(i * PI / 180) * (radius * 1.001F)));
-		}
 		glEnd();
 		glDisable(GL_LINE_SMOOTH);
 

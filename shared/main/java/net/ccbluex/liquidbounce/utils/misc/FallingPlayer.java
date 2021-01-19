@@ -54,9 +54,7 @@ public class FallingPlayer extends MinecraftInstance
 			v = (float) Math.sqrt(v);
 
 			if (v < 1.0F)
-			{
 				v = 1.0F;
-			}
 
 			v = mc.getThePlayer().getJumpMovementFactor() / v;
 			strafe = strafe * v;
@@ -125,9 +123,7 @@ public class FallingPlayer extends MinecraftInstance
 		final IMovingObjectPosition result = mc.getTheWorld().rayTraceBlocks(start, end, true);
 
 		if (result != null && result.getTypeOfHit() == WMovingObjectType.BLOCK && result.getSideHit().isUp())
-		{
 			return result.getBlockPos();
-		}
 
 		return null;
 	}

@@ -112,9 +112,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 		final LiquidWalk liquidWalk = (LiquidWalk) LiquidBounce.moduleManager.getModule(LiquidWalk.class);
 
 		if (Objects.requireNonNull(liquidWalk).getState() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getModeValue().get().equalsIgnoreCase("Swim"))
-		{
 			updateAITick();
-		}
 	}
 
 	@Inject(method = "getLook", at = @At("HEAD"), cancellable = true)

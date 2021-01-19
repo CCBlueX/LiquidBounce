@@ -63,13 +63,9 @@ public class ValuesConfig extends FileConfig
 			final Entry<String, JsonElement> entry = iterator.next();
 
 			if (entry.getKey().equalsIgnoreCase("CommandPrefix"))
-			{
 				LiquidBounce.commandManager.setPrefix(entry.getValue().getAsCharacter());
-			}
 			else if (entry.getKey().equalsIgnoreCase("ShowRichPresence"))
-			{
 				LiquidBounce.clientRichPresence.setShowRichPresenceValue(entry.getValue().getAsBoolean());
-			}
 			else if (entry.getKey().equalsIgnoreCase("targets"))
 			{
 				final JsonObject jsonValue = (JsonObject) entry.getValue();

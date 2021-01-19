@@ -116,26 +116,20 @@ public class Fonts extends MinecraftInstance
 	public static IFontRenderer getFontRenderer(final String name, final int size)
 	{
 		for (final Field field : Fonts.class.getDeclaredFields())
-		{
-			try
-			{
+			try {
 				field.setAccessible(true);
 
 				final Object o = field.get(null);
 
-				if (o instanceof IFontRenderer)
-				{
+				if (o instanceof IFontRenderer) {
 					final FontDetails fontDetails = field.getAnnotation(FontDetails.class);
 
 					if (fontDetails.fontName().equals(name) && fontDetails.fontSize() == size)
 						return (IFontRenderer) o;
 				}
-			}
-			catch (final IllegalAccessException e)
-			{
+			} catch (final IllegalAccessException e) {
 				e.printStackTrace();
 			}
-		}
 
 		return CUSTOM_FONT_RENDERERS.getOrDefault(new FontInfo(name, size), minecraftFont);
 	}
@@ -143,31 +137,23 @@ public class Fonts extends MinecraftInstance
 	public static FontInfo getFontDetails(final IFontRenderer fontRenderer)
 	{
 		for (final Field field : Fonts.class.getDeclaredFields())
-		{
-			try
-			{
+			try {
 				field.setAccessible(true);
 
 				final Object o = field.get(null);
 
-				if (o.equals(fontRenderer))
-				{
+				if (o.equals(fontRenderer)) {
 					final FontDetails fontDetails = field.getAnnotation(FontDetails.class);
 
 					return new FontInfo(fontDetails.fontName(), fontDetails.fontSize());
 				}
-			}
-			catch (final IllegalAccessException e)
-			{
+			} catch (final IllegalAccessException e) {
 				e.printStackTrace();
 			}
-		}
 
 		for (final Entry<FontInfo, IFontRenderer> entry : CUSTOM_FONT_RENDERERS.entrySet())
-		{
 			if (entry.getValue() == fontRenderer)
 				return entry.getKey();
-		}
 
 		return null;
 	}
@@ -177,21 +163,16 @@ public class Fonts extends MinecraftInstance
 		final List<IFontRenderer> fonts = new ArrayList<>();
 
 		for (final Field fontField : Fonts.class.getDeclaredFields())
-		{
-			try
-			{
+			try {
 				fontField.setAccessible(true);
 
 				final Object fontObj = fontField.get(null);
 
 				if (fontObj instanceof IFontRenderer)
 					fonts.add((IFontRenderer) fontObj);
-			}
-			catch (final IllegalAccessException e)
-			{
+			} catch (final IllegalAccessException e) {
 				e.printStackTrace();
 			}
-		}
 
 		fonts.addAll(CUSTOM_FONT_RENDERERS.values());
 

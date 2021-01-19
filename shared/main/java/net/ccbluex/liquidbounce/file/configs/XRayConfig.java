@@ -53,24 +53,18 @@ public class XRayConfig extends FileConfig
 		xRay.getXrayBlocks().clear();
 
 		for (final JsonElement jsonElement : jsonArray)
-		{
-			try
-			{
+			try {
 				final IBlock block = LiquidBounce.wrapper.getFunctions().getBlockFromName(jsonElement.getAsString());
 
-				if (xRay.getXrayBlocks().contains(block))
-				{
+				if (xRay.getXrayBlocks().contains(block)) {
 					ClientUtils.getLogger().error("[FileManager] Skipped xray block '" + block.getRegistryName() + "' because the block is already added.");
 					continue;
 				}
 
 				xRay.getXrayBlocks().add(block);
-			}
-			catch (final Throwable throwable)
-			{
+			} catch (final Throwable throwable) {
 				ClientUtils.getLogger().error("[FileManager] Failed to add block to xray.", throwable);
 			}
-		}
 	}
 
 	/**

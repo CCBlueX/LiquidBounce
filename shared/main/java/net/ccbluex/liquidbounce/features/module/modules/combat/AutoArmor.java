@@ -85,9 +85,7 @@ public class AutoArmor extends Module
 		final ArmorPiece[] bestArmor = new ArmorPiece[4];
 
 		for (final Entry<Integer, List<ArmorPiece>> armorEntry : armorPieces.entrySet())
-		{
 			bestArmor[armorEntry.getKey()] = armorEntry.getValue().stream().max(ARMOR_COMPARATOR).orElse(null);
-		}
 
 		// Swap armor
 		for (int i = 0; i < 4; i++)
@@ -155,25 +153,16 @@ public class AutoArmor extends Module
 			boolean full = isArmorSlot;
 
 			if (full)
-			{
 				for (final IItemStack iItemStack : mc.getThePlayer().getInventory().getMainInventory())
-				{
-					if (ItemUtils.isStackEmpty(iItemStack))
-					{
+					if (ItemUtils.isStackEmpty(iItemStack)) {
 						full = false;
 						break;
 					}
-				}
-			}
 
 			if (full)
-			{
 				mc.getPlayerController().windowClick(mc.getThePlayer().getInventoryContainer().getWindowId(), item, 1, 4, mc.getThePlayer());
-			}
 			else
-			{
 				mc.getPlayerController().windowClick(mc.getThePlayer().getInventoryContainer().getWindowId(), isArmorSlot ? item : item < 9 ? item + 36 : item, 0, 1, mc.getThePlayer());
-			}
 
 			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 

@@ -56,9 +56,7 @@ public class Ignite extends Module
 		final int fireInHotbar = lighterInHotbar != -1 ? lighterInHotbar : lavaInHotbar;
 
 		for (final IEntity entity : theWorld.getLoadedEntityList())
-		{
-			if (EntityUtils.isSelected(entity, true) && !entity.isBurning())
-			{
+			if (EntityUtils.isSelected(entity, true) && !entity.isBurning()) {
 				final WBlockPos blockPos = entity.getPosition();
 
 				if (mc.getThePlayer().getDistanceSq(blockPos) >= 22.3D || !BlockUtils.isReplaceable(blockPos) || !classProvider.isBlockAir(BlockUtils.getBlock(blockPos)))
@@ -70,8 +68,7 @@ public class Ignite extends Module
 
 				final IItemStack itemStack = mc.getThePlayer().getInventory().getStackInSlot(fireInHotbar);
 
-				if (classProvider.isItemBucket(itemStack.getItem()))
-				{
+				if (classProvider.isItemBucket(itemStack.getItem())) {
 					final double diffX = blockPos.getX() + 0.5D - mc.getThePlayer().getPosX();
 					final double diffY = blockPos.getY() + 0.5D - (thePlayer.getEntityBoundingBox().getMinY() + thePlayer.getEyeHeight());
 					final double diffZ = blockPos.getZ() + 0.5D - thePlayer.getPosZ();
@@ -82,11 +79,8 @@ public class Ignite extends Module
 					mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerLook(thePlayer.getRotationYaw() + WMathHelper.wrapAngleTo180_float(yaw - thePlayer.getRotationYaw()), thePlayer.getRotationPitch() + WMathHelper.wrapAngleTo180_float(pitch - thePlayer.getRotationPitch()), thePlayer.getOnGround()));
 
 					mc.getPlayerController().sendUseItem(thePlayer, theWorld, itemStack);
-				}
-				else
-				{
-					for (final EnumFacingType enumFacingType : EnumFacingType.values())
-					{
+				} else
+					for (final EnumFacingType enumFacingType : EnumFacingType.values()) {
 						final IEnumFacing side = classProvider.getEnumFacing(enumFacingType);
 
 						final WBlockPos neighbor = blockPos.offset(side);
@@ -103,13 +97,11 @@ public class Ignite extends Module
 
 						mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerLook(thePlayer.getRotationYaw() + WMathHelper.wrapAngleTo180_float(yaw - thePlayer.getRotationYaw()), thePlayer.getRotationPitch() + WMathHelper.wrapAngleTo180_float(pitch - thePlayer.getRotationPitch()), thePlayer.getOnGround()));
 
-						if (mc.getPlayerController().onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor, side.getOpposite(), new WVec3(side.getDirectionVec())))
-						{
+						if (mc.getPlayerController().onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor, side.getOpposite(), new WVec3(side.getDirectionVec()))) {
 							thePlayer.swingItem();
 							break;
 						}
 					}
-				}
 
 				mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.getInventory().getCurrentItem()));
 				RotationUtils.keepCurrentRotation = false;
@@ -118,6 +110,5 @@ public class Ignite extends Module
 				msTimer.reset();
 				break;
 			}
-		}
 	}
 }

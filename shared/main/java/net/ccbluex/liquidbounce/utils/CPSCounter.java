@@ -16,9 +16,7 @@ public class CPSCounter
 	static
 	{
 		for (int i = 0; i < TIMESTAMP_BUFFERS.length; i++)
-		{
 			TIMESTAMP_BUFFERS[i] = new RollingArrayLongBuffer(MAX_CPS);
-		}
 	}
 
 	/**

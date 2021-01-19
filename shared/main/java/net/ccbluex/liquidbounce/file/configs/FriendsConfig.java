@@ -63,20 +63,15 @@ public class FriendsConfig extends FileConfig
 
 			String line;
 			while ((line = bufferedReader.readLine()) != null)
-			{
-				if (!line.contains("{") && !line.contains("}"))
-				{
+				if (!line.contains("{") && !line.contains("}")) {
 					line = line.replace(" ", "").replace("\"", "").replace(",", "");
 
-					if (line.contains(":"))
-					{
+					if (line.contains(":")) {
 						final String[] data = line.split(":");
 						addFriend(data[0], data[1]);
-					}
-					else
+					} else
 						addFriend(line);
 				}
-			}
 			bufferedReader.close();
 			ClientUtils.getLogger().info("[FileManager] Loaded old Friends config...");
 

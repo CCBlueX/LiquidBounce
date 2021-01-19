@@ -52,11 +52,8 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 		VecRotation vecRotation = null;
 
 		for (double xSearch = 0.1D; xSearch < 0.9D; xSearch += 0.1D)
-		{
 			for (double ySearch = 0.1D; ySearch < 0.9D; ySearch += 0.1D)
-			{
-				for (double zSearch = 0.1D; zSearch < 0.9D; zSearch += 0.1D)
-				{
+				for (double zSearch = 0.1D; zSearch < 0.9D; zSearch += 0.1D) {
 					final WVec3 eyesPos = new WVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getEntityBoundingBox().getMinY() + mc.getThePlayer().getEyeHeight(), mc.getThePlayer().getPosZ());
 					final WVec3 posVec = new WVec3(blockPos).addVector(xSearch, ySearch, zSearch);
 					final double dist = eyesPos.distanceTo(posVec);
@@ -73,16 +70,13 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 					final WVec3 vector = eyesPos.addVector(rotationVector.getXCoord() * dist, rotationVector.getYCoord() * dist, rotationVector.getZCoord() * dist);
 					final IMovingObjectPosition obj = mc.getTheWorld().rayTraceBlocks(eyesPos, vector, false, false, true);
 
-					if (obj != null && obj.getTypeOfHit() == WMovingObjectType.BLOCK)
-					{
+					if (obj != null && obj.getTypeOfHit() == WMovingObjectType.BLOCK) {
 						final VecRotation currentVec = new VecRotation(posVec, rotation);
 
 						if (vecRotation == null || getRotationDifference(currentVec.getRotation()) < getRotationDifference(vecRotation.getRotation()))
 							vecRotation = currentVec;
 					}
 				}
-			}
-		}
 
 		return vecRotation;
 	}
@@ -188,11 +182,8 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 		VecRotation vecRotation = null;
 
 		for (double xSearch = 0.15D; xSearch < 0.85D; xSearch += 0.1D)
-		{
 			for (double ySearch = 0.15D; ySearch < 1D; ySearch += 0.1D)
-			{
-				for (double zSearch = 0.15D; zSearch < 0.85D; zSearch += 0.1D)
-				{
+				for (double zSearch = 0.15D; zSearch < 0.85D; zSearch += 0.1D) {
 					final WVec3 vec3 = new WVec3(bb.getMinX() + (bb.getMaxX() - bb.getMinX()) * xSearch, bb.getMinY() + (bb.getMaxY() - bb.getMinY()) * ySearch, bb.getMinZ() + (bb.getMaxZ() - bb.getMinZ()) * zSearch);
 					final Rotation rotation = toRotation(vec3, predict);
 					final double vecDist = eyes.distanceTo(vec3);
@@ -200,16 +191,13 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 					if (vecDist > distance)
 						continue;
 
-					if (throughWalls || isVisible(vec3))
-					{
+					if (throughWalls || isVisible(vec3)) {
 						final VecRotation currentVec = new VecRotation(vec3, rotation);
 
 						if (vecRotation == null || (random ? getRotationDifference(currentVec.getRotation(), randomRotation) < getRotationDifference(vecRotation.getRotation(), randomRotation) : getRotationDifference(currentVec.getRotation()) < getRotationDifference(vecRotation.getRotation())))
 							vecRotation = currentVec;
 					}
 				}
-			}
-		}
 
 		return vecRotation;
 	}

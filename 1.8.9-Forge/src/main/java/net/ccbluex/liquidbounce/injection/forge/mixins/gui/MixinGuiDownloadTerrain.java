@@ -40,18 +40,14 @@ public abstract class MixinGuiDownloadTerrain extends MixinGuiScreen
 			mc.loadWorld(null);
 
 			if (flag)
-			{
 				mc.displayGuiScreen(new GuiMainMenu());
-			}
 			else if (flag1)
 			{
 				final RealmsBridge realmsbridge = new RealmsBridge();
 				realmsbridge.switchToRealms(new GuiMainMenu());
 			}
 			else
-			{
 				mc.displayGuiScreen(new GuiMultiplayer(new GuiMainMenu()));
-			}
 		}
 
 	}

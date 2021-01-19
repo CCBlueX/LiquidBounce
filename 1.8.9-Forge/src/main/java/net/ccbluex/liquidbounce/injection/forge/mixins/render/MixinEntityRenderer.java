@@ -112,9 +112,7 @@ public abstract class MixinEntityRenderer
 				final double d3 = thirdPersonDistanceTemp + (thirdPersonDistance - thirdPersonDistanceTemp) * partialTicks;
 
 				if (mc.gameSettings.debugCamEnable)
-				{
 					GlStateManager.translate(0.0F, 0.0F, (float) -d3);
-				}
 				else
 				{
 					final float f1 = entity.rotationYaw;
@@ -202,14 +200,10 @@ public abstract class MixinEntityRenderer
 				d1 = 6.0D;
 			}
 			else if (d0 > 3.0D)
-			{
 				flag = true;
-			}
 
 			if (mc.objectMouseOver != null)
-			{
 				d1 = mc.objectMouseOver.hitVec.distanceTo(vec3);
-			}
 
 			if (reach.getState())
 			{
@@ -247,22 +241,16 @@ public abstract class MixinEntityRenderer
 				{
 					final double d3 = vec3.distanceTo(movingobjectposition.hitVec);
 					if (d3 < d2 || d2 == 0.0D)
-					{
-						if (entity1 == entity.ridingEntity && !entity.canRiderInteract())
-						{
-							if (d2 == 0.0D)
-							{
+						if (entity1 == entity.ridingEntity && !entity.canRiderInteract()) {
+							if (d2 == 0.0D) {
 								pointedEntity = entity1;
 								vec33 = movingobjectposition.hitVec;
 							}
-						}
-						else
-						{
+						} else {
 							pointedEntity = entity1;
 							vec33 = movingobjectposition.hitVec;
 							d2 = d3;
 						}
-					}
 				}
 			}
 
@@ -276,9 +264,7 @@ public abstract class MixinEntityRenderer
 			{
 				mc.objectMouseOver = new MovingObjectPosition(pointedEntity, vec33);
 				if (pointedEntity instanceof EntityLivingBase || pointedEntity instanceof EntityItemFrame)
-				{
 					mc.pointedEntity = pointedEntity;
-				}
 			}
 
 			mc.mcProfiler.endSection();

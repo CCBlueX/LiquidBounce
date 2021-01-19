@@ -258,18 +258,13 @@ public class ClickGui extends WrappedGuiScreen
 		}
 
 		for (final Panel panel : panels)
-		{
 			for (final Element element : panel.getElements())
-			{
-				if (element instanceof ModuleElement)
-				{
+				if (element instanceof ModuleElement) {
 					final ModuleElement moduleElement = (ModuleElement) element;
 
 					if (mouseX != 0 && mouseY != 0 && moduleElement.isHovering(mouseX, mouseY) && moduleElement.isVisible() && element.getY() <= panel.getY() + panel.getFade())
 						style.drawDescription(mouseX, mouseY, moduleElement.getModule().getDescription());
 				}
-			}
-		}
 
 		if (Mouse.hasWheel())
 		{
@@ -330,39 +325,29 @@ public class ClickGui extends WrappedGuiScreen
 		mouseY /= scale;
 
 		for (final Panel panel : panels)
-		{
 			panel.mouseReleased(mouseX, mouseY, state);
-		}
 	}
 
 	@Override
 	public void updateScreen()
 	{
 		for (final Panel panel : panels)
-		{
-			for (final Element element : panel.getElements())
-			{
-				if (element instanceof ButtonElement)
-				{
+			for (final Element element : panel.getElements()) {
+				if (element instanceof ButtonElement) {
 					final ButtonElement buttonElement = (ButtonElement) element;
 
-					if (buttonElement.isHovering(mouseX, mouseY))
-					{
+					if (buttonElement.isHovering(mouseX, mouseY)) {
 						if (buttonElement.hoverTime < 7)
 							buttonElement.hoverTime++;
-					}
-					else if (buttonElement.hoverTime > 0)
+					} else if (buttonElement.hoverTime > 0)
 						buttonElement.hoverTime--;
 				}
 
-				if (element instanceof ModuleElement)
-				{
-					if (((ModuleElement) element).getModule().getState())
-					{
+				if (element instanceof ModuleElement) {
+					if (((ModuleElement) element).getModule().getState()) {
 						if (((ModuleElement) element).slowlyFade < 255)
 							((ModuleElement) element).slowlyFade += 20;
-					}
-					else if (((ModuleElement) element).slowlyFade > 0)
+					} else if (((ModuleElement) element).slowlyFade > 0)
 						((ModuleElement) element).slowlyFade -= 20;
 
 					if (((ModuleElement) element).slowlyFade > 255)
@@ -372,7 +357,6 @@ public class ClickGui extends WrappedGuiScreen
 						((ModuleElement) element).slowlyFade = 0;
 				}
 			}
-		}
 		super.updateScreen();
 	}
 

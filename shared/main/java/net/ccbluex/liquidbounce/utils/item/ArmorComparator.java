@@ -94,9 +94,7 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 				final int durabilityCmp = Integer.compare(o1a.getArmorMaterial().getDurability(o1a.getArmorType()), o2a.getArmorMaterial().getDurability(o2a.getArmorType()));
 
 				if (durabilityCmp != 0)
-				{
 					return durabilityCmp;
-				}
 
 				// Last comparision: Enchantability
 				return Integer.compare(o1a.getArmorMaterial().getEnchantability(), o2a.getArmorMaterial().getEnchantability());
@@ -125,9 +123,7 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 		float sum = 0.0f;
 
 		for (int i = 0; i < DAMAGE_REDUCTION_ENCHANTMENTS.length; i++)
-		{
 			sum += ItemUtils.getEnchantment(itemStack, DAMAGE_REDUCTION_ENCHANTMENTS[i]) * ENCHANTMENT_FACTORS[i] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[i];
-		}
 
 		return sum;
 
@@ -138,9 +134,7 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 		float sum = 0.0f;
 
 		for (int i = 0; i < OTHER_ENCHANTMENTS.length; i++)
-		{
 			sum += ItemUtils.getEnchantment(itemStack, OTHER_ENCHANTMENTS[i]) * OTHER_ENCHANTMENT_FACTORS[i];
-		}
 
 		return sum;
 

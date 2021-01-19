@@ -105,9 +105,7 @@ public abstract class MixinItemRenderer
 			final KillAura killAura = (KillAura) LiquidBounce.moduleManager.getModule(KillAura.class);
 
 			if (itemToRender.getItem() instanceof ItemMap)
-			{
 				renderItemMap(abstractclientplayer, f2, f, f1);
-			}
 			else if (abstractclientplayer.getItemInUseCount() > 0 || itemToRender.getItem() instanceof ItemSword && killAura.getBlockingStatus())
 			{
 				final EnumAction enumaction = killAura.getBlockingStatus() ? EnumAction.BLOCK : itemToRender.getItemUseAction();
@@ -142,9 +140,7 @@ public abstract class MixinItemRenderer
 			renderItem(abstractclientplayer, itemToRender, TransformType.FIRST_PERSON);
 		}
 		else if (!abstractclientplayer.isInvisible())
-		{
 			renderPlayerArm(abstractclientplayer, f, f1);
-		}
 
 		GlStateManager.popMatrix();
 		GlStateManager.disableRescaleNormal();

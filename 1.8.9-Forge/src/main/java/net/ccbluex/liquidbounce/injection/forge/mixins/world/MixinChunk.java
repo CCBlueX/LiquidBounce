@@ -44,12 +44,9 @@ public class MixinChunk
 		final ProphuntESP prophuntESP = (ProphuntESP) LiquidBounce.moduleManager.getModule(ProphuntESP.class);
 
 		if (Objects.requireNonNull(prophuntESP).getState())
-		{
-			synchronized (prophuntESP.getBlocks())
-			{
+			synchronized (prophuntESP.getBlocks()) {
 				prophuntESP.getBlocks().put(BackendExtentionsKt.wrap(pos), System.currentTimeMillis());
 			}
-		}
 	}
 
 	@Inject(method = "onChunkUnload", at = @At("HEAD"))

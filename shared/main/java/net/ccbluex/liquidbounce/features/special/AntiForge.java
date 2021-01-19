@@ -28,14 +28,11 @@ public class AntiForge extends MinecraftInstance implements Listenable
 		final IPacket packet = event.getPacket();
 
 		if (enabled && !mc.isIntegratedServerRunning())
-		{
-			try
-			{
+			try {
 				if (blockProxyPacket && packet.getClass().getName().equals("net.minecraftforge.fml.common.network.internal.FMLProxyPacket"))
 					event.cancelEvent();
 
-				if (blockPayloadPackets && classProvider.isCPacketCustomPayload(packet))
-				{
+				if (blockPayloadPackets && classProvider.isCPacketCustomPayload(packet)) {
 					final ICPacketCustomPayload customPayload = packet.asCPacketCustomPayload();
 
 					if (!customPayload.getChannelName().startsWith("MC|"))
@@ -43,12 +40,9 @@ public class AntiForge extends MinecraftInstance implements Listenable
 					else if (customPayload.getChannelName().equalsIgnoreCase("MC|Brand"))
 						customPayload.setData(classProvider.createPacketBuffer(Unpooled.buffer()).writeString("vanilla"));
 				}
-			}
-			catch (final Exception e)
-			{
+			} catch (final Exception e) {
 				e.printStackTrace();
 			}
-		}
 	}
 
 	@Override

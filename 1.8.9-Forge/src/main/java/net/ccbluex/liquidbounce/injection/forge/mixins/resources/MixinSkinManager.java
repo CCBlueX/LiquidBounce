@@ -31,13 +31,10 @@ public class MixinSkinManager
 		final NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.getModule(NameProtect.class);
 
 		if (nameProtect.getState() && nameProtect.skinProtectValue.get())
-		{
-			if (nameProtect.allPlayersValue.get() || Objects.equals(gameProfile.getId(), Minecraft.getMinecraft().getSession().getProfile().getId()))
-			{
+			if (nameProtect.allPlayersValue.get() || Objects.equals(gameProfile.getId(), Minecraft.getMinecraft().getSession().getProfile().getId())) {
 				cir.setReturnValue(new HashMap<>());
 				cir.cancel();
 			}
-		}
 	}
 
 }

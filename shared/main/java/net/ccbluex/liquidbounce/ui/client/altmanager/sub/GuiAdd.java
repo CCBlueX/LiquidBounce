@@ -194,9 +194,7 @@ public class GuiAdd extends WrappedGuiScreen
 					final EnumAltService oldService = GuiAltManager.altService.getCurrentService();
 
 					if (oldService != EnumAltService.MOJANG)
-					{
 						GuiAltManager.altService.switchService(EnumAltService.MOJANG);
-					}
 
 					final YggdrasilUserAuthentication userAuthentication = (YggdrasilUserAuthentication) new YggdrasilAuthenticationService(Proxy.NO_PROXY, "").createUserAuthentication(Agent.MINECRAFT);
 

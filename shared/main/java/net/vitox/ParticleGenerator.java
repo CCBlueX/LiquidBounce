@@ -50,9 +50,7 @@ public class ParticleGenerator
 			final boolean mouseOver = mouseX >= particle.x - range && mouseY >= particle.y - range && mouseX <= particle.x + range && mouseY <= particle.y + range;
 
 			if (mouseOver)
-			{
 				particles.stream().filter(part -> part.getX() > particle.getX() && part.getX() - particle.getX() < range && particle.getX() - part.getX() < range && (part.getY() > particle.getY() && part.getY() - particle.getY() < range || particle.getY() > part.getY() && particle.getY() - part.getY() < range)).forEach(connectable -> particle.connect(connectable.getX(), connectable.getY()));
-			}
 
 			RenderUtils.drawCircle(particle.getX(), particle.getY(), particle.size, 0xffFFFFFF);
 		}

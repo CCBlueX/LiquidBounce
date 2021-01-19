@@ -67,9 +67,7 @@ public final class PathUtils extends MinecraftInstance
 
 		final Collection<Vector3d> positions = new ArrayDeque<>();
 		for (double d = 1D; d <= steps; ++d)
-		{
 			positions.add(new Vector3d(mc.getThePlayer().getPosX() + dX * d / steps, mc.getThePlayer().getPosY() + dY * d / steps, mc.getThePlayer().getPosZ() + dZ * d / steps));
-		}
 
 		return positions;
 	}

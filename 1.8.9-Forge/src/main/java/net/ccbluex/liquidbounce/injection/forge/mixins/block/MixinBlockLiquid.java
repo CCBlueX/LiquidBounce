@@ -38,8 +38,6 @@ public class MixinBlockLiquid
 		final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
 
 		if (noSlow.getState() && noSlow.getLiquidPushValue().get())
-		{
 			callbackInfoReturnable.setReturnValue(new Vec3(0.0D, 0.0D, 0.0D));
-		}
 	}
 }
