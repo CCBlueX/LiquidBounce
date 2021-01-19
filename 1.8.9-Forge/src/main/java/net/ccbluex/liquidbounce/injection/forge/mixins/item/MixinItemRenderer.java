@@ -106,9 +106,9 @@ public abstract class MixinItemRenderer
 
 			if (itemToRender.getItem() instanceof ItemMap)
 				renderItemMap(abstractclientplayer, f2, f, f1);
-			else if (abstractclientplayer.getItemInUseCount() > 0 || itemToRender.getItem() instanceof ItemSword && killAura.getBlockingStatus())
+			else if (abstractclientplayer.getItemInUseCount() > 0 || itemToRender.getItem() instanceof ItemSword && killAura.getClientSideBlockingStatus())
 			{
-				final EnumAction enumaction = killAura.getBlockingStatus() ? EnumAction.BLOCK : itemToRender.getItemUseAction();
+				final EnumAction enumaction = killAura.getClientSideBlockingStatus() ? EnumAction.BLOCK : itemToRender.getItemUseAction();
 
 				switch (enumaction)
 				{

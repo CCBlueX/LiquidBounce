@@ -93,9 +93,9 @@ public final class RenderUtils extends MinecraftInstance
 		{
 			final IEntityPlayer player = mc.getThePlayer();
 
-			final double posX = player.getLastTickPosX() + (player.getPosX() - player.getLastTickPosX()) * (double) timer.getRenderPartialTicks();
-			final double posY = player.getLastTickPosY() + (player.getPosY() - player.getLastTickPosY()) * (double) timer.getRenderPartialTicks();
-			final double posZ = player.getLastTickPosZ() + (player.getPosZ() - player.getLastTickPosZ()) * (double) timer.getRenderPartialTicks();
+			final double posX = player.getLastTickPosX() + (player.getPosX() - player.getLastTickPosX()) * timer.getRenderPartialTicks();
+			final double posY = player.getLastTickPosY() + (player.getPosY() - player.getLastTickPosY()) * timer.getRenderPartialTicks();
+			final double posZ = player.getLastTickPosZ() + (player.getPosZ() - player.getLastTickPosZ()) * timer.getRenderPartialTicks();
 
 			if (Backend.MINECRAFT_VERSION_MINOR < 12)
 				block.setBlockBoundsBasedOnState(mc.getTheWorld(), blockPos);
@@ -700,9 +700,9 @@ public final class RenderUtils extends MinecraftInstance
 		final ITessellator tessellator = classProvider.getTessellatorInstance();
 		final IWorldRenderer worldrenderer = tessellator.getWorldRenderer();
 		worldrenderer.begin(7, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX));
-		worldrenderer.pos(x, y + height, 0.0D).tex(u * f, (v + (float) vHeight) * f1).endVertex();
-		worldrenderer.pos(x + width, y + height, 0.0D).tex((u + (float) uWidth) * f, (v + (float) vHeight) * f1).endVertex();
-		worldrenderer.pos(x + width, y, 0.0D).tex((u + (float) uWidth) * f, v * f1).endVertex();
+		worldrenderer.pos(x, y + height, 0.0D).tex(u * f, (v + vHeight) * f1).endVertex();
+		worldrenderer.pos(x + width, y + height, 0.0D).tex((u + uWidth) * f, (v + vHeight) * f1).endVertex();
+		worldrenderer.pos(x + width, y, 0.0D).tex((u + uWidth) * f, v * f1).endVertex();
 		worldrenderer.pos(x, y, 0.0D).tex(u * f, v * f1).endVertex();
 		tessellator.draw();
 	}

@@ -46,7 +46,7 @@ object ChestAura : Module()
 	@EventTarget
 	fun onMotion(event: MotionEvent)
 	{
-		if (LiquidBounce.moduleManager[Blink::class.java].state || (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).isBlockingChestAura) return
+		if (LiquidBounce.moduleManager[Blink::class.java].state || (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).hasTarget) return
 
 		val thePlayer = mc.thePlayer!!
 		val theWorld = mc.theWorld!!

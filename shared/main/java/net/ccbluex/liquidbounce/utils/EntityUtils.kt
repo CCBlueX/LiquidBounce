@@ -7,7 +7,9 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.isAnimal
@@ -62,4 +64,38 @@ object EntityUtils : MinecraftInstance()
 		return false
 	}
 
+	/**
+	 * Check if [entity] is alive
+	 */
+	@JvmStatic
+	fun isAlive(entity: IEntityLivingBase, aac: Boolean) = entity.entityAlive && entity.health > 0 || aac && entity.hurtTime > 5 // AAC RayCast bots
+
+	/**
+	 * Check if [entity] is selected as enemy with current target options and other modules
+	 */
+	@JvmStatic
+	fun isEnemy(entity: IEntity?, aac: Boolean): Boolean
+	{
+		if (classProvider.isEntityLivingBase(entity) && entity != null && (targetDead || isAlive(entity.asEntityLivingBase(), aac)) && entity != mc.thePlayer)
+		{
+			if (!targetInvisible && entity.invisible) return false
+
+			if (targetPlayer && classProvider.isEntityPlayer(entity))
+			{
+				val player = entity.asEntityPlayer()
+
+				if (player.spectator || isBot(player)) return false
+
+				if (player.isClientFriend() && !LiquidBounce.moduleManager[NoFriends::class.java].state) return false
+
+				val teams = LiquidBounce.moduleManager[Teams::class.java] as Teams
+
+				return !teams.state || !teams.isInYourTeam(entity.asEntityLivingBase())
+			}
+
+			return targetMobs && entity.isMob() || targetAnimals && entity.isAnimal()
+		}
+
+		return false
+	}
 }

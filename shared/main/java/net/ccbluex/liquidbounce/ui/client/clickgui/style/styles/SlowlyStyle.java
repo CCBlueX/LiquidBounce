@@ -41,7 +41,7 @@ public class SlowlyStyle extends Style
 	{
 		final float displayValue = Math.max(min, Math.min(value, max));
 
-		final float sliderValue = (float) x + (float) width * (displayValue - min) / (max - min);
+		final float sliderValue = x + width * (displayValue - min) / (max - min);
 
 		RenderUtils.drawRect(x, y, x + width, y + 2, Integer.MAX_VALUE);
 		RenderUtils.drawRect(x, y, sliderValue, y + 2, color);
@@ -49,7 +49,7 @@ public class SlowlyStyle extends Style
 
 		if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
 		{
-			final double i = WMathHelper.clamp_double(((double) mouseX - (double) x) / ((double) width - 3), 0, 1);
+			final double i = WMathHelper.clamp_double(((double) mouseX - x) / ((double) width - 3), 0, 1);
 
 			BigDecimal bigDecimal = new BigDecimal(Double.toString(min + (max - min) * i));
 			bigDecimal = bigDecimal.setScale(2, 4);
@@ -62,11 +62,11 @@ public class SlowlyStyle extends Style
 	@Override
 	public void drawPanel(final int mouseX, final int mouseY, final Panel panel)
 	{
-		RenderUtils.drawBorderedRect((float) panel.getX(), (float) panel.getY() - 3, (float) panel.getX() + panel.getWidth(), (float) panel.getY() + 17, 3, new Color(42, 57, 79).getRGB(), new Color(42, 57, 79).getRGB());
+		RenderUtils.drawBorderedRect(panel.getX(), (float) panel.getY() - 3, (float) panel.getX() + panel.getWidth(), (float) panel.getY() + 17, 3, new Color(42, 57, 79).getRGB(), new Color(42, 57, 79).getRGB());
 		if (panel.getFade() > 0)
 		{
-			RenderUtils.drawBorderedRect((float) panel.getX(), (float) panel.getY() + 17, (float) panel.getX() + panel.getWidth(), panel.getY() + 19 + panel.getFade(), 3, new Color(54, 71, 96).getRGB(), new Color(54, 71, 96).getRGB());
-			RenderUtils.drawBorderedRect((float) panel.getX(), panel.getY() + 17 + panel.getFade(), (float) panel.getX() + panel.getWidth(), panel.getY() + 19 + panel.getFade() + 5, 3, new Color(42, 57, 79).getRGB(), new Color(42, 57, 79).getRGB());
+			RenderUtils.drawBorderedRect(panel.getX(), (float) panel.getY() + 17, (float) panel.getX() + panel.getWidth(), panel.getY() + 19 + panel.getFade(), 3, new Color(54, 71, 96).getRGB(), new Color(54, 71, 96).getRGB());
+			RenderUtils.drawBorderedRect(panel.getX(), panel.getY() + 17 + panel.getFade(), (float) panel.getX() + panel.getWidth(), panel.getY() + 19 + panel.getFade() + 5, 3, new Color(42, 57, 79).getRGB(), new Color(42, 57, 79).getRGB());
 		}
 		GlStateManager.resetColor();
 		final float textWidth = Fonts.font35.getStringWidth("\u00A7f" + StringUtils.stripControlCodes(panel.getName()));

@@ -335,7 +335,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 		final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
 		final KillAura killAura = (KillAura) LiquidBounce.moduleManager.getModule(KillAura.class);
 
-		if (getHeldItem() != null && (isUsingItem() || getHeldItem().getItem() instanceof ItemSword && killAura.getBlockingStatus()) && !isRiding())
+		if (getHeldItem() != null && (isUsingItem() || getHeldItem().getItem() instanceof ItemSword && killAura.getServerSideBlockingStatus()) && !isRiding())
 		{
 			final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
 			LiquidBounce.eventManager.callEvent(slowDownEvent);
@@ -344,14 +344,14 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			sprintToggleTimer = 0;
 		}
 
-		pushOutOfBlocks(posX - (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + (double) width * 0.35D);
-		pushOutOfBlocks(posX - (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - (double) width * 0.35D);
-		pushOutOfBlocks(posX + (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - (double) width * 0.35D);
-		pushOutOfBlocks(posX + (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + (double) width * 0.35D);
+		pushOutOfBlocks(posX - width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + width * 0.35D);
+		pushOutOfBlocks(posX - width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - width * 0.35D);
+		pushOutOfBlocks(posX + width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - width * 0.35D);
+		pushOutOfBlocks(posX + width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + width * 0.35D);
 
 		final Sprint sprint = (Sprint) LiquidBounce.moduleManager.getModule(Sprint.class);
 
-		final boolean flag3 = !sprint.foodValue.get() || (float) getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
+		final boolean flag3 = !sprint.foodValue.get() || getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
 
 		if (onGround && !flag1 && !flag2 && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness))
 			if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown())
@@ -418,9 +418,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				++horseJumpPowerCounter;
 
 				if (horseJumpPowerCounter < 10)
-					horseJumpPower = (float) horseJumpPowerCounter * 0.1F;
+					horseJumpPower = horseJumpPowerCounter * 0.1F;
 				else
-					horseJumpPower = 0.8F + 2.0F / (float) (horseJumpPowerCounter - 9) * 0.1F;
+					horseJumpPower = 0.8F + 2.0F / (horseJumpPowerCounter - 9) * 0.1F;
 			}
 		}
 		else
@@ -677,10 +677,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				if (onGround)
 					block1.onEntityCollidedWithBlock(worldObj, blockpos, (Entity) (Object) this);
 
-				distanceWalkedModified = (float) ((double) distanceWalkedModified + (double) MathHelper.sqrt_double(d12 * d12 + d14 * d14) * 0.6D);
-				distanceWalkedOnStepModified = (float) ((double) distanceWalkedOnStepModified + (double) MathHelper.sqrt_double(d12 * d12 + d13 * d13 + d14 * d14) * 0.6D);
+				distanceWalkedModified = (float) (distanceWalkedModified + MathHelper.sqrt_double(d12 * d12 + d14 * d14) * 0.6D);
+				distanceWalkedOnStepModified = (float) (distanceWalkedOnStepModified + MathHelper.sqrt_double(d12 * d12 + d13 * d13 + d14 * d14) * 0.6D);
 
-				if (distanceWalkedOnStepModified > (float) getNextStepDistance() && block1.getMaterial() != Material.air)
+				if (distanceWalkedOnStepModified > getNextStepDistance() && block1.getMaterial() != Material.air)
 				{
 					setNextStepDistance((int) distanceWalkedOnStepModified + 1);
 

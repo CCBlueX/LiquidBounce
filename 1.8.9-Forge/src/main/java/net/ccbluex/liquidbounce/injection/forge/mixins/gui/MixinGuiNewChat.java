@@ -84,7 +84,7 @@ public abstract class MixinGuiNewChat
 						lvt_3_1_ = true;
 
 					final float lvt_7_1_ = getChatScale();
-					final int lvt_8_1_ = MathHelper.ceiling_float_int((float) getChatWidth() / lvt_7_1_);
+					final int lvt_8_1_ = MathHelper.ceiling_float_int(getChatWidth() / lvt_7_1_);
 					GlStateManager.pushMatrix();
 					GlStateManager.translate(2.0F, 20.0F, 0.0F);
 					GlStateManager.scale(lvt_7_1_, lvt_7_1_, 1.0F);
@@ -100,7 +100,7 @@ public abstract class MixinGuiNewChat
 							lvt_11_1_ = p_drawChat_1_ - lvt_10_1_.getUpdatedCounter();
 							if (lvt_11_1_ < 200 || lvt_3_1_)
 							{
-								double lvt_12_1_ = (double) lvt_11_1_ / 200.0D;
+								double lvt_12_1_ = lvt_11_1_ / 200.0D;
 								lvt_12_1_ = 1.0D - lvt_12_1_;
 								lvt_12_1_ *= 10.0D;
 								lvt_12_1_ = MathHelper.clamp_double(lvt_12_1_, 0.0D, 1.0D);
@@ -109,7 +109,7 @@ public abstract class MixinGuiNewChat
 								if (lvt_3_1_)
 									lvt_14_1_ = 255;
 
-								lvt_14_1_ = (int) ((float) lvt_14_1_ * lvt_6_1_);
+								lvt_14_1_ = (int) (lvt_14_1_ * lvt_6_1_);
 								++lvt_4_1_;
 								if (lvt_14_1_ > 3)
 								{
@@ -184,12 +184,12 @@ public abstract class MixinGuiNewChat
 				final float lvt_5_1_ = getChatScale();
 				int lvt_6_1_ = p_getChatComponent_1_ / lvt_4_1_ - 3;
 				int lvt_7_1_ = p_getChatComponent_2_ / lvt_4_1_ - 27;
-				lvt_6_1_ = MathHelper.floor_float((float) lvt_6_1_ / lvt_5_1_);
-				lvt_7_1_ = MathHelper.floor_float((float) lvt_7_1_ / lvt_5_1_);
+				lvt_6_1_ = MathHelper.floor_float(lvt_6_1_ / lvt_5_1_);
+				lvt_7_1_ = MathHelper.floor_float(lvt_7_1_ / lvt_5_1_);
 				if (lvt_6_1_ >= 0 && lvt_7_1_ >= 0)
 				{
 					final int lvt_8_1_ = Math.min(getLineCount(), drawnChatLines.size());
-					if (lvt_6_1_ <= MathHelper.floor_float((float) getChatWidth() / getChatScale()) && lvt_7_1_ < Fonts.font40.getFontHeight() * lvt_8_1_ + lvt_8_1_)
+					if (lvt_6_1_ <= MathHelper.floor_float(getChatWidth() / getChatScale()) && lvt_7_1_ < Fonts.font40.getFontHeight() * lvt_8_1_ + lvt_8_1_)
 					{
 						final int lvt_9_1_ = lvt_7_1_ / Fonts.font40.getFontHeight() + scrollPos;
 						if (lvt_9_1_ >= 0 && lvt_9_1_ < drawnChatLines.size())

@@ -81,7 +81,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 		motionY = jumpEvent.getMotion();
 
 		if (isPotionActive(Potion.jump))
-			motionY += (float) (getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F;
+			motionY += (getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F;
 
 		if (isSprinting())
 		{

@@ -94,7 +94,7 @@ public abstract class MixinEntityRenderer
 
 			if (entity instanceof EntityLivingBase && ((EntityLivingBase) entity).isPlayerSleeping())
 			{
-				f = (float) ((double) f + 1D);
+				f = (float) (f + 1D);
 				GlStateManager.translate(0F, 0.3F, 0.0F);
 
 				if (!mc.gameSettings.debugCamEnable)
@@ -154,9 +154,9 @@ public abstract class MixinEntityRenderer
 			}
 
 			GlStateManager.translate(0.0F, -f, 0.0F);
-			final double d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * (double) partialTicks;
-			final double d1 = entity.prevPosY + (entity.posY - entity.prevPosY) * (double) partialTicks + (double) f;
-			final double d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * (double) partialTicks;
+			final double d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * partialTicks;
+			final double d1 = entity.prevPosY + (entity.posY - entity.prevPosY) * partialTicks + f;
+			final double d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * partialTicks;
 			cloudFog = mc.renderGlobal.hasCloudFog(d0, d1, d2, partialTicks);
 		}
 	}
@@ -189,7 +189,7 @@ public abstract class MixinEntityRenderer
 
 			final Reach reach = (Reach) LiquidBounce.moduleManager.getModule(Reach.class);
 
-			double d0 = reach.getState() ? reach.getMaxRange() : (double) mc.playerController.getBlockReachDistance();
+			double d0 = reach.getState() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();
 			mc.objectMouseOver = entity.rayTrace(reach.getState() ? reach.getBuildReachValue().get() : d0, p_getMouseOver_1_);
 			double d1 = d0;
 			final Vec3 vec3 = entity.getPositionEyes(p_getMouseOver_1_);

@@ -207,8 +207,8 @@ public abstract class MixinEntity
 
 			final float f = rotationPitch;
 			final float f1 = rotationYaw;
-			rotationYaw = (float) ((double) rotationYaw + (double) yaw * 0.15D);
-			rotationPitch = (float) ((double) rotationPitch - (double) pitch * 0.15D);
+			rotationYaw = (float) (rotationYaw + yaw * 0.15D);
+			rotationPitch = (float) (rotationPitch - pitch * 0.15D);
 			prevRotationPitch += rotationPitch - f;
 			prevRotationYaw += rotationYaw - f1;
 		}

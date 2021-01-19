@@ -57,7 +57,7 @@ class NoSlow : Module()
 		if (!classProvider.isItemSword(heldItem.item) || !MovementUtils.isMoving) return
 
 		val aura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-		if (!thePlayer.isBlocking && !aura.blockingStatus) return
+		if (!thePlayer.isBlocking && !aura.serverSideBlockingStatus) return
 
 		if (packet.get() && Backend.MINECRAFT_VERSION_MINOR == 8)
 		{
