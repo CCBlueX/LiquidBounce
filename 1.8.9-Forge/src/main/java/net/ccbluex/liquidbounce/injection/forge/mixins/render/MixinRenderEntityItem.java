@@ -166,9 +166,13 @@ public class MixinRenderEntityItem
 
 			try
 			{
-				for (final Method method : Render.class.getMethods()) // idk anyelse solution...
-					if (method.getName().equals("doRender"))
+				// idk anyelse solution...
+				for (final Method method : Render.class.getMethods())
+					if ("doRender".equals(method.getName()))
+					{
 						method.invoke(this, entity, x, y, z, entityYaw, partialTicks);
+						break;
+					}
 			}
 			catch (final IllegalAccessException | IllegalArgumentException | InvocationTargetException | SecurityException e)
 			{
