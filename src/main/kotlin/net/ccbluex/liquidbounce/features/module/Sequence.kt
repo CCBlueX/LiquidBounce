@@ -30,11 +30,15 @@ internal val sequences = Lists.newCopyOnWriteArrayList<Sequence<*>>()
 
 typealias SuspendableHandler<T> = suspend Sequence<T>.(T) -> Unit
 
-class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T) {
+class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T, var loop: Boolean = false) {
 
     private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
         sequences += this@Sequence
         handler(event)
+        while (loop) {
+            wait(0) // sync
+            handler(event)
+        }
         sequences -= this@Sequence
     }
 
@@ -52,6 +56,10 @@ class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T) {
     suspend fun wait(ticks: Int) {
         remainingTicks = ticks
         suspendCoroutine<Unit> { continuation = it }
+    }
+
+    fun cancel() {
+        loop = false
     }
 
 }

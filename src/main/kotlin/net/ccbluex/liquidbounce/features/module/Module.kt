@@ -20,16 +20,14 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.boolean
-import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.world.World
 import org.lwjgl.glfw.GLFW
 
-open class Module(val name: String, val category: Category, val bind: Int = GLFW.GLFW_KEY_UNKNOWN,
+open class Module(val name: String, val category: Category, var description: String = "", val bind: Int = GLFW.GLFW_KEY_UNKNOWN,
                   defaultState: Boolean = false, val disableActivation: Boolean = false) : Listenable, Configurable(name) {
 
     private var enabled by boolean("enabled", defaultState)
@@ -48,10 +46,12 @@ open class Module(val name: String, val category: Category, val bind: Int = GLFW
                 if (!disableActivation) {
                     enabled = value
                 }
+                // Call out module event
+                EventManager.callEvent(ModuleEvent(this, enabled))
             }.onFailure {
                 // Log error
                 logger.error("Module toggle failed (old: $enabled, new: $value)", it)
-                // In case of a error module should stay disabled
+                // In case of an error module should stay disabled
                 enabled = false
             }
         }
@@ -73,6 +73,23 @@ open class Module(val name: String, val category: Category, val bind: Int = GLFW
      */
     inline fun <reified T : Event> sequenceHandler(ignoreCondition: Boolean = false, noinline eventHandler: SuspendableHandler<T>) {
         handler<T>(ignoreCondition) { event -> Sequence(eventHandler, event) }
+    }
+
+    /**
+     * Registers an event hook for events of type [T]
+     */
+    inline fun repeatableSequence(noinline eventHandler: SuspendableHandler<ModuleEvent>) {
+        var sequence: Sequence<ModuleEvent>? = null
+
+        handler<ModuleEvent>(true) { event ->
+            sequence = if (event.newState) {
+                Sequence(eventHandler, event, loop = true)
+            } else {
+                // TODO: fix sequence not being cancelled
+                sequence?.cancel()
+                null
+            }
+        }
     }
 
     /**
