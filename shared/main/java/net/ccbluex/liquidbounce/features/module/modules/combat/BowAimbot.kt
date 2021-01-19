@@ -26,9 +26,44 @@ class BowAimbot : Module()
 
 	private val silentValue = BoolValue("Silent", true)
 	private val predictValue = BoolValue("Predict", true)
+
+	//	private val predictSizeValue = FloatValue("PredictSize", 2F, 0.1F, 5F)
+	private val playerPredictValue = BoolValue("PlayerPredict", false)
 	private val throughWallsValue = BoolValue("ThroughWalls", false)
-	private val predictSizeValue = FloatValue("PredictSize", 2F, 0.1F, 5F)
 	private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
+	private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f, 180f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = minTurnSpeed.get()
+			if (v > newValue) this.set(v)
+		}
+	}
+	private val minTurnSpeed: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 1f, 180f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = maxTurnSpeed.get()
+			if (v < newValue) this.set(v)
+		}
+	}
+
+	private val maxAccelerationRatio: FloatValue = object : FloatValue("MaxAccelerationRatio", 0f, 0f, .99f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = minAccelerationRatio.get()
+			if (v > newValue) this.set(v)
+		}
+	}
+	private val minAccelerationRatio: FloatValue = object : FloatValue("MinAccelerationRatio", 0f, 0f, .99f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = maxAccelerationRatio.get()
+			if (v < newValue) this.set(v)
+		}
+	}
 	private val markValue = BoolValue("Mark", true)
 
 	private var target: IEntity? = null
@@ -48,7 +83,7 @@ class BowAimbot : Module()
 			val entity = getTarget(throughWallsValue.get(), priorityValue.get()) ?: return
 
 			target = entity
-			RotationUtils.faceBow(target, silentValue.get(), predictValue.get(), predictSizeValue.get())
+			RotationUtils.faceBow(target, silentValue.get(), predictValue.get(), playerPredictValue.get(), minTurnSpeed.get(), maxTurnSpeed.get(), minAccelerationRatio.get(), maxAccelerationRatio.get())
 		}
 	}
 
@@ -60,13 +95,13 @@ class BowAimbot : Module()
 
 	private fun getTarget(throughWalls: Boolean, priorityMode: String): IEntity?
 	{
-		val targets = mc.theWorld!!.loadedEntityList.filter {
+		val targets = (mc.theWorld ?: return null).loadedEntityList.filter {
 			classProvider.isEntityLivingBase(it) && EntityUtils.isSelected(it, true) && (throughWalls || mc.thePlayer!!.canEntityBeSeen(it))
 		}
 
 		return when
 		{
-			priorityMode.equals("distance", true) -> targets.minBy { mc.thePlayer!!.getDistanceToEntity(it) }
+			priorityMode.equals("distance", true) -> targets.minBy((mc.thePlayer ?: return null)::getDistanceToEntity)
 			priorityMode.equals("direction", true) -> targets.minBy { RotationUtils.getRotationDifference(it) }
 			priorityMode.equals("health", true) -> targets.minBy { it.asEntityLivingBase().health }
 			else -> null

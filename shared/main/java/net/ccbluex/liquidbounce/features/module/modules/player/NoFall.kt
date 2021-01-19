@@ -246,7 +246,7 @@ class NoFall : Module()
 				}
 
 				currentMlgRotation = RotationUtils.faceBlock(collision.pos)
-				currentMlgRotation!!.rotation.toPlayer(mc.thePlayer!!)
+				currentMlgRotation!!.rotation.applyRotationToPlayer(mc.thePlayer!!)
 			}
 		} else if (currentMlgRotation != null)
 		{

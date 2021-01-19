@@ -25,6 +25,10 @@ interface IGameSettings
 	val keyBindLeft: IKeyBinding
 	val keyBindSprint: IKeyBinding
 
+	val thirdPersonView: Int
+
+	val fovSettings: Float
+
 	fun isKeyDown(key: IKeyBinding): Boolean
 	fun setModelPartEnabled(modelParts: WEnumPlayerModelParts, enabled: Boolean)
 }

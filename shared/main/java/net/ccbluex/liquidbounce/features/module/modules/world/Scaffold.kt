@@ -820,7 +820,8 @@ class Scaffold : Module()
 			{
 				limitedRotation = RotationUtils.limitAngleChange(
 					RotationUtils.serverRotation, placeRotation.rotation, (Math.random() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()).toFloat()
-				)
+				, 0.0F
+				) // TODO: Apply some settings here too
 				setRotation(limitedRotation!!, keepLengthValue.get())
 				lockRotation = limitedRotation
 				facesBlock = false

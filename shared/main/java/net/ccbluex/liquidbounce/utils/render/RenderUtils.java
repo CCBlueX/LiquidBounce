@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
 
+import net.minecraft.client.gui.ScaledResolution;
 import org.lwjgl.opengl.GL14;
 
 public final class RenderUtils extends MinecraftInstance
@@ -704,5 +705,12 @@ public final class RenderUtils extends MinecraftInstance
 		worldrenderer.pos(x + width, y, 0.0D).tex((u + (float) uWidth) * f, v * f1).endVertex();
 		worldrenderer.pos(x, y, 0.0D).tex(u * f, v * f1).endVertex();
 		tessellator.draw();
+	}
+
+	public static void drawFoVCircle(final float fov) {
+		if (mc.getGameSettings().getThirdPersonView() > 0)
+			return;
+		final IScaledResolution scaledResolution = classProvider.createScaledResolution(mc);
+		drawCircle(scaledResolution.getScaledWidth() >> 1, scaledResolution.getScaledHeight() >> 1, fov * 6.0F / (mc.getGameSettings().getFovSettings() / 70.0F), 0, 360);
 	}
 }

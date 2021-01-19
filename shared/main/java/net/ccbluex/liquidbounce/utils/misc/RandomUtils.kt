@@ -9,23 +9,25 @@ import java.util.*
 
 object RandomUtils
 {
-
 	@JvmStatic
 	fun nextInt(startInclusive: Int, endExclusive: Int): Int
 	{
 		return if (endExclusive - startInclusive <= 0) startInclusive else startInclusive + Random().nextInt(endExclusive - startInclusive)
 	}
 
+	@JvmStatic
 	fun nextDouble(startInclusive: Double, endInclusive: Double): Double
 	{
 		return if (startInclusive == endInclusive || endInclusive - startInclusive <= 0.0) startInclusive else startInclusive + (endInclusive - startInclusive) * Math.random()
 	}
 
+	@JvmStatic
 	fun nextFloat(startInclusive: Float, endInclusive: Float): Float
 	{
 		return if (startInclusive == endInclusive || endInclusive - startInclusive <= 0f) startInclusive else (startInclusive + (endInclusive - startInclusive) * Math.random()).toFloat()
 	}
 
+	@JvmStatic
 	fun randomNumber(length: Int): String
 	{
 		return random(length, "123456789")
@@ -37,11 +39,13 @@ object RandomUtils
 		return random(length, "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 	}
 
+	@JvmStatic
 	fun random(length: Int, chars: String): String
 	{
 		return random(length, chars.toCharArray())
 	}
 
+	@JvmStatic
 	fun random(length: Int, chars: CharArray): String
 	{
 		val stringBuilder = StringBuilder()
