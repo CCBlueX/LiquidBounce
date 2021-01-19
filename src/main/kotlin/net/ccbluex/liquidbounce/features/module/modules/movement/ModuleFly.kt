@@ -16,18 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.features.module.modules.movement
 
-package net.ccbluex.liquidbounce.features.module
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import org.lwjgl.glfw.GLFW
 
-enum class Category(val readableName: String) {
+object ModuleFly : Module("Fly", Category.MOVEMENT, bind = GLFW.GLFW_KEY_R) {
 
-    COMBAT("Combat"),
-    PLAYER("Player"),
-    MOVEMENT("Movement"),
-    RENDER("Render"),
-    WORLD("World"),
-    MISC("Misc"),
-    EXPLOIT("Exploit"),
-    FUN("Fun")
+    override fun enable() {
+        player.abilities!!.flying = true
+    }
+
+    override fun disable() {
+        player.abilities!!.flying = false
+    }
 
 }

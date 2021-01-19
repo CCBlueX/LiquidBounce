@@ -17,17 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module
+package net.ccbluex.liquidbounce.features.module.modules.render
 
-enum class Category(val readableName: String) {
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.sciter.SciterScreen
+import net.minecraft.client.MinecraftClient
+import org.lwjgl.glfw.GLFW
 
-    COMBAT("Combat"),
-    PLAYER("Player"),
-    MOVEMENT("Movement"),
-    RENDER("Render"),
-    WORLD("World"),
-    MISC("Misc"),
-    EXPLOIT("Exploit"),
-    FUN("Fun")
+object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
+
+    override fun enable() {
+        MinecraftClient.getInstance().openScreen(SciterScreen("helo"))
+    }
 
 }

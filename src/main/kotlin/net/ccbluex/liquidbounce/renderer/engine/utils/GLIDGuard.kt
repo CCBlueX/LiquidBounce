@@ -17,17 +17,38 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module
+package net.ccbluex.liquidbounce.renderer.engine.utils
 
-enum class Category(val readableName: String) {
+import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
 
-    COMBAT("Combat"),
-    PLAYER("Player"),
-    MOVEMENT("Movement"),
-    RENDER("Render"),
-    WORLD("World"),
-    MISC("Misc"),
-    EXPLOIT("Exploit"),
-    FUN("Fun")
+/**
+ * Provides a guard for IDs provided by OpenGL which handles freeing of it
+ *
+ * @param deletionFunction A function that is called when the object should be deallocated
+ */
+abstract class GLIDGuard(val id: Int, val deletionFunction: (Int) -> Unit) {
+    /**
+     * Was [delete] called?
+     */
+    private var deleted = false
+
+    protected fun finalize() {
+        if (!deleted) {
+            val id = this.id
+
+            RenderEngine.runOnGlContext {
+                deletionFunction(id)
+            }
+        }
+    }
+
+    fun delete() {
+        if (!deleted) {
+            deletionFunction(this.id)
+
+            deleted = false
+        }
+    }
+
 
 }

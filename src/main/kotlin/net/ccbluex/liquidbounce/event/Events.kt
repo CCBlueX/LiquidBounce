@@ -18,10 +18,13 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.network.Packet
+
+class ModuleEvent(val module: Module, val newState: Boolean) : Event()
 
 class EntityTickEvent : Event()
 

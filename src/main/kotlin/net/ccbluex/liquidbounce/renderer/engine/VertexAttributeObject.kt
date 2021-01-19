@@ -17,17 +17,50 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module
+package net.ccbluex.liquidbounce.renderer.engine
 
-enum class Category(val readableName: String) {
+import org.lwjgl.opengl.GL32
 
-    COMBAT("Combat"),
-    PLAYER("Player"),
-    MOVEMENT("Movement"),
-    RENDER("Render"),
-    WORLD("World"),
-    MISC("Misc"),
-    EXPLOIT("Exploit"),
-    FUN("Fun")
+/**
+ * A wrapper for VAOs
+ */
+class VertexAttributeObject {
+    /**
+     * OpenGL's id for the buffer
+     */
+    val id: Int
 
+    init {
+        // Get an id for our VBO
+        id = GL32.glGenVertexArrays()
+    }
+
+    /**
+     * Binds this buffer
+     */
+    fun bind() {
+        GL32.glBindVertexArray(id)
+    }
+
+    /**
+     * Unbinds all buffers for this target
+     */
+    fun unbind() {
+        GL32.glBindVertexArray(0)
+    }
+
+    /**
+     * Deletes the buffer
+     */
+    fun delete() {
+        GL32.glDeleteVertexArrays(id)
+    }
+
+    fun finalize() {
+        val id = this.id
+
+        RenderEngine.runOnGlContext {
+            GL32.glDeleteVertexArrays(id)
+        }
+    }
 }

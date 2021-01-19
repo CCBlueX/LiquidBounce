@@ -22,10 +22,8 @@ package net.ccbluex.liquidbounce.features.command
 import net.ccbluex.liquidbounce.event.ChatSendEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.commands.BindCommand
-import net.ccbluex.liquidbounce.features.command.commands.FriendCommand
-import net.ccbluex.liquidbounce.features.command.commands.HelpCommand
-import net.ccbluex.liquidbounce.features.command.commands.ToggleCommand
+import net.ccbluex.liquidbounce.features.command.commands.CommandFriend
+import net.ccbluex.liquidbounce.features.command.commands.CommandToggle
 import net.ccbluex.liquidbounce.utils.chat
 
 class CommandException(message: String, cause: Throwable? = null, val usageInfo: List<String>? = null) :
@@ -79,7 +77,7 @@ object CommandExecutor : Listenable {
  */
 object CommandManager {
 
-    val commands = mutableListOf<Command>()
+    private val commands = mutableListOf<Command>()
 
     /**
      * The prefix of the commands.
@@ -94,10 +92,8 @@ object CommandManager {
     val prefix = "."
 
     fun registerInbuilt() {
-        addCommand(FriendCommand.createCommand())
-        addCommand(ToggleCommand.createCommand())
-        addCommand(HelpCommand.createCommand())
-        addCommand(BindCommand.createCommand())
+        addCommand(CommandFriend.createCommand())
+        addCommand(CommandToggle.createCommand())
     }
 
     fun addCommand(command: Command) {

@@ -16,18 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.features.module.modules.combat
 
-package net.ccbluex.liquidbounce.features.module
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import org.lwjgl.glfw.GLFW
 
-enum class Category(val readableName: String) {
+object ModuleVelocity : Module("Velocity", Category.COMBAT, bind = GLFW.GLFW_KEY_L) {
 
-    COMBAT("Combat"),
-    PLAYER("Player"),
-    MOVEMENT("Movement"),
-    RENDER("Render"),
-    WORLD("World"),
-    MISC("Misc"),
-    EXPLOIT("Exploit"),
-    FUN("Fun")
+    val packetReceiveHandler = handler<PacketEvent> {
+        val packet = it.packet
+
+        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.entityId) {
+            it.cancelEvent()
+        }
+    }
 
 }
