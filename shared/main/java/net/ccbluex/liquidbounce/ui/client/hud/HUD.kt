@@ -52,24 +52,24 @@ open class HUD : MinecraftInstance()
 	fun render(designer: Boolean)
 	{
 		elements.sortedBy { -it.info.priority }.forEach {
-				GL11.glPushMatrix()
+			GL11.glPushMatrix()
 
-				if (!it.info.disableScale) GL11.glScalef(it.scale, it.scale, it.scale)
+			if (!it.info.disableScale) GL11.glScalef(it.scale, it.scale, it.scale)
 
-				GL11.glTranslated(it.renderX, it.renderY, 0.0)
+			GL11.glTranslated(it.renderX, it.renderY, 0.0)
 
-				try
-				{
-					it.border = it.drawElement()
+			try
+			{
+				it.border = it.drawElement()
 
-					if (designer) it.border?.draw()
-				} catch (ex: Exception)
-				{
-					ClientUtils.getLogger().error("Something went wrong while drawing ${it.name} element in HUD.", ex)
-				}
-
-				GL11.glPopMatrix()
+				if (designer) it.border?.draw()
+			} catch (ex: Exception)
+			{
+				ClientUtils.getLogger().error("Something went wrong while drawing ${it.name} element in HUD.", ex)
 			}
+
+			GL11.glPopMatrix()
+		}
 	}
 
 	/**

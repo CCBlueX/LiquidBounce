@@ -12,15 +12,17 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
 @ModuleInfo(name = "AutoWalk", description = "Automatically makes you walk.", category = ModuleCategory.MOVEMENT)
-class AutoWalk : Module() {
+class AutoWalk : Module()
+{
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        mc.gameSettings.keyBindForward.pressed = true
-    }
+	@EventTarget
+	fun onUpdate(event: UpdateEvent)
+	{
+		mc.gameSettings.keyBindForward.pressed = true
+	}
 
-    override fun onDisable() {
-        if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindForward))
-            mc.gameSettings.keyBindForward.pressed = false
-    }
+	override fun onDisable()
+	{
+		if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindForward)) mc.gameSettings.keyBindForward.pressed = false
+	}
 }

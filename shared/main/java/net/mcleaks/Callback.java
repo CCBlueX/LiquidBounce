@@ -1,7 +1,8 @@
 package net.mcleaks;
 
-public interface Callback<T> {
+public interface Callback<T>
+{
 
-    void done(T p0);
+	void done(T p0);
 
 }

@@ -5,16 +5,6 @@
  */
 package net.ccbluex.liquidbounce.ui.client.tools;
 
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen;
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
-import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
-import net.ccbluex.liquidbounce.ui.font.Fonts;
-import net.ccbluex.liquidbounce.utils.TabUtils;
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
-import org.lwjgl.input.Keyboard;
-
-import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.FileWriter;
@@ -24,7 +14,20 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GuiPortScanner extends WrappedGuiScreen {
+import javax.swing.*;
+
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen;
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
+import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
+import net.ccbluex.liquidbounce.ui.font.Fonts;
+import net.ccbluex.liquidbounce.utils.TabUtils;
+import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
+
+import org.lwjgl.input.Keyboard;
+
+public class GuiPortScanner extends WrappedGuiScreen
+{
 
 	private final IGuiScreen prevGui;
 	private final List<Integer> ports = new ArrayList<>();
@@ -41,12 +44,14 @@ public class GuiPortScanner extends WrappedGuiScreen {
 	private int minPort;
 	private int checkedPort;
 
-	public GuiPortScanner(final IGuiScreen prevGui) {
+	public GuiPortScanner(final IGuiScreen prevGui)
+	{
 		this.prevGui = prevGui;
 	}
 
 	@Override
-	public void initGui() {
+	public void initGui()
+	{
 		Keyboard.enableRepeatEvents(true);
 
 		hostField = classProvider.createGuiTextField(0, Fonts.font40, representedScreen.getWidth() / 2 - 100, 60, 200, 20);
@@ -74,7 +79,8 @@ public class GuiPortScanner extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
+	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
+	{
 		representedScreen.drawBackground(0);
 
 		Fonts.font40.drawCenteredString("Port Scanner", representedScreen.getWidth() / 2.0f, 34, 0xffffff);
@@ -89,10 +95,12 @@ public class GuiPortScanner extends WrappedGuiScreen {
 
 		Fonts.font40.drawString("\u00A7c\u00A7lPorts:", 2, 2, Color.WHITE.hashCode());
 
-		synchronized (ports) {
+		synchronized (ports)
+		{
 			int i = 12;
 
-			for (final Integer integer : ports) {
+			for (final Integer integer : ports)
+			{
 				Fonts.font35.drawString(String.valueOf(integer), 2, i, Color.WHITE.hashCode());
 				i += Fonts.font35.getFontHeight();
 			}
@@ -102,40 +110,55 @@ public class GuiPortScanner extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void actionPerformed(final IGuiButton button) throws IOException {
-		switch (button.getId()) {
+	public void actionPerformed(final IGuiButton button) throws IOException
+	{
+		switch (button.getId())
+		{
 			case 0:
 				mc.displayGuiScreen(prevGui);
 				break;
 			case 1:
-				if (running) {
+				if (running)
+				{
 					running = false;
-				} else {
+				}
+				else
+				{
 					host = hostField.getText();
 
-					if (host.isEmpty()) {
+					if (host.isEmpty())
+					{
 						status = "\u00A7cInvalid host";
 						return;
 					}
 
-					try {
+					try
+					{
 						minPort = Integer.parseInt(minPortField.getText());
-					} catch (final NumberFormatException e) {
+					}
+					catch (final NumberFormatException e)
+					{
 						status = "\u00A7cInvalid min port";
 						return;
 					}
 
-					try {
+					try
+					{
 						maxPort = Integer.parseInt(maxPortField.getText());
-					} catch (final NumberFormatException e) {
+					}
+					catch (final NumberFormatException e)
+					{
 						status = "\u00A7cInvalid max port";
 						return;
 					}
 
 					final int threads;
-					try {
+					try
+					{
 						threads = Integer.parseInt(threadsField.getText());
-					} catch (final NumberFormatException e) {
+					}
+					catch (final NumberFormatException e)
+					{
 						status = "\u00A7cInvalid threads";
 						return;
 					}
@@ -145,24 +168,32 @@ public class GuiPortScanner extends WrappedGuiScreen {
 					currentPort = minPort - 1;
 					checkedPort = minPort;
 
-					for (int i = 0; i < threads; i++) {
-						new Thread(() -> {
-							try {
-								while (running && currentPort < maxPort) {
+					for (int i = 0; i < threads; i++)
+					{
+						new Thread(() ->
+						{
+							try
+							{
+								while (running && currentPort < maxPort)
+								{
 									currentPort++;
 
 									final int port = currentPort;
 
-									try {
+									try
+									{
 										final Socket socket = new Socket();
 										socket.connect(new InetSocketAddress(host, port), 500);
 										socket.close();
 
-										synchronized (ports) {
+										synchronized (ports)
+										{
 											if (!ports.contains(port))
 												ports.add(port);
 										}
-									} catch (final Exception ignored) {
+									}
+									catch (final Exception ignored)
+									{
 									}
 
 									if (checkedPort < port)
@@ -171,7 +202,9 @@ public class GuiPortScanner extends WrappedGuiScreen {
 
 								running = false;
 								buttonToggle.setDisplayString("Start");
-							} catch (final Exception e) {
+							}
+							catch (final Exception e)
+							{
 								status = "\u00A7a\u00A7l" + e.getClass().getSimpleName() + ": \u00A7c" + e.getMessage();
 							}
 						}).start();
@@ -188,7 +221,8 @@ public class GuiPortScanner extends WrappedGuiScreen {
 				if (selectedFile == null || selectedFile.isDirectory())
 					return;
 
-				try {
+				try
+				{
 					if (!selectedFile.exists())
 						selectedFile.createNewFile();
 
@@ -204,7 +238,9 @@ public class GuiPortScanner extends WrappedGuiScreen {
 					fileWriter.flush();
 					fileWriter.close();
 					JOptionPane.showMessageDialog(null, "Exported successfully!", "Port Scanner", JOptionPane.INFORMATION_MESSAGE);
-				} catch (final Exception e) {
+				}
+				catch (final Exception e)
+				{
 					e.printStackTrace();
 					MiscUtils.showErrorPopup("Error", "Exception class: " + e.getClass().getName() + "\nMessage: " + e.getMessage());
 				}
@@ -214,8 +250,10 @@ public class GuiPortScanner extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void keyTyped(final char typedChar, final int keyCode) throws IOException {
-		if (Keyboard.KEY_ESCAPE == keyCode) {
+	public void keyTyped(final char typedChar, final int keyCode) throws IOException
+	{
+		if (Keyboard.KEY_ESCAPE == keyCode)
+		{
 			mc.displayGuiScreen(prevGui);
 			return;
 		}
@@ -241,7 +279,8 @@ public class GuiPortScanner extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException
+	{
 		hostField.mouseClicked(mouseX, mouseY, mouseButton);
 		minPortField.mouseClicked(mouseX, mouseY, mouseButton);
 		maxPortField.mouseClicked(mouseX, mouseY, mouseButton);
@@ -250,7 +289,8 @@ public class GuiPortScanner extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void updateScreen() {
+	public void updateScreen()
+	{
 		hostField.updateCursorCounter();
 		minPortField.updateCursorCounter();
 		maxPortField.updateCursorCounter();
@@ -259,7 +299,8 @@ public class GuiPortScanner extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void onGuiClosed() {
+	public void onGuiClosed()
+	{
 		Keyboard.enableRepeatEvents(false);
 		running = false;
 		super.onGuiClosed();

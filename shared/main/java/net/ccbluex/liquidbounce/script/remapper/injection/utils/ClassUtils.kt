@@ -14,30 +14,33 @@ import org.objectweb.asm.tree.ClassNode
  *
  * @author CCBlueX
  */
-object ClassUtils {
+object ClassUtils
+{
 
-    /**
-     * Read bytes to class node
-     *
-     * @param bytes ByteArray of class
-     */
-    fun toClassNode(bytes : ByteArray) : ClassNode {
-        val classReader = ClassReader(bytes)
-        val classNode = ClassNode()
-        classReader.accept(classNode, 0)
+	/**
+	 * Read bytes to class node
+	 *
+	 * @param bytes ByteArray of class
+	 */
+	fun toClassNode(bytes: ByteArray): ClassNode
+	{
+		val classReader = ClassReader(bytes)
+		val classNode = ClassNode()
+		classReader.accept(classNode, 0)
 
-        return classNode
-    }
+		return classNode
+	}
 
-    /**
-     * Write class node to bytes
-     *
-     * @param classNode ClassNode of class
-     */
-    fun toBytes(classNode : ClassNode) : ByteArray {
-        val classWriter = ClassWriter(ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
-        classNode.accept(classWriter)
+	/**
+	 * Write class node to bytes
+	 *
+	 * @param classNode ClassNode of class
+	 */
+	fun toBytes(classNode: ClassNode): ByteArray
+	{
+		val classWriter = ClassWriter(ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
+		classNode.accept(classWriter)
 
-        return classWriter.toByteArray()
-    }
+		return classWriter.toByteArray()
+	}
 }

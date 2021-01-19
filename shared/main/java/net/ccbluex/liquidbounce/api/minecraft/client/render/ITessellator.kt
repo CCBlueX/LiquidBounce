@@ -6,8 +6,9 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.client.render
 
-interface ITessellator {
-    val worldRenderer: IWorldRenderer
+interface ITessellator
+{
+	val worldRenderer: IWorldRenderer
 
-    fun draw()
+	fun draw()
 }

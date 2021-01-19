@@ -5,6 +5,11 @@
  */
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub;
 
+import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
+
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
@@ -16,14 +21,11 @@ import net.ccbluex.liquidbounce.utils.TabUtils;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
+
 import org.lwjgl.input.Keyboard;
 
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
-
-public class GuiDirectLogin extends WrappedGuiScreen {
+public class GuiDirectLogin extends WrappedGuiScreen
+{
 
 	private final IGuiScreen prevGui;
 
@@ -34,11 +36,13 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 
 	private String status = "\u00A77Idle...";
 
-	public GuiDirectLogin(final GuiAltManager gui) {
+	public GuiDirectLogin(final GuiAltManager gui)
+	{
 		prevGui = gui.representedScreen;
 	}
 
-	public void initGui() {
+	public void initGui()
+	{
 		Keyboard.enableRepeatEvents(true);
 		getRepresentedScreen().getButtonList().add(loginButton = classProvider.createGuiButton(1, getRepresentedScreen().getWidth() / 2 - 100, getRepresentedScreen().getHeight() / 4 + 72, "Login"));
 		getRepresentedScreen().getButtonList().add(clipboardLoginButton = classProvider.createGuiButton(2, getRepresentedScreen().getWidth() / 2 - 100, getRepresentedScreen().getHeight() / 4 + 96, "Clipboard Login"));
@@ -51,7 +55,8 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
+	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
+	{
 		getRepresentedScreen().drawBackground(0);
 		RenderUtils.drawRect(30, 30, getRepresentedScreen().getWidth() - 30, getRepresentedScreen().getHeight() - 30, Integer.MIN_VALUE);
 
@@ -70,15 +75,19 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void actionPerformed(final IGuiButton button) throws IOException {
-		if (!button.getEnabled()) return;
+	public void actionPerformed(final IGuiButton button) throws IOException
+	{
+		if (!button.getEnabled())
+			return;
 
-		switch (button.getId()) {
+		switch (button.getId())
+		{
 			case 0:
 				mc.displayGuiScreen(prevGui);
 				break;
 			case 1:
-				if (username.getText().isEmpty()) {
+				if (username.getText().isEmpty())
+				{
 					status = "\u00A7cYou have to fill in both fields!";
 					return;
 				}
@@ -86,7 +95,8 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 				loginButton.setEnabled(false);
 				clipboardLoginButton.setEnabled(false);
 
-				new Thread(() -> {
+				new Thread(() ->
+				{
 					status = "\u00A7aLogging in...";
 
 					if (password.getText().isEmpty())
@@ -99,11 +109,13 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 				}).start();
 				break;
 			case 2:
-				try {
+				try
+				{
 					final String clipboardData = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
 					final String[] args = clipboardData.split(":", 2);
 
-					if (!clipboardData.contains(":") || args.length != 2) {
+					if (!clipboardData.contains(":") || args.length != 2)
+					{
 						status = "\u00A7cInvalid clipboard data. (Use: E-Mail:Password)";
 						return;
 					}
@@ -111,7 +123,8 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 					loginButton.setEnabled(false);
 					clipboardLoginButton.setEnabled(false);
 
-					new Thread(() -> {
+					new Thread(() ->
+					{
 						status = "\u00A7aLogging in...";
 
 						status = GuiAltManager.login(new MinecraftAccount(args[0], args[1]));
@@ -119,10 +132,14 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 						loginButton.setEnabled(true);
 						clipboardLoginButton.setEnabled(true);
 					}).start();
-				} catch (final UnsupportedFlavorException e) {
+				}
+				catch (final UnsupportedFlavorException e)
+				{
 					status = "\u00A7cClipboard flavor unsupported!";
 					ClientUtils.getLogger().error("Failed to read data from clipboard.", e);
-				} catch (final IOException e) {
+				}
+				catch (final IOException e)
+				{
 					status = "\u00A7cUnknown error! (See log)";
 					ClientUtils.getLogger().error(e);
 				}
@@ -132,8 +149,10 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void keyTyped(final char typedChar, final int keyCode) throws IOException {
-		switch (keyCode) {
+	public void keyTyped(final char typedChar, final int keyCode) throws IOException
+	{
+		switch (keyCode)
+		{
 			case Keyboard.KEY_ESCAPE:
 				mc.displayGuiScreen(prevGui);
 				return;
@@ -154,21 +173,24 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException
+	{
 		username.mouseClicked(mouseX, mouseY, mouseButton);
 		password.mouseClicked(mouseX, mouseY, mouseButton);
 		super.mouseClicked(mouseX, mouseY, mouseButton);
 	}
 
 	@Override
-	public void updateScreen() {
+	public void updateScreen()
+	{
 		username.updateCursorCounter();
 		password.updateCursorCounter();
 		super.updateScreen();
 	}
 
 	@Override
-	public void onGuiClosed() {
+	public void onGuiClosed()
+	{
 		Keyboard.enableRepeatEvents(false);
 		super.onGuiClosed();
 	}

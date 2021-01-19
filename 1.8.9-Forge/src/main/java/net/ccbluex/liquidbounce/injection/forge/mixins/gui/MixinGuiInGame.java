@@ -21,6 +21,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,64 +31,72 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GuiIngame.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinGuiInGame {
+public abstract class MixinGuiInGame
+{
 
-    @Shadow
-    protected abstract void renderHotbarItem(int index, int xPos, int yPos, float partialTicks, EntityPlayer player);
+	@Shadow
+	protected abstract void renderHotbarItem(int index, int xPos, int yPos, float partialTicks, EntityPlayer player);
 
-    @Inject(method = "renderScoreboard", at = @At("HEAD"), cancellable = true)
-    private void renderScoreboard(final CallbackInfo callbackInfo) {
-        if (LiquidBounce.moduleManager.getModule(HUD.class).getState() || NoScoreboard.INSTANCE.getState())
-            callbackInfo.cancel();
-    }
+	@Inject(method = "renderScoreboard", at = @At("HEAD"), cancellable = true)
+	private void renderScoreboard(final CallbackInfo callbackInfo)
+	{
+		if (LiquidBounce.moduleManager.getModule(HUD.class).getState() || NoScoreboard.INSTANCE.getState())
+			callbackInfo.cancel();
+	}
 
-    @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
-    private void renderTooltip(final ScaledResolution sr, final float partialTicks, final CallbackInfo callbackInfo) {
-        final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+	@Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
+	private void renderTooltip(final ScaledResolution sr, final float partialTicks, final CallbackInfo callbackInfo)
+	{
+		final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
 
-        if(Minecraft.getMinecraft().getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.getBlackHotbarValue().get()) {
-            final EntityPlayer entityPlayer = (EntityPlayer) Minecraft.getMinecraft().getRenderViewEntity();
+		if (Minecraft.getMinecraft().getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.getBlackHotbarValue().get())
+		{
+			final EntityPlayer entityPlayer = (EntityPlayer) Minecraft.getMinecraft().getRenderViewEntity();
 
-            final int middleScreen = sr.getScaledWidth() / 2;
+			final int middleScreen = sr.getScaledWidth() / 2;
 
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            Gui.drawRect(middleScreen - 91, sr.getScaledHeight() - 24, middleScreen + 90, sr.getScaledHeight(), Integer.MIN_VALUE);
-            Gui.drawRect(middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
+			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+			Gui.drawRect(middleScreen - 91, sr.getScaledHeight() - 24, middleScreen + 90, sr.getScaledHeight(), Integer.MIN_VALUE);
+			Gui.drawRect(middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
 
-            GlStateManager.enableRescaleNormal();
-            GL11.glEnable(GL11.GL_BLEND);
-            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-            RenderHelper.enableGUIStandardItemLighting();
+			GlStateManager.enableRescaleNormal();
+			GL11.glEnable(GL11.GL_BLEND);
+			GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+			RenderHelper.enableGUIStandardItemLighting();
 
-            for(int j = 0; j < 9; ++j) {
-                final int k = sr.getScaledWidth() / 2 - 90 + j * 20 + 2;
-                final int l = sr.getScaledHeight() - 16 - 3;
-                renderHotbarItem(j, k, l, partialTicks, entityPlayer);
-            }
+			for (int j = 0; j < 9; ++j)
+			{
+				final int k = sr.getScaledWidth() / 2 - 90 + j * 20 + 2;
+				final int l = sr.getScaledHeight() - 16 - 3;
+				renderHotbarItem(j, k, l, partialTicks, entityPlayer);
+			}
 
-            RenderHelper.disableStandardItemLighting();
-            GlStateManager.disableRescaleNormal();
-            GlStateManager.disableBlend();
+			RenderHelper.disableStandardItemLighting();
+			GlStateManager.disableRescaleNormal();
+			GlStateManager.disableBlend();
 
-            LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
-            AWTFontRenderer.Companion.garbageCollectionTick();
-            callbackInfo.cancel();
-        }
-    }
+			LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
+			AWTFontRenderer.Companion.garbageCollectionTick();
+			callbackInfo.cancel();
+		}
+	}
 
-    @Inject(method = "renderTooltip", at = @At("RETURN"))
-    private void renderTooltipPost(final ScaledResolution sr, final float partialTicks, final CallbackInfo callbackInfo) {
-        if (!ClassUtils.hasClass("net.labymod.api.LabyModAPI")) {
-            LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
-            AWTFontRenderer.Companion.garbageCollectionTick();
-        }
-    }
+	@Inject(method = "renderTooltip", at = @At("RETURN"))
+	private void renderTooltipPost(final ScaledResolution sr, final float partialTicks, final CallbackInfo callbackInfo)
+	{
+		if (!ClassUtils.hasClass("net.labymod.api.LabyModAPI"))
+		{
+			LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
+			AWTFontRenderer.Companion.garbageCollectionTick();
+		}
+	}
 
-    @Inject(method = "renderPumpkinOverlay", at = @At("HEAD"), cancellable = true)
-    private void renderPumpkinOverlay(final CallbackInfo callbackInfo) {
-        final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.getModule(AntiBlind.class);
+	@Inject(method = "renderPumpkinOverlay", at = @At("HEAD"), cancellable = true)
+	private void renderPumpkinOverlay(final CallbackInfo callbackInfo)
+	{
+		final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.getModule(AntiBlind.class);
 
-        if(antiBlind.getState() && antiBlind.getPumpkinEffect().get())
-            callbackInfo.cancel();
-    }
+		if (antiBlind.getState() && antiBlind.getPumpkinEffect().get())
+			callbackInfo.cancel();
+	}
 }

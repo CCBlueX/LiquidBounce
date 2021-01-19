@@ -1,23 +1,22 @@
 package net.vitox;
 
+import java.util.Random;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.vitox.particle.util.RenderUtils;
 
-import java.util.Random;
-
 /**
- * Particle API
- * This Api is free2use
- * But u have to mention me.
+ * Particle API This Api is free2use But u have to mention me.
  *
- * @author Vitox
+ * @author  Vitox
  * @version 3.0
  */
 @SideOnly(Side.CLIENT)
-class Particle {
+class Particle
+{
 
 	public float x;
 	public float y;
@@ -27,70 +26,86 @@ class Particle {
 	private int height;
 	private int width;
 
-	Particle(final int x, final int y) {
+	Particle(final int x, final int y)
+	{
 		this.x = x;
 		this.y = y;
 		size = genRandom();
 	}
 
-	private float lint1(final float f) {
+	private float lint1(final float f)
+	{
 		return (float) 1.02 * (1.0f - f) + (float) 1.0 * f;
 	}
 
-	private float lint2(final float f) {
+	private float lint2(final float f)
+	{
 		return (float) 1.02 + f * ((float) 1.0 - (float) 1.02);
 	}
 
-	void connect(final float x, final float y) {
+	void connect(final float x, final float y)
+	{
 		RenderUtils.connectPoints(getX(), getY(), x, y);
 	}
 
-	public int getHeight() {
+	public int getHeight()
+	{
 		return height;
 	}
 
-	public void setHeight(final int height) {
+	public void setHeight(final int height)
+	{
 		this.height = height;
 	}
 
-	public int getWidth() {
+	public int getWidth()
+	{
 		return width;
 	}
 
-	public void setWidth(final int width) {
+	public void setWidth(final int width)
+	{
 		this.width = width;
 	}
 
-	public float getX() {
+	public float getX()
+	{
 		return x;
 	}
 
-	public void setX(final int x) {
+	public void setX(final int x)
+	{
 		this.x = x;
 	}
 
-	public float getY() {
+	public float getY()
+	{
 		return y;
 	}
 
-	public void setY(final int y) {
+	public void setY(final int y)
+	{
 		this.y = y;
 	}
 
-	void interpolation() {
-		for (int n = 0; n <= 64; ++n) {
+	void interpolation()
+	{
+		for (int n = 0; n <= 64; ++n)
+		{
 			final float f = n / 64.0f;
 			final float p1 = lint1(f);
 			final float p2 = lint2(f);
 
-			if (p1 != p2) {
+			if (p1 != p2)
+			{
 				y -= f;
 				x -= f;
 			}
 		}
 	}
 
-	void fall() {
+	void fall()
+	{
 		final Minecraft mc = Minecraft.getMinecraft();
 		final ScaledResolution scaledResolution = new ScaledResolution(mc);
 		y = y + ySpeed;
@@ -109,8 +124,8 @@ class Particle {
 			y = scaledResolution.getScaledHeight();
 	}
 
-	private float genRandom() {
+	private float genRandom()
+	{
 		return (float) (0.3f + Math.random() * (0.6f - 0.3f + 1.0F));
 	}
 }
-

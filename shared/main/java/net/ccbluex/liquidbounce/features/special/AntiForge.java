@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.special;
 
-import io.netty.buffer.Unpooled;
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket;
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketCustomPayload;
 import net.ccbluex.liquidbounce.event.EventTarget;
@@ -13,38 +12,48 @@ import net.ccbluex.liquidbounce.event.Listenable;
 import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 
-public class AntiForge extends MinecraftInstance implements Listenable {
+import io.netty.buffer.Unpooled;
 
-    public static boolean enabled = true;
-    public static boolean blockFML = true;
-    public static boolean blockProxyPacket = true;
-    public static boolean blockPayloadPackets = true;
+public class AntiForge extends MinecraftInstance implements Listenable
+{
 
-    @EventTarget
-    public void onPacket(final PacketEvent event) {
-        final IPacket packet = event.getPacket();
+	public static boolean enabled = true;
+	public static boolean blockFML = true;
+	public static boolean blockProxyPacket = true;
+	public static boolean blockPayloadPackets = true;
 
-        if (enabled && !mc.isIntegratedServerRunning()) {
-            try {
-                if (blockProxyPacket && packet.getClass().getName().equals("net.minecraftforge.fml.common.network.internal.FMLProxyPacket"))
-                    event.cancelEvent();
+	@EventTarget
+	public void onPacket(final PacketEvent event)
+	{
+		final IPacket packet = event.getPacket();
 
-                if (blockPayloadPackets && classProvider.isCPacketCustomPayload(packet)) {
-                    final ICPacketCustomPayload customPayload = packet.asCPacketCustomPayload();
+		if (enabled && !mc.isIntegratedServerRunning())
+		{
+			try
+			{
+				if (blockProxyPacket && packet.getClass().getName().equals("net.minecraftforge.fml.common.network.internal.FMLProxyPacket"))
+					event.cancelEvent();
 
-                    if (!customPayload.getChannelName().startsWith("MC|"))
-                        event.cancelEvent();
-                    else if (customPayload.getChannelName().equalsIgnoreCase("MC|Brand"))
-                        customPayload.setData(classProvider.createPacketBuffer(Unpooled.buffer()).writeString("vanilla"));
-                }
-            }catch(final Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
+				if (blockPayloadPackets && classProvider.isCPacketCustomPayload(packet))
+				{
+					final ICPacketCustomPayload customPayload = packet.asCPacketCustomPayload();
 
-    @Override
-    public boolean handleEvents() {
-        return true;
-    }
+					if (!customPayload.getChannelName().startsWith("MC|"))
+						event.cancelEvent();
+					else if (customPayload.getChannelName().equalsIgnoreCase("MC|Brand"))
+						customPayload.setData(classProvider.createPacketBuffer(Unpooled.buffer()).writeString("vanilla"));
+				}
+			}
+			catch (final Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@Override
+	public boolean handleEvents()
+	{
+		return true;
+	}
 }

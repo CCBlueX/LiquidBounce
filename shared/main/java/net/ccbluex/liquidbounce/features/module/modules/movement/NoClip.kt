@@ -12,33 +12,34 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
 @ModuleInfo(name = "NoClip", description = "Allows you to freely move through walls (A sandblock has to fall on your head).", category = ModuleCategory.MOVEMENT)
-class NoClip : Module() {
+class NoClip : Module()
+{
 
-    override fun onDisable() {
-        mc.thePlayer?.noClip = false
-    }
+	override fun onDisable()
+	{
+		mc.thePlayer?.noClip = false
+	}
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+	@EventTarget
+	fun onUpdate(event: UpdateEvent)
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        thePlayer.noClip = true
-        thePlayer.fallDistance = 0f
-        thePlayer.onGround = false
+		thePlayer.noClip = true
+		thePlayer.fallDistance = 0f
+		thePlayer.onGround = false
 
-        thePlayer.capabilities.isFlying = false
-        thePlayer.motionX = 0.0
-        thePlayer.motionY = 0.0
-        thePlayer.motionZ = 0.0
+		thePlayer.capabilities.isFlying = false
+		thePlayer.motionX = 0.0
+		thePlayer.motionY = 0.0
+		thePlayer.motionZ = 0.0
 
-        val speed = 0.32f
+		val speed = 0.32f
 
-        thePlayer.jumpMovementFactor = speed
+		thePlayer.jumpMovementFactor = speed
 
-        if (mc.gameSettings.keyBindJump.isKeyDown)
-            thePlayer.motionY += speed.toDouble()
+		if (mc.gameSettings.keyBindJump.isKeyDown) thePlayer.motionY += speed.toDouble()
 
-        if (mc.gameSettings.keyBindSneak.isKeyDown)
-            thePlayer.motionY -= speed.toDouble()
-    }
+		if (mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY -= speed.toDouble()
+	}
 }

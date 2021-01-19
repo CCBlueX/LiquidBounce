@@ -10,16 +10,17 @@ import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreObjective
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
 import net.minecraft.scoreboard.ScoreObjective
 
-class ScoreObjectiveImpl(val wrapped: ScoreObjective) : IScoreObjective {
-    override val displayName: String
-        get() = wrapped.displayName
-    override val scoreboard: IScoreboard
-        get() = wrapped.scoreboard.wrap()
+class ScoreObjectiveImpl(val wrapped: ScoreObjective) : IScoreObjective
+{
+	override val displayName: String
+		get() = wrapped.displayName
+	override val scoreboard: IScoreboard
+		get() = wrapped.scoreboard.wrap()
 
-
-    override fun equals(other: Any?): Boolean {
-        return other is ScoreObjectiveImpl && other.wrapped == this.wrapped
-    }
+	override fun equals(other: Any?): Boolean
+	{
+		return other is ScoreObjectiveImpl && other.wrapped == this.wrapped
+	}
 }
 
 inline fun IScoreObjective.unwrap(): ScoreObjective = (this as ScoreObjectiveImpl).wrapped

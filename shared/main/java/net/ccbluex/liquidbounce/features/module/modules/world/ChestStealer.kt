@@ -24,174 +24,190 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import kotlin.random.Random
 
 @ModuleInfo(name = "ChestStealer", description = "Automatically steals all items from a chest.", category = ModuleCategory.WORLD)
-class ChestStealer : Module() {
+class ChestStealer : Module()
+{
 
-    /**
-     * OPTIONS
-     */
+	/**
+	 * OPTIONS
+	 */
 
-    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 200, 0, 400) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = minDelayValue.get()
-            if (i > newValue)
-                set(i)
+	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 200, 0, 400)
+	{
+		override fun onChanged(oldValue: Int, newValue: Int)
+		{
+			val i = minDelayValue.get()
+			if (i > newValue) set(i)
 
-            nextDelay = TimeUtils.randomDelay(minDelayValue.get(), get())
-        }
-    }
+			nextDelay = TimeUtils.randomDelay(minDelayValue.get(), get())
+		}
+	}
 
-    private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 150, 0, 400) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = maxDelayValue.get()
+	private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 150, 0, 400)
+	{
+		override fun onChanged(oldValue: Int, newValue: Int)
+		{
+			val i = maxDelayValue.get()
 
-            if (i < newValue)
-                set(i)
+			if (i < newValue) set(i)
 
-            nextDelay = TimeUtils.randomDelay(get(), maxDelayValue.get())
-        }
-    }
-    private val delayOnFirstValue = BoolValue("DelayOnFirst", false)
+			nextDelay = TimeUtils.randomDelay(get(), maxDelayValue.get())
+		}
+	}
+	private val delayOnFirstValue = BoolValue("DelayOnFirst", false)
 
-    private val takeRandomizedValue = BoolValue("TakeRandomized", false)
-    private val onlyItemsValue = BoolValue("OnlyItems", false)
-    private val noCompassValue = BoolValue("NoCompass", false)
-    private val autoCloseValue = BoolValue("AutoClose", true)
+	private val takeRandomizedValue = BoolValue("TakeRandomized", false)
+	private val onlyItemsValue = BoolValue("OnlyItems", false)
+	private val noCompassValue = BoolValue("NoCompass", false)
+	private val autoCloseValue = BoolValue("AutoClose", true)
 
-    private val autoCloseMaxDelayValue: IntegerValue = object : IntegerValue("AutoCloseMaxDelay", 0, 0, 400) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = autoCloseMinDelayValue.get()
-            if (i > newValue) set(i)
-            nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), this.get())
-        }
-    }
+	private val autoCloseMaxDelayValue: IntegerValue = object : IntegerValue("AutoCloseMaxDelay", 0, 0, 400)
+	{
+		override fun onChanged(oldValue: Int, newValue: Int)
+		{
+			val i = autoCloseMinDelayValue.get()
+			if (i > newValue) set(i)
+			nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), this.get())
+		}
+	}
 
-    private val autoCloseMinDelayValue: IntegerValue = object : IntegerValue("AutoCloseMinDelay", 0, 0, 400) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = autoCloseMaxDelayValue.get()
-            if (i < newValue) set(i)
-            nextCloseDelay = TimeUtils.randomDelay(this.get(), autoCloseMaxDelayValue.get())
-        }
-    }
+	private val autoCloseMinDelayValue: IntegerValue = object : IntegerValue("AutoCloseMinDelay", 0, 0, 400)
+	{
+		override fun onChanged(oldValue: Int, newValue: Int)
+		{
+			val i = autoCloseMaxDelayValue.get()
+			if (i < newValue) set(i)
+			nextCloseDelay = TimeUtils.randomDelay(this.get(), autoCloseMaxDelayValue.get())
+		}
+	}
 
-    private val closeOnFullValue = BoolValue("CloseOnFull", true)
-    private val chestTitleValue = BoolValue("ChestTitle", false)
+	private val closeOnFullValue = BoolValue("CloseOnFull", true)
+	private val chestTitleValue = BoolValue("ChestTitle", false)
 
-    /**
-     * VALUES
-     */
+	/**
+	 * VALUES
+	 */
 
-    private val delayTimer = MSTimer()
-    private var nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+	private val delayTimer = MSTimer()
+	private var nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 
-    private val autoCloseTimer = MSTimer()
-    private var nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
+	private val autoCloseTimer = MSTimer()
+	private var nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
 
-    private var contentReceived = 0
+	private var contentReceived = 0
 
-    @EventTarget
-    fun onRender3D(event: Render3DEvent?) {
-        val thePlayer = mc.thePlayer!!
+	@EventTarget
+	fun onRender3D(event: Render3DEvent?)
+	{
+		val thePlayer = mc.thePlayer!!
 
-        if (!classProvider.isGuiChest(mc.currentScreen) || mc.currentScreen == null) {
-            if (delayOnFirstValue.get())
-                delayTimer.reset()
-            autoCloseTimer.reset()
-            return
-        }
+		if (!classProvider.isGuiChest(mc.currentScreen) || mc.currentScreen == null)
+		{
+			if (delayOnFirstValue.get()) delayTimer.reset()
+			autoCloseTimer.reset()
+			return
+		}
 
-        if (!delayTimer.hasTimePassed(nextDelay)) {
-            autoCloseTimer.reset()
-            return
-        }
+		if (!delayTimer.hasTimePassed(nextDelay))
+		{
+			autoCloseTimer.reset()
+			return
+		}
 
-        val screen = mc.currentScreen!!.asGuiChest()
+		val screen = mc.currentScreen!!.asGuiChest()
 
-        // No Compass
-        if (noCompassValue.get() && thePlayer.inventory.getCurrentItemInHand()?.item?.unlocalizedName == "item.compass")
-            return
+		// No Compass
+		if (noCompassValue.get() && thePlayer.inventory.getCurrentItemInHand()?.item?.unlocalizedName == "item.compass") return
 
-        // Chest title
-        if (chestTitleValue.get() && (screen.lowerChestInventory == null || !screen.lowerChestInventory!!.name.contains(classProvider.createItemStack(functions.getObjectFromItemRegistry(classProvider.createResourceLocation("minecraft:chest"))!!).displayName)))
-            return
+		// Chest title
+		if (chestTitleValue.get() && (screen.lowerChestInventory == null || !screen.lowerChestInventory!!.name.contains(classProvider.createItemStack(functions.getObjectFromItemRegistry(classProvider.createResourceLocation("minecraft:chest"))!!).displayName))) return
 
-        // inventory cleaner
-        val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
+		// inventory cleaner
+		val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 
-        // Is empty?
-        if (!isEmpty(screen) && (!closeOnFullValue.get() || !fullInventory)) {
-            autoCloseTimer.reset()
+		// Is empty?
+		if (!isEmpty(screen) && (!closeOnFullValue.get() || !fullInventory))
+		{
+			autoCloseTimer.reset()
 
-            // Randomized
-            if (takeRandomizedValue.get()) {
-                do {
-                    val items = mutableListOf<ISlot>()
+			// Randomized
+			if (takeRandomizedValue.get())
+			{
+				do
+				{
+					val items = mutableListOf<ISlot>()
 
-                    for (slotIndex in 0 until screen.inventoryRows * 9) {
-                        val slot = screen.inventorySlots!!.getSlot(slotIndex)
+					for (slotIndex in 0 until screen.inventoryRows * 9)
+					{
+						val slot = screen.inventorySlots!!.getSlot(slotIndex)
 
-                        val stack = slot.stack
+						val stack = slot.stack
 
-                        if (stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1)))
-                            items.add(slot)
-                    }
+						if (stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))) items.add(slot)
+					}
 
-                    val randomSlot = Random.nextInt(items.size)
-                    val slot = items[randomSlot]
+					val randomSlot = Random.nextInt(items.size)
+					val slot = items[randomSlot]
 
-                    move(screen, slot)
-                } while (delayTimer.hasTimePassed(nextDelay) && items.isNotEmpty())
-                return
-            }
+					move(screen, slot)
+				} while (delayTimer.hasTimePassed(nextDelay) && items.isNotEmpty())
+				return
+			}
 
-            // Non randomized
-            for (slotIndex in 0 until screen.inventoryRows * 9) {
-                val slot = screen.inventorySlots!!.getSlot(slotIndex)
+			// Non randomized
+			for (slotIndex in 0 until screen.inventoryRows * 9)
+			{
+				val slot = screen.inventorySlots!!.getSlot(slotIndex)
 
-                val stack = slot.stack
+				val stack = slot.stack
 
-                if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack, inventoryCleaner)) {
-                    move(screen, slot)
-                }
-            }
-        } else if (autoCloseValue.get() && screen.inventorySlots!!.windowId == contentReceived && autoCloseTimer.hasTimePassed(nextCloseDelay)) {
-            thePlayer.closeScreen()
-            nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
-        }
-    }
+				if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack, inventoryCleaner))
+				{
+					move(screen, slot)
+				}
+			}
+		} else if (autoCloseValue.get() && screen.inventorySlots!!.windowId == contentReceived && autoCloseTimer.hasTimePassed(nextCloseDelay))
+		{
+			thePlayer.closeScreen()
+			nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
+		}
+	}
 
-    @EventTarget
-    private fun onPacket(event: PacketEvent) {
-        val packet = event.packet
+	@EventTarget
+	private fun onPacket(event: PacketEvent)
+	{
+		val packet = event.packet
 
-        if (classProvider.isSPacketWindowItems(packet))
-            contentReceived = packet.asSPacketWindowItems().windowId
-    }
+		if (classProvider.isSPacketWindowItems(packet)) contentReceived = packet.asSPacketWindowItems().windowId
+	}
 
-    private inline fun shouldTake(stack: IItemStack?, inventoryCleaner: InventoryCleaner): Boolean {
-        return stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))
-    }
+	private inline fun shouldTake(stack: IItemStack?, inventoryCleaner: InventoryCleaner): Boolean
+	{
+		return stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))
+	}
 
-    private fun move(screen: IGuiChest, slot: ISlot) {
-        screen.handleMouseClick(slot, slot.slotNumber, 0, 1)
-        delayTimer.reset()
-        nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
-    }
+	private fun move(screen: IGuiChest, slot: ISlot)
+	{
+		screen.handleMouseClick(slot, slot.slotNumber, 0, 1)
+		delayTimer.reset()
+		nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+	}
 
-    private fun isEmpty(chest: IGuiChest): Boolean {
-        val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
+	private fun isEmpty(chest: IGuiChest): Boolean
+	{
+		val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 
-        for (i in 0 until chest.inventoryRows * 9) {
-            val slot = chest.inventorySlots!!.getSlot(i)
+		for (i in 0 until chest.inventoryRows * 9)
+		{
+			val slot = chest.inventorySlots!!.getSlot(i)
 
-            val stack = slot.stack
+			val stack = slot.stack
 
-            if (shouldTake(stack, inventoryCleaner))
-                return false
-        }
+			if (shouldTake(stack, inventoryCleaner)) return false
+		}
 
-        return true
-    }
+		return true
+	}
 
-    private val fullInventory: Boolean
-        get() = mc.thePlayer?.inventory?.mainInventory?.none(ItemUtils::isStackEmpty) ?: false
+	private val fullInventory: Boolean
+		get() = mc.thePlayer?.inventory?.mainInventory?.none(ItemUtils::isStackEmpty) ?: false
 }

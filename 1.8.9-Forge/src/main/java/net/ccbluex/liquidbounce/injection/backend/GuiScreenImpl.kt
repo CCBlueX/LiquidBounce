@@ -20,44 +20,48 @@ import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.inventory.GuiChest
 import net.minecraft.client.gui.inventory.GuiContainer
 
-open class GuiScreenImpl<T : GuiScreen>(wrapped: T) : GuiImpl<T>(wrapped), IGuiScreen {
-    override val fontRendererObj: IFontRenderer
-        get() = wrapped.fontRendererObj.wrap()
-    override val buttonList: MutableList<IGuiButton>
-        get() = WrappedMutableList(wrapped.buttonList, IGuiButton::unwrap, GuiButton::wrap)
+open class GuiScreenImpl<T : GuiScreen>(wrapped: T) : GuiImpl<T>(wrapped), IGuiScreen
+{
+	override val fontRendererObj: IFontRenderer
+		get() = wrapped.fontRendererObj.wrap()
+	override val buttonList: MutableList<IGuiButton>
+		get() = WrappedMutableList(wrapped.buttonList, IGuiButton::unwrap, GuiButton::wrap)
 
-    override fun asGuiContainer(): IGuiContainer = GuiContainerImpl(wrapped as GuiContainer)
+	override fun asGuiContainer(): IGuiContainer = GuiContainerImpl(wrapped as GuiContainer)
 
-    override fun asGuiGameOver(): IGuiGameOver = GuiGameOverImpl(wrapped as GuiGameOver)
+	override fun asGuiGameOver(): IGuiGameOver = GuiGameOverImpl(wrapped as GuiGameOver)
 
-    override fun asGuiChest(): IGuiChest = GuiChestImpl(wrapped as GuiChest)
+	override fun asGuiChest(): IGuiChest = GuiChestImpl(wrapped as GuiChest)
 
-    override fun superMouseReleased(mouseX: Int, mouseY: Int, state: Int) = (wrapped as GuiScreenWrapper).superMouseReleased(mouseX, mouseY, state)
+	override fun superMouseReleased(mouseX: Int, mouseY: Int, state: Int) = (wrapped as GuiScreenWrapper).superMouseReleased(mouseX, mouseY, state)
 
-    override fun drawBackground(i: Int) = wrapped.drawBackground(i)
+	override fun drawBackground(i: Int) = wrapped.drawBackground(i)
 
-    override fun drawDefaultBackground() = wrapped.drawDefaultBackground()
-    override fun superKeyTyped(typedChar: Char, keyCode: Int) = (wrapped as GuiScreenWrapper).superKeyTyped(typedChar, keyCode)
+	override fun drawDefaultBackground() = wrapped.drawDefaultBackground()
+	override fun superKeyTyped(typedChar: Char, keyCode: Int) = (wrapped as GuiScreenWrapper).superKeyTyped(typedChar, keyCode)
 
-    override fun superHandleMouseInput() = (wrapped as GuiScreenWrapper).superHandleMouseInput()
+	override fun superHandleMouseInput() = (wrapped as GuiScreenWrapper).superHandleMouseInput()
 
-    override fun superMouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) = (wrapped as GuiScreenWrapper).superMouseClicked(mouseX, mouseY, mouseButton)
-    override fun superDrawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) = (wrapped as GuiScreenWrapper).superDrawScreen(mouseX, mouseY, partialTicks)
+	override fun superMouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) = (wrapped as GuiScreenWrapper).superMouseClicked(mouseX, mouseY, mouseButton)
+	override fun superDrawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) = (wrapped as GuiScreenWrapper).superDrawScreen(mouseX, mouseY, partialTicks)
 
-    override var height: Int
-        get() = wrapped.height
-        set(value) {
-            wrapped.height = value
-        }
-    override var width: Int
-        get() = wrapped.width
-        set(value) {
-            wrapped.width = value
-        }
+	override var height: Int
+		get() = wrapped.height
+		set(value)
+		{
+			wrapped.height = value
+		}
+	override var width: Int
+		get() = wrapped.width
+		set(value)
+		{
+			wrapped.width = value
+		}
 
-    override fun equals(other: Any?): Boolean {
-        return other is GuiScreenImpl<*> && other.wrapped == this.wrapped
-    }
+	override fun equals(other: Any?): Boolean
+	{
+		return other is GuiScreenImpl<*> && other.wrapped == this.wrapped
+	}
 }
 
 inline fun IGuiScreen.unwrap(): GuiScreen = (this as GuiScreenImpl<*>).wrapped

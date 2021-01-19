@@ -9,22 +9,30 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AACYPort : SpeedMode("AACYPort") {
-    override fun onMotion() {
-        val thePlayer = mc.thePlayer ?: return
+class AACYPort : SpeedMode("AACYPort")
+{
+	override fun onMotion()
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        if (MovementUtils.isMoving && !thePlayer.sneaking) {
-            thePlayer.cameraPitch = 0f
+		if (MovementUtils.isMoving && !thePlayer.sneaking)
+		{
+			thePlayer.cameraPitch = 0f
 
-            if (thePlayer.onGround) {
-                thePlayer.motionY = 0.3425
-                thePlayer.motionX *= 1.5893
-                thePlayer.motionZ *= 1.5893
-            } else
-                thePlayer.motionY = -0.19
-        }
-    }
+			if (thePlayer.onGround)
+			{
+				thePlayer.motionY = 0.3425
+				thePlayer.motionX *= 1.5893
+				thePlayer.motionZ *= 1.5893
+			} else thePlayer.motionY = -0.19
+		}
+	}
 
-    override fun onUpdate() {}
-    override fun onMove(event: MoveEvent) {}
+	override fun onUpdate()
+	{
+	}
+
+	override fun onMove(event: MoveEvent)
+	{
+	}
 }

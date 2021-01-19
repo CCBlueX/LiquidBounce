@@ -16,80 +16,88 @@ import java.awt.image.BufferedImage
 import java.util.*
 import kotlin.collections.HashMap
 
-object CapeAPI : MinecraftInstance() {
+object CapeAPI : MinecraftInstance()
+{
 
-    // Cape Service
-    private var capeService: CapeService? = null
+	// Cape Service
+	private var capeService: CapeService? = null
 
-    /**
-     * Register cape service
-     */
-    fun registerCapeService() {
-        // Read cape infos from web
-        val jsonObject = JsonParser()
-                .parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/capes.json")).asJsonObject
-        val serviceType = jsonObject.get("serviceType").asString
+	/**
+	 * Register cape service
+	 */
+	fun registerCapeService()
+	{ // Read cape infos from web
+		val jsonObject = JsonParser().parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/capes.json")).asJsonObject
+		val serviceType = jsonObject.get("serviceType").asString
 
-        // Setup service type
-        when (serviceType.toLowerCase()) {
-            "api" -> {
-                val url = jsonObject.get("api").asJsonObject.get("url").asString
+		// Setup service type
+		when (serviceType.toLowerCase())
+		{
+			"api" ->
+			{
+				val url = jsonObject.get("api").asJsonObject.get("url").asString
 
-                capeService = ServiceAPI(url)
-                ClientUtils.getLogger().info("Registered $url as '$serviceType' service type.")
-            }
-            "list" -> {
-                val users = HashMap<String, String>()
+				capeService = ServiceAPI(url)
+				ClientUtils.getLogger().info("Registered $url as '$serviceType' service type.")
+			}
 
-                for ((key, value) in jsonObject.get("users").asJsonObject.entrySet()) {
-                    users[key] = value.asString
-                    ClientUtils.getLogger().info("Loaded user cape for '$key'.")
-                }
+			"list" ->
+			{
+				val users = HashMap<String, String>()
 
-                capeService = ServiceList(users)
-                ClientUtils.getLogger().info("Registered '$serviceType' service type.")
-            }
-        }
+				for ((key, value) in jsonObject.get("users").asJsonObject.entrySet())
+				{
+					users[key] = value.asString
+					ClientUtils.getLogger().info("Loaded user cape for '$key'.")
+				}
 
-        ClientUtils.getLogger().info("Loaded.")
-    }
+				capeService = ServiceList(users)
+				ClientUtils.getLogger().info("Registered '$serviceType' service type.")
+			}
+		}
 
-    /**
-     * Load cape of user with uuid
-     *
-     * @param uuid
-     * @return cape info
-     */
-    fun loadCape(uuid: UUID): CapeInfo? {
-        // Get url of cape from cape service
-        val url = (capeService ?: return null).getCape(uuid) ?: return null
+		ClientUtils.getLogger().info("Loaded.")
+	}
 
-        // Load cape
-        val resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation("capes/%s.png".format(uuid.toString()))
-        val capeInfo = CapeInfo(resourceLocation)
-        val threadDownloadImageData = LiquidBounce.wrapper.classProvider.createThreadDownloadImageData(null, url, null, object : WIImageBuffer {
+	/**
+	 * Load cape of user with uuid
+	 *
+	 * @param uuid
+	 * @return cape info
+	 */
+	fun loadCape(uuid: UUID): CapeInfo?
+	{ // Get url of cape from cape service
+		val url = (capeService ?: return null).getCape(uuid) ?: return null
 
-            override fun parseUserSkin(image: BufferedImage?): BufferedImage? {
-                return image
-            }
+		// Load cape
+		val resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation("capes/%s.png".format(uuid.toString()))
+		val capeInfo = CapeInfo(resourceLocation)
+		val threadDownloadImageData = LiquidBounce.wrapper.classProvider.createThreadDownloadImageData(null, url, null, object : WIImageBuffer
+		{
 
-            override fun skinAvailable() {
-                capeInfo.isCapeAvailable = true
-            }
+			override fun parseUserSkin(image: BufferedImage?): BufferedImage?
+			{
+				return image
+			}
 
-        })
+			override fun skinAvailable()
+			{
+				capeInfo.isCapeAvailable = true
+			}
 
-        mc.textureManager.loadTexture(resourceLocation, threadDownloadImageData)
+		})
 
-        return capeInfo
-    }
+		mc.textureManager.loadTexture(resourceLocation, threadDownloadImageData)
 
-    /**
-     * Check if cape service is available
-     *
-     * @return capeservice status
-     */
-    fun hasCapeService() = capeService != null
+		return capeInfo
+	}
+
+	/**
+	 * Check if cape service is available
+	 *
+	 * @return capeservice status
+	 */
+	fun hasCapeService() = capeService != null
 }
 
 data class CapeInfo(val resourceLocation: IResourceLocation, var isCapeAvailable: Boolean = false)

@@ -298,8 +298,8 @@ class Arraylist(
 	override fun updateElement()
 	{
 		modules = LiquidBounce.moduleManager.modules.filter { it.array && it.slide > 0 }.sortedBy {
-				-fontValue.get()
-					.getStringWidth(if (upperCaseValue.get()) (if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName).toUpperCase() else if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName)
-			}
+			-fontValue.get()
+				.getStringWidth(if (upperCaseValue.get()) (if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName).toUpperCase() else if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName)
+		}
 	}
 }

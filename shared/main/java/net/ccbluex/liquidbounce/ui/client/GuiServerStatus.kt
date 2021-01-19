@@ -47,8 +47,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				Fonts.font40.drawCenteredString(
 					"$server: ${if (color.equals("red", ignoreCase = true)) "\u00A7c" else if (color.equals("yellow", ignoreCase = true)) "\u00A7e" else "\u00A7a"}${
 						if (color.equals(
-								"red",
-								ignoreCase = true
+								"red", ignoreCase = true
 							)
 						) "Offline" else if (color.equals("yellow", ignoreCase = true)) "Slow" else "Online"
 					}", representedScreen.width / 2.0f, i.toFloat(), Color.WHITE.rgb

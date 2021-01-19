@@ -8,13 +8,15 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(TileEntityItemStackRenderer.class)
 @SideOnly(Side.CLIENT)
-public class MixinTileEntityItemStackRenderer {
+public class MixinTileEntityItemStackRenderer
+{
 
-    // TODO Fix this (p0)
+	// TODO Fix this (p0)
 //    @Shadow
 //    private TileEntityBanner banner;
 //

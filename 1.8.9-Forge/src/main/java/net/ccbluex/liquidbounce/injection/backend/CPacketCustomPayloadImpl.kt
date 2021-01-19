@@ -10,14 +10,16 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketCustom
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.minecraft.network.play.client.C17PacketCustomPayload
 
-class CPacketCustomPayloadImpl<T : C17PacketCustomPayload>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketCustomPayload {
-    override var data: IPacketBuffer
-        get() = wrapped.data.wrap()
-        set(value) {
-            wrapped.data = value.unwrap()
-        }
-    override val channelName: String
-        get() = wrapped.channelName
+class CPacketCustomPayloadImpl<T : C17PacketCustomPayload>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketCustomPayload
+{
+	override var data: IPacketBuffer
+		get() = wrapped.data.wrap()
+		set(value)
+		{
+			wrapped.data = value.unwrap()
+		}
+	override val channelName: String
+		get() = wrapped.channelName
 
 }
 

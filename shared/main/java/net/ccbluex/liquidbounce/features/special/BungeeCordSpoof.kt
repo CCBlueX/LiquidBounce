@@ -11,27 +11,32 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.util.*
 
-class BungeeCordSpoof : MinecraftInstance(), Listenable {
-    @EventTarget
-    fun onPacket(event: PacketEvent) {
-        val packet = event.packet
-        if (classProvider.isCPacketHandshake(packet) && enabled && packet.asCPacketHandshake().requestedState.isHandshake) {
-            val handshake = packet.asCPacketHandshake()
+class BungeeCordSpoof : MinecraftInstance(), Listenable
+{
+	@EventTarget
+	fun onPacket(event: PacketEvent)
+	{
+		val packet = event.packet
+		if (classProvider.isCPacketHandshake(packet) && enabled && packet.asCPacketHandshake().requestedState.isHandshake)
+		{
+			val handshake = packet.asCPacketHandshake()
 
-            handshake.ip = handshake.ip + "\u0000" + String.format("%d.%d.%d.%d", getRandomIpPart(), getRandomIpPart(), getRandomIpPart(), getRandomIpPart()) + "\u0000" + mc.session.playerId.replace("-", "")
-        }
-    }
+			handshake.ip = handshake.ip + "\u0000" + String.format("%d.%d.%d.%d", getRandomIpPart(), getRandomIpPart(), getRandomIpPart(), getRandomIpPart()) + "\u0000" + mc.session.playerId.replace("-", "")
+		}
+	}
 
-    private fun getRandomIpPart(): String = RANDOM.nextInt(256).toString()
+	private fun getRandomIpPart(): String = RANDOM.nextInt(256).toString()
 
-    override fun handleEvents(): Boolean {
-        return true
-    }
+	override fun handleEvents(): Boolean
+	{
+		return true
+	}
 
-    companion object {
-        private val RANDOM = Random()
+	companion object
+	{
+		private val RANDOM = Random()
 
-        @JvmField
-        var enabled = false
-    }
+		@JvmField
+		var enabled = false
+	}
 }

@@ -13,16 +13,17 @@ import org.objectweb.asm.tree.InsnList
  *
  * @author CCBlueX
  */
-object NodeUtils {
+object NodeUtils
+{
 
-    /**
-     * Lazy.
-     */
-    fun toNodes(vararg nodes : AbstractInsnNode) : InsnList {
-        val insnList = InsnList()
-        for(node in nodes)
-            insnList.add(node)
-        return insnList
-    }
+	/**
+	 * Lazy.
+	 */
+	fun toNodes(vararg nodes: AbstractInsnNode): InsnList
+	{
+		val insnList = InsnList()
+		for (node in nodes) insnList.add(node)
+		return insnList
+	}
 
 }

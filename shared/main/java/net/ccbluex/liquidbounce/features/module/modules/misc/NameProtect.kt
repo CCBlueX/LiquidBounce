@@ -17,31 +17,30 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.TextValue
 
 @ModuleInfo(name = "NameProtect", description = "Changes playernames clientside.", category = ModuleCategory.MISC)
-class NameProtect : Module() {
-    @JvmField
-    val allPlayersValue = BoolValue("AllPlayers", false)
+class NameProtect : Module()
+{
+	@JvmField
+	val allPlayersValue = BoolValue("AllPlayers", false)
 
-    @JvmField
-    val skinProtectValue = BoolValue("SkinProtect", true)
-    private val fakeNameValue = TextValue("FakeName", "&cMe")
+	@JvmField
+	val skinProtectValue = BoolValue("SkinProtect", true)
+	private val fakeNameValue = TextValue("FakeName", "&cMe")
 
-    @EventTarget(ignoreCondition = true)
-    fun onText(event: TextEvent) {
-        val thePlayer = mc.thePlayer
+	@EventTarget(ignoreCondition = true)
+	fun onText(event: TextEvent)
+	{
+		val thePlayer = mc.thePlayer
 
-        if (thePlayer == null || event.text!!.contains("\u00A78[\u00A79\u00A7l" + LiquidBounce.CLIENT_NAME + "\u00A78] \u00A73"))
-            return
+		if (thePlayer == null || event.text!!.contains("\u00A78[\u00A79\u00A7l" + LiquidBounce.CLIENT_NAME + "\u00A78] \u00A73")) return
 
-        for (friend in LiquidBounce.fileManager.friendsConfig.friends)
-            event.text = StringUtils.replace(event.text, friend.playerName, translateAlternateColorCodes(friend.alias) + "\u00A7f")
+		for (friend in LiquidBounce.fileManager.friendsConfig.friends) event.text = StringUtils.replace(event.text, friend.playerName, translateAlternateColorCodes(friend.alias) + "\u00A7f")
 
-        if (!state)
-            return
-        event.text = StringUtils.replace(event.text, thePlayer.name, translateAlternateColorCodes(fakeNameValue.get()) + "\u00A7f")
+		if (!state) return
+		event.text = StringUtils.replace(event.text, thePlayer.name, translateAlternateColorCodes(fakeNameValue.get()) + "\u00A7f")
 
-        if (allPlayersValue.get()) {
-            for (playerInfo in mc.netHandler.playerInfoMap)
-                event.text = StringUtils.replace(event.text, playerInfo.gameProfile.name, "Protected User")
-        }
-    }
+		if (allPlayersValue.get())
+		{
+			for (playerInfo in mc.netHandler.playerInfoMap) event.text = StringUtils.replace(event.text, playerInfo.gameProfile.name, "Protected User")
+		}
+	}
 }

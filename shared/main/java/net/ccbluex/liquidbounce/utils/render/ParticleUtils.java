@@ -10,11 +10,13 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import net.vitox.ParticleGenerator;
 
 @SideOnly(Side.CLIENT)
-public final class ParticleUtils {
+public final class ParticleUtils
+{
 
-    private static final ParticleGenerator particleGenerator = new ParticleGenerator(100);
+	private static final ParticleGenerator particleGenerator = new ParticleGenerator(100);
 
-    public static void drawParticles(final int mouseX, final int mouseY) {
-        particleGenerator.draw(mouseX, mouseY);
-    }
+	public static void drawParticles(final int mouseX, final int mouseY)
+	{
+		particleGenerator.draw(mouseX, mouseY);
+	}
 }

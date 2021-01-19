@@ -12,13 +12,14 @@ import net.ccbluex.liquidbounce.api.minecraft.tileentity.ITileEntity
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 
-interface IWorldClient : IWorld {
-    val playerEntities: Collection<IEntityPlayer>
-    val loadedEntityList: Collection<IEntity>
-    val loadedTileEntityList: Collection<ITileEntity>
+interface IWorldClient : IWorld
+{
+	val playerEntities: Collection<IEntityPlayer>
+	val loadedEntityList: Collection<IEntity>
+	val loadedTileEntityList: Collection<ITileEntity>
 
-    fun sendQuittingDisconnectingPacket()
-    fun sendBlockBreakProgress(entityId: Int, blockPos: WBlockPos, damage: Int)
-    fun addEntityToWorld(entityId: Int, fakePlayer: IEntity)
-    fun removeEntityFromWorld(entityId: Int)
+	fun sendQuittingDisconnectingPacket()
+	fun sendBlockBreakProgress(entityId: Int, blockPos: WBlockPos, damage: Int)
+	fun addEntityToWorld(entityId: Int, fakePlayer: IEntity)
+	fun removeEntityFromWorld(entityId: Int)
 }

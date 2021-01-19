@@ -28,77 +28,79 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
-object ChestAura : Module() {
+object ChestAura : Module()
+{
 
-    private val rangeValue = FloatValue("Range", 5F, 1F, 6F)
-    private val delayValue = IntegerValue("Delay", 100, 50, 200)
-    private val throughWallsValue = BoolValue("ThroughWalls", true)
-    private val visualSwing = BoolValue("VisualSwing", true)
-    private val chestValue = BlockValue("Chest", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.CHEST)))
-    private val rotationsValue = BoolValue("Rotations", true)
+	private val rangeValue = FloatValue("Range", 5F, 1F, 6F)
+	private val delayValue = IntegerValue("Delay", 100, 50, 200)
+	private val throughWallsValue = BoolValue("ThroughWalls", true)
+	private val visualSwing = BoolValue("VisualSwing", true)
+	private val chestValue = BlockValue("Chest", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.CHEST)))
+	private val rotationsValue = BoolValue("Rotations", true)
 
-    private var currentBlock: WBlockPos? = null
-    private val timer = MSTimer()
+	private var currentBlock: WBlockPos? = null
+	private val timer = MSTimer()
 
-    val clickedBlocks = mutableListOf<WBlockPos>()
+	val clickedBlocks = mutableListOf<WBlockPos>()
 
-    @EventTarget
-    fun onMotion(event: MotionEvent) {
-        if (LiquidBounce.moduleManager[Blink::class.java].state || (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).isBlockingChestAura)
-            return
+	@EventTarget
+	fun onMotion(event: MotionEvent)
+	{
+		if (LiquidBounce.moduleManager[Blink::class.java].state || (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).isBlockingChestAura) return
 
-        val thePlayer = mc.thePlayer!!
-        val theWorld = mc.theWorld!!
+		val thePlayer = mc.thePlayer!!
+		val theWorld = mc.theWorld!!
 
-        when (event.eventState) {
-            EventState.PRE -> {
-                if (classProvider.isGuiContainer(mc.currentScreen))
-                    timer.reset()
+		when (event.eventState)
+		{
+			EventState.PRE ->
+			{
+				if (classProvider.isGuiContainer(mc.currentScreen)) timer.reset()
 
-                val radius = rangeValue.get() + 1
+				val radius = rangeValue.get() + 1
 
-                val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight,
-                        thePlayer.posZ)
+				val eyesPos = WVec3(
+					thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ
+				)
 
-                currentBlock = BlockUtils.searchBlocks(radius.toInt())
-                        .filter {
-                            functions.getIdFromBlock(it.value) == chestValue.get() && !clickedBlocks.contains(it.key)
-                                    && BlockUtils.getCenterDistance(it.key) < rangeValue.get()
-                        }
-                        .filter {
-                            if (throughWallsValue.get())
-                                return@filter true
+				currentBlock = BlockUtils.searchBlocks(radius.toInt()).filter {
+					functions.getIdFromBlock(it.value) == chestValue.get() && !clickedBlocks.contains(it.key) && BlockUtils.getCenterDistance(it.key) < rangeValue.get()
+				}.filter {
+					if (throughWallsValue.get()) return@filter true
 
-                            val blockPos = it.key
-                            val movingObjectPosition = theWorld.rayTraceBlocks(eyesPos,
-                                    blockPos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
+					val blockPos = it.key
+					val movingObjectPosition = theWorld.rayTraceBlocks(
+						eyesPos, blockPos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false
+					)
 
-                            movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
-                        }
-                        .minBy { BlockUtils.getCenterDistance(it.key) }?.key
+					movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
+				}.minBy { BlockUtils.getCenterDistance(it.key) }?.key
 
-                if (rotationsValue.get())
-                    RotationUtils.setTargetRotation((RotationUtils.faceBlock(currentBlock ?: return)
-                            ?: return).rotation)
-            }
+				if (rotationsValue.get()) RotationUtils.setTargetRotation(
+					(RotationUtils.faceBlock(currentBlock ?: return) ?: return).rotation
+				)
+			}
 
-            EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get().toLong())) {
-                if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld!!, thePlayer.heldItem, currentBlock!!,
-                                classProvider.getEnumFacing(EnumFacingType.DOWN), currentBlock!!.getVec())) {
-                    if (visualSwing.get())
-                        thePlayer.swingItem()
-                    else
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
+			EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get().toLong()))
+			{
+				if (mc.playerController.onPlayerRightClick(
+						thePlayer, mc.theWorld!!, thePlayer.heldItem, currentBlock!!, classProvider.getEnumFacing(EnumFacingType.DOWN), currentBlock!!.getVec()
+					)
+				)
+				{
+					if (visualSwing.get()) thePlayer.swingItem()
+					else mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
 
-                    clickedBlocks.add(currentBlock!!)
-                    currentBlock = null
-                    timer.reset()
-                }
-            }
-        }
-    }
+					clickedBlocks.add(currentBlock!!)
+					currentBlock = null
+					timer.reset()
+				}
+			}
+		}
+	}
 
-    override fun onDisable() {
-        clickedBlocks.clear()
-    }
+	override fun onDisable()
+	{
+		clickedBlocks.clear()
+	}
 }

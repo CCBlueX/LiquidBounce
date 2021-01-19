@@ -8,7 +8,8 @@ package net.ccbluex.liquidbounce.api.minecraft.client.render.texture
 
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 
-interface ITextureManager {
-    fun loadTexture(textureLocation: IResourceLocation, textureObj: IAbstractTexture): Boolean
-    fun bindTexture(image: IResourceLocation)
+interface ITextureManager
+{
+	fun loadTexture(textureLocation: IResourceLocation, textureObj: IAbstractTexture): Boolean
+	fun bindTexture(image: IResourceLocation)
 }

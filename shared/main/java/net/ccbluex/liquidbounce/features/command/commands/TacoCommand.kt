@@ -14,63 +14,68 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 
-class TacoCommand : Command("taco"), Listenable {
-    private var toggle = false
-    private var image = 0
-    private var running = 0f
-    private val tacoTextures = arrayOf(
-            classProvider.createResourceLocation("liquidbounce/taco/1.png"),
-            classProvider.createResourceLocation("liquidbounce/taco/2.png"),
-            classProvider.createResourceLocation("liquidbounce/taco/3.png"),
-            classProvider.createResourceLocation("liquidbounce/taco/4.png"),
-            classProvider.createResourceLocation("liquidbounce/taco/5.png"),
-            classProvider.createResourceLocation("liquidbounce/taco/6.png"),
-            classProvider.createResourceLocation("liquidbounce/taco/7.png"),
-            classProvider.createResourceLocation("liquidbounce/taco/8.png"),
-            classProvider.createResourceLocation("liquidbounce/taco/9.png"),
-            classProvider.createResourceLocation("liquidbounce/taco/10.png"),
-            classProvider.createResourceLocation("liquidbounce/taco/11.png"),
-            classProvider.createResourceLocation("liquidbounce/taco/12.png")
-    )
+class TacoCommand : Command("taco"), Listenable
+{
+	private var toggle = false
+	private var image = 0
+	private var running = 0f
+	private val tacoTextures = arrayOf(
+		classProvider.createResourceLocation("liquidbounce/taco/1.png"),
+		classProvider.createResourceLocation("liquidbounce/taco/2.png"),
+		classProvider.createResourceLocation("liquidbounce/taco/3.png"),
+		classProvider.createResourceLocation("liquidbounce/taco/4.png"),
+		classProvider.createResourceLocation("liquidbounce/taco/5.png"),
+		classProvider.createResourceLocation("liquidbounce/taco/6.png"),
+		classProvider.createResourceLocation("liquidbounce/taco/7.png"),
+		classProvider.createResourceLocation("liquidbounce/taco/8.png"),
+		classProvider.createResourceLocation("liquidbounce/taco/9.png"),
+		classProvider.createResourceLocation("liquidbounce/taco/10.png"),
+		classProvider.createResourceLocation("liquidbounce/taco/11.png"),
+		classProvider.createResourceLocation("liquidbounce/taco/12.png")
+	)
 
-    init {
-        LiquidBounce.eventManager.registerListener(this)
-    }
+	init
+	{
+		LiquidBounce.eventManager.registerListener(this)
+	}
 
-    /**
-     * Execute commands with provided [args]
-     */
-    override fun execute(args: Array<String>) {
-        toggle = !toggle
-        ClientUtils.displayChatMessage(if (toggle) "\u00A7aTACO TACO TACO. :)" else "\u00A7cYou made the little taco sad! :(")
-    }
+	/**
+	 * Execute commands with provided [args]
+	 */
+	override fun execute(args: Array<String>)
+	{
+		toggle = !toggle
+		ClientUtils.displayChatMessage(if (toggle) "\u00A7aTACO TACO TACO. :)" else "\u00A7cYou made the little taco sad! :(")
+	}
 
-    @EventTarget
-    fun onRender2D(event: Render2DEvent) {
-        if (!toggle)
-            return
+	@EventTarget
+	fun onRender2D(event: Render2DEvent)
+	{
+		if (!toggle) return
 
-        running += 0.15f * RenderUtils.deltaTime
-        val scaledResolution = classProvider.createScaledResolution(mc)
-        RenderUtils.drawImage(tacoTextures[image], running.toInt(), scaledResolution.scaledHeight - 60, 64, 32)
-        if (scaledResolution.scaledWidth <= running)
-            running = -64f
-    }
+		running += 0.15f * RenderUtils.deltaTime
+		val scaledResolution = classProvider.createScaledResolution(mc)
+		RenderUtils.drawImage(tacoTextures[image], running.toInt(), scaledResolution.scaledHeight - 60, 64, 32)
+		if (scaledResolution.scaledWidth <= running) running = -64f
+	}
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        if (!toggle) {
-            image = 0
-            return
-        }
+	@EventTarget
+	fun onUpdate(event: UpdateEvent)
+	{
+		if (!toggle)
+		{
+			image = 0
+			return
+		}
 
-        image++
-        if (image >= tacoTextures.size) image = 0
-    }
+		image++
+		if (image >= tacoTextures.size) image = 0
+	}
 
-    override fun handleEvents() = true
+	override fun handleEvents() = true
 
-    override fun tabComplete(args: Array<String>): List<String> {
-        return listOf("TACO")
-    }
+	override fun tabComplete(args: Array<String>): List<String>
+	{
+		return listOf("TACO")
+	}
 }

@@ -13,13 +13,14 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 
 @ModuleInfo(name = "SafeWalk", description = "Prevents you from falling down as if you were sneaking.", category = ModuleCategory.MOVEMENT)
-class SafeWalk : Module() {
+class SafeWalk : Module()
+{
 
-    private val airSafeValue = BoolValue("AirSafe", false)
+	private val airSafeValue = BoolValue("AirSafe", false)
 
-    @EventTarget
-    fun onMove(event: MoveEvent) {
-        if (airSafeValue.get() || mc.thePlayer!!.onGround)
-            event.isSafeWalk = true
-    }
+	@EventTarget
+	fun onMove(event: MoveEvent)
+	{
+		if (airSafeValue.get() || mc.thePlayer!!.onGround) event.isSafeWalk = true
+	}
 }

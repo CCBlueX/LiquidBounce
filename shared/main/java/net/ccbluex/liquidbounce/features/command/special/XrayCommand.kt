@@ -5,125 +5,147 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay
 import net.minecraft.block.Block
 
-class XrayCommand : Command("xray") {
+class XrayCommand : Command("xray")
+{
 
-    val xRay = LiquidBounce.moduleManager.getModule(XRay::class.java) as XRay
+	val xRay = LiquidBounce.moduleManager.getModule(XRay::class.java) as XRay
 
-    /**
-     * Execute commands with provided [args]
-     */
-    override fun execute(args: Array<String>) {
-        if (args.size > 1) {
-            if (args[1].equals("add", ignoreCase = true)) {
-                if (args.size > 2) {
-                    try {
-                        val block = try {
-                            functions.getBlockById(args[2].toInt())
-                        } catch (exception: NumberFormatException) {
-                            val tmpBlock = functions.getBlockFromName(args[2])
+	/**
+	 * Execute commands with provided [args]
+	 */
+	override fun execute(args: Array<String>)
+	{
+		if (args.size > 1)
+		{
+			if (args[1].equals("add", ignoreCase = true))
+			{
+				if (args.size > 2)
+				{
+					try
+					{
+						val block = try
+						{
+							functions.getBlockById(args[2].toInt())
+						} catch (exception: NumberFormatException)
+						{
+							val tmpBlock = functions.getBlockFromName(args[2])
 
-                            if (tmpBlock == null || functions.getIdFromBlock(tmpBlock) <= 0) {
-                                chat("\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
-                                return
-                            }
+							if (tmpBlock == null || functions.getIdFromBlock(tmpBlock) <= 0)
+							{
+								chat("\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
+								return
+							}
 
-                            tmpBlock
-                        }
+							tmpBlock
+						}
 
-                        if (block == null || xRay.xrayBlocks.contains(block)) {
-                            chat("This block is already on the list.")
-                            return
-                        }
+						if (block == null || xRay.xrayBlocks.contains(block))
+						{
+							chat("This block is already on the list.")
+							return
+						}
 
-                        xRay.xrayBlocks.add(block)
-                        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
-                        chat("\u00A77Added block \u00A78${block.localizedName}\u00A77.")
-                        playEdit()
-                    } catch (exception: NumberFormatException) {
-                        chatSyntaxError()
-                    }
+						xRay.xrayBlocks.add(block)
+						LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
+						chat("\u00A77Added block \u00A78${block.localizedName}\u00A77.")
+						playEdit()
+					} catch (exception: NumberFormatException)
+					{
+						chatSyntaxError()
+					}
 
-                    return
-                }
+					return
+				}
 
-                chatSyntax("xray add <block_id>")
-                return
-            }
+				chatSyntax("xray add <block_id>")
+				return
+			}
 
-            if (args[1].equals("remove", ignoreCase = true)) {
-                if (args.size > 2) {
-                    try {
-                        val block = try {
-                            functions.getBlockById(args[2].toInt())
-                        } catch (exception: NumberFormatException) {
-                            val tmpBlock = functions.getBlockFromName(args[2])
+			if (args[1].equals("remove", ignoreCase = true))
+			{
+				if (args.size > 2)
+				{
+					try
+					{
+						val block = try
+						{
+							functions.getBlockById(args[2].toInt())
+						} catch (exception: NumberFormatException)
+						{
+							val tmpBlock = functions.getBlockFromName(args[2])
 
-                            if (tmpBlock == null || functions.getIdFromBlock(tmpBlock) <= 0) {
-                                chat("\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
-                                return
-                            }
+							if (tmpBlock == null || functions.getIdFromBlock(tmpBlock) <= 0)
+							{
+								chat("\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
+								return
+							}
 
-                            tmpBlock
-                        }
+							tmpBlock
+						}
 
-                        if (block == null || !xRay.xrayBlocks.contains(block)) {
-                            chat("This block is not on the list.")
-                            return
-                        }
+						if (block == null || !xRay.xrayBlocks.contains(block))
+						{
+							chat("This block is not on the list.")
+							return
+						}
 
-                        xRay.xrayBlocks.remove(block)
-                        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
-                        chat("\u00A77Removed block \u00A78${block.localizedName}\u00A77.")
-                        playEdit()
-                    } catch (exception: NumberFormatException) {
-                        chatSyntaxError()
-                    }
+						xRay.xrayBlocks.remove(block)
+						LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
+						chat("\u00A77Removed block \u00A78${block.localizedName}\u00A77.")
+						playEdit()
+					} catch (exception: NumberFormatException)
+					{
+						chatSyntaxError()
+					}
 
-                    return
-                }
-                chatSyntax("xray remove <block_id>")
-                return
-            }
+					return
+				}
+				chatSyntax("xray remove <block_id>")
+				return
+			}
 
-            if (args[1].equals("list", ignoreCase = true)) {
-                chat("\u00A78Xray blocks:")
-                xRay.xrayBlocks.forEach { chat("\u00A78${it.localizedName} \u00A77-\u00A7c ${functions.getIdFromBlock(it)}") }
-                return
-            }
-        }
-        chatSyntax("xray <add, remove, list>")
-    }
+			if (args[1].equals("list", ignoreCase = true))
+			{
+				chat("\u00A78Xray blocks:")
+				xRay.xrayBlocks.forEach { chat("\u00A78${it.localizedName} \u00A77-\u00A7c ${functions.getIdFromBlock(it)}") }
+				return
+			}
+		}
+		chatSyntax("xray <add, remove, list>")
+	}
 
-    override fun tabComplete(args: Array<String>): List<String> {
-        if (args.isEmpty())
-            return emptyList()
+	override fun tabComplete(args: Array<String>): List<String>
+	{
+		if (args.isEmpty()) return emptyList()
 
-        return when (args.size) {
-            1 -> {
-                arrayOf("add", "remove", "list")
-                        .map { it.toLowerCase() }
-                        .filter { it.startsWith(args[0], true) }
-            }
-            2 -> {
-                when (args[0].toLowerCase()) {
-                    "add" -> {
-                        return functions.getBlockRegistryKeys()
-                                .map { it.resourcePath.toLowerCase() }
-                                .filter { Block.getBlockFromName(it.toLowerCase()) != null }
-                                .filter { !xRay.xrayBlocks.contains(functions.getBlockFromName(it.toLowerCase())) }
-                                .filter { it.startsWith(args[1], true) }
-                    }
-                    "remove" -> {
-                        return functions.getBlockRegistryKeys()
-                                .map { it.resourcePath.toLowerCase() }
-                                .filter { xRay.xrayBlocks.contains(functions.getBlockFromName(it)) }
-                                .filter { it.startsWith(args[1], true) }
-                    }
-                    else -> emptyList()
-                }
+		return when (args.size)
+		{
+			1 ->
+			{
+				arrayOf("add", "remove", "list").map { it.toLowerCase() }.filter { it.startsWith(args[0], true) }
+			}
 
-            }
-            else -> emptyList()
-        }
-    }
+			2 ->
+			{
+				when (args[0].toLowerCase())
+				{
+					"add" ->
+					{
+						return functions.getBlockRegistryKeys().map { it.resourcePath.toLowerCase() }.filter { Block.getBlockFromName(it.toLowerCase()) != null }.filter { !xRay.xrayBlocks.contains(functions.getBlockFromName(it.toLowerCase())) }
+							.filter { it.startsWith(args[1], true) }
+					}
+
+					"remove" ->
+					{
+						return functions.getBlockRegistryKeys().map { it.resourcePath.toLowerCase() }.filter { xRay.xrayBlocks.contains(functions.getBlockFromName(it)) }.filter { it.startsWith(args[1], true) }
+					}
+
+					else -> emptyList()
+				}
+
+			}
+
+			else -> emptyList()
+		}
+	}
 }

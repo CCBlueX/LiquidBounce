@@ -17,69 +17,76 @@ import net.ccbluex.liquidbounce.api.util.WrappedCollection
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.potion.PotionEffect
 
-open class EntityLivingBaseImpl<T : EntityLivingBase>(wrapped: T) : EntityImpl<T>(wrapped), IEntityLivingBase {
-    override val maxHealth: Float
-        get() = wrapped.maxHealth
-    override var prevRotationYawHead: Float
-        get() = wrapped.prevRotationYawHead
-        set(value) {
-            wrapped.prevRotationYawHead = value
-        }
-    override var renderYawOffset: Float
-        get() = wrapped.renderYawOffset
-        set(value) {
-            wrapped.renderYawOffset = value
-        }
-    override val activePotionEffects: Collection<IPotionEffect>
-        get() = WrappedCollection<PotionEffect, IPotionEffect, Collection<PotionEffect>>(wrapped.activePotionEffects, IPotionEffect::unwrap, PotionEffect::wrap)
-    override val isSwingInProgress: Boolean
-        get() = wrapped.isSwingInProgress
-    override var cameraPitch: Float
-        get() = wrapped.cameraPitch
-        set(value) {
-            wrapped.cameraPitch = value
-        }
-    override val team: ITeam?
-        get() = wrapped.team?.wrap()
-    override val creatureAttribute: IEnumCreatureAttribute
-        get() = wrapped.creatureAttribute.wrap()
-    override val hurtTime: Int
-        get() = wrapped.hurtTime
-    override val isOnLadder: Boolean
-        get() = wrapped.isOnLadder
-    override var jumpMovementFactor: Float
-        get() = wrapped.jumpMovementFactor
-        set(value) {
-            wrapped.jumpMovementFactor = value
-        }
-    override val moveStrafing: Float
-        get() = wrapped.moveStrafing
-    override val moveForward: Float
-        get() = wrapped.moveForward
-    override var health: Float
-        get() = wrapped.health
-        set(value) {
-            wrapped.health = value
-        }
-    override var rotationYawHead: Float
-        get() = wrapped.rotationYawHead
-        set(value) {
-            wrapped.rotationYawHead = value
-        }
+open class EntityLivingBaseImpl<T : EntityLivingBase>(wrapped: T) : EntityImpl<T>(wrapped), IEntityLivingBase
+{
+	override val maxHealth: Float
+		get() = wrapped.maxHealth
+	override var prevRotationYawHead: Float
+		get() = wrapped.prevRotationYawHead
+		set(value)
+		{
+			wrapped.prevRotationYawHead = value
+		}
+	override var renderYawOffset: Float
+		get() = wrapped.renderYawOffset
+		set(value)
+		{
+			wrapped.renderYawOffset = value
+		}
+	override val activePotionEffects: Collection<IPotionEffect>
+		get() = WrappedCollection<PotionEffect, IPotionEffect, Collection<PotionEffect>>(wrapped.activePotionEffects, IPotionEffect::unwrap, PotionEffect::wrap)
+	override val isSwingInProgress: Boolean
+		get() = wrapped.isSwingInProgress
+	override var cameraPitch: Float
+		get() = wrapped.cameraPitch
+		set(value)
+		{
+			wrapped.cameraPitch = value
+		}
+	override val team: ITeam?
+		get() = wrapped.team?.wrap()
+	override val creatureAttribute: IEnumCreatureAttribute
+		get() = wrapped.creatureAttribute.wrap()
+	override val hurtTime: Int
+		get() = wrapped.hurtTime
+	override val isOnLadder: Boolean
+		get() = wrapped.isOnLadder
+	override var jumpMovementFactor: Float
+		get() = wrapped.jumpMovementFactor
+		set(value)
+		{
+			wrapped.jumpMovementFactor = value
+		}
+	override val moveStrafing: Float
+		get() = wrapped.moveStrafing
+	override val moveForward: Float
+		get() = wrapped.moveForward
+	override var health: Float
+		get() = wrapped.health
+		set(value)
+		{
+			wrapped.health = value
+		}
+	override var rotationYawHead: Float
+		get() = wrapped.rotationYawHead
+		set(value)
+		{
+			wrapped.rotationYawHead = value
+		}
 
-    override fun canEntityBeSeen(it: IEntity): Boolean = wrapped.canEntityBeSeen(it.unwrap())
+	override fun canEntityBeSeen(it: IEntity): Boolean = wrapped.canEntityBeSeen(it.unwrap())
 
-    override fun isPotionActive(potion: IPotion): Boolean = wrapped.isPotionActive(potion.unwrap())
+	override fun isPotionActive(potion: IPotion): Boolean = wrapped.isPotionActive(potion.unwrap())
 
-    override fun swingItem() = wrapped.swingItem()
+	override fun swingItem() = wrapped.swingItem()
 
-    override fun getActivePotionEffect(potion: IPotion): IPotionEffect = wrapped.getActivePotionEffect(potion.unwrap()).wrap()
+	override fun getActivePotionEffect(potion: IPotion): IPotionEffect = wrapped.getActivePotionEffect(potion.unwrap()).wrap()
 
-    override fun removePotionEffectClient(id: Int) = wrapped.removePotionEffectClient(id)
+	override fun removePotionEffectClient(id: Int) = wrapped.removePotionEffectClient(id)
 
-    override fun addPotionEffect(effect: IPotionEffect) = wrapped.addPotionEffect(effect.unwrap())
+	override fun addPotionEffect(effect: IPotionEffect) = wrapped.addPotionEffect(effect.unwrap())
 
-    override fun getEquipmentInSlot(index: Int): IItemStack? = wrapped.getEquipmentInSlot(index)?.wrap()
+	override fun getEquipmentInSlot(index: Int): IItemStack? = wrapped.getEquipmentInSlot(index)?.wrap()
 }
 
 inline fun IEntityLivingBase.unwrap(): EntityLivingBase = (this as EntityLivingBaseImpl<*>).wrapped

@@ -10,14 +10,16 @@ import net.ccbluex.liquidbounce.api.minecraft.client.render.ITessellator
 import net.ccbluex.liquidbounce.api.minecraft.client.render.IWorldRenderer
 import net.minecraft.client.renderer.Tessellator
 
-class TessellatorImpl(val wrapped: Tessellator) : ITessellator {
-    override val worldRenderer: IWorldRenderer
-        get() = WorldRendererImpl(wrapped.worldRenderer)
+class TessellatorImpl(val wrapped: Tessellator) : ITessellator
+{
+	override val worldRenderer: IWorldRenderer
+		get() = WorldRendererImpl(wrapped.worldRenderer)
 
-    override fun draw() = wrapped.draw()
+	override fun draw() = wrapped.draw()
 
-    override fun equals(other: Any?): Boolean {
-        return other is TessellatorImpl && other.wrapped == this.wrapped
-    }
+	override fun equals(other: Any?): Boolean
+	{
+		return other is TessellatorImpl && other.wrapped == this.wrapped
+	}
 
 }

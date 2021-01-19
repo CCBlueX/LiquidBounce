@@ -15,14 +15,14 @@ import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.item.ItemPotion
 import net.minecraft.potion.PotionEffect
 
-class ItemPotionImpl(wrapped: ItemPotion) : ItemImpl<ItemPotion>(wrapped), IItemPotion {
-    override fun getEffects(stack: IItemStack): Collection<IPotionEffect> {
-        return WrappedCollection(
-                wrapped.getEffects(stack.unwrap()),
-                IPotionEffect::unwrap,
-                PotionEffect::wrap
-        )
-    }
+class ItemPotionImpl(wrapped: ItemPotion) : ItemImpl<ItemPotion>(wrapped), IItemPotion
+{
+	override fun getEffects(stack: IItemStack): Collection<IPotionEffect>
+	{
+		return WrappedCollection(
+			wrapped.getEffects(stack.unwrap()), IPotionEffect::unwrap, PotionEffect::wrap
+		)
+	}
 }
 
 

@@ -13,43 +13,47 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "NoWeb", description = "Prevents you from getting slowed down in webs.", category = ModuleCategory.MOVEMENT)
-class NoWeb : Module() {
+class NoWeb : Module()
+{
 
-    private val modeValue = ListValue("Mode", arrayOf("None", "AAC", "LAAC", "Rewi"), "None")
+	private val modeValue = ListValue("Mode", arrayOf("None", "AAC", "LAAC", "Rewi"), "None")
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+	@EventTarget
+	fun onUpdate(event: UpdateEvent)
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        if (!thePlayer.isInWeb)
-            return
+		if (!thePlayer.isInWeb) return
 
-        when (modeValue.get().toLowerCase()) {
-            "none" -> thePlayer.isInWeb = false
-            "aac" -> {
-                thePlayer.jumpMovementFactor = 0.59f
+		when (modeValue.get().toLowerCase())
+		{
+			"none" -> thePlayer.isInWeb = false
 
-                if (!mc.gameSettings.keyBindSneak.isKeyDown)
-                    thePlayer.motionY = 0.0
-            }
-            "laac" -> {
-                thePlayer.jumpMovementFactor = if (thePlayer.movementInput.moveStrafe != 0f) 1.0f else 1.21f
+			"aac" ->
+			{
+				thePlayer.jumpMovementFactor = 0.59f
 
-                if (!mc.gameSettings.keyBindSneak.isKeyDown)
-                    thePlayer.motionY = 0.0
+				if (!mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY = 0.0
+			}
 
-                if (thePlayer.onGround)
-                    thePlayer.jump()
-            }
-            "rewi" -> {
-                thePlayer.jumpMovementFactor = 0.42f
+			"laac" ->
+			{
+				thePlayer.jumpMovementFactor = if (thePlayer.movementInput.moveStrafe != 0f) 1.0f else 1.21f
 
-                if (thePlayer.onGround)
-                    thePlayer.jump()
-            }
-        }
-    }
+				if (!mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY = 0.0
 
-    override val tag: String?
-        get() = modeValue.get()
+				if (thePlayer.onGround) thePlayer.jump()
+			}
+
+			"rewi" ->
+			{
+				thePlayer.jumpMovementFactor = 0.42f
+
+				if (thePlayer.onGround) thePlayer.jump()
+			}
+		}
+	}
+
+	override val tag: String?
+		get() = modeValue.get()
 }

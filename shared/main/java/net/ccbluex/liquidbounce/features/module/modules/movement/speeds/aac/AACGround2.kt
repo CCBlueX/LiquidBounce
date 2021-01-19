@@ -11,18 +11,26 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AACGround2 : SpeedMode("AACGround2") {
-    override fun onMotion() {}
-    override fun onUpdate() {
-        if (!MovementUtils.isMoving)
-            return
+class AACGround2 : SpeedMode("AACGround2")
+{
+	override fun onMotion()
+	{
+	}
 
-        mc.timer.timerSpeed = (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?)!!.aacGroundTimerValue.get()
-        MovementUtils.strafe(0.02f)
-    }
+	override fun onUpdate()
+	{
+		if (!MovementUtils.isMoving) return
 
-    override fun onMove(event: MoveEvent) {}
-    override fun onDisable() {
-        mc.timer.timerSpeed = 1f
-    }
+		mc.timer.timerSpeed = (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?)!!.aacGroundTimerValue.get()
+		MovementUtils.strafe(0.02f)
+	}
+
+	override fun onMove(event: MoveEvent)
+	{
+	}
+
+	override fun onDisable()
+	{
+		mc.timer.timerSpeed = 1f
+	}
 }

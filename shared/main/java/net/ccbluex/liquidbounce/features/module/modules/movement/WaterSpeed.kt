@@ -14,18 +14,21 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.FloatValue
 
 @ModuleInfo(name = "WaterSpeed", description = "Allows you to swim faster.", category = ModuleCategory.MOVEMENT)
-class WaterSpeed : Module() {
-    private val speedValue = FloatValue("Speed", 1.2f, 1.1f, 1.5f)
+class WaterSpeed : Module()
+{
+	private val speedValue = FloatValue("Speed", 1.2f, 1.1f, 1.5f)
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
-        val thePlayer = mc.thePlayer ?: return
+	@EventTarget
+	fun onUpdate(event: UpdateEvent?)
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.isInWater && classProvider.isBlockLiquid(getBlock(thePlayer.position))) {
-            val speed = speedValue.get()
+		if (thePlayer.isInWater && classProvider.isBlockLiquid(getBlock(thePlayer.position)))
+		{
+			val speed = speedValue.get()
 
-            thePlayer.motionX *= speed
-            thePlayer.motionZ *= speed
-        }
-    }
+			thePlayer.motionX *= speed
+			thePlayer.motionZ *= speed
+		}
+	}
 }

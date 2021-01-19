@@ -6,45 +6,53 @@
 
 package net.ccbluex.liquidbounce.utils.render;
 
-import net.minecraft.client.renderer.texture.TextureUtil;
-import org.lwjgl.opengl.GL11;
-
 import java.awt.image.BufferedImage;
 
-public class CustomTexture {
-    private final BufferedImage image;
-    private boolean unloaded;
-    private int textureId = -1;
+import net.minecraft.client.renderer.texture.TextureUtil;
 
-    public CustomTexture(final BufferedImage image) {
-        this.image = image;
-    }
+import org.lwjgl.opengl.GL11;
 
-    /**
-     * @return ID of this texture loaded into memory
-     * @throws IllegalStateException If the texture was unloaded via {@link #unload()}
-     */
-    public int getTextureId() {
-        if (unloaded)
-            throw new IllegalStateException("Texture unloaded");
+public class CustomTexture
+{
+	private final BufferedImage image;
+	private boolean unloaded;
+	private int textureId = -1;
 
-        if (textureId == -1)
-            textureId = TextureUtil.uploadTextureImageAllocate(TextureUtil.glGenTextures(), image, true, true);
+	public CustomTexture(final BufferedImage image)
+	{
+		this.image = image;
+	}
 
-        return textureId;
-    }
+	/**
+	 * @return                       ID of this texture loaded into memory
+	 * @throws IllegalStateException
+	 *                               If the texture was unloaded via {@link #unload()}
+	 */
+	public int getTextureId()
+	{
+		if (unloaded)
+			throw new IllegalStateException("Texture unloaded");
 
-    public void unload() {
-        if (!unloaded) {
-            GL11.glDeleteTextures(textureId);
-            unloaded = true;
-        }
-    }
+		if (textureId == -1)
+			textureId = TextureUtil.uploadTextureImageAllocate(TextureUtil.glGenTextures(), image, true, true);
 
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
+		return textureId;
+	}
 
-        unload();
-    }
+	public void unload()
+	{
+		if (!unloaded)
+		{
+			GL11.glDeleteTextures(textureId);
+			unloaded = true;
+		}
+	}
+
+	@Override
+	protected void finalize() throws Throwable
+	{
+		super.finalize();
+
+		unload();
+	}
 }

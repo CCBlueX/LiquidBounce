@@ -10,7 +10,8 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement;
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 
-public abstract class Style extends MinecraftInstance {
+public abstract class Style extends MinecraftInstance
+{
 
 	public abstract void drawPanel(final int mouseX, final int mouseY, final Panel panel);
 

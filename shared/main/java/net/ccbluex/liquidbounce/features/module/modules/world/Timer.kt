@@ -16,33 +16,36 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
 @ModuleInfo(name = "Timer", description = "Changes the speed of the entire game.", category = ModuleCategory.WORLD)
-class Timer : Module() {
+class Timer : Module()
+{
 
-    private val speedValue = FloatValue("Speed", 2F, 0.1F, 10F)
-    private val onMoveValue = BoolValue("OnMove", true)
+	private val speedValue = FloatValue("Speed", 2F, 0.1F, 10F)
+	private val onMoveValue = BoolValue("OnMove", true)
 
-    override fun onDisable() {
-        if (mc.thePlayer == null)
-            return
+	override fun onDisable()
+	{
+		if (mc.thePlayer == null) return
 
-        mc.timer.timerSpeed = 1F
-    }
+		mc.timer.timerSpeed = 1F
+	}
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        if(MovementUtils.isMoving || !onMoveValue.get()) {
-            mc.timer.timerSpeed = speedValue.get()
-            return
-        }
+	@EventTarget
+	fun onUpdate(event: UpdateEvent)
+	{
+		if (MovementUtils.isMoving || !onMoveValue.get())
+		{
+			mc.timer.timerSpeed = speedValue.get()
+			return
+		}
 
-        mc.timer.timerSpeed = 1F
-    }
+		mc.timer.timerSpeed = 1F
+	}
 
-    @EventTarget
-    fun onWorld(event: WorldEvent) {
-        if (event.worldClient != null)
-            return
+	@EventTarget
+	fun onWorld(event: WorldEvent)
+	{
+		if (event.worldClient != null) return
 
-        state = false
-    }
+		state = false
+	}
 }

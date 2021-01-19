@@ -12,17 +12,19 @@ import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.scoreboard.ScorePlayerTeam
 import net.minecraft.scoreboard.Team
 
-class TeamImpl(val wrapped: Team) : ITeam {
-    override val chatFormat: WEnumChatFormatting
-        get() = (wrapped as ScorePlayerTeam).chatFormat.wrap()
+class TeamImpl(val wrapped: Team) : ITeam
+{
+	override val chatFormat: WEnumChatFormatting
+		get() = (wrapped as ScorePlayerTeam).chatFormat.wrap()
 
-    override fun formatString(name: String): String = wrapped.formatString(name)
+	override fun formatString(name: String): String = wrapped.formatString(name)
 
-    override fun isSameTeam(team: ITeam): Boolean = wrapped.isSameTeam(team.unwrap())
+	override fun isSameTeam(team: ITeam): Boolean = wrapped.isSameTeam(team.unwrap())
 
-    override fun equals(other: Any?): Boolean {
-        return other is TeamImpl && other.wrapped == this.wrapped
-    }
+	override fun equals(other: Any?): Boolean
+	{
+		return other is TeamImpl && other.wrapped == this.wrapped
+	}
 }
 
 inline fun ITeam.unwrap(): Team = (this as TeamImpl).wrapped

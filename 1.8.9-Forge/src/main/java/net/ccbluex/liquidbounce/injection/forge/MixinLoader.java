@@ -5,46 +5,53 @@
  */
 package net.ccbluex.liquidbounce.injection.forge;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.injection.backend.WrapperImpl;
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import org.spongepowered.asm.launch.MixinBootstrap;
-import org.spongepowered.asm.mixin.MixinEnvironment;
-import org.spongepowered.asm.mixin.Mixins;
-
 import java.util.Map;
 
-public class MixinLoader implements IFMLLoadingPlugin {
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
-    public MixinLoader() {
-        System.out.println("[LiquidBounce] Injecting with IFMLLoadingPlugin.");
+import org.spongepowered.asm.launch.MixinBootstrap;
+import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.MixinEnvironment.Side;
+import org.spongepowered.asm.mixin.Mixins;
 
-        MixinBootstrap.init();
-        Mixins.addConfiguration("liquidbounce.forge.mixins.json");
-        MixinEnvironment.getDefaultEnvironment().setSide(MixinEnvironment.Side.CLIENT);
-    }
+public class MixinLoader implements IFMLLoadingPlugin
+{
 
-    @Override
-    public String[] getASMTransformerClass() {
-        return new String[0];
-    }
+	public MixinLoader()
+	{
+		System.out.println("[LiquidBounce] Injecting with IFMLLoadingPlugin.");
 
-    @Override
-    public String getModContainerClass() {
-        return null;
-    }
+		MixinBootstrap.init();
+		Mixins.addConfiguration("liquidbounce.forge.mixins.json");
+		MixinEnvironment.getDefaultEnvironment().setSide(Side.CLIENT);
+	}
 
-    @Override
-    public String getSetupClass() {
-        return null;
-    }
+	@Override
+	public String[] getASMTransformerClass()
+	{
+		return new String[0];
+	}
 
-    @Override
-    public void injectData(Map<String, Object> data) {
-    }
+	@Override
+	public String getModContainerClass()
+	{
+		return null;
+	}
 
-    @Override
-    public String getAccessTransformerClass() {
-        return null;
-    }
+	@Override
+	public String getSetupClass()
+	{
+		return null;
+	}
+
+	@Override
+	public void injectData(final Map<String, Object> data)
+	{
+	}
+
+	@Override
+	public String getAccessTransformerClass()
+	{
+		return null;
+	}
 }

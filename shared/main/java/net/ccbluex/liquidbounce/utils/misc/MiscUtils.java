@@ -5,64 +5,73 @@
  */
 package net.ccbluex.liquidbounce.utils.misc;
 
-import net.ccbluex.liquidbounce.utils.MinecraftInstance;
-
-import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public final class MiscUtils extends MinecraftInstance {
+import javax.swing.*;
 
-    public static void showErrorPopup(final String title, final String message) {
-        JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
-    }
+import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 
-    public static void showURL(final String url) {
-        try {
-            Desktop.getDesktop().browse(new URI(url));
-        }catch(final IOException | URISyntaxException e) {
-            e.printStackTrace();
-        }
-    }
+public final class MiscUtils extends MinecraftInstance
+{
 
-    public static File openFileChooser() {
-        if (mc.isFullScreen())
-            mc.toggleFullscreen();
+	public static void showErrorPopup(final String title, final String message)
+	{
+		JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
+	}
 
-        final JFileChooser fileChooser = new JFileChooser();
-        final JFrame frame = new JFrame();
+	public static void showURL(final String url)
+	{
+		try
+		{
+			Desktop.getDesktop().browse(new URI(url));
+		}
+		catch (final IOException | URISyntaxException e)
+		{
+			e.printStackTrace();
+		}
+	}
 
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+	public static File openFileChooser()
+	{
+		if (mc.isFullScreen())
+			mc.toggleFullscreen();
 
-        frame.setVisible(true);
-        frame.toFront();
-        frame.setVisible(false);
+		final JFileChooser fileChooser = new JFileChooser();
+		final JFrame frame = new JFrame();
 
-        final int action = fileChooser.showOpenDialog(frame);
-        frame.dispose();
+		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-        return action == JFileChooser.APPROVE_OPTION ? fileChooser.getSelectedFile() : null;
-    }
+		frame.setVisible(true);
+		frame.toFront();
+		frame.setVisible(false);
 
-    public static File saveFileChooser() {
-        if (mc.isFullScreen())
-            mc.toggleFullscreen();
+		final int action = fileChooser.showOpenDialog(frame);
+		frame.dispose();
 
-        final JFileChooser fileChooser = new JFileChooser();
-        final JFrame frame = new JFrame();
+		return action == JFileChooser.APPROVE_OPTION ? fileChooser.getSelectedFile() : null;
+	}
 
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+	public static File saveFileChooser()
+	{
+		if (mc.isFullScreen())
+			mc.toggleFullscreen();
 
-        frame.setVisible(true);
-        frame.toFront();
-        frame.setVisible(false);
+		final JFileChooser fileChooser = new JFileChooser();
+		final JFrame frame = new JFrame();
 
-        final int action = fileChooser.showSaveDialog(frame);
-        frame.dispose();
+		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-        return action == JFileChooser.APPROVE_OPTION ? fileChooser.getSelectedFile() : null;
-    }
+		frame.setVisible(true);
+		frame.toFront();
+		frame.setVisible(false);
+
+		final int action = fileChooser.showSaveDialog(frame);
+		frame.dispose();
+
+		return action == JFileChooser.APPROVE_OPTION ? fileChooser.getSelectedFile() : null;
+	}
 }

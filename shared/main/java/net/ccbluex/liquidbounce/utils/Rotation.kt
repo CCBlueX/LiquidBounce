@@ -17,130 +17,152 @@ import kotlin.math.sqrt
 /**
  * Rotations
  */
-data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
+data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
+{
 
-    /**
-     * Set rotations to [player]
-     */
-    fun toPlayer(player: IEntityPlayer) {
-        if (yaw.isNaN() || pitch.isNaN())
-            return
+	/**
+	 * Set rotations to [player]
+	 */
+	fun toPlayer(player: IEntityPlayer)
+	{
+		if (yaw.isNaN() || pitch.isNaN()) return
 
-        fixedSensitivity(mc.gameSettings.mouseSensitivity)
+		fixedSensitivity(mc.gameSettings.mouseSensitivity)
 
-        player.rotationYaw = yaw
-        player.rotationPitch = pitch
-    }
+		player.rotationYaw = yaw
+		player.rotationPitch = pitch
+	}
 
-    /**
-     * Patch gcd exploit in aim
-     *
-     * @see net.minecraft.client.renderer.EntityRenderer.updateCameraAndRender
-     */
-    fun fixedSensitivity(sensitivity: Float) {
-        val f = sensitivity * 0.6F + 0.2F
-        val gcd = f * f * f * 1.2F
+	/**
+	 * Patch gcd exploit in aim
+	 *
+	 * @see net.minecraft.client.renderer.EntityRenderer.updateCameraAndRender
+	 */
+	fun fixedSensitivity(sensitivity: Float)
+	{
+		val f = sensitivity * 0.6F + 0.2F
+		val gcd = f * f * f * 1.2F
 
-        // get previous rotation
-        val rotation = RotationUtils.serverRotation
+		// get previous rotation
+		val rotation = RotationUtils.serverRotation
 
-        // fix yaw
-        var deltaYaw = yaw - rotation.yaw
-        deltaYaw -= deltaYaw % gcd
-        yaw = rotation.yaw + deltaYaw
+		// fix yaw
+		var deltaYaw = yaw - rotation.yaw
+		deltaYaw -= deltaYaw % gcd
+		yaw = rotation.yaw + deltaYaw
 
-        // fix pitch
-        var deltaPitch = pitch - rotation.pitch
-        deltaPitch -= deltaPitch % gcd
-        pitch = rotation.pitch + deltaPitch
-    }
+		// fix pitch
+		var deltaPitch = pitch - rotation.pitch
+		deltaPitch -= deltaPitch % gcd
+		pitch = rotation.pitch + deltaPitch
+	}
 
-    /**
-     * Apply strafe to player
-     *
-     * @author bestnub
-     */
-    fun applyStrafeToPlayer(event: StrafeEvent) {
-        val player = mc.thePlayer!!
+	/**
+	 * Apply strafe to player
+	 *
+	 * @author bestnub
+	 */
+	fun applyStrafeToPlayer(event: StrafeEvent)
+	{
+		val player = mc.thePlayer!!
 
-        val dif = ((WMathHelper.wrapAngleTo180_float(player.rotationYaw - this.yaw
-                - 23.5f - 135)
-                + 180) / 45).toInt()
+		val dif = ((WMathHelper.wrapAngleTo180_float(
+			player.rotationYaw - this.yaw - 23.5f - 135
+		) + 180) / 45).toInt()
 
-        val yaw = this.yaw
+		val yaw = this.yaw
 
-        val strafe = event.strafe
-        val forward = event.forward
-        val friction = event.friction
+		val strafe = event.strafe
+		val forward = event.forward
+		val friction = event.friction
 
-        var calcForward = 0f
-        var calcStrafe = 0f
+		var calcForward = 0f
+		var calcStrafe = 0f
 
-        when (dif) {
-            0 -> {
-                calcForward = forward
-                calcStrafe = strafe
-            }
-            1 -> {
-                calcForward += forward
-                calcStrafe -= forward
-                calcForward += strafe
-                calcStrafe += strafe
-            }
-            2 -> {
-                calcForward = strafe
-                calcStrafe = -forward
-            }
-            3 -> {
-                calcForward -= forward
-                calcStrafe -= forward
-                calcForward += strafe
-                calcStrafe -= strafe
-            }
-            4 -> {
-                calcForward = -forward
-                calcStrafe = -strafe
-            }
-            5 -> {
-                calcForward -= forward
-                calcStrafe += forward
-                calcForward -= strafe
-                calcStrafe -= strafe
-            }
-            6 -> {
-                calcForward = -strafe
-                calcStrafe = forward
-            }
-            7 -> {
-                calcForward += forward
-                calcStrafe += forward
-                calcForward -= strafe
-                calcStrafe += strafe
-            }
-        }
+		when (dif)
+		{
+			0 ->
+			{
+				calcForward = forward
+				calcStrafe = strafe
+			}
 
-        if (calcForward > 1f || calcForward < 0.9f && calcForward > 0.3f || calcForward < -1f || calcForward > -0.9f && calcForward < -0.3f) {
-            calcForward *= 0.5f
-        }
+			1 ->
+			{
+				calcForward += forward
+				calcStrafe -= forward
+				calcForward += strafe
+				calcStrafe += strafe
+			}
 
-        if (calcStrafe > 1f || calcStrafe < 0.9f && calcStrafe > 0.3f || calcStrafe < -1f || calcStrafe > -0.9f && calcStrafe < -0.3f) {
-            calcStrafe *= 0.5f
-        }
+			2 ->
+			{
+				calcForward = strafe
+				calcStrafe = -forward
+			}
 
-        var d = calcStrafe * calcStrafe + calcForward * calcForward
+			3 ->
+			{
+				calcForward -= forward
+				calcStrafe -= forward
+				calcForward += strafe
+				calcStrafe -= strafe
+			}
 
-        if (d >= 1.0E-4f) {
-            d = sqrt(d)
-            if (d < 1.0f) d = 1.0f
-            d = friction / d
-            calcStrafe *= d
-            calcForward *= d
-            val yawSin = sin((yaw * Math.PI / 180f).toFloat())
-            val yawCos = cos((yaw * Math.PI / 180f).toFloat())
-            player.motionX += calcStrafe * yawCos - calcForward * yawSin.toDouble()
-            player.motionZ += calcForward * yawCos + calcStrafe * yawSin.toDouble()
-        }
-    }
+			4 ->
+			{
+				calcForward = -forward
+				calcStrafe = -strafe
+			}
+
+			5 ->
+			{
+				calcForward -= forward
+				calcStrafe += forward
+				calcForward -= strafe
+				calcStrafe -= strafe
+			}
+
+			6 ->
+			{
+				calcForward = -strafe
+				calcStrafe = forward
+			}
+
+			7 ->
+			{
+				calcForward += forward
+				calcStrafe += forward
+				calcForward -= strafe
+				calcStrafe += strafe
+			}
+		}
+
+		if (calcForward > 1f || calcForward < 0.9f && calcForward > 0.3f || calcForward < -1f || calcForward > -0.9f && calcForward < -0.3f)
+		{
+			calcForward *= 0.5f
+		}
+
+		if (calcStrafe > 1f || calcStrafe < 0.9f && calcStrafe > 0.3f || calcStrafe < -1f || calcStrafe > -0.9f && calcStrafe < -0.3f)
+		{
+			calcStrafe *= 0.5f
+		}
+
+		var d = calcStrafe * calcStrafe + calcForward * calcForward
+
+		if (d >= 1.0E-4f)
+		{
+			d = sqrt(d)
+			if (d < 1.0f) d = 1.0f
+			d = friction / d
+			calcStrafe *= d
+			calcForward *= d
+			val yawSin = sin((yaw * Math.PI / 180f).toFloat())
+			val yawCos = cos((yaw * Math.PI / 180f).toFloat())
+			player.motionX += calcStrafe * yawCos - calcForward * yawSin.toDouble()
+			player.motionZ += calcForward * yawCos + calcStrafe * yawSin.toDouble()
+		}
+	}
 }
 
 /**

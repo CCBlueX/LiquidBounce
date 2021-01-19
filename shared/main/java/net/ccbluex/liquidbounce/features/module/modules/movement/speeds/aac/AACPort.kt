@@ -15,27 +15,33 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import kotlin.math.cos
 import kotlin.math.sin
 
-class AACPort : SpeedMode("AACPort") {
-    override fun onMotion() {}
-    override fun onUpdate() {
-        val thePlayer = mc.thePlayer ?: return
+class AACPort : SpeedMode("AACPort")
+{
+	override fun onMotion()
+	{
+	}
 
-        if (!MovementUtils.isMoving)
-            return
+	override fun onUpdate()
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        val f = thePlayer.rotationYaw * 0.017453292f
-        var d = 0.2
+		if (!MovementUtils.isMoving) return
 
-        while (d <= (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?)!!.portMax.get()) {
-            val x: Double = thePlayer.posX - sin(f) * d
-            val z: Double = thePlayer.posZ + cos(f) * d
+		val f = thePlayer.rotationYaw * 0.017453292f
+		var d = 0.2
 
-            if (thePlayer.posY < thePlayer.posY.toInt() + 0.5 && !classProvider.isBlockAir(getBlock(WBlockPos(x, thePlayer.posY, z))))
-                break
-            thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketPlayerPosition(x, thePlayer.posY, z, true))
-            d += 0.2
-        }
-    }
+		while (d <= (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?)!!.portMax.get())
+		{
+			val x: Double = thePlayer.posX - sin(f) * d
+			val z: Double = thePlayer.posZ + cos(f) * d
 
-    override fun onMove(event: MoveEvent) {}
+			if (thePlayer.posY < thePlayer.posY.toInt() + 0.5 && !classProvider.isBlockAir(getBlock(WBlockPos(x, thePlayer.posY, z)))) break
+			thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketPlayerPosition(x, thePlayer.posY, z, true))
+			d += 0.2
+		}
+	}
+
+	override fun onMove(event: MoveEvent)
+	{
+	}
 }

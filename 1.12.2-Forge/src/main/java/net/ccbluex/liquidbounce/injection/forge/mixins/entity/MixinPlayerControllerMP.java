@@ -18,6 +18,7 @@ import net.minecraft.inventory.ClickType;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -26,25 +27,29 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerControllerMP.class)
 @SideOnly(Side.CLIENT)
-public class MixinPlayerControllerMP {
+public class MixinPlayerControllerMP
+{
 
-    @Inject(method = "attackEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;syncCurrentPlayItem()V"))
-    private void attackEntity(EntityPlayer entityPlayer, Entity targetEntity, CallbackInfo callbackInfo) {
-        LiquidBounce.eventManager.callEvent(new AttackEvent(EntityImplKt.wrap(targetEntity)));
-    }
+	@Inject(method = "attackEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;syncCurrentPlayItem()V"))
+	private void attackEntity(EntityPlayer entityPlayer, Entity targetEntity, CallbackInfo callbackInfo)
+	{
+		LiquidBounce.eventManager.callEvent(new AttackEvent(EntityImplKt.wrap(targetEntity)));
+	}
 
-    @Inject(method = "getIsHittingBlock", at = @At("HEAD"), cancellable = true)
-    private void getIsHittingBlock(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (LiquidBounce.moduleManager.getModule(AbortBreaking.class).getState())
-            callbackInfoReturnable.setReturnValue(false);
-    }
+	@Inject(method = "getIsHittingBlock", at = @At("HEAD"), cancellable = true)
+	private void getIsHittingBlock(CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	{
+		if (LiquidBounce.moduleManager.getModule(AbortBreaking.class).getState())
+			callbackInfoReturnable.setReturnValue(false);
+	}
 
-    @Inject(method = "windowClick", at = @At("HEAD"), cancellable = true)
-    private void windowClick(int windowId, int slotId, int mouseButton, ClickType type, EntityPlayer player, CallbackInfoReturnable<ItemStack> callbackInfo) {
-        final ClickWindowEvent event = new ClickWindowEvent(windowId, slotId, mouseButton, BackendExtentionsKt.toInt(type));
-        LiquidBounce.eventManager.callEvent(event);
+	@Inject(method = "windowClick", at = @At("HEAD"), cancellable = true)
+	private void windowClick(int windowId, int slotId, int mouseButton, ClickType type, EntityPlayer player, CallbackInfoReturnable<ItemStack> callbackInfo)
+	{
+		final ClickWindowEvent event = new ClickWindowEvent(windowId, slotId, mouseButton, BackendExtentionsKt.toInt(type));
+		LiquidBounce.eventManager.callEvent(event);
 
-        if (event.isCancelled())
-            callbackInfo.cancel();
-    }
+		if (event.isCancelled())
+			callbackInfo.cancel();
+	}
 }

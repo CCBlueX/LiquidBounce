@@ -21,52 +21,60 @@ import java.net.URL
  * @game Minecraft
  * @author CCBlueX
  */
-object HttpUtils {
+object HttpUtils
+{
 
-    private const val DEFAULT_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0"
+	private const val DEFAULT_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0"
 
-    init {
-        HttpURLConnection.setFollowRedirects(true)
-    }
+	init
+	{
+		HttpURLConnection.setFollowRedirects(true)
+	}
 
-    private fun make(url: String, method: String,
-                     agent: String = DEFAULT_AGENT): HttpURLConnection {
-        val httpConnection = URL(url).openConnection() as HttpURLConnection
+	private fun make(
+		url: String, method: String, agent: String = DEFAULT_AGENT
+	): HttpURLConnection
+	{
+		val httpConnection = URL(url).openConnection() as HttpURLConnection
 
-        httpConnection.requestMethod = method
-        httpConnection.connectTimeout = 2000
-        httpConnection.readTimeout = 10000
+		httpConnection.requestMethod = method
+		httpConnection.connectTimeout = 2000
+		httpConnection.readTimeout = 10000
 
-        httpConnection.setRequestProperty("User-Agent", agent)
+		httpConnection.setRequestProperty("User-Agent", agent)
 
-        httpConnection.instanceFollowRedirects = true
-        httpConnection.doOutput = true
+		httpConnection.instanceFollowRedirects = true
+		httpConnection.doOutput = true
 
-        return httpConnection
-    }
+		return httpConnection
+	}
 
-    @Throws(IOException::class)
-    fun request(url: String, method: String,
-                agent: String = DEFAULT_AGENT): String {
-        val connection = make(url, method, agent)
+	@Throws(IOException::class)
+	fun request(
+		url: String, method: String, agent: String = DEFAULT_AGENT
+	): String
+	{
+		val connection = make(url, method, agent)
 
-        return connection.inputStream.reader().readText()
-    }
+		return connection.inputStream.reader().readText()
+	}
 
-    @Throws(IOException::class)
-    fun requestStream(url: String, method: String,
-                      agent: String = DEFAULT_AGENT): InputStream? {
-        val connection = make(url, method, agent)
+	@Throws(IOException::class)
+	fun requestStream(
+		url: String, method: String, agent: String = DEFAULT_AGENT
+	): InputStream?
+	{
+		val connection = make(url, method, agent)
 
-        return connection.inputStream
-    }
+		return connection.inputStream
+	}
 
-    @Throws(IOException::class)
-    @JvmStatic
-    fun get(url: String) = request(url, "GET")
+	@Throws(IOException::class)
+	@JvmStatic
+	fun get(url: String) = request(url, "GET")
 
-    @Throws(IOException::class)
-    @JvmStatic
-    fun download(url: String, file: File) = FileOutputStream(file).use { ByteStreams.copy(make(url, "GET").inputStream, it) }
+	@Throws(IOException::class)
+	@JvmStatic
+	fun download(url: String, file: File) = FileOutputStream(file).use { ByteStreams.copy(make(url, "GET").inputStream, it) }
 
 }

@@ -12,39 +12,39 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 
 @ModuleInfo(name = "Teams", description = "Prevents Killaura from attacking team mates.", category = ModuleCategory.MISC)
-class Teams : Module() {
+class Teams : Module()
+{
 
-    private val scoreboardValue = BoolValue("ScoreboardTeam", true)
-    private val colorValue = BoolValue("Color", true)
-    private val gommeSWValue = BoolValue("GommeSW", false)
+	private val scoreboardValue = BoolValue("ScoreboardTeam", true)
+	private val colorValue = BoolValue("Color", true)
+	private val gommeSWValue = BoolValue("GommeSW", false)
 
-    /**
-     * Check if [entity] is in your own team using scoreboard, name color or team prefix
-     */
-    fun isInYourTeam(entity: IEntityLivingBase): Boolean {
-        val thePlayer = mc.thePlayer ?: return false
+	/**
+	 * Check if [entity] is in your own team using scoreboard, name color or team prefix
+	 */
+	fun isInYourTeam(entity: IEntityLivingBase): Boolean
+	{
+		val thePlayer = mc.thePlayer ?: return false
 
-        if (scoreboardValue.get() && thePlayer.team != null && entity.team != null &&
-                thePlayer.team!!.isSameTeam(entity.team!!))
-            return true
+		if (scoreboardValue.get() && thePlayer.team != null && entity.team != null && thePlayer.team!!.isSameTeam(entity.team!!)) return true
 
-        val displayName = thePlayer.displayName
+		val displayName = thePlayer.displayName
 
-        if (gommeSWValue.get() && displayName != null && entity.displayName != null) {
-            val targetName = entity.displayName!!.formattedText.replace("\u00A7r", "")
-            val clientName = displayName.formattedText.replace("\u00A7r", "")
-            if (targetName.startsWith("T") && clientName.startsWith("T"))
-                if (targetName[1].isDigit() && clientName[1].isDigit())
-                    return targetName[1] == clientName[1]
-        }
+		if (gommeSWValue.get() && displayName != null && entity.displayName != null)
+		{
+			val targetName = entity.displayName!!.formattedText.replace("\u00A7r", "")
+			val clientName = displayName.formattedText.replace("\u00A7r", "")
+			if (targetName.startsWith("T") && clientName.startsWith("T")) if (targetName[1].isDigit() && clientName[1].isDigit()) return targetName[1] == clientName[1]
+		}
 
-        if (colorValue.get() && displayName != null && entity.displayName != null) {
-            val targetName = entity.displayName!!.formattedText.replace("\u00A7r", "")
-            val clientName = displayName.formattedText.replace("\u00A7r", "")
-            return targetName.startsWith("\u00A7${clientName[1]}")
-        }
+		if (colorValue.get() && displayName != null && entity.displayName != null)
+		{
+			val targetName = entity.displayName!!.formattedText.replace("\u00A7r", "")
+			val clientName = displayName.formattedText.replace("\u00A7r", "")
+			return targetName.startsWith("\u00A7${clientName[1]}")
+		}
 
-        return false
-    }
+		return false
+	}
 
 }

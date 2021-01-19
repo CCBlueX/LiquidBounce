@@ -5,8 +5,15 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
+import java.io.File;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
 import com.google.common.collect.Lists;
+
 import net.minecraft.client.resources.ResourcePackRepository;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.commons.io.filefilter.TrueFileFilter;
@@ -16,43 +23,45 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
 @Mixin(ResourcePackRepository.class)
-public class MixinResourcePackRepository {
+public class MixinResourcePackRepository
+{
 
-    @Shadow
-    @Final
-    private File dirServerResourcepacks;
+	@Shadow
+	@Final
+	private File dirServerResourcepacks;
 
-    @Shadow
-    @Final
-    private static Logger logger;
+	@Shadow
+	@Final
+	private static Logger logger;
 
-    /**
-     * @author Mojang
-     * @reason Fix a bug
-     */
-    @Overwrite
-    private void deleteOldServerResourcesPacks() {
-        try {
-            final List<File> lvt_1_1_ = Lists.newArrayList(FileUtils.listFiles(dirServerResourcepacks, TrueFileFilter.TRUE, null));
-            Collections.sort(lvt_1_1_, LastModifiedFileComparator.LASTMODIFIED_REVERSE);
-            int lvt_2_1_ = 0;
-            final Iterator lvt_3_1_ = lvt_1_1_.iterator();
+	/**
+	 * @author Mojang
+	 * @reason Fix a bug
+	 */
+	@Overwrite
+	private void deleteOldServerResourcesPacks()
+	{
+		try
+		{
+			final List<File> lvt_1_1_ = Lists.newArrayList(FileUtils.listFiles(dirServerResourcepacks, TrueFileFilter.TRUE, null));
+			Collections.sort(lvt_1_1_, LastModifiedFileComparator.LASTMODIFIED_REVERSE);
+			int lvt_2_1_ = 0;
+			final Iterator lvt_3_1_ = lvt_1_1_.iterator();
 
-            while(lvt_3_1_.hasNext()) {
-                final File lvt_4_1_ = (File) lvt_3_1_.next();
-                if(lvt_2_1_++ >= 10) {
-                    logger.info("Deleting old server resource pack " + lvt_4_1_.getName());
-                    FileUtils.deleteQuietly(lvt_4_1_);
-                }
-            }
-        }catch(final Throwable e) {
-            e.printStackTrace();
-        }
-    }
+			while (lvt_3_1_.hasNext())
+			{
+				final File lvt_4_1_ = (File) lvt_3_1_.next();
+				if (lvt_2_1_++ >= 10)
+				{
+					logger.info("Deleting old server resource pack " + lvt_4_1_.getName());
+					FileUtils.deleteQuietly(lvt_4_1_);
+				}
+			}
+		}
+		catch (final Throwable e)
+		{
+			e.printStackTrace();
+		}
+	}
 }

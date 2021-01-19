@@ -9,22 +9,23 @@ package net.ccbluex.liquidbounce.api.minecraft.client.gui
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiContainer
 
-interface IGuiScreen : IGui {
-    val width: Int
-    val height: Int
-    val fontRendererObj: IFontRenderer
-    val buttonList: MutableList<IGuiButton>
+interface IGuiScreen : IGui
+{
+	val width: Int
+	val height: Int
+	val fontRendererObj: IFontRenderer
+	val buttonList: MutableList<IGuiButton>
 
-    fun asGuiContainer(): IGuiContainer
-    fun asGuiGameOver(): IGuiGameOver
-    fun asGuiChest(): IGuiChest
+	fun asGuiContainer(): IGuiContainer
+	fun asGuiGameOver(): IGuiGameOver
+	fun asGuiChest(): IGuiChest
 
-    // Non-virtual calls. Used for GuiScreen-Wrapping
-    fun superMouseReleased(mouseX: Int, mouseY: Int, state: Int)
-    fun drawBackground(i: Int)
-    fun drawDefaultBackground()
-    fun superKeyTyped(typedChar: Char, keyCode: Int)
-    fun superHandleMouseInput()
-    fun superMouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
-    fun superDrawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
+	// Non-virtual calls. Used for GuiScreen-Wrapping
+	fun superMouseReleased(mouseX: Int, mouseY: Int, state: Int)
+	fun drawBackground(i: Int)
+	fun drawDefaultBackground()
+	fun superKeyTyped(typedChar: Char, keyCode: Int)
+	fun superHandleMouseInput()
+	fun superMouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
+	fun superDrawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
 }

@@ -10,19 +10,21 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
 
-class PotionEffectImpl(val wrapped: PotionEffect) : IPotionEffect {
-    override fun getDurationString(): String = Potion.getDurationString(wrapped)
+class PotionEffectImpl(val wrapped: PotionEffect) : IPotionEffect
+{
+	override fun getDurationString(): String = Potion.getDurationString(wrapped)
 
-    override val amplifier: Int
-        get() = wrapped.amplifier
-    override val duration: Int
-        get() = wrapped.duration
-    override val potionID: Int
-        get() = wrapped.potionID
+	override val amplifier: Int
+		get() = wrapped.amplifier
+	override val duration: Int
+		get() = wrapped.duration
+	override val potionID: Int
+		get() = wrapped.potionID
 
-    override fun equals(other: Any?): Boolean {
-        return other is PotionEffectImpl && other.wrapped == this.wrapped
-    }
+	override fun equals(other: Any?): Boolean
+	{
+		return other is PotionEffectImpl && other.wrapped == this.wrapped
+	}
 }
 
 inline fun IPotionEffect.unwrap(): PotionEffect = (this as PotionEffectImpl).wrapped

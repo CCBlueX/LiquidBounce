@@ -15,21 +15,25 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "SlimeJump", description = "Allows you to to jump higher on slime blocks.", category = ModuleCategory.MOVEMENT)
-class SlimeJump : Module() {
-    private val motionValue = FloatValue("Motion", 0.42f, 0.2f, 1f)
-    private val modeValue = ListValue("Mode", arrayOf("Set", "Add"), "Add")
+class SlimeJump : Module()
+{
+	private val motionValue = FloatValue("Motion", 0.42f, 0.2f, 1f)
+	private val modeValue = ListValue("Mode", arrayOf("Set", "Add"), "Add")
 
-    @EventTarget
-    fun onJump(event: JumpEvent) {
-        val thePlayer = mc.thePlayer ?: return
+	@EventTarget
+	fun onJump(event: JumpEvent)
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        if (mc.thePlayer != null && mc.theWorld != null && classProvider.isBlockSlime(getBlock(thePlayer.position.down()))) {
-            event.cancelEvent()
+		if (mc.thePlayer != null && mc.theWorld != null && classProvider.isBlockSlime(getBlock(thePlayer.position.down())))
+		{
+			event.cancelEvent()
 
-            when (modeValue.get().toLowerCase()) {
-                "set" -> thePlayer.motionY = motionValue.get().toDouble()
-                "add" -> thePlayer.motionY += motionValue.get()
-            }
-        }
-    }
+			when (modeValue.get().toLowerCase())
+			{
+				"set" -> thePlayer.motionY = motionValue.get().toDouble()
+				"add" -> thePlayer.motionY += motionValue.get()
+			}
+		}
+	}
 }

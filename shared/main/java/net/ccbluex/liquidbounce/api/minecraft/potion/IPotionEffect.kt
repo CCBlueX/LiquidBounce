@@ -6,10 +6,11 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.potion
 
-interface IPotionEffect {
-    fun getDurationString(): String
+interface IPotionEffect
+{
+	fun getDurationString(): String
 
-    val amplifier: Int
-    val duration: Int
-    val potionID: Int
+	val amplifier: Int
+	val duration: Int
+	val potionID: Int
 }

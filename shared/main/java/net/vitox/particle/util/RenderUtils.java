@@ -2,9 +2,11 @@ package net.vitox.particle.util;
 
 import static org.lwjgl.opengl.GL11.*;
 
-public class RenderUtils {
+public class RenderUtils
+{
 
-	public static void connectPoints(final float xOne, final float yOne, final float xTwo, final float yTwo) {
+	public static void connectPoints(final float xOne, final float yOne, final float xTwo, final float yTwo)
+	{
 		glPushMatrix();
 		glEnable(GL_LINE_SMOOTH);
 		glColor4f(1.0F, 1.0F, 1.0F, 0.8F);
@@ -22,7 +24,8 @@ public class RenderUtils {
 		glPopMatrix();
 	}
 
-	public static void drawCircle(final float x, final float y, final float radius, final int color) {
+	public static void drawCircle(final float x, final float y, final float radius, final int color)
+	{
 		final float alpha = (color >> 24 & 0xFF) / 255.0F;
 		final float red = (color >> 16 & 0xFF) / 255.0F;
 		final float green = (color >> 8 & 0xFF) / 255.0F;

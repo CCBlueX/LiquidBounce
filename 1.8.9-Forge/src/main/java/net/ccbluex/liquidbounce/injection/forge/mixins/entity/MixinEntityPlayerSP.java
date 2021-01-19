@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
+import java.util.List;
+
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
@@ -35,12 +37,17 @@ import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemSword;
 import net.minecraft.network.play.client.C03PacketPlayer;
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition;
+import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook;
+import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook;
 import net.minecraft.network.play.client.C0APacketAnimation;
 import net.minecraft.network.play.client.C0BPacketEntityAction;
+import net.minecraft.network.play.client.C0BPacketEntityAction.Action;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.*;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -50,673 +57,809 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.List;
-
 @Mixin(EntityPlayerSP.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
+public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
+{
 
-    @Shadow
-    public boolean serverSprintState;
+	@Shadow
+	public boolean serverSprintState;
 
-    @Shadow
-    public abstract void playSound(String name, float volume, float pitch);
+	@Shadow
+	public abstract void playSound(String name, float volume, float pitch);
 
-    @Shadow
-    public int sprintingTicksLeft;
+	@Shadow
+	public int sprintingTicksLeft;
 
-    @Shadow
-    protected int sprintToggleTimer;
+	@Shadow
+	protected int sprintToggleTimer;
 
-    @Shadow
-    public float timeInPortal;
+	@Shadow
+	public float timeInPortal;
 
-    @Shadow
-    public float prevTimeInPortal;
+	@Shadow
+	public float prevTimeInPortal;
 
-    @Shadow
-    protected Minecraft mc;
+	@Shadow
+	protected Minecraft mc;
 
-    @Shadow
-    public MovementInput movementInput;
+	@Shadow
+	public MovementInput movementInput;
 
-    @Shadow
-    public abstract void setSprinting(boolean sprinting);
+	@Shadow
+	public abstract void setSprinting(boolean sprinting);
 
-    @Shadow
-    protected abstract boolean pushOutOfBlocks(double x, double y, double z);
+	@Shadow
+	protected abstract boolean pushOutOfBlocks(double x, double y, double z);
 
-    @Shadow
-    public abstract void sendPlayerAbilities();
+	@Shadow
+	public abstract void sendPlayerAbilities();
 
-    @Shadow
-    public float horseJumpPower;
+	@Shadow
+	public float horseJumpPower;
 
-    @Shadow
-    public int horseJumpPowerCounter;
+	@Shadow
+	public int horseJumpPowerCounter;
 
-    @Shadow
-    protected abstract void sendHorseJump();
+	@Shadow
+	protected abstract void sendHorseJump();
 
-    @Shadow
-    public abstract boolean isRidingHorse();
+	@Shadow
+	public abstract boolean isRidingHorse();
 
-    @Shadow
-    @Final
-    public NetHandlerPlayClient sendQueue;
+	@Shadow
+	@Final
+	public NetHandlerPlayClient sendQueue;
 
-    @Shadow
-    private boolean serverSneakState;
-
-    @Shadow
-    public abstract boolean isSneaking();
-
-    @Shadow
-    protected abstract boolean isCurrentViewEntity();
-
-    @Shadow
-    private double lastReportedPosX;
-
-    @Shadow
-    private int positionUpdateTicks;
-
-    @Shadow
-    private double lastReportedPosY;
-
-    @Shadow
-    private double lastReportedPosZ;
-
-    @Shadow
-    private float lastReportedYaw;
-
-    @Shadow
-    private float lastReportedPitch;
-
-    /**
-     * @author CCBlueX
-     */
-    @Overwrite
-    public void onUpdateWalkingPlayer() {
-        try {
-            LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE));
-
-            final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.getModule(InventoryMove.class);
-            final Sneak sneak = (Sneak) LiquidBounce.moduleManager.getModule(Sneak.class);
-            final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || LiquidBounce.moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
-
-            boolean sprinting = this.isSprinting() && !fakeSprint;
-
-            if (sprinting != this.serverSprintState) {
-                if (sprinting)
-                    this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.START_SPRINTING));
-                else
-                    this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.STOP_SPRINTING));
-
-                this.serverSprintState = sprinting;
-            }
-
-            boolean sneaking = this.isSneaking();
-
-            if (sneaking != this.serverSneakState && (!sneak.getState() || sneak.modeValue.get().equalsIgnoreCase("Legit"))) {
-                if (sneaking)
-                    this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.START_SNEAKING));
-                else
-                    this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.STOP_SNEAKING));
-
-                this.serverSneakState = sneaking;
-            }
-
-            if (this.isCurrentViewEntity()) {
-                float yaw = rotationYaw;
-                float pitch = rotationPitch;
-                float lastReportedYaw = RotationUtils.serverRotation.getYaw();
-                float lastReportedPitch = RotationUtils.serverRotation.getPitch();
-
-                final Derp derp = (Derp) LiquidBounce.moduleManager.getModule(Derp.class);
-                if (derp.getState()) {
-                    float[] rot = derp.getRotation();
-                    yaw = rot[0];
-                    pitch = rot[1];
-                }
-
-                if (RotationUtils.targetRotation != null) {
-                    yaw = RotationUtils.targetRotation.getYaw();
-                    pitch = RotationUtils.targetRotation.getPitch();
-                }
-
-                double xDiff = this.posX - this.lastReportedPosX;
-                double yDiff = this.getEntityBoundingBox().minY - this.lastReportedPosY;
-                double zDiff = this.posZ - this.lastReportedPosZ;
-                double yawDiff = yaw - lastReportedYaw;
-                double pitchDiff = pitch - lastReportedPitch;
-                boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || this.positionUpdateTicks >= 20;
-                boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
-
-                if (this.ridingEntity == null) {
-                    if (moved && rotated) {
-                        this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.posX, this.getEntityBoundingBox().minY, this.posZ, yaw, pitch, this.onGround));
-                    } else if (moved) {
-                        this.sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(this.posX, this.getEntityBoundingBox().minY, this.posZ, this.onGround));
-                    } else if (rotated) {
-                        this.sendQueue.addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, this.onGround));
-                    } else {
-                        this.sendQueue.addToSendQueue(new C03PacketPlayer(this.onGround));
-                    }
-                } else {
-                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.motionX, -999.0D, this.motionZ, yaw, pitch, this.onGround));
-                    moved = false;
-                }
-
-                ++this.positionUpdateTicks;
-
-                if (moved) {
-                    this.lastReportedPosX = this.posX;
-                    this.lastReportedPosY = this.getEntityBoundingBox().minY;
-                    this.lastReportedPosZ = this.posZ;
-                    this.positionUpdateTicks = 0;
-                }
-
-                if (rotated) {
-                    this.lastReportedYaw = this.rotationYaw;
-                    this.lastReportedPitch = this.rotationPitch;
-                }
-            }
-
-            LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST));
-        } catch (final Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Inject(method = "swingItem", at = @At("HEAD"), cancellable = true)
-    private void swingItem(CallbackInfo callbackInfo) {
-        final NoSwing noSwing = (NoSwing) LiquidBounce.moduleManager.getModule(NoSwing.class);
-
-        if (noSwing.getState()) {
-            callbackInfo.cancel();
-
-            if (!noSwing.getServerSideValue().get())
-                this.sendQueue.addToSendQueue(new C0APacketAnimation());
-        }
-    }
-
-    @Inject(method = "pushOutOfBlocks", at = @At("HEAD"), cancellable = true)
-    private void onPushOutOfBlocks(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        PushOutEvent event = new PushOutEvent();
-        if (this.noClip) event.cancelEvent();
-        LiquidBounce.eventManager.callEvent(event);
-
-        if (event.isCancelled())
-            callbackInfoReturnable.setReturnValue(false);
-    }
-
-    /**
-     * @author CCBlueX
-     */
-    @Overwrite
-    public void onLivingUpdate() {
-        LiquidBounce.eventManager.callEvent(new UpdateEvent());
-
-        if (this.sprintingTicksLeft > 0) {
-            --this.sprintingTicksLeft;
-
-            if (this.sprintingTicksLeft == 0) {
-                this.setSprinting(false);
-            }
-        }
-
-        if (this.sprintToggleTimer > 0) {
-            --this.sprintToggleTimer;
-        }
-
-        this.prevTimeInPortal = this.timeInPortal;
-
-        if (this.inPortal) {
-            if (this.mc.currentScreen != null && !this.mc.currentScreen.doesGuiPauseGame()
-                    && !LiquidBounce.moduleManager.getModule(PortalMenu.class).getState()) {
-                this.mc.displayGuiScreen(null);
-            }
-
-            if (this.timeInPortal == 0.0F) {
-                this.mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("portal.trigger"), this.rand.nextFloat() * 0.4F + 0.8F));
-            }
-
-            this.timeInPortal += 0.0125F;
-
-            if (this.timeInPortal >= 1.0F) {
-                this.timeInPortal = 1.0F;
-            }
-
-            this.inPortal = false;
-        } else if (this.isPotionActive(Potion.confusion) && this.getActivePotionEffect(Potion.confusion).getDuration() > 60) {
-            this.timeInPortal += 0.006666667F;
-
-            if (this.timeInPortal > 1.0F) {
-                this.timeInPortal = 1.0F;
-            }
-        } else {
-            if (this.timeInPortal > 0.0F) {
-                this.timeInPortal -= 0.05F;
-            }
-
-            if (this.timeInPortal < 0.0F) {
-                this.timeInPortal = 0.0F;
-            }
-        }
-
-        if (this.timeUntilPortal > 0) {
-            --this.timeUntilPortal;
-        }
-
-        boolean flag = this.movementInput.jump;
-        boolean flag1 = this.movementInput.sneak;
-        float f = 0.8F;
-        boolean flag2 = this.movementInput.moveForward >= f;
-        this.movementInput.updatePlayerMoveState();
-
-        final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
-        final KillAura killAura = (KillAura) LiquidBounce.moduleManager.getModule(KillAura.class);
-
-        if (getHeldItem() != null && (this.isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockingStatus())) && !this.isRiding()) {
-            final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
-            LiquidBounce.eventManager.callEvent(slowDownEvent);
-            this.movementInput.moveStrafe *= slowDownEvent.getStrafe();
-            this.movementInput.moveForward *= slowDownEvent.getForward();
-            this.sprintToggleTimer = 0;
-        }
-
-        this.pushOutOfBlocks(this.posX - (double) this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ + (double) this.width * 0.35D);
-        this.pushOutOfBlocks(this.posX - (double) this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ - (double) this.width * 0.35D);
-        this.pushOutOfBlocks(this.posX + (double) this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ - (double) this.width * 0.35D);
-        this.pushOutOfBlocks(this.posX + (double) this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ + (double) this.width * 0.35D);
-
-        final Sprint sprint = (Sprint) LiquidBounce.moduleManager.getModule(Sprint.class);
-
-        boolean flag3 = !sprint.foodValue.get() || (float) this.getFoodStats().getFoodLevel() > 6.0F || this.capabilities.allowFlying;
-
-        if (this.onGround && !flag1 && !flag2 && this.movementInput.moveForward >= f && !this.isSprinting() && flag3 && !this.isUsingItem() && !this.isPotionActive(Potion.blindness)) {
-            if (this.sprintToggleTimer <= 0 && !this.mc.gameSettings.keyBindSprint.isKeyDown()) {
-                this.sprintToggleTimer = 7;
-            } else {
-                this.setSprinting(true);
-            }
-        }
-
-        if (!this.isSprinting() && this.movementInput.moveForward >= f && flag3 && (noSlow.getState() || !this.isUsingItem()) && !this.isPotionActive(Potion.blindness) && this.mc.gameSettings.keyBindSprint.isKeyDown()) {
-            this.setSprinting(true);
-        }
-
-        final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.getModule(Scaffold.class);
-        if ((scaffold.getState() && !scaffold.sprintValue.get()) || (sprint.getState() && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30))
-            this.setSprinting(false);
-
-        if (this.isSprinting() && ((!(sprint.getState() && sprint.allDirectionsValue.get()) && this.movementInput.moveForward < f) || this.isCollidedHorizontally || !flag3)) {
-            this.setSprinting(false);
-        }
-
-        if (this.capabilities.allowFlying) {
-            if (this.mc.playerController.isSpectatorMode()) {
-                if (!this.capabilities.isFlying) {
-                    this.capabilities.isFlying = true;
-                    this.sendPlayerAbilities();
-                }
-            } else if (!flag && this.movementInput.jump) {
-                if (this.flyToggleTimer == 0) {
-                    this.flyToggleTimer = 7;
-                } else {
-                    this.capabilities.isFlying = !this.capabilities.isFlying;
-                    this.sendPlayerAbilities();
-                    this.flyToggleTimer = 0;
-                }
-            }
-        }
-
-        if (this.capabilities.isFlying && this.isCurrentViewEntity()) {
-            if (this.movementInput.sneak) {
-                this.motionY -= this.capabilities.getFlySpeed() * 3.0F;
-            }
-
-            if (this.movementInput.jump) {
-                this.motionY += this.capabilities.getFlySpeed() * 3.0F;
-            }
-        }
-
-        if (this.isRidingHorse()) {
-            if (this.horseJumpPowerCounter < 0) {
-                ++this.horseJumpPowerCounter;
-
-                if (this.horseJumpPowerCounter == 0) {
-                    this.horseJumpPower = 0.0F;
-                }
-            }
-
-            if (flag && !this.movementInput.jump) {
-                this.horseJumpPowerCounter = -10;
-                this.sendHorseJump();
-            } else if (!flag && this.movementInput.jump) {
-                this.horseJumpPowerCounter = 0;
-                this.horseJumpPower = 0.0F;
-            } else if (flag) {
-                ++this.horseJumpPowerCounter;
-
-                if (this.horseJumpPowerCounter < 10) {
-                    this.horseJumpPower = (float) this.horseJumpPowerCounter * 0.1F;
-                } else {
-                    this.horseJumpPower = 0.8F + 2.0F / (float) (this.horseJumpPowerCounter - 9) * 0.1F;
-                }
-            }
-        } else {
-            this.horseJumpPower = 0.0F;
-        }
-
-        super.onLivingUpdate();
-
-        if (this.onGround && this.capabilities.isFlying && !this.mc.playerController.isSpectatorMode()) {
-            this.capabilities.isFlying = false;
-            this.sendPlayerAbilities();
-        }
-    }
-
-    @Override
-    public void moveEntity(double x, double y, double z) {
-        MoveEvent moveEvent = new MoveEvent(x, y, z);
-        LiquidBounce.eventManager.callEvent(moveEvent);
-
-        if (moveEvent.isCancelled())
-            return;
-
-        x = moveEvent.getX();
-        y = moveEvent.getY();
-        z = moveEvent.getZ();
-
-        if (this.noClip) {
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, y, z));
-            this.posX = (this.getEntityBoundingBox().minX + this.getEntityBoundingBox().maxX) / 2.0D;
-            this.posY = this.getEntityBoundingBox().minY;
-            this.posZ = (this.getEntityBoundingBox().minZ + this.getEntityBoundingBox().maxZ) / 2.0D;
-        } else {
-            this.worldObj.theProfiler.startSection("move");
-            double d0 = this.posX;
-            double d1 = this.posY;
-            double d2 = this.posZ;
-
-            if (this.isInWeb) {
-                this.isInWeb = false;
-                x *= 0.25D;
-                y *= 0.05000000074505806D;
-                z *= 0.25D;
-                this.motionX = 0.0D;
-                this.motionY = 0.0D;
-                this.motionZ = 0.0D;
-            }
-
-            double d3 = x;
-            double d4 = y;
-            double d5 = z;
-            boolean flag = this.onGround && this.isSneaking();
-
-            if (flag || moveEvent.isSafeWalk()) {
-                double d6;
-
-                //noinspection ConstantConditions
-                for (d6 = 0.05D; x != 0.0D && this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().offset(x, -1.0D, 0.0D)).isEmpty(); d3 = x) {
-                    if (x < d6 && x >= -d6) {
-                        x = 0.0D;
-                    } else if (x > 0.0D) {
-                        x -= d6;
-                    } else {
-                        x += d6;
-                    }
-                }
-
-                //noinspection ConstantConditions
-                for (; z != 0.0D && this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().offset(0.0D, -1.0D, z)).isEmpty(); d5 = z) {
-                    if (z < d6 && z >= -d6) {
-                        z = 0.0D;
-                    } else if (z > 0.0D) {
-                        z -= d6;
-                    } else {
-                        z += d6;
-                    }
-                }
-
-                //noinspection ConstantConditions
-                for (; x != 0.0D && z != 0.0D && this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().offset(x, -1.0D, z)).isEmpty(); d5 = z) {
-                    if (x < d6 && x >= -d6) {
-                        x = 0.0D;
-                    } else if (x > 0.0D) {
-                        x -= d6;
-                    } else {
-                        x += d6;
-                    }
-
-                    d3 = x;
-
-                    if (z < d6 && z >= -d6) {
-                        z = 0.0D;
-                    } else if (z > 0.0D) {
-                        z -= d6;
-                    } else {
-                        z += d6;
-                    }
-                }
-            }
-
-            //noinspection ConstantConditions
-            List<AxisAlignedBB> list1 = this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().addCoord(x, y, z));
-            AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
-
-            for (AxisAlignedBB axisalignedbb1 : list1) {
-                y = axisalignedbb1.calculateYOffset(this.getEntityBoundingBox(), y);
-            }
-
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
-            boolean flag1 = this.onGround || d4 != y && d4 < 0.0D;
-
-            for (AxisAlignedBB axisalignedbb2 : list1) {
-                x = axisalignedbb2.calculateXOffset(this.getEntityBoundingBox(), x);
-            }
-
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, 0.0D, 0.0D));
-
-            for (AxisAlignedBB axisalignedbb13 : list1) {
-                z = axisalignedbb13.calculateZOffset(this.getEntityBoundingBox(), z);
-            }
-
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, 0.0D, z));
-
-            if (this.stepHeight > 0.0F && flag1 && (d3 != x || d5 != z)) {
-                StepEvent stepEvent = new StepEvent(this.stepHeight);
-                LiquidBounce.eventManager.callEvent(stepEvent);
-                double d11 = x;
-                double d7 = y;
-                double d8 = z;
-                AxisAlignedBB axisalignedbb3 = this.getEntityBoundingBox();
-                this.setEntityBoundingBox(axisalignedbb);
-                y = stepEvent.getStepHeight();
-                //noinspection ConstantConditions
-                List<AxisAlignedBB> list = this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().addCoord(d3, y, d5));
-                AxisAlignedBB axisalignedbb4 = this.getEntityBoundingBox();
-                AxisAlignedBB axisalignedbb5 = axisalignedbb4.addCoord(d3, 0.0D, d5);
-                double d9 = y;
-
-                for (AxisAlignedBB axisalignedbb6 : list) {
-                    d9 = axisalignedbb6.calculateYOffset(axisalignedbb5, d9);
-                }
-
-                axisalignedbb4 = axisalignedbb4.offset(0.0D, d9, 0.0D);
-                double d15 = d3;
-
-                for (AxisAlignedBB axisalignedbb7 : list) {
-                    d15 = axisalignedbb7.calculateXOffset(axisalignedbb4, d15);
-                }
-
-                axisalignedbb4 = axisalignedbb4.offset(d15, 0.0D, 0.0D);
-                double d16 = d5;
-
-                for (AxisAlignedBB axisalignedbb8 : list) {
-                    d16 = axisalignedbb8.calculateZOffset(axisalignedbb4, d16);
-                }
-
-                axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, d16);
-                AxisAlignedBB axisalignedbb14 = this.getEntityBoundingBox();
-                double d17 = y;
-
-                for (AxisAlignedBB axisalignedbb9 : list) {
-                    d17 = axisalignedbb9.calculateYOffset(axisalignedbb14, d17);
-                }
-
-                axisalignedbb14 = axisalignedbb14.offset(0.0D, d17, 0.0D);
-                double d18 = d3;
-
-                for (AxisAlignedBB axisalignedbb10 : list) {
-                    d18 = axisalignedbb10.calculateXOffset(axisalignedbb14, d18);
-                }
-
-                axisalignedbb14 = axisalignedbb14.offset(d18, 0.0D, 0.0D);
-                double d19 = d5;
-
-                for (AxisAlignedBB axisalignedbb11 : list) {
-                    d19 = axisalignedbb11.calculateZOffset(axisalignedbb14, d19);
-                }
-
-                axisalignedbb14 = axisalignedbb14.offset(0.0D, 0.0D, d19);
-                double d20 = d15 * d15 + d16 * d16;
-                double d10 = d18 * d18 + d19 * d19;
-
-                if (d20 > d10) {
-                    x = d15;
-                    z = d16;
-                    y = -d9;
-                    this.setEntityBoundingBox(axisalignedbb4);
-                } else {
-                    x = d18;
-                    z = d19;
-                    y = -d17;
-                    this.setEntityBoundingBox(axisalignedbb14);
-                }
-
-                for (AxisAlignedBB axisalignedbb12 : list) {
-                    y = axisalignedbb12.calculateYOffset(this.getEntityBoundingBox(), y);
-                }
-
-                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
-
-                if (d11 * d11 + d8 * d8 >= x * x + z * z) {
-                    x = d11;
-                    y = d7;
-                    z = d8;
-                    this.setEntityBoundingBox(axisalignedbb3);
-                } else {
-                    LiquidBounce.eventManager.callEvent(new StepConfirmEvent());
-                }
-            }
-
-            this.worldObj.theProfiler.endSection();
-            this.worldObj.theProfiler.startSection("rest");
-            this.posX = (this.getEntityBoundingBox().minX + this.getEntityBoundingBox().maxX) / 2.0D;
-            this.posY = this.getEntityBoundingBox().minY;
-            this.posZ = (this.getEntityBoundingBox().minZ + this.getEntityBoundingBox().maxZ) / 2.0D;
-            this.isCollidedHorizontally = d3 != x || d5 != z;
-            this.isCollidedVertically = d4 != y;
-            this.onGround = this.isCollidedVertically && d4 < 0.0D;
-            this.isCollided = this.isCollidedHorizontally || this.isCollidedVertically;
-            int i = MathHelper.floor_double(this.posX);
-            int j = MathHelper.floor_double(this.posY - 0.20000000298023224D);
-            int k = MathHelper.floor_double(this.posZ);
-            BlockPos blockpos = new BlockPos(i, j, k);
-            Block block1 = this.worldObj.getBlockState(blockpos).getBlock();
-
-            if (block1.getMaterial() == Material.air) {
-                Block block = this.worldObj.getBlockState(blockpos.down()).getBlock();
-
-                if (block instanceof BlockFence || block instanceof BlockWall || block instanceof BlockFenceGate) {
-                    block1 = block;
-                    blockpos = blockpos.down();
-                }
-            }
-
-            this.updateFallState(y, this.onGround, block1, blockpos);
-
-            if (d3 != x) {
-                this.motionX = 0.0D;
-            }
-
-            if (d5 != z) {
-                this.motionZ = 0.0D;
-            }
-
-            if (d4 != y) {
-                //noinspection ConstantConditions
-                block1.onLanded(this.worldObj, (Entity) (Object) this);
-            }
-
-            if (this.canTriggerWalking() && !flag && this.ridingEntity == null) {
-                double d12 = this.posX - d0;
-                double d13 = this.posY - d1;
-                double d14 = this.posZ - d2;
-
-                if (block1 != Blocks.ladder) {
-                    d13 = 0.0D;
-                }
-
-                if (this.onGround) {
-                    //noinspection ConstantConditions
-                    block1.onEntityCollidedWithBlock(this.worldObj, blockpos, (Entity) (Object) this);
-                }
-
-                this.distanceWalkedModified = (float) ((double) this.distanceWalkedModified + (double) MathHelper.sqrt_double(d12 * d12 + d14 * d14) * 0.6D);
-                this.distanceWalkedOnStepModified = (float) ((double) this.distanceWalkedOnStepModified + (double) MathHelper.sqrt_double(d12 * d12 + d13 * d13 + d14 * d14) * 0.6D);
-
-                if (this.distanceWalkedOnStepModified > (float) getNextStepDistance() && block1.getMaterial() != Material.air) {
-                    setNextStepDistance((int) this.distanceWalkedOnStepModified + 1);
-
-                    if (this.isInWater()) {
-                        float f = MathHelper.sqrt_double(this.motionX * this.motionX * 0.20000000298023224D + this.motionY * this.motionY + this.motionZ * this.motionZ * 0.20000000298023224D) * 0.35F;
-
-                        if (f > 1.0F) {
-                            f = 1.0F;
-                        }
-
-                        this.playSound(this.getSwimSound(), f, 1.0F + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.4F);
-                    }
-
-                    this.playStepSound(blockpos, block1);
-                }
-            }
-
-            try {
-                this.doBlockCollisions();
-            } catch (Throwable throwable) {
-                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Checking entity block collision");
-                CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity being checked for collision");
-                this.addEntityCrashInfo(crashreportcategory);
-                throw new ReportedException(crashreport);
-            }
-
-            boolean flag2 = this.isWet();
-
-            if (this.worldObj.isFlammableWithin(this.getEntityBoundingBox().contract(0.001D, 0.001D, 0.001D))) {
-                this.dealFireDamage(1);
-
-                if (!flag2) {
-                    setFire(getFire() + 1);
-
-                    if (getFire() == 0) {
-                        this.setFire(8);
-                    }
-                }
-            } else if (getFire() <= 0) {
-                setFire(-this.fireResistance);
-            }
-
-            if (flag2 && getFire() > 0) {
-                this.playSound("random.fizz", 0.7F, 1.6F + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.4F);
-                setFire(-this.fireResistance);
-            }
-
-            worldObj.theProfiler.endSection();
-        }
-    }
+	@Shadow
+	private boolean serverSneakState;
+
+	@Shadow
+	public abstract boolean isSneaking();
+
+	@Shadow
+	protected abstract boolean isCurrentViewEntity();
+
+	@Shadow
+	private double lastReportedPosX;
+
+	@Shadow
+	private int positionUpdateTicks;
+
+	@Shadow
+	private double lastReportedPosY;
+
+	@Shadow
+	private double lastReportedPosZ;
+
+	@Shadow
+	private float lastReportedYaw;
+
+	@Shadow
+	private float lastReportedPitch;
+
+	/**
+	 * @author CCBlueX
+	 */
+	@Overwrite
+	public void onUpdateWalkingPlayer()
+	{
+		try
+		{
+			LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE));
+
+			final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.getModule(InventoryMove.class);
+			final Sneak sneak = (Sneak) LiquidBounce.moduleManager.getModule(Sneak.class);
+			final boolean fakeSprint = inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.getModule(AntiHunger.class).getState() || sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure");
+
+			final boolean sprinting = isSprinting() && !fakeSprint;
+
+			if (sprinting != serverSprintState)
+			{
+				if (sprinting)
+					sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, Action.START_SPRINTING));
+				else
+					sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, Action.STOP_SPRINTING));
+
+				serverSprintState = sprinting;
+			}
+
+			final boolean sneaking = isSneaking();
+
+			if (sneaking != serverSneakState && (!sneak.getState() || sneak.modeValue.get().equalsIgnoreCase("Legit")))
+			{
+				if (sneaking)
+					sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, Action.START_SNEAKING));
+				else
+					sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, Action.STOP_SNEAKING));
+
+				serverSneakState = sneaking;
+			}
+
+			if (isCurrentViewEntity())
+			{
+				float yaw = rotationYaw;
+				float pitch = rotationPitch;
+				final float lastReportedYaw = RotationUtils.serverRotation.getYaw();
+				final float lastReportedPitch = RotationUtils.serverRotation.getPitch();
+
+				final Derp derp = (Derp) LiquidBounce.moduleManager.getModule(Derp.class);
+				if (derp.getState())
+				{
+					final float[] rot = derp.getRotation();
+					yaw = rot[0];
+					pitch = rot[1];
+				}
+
+				if (RotationUtils.targetRotation != null)
+				{
+					yaw = RotationUtils.targetRotation.getYaw();
+					pitch = RotationUtils.targetRotation.getPitch();
+				}
+
+				final double xDiff = posX - lastReportedPosX;
+				final double yDiff = getEntityBoundingBox().minY - lastReportedPosY;
+				final double zDiff = posZ - lastReportedPosZ;
+				final double yawDiff = yaw - lastReportedYaw;
+				final double pitchDiff = pitch - lastReportedPitch;
+				boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || positionUpdateTicks >= 20;
+				final boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
+
+				if (ridingEntity == null)
+				{
+					if (moved && rotated)
+					{
+						sendQueue.addToSendQueue(new C06PacketPlayerPosLook(posX, getEntityBoundingBox().minY, posZ, yaw, pitch, onGround));
+					}
+					else if (moved)
+					{
+						sendQueue.addToSendQueue(new C04PacketPlayerPosition(posX, getEntityBoundingBox().minY, posZ, onGround));
+					}
+					else if (rotated)
+					{
+						sendQueue.addToSendQueue(new C05PacketPlayerLook(yaw, pitch, onGround));
+					}
+					else
+					{
+						sendQueue.addToSendQueue(new C03PacketPlayer(onGround));
+					}
+				}
+				else
+				{
+					sendQueue.addToSendQueue(new C06PacketPlayerPosLook(motionX, -999.0D, motionZ, yaw, pitch, onGround));
+					moved = false;
+				}
+
+				++positionUpdateTicks;
+
+				if (moved)
+				{
+					lastReportedPosX = posX;
+					lastReportedPosY = getEntityBoundingBox().minY;
+					lastReportedPosZ = posZ;
+					positionUpdateTicks = 0;
+				}
+
+				if (rotated)
+				{
+					this.lastReportedYaw = rotationYaw;
+					this.lastReportedPitch = rotationPitch;
+				}
+			}
+
+			LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST));
+		}
+		catch (final Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	@Inject(method = "swingItem", at = @At("HEAD"), cancellable = true)
+	private void swingItem(final CallbackInfo callbackInfo)
+	{
+		final NoSwing noSwing = (NoSwing) LiquidBounce.moduleManager.getModule(NoSwing.class);
+
+		if (noSwing.getState())
+		{
+			callbackInfo.cancel();
+
+			if (!noSwing.getServerSideValue().get())
+				sendQueue.addToSendQueue(new C0APacketAnimation());
+		}
+	}
+
+	@Inject(method = "pushOutOfBlocks", at = @At("HEAD"), cancellable = true)
+	private void onPushOutOfBlocks(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	{
+		final PushOutEvent event = new PushOutEvent();
+		if (noClip)
+			event.cancelEvent();
+		LiquidBounce.eventManager.callEvent(event);
+
+		if (event.isCancelled())
+			callbackInfoReturnable.setReturnValue(false);
+	}
+
+	/**
+	 * @author CCBlueX
+	 */
+	@Overwrite
+	public void onLivingUpdate()
+	{
+		LiquidBounce.eventManager.callEvent(new UpdateEvent());
+
+		if (sprintingTicksLeft > 0)
+		{
+			--sprintingTicksLeft;
+
+			if (sprintingTicksLeft == 0)
+			{
+				setSprinting(false);
+			}
+		}
+
+		if (sprintToggleTimer > 0)
+		{
+			--sprintToggleTimer;
+		}
+
+		prevTimeInPortal = timeInPortal;
+
+		if (inPortal)
+		{
+			if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !LiquidBounce.moduleManager.getModule(PortalMenu.class).getState())
+			{
+				mc.displayGuiScreen(null);
+			}
+
+			if (timeInPortal == 0.0F)
+			{
+				mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("portal.trigger"), rand.nextFloat() * 0.4F + 0.8F));
+			}
+
+			timeInPortal += 0.0125F;
+
+			if (timeInPortal >= 1.0F)
+			{
+				timeInPortal = 1.0F;
+			}
+
+			inPortal = false;
+		}
+		else if (isPotionActive(Potion.confusion) && getActivePotionEffect(Potion.confusion).getDuration() > 60)
+		{
+			timeInPortal += 0.006666667F;
+
+			if (timeInPortal > 1.0F)
+			{
+				timeInPortal = 1.0F;
+			}
+		}
+		else
+		{
+			if (timeInPortal > 0.0F)
+			{
+				timeInPortal -= 0.05F;
+			}
+
+			if (timeInPortal < 0.0F)
+			{
+				timeInPortal = 0.0F;
+			}
+		}
+
+		if (timeUntilPortal > 0)
+		{
+			--timeUntilPortal;
+		}
+
+		final boolean flag = movementInput.jump;
+		final boolean flag1 = movementInput.sneak;
+		final float f = 0.8F;
+		final boolean flag2 = movementInput.moveForward >= f;
+		movementInput.updatePlayerMoveState();
+
+		final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
+		final KillAura killAura = (KillAura) LiquidBounce.moduleManager.getModule(KillAura.class);
+
+		if (getHeldItem() != null && (isUsingItem() || getHeldItem().getItem() instanceof ItemSword && killAura.getBlockingStatus()) && !isRiding())
+		{
+			final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
+			LiquidBounce.eventManager.callEvent(slowDownEvent);
+			movementInput.moveStrafe *= slowDownEvent.getStrafe();
+			movementInput.moveForward *= slowDownEvent.getForward();
+			sprintToggleTimer = 0;
+		}
+
+		pushOutOfBlocks(posX - (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + (double) width * 0.35D);
+		pushOutOfBlocks(posX - (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - (double) width * 0.35D);
+		pushOutOfBlocks(posX + (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - (double) width * 0.35D);
+		pushOutOfBlocks(posX + (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + (double) width * 0.35D);
+
+		final Sprint sprint = (Sprint) LiquidBounce.moduleManager.getModule(Sprint.class);
+
+		final boolean flag3 = !sprint.foodValue.get() || (float) getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
+
+		if (onGround && !flag1 && !flag2 && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness))
+		{
+			if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown())
+			{
+				sprintToggleTimer = 7;
+			}
+			else
+			{
+				setSprinting(true);
+			}
+		}
+
+		if (!isSprinting() && movementInput.moveForward >= f && flag3 && (noSlow.getState() || !isUsingItem()) && !isPotionActive(Potion.blindness) && mc.gameSettings.keyBindSprint.isKeyDown())
+		{
+			setSprinting(true);
+		}
+
+		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.getModule(Scaffold.class);
+		if (scaffold.getState() && !scaffold.sprintValue.get() || sprint.getState() && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)
+			setSprinting(false);
+
+		if (isSprinting() && (!(sprint.getState() && sprint.allDirectionsValue.get()) && movementInput.moveForward < f || isCollidedHorizontally || !flag3))
+		{
+			setSprinting(false);
+		}
+
+		if (capabilities.allowFlying)
+		{
+			if (mc.playerController.isSpectatorMode())
+			{
+				if (!capabilities.isFlying)
+				{
+					capabilities.isFlying = true;
+					sendPlayerAbilities();
+				}
+			}
+			else if (!flag && movementInput.jump)
+			{
+				if (flyToggleTimer == 0)
+				{
+					flyToggleTimer = 7;
+				}
+				else
+				{
+					capabilities.isFlying = !capabilities.isFlying;
+					sendPlayerAbilities();
+					flyToggleTimer = 0;
+				}
+			}
+		}
+
+		if (capabilities.isFlying && isCurrentViewEntity())
+		{
+			if (movementInput.sneak)
+			{
+				motionY -= capabilities.getFlySpeed() * 3.0F;
+			}
+
+			if (movementInput.jump)
+			{
+				motionY += capabilities.getFlySpeed() * 3.0F;
+			}
+		}
+
+		if (isRidingHorse())
+		{
+			if (horseJumpPowerCounter < 0)
+			{
+				++horseJumpPowerCounter;
+
+				if (horseJumpPowerCounter == 0)
+				{
+					horseJumpPower = 0.0F;
+				}
+			}
+
+			if (flag && !movementInput.jump)
+			{
+				horseJumpPowerCounter = -10;
+				sendHorseJump();
+			}
+			else if (!flag && movementInput.jump)
+			{
+				horseJumpPowerCounter = 0;
+				horseJumpPower = 0.0F;
+			}
+			else if (flag)
+			{
+				++horseJumpPowerCounter;
+
+				if (horseJumpPowerCounter < 10)
+				{
+					horseJumpPower = (float) horseJumpPowerCounter * 0.1F;
+				}
+				else
+				{
+					horseJumpPower = 0.8F + 2.0F / (float) (horseJumpPowerCounter - 9) * 0.1F;
+				}
+			}
+		}
+		else
+		{
+			horseJumpPower = 0.0F;
+		}
+
+		super.onLivingUpdate();
+
+		if (onGround && capabilities.isFlying && !mc.playerController.isSpectatorMode())
+		{
+			capabilities.isFlying = false;
+			sendPlayerAbilities();
+		}
+	}
+
+	@Override
+	public void moveEntity(double x, double y, double z)
+	{
+		final MoveEvent moveEvent = new MoveEvent(x, y, z);
+		LiquidBounce.eventManager.callEvent(moveEvent);
+
+		if (moveEvent.isCancelled())
+			return;
+
+		x = moveEvent.getX();
+		y = moveEvent.getY();
+		z = moveEvent.getZ();
+
+		if (noClip)
+		{
+			setEntityBoundingBox(getEntityBoundingBox().offset(x, y, z));
+			posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2.0D;
+			posY = getEntityBoundingBox().minY;
+			posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2.0D;
+		}
+		else
+		{
+			worldObj.theProfiler.startSection("move");
+			final double d0 = posX;
+			final double d1 = posY;
+			final double d2 = posZ;
+
+			if (isInWeb)
+			{
+				isInWeb = false;
+				x *= 0.25D;
+				y *= 0.05000000074505806D;
+				z *= 0.25D;
+				motionX = 0.0D;
+				motionY = 0.0D;
+				motionZ = 0.0D;
+			}
+
+			double d3 = x;
+			final double d4 = y;
+			double d5 = z;
+			final boolean flag = onGround && isSneaking();
+
+			if (flag || moveEvent.isSafeWalk())
+			{
+				final double d6;
+
+				// noinspection ConstantConditions
+				for (d6 = 0.05D; x != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, 0.0D)).isEmpty(); d3 = x)
+				{
+					if (x < d6 && x >= -d6)
+					{
+						x = 0.0D;
+					}
+					else if (x > 0.0D)
+					{
+						x -= d6;
+					}
+					else
+					{
+						x += d6;
+					}
+				}
+
+				// noinspection ConstantConditions
+				for (; z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0.0D, -1.0D, z)).isEmpty(); d5 = z)
+				{
+					if (z < d6 && z >= -d6)
+					{
+						z = 0.0D;
+					}
+					else if (z > 0.0D)
+					{
+						z -= d6;
+					}
+					else
+					{
+						z += d6;
+					}
+				}
+
+				// noinspection ConstantConditions
+				for (; x != 0.0D && z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, z)).isEmpty(); d5 = z)
+				{
+					if (x < d6 && x >= -d6)
+					{
+						x = 0.0D;
+					}
+					else if (x > 0.0D)
+					{
+						x -= d6;
+					}
+					else
+					{
+						x += d6;
+					}
+
+					d3 = x;
+
+					if (z < d6 && z >= -d6)
+					{
+						z = 0.0D;
+					}
+					else if (z > 0.0D)
+					{
+						z -= d6;
+					}
+					else
+					{
+						z += d6;
+					}
+				}
+			}
+
+			// noinspection ConstantConditions
+			final List<AxisAlignedBB> list1 = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(x, y, z));
+			final AxisAlignedBB axisalignedbb = getEntityBoundingBox();
+
+			for (final AxisAlignedBB axisalignedbb1 : list1)
+			{
+				y = axisalignedbb1.calculateYOffset(getEntityBoundingBox(), y);
+			}
+
+			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
+			final boolean flag1 = onGround || d4 != y && d4 < 0.0D;
+
+			for (final AxisAlignedBB axisalignedbb2 : list1)
+			{
+				x = axisalignedbb2.calculateXOffset(getEntityBoundingBox(), x);
+			}
+
+			setEntityBoundingBox(getEntityBoundingBox().offset(x, 0.0D, 0.0D));
+
+			for (final AxisAlignedBB axisalignedbb13 : list1)
+			{
+				z = axisalignedbb13.calculateZOffset(getEntityBoundingBox(), z);
+			}
+
+			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, 0.0D, z));
+
+			if (stepHeight > 0.0F && flag1 && (d3 != x || d5 != z))
+			{
+				final StepEvent stepEvent = new StepEvent(stepHeight);
+				LiquidBounce.eventManager.callEvent(stepEvent);
+				final double d11 = x;
+				final double d7 = y;
+				final double d8 = z;
+				final AxisAlignedBB axisalignedbb3 = getEntityBoundingBox();
+				setEntityBoundingBox(axisalignedbb);
+				y = stepEvent.getStepHeight();
+				// noinspection ConstantConditions
+				final List<AxisAlignedBB> list = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(d3, y, d5));
+				AxisAlignedBB axisalignedbb4 = getEntityBoundingBox();
+				final AxisAlignedBB axisalignedbb5 = axisalignedbb4.addCoord(d3, 0.0D, d5);
+				double d9 = y;
+
+				for (final AxisAlignedBB axisalignedbb6 : list)
+				{
+					d9 = axisalignedbb6.calculateYOffset(axisalignedbb5, d9);
+				}
+
+				axisalignedbb4 = axisalignedbb4.offset(0.0D, d9, 0.0D);
+				double d15 = d3;
+
+				for (final AxisAlignedBB axisalignedbb7 : list)
+				{
+					d15 = axisalignedbb7.calculateXOffset(axisalignedbb4, d15);
+				}
+
+				axisalignedbb4 = axisalignedbb4.offset(d15, 0.0D, 0.0D);
+				double d16 = d5;
+
+				for (final AxisAlignedBB axisalignedbb8 : list)
+				{
+					d16 = axisalignedbb8.calculateZOffset(axisalignedbb4, d16);
+				}
+
+				axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, d16);
+				AxisAlignedBB axisalignedbb14 = getEntityBoundingBox();
+				double d17 = y;
+
+				for (final AxisAlignedBB axisalignedbb9 : list)
+				{
+					d17 = axisalignedbb9.calculateYOffset(axisalignedbb14, d17);
+				}
+
+				axisalignedbb14 = axisalignedbb14.offset(0.0D, d17, 0.0D);
+				double d18 = d3;
+
+				for (final AxisAlignedBB axisalignedbb10 : list)
+				{
+					d18 = axisalignedbb10.calculateXOffset(axisalignedbb14, d18);
+				}
+
+				axisalignedbb14 = axisalignedbb14.offset(d18, 0.0D, 0.0D);
+				double d19 = d5;
+
+				for (final AxisAlignedBB axisalignedbb11 : list)
+				{
+					d19 = axisalignedbb11.calculateZOffset(axisalignedbb14, d19);
+				}
+
+				axisalignedbb14 = axisalignedbb14.offset(0.0D, 0.0D, d19);
+				final double d20 = d15 * d15 + d16 * d16;
+				final double d10 = d18 * d18 + d19 * d19;
+
+				if (d20 > d10)
+				{
+					x = d15;
+					z = d16;
+					y = -d9;
+					setEntityBoundingBox(axisalignedbb4);
+				}
+				else
+				{
+					x = d18;
+					z = d19;
+					y = -d17;
+					setEntityBoundingBox(axisalignedbb14);
+				}
+
+				for (final AxisAlignedBB axisalignedbb12 : list)
+				{
+					y = axisalignedbb12.calculateYOffset(getEntityBoundingBox(), y);
+				}
+
+				setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
+
+				if (d11 * d11 + d8 * d8 >= x * x + z * z)
+				{
+					x = d11;
+					y = d7;
+					z = d8;
+					setEntityBoundingBox(axisalignedbb3);
+				}
+				else
+				{
+					LiquidBounce.eventManager.callEvent(new StepConfirmEvent());
+				}
+			}
+
+			worldObj.theProfiler.endSection();
+			worldObj.theProfiler.startSection("rest");
+			posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2.0D;
+			posY = getEntityBoundingBox().minY;
+			posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2.0D;
+			isCollidedHorizontally = d3 != x || d5 != z;
+			isCollidedVertically = d4 != y;
+			onGround = isCollidedVertically && d4 < 0.0D;
+			isCollided = isCollidedHorizontally || isCollidedVertically;
+			final int i = MathHelper.floor_double(posX);
+			final int j = MathHelper.floor_double(posY - 0.20000000298023224D);
+			final int k = MathHelper.floor_double(posZ);
+			BlockPos blockpos = new BlockPos(i, j, k);
+			Block block1 = worldObj.getBlockState(blockpos).getBlock();
+
+			if (block1.getMaterial() == Material.air)
+			{
+				final Block block = worldObj.getBlockState(blockpos.down()).getBlock();
+
+				if (block instanceof BlockFence || block instanceof BlockWall || block instanceof BlockFenceGate)
+				{
+					block1 = block;
+					blockpos = blockpos.down();
+				}
+			}
+
+			updateFallState(y, onGround, block1, blockpos);
+
+			if (d3 != x)
+			{
+				motionX = 0.0D;
+			}
+
+			if (d5 != z)
+			{
+				motionZ = 0.0D;
+			}
+
+			if (d4 != y)
+			{
+				// noinspection ConstantConditions
+				block1.onLanded(worldObj, (Entity) (Object) this);
+			}
+
+			if (canTriggerWalking() && !flag && ridingEntity == null)
+			{
+				final double d12 = posX - d0;
+				double d13 = posY - d1;
+				final double d14 = posZ - d2;
+
+				if (block1 != Blocks.ladder)
+				{
+					d13 = 0.0D;
+				}
+
+				if (onGround)
+				{
+					// noinspection ConstantConditions
+					block1.onEntityCollidedWithBlock(worldObj, blockpos, (Entity) (Object) this);
+				}
+
+				distanceWalkedModified = (float) ((double) distanceWalkedModified + (double) MathHelper.sqrt_double(d12 * d12 + d14 * d14) * 0.6D);
+				distanceWalkedOnStepModified = (float) ((double) distanceWalkedOnStepModified + (double) MathHelper.sqrt_double(d12 * d12 + d13 * d13 + d14 * d14) * 0.6D);
+
+				if (distanceWalkedOnStepModified > (float) getNextStepDistance() && block1.getMaterial() != Material.air)
+				{
+					setNextStepDistance((int) distanceWalkedOnStepModified + 1);
+
+					if (isInWater())
+					{
+						float f = MathHelper.sqrt_double(motionX * motionX * 0.20000000298023224D + motionY * motionY + motionZ * motionZ * 0.20000000298023224D) * 0.35F;
+
+						if (f > 1.0F)
+						{
+							f = 1.0F;
+						}
+
+						playSound(getSwimSound(), f, 1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
+					}
+
+					playStepSound(blockpos, block1);
+				}
+			}
+
+			try
+			{
+				doBlockCollisions();
+			}
+			catch (final Throwable throwable)
+			{
+				final CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Checking entity block collision");
+				final CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity being checked for collision");
+				addEntityCrashInfo(crashreportcategory);
+				throw new ReportedException(crashreport);
+			}
+
+			final boolean flag2 = isWet();
+
+			if (worldObj.isFlammableWithin(getEntityBoundingBox().contract(0.001D, 0.001D, 0.001D)))
+			{
+				dealFireDamage(1);
+
+				if (!flag2)
+				{
+					setFire(getFire() + 1);
+
+					if (getFire() == 0)
+					{
+						setFire(8);
+					}
+				}
+			}
+			else if (getFire() <= 0)
+			{
+				setFire(-fireResistance);
+			}
+
+			if (flag2 && getFire() > 0)
+			{
+				playSound("random.fizz", 0.7F, 1.6F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
+				setFire(-fireResistance);
+			}
+
+			worldObj.theProfiler.endSection();
+		}
+	}
 }
-

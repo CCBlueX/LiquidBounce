@@ -10,49 +10,68 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AACHop350 : SpeedMode("AACHop3.5.0"), Listenable {
-    override fun onMotion() {}
-    override fun onUpdate() {}
-    override fun onMove(event: MoveEvent) {}
+class AACHop350 : SpeedMode("AACHop3.5.0"), Listenable
+{
+	override fun onMotion()
+	{
+	}
 
-    @EventTarget
-    fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
+	override fun onUpdate()
+	{
+	}
 
-        if (event.eventState == EventState.POST && MovementUtils.isMoving && !thePlayer.isInWater && !thePlayer.isInLava) {
-            thePlayer.jumpMovementFactor += 0.00208f
-            if (thePlayer.fallDistance <= 1f) {
-                if (thePlayer.onGround) {
-                    thePlayer.jump()
-                    thePlayer.motionX *= 1.0118f
-                    thePlayer.motionZ *= 1.0118f
-                } else {
-                    thePlayer.motionY -= 0.0147f
-                    thePlayer.motionX *= 1.00138f
-                    thePlayer.motionZ *= 1.00138f
-                }
-            }
-        }
-    }
+	override fun onMove(event: MoveEvent)
+	{
+	}
 
-    override fun onEnable() {
-        val thePlayer = mc.thePlayer ?: return
+	@EventTarget
+	fun onMotion(event: MotionEvent)
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.onGround) {
-            thePlayer.motionZ = 0.0
-            thePlayer.motionX = thePlayer.motionZ
-        }
-    }
+		if (event.eventState == EventState.POST && MovementUtils.isMoving && !thePlayer.isInWater && !thePlayer.isInLava)
+		{
+			thePlayer.jumpMovementFactor += 0.00208f
+			if (thePlayer.fallDistance <= 1f)
+			{
+				if (thePlayer.onGround)
+				{
+					thePlayer.jump()
+					thePlayer.motionX *= 1.0118f
+					thePlayer.motionZ *= 1.0118f
+				} else
+				{
+					thePlayer.motionY -= 0.0147f
+					thePlayer.motionX *= 1.00138f
+					thePlayer.motionZ *= 1.00138f
+				}
+			}
+		}
+	}
 
-    override fun onDisable() {
-        mc.thePlayer?.jumpMovementFactor = 0.02f
-    }
+	override fun onEnable()
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-    override fun handleEvents(): Boolean {
-        return isActive
-    }
+		if (thePlayer.onGround)
+		{
+			thePlayer.motionZ = 0.0
+			thePlayer.motionX = thePlayer.motionZ
+		}
+	}
 
-    init {
-        LiquidBounce.eventManager.registerListener(this)
-    }
+	override fun onDisable()
+	{
+		mc.thePlayer?.jumpMovementFactor = 0.02f
+	}
+
+	override fun handleEvents(): Boolean
+	{
+		return isActive
+	}
+
+	init
+	{
+		LiquidBounce.eventManager.registerListener(this)
+	}
 }

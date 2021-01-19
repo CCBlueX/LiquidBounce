@@ -5,7 +5,12 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.mojang.authlib.GameProfile;
+
 import net.ccbluex.liquidbounce.injection.backend.ServerDataImplKt;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ServerUtils;
@@ -25,6 +30,7 @@ import net.minecraft.network.login.client.C00PacketLoginStart;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,109 +40,120 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.concurrent.atomic.AtomicInteger;
-
 @Mixin(GuiConnecting.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinGuiConnecting extends GuiScreen {
+public abstract class MixinGuiConnecting extends GuiScreen
+{
 
-    @Shadow
-    private NetworkManager networkManager;
+	@Shadow
+	private NetworkManager networkManager;
 
-    @Shadow
-    @Final
-    private static Logger logger;
+	@Shadow
+	@Final
+	private static Logger logger;
 
-    @Shadow
-    private boolean cancel;
+	@Shadow
+	private boolean cancel;
 
-    @Shadow
-    @Final
-    private GuiScreen previousGuiScreen;
+	@Shadow
+	@Final
+	private GuiScreen previousGuiScreen;
 
-    @Shadow
-    @Final
-    private static AtomicInteger CONNECTION_ID;
+	@Shadow
+	@Final
+	private static AtomicInteger CONNECTION_ID;
 
-    @Inject(method = "connect", at = @At("HEAD"))
-    private void headConnect(final String ip, final int port, final CallbackInfo callbackInfo) {
-        ServerUtils.serverData = ServerDataImplKt.wrap(new ServerData("", ip + ":" + port, false));
-    }
+	@Inject(method = "connect", at = @At("HEAD"))
+	private void headConnect(final String ip, final int port, final CallbackInfo callbackInfo)
+	{
+		ServerUtils.serverData = ServerDataImplKt.wrap(new ServerData("", ip + ":" + port, false));
+	}
 
-    @Inject(method = "connect", at = @At(value = "NEW", target = "net/minecraft/network/login/client/C00PacketLoginStart"), cancellable = true)
-    private void mcLeaks(final CallbackInfo callbackInfo) {
-        if(MCLeaks.isAltActive()) {
-            networkManager.sendPacket(new C00PacketLoginStart(new GameProfile(null, MCLeaks.getSession().getUsername())));
-            callbackInfo.cancel();
-        }
-    }
+	@Inject(method = "connect", at = @At(value = "NEW", target = "net/minecraft/network/login/client/C00PacketLoginStart"), cancellable = true)
+	private void mcLeaks(final CallbackInfo callbackInfo)
+	{
+		if (MCLeaks.isAltActive())
+		{
+			networkManager.sendPacket(new C00PacketLoginStart(new GameProfile(null, MCLeaks.getSession().getUsername())));
+			callbackInfo.cancel();
+		}
+	}
 
-    /**
-     * @author CCBlueX
-     */
-    @Overwrite
-    private void connect(final String ip, final int port) {
-        logger.info("Connecting to " + ip + ", " + port);
+	/**
+	 * @author CCBlueX
+	 */
+	@Overwrite
+	private void connect(final String ip, final int port)
+	{
+		logger.info("Connecting to " + ip + ", " + port);
 
-        new Thread(() -> {
-            InetAddress inetaddress = null;
+		new Thread(() ->
+		{
+			InetAddress inetaddress = null;
 
-            try {
-                if(cancel) {
-                    return;
-                }
+			try
+			{
+				if (cancel)
+				{
+					return;
+				}
 
-                inetaddress = InetAddress.getByName(ip);
-                networkManager = NetworkManager.createNetworkManagerAndConnect(inetaddress, port, mc.gameSettings.isUsingNativeTransport());
-                networkManager.setNetHandler(new NetHandlerLoginClient(networkManager, mc, previousGuiScreen));
-                networkManager.sendPacket(new C00Handshake(47, ip, port, EnumConnectionState.LOGIN, true));
-                networkManager.sendPacket(new C00PacketLoginStart(MCLeaks.isAltActive() ? new GameProfile(null, MCLeaks.getSession().getUsername()) : mc.getSession().getProfile()));
-            }catch(final UnknownHostException unknownhostexception) {
-                if(cancel)
-                    return;
+				inetaddress = InetAddress.getByName(ip);
+				networkManager = NetworkManager.createNetworkManagerAndConnect(inetaddress, port, mc.gameSettings.isUsingNativeTransport());
+				networkManager.setNetHandler(new NetHandlerLoginClient(networkManager, mc, previousGuiScreen));
+				networkManager.sendPacket(new C00Handshake(47, ip, port, EnumConnectionState.LOGIN, true));
+				networkManager.sendPacket(new C00PacketLoginStart(MCLeaks.isAltActive() ? new GameProfile(null, MCLeaks.getSession().getUsername()) : mc.getSession().getProfile()));
+			}
+			catch (final UnknownHostException unknownhostexception)
+			{
+				if (cancel)
+					return;
 
-                logger.error("Couldn't connect to server", unknownhostexception);
-                mc.displayGuiScreen(new GuiDisconnected(previousGuiScreen, "connect.failed", new ChatComponentTranslation("disconnect.genericReason", "Unknown host")));
-            }catch(final Exception exception) {
-                if(cancel) {
-                    return;
-                }
+				logger.error("Couldn't connect to server", unknownhostexception);
+				mc.displayGuiScreen(new GuiDisconnected(previousGuiScreen, "connect.failed", new ChatComponentTranslation("disconnect.genericReason", "Unknown host")));
+			}
+			catch (final Exception exception)
+			{
+				if (cancel)
+				{
+					return;
+				}
 
-                logger.error("Couldn't connect to server", exception);
-                String s = exception.toString();
+				logger.error("Couldn't connect to server", exception);
+				String s = exception.toString();
 
-                if(inetaddress != null) {
-                    final String s1 = inetaddress + ":" + port;
-                    s = s.replaceAll(s1, "");
-                }
+				if (inetaddress != null)
+				{
+					final String s1 = inetaddress + ":" + port;
+					s = s.replaceAll(s1, "");
+				}
 
-                mc.displayGuiScreen(new GuiDisconnected(previousGuiScreen, "connect.failed", new ChatComponentTranslation("disconnect.genericReason", s)));
-            }
-        }, "Server Connector #" + CONNECTION_ID.incrementAndGet()).start();
-    }
+				mc.displayGuiScreen(new GuiDisconnected(previousGuiScreen, "connect.failed", new ChatComponentTranslation("disconnect.genericReason", s)));
+			}
+		}, "Server Connector #" + CONNECTION_ID.incrementAndGet()).start();
+	}
 
-    /**
-     * @author CCBlueX
-     */
-    @Overwrite
-    public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
-        final ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
+	/**
+	 * @author CCBlueX
+	 */
+	@Overwrite
+	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
+	{
+		final ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
 
-        drawDefaultBackground();
+		drawDefaultBackground();
 
-        RenderUtils.drawLoadingCircle(scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 70);
+		RenderUtils.drawLoadingCircle(scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 70);
 
-        String ip = "Unknown";
+		String ip = "Unknown";
 
-        final ServerData serverData = mc.getCurrentServerData();
-        if(serverData != null)
-            ip = serverData.serverIP;
+		final ServerData serverData = mc.getCurrentServerData();
+		if (serverData != null)
+			ip = serverData.serverIP;
 
-        Fonts.font40.drawCenteredString("Connecting to", scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 110, 0xFFFFFF, true);
-        Fonts.font35.drawCenteredString(ip, scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 120, 0x5281FB, true);
+		Fonts.font40.drawCenteredString("Connecting to", scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 110, 0xFFFFFF, true);
+		Fonts.font35.drawCenteredString(ip, scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 120, 0x5281FB, true);
 
-        super.drawScreen(mouseX, mouseY, partialTicks);
-    }
+		super.drawScreen(mouseX, mouseY, partialTicks);
+	}
 }

@@ -8,22 +8,23 @@ package net.ccbluex.liquidbounce.api.minecraft.client.settings
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.WEnumPlayerModelParts
 
-interface IGameSettings {
-    var entityShadows: Boolean
-    var gammaSetting: Float
-    val modelParts: Set<WEnumPlayerModelParts>
-    val mouseSensitivity: Float
+interface IGameSettings
+{
+	var entityShadows: Boolean
+	var gammaSetting: Float
+	val modelParts: Set<WEnumPlayerModelParts>
+	val mouseSensitivity: Float
 
-    val keyBindAttack: IKeyBinding
-    val keyBindUseItem: IKeyBinding
-    val keyBindJump: IKeyBinding
-    val keyBindSneak: IKeyBinding
-    val keyBindForward: IKeyBinding
-    val keyBindBack: IKeyBinding
-    val keyBindRight: IKeyBinding
-    val keyBindLeft: IKeyBinding
-    val keyBindSprint: IKeyBinding
+	val keyBindAttack: IKeyBinding
+	val keyBindUseItem: IKeyBinding
+	val keyBindJump: IKeyBinding
+	val keyBindSneak: IKeyBinding
+	val keyBindForward: IKeyBinding
+	val keyBindBack: IKeyBinding
+	val keyBindRight: IKeyBinding
+	val keyBindLeft: IKeyBinding
+	val keyBindSprint: IKeyBinding
 
-    fun isKeyDown(key: IKeyBinding): Boolean
-    fun setModelPartEnabled(modelParts: WEnumPlayerModelParts, enabled: Boolean)
+	fun isKeyDown(key: IKeyBinding): Boolean
+	fun setModelPartEnabled(modelParts: WEnumPlayerModelParts, enabled: Boolean)
 }

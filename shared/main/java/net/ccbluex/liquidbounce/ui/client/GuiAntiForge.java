@@ -5,17 +5,19 @@
  */
 package net.ccbluex.liquidbounce.ui.client;
 
+import java.io.IOException;
+
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen;
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
 import net.ccbluex.liquidbounce.features.special.AntiForge;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
+
 import org.lwjgl.input.Keyboard;
 
-import java.io.IOException;
-
-public class GuiAntiForge extends WrappedGuiScreen {
+public class GuiAntiForge extends WrappedGuiScreen
+{
 
 	private final IGuiScreen prevGui;
 
@@ -24,12 +26,14 @@ public class GuiAntiForge extends WrappedGuiScreen {
 	private IGuiButton proxyButton;
 	private IGuiButton payloadButton;
 
-	public GuiAntiForge(final IGuiScreen prevGui) {
+	public GuiAntiForge(final IGuiScreen prevGui)
+	{
 		this.prevGui = prevGui;
 	}
 
 	@Override
-	public void initGui() {
+	public void initGui()
+	{
 		representedScreen.getButtonList().add(enabledButton = classProvider.createGuiButton(1, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 35, "Enabled (" + (AntiForge.enabled ? "On" : "Off") + ")"));
 		representedScreen.getButtonList().add(fmlButton = classProvider.createGuiButton(2, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 50 + 25, "Block FML (" + (AntiForge.blockFML ? "On" : "Off") + ")"));
 		representedScreen.getButtonList().add(proxyButton = classProvider.createGuiButton(3, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 50 + 25 * 2, "Block FML Proxy Packet (" + (AntiForge.blockProxyPacket ? "On" : "Off") + ")"));
@@ -39,8 +43,10 @@ public class GuiAntiForge extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void actionPerformed(final IGuiButton button) {
-		switch (button.getId()) {
+	public void actionPerformed(final IGuiButton button)
+	{
+		switch (button.getId())
+		{
 			case 1:
 				AntiForge.enabled = !AntiForge.enabled;
 				enabledButton.setDisplayString("Enabled (" + (AntiForge.enabled ? "On" : "Off") + ")");
@@ -68,7 +74,8 @@ public class GuiAntiForge extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
+	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
+	{
 		representedScreen.drawBackground(0);
 		Fonts.fontBold180.drawCenteredString("AntiForge", (int) (representedScreen.getWidth() / 2F), (int) (representedScreen.getHeight() / 8F + 5F), 4673984, true);
 
@@ -76,8 +83,10 @@ public class GuiAntiForge extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void keyTyped(final char typedChar, final int keyCode) throws IOException {
-		if (Keyboard.KEY_ESCAPE == keyCode) {
+	public void keyTyped(final char typedChar, final int keyCode) throws IOException
+	{
+		if (Keyboard.KEY_ESCAPE == keyCode)
+		{
 			mc.displayGuiScreen(prevGui);
 			return;
 		}

@@ -251,8 +251,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 					val color = (LiquidBounce.moduleManager[ESP::class.java] as ESP).getColor(entity)
 
 					worldRenderer.pos(((positionRelativeToPlayer.x / viewDistance) * size).toDouble(), ((positionRelativeToPlayer.y / viewDistance) * size).toDouble(), 0.0).color(
-							color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f
-						).endVertex()
+						color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f
+					).endVertex()
 				}
 
 				if (transform)

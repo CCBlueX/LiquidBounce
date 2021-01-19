@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.injection.implementations;
 
-public interface IMixinItemStack {
-    long getItemDelay();
+public interface IMixinItemStack
+{
+	long getItemDelay();
 }

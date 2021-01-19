@@ -16,19 +16,21 @@ import net.minecraft.client.network.NetworkPlayerInfo
 import net.minecraft.network.play.INetHandlerPlayClient
 import java.util.*
 
-class INetHandlerPlayClientImpl(val wrapped: NetHandlerPlayClient) : IINetHandlerPlayClient {
-    override val networkManager: INetworkManager
-        get() = wrapped.networkManager.wrap()
-    override val playerInfoMap: Collection<INetworkPlayerInfo>
-        get() = WrappedCollection(wrapped.playerInfoMap, INetworkPlayerInfo::unwrap, NetworkPlayerInfo::wrap)
+class INetHandlerPlayClientImpl(val wrapped: NetHandlerPlayClient) : IINetHandlerPlayClient
+{
+	override val networkManager: INetworkManager
+		get() = wrapped.networkManager.wrap()
+	override val playerInfoMap: Collection<INetworkPlayerInfo>
+		get() = WrappedCollection(wrapped.playerInfoMap, INetworkPlayerInfo::unwrap, NetworkPlayerInfo::wrap)
 
-    override fun getPlayerInfo(uuid: UUID): INetworkPlayerInfo? = wrapped.getPlayerInfo(uuid)?.wrap()
+	override fun getPlayerInfo(uuid: UUID): INetworkPlayerInfo? = wrapped.getPlayerInfo(uuid)?.wrap()
 
-    override fun addToSendQueue(packet: IPacket) = wrapped.addToSendQueue(packet.unwrap())
+	override fun addToSendQueue(packet: IPacket) = wrapped.addToSendQueue(packet.unwrap())
 
-    override fun equals(other: Any?): Boolean {
-        return other is INetHandlerPlayClientImpl && other.wrapped == this.wrapped
-    }
+	override fun equals(other: Any?): Boolean
+	{
+		return other is INetHandlerPlayClientImpl && other.wrapped == this.wrapped
+	}
 }
 
 inline fun IINetHandlerPlayClient.unwrap(): INetHandlerPlayClient = (this as INetHandlerPlayClientImpl).wrapped

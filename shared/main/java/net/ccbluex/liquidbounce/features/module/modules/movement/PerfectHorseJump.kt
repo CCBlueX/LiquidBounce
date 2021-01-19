@@ -12,13 +12,15 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
 @ModuleInfo(name = "PerfectHorseJump", description = "Automatically jumps when the jump bar of a horse is filled up completely.", category = ModuleCategory.MOVEMENT)
-class PerfectHorseJump : Module() {
+class PerfectHorseJump : Module()
+{
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+	@EventTarget
+	fun onUpdate(event: UpdateEvent)
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        thePlayer.horseJumpPowerCounter = 9
-        thePlayer.horseJumpPower = 1.0f
-    }
+		thePlayer.horseJumpPowerCounter = 9
+		thePlayer.horseJumpPower = 1.0f
+	}
 }

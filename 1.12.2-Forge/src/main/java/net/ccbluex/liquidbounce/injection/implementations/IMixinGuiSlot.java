@@ -6,10 +6,11 @@
 
 package net.ccbluex.liquidbounce.injection.implementations;
 
-public interface IMixinGuiSlot {
+public interface IMixinGuiSlot
+{
 
-    void setListWidth(int listWidth);
+	void setListWidth(int listWidth);
 
-    void setEnableScissor(boolean b);
+	void setEnableScissor(boolean b);
 
 }

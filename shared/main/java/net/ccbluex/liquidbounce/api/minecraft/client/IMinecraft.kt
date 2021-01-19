@@ -27,36 +27,37 @@ import net.ccbluex.liquidbounce.api.minecraft.util.ISession
 import net.ccbluex.liquidbounce.api.minecraft.util.ITimer
 import java.io.File
 
-interface IMinecraft {
-    val framebuffer: IFramebuffer
-    val isFullScreen: Boolean
-    val dataDir: File
-    val debugFPS: Int
-    val renderGlobal: IRenderGlobal
-    val renderItem: IRenderItem
-    val displayWidth: Int
-    val displayHeight: Int
-    val entityRenderer: IEntityRenderer
-    var rightClickDelayTimer: Int
-    var session: ISession
-    val soundHandler: ISoundHandler
-    val objectMouseOver: IMovingObjectPosition?
-    val timer: ITimer
-    val renderManager: IRenderManager
-    val playerController: IPlayerControllerMP
-    val currentScreen: IGuiScreen?
-    var renderViewEntity: IEntity?
-    val netHandler: IINetHandlerPlayClient
-    val theWorld: IWorldClient?
-    val thePlayer: IEntityPlayerSP?
-    val textureManager: ITextureManager
-    val isIntegratedServerRunning: Boolean
-    val currentServerData: IServerData?
-    val gameSettings: IGameSettings
-    val fontRendererObj: IFontRenderer
+interface IMinecraft
+{
+	val framebuffer: IFramebuffer
+	val isFullScreen: Boolean
+	val dataDir: File
+	val debugFPS: Int
+	val renderGlobal: IRenderGlobal
+	val renderItem: IRenderItem
+	val displayWidth: Int
+	val displayHeight: Int
+	val entityRenderer: IEntityRenderer
+	var rightClickDelayTimer: Int
+	var session: ISession
+	val soundHandler: ISoundHandler
+	val objectMouseOver: IMovingObjectPosition?
+	val timer: ITimer
+	val renderManager: IRenderManager
+	val playerController: IPlayerControllerMP
+	val currentScreen: IGuiScreen?
+	var renderViewEntity: IEntity?
+	val netHandler: IINetHandlerPlayClient
+	val theWorld: IWorldClient?
+	val thePlayer: IEntityPlayerSP?
+	val textureManager: ITextureManager
+	val isIntegratedServerRunning: Boolean
+	val currentServerData: IServerData?
+	val gameSettings: IGameSettings
+	val fontRendererObj: IFontRenderer
 
-    fun displayGuiScreen(screen: IGuiScreen?)
-    fun rightClickMouse()
-    fun shutdown()
-    fun toggleFullscreen()
+	fun displayGuiScreen(screen: IGuiScreen?)
+	fun rightClickMouse()
+	fun shutdown()
+	fun toggleFullscreen()
 }

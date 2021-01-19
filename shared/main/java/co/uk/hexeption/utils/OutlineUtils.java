@@ -1,16 +1,17 @@
 package co.uk.hexeption.utils;
 
+import static org.lwjgl.opengl.GL11.*;
+
+import java.awt.*;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
 import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.EXTPackedDepthStencil;
-
-import java.awt.*;
-
-import static org.lwjgl.opengl.GL11.*;
 
 /**
  * Outline ESP
@@ -18,9 +19,11 @@ import static org.lwjgl.opengl.GL11.*;
  * @author Hexeption
  */
 @SideOnly(Side.CLIENT)
-public class OutlineUtils {
+public class OutlineUtils
+{
 
-	public static void renderOne(final float lineWidth) {
+	public static void renderOne(final float lineWidth)
+	{
 		checkSetupFBO();
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
 		glDisable(GL_ALPHA_TEST);
@@ -38,19 +41,22 @@ public class OutlineUtils {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 
-	public static void renderTwo() {
+	public static void renderTwo()
+	{
 		glStencilFunc(GL_NEVER, 0, 0xF);
 		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
-	public static void renderThree() {
+	public static void renderThree()
+	{
 		glStencilFunc(GL_EQUAL, 1, 0xF);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 
-	public static void renderFour(final Color color) {
+	public static void renderFour(final Color color)
+	{
 		setColor(color);
 		glDepthMask(false);
 		glDisable(GL_DEPTH_TEST);
@@ -59,7 +65,8 @@ public class OutlineUtils {
 		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
 	}
 
-	public static void renderFive() {
+	public static void renderFive()
+	{
 		glPolygonOffset(1.0F, 2000000F);
 		glDisable(GL_POLYGON_OFFSET_LINE);
 		glEnable(GL_DEPTH_TEST);
@@ -74,18 +81,22 @@ public class OutlineUtils {
 		glPopAttrib();
 	}
 
-	public static void setColor(final Color color) {
+	public static void setColor(final Color color)
+	{
 		glColor4d(color.getRed() / 255F, color.getGreen() / 255F, color.getBlue() / 255F, color.getAlpha() / 255F);
 	}
 
-	public static void checkSetupFBO() {
+	public static void checkSetupFBO()
+	{
 		// Gets the FBO of Minecraft
 		final Framebuffer fbo = Minecraft.getMinecraft().getFramebuffer();
 
 		// Check if FBO isn't null
-		if (fbo != null) {
+		if (fbo != null)
+		{
 			// Checks if screen has been resized or new FBO has been created
-			if (fbo.depthBuffer > -1) {
+			if (fbo.depthBuffer > -1)
+			{
 				// Sets up the FBO with depth and stencil extensions (24/8 bit)
 				setupFBO(fbo);
 				// Reset the ID to prevent multiple FBO's
@@ -97,9 +108,11 @@ public class OutlineUtils {
 	/**
 	 * Sets up the FBO with depth and stencil
 	 *
-	 * @param fbo Framebuffer
+	 * @param fbo
+	 *            Framebuffer
 	 */
-	private static void setupFBO(final Framebuffer fbo) {
+	private static void setupFBO(final Framebuffer fbo)
+	{
 		// Deletes old render buffer extensions such as depth
 		// Args: Render Buffer ID
 		EXTFramebufferObject.glDeleteRenderbuffersEXT(fbo.depthBuffer);

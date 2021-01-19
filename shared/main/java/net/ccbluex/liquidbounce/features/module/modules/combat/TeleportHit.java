@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity;
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity.WAction;
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3;
 import net.ccbluex.liquidbounce.event.EventState;
@@ -20,47 +19,54 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.utils.*;
 
 @ModuleInfo(name = "TeleportHit", description = "Allows to hit entities from far away.", category = ModuleCategory.COMBAT)
-public class TeleportHit extends Module {
-    private IEntityLivingBase targetEntity;
-    private boolean shouldHit;
+public class TeleportHit extends Module
+{
+	private IEntityLivingBase targetEntity;
+	private boolean shouldHit;
 
-    @EventTarget
-    public void onMotion(final MotionEvent event) {
-        if (event.getEventState() != EventState.PRE)
-            return;
+	@EventTarget
+	public void onMotion(final MotionEvent event)
+	{
+		if (event.getEventState() != EventState.PRE)
+			return;
 
-        final IEntity facedEntity = RaycastUtils.raycastEntity(100D, classProvider::isEntityLivingBase);
+		final IEntity facedEntity = RaycastUtils.raycastEntity(100D, classProvider::isEntityLivingBase);
 
-        final IEntityPlayerSP thePlayer = mc.getThePlayer();
+		final IEntityPlayerSP thePlayer = mc.getThePlayer();
 
-        if (thePlayer == null)
-            return;
+		if (thePlayer == null)
+			return;
 
-        if (mc.getGameSettings().getKeyBindAttack().isKeyDown() && EntityUtils.isSelected(facedEntity, true) && facedEntity.getDistanceSqToEntity(thePlayer) >= 1D)
-            targetEntity = facedEntity.asEntityLivingBase();
+		if (mc.getGameSettings().getKeyBindAttack().isKeyDown() && EntityUtils.isSelected(facedEntity, true) && facedEntity.getDistanceSqToEntity(thePlayer) >= 1D)
+			targetEntity = facedEntity.asEntityLivingBase();
 
-        if (targetEntity != null) {
-            if (!shouldHit) {
-                shouldHit = true;
-                return;
-            }
+		if (targetEntity != null)
+		{
+			if (!shouldHit)
+			{
+				shouldHit = true;
+				return;
+			}
 
-            if (thePlayer.getFallDistance() > 0F) {
-                final WVec3 rotationVector = RotationUtils.getVectorForRotation(new Rotation(thePlayer.getRotationYaw(), 0F));
-                final double x = thePlayer.getPosX() + rotationVector.getXCoord() * (thePlayer.getDistanceToEntity(targetEntity) - 1.0F);
-                final double z = thePlayer.getPosZ() + rotationVector.getZCoord() * (thePlayer.getDistanceToEntity(targetEntity) - 1.0F);
-                final double y = targetEntity.getPosition().getY() + 0.25D;
+			if (thePlayer.getFallDistance() > 0F)
+			{
+				final WVec3 rotationVector = RotationUtils.getVectorForRotation(new Rotation(thePlayer.getRotationYaw(), 0F));
+				final double x = thePlayer.getPosX() + rotationVector.getXCoord() * (thePlayer.getDistanceToEntity(targetEntity) - 1.0F);
+				final double z = thePlayer.getPosZ() + rotationVector.getZCoord() * (thePlayer.getDistanceToEntity(targetEntity) - 1.0F);
+				final double y = targetEntity.getPosition().getY() + 0.25D;
 
-                PathUtils.findPath(x, y + 1.0D, z, 4D).forEach(pos -> mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
+				PathUtils.findPath(x, y + 1.0D, z, 4D).forEach(pos -> mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
 
-                thePlayer.swingItem();
-                mc.getNetHandler().addToSendQueue(classProvider.createCPacketUseEntity(targetEntity, WAction.ATTACK));
-                thePlayer.onCriticalHit(targetEntity);
-                shouldHit = false;
-                targetEntity = null;
-            } else if (thePlayer.getOnGround())
-                thePlayer.jump();
-        } else
-            shouldHit = false;
-    }
+				thePlayer.swingItem();
+				mc.getNetHandler().addToSendQueue(classProvider.createCPacketUseEntity(targetEntity, WAction.ATTACK));
+				thePlayer.onCriticalHit(targetEntity);
+				shouldHit = false;
+				targetEntity = null;
+			}
+			else if (thePlayer.getOnGround())
+				thePlayer.jump();
+		}
+		else
+			shouldHit = false;
+	}
 }

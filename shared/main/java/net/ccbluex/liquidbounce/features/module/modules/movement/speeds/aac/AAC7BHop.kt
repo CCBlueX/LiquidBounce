@@ -11,29 +11,35 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import kotlin.math.cos
 import kotlin.math.sin
 
-class AAC7BHop : SpeedMode("AAC7BHop") {
-    override fun onUpdate() {
-        val thePlayer = mc.thePlayer ?: return
+class AAC7BHop : SpeedMode("AAC7BHop")
+{
+	override fun onUpdate()
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        if (!MovementUtils.isMoving || thePlayer.ridingEntity != null || thePlayer.hurtTime > 0)
-            return
+		if (!MovementUtils.isMoving || thePlayer.ridingEntity != null || thePlayer.hurtTime > 0) return
 
-        if (thePlayer.onGround) {
-            thePlayer.jump()
-            thePlayer.motionY = 0.405
-            thePlayer.motionX *= 1.004
-            thePlayer.motionZ *= 1.004
-            return
-        }
+		if (thePlayer.onGround)
+		{
+			thePlayer.jump()
+			thePlayer.motionY = 0.405
+			thePlayer.motionX *= 1.004
+			thePlayer.motionZ *= 1.004
+			return
+		}
 
-        val speed = MovementUtils.speed * 1.0072
-        val yaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
+		val speed = MovementUtils.speed * 1.0072
+		val yaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
 
-        thePlayer.motionX = -sin(yaw) * speed
-        thePlayer.motionZ = cos(yaw) * speed
-    }
+		thePlayer.motionX = -sin(yaw) * speed
+		thePlayer.motionZ = cos(yaw) * speed
+	}
 
-    override fun onMotion() {}
+	override fun onMotion()
+	{
+	}
 
-    override fun onMove(event: MoveEvent) {}
+	override fun onMove(event: MoveEvent)
+	{
+	}
 }

@@ -17,56 +17,52 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import kotlin.random.Random
 
 @ModuleInfo(name = "SkinDerp", description = "Makes your skin blink (Requires multi-layer skin).", category = ModuleCategory.FUN)
-class SkinDerp : Module() {
+class SkinDerp : Module()
+{
 
-    private val delayValue = IntegerValue("Delay", 0, 0, 1000)
-    private val hatValue = BoolValue("Hat", true)
-    private val jacketValue = BoolValue("Jacket", true)
-    private val leftPantsValue = BoolValue("LeftPants", true)
-    private val rightPantsValue = BoolValue("RightPants", true)
-    private val leftSleeveValue = BoolValue("LeftSleeve", true)
-    private val rightSleeveValue = BoolValue("RightSleeve", true)
+	private val delayValue = IntegerValue("Delay", 0, 0, 1000)
+	private val hatValue = BoolValue("Hat", true)
+	private val jacketValue = BoolValue("Jacket", true)
+	private val leftPantsValue = BoolValue("LeftPants", true)
+	private val rightPantsValue = BoolValue("RightPants", true)
+	private val leftSleeveValue = BoolValue("LeftSleeve", true)
+	private val rightSleeveValue = BoolValue("RightSleeve", true)
 
-    private var prevModelParts = emptySet<WEnumPlayerModelParts>()
+	private var prevModelParts = emptySet<WEnumPlayerModelParts>()
 
-    private val timer = MSTimer()
+	private val timer = MSTimer()
 
-    override fun onEnable() {
-        prevModelParts = mc.gameSettings.modelParts
+	override fun onEnable()
+	{
+		prevModelParts = mc.gameSettings.modelParts
 
-        super.onEnable()
-    }
+		super.onEnable()
+	}
 
-    override fun onDisable() {
-        // Disable all current model parts
+	override fun onDisable()
+	{ // Disable all current model parts
 
-        for (modelPart in mc.gameSettings.modelParts)
-            mc.gameSettings.setModelPartEnabled(modelPart, false)
+		for (modelPart in mc.gameSettings.modelParts) mc.gameSettings.setModelPartEnabled(modelPart, false)
 
-        // Enable all old model parts
-        for (modelPart in prevModelParts)
-            mc.gameSettings.setModelPartEnabled(modelPart, true)
+		// Enable all old model parts
+		for (modelPart in prevModelParts) mc.gameSettings.setModelPartEnabled(modelPart, true)
 
-        super.onDisable()
-    }
+		super.onDisable()
+	}
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        if (timer.hasTimePassed(delayValue.get().toLong())) {
-            if (hatValue.get())
-                mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.HAT, Random.nextBoolean())
-            if (jacketValue.get())
-                mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.JACKET, Random.nextBoolean())
-            if (leftPantsValue.get())
-                mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.LEFT_PANTS_LEG, Random.nextBoolean())
-            if (rightPantsValue.get())
-                mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.RIGHT_PANTS_LEG, Random.nextBoolean())
-            if (leftSleeveValue.get())
-                mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.LEFT_SLEEVE, Random.nextBoolean())
-            if (rightSleeveValue.get())
-                mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.RIGHT_SLEEVE, Random.nextBoolean())
-            timer.reset()
-        }
-    }
+	@EventTarget
+	fun onUpdate(event: UpdateEvent)
+	{
+		if (timer.hasTimePassed(delayValue.get().toLong()))
+		{
+			if (hatValue.get()) mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.HAT, Random.nextBoolean())
+			if (jacketValue.get()) mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.JACKET, Random.nextBoolean())
+			if (leftPantsValue.get()) mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.LEFT_PANTS_LEG, Random.nextBoolean())
+			if (rightPantsValue.get()) mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.RIGHT_PANTS_LEG, Random.nextBoolean())
+			if (leftSleeveValue.get()) mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.LEFT_SLEEVE, Random.nextBoolean())
+			if (rightSleeveValue.get()) mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.RIGHT_SLEEVE, Random.nextBoolean())
+			timer.reset()
+		}
+	}
 
 }

@@ -17,38 +17,34 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.value.IntegerValue
 
 @ModuleInfo(name = "FastBow", description = "Turns your bow into a machine gun.", category = ModuleCategory.COMBAT)
-class FastBow : Module() {
+class FastBow : Module()
+{
 
-    private val packetsValue = IntegerValue("Packets", 20, 3, 20)
+	private val packetsValue = IntegerValue("Packets", 20, 3, 20)
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+	@EventTarget
+	fun onUpdate(event: UpdateEvent)
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        if (!thePlayer.isUsingItem)
-            return
+		if (!thePlayer.isUsingItem) return
 
-        val currentItem = thePlayer.inventory.getCurrentItemInHand()
+		val currentItem = thePlayer.inventory.getCurrentItemInHand()
 
-        if (currentItem != null && classProvider.isItemBow(currentItem.item)) {
-            // TODO Find out what this is suppose to do
-            mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(WBlockPos.ORIGIN, 255, currentItem, 0F, 0F, 0F))
+		if (currentItem != null && classProvider.isItemBow(currentItem.item))
+		{ // TODO Find out what this is suppose to do
+			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(WBlockPos.ORIGIN, 255, currentItem, 0F, 0F, 0F))
 
-            val yaw = if (RotationUtils.targetRotation != null)
-                RotationUtils.targetRotation.yaw
-            else
-                thePlayer.rotationYaw
+			val yaw = if (RotationUtils.targetRotation != null) RotationUtils.targetRotation.yaw
+			else thePlayer.rotationYaw
 
-            val pitch = if (RotationUtils.targetRotation != null)
-                RotationUtils.targetRotation.pitch
-            else
-                thePlayer.rotationPitch
+			val pitch = if (RotationUtils.targetRotation != null) RotationUtils.targetRotation.pitch
+			else thePlayer.rotationPitch
 
-            for (i in 0 until packetsValue.get())
-                mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerLook(yaw, pitch, true))
+			for (i in 0 until packetsValue.get()) mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerLook(yaw, pitch, true))
 
-            mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
-            thePlayer.itemInUseCount = currentItem.maxItemUseDuration - 1
-        }
-    }
+			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+			thePlayer.itemInUseCount = currentItem.maxItemUseDuration - 1
+		}
+	}
 }

@@ -11,10 +11,11 @@ import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.inventory.ISlot
 import net.minecraft.client.gui.inventory.GuiContainer
 
-class GuiContainerImpl(wrapped: GuiContainer) : GuiScreenImpl<GuiContainer>(wrapped), IGuiContainer {
-    override fun handleMouseClick(slot: ISlot, slotNumber: Int, clickedButton: Int, clickType: Int) = wrapped.handleMouseClick(slot.unwrap(), slotNumber, clickedButton, clickType)
-    override val inventorySlots: IContainer?
-        get() = wrapped.inventorySlots?.wrap()
+class GuiContainerImpl(wrapped: GuiContainer) : GuiScreenImpl<GuiContainer>(wrapped), IGuiContainer
+{
+	override fun handleMouseClick(slot: ISlot, slotNumber: Int, clickedButton: Int, clickType: Int) = wrapped.handleMouseClick(slot.unwrap(), slotNumber, clickedButton, clickType)
+	override val inventorySlots: IContainer?
+		get() = wrapped.inventorySlots?.wrap()
 }
 
 inline fun IGuiContainer.unwrap(): GuiContainer = (this as GuiContainerImpl).wrapped

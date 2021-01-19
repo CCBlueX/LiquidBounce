@@ -9,66 +9,77 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 
-class GiveCommand : Command("give", "item", "i", "get") {
-    /**
-     * Execute commands with provided [args]
-     */
-    override fun execute(args: Array<String>) {
-        val thePlayer = mc.thePlayer ?: return
+class GiveCommand : Command("give", "item", "i", "get")
+{
+	/**
+	 * Execute commands with provided [args]
+	 */
+	override fun execute(args: Array<String>)
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        if (mc.playerController.isNotCreative) {
-            chat("\u00A7c\u00A7lError: \u00A73You need to be in creative mode.")
-            return
-        }
+		if (mc.playerController.isNotCreative)
+		{
+			chat("\u00A7c\u00A7lError: \u00A73You need to be in creative mode.")
+			return
+		}
 
-        if (args.size > 1) {
-            val itemStack = ItemUtils.createItem(StringUtils.toCompleteString(args, 1))
+		if (args.size > 1)
+		{
+			val itemStack = ItemUtils.createItem(StringUtils.toCompleteString(args, 1))
 
-            if (itemStack == null) {
-                chatSyntaxError()
-                return
-            }
+			if (itemStack == null)
+			{
+				chatSyntaxError()
+				return
+			}
 
-            var emptySlot = -1
+			var emptySlot = -1
 
-            for (i in 36..44) {
-                if (thePlayer.inventoryContainer.getSlot(i).stack == null) {
-                    emptySlot = i
-                    break
-                }
-            }
+			for (i in 36..44)
+			{
+				if (thePlayer.inventoryContainer.getSlot(i).stack == null)
+				{
+					emptySlot = i
+					break
+				}
+			}
 
-            if (emptySlot == -1) {
-                for (i in 9..44) {
-                    if (thePlayer.inventoryContainer.getSlot(i).stack == null) {
-                        emptySlot = i
-                        break
-                    }
-                }
-            }
+			if (emptySlot == -1)
+			{
+				for (i in 9..44)
+				{
+					if (thePlayer.inventoryContainer.getSlot(i).stack == null)
+					{
+						emptySlot = i
+						break
+					}
+				}
+			}
 
-            if (emptySlot != -1) {
-                mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(emptySlot, itemStack))
-                chat("\u00A77Given [\u00A78${itemStack.displayName}\u00A77] * \u00A78${itemStack.stackSize}\u00A77 to \u00A78${mc.session.username}\u00A77.")
-            } else
-                chat("Your inventory is full.")
-            return
-        }
+			if (emptySlot != -1)
+			{
+				mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(emptySlot, itemStack))
+				chat("\u00A77Given [\u00A78${itemStack.displayName}\u00A77] * \u00A78${itemStack.stackSize}\u00A77 to \u00A78${mc.session.username}\u00A77.")
+			} else chat("Your inventory is full.")
+			return
+		}
 
-        chatSyntax("give <item> [amount] [data] [datatag]")
-    }
+		chatSyntax("give <item> [amount] [data] [datatag]")
+	}
 
-    override fun tabComplete(args: Array<String>): List<String> {
-        if (args.isEmpty())
-            return emptyList()
+	override fun tabComplete(args: Array<String>): List<String>
+	{
+		if (args.isEmpty()) return emptyList()
 
-        return when (args.size) {
-            1 -> {
-                return functions.getItemRegistryKeys()
-                        .map { it.resourcePath.toLowerCase() }
-                        .filter { it.startsWith(args[0], true) }
-            }
-            else -> emptyList()
-        }
-    }
+		return when (args.size)
+		{
+			1 ->
+			{
+				return functions.getItemRegistryKeys().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[0], true) }
+			}
+
+			else -> emptyList()
+		}
+	}
 }

@@ -18,97 +18,106 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "FastUse", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
-class FastUse : Module() {
+class FastUse : Module()
+{
 
-    private val modeValue = ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
+	private val modeValue = ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
 
-    private val noMoveValue = BoolValue("NoMove", false)
+	private val noMoveValue = BoolValue("NoMove", false)
 
-    private val delayValue = IntegerValue("CustomDelay", 0, 0, 300)
-    private val customSpeedValue = IntegerValue("CustomSpeed", 2, 1, 35)
-    private val customTimer = FloatValue("CustomTimer", 1.1f, 0.5f, 2f)
+	private val delayValue = IntegerValue("CustomDelay", 0, 0, 300)
+	private val customSpeedValue = IntegerValue("CustomSpeed", 2, 1, 35)
+	private val customTimer = FloatValue("CustomTimer", 1.1f, 0.5f, 2f)
 
-    private val msTimer = MSTimer()
-    private var usedTimer = false
+	private val msTimer = MSTimer()
+	private var usedTimer = false
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+	@EventTarget
+	fun onUpdate(event: UpdateEvent)
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        if (usedTimer) {
-            mc.timer.timerSpeed = 1F
-            usedTimer = false
-        }
+		if (usedTimer)
+		{
+			mc.timer.timerSpeed = 1F
+			usedTimer = false
+		}
 
-        if (!thePlayer.isUsingItem) {
-            msTimer.reset()
-            return
-        }
+		if (!thePlayer.isUsingItem)
+		{
+			msTimer.reset()
+			return
+		}
 
-        val usingItem = thePlayer.itemInUse!!.item
+		val usingItem = thePlayer.itemInUse!!.item
 
-        if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem)) {
-            when (modeValue.get().toLowerCase()) {
-                "instant" -> {
-                    repeat(35) {
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
-                    }
+		if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem))
+		{
+			when (modeValue.get().toLowerCase())
+			{
+				"instant" ->
+				{
+					repeat(35) {
+						mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+					}
 
-                    mc.playerController.onStoppedUsingItem(thePlayer)
-                }
+					mc.playerController.onStoppedUsingItem(thePlayer)
+				}
 
-                "ncp" -> if (thePlayer.itemInUseDuration > 14) {
-                    repeat(20) {
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
-                    }
+				"ncp" -> if (thePlayer.itemInUseDuration > 14)
+				{
+					repeat(20) {
+						mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+					}
 
-                    mc.playerController.onStoppedUsingItem(thePlayer)
-                }
+					mc.playerController.onStoppedUsingItem(thePlayer)
+				}
 
-                "aac" -> {
-                    mc.timer.timerSpeed = 1.22F
-                    usedTimer = true
-                }
-                
-                "custom" -> {
-                    mc.timer.timerSpeed = customTimer.get()
-                    usedTimer = true
+				"aac" ->
+				{
+					mc.timer.timerSpeed = 1.22F
+					usedTimer = true
+				}
 
-                    if (!msTimer.hasTimePassed(delayValue.get().toLong()))
-                        return
+				"custom" ->
+				{
+					mc.timer.timerSpeed = customTimer.get()
+					usedTimer = true
 
-                    repeat(customSpeedValue.get()) {
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
-                    }
+					if (!msTimer.hasTimePassed(delayValue.get().toLong())) return
 
-                    msTimer.reset()
-                }
-            }
-        }
-    }
+					repeat(customSpeedValue.get()) {
+						mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+					}
 
-    @EventTarget
-    fun onMove(event: MoveEvent?) {
-        val thePlayer = mc.thePlayer
+					msTimer.reset()
+				}
+			}
+		}
+	}
 
-        if (thePlayer == null || event == null)
-            return
-        if (!state || !thePlayer.isUsingItem || !noMoveValue.get())
-            return
+	@EventTarget
+	fun onMove(event: MoveEvent?)
+	{
+		val thePlayer = mc.thePlayer
 
-        val usingItem = thePlayer.itemInUse!!.item
+		if (thePlayer == null || event == null) return
+		if (!state || !thePlayer.isUsingItem || !noMoveValue.get()) return
 
-        if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem))
-            event.zero()
-    }
+		val usingItem = thePlayer.itemInUse!!.item
 
-    override fun onDisable() {
-        if (usedTimer) {
-            mc.timer.timerSpeed = 1F
-            usedTimer = false
-        }
-    }
+		if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem)) event.zero()
+	}
 
-    override val tag: String?
-        get() = modeValue.get()
+	override fun onDisable()
+	{
+		if (usedTimer)
+		{
+			mc.timer.timerSpeed = 1F
+			usedTimer = false
+		}
+	}
+
+	override val tag: String?
+		get() = modeValue.get()
 }

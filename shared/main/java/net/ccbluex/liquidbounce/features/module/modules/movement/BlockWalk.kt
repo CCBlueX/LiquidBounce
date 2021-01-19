@@ -14,14 +14,16 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 
 @ModuleInfo(name = "BlockWalk", description = "Allows you to walk on non-fullblock blocks.", category = ModuleCategory.MOVEMENT)
-class BlockWalk : Module() {
-    private val cobwebValue = BoolValue("Cobweb", true)
-    private val snowValue = BoolValue("Snow", true)
+class BlockWalk : Module()
+{
+	private val cobwebValue = BoolValue("Cobweb", true)
+	private val snowValue = BoolValue("Snow", true)
 
-    @EventTarget
-    fun onBlockBB(event: BlockBBEvent) {
-        if (cobwebValue.get() && event.block == classProvider.getBlockEnum(BlockType.WEB) || snowValue.get() && event.block == classProvider.getBlockEnum(BlockType.SNOW_LAYER))
-            event.boundingBox = classProvider.createAxisAlignedBB(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(),
-                    event.x + 1.0, event.y + 1.0, event.z + 1.0)
-    }
+	@EventTarget
+	fun onBlockBB(event: BlockBBEvent)
+	{
+		if (cobwebValue.get() && event.block == classProvider.getBlockEnum(BlockType.WEB) || snowValue.get() && event.block == classProvider.getBlockEnum(BlockType.SNOW_LAYER)) event.boundingBox = classProvider.createAxisAlignedBB(
+			event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.0, event.y + 1.0, event.z + 1.0
+		)
+	}
 }

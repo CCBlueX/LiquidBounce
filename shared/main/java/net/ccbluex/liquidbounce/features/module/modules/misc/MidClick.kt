@@ -16,34 +16,38 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import org.lwjgl.input.Mouse
 
 @ModuleInfo(name = "MidClick", description = "Allows you to add a player as a friend by right clicking him.", category = ModuleCategory.MISC)
-class MidClick : Module() {
-    private var wasDown = false
+class MidClick : Module()
+{
+	private var wasDown = false
 
-    @EventTarget
-    fun onRender(event: Render2DEvent?) {
-        if (mc.currentScreen != null)
-            return
+	@EventTarget
+	fun onRender(event: Render2DEvent?)
+	{
+		if (mc.currentScreen != null) return
 
-        if (!wasDown && Mouse.isButtonDown(2)) {
-            val entity = mc.objectMouseOver!!.entityHit
+		if (!wasDown && Mouse.isButtonDown(2))
+		{
+			val entity = mc.objectMouseOver!!.entityHit
 
-            if (classProvider.isEntityPlayer(entity)) {
-                val playerName = stripColor(entity!!.name)
-                val friendsConfig = LiquidBounce.fileManager.friendsConfig
+			if (classProvider.isEntityPlayer(entity))
+			{
+				val playerName = stripColor(entity!!.name)
+				val friendsConfig = LiquidBounce.fileManager.friendsConfig
 
-                if (!friendsConfig.isFriend(playerName)) {
-                    friendsConfig.addFriend(playerName)
-                    LiquidBounce.fileManager.saveConfig(friendsConfig)
-                    ClientUtils.displayChatMessage("\u00A7a\u00A7l$playerName\u00A7c was added to your friends.")
-                } else {
-                    friendsConfig.removeFriend(playerName)
-                    LiquidBounce.fileManager.saveConfig(friendsConfig)
-                    ClientUtils.displayChatMessage("\u00A7a\u00A7l$playerName\u00A7c was removed from your friends.")
-                }
+				if (!friendsConfig.isFriend(playerName))
+				{
+					friendsConfig.addFriend(playerName)
+					LiquidBounce.fileManager.saveConfig(friendsConfig)
+					ClientUtils.displayChatMessage("\u00A7a\u00A7l$playerName\u00A7c was added to your friends.")
+				} else
+				{
+					friendsConfig.removeFriend(playerName)
+					LiquidBounce.fileManager.saveConfig(friendsConfig)
+					ClientUtils.displayChatMessage("\u00A7a\u00A7l$playerName\u00A7c was removed from your friends.")
+				}
 
-            } else
-                ClientUtils.displayChatMessage("\u00A7c\u00A7lError: \u00A7aYou need to select a player.")
-        }
-        wasDown = Mouse.isButtonDown(2)
-    }
+			} else ClientUtils.displayChatMessage("\u00A7c\u00A7lError: \u00A7aYou need to select a player.")
+		}
+		wasDown = Mouse.isButtonDown(2)
+	}
 }

@@ -14,20 +14,21 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
 @ModuleInfo(name = "Eagle", description = "Makes you eagle (aka. FastBridge).", category = ModuleCategory.PLAYER)
-class Eagle : Module() {
+class Eagle : Module()
+{
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+	@EventTarget
+	fun onUpdate(event: UpdateEvent)
+	{
+		val thePlayer = mc.thePlayer ?: return
 
-        mc.gameSettings.keyBindSneak.pressed = mc.theWorld!!.getBlockState(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)).block == classProvider.getBlockEnum(BlockType.AIR)
-    }
+		mc.gameSettings.keyBindSneak.pressed = mc.theWorld!!.getBlockState(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)).block == classProvider.getBlockEnum(BlockType.AIR)
+	}
 
-    override fun onDisable() {
-        if (mc.thePlayer == null)
-            return
+	override fun onDisable()
+	{
+		if (mc.thePlayer == null) return
 
-        if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindSneak))
-            mc.gameSettings.keyBindSneak.pressed = false
-    }
+		if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) mc.gameSettings.keyBindSneak.pressed = false
+	}
 }

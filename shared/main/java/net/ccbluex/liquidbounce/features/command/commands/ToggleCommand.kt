@@ -8,51 +8,58 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 
-class ToggleCommand : Command("toggle", "t") {
-    /**
-     * Execute commands with provided [args]
-     */
-    override fun execute(args: Array<String>) {
-        if (args.size > 1) {
-            val module = LiquidBounce.moduleManager.getModule(args[1])
+class ToggleCommand : Command("toggle", "t")
+{
+	/**
+	 * Execute commands with provided [args]
+	 */
+	override fun execute(args: Array<String>)
+	{
+		if (args.size > 1)
+		{
+			val module = LiquidBounce.moduleManager.getModule(args[1])
 
-            if (module == null) {
-                chat("Module '${args[1]}' not found.")
-                return
-            }
+			if (module == null)
+			{
+				chat("Module '${args[1]}' not found.")
+				return
+			}
 
-            if (args.size > 2) {
-                val newState = args[2].toLowerCase()
+			if (args.size > 2)
+			{
+				val newState = args[2].toLowerCase()
 
-                if (newState == "on" || newState == "off") {
-                    module.state = newState == "on"
-                } else {
-                    chatSyntax("toggle <module> [on/off]")
-                    return
-                }
-            } else {
-                module.toggle()
-            }
+				if (newState == "on" || newState == "off")
+				{
+					module.state = newState == "on"
+				} else
+				{
+					chatSyntax("toggle <module> [on/off]")
+					return
+				}
+			} else
+			{
+				module.toggle()
+			}
 
-            chat("${if (module.state) "Enabled" else "Disabled"} module \u00A78${module.name}\u00A73.")
-            return
-        }
+			chat("${if (module.state) "Enabled" else "Disabled"} module \u00A78${module.name}\u00A73.")
+			return
+		}
 
-        chatSyntax("toggle <module> [on/off]")
-    }
+		chatSyntax("toggle <module> [on/off]")
+	}
 
-    override fun tabComplete(args: Array<String>): List<String> {
-        if (args.isEmpty()) return emptyList()
+	override fun tabComplete(args: Array<String>): List<String>
+	{
+		if (args.isEmpty()) return emptyList()
 
-        val moduleName = args[0]
+		val moduleName = args[0]
 
-        return when (args.size) {
-            1 -> LiquidBounce.moduleManager.modules
-                    .map { it.name }
-                    .filter { it.startsWith(moduleName, true) }
-                    .toList()
-            else -> emptyList()
-        }
-    }
+		return when (args.size)
+		{
+			1 -> LiquidBounce.moduleManager.modules.map { it.name }.filter { it.startsWith(moduleName, true) }.toList()
+			else -> emptyList()
+		}
+	}
 
 }

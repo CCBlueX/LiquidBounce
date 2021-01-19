@@ -13,18 +13,19 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
 @ModuleInfo(name = "AutoBreak", description = "Automatically breaks the block you are looking at.", category = ModuleCategory.WORLD)
-class AutoBreak : Module() {
+class AutoBreak : Module()
+{
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        if (mc.objectMouseOver == null || mc.objectMouseOver!!.blockPos == null || mc.theWorld == null)
-            return
+	@EventTarget
+	fun onUpdate(event: UpdateEvent)
+	{
+		if (mc.objectMouseOver == null || mc.objectMouseOver!!.blockPos == null || mc.theWorld == null) return
 
-        mc.gameSettings.keyBindAttack.pressed = mc.theWorld!!.getBlockState(mc.objectMouseOver!!.blockPos!!).block != classProvider.getBlockEnum(BlockType.AIR)
-    }
+		mc.gameSettings.keyBindAttack.pressed = mc.theWorld!!.getBlockState(mc.objectMouseOver!!.blockPos!!).block != classProvider.getBlockEnum(BlockType.AIR)
+	}
 
-    override fun onDisable() {
-        if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindAttack))
-            mc.gameSettings.keyBindAttack.pressed = false
-    }
+	override fun onDisable()
+	{
+		if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindAttack)) mc.gameSettings.keyBindAttack.pressed = false
+	}
 }

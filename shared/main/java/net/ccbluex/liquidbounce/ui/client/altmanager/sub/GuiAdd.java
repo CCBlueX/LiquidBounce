@@ -5,12 +5,18 @@
  */
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub;
 
+import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
+import java.net.Proxy;
+
 import com.mojang.authlib.Agent;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
-import com.thealtening.AltService;
 import com.thealtening.AltService.EnumAltService;
+
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
@@ -21,15 +27,11 @@ import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.TabUtils;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
+
 import org.lwjgl.input.Keyboard;
 
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
-import java.net.Proxy;
-
-public class GuiAdd extends WrappedGuiScreen {
+public class GuiAdd extends WrappedGuiScreen
+{
 
 	private final GuiAltManager prevGui;
 
@@ -40,11 +42,13 @@ public class GuiAdd extends WrappedGuiScreen {
 
 	private String status = "\u00A77Idle...";
 
-	public GuiAdd(final GuiAltManager gui) {
+	public GuiAdd(final GuiAltManager gui)
+	{
 		prevGui = gui;
 	}
 
-	public void initGui() {
+	public void initGui()
+	{
 		Keyboard.enableRepeatEvents(true);
 		representedScreen.getButtonList().add(addButton = classProvider.createGuiButton(1, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 72, "Add"));
 		representedScreen.getButtonList().add(clipboardButton = classProvider.createGuiButton(2, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 96, "Clipboard"));
@@ -57,7 +61,8 @@ public class GuiAdd extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
+	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
+	{
 		representedScreen.drawBackground(0);
 		RenderUtils.drawRect(30, 30, representedScreen.getWidth() - 30, representedScreen.getHeight() - 30, Integer.MIN_VALUE);
 
@@ -76,16 +81,19 @@ public class GuiAdd extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void actionPerformed(final IGuiButton button) throws IOException {
+	public void actionPerformed(final IGuiButton button) throws IOException
+	{
 		if (!button.getEnabled())
 			return;
 
-		switch (button.getId()) {
+		switch (button.getId())
+		{
 			case 0:
 				mc.displayGuiScreen(prevGui.representedScreen);
 				break;
 			case 1:
-				if (LiquidBounce.fileManager.accountsConfig.accountExists(username.getText())) {
+				if (LiquidBounce.fileManager.accountsConfig.accountExists(username.getText()))
+				{
 					status = "\u00A7cThe account has already been added.";
 					break;
 				}
@@ -93,18 +101,21 @@ public class GuiAdd extends WrappedGuiScreen {
 				addAccount(username.getText(), password.getText());
 				break;
 			case 2:
-				try {
-					final String clipboardData = (String) Toolkit.getDefaultToolkit().getSystemClipboard()
-							.getData(DataFlavor.stringFlavor);
+				try
+				{
+					final String clipboardData = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
 					final String[] accountData = clipboardData.split(":", 2);
 
-					if (!clipboardData.contains(":") || accountData.length != 2) {
+					if (!clipboardData.contains(":") || accountData.length != 2)
+					{
 						status = "\u00A7cInvalid clipboard data. (Use: E-Mail:Password)";
 						return;
 					}
 
 					addAccount(accountData[0], accountData[1]);
-				} catch (final UnsupportedFlavorException e) {
+				}
+				catch (final UnsupportedFlavorException e)
+				{
 					status = "\u00A7cClipboard flavor unsupported!";
 					ClientUtils.getLogger().error("Failed to read data from clipboard.", e);
 				}
@@ -113,8 +124,10 @@ public class GuiAdd extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void keyTyped(final char typedChar, final int keyCode) throws IOException {
-		switch (keyCode) {
+	public void keyTyped(final char typedChar, final int keyCode) throws IOException
+	{
+		switch (keyCode)
+		{
 			case Keyboard.KEY_ESCAPE:
 				mc.displayGuiScreen(prevGui.representedScreen);
 				return;
@@ -135,14 +148,16 @@ public class GuiAdd extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException
+	{
 		username.mouseClicked(mouseX, mouseY, mouseButton);
 		password.mouseClicked(mouseX, mouseY, mouseButton);
 		super.mouseClicked(mouseX, mouseY, mouseButton);
 	}
 
 	@Override
-	public void updateScreen() {
+	public void updateScreen()
+	{
 		username.updateCursorCounter();
 		password.updateCursorCounter();
 
@@ -150,12 +165,15 @@ public class GuiAdd extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void onGuiClosed() {
+	public void onGuiClosed()
+	{
 		Keyboard.enableRepeatEvents(false);
 	}
 
-	private void addAccount(final String name, final String password) {
-		if (LiquidBounce.fileManager.accountsConfig.accountExists(name)) {
+	private void addAccount(final String name, final String password)
+	{
+		if (LiquidBounce.fileManager.accountsConfig.accountExists(name))
+		{
 			status = "\u00A7cThe account has already been added.";
 			return;
 		}
@@ -165,20 +183,22 @@ public class GuiAdd extends WrappedGuiScreen {
 
 		final MinecraftAccount account = new MinecraftAccount(name, password);
 
-		new Thread(() -> {
-			if (!account.isCracked()) {
+		new Thread(() ->
+		{
+			if (!account.isCracked())
+			{
 				status = "\u00A7aChecking...";
 
-				try {
+				try
+				{
 					final EnumAltService oldService = GuiAltManager.altService.getCurrentService();
 
-					if (oldService != EnumAltService.MOJANG) {
+					if (oldService != EnumAltService.MOJANG)
+					{
 						GuiAltManager.altService.switchService(EnumAltService.MOJANG);
 					}
 
-					final YggdrasilUserAuthentication userAuthentication = (YggdrasilUserAuthentication)
-							new YggdrasilAuthenticationService(Proxy.NO_PROXY, "")
-									.createUserAuthentication(Agent.MINECRAFT);
+					final YggdrasilUserAuthentication userAuthentication = (YggdrasilUserAuthentication) new YggdrasilAuthenticationService(Proxy.NO_PROXY, "").createUserAuthentication(Agent.MINECRAFT);
 
 					userAuthentication.setUsername(account.getName());
 					userAuthentication.setPassword(account.getPassword());
@@ -188,14 +208,15 @@ public class GuiAdd extends WrappedGuiScreen {
 
 					if (oldService == EnumAltService.THEALTENING)
 						GuiAltManager.altService.switchService(EnumAltService.THEALTENING);
-				} catch (final NullPointerException | AuthenticationException | NoSuchFieldException | IllegalAccessException e) {
+				}
+				catch (final NullPointerException | AuthenticationException | NoSuchFieldException | IllegalAccessException e)
+				{
 					status = "\u00A7cThe account doesn't work.";
 					addButton.setEnabled(true);
 					clipboardButton.setEnabled(true);
 					return;
 				}
 			}
-
 
 			LiquidBounce.fileManager.accountsConfig.getAccounts().add(account);
 			LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);

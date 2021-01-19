@@ -7,7 +7,8 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.elements;
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 
-public class Element extends MinecraftInstance {
+public class Element extends MinecraftInstance
+{
 
 	private int x;
 	private int y;
@@ -15,57 +16,71 @@ public class Element extends MinecraftInstance {
 	private int height;
 	private boolean visible;
 
-	public void setLocation(final int x, final int y) {
+	public void setLocation(final int x, final int y)
+	{
 		this.x = x;
 		this.y = y;
 	}
 
-	public void drawScreen(final int mouseX, final int mouseY, final float button) {
+	public void drawScreen(final int mouseX, final int mouseY, final float button)
+	{
 	}
 
-	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton)
+	{
 	}
 
-	public void mouseReleased(final int mouseX, final int mouseY, final int state) {
+	public void mouseReleased(final int mouseX, final int mouseY, final int state)
+	{
 	}
 
-	public int getX() {
+	public int getX()
+	{
 		return x;
 	}
 
-	public void setX(final int x) {
+	public void setX(final int x)
+	{
 		this.x = x;
 	}
 
-	public int getY() {
+	public int getY()
+	{
 		return y;
 	}
 
-	public void setY(final int y) {
+	public void setY(final int y)
+	{
 		this.y = y;
 	}
 
-	public int getWidth() {
+	public int getWidth()
+	{
 		return width;
 	}
 
-	public void setWidth(final int width) {
+	public void setWidth(final int width)
+	{
 		this.width = width;
 	}
 
-	public int getHeight() {
+	public int getHeight()
+	{
 		return height;
 	}
 
-	public void setHeight(final int height) {
+	public void setHeight(final int height)
+	{
 		this.height = height;
 	}
 
-	public boolean isVisible() {
+	public boolean isVisible()
+	{
 		return visible;
 	}
 
-	public void setVisible(final boolean visible) {
+	public void setVisible(final boolean visible)
+	{
 		this.visible = visible;
 	}
 }

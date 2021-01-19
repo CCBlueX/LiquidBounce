@@ -5,59 +5,71 @@
  */
 package net.ccbluex.liquidbounce.features.command.shortcuts
 
-object ShortcutParser {
-    private val SEPARATOR = ";".codePointAt(0)
+object ShortcutParser
+{
+	private val SEPARATOR = ";".codePointAt(0)
 
-    fun parse(script: String): List<List<String>> {
-        val tokens = tokenize(script)
+	fun parse(script: String): List<List<String>>
+	{
+		val tokens = tokenize(script)
 
-        val parsed = mutableListOf<List<String>>()
-        val tmpStatement = mutableListOf<String>()
+		val parsed = mutableListOf<List<String>>()
+		val tmpStatement = mutableListOf<String>()
 
-        for (token in tokens) {
-            when (token) {
-                is Literal -> tmpStatement += token.literal
-                is StatementEnd -> {
-                    parsed += tmpStatement.toList()
+		for (token in tokens)
+		{
+			when (token)
+			{
+				is Literal -> tmpStatement += token.literal
 
-                    tmpStatement.clear()
-                }
-            }
-        }
+				is StatementEnd ->
+				{
+					parsed += tmpStatement.toList()
 
-        if (tmpStatement.isNotEmpty())
-            throw IllegalArgumentException("Unexpected end of statement!")
+					tmpStatement.clear()
+				}
+			}
+		}
 
-        return parsed
-    }
+		if (tmpStatement.isNotEmpty()) throw IllegalArgumentException("Unexpected end of statement!")
 
-    private fun tokenize(script: String): List<Token> {
-        val tokens = mutableListOf<Token>()
-        val tokenBuf = StringBuilder()
+		return parsed
+	}
 
-        for (code in script.codePoints()) {
-            when {
-                Character.isWhitespace(code) -> finishLiteral(tokens, tokenBuf)
-                code == SEPARATOR -> {
-                    finishLiteral(tokens, tokenBuf)
+	private fun tokenize(script: String): List<Token>
+	{
+		val tokens = mutableListOf<Token>()
+		val tokenBuf = StringBuilder()
 
-                    tokens += StatementEnd()
-                }
-                else -> tokenBuf.appendCodePoint(code)
-            }
-        }
+		for (code in script.codePoints())
+		{
+			when
+			{
+				Character.isWhitespace(code) -> finishLiteral(tokens, tokenBuf)
 
-        if (tokenBuf.isNotEmpty())
-            throw IllegalArgumentException("Unexpected end of literal!")
+				code == SEPARATOR ->
+				{
+					finishLiteral(tokens, tokenBuf)
 
-        return tokens
-    }
+					tokens += StatementEnd()
+				}
 
-    private fun finishLiteral(tokens: MutableList<Token>, tokenBuf: StringBuilder) {
-        if (tokenBuf.isNotEmpty()) {
-            tokens += Literal(tokenBuf.toString())
+				else -> tokenBuf.appendCodePoint(code)
+			}
+		}
 
-            tokenBuf.clear()
-        }
-    }
+		if (tokenBuf.isNotEmpty()) throw IllegalArgumentException("Unexpected end of literal!")
+
+		return tokens
+	}
+
+	private fun finishLiteral(tokens: MutableList<Token>, tokenBuf: StringBuilder)
+	{
+		if (tokenBuf.isNotEmpty())
+		{
+			tokens += Literal(tokenBuf.toString())
+
+			tokenBuf.clear()
+		}
+	}
 }

@@ -17,86 +17,94 @@ import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import java.util.*
 
-class HeadsTab : WrappedCreativeTabs("Heads") {
+class HeadsTab : WrappedCreativeTabs("Heads")
+{
 
-    // List of heads
-    private val heads = ArrayList<IItemStack>()
+	// List of heads
+	private val heads = ArrayList<IItemStack>()
 
-    /**
-     * Constructor of heads tab
-     */
-    init {
-        representedType.backgroundImageName = "item_search.png"
+	/**
+	 * Constructor of heads tab
+	 */
+	init
+	{
+		representedType.backgroundImageName = "item_search.png"
 
-        loadHeads()
-    }
+		loadHeads()
+	}
 
-    /**
-     * Load all heads from the database
-     */
-    private fun loadHeads() {
-        try {
-            ClientUtils.getLogger().info("Loading heads...")
+	/**
+	 * Load all heads from the database
+	 */
+	private fun loadHeads()
+	{
+		try
+		{
+			ClientUtils.getLogger().info("Loading heads...")
 
-            val headsConfiguration = JsonParser().parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/heads.json"))
+			val headsConfiguration = JsonParser().parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/heads.json"))
 
-            if (!headsConfiguration.isJsonObject) return
+			if (!headsConfiguration.isJsonObject) return
 
-            val headsConf = headsConfiguration.asJsonObject
+			val headsConf = headsConfiguration.asJsonObject
 
-            if (headsConf.get("enabled").asBoolean) {
-                val url = headsConf.get("url").asString
+			if (headsConf.get("enabled").asBoolean)
+			{
+				val url = headsConf.get("url").asString
 
-                ClientUtils.getLogger().info("Loading heads from $url...")
+				ClientUtils.getLogger().info("Loading heads from $url...")
 
-                val headsElement = JsonParser().parse(HttpUtils.get(url))
+				val headsElement = JsonParser().parse(HttpUtils.get(url))
 
-                if (!headsElement.isJsonObject) {
-                    ClientUtils.getLogger().error("Something is wrong, the heads json is not a JsonObject!")
-                    return
-                }
+				if (!headsElement.isJsonObject)
+				{
+					ClientUtils.getLogger().error("Something is wrong, the heads json is not a JsonObject!")
+					return
+				}
 
-                val headsObject = headsElement.asJsonObject
+				val headsObject = headsElement.asJsonObject
 
-                for ((_, value) in headsObject.entrySet()) {
-                    val headElement = value.asJsonObject
+				for ((_, value) in headsObject.entrySet())
+				{
+					val headElement = value.asJsonObject
 
-                    heads.add(ItemUtils.createItem("skull 1 3 {display:{Name:\"${headElement.get("name").asString}\"},SkullOwner:{Id:\"${headElement.get("uuid").asString}\",Properties:{textures:[{Value:\"${headElement.get("value").asString}\"}]}}}"))
-                }
+					heads.add(ItemUtils.createItem("skull 1 3 {display:{Name:\"${headElement.get("name").asString}\"},SkullOwner:{Id:\"${headElement.get("uuid").asString}\",Properties:{textures:[{Value:\"${headElement.get("value").asString}\"}]}}}"))
+				}
 
-                ClientUtils.getLogger().info("Loaded " + heads.size + " heads from HeadDB.")
-            } else
-                ClientUtils.getLogger().info("Heads are disabled.")
-        } catch (e: Exception) {
-            ClientUtils.getLogger().error("Error while reading heads.", e)
-        }
-    }
+				ClientUtils.getLogger().info("Loaded " + heads.size + " heads from HeadDB.")
+			} else ClientUtils.getLogger().info("Heads are disabled.")
+		} catch (e: Exception)
+		{
+			ClientUtils.getLogger().error("Error while reading heads.", e)
+		}
+	}
 
-    /**
-     * Add all items to tab
-     *
-     * @param itemList list of tab items
-     */
-    override fun displayAllReleventItems(itemList: MutableList<IItemStack>) {
-        itemList.addAll(heads)
-    }
+	/**
+	 * Add all items to tab
+	 *
+	 * @param itemList list of tab items
+	 */
+	override fun displayAllReleventItems(itemList: MutableList<IItemStack>)
+	{
+		itemList.addAll(heads)
+	}
 
-    /**
-     * Return icon item of tab
-     *
-     * @return icon item
-     */
-    override fun getTabIconItem(): IItem = classProvider.getItemEnum(ItemType.SKULL)
+	/**
+	 * Return icon item of tab
+	 *
+	 * @return icon item
+	 */
+	override fun getTabIconItem(): IItem = classProvider.getItemEnum(ItemType.SKULL)
 
-    /**
-     * Return name of tab
-     *
-     * @return tab name
-     */
-    override fun getTranslatedTabLabel() = "Heads"
+	/**
+	 * Return name of tab
+	 *
+	 * @return tab name
+	 */
+	override fun getTranslatedTabLabel() = "Heads"
 
-    /**
-     * @return searchbar status
-     */
-    override fun hasSearchBar() = true
+	/**
+	 * @return searchbar status
+	 */
+	override fun hasSearchBar() = true
 }

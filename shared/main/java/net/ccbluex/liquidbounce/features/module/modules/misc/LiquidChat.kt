@@ -31,259 +31,297 @@ import java.util.regex.Pattern
 import kotlin.concurrent.thread
 
 @ModuleInfo(name = "LiquidChat", description = "Allows you to chat with other LiquidBounce users.", category = ModuleCategory.MISC)
-class LiquidChat : Module() {
+class LiquidChat : Module()
+{
 
-    init {
-        state = true
-        array = false
-    }
+	init
+	{
+		state = true
+		array = false
+	}
 
-    val jwtValue = object : BoolValue("JWT", false) {
-        override fun onChanged(oldValue: Boolean, newValue: Boolean) {
-            if (state) {
-                state = false
-                state = true
-            }
-        }
-    }
+	val jwtValue = object : BoolValue("JWT", false)
+	{
+		override fun onChanged(oldValue: Boolean, newValue: Boolean)
+		{
+			if (state)
+			{
+				state = false
+				state = true
+			}
+		}
+	}
 
-    companion object {
-        var jwtToken = ""
-    }
+	companion object
+	{
+		var jwtToken = ""
+	}
 
-    val client = object : Client() {
+	val client = object : Client()
+	{
 
-        /**
-         * Handle connect to web socket
-         */
-        override fun onConnect() {
-            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Connecting to chat server...")
-        }
+		/**
+		 * Handle connect to web socket
+		 */
+		override fun onConnect()
+		{
+			ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Connecting to chat server...")
+		}
 
-        /**
-         * Handle connect to web socket
-         */
-        override fun onConnected() {
-            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Connected to chat server!")
-        }
+		/**
+		 * Handle connect to web socket
+		 */
+		override fun onConnected()
+		{
+			ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Connected to chat server!")
+		}
 
-        /**
-         * Handle handshake
-         */
-        override fun onHandshake(success: Boolean) {}
+		/**
+		 * Handle handshake
+		 */
+		override fun onHandshake(success: Boolean)
+		{
+		}
 
-        /**
-         * Handle disconnect
-         */
-        override fun onDisconnect() {
-            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cDisconnected from chat server!")
-        }
+		/**
+		 * Handle disconnect
+		 */
+		override fun onDisconnect()
+		{
+			ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cDisconnected from chat server!")
+		}
 
-        /**
-         * Handle logon to web socket with minecraft account
-         */
-        override fun onLogon() {
-            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Logging in...")
-        }
+		/**
+		 * Handle logon to web socket with minecraft account
+		 */
+		override fun onLogon()
+		{
+			ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Logging in...")
+		}
 
-        /**
-         * Handle incoming packets
-         */
-        override fun onPacket(packet: Packet) {
-            when (packet) {
-                is ClientMessagePacket -> {
-                    val thePlayer = mc.thePlayer
+		/**
+		 * Handle incoming packets
+		 */
+		override fun onPacket(packet: Packet)
+		{
+			when (packet)
+			{
+				is ClientMessagePacket ->
+				{
+					val thePlayer = mc.thePlayer
 
-                    if (thePlayer == null) {
-                        ClientUtils.getLogger().info("[LiquidChat] ${packet.user.name}: ${packet.content}")
-                        return
-                    }
+					if (thePlayer == null)
+					{
+						ClientUtils.getLogger().info("[LiquidChat] ${packet.user.name}: ${packet.content}")
+						return
+					}
 
-                    val chatComponent = classProvider.createChatComponentText("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79${packet.user.name}: ")
-                    val messageComponent = toChatComponent(packet.content)
-                    chatComponent.appendSibling(messageComponent)
+					val chatComponent = classProvider.createChatComponentText("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79${packet.user.name}: ")
+					val messageComponent = toChatComponent(packet.content)
+					chatComponent.appendSibling(messageComponent)
 
-                    thePlayer.addChatMessage(chatComponent)
-                }
-                is ClientPrivateMessagePacket -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7c(P)\u00A79 ${packet.user.name}: \u00A77${packet.content}")
-                is ClientErrorPacket -> {
-                    val message = when (packet.message) {
-                        "NotSupported" -> "This method is not supported!"
-                        "LoginFailed" -> "Login Failed!"
-                        "NotLoggedIn" -> "You must be logged in to use the chat! Enable LiquidChat."
-                        "AlreadyLoggedIn" -> "You are already logged in!"
-                        "MojangRequestMissing" -> "Mojang request missing!"
-                        "NotPermitted" -> "You are missing the required permissions!"
-                        "NotBanned" -> "You are not banned!"
-                        "Banned" -> "You are banned!"
-                        "RateLimited" -> "You have been rate limited. Please try again later."
-                        "PrivateMessageNotAccepted" -> "Private message not accepted!"
-                        "EmptyMessage" -> "You are trying to send an empty message!"
-                        "MessageTooLong" -> "Message is too long!"
-                        "InvalidCharacter" -> "Message contains a non-ASCII character!"
-                        "InvalidId" -> "The given ID is invalid!"
-                        "Internal" -> "An internal server error occurred!"
-                        else -> packet.message
-                    }
+					thePlayer.addChatMessage(chatComponent)
+				}
 
-                    ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cError: \u00A77$message")
-                }
-                is ClientSuccessPacket -> {
-                    when (packet.reason) {
-                        "Login" -> {
-                            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Logged in!")
+				is ClientPrivateMessagePacket -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7c(P)\u00A79 ${packet.user.name}: \u00A77${packet.content}")
 
-                            ClientUtils.displayChatMessage("====================================")
-                            ClientUtils.displayChatMessage("\u00A7c>> \u00A7lLiquidChat")
-                            ClientUtils.displayChatMessage("\u00A77Write message: \u00A7a.chat <message>")
-                            ClientUtils.displayChatMessage("\u00A77Write private message: \u00A7a.pchat <user> <message>")
-                            ClientUtils.displayChatMessage("====================================")
+				is ClientErrorPacket ->
+				{
+					val message = when (packet.message)
+					{
+						"NotSupported" -> "This method is not supported!"
+						"LoginFailed" -> "Login Failed!"
+						"NotLoggedIn" -> "You must be logged in to use the chat! Enable LiquidChat."
+						"AlreadyLoggedIn" -> "You are already logged in!"
+						"MojangRequestMissing" -> "Mojang request missing!"
+						"NotPermitted" -> "You are missing the required permissions!"
+						"NotBanned" -> "You are not banned!"
+						"Banned" -> "You are banned!"
+						"RateLimited" -> "You have been rate limited. Please try again later."
+						"PrivateMessageNotAccepted" -> "Private message not accepted!"
+						"EmptyMessage" -> "You are trying to send an empty message!"
+						"MessageTooLong" -> "Message is too long!"
+						"InvalidCharacter" -> "Message contains a non-ASCII character!"
+						"InvalidId" -> "The given ID is invalid!"
+						"Internal" -> "An internal server error occurred!"
+						else -> packet.message
+					}
 
-                            loggedIn = true
-                        }
-                        "Ban" -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Successfully banned user!")
-                        "Unban" -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Successfully unbanned user!")
-                    }
-                }
-                is ClientNewJWTPacket -> {
-                    jwtToken = packet.token
-                    jwtValue.set(true)
+					ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cError: \u00A77$message")
+				}
 
-                    state = false
-                    state = true
-                }
-            }
-        }
+				is ClientSuccessPacket ->
+				{
+					when (packet.reason)
+					{
+						"Login" ->
+						{
+							ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Logged in!")
 
-        /**
-         * Handle error
-         */
-        override fun onError(cause: Throwable) {
-            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7c\u00A7lError: \u00A77${cause.javaClass.name}: ${cause.message}")
-        }
-    }
+							ClientUtils.displayChatMessage("====================================")
+							ClientUtils.displayChatMessage("\u00A7c>> \u00A7lLiquidChat")
+							ClientUtils.displayChatMessage("\u00A77Write message: \u00A7a.chat <message>")
+							ClientUtils.displayChatMessage("\u00A77Write private message: \u00A7a.pchat <user> <message>")
+							ClientUtils.displayChatMessage("====================================")
 
-    private var loggedIn = false
+							loggedIn = true
+						}
 
-    private var loginThread: Thread? = null
+						"Ban" -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Successfully banned user!")
+						"Unban" -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Successfully unbanned user!")
+					}
+				}
 
-    private val connectTimer = MSTimer()
+				is ClientNewJWTPacket ->
+				{
+					jwtToken = packet.token
+					jwtValue.set(true)
 
-    override fun onDisable() {
-        loggedIn = false
-        client.disconnect()
-    }
+					state = false
+					state = true
+				}
+			}
+		}
 
-    @EventTarget
-    fun onSession(sessionEvent: SessionEvent) {
-        client.disconnect()
-        connect()
-    }
+		/**
+		 * Handle error
+		 */
+		override fun onError(cause: Throwable)
+		{
+			ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7c\u00A7lError: \u00A77${cause.javaClass.name}: ${cause.message}")
+		}
+	}
 
-    @EventTarget
-    fun onUpdate(updateEvent: UpdateEvent) {
-        if (client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
+	private var loggedIn = false
 
-        if (connectTimer.hasTimePassed(5000)) {
-            connect()
-            connectTimer.reset()
-        }
-    }
+	private var loginThread: Thread? = null
 
-    private fun connect() {
-        if (client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
+	private val connectTimer = MSTimer()
 
-        if (jwtValue.get() && jwtToken.isEmpty()) {
-            ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cError: \u00A77No token provided!")
-            state = false
-            return
-        }
+	override fun onDisable()
+	{
+		loggedIn = false
+		client.disconnect()
+	}
 
-        loggedIn = false
+	@EventTarget
+	fun onSession(sessionEvent: SessionEvent)
+	{
+		client.disconnect()
+		connect()
+	}
 
-        loginThread = thread {
-            try {
-                client.connect()
+	@EventTarget
+	fun onUpdate(updateEvent: UpdateEvent)
+	{
+		if (client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
 
-                if (jwtValue.get())
-                    client.loginJWT(jwtToken)
-                else if (UserUtils.isValidToken(mc.session.token))
-                    client.loginMojang()
-            } catch (cause: Exception) {
-                ClientUtils.getLogger().error("LiquidChat error", cause)
-                ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cError: \u00A77${cause.javaClass.name}: ${cause.message}")
-            }
+		if (connectTimer.hasTimePassed(5000))
+		{
+			connect()
+			connectTimer.reset()
+		}
+	}
 
-            loginThread = null
-        }
-    }
+	private fun connect()
+	{
+		if (client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
 
-    /**
-     * Forge Hooks
-     *
-     * @author Forge
-     */
+		if (jwtValue.get() && jwtToken.isEmpty())
+		{
+			ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cError: \u00A77No token provided!")
+			state = false
+			return
+		}
 
-    private val urlPattern = Pattern.compile("((?:[a-z0-9]{2,}:\\/\\/)?(?:(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|(?:[-\\w_\\.]{1,}\\.[a-z]{2,}?))(?::[0-9]{1,5})?.*?(?=[!\"\u00A7 \n]|$))", Pattern.CASE_INSENSITIVE)
+		loggedIn = false
 
-    private fun toChatComponent(string: String): IIChatComponent {
-        var component: IIChatComponent? = null
-        val matcher = urlPattern.matcher(string)
-        var lastEnd = 0
+		loginThread = thread {
+			try
+			{
+				client.connect()
 
-        while (matcher.find()) {
-            val start = matcher.start()
-            val end = matcher.end()
+				if (jwtValue.get()) client.loginJWT(jwtToken)
+				else if (UserUtils.isValidToken(mc.session.token)) client.loginMojang()
+			} catch (cause: Exception)
+			{
+				ClientUtils.getLogger().error("LiquidChat error", cause)
+				ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cError: \u00A77${cause.javaClass.name}: ${cause.message}")
+			}
 
-            // Append the previous left overs.
-            val part = string.substring(lastEnd, start)
-            if (part.isNotEmpty()) {
-                if (component == null) {
-                    component = classProvider.createChatComponentText(part)
-                    component.chatStyle.color = WEnumChatFormatting.GRAY
-                } else
-                    component.appendText(part)
-            }
+			loginThread = null
+		}
+	}
 
-            lastEnd = end
+	/**
+	 * Forge Hooks
+	 *
+	 * @author Forge
+	 */
 
-            val url = string.substring(start, end)
+	private val urlPattern = Pattern.compile("((?:[a-z0-9]{2,}:\\/\\/)?(?:(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|(?:[-\\w_\\.]{1,}\\.[a-z]{2,}?))(?::[0-9]{1,5})?.*?(?=[!\"\u00A7 \n]|$))", Pattern.CASE_INSENSITIVE)
 
-            try {
-                if (URI(url).scheme != null) {
-                    // Set the click event and append the link.
-                    val link: IIChatComponent = classProvider.createChatComponentText(url)
+	private fun toChatComponent(string: String): IIChatComponent
+	{
+		var component: IIChatComponent? = null
+		val matcher = urlPattern.matcher(string)
+		var lastEnd = 0
 
-                    link.chatStyle.chatClickEvent = classProvider.createClickEvent(IClickEvent.WAction.OPEN_URL, url)
-                    link.chatStyle.underlined = true
-                    link.chatStyle.color = WEnumChatFormatting.GRAY
+		while (matcher.find())
+		{
+			val start = matcher.start()
+			val end = matcher.end()
 
-                    if (component == null)
-                        component = link
-                    else
-                        component.appendSibling(link)
-                    continue
-                }
-            } catch (e: URISyntaxException) {
-            }
+			// Append the previous left overs.
+			val part = string.substring(lastEnd, start)
+			if (part.isNotEmpty())
+			{
+				if (component == null)
+				{
+					component = classProvider.createChatComponentText(part)
+					component.chatStyle.color = WEnumChatFormatting.GRAY
+				} else component.appendText(part)
+			}
 
-            if (component == null) {
-                component = classProvider.createChatComponentText(url)
-                component.chatStyle.color = WEnumChatFormatting.GRAY
-            } else
-                component.appendText(url)
-        }
+			lastEnd = end
 
-        // Append the rest of the message.
-        val end = string.substring(lastEnd)
+			val url = string.substring(start, end)
 
-        if (component == null) {
-            component = classProvider.createChatComponentText(end)
-            component.chatStyle.color = WEnumChatFormatting.GRAY
-        } else if (end.isNotEmpty())
-            component.appendText(string.substring(lastEnd))
+			try
+			{
+				if (URI(url).scheme != null)
+				{ // Set the click event and append the link.
+					val link: IIChatComponent = classProvider.createChatComponentText(url)
 
-        return component
-    }
+					link.chatStyle.chatClickEvent = classProvider.createClickEvent(IClickEvent.WAction.OPEN_URL, url)
+					link.chatStyle.underlined = true
+					link.chatStyle.color = WEnumChatFormatting.GRAY
+
+					if (component == null) component = link
+					else component.appendSibling(link)
+					continue
+				}
+			} catch (e: URISyntaxException)
+			{
+			}
+
+			if (component == null)
+			{
+				component = classProvider.createChatComponentText(url)
+				component.chatStyle.color = WEnumChatFormatting.GRAY
+			} else component.appendText(url)
+		}
+
+		// Append the rest of the message.
+		val end = string.substring(lastEnd)
+
+		if (component == null)
+		{
+			component = classProvider.createChatComponentText(end)
+			component.chatStyle.color = WEnumChatFormatting.GRAY
+		} else if (end.isNotEmpty()) component.appendText(string.substring(lastEnd))
+
+		return component
+	}
 
 }

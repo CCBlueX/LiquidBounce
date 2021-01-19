@@ -16,82 +16,86 @@ import net.ccbluex.liquidbounce.file.FileManager
 import java.io.File
 import java.io.IOException
 
-class ShortcutsConfig(file: File) : FileConfig(file) {
+class ShortcutsConfig(file: File) : FileConfig(file)
+{
 
-    /**
-     * Load config from file
-     *
-     * @throws IOException
-     */
-    override fun loadConfig() {
-        val jsonElement = JsonParser().parse(file.readText())
+	/**
+	 * Load config from file
+	 *
+	 * @throws IOException
+	 */
+	override fun loadConfig()
+	{
+		val jsonElement = JsonParser().parse(file.readText())
 
-        if (jsonElement !is JsonArray)
-            return
+		if (jsonElement !is JsonArray) return
 
-        for (shortcutJson in jsonElement) {
-            if (shortcutJson !is JsonObject)
-                continue
+		for (shortcutJson in jsonElement)
+		{
+			if (shortcutJson !is JsonObject) continue
 
-            val name = shortcutJson.get("name")?.asString ?: continue
-            val scriptJson = shortcutJson.get("script")?.asJsonArray ?: continue
+			val name = shortcutJson.get("name")?.asString ?: continue
+			val scriptJson = shortcutJson.get("script")?.asJsonArray ?: continue
 
-            val script = mutableListOf<Pair<Command, Array<String>>>()
+			val script = mutableListOf<Pair<Command, Array<String>>>()
 
-            for (scriptCommand in scriptJson) {
-                if (scriptCommand !is JsonObject)
-                    continue
+			for (scriptCommand in scriptJson)
+			{
+				if (scriptCommand !is JsonObject) continue
 
-                val commandName = scriptCommand.get("name")?.asString ?: continue
-                val arguments = scriptCommand.get("arguments")?.asJsonArray ?: continue
+				val commandName = scriptCommand.get("name")?.asString ?: continue
+				val arguments = scriptCommand.get("arguments")?.asJsonArray ?: continue
 
-                val command = LiquidBounce.commandManager.getCommand(commandName) ?: continue
+				val command = LiquidBounce.commandManager.getCommand(commandName) ?: continue
 
-                script.add(Pair(command, arguments.map { it.asString }.toTypedArray()))
-            }
+				script.add(Pair(command, arguments.map { it.asString }.toTypedArray()))
+			}
 
-            LiquidBounce.commandManager.registerCommand(Shortcut(name, script))
-        }
-    }
+			LiquidBounce.commandManager.registerCommand(Shortcut(name, script))
+		}
+	}
 
-    /**
-     * Save config to file
-     *
-     * @throws IOException
-     */
-    override fun saveConfig() {
-        val jsonArray = JsonArray()
+	/**
+	 * Save config to file
+	 *
+	 * @throws IOException
+	 */
+	override fun saveConfig()
+	{
+		val jsonArray = JsonArray()
 
-        for (command in LiquidBounce.commandManager.commands) {
-            if (command !is Shortcut)
-                continue
+		for (command in LiquidBounce.commandManager.commands)
+		{
+			if (command !is Shortcut) continue
 
-            val jsonCommand = JsonObject()
-            jsonCommand.addProperty("name", command.command)
+			val jsonCommand = JsonObject()
+			jsonCommand.addProperty("name", command.command)
 
-            val scriptArray = JsonArray()
+			val scriptArray = JsonArray()
 
-            for (pair in command.script) {
-                val pairObject = JsonObject()
+			for (pair in command.script)
+			{
+				val pairObject = JsonObject()
 
-                pairObject.addProperty("name", pair.first.command)
+				pairObject.addProperty("name", pair.first.command)
 
-                val argumentsObject = JsonArray()
-                for (argument in pair.second) {
-                    argumentsObject.add(argument)
-                }
+				val argumentsObject = JsonArray()
+				for (argument in pair.second)
+				{
+					argumentsObject.add(argument)
+				}
 
-                pairObject.add("arguments", argumentsObject)
+				pairObject.add("arguments", argumentsObject)
 
-                scriptArray.add(pairObject)
-            }
+				scriptArray.add(pairObject)
+			}
 
-            jsonCommand.add("script", scriptArray)
+			jsonCommand.add("script", scriptArray)
 
-            jsonArray.add(jsonCommand)
-        }
+			jsonArray.add(jsonCommand)
+		}
 
-        file.writeText(FileManager.PRETTY_GSON.toJson(jsonArray))
-    }
+		file.writeText(FileManager.PRETTY_GSON.toJson(jsonArray))
+	}
 
 }

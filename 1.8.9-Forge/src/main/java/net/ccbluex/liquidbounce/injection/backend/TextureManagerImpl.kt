@@ -11,14 +11,16 @@ import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.ITextureMana
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.minecraft.client.renderer.texture.TextureManager
 
-class TextureManagerImpl(val wrapped: TextureManager) : ITextureManager {
-    override fun loadTexture(textureLocation: IResourceLocation, textureObj: IAbstractTexture): Boolean = wrapped.loadTexture(textureLocation.unwrap(), textureObj.unwrap())
+class TextureManagerImpl(val wrapped: TextureManager) : ITextureManager
+{
+	override fun loadTexture(textureLocation: IResourceLocation, textureObj: IAbstractTexture): Boolean = wrapped.loadTexture(textureLocation.unwrap(), textureObj.unwrap())
 
-    override fun bindTexture(image: IResourceLocation) = wrapped.bindTexture(image.unwrap())
+	override fun bindTexture(image: IResourceLocation) = wrapped.bindTexture(image.unwrap())
 
-    override fun equals(other: Any?): Boolean {
-        return other is TextureManagerImpl && other.wrapped == this.wrapped
-    }
+	override fun equals(other: Any?): Boolean
+	{
+		return other is TextureManagerImpl && other.wrapped == this.wrapped
+	}
 }
 
 inline fun ITextureManager.unwrap(): TextureManager = (this as TextureManagerImpl).wrapped

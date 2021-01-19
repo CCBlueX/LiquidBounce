@@ -24,128 +24,123 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "AutoPot", description = "Automatically throws healing potions.", category = ModuleCategory.COMBAT)
-class AutoPot : Module() {
+class AutoPot : Module()
+{
 
-    private val healthValue = FloatValue("Health", 15F, 1F, 20F)
-    private val delayValue = IntegerValue("Delay", 500, 500, 1000)
+	private val healthValue = FloatValue("Health", 15F, 1F, 20F)
+	private val delayValue = IntegerValue("Delay", 500, 500, 1000)
 
-    private val openInventoryValue = BoolValue("OpenInv", false)
-    private val simulateInventory = BoolValue("SimulateInventory", true)
+	private val openInventoryValue = BoolValue("OpenInv", false)
+	private val simulateInventory = BoolValue("SimulateInventory", true)
 
-    private val groundDistanceValue = FloatValue("GroundDistance", 2F, 0F, 5F)
-    private val modeValue = ListValue("Mode", arrayOf("Normal", "Jump", "Port"), "Normal")
+	private val groundDistanceValue = FloatValue("GroundDistance", 2F, 0F, 5F)
+	private val modeValue = ListValue("Mode", arrayOf("Normal", "Jump", "Port"), "Normal")
 
-    private val msTimer = MSTimer()
-    private var potion = -1
+	private val msTimer = MSTimer()
+	private var potion = -1
 
-    @EventTarget
-    fun onMotion(motionEvent: MotionEvent) {
-        if (!msTimer.hasTimePassed(delayValue.get().toLong()) || mc.playerController.isInCreativeMode)
-            return
+	@EventTarget
+	fun onMotion(motionEvent: MotionEvent)
+	{
+		if (!msTimer.hasTimePassed(delayValue.get().toLong()) || mc.playerController.isInCreativeMode) return
 
-        val thePlayer = mc.thePlayer ?: return
+		val thePlayer = mc.thePlayer ?: return
 
-        when (motionEvent.eventState) {
-            PRE -> {
-                // Hotbar Potion
-                val potionInHotbar = findPotion(36, 45)
+		when (motionEvent.eventState)
+		{
+			PRE ->
+			{ // Hotbar Potion
+				val potionInHotbar = findPotion(36, 45)
 
-                if (thePlayer.health <= healthValue.get() && potionInHotbar != -1) {
-                    if (thePlayer.onGround) {
-                        when (modeValue.get().toLowerCase()) {
-                            "jump" -> thePlayer.jump()
-                            "port" -> thePlayer.moveEntity(0.0, 0.42, 0.0)
-                        }
-                    }
+				if (thePlayer.health <= healthValue.get() && potionInHotbar != -1)
+				{
+					if (thePlayer.onGround)
+					{
+						when (modeValue.get().toLowerCase())
+						{
+							"jump" -> thePlayer.jump()
+							"port" -> thePlayer.moveEntity(0.0, 0.42, 0.0)
+						}
+					}
 
-                    // Prevent throwing potions into the void
-                    val fallingPlayer = FallingPlayer(
-                            thePlayer.posX,
-                            thePlayer.posY,
-                            thePlayer.posZ,
-                            thePlayer.motionX,
-                            thePlayer.motionY,
-                            thePlayer.motionZ,
-                            thePlayer.rotationYaw,
-                            thePlayer.moveStrafing,
-                            thePlayer.moveForward
-                    )
+					// Prevent throwing potions into the void
+					val fallingPlayer = FallingPlayer(
+						thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward
+					)
 
-                    val collisionBlock = fallingPlayer.findCollision(20)?.pos
+					val collisionBlock = fallingPlayer.findCollision(20)?.pos
 
-                    if (thePlayer.posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get())
-                        return
+					if (thePlayer.posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get()) return
 
-                    potion = potionInHotbar
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(potion - 36))
+					potion = potionInHotbar
+					mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(potion - 36))
 
-                    if (thePlayer.rotationPitch <= 80F) {
-                        RotationUtils.setTargetRotation(Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)))
-                    }
-                    return
-                }
+					if (thePlayer.rotationPitch <= 80F)
+					{
+						RotationUtils.setTargetRotation(Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)))
+					}
+					return
+				}
 
-                // Inventory Potion -> Hotbar Potion
-                val potionInInventory = findPotion(9, 36)
-                if (potionInInventory != -1 && InventoryUtils.hasSpaceHotbar()) {
-                    if (openInventoryValue.get() && !classProvider.isGuiInventory(mc.currentScreen))
-                        return
+				// Inventory Potion -> Hotbar Potion
+				val potionInInventory = findPotion(9, 36)
+				if (potionInInventory != -1 && InventoryUtils.hasSpaceHotbar())
+				{
+					if (openInventoryValue.get() && !classProvider.isGuiInventory(mc.currentScreen)) return
 
-                    val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
+					val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
 
-                    if (openInventory)
-                        mc.netHandler.addToSendQueue(createOpenInventoryPacket())
+					if (openInventory) mc.netHandler.addToSendQueue(createOpenInventoryPacket())
 
-                    mc.playerController.windowClick(0, potionInInventory, 0, 1, thePlayer)
+					mc.playerController.windowClick(0, potionInInventory, 0, 1, thePlayer)
 
-                    if (openInventory)
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
+					if (openInventory) mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
 
-                    msTimer.reset()
-                }
-            }
-            POST -> {
-                if (potion >= 0 && RotationUtils.serverRotation.pitch >= 75F) {
-                    val itemStack = thePlayer.inventory.getStackInSlot(potion)
+					msTimer.reset()
+				}
+			}
 
-                    if (itemStack != null) {
-                        mc.netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+			POST ->
+			{
+				if (potion >= 0 && RotationUtils.serverRotation.pitch >= 75F)
+				{
+					val itemStack = thePlayer.inventory.getStackInSlot(potion)
 
-                        msTimer.reset()
-                    }
+					if (itemStack != null)
+					{
+						mc.netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
+						mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
-                    potion = -1
-                }
-            }
-        }
-    }
+						msTimer.reset()
+					}
 
-    private fun findPotion(startSlot: Int, endSlot: Int): Int {
-        val thePlayer = mc.thePlayer!!
+					potion = -1
+				}
+			}
+		}
+	}
 
-        for (i in startSlot until endSlot) {
-            val stack = thePlayer.inventoryContainer.getSlot(i).stack
+	private fun findPotion(startSlot: Int, endSlot: Int): Int
+	{
+		val thePlayer = mc.thePlayer!!
 
-            if (stack == null || !classProvider.isItemPotion(stack.item) || !stack.isSplash())
-                continue
+		for (i in startSlot until endSlot)
+		{
+			val stack = thePlayer.inventoryContainer.getSlot(i).stack
 
-            val itemPotion = stack.item!!.asItemPotion()
+			if (stack == null || !classProvider.isItemPotion(stack.item) || !stack.isSplash()) continue
 
-            for (potionEffect in itemPotion.getEffects(stack))
-                if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.HEAL).id)
-                    return i
+			val itemPotion = stack.item!!.asItemPotion()
 
-            if (!thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.REGENERATION)))
-                for (potionEffect in itemPotion.getEffects(stack))
-                    if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.REGENERATION).id)
-                        return i
-        }
+			for (potionEffect in itemPotion.getEffects(stack)) if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.HEAL).id) return i
 
-        return -1
-    }
+			if (!thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.REGENERATION))) for (potionEffect in itemPotion.getEffects(stack)) if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.REGENERATION).id) return i
+		}
 
-    override val tag: String?
-        get() = healthValue.get().toString()
+		return -1
+	}
+
+	override val tag: String?
+		get() = healthValue.get().toString()
 
 }

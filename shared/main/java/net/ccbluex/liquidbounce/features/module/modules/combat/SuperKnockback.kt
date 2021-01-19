@@ -14,27 +14,28 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.IntegerValue
 
 @ModuleInfo(name = "SuperKnockback", description = "Increases knockback dealt to other entities.", category = ModuleCategory.COMBAT)
-class SuperKnockback : Module() {
+class SuperKnockback : Module()
+{
 
-    private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
+	private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
 
-    @EventTarget
-    fun onAttack(event: AttackEvent) {
-        if (classProvider.isEntityLivingBase(event.targetEntity)) {
-            if (event.targetEntity!!.asEntityLivingBase().hurtTime > hurtTimeValue.get())
-                return
+	@EventTarget
+	fun onAttack(event: AttackEvent)
+	{
+		if (classProvider.isEntityLivingBase(event.targetEntity))
+		{
+			if (event.targetEntity!!.asEntityLivingBase().hurtTime > hurtTimeValue.get()) return
 
-            val player = mc.thePlayer ?: return
+			val player = mc.thePlayer ?: return
 
-            if (player.sprinting)
-                mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.STOP_SPRINTING))
+			if (player.sprinting) mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.STOP_SPRINTING))
 
-            mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.START_SPRINTING))
-            mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.STOP_SPRINTING))
-            mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.START_SPRINTING))
-            player.sprinting = true
-            player.serverSprintState = true
-        }
-    }
+			mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.START_SPRINTING))
+			mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.STOP_SPRINTING))
+			mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.START_SPRINTING))
+			player.sprinting = true
+			player.serverSprintState = true
+		}
+	}
 
 }

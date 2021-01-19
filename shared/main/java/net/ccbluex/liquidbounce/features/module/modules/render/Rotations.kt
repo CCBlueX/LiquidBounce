@@ -20,50 +20,51 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 
 @ModuleInfo(name = "Rotations", description = "Allows you to see server-sided head and body rotations.", category = ModuleCategory.RENDER)
-class Rotations : Module() {
+class Rotations : Module()
+{
 
-    private val bodyValue = BoolValue("Body", true)
+	private val bodyValue = BoolValue("Body", true)
 
-    private var playerYaw: Float? = null
+	private var playerYaw: Float? = null
 
-    @EventTarget
-    fun onRender3D(event: Render3DEvent) {
-        if (RotationUtils.serverRotation != null && !bodyValue.get())
-            mc.thePlayer?.rotationYawHead = RotationUtils.serverRotation.yaw
-    }
+	@EventTarget
+	fun onRender3D(event: Render3DEvent)
+	{
+		if (RotationUtils.serverRotation != null && !bodyValue.get()) mc.thePlayer?.rotationYawHead = RotationUtils.serverRotation.yaw
+	}
 
-    @EventTarget
-    fun onPacket(event: PacketEvent) {
-        val thePlayer = mc.thePlayer
+	@EventTarget
+	fun onPacket(event: PacketEvent)
+	{
+		val thePlayer = mc.thePlayer
 
-        if (!bodyValue.get() || !shouldRotate() || thePlayer == null)
-            return
+		if (!bodyValue.get() || !shouldRotate() || thePlayer == null) return
 
-        val packet = event.packet
+		val packet = event.packet
 
-        if (classProvider.isCPacketPlayerPosLook(packet) || classProvider.isCPacketPlayerLook(packet)) {
-            val packetPlayer = packet.asCPacketPlayer()
+		if (classProvider.isCPacketPlayerPosLook(packet) || classProvider.isCPacketPlayerLook(packet))
+		{
+			val packetPlayer = packet.asCPacketPlayer()
 
-            playerYaw = packetPlayer.yaw
+			playerYaw = packetPlayer.yaw
 
-            thePlayer.renderYawOffset = packetPlayer.yaw
-            thePlayer.rotationYawHead = packetPlayer.yaw
-        } else {
-            if (playerYaw != null)
-                thePlayer.renderYawOffset = this.playerYaw!!
+			thePlayer.renderYawOffset = packetPlayer.yaw
+			thePlayer.rotationYawHead = packetPlayer.yaw
+		} else
+		{
+			if (playerYaw != null) thePlayer.renderYawOffset = this.playerYaw!!
 
-            thePlayer.rotationYawHead = thePlayer.renderYawOffset
-        }
-    }
+			thePlayer.rotationYawHead = thePlayer.renderYawOffset
+		}
+	}
 
-    private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module].state
+	private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module].state
 
-    private fun shouldRotate(): Boolean {
-        val killAura = LiquidBounce.moduleManager.getModule(KillAura::class.java) as KillAura
-        return getState(Scaffold::class.java) || getState(Tower::class.java) ||
-                (getState(KillAura::class.java) && killAura.target != null) ||
-                getState(Derp::class.java) || getState(BowAimbot::class.java) ||
-                getState(Fucker::class.java) || getState(CivBreak::class.java) || getState(Nuker::class.java) ||
-                getState(ChestAura::class.java)
-    }
+	private fun shouldRotate(): Boolean
+	{
+		val killAura = LiquidBounce.moduleManager.getModule(KillAura::class.java) as KillAura
+		return getState(Scaffold::class.java) || getState(Tower::class.java) || (getState(KillAura::class.java) && killAura.target != null) || getState(Derp::class.java) || getState(BowAimbot::class.java) || getState(Fucker::class.java) || getState(
+			CivBreak::class.java
+		) || getState(Nuker::class.java) || getState(ChestAura::class.java)
+	}
 }

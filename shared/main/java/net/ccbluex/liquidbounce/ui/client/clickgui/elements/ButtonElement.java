@@ -10,45 +10,54 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
-public class ButtonElement extends Element {
+public class ButtonElement extends Element
+{
 
 	protected String displayName;
 	protected int color = 0xffffff;
 
 	public int hoverTime;
 
-	public ButtonElement(final String displayName) {
+	public ButtonElement(final String displayName)
+	{
 		createButton(displayName);
 	}
 
-	public void createButton(final String displayName) {
+	public void createButton(final String displayName)
+	{
 		this.displayName = displayName;
 	}
 
 	@Override
-	public void drawScreen(final int mouseX, final int mouseY, final float button) {
+	public void drawScreen(final int mouseX, final int mouseY, final float button)
+	{
 		LiquidBounce.clickGui.style.drawButtonElement(mouseX, mouseY, this);
 		super.drawScreen(mouseX, mouseY, button);
 	}
 
 	@Override
-	public int getHeight() {
+	public int getHeight()
+	{
 		return 16;
 	}
 
-	public boolean isHovering(final int mouseX, final int mouseY) {
+	public boolean isHovering(final int mouseX, final int mouseY)
+	{
 		return mouseX >= getX() && mouseX <= getX() + getWidth() && mouseY >= getY() && mouseY <= getY() + 16;
 	}
 
-	public String getDisplayName() {
+	public String getDisplayName()
+	{
 		return displayName;
 	}
 
-	public void setColor(final int color) {
+	public void setColor(final int color)
+	{
 		this.color = color;
 	}
 
-	public int getColor() {
+	public int getColor()
+	{
 		return color;
 	}
 }

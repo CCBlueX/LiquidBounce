@@ -12,15 +12,16 @@ import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.inventory.ISlot
 import net.minecraft.client.gui.inventory.GuiChest
 
-class GuiChestImpl<T : GuiChest>(wrapped: T) : GuiScreenImpl<T>(wrapped), IGuiChest {
-    override val inventoryRows: Int
-        get() = wrapped.inventoryRows
-    override val lowerChestInventory: IIInventory?
-        get() = wrapped.lowerChestInventory?.wrap()
-    override val inventorySlots: IContainer?
-        get() = wrapped.inventorySlots?.wrap()
+class GuiChestImpl<T : GuiChest>(wrapped: T) : GuiScreenImpl<T>(wrapped), IGuiChest
+{
+	override val inventoryRows: Int
+		get() = wrapped.inventoryRows
+	override val lowerChestInventory: IIInventory?
+		get() = wrapped.lowerChestInventory?.wrap()
+	override val inventorySlots: IContainer?
+		get() = wrapped.inventorySlots?.wrap()
 
-    override fun handleMouseClick(slot: ISlot, slotNumber: Int, clickedButton: Int, clickType: Int) = wrapped.handleMouseClick(slot.unwrap(), slotNumber, clickedButton, clickType)
+	override fun handleMouseClick(slot: ISlot, slotNumber: Int, clickedButton: Int, clickType: Int) = wrapped.handleMouseClick(slot.unwrap(), slotNumber, clickedButton, clickType)
 
 }
 

@@ -5,188 +5,220 @@
  */
 package net.ccbluex.liquidbounce.file.configs;
 
-import com.google.gson.*;
-import net.ccbluex.liquidbounce.file.FileConfig;
-import net.ccbluex.liquidbounce.file.FileManager;
-import net.ccbluex.liquidbounce.utils.ClientUtils;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FriendsConfig extends FileConfig {
+import com.google.gson.*;
 
-    private final List<Friend> friends = new ArrayList<>();
+import net.ccbluex.liquidbounce.file.FileConfig;
+import net.ccbluex.liquidbounce.file.FileManager;
+import net.ccbluex.liquidbounce.utils.ClientUtils;
 
-    /**
-     * Constructor of config
-     *
-     * @param file of config
-     */
-    public FriendsConfig(final File file) {
-        super(file);
-    }
+public class FriendsConfig extends FileConfig
+{
 
-    /**
-     * Load config from file
-     *
-     * @throws IOException
-     */
-    @Override
-    protected void loadConfig() throws IOException {
-        clearFriends();
-        try {
-            final JsonElement jsonElement = new JsonParser().parse(new BufferedReader(new FileReader(getFile())));
+	private final List<Friend> friends = new ArrayList<>();
 
-            if (jsonElement instanceof JsonNull)
-                return;
+	/**
+	 * Constructor of config
+	 *
+	 * @param file
+	 *             of config
+	 */
+	public FriendsConfig(final File file)
+	{
+		super(file);
+	}
 
-            for (final JsonElement friendElement : jsonElement.getAsJsonArray()) {
-                final JsonObject friendObject = friendElement.getAsJsonObject();
-                addFriend(friendObject.get("playerName").getAsString(), friendObject.get("alias").getAsString());
-            }
+	/**
+	 * Load config from file
+	 *
+	 * @throws IOException
+	 */
+	@Override
+	protected void loadConfig() throws IOException
+	{
+		clearFriends();
+		try
+		{
+			final JsonElement jsonElement = new JsonParser().parse(new BufferedReader(new FileReader(getFile())));
 
-        } catch (final JsonSyntaxException | IllegalStateException ex) {
-            //When the JSON Parse fail, the client try to load and update the old config
-            ClientUtils.getLogger().info("[FileManager] Try to load old Friends config...");
+			if (jsonElement instanceof JsonNull)
+				return;
 
-            final BufferedReader bufferedReader = new BufferedReader(new FileReader(getFile()));
+			for (final JsonElement friendElement : jsonElement.getAsJsonArray())
+			{
+				final JsonObject friendObject = friendElement.getAsJsonObject();
+				addFriend(friendObject.get("playerName").getAsString(), friendObject.get("alias").getAsString());
+			}
 
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                if (!line.contains("{") && !line.contains("}")) {
-                    line = line.replace(" ", "").replace("\"", "").replace(",", "");
+		}
+		catch (final JsonSyntaxException | IllegalStateException ex)
+		{
+			// When the JSON Parse fail, the client try to load and update the old config
+			ClientUtils.getLogger().info("[FileManager] Try to load old Friends config...");
 
-                    if (line.contains(":")) {
-                        final String[] data = line.split(":");
-                        addFriend(data[0], data[1]);
-                    } else
-                        addFriend(line);
-                }
-            }
-            bufferedReader.close();
-            ClientUtils.getLogger().info("[FileManager] Loaded old Friends config...");
+			final BufferedReader bufferedReader = new BufferedReader(new FileReader(getFile()));
 
-            //Save the friends into a new valid JSON file
-            saveConfig();
-            ClientUtils.getLogger().info("[FileManager] Saved Friends to new config...");
-        }
-    }
+			String line;
+			while ((line = bufferedReader.readLine()) != null)
+			{
+				if (!line.contains("{") && !line.contains("}"))
+				{
+					line = line.replace(" ", "").replace("\"", "").replace(",", "");
 
-    /**
-     * Save config to file
-     *
-     * @throws IOException
-     */
-    @Override
-    protected void saveConfig() throws IOException {
-        final JsonArray jsonArray = new JsonArray();
+					if (line.contains(":"))
+					{
+						final String[] data = line.split(":");
+						addFriend(data[0], data[1]);
+					}
+					else
+						addFriend(line);
+				}
+			}
+			bufferedReader.close();
+			ClientUtils.getLogger().info("[FileManager] Loaded old Friends config...");
 
-        for (final Friend friend : getFriends()) {
-            final JsonObject friendObject = new JsonObject();
-            friendObject.addProperty("playerName", friend.getPlayerName());
-            friendObject.addProperty("alias", friend.getAlias());
-            jsonArray.add(friendObject);
-        }
+			// Save the friends into a new valid JSON file
+			saveConfig();
+			ClientUtils.getLogger().info("[FileManager] Saved Friends to new config...");
+		}
+	}
 
-        final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
-        printWriter.println(FileManager.PRETTY_GSON.toJson(jsonArray));
-        printWriter.close();
-    }
+	/**
+	 * Save config to file
+	 *
+	 * @throws IOException
+	 */
+	@Override
+	protected void saveConfig() throws IOException
+	{
+		final JsonArray jsonArray = new JsonArray();
 
-    /**
-     * Add friend to config
-     *
-     * @param playerName of friend
-     * @return of successfully added friend
-     */
-    public boolean addFriend(final String playerName) {
-        return addFriend(playerName, playerName);
-    }
+		for (final Friend friend : getFriends())
+		{
+			final JsonObject friendObject = new JsonObject();
+			friendObject.addProperty("playerName", friend.getPlayerName());
+			friendObject.addProperty("alias", friend.getAlias());
+			jsonArray.add(friendObject);
+		}
 
-    /**
-     * Add friend to config
-     *
-     * @param playerName of friend
-     * @param alias      of friend
-     * @return of successfully added friend
-     */
-    public boolean addFriend(final String playerName, final String alias) {
-        if(isFriend(playerName))
-            return false;
+		final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
+		printWriter.println(FileManager.PRETTY_GSON.toJson(jsonArray));
+		printWriter.close();
+	}
 
-        friends.add(new Friend(playerName, alias));
-        return true;
-    }
+	/**
+	 * Add friend to config
+	 *
+	 * @param  playerName
+	 *                    of friend
+	 * @return            of successfully added friend
+	 */
+	public boolean addFriend(final String playerName)
+	{
+		return addFriend(playerName, playerName);
+	}
 
-    /**
-     * Remove friend from config
-     *
-     * @param playerName of friend
-     */
-    public boolean removeFriend(final String playerName) {
-        if(!isFriend(playerName))
-            return false;
+	/**
+	 * Add friend to config
+	 *
+	 * @param  playerName
+	 *                    of friend
+	 * @param  alias
+	 *                    of friend
+	 * @return            of successfully added friend
+	 */
+	public boolean addFriend(final String playerName, final String alias)
+	{
+		if (isFriend(playerName))
+			return false;
 
-        friends.removeIf(friend -> friend.getPlayerName().equals(playerName));
-        return true;
-    }
+		friends.add(new Friend(playerName, alias));
+		return true;
+	}
 
-    /**
-     * Check is friend
-     *
-     * @param playerName of friend
-     * @return is friend
-     */
-    public boolean isFriend(final String playerName) {
-        for(final Friend friend : friends)
-            if(friend.getPlayerName().equals(playerName))
-                return true;
-        return false;
-    }
+	/**
+	 * Remove friend from config
+	 *
+	 * @param playerName
+	 *                   of friend
+	 */
+	public boolean removeFriend(final String playerName)
+	{
+		if (!isFriend(playerName))
+			return false;
 
-    /**
-     * Clear all friends from config
-     */
-    public void clearFriends() {
-        friends.clear();
-    }
+		friends.removeIf(friend -> friend.getPlayerName().equals(playerName));
+		return true;
+	}
 
-    /**
-     * Get friends
-     *
-     * @return list of friends
-     */
-    public List<Friend> getFriends() {
-        return friends;
-    }
+	/**
+	 * Check is friend
+	 *
+	 * @param  playerName
+	 *                    of friend
+	 * @return            is friend
+	 */
+	public boolean isFriend(final String playerName)
+	{
+		for (final Friend friend : friends)
+			if (friend.getPlayerName().equals(playerName))
+				return true;
+		return false;
+	}
 
-    public class Friend {
+	/**
+	 * Clear all friends from config
+	 */
+	public void clearFriends()
+	{
+		friends.clear();
+	}
 
-        private final String playerName;
-        private final String alias;
+	/**
+	 * Get friends
+	 *
+	 * @return list of friends
+	 */
+	public List<Friend> getFriends()
+	{
+		return friends;
+	}
 
-        /**
-         * @param playerName of friend
-         * @param alias      of friend
-         */
-        Friend(final String playerName, final String alias) {
-            this.playerName = playerName;
-            this.alias = alias;
-        }
+	public class Friend
+	{
 
-        /**
-         * @return name of friend
-         */
-        public String getPlayerName() {
-            return playerName;
-        }
+		private final String playerName;
+		private final String alias;
 
-        /**
-         * @return alias of friend
-         */
-        public String getAlias() {
-            return alias;
-        }
-    }
+		/**
+		 * @param playerName
+		 *                   of friend
+		 * @param alias
+		 *                   of friend
+		 */
+		Friend(final String playerName, final String alias)
+		{
+			this.playerName = playerName;
+			this.alias = alias;
+		}
+
+		/**
+		 * @return name of friend
+		 */
+		public String getPlayerName()
+		{
+			return playerName;
+		}
+
+		/**
+		 * @return alias of friend
+		 */
+		public String getAlias()
+		{
+			return alias;
+		}
+	}
 }

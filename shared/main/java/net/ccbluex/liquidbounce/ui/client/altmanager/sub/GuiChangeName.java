@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub;
 
+import java.io.IOException;
+
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
@@ -13,21 +15,23 @@ import net.ccbluex.liquidbounce.event.SessionEvent;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
+
 import org.lwjgl.input.Keyboard;
 
-import java.io.IOException;
-
-public class GuiChangeName extends WrappedGuiScreen {
+public class GuiChangeName extends WrappedGuiScreen
+{
 
 	private final GuiAltManager prevGui;
 	private IGuiTextField name;
 	private String status;
 
-	public GuiChangeName(final GuiAltManager gui) {
+	public GuiChangeName(final GuiAltManager gui)
+	{
 		prevGui = gui;
 	}
 
-	public void initGui() {
+	public void initGui()
+	{
 		Keyboard.enableRepeatEvents(true);
 		representedScreen.getButtonList().add(classProvider.createGuiButton(1, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 96, "Change"));
 		representedScreen.getButtonList().add(classProvider.createGuiButton(0, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 120, "Back"));
@@ -39,7 +43,8 @@ public class GuiChangeName extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
+	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
+	{
 		representedScreen.drawBackground(0);
 		RenderUtils.drawRect(30, 30, representedScreen.getWidth() - 30, representedScreen.getHeight() - 30, Integer.MIN_VALUE);
 
@@ -54,18 +59,22 @@ public class GuiChangeName extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void actionPerformed(final IGuiButton button) throws IOException {
-		switch (button.getId()) {
+	public void actionPerformed(final IGuiButton button) throws IOException
+	{
+		switch (button.getId())
+		{
 			case 0:
 				mc.displayGuiScreen(prevGui.representedScreen);
 				break;
 			case 1:
-				if (name.getText().isEmpty()) {
+				if (name.getText().isEmpty())
+				{
 					status = "\u00A7cEnter a name!";
 					return;
 				}
 
-				if (!name.getText().equalsIgnoreCase(mc.getSession().getUsername())) {
+				if (!name.getText().equalsIgnoreCase(mc.getSession().getUsername()))
+				{
 					status = "\u00A7cJust change the upper and lower case!";
 					return;
 				}
@@ -80,8 +89,10 @@ public class GuiChangeName extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void keyTyped(final char typedChar, final int keyCode) throws IOException {
-		if (Keyboard.KEY_ESCAPE == keyCode) {
+	public void keyTyped(final char typedChar, final int keyCode) throws IOException
+	{
+		if (Keyboard.KEY_ESCAPE == keyCode)
+		{
 			mc.displayGuiScreen(prevGui.getRepresentedScreen());
 			return;
 		}
@@ -92,19 +103,22 @@ public class GuiChangeName extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException
+	{
 		name.mouseClicked(mouseX, mouseY, mouseButton);
 		super.mouseClicked(mouseX, mouseY, mouseButton);
 	}
 
 	@Override
-	public void updateScreen() {
+	public void updateScreen()
+	{
 		name.updateCursorCounter();
 		super.updateScreen();
 	}
 
 	@Override
-	public void onGuiClosed() {
+	public void onGuiClosed()
+	{
 		Keyboard.enableRepeatEvents(false);
 		super.onGuiClosed();
 	}

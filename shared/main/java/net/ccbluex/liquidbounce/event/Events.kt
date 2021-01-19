@@ -28,10 +28,11 @@ class AttackEvent(val targetEntity: IEntity?) : Event()
  * @param block block itself
  * @param boundingBox vanilla bounding box
  */
-class BlockBBEvent(blockPos: WBlockPos, val block: IBlock, var boundingBox: IAxisAlignedBB?) : Event() {
-    val x = blockPos.x
-    val y = blockPos.y
-    val z = blockPos.z
+class BlockBBEvent(blockPos: WBlockPos, val block: IBlock, var boundingBox: IAxisAlignedBB?) : Event()
+{
+	val x = blockPos.x
+	val y = blockPos.y
+	val z = blockPos.z
 }
 
 /**
@@ -90,19 +91,22 @@ class StrafeEvent(val strafe: Float, val forward: Float, val friction: Float) : 
  * @param y motion
  * @param z motion
  */
-class MoveEvent(var x: Double, var y: Double, var z: Double) : CancellableEvent() {
-    var isSafeWalk = false
+class MoveEvent(var x: Double, var y: Double, var z: Double) : CancellableEvent()
+{
+	var isSafeWalk = false
 
-    fun zero() {
-        x = 0.0
-        y = 0.0
-        z = 0.0
-    }
+	fun zero()
+	{
+		x = 0.0
+		y = 0.0
+		z = 0.0
+	}
 
-    fun zeroXZ() {
-        x = 0.0
-        z = 0.0
-    }
+	fun zeroXZ()
+	{
+		x = 0.0
+		z = 0.0
+	}
 }
 
 /**
@@ -128,8 +132,9 @@ class Render3DEvent(val partialTicks: Float) : Event()
 /**
  * Called when entity is going to be rendered
  */
-class RenderEntityEvent(val entity: IEntity, val x: Double, val y: Double, val z: Double, val entityYaw: Float,
-                        val partialTicks: Float) : Event()
+class RenderEntityEvent(
+	val entity: IEntity, val x: Double, val y: Double, val z: Double, val entityYaw: Float, val partialTicks: Float
+) : Event()
 
 /**
  * Called when the screen changes

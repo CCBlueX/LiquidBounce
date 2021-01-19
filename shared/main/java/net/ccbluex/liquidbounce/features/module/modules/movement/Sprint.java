@@ -17,28 +17,26 @@ import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 
 @ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
-public class Sprint extends Module {
+public class Sprint extends Module
+{
 
-    public final BoolValue allDirectionsValue = new BoolValue("AllDirections", true);
-    public final BoolValue blindnessValue = new BoolValue("Blindness", true);
-    public final BoolValue foodValue = new BoolValue("Food", true);
+	public final BoolValue allDirectionsValue = new BoolValue("AllDirections", true);
+	public final BoolValue blindnessValue = new BoolValue("Blindness", true);
+	public final BoolValue foodValue = new BoolValue("Food", true);
 
-    public final BoolValue checkServerSide = new BoolValue("CheckServerSide", false);
-    public final BoolValue checkServerSideGround = new BoolValue("CheckServerSideOnlyGround", false);
+	public final BoolValue checkServerSide = new BoolValue("CheckServerSide", false);
+	public final BoolValue checkServerSideGround = new BoolValue("CheckServerSideOnlyGround", false);
 
-    @EventTarget
-    public void onUpdate(final UpdateEvent event) {
-        if (!MovementUtils.isMoving() || mc.getThePlayer().isSneaking() ||
-				blindnessValue.get() && mc.getThePlayer().isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) ||
-				foodValue.get() && !(mc.getThePlayer().getFoodStats().getFoodLevel() > 6.0F || mc.getThePlayer().getCapabilities().getAllowFlying())
-                || checkServerSide.get() && (mc.getThePlayer().getOnGround() || !checkServerSideGround.get())
-                && !allDirectionsValue.get() && RotationUtils.targetRotation != null &&
-                RotationUtils.getRotationDifference(new Rotation(mc.getThePlayer().getRotationYaw(), mc.getThePlayer().getRotationPitch())) > 30) {
-            mc.getThePlayer().setSprinting(false);
-            return;
-        }
+	@EventTarget
+	public void onUpdate(final UpdateEvent event)
+	{
+		if (!MovementUtils.isMoving() || mc.getThePlayer().isSneaking() || blindnessValue.get() && mc.getThePlayer().isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) || foodValue.get() && !(mc.getThePlayer().getFoodStats().getFoodLevel() > 6.0F || mc.getThePlayer().getCapabilities().getAllowFlying()) || checkServerSide.get() && (mc.getThePlayer().getOnGround() || !checkServerSideGround.get()) && !allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.getThePlayer().getRotationYaw(), mc.getThePlayer().getRotationPitch())) > 30)
+		{
+			mc.getThePlayer().setSprinting(false);
+			return;
+		}
 
-        if (allDirectionsValue.get() || mc.getThePlayer().getMovementInput().getMoveForward() >= 0.8F)
-            mc.getThePlayer().setSprinting(true);
-    }
+		if (allDirectionsValue.get() || mc.getThePlayer().getMovementInput().getMoveForward() >= 0.8F)
+			mc.getThePlayer().setSprinting(true);
+	}
 }

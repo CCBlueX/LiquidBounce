@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagCompound
 import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.nbt.JsonToNBT
 
-object JsonToNBTImpl : IJsonToNBT {
-    override fun getTagFromJson(s: String): INBTTagCompound = JsonToNBT.getTagFromJson(s).wrap()
+object JsonToNBTImpl : IJsonToNBT
+{
+	override fun getTagFromJson(s: String): INBTTagCompound = JsonToNBT.getTagFromJson(s).wrap()
 }
