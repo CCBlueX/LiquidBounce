@@ -31,7 +31,6 @@ import net.minecraft.client.resource.language.I18n;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -41,6 +40,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -76,8 +76,6 @@ public abstract class MixinMinecraftClient {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void startClient(final CallbackInfo callback) {
         LiquidBounce.INSTANCE.start();
-
-//        openScreen(new SciterScreen("Hallo", true));
     }
 
     /**

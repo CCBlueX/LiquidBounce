@@ -44,18 +44,16 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-
-    testImplementation "org.junit.jupiter:junit-jupiter:5.7.0"
-    // Fabric API. This is technically optional, but you probably want it anyway.
-    // => Not needed.
-    // modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    implementation ('com.thealtening.api:api:4.1.0') {
+    modImplementation "com.google.code.findbugs:jsr305:3.0.2" // to fix nullable imports
+
+    modImplementation ('com.thealtening.api:api:4.1.0') {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.7.0"
 }
 
 processResources {
