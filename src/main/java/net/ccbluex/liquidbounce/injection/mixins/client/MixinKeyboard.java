@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.injection.mixins;
+package net.ccbluex.liquidbounce.injection.mixins.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.KeyEvent;

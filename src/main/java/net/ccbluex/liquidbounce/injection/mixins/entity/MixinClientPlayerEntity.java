@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.injection.mixins;
+package net.ccbluex.liquidbounce.injection.mixins.entity;
 
 import net.ccbluex.liquidbounce.event.EntityTickEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
