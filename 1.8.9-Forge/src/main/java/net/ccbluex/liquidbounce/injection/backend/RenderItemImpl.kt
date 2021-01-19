@@ -9,6 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.render.entity.IRenderItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
+import net.minecraft.client.renderer.ItemModelMesher
 import net.minecraft.client.renderer.entity.RenderItem
 
 class RenderItemImpl(val wrapped: RenderItem) : IRenderItem

@@ -13,11 +13,13 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.StrafeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.NoPitchLimit;
+import net.ccbluex.liquidbounce.features.module.modules.render.ItemPhysics;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.Vec3;
@@ -36,7 +38,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @SideOnly(Side.CLIENT)
 public abstract class MixinEntity
 {
-
 	@Shadow
 	public double posX;
 
@@ -174,6 +175,9 @@ public abstract class MixinEntity
 	@Shadow
 	public abstract boolean isInsideOfMaterial(Material materialIn);
 
+	@Shadow
+	public abstract void setPosition(double x, double y, double z);
+
 	public int getNextStepDistance()
 	{
 		return nextStepDistance;
@@ -226,5 +230,17 @@ public abstract class MixinEntity
 
 		if (strafeEvent.isCancelled())
 			callbackInfo.cancel();
+	}
+
+	@SideOnly(Side.CLIENT)
+	@Inject(method = "setPositionAndRotation2", at = @At("HEAD"), cancellable = true)
+	public void setPositionAndRotation2(final double x, final double y, final double z, final float yaw, final float pitch, final int posRotationIncrements, final boolean p_180426_10_, final CallbackInfo callbackInfo)
+	{
+		final ItemPhysics itemPhysics = (ItemPhysics) LiquidBounce.moduleManager.get(ItemPhysics.class);
+		if ((Object) this instanceof EntityItem && itemPhysics.getState())
+		{
+			setPosition(x, y, z);
+			callbackInfo.cancel();
+		}
 	}
 }

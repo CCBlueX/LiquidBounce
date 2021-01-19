@@ -95,6 +95,8 @@ class MinecraftImpl(val wrapped: Minecraft) : IMinecraft
 		get() = GameSettingsImpl(wrapped.gameSettings)
 	override val fontRendererObj: IFontRenderer
 		get() = wrapped.fontRendererObj.wrap()
+	override val inGameHasFocus: Boolean
+		get() = wrapped.inGameHasFocus
 
 	override fun displayGuiScreen(screen: IGuiScreen?) = wrapped.displayGuiScreen(screen?.unwrap())
 

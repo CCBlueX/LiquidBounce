@@ -179,7 +179,8 @@ class ModuleManager : Listenable
 			ResourcePackSpoof::class.java,
 			NoSlowBreak::class.java,
 			PortalMenu::class.java,
-			AutoLogin::class.java
+			AutoLogin::class.java,
+			ItemPhysics::class.java
 		)
 
 		registerModule(NoScoreboard)
