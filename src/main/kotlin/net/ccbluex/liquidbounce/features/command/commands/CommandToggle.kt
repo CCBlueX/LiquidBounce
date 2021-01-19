@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.utils.defaultColor
 import net.ccbluex.liquidbounce.utils.statusColor
 import net.ccbluex.liquidbounce.utils.variableColor
 
-object ToggleCommand {
+object CommandToggle {
 
     fun createCommand(): Command {
         return CommandBuilder

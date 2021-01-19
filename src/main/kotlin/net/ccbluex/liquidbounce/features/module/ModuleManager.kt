@@ -23,13 +23,13 @@ import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.combat.Trigger
-import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
-import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
-import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
-import net.ccbluex.liquidbounce.features.module.modules.player.AutoRespawn
-import net.ccbluex.liquidbounce.features.module.modules.render.ClickGui
-import net.ccbluex.liquidbounce.features.module.modules.render.HUD
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTrigger
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -67,13 +67,13 @@ object ModuleManager : Iterable<Module>, Listenable {
      */
     fun registerInbuilt() {
         modules += arrayOf(
-            HUD,
-            ClickGui,
-            Fly,
-            Velocity,
-            Speed,
-            AutoRespawn,
-            Trigger
+            ModuleHud,
+            ModuleClickGui,
+            ModuleFly,
+            ModuleVelocity,
+            ModuleSpeed,
+            ModuleAutoRespawn,
+            ModuleTrigger
         )
     }
 

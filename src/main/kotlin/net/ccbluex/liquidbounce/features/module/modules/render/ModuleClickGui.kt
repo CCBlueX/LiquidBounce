@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.sciter.SciterScreen
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.glfw.GLFW
 
-object ClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
+object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
 
     override fun enable() {
         MinecraftClient.getInstance().openScreen(SciterScreen("helo"))

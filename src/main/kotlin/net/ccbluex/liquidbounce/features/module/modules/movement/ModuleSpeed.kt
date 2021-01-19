@@ -16,22 +16,33 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.combat
+package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.config.boolean
+import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.ccbluex.liquidbounce.utils.extensions.moving
 import org.lwjgl.glfw.GLFW
+import java.lang.Math.toRadians
+import kotlin.math.cos
+import kotlin.math.sin
 
-object Velocity : Module("Velocity", Category.COMBAT, bind = GLFW.GLFW_KEY_L) {
+object ModuleSpeed : Module("Speed", Category.COMBAT, bind = GLFW.GLFW_KEY_V) {
 
-    val packetReceiveHandler = handler<PacketEvent> {
-        val packet = it.packet
+    private var port by boolean("yPort", true)
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.entityId) {
-            it.cancelEvent()
+    val tickHandler = sequenceHandler<EntityTickEvent> {
+        if (player.isOnGround && player.moving) {
+            val angle = toRadians(player.yaw.toDouble())
+            val x = -sin(angle) * 0.4
+            val z = cos(angle) * 0.4
+
+            player.setVelocity(x, 0.42, z)
+            if (port) {
+                wait(1)
+                player.setVelocity(x, -1.0, z)
+            }
         }
     }
 

@@ -16,20 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement
+package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import org.lwjgl.glfw.GLFW
 
-object Fly : Module("Fly", Category.MOVEMENT, bind = GLFW.GLFW_KEY_R) {
+object ModuleVelocity : Module("Velocity", Category.COMBAT, bind = GLFW.GLFW_KEY_L) {
 
-    override fun enable() {
-        player.abilities!!.flying = true
-    }
+    val packetReceiveHandler = handler<PacketEvent> {
+        val packet = it.packet
 
-    override fun disable() {
-        player.abilities!!.flying = false
+        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.entityId) {
+            it.cancelEvent()
+        }
     }
 
 }

@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 
-object FriendCommand {
+object CommandFriend {
 
     fun createCommand(): Command {
         return CommandBuilder

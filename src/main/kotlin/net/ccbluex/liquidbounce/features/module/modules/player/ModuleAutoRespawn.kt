@@ -16,37 +16,35 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.combat
+package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.boolean
+import net.ccbluex.liquidbounce.config.int
 import net.ccbluex.liquidbounce.config.intRange
+import net.ccbluex.liquidbounce.event.EntityTickEvent
+import net.ccbluex.liquidbounce.event.ScreenEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.extensions.shouldBeAttacked
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.EntityHitResult
-import kotlin.math.roundToInt
+import net.minecraft.client.gui.screen.DeathScreen
 
 /**
- * Trigger module
+ * A auto respawn module
  *
- * Automatically attacks enemy on your crosshair
+ * Automatically respawns the player after dying
  */
-object Trigger : Module("Trigger", Category.COMBAT) {
+object ModuleAutoRespawn : Module("AutoRespawn", Category.PLAYER) {
 
-    // CPS means clicks per second
-    val cps by intRange("CPS", 5..8, 1..20)
-    val cooldown by boolean("Cooldown", true)
+    // There is a delay until the button is clickable on the death screen (20 ticks)
+    val delay by int("Delay", 0, 0..20)
 
-    val tickRepeatable = repeatableSequence {
-        val crosshair = mc.crosshairTarget
-        if (crosshair is EntityHitResult && crosshair.entity.shouldBeAttacked()) {
-            mc.interactionManager?.attackEntity(player, crosshair.entity)
-            player.swingHand(Hand.MAIN_HAND);
+    val screenHandler = sequenceHandler<ScreenEvent> {
+        if (it.screen is DeathScreen) {
+            if (delay > 0)
+                wait(delay)
 
-            // todo: add cps and cooldown option
-            //   just testing right now
-            wait(player.attackCooldownProgressPerTick.roundToInt())
+            player.requestRespawn()
+            mc.openScreen(null)
         }
     }
 

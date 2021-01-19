@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.renderer.engine.RenderTask
 import net.ccbluex.liquidbounce.renderer.engine.font.FontRenderer
 import java.awt.Font
 
-object HUD : Module("HUD", Category.RENDER, defaultState = true) {
+object ModuleHud : Module("HUD", Category.RENDER, defaultState = true) {
     val liquidBounceFont: Array<RenderTask> = kotlin.run {
         val renderer = FontRenderer.createFontRendererWithStyles(Font("Roboto Bold", Font.PLAIN, 45))
 
