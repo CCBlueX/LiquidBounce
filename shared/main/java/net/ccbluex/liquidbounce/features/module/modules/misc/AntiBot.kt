@@ -178,8 +178,8 @@ object AntiBot : Module() {
                     invisible.add(entity.entityId)
 
                 if (!notAlwaysInRadius.contains(entity.entityId) && mc.thePlayer!!.getDistanceToEntity(entity) > allwaysRadiusValue.get())
-                    notAlwaysInRadius.add(entity.entityId);
-            }
+                    notAlwaysInRadius.add(entity.entityId)
+			}
         }
 
         if (classProvider.isSPacketAnimation(packet)) {
@@ -211,7 +211,7 @@ object AntiBot : Module() {
         ground.clear()
         invalidGround.clear()
         invisible.clear()
-        notAlwaysInRadius.clear();
-    }
+        notAlwaysInRadius.clear()
+	}
 
 }

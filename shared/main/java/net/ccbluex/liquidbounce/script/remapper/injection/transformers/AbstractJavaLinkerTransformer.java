@@ -32,7 +32,7 @@ public class AbstractJavaLinkerTransformer implements IClassTransformer {
      * @return new bytecode
      */
     @Override
-    public byte[] transform(String name, String transformedName, byte[] basicClass) {
+    public byte[] transform(final String name, final String transformedName, final byte[] basicClass) {
         if(name.equals("jdk.internal.dynalink.beans.AbstractJavaLinker")) {
             try {
                 final ClassNode classNode = ClassUtils.INSTANCE.toClassNode(basicClass);

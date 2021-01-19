@@ -17,13 +17,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinGuiIngameMenu extends MixinGuiScreen {
 
     @Inject(method = "initGui", at = @At("RETURN"))
-    private void initGui(CallbackInfo callbackInfo) {
-        if(!this.mc.isIntegratedServerRunning())
-            this.buttonList.add(new GuiButton(1337, this.width / 2 - 100, this.height / 4 + 128, "Reconnect"));
+    private void initGui(final CallbackInfo callbackInfo) {
+        if(!mc.isIntegratedServerRunning())
+			buttonList.add(new GuiButton(1337, width / 2 - 100, height / 4 + 128, "Reconnect"));
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
-    private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
+    private void actionPerformed(final GuiButton button, final CallbackInfo callbackInfo) {
         if (button.id == 1337) {
             mc.theWorld.sendQuittingDisconnectingPacket();
             ServerUtils.connectToLastServer();

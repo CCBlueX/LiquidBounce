@@ -14,10 +14,10 @@ package net.ccbluex.liquidbounce.utils;
  */
 public class RollingArrayLongBuffer {
     private final long[] contents;
-    private int currentIndex = 0;
+    private int currentIndex;
 
-    public RollingArrayLongBuffer(int length) {
-        this.contents = new long[length];
+    public RollingArrayLongBuffer(final int length) {
+		contents = new long[length];
     }
 
     /**
@@ -32,7 +32,7 @@ public class RollingArrayLongBuffer {
      *
      * @param l The element to be added
      */
-    public void add(long l) {
+    public void add(final long l) {
         currentIndex = (currentIndex + 1) % contents.length;
         contents[currentIndex] = l;
     }
@@ -44,7 +44,7 @@ public class RollingArrayLongBuffer {
      * @param l The threshold timestamp
      * @return The count
      */
-    public int getTimestampsSince(long l) {
+    public int getTimestampsSince(final long l) {
         for (int i = 0; i < contents.length; i++) {
             if (contents[currentIndex < i ? contents.length - i + currentIndex : currentIndex - i] < l) {
                 return i;

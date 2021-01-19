@@ -37,7 +37,7 @@ public class MCLeaks {
     }
 
     public static void remove() {
-        MCLeaks.session = null;
+        session = null;
     }
 
     public static void redeem(final String token, final Callback<Object> callback) {

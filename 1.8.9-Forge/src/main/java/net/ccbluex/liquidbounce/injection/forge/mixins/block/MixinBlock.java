@@ -56,7 +56,7 @@ public abstract class MixinBlock {
 
     // Has to be implemented since a non-virtual call on an abstract method is illegal
     @Shadow
-    public IBlockState onBlockPlaced(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
+    public IBlockState onBlockPlaced(final World worldIn, final BlockPos pos, final EnumFacing facing, final float hitX, final float hitY, final float hitZ, final int meta, final EntityLivingBase placer) {
         return null;
     }
 
@@ -64,9 +64,9 @@ public abstract class MixinBlock {
      * @author CCBlueX
      */
     @Overwrite
-    public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, AxisAlignedBB mask, List<AxisAlignedBB> list, Entity collidingEntity) {
-        AxisAlignedBB axisalignedbb = this.getCollisionBoundingBox(worldIn, pos, state);
-        BlockBBEvent blockBBEvent = new BlockBBEvent(BackendExtentionsKt.wrap(pos), BlockImplKt.wrap(blockState.getBlock()), axisalignedbb == null ? null : AxisAlignedBBImplKt.wrap(axisalignedbb));
+    public void addCollisionBoxesToList(final World worldIn, final BlockPos pos, final IBlockState state, final AxisAlignedBB mask, final List<AxisAlignedBB> list, final Entity collidingEntity) {
+        AxisAlignedBB axisalignedbb = getCollisionBoundingBox(worldIn, pos, state);
+        final BlockBBEvent blockBBEvent = new BlockBBEvent(BackendExtentionsKt.wrap(pos), BlockImplKt.wrap(blockState.getBlock()), axisalignedbb == null ? null : AxisAlignedBBImplKt.wrap(axisalignedbb));
         LiquidBounce.eventManager.callEvent(blockBBEvent);
 
         axisalignedbb = blockBBEvent.getBoundingBox() == null ? null : AxisAlignedBBImplKt.unwrap(blockBBEvent.getBoundingBox());
@@ -76,7 +76,7 @@ public abstract class MixinBlock {
     }
 
     @Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
-    private void shouldSideBeRendered(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+    private void shouldSideBeRendered(final CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
 
         if (Objects.requireNonNull(xray).getState())
@@ -85,7 +85,7 @@ public abstract class MixinBlock {
     }
 
     @Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)
-    private void isCollidable(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+    private void isCollidable(final CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.getModule(GhostHand.class);
 
         if (Objects.requireNonNull(ghostHand).getState() && !(ghostHand.getBlockValue().get() == Block.getIdFromBlock((Block) (Object) this)))
@@ -99,7 +99,7 @@ public abstract class MixinBlock {
     }
 
     @Inject(method = "getPlayerRelativeBlockHardness", at = @At("RETURN"), cancellable = true)
-    public void modifyBreakSpeed(EntityPlayer playerIn, World worldIn, BlockPos pos, final CallbackInfoReturnable<Float> callbackInfo) {
+    public void modifyBreakSpeed(final EntityPlayer playerIn, final World worldIn, final BlockPos pos, final CallbackInfoReturnable<Float> callbackInfo) {
         float f = callbackInfo.getReturnValue();
 
         // NoSlowBreak

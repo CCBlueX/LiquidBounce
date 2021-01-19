@@ -14,7 +14,7 @@ import org.lwjgl.opengl.GL20;
 
 public final class BackgroundShader extends Shader {
 
-    public final static BackgroundShader BACKGROUND_SHADER = new BackgroundShader();
+    public static final BackgroundShader BACKGROUND_SHADER = new BackgroundShader();
 
     private float time;
 

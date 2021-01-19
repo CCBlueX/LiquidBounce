@@ -270,7 +270,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		override fun getSize() = credits.size
 
-		internal fun getSelectedSlot() = if (selectedSlot > credits.size) -1 else selectedSlot
+		fun getSelectedSlot() = if (selectedSlot > credits.size) -1 else selectedSlot
 
 		override fun elementClicked(index: Int, doubleClick: Boolean, var3: Int, var4: Int)
 		{

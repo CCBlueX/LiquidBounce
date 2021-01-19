@@ -35,7 +35,7 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 	private String status = "\u00A77Idle...";
 
 	public GuiDirectLogin(final GuiAltManager gui) {
-		this.prevGui = gui.representedScreen;
+		prevGui = gui.representedScreen;
 	}
 
 	public void initGui() {
@@ -51,7 +51,7 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
 		getRepresentedScreen().drawBackground(0);
 		RenderUtils.drawRect(30, 30, getRepresentedScreen().getWidth() - 30, getRepresentedScreen().getHeight() - 30, Integer.MIN_VALUE);
 
@@ -70,7 +70,7 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void actionPerformed(IGuiButton button) throws IOException {
+	public void actionPerformed(final IGuiButton button) throws IOException {
 		if (!button.getEnabled()) return;
 
 		switch (button.getId()) {
@@ -122,7 +122,7 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 				} catch (final UnsupportedFlavorException e) {
 					status = "\u00A7cClipboard flavor unsupported!";
 					ClientUtils.getLogger().error("Failed to read data from clipboard.", e);
-				} catch (IOException e) {
+				} catch (final IOException e) {
 					status = "\u00A7cUnknown error! (See log)";
 					ClientUtils.getLogger().error(e);
 				}
@@ -132,7 +132,7 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void keyTyped(char typedChar, int keyCode) throws IOException {
+	public void keyTyped(final char typedChar, final int keyCode) throws IOException {
 		switch (keyCode) {
 			case Keyboard.KEY_ESCAPE:
 				mc.displayGuiScreen(prevGui);
@@ -154,7 +154,7 @@ public class GuiDirectLogin extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException {
 		username.mouseClicked(mouseX, mouseY, mouseButton);
 		password.mouseClicked(mouseX, mouseY, mouseButton);
 		super.mouseClicked(mouseX, mouseY, mouseButton);

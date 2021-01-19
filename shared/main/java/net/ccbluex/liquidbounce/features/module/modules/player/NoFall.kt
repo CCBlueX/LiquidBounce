@@ -48,7 +48,7 @@ class NoFall : Module() {
         if (mc.thePlayer!!.motionY > 0)
             jumped = true
 
-        if (!state || LiquidBounce.moduleManager.getModule(FreeCam::class.java)!!.state)
+        if (!state || LiquidBounce.moduleManager.getModule(FreeCam::class.java).state)
             return
 
         if (collideBlock(mc.thePlayer!!.entityBoundingBox, classProvider::isBlockLiquid) ||

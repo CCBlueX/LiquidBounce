@@ -132,7 +132,7 @@ class Velocity : Module() {
 
                     // Reduce Y
                     if (thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get()
-                            && !LiquidBounce.moduleManager[Speed::class.java]!!.state)
+                            && !LiquidBounce.moduleManager[Speed::class.java].state)
                         thePlayer.motionY -= 0.014999993
                 }
 

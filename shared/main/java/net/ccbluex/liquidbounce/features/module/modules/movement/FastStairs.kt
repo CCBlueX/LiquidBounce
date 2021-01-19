@@ -31,7 +31,7 @@ class FastStairs : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!MovementUtils.isMoving || LiquidBounce.moduleManager[Speed::class.java]!!.state)
+        if (!MovementUtils.isMoving || LiquidBounce.moduleManager[Speed::class.java].state)
             return
 
         if (thePlayer.fallDistance > 0 && !walkingDown)

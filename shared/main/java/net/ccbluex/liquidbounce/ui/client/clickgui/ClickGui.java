@@ -47,7 +47,7 @@ public class ClickGui extends WrappedGuiScreen {
 
 				@Override
 				public void setupItems() {
-					for (Module module : LiquidBounce.moduleManager.getModules())
+					for (final Module module : LiquidBounce.moduleManager.getModules())
 						if (module.getCategory() == category)
 							getElements().add(new ModuleElement(module));
 				}
@@ -65,7 +65,7 @@ public class ClickGui extends WrappedGuiScreen {
 				getElements().add(new ButtonElement("Players") {
 
 					@Override
-					public void createButton(String displayName) {
+					public void createButton(final String displayName) {
 						color = EntityUtils.targetPlayer ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
 						super.createButton(displayName);
 					}
@@ -78,7 +78,7 @@ public class ClickGui extends WrappedGuiScreen {
 					}
 
 					@Override
-					public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+					public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
 						if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible()) {
 							EntityUtils.targetPlayer = !EntityUtils.targetPlayer;
 							displayName = "Players";
@@ -91,7 +91,7 @@ public class ClickGui extends WrappedGuiScreen {
 				getElements().add(new ButtonElement("Mobs") {
 
 					@Override
-					public void createButton(String displayName) {
+					public void createButton(final String displayName) {
 						color = EntityUtils.targetMobs ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
 						super.createButton(displayName);
 					}
@@ -104,7 +104,7 @@ public class ClickGui extends WrappedGuiScreen {
 					}
 
 					@Override
-					public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+					public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
 						if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible()) {
 							EntityUtils.targetMobs = !EntityUtils.targetMobs;
 							displayName = "Mobs";
@@ -117,7 +117,7 @@ public class ClickGui extends WrappedGuiScreen {
 				getElements().add(new ButtonElement("Animals") {
 
 					@Override
-					public void createButton(String displayName) {
+					public void createButton(final String displayName) {
 						color = EntityUtils.targetAnimals ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
 						super.createButton(displayName);
 					}
@@ -130,7 +130,7 @@ public class ClickGui extends WrappedGuiScreen {
 					}
 
 					@Override
-					public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+					public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
 						if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible()) {
 							EntityUtils.targetAnimals = !EntityUtils.targetAnimals;
 							displayName = "Animals";
@@ -143,7 +143,7 @@ public class ClickGui extends WrappedGuiScreen {
 				getElements().add(new ButtonElement("Invisible") {
 
 					@Override
-					public void createButton(String displayName) {
+					public void createButton(final String displayName) {
 						color = EntityUtils.targetInvisible ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
 						super.createButton(displayName);
 					}
@@ -156,7 +156,7 @@ public class ClickGui extends WrappedGuiScreen {
 					}
 
 					@Override
-					public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+					public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
 						if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible()) {
 							EntityUtils.targetInvisible = !EntityUtils.targetInvisible;
 							displayName = "Invisible";
@@ -169,7 +169,7 @@ public class ClickGui extends WrappedGuiScreen {
 				getElements().add(new ButtonElement("Dead") {
 
 					@Override
-					public void createButton(String displayName) {
+					public void createButton(final String displayName) {
 						color = EntityUtils.targetDead ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
 						super.createButton(displayName);
 					}
@@ -182,7 +182,7 @@ public class ClickGui extends WrappedGuiScreen {
 					}
 
 					@Override
-					public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+					public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
 						if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible()) {
 							EntityUtils.targetDead = !EntityUtils.targetDead;
 							displayName = "Dead";
@@ -196,7 +196,7 @@ public class ClickGui extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+	public void drawScreen(int mouseX, int mouseY, final float partialTicks) {
 		if (Mouse.isButtonDown(0) && mouseX >= 5 && mouseX <= 50 && mouseY <= representedScreen.getHeight() - 5 && mouseY >= representedScreen.getHeight() - 50)
 			mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiHudDesigner()));
 
@@ -234,7 +234,7 @@ public class ClickGui extends WrappedGuiScreen {
 		}
 
 		if (Mouse.hasWheel()) {
-			int wheel = Mouse.getDWheel();
+			final int wheel = Mouse.getDWheel();
 
 			for (int i = panels.size() - 1; i >= 0; i--)
 				if (panels.get(i).handleScroll(mouseX, mouseY, wheel))
@@ -251,7 +251,7 @@ public class ClickGui extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+	public void mouseClicked(int mouseX, int mouseY, final int mouseButton) throws IOException {
 		final double scale = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).scaleValue.get();
 
 		mouseX /= scale;
@@ -280,13 +280,13 @@ public class ClickGui extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void mouseReleased(int mouseX, int mouseY, int state) {
+	public void mouseReleased(int mouseX, int mouseY, final int state) {
 		final double scale = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).scaleValue.get();
 
 		mouseX /= scale;
 		mouseY /= scale;
 
-		for (Panel panel : panels) {
+		for (final Panel panel : panels) {
 			panel.mouseReleased(mouseX, mouseY, state);
 		}
 	}

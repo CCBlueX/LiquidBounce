@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -36,19 +37,19 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
     @Shadow
     private boolean waitingOnAutocomplete;
     private float yPosOfInputField;
-    private float fade = 0;
+    private float fade;
 
     @Shadow
     public abstract void onAutocompleteResponse(String[] p_onAutocompleteResponse_1_);
 
     @Inject(method = "initGui", at = @At("RETURN"))
-    private void init(CallbackInfo callbackInfo) {
+    private void init(final CallbackInfo callbackInfo) {
         inputField.yPosition = height + 1;
         yPosOfInputField = inputField.yPosition;
     }
 
     @Inject(method = "keyTyped", at = @At("RETURN"))
-    private void updateLength(CallbackInfo callbackInfo) {
+    private void updateLength(final CallbackInfo callbackInfo) {
         if (!inputField.getText().startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix()))) return;
         LiquidBounce.commandManager.autoComplete(inputField.getText());
 
@@ -59,7 +60,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
     }
 
     @Inject(method = "updateScreen", at = @At("HEAD"))
-    private void updateScreen(CallbackInfo callbackInfo) {
+    private void updateScreen(final CallbackInfo callbackInfo) {
         final int delta = RenderUtils.deltaTime;
 
         if (fade < 14) fade += 0.4F * delta;
@@ -84,16 +85,16 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
      * @author NurMarvin
      */
     @Inject(method = "sendAutocompleteRequest", at = @At("HEAD"), cancellable = true)
-    private void handleClientCommandCompletion(String full, final String ignored, CallbackInfo callbackInfo) {
+    private void handleClientCommandCompletion(final String full, final String ignored, final CallbackInfo callbackInfo) {
         if (LiquidBounce.commandManager.autoComplete(full)) {
             waitingOnAutocomplete = true;
 
-            String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
+            final String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
 
             if (full.toLowerCase().endsWith(latestAutoComplete[latestAutoComplete.length - 1].toLowerCase()))
                 return;
 
-            this.onAutocompleteResponse(latestAutoComplete);
+            onAutocompleteResponse(latestAutoComplete);
 
             callbackInfo.cancel();
         }
@@ -105,8 +106,8 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
      *
      * @author derech1e
      */
-    @Inject(method = "onAutocompleteResponse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiChat;autocompletePlayerNames()V", shift = At.Shift.BEFORE), cancellable = true)
-    private void onAutocompleteResponse(String[] autoCompleteResponse, CallbackInfo callbackInfo) {
+    @Inject(method = "onAutocompleteResponse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiChat;autocompletePlayerNames()V", shift = Shift.BEFORE), cancellable = true)
+    private void onAutocompleteResponse(final String[] autoCompleteResponse, final CallbackInfo callbackInfo) {
         if (LiquidBounce.commandManager.getLatestAutoComplete().length != 0) callbackInfo.cancel();
     }
 
@@ -114,22 +115,22 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
      * @author CCBlueX
      */
     @Overwrite
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        Gui.drawRect(2, this.height - (int) fade, this.width - 2, this.height, Integer.MIN_VALUE);
-        this.inputField.drawTextBox();
+    public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
+        Gui.drawRect(2, height - (int) fade, width - 2, height, Integer.MIN_VALUE);
+        inputField.drawTextBox();
 
         if (LiquidBounce.commandManager.getLatestAutoComplete().length > 0 && !inputField.getText().isEmpty() && inputField.getText().startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix()))) {
-            String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
-            String[] textArray = inputField.getText().split(" ");
-            String trimmedString = latestAutoComplete[0].replaceFirst("(?i)" + textArray[textArray.length - 1], "");
+            final String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
+            final String[] textArray = inputField.getText().split(" ");
+            final String trimmedString = latestAutoComplete[0].replaceFirst("(?i)" + textArray[textArray.length - 1], "");
 
             mc.fontRendererObj.drawStringWithShadow(trimmedString, inputField.xPosition + mc.fontRendererObj.getStringWidth(inputField.getText()), inputField.yPosition, new Color(165, 165, 165).getRGB());
         }
 
-        IChatComponent ichatcomponent =
-                this.mc.ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());
+        final IChatComponent ichatcomponent =
+                mc.ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());
 
         if (ichatcomponent != null)
-            this.handleComponentHover(ichatcomponent, mouseX, mouseY);
+            handleComponentHover(ichatcomponent, mouseX, mouseY);
     }
 }

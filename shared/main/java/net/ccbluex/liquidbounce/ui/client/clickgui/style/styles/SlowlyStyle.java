@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style;
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
+import net.ccbluex.liquidbounce.ui.font.Fonts.FontInfo;
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
@@ -44,9 +45,9 @@ public class SlowlyStyle extends Style {
 		RenderUtils.drawFilledCircle((int) sliderValue, y + 1, 3, color);
 
 		if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0)) {
-			double i = WMathHelper.clamp_double(((double) mouseX - (double) x) / ((double) width - 3), 0, 1);
+			final double i = WMathHelper.clamp_double(((double) mouseX - (double) x) / ((double) width - 3), 0, 1);
 
-			BigDecimal bigDecimal = new BigDecimal(Double.toString((min + (max - min) * i)));
+			BigDecimal bigDecimal = new BigDecimal(Double.toString(min + (max - min) * i));
 			bigDecimal = bigDecimal.setScale(2, 4);
 			return bigDecimal.floatValue();
 		}
@@ -55,28 +56,28 @@ public class SlowlyStyle extends Style {
 	}
 
 	@Override
-	public void drawPanel(int mouseX, int mouseY, Panel panel) {
+	public void drawPanel(final int mouseX, final int mouseY, final Panel panel) {
 		RenderUtils.drawBorderedRect((float) panel.getX(), (float) panel.getY() - 3, (float) panel.getX() + panel.getWidth(), (float) panel.getY() + 17, 3, new Color(42, 57, 79).getRGB(), new Color(42, 57, 79).getRGB());
 		if (panel.getFade() > 0) {
 			RenderUtils.drawBorderedRect((float) panel.getX(), (float) panel.getY() + 17, (float) panel.getX() + panel.getWidth(), panel.getY() + 19 + panel.getFade(), 3, new Color(54, 71, 96).getRGB(), new Color(54, 71, 96).getRGB());
 			RenderUtils.drawBorderedRect((float) panel.getX(), panel.getY() + 17 + panel.getFade(), (float) panel.getX() + panel.getWidth(), panel.getY() + 19 + panel.getFade() + 5, 3, new Color(42, 57, 79).getRGB(), new Color(42, 57, 79).getRGB());
 		}
 		GlStateManager.resetColor();
-		float textWidth = Fonts.font35.getStringWidth("\u00A7f" + StringUtils.stripControlCodes(panel.getName()));
+		final float textWidth = Fonts.font35.getStringWidth("\u00A7f" + StringUtils.stripControlCodes(panel.getName()));
 		Fonts.font35.drawString(panel.getName(), (int) (panel.getX() - (textWidth - 100.0F) / 2F), panel.getY() + 7 - 3, Color.WHITE.getRGB());
 	}
 
 	@Override
-	public void drawDescription(int mouseX, int mouseY, String text) {
-		int textWidth = Fonts.font35.getStringWidth(text);
+	public void drawDescription(final int mouseX, final int mouseY, final String text) {
+		final int textWidth = Fonts.font35.getStringWidth(text);
 
 		RenderUtils.drawBorderedRect(mouseX + 9, mouseY, mouseX + textWidth + 14, mouseY + Fonts.font35.getFontHeight() + 3, 3F, new Color(42, 57, 79).getRGB(), new Color(42, 57, 79).getRGB());
 		GlStateManager.resetColor();
-		Fonts.font35.drawString(text, mouseX + 12, mouseY + (Fonts.font35.getFontHeight() / 2), Color.WHITE.getRGB());
+		Fonts.font35.drawString(text, mouseX + 12, mouseY + Fonts.font35.getFontHeight() / 2, Color.WHITE.getRGB());
 	}
 
 	@Override
-	public void drawButtonElement(int mouseX, int mouseY, ButtonElement buttonElement) {
+	public void drawButtonElement(final int mouseX, final int mouseY, final ButtonElement buttonElement) {
 		Gui.drawRect(buttonElement.getX() - 1, buttonElement.getY() - 1, buttonElement.getX() + buttonElement.getWidth() + 1, buttonElement.getY() + buttonElement.getHeight() + 1, hoverColor(buttonElement.getColor() != Integer.MAX_VALUE ? new Color(7, 152, 252) : new Color(54, 71, 96), buttonElement.hoverTime).getRGB());
 
 		GlStateManager.resetColor();
@@ -95,7 +96,7 @@ public class SlowlyStyle extends Style {
     }*/
 
 	@Override
-	public void drawModuleElement(int mouseX, int mouseY, ModuleElement moduleElement) {
+	public void drawModuleElement(final int mouseX, final int mouseY, final ModuleElement moduleElement) {
 		Gui.drawRect(moduleElement.getX() - 1, moduleElement.getY() - 1, moduleElement.getX() + moduleElement.getWidth() + 1, moduleElement.getY() + moduleElement.getHeight() + 1, hoverColor(new Color(54, 71, 96), moduleElement.hoverTime).getRGB());
 		Gui.drawRect(moduleElement.getX() - 1, moduleElement.getY() - 1, moduleElement.getX() + moduleElement.getWidth() + 1, moduleElement.getY() + moduleElement.getHeight() + 1, hoverColor(new Color(7, 152, 252, moduleElement.slowlyFade), moduleElement.hoverTime).getRGB());
 		GlStateManager.resetColor();
@@ -113,7 +114,7 @@ public class SlowlyStyle extends Style {
 
 				moduleElement.slowlySettingsYPos = moduleElement.getY() + 6;
 				for (final Value value : moduleValues) {
-					boolean isNumber = value.get() instanceof Number;
+					final boolean isNumber = value.get() instanceof Number;
 
 					if (isNumber) {
 						AWTFontRenderer.Companion.setAssumeNonVolatile(false);
@@ -218,7 +219,7 @@ public class SlowlyStyle extends Style {
 						} else if (fontRenderer == Fonts.minecraftFont)
 							displayString = "Font: Minecraft";
 						else {
-							final Fonts.FontInfo objects = Fonts.getFontDetails(fontRenderer);
+							final FontInfo objects = Fonts.getFontDetails(fontRenderer);
 
 							if (objects != null) {
 								displayString = objects.getName() + (objects.getFontSize() != -1 ? " - " + objects.getFontSize() : "");
@@ -226,7 +227,7 @@ public class SlowlyStyle extends Style {
 						}
 
 						Fonts.font35.drawString(displayString, moduleElement.getX() + moduleElement.getWidth() + 6, moduleElement.slowlySettingsYPos + 2, Color.WHITE.getRGB());
-						int stringWidth = Fonts.font35.getStringWidth(displayString);
+						final int stringWidth = Fonts.font35.getStringWidth(displayString);
 
 						if (moduleElement.getSettingsWidth() < stringWidth + 8)
 							moduleElement.setSettingsWidth(stringWidth + 8);
@@ -300,9 +301,9 @@ public class SlowlyStyle extends Style {
 	}
 
 	private Color hoverColor(final Color color, final int hover) {
-		final int r = color.getRed() - (hover * 2);
-		final int g = color.getGreen() - (hover * 2);
-		final int b = color.getBlue() - (hover * 2);
+		final int r = color.getRed() - hover * 2;
+		final int g = color.getGreen() - hover * 2;
+		final int b = color.getBlue() - hover * 2;
 
 		return new Color(Math.max(r, 0), Math.max(g, 0), Math.max(b, 0), color.getAlpha());
 	}

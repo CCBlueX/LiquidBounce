@@ -16,8 +16,10 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.EnumAction;
+import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraftforge.fml.relauncher.Side;
@@ -75,7 +77,7 @@ public abstract class MixinItemRenderer {
     protected abstract void doItemUsedTransformations(float swingProgress);
 
     @Shadow
-    public abstract void renderItem(EntityLivingBase entityIn, ItemStack heldStack, ItemCameraTransforms.TransformType transform);
+    public abstract void renderItem(EntityLivingBase entityIn, ItemStack heldStack, TransformType transform);
 
     @Shadow
     protected abstract void renderPlayerArm(AbstractClientPlayer clientPlayer, float equipProgress, float swingProgress);
@@ -84,53 +86,53 @@ public abstract class MixinItemRenderer {
      * @author CCBlueX
      */
     @Overwrite
-    public void renderItemInFirstPerson(float partialTicks) {
-        float f = 1.0F - (this.prevEquippedProgress + (this.equippedProgress - this.prevEquippedProgress) * partialTicks);
-        EntityPlayerSP abstractclientplayer = this.mc.thePlayer;
-        float f1 = abstractclientplayer.getSwingProgress(partialTicks);
-        float f2 = abstractclientplayer.prevRotationPitch + (abstractclientplayer.rotationPitch - abstractclientplayer.prevRotationPitch) * partialTicks;
-        float f3 = abstractclientplayer.prevRotationYaw + (abstractclientplayer.rotationYaw - abstractclientplayer.prevRotationYaw) * partialTicks;
-        this.rotateArroundXAndY(f2, f3);
-        this.setLightMapFromPlayer(abstractclientplayer);
-        this.rotateWithPlayerRotations(abstractclientplayer, partialTicks);
+    public void renderItemInFirstPerson(final float partialTicks) {
+        final float f = 1.0F - (prevEquippedProgress + (equippedProgress - prevEquippedProgress) * partialTicks);
+        final EntityPlayerSP abstractclientplayer = mc.thePlayer;
+        final float f1 = abstractclientplayer.getSwingProgress(partialTicks);
+        final float f2 = abstractclientplayer.prevRotationPitch + (abstractclientplayer.rotationPitch - abstractclientplayer.prevRotationPitch) * partialTicks;
+        final float f3 = abstractclientplayer.prevRotationYaw + (abstractclientplayer.rotationYaw - abstractclientplayer.prevRotationYaw) * partialTicks;
+        rotateArroundXAndY(f2, f3);
+        setLightMapFromPlayer(abstractclientplayer);
+        rotateWithPlayerRotations(abstractclientplayer, partialTicks);
         GlStateManager.enableRescaleNormal();
         GlStateManager.pushMatrix();
 
-        if(this.itemToRender != null) {
+        if(itemToRender != null) {
             final KillAura killAura = (KillAura) LiquidBounce.moduleManager.getModule(KillAura.class);
 
-            if(this.itemToRender.getItem() instanceof net.minecraft.item.ItemMap) {
-                this.renderItemMap(abstractclientplayer, f2, f, f1);
-            } else if (abstractclientplayer.getItemInUseCount() > 0 || (itemToRender.getItem() instanceof ItemSword && killAura.getBlockingStatus())) {
-                EnumAction enumaction = killAura.getBlockingStatus() ? EnumAction.BLOCK : this.itemToRender.getItemUseAction();
+            if(itemToRender.getItem() instanceof ItemMap) {
+                renderItemMap(abstractclientplayer, f2, f, f1);
+            } else if (abstractclientplayer.getItemInUseCount() > 0 || itemToRender.getItem() instanceof ItemSword && killAura.getBlockingStatus()) {
+                final EnumAction enumaction = killAura.getBlockingStatus() ? EnumAction.BLOCK : itemToRender.getItemUseAction();
 
                 switch(enumaction) {
                     case NONE:
-                        this.transformFirstPersonItem(f, 0.0F);
+                        transformFirstPersonItem(f, 0.0F);
                         break;
                     case EAT:
                     case DRINK:
-                        this.performDrinking(abstractclientplayer, partialTicks);
-                        this.transformFirstPersonItem(f, f1);
+                        performDrinking(abstractclientplayer, partialTicks);
+                        transformFirstPersonItem(f, f1);
                         break;
                     case BLOCK:
-                        this.transformFirstPersonItem(f + 0.1F, f1);
-                        this.doBlockTransformations();
+                        transformFirstPersonItem(f + 0.1F, f1);
+                        doBlockTransformations();
                         GlStateManager.translate(-0.5F, 0.2F, 0.0F);
                         break;
                     case BOW:
-                        this.transformFirstPersonItem(f, f1);
-                        this.doBowTransformations(partialTicks, abstractclientplayer);
+                        transformFirstPersonItem(f, f1);
+                        doBowTransformations(partialTicks, abstractclientplayer);
                 }
             }else{
                 if (!LiquidBounce.moduleManager.getModule(SwingAnimation.class).getState())
-                    this.doItemUsedTransformations(f1);
-                this.transformFirstPersonItem(f, f1);
+                    doItemUsedTransformations(f1);
+                transformFirstPersonItem(f, f1);
             }
 
-            this.renderItem(abstractclientplayer, this.itemToRender, ItemCameraTransforms.TransformType.FIRST_PERSON);
+            renderItem(abstractclientplayer, itemToRender, TransformType.FIRST_PERSON);
         }else if(!abstractclientplayer.isInvisible()) {
-            this.renderPlayerArm(abstractclientplayer, f, f1);
+            renderPlayerArm(abstractclientplayer, f, f1);
         }
 
         GlStateManager.popMatrix();

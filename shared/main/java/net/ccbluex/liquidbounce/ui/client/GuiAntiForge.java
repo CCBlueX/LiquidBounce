@@ -39,7 +39,7 @@ public class GuiAntiForge extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void actionPerformed(IGuiButton button) {
+	public void actionPerformed(final IGuiButton button) {
 		switch (button.getId()) {
 			case 1:
 				AntiForge.enabled = !AntiForge.enabled;
@@ -68,7 +68,7 @@ public class GuiAntiForge extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
 		representedScreen.drawBackground(0);
 		Fonts.fontBold180.drawCenteredString("AntiForge", (int) (representedScreen.getWidth() / 2F), (int) (representedScreen.getHeight() / 8F + 5F), 4673984, true);
 
@@ -76,7 +76,7 @@ public class GuiAntiForge extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void keyTyped(char typedChar, int keyCode) throws IOException {
+	public void keyTyped(final char typedChar, final int keyCode) throws IOException {
 		if (Keyboard.KEY_ESCAPE == keyCode) {
 			mc.displayGuiScreen(prevGui);
 			return;

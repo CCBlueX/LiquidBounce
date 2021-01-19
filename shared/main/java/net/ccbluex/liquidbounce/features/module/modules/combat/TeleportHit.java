@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity;
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity.WAction;
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3;
 import net.ccbluex.liquidbounce.event.EventState;
 import net.ccbluex.liquidbounce.event.EventTarget;
@@ -24,13 +25,13 @@ public class TeleportHit extends Module {
     private boolean shouldHit;
 
     @EventTarget
-    public void onMotion(MotionEvent event) {
+    public void onMotion(final MotionEvent event) {
         if (event.getEventState() != EventState.PRE)
             return;
 
         final IEntity facedEntity = RaycastUtils.raycastEntity(100D, classProvider::isEntityLivingBase);
 
-        IEntityPlayerSP thePlayer = mc.getThePlayer();
+        final IEntityPlayerSP thePlayer = mc.getThePlayer();
 
         if (thePlayer == null)
             return;
@@ -53,7 +54,7 @@ public class TeleportHit extends Module {
                 PathUtils.findPath(x, y + 1.0D, z, 4D).forEach(pos -> mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
 
                 thePlayer.swingItem();
-                mc.getNetHandler().addToSendQueue(classProvider.createCPacketUseEntity(targetEntity, ICPacketUseEntity.WAction.ATTACK));
+                mc.getNetHandler().addToSendQueue(classProvider.createCPacketUseEntity(targetEntity, WAction.ATTACK));
                 thePlayer.onCriticalHit(targetEntity);
                 shouldHit = false;
                 targetEntity = null;

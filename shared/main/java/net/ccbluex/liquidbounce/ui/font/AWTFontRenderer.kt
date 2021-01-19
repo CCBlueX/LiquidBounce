@@ -88,7 +88,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 		GL11.glScaled(scale, scale, scale)
 		GL11.glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
 
-		if (this.loadingScreen) GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+		if (this.loadingScreen) GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
 		else classProvider.getGlStateManager().bindTexture(textureID)
 
 		val red: Float = (color shr 16 and 0xff) / 255F
@@ -137,7 +137,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 
 				GL11.glScaled(scale, scale, scale)
 
-				if (this.loadingScreen) GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+				if (this.loadingScreen) GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
 				else classProvider.getGlStateManager().bindTexture(textureID)
 
 				GL11.glColor4f(red, green, blue, alpha)

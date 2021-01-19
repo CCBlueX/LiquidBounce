@@ -23,7 +23,7 @@ public class CPSCounter {
      *
      * @param button The clicked button
      */
-    public static void registerClick(MouseButton button) {
+    public static void registerClick(final MouseButton button) {
         TIMESTAMP_BUFFERS[button.getIndex()].add(System.currentTimeMillis());
     }
 
@@ -33,16 +33,16 @@ public class CPSCounter {
      * @param button The mouse button
      * @return The CPS
      */
-    public static int getCPS(MouseButton button) {
+    public static int getCPS(final MouseButton button) {
         return TIMESTAMP_BUFFERS[button.getIndex()].getTimestampsSince(System.currentTimeMillis() - 1000L);
     }
 
     public enum MouseButton {
         LEFT(0), MIDDLE(1), RIGHT(2);
 
-        private int index;
+        private final int index;
 
-        MouseButton(int index) {
+        MouseButton(final int index) {
             this.index = index;
         }
 

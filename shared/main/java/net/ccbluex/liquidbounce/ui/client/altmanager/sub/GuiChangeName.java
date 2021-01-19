@@ -24,7 +24,7 @@ public class GuiChangeName extends WrappedGuiScreen {
 	private String status;
 
 	public GuiChangeName(final GuiAltManager gui) {
-		this.prevGui = gui;
+		prevGui = gui;
 	}
 
 	public void initGui() {
@@ -39,7 +39,7 @@ public class GuiChangeName extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
 		representedScreen.drawBackground(0);
 		RenderUtils.drawRect(30, 30, representedScreen.getWidth() - 30, representedScreen.getHeight() - 30, Integer.MIN_VALUE);
 
@@ -54,7 +54,7 @@ public class GuiChangeName extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void actionPerformed(IGuiButton button) throws IOException {
+	public void actionPerformed(final IGuiButton button) throws IOException {
 		switch (button.getId()) {
 			case 0:
 				mc.displayGuiScreen(prevGui.representedScreen);
@@ -80,7 +80,7 @@ public class GuiChangeName extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void keyTyped(char typedChar, int keyCode) throws IOException {
+	public void keyTyped(final char typedChar, final int keyCode) throws IOException {
 		if (Keyboard.KEY_ESCAPE == keyCode) {
 			mc.displayGuiScreen(prevGui.getRepresentedScreen());
 			return;
@@ -92,7 +92,7 @@ public class GuiChangeName extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException {
 		name.mouseClicked(mouseX, mouseY, mouseButton);
 		super.mouseClicked(mouseX, mouseY, mouseButton);
 	}

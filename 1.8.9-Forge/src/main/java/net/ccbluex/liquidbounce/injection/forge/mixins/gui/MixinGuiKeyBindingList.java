@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 @Mixin(GuiKeyBindingList.class)
 public abstract class MixinGuiKeyBindingList extends GuiSlot {
 
-    public MixinGuiKeyBindingList(Minecraft mcIn, int width, int height, int topIn, int bottomIn, int slotHeightIn) {
+    public MixinGuiKeyBindingList(final Minecraft mcIn, final int width, final int height, final int topIn, final int bottomIn, final int slotHeightIn) {
         super(mcIn, width, height, topIn, bottomIn, slotHeightIn);
     }
 
@@ -23,6 +23,6 @@ public abstract class MixinGuiKeyBindingList extends GuiSlot {
      */
     @Overwrite
     protected int getScrollBarX() {
-        return this.width - 5;
+        return width - 5;
     }
 }

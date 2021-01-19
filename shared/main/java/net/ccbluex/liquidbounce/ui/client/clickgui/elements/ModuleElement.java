@@ -17,7 +17,7 @@ public class ModuleElement extends ButtonElement {
 	private final Module module;
 
 	private boolean showSettings;
-	private float settingsWidth = 0F;
+	private float settingsWidth;
 	private boolean wasPressed;
 
 	public int slowlySettingsYPos;
@@ -26,17 +26,17 @@ public class ModuleElement extends ButtonElement {
 	public ModuleElement(final Module module) {
 		super(null);
 
-		this.displayName = module.getName();
+		displayName = module.getName();
 		this.module = module;
 	}
 
 	@Override
-	public void drawScreen(int mouseX, int mouseY, float button) {
+	public void drawScreen(final int mouseX, final int mouseY, final float button) {
 		LiquidBounce.clickGui.style.drawModuleElement(mouseX, mouseY, this);
 	}
 
 	@Override
-	public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
 		if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible()) {
 			module.toggle();
 			mc.getSoundHandler().playSound("gui.button.press", 1.0F);
@@ -56,7 +56,7 @@ public class ModuleElement extends ButtonElement {
 		return showSettings;
 	}
 
-	public void setShowSettings(boolean showSettings) {
+	public void setShowSettings(final boolean showSettings) {
 		this.showSettings = showSettings;
 	}
 
@@ -72,7 +72,7 @@ public class ModuleElement extends ButtonElement {
 		return settingsWidth;
 	}
 
-	public void setSettingsWidth(float settingsWidth) {
+	public void setSettingsWidth(final float settingsWidth) {
 		this.settingsWidth = settingsWidth;
 	}
 }

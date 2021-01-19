@@ -27,21 +27,21 @@ class Particle {
 	private int height;
 	private int width;
 
-	Particle(int x, int y) {
+	Particle(final int x, final int y) {
 		this.x = x;
 		this.y = y;
-		this.size = genRandom();
+		size = genRandom();
 	}
 
-	private float lint1(float f) {
-		return ((float) 1.02 * (1.0f - f)) + ((float) 1.0 * f);
+	private float lint1(final float f) {
+		return (float) 1.02 * (1.0f - f) + (float) 1.0 * f;
 	}
 
-	private float lint2(float f) {
+	private float lint2(final float f) {
 		return (float) 1.02 + f * ((float) 1.0 - (float) 1.02);
 	}
 
-	void connect(float x, float y) {
+	void connect(final float x, final float y) {
 		RenderUtils.connectPoints(getX(), getY(), x, y);
 	}
 
@@ -49,7 +49,7 @@ class Particle {
 		return height;
 	}
 
-	public void setHeight(int height) {
+	public void setHeight(final int height) {
 		this.height = height;
 	}
 
@@ -57,7 +57,7 @@ class Particle {
 		return width;
 	}
 
-	public void setWidth(int width) {
+	public void setWidth(final int width) {
 		this.width = width;
 	}
 
@@ -65,7 +65,7 @@ class Particle {
 		return x;
 	}
 
-	public void setX(int x) {
+	public void setX(final int x) {
 		this.x = x;
 	}
 
@@ -73,7 +73,7 @@ class Particle {
 		return y;
 	}
 
-	public void setY(int y) {
+	public void setY(final int y) {
 		this.y = y;
 	}
 
@@ -93,8 +93,8 @@ class Particle {
 	void fall() {
 		final Minecraft mc = Minecraft.getMinecraft();
 		final ScaledResolution scaledResolution = new ScaledResolution(mc);
-		y = (y + ySpeed);
-		x = (x + xSpeed);
+		y = y + ySpeed;
+		x = x + xSpeed;
 
 		if (y > mc.displayHeight)
 			y = 1;

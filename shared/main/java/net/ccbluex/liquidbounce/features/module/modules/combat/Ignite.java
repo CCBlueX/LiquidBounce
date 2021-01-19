@@ -39,8 +39,8 @@ public class Ignite extends Module {
        if (!msTimer.hasTimePassed(500L))
            return;
 
-       IEntityPlayerSP thePlayer = mc.getThePlayer();
-       IWorldClient theWorld = mc.getTheWorld();
+       final IEntityPlayerSP thePlayer = mc.getThePlayer();
+       final IWorldClient theWorld = mc.getTheWorld();
 
        if (thePlayer == null || theWorld == null)
            return;
@@ -57,7 +57,7 @@ public class Ignite extends Module {
 
        for (final IEntity entity : theWorld.getLoadedEntityList()) {
            if (EntityUtils.isSelected(entity, true) && !entity.isBurning()) {
-               WBlockPos blockPos = entity.getPosition();
+               final WBlockPos blockPos = entity.getPosition();
 
                if (mc.getThePlayer().getDistanceSq(blockPos) >= 22.3D ||
                        !BlockUtils.isReplaceable(blockPos) ||
@@ -89,8 +89,8 @@ public class Ignite extends Module {
 
                    mc.getPlayerController().sendUseItem(thePlayer, theWorld, itemStack);
                } else {
-                   for (EnumFacingType enumFacingType : EnumFacingType.values()) {
-                       IEnumFacing side = classProvider.getEnumFacing(enumFacingType);
+                   for (final EnumFacingType enumFacingType : EnumFacingType.values()) {
+                       final IEnumFacing side = classProvider.getEnumFacing(enumFacingType);
 
                        final WBlockPos neighbor = blockPos.offset(side);
 

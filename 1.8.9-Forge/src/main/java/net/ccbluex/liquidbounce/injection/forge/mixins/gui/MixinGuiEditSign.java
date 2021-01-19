@@ -10,6 +10,7 @@ import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiEditSign;
 import net.minecraft.event.ClickEvent;
+import net.minecraft.event.ClickEvent.Action;
 import net.minecraft.tileentity.TileEntitySign;
 import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraft.util.ChatComponentText;
@@ -43,34 +44,34 @@ public class MixinGuiEditSign extends GuiScreen {
 
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(final CallbackInfo callbackInfo) {
-        buttonList.add(toggleButton = new GuiButton(1, this.width / 2 - 100, this.height / 4 + 145, enabled ? "Disable Formatting codes" : "Enable Formatting codes"));
+        buttonList.add(toggleButton = new GuiButton(1, width / 2 - 100, height / 4 + 145, enabled ? "Disable Formatting codes" : "Enable Formatting codes"));
 
-        this.signCommand1 = new GuiTextField(0, fontRendererObj, this.width / 2 - 100, height - 15, 200, 10);
-        this.signCommand2 = new GuiTextField(1, fontRendererObj, this.width / 2 - 100, height - 15 * 2, 200, 10);
-        this.signCommand3 = new GuiTextField(2, fontRendererObj, this.width / 2 - 100, height - 15 * 3, 200, 10);
-        this.signCommand4 = new GuiTextField(3, fontRendererObj, this.width / 2 - 100, height - 15 * 4, 200, 10);
+        signCommand1 = new GuiTextField(0, fontRendererObj, width / 2 - 100, height - 15, 200, 10);
+        signCommand2 = new GuiTextField(1, fontRendererObj, width / 2 - 100, height - 15 * 2, 200, 10);
+        signCommand3 = new GuiTextField(2, fontRendererObj, width / 2 - 100, height - 15 * 3, 200, 10);
+        signCommand4 = new GuiTextField(3, fontRendererObj, width / 2 - 100, height - 15 * 4, 200, 10);
 
-        this.signCommand1.setText("");
-        this.signCommand2.setText("");
-        this.signCommand3.setText("");
-        this.signCommand4.setText("");
+        signCommand1.setText("");
+        signCommand2.setText("");
+        signCommand3.setText("");
+        signCommand4.setText("");
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
-    private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
+    private void actionPerformed(final GuiButton button, final CallbackInfo callbackInfo) {
         switch (button.id) {
             case 0:
                 if (!signCommand1.getText().isEmpty())
-                    tileSign.signText[0].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand1.getText())));
+                    tileSign.signText[0].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(Action.RUN_COMMAND, signCommand1.getText())));
 
                 if (!signCommand2.getText().isEmpty())
-                    tileSign.signText[1].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand2.getText())));
+                    tileSign.signText[1].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(Action.RUN_COMMAND, signCommand2.getText())));
 
                 if (!signCommand3.getText().isEmpty())
-                    tileSign.signText[2].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand3.getText())));
+                    tileSign.signText[2].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(Action.RUN_COMMAND, signCommand3.getText())));
 
                 if(!signCommand4.getText().isEmpty())
-                    tileSign.signText[3].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand4.getText())));
+                    tileSign.signText[3].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(Action.RUN_COMMAND, signCommand4.getText())));
                 break;
             case 1:
                 enabled = !enabled;
@@ -80,7 +81,7 @@ public class MixinGuiEditSign extends GuiScreen {
     }
 
     @Inject(method = "drawScreen", at = @At("RETURN"))
-    private void drawFields(CallbackInfo callbackInfo) {
+    private void drawFields(final CallbackInfo callbackInfo) {
         fontRendererObj.drawString("\u00A7c\u00A7lCommands \u00A77(\u00A7f\u00A7l1.8\u00A77)", width / 2 - 100, height - 15 * 5, Color.WHITE.getRGB());
 
         signCommand1.drawTextBox();
@@ -90,11 +91,11 @@ public class MixinGuiEditSign extends GuiScreen {
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        this.signCommand1.mouseClicked(mouseX, mouseY, mouseButton);
-        this.signCommand2.mouseClicked(mouseX, mouseY, mouseButton);
-        this.signCommand3.mouseClicked(mouseX, mouseY, mouseButton);
-        this.signCommand4.mouseClicked(mouseX, mouseY, mouseButton);
+    protected void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException {
+        signCommand1.mouseClicked(mouseX, mouseY, mouseButton);
+        signCommand2.mouseClicked(mouseX, mouseY, mouseButton);
+        signCommand3.mouseClicked(mouseX, mouseY, mouseButton);
+        signCommand4.mouseClicked(mouseX, mouseY, mouseButton);
 
         super.mouseClicked(mouseX, mouseY, mouseButton);
     }
@@ -103,35 +104,35 @@ public class MixinGuiEditSign extends GuiScreen {
      * @author CCBlueX
      */
     @Overwrite
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        this.signCommand1.textboxKeyTyped(typedChar, keyCode);
-        this.signCommand2.textboxKeyTyped(typedChar, keyCode);
-        this.signCommand3.textboxKeyTyped(typedChar, keyCode);
-        this.signCommand4.textboxKeyTyped(typedChar, keyCode);
+    protected void keyTyped(final char typedChar, final int keyCode) throws IOException {
+        signCommand1.textboxKeyTyped(typedChar, keyCode);
+        signCommand2.textboxKeyTyped(typedChar, keyCode);
+        signCommand3.textboxKeyTyped(typedChar, keyCode);
+        signCommand4.textboxKeyTyped(typedChar, keyCode);
 
         if(signCommand1.isFocused() || signCommand2.isFocused() || signCommand3.isFocused() || signCommand4.isFocused())
             return;
 
         if(keyCode == 200) {
-            this.editLine = this.editLine - 1 & 3;
+            editLine = editLine - 1 & 3;
         }
 
         if(keyCode == 208 || keyCode == 28 || keyCode == 156) {
-            this.editLine = this.editLine + 1 & 3;
+            editLine = editLine + 1 & 3;
         }
 
-        String s = this.tileSign.signText[this.editLine].getUnformattedText();
+        String s = tileSign.signText[editLine].getUnformattedText();
         if(keyCode == 14 && s.length() > 0) {
             s = s.substring(0, s.length() - 1);
         }
 
-        if((ChatAllowedCharacters.isAllowedCharacter(typedChar) || (enabled && typedChar == '\u00A7')) && this.fontRendererObj.getStringWidth(s + typedChar) <= 90) {
+        if((ChatAllowedCharacters.isAllowedCharacter(typedChar) || enabled && typedChar == '\u00A7') && fontRendererObj.getStringWidth(s + typedChar) <= 90) {
             s = s + typedChar;
         }
 
-        this.tileSign.signText[this.editLine] = new ChatComponentText(s);
+        tileSign.signText[editLine] = new ChatComponentText(s);
         if(keyCode == 1) {
-            this.actionPerformed(this.doneBtn);
+            actionPerformed(doneBtn);
         }
     }
 }

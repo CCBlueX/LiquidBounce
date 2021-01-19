@@ -118,14 +118,14 @@ public final class RenderUtils extends MinecraftInstance {
             drawSelectionBoundingBox(axisAlignedBB);
         }
 
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         glDepthMask(true);
         resetCaps();
     }
 
-    public static void drawSelectionBoundingBox(IAxisAlignedBB boundingBox) {
-        ITessellator tessellator = classProvider.getTessellatorInstance();
-        IWorldRenderer worldrenderer = tessellator.getWorldRenderer();
+    public static void drawSelectionBoundingBox(final IAxisAlignedBB boundingBox) {
+        final ITessellator tessellator = classProvider.getTessellatorInstance();
+        final IWorldRenderer worldrenderer = tessellator.getWorldRenderer();
 
         worldrenderer.begin(GL_LINE_STRIP, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION));
 
@@ -378,7 +378,7 @@ public final class RenderUtils extends MinecraftInstance {
         drawBorder(x, y, x2, y2, width, color1);
     }
 
-    public static void drawBorder(float x, float y, float x2, float y2, float width, int color1) {
+    public static void drawBorder(final float x, final float y, final float x2, final float y2, final float width, final int color1) {
         glEnable(GL_BLEND);
         glDisable(GL_TEXTURE_2D);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -417,14 +417,14 @@ public final class RenderUtils extends MinecraftInstance {
         glEnd();
     }
 
-    public static void drawLoadingCircle(float x, float y) {
+    public static void drawLoadingCircle(final float x, final float y) {
         for (int i = 0; i < 4; i++) {
-            int rot = (int) ((System.nanoTime() / 5000000 * i) % 360);
+            final int rot = (int) (System.nanoTime() / 5000000 * i % 360);
             drawCircle(x, y, i * 10, rot - 180, rot);
         }
     }
 
-    public static void drawCircle(float x, float y, float radius, int start, int end) {
+    public static void drawCircle(final float x, final float y, final float radius, final int start, final int end) {
         classProvider.getGlStateManager().enableBlend();
         classProvider.getGlStateManager().disableTexture2D();
         classProvider.getGlStateManager().tryBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
@@ -433,8 +433,8 @@ public final class RenderUtils extends MinecraftInstance {
         glEnable(GL_LINE_SMOOTH);
         glLineWidth(2F);
         glBegin(GL_LINE_STRIP);
-        for (float i = end; i >= start; i -= (360 / 90.0f)) {
-            glVertex2f((float) (x + (cos(i * PI / 180) * (radius * 1.001F))), (float) (y + (sin(i * PI / 180) * (radius * 1.001F))));
+        for (float i = end; i >= start; i -= 360 / 90.0f) {
+            glVertex2f((float) (x + cos(i * PI / 180) * (radius * 1.001F)), (float) (y + sin(i * PI / 180) * (radius * 1.001F)));
         }
         glEnd();
         glDisable(GL_LINE_SMOOTH);
@@ -444,8 +444,8 @@ public final class RenderUtils extends MinecraftInstance {
     }
 
     public static void drawFilledCircle(final int xx, final int yy, final float radius, final Color color) {
-        int sections = 50;
-        double dAngle = 2 * Math.PI / sections;
+        final int sections = 50;
+        final double dAngle = 2 * PI / sections;
         float x, y;
 
         glPushAttrib(GL_ENABLE_BIT);
@@ -457,8 +457,8 @@ public final class RenderUtils extends MinecraftInstance {
         glBegin(GL_TRIANGLE_FAN);
 
         for (int i = 0; i < sections; i++) {
-            x = (float) (radius * Math.sin((i * dAngle)));
-            y = (float) (radius * Math.cos((i * dAngle)));
+            x = (float) (radius * sin(i * dAngle));
+            y = (float) (radius * cos(i * dAngle));
 
             glColor4f(color.getRed() / 255F, color.getGreen() / 255F, color.getBlue() / 255F, color.getAlpha() / 255F);
             glVertex2f(xx + x, yy + y);
@@ -471,7 +471,7 @@ public final class RenderUtils extends MinecraftInstance {
         glPopAttrib();
     }
 
-    public static void drawImage(IResourceLocation image, int x, int y, int width, int height) {
+    public static void drawImage(final IResourceLocation image, final int x, final int y, final int width, final int height) {
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         glDepthMask(false);
@@ -487,21 +487,21 @@ public final class RenderUtils extends MinecraftInstance {
     /**
      * Draws a textured rectangle at z = 0. Args: x, y, u, v, width, height, textureWidth, textureHeight
      */
-    public static void drawModalRectWithCustomSizedTexture(float x, float y, float u, float v, float width, float height, float textureWidth, float textureHeight) {
-        float f = 1.0F / textureWidth;
-        float f1 = 1.0F / textureHeight;
-        ITessellator tessellator = classProvider.getTessellatorInstance();
-        IWorldRenderer worldrenderer = tessellator.getWorldRenderer();
+    public static void drawModalRectWithCustomSizedTexture(final float x, final float y, final float u, final float v, final float width, final float height, final float textureWidth, final float textureHeight) {
+        final float f = 1.0F / textureWidth;
+        final float f1 = 1.0F / textureHeight;
+        final ITessellator tessellator = classProvider.getTessellatorInstance();
+        final IWorldRenderer worldrenderer = tessellator.getWorldRenderer();
         worldrenderer.begin(7, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX));
-        worldrenderer.pos(x, y + height, 0.0D).tex(u * f, (v + (float) height) * f1).endVertex();
-        worldrenderer.pos(x + width, y + height, 0.0D).tex((u + (float) width) * f, (v + (float) height) * f1).endVertex();
-        worldrenderer.pos(x + width, y, 0.0D).tex((u + (float) width) * f, v * f1).endVertex();
+        worldrenderer.pos(x, y + height, 0.0D).tex(u * f, (v + height) * f1).endVertex();
+        worldrenderer.pos(x + width, y + height, 0.0D).tex((u + width) * f, (v + height) * f1).endVertex();
+        worldrenderer.pos(x + width, y, 0.0D).tex((u + width) * f, v * f1).endVertex();
         worldrenderer.pos(x, y, 0.0D).tex(u * f, v * f1).endVertex();
         tessellator.draw();
     }
 
     public static void glColor(final int red, final int green, final int blue, final int alpha) {
-        GL11.glColor4f(red / 255F, green / 255F, blue / 255F, alpha / 255F);
+        glColor4f(red / 255F, green / 255F, blue / 255F, alpha / 255F);
     }
 
     public static void glColor(final Color color) {
@@ -513,17 +513,17 @@ public final class RenderUtils extends MinecraftInstance {
     }
 
     public static void draw2D(final IEntityLivingBase entity, final double posX, final double posY, final double posZ, final int color, final int backgroundColor) {
-        GL11.glPushMatrix();
-        GL11.glTranslated(posX, posY, posZ);
-        GL11.glRotated(-mc.getRenderManager().getPlayerViewY(), 0F, 1F, 0F);
-        GL11.glScaled(-0.1D, -0.1D, 0.1D);
+        glPushMatrix();
+        glTranslated(posX, posY, posZ);
+        glRotated(-mc.getRenderManager().getPlayerViewY(), 0F, 1F, 0F);
+        glScaled(-0.1D, -0.1D, 0.1D);
 
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         glDisable(GL_TEXTURE_2D);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        GL11.glDepthMask(true);
+        glDepthMask(true);
 
         glColor(color);
 
@@ -533,7 +533,7 @@ public final class RenderUtils extends MinecraftInstance {
 
         glCallList(DISPLAY_LISTS_2D[1]);
 
-        GL11.glTranslated(0, 21 + -(entity.getEntityBoundingBox().getMaxY() - entity.getEntityBoundingBox().getMinY()) * 12, 0);
+        glTranslated(0, 21 + -(entity.getEntityBoundingBox().getMaxY() - entity.getEntityBoundingBox().getMinY()) * 12, 0);
 
         glColor(color);
         glCallList(DISPLAY_LISTS_2D[2]);
@@ -546,27 +546,27 @@ public final class RenderUtils extends MinecraftInstance {
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_BLEND);
 
-        GL11.glPopMatrix();
+        glPopMatrix();
     }
 
     public static void draw2D(final WBlockPos blockPos, final int color, final int backgroundColor) {
         final IRenderManager renderManager = mc.getRenderManager();
 
-        final double posX = (blockPos.getX() + 0.5) - renderManager.getRenderPosX();
+        final double posX = blockPos.getX() + 0.5 - renderManager.getRenderPosX();
         final double posY = blockPos.getY() - renderManager.getRenderPosY();
-        final double posZ = (blockPos.getZ() + 0.5) - renderManager.getRenderPosZ();
+        final double posZ = blockPos.getZ() + 0.5 - renderManager.getRenderPosZ();
 
-        GL11.glPushMatrix();
-        GL11.glTranslated(posX, posY, posZ);
-        GL11.glRotated(-mc.getRenderManager().getPlayerViewY(), 0F, 1F, 0F);
-        GL11.glScaled(-0.1D, -0.1D, 0.1D);
+        glPushMatrix();
+        glTranslated(posX, posY, posZ);
+        glRotated(-mc.getRenderManager().getPlayerViewY(), 0F, 1F, 0F);
+        glScaled(-0.1D, -0.1D, 0.1D);
 
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         glDisable(GL_TEXTURE_2D);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        GL11.glDepthMask(true);
+        glDepthMask(true);
 
         glColor(color);
 
@@ -576,7 +576,7 @@ public final class RenderUtils extends MinecraftInstance {
 
         glCallList(DISPLAY_LISTS_2D[1]);
 
-        GL11.glTranslated(0, 9, 0);
+        glTranslated(0, 9, 0);
 
         glColor(color);
 
@@ -591,7 +591,7 @@ public final class RenderUtils extends MinecraftInstance {
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_BLEND);
 
-        GL11.glPopMatrix();
+        glPopMatrix();
     }
 
     public static void renderNameTag(final String string, final double x, final double y, final double z) {
@@ -674,11 +674,11 @@ public final class RenderUtils extends MinecraftInstance {
             glDisable(cap);
     }
 
-    public static void drawScaledCustomSizeModalRect(int x, int y, float u, float v, int uWidth, int vHeight, int width, int height, float tileWidth, float tileHeight) {
-        float f = 1.0F / tileWidth;
-        float f1 = 1.0F / tileHeight;
-        ITessellator tessellator = classProvider.getTessellatorInstance();
-        IWorldRenderer worldrenderer = tessellator.getWorldRenderer();
+    public static void drawScaledCustomSizeModalRect(final int x, final int y, final float u, final float v, final int uWidth, final int vHeight, final int width, final int height, final float tileWidth, final float tileHeight) {
+        final float f = 1.0F / tileWidth;
+        final float f1 = 1.0F / tileHeight;
+        final ITessellator tessellator = classProvider.getTessellatorInstance();
+        final IWorldRenderer worldrenderer = tessellator.getWorldRenderer();
         worldrenderer.begin(7, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX));
         worldrenderer.pos(x, y + height, 0.0D).tex(u * f, (v + (float) vHeight) * f1).endVertex();
         worldrenderer.pos(x + width, y + height, 0.0D).tex((u + (float) uWidth) * f, (v + (float) vHeight) * f1).endVertex();

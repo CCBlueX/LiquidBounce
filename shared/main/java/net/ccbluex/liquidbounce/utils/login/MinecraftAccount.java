@@ -16,12 +16,12 @@ public final class MinecraftAccount {
     }
 
     public MinecraftAccount(final String name, final String password) {
-        this.username = name;
+		username = name;
         this.password = password;
     }
 
     public MinecraftAccount(final String name, final String password, final String inGameName) {
-        this.username = name;
+		username = name;
         this.password = password;
         this.inGameName = inGameName;
     }
@@ -43,6 +43,6 @@ public final class MinecraftAccount {
     }
 
     public void setAccountName(final String accountName) {
-        this.inGameName = accountName;
+		inGameName = accountName;
     }
 }

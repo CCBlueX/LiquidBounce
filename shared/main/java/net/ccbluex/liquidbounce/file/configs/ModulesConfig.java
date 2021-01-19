@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.file.FileManager;
 import java.io.*;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class ModulesConfig extends FileConfig {
 
@@ -41,9 +42,9 @@ public class ModulesConfig extends FileConfig {
         if(jsonElement instanceof JsonNull)
             return;
 
-        final Iterator<Map.Entry<String, JsonElement>> entryIterator = jsonElement.getAsJsonObject().entrySet().iterator();
+        final Iterator<Entry<String, JsonElement>> entryIterator = jsonElement.getAsJsonObject().entrySet().iterator();
         while(entryIterator.hasNext()) {
-            final Map.Entry<String, JsonElement> entry = entryIterator.next();
+            final Entry<String, JsonElement> entry = entryIterator.next();
             final Module module = LiquidBounce.moduleManager.getModule(entry.getKey());
 
             if(module != null) {

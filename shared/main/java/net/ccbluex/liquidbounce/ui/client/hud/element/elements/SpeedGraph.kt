@@ -35,7 +35,7 @@ class SpeedGraph(
 	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
 
 	private val speedList = ArrayList<Double>()
-	private var lastTick = -1;
+	private var lastTick = -1
 
 	override fun drawElement(): Border
 	{

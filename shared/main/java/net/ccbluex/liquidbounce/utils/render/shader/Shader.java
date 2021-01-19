@@ -20,9 +20,10 @@ public abstract class Shader extends MinecraftInstance {
     private Map<String, Integer> uniformsMap;
 
     public Shader(final String fragmentShader) {
-        int vertexShaderID, fragmentShaderID;
+        final int vertexShaderID;
+		final int fragmentShaderID;
 
-        try {
+		try {
             final InputStream vertexStream = getClass().getResourceAsStream("/assets/minecraft/liquidbounce/shader/vertex.vert");
             vertexShaderID = createShader(IOUtils.toString(vertexStream), ARBVertexShader.GL_VERTEX_SHADER_ARB);
             IOUtils.closeQuietly(vertexStream);
@@ -73,7 +74,7 @@ public abstract class Shader extends MinecraftInstance {
 
     public abstract void updateUniforms();
 
-    private int createShader(String shaderSource, int shaderType) {
+    private int createShader(final String shaderSource, final int shaderType) {
         int shader = 0;
 
         try {
@@ -96,7 +97,7 @@ public abstract class Shader extends MinecraftInstance {
         }
     }
 
-    private String getLogInfo(int i) {
+    private String getLogInfo(final int i) {
         return ARBShaderObjects.glGetInfoLogARB(i, ARBShaderObjects.glGetObjectParameteriARB(i, ARBShaderObjects.GL_OBJECT_INFO_LOG_LENGTH_ARB));
     }
 

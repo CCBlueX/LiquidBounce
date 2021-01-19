@@ -74,7 +74,7 @@ public class GuiPortScanner extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
 		representedScreen.drawBackground(0);
 
 		Fonts.font40.drawCenteredString("Port Scanner", representedScreen.getWidth() / 2.0f, 34, 0xffffff);
@@ -102,7 +102,7 @@ public class GuiPortScanner extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void actionPerformed(IGuiButton button) throws IOException {
+	public void actionPerformed(final IGuiButton button) throws IOException {
 		switch (button.getId()) {
 			case 0:
 				mc.displayGuiScreen(prevGui);
@@ -132,7 +132,7 @@ public class GuiPortScanner extends WrappedGuiScreen {
 						return;
 					}
 
-					int threads;
+					final int threads;
 					try {
 						threads = Integer.parseInt(threadsField.getText());
 					} catch (final NumberFormatException e) {
@@ -214,7 +214,7 @@ public class GuiPortScanner extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void keyTyped(char typedChar, int keyCode) throws IOException {
+	public void keyTyped(final char typedChar, final int keyCode) throws IOException {
 		if (Keyboard.KEY_ESCAPE == keyCode) {
 			mc.displayGuiScreen(prevGui);
 			return;
@@ -241,7 +241,7 @@ public class GuiPortScanner extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException {
 		hostField.mouseClicked(mouseX, mouseY, mouseButton);
 		minPortField.mouseClicked(mouseX, mouseY, mouseButton);
 		maxPortField.mouseClicked(mouseX, mouseY, mouseButton);

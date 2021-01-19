@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.value.Value;
 import java.io.*;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class ValuesConfig extends FileConfig {
 
@@ -52,16 +53,16 @@ public class ValuesConfig extends FileConfig {
 
         final JsonObject jsonObject = (JsonObject) jsonElement;
 
-        final Iterator<Map.Entry<String, JsonElement>> iterator = jsonObject.entrySet().iterator();
+        final Iterator<Entry<String, JsonElement>> iterator = jsonObject.entrySet().iterator();
         while(iterator.hasNext()) {
-            final Map.Entry<String, JsonElement> entry = iterator.next();
+            final Entry<String, JsonElement> entry = iterator.next();
 
             if (entry.getKey().equalsIgnoreCase("CommandPrefix")) {
                 LiquidBounce.commandManager.setPrefix(entry.getValue().getAsCharacter());
             } else if (entry.getKey().equalsIgnoreCase("ShowRichPresence")) {
                 LiquidBounce.clientRichPresence.setShowRichPresenceValue(entry.getValue().getAsBoolean());
             } else if (entry.getKey().equalsIgnoreCase("targets")) {
-                JsonObject jsonValue = (JsonObject) entry.getValue();
+                final JsonObject jsonValue = (JsonObject) entry.getValue();
 
                 if (jsonValue.has("TargetPlayer"))
                     EntityUtils.targetPlayer = jsonValue.get("TargetPlayer").getAsBoolean();
@@ -74,7 +75,7 @@ public class ValuesConfig extends FileConfig {
                 if (jsonValue.has("TargetDead"))
                     EntityUtils.targetDead = jsonValue.get("TargetDead").getAsBoolean();
             } else if (entry.getKey().equalsIgnoreCase("features")) {
-                JsonObject jsonValue = (JsonObject) entry.getValue();
+                final JsonObject jsonValue = (JsonObject) entry.getValue();
 
                 if (jsonValue.has("AntiForge"))
                     AntiForge.enabled = jsonValue.get("AntiForge").getAsBoolean();
@@ -89,17 +90,17 @@ public class ValuesConfig extends FileConfig {
                 if (jsonValue.has("AutoReconnectDelay"))
                     AutoReconnect.INSTANCE.setDelay(jsonValue.get("AutoReconnectDelay").getAsInt());
             } else if (entry.getKey().equalsIgnoreCase("thealtening")) {
-                JsonObject jsonValue = (JsonObject) entry.getValue();
+                final JsonObject jsonValue = (JsonObject) entry.getValue();
 
                 if (jsonValue.has("API-Key"))
                     GuiTheAltening.Companion.setApiKey(jsonValue.get("API-Key").getAsString());
             } else if (entry.getKey().equalsIgnoreCase("liquidchat")) {
-                JsonObject jsonValue = (JsonObject) entry.getValue();
+                final JsonObject jsonValue = (JsonObject) entry.getValue();
 
                 if (jsonValue.has("token"))
                     LiquidChat.Companion.setJwtToken(jsonValue.get("token").getAsString());
             } else if (entry.getKey().equalsIgnoreCase("DonatorCape")) {
-                JsonObject jsonValue = (JsonObject) entry.getValue();
+                final JsonObject jsonValue = (JsonObject) entry.getValue();
 
                 if (jsonValue.has("TransferCode"))
                     GuiDonatorCape.Companion.setTransferCode(jsonValue.get("TransferCode").getAsString());
@@ -107,7 +108,7 @@ public class ValuesConfig extends FileConfig {
                 if (jsonValue.has("CapeEnabled"))
                     GuiDonatorCape.Companion.setCapeEnabled(jsonValue.get("CapeEnabled").getAsBoolean());
             } else if (entry.getKey().equalsIgnoreCase("Background")) {
-                JsonObject jsonValue = (JsonObject) entry.getValue();
+                final JsonObject jsonValue = (JsonObject) entry.getValue();
 
                 if (jsonValue.has("Enabled"))
                     GuiBackground.Companion.setEnabled(jsonValue.get("Enabled").getAsBoolean());

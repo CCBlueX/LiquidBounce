@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -58,12 +59,12 @@ public class AutoArmor extends Module {
 
     private long delay;
 
-    private boolean locked = false;
+    private boolean locked;
 
     @EventTarget
     public void onRender3D(final Render3DEvent event) {
         if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || mc.getThePlayer() == null ||
-                (mc.getThePlayer().getOpenContainer() != null && mc.getThePlayer().getOpenContainer().getWindowId() != 0))
+                mc.getThePlayer().getOpenContainer() != null && mc.getThePlayer().getOpenContainer().getWindowId() != 0)
             return;
 
         // Find best armor
@@ -79,7 +80,7 @@ public class AutoArmor extends Module {
 
         final ArmorPiece[] bestArmor = new ArmorPiece[4];
 
-        for (final Map.Entry<Integer, List<ArmorPiece>> armorEntry : armorPieces.entrySet()) {
+        for (final Entry<Integer, List<ArmorPiece>> armorEntry : armorPieces.entrySet()) {
             bestArmor[armorEntry.getKey()] = armorEntry.getValue().stream()
                     .max(ARMOR_COMPARATOR).orElse(null);
         }
@@ -91,7 +92,7 @@ public class AutoArmor extends Module {
             if (armorPiece == null)
                 continue;
 
-            int armorSlot = 3 - i;
+            final int armorSlot = 3 - i;
 
             final ArmorPiece oldArmor = new ArmorPiece(mc.getThePlayer().getInventory().armorItemInSlot(armorSlot), -1);
 
@@ -123,7 +124,7 @@ public class AutoArmor extends Module {
      * @param isArmorSlot
      * @return True if it is unable to move the item
      */
-    private boolean move(int item, boolean isArmorSlot) {
+    private boolean move(final int item, final boolean isArmorSlot) {
         if (!isArmorSlot && item < 9 && hotbarValue.get() && !classProvider.isGuiInventory(mc.getCurrentScreen())) {
             mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(item));
             mc.getNetHandler().addToSendQueue(CrossVersionUtilsKt.createUseItemPacket(mc.getThePlayer().getInventoryContainer().getSlot(item).getStack(), WEnumHand.MAIN_HAND));
@@ -141,7 +142,7 @@ public class AutoArmor extends Module {
             boolean full = isArmorSlot;
 
             if (full) {
-                for (IItemStack iItemStack : mc.getThePlayer().getInventory().getMainInventory()) {
+                for (final IItemStack iItemStack : mc.getThePlayer().getInventory().getMainInventory()) {
                     if (ItemUtils.isStackEmpty(iItemStack)) {
                         full = false;
                         break;
@@ -152,7 +153,7 @@ public class AutoArmor extends Module {
             if (full) {
                 mc.getPlayerController().windowClick(mc.getThePlayer().getInventoryContainer().getWindowId(), item, 1, 4, mc.getThePlayer());
             } else {
-                mc.getPlayerController().windowClick(mc.getThePlayer().getInventoryContainer().getWindowId(), (isArmorSlot ? item : (item < 9 ? item + 36 : item)), 0, 1, mc.getThePlayer());
+                mc.getPlayerController().windowClick(mc.getThePlayer().getInventoryContainer().getWindowId(), isArmorSlot ? item : item < 9 ? item + 36 : item, 0, 1, mc.getThePlayer());
             }
 
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());

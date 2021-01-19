@@ -24,14 +24,14 @@ public abstract class MixinGuiMultiplayer extends MixinGuiScreen {
     private GuiButton bungeeCordSpoofButton;
 
     @Inject(method = "initGui", at = @At("RETURN"))
-    private void initGui(CallbackInfo callbackInfo) {
+    private void initGui(final CallbackInfo callbackInfo) {
         buttonList.add(new GuiButton(997, 5, 8, 98, 20, "AntiForge"));
         buttonList.add(bungeeCordSpoofButton = new GuiButton(998, 108, 8, 98, 20, "BungeeCord Spoof: " + (BungeeCordSpoof.enabled ? "On" : "Off")));
         buttonList.add(new GuiButton(999, width - 104, 8, 98, 20, "Tools"));
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
-    private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
+    private void actionPerformed(final GuiButton button, final CallbackInfo callbackInfo) {
         switch (button.id) {
             case 997:
                 mc.displayGuiScreen(GuiScreenImplKt.unwrap(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiAntiForge(GuiScreenImplKt.wrap((GuiScreen) (Object) this)))));

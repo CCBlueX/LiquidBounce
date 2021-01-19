@@ -15,25 +15,25 @@ public class Element extends MinecraftInstance {
 	private int height;
 	private boolean visible;
 
-	public void setLocation(int x, int y) {
+	public void setLocation(final int x, final int y) {
 		this.x = x;
 		this.y = y;
 	}
 
-	public void drawScreen(int mouseX, int mouseY, float button) {
+	public void drawScreen(final int mouseX, final int mouseY, final float button) {
 	}
 
-	public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
 	}
 
-	public void mouseReleased(int mouseX, int mouseY, int state) {
+	public void mouseReleased(final int mouseX, final int mouseY, final int state) {
 	}
 
 	public int getX() {
 		return x;
 	}
 
-	public void setX(int x) {
+	public void setX(final int x) {
 		this.x = x;
 	}
 
@@ -41,7 +41,7 @@ public class Element extends MinecraftInstance {
 		return y;
 	}
 
-	public void setY(int y) {
+	public void setY(final int y) {
 		this.y = y;
 	}
 
@@ -49,7 +49,7 @@ public class Element extends MinecraftInstance {
 		return width;
 	}
 
-	public void setWidth(int width) {
+	public void setWidth(final int width) {
 		this.width = width;
 	}
 
@@ -57,7 +57,7 @@ public class Element extends MinecraftInstance {
 		return height;
 	}
 
-	public void setHeight(int height) {
+	public void setHeight(final int height) {
 		this.height = height;
 	}
 
@@ -65,7 +65,7 @@ public class Element extends MinecraftInstance {
 		return visible;
 	}
 
-	public void setVisible(boolean visible) {
+	public void setVisible(final boolean visible) {
 		this.visible = visible;
 	}
 }

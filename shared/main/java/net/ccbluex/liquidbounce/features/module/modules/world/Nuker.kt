@@ -61,7 +61,7 @@ class Nuker : Module() {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // Block hit delay
-        if (blockHitDelay > 0 && !LiquidBounce.moduleManager[FastBreak::class.java]!!.state) {
+        if (blockHitDelay > 0 && !LiquidBounce.moduleManager[FastBreak::class.java].state) {
             blockHitDelay--
             return
         }

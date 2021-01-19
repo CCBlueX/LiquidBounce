@@ -12,7 +12,7 @@ public class ArmorPiece {
     private final IItemStack itemStack;
     private final int slot;
 
-    public ArmorPiece(IItemStack itemStack, int slot) {
+    public ArmorPiece(final IItemStack itemStack, final int slot) {
         this.itemStack = itemStack;
         this.slot = slot;
     }

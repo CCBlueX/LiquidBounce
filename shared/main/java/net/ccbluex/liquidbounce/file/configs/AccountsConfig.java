@@ -42,10 +42,10 @@ public class AccountsConfig extends FileConfig {
                 return;
 
             for (final JsonElement accountElement : jsonElement.getAsJsonArray()) {
-                JsonObject accountObject = accountElement.getAsJsonObject();
-                JsonElement name = accountObject.get("name");
-                JsonElement password = accountObject.get("password");
-                JsonElement inGameName = accountObject.get("inGameName");
+                final JsonObject accountObject = accountElement.getAsJsonObject();
+                final JsonElement name = accountObject.get("name");
+                final JsonElement password = accountObject.get("password");
+                final JsonElement inGameName = accountObject.get("inGameName");
 
                 if (inGameName == null || inGameName.isJsonNull())
                     addAccount(name.getAsString(), password.getAsString());
@@ -55,7 +55,7 @@ public class AccountsConfig extends FileConfig {
                     addAccount(name.getAsString(), accountObject.get("password").getAsString(), accountObject.get("inGameName").getAsString());
             }
 
-        } catch (JsonSyntaxException | IllegalStateException ex) {
+        } catch (final JsonSyntaxException | IllegalStateException ex) {
             //When the JSON Parse fail, the client try to load and update the old config
             ClientUtils.getLogger().info("[FileManager] Try to load old Accounts config...");
             final List<String> accountList = new Gson().fromJson(new BufferedReader(new FileReader(getFile())), List.class);
@@ -94,7 +94,7 @@ public class AccountsConfig extends FileConfig {
         final JsonArray jsonArray = new JsonArray();
 
         for (final MinecraftAccount minecraftAccount : accounts) {
-            JsonObject friendObject = new JsonObject();
+            final JsonObject friendObject = new JsonObject();
             friendObject.addProperty("name", minecraftAccount.getName());
             friendObject.addProperty("password", minecraftAccount.getPassword());
             friendObject.addProperty("inGameName", minecraftAccount.getAccountName());
@@ -159,7 +159,7 @@ public class AccountsConfig extends FileConfig {
      *
      * @param account the account
      */
-    public void removeAccount(MinecraftAccount account) {
+    public void removeAccount(final MinecraftAccount account) {
         accounts.remove(account);
     }
 

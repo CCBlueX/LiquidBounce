@@ -21,7 +21,7 @@ public class AntiForge extends MinecraftInstance implements Listenable {
     public static boolean blockPayloadPackets = true;
 
     @EventTarget
-    public void onPacket(PacketEvent event) {
+    public void onPacket(final PacketEvent event) {
         final IPacket packet = event.getPacket();
 
         if (enabled && !mc.isIntegratedServerRunning()) {
@@ -30,7 +30,7 @@ public class AntiForge extends MinecraftInstance implements Listenable {
                     event.cancelEvent();
 
                 if (blockPayloadPackets && classProvider.isCPacketCustomPayload(packet)) {
-                    ICPacketCustomPayload customPayload = packet.asCPacketCustomPayload();
+                    final ICPacketCustomPayload customPayload = packet.asCPacketCustomPayload();
 
                     if (!customPayload.getChannelName().startsWith("MC|"))
                         event.cancelEvent();

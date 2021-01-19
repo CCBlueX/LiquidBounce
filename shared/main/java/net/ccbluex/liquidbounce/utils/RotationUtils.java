@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket;
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayer;
 import net.ccbluex.liquidbounce.api.minecraft.util.*;
+import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition.WMovingObjectType;
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.Listenable;
 import net.ccbluex.liquidbounce.event.PacketEvent;
@@ -29,7 +30,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
     public static Rotation targetRotation;
     public static Rotation serverRotation = new Rotation(0F, 0F);
 
-    public static boolean keepCurrentRotation = false;
+    public static boolean keepCurrentRotation;
 
     private static double x = random.nextDouble();
     private static double y = random.nextDouble();
@@ -70,7 +71,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
                     final IMovingObjectPosition obj = mc.getTheWorld().rayTraceBlocks(eyesPos, vector, false,
                             false, true);
 
-                    if (obj != null && obj.getTypeOfHit() == IMovingObjectPosition.WMovingObjectType.BLOCK) {
+                    if (obj != null && obj.getTypeOfHit() == WMovingObjectType.BLOCK) {
                         final VecRotation currentVec = new VecRotation(posVec, rotation);
 
                         if (vecRotation == null || getRotationDifference(currentVec.getRotation()) < getRotationDifference(vecRotation.getRotation()))
@@ -94,9 +95,9 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
     public static void faceBow(final IEntity target, final boolean silent, final boolean predict, final float predictSize) {
         final IEntityPlayerSP player = mc.getThePlayer();
 
-        final double posX = target.getPosX() + (predict ? (target.getPosX() - target.getPrevPosX()) * predictSize : 0) - (player.getPosX() + (predict ? (player.getPosX() - player.getPrevPosX()) : 0));
-        final double posY = target.getEntityBoundingBox().getMinY() + (predict ? (target.getEntityBoundingBox().getMinY() - target.getPrevPosY()) * predictSize : 0) + target.getEyeHeight() - 0.15 - (player.getEntityBoundingBox().getMinY() + (predict ? (player.getPosY() - player.getPrevPosY()) : 0)) - player.getEyeHeight();
-        final double posZ = target.getPosZ() + (predict ? (target.getPosZ() - target.getPrevPosZ()) * predictSize : 0) - (player.getPosZ() + (predict ? (player.getPosZ() - player.getPrevPosZ()) : 0));
+        final double posX = target.getPosX() + (predict ? (target.getPosX() - target.getPrevPosX()) * predictSize : 0) - (player.getPosX() + (predict ? player.getPosX() - player.getPrevPosX() : 0));
+        final double posY = target.getEntityBoundingBox().getMinY() + (predict ? (target.getEntityBoundingBox().getMinY() - target.getPrevPosY()) * predictSize : 0) + target.getEyeHeight() - 0.15 - (player.getEntityBoundingBox().getMinY() + (predict ? player.getPosY() - player.getPrevPosY() : 0)) - player.getEyeHeight();
+        final double posZ = target.getPosZ() + (predict ? (target.getPosZ() - target.getPrevPosZ()) * predictSize : 0) - (player.getPosZ() + (predict ? player.getPosZ() - player.getPrevPosZ() : 0));
         final double posSqrt = Math.sqrt(posX * posX + posZ * posZ);
 
         float velocity = LiquidBounce.moduleManager.getModule(FastBow.class).getState() ? 1F : player.getItemInUseDuration() / 20F;
@@ -137,7 +138,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
         return new Rotation(WMathHelper.wrapAngleTo180_float(
                 (float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90F
         ), WMathHelper.wrapAngleTo180_float(
-                (float) (-Math.toDegrees(Math.atan2(diffY, Math.sqrt(diffX * diffX + diffZ * diffZ))))
+                (float) -Math.toDegrees(Math.atan2(diffY, Math.sqrt(diffX * diffX + diffZ * diffZ)))
         ));
     }
 
@@ -259,7 +260,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      * @return difference between angle points
      */
     private static float getAngleDifference(final float a, final float b) {
-        return ((((a - b) % 360F) + 540F) % 360F) - 180F;
+        return ((a - b) % 360F + 540F) % 360F - 180F;
     }
 
     /**
@@ -269,10 +270,10 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      * @return target vector
      */
     public static WVec3 getVectorForRotation(final Rotation rotation) {
-        float yawCos = (float) Math.cos(-rotation.getYaw() * 0.017453292F - (float) Math.PI);
-        float yawSin = (float) Math.sin(-rotation.getYaw() * 0.017453292F - (float) Math.PI);
-        float pitchCos = (float) -Math.cos(-rotation.getPitch() * 0.017453292F);
-        float pitchSin = (float) Math.sin(-rotation.getPitch() * 0.017453292F);
+        final float yawCos = (float) Math.cos(-rotation.getYaw() * 0.017453292F - (float) Math.PI);
+        final float yawSin = (float) Math.sin(-rotation.getYaw() * 0.017453292F - (float) Math.PI);
+        final float pitchCos = (float) -Math.cos(-rotation.getPitch() * 0.017453292F);
+        final float pitchSin = (float) Math.sin(-rotation.getPitch() * 0.017453292F);
         return new WVec3(yawSin * pitchCos, pitchSin, yawCos * pitchCos);
     }
 
@@ -283,7 +284,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      * @param blockReachDistance your reach
      * @return if crosshair is over target
      */
-    public static boolean isFaced(final IEntity targetEntity, double blockReachDistance) {
+    public static boolean isFaced(final IEntity targetEntity, final double blockReachDistance) {
         return RaycastUtils.raycastEntity(blockReachDistance, entity -> targetEntity != null && targetEntity.equals(entity)) != null;
     }
 

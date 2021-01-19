@@ -19,7 +19,7 @@ public class MixinMixinItemStack implements IMixinItemStack {
 
     @Inject(method = "<init>(Lnet/minecraft/item/Item;IILnet/minecraft/nbt/NBTTagCompound;)V", at = @At("RETURN"))
     private void init(final CallbackInfo callbackInfo) {
-        this.itemDelay = System.currentTimeMillis();
+		itemDelay = System.currentTimeMillis();
     }
 
     @Override

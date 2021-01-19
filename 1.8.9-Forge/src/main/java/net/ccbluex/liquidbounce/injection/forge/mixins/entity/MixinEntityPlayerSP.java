@@ -715,7 +715,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 setFire(-this.fireResistance);
             }
 
-            this.worldObj.theProfiler.endSection();
+            worldObj.theProfiler.endSection();
         }
     }
 }

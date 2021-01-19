@@ -61,12 +61,12 @@ public abstract class MixinGuiConnecting extends GuiScreen {
     private static AtomicInteger CONNECTION_ID;
 
     @Inject(method = "connect", at = @At("HEAD"))
-    private void headConnect(final String ip, final int port, CallbackInfo callbackInfo) {
+    private void headConnect(final String ip, final int port, final CallbackInfo callbackInfo) {
         ServerUtils.serverData = ServerDataImplKt.wrap(new ServerData("", ip + ":" + port, false));
     }
 
     @Inject(method = "connect", at = @At(value = "NEW", target = "net/minecraft/network/login/client/C00PacketLoginStart"), cancellable = true)
-    private void mcLeaks(CallbackInfo callbackInfo) {
+    private void mcLeaks(final CallbackInfo callbackInfo) {
         if(MCLeaks.isAltActive()) {
             networkManager.sendPacket(new C00PacketLoginStart(new GameProfile(null, MCLeaks.getSession().getUsername())));
             callbackInfo.cancel();
@@ -93,13 +93,13 @@ public abstract class MixinGuiConnecting extends GuiScreen {
                 networkManager.setNetHandler(new NetHandlerLoginClient(networkManager, mc, previousGuiScreen));
                 networkManager.sendPacket(new C00Handshake(47, ip, port, EnumConnectionState.LOGIN, true));
                 networkManager.sendPacket(new C00PacketLoginStart(MCLeaks.isAltActive() ? new GameProfile(null, MCLeaks.getSession().getUsername()) : mc.getSession().getProfile()));
-            }catch(UnknownHostException unknownhostexception) {
+            }catch(final UnknownHostException unknownhostexception) {
                 if(cancel)
                     return;
 
                 logger.error("Couldn't connect to server", unknownhostexception);
                 mc.displayGuiScreen(new GuiDisconnected(previousGuiScreen, "connect.failed", new ChatComponentTranslation("disconnect.genericReason", "Unknown host")));
-            }catch(Exception exception) {
+            }catch(final Exception exception) {
                 if(cancel) {
                     return;
                 }
@@ -108,7 +108,7 @@ public abstract class MixinGuiConnecting extends GuiScreen {
                 String s = exception.toString();
 
                 if(inetaddress != null) {
-                    String s1 = inetaddress.toString() + ":" + port;
+                    final String s1 = inetaddress + ":" + port;
                     s = s.replaceAll(s1, "");
                 }
 
@@ -121,10 +121,10 @@ public abstract class MixinGuiConnecting extends GuiScreen {
      * @author CCBlueX
      */
     @Overwrite
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
+    public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
+        final ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
 
-        this.drawDefaultBackground();
+        drawDefaultBackground();
 
         RenderUtils.drawLoadingCircle(scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 70);
 

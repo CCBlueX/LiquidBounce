@@ -17,6 +17,7 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -33,7 +34,7 @@ public class Fonts extends MinecraftInstance {
 	public static IFontRenderer fontBold180;
 
 	public static void loadFonts() {
-		long l = System.currentTimeMillis();
+		final long l = System.currentTimeMillis();
 
 		ClientUtils.getLogger().info("Loading Fonts.");
 
@@ -62,7 +63,7 @@ public class Fonts extends MinecraftInstance {
 
 					final JsonObject fontObject = (JsonObject) element;
 
-					Font font = getFont(fontObject.get("fontFile").getAsString(), fontObject.get("fontSize").getAsInt());
+					final Font font = getFont(fontObject.get("fontFile").getAsString(), fontObject.get("fontSize").getAsInt());
 
 					CUSTOM_FONT_RENDERERS.put(new FontInfo(font), classProvider.wrapFontRenderer(new GameFontRenderer(font)));
 				}
@@ -90,7 +91,7 @@ public class Fonts extends MinecraftInstance {
 				ClientUtils.getLogger().info("Extract fonts...");
 				extractZip(outputFile.getPath(), LiquidBounce.fileManager.fontsDir.getPath());
 			}
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -100,10 +101,10 @@ public class Fonts extends MinecraftInstance {
 			try {
 				field.setAccessible(true);
 
-				Object o = field.get(null);
+				final Object o = field.get(null);
 
 				if (o instanceof IFontRenderer) {
-					FontDetails fontDetails = field.getAnnotation(FontDetails.class);
+					final FontDetails fontDetails = field.getAnnotation(FontDetails.class);
 
 					if (fontDetails.fontName().equals(name) && fontDetails.fontSize() == size)
 						return (IFontRenderer) o;
@@ -133,7 +134,7 @@ public class Fonts extends MinecraftInstance {
 			}
 		}
 
-		for (Map.Entry<FontInfo, IFontRenderer> entry : CUSTOM_FONT_RENDERERS.entrySet()) {
+		for (final Entry<FontInfo, IFontRenderer> entry : CUSTOM_FONT_RENDERERS.entrySet()) {
 			if (entry.getValue() == fontRenderer)
 				return entry.getKey();
 		}
@@ -156,7 +157,7 @@ public class Fonts extends MinecraftInstance {
 			}
 		}
 
-		fonts.addAll(Fonts.CUSTOM_FONT_RENDERERS.values());
+		fonts.addAll(CUSTOM_FONT_RENDERERS.values());
 
 		return fonts;
 	}
@@ -187,10 +188,10 @@ public class Fonts extends MinecraftInstance {
 
 			ZipEntry zipEntry = zipInputStream.getNextEntry();
 			while (zipEntry != null) {
-				File newFile = new File(outputFolder + File.separator + zipEntry.getName());
+				final File newFile = new File(outputFolder + File.separator + zipEntry.getName());
 				new File(newFile.getParent()).mkdirs();
 
-				FileOutputStream fileOutputStream = new FileOutputStream(newFile);
+				final FileOutputStream fileOutputStream = new FileOutputStream(newFile);
 
 				int i;
 				while ((i = zipInputStream.read(buffer)) > 0)
@@ -211,12 +212,12 @@ public class Fonts extends MinecraftInstance {
 		private final String name;
 		private final int fontSize;
 
-		public FontInfo(String name, int fontSize) {
+		public FontInfo(final String name, final int fontSize) {
 			this.name = name;
 			this.fontSize = fontSize;
 		}
 
-		public FontInfo(Font font) {
+		public FontInfo(final Font font) {
 			this(font.getName(), font.getSize());
 		}
 
@@ -229,11 +230,11 @@ public class Fonts extends MinecraftInstance {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(final Object o) {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			FontInfo fontInfo = (FontInfo) o;
+			final FontInfo fontInfo = (FontInfo) o;
 
 			if (fontSize != fontInfo.fontSize) return false;
 			return Objects.equals(name, fontInfo.name);

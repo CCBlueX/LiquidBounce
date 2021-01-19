@@ -17,16 +17,16 @@ public class ButtonElement extends Element {
 
 	public int hoverTime;
 
-	public ButtonElement(String displayName) {
+	public ButtonElement(final String displayName) {
 		createButton(displayName);
 	}
 
-	public void createButton(String displayName) {
+	public void createButton(final String displayName) {
 		this.displayName = displayName;
 	}
 
 	@Override
-	public void drawScreen(int mouseX, int mouseY, float button) {
+	public void drawScreen(final int mouseX, final int mouseY, final float button) {
 		LiquidBounce.clickGui.style.drawButtonElement(mouseX, mouseY, this);
 		super.drawScreen(mouseX, mouseY, button);
 	}
@@ -36,7 +36,7 @@ public class ButtonElement extends Element {
 		return 16;
 	}
 
-	public boolean isHovering(int mouseX, int mouseY) {
+	public boolean isHovering(final int mouseX, final int mouseY) {
 		return mouseX >= getX() && mouseX <= getX() + getWidth() && mouseY >= getY() && mouseY <= getY() + 16;
 	}
 
@@ -44,7 +44,7 @@ public class ButtonElement extends Element {
 		return displayName;
 	}
 
-	public void setColor(int color) {
+	public void setColor(final int color) {
 		this.color = color;
 	}
 

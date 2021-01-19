@@ -39,7 +39,7 @@ public class FileManager extends MinecraftInstance {
 
     public final File backgroundFile = new File(dir, "userbackground.png");
 
-    public boolean firstStart =  false;
+    public boolean firstStart;
 
     public static final Gson PRETTY_GSON = new GsonBuilder().setPrettyPrinting().create();
 

@@ -36,7 +36,7 @@ class Fullbright : Module() {
 
     @EventTarget(ignoreCondition = true)
     fun onUpdate(event: UpdateEvent?) {
-        if (state || LiquidBounce.moduleManager.getModule(XRay::class.java)!!.state) {
+        if (state || LiquidBounce.moduleManager.getModule(XRay::class.java).state) {
             when (modeValue.get().toLowerCase()) {
                 "gamma" -> when {
                     mc.gameSettings.gammaSetting <= 100f -> mc.gameSettings.gammaSetting++

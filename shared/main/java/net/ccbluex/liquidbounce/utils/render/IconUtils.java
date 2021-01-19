@@ -21,7 +21,7 @@ public final class IconUtils {
     public static ByteBuffer[] getFavicon() {
         try {
             return new ByteBuffer[] {readImageToBuffer(IconUtils.class.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/icon_16x16.png")), readImageToBuffer(IconUtils.class.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/icon_32x32.png"))};
-        }catch(IOException e) {
+        }catch(final IOException e) {
             e.printStackTrace();
         }
         return null;
@@ -34,7 +34,7 @@ public final class IconUtils {
         final BufferedImage bufferedImage = ImageIO.read(imageStream);
         final int[] rgb = bufferedImage.getRGB(0, 0, bufferedImage.getWidth(), bufferedImage.getHeight(), null, 0, bufferedImage.getWidth());
         final ByteBuffer byteBuffer = ByteBuffer.allocate(4 * rgb.length);
-        for(int i : rgb)
+        for(final int i : rgb)
             byteBuffer.putInt(i << 8 | i >> 24 & 255);
         byteBuffer.flip();
         return byteBuffer;

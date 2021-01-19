@@ -39,23 +39,23 @@ public abstract class Panel extends MinecraftInstance {
 
 	private float fade;
 
-	public Panel(String name, int x, int y, int width, int height, boolean open) {
+	public Panel(final String name, final int x, final int y, final int width, final int height, final boolean open) {
 		this.name = name;
-		this.elements = new ArrayList<>();
-		this.scrollbar = false;
+		elements = new ArrayList<>();
+		scrollbar = false;
 		this.x = x;
 		this.y = y;
 		this.width = width;
 		this.height = height;
 		this.open = open;
-		this.visible = true;
+		visible = true;
 
 		setupItems();
 	}
 
 	public abstract void setupItems();
 
-	public void drawScreen(int mouseX, int mouseY, float button) {
+	public void drawScreen(final int mouseX, final int mouseY, final float button) {
 		if (!visible)
 			return;
 
@@ -63,8 +63,8 @@ public abstract class Panel extends MinecraftInstance {
 
 		// Drag
 		if (drag) {
-			int nx = x2 + mouseX;
-			int ny = y2 + mouseY;
+			final int nx = x2 + mouseX;
+			final int ny = y2 + mouseY;
 			if (nx > -1)
 				x = nx;
 
@@ -73,7 +73,7 @@ public abstract class Panel extends MinecraftInstance {
 		}
 
 		elementsHeight = getElementsHeight() - 1;
-		boolean scrollbar = elements.size() >= maxElements;
+		final boolean scrollbar = elements.size() >= maxElements;
 		if (this.scrollbar != scrollbar)
 			this.scrollbar = scrollbar;
 
@@ -83,7 +83,7 @@ public abstract class Panel extends MinecraftInstance {
 		int count = 0;
 
 		for (final Element element : elements) {
-			if (++count > scroll && count < scroll + (maxElements + 1) && scroll < elements.size()) {
+			if (++count > scroll && count < scroll + maxElements + 1 && scroll < elements.size()) {
 				element.setLocation(x, y);
 				element.setWidth(getWidth());
 				if (y <= getY() + fade)
@@ -95,7 +95,7 @@ public abstract class Panel extends MinecraftInstance {
 		}
 	}
 
-	public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
 		if (!visible)
 			return;
 
@@ -110,7 +110,7 @@ public abstract class Panel extends MinecraftInstance {
 				element.mouseClicked(mouseX, mouseY, mouseButton);
 	}
 
-	public void mouseReleased(int mouseX, int mouseY, int state) {
+	public void mouseReleased(final int mouseX, final int mouseY, final int state) {
 		if (!visible)
 			return;
 
@@ -123,7 +123,7 @@ public abstract class Panel extends MinecraftInstance {
 			element.mouseReleased(mouseX, mouseY, state);
 	}
 
-	public boolean handleScroll(int mouseX, int mouseY, int wheel) {
+	public boolean handleScroll(final int mouseX, final int mouseY, final int wheel) {
 		final int maxElements = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).maxElementsValue.get();
 
 		if (mouseX >= getX() && mouseX <= getX() + 100 && mouseY >= getY() && mouseY <= getY() + 19 + elementsHeight) {
@@ -164,42 +164,42 @@ public abstract class Panel extends MinecraftInstance {
 	}
 
 	public int getX() {
-		return this.x;
+		return x;
 	}
 
 	public int getY() {
-		return this.y;
+		return y;
 	}
 
-	public void setX(int dragX) {
-		this.x = dragX;
+	public void setX(final int dragX) {
+		x = dragX;
 	}
 
-	public void setY(int dragY) {
-		this.y = dragY;
+	public void setY(final int dragY) {
+		y = dragY;
 	}
 
 	public int getWidth() {
-		return this.width;
+		return width;
 	}
 
 	public int getHeight() {
-		return this.height;
+		return height;
 	}
 
 	public boolean getScrollbar() {
-		return this.scrollbar;
+		return scrollbar;
 	}
 
-	public void setOpen(boolean open) {
+	public void setOpen(final boolean open) {
 		this.open = open;
 	}
 
 	public boolean getOpen() {
-		return this.open;
+		return open;
 	}
 
-	public void setVisible(boolean visible) {
+	public void setVisible(final boolean visible) {
 		this.visible = visible;
 	}
 
@@ -231,7 +231,7 @@ public abstract class Panel extends MinecraftInstance {
 		return height;
 	}
 
-	boolean isHovering(int mouseX, int mouseY) {
+	boolean isHovering(final int mouseX, final int mouseY) {
 		final float textWidth = mc.getFontRendererObj().getStringWidth(StringUtils.stripControlCodes(name)) - 100F;
 		return mouseX >= x - textWidth / 2F - 19F && mouseX <= x - textWidth / 2F + mc.getFontRendererObj().getStringWidth(StringUtils.stripControlCodes(name)) + 19F && mouseY >= y && mouseY <= y + height - (open ? 2 : 0);
 	}

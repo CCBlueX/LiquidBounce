@@ -14,7 +14,7 @@ public final class MSTimer {
     }
 
     public long hasTimeLeft(final long MS) {
-        return (MS + time) - System.currentTimeMillis();
+        return MS + time - System.currentTimeMillis();
     }
 
     public void reset() {

@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard;
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -35,23 +36,23 @@ public abstract class MixinGuiInGame {
     protected abstract void renderHotbarItem(int index, int xPos, int yPos, float partialTicks, EntityPlayer player);
 
     @Inject(method = "renderScoreboard", at = @At("HEAD"), cancellable = true)
-    private void renderScoreboard(CallbackInfo callbackInfo) {
+    private void renderScoreboard(final CallbackInfo callbackInfo) {
         if (LiquidBounce.moduleManager.getModule(HUD.class).getState() || NoScoreboard.INSTANCE.getState())
             callbackInfo.cancel();
     }
 
     @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
-    private void renderTooltip(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
+    private void renderTooltip(final ScaledResolution sr, final float partialTicks, final CallbackInfo callbackInfo) {
         final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
 
         if(Minecraft.getMinecraft().getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.getBlackHotbarValue().get()) {
-            EntityPlayer entityPlayer = (EntityPlayer) Minecraft.getMinecraft().getRenderViewEntity();
+            final EntityPlayer entityPlayer = (EntityPlayer) Minecraft.getMinecraft().getRenderViewEntity();
 
-            int middleScreen = sr.getScaledWidth() / 2;
+            final int middleScreen = sr.getScaledWidth() / 2;
 
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            GuiIngame.drawRect(middleScreen - 91, sr.getScaledHeight() - 24, middleScreen + 90, sr.getScaledHeight(), Integer.MIN_VALUE);
-            GuiIngame.drawRect(middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
+            Gui.drawRect(middleScreen - 91, sr.getScaledHeight() - 24, middleScreen + 90, sr.getScaledHeight(), Integer.MIN_VALUE);
+            Gui.drawRect(middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
 
             GlStateManager.enableRescaleNormal();
             GL11.glEnable(GL11.GL_BLEND);
@@ -59,9 +60,9 @@ public abstract class MixinGuiInGame {
             RenderHelper.enableGUIStandardItemLighting();
 
             for(int j = 0; j < 9; ++j) {
-                int k = sr.getScaledWidth() / 2 - 90 + j * 20 + 2;
-                int l = sr.getScaledHeight() - 16 - 3;
-                this.renderHotbarItem(j, k, l, partialTicks, entityPlayer);
+                final int k = sr.getScaledWidth() / 2 - 90 + j * 20 + 2;
+                final int l = sr.getScaledHeight() - 16 - 3;
+                renderHotbarItem(j, k, l, partialTicks, entityPlayer);
             }
 
             RenderHelper.disableStandardItemLighting();
@@ -75,7 +76,7 @@ public abstract class MixinGuiInGame {
     }
 
     @Inject(method = "renderTooltip", at = @At("RETURN"))
-    private void renderTooltipPost(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
+    private void renderTooltipPost(final ScaledResolution sr, final float partialTicks, final CallbackInfo callbackInfo) {
         if (!ClassUtils.hasClass("net.labymod.api.LabyModAPI")) {
             LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
             AWTFontRenderer.Companion.garbageCollectionTick();

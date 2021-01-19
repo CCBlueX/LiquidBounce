@@ -32,7 +32,7 @@ class GuiWelcome : WrappedGuiScreen()
 		font.drawCenteredString("Here is some information you might find useful if you are using LiquidBounce for the first time.", representedScreen.width / 2F, representedScreen.height / 8F + 70 + font.fontHeight, 0xffffff, true)
 
 		font.drawCenteredString("\u00A7lClickGUI:", representedScreen.width / 2F, representedScreen.height / 8F + 80 + font.fontHeight * 3, 0xffffff, true)
-		font.drawCenteredString("Press ${Keyboard.getKeyName(LiquidBounce.moduleManager[ClickGUI::class.java]!!.keyBind)} to open up the ClickGUI", representedScreen.width / 2F, representedScreen.height / 8 + 80F + font.fontHeight * 4, 0xffffff, true)
+		font.drawCenteredString("Press ${Keyboard.getKeyName(LiquidBounce.moduleManager[ClickGUI::class.java].keyBind)} to open up the ClickGUI", representedScreen.width / 2F, representedScreen.height / 8 + 80F + font.fontHeight * 4, 0xffffff, true)
 		font.drawCenteredString("Right-click modules with a '+' next to them to edit their settings.", representedScreen.width / 2F, representedScreen.height / 8F + 80 + font.fontHeight * 5, 0xffffff, true)
 		font.drawCenteredString("Hover a module to see it's description.", representedScreen.width / 2F, representedScreen.height / 8F + 80 + font.fontHeight * 6, 0xffffff, true)
 

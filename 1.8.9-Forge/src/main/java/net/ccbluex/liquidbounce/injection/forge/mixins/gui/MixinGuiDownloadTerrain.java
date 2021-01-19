@@ -20,27 +20,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GuiDownloadTerrain.class)
 public abstract class MixinGuiDownloadTerrain extends MixinGuiScreen {
 
-    @Inject(method = "initGui", at = @At(value = "RETURN"))
-    private void injectDisconnectButton(CallbackInfo ci) {
-        this.buttonList.add(new GuiButton(0, this.width / 2 - 100, this.height / 4 + 120 + 12, I18n.format("gui.cancel")));
+    @Inject(method = "initGui", at = @At("RETURN"))
+    private void injectDisconnectButton(final CallbackInfo ci) {
+		buttonList.add(new GuiButton(0, width / 2 - 100, height / 4 + 120 + 12, I18n.format("gui.cancel")));
     }
 
     @Override
-    protected void injectedActionPerformed(GuiButton button) {
+    protected void injectedActionPerformed(final GuiButton button) {
         if (button.id == 0) {
-            boolean flag = this.mc.isIntegratedServerRunning();
-            boolean flag1 = this.mc.isConnectedToRealms();
+            final boolean flag = mc.isIntegratedServerRunning();
+            final boolean flag1 = mc.isConnectedToRealms();
             button.enabled = false;
-            this.mc.theWorld.sendQuittingDisconnectingPacket();
-            this.mc.loadWorld(null);
+			mc.theWorld.sendQuittingDisconnectingPacket();
+			mc.loadWorld(null);
 
             if (flag) {
-                this.mc.displayGuiScreen(new GuiMainMenu());
+				mc.displayGuiScreen(new GuiMainMenu());
             } else if (flag1) {
-                RealmsBridge realmsbridge = new RealmsBridge();
+                final RealmsBridge realmsbridge = new RealmsBridge();
                 realmsbridge.switchToRealms(new GuiMainMenu());
             } else {
-                this.mc.displayGuiScreen(new GuiMultiplayer(new GuiMainMenu()));
+				mc.displayGuiScreen(new GuiMultiplayer(new GuiMainMenu()));
             }
         }
 

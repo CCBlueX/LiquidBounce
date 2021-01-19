@@ -10,6 +10,7 @@ import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
 import com.thealtening.AltService;
+import com.thealtening.AltService.EnumAltService;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
@@ -40,7 +41,7 @@ public class GuiAdd extends WrappedGuiScreen {
 	private String status = "\u00A77Idle...";
 
 	public GuiAdd(final GuiAltManager gui) {
-		this.prevGui = gui;
+		prevGui = gui;
 	}
 
 	public void initGui() {
@@ -56,7 +57,7 @@ public class GuiAdd extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
 		representedScreen.drawBackground(0);
 		RenderUtils.drawRect(30, 30, representedScreen.getWidth() - 30, representedScreen.getHeight() - 30, Integer.MIN_VALUE);
 
@@ -75,7 +76,7 @@ public class GuiAdd extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void actionPerformed(IGuiButton button) throws IOException {
+	public void actionPerformed(final IGuiButton button) throws IOException {
 		if (!button.getEnabled())
 			return;
 
@@ -112,7 +113,7 @@ public class GuiAdd extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void keyTyped(char typedChar, int keyCode) throws IOException {
+	public void keyTyped(final char typedChar, final int keyCode) throws IOException {
 		switch (keyCode) {
 			case Keyboard.KEY_ESCAPE:
 				mc.displayGuiScreen(prevGui.representedScreen);
@@ -134,7 +135,7 @@ public class GuiAdd extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException {
 		username.mouseClicked(mouseX, mouseY, mouseButton);
 		password.mouseClicked(mouseX, mouseY, mouseButton);
 		super.mouseClicked(mouseX, mouseY, mouseButton);
@@ -169,10 +170,10 @@ public class GuiAdd extends WrappedGuiScreen {
 				status = "\u00A7aChecking...";
 
 				try {
-					final AltService.EnumAltService oldService = GuiAltManager.altService.getCurrentService();
+					final EnumAltService oldService = GuiAltManager.altService.getCurrentService();
 
-					if (oldService != AltService.EnumAltService.MOJANG) {
-						GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG);
+					if (oldService != EnumAltService.MOJANG) {
+						GuiAltManager.altService.switchService(EnumAltService.MOJANG);
 					}
 
 					final YggdrasilUserAuthentication userAuthentication = (YggdrasilUserAuthentication)
@@ -185,9 +186,9 @@ public class GuiAdd extends WrappedGuiScreen {
 					userAuthentication.logIn();
 					account.setAccountName(userAuthentication.getSelectedProfile().getName());
 
-					if (oldService == AltService.EnumAltService.THEALTENING)
-						GuiAltManager.altService.switchService(AltService.EnumAltService.THEALTENING);
-				} catch (NullPointerException | AuthenticationException | NoSuchFieldException | IllegalAccessException e) {
+					if (oldService == EnumAltService.THEALTENING)
+						GuiAltManager.altService.switchService(EnumAltService.THEALTENING);
+				} catch (final NullPointerException | AuthenticationException | NoSuchFieldException | IllegalAccessException e) {
 					status = "\u00A7cThe account doesn't work.";
 					addButton.setEnabled(true);
 					clipboardButton.setEnabled(true);

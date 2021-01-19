@@ -35,7 +35,7 @@ public final class PathUtils extends MinecraftInstance {
             if (diffY < 0.0D) curY += minY;
             if (diffY > 0.0D) curY -= minY;
 
-            double minZ = Math.min(Math.abs(diffZ), offset);
+            final double minZ = Math.min(Math.abs(diffZ), offset);
             if (diffZ < 0.0D) curZ += minZ;
             if (diffZ > 0.0D) curZ -= minZ;
 
@@ -54,7 +54,7 @@ public final class PathUtils extends MinecraftInstance {
         final double dZ = tpZ - mc.getThePlayer().getPosZ();
 
         for(double d = 1D; d <= steps; ++d) {
-            positions.add(new Vector3d(mc.getThePlayer().getPosX() + (dX * d) / steps, mc.getThePlayer().getPosY() + (dY * d) / steps, mc.getThePlayer().getPosZ() + (dZ * d) / steps));
+            positions.add(new Vector3d(mc.getThePlayer().getPosX() + dX * d / steps, mc.getThePlayer().getPosY() + dY * d / steps, mc.getThePlayer().getPosZ() + dZ * d / steps));
         }
 
         return positions;

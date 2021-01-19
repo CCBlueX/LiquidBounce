@@ -81,7 +81,7 @@ public abstract class MixinEntity {
     public World worldObj;
 
     @Shadow
-    public void moveEntity(double x, double y, double z) {
+    public void moveEntity(final double x, final double y, final double z) {
     }
 
     @Shadow
@@ -175,7 +175,7 @@ public abstract class MixinEntity {
         return nextStepDistance;
     }
 
-    public void setNextStepDistance(int nextStepDistance) {
+    public void setNextStepDistance(final int nextStepDistance) {
         this.nextStepDistance = nextStepDistance;
     }
 
@@ -196,17 +196,17 @@ public abstract class MixinEntity {
         if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(NoPitchLimit.class)).getState()) {
             callbackInfo.cancel();
 
-            float f = this.rotationPitch;
-            float f1 = this.rotationYaw;
-            this.rotationYaw = (float) ((double) this.rotationYaw + (double) yaw * 0.15D);
-            this.rotationPitch = (float) ((double) this.rotationPitch - (double) pitch * 0.15D);
-            this.prevRotationPitch += this.rotationPitch - f;
-            this.prevRotationYaw += this.rotationYaw - f1;
+            final float f = rotationPitch;
+            final float f1 = rotationYaw;
+            rotationYaw = (float) ((double) rotationYaw + (double) yaw * 0.15D);
+            rotationPitch = (float) ((double) rotationPitch - (double) pitch * 0.15D);
+            prevRotationPitch += rotationPitch - f;
+            prevRotationYaw += rotationYaw - f1;
         }
     }
 
     @Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
-    private void handleRotations(float strafe, float forward, float friction, final CallbackInfo callbackInfo) {
+    private void handleRotations(final float strafe, final float forward, final float friction, final CallbackInfo callbackInfo) {
         //noinspection ConstantConditions
         if ((Object) this != Minecraft.getMinecraft().thePlayer)
             return;

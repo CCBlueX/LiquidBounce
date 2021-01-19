@@ -22,7 +22,7 @@ import java.util.Objects;
 public class MixinBlockSoulSand {
 
     @Inject(method = "onEntityCollidedWithBlock", at = @At("HEAD"), cancellable = true)
-    private void onEntityCollidedWithBlock(CallbackInfo callbackInfo) {
+    private void onEntityCollidedWithBlock(final CallbackInfo callbackInfo) {
         final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
 
         if (Objects.requireNonNull(noSlow).getState() && noSlow.getSoulsandValue().get())

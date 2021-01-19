@@ -16,7 +16,7 @@ public class CustomTexture {
     private boolean unloaded;
     private int textureId = -1;
 
-    public CustomTexture(BufferedImage image) {
+    public CustomTexture(final BufferedImage image) {
         this.image = image;
     }
 

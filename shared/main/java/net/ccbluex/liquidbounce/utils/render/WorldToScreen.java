@@ -11,8 +11,8 @@ import java.nio.FloatBuffer;
 
 public class WorldToScreen {
 
-    public static Matrix4f getMatrix(int matrix) {
-        FloatBuffer floatBuffer = BufferUtils.createFloatBuffer(16);
+    public static Matrix4f getMatrix(final int matrix) {
+        final FloatBuffer floatBuffer = BufferUtils.createFloatBuffer(16);
 
         GL11.glGetFloat(matrix, floatBuffer);
 
@@ -20,19 +20,19 @@ public class WorldToScreen {
     }
 
 
-    public static Vector2f worldToScreen(Vector3f pointInWorld, int screenWidth, int screenHeight) {
+    public static Vector2f worldToScreen(final Vector3f pointInWorld, final int screenWidth, final int screenHeight) {
         return worldToScreen(pointInWorld, getMatrix(GL11.GL_MODELVIEW_MATRIX), getMatrix(GL11.GL_PROJECTION_MATRIX), screenWidth, screenHeight);
     }
 
-    public static Vector2f worldToScreen(Vector3f pointInWorld, Matrix4f view, Matrix4f projection, int screenWidth, int screenHeight) {
-        Vector4f clipSpacePos = multiply(multiply(new Vector4f(pointInWorld.x, pointInWorld.y, pointInWorld.z, 1.0f), view), projection);
+    public static Vector2f worldToScreen(final Vector3f pointInWorld, final Matrix4f view, final Matrix4f projection, final int screenWidth, final int screenHeight) {
+        final Vector4f clipSpacePos = multiply(multiply(new Vector4f(pointInWorld.x, pointInWorld.y, pointInWorld.z, 1.0f), view), projection);
 
-        Vector3f ndcSpacePos = new Vector3f(clipSpacePos.x / clipSpacePos.w, clipSpacePos.y / clipSpacePos.w, clipSpacePos.z / clipSpacePos.w);
+        final Vector3f ndcSpacePos = new Vector3f(clipSpacePos.x / clipSpacePos.w, clipSpacePos.y / clipSpacePos.w, clipSpacePos.z / clipSpacePos.w);
 
 //        System.out.println(pointInNdc);
 
-        float screenX = ((ndcSpacePos.x + 1.0f) / 2.0f) * screenWidth;
-        float screenY = ((1.0f - ndcSpacePos.y) / 2.0f) * screenHeight;
+        final float screenX = (ndcSpacePos.x + 1.0f) / 2.0f * screenWidth;
+        final float screenY = (1.0f - ndcSpacePos.y) / 2.0f * screenHeight;
 
         // nPlane = -1, fPlane = 1
         if (ndcSpacePos.z < -1.0 || ndcSpacePos.z > 1.0) {
@@ -42,7 +42,7 @@ public class WorldToScreen {
         return new Vector2f(screenX, screenY);
     }
 
-    public static Vector4f multiply(Vector4f vec, Matrix4f mat) {
+    public static Vector4f multiply(final Vector4f vec, final Matrix4f mat) {
         return new Vector4f(
                 vec.x * mat.m00 + vec.y * mat.m10 + vec.z * mat.m20 + vec.w * mat.m30,
                 vec.x * mat.m01 + vec.y * mat.m11 + vec.z * mat.m21 + vec.w * mat.m31,

@@ -33,7 +33,7 @@ public abstract class MixinBlockLadder extends MixinBlock {
      * @author CCBlueX
      */
     @Overwrite
-    public void setBlockBoundsBasedOnState(IBlockAccess worldIn, BlockPos pos) {
+    public void setBlockBoundsBasedOnState(final IBlockAccess worldIn, final BlockPos pos) {
         final IBlockState iblockstate = worldIn.getBlockState(pos);
 
         if(iblockstate.getBlock() instanceof BlockLadder) {
@@ -42,17 +42,17 @@ public abstract class MixinBlockLadder extends MixinBlock {
 
             switch(iblockstate.getValue(FACING)) {
                 case NORTH:
-                    this.setBlockBounds(0.0F, 0.0F, 1.0F - f, 1.0F, 1.0F, 1.0F);
+                    setBlockBounds(0.0F, 0.0F, 1.0F - f, 1.0F, 1.0F, 1.0F);
                     break;
                 case SOUTH:
-                    this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, f);
+                    setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, f);
                     break;
                 case WEST:
-                    this.setBlockBounds(1.0F - f, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
+                    setBlockBounds(1.0F - f, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
                     break;
                 case EAST:
                 default:
-                    this.setBlockBounds(0.0F, 0.0F, 0.0F, f, 1.0F, 1.0F);
+                    setBlockBounds(0.0F, 0.0F, 0.0F, f, 1.0F, 1.0F);
             }
         }
     }

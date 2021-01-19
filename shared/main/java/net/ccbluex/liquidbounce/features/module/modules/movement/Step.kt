@@ -148,7 +148,7 @@ class Step : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         // Phase should disable step
-        if (LiquidBounce.moduleManager[Phase::class.java]!!.state) {
+        if (LiquidBounce.moduleManager[Phase::class.java].state) {
             event.stepHeight = 0F
             return
         }

@@ -9,6 +9,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.thealtening.AltService;
+import com.thealtening.AltService.EnumAltService;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen;
@@ -21,6 +22,7 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAlte
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.login.LoginUtils;
+import net.ccbluex.liquidbounce.utils.login.LoginUtils.LoginResult;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
 import net.ccbluex.liquidbounce.utils.login.UserUtils;
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils;
@@ -72,9 +74,9 @@ public class GuiAltManager extends WrappedGuiScreen {
 		if (minecraftAccount == null)
 			return "";
 
-		if (altService.getCurrentService() != AltService.EnumAltService.MOJANG) {
+		if (altService.getCurrentService() != EnumAltService.MOJANG) {
 			try {
-				altService.switchService(AltService.EnumAltService.MOJANG);
+				altService.switchService(EnumAltService.MOJANG);
 			} catch (final NoSuchFieldException | IllegalAccessException e) {
 				ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e);
 			}
@@ -86,32 +88,32 @@ public class GuiAltManager extends WrappedGuiScreen {
 			return "\u00A7cYour name is now \u00A78" + minecraftAccount.getName() + "\u00A7c.";
 		}
 
-		LoginUtils.LoginResult result = LoginUtils.login(minecraftAccount.getName(), minecraftAccount.getPassword());
-		if (result == LoginUtils.LoginResult.LOGGED) {
+		final LoginResult result = LoginUtils.login(minecraftAccount.getName(), minecraftAccount.getPassword());
+		if (result == LoginResult.LOGGED) {
 			MCLeaks.remove();
-			String userName = mc.getSession().getUsername();
+			final String userName = mc.getSession().getUsername();
 			minecraftAccount.setAccountName(userName);
 			LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 			return "\u00A7cYour name is now \u00A7f\u00A7l" + userName + "\u00A7c.";
 		}
 
-		if (result == LoginUtils.LoginResult.WRONG_PASSWORD)
+		if (result == LoginResult.WRONG_PASSWORD)
 			return "\u00A7cWrong password.";
 
-		if (result == LoginUtils.LoginResult.NO_CONTACT)
+		if (result == LoginResult.NO_CONTACT)
 			return "\u00A7cCannot contact authentication server.";
 
-		if (result == LoginUtils.LoginResult.INVALID_ACCOUNT_DATA)
+		if (result == LoginResult.INVALID_ACCOUNT_DATA)
 			return "\u00A7cInvalid username or password.";
 
-		if (result == LoginUtils.LoginResult.MIGRATED)
+		if (result == LoginResult.MIGRATED)
 			return "\u00A7cAccount migrated.";
 
 		return "";
 	}
 
 	public void initGui() {
-		int textFieldWidth = Math.max(representedScreen.getWidth() / 8, 70);
+		final int textFieldWidth = Math.max(representedScreen.getWidth() / 8, 70);
 
 		searchField = classProvider.createGuiTextField(2, Fonts.font40, representedScreen.getWidth() - textFieldWidth - 10, 10, textFieldWidth, 20);
 		searchField.setMaxStringLength(Integer.MAX_VALUE);
@@ -122,9 +124,9 @@ public class GuiAltManager extends WrappedGuiScreen {
 		int index = -1;
 
 		for (int i = 0; i < LiquidBounce.fileManager.accountsConfig.getAccounts().size(); i++) {
-			MinecraftAccount minecraftAccount = LiquidBounce.fileManager.accountsConfig.getAccounts().get(i);
+			final MinecraftAccount minecraftAccount = LiquidBounce.fileManager.accountsConfig.getAccounts().get(i);
 
-			if (minecraftAccount != null && (((minecraftAccount.getPassword() == null || minecraftAccount.getPassword().isEmpty()) && minecraftAccount.getName() != null && minecraftAccount.getName().equals(mc.getSession().getUsername())) || minecraftAccount.getAccountName() != null && minecraftAccount.getAccountName().equals(mc.getSession().getUsername()))) {
+			if (minecraftAccount != null && ((minecraftAccount.getPassword() == null || minecraftAccount.getPassword().isEmpty()) && minecraftAccount.getName() != null && minecraftAccount.getName().equals(mc.getSession().getUsername()) || minecraftAccount.getAccountName() != null && minecraftAccount.getAccountName().equals(mc.getSession().getUsername()))) {
 				index = i;
 				break;
 			}
@@ -133,7 +135,7 @@ public class GuiAltManager extends WrappedGuiScreen {
 		altsList.elementClicked(index, false, 0, 0);
 		altsList.represented.scrollBy(index * altsList.represented.getSlotHeight());
 
-		int j = 22;
+		final int j = 22;
 		representedScreen.getButtonList().add(classProvider.createGuiButton(1, representedScreen.getWidth() - 80, j + 24, 70, 20, "Add"));
 		representedScreen.getButtonList().add(classProvider.createGuiButton(2, representedScreen.getWidth() - 80, j + 24 * 2, 70, 20, "Remove"));
 		representedScreen.getButtonList().add(classProvider.createGuiButton(7, representedScreen.getWidth() - 80, j + 24 * 3, 70, 20, "Import"));
@@ -158,28 +160,28 @@ public class GuiAltManager extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
 		representedScreen.drawBackground(0);
 
 		altsList.represented.drawScreen(mouseX, mouseY, partialTicks);
 
 		Fonts.font40.drawCenteredString("AltManager", representedScreen.getWidth() / 2.0f, 6, 0xffffff);
-		Fonts.font35.drawCenteredString(this.searchField.getText().isEmpty() ? (LiquidBounce.fileManager.accountsConfig.getAccounts().size() + " Alts") : this.altsList.accounts.size() + " Search Results", representedScreen.getWidth() / 2.0f, 18, 0xffffff);
+		Fonts.font35.drawCenteredString(searchField.getText().isEmpty() ? LiquidBounce.fileManager.accountsConfig.getAccounts().size() + " Alts" : altsList.accounts.size() + " Search Results", representedScreen.getWidth() / 2.0f, 18, 0xffffff);
 		Fonts.font35.drawCenteredString(status, representedScreen.getWidth() / 2.0f, 32, 0xffffff);
 		Fonts.font35.drawStringWithShadow("\u00A77User: \u00A7a" + (MCLeaks.isAltActive() ? MCLeaks.getSession().getUsername() : mc.getSession().getUsername()), 6, 6, 0xffffff);
-		Fonts.font35.drawStringWithShadow("\u00A77Type: \u00A7a" + (altService.getCurrentService() == AltService.EnumAltService.THEALTENING ? "TheAltening" : MCLeaks.isAltActive() ? "MCLeaks" : UserUtils.INSTANCE.isValidTokenOffline(mc.getSession().getToken()) ? "Premium" : "Cracked"), 6, 15, 0xffffff);
+		Fonts.font35.drawStringWithShadow("\u00A77Type: \u00A7a" + (altService.getCurrentService() == EnumAltService.THEALTENING ? "TheAltening" : MCLeaks.isAltActive() ? "MCLeaks" : UserUtils.INSTANCE.isValidTokenOffline(mc.getSession().getToken()) ? "Premium" : "Cracked"), 6, 15, 0xffffff);
 
-		this.searchField.drawTextBox();
+		searchField.drawTextBox();
 
 		if (searchField.getText().isEmpty() && !searchField.isFocused())
-			Fonts.font40.drawStringWithShadow("\u00A77Search...", this.searchField.getXPosition() + 4, 17, 0xffffff);
+			Fonts.font40.drawStringWithShadow("\u00A77Search...", searchField.getXPosition() + 4, 17, 0xffffff);
 
 
 		super.drawScreen(mouseX, mouseY, partialTicks);
 	}
 
 	@Override
-	public void actionPerformed(IGuiButton button) throws IOException {
+	public void actionPerformed(final IGuiButton button) throws IOException {
 		if (!button.getEnabled())
 			return;
 
@@ -192,11 +194,11 @@ public class GuiAltManager extends WrappedGuiScreen {
 				break;
 			case 2:
 				if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize()) {
-					LiquidBounce.fileManager.accountsConfig.removeAccount(this.altsList.accounts.get(altsList.getSelectedSlot()));
+					LiquidBounce.fileManager.accountsConfig.removeAccount(altsList.accounts.get(altsList.getSelectedSlot()));
 					LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 					status = "\u00A7aThe account has been removed.";
 
-					this.altsList.updateAccounts(searchField.getText());
+					altsList.updateAccounts(searchField.getText());
 				} else
 					status = "\u00A7cSelect an account.";
 				break;
@@ -206,7 +208,7 @@ public class GuiAltManager extends WrappedGuiScreen {
 					randomButton.setEnabled(false);
 
 					final Thread thread = new Thread(() -> {
-						final MinecraftAccount minecraftAccount = this.altsList.accounts.get(altsList.getSelectedSlot());
+						final MinecraftAccount minecraftAccount = altsList.accounts.get(altsList.getSelectedSlot());
 						status = "\u00A7aLogging in...";
 						status = login(minecraftAccount);
 
@@ -218,12 +220,12 @@ public class GuiAltManager extends WrappedGuiScreen {
 					status = "\u00A7cSelect an account.";
 				break;
 			case 4:
-				if (this.altsList.accounts.size() <= 0) {
+				if (altsList.accounts.size() <= 0) {
 					status = "\u00A7cThe list is empty.";
 					return;
 				}
 
-				final int randomInteger = new Random().nextInt(this.altsList.accounts.size());
+				final int randomInteger = new Random().nextInt(altsList.accounts.size());
 
 				if (randomInteger < altsList.getSize())
 					altsList.selectedSlot = randomInteger;
@@ -232,7 +234,7 @@ public class GuiAltManager extends WrappedGuiScreen {
 				randomButton.setEnabled(false);
 
 				final Thread thread = new Thread(() -> {
-					final MinecraftAccount minecraftAccount = this.altsList.accounts.get(randomInteger);
+					final MinecraftAccount minecraftAccount = altsList.accounts.get(randomInteger);
 					status = "\u00A7aLogging in...";
 					status = login(minecraftAccount);
 
@@ -271,13 +273,13 @@ public class GuiAltManager extends WrappedGuiScreen {
 				fileReader.close();
 				bufferedReader.close();
 
-				this.altsList.updateAccounts(searchField.getText());
+				altsList.updateAccounts(searchField.getText());
 				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 				status = "\u00A7aThe accounts were imported successfully.";
 				break;
 			case 8:
 				if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize()) {
-					final MinecraftAccount minecraftAccount = this.altsList.accounts.get(altsList.getSelectedSlot());
+					final MinecraftAccount minecraftAccount = altsList.accounts.get(altsList.getSelectedSlot());
 
 					if (minecraftAccount == null)
 						break;
@@ -316,7 +318,7 @@ public class GuiAltManager extends WrappedGuiScreen {
 
 					final FileWriter fileWriter = new FileWriter(selectedFile);
 
-					for (MinecraftAccount account : LiquidBounce.fileManager.accountsConfig.getAccounts()) {
+					for (final MinecraftAccount account : LiquidBounce.fileManager.accountsConfig.getAccounts()) {
 						if (account.isCracked()) {
 							fileWriter.write(account.getName() + "\r\n");
 						} else {
@@ -336,10 +338,10 @@ public class GuiAltManager extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void keyTyped(char typedChar, int keyCode) throws IOException {
+	public void keyTyped(final char typedChar, final int keyCode) throws IOException {
 		if (searchField.isFocused()) {
 			searchField.textboxKeyTyped(typedChar, keyCode);
-			this.altsList.updateAccounts(searchField.getText());
+			altsList.updateAccounts(searchField.getText());
 		}
 
 		switch (keyCode) {
@@ -385,7 +387,7 @@ public class GuiAltManager extends WrappedGuiScreen {
 	}
 
 	@Override
-	public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException {
 		searchField.mouseClicked(mouseX, mouseY, mouseButton);
 
 		representedScreen.superMouseClicked(mouseX, mouseY, mouseButton);
@@ -400,7 +402,7 @@ public class GuiAltManager extends WrappedGuiScreen {
 		private List<MinecraftAccount> accounts;
 		private int selectedSlot;
 
-		GuiList(IGuiScreen prevGui) {
+		GuiList(final IGuiScreen prevGui) {
 			super(mc, prevGui.getWidth(), prevGui.getHeight(), 40, prevGui.getHeight() - 40, 30);
 
 			updateAccounts(null);
@@ -408,25 +410,25 @@ public class GuiAltManager extends WrappedGuiScreen {
 
 		private void updateAccounts(String search) {
 			if (search == null || search.isEmpty()) {
-				this.accounts = LiquidBounce.fileManager.accountsConfig.getAccounts();
+				accounts = LiquidBounce.fileManager.accountsConfig.getAccounts();
 				return;
 			}
 
 			search = search.toLowerCase();
 
-			this.accounts = new ArrayList<>();
+			accounts = new ArrayList<>();
 
-			for (MinecraftAccount account : LiquidBounce.fileManager.accountsConfig.getAccounts()) {
+			for (final MinecraftAccount account : LiquidBounce.fileManager.accountsConfig.getAccounts()) {
 				if (account.getName() != null && account.getName().toLowerCase().contains(search)
 						|| account.getAccountName() != null && account.getAccountName().toLowerCase().contains(search)) {
-					this.accounts.add(account);
+					accounts.add(account);
 				}
 
 			}
 		}
 
 		@Override
-		public boolean isSelected(int id) {
+		public boolean isSelected(final int id) {
 			return selectedSlot == id;
 		}
 
@@ -436,7 +438,7 @@ public class GuiAltManager extends WrappedGuiScreen {
 			return selectedSlot;
 		}
 
-		public void setSelectedSlot(int selectedSlot) {
+		public void setSelectedSlot(final int selectedSlot) {
 			this.selectedSlot = selectedSlot;
 		}
 
@@ -446,7 +448,7 @@ public class GuiAltManager extends WrappedGuiScreen {
 		}
 
 		@Override
-		public void elementClicked(int var1, boolean doubleClick, int var3, int var4) {
+		public void elementClicked(final int var1, final boolean doubleClick, final int var3, final int var4) {
 			selectedSlot = var1;
 
 			if (doubleClick) {
@@ -455,7 +457,7 @@ public class GuiAltManager extends WrappedGuiScreen {
 					randomButton.setEnabled(false);
 
 					new Thread(() -> {
-						MinecraftAccount minecraftAccount = accounts.get(altsList.getSelectedSlot());
+						final MinecraftAccount minecraftAccount = accounts.get(altsList.getSelectedSlot());
 						status = "\u00A7aLogging in...";
 						status = "\u00A7c" + login(minecraftAccount);
 
@@ -468,11 +470,11 @@ public class GuiAltManager extends WrappedGuiScreen {
 		}
 
 		@Override
-		public void drawSlot(int id, int x, int y, int var4, int var5, int var6) {
+		public void drawSlot(final int id, final int x, final int y, final int var4, final int var5, final int var6) {
 			final MinecraftAccount minecraftAccount = accounts.get(id);
 
-			Fonts.font40.drawCenteredString(minecraftAccount.getAccountName() == null ? minecraftAccount.getName() : minecraftAccount.getAccountName(), (representedScreen.getWidth() / 2), y + 2, Color.WHITE.getRGB(), true);
-			Fonts.font40.drawCenteredString(minecraftAccount.isCracked() ? "Cracked" : (minecraftAccount.getAccountName() == null ? "Premium" : minecraftAccount.getName()), (representedScreen.getWidth() / 2), y + 15, minecraftAccount.isCracked() ? Color.GRAY.getRGB() : (minecraftAccount.getAccountName() == null ? Color.GREEN.getRGB() : Color.LIGHT_GRAY.getRGB()), true);
+			Fonts.font40.drawCenteredString(minecraftAccount.getAccountName() == null ? minecraftAccount.getName() : minecraftAccount.getAccountName(), representedScreen.getWidth() / 2, y + 2, Color.WHITE.getRGB(), true);
+			Fonts.font40.drawCenteredString(minecraftAccount.isCracked() ? "Cracked" : minecraftAccount.getAccountName() == null ? "Premium" : minecraftAccount.getName(), representedScreen.getWidth() / 2, y + 15, minecraftAccount.isCracked() ? Color.GRAY.getRGB() : minecraftAccount.getAccountName() == null ? Color.GREEN.getRGB() : Color.LIGHT_GRAY.getRGB(), true);
 		}
 
 		@Override

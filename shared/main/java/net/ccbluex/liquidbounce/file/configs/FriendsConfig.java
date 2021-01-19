@@ -42,11 +42,11 @@ public class FriendsConfig extends FileConfig {
                 return;
 
             for (final JsonElement friendElement : jsonElement.getAsJsonArray()) {
-                JsonObject friendObject = friendElement.getAsJsonObject();
+                final JsonObject friendObject = friendElement.getAsJsonObject();
                 addFriend(friendObject.get("playerName").getAsString(), friendObject.get("alias").getAsString());
             }
 
-        } catch (JsonSyntaxException | IllegalStateException ex) {
+        } catch (final JsonSyntaxException | IllegalStateException ex) {
             //When the JSON Parse fail, the client try to load and update the old config
             ClientUtils.getLogger().info("[FileManager] Try to load old Friends config...");
 
@@ -58,7 +58,7 @@ public class FriendsConfig extends FileConfig {
                     line = line.replace(" ", "").replace("\"", "").replace(",", "");
 
                     if (line.contains(":")) {
-                        String[] data = line.split(":");
+                        final String[] data = line.split(":");
                         addFriend(data[0], data[1]);
                     } else
                         addFriend(line);
@@ -83,7 +83,7 @@ public class FriendsConfig extends FileConfig {
         final JsonArray jsonArray = new JsonArray();
 
         for (final Friend friend : getFriends()) {
-            JsonObject friendObject = new JsonObject();
+            final JsonObject friendObject = new JsonObject();
             friendObject.addProperty("playerName", friend.getPlayerName());
             friendObject.addProperty("alias", friend.getAlias());
             jsonArray.add(friendObject);

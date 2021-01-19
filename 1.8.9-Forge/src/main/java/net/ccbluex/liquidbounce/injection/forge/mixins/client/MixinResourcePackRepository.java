@@ -39,13 +39,13 @@ public class MixinResourcePackRepository {
     @Overwrite
     private void deleteOldServerResourcesPacks() {
         try {
-            List<File> lvt_1_1_ = Lists.newArrayList(FileUtils.listFiles(this.dirServerResourcepacks, TrueFileFilter.TRUE, null));
+            final List<File> lvt_1_1_ = Lists.newArrayList(FileUtils.listFiles(dirServerResourcepacks, TrueFileFilter.TRUE, null));
             Collections.sort(lvt_1_1_, LastModifiedFileComparator.LASTMODIFIED_REVERSE);
             int lvt_2_1_ = 0;
-            Iterator lvt_3_1_ = lvt_1_1_.iterator();
+            final Iterator lvt_3_1_ = lvt_1_1_.iterator();
 
             while(lvt_3_1_.hasNext()) {
-                File lvt_4_1_ = (File) lvt_3_1_.next();
+                final File lvt_4_1_ = (File) lvt_3_1_.next();
                 if(lvt_2_1_++ >= 10) {
                     logger.info("Deleting old server resource pack " + lvt_4_1_.getName());
                     FileUtils.deleteQuietly(lvt_4_1_);

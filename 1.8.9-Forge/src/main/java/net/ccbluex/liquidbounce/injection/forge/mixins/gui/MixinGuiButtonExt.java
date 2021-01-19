@@ -28,12 +28,12 @@ public abstract class MixinGuiButtonExt extends GuiButton {
     private float cut;
     private float alpha;
 
-    public MixinGuiButtonExt(int p_i1020_1_, int p_i1020_2_, int p_i1020_3_, String p_i1020_4_) {
+    public MixinGuiButtonExt(final int p_i1020_1_, final int p_i1020_2_, final int p_i1020_3_, final String p_i1020_4_) {
         super(p_i1020_1_, p_i1020_2_, p_i1020_3_, p_i1020_4_);
     }
 
-    public MixinGuiButtonExt(int p_i46323_1_, int p_i46323_2_, int p_i46323_3_, int p_i46323_4_,
-                             int p_i46323_5_, String p_i46323_6_) {
+    public MixinGuiButtonExt(final int p_i46323_1_, final int p_i46323_2_, final int p_i46323_3_, final int p_i46323_4_,
+                             final int p_i46323_5_, final String p_i46323_6_) {
         super(p_i46323_1_, p_i46323_2_, p_i46323_3_, p_i46323_4_, p_i46323_5_, p_i46323_6_);
    }
 
@@ -41,12 +41,12 @@ public abstract class MixinGuiButtonExt extends GuiButton {
     * @author CCBlueX
     */
    @Overwrite
-   public void drawButton(Minecraft mc, int mouseX, int mouseY) {
+   public void drawButton(final Minecraft mc, final int mouseX, final int mouseY) {
       if (visible) {
          final FontRenderer fontRenderer =
             mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRendererObj : ((FontRendererImpl) Fonts.font35).getWrapped();
-         hovered = (mouseX >= this.xPosition && mouseY >= this.yPosition &&
-                    mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height);
+         hovered = mouseX >= xPosition && mouseY >= yPosition &&
+                    mouseX < xPosition + width && mouseY < yPosition + height;
 
          final int delta = RenderUtils.deltaTime;
 
@@ -68,18 +68,18 @@ public abstract class MixinGuiButtonExt extends GuiButton {
             if (alpha <= 120) alpha = 120;
          }
 
-         Gui.drawRect(this.xPosition + (int) this.cut, this.yPosition,
-                      this.xPosition + this.width - (int) this.cut, this.yPosition + this.height,
-                      this.enabled ? new Color(0F, 0F, 0F, this.alpha / 255F).getRGB() :
+         Gui.drawRect(xPosition + (int) cut, yPosition,
+                 xPosition + width - (int) cut, yPosition + height,
+                 enabled ? new Color(0F, 0F, 0F, alpha / 255F).getRGB() :
                       new Color(0.5F, 0.5F, 0.5F, 0.5F).getRGB());
 
          mc.getTextureManager().bindTexture(buttonTextures);
          mouseDragged(mc, mouseX, mouseY);
 
          fontRenderer.drawStringWithShadow(displayString,
-                                           (float) ((this.xPosition + this.width / 2) -
+                                           (float) (xPosition + width / 2 -
                                                     fontRenderer.getStringWidth(displayString) / 2),
-                                           this.yPosition + (this.height - 5) / 2F, 14737632);
+                 yPosition + (height - 5) / 2F, 14737632);
          GlStateManager.resetColor();
       }
    }
