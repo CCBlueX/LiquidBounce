@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.tabs.Tabs
 import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
 import net.ccbluex.liquidbounce.utils.extensions.globalEnemyConfigurable
 import org.apache.logging.log4j.LogManager
@@ -44,6 +45,7 @@ object LiquidBounce {
      */
     const val CLIENT_NAME = "LiquidBounce"
     const val CLIENT_VERSION = "1.0.0"
+    const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
 
     /**
      * Client feature managers
@@ -74,6 +76,9 @@ object LiquidBounce {
         globalEnemyConfigurable
         // Initialize the render engine
         RenderEngine.init()
+
+        // Register tabs
+        Tabs
 
         moduleManager.registerInbuilt()
         commandManager.registerInbuilt()
