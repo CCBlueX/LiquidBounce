@@ -116,12 +116,13 @@ class Scaffold : Module()
 	private val silentRotationValue = BoolValue("SilentRotation", true)
 	private val keepRotationValue = BoolValue("KeepRotation", true)
 	private val keepLengthValue = IntegerValue("KeepRotationLength", 0, 1, 20)
+	private val lockRotationValue = BoolValue("LockRotation", false)
 	private val staticPitchValue = FloatValue("StaticPitchOffSet", 86f, 70f, 90f)
 	private val staticYawValue = FloatValue("StaticYawOffSet", 0f, 0f, 90f)
 
 	// xz + y range
-	private val xzRangeValue = FloatValue("xzRange", 0.8f, 0f, 1f)
-	private val yRangeValue = FloatValue("yRange", 0.8f, 0f, 1f)
+	private val xzRangeValue = FloatValue("XZRange", 0.8f, 0f, 1f)
+	private val yRangeValue = FloatValue("YRange", 0.8f, 0f, 1f)
 	private val minDiffValue = FloatValue("MinDiff", 0.0f, 0.0f, 0.2f)
 
 	// Search
@@ -505,11 +506,11 @@ class Scaffold : Module()
 	fun onMotion(event: MotionEvent)
 	{
 		val eventState: EventState = event.eventState
-
-		if (disableWhileTowering.get() && Tower.active) return
+		val tower = LiquidBounce.moduleManager[Tower::class.java] as Tower
+		if (disableWhileTowering.get() && tower.active) return
 
 		// Lock Rotation
-		if (!rotationModeValue.get().equals("Off", true) && keepRotationValue.get() && lockRotation != null) setRotation(lockRotation ?: return)
+		if (!rotationModeValue.get().equals("Off", true) && keepRotationValue.get() && lockRotationValue.get() && lockRotation != null) setRotation(lockRotation ?: return)
 
 		// Place block
 		if ((facesBlock || rotationModeValue.get().equals("Off", true)) && placeModeValue.get().equals(eventState.stateName, true)) place()
@@ -555,6 +556,7 @@ class Scaffold : Module()
 		if (silentRotationValue.get())
 		{
 			RotationUtils.setTargetRotation(rotation, keepRotation)
+			RotationUtils.setNextResetTurnSpeed()
 		} else
 		{
 			thePlayer.rotationYaw = rotation.yaw
@@ -1020,13 +1022,14 @@ class Scaffold : Module()
 		// Rotate
 		if (!rotationModeValue.get().equals("Off", ignoreCase = true))
 		{
+			val tower = LiquidBounce.moduleManager[Tower::class.java] as Tower
 			if (minTurnSpeedValue.get() < 180)
 			{
 				limitedRotation = RotationUtils.limitAngleChange(
 					RotationUtils.serverRotation, placeRotation.rotation, (Math.random() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()).toFloat(), 0.0F
 				) // TODO: Apply some settings here too
 				setRotation(limitedRotation!!, if (keepRotationValue.get()) keepLengthValue.get() else 0)
-				Tower.lockRotation = null // Prevents conflict
+				tower.lockRotation = null // Prevents conflict
 				lockRotation = limitedRotation
 				facesBlock = false
 				for (facingType in EnumFacingType.values())
@@ -1054,7 +1057,7 @@ class Scaffold : Module()
 			} else
 			{
 				setRotation(placeRotation.rotation, if (keepRotationValue.get()) keepLengthValue.get() else 0)
-				Tower.lockRotation = null // Prevents conflict
+				tower.lockRotation = null // Prevents conflict
 				lockRotation = placeRotation.rotation
 				facesBlock = true
 			}

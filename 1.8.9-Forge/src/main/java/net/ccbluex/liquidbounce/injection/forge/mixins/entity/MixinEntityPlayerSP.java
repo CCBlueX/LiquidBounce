@@ -326,10 +326,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 		if (timeUntilPortal > 0)
 			--timeUntilPortal;
 
-		final boolean flag = movementInput.jump;
-		final boolean flag1 = movementInput.sneak;
+		final boolean jump = movementInput.jump;
+		final boolean sneak = movementInput.sneak;
 		final float f = 0.8F;
-		final boolean flag2 = movementInput.moveForward >= f;
+		final boolean forward = movementInput.moveForward >= f;
 		movementInput.updatePlayerMoveState();
 
 		final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
@@ -353,7 +353,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		final boolean flag3 = !sprint.foodValue.get() || getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
 
-		if (onGround && !flag1 && !flag2 && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness))
+		if (onGround && !sneak && !forward && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness))
 			if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown())
 				sprintToggleTimer = 7;
 			else
@@ -375,7 +375,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 					capabilities.isFlying = true;
 					sendPlayerAbilities();
 				}
-			} else if (!flag && movementInput.jump)
+			} else if (!jump && movementInput.jump)
 				if (flyToggleTimer == 0)
 					flyToggleTimer = 7;
 				else {
@@ -403,17 +403,17 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 					horseJumpPower = 0.0F;
 			}
 
-			if (flag && !movementInput.jump)
+			if (jump && !movementInput.jump)
 			{
 				horseJumpPowerCounter = -10;
 				sendHorseJump();
 			}
-			else if (!flag && movementInput.jump)
+			else if (!jump && movementInput.jump)
 			{
 				horseJumpPowerCounter = 0;
 				horseJumpPower = 0.0F;
 			}
-			else if (flag)
+			else if (jump)
 			{
 				++horseJumpPowerCounter;
 
