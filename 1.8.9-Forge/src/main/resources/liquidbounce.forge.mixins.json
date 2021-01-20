@@ -10,15 +10,18 @@
     "block.MixinBlockLiquid",
     "block.MixinBlockModelRenderer",
     "block.MixinBlockSoulSand",
+
     "client.MixinMinecraft",
     "client.MixinProfiler",
     "client.MixinResourcePackRepository",
+
     "entity.MixinAbstractClientPlayer",
     "entity.MixinEntity",
     "entity.MixinEntityLivingBase",
     "entity.MixinEntityPlayer",
     "entity.MixinEntityPlayerSP",
     "entity.MixinPlayerControllerMP",
+
     "gui.MixinGuiButton",
     "gui.MixinGuiButtonExt",
     "gui.MixinGuiChat",
@@ -35,13 +38,18 @@
     "gui.MixinGuiSlot",
     "gui.MixinGuiSpectator",
     "gui.MixinServerSelectionList",
+    "gui.MixinGuiContainer",
+
     "item.MixinItemRenderer",
     "item.MixinMixinItemStack",
+
     "network.MixinNetHandlerLoginClient",
     "network.MixinNetHandlerPlayClient",
     "network.MixinNetworkManager",
     "network.MixinNetworkPlayerInfo",
+
     "packets.MixinC00Handshake",
+
     "render.MixinEffectRenderer",
     "render.MixinEntityRenderer",
     "render.MixinFontRenderer",
@@ -55,7 +63,9 @@
     "render.MixinTileEntityMobSpawnerRenderer",
     "render.MixinTileEntityRendererDispatcher",
     "render.MixinVisGraph",
+
     "resources.MixinSkinManager",
+
     "world.MixinChunk",
     "world.MixinWorld",
     "world.MixinWorldClient"

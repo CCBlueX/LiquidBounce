@@ -24,6 +24,7 @@ import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.IChatComponent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -39,7 +40,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GuiScreen.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinGuiScreen
+public abstract class MixinGuiScreen extends Gui
 {
 	@Shadow
 	public Minecraft mc;
@@ -60,6 +61,15 @@ public abstract class MixinGuiScreen
 	public void updateScreen()
 	{
 	}
+
+	@Shadow
+	public abstract void drawDefaultBackground();
+
+	@Shadow
+	public void drawScreen(int mouseX, int mouseY, float partialTicks) {}
+
+	@Shadow
+	protected abstract void renderToolTip(ItemStack stack, int x, int y);
 
 	@Shadow
 	public abstract void handleComponentHover(IChatComponent component, int x, int y);

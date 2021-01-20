@@ -35,7 +35,7 @@ class InventoryCleaner : Module()
 	 * OPTIONS
 	 */
 
-	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 600, 0, 1000)
+	val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 600, 0, 1000)
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
 		{
@@ -44,7 +44,7 @@ class InventoryCleaner : Module()
 		}
 	}
 
-	private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 400, 0, 1000)
+	val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 400, 0, 1000)
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
 		{
@@ -57,7 +57,7 @@ class InventoryCleaner : Module()
 	private val simulateInventory = BoolValue("SimulateInventory", true)
 	private val noMoveValue = BoolValue("NoMove", false)
 	private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
-	private val hotbarValue = BoolValue("Hotbar", true)
+	val hotbarValue = BoolValue("Hotbar", true)
 	private val randomSlotValue = BoolValue("RandomSlot", false)
 	private val sortValue = BoolValue("Sort", true)
 	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)

@@ -9,6 +9,7 @@ package net.ccbluex.liquidbounce.api.minecraft.inventory
 interface IContainer
 {
 	val windowId: Int
+	val inventorySlots: List<ISlot>
 
 	fun getSlot(id: Int): ISlot
 }

@@ -9,11 +9,13 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiContainer
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.inventory.ISlot
+import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiContainer
 import net.minecraft.client.gui.inventory.GuiContainer
 
 class GuiContainerImpl(wrapped: GuiContainer) : GuiScreenImpl<GuiContainer>(wrapped), IGuiContainer
 {
 	override fun handleMouseClick(slot: ISlot, slotNumber: Int, clickedButton: Int, clickType: Int) = wrapped.handleMouseClick(slot.unwrap(), slotNumber, clickedButton, clickType)
+	override fun highlight(slotNumber: Int, length: Long, color: Int) = (wrapped as IMixinGuiContainer).highlight(slotNumber, length, color)
 	override val inventorySlots: IContainer?
 		get() = wrapped.inventorySlots?.wrap()
 }

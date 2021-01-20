@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.api.minecraft.inventory.ISlot
 interface IGuiContainer : IGuiScreen
 {
 	fun handleMouseClick(slot: ISlot, slotNumber: Int, clickedButton: Int, clickType: Int)
+	fun highlight(slotNumber: Int, length: Long, color: Int)
 
 	val inventorySlots: IContainer?
 }
