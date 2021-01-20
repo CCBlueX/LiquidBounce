@@ -32,5 +32,4 @@ object WMathHelper
 
 	@JvmStatic
 	inline fun clamp_double(num: Double, min: Double, max: Double): Double = if (num < min) min else if (num > max) max else num
-
 }

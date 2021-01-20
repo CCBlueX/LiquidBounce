@@ -24,9 +24,11 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
@@ -34,11 +36,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.block.Block
 import net.minecraft.item.ItemBlock
-import net.minecraft.item.ItemStack
-import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -208,12 +206,14 @@ class Scaffold : Module()
 	private val airSafeValue = BoolValue("AirSafe", false)
 
 	// Killaura bypass
-	private val disableKillauraDuration = IntegerValue("DisableKillauraDuration", 300, 300, 1000)
 	private val killauraBypassValue = ListValue(
 		"KillauraBypassMode", arrayOf(
-			"None", "DisableKillaura", "WaitForKillauraEnd"
+			"None", "SuspendKillaura", "WaitForKillauraEnd"
 		), "DisableKillaura"
 	)
+
+	private val suspendKillauraDuration = IntegerValue("SuspendKillauraDuration", 300, 300, 1000)
+
 	var shouldDisableKillaura = false
 
 	// Visuals
@@ -245,9 +245,8 @@ class Scaffold : Module()
 	private val delayTimer = MSTimer()
 	private val zitterTimer = MSTimer()
 	private val switchTimer = MSTimer()
-	private val disableKillauraDurationTimer = MSTimer()
 	private var delay = 0L
-	private var switchdelay = 0L
+	private var switchDelay = 0L
 
 	// Eagle
 	private var placedBlocksWithoutEagle = 0
@@ -255,9 +254,6 @@ class Scaffold : Module()
 
 	// Downwards
 	private var shouldGoDown: Boolean = false
-
-	// Is Disabled Killaura Recently
-	private var disabledKillaura = false
 
 	// Last Ground Block
 	private var lastGroundBlockState: IIBlockState? = null
@@ -612,48 +608,58 @@ class Scaffold : Module()
 		var sameY = false
 		if (sameYValue.get() && launchY != -999)
 		{
-			pos = WBlockPos(thePlayer!!.posX, launchY + 1.0, thePlayer!!.posZ)
+			pos = WBlockPos(thePlayer.posX, launchY + 1.0, thePlayer.posZ)
 			sameY = true
 		}
 
-		val abCollisionBB = autoblockBlock.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, if (classProvider.isBlockEqualTo(groundBlock, autoblockBlock)) lastGroundBlockState!! else autoblockBlock.defaultState!!)
-		var gBB = AxisAlignedBB(
+		val abCollisionBB = autoblockBlock.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, if (classProvider.isBlockEqualTo(groundBlock, autoblockBlock)) lastGroundBlockState!! else autoblockBlock.defaultState!!)!!
+		var gBB = classProvider.createAxisAlignedBB(
 			groundBlock.getBlockBoundsMinX(), groundBlock.getBlockBoundsMinY(), groundBlock.getBlockBoundsMinZ(), groundBlock.getBlockBoundsMaxX(), groundBlock.getBlockBoundsMaxY(), groundBlock.getBlockBoundsMaxZ()
-		) //		final AxisAlignedBB abBB = new AxisAlignedBB(autoblockBlock.getBlockBoundsMinX(), autoblockBlock.getBlockBoundsMinY(), autoblockBlock.getBlockBoundsMinZ(), autoblockBlock.getBlockBoundsMaxX(), autoblockBlock.getBlockBoundsMaxY(), autoblockBlock.getBlockBoundsMaxZ());		//		final AxisAlignedBB abBB = new AxisAlignedBB(autoblockBlock.getBlockBoundsMinX(), autoblockBlock.getBlockBoundsMinY(), autoblockBlock.getBlockBoundsMinZ(), autoblockBlock.getBlockBoundsMaxX(), autoblockBlock.getBlockBoundsMaxY(), autoblockBlock.getBlockBoundsMaxZ());
-		var yDecrement: Double
-		gBB = gBB.expand((gBB.maxX - gBB.minX) * -searchXZDecrement.get(), -((gBB.maxY - gBB.minY) * searchYDecrement.get().also({ yDecrement = it })), (gBB.maxZ - gBB.minZ) * -searchXZDecrement.get()) // Shrink bb
+		)
 
-		val sampleCount: Int = searchSamples.get()
-		val sensitivityX = (gBB.maxX - gBB.minX) / sampleCount
-		val sensitivityY = (gBB.maxY - gBB.minY) / sampleCount
-		val sensitivityZ = (gBB.maxZ - gBB.minZ) / sampleCount
-		val searchBounds = SearchBounds(gBB.minX, gBB.maxX, sensitivityX, gBB.minY, gBB.maxY, sensitivityY, gBB.minZ, gBB.maxZ, sensitivityZ)
+		// These delta variable has in range 0.0625 ~ 1.0
+		val deltaX = gBB.maxX - gBB.minX
+		val deltaY = gBB.maxY - gBB.minY
+		val deltaZ = gBB.maxZ - gBB.minZ
+
+		// Search Ranges
+		val xzRange = xzRangeValue.get().toDouble()
+		val yRange = yRangeValue.get().toDouble()
+
+		val xSteps = calcStepSize(xzRange.toFloat()) * deltaX
+		val ySteps = calcStepSize(yRange.toFloat()) * deltaY
+		val zSteps = calcStepSize(xzRange.toFloat()) * deltaZ
+
+		val sMinX = (0.5 - xzRange / 2) * deltaX
+		val sMaxX = (0.5 + xzRange / 2) * deltaX
+		val sMinY = (0.5 - yRange / 2) * deltaY
+		val sMaxY = (0.5 + yRange / 2) * deltaY
+		val sMinZ = (0.5 - xzRange / 2) * deltaZ
+		val sMaxZ = (0.5 + xzRange / 2) * deltaZ
+
+		val searchBounds = SearchBounds(sMinX, sMaxX, xSteps, sMinY, sMaxY, ySteps, sMinZ, sMaxZ, zSteps)
 
 		lastSearchBound = searchBounds
 
 		val state: String
 
 		var clutching = false
-		if (fallStartY - thePlayer!!.posY > 2) // Clutch while falling
+		if (fallStartY - thePlayer.posY > 2) // Clutch while falling
 		{
-			searchPosition = WBlockPos(thePlayer!!.posX, thePlayer.getEntityBoundingBox().minY - 1.5, thePlayer!!.posZ)
+			searchPosition = WBlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY - 1.5, thePlayer.posZ)
 			state = "Clutch"
 			clutching = true
 		} else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1 && lastGroundBlockBB!!.maxY < 1 && abCollisionBB.maxY - abCollisionBB.minY < lastGroundBlockBB!!.maxY - lastGroundBlockBB!!.minY)
 		{
 			searchPosition = pos
 
-			// Failsafe for slab
+			// Failsafe for slab: Limits maxY to 0.5 to place slab safely.
 			if (searchBounds.maxY >= 0.5)
-			{ //				searchBounds.minY = 0; /* NOT SAFE */
-				searchBounds.minY -= yDecrement // Remove shrink applied that applied to minY.
-				searchBounds.maxY = 0.5 // Limits the maxY to 0.5 to safely place the slab.
-				val yDecrementRecalculated: Double = (searchBounds.maxY - searchBounds.minY) * searchYDecrement.get()
-				searchBounds.maxY -= yDecrementRecalculated
-				searchBounds.minY += yDecrementRecalculated
-				searchBounds.ysensitivity = (searchBounds.maxY - searchBounds.minY) / sampleCount
+			{
+				searchBounds.minY = 0.25 - (yRange / 4)
+				searchBounds.maxY = 0.25 + (yRange / 4)
 			}
-			state = "Non-Fullblock-BoxCorrection"
+			state = "Non-Fullblock-SlabCorrection"
 		} else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1 && lastGroundBlockBB!!.maxY < 1 && abCollisionBB.maxY - abCollisionBB.minY == lastGroundBlockBB!!.maxY - lastGroundBlockBB!!.minY)
 		{
 			searchPosition = pos
@@ -676,7 +682,7 @@ class Scaffold : Module()
 
 		val checkVisible = checkVisibleValue.get() && !shouldGoDown
 
-		if (!expand && (!isReplaceable(searchPosition) || search(searchPosition, checkVisible))) return
+		if (!expand && (!isReplaceable(searchPosition) || search(searchPosition, checkVisible, searchBounds))) return
 
 		val ySearch = ySearchValue.get() || clutching
 		if (expand)
@@ -684,97 +690,119 @@ class Scaffold : Module()
 			for (i in 0 until expandLengthValue.get())
 			{
 				if (search(
-						blockPosition.add(
-							if (thePlayer.horizontalFacing == classProvider.getEnumFacing(
+						searchPosition.add(
+							when (thePlayer.horizontalFacing)
+							{
+								classProvider.getEnumFacing(
 									EnumFacingType.WEST
-								)
-							) -i else if (thePlayer.horizontalFacing == classProvider.getEnumFacing(EnumFacingType.EAST)) i else 0,
-							0,
-							if (thePlayer.horizontalFacing == classProvider.getEnumFacing(EnumFacingType.NORTH)) -i else if (thePlayer.horizontalFacing == classProvider.getEnumFacing(
+								) -> -i
+								classProvider.getEnumFacing(EnumFacingType.EAST) -> i
+								else -> 0
+							}, 0, when (thePlayer.horizontalFacing)
+							{
+								classProvider.getEnumFacing(EnumFacingType.NORTH) -> -i
+								classProvider.getEnumFacing(
 									EnumFacingType.SOUTH
-								)
-							) i else 0
-						), false
+								) -> i
+								else -> 0
+							}
+						), false, searchBounds
 					)
 				) return
 			}
 		} else if (searchValue.get())
 		{
-			for (x in -1..1) for (y in (if (ySearch) -1..1 else 0..0)) for (z in -1..1) if (search(blockPosition.add(x, 0, z), !shouldGoDown)) return
+			for (x in -1..1) for (y in (if (ySearch) -1..1 else 0..0)) for (z in -1..1) if (search(searchPosition.add(x, 0, z), !shouldGoDown, searchBounds)) return
 		}
 	}
 
 	fun place()
 	{
-		if (targetPlace == null)
+		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
+
+		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
+		val waitForKillauraEnd = killauraBypassValue.get().equals("WaitForKillauraEnd", true) && killAura.hasTarget        // targetPlace, Blacklist, killauraWait check
+		if (targetPlace == null || InventoryUtils.AUTOBLOCK_BLACKLIST.contains(BlockUtils.getBlock((targetPlace ?: return).blockPos)) || waitForKillauraEnd)
 		{
 			if (placeableDelay.get()) delayTimer.reset()
 			return
 		}
 
+		// Delay & SameY check
 		if (!delayTimer.hasTimePassed(delay) || sameYValue.get() && launchY - 1 != targetPlace!!.vec3.yCoord.toInt()) return
 
-		var itemStack: IItemStack? = mc.thePlayer!!.heldItem
-		if (itemStack == null || !classProvider.isItemBlock(itemStack.item) || classProvider.isBlockBush(itemStack.item!!.asItemBlock().block) || mc.thePlayer!!.heldItem!!.stackSize <= 0)
+		if (killauraBypassValue.get().equals("DisableKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
+
+		// Check if the player is holding block
+		var itemStack: IItemStack? = thePlayer.heldItem
+		var switched = false
+		if (itemStack == null || !classProvider.isItemBlock(itemStack.item) || classProvider.isBlockBush(itemStack.item!!.asItemBlock().block) || thePlayer.heldItem!!.stackSize <= 0)
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
-			val blockSlot = InventoryUtils.findAutoBlockBlock()
+			// Auto-Block
+			val blockSlot = InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), (lastGroundBlockBB?.maxY ?: 0.0) - (lastGroundBlockBB?.minY ?: 1.0)) // Default boundingBoxYLimit it -1 (0.0 - 1.0)
 
+			// If there is no autoblock-able blocks in your inventory, we can't continue.
 			if (blockSlot == -1) return
+
+			switched = slot + 36 != blockSlot
 			when (autoBlockValue.get())
 			{
-				"Off" ->
-				{
-					return
-				}
-
 				"Pick" ->
 				{
-					mc.thePlayer!!.inventory.currentItem = blockSlot - 36
+					thePlayer.inventory.currentItem = blockSlot - 36
 					mc.playerController.updateController()
 				}
 
 				"Spoof" ->
 				{
-					if (blockSlot - 36 != slot)
-					{
-						mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
-					}
+					if (blockSlot - 36 != slot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
 				}
 
 				"Switch" ->
 				{
-					if (blockSlot - 36 != slot)
-					{
-						mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
-					}
+					if (blockSlot - 36 != slot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
 				}
 			}
-			itemStack = mc.thePlayer!!.inventoryContainer.getSlot(blockSlot).stack
+			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
 		}
+
+		// Switch Delay reset
+		if (switched)
+		{
+			switchTimer.reset()
+			switchDelay = TimeUtils.randomDelay(minSwitchDelayValue.get(), maxSwitchDelayValue.get())
+			if (switchDelay > 0) return
+		}
+
+		// Switch Delay wait
+		if (!switchTimer.hasTimePassed(switchDelay)) return
+
 		if (mc.playerController.onPlayerRightClick(
-				mc.thePlayer!!, mc.theWorld!!, itemStack, targetPlace!!.blockPos, targetPlace!!.enumFacing, targetPlace!!.vec3
+				thePlayer, theWorld, itemStack, targetPlace!!.blockPos, targetPlace!!.enumFacing, targetPlace!!.vec3
 			)
 		)
-		{
+		{			// Reset delay
 			delayTimer.reset()
 			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 
-			if (mc.thePlayer!!.onGround)
+			// Apply SpeedModifier
+			if (thePlayer.onGround)
 			{
 				val modifier: Float = speedModifierValue.get()
-				mc.thePlayer!!.motionX = mc.thePlayer!!.motionX * modifier
-				mc.thePlayer!!.motionZ = mc.thePlayer!!.motionZ * modifier
+				thePlayer.motionX = thePlayer.motionX * modifier
+				thePlayer.motionZ = thePlayer.motionZ * modifier
 			}
 
-			if (swingValue.get()) mc.thePlayer!!.swingItem()
+			if (swingValue.get()) thePlayer.swingItem()
 			else mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
 		}
-		if (autoBlockValue.get().equals("Switch", true))
-		{
-			if (slot != mc.thePlayer!!.inventory.currentItem) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(mc.thePlayer!!.inventory.currentItem))
-		}
+
+		// Switch back to original slot after place on AutoBlock-Switch mode
+		if (autoBlockValue.get().equals("Switch", true) && slot != thePlayer.inventory.currentItem) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+
 		targetPlace = null
 	}
 
@@ -794,11 +822,6 @@ class Scaffold : Module()
 			)
 		}
 
-		/*if(autoBlockValue.get().equals("Switch", ignoreCase = true)) {
-            thePlayer.inventory.currentItem = oldslot
-            mc.playerController.updateController()
-        }*/
-
 		if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindRight)) mc.gameSettings.keyBindRight.pressed = false
 		if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindLeft)) mc.gameSettings.keyBindLeft.pressed = false
 
@@ -815,8 +838,6 @@ class Scaffold : Module()
 		if (shouldDisableKillaura) shouldDisableKillaura = false
 	}
 
-	// Entity movement event
-	/** @param event */
 	@EventTarget
 	fun onMove(event: MoveEvent)
 	{
@@ -858,23 +879,29 @@ class Scaffold : Module()
 		}
 	} // SCAFFOLD VISUALS
 
-	/** @param  */
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
 	{
 		if (!markValue.get()) return
+		val thePlayer = mc.thePlayer ?: return
 		for (i in 0 until if (modeValue.get().equals("Expand", true)) expandLengthValue.get() + 1 else 2)
 		{
 			val blockPos = WBlockPos(
-				mc.thePlayer!!.posX + if (mc.thePlayer!!.horizontalFacing == classProvider.getEnumFacing(EnumFacingType.WEST)) -i.toDouble() else if (mc.thePlayer!!.horizontalFacing == classProvider.getEnumFacing(
+				thePlayer.posX + when (thePlayer.horizontalFacing)
+				{
+					classProvider.getEnumFacing(EnumFacingType.WEST) -> -i.toDouble()
+					classProvider.getEnumFacing(
 						EnumFacingType.EAST
-					)
-				) i.toDouble() else 0.0,
-				if (sameYValue.get() && launchY <= mc.thePlayer!!.posY) launchY - 1.0 else mc.thePlayer!!.posY - (if (mc.thePlayer!!.posY == mc.thePlayer!!.posY + 0.5) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0,
-				mc.thePlayer!!.posZ + if (mc.thePlayer!!.horizontalFacing == classProvider.getEnumFacing(EnumFacingType.NORTH)) -i.toDouble() else if (mc.thePlayer!!.horizontalFacing == classProvider.getEnumFacing(
+					) -> i.toDouble()
+					else -> 0.0
+				}, if (sameYValue.get() && launchY <= thePlayer.posY) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY == thePlayer.posY + 0.5) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (thePlayer.horizontalFacing)
+				{
+					classProvider.getEnumFacing(EnumFacingType.NORTH) -> -i.toDouble()
+					classProvider.getEnumFacing(
 						EnumFacingType.SOUTH
-					)
-				) i.toDouble() else 0.0
+					) -> i.toDouble()
+					else -> 0.0
+				}
 			)
 			val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
 			if (isReplaceable(blockPos) && placeInfo != null)
@@ -893,8 +920,9 @@ class Scaffold : Module()
 	 * @return
 	 */
 
-	private fun search(blockPosition: WBlockPos, checkVisible: Boolean): Boolean
+	private fun search(blockPosition: WBlockPos, checkVisible: Boolean, data: SearchBounds): Boolean
 	{
+		val thePlayer = mc.thePlayer ?: return false
 		if (!isReplaceable(blockPosition)) return false
 
 		// Static Modes
@@ -904,16 +932,12 @@ class Scaffold : Module()
 		val staticPitch = staticPitchValue.get()
 		val staticYawOffset = staticYawValue.get()
 
-		// Search Ranges
-		val xzRV = xzRangeValue.get().toDouble()
-		val xzSSV = calcStepSize(xzRV.toFloat())
-		val yRV = yRangeValue.get().toDouble()
-		val ySSV = calcStepSize(yRV.toFloat())
 		var xSearchFace = 0.0
 		var ySearchFace = 0.0
 		var zSearchFace = 0.0
+
 		val eyesPos = WVec3(
-			mc.thePlayer!!.posX, mc.thePlayer!!.entityBoundingBox.minY + mc.thePlayer!!.eyeHeight, mc.thePlayer!!.posZ
+			thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ
 		)
 		var placeRotation: PlaceRotation? = null
 		for (facingType in EnumFacingType.values())
@@ -922,14 +946,14 @@ class Scaffold : Module()
 			val neighbor = blockPosition.offset(side)
 			if (!canBeClicked(neighbor)) continue
 			val dirVec = WVec3(side.directionVec)
-			var xSearch = 0.5 - xzRV / 2
-			while (xSearch <= 0.5 + xzRV / 2)
+			var xSearch = data.minX
+			while (xSearch <= data.maxX)
 			{
-				var ySearch = 0.5 - yRV / 2
-				while (ySearch <= 0.5 + yRV / 2)
+				var ySearch = data.minY
+				while (ySearch <= data.maxY)
 				{
-					var zSearch = 0.5 - xzRV / 2
-					while (zSearch <= 0.5 + xzRV / 2)
+					var zSearch = data.minZ
+					while (zSearch <= data.maxZ)
 					{
 						val posVec = WVec3(blockPosition).addVector(xSearch, ySearch, zSearch)
 						val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
@@ -939,7 +963,7 @@ class Scaffold : Module()
 							) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)
 						)
 						{
-							zSearch += xzSSV
+							zSearch += data.zSteps
 							continue
 						}
 
@@ -984,14 +1008,17 @@ class Scaffold : Module()
 							ySearchFace = ySearch
 							zSearchFace = zSearch
 						}
-						zSearch += xzSSV
+						zSearch += data.zSteps
 					}
-					ySearch += ySSV
+					ySearch += data.ySteps
 				}
-				xSearch += xzSSV
+				xSearch += data.zSteps
 			}
 		}
+
 		if (placeRotation == null) return false
+
+		// Rotate
 		if (!rotationModeValue.get().equals("Off", ignoreCase = true))
 		{
 			if (minTurnSpeedValue.get() < 180)
@@ -999,7 +1026,8 @@ class Scaffold : Module()
 				limitedRotation = RotationUtils.limitAngleChange(
 					RotationUtils.serverRotation, placeRotation.rotation, (Math.random() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()).toFloat(), 0.0F
 				) // TODO: Apply some settings here too
-				setRotation(limitedRotation!!, keepLengthValue.get())
+				setRotation(limitedRotation!!, if (keepRotationValue.get()) keepLengthValue.get() else 0)
+				Tower.lockRotation = null // Prevents conflict
 				lockRotation = limitedRotation
 				facesBlock = false
 				for (facingType in EnumFacingType.values())
@@ -1026,7 +1054,8 @@ class Scaffold : Module()
 				}
 			} else
 			{
-				setRotation(placeRotation.rotation, keepLengthValue.get())
+				setRotation(placeRotation.rotation, if (keepRotationValue.get()) keepLengthValue.get() else 0)
+				Tower.lockRotation = null // Prevents conflict
 				lockRotation = placeRotation.rotation
 				facesBlock = true
 			}
@@ -1065,20 +1094,21 @@ class Scaffold : Module()
 	override val tag: String
 		get() = modeValue.get()
 
-	class SearchBounds(x: Double, x2: Double, xsens: Double, y: Double, y2: Double, ysens: Double, z: Double, z2: Double, zsens: Double)
+	class SearchBounds(x: Double, x2: Double, xsteps: Double, y: Double, y2: Double, ysteps: Double, z: Double, z2: Double, zsteps: Double)
 	{
 		val minX: Double = x.coerceAtMost(x2)
 		val maxX: Double = x.coerceAtLeast(x2)
-		val xsensitivity: Double = xsens
 		var minY: Double = y.coerceAtMost(y2)
 		var maxY: Double = y.coerceAtLeast(y2)
-		var ysensitivity: Double = ysens
 		val minZ: Double = z.coerceAtMost(z2)
 		val maxZ: Double = z.coerceAtLeast(z2)
-		val zsensitivity: Double = zsens
+
+		val xSteps = xsteps
+		val ySteps = ysteps
+		val zSteps = zsteps
 
 		fun asAABB(): IAxisAlignedBB = classProvider.createAxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ)
 
-		override fun toString(): String = String.format("SearchBounds[X: %.2f~%.2f (%.2f), Y: %.2f~%.2f (%.2f), Z: %.2f~%.2f (%.2f)]", minX, maxX, xsensitivity, minY, maxY, ysensitivity, minZ, maxZ, zsensitivity)
+		override fun toString(): String = String.format("SearchBounds[X: %.2f~%.2f (%.3f), Y: %.2f~%.2f (%.3f), Z: %.2f~%.2f (%.3f)]", minX, maxX, xSteps, minY, maxY, ySteps, minZ, maxZ, zSteps)
 	}
 }

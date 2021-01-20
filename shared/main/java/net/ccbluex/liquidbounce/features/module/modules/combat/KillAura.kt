@@ -43,7 +43,6 @@ import kotlin.math.*
 )
 class KillAura : Module()
 {
-
 	/**
 	 * OPTIONS
 	 */
@@ -301,10 +300,11 @@ class KillAura : Module()
 	// Attack delay
 	private val attackTimer = MSTimer()
 	private var attackDelay = 0L
-	private val switchTimer = MSTimer()
 	private var clicks = 0
 
-	private var closeInventory = false
+	// Suspend killaura timer
+	private val suspendTimer = MSTimer()
+	private var suspend = 0L
 
 	// Ranges
 	private var attackRange = 0f
@@ -391,6 +391,8 @@ class KillAura : Module()
 	@EventTarget
 	fun onMotion(event: MotionEvent)
 	{
+		if (suspended) return
+
 		if (event.eventState == EventState.POST)
 		{
 			target ?: return
@@ -414,6 +416,8 @@ class KillAura : Module()
 	@EventTarget
 	fun onStrafe(event: StrafeEvent)
 	{
+		if (suspended) return
+
 		if (rotationStrafeValue.get().equals("Off", true)) return
 
 		update()
@@ -497,6 +501,8 @@ class KillAura : Module()
 			return
 		}
 
+		if (suspended) return
+
 		attackRange = attackRangeValue.get()
 		aimRange = aimRangeValue.get()
 		swingRange = swingRangeValue.get()
@@ -536,6 +542,8 @@ class KillAura : Module()
 			return
 		}
 
+		if (suspended) return
+
 		// NoInventory
 		if (noInventoryAttackValue.get() && (classProvider.isGuiContainer(mc.currentScreen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))
 		{
@@ -568,6 +576,8 @@ class KillAura : Module()
 	@EventTarget
 	fun onRender2D(event: Render2DEvent)
 	{
+		if (suspended) return
+
 		if (fovValue.get() < 180) RenderUtils.drawFoVCircle(fovValue.get())
 	}
 
@@ -577,6 +587,8 @@ class KillAura : Module()
 	@EventTarget
 	fun onEntityMove(event: EntityMovementEvent)
 	{
+		if (suspended) return
+
 		val movedEntity = event.movedEntity
 		if (target == null || movedEntity != currentTarget) return
 		updateHitable()
@@ -1012,4 +1024,13 @@ class KillAura : Module()
 
 	val hasTarget: Boolean
 		get() = state && target != null
+
+	fun suspend(time: Long)
+	{
+		suspend = time
+		suspendTimer.reset()
+	}
+
+	private val suspended: Boolean
+		get() = !suspendTimer.hasTimePassed(suspend)
 }

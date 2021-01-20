@@ -31,7 +31,7 @@ class WBlockPos(x: Int, y: Int, z: Int) : WVec3i(x, y, z)
 	/**
 	 * Add the given coordinates to the coordinates of this BlockPos
 	 */
-	fun add(x: Double, y: Double, z: Double): WBlockPos = if (x == 0.0 && y == 0.0 && z == 0.0) this else WBlockPos(WMathHelper.floor.floor(this.x + x), this.y + y, this.z + z)
+	fun add(x: Double, y: Double, z: Double): WBlockPos = if (x == 0.0 && y == 0.0 && z == 0.0) this else WBlockPos(this.x + x, this.y + y, this.z + z)
 
 	@JvmOverloads
 	fun offset(side: IEnumFacing, n: Int = 1): WBlockPos = if (n == 0) this else WBlockPos(x + side.directionVec.x * n, y + side.directionVec.y * n, z + side.directionVec.z * n)
