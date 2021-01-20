@@ -695,6 +695,8 @@ class KillAura : Module()
 			}
 		}
 
+		thePlayer.sendChatMessage("Found ${targets.size} entities to attack")
+
 		if (targets.isEmpty()) for (entity in theWorld.loadedEntityList)  // If there is no attackable entities found, search about pre-aimable entities and pre-swingable entities instead.
 		{
 			if (!classProvider.isEntityLivingBase(entity) || !EntityUtils.isEnemy(
@@ -711,6 +713,8 @@ class KillAura : Module()
 
 			if ((fov == 180F || entityFov <= fov) && distance <= maxTargetRange && entity.asEntityLivingBase().hurtTime <= hurtTime) targets.add(entity.asEntityLivingBase())
 		}
+
+		thePlayer.sendChatMessage("Found ${targets.size} entities to pre-aim or pre-swing")
 
 		// Sort targets by priority
 		when (priorityValue.get().toLowerCase())
@@ -749,7 +753,7 @@ class KillAura : Module()
 		// Find best target
 		for (entity in targets)
 		{ // Update rotations to current target
-			if (thePlayer.getDistanceToEntityBox(currentTarget ?: continue) <= aimRange && !updateRotations(entity)) continue
+			if (thePlayer.getDistanceToEntityBox(entity) <= aimRange && !updateRotations(entity)) continue
 
 			// Set target to current entity
 			target = entity
