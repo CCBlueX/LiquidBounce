@@ -6,25 +6,45 @@
 package net.ccbluex.liquidbounce.ui.client;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen;
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
-import net.ccbluex.liquidbounce.features.special.AntiForge;
+import net.ccbluex.liquidbounce.features.special.AntiModDisable;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 
 import org.lwjgl.input.Keyboard;
 
 public class GuiAntiForge extends WrappedGuiScreen
 {
+	public static final String BLOCK_FML = "Block FML ";
+	public static final String BLOCK_FMLPROXY_PACKET = "Block FMLProxyPackets ";
+	public static final String SPOOF_MC_BRAND_PAYLOAD_PACKETS = "Spoof FML ClientBrandRetriever(MC|Brand Payload) Payloads ";
+	public static final String BLOCK_WORLD_DOWNLOADER_PAYLOAD_PACKETS = "Block WorldDownloader Payloads ";
+	public static final String BLOCK_THE_5_ZIG_S_MOD_PAYLOAD_PACKETS = "Block The 5zig's mod Payloads ";
+	public static final String BLOCK_BETTER_SPRINTING_PAYLOAD_PACKETS = "Block Better Sprinting mod Payloads ";
+	public static final String BLOCK_CRACKED_VAPE_SABOTAGES = "Block Cracked Vape Sabotages ";
+	public static final String BLOCK_DIPERMISSIONS_PAYLOAD_PACKETS = "Block DIPermissions Payloads ";
+	public static final String BLOCK_PERMISSIONS_REPL_PAYLOAD_PACKETS = "Block PermissionsRepl Payloads ";
+	public static final String BLOCK_SCHEMATICA_PAYLOAD_PACKETS = "Block Schematica Payloads ";
+	public static final String PRINT_BLOCKED_SPOOFED_PACKETS = "Print Blocked/Spoofed Packets On The Chat ";
 
 	private final IGuiScreen prevGui;
 
 	private IGuiButton enabledButton;
 	private IGuiButton fmlButton;
-	private IGuiButton proxyButton;
-	private IGuiButton payloadButton;
+	private IGuiButton fmlProxyPacket;
+	private IGuiButton clientBrandPayloadPacket;
+	private IGuiButton wdlPayloadButton;
+	private IGuiButton _5zigPayloadButton;
+	private IGuiButton debugmode;
+	private IGuiButton betterSprintingButton;
+	private IGuiButton vapeButton;
+	private IGuiButton dipermsButton;
+	private IGuiButton permsreplButton;
+	private IGuiButton schematicaButton;
 
 	public GuiAntiForge(final IGuiScreen prevGui)
 	{
@@ -34,12 +54,25 @@ public class GuiAntiForge extends WrappedGuiScreen
 	@Override
 	public void initGui()
 	{
-		representedScreen.getButtonList().add(enabledButton = classProvider.createGuiButton(1, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 35, "Enabled (" + (AntiForge.enabled ? "On" : "Off") + ")"));
-		representedScreen.getButtonList().add(fmlButton = classProvider.createGuiButton(2, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 50 + 25, "Block FML (" + (AntiForge.blockFML ? "On" : "Off") + ")"));
-		representedScreen.getButtonList().add(proxyButton = classProvider.createGuiButton(3, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 50 + 25 * 2, "Block FML Proxy Packet (" + (AntiForge.blockProxyPacket ? "On" : "Off") + ")"));
-		representedScreen.getButtonList().add(payloadButton = classProvider.createGuiButton(4, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 50 + 25 * 3, "Block Payload Packets (" + (AntiForge.blockPayloadPackets ? "On" : "Off") + ")"));
+		final Collection<IGuiButton> buttonsList = representedScreen.getButtonList();
+		final int width = representedScreen.getWidth();
+		final int height = representedScreen.getHeight();
 
-		representedScreen.getButtonList().add(classProvider.createGuiButton(0, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 55 + 25 * 4 + 5, "Back"));
+		buttonsList.add(enabledButton = classProvider.createGuiButton(1, width / 2 - 100, representedScreen.getHeight() / 4 + 35, "Enabled (" + (AntiModDisable.enabled ? "On" : "Off") + ")"));
+		buttonsList.add(fmlButton = classProvider.createGuiButton(2, width / 2 - 100, height / 4 + 50 + 25, BLOCK_FML + (AntiModDisable.enabled && AntiModDisable.blockFMLPackets ? "\u00a7a(On)" : "\u00a7c(Off)")));
+		buttonsList.add(fmlProxyPacket = classProvider.createGuiButton(3, width / 2 - 100, height / 4 + 50 + 50, BLOCK_FMLPROXY_PACKET + (AntiModDisable.enabled && AntiModDisable.blockFMLProxyPackets ? "\u00a7a(On)" : "\u00a7c(Off)")));
+		buttonsList.add(clientBrandPayloadPacket = classProvider.createGuiButton(4, width / 2 - 100, height / 4 + 50 + 75, SPOOF_MC_BRAND_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockClientBrandRetrieverPackets ? "\u00a7a(On)" : "\u00a7c(Off)")));
+		buttonsList.add(wdlPayloadButton = classProvider.createGuiButton(5, width / 2 - 100, height / 4 + 50 + 100, BLOCK_WORLD_DOWNLOADER_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockWDLPayloads ? "\u00a7a(On)" : "\u00a7c(Off)")));
+		buttonsList.add(_5zigPayloadButton = classProvider.createGuiButton(6, width / 2 - 100, height / 4 + 50 + 125, "Block The 5zig's mod Payload Packets " + (AntiModDisable.enabled && AntiModDisable.block5zigsmodPayloads ? "\u00a7a(On)" : "\u00a7c(Off)")));
+		buttonsList.add(betterSprintingButton = classProvider.createGuiButton(7, width / 2 - 100, height / 4 + 50 + 150, BLOCK_BETTER_SPRINTING_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockBetterSprintingPayloads ? "\u00a7a(On)" : "\u00a7c(Off)")));
+		buttonsList.add(vapeButton = classProvider.createGuiButton(8, width / 2 - 100, height / 4 + 50 + 175, BLOCK_CRACKED_VAPE_SABOTAGES + (AntiModDisable.enabled && AntiModDisable.blockCrackedVapeSabotages ? "\u00a7a(On)" : "\u00a7c(Off)")));
+		buttonsList.add(dipermsButton = classProvider.createGuiButton(9, width / 2 - 100, height / 4 + 50 + 200, BLOCK_DIPERMISSIONS_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockDIPermissionsPayloads ? "\u00a7a(On)" : "\u00a7c(Off)")));
+		buttonsList.add(permsreplButton = classProvider.createGuiButton(10, width / 2 - 100, height / 4 + 50 + 225, BLOCK_PERMISSIONS_REPL_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockPermissionsReplPayloads ? "\u00a7a(On)" : "\u00a7c(Off)")));
+		buttonsList.add(schematicaButton = classProvider.createGuiButton(11, width / 2 - 100, height / 4 + 50 + 250, BLOCK_SCHEMATICA_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockSchematicaPayloads ? "\u00a7a(On)" : "\u00a7c(Off)")));
+
+		buttonsList.add(debugmode = classProvider.createGuiButton(999, width / 2 - 100, height / 4 + 50 + 275, PRINT_BLOCKED_SPOOFED_PACKETS + (AntiModDisable.enabled && AntiModDisable.debug ? "\u00a7a(On)" : "\u00a7c(Off)")));
+
+		buttonsList.add(classProvider.createGuiButton(0, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 55 + 25 * 4 + 5, "Back"));
 	}
 
 	@Override
@@ -48,29 +81,85 @@ public class GuiAntiForge extends WrappedGuiScreen
 		switch (button.getId())
 		{
 			case 1:
-				AntiForge.enabled = !AntiForge.enabled;
-				enabledButton.setDisplayString("Enabled (" + (AntiForge.enabled ? "On" : "Off") + ")");
+				AntiModDisable.enabled = !AntiModDisable.enabled;
+				enabledButton.setDisplayString("Enabled (" + (AntiModDisable.enabled ? "On" : "Off") + ")");
 				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				updateAll();
 				break;
 			case 2:
-				AntiForge.blockFML = !AntiForge.blockFML;
-				fmlButton.setDisplayString("Block FML (" + (AntiForge.blockFML ? "On" : "Off") + ")");
+				AntiModDisable.blockFMLPackets = !AntiModDisable.blockFMLPackets;
+				fmlButton.setDisplayString("Block FML (" + (AntiModDisable.blockFMLPackets ? "On" : "Off") + ")");
 				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 3:
-				AntiForge.blockProxyPacket = !AntiForge.blockProxyPacket;
-				proxyButton.setDisplayString("Block FML Proxy Packet (" + (AntiForge.blockProxyPacket ? "On" : "Off") + ")");
+				AntiModDisable.blockFMLProxyPackets = !AntiModDisable.blockFMLProxyPackets;
+				fmlProxyPacket.setDisplayString("Block FMLProxyPackets (" + (AntiModDisable.blockFMLProxyPackets ? "On" : "Off") + ")");
 				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 4:
-				AntiForge.blockPayloadPackets = !AntiForge.blockPayloadPackets;
-				payloadButton.setDisplayString("Block Payload Packets (" + (AntiForge.blockPayloadPackets ? "On" : "Off") + ")");
+				AntiModDisable.blockClientBrandRetrieverPackets = !AntiModDisable.blockClientBrandRetrieverPackets;
+				clientBrandPayloadPacket.setDisplayString("Block FML ClientBrandRetriever Packets (" + (AntiModDisable.blockClientBrandRetrieverPackets ? "On" : "Off") + ")");
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				break;
+			case 5:
+				AntiModDisable.blockWDLPayloads = !AntiModDisable.blockWDLPayloads;
+				wdlPayloadButton.setDisplayString(BLOCK_WORLD_DOWNLOADER_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockWDLPayloads ? "\u00a7a(On)" : "\u00a7c(Off)"));
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				break;
+			case 6:
+				AntiModDisable.block5zigsmodPayloads = !AntiModDisable.block5zigsmodPayloads;
+				_5zigPayloadButton.setDisplayString(BLOCK_THE_5_ZIG_S_MOD_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.block5zigsmodPayloads ? "\u00a7a(On)" : "\u00a7c(Off)"));
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				break;
+			case 7:
+				AntiModDisable.blockBetterSprintingPayloads = !AntiModDisable.blockBetterSprintingPayloads;
+				betterSprintingButton.setDisplayString(BLOCK_BETTER_SPRINTING_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockBetterSprintingPayloads ? "\u00a7a(On)" : "\u00a7c(Off)"));
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				break;
+			case 8:
+				AntiModDisable.blockCrackedVapeSabotages = !AntiModDisable.blockCrackedVapeSabotages;
+				vapeButton.setDisplayString(BLOCK_CRACKED_VAPE_SABOTAGES + (AntiModDisable.enabled && AntiModDisable.blockCrackedVapeSabotages ? "\u00a7a(On)" : "\u00a7c(Off)"));
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				break;
+			case 9:
+				AntiModDisable.blockDIPermissionsPayloads = !AntiModDisable.blockDIPermissionsPayloads;
+				dipermsButton.setDisplayString(BLOCK_DIPERMISSIONS_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockDIPermissionsPayloads ? "\u00a7a(On)" : "\u00a7c(Off)"));
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				break;
+			case 10:
+				AntiModDisable.blockPermissionsReplPayloads = !AntiModDisable.blockPermissionsReplPayloads;
+				permsreplButton.setDisplayString(BLOCK_PERMISSIONS_REPL_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockPermissionsReplPayloads ? "\u00a7a(On)" : "\u00a7c(Off)"));
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				break;
+			case 11:
+				AntiModDisable.blockSchematicaPayloads = !AntiModDisable.blockSchematicaPayloads;
+				schematicaButton.setDisplayString(BLOCK_SCHEMATICA_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockSchematicaPayloads ? "\u00a7a(On)" : "\u00a7c(Off)"));
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				break;
+			case 999:
+				AntiModDisable.debug = !AntiModDisable.debug;
+				debugmode.setDisplayString(PRINT_BLOCKED_SPOOFED_PACKETS + (AntiModDisable.enabled && AntiModDisable.debug ? "\u00a7a(On)" : "\u00a7c(Off)"));
 				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 0:
 				mc.displayGuiScreen(prevGui);
 				break;
 		}
+	}
+
+	private void updateAll()
+	{
+		fmlButton.setDisplayString(BLOCK_FML + (AntiModDisable.enabled && AntiModDisable.blockFMLPackets ? "\u00a7a(On)" : "\u00a7c(Off)"));
+		fmlProxyPacket.setDisplayString(BLOCK_FMLPROXY_PACKET + (AntiModDisable.enabled && AntiModDisable.blockFMLProxyPackets ? "\u00a7a(On)" : "\u00a7c(Off)"));
+		clientBrandPayloadPacket.setDisplayString(SPOOF_MC_BRAND_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockClientBrandRetrieverPackets ? "\u00a7a(On)" : "\u00a7c(Off)"));
+		wdlPayloadButton.setDisplayString(BLOCK_WORLD_DOWNLOADER_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockWDLPayloads ? "\u00a7a(On)" : "\u00a7c(Off)"));
+		_5zigPayloadButton.setDisplayString(BLOCK_THE_5_ZIG_S_MOD_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.block5zigsmodPayloads ? "\u00a7a(On)" : "\u00a7c(Off)"));
+		betterSprintingButton.setDisplayString(BLOCK_BETTER_SPRINTING_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockBetterSprintingPayloads ? "\u00a7a(On)" : "\u00a7c(Off)"));
+		vapeButton.setDisplayString(BLOCK_CRACKED_VAPE_SABOTAGES + (AntiModDisable.enabled && AntiModDisable.blockCrackedVapeSabotages ? "\u00a7a(On)" : "\u00a7c(Off)"));
+		dipermsButton.setDisplayString(BLOCK_DIPERMISSIONS_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockDIPermissionsPayloads ? "\u00a7a(On)" : "\u00a7c(Off)"));
+		permsreplButton.setDisplayString(BLOCK_PERMISSIONS_REPL_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockPermissionsReplPayloads ? "\u00a7a(On)" : "\u00a7c(Off)"));
+		schematicaButton.setDisplayString(BLOCK_SCHEMATICA_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockSchematicaPayloads ? "\u00a7a(On)" : "\u00a7c(Off)"));
+		debugmode.setDisplayString(PRINT_BLOCKED_SPOOFED_PACKETS + (AntiModDisable.enabled && AntiModDisable.debug ? "\u00a7a(On)" : "\u00a7c(Off)"));
 	}
 
 	@Override
@@ -85,7 +174,7 @@ public class GuiAntiForge extends WrappedGuiScreen
 	@Override
 	public void keyTyped(final char typedChar, final int keyCode) throws IOException
 	{
-		if (Keyboard.KEY_ESCAPE == keyCode)
+		if (keyCode == Keyboard.KEY_ESCAPE)
 		{
 			mc.displayGuiScreen(prevGui);
 			return;

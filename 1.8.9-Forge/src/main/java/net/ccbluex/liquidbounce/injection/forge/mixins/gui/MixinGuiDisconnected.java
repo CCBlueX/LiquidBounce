@@ -19,7 +19,7 @@ import com.thealtening.api.data.AccountData;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.SessionEvent;
-import net.ccbluex.liquidbounce.features.special.AntiForge;
+import net.ccbluex.liquidbounce.features.special.AntiModDisable;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
@@ -62,7 +62,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 
 		buttonList.add(new GuiButton(3, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
 		buttonList.add(new GuiButton(4, width / 2 + 2, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 44, 98, 20, "Random username"));
-		buttonList.add(forgeBypassButton = new GuiButton(5, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 66, "Bypass AntiForge: " + (AntiForge.enabled ? "On" : "Off")));
+		buttonList.add(forgeBypassButton = new GuiButton(5, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 66, "Bypass AntiForge: " + (AntiModDisable.enabled ? "On" : "Off")));
 
 		updateSliderText();
 	}
@@ -115,8 +115,8 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 				ServerUtils.connectToLastServer();
 				break;
 			case 5:
-				AntiForge.enabled = !AntiForge.enabled;
-				forgeBypassButton.displayString = "Bypass AntiForge: " + (AntiForge.enabled ? "On" : "Off");
+				AntiModDisable.enabled = !AntiModDisable.enabled;
+				forgeBypassButton.displayString = "Bypass AntiForge: " + (AntiModDisable.enabled ? "On" : "Off");
 				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 		}

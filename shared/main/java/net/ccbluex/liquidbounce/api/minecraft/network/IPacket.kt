@@ -14,16 +14,19 @@ interface IPacket
 {
 	fun asSPacketAnimation(): ISPacketAnimation
 	fun asSPacketEntity(): ISPacketEntity
-	fun asCPacketPlayer(): ICPacketPlayer
-	fun asCPacketUseEntity(): ICPacketUseEntity
 	fun asSPacketEntityVelocity(): ISPacketEntityVelocity
-	fun asCPacketChatMessage(): ICPacketChatMessage
 	fun asSPacketCloseWindow(): ISPacketCloseWindow
 	fun asSPacketTabComplete(): ISPacketTabComplete
 	fun asSPacketPosLook(): ISPacketPosLook
 	fun asSPacketResourcePackSend(): ISPacketResourcePackSend
-	fun asCPacketHeldItemChange(): ICPacketHeldItemChange
 	fun asSPacketWindowItems(): ISPacketWindowItems
+	fun asSPacketChat(): ISPacketChat
+	fun asSPacketCustomPayload(): ISPacketCustomPayload
+
+	fun asCPacketPlayer(): ICPacketPlayer
+	fun asCPacketUseEntity(): ICPacketUseEntity
+	fun asCPacketChatMessage(): ICPacketChatMessage
+	fun asCPacketHeldItemChange(): ICPacketHeldItemChange
 	fun asCPacketCustomPayload(): ICPacketCustomPayload
 	fun asCPacketHandshake(): ICPacketHandshake
 }

@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.event.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.special.AntiForge
+import net.ccbluex.liquidbounce.features.special.AntiModDisable
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
 import net.ccbluex.liquidbounce.features.special.ClientRichPresence
 import net.ccbluex.liquidbounce.features.special.DonatorCape
@@ -91,7 +91,7 @@ object LiquidBounce
 
 		// Register listeners
 		eventManager.registerListener(RotationUtils())
-		eventManager.registerListener(AntiForge())
+		eventManager.registerListener(AntiModDisable())
 		eventManager.registerListener(BungeeCordSpoof())
 		eventManager.registerListener(DonatorCape())
 		eventManager.registerListener(InventoryUtils())

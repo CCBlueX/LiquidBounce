@@ -10,7 +10,7 @@ import java.net.URISyntaxException;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EntityMovementEvent;
-import net.ccbluex.liquidbounce.features.special.AntiForge;
+import net.ccbluex.liquidbounce.features.special.AntiModDisable;
 import net.ccbluex.liquidbounce.injection.backend.EntityImplKt;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.minecraft.client.ClientBrandRetriever;
@@ -85,7 +85,7 @@ public abstract class MixinNetHandlerPlayClient
 	@Inject(method = "handleJoinGame", at = @At("HEAD"), cancellable = true)
 	private void handleJoinGameWithAntiForge(final S01PacketJoinGame packetIn, final CallbackInfo callbackInfo)
 	{
-		if (!AntiForge.enabled || !AntiForge.blockFML || Minecraft.getMinecraft().isIntegratedServerRunning())
+		if (!AntiModDisable.enabled || !AntiModDisable.blockFMLPackets || Minecraft.getMinecraft().isIntegratedServerRunning())
 			return;
 
 		PacketThreadUtil.checkThreadAndEnqueue(packetIn, (NetHandlerPlayClient) (Object) this, gameController);

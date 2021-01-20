@@ -79,7 +79,7 @@ interface IClassProvider
 	fun createNBTTagList(): INBTTagList
 	fun createNBTTagString(string: String): INBTTagString
 	fun createNBTTagDouble(value: Double): INBTTagDouble
-	fun createEntityOtherPlayerMP(world: IWorldClient, GameProfile: GameProfile): IEntityOtherPlayerMP
+	fun createEntityOtherPlayerMP(world: IWorldClient, gameProfile: GameProfile): IEntityOtherPlayerMP
 	fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect
 	fun createGuiOptions(parentScreen: IGuiScreen, gameSettings: IGameSettings): IGuiScreen
 	fun createGuiSelectWorld(parentScreen: IGuiScreen): IGuiScreen
@@ -148,6 +148,9 @@ interface IClassProvider
 	fun isSPacketExplosion(obj: Any?): Boolean
 	fun isSPacketCloseWindow(obj: Any?): Boolean
 	fun isSPacketTabComplete(obj: Any?): Boolean
+	fun isSPacketChat(obj: Any?): Boolean
+	fun isSPacketCustomPayload(obj: Any?): Boolean
+
 	fun isCPacketPlayer(obj: Any?): Boolean
 	fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean
 	fun isCPacketUseEntity(obj: Any?): Boolean

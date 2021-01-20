@@ -584,6 +584,8 @@ class KillAura : Module()
 		val swing = swingValue.get()
 		val multi = targetModeValue.get().equals("Multi", ignoreCase = true)
 		val openInventory = aacValue.get() && classProvider.isGuiContainer(mc.currentScreen)
+
+		// FailRate
 		failedToHit = failRate > 0 && Random().nextInt(100) <= failRate
 
 		// Close inventory when open
@@ -591,7 +593,9 @@ class KillAura : Module()
 
 		// Check is not hitable or check failrate
 		if (!hitable || failedToHit)
-		{ // Stop Blocking before FAKE attack
+		{
+
+			// Stop Blocking before FAKE attack
 			if (thePlayer.isBlocking || (serverSideBlockingStatus))
 			{
 				mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
@@ -606,10 +610,8 @@ class KillAura : Module()
 			if ((thePlayer.isBlocking || (canBlock && thePlayer.getDistanceToEntityBox(currentTarget!!) <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(currentTarget!!, interactAutoBlockValue.get())
 		} else
 		{ // Attack
-			if (!multi)
-			{
-				attackEntity(currentTarget ?: return)
-			} else
+			if (!multi) attackEntity(currentTarget ?: return)
+			else
 			{
 				var targets = 0
 
@@ -804,6 +806,7 @@ class KillAura : Module()
 	{
 		var boundingBox = entity.entityBoundingBox
 
+		// Entity movement predict
 		if (predictValue.get()) boundingBox = boundingBox.offset(
 			(entity.posX - entity.prevPosX - (mc.thePlayer!!.posX - mc.thePlayer!!.prevPosX)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()),
 			(entity.posY - entity.prevPosY - (mc.thePlayer!!.posY - mc.thePlayer!!.prevPosY)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()),

@@ -17,7 +17,7 @@ import com.google.gson.JsonParser;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat;
-import net.ccbluex.liquidbounce.features.special.AntiForge;
+import net.ccbluex.liquidbounce.features.special.AntiModDisable;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof;
 import net.ccbluex.liquidbounce.file.FileConfig;
@@ -86,13 +86,13 @@ public class ValuesConfig extends FileConfig
 				final JsonObject jsonValue = (JsonObject) entry.getValue();
 
 				if (jsonValue.has("AntiForge"))
-					AntiForge.enabled = jsonValue.get("AntiForge").getAsBoolean();
+					AntiModDisable.enabled = jsonValue.get("AntiForge").getAsBoolean();
 				if (jsonValue.has("AntiForgeFML"))
-					AntiForge.blockFML = jsonValue.get("AntiForgeFML").getAsBoolean();
+					AntiModDisable.blockFMLPackets = jsonValue.get("AntiForgeFML").getAsBoolean();
 				if (jsonValue.has("AntiForgeProxy"))
-					AntiForge.blockProxyPacket = jsonValue.get("AntiForgeProxy").getAsBoolean();
+					AntiModDisable.blockFMLProxyPackets = jsonValue.get("AntiForgeProxy").getAsBoolean();
 				if (jsonValue.has("AntiForgePayloads"))
-					AntiForge.blockPayloadPackets = jsonValue.get("AntiForgePayloads").getAsBoolean();
+					AntiModDisable.blockClientBrandRetrieverPackets = jsonValue.get("AntiForgePayloads").getAsBoolean();
 				if (jsonValue.has("BungeeSpoof"))
 					BungeeCordSpoof.enabled = jsonValue.get("BungeeSpoof").getAsBoolean();
 				if (jsonValue.has("AutoReconnectDelay"))
@@ -174,10 +174,10 @@ public class ValuesConfig extends FileConfig
 		jsonObject.add("targets", jsonTargets);
 
 		final JsonObject jsonFeatures = new JsonObject();
-		jsonFeatures.addProperty("AntiForge", AntiForge.enabled);
-		jsonFeatures.addProperty("AntiForgeFML", AntiForge.blockFML);
-		jsonFeatures.addProperty("AntiForgeProxy", AntiForge.blockProxyPacket);
-		jsonFeatures.addProperty("AntiForgePayloads", AntiForge.blockPayloadPackets);
+		jsonFeatures.addProperty("AntiForge", AntiModDisable.enabled);
+		jsonFeatures.addProperty("AntiForgeFML", AntiModDisable.blockFMLPackets);
+		jsonFeatures.addProperty("AntiForgeProxy", AntiModDisable.blockFMLProxyPackets);
+		jsonFeatures.addProperty("AntiForgePayloads", AntiModDisable.blockClientBrandRetrieverPackets);
 		jsonFeatures.addProperty("BungeeSpoof", BungeeCordSpoof.enabled);
 		jsonFeatures.addProperty("AutoReconnectDelay", AutoReconnect.INSTANCE.getDelay());
 		jsonObject.add("features", jsonFeatures);

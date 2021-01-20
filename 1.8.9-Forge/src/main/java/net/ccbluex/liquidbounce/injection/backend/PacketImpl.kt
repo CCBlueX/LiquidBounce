@@ -21,13 +21,7 @@ open class PacketImpl<T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun asSPacketEntity(): ISPacketEntity = SPacketEntityImpl(wrapped as S14PacketEntity)
 
-	override fun asCPacketPlayer(): ICPacketPlayer = CPacketPlayerImpl(wrapped as C03PacketPlayer)
-
-	override fun asCPacketUseEntity(): ICPacketUseEntity = CPacketUseEntityImpl(wrapped as C02PacketUseEntity)
-
 	override fun asSPacketEntityVelocity(): ISPacketEntityVelocity = SPacketEntityVelocityImpl(wrapped as S12PacketEntityVelocity)
-
-	override fun asCPacketChatMessage(): ICPacketChatMessage = CPacketChatMessageImpl(wrapped as C01PacketChatMessage)
 
 	override fun asSPacketCloseWindow(): ISPacketCloseWindow = SPacketCloseWindowImpl(wrapped as S2EPacketCloseWindow)
 
@@ -37,9 +31,19 @@ open class PacketImpl<T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun asSPacketResourcePackSend(): ISPacketResourcePackSend = SPacketResourcePackSendImpl(wrapped as S48PacketResourcePackSend)
 
+	override fun asSPacketWindowItems(): ISPacketWindowItems = SPacketWindowItemsImpl(wrapped as S30PacketWindowItems)
+
+	override fun asSPacketChat(): ISPacketChat = SPacketChatImpl(wrapped as S02PacketChat)
+
+	override fun asSPacketCustomPayload(): ISPacketCustomPayload = SPacketCustomPayloadImpl(wrapped as S3FPacketCustomPayload)
+
+	override fun asCPacketChatMessage(): ICPacketChatMessage = CPacketChatMessageImpl(wrapped as C01PacketChatMessage)
+
 	override fun asCPacketHeldItemChange(): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(wrapped as C09PacketHeldItemChange)
 
-	override fun asSPacketWindowItems(): ISPacketWindowItems = SPacketWindowItemsImpl(wrapped as S30PacketWindowItems)
+	override fun asCPacketPlayer(): ICPacketPlayer = CPacketPlayerImpl(wrapped as C03PacketPlayer)
+
+	override fun asCPacketUseEntity(): ICPacketUseEntity = CPacketUseEntityImpl(wrapped as C02PacketUseEntity)
 
 	override fun asCPacketCustomPayload(): ICPacketCustomPayload = CPacketCustomPayloadImpl(wrapped as C17PacketCustomPayload)
 

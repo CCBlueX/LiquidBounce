@@ -260,6 +260,10 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isSPacketTabComplete(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S3APacketTabComplete
 
+	override fun isSPacketChat(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S02PacketChat
+
+	override fun isSPacketCustomPayload(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S3FPacketCustomPayload
+
 	override fun isCPacketPlayer(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C03PacketPlayer
 
 	override fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C08PacketPlayerBlockPlacement
