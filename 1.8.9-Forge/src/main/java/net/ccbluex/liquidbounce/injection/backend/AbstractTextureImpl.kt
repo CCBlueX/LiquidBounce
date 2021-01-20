@@ -11,10 +11,7 @@ import net.minecraft.client.renderer.texture.AbstractTexture
 
 open class AbstractTextureImpl<T : AbstractTexture>(val wrapped: T) : IAbstractTexture
 {
-	override fun equals(other: Any?): Boolean
-	{
-		return other is AbstractTextureImpl<*> && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is AbstractTextureImpl<*> && other.wrapped == wrapped
 }
 
 inline fun IAbstractTexture.unwrap(): AbstractTexture = (this as AbstractTextureImpl<*>).wrapped

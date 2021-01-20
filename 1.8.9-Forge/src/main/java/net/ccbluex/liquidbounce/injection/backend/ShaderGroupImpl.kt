@@ -14,10 +14,7 @@ class ShaderGroupImpl(val wrapped: ShaderGroup) : IShaderGroup
 	override val shaderGroupName: String
 		get() = wrapped.shaderGroupName
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is ShaderGroupImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is ShaderGroupImpl && other.wrapped == wrapped
 }
 
 inline fun IShaderGroup.unwrap(): ShaderGroup = (this as ShaderGroupImpl).wrapped

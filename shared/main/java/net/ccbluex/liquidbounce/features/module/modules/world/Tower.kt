@@ -505,7 +505,7 @@ class Tower : Module()
 				if (itemStack != null && classProvider.isItemBlock(itemStack.item))
 				{
 					val block = itemStack.item!!.asItemBlock().block
-					if (mc.thePlayer!!.heldItem == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block))
+					if (mc.thePlayer!!.heldItem == itemStack || !InventoryUtils.AUTOBLOCK_BLACKLIST.contains(block))
 					{
 						amount += itemStack.stackSize
 					}

@@ -5,34 +5,60 @@
  */
 package net.ccbluex.liquidbounce.utils;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.IntStream;
 
 import net.ccbluex.liquidbounce.api.enums.BlockType;
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock;
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemBlock;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack;
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket;
+import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB;
+import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos;
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld;
 import net.ccbluex.liquidbounce.event.ClickWindowEvent;
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.Listenable;
 import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
+import net.minecraft.block.Block;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
 
 public final class InventoryUtils extends MinecraftInstance implements Listenable
 {
 
+	// @formatter:off
+	public static final List<IBlock> AUTOBLOCK_BLACKLIST = Arrays.asList(
+			// Interactible blocks
+			classProvider.getBlockEnum(BlockType.CHEST), classProvider.getBlockEnum(BlockType.ENDER_CHEST), classProvider.getBlockEnum(BlockType.TRAPPED_CHEST), classProvider.getBlockEnum(BlockType.ANVIL), classProvider.getBlockEnum(BlockType.DISPENSER), classProvider.getBlockEnum(BlockType.DROPPER), classProvider.getBlockEnum(BlockType.FURNACE), classProvider.getBlockEnum(BlockType.LIT_FURNACE), classProvider.getBlockEnum(BlockType.CRAFTING_TABLE), classProvider.getBlockEnum(BlockType.ENCHANTING_TABLE), classProvider.getBlockEnum(BlockType.JUKEBOX), classProvider.getBlockEnum(BlockType.BED), classProvider.getBlockEnum(BlockType.NOTEBLOCK),
+
+			classProvider.getBlockEnum(BlockType.WEB),
+
+			// Some excepted blocks
+			classProvider.getBlockEnum(BlockType.TORCH), classProvider.getBlockEnum(BlockType.REDSTONE_TORCH), classProvider.getBlockEnum(BlockType.REDSTONE_WIRE), classProvider.getBlockEnum(BlockType.LADDER), classProvider.getBlockEnum(BlockType.VINE), classProvider.getBlockEnum(BlockType.WATERLILY), classProvider.getBlockEnum(BlockType.CACTUS), classProvider.getBlockEnum(BlockType.GLASS_PANE), classProvider.getBlockEnum(BlockType.IRON_BARS),
+
+			// Pressure plates
+			classProvider.getBlockEnum(BlockType.STONE_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.WODDEN_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.LIGHT_WEIGHTED_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.HEAVY_WEIGHTED_PRESSURE_PLATE),
+
+			// Falling blocks
+			classProvider.getBlockEnum(BlockType.SAND), classProvider.getBlockEnum(BlockType.GRAVEL),
+
+			classProvider.getBlockEnum(BlockType.TNT), classProvider.getBlockEnum(BlockType.STANDING_BANNER), classProvider.getBlockEnum(BlockType.WALL_BANNER));
+	// @formatter:on
+
 	public static final MSTimer CLICK_TIMER = new MSTimer();
-	public static final List<IBlock> BLOCK_BLACKLIST = Arrays.asList(classProvider.getBlockEnum(BlockType.CHEST), classProvider.getBlockEnum(BlockType.ENDER_CHEST), classProvider.getBlockEnum(BlockType.TRAPPED_CHEST), classProvider.getBlockEnum(BlockType.ANVIL), classProvider.getBlockEnum(BlockType.SAND), classProvider.getBlockEnum(BlockType.WEB), classProvider.getBlockEnum(BlockType.TORCH), classProvider.getBlockEnum(BlockType.CRAFTING_TABLE), classProvider.getBlockEnum(BlockType.FURNACE), classProvider.getBlockEnum(BlockType.WATERLILY), classProvider.getBlockEnum(BlockType.DISPENSER), classProvider.getBlockEnum(BlockType.STONE_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.WODDEN_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.NOTEBLOCK), classProvider.getBlockEnum(BlockType.DROPPER), classProvider.getBlockEnum(BlockType.TNT), classProvider.getBlockEnum(BlockType.STANDING_BANNER), classProvider.getBlockEnum(BlockType.WALL_BANNER), classProvider.getBlockEnum(BlockType.REDSTONE_TORCH));
 
 	public static int findItem(final int startSlot, final int endSlot, final IItem item)
 	{
 		for (int i = startSlot; i < endSlot; i++)
 		{
-			final IItemStack stack = mc.getThePlayer().getInventoryContainer().getSlot(i).getStack();
+			final IItemStack stack = Objects.requireNonNull(mc.getThePlayer()).getInventoryContainer().getSlot(i).getStack();
 
-			if (stack != null && stack.getItem().equals(item))
+			if (stack != null && Objects.equals(stack.getItem(), item))
 				return i;
 		}
 
@@ -41,48 +67,79 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 
 	public static boolean hasSpaceHotbar()
 	{
-		for (int i = 36; i < 45; i++)
-		{
-			final IItemStack stack = mc.getThePlayer().getInventory().getStackInSlot(i);
-
-			if (stack == null)
-				return true;
-		}
-
-		return false;
+		return IntStream.range(36, 45).mapToObj(i -> Objects.requireNonNull(mc.getThePlayer()).getInventory().getStackInSlot(i)).anyMatch(Objects::isNull);
 	}
 
-	public static int findAutoBlockBlock()
+	public static int findAutoBlockBlock(final boolean autoblockFullcubeOnly, final double boundingBoxYLimit)
 	{
+		final IWorld theWorld = Objects.requireNonNull(mc.getTheWorld());
+		final IEntityPlayerSP thePlayer = Objects.requireNonNull(mc.getThePlayer());
+
+		final List<Integer> hotbarSlots = new ArrayList<>(9);
 		for (int i = 36; i < 45; i++)
 		{
-			final IItemStack itemStack = mc.getThePlayer().getInventoryContainer().getSlot(i).getStack();
+			final IItemStack itemStack = thePlayer.getInventoryContainer().getSlot(i).getStack();
 
 			if (itemStack != null && classProvider.isItemBlock(itemStack.getItem()) && itemStack.getStackSize() > 0)
 			{
-				final IItemBlock itemBlock = itemStack.getItem().asItemBlock();
+				final IItemBlock itemBlock = Objects.requireNonNull(itemStack.getItem()).asItemBlock();
 				final IBlock block = itemBlock.getBlock();
 
-				if (block.isFullCube(block.getDefaultState()) && !BLOCK_BLACKLIST.contains(block) && !classProvider.isBlockBush(block))
-					return i;
+				if (canAutoBlock(block) && block.isFullCube(Objects.requireNonNull(block.getDefaultState())))
+					hotbarSlots.add(i);
 			}
 		}
-
-		for (int i = 36; i < 45; i++)
+		final Optional<Integer> pred = boundingBoxYLimit == -1 ? Optional.ofNullable(hotbarSlots.isEmpty() ? null : hotbarSlots.get(0)) : hotbarSlots.stream().filter(c ->
 		{
-			final IItemStack itemStack = mc.getThePlayer().getInventoryContainer().getSlot(i).getStack();
+			final IBlock b = ((IItemBlock) Objects.requireNonNull(Objects.requireNonNull(mc.getThePlayer().getInventoryContainer().getSlot(c).getStack()).getItem())).getBlock();
+			final IAxisAlignedBB box = b.getCollisionBoundingBox(theWorld, WBlockPos.Companion.getORIGIN(), Objects.requireNonNull(b.getDefaultState()));
+			return box != null && box.getMaxY() - box.getMinY() <= boundingBoxYLimit;
+		}).max(Comparator.comparingDouble(c ->
+		{
+			final IBlock block = ((IItemBlock) Objects.requireNonNull(Objects.requireNonNull(mc.getThePlayer().getInventoryContainer().getSlot(c).getStack()).getItem())).getBlock();
+			return block.getBlockBoundsMaxY() - block.getBlockBoundsMinY();
+		}));
+		if (pred.isPresent())
+			return pred.get();
 
-			if (itemStack != null && classProvider.isItemBlock(itemStack.getItem()) && itemStack.getStackSize() > 0)
+		hotbarSlots.clear(); // Reuse list
+
+		if (!autoblockFullcubeOnly)
+		{
+			for (int i = 36; i < 45; i++)
 			{
-				final IItemBlock itemBlock = itemStack.getItem().asItemBlock();
-				final IBlock block = itemBlock.getBlock();
+				final IItemStack itemStack = mc.getThePlayer().getInventoryContainer().getSlot(i).getStack();
 
-				if (!BLOCK_BLACKLIST.contains(block) && !classProvider.isBlockBush(block))
-					return i;
+				if (itemStack != null && classProvider.isItemBlock(itemStack.getItem()) && itemStack.getStackSize() > 0)
+				{
+					final IItemBlock itemBlock = Objects.requireNonNull(itemStack.getItem()).asItemBlock();
+					final IBlock block = itemBlock.getBlock();
+
+					if (canAutoBlock(block))
+						hotbarSlots.add(i);
+				}
 			}
+			final Optional<Integer> pred2 = boundingBoxYLimit == -1 ? Optional.ofNullable(hotbarSlots.isEmpty() ? null : hotbarSlots.get(0)) : hotbarSlots.stream().filter(c ->
+			{
+				final IBlock block = ((IItemBlock) Objects.requireNonNull(Objects.requireNonNull(thePlayer.getInventoryContainer().getSlot(c).getStack()).getItem())).getBlock();
+				final IAxisAlignedBB box = block.getCollisionBoundingBox(theWorld, WBlockPos.Companion.getORIGIN(), Objects.requireNonNull(block.getDefaultState()));
+				return box != null && box.getMaxY() - box.getMinY() <= boundingBoxYLimit;
+			}).max(Comparator.comparingDouble(c ->
+			{
+				final IBlock block = ((IItemBlock) Objects.requireNonNull(Objects.requireNonNull(thePlayer.getInventoryContainer().getSlot(c).getStack()).getItem())).getBlock();
+				return block.getBlockBoundsMaxY() - block.getBlockBoundsMinY();
+			}));
+
+			if (pred2.isPresent())
+				return pred2.get();
 		}
 
 		return -1;
+	}
+
+	public static boolean canAutoBlock(IBlock block)
+	{
+		return !AUTOBLOCK_BLACKLIST.contains(block) && !classProvider.isBlockBush(block) && !classProvider.isBlockRailBase(block) && !classProvider.isBlockSign(block) && !classProvider.isBlockDoor(block);
 	}
 
 	@EventTarget

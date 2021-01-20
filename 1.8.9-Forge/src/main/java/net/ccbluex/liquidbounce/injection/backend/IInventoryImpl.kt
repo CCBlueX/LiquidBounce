@@ -14,10 +14,7 @@ class IInventoryImpl(val wrapped: IInventory) : IIInventory
 	override val name: String
 		get() = wrapped.name
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is IInventoryImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is IInventoryImpl && other.wrapped == wrapped
 }
 
 inline fun IIInventory.unwrap(): IInventory = (this as IInventoryImpl).wrapped

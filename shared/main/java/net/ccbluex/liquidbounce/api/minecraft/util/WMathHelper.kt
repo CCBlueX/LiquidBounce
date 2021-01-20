@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.api.minecraft.util
 
 object WMathHelper
 {
-
 	@Suppress("FunctionName")
 	@JvmStatic
 	fun wrapAngleTo180_float(angle: Float): Float
@@ -29,15 +28,9 @@ object WMathHelper
 	}
 
 	@JvmStatic
-	inline fun clamp_float(num: Float, min: Float, max: Float): Float
-	{
-		return if (num < min) min else if (num > max) max else num
-	}
+	inline fun clamp_float(num: Float, min: Float, max: Float): Float = if (num < min) min else if (num > max) max else num
 
 	@JvmStatic
-	inline fun clamp_double(num: Double, min: Double, max: Double): Double
-	{
-		return if (num < min) min else if (num > max) max else num
-	}
+	inline fun clamp_double(num: Double, min: Double, max: Double): Double = if (num < min) min else if (num > max) max else num
 
 }

@@ -309,7 +309,7 @@ class InventoryCleaner : Module()
 					{
 						val item = stack.item!!
 
-						if (classProvider.isItemBlock(item) && !InventoryUtils.BLOCK_BLACKLIST.contains(item.asItemBlock().block) && !type(index).equals("Block", ignoreCase = true))
+						if (classProvider.isItemBlock(item) && !InventoryUtils.AUTOBLOCK_BLACKLIST.contains(item.asItemBlock().block) && !type(index).equals("Block", ignoreCase = true))
 						{
 							val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemBlock(item)
 

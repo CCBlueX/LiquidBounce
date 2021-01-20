@@ -20,10 +20,7 @@ class TimerImpl(val wrapped: Timer) : ITimer
 	override val renderPartialTicks: Float
 		get() = wrapped.renderPartialTicks
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is TimerImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is TimerImpl && other.wrapped == wrapped
 }
 
 inline fun ITimer.unwrap(): Timer = (this as TimerImpl).wrapped

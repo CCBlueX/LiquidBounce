@@ -15,10 +15,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityOtherPlayerMP
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.*
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.render.ITessellator
@@ -42,10 +39,7 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
-import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
-import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
-import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
-import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
+import net.ccbluex.liquidbounce.api.util.*
 import net.ccbluex.liquidbounce.injection.backend.utils.*
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
@@ -66,24 +60,15 @@ import net.minecraft.enchantment.Enchantment
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.boss.EntityDragon
 import net.minecraft.entity.item.*
-import net.minecraft.entity.monster.EntityGhast
-import net.minecraft.entity.monster.EntityGolem
-import net.minecraft.entity.monster.EntityMob
-import net.minecraft.entity.monster.EntitySlime
-import net.minecraft.entity.passive.EntityAnimal
-import net.minecraft.entity.passive.EntityBat
-import net.minecraft.entity.passive.EntitySquid
-import net.minecraft.entity.passive.EntityVillager
+import net.minecraft.entity.monster.*
+import net.minecraft.entity.passive.*
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.projectile.EntityArrow
 import net.minecraft.event.ClickEvent
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
 import net.minecraft.item.*
-import net.minecraft.nbt.NBTTagCompound
-import net.minecraft.nbt.NBTTagDouble
-import net.minecraft.nbt.NBTTagList
-import net.minecraft.nbt.NBTTagString
+import net.minecraft.nbt.*
 import net.minecraft.network.PacketBuffer
 import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.login.client.C01PacketEncryptionResponse
@@ -378,6 +363,12 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isBlockBush(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockBush
 
+	override fun isBlockRailBase(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockRailBase
+
+	override fun isBlockSign(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSign
+
+	override fun isBlockDoor(obj: Any?): Boolean = obj is BlockImpl && (obj.wrapped is BlockDoor || obj.wrapped is BlockTrapDoor)
+
 	override fun isGuiInventory(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiInventory
 
 	override fun isGuiContainer(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiContainer
@@ -493,6 +484,16 @@ object ClassProviderImpl : IClassProvider
 			BlockType.BROWN_MUSHROOM_BLOCK -> Blocks.brown_mushroom_block.wrap()
 			BlockType.RED_MUSHROOM_BLOCK -> Blocks.red_mushroom_block.wrap()
 			BlockType.FARMLAND -> Blocks.farmland.wrap()
+			BlockType.JUKEBOX -> Blocks.jukebox.wrap()
+			BlockType.REDSTONE_WIRE -> Blocks.redstone_wire.wrap()
+			BlockType.VINE -> Blocks.vine.wrap()
+			BlockType.BED -> Blocks.bed.wrap()
+			BlockType.CACTUS -> Blocks.cactus.wrap()
+			BlockType.GLASS_PANE -> Blocks.glass_pane.wrap()
+			BlockType.IRON_BARS -> Blocks.iron_bars.wrap()
+			BlockType.LIGHT_WEIGHTED_PRESSURE_PLATE -> Blocks.light_weighted_pressure_plate.wrap()
+			BlockType.HEAVY_WEIGHTED_PRESSURE_PLATE -> Blocks.heavy_weighted_pressure_plate.wrap()
+			BlockType.GRAVEL -> Blocks.gravel.wrap()
 		}
 	}
 
@@ -593,6 +594,8 @@ object ClassProviderImpl : IClassProvider
 
 	override fun getGlStateManager(): IGlStateManager = GlStateManagerImpl
 	override fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket = PacketImpl(C01PacketEncryptionResponse(secretKey, publicKey, VerifyToken))
+
+	override fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean = Block.isEqualTo(block1?.unwrap(), block2?.unwrap())
 
 	override fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*> = Backend.BACKEND_UNSUPPORTED()
 

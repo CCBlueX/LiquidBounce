@@ -201,6 +201,9 @@ interface IClassProvider
 	fun isBlockCactus(obj: Any?): Boolean
 	fun isBlockBedrock(obj: Any?): Boolean
 	fun isBlockBush(obj: Any?): Boolean
+	fun isBlockRailBase(obj: Any?): Boolean
+	fun isBlockSign(obj: Any?): Boolean
+	fun isBlockDoor(obj: Any?): Boolean
 
 	fun isGuiInventory(obj: Any?): Boolean
 	fun isGuiContainer(obj: Any?): Boolean
@@ -227,6 +230,8 @@ interface IClassProvider
 	fun wrapGuiSlot(wrappedGuiSlot: WrappedGuiSlot, mc: IMinecraft, width: Int, height: Int, top: Int, bottom: Int, slotHeight: Int)
 	fun getGlStateManager(): IGlStateManager
 	fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket
+
+	fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean
 
 	@SupportsMinecraftVersions(value = [MinecraftVersion.MC_1_12])
 	fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*>
