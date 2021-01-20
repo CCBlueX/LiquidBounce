@@ -138,7 +138,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen
 			final String[] textArray = inputField.getText().split(" ");
 			final String trimmedString = latestAutoComplete[0].replaceFirst("(?i)" + textArray[textArray.length - 1], "");
 
-			mc.fontRendererObj.drawStringWithShadow(trimmedString, inputField.xPosition + mc.fontRendererObj.getStringWidth(inputField.getText()), inputField.yPosition, new Color(165, 165, 165).getRGB());
+			mc.fontRendererObj.drawStringWithShadow(trimmedString, inputField.xPosition + mc.fontRendererObj.getStringWidth(inputField.getText()) + 1, inputField.yPosition, new Color(165, 165, 165).getRGB());
 		}
 
 		final IChatComponent ichatcomponent = mc.ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());
