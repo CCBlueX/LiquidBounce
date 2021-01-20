@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.features.command.commands
+package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandManager

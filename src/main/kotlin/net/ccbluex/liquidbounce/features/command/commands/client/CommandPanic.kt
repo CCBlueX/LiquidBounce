@@ -16,52 +16,58 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands
+package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.chat
-import net.minecraft.client.util.InputUtil
 
-object CommandBind {
+object CommandPanic {
 
     fun createCommand(): Command {
         return CommandBuilder
-            .begin("bind")
-            .description("Allows you to set keybinds")
+            .begin("panic")
+            .description("Turns off all modules")
             .parameter(
                 ParameterBuilder
-                    .begin<String>("name")
-                    .description("The name of the module")
+                    .begin<String>("category")
+                    .description("Specific category of modules")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .required()
-                    .build()
-            ).parameter(
-                ParameterBuilder
-                    .begin<String>("key")
-                    .description("The new key to bind")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .required()
+                    .optional()
                     .build()
             )
             .handler { args ->
-                // TODO: use .binds add
+                var modules = ModuleManager.filter { it.state }
+                val msg: String
 
-                val name = args[0] as String
-                val key = args[1] as String
-                val module = ModuleManager.find { it.name.equals(name, true) }
-                    ?: throw CommandException("Module ${args[1]} not found.")
+                val type = if (args.isNotEmpty()) {
+                    args[0] as String
+                }else{
+                    "nonrender"
+                }
 
-                val bindKey = runCatching {
-                    InputUtil.fromTranslationKey("key.keyboard.${key.toLowerCase()}")
-                }.getOrElse { InputUtil.UNKNOWN_KEY }
+                when (type) {
+                    "all" -> msg = "all"
+                    "nonrender" -> {
+                        modules = modules.filter { it.category != Category.RENDER }
+                        msg = "all non-render"
+                    }
+                    else -> {
+                        val category = Category.values().find { it.readableName.equals(type, true) } ?:
+                            throw CommandException("Category '$type' not found.")
+                        modules = modules.filter { it.category == category }
+                        msg = "all ${category.readableName}"
+                    }
+                }
 
-                module.bind = bindKey
-                chat("Bound module ${module.name} to key ${bindKey.localizedText.asString()}.")
+                modules.forEach { it.state = false }
+                chat("Disabled $msg modules.")
             }
             .build()
     }
+
 }

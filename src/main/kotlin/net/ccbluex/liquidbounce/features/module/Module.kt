@@ -28,9 +28,10 @@ import net.minecraft.client.util.InputUtil
 import net.minecraft.world.World
 
 open class Module(val name: String, val category: Category, var description: String = "", var bind: InputUtil.Key = InputUtil.UNKNOWN_KEY,
-                  defaultState: Boolean = false, val disableActivation: Boolean = false) : Listenable, Configurable(name) {
+                  defaultState: Boolean = false, val disableActivation: Boolean = false, hide: Boolean = false) : Listenable, Configurable(name) {
 
     private var enabled by boolean("enabled", defaultState)
+    var hidden by boolean("hidden", hide)
 
     var state
         set(value) {

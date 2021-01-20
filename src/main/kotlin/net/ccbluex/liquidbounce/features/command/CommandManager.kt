@@ -19,12 +19,16 @@
 
 package net.ccbluex.liquidbounce.features.command
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.text
 import net.ccbluex.liquidbounce.event.ChatSendEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.commands.*
+import net.ccbluex.liquidbounce.features.command.commands.client.*
+import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemRename
+import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
+import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.utils.chat
 
 class CommandException(message: String, cause: Throwable? = null, val usageInfo: List<String>? = null) :
@@ -92,13 +96,27 @@ object CommandManager : Configurable("command"), Iterable<Command> {
      */
     var prefix by text("prefix", ".")
 
+    init {
+        LiquidBounce.configSystem.root(this)
+    }
+
     fun registerInbuilt() {
+        // client commands
         addCommand(CommandFriend.createCommand())
         addCommand(CommandToggle.createCommand())
         addCommand(CommandBind.createCommand())
         addCommand(CommandHelp.createCommand())
         addCommand(CommandBinds.createCommand())
         addCommand(CommandPrefix.createCommand())
+        addCommand(CommandClear.createCommand())
+        addCommand(CommandHide.createCommand())
+
+        // creative commands
+        addCommand(CommandItemRename.createCommand())
+
+        // utility commands
+        addCommand(CommandUsername.createCommand())
+        addCommand(CommandPosition.createCommand())
     }
 
     fun addCommand(command: Command) {

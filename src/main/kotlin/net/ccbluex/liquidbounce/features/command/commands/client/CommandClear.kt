@@ -16,25 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.extensions
+package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.minecraft.text.Text
+import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.utils.mc
 
-fun String.asText() = Text.of(this)!!
+object CommandClear {
 
-/**
- * Translate alt color codes to minecraft color codes
- */
-fun String.translateColorCodes(): String {
-    val charset = "0123456789AaBbCcDdEeFfKkLlMmNnOoRr"
-
-    val chars = toCharArray()
-    for (i in 0 until chars.size - 1) {
-        if (chars[i] == '&' && charset.contains(chars[i + 1], true)) {
-            chars[i] = '§'
-            chars[i + 1] = chars[i + 1].toLowerCase()
-        }
+    fun createCommand(): Command {
+        return CommandBuilder
+            .begin("clear")
+            .description("Clears the chat.")
+            .handler {
+                mc.inGameHud.chatHud.clear(true)
+            }
+            .build()
     }
 
-    return String(chars)
 }

@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.renderer.engine.RenderTask
 import net.ccbluex.liquidbounce.renderer.engine.font.FontRenderer
 import java.awt.Font
 
-object ModuleHud : Module("HUD", Category.RENDER, defaultState = true) {
-    val liquidBounceFont: Array<RenderTask> = kotlin.run {
+object ModuleHud : Module("HUD", Category.RENDER, defaultState = true, hide = true) {
+    val liquidBounceFont: Array<RenderTask> = run {
         val renderer = FontRenderer.createFontRendererWithStyles(Font("Roboto Bold", Font.PLAIN, 45))
 
         renderer.begin()
@@ -44,7 +44,7 @@ object ModuleHud : Module("HUD", Category.RENDER, defaultState = true) {
     val renderHandler = handler<RenderHudEvent> {
 //        mc.textRenderer.drawWithShadow(it.matrixStack, "LiquidBounce", 2F, 2F, 0xfffff)
 
-        LiquidBounce.moduleManager.filter { module -> module.state }.forEachIndexed { index, module ->
+        LiquidBounce.moduleManager.filter { module -> module.state && !module.hidden }.forEachIndexed { index, module ->
             val width = mc.textRenderer.getWidth(module.name)
             mc.textRenderer.drawWithShadow(
                 it.matrixStack,
