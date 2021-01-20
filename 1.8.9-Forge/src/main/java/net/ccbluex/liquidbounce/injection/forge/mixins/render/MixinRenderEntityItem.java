@@ -44,7 +44,7 @@ public class MixinRenderEntityItem
 	public double rotation;
 	public final Random random = new Random();
 
-	@Inject(method = "doRender", at = @At("HEAD"))
+	@Inject(method = "doRender", at = @At("HEAD"), cancellable = true)
 	private void injectChamsPre(final EntityItem entity, final double x, final double y, final double z, final float entityYaw, final float partialTicks, final CallbackInfo callbackInfo)
 	{
 		final Minecraft mc = Minecraft.getMinecraft();
@@ -206,14 +206,12 @@ public class MixinRenderEntityItem
 
 		if (stack.stackSize > 48)
 			return 5;
-		else if (stack.stackSize > 32)
+		if (stack.stackSize > 32)
 			return 4;
-		else if (stack.stackSize > 16)
+		if (stack.stackSize > 16)
 			return 3;
-		else if (stack.stackSize > 1)
-			return 2;
 
-		return 1;
+		return stack.stackSize > 1 ? 2 : 1;
 	}
 
 	public final Fluid getFluid(final EntityItem item)

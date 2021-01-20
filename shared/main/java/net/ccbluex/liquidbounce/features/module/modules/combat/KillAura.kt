@@ -353,7 +353,6 @@ class KillAura : Module()
 	 * Target of delayed-block
 	 */
 	private var delayedBlock: IEntityLivingBase? = null
-	private var realAttack = false
 
 	init
 	{
@@ -400,8 +399,8 @@ class KillAura : Module()
 			// Update hitable
 			updateHitable()
 
-			// AutoBlock
-			if (autoBlockValue.get().equals("AfterTick", true) && canBlock) startBlocking(currentTarget ?: return, hitable)
+			// Delayed-AutoBlock
+			if (autoBlockValue.get().equals("AfterTick", true) && canBlock) startBlocking(currentTarget ?: return, interactAutoBlockValue.get() && hitable)
 
 			return
 		}
@@ -471,13 +470,7 @@ class KillAura : Module()
 		// Update target
 		updateTarget()
 
-		//		if (target == null)
-		//		{
-		//			stopBlocking()
-		//			return
-		//		}
-
-		// Pre AutoBlock
+		// Pre-AutoBlock
 		if (autoBlockTarget != null && !autoBlockValue.get().equals("AfterTick") && canBlock && (!autoBlockHitableCheckValue.get() || hitable)) startBlocking(autoBlockTarget ?: return, interactAutoBlockValue.get())
 		else if (canBlock) stopBlocking()
 
@@ -610,9 +603,8 @@ class KillAura : Module()
 		if (openInventory) mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
 
 		// Check is not hitable or check failrate
-
 		if (!hitable || failedToHit)
-		{            // Stop Blocking before FAKE attack
+		{ // Stop Blocking before FAKE attack
 			if (thePlayer.isBlocking || (serverSideBlockingStatus))
 			{
 				mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))

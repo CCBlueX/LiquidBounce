@@ -42,5 +42,4 @@ interface IExtractedFunctions
 	fun jsonToComponent(toString: String): IIChatComponent
 	fun setActiveTextureLightMapTexUnit()
 	fun setActiveTextureDefaultTexUnit()
-
 }
