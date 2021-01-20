@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.entity.EntityLivingBase
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.util.*
@@ -693,7 +692,7 @@ class KillAura : Module()
 
 		for (entity in theWorld.loadedEntityList)
 		{
-			if (entity !is EntityLivingBase || !EntityUtils.isEnemy(entity, aacValue.get()) || (switchMode && previouslySwitchedTargets.contains(entity.entityId))) continue
+			if (!classProvider.isEntityLivingBase(entity) || !EntityUtils.isEnemy(entity, aacValue.get()) || (switchMode && previouslySwitchedTargets.contains(entity.entityId))) continue
 
 			val distance = thePlayer.getDistanceToEntityBox(entity)
 			val entityFov = when (fovModeValue.get())
@@ -704,8 +703,8 @@ class KillAura : Module()
 
 			if (fov == 180F || entityFov <= fov)
 			{
-				if (distance <= blockRange && (!autoBlockHurtTimeCheckValue.get() || entity.hurtTime <= hurtTime)) abTargets.add(entity.asEntityLivingBase())
-				if (distance <= getAttackRange(entity) && entity.hurtTime <= hurtTime) targets.add(entity.asEntityLivingBase()) // Attack attack-ables first.
+				if (distance <= blockRange && (!autoBlockHurtTimeCheckValue.get() || entity.asEntityLivingBase().hurtTime <= hurtTime)) abTargets.add(entity.asEntityLivingBase())
+				if (distance <= getAttackRange(entity) && entity.asEntityLivingBase().hurtTime <= hurtTime) targets.add(entity.asEntityLivingBase()) // Attack attack-ables first.
 			}
 		}
 

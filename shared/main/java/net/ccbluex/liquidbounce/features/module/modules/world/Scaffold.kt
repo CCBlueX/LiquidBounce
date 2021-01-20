@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.item.ItemBlock
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -228,7 +227,7 @@ class Scaffold : Module()
 	private var lastSearchBound: SearchBounds? = null
 
 	// Rotation lock
-	private var lockRotation: Rotation? = null
+	var lockRotation: Rotation? = null
 	private var limitedRotation: Rotation? = null
 
 	// Launch position
@@ -591,7 +590,7 @@ class Scaffold : Module()
 
 		// get the block that will be automatically placed
 		var autoblock: IItemStack? = thePlayer.heldItem
-		if (thePlayer.heldItem == null || thePlayer.heldItem?.item !is ItemBlock || (thePlayer.heldItem?.stackSize ?: 0) <= 0 || !InventoryUtils.canAutoBlock((thePlayer.heldItem?.item as IItemBlock).block))
+		if (thePlayer.heldItem == null || !classProvider.isItemBlock(thePlayer.heldItem?.item) || (thePlayer.heldItem?.stackSize ?: 0) <= 0 || !InventoryUtils.canAutoBlock((thePlayer.heldItem?.item as IItemBlock).block))
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), lastGroundBlockBB!!.maxY - lastGroundBlockBB!!.minY)
