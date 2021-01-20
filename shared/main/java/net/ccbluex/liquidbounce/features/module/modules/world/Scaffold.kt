@@ -39,8 +39,8 @@ import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import java.util.*
 import kotlin.math.*
+import kotlin.random.Random
 
 @ModuleInfo(
 	name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_I
@@ -114,11 +114,45 @@ class Scaffold : Module()
 	private val rotationStrafeValue = BoolValue("RotationStrafe", false)
 	private val rotationModeValue = ListValue("RotationMode", arrayOf("Off", "Normal", "Static", "StaticPitch", "StaticYaw"), "Normal")
 	private val silentRotationValue = BoolValue("SilentRotation", true)
-	private val keepRotationValue = BoolValue("KeepRotation", true)
-	private val keepLengthValue = IntegerValue("KeepRotationLength", 0, 1, 20)
-	private val lockRotationValue = BoolValue("LockRotation", false)
 	private val staticPitchValue = FloatValue("StaticPitchOffSet", 86f, 70f, 90f)
 	private val staticYawValue = FloatValue("StaticYawOffSet", 0f, 0f, 90f)
+	private val keepRotationValue = BoolValue("KeepRotation", true)
+
+	private val minKeepRotationTicksValue: IntegerValue = object : IntegerValue("MinKeepRotationTicks", 20, 0, 50)
+	{
+		override fun onChanged(oldValue: Int, newValue: Int)
+		{
+			val i = maxKeepRotationTicksValue.get()
+			if (i < newValue) this.set(i)
+		}
+	}
+	private val maxKeepRotationTicksValue: IntegerValue = object : IntegerValue("MaxKeepRotationTicks", 30, 0, 50)
+	{
+		override fun onChanged(oldValue: Int, newValue: Int)
+		{
+			val i = minKeepRotationTicksValue.get()
+			if (i > newValue) this.set(i)
+		}
+	}
+	private val lockRotationValue = BoolValue("LockRotation", false)
+
+	// Reset Turn Speed
+	private val maxResetTurnSpeed: FloatValue = object : FloatValue("MaxRotationResetSpeed", 180f, 20f, 180f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = minResetTurnSpeed.get()
+			if (v > newValue) this.set(v)
+		}
+	}
+	private val minResetTurnSpeed: FloatValue = object : FloatValue("MinRotationResetSpeed", 180f, 20f, 180f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = maxResetTurnSpeed.get()
+			if (v < newValue) this.set(v)
+		}
+	}
 
 	// xz + y range
 	private val xzRangeValue = FloatValue("XZRange", 0.8f, 0f, 1f)
@@ -556,7 +590,7 @@ class Scaffold : Module()
 		if (silentRotationValue.get())
 		{
 			RotationUtils.setTargetRotation(rotation, keepRotation)
-			RotationUtils.setNextResetTurnSpeed()
+			RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
 		} else
 		{
 			thePlayer.rotationYaw = rotation.yaw
@@ -592,7 +626,7 @@ class Scaffold : Module()
 
 		// get the block that will be automatically placed
 		var autoblock: IItemStack? = thePlayer.heldItem
-		if (thePlayer.heldItem == null || !classProvider.isItemBlock(thePlayer.heldItem?.item) || (thePlayer.heldItem?.stackSize ?: 0) <= 0 || !InventoryUtils.canAutoBlock((thePlayer.heldItem?.item as IItemBlock).block))
+		if (thePlayer.heldItem == null || !classProvider.isItemBlock(thePlayer.heldItem?.item) || (thePlayer.heldItem?.stackSize ?: 0) <= 0 || !InventoryUtils.canAutoBlock(thePlayer.heldItem!!.item!!.asItemBlock().block))
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), lastGroundBlockBB!!.maxY - lastGroundBlockBB!!.minY)
@@ -600,7 +634,7 @@ class Scaffold : Module()
 			autoblock = thePlayer.inventoryContainer.getSlot(autoBlockSlot).stack
 		}
 
-		val autoblockBlock = (autoblock?.item as IItemBlock).block
+		val autoblockBlock = autoblock!!.item!!.asItemBlock().block
 
 		// Configure place-position
 		val searchPosition: WBlockPos
@@ -757,15 +791,9 @@ class Scaffold : Module()
 					mc.playerController.updateController()
 				}
 
-				"Spoof" ->
-				{
-					if (blockSlot - 36 != slot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
-				}
+				"Spoof" -> if (blockSlot - 36 != slot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
 
-				"Switch" ->
-				{
-					if (blockSlot - 36 != slot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
-				}
+				"Switch" -> if (blockSlot - 36 != slot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
 			}
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
 		}
@@ -785,7 +813,9 @@ class Scaffold : Module()
 				thePlayer, theWorld, itemStack, targetPlace!!.blockPos, targetPlace!!.enumFacing, targetPlace!!.vec3
 			)
 		)
-		{			// Reset delay
+		{
+
+			// Reset delay
 			delayTimer.reset()
 			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 
@@ -846,7 +876,9 @@ class Scaffold : Module()
 		if (airSafeValue.get() || mc.thePlayer!!.onGround) event.isSafeWalk = true
 	}
 
-	// Scaffold visuals
+	/**
+	 * Scaffold visuals
+	 */
 	@EventTarget
 	fun onRender2D(event: Render2DEvent)
 	{
@@ -854,11 +886,9 @@ class Scaffold : Module()
 		{
 			GL11.glPushMatrix()
 			val blockOverlay = LiquidBounce.moduleManager.getModule(BlockOverlay::class.java) as BlockOverlay
-			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null)
-			{
-				GL11.glTranslatef(0f, 15f, 0f)
-			}
-			val info = "Blocks: \u00A77$blocksAmount"
+			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) GL11.glTranslatef(0f, 15f, 0f)
+
+			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}7$blocksAmount"
 			val scaledResolution = classProvider.createScaledResolution(mc)
 
 			RenderUtils.drawBorderedRect(
@@ -878,7 +908,7 @@ class Scaffold : Module()
 			)
 			GL11.glPopMatrix()
 		}
-	} // SCAFFOLD VISUALS
+	}
 
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
@@ -1023,12 +1053,16 @@ class Scaffold : Module()
 		if (!rotationModeValue.get().equals("Off", ignoreCase = true))
 		{
 			val tower = LiquidBounce.moduleManager[Tower::class.java] as Tower
+			val keepRotationTicks = if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get()
+			else minKeepRotationTicksValue.get() + Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get())
+			else 0
+
 			if (minTurnSpeedValue.get() < 180)
 			{
 				limitedRotation = RotationUtils.limitAngleChange(
 					RotationUtils.serverRotation, placeRotation.rotation, (Math.random() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()).toFloat(), 0.0F
 				) // TODO: Apply some settings here too
-				setRotation(limitedRotation!!, if (keepRotationValue.get()) keepLengthValue.get() else 0)
+				setRotation(limitedRotation!!, keepRotationTicks)
 				tower.lockRotation = null // Prevents conflict
 				lockRotation = limitedRotation
 				facesBlock = false
@@ -1056,7 +1090,7 @@ class Scaffold : Module()
 				}
 			} else
 			{
-				setRotation(placeRotation.rotation, if (keepRotationValue.get()) keepLengthValue.get() else 0)
+				setRotation(placeRotation.rotation, keepRotationTicks)
 				tower.lockRotation = null // Prevents conflict
 				lockRotation = placeRotation.rotation
 				facesBlock = true

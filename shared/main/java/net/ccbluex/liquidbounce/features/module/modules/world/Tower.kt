@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
+import java.util.*
 import kotlin.math.atan2
 import kotlin.math.sqrt
 import kotlin.math.truncate
@@ -54,8 +55,42 @@ class Tower : Module()
 	// Rotation
 	private val rotationsValue = BoolValue("Rotations", true)
 	private val keepRotationValue = BoolValue("KeepRotation", false)
-	private val keepLengthValue = IntegerValue("KeepRotationLength", 20, 1, 50)
+	private val minKeepRotationTicksValue: IntegerValue = object : IntegerValue("MinKeepRotationTicks", 20, 0, 50)
+	{
+		override fun onChanged(oldValue: Int, newValue: Int)
+		{
+			val i = maxKeepRotationTicksValue.get()
+			if (i < newValue) this.set(i)
+		}
+	}
+
+	private val maxKeepRotationTicksValue: IntegerValue = object : IntegerValue("MaxKeepRotationTicks", 30, 0, 50)
+	{
+		override fun onChanged(oldValue: Int, newValue: Int)
+		{
+			val i = minKeepRotationTicksValue.get()
+			if (i > newValue) this.set(i)
+		}
+	}
 	private val lockRotationValue = BoolValue("LockRotation", false)
+
+	// Reset Turn Speed
+	private val maxResetTurnSpeed: FloatValue = object : FloatValue("MaxRotationResetSpeed", 180f, 20f, 180f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = minResetTurnSpeed.get()
+			if (v > newValue) this.set(v)
+		}
+	}
+	private val minResetTurnSpeed: FloatValue = object : FloatValue("MinRotationResetSpeed", 180f, 20f, 180f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = maxResetTurnSpeed.get()
+			if (v < newValue) this.set(v)
+		}
+	}
 
 	// OnJump
 	private val onJumpValue = BoolValue("OnJump", false)
@@ -179,7 +214,9 @@ class Tower : Module()
 					val vecRotation = RotationUtils.faceBlock(blockPos)
 					if (vecRotation != null)
 					{
-						RotationUtils.setTargetRotation(vecRotation.rotation, if (keepRotationValue.get()) keepLengthValue.get() else 0)
+						RotationUtils.setTargetRotation(vecRotation.rotation, keepRotationTicks)
+						RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
+
 						placeInfo!!.vec3 = vecRotation.vec
 					}
 				}
@@ -187,11 +224,15 @@ class Tower : Module()
 		}
 	}
 
-	//Send jump packets, bypasses Hypixel.
+	/**
+	 * Send jump packets, bypasses stat-based cheat detections like Hypixel watchdog.
+	 */
 	private fun fakeJump()
 	{
-		mc.thePlayer!!.isAirBorne = true
-		mc.thePlayer!!.triggerAchievement(classProvider.getStatEnum(StatType.JUMP_STAT))
+		val thePlayer = mc.thePlayer ?: return
+
+		thePlayer.isAirBorne = true
+		thePlayer.triggerAchievement(classProvider.getStatEnum(StatType.JUMP_STAT))
 	}
 
 	/**
@@ -209,6 +250,7 @@ class Tower : Module()
 				thePlayer.motionY = jumpMotionValue.get().toDouble()
 				timer.reset()
 			}
+
 			"motion" -> if (thePlayer.onGround)
 			{
 				fakeJump()
@@ -217,6 +259,7 @@ class Tower : Module()
 			{
 				thePlayer.motionY = -0.3
 			}
+
 			"motiontp" -> if (thePlayer.onGround)
 			{
 				fakeJump()
@@ -225,6 +268,7 @@ class Tower : Module()
 			{
 				thePlayer.setPosition(thePlayer.posX, truncate(thePlayer.posY), thePlayer.posZ)
 			}
+
 			"packet" -> if (thePlayer.onGround && timer.hasTimePassed(2))
 			{
 				fakeJump()
@@ -283,6 +327,8 @@ class Tower : Module()
 				mc.timer.timerSpeed = 1f
 				if (thePlayer.motionY < 0)
 				{
+
+					// Fast down
 					thePlayer.motionY -= 0.00000945
 					mc.timer.timerSpeed = 1.6f
 				}
@@ -312,37 +358,22 @@ class Tower : Module()
 		var itemStack = thePlayer.heldItem
 		if (itemStack == null || !classProvider.isItemBlock(itemStack.item) || classProvider.isBlockBush(itemStack.item?.asItemBlock()?.block))
 		{
+			if (autoBlockValue.get().equals("Off", true)) return
+
 			val blockSlot = InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), -1.0)
 			if (blockSlot == -1) return
 
 			when (autoBlockValue.get())
 			{
-				"Off" ->
-				{
-					return
-				}
-
 				"Pick" ->
 				{
-					mc.thePlayer!!.inventory.currentItem = blockSlot - 36
+					thePlayer.inventory.currentItem = blockSlot - 36
 					mc.playerController.updateController()
 				}
 
-				"Spoof" ->
-				{
-					if (blockSlot - 36 != slot)
-					{
-						mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
-					}
-				}
+				"Spoof" -> if (blockSlot - 36 != slot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
 
-				"Switch" ->
-				{
-					if (blockSlot - 36 != slot)
-					{
-						mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
-					}
-				}
+				"Switch" -> if (blockSlot - 36 != slot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
 			}
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
 		}
@@ -353,18 +384,13 @@ class Tower : Module()
 			)
 		)
 		{
-			if (swingValue.get())
-			{
-				thePlayer.swingItem()
-			} else
-			{
-				mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
-			}
+			if (swingValue.get()) thePlayer.swingItem()
+			else mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
 		}
-		if (autoBlockValue.get().equals("Switch", true))
-		{
-			if (slot != mc.thePlayer!!.inventory.currentItem) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(mc.thePlayer!!.inventory.currentItem))
-		}
+
+		// Switch back to original slot after place on AutoBlock-Switch mode
+		if (autoBlockValue.get().equals("Switch", true) && slot != thePlayer.inventory.currentItem) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(mc.thePlayer!!.inventory.currentItem))
+
 		placeInfo = null
 	}
 
@@ -442,7 +468,8 @@ class Tower : Module()
 		if (rotationsValue.get())
 		{
 			val scaffold = LiquidBounce.moduleManager[Scaffold::class.java] as Scaffold
-			RotationUtils.setTargetRotation(placeRotation.rotation, 0)
+			RotationUtils.setTargetRotation(placeRotation.rotation, keepRotationTicks)
+			RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
 			scaffold.lockRotation = null // Prevent to lockRotation confliction
 			lockRotation = placeRotation.rotation
 		}
@@ -523,4 +550,9 @@ class Tower : Module()
 		get() = modeValue.get()
 
 	var active = false
+
+	private val keepRotationTicks: Int
+		get() = if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get()
+		else minKeepRotationTicksValue.get() + Random().nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get())
+		else 0
 }

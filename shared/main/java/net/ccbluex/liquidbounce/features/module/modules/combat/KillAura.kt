@@ -183,7 +183,6 @@ class KillAura : Module()
 			if (i < newValue) this.set(i)
 		}
 	}
-
 	private val maxKeepRotationTicksValue: IntegerValue = object : IntegerValue("MaxKeepRotationTicks", 30, 0, 50)
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
