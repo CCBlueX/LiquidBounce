@@ -259,7 +259,7 @@ class KillAura : Module()
 	private val predictValue = BoolValue("Predict", true)
 	private val playerPredictValue = BoolValue("PlayerPredict", true)
 
-	private val maxPredictSize: FloatValue = object : FloatValue("MaxPredictSize", 1f, 0.1f, 5f)
+	private val maxPredictSize: FloatValue = object : FloatValue("MaxPredictSize", 1f, -5f, 5f)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -268,7 +268,7 @@ class KillAura : Module()
 		}
 	}
 
-	private val minPredictSize: FloatValue = object : FloatValue("MinPredictSize", 1f, 0.1f, 5f)
+	private val minPredictSize: FloatValue = object : FloatValue("MinPredictSize", 1f, -5f, 5f)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{

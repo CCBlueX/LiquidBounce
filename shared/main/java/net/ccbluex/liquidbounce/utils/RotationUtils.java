@@ -157,15 +157,15 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 	 *
 	 * @param  vec
 	 *                 target vec
-	 * @param  predict
+	 * @param  playerPredict
 	 *                 predict new location of your body
 	 * @return         rotation
 	 */
-	public static Rotation toRotation(final WVec3 vec, final boolean predict)
+	public static Rotation toRotation(final WVec3 vec, final boolean playerPredict)
 	{
 		final WVec3 eyesPos = new WVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getEntityBoundingBox().getMinY() + mc.getThePlayer().getEyeHeight(), mc.getThePlayer().getPosZ());
 
-		if (predict)
+		if (playerPredict)
 			eyesPos.addVector(mc.getThePlayer().getMotionX(), mc.getThePlayer().getMotionY(), mc.getThePlayer().getMotionZ());
 
 		final double diffX = vec.getXCoord() - eyesPos.getXCoord();
