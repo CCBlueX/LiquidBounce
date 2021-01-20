@@ -58,7 +58,7 @@ public class GuiAntiModDisable extends WrappedGuiScreen
 		final int width = representedScreen.getWidth();
 		final int height = representedScreen.getHeight();
 
-		buttonsList.add(enabledButton = classProvider.createGuiButton(1, width / 2 - 100, representedScreen.getHeight() / 4 + 35, "Enabled (" + (AntiModDisable.enabled ? "\u00a7a(On)" : "\u00a7c(Off)") + ")"));
+		buttonsList.add(enabledButton = classProvider.createGuiButton(1, width / 2 - 100, representedScreen.getHeight() / 4 + 35, "Enabled " + (AntiModDisable.enabled ? "\u00a7a(On)" : "\u00a7c(Off)")));
 		buttonsList.add(fmlButton = classProvider.createGuiButton(2, width / 2 - 100, height / 4 + 50 + 25, BLOCK_FML + (AntiModDisable.enabled && AntiModDisable.blockFMLPackets ? "\u00a7a(On)" : "\u00a7c(Off)")));
 		buttonsList.add(fmlProxyPacket = classProvider.createGuiButton(3, width / 2 - 100, height / 4 + 50 + 50, BLOCK_FMLPROXY_PACKET + (AntiModDisable.enabled && AntiModDisable.blockFMLProxyPackets ? "\u00a7a(On)" : "\u00a7c(Off)")));
 		buttonsList.add(clientBrandPayloadPacket = classProvider.createGuiButton(4, width / 2 - 100, height / 4 + 50 + 75, SPOOF_MC_BRAND_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockClientBrandRetrieverPackets ? "\u00a7a(On)" : "\u00a7c(Off)")));
@@ -166,7 +166,7 @@ public class GuiAntiModDisable extends WrappedGuiScreen
 	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
 	{
 		representedScreen.drawBackground(0);
-		Fonts.fontBold180.drawCenteredString("AntiForge", (int) (representedScreen.getWidth() / 2F), (int) (representedScreen.getHeight() / 8F + 5F), 4673984, true);
+		Fonts.fontBold180.drawCenteredString("AntiModDisable", (int) (representedScreen.getWidth() / 2F), (int) (representedScreen.getHeight() / 10.0F + 5.0F), 4673984, true);
 
 		super.drawScreen(mouseX, mouseY, partialTicks);
 	}
