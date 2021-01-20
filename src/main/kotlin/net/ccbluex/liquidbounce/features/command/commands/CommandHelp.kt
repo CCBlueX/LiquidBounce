@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2021 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
@@ -30,8 +48,10 @@ object CommandHelp {
                     1
                 }.coerceAtLeast(1)
 
+                val commands = CommandManager.sortedBy { it.name }
+
                 // Max page
-                val maxPage = ceil(CommandManager.commands.size / 8.0).roundToInt()
+                val maxPage = ceil(commands.size / 8.0).roundToInt()
                 if (page > maxPage) {
                     throw CommandException("The number you have entered is too big, it must be under $maxPage.")
                 }
@@ -41,8 +61,6 @@ object CommandHelp {
                 helpOut.append("§c§lHelp\n")
                 helpOut.append("§7> Page: §8$page / $maxPage\n")
 
-                val commands = CommandManager.commands.sortedBy { it.name }
-
                 val iterPage = 8 * page
                 for (command in commands.subList(iterPage - 8, iterPage.coerceAtMost(commands.size))){
                     val aliases = if (command.aliases.isEmpty()) "" else " §7(§8${command.aliases.joinToString("§7, §8")}§7)"
@@ -51,7 +69,6 @@ object CommandHelp {
 
                 helpOut.append("§a------------\n§7> §c${CommandManager.prefix}help §8<§7§lpage§8>")
                 chat(helpOut.toString())
-                true
             }
             .build()
     }

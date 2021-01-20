@@ -19,13 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.command
 
+import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.text
 import net.ccbluex.liquidbounce.event.ChatSendEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.commands.CommandBind
-import net.ccbluex.liquidbounce.features.command.commands.CommandFriend
-import net.ccbluex.liquidbounce.features.command.commands.CommandHelp
-import net.ccbluex.liquidbounce.features.command.commands.CommandToggle
+import net.ccbluex.liquidbounce.features.command.commands.*
 import net.ccbluex.liquidbounce.utils.chat
 
 class CommandException(message: String, cause: Throwable? = null, val usageInfo: List<String>? = null) :
@@ -77,7 +76,7 @@ object CommandExecutor : Listenable {
  *
  * @author superblaubeere27 (@team CCBlueX)
  */
-object CommandManager {
+object CommandManager : Configurable("command"), Iterable<Command> {
 
     internal val commands = mutableListOf<Command>()
 
@@ -91,13 +90,15 @@ object CommandManager {
      * prefix (.)
      * ```
      */
-    val prefix = "."
+    var prefix by text("prefix", ".")
 
     fun registerInbuilt() {
         addCommand(CommandFriend.createCommand())
         addCommand(CommandToggle.createCommand())
         addCommand(CommandBind.createCommand())
         addCommand(CommandHelp.createCommand())
+        addCommand(CommandBinds.createCommand())
+        addCommand(CommandPrefix.createCommand())
     }
 
     fun addCommand(command: Command) {
@@ -235,7 +236,7 @@ object CommandManager {
             throw CommandException("The command ${command.name} is not executable.", usageInfo = command.usage())
 
         @Suppress("UNCHECKED_CAST")
-        command.handler!!.invoke(parsedParameters as Array<Any>)
+        command.handler!!(parsedParameters as Array<Any>)
     }
 
     /**
@@ -312,5 +313,7 @@ object CommandManager {
 
         return output
     }
+
+    override fun iterator() = commands.iterator()
 
 }

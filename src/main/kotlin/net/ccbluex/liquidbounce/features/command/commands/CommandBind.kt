@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2021 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
@@ -30,18 +48,19 @@ object CommandBind {
                     .build()
             )
             .handler { args ->
+                // TODO: use .binds add
+
                 val name = args[0] as String
                 val key = args[1] as String
                 val module = ModuleManager.find { it.name.equals(name, true) }
-                    ?: throw CommandException("Module §b§l${args[1]}§c not found.")
+                    ?: throw CommandException("Module ${args[1]} not found.")
 
                 val bindKey = runCatching {
                     InputUtil.fromTranslationKey("key.keyboard.${key.toLowerCase()}")
                 }.getOrElse { InputUtil.UNKNOWN_KEY }
 
                 module.bind = bindKey
-                chat("Bound module §a§l${module.name}§3 to key §a§l${bindKey.localizedText.toString()}§3.")
-                true
+                chat("Bound module ${module.name} to key ${bindKey.localizedText.asString()}.")
             }
             .build()
     }

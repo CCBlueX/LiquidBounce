@@ -95,14 +95,14 @@ object CommandFriend {
                 CommandBuilder
                     .begin("list")
                     .description("Lists the friend list")
-                    .handler { println("You have no friends"); return@handler true }
+                    .handler { println("You have no friends"); return@handler }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("clear")
                     .description("Clears the friend list")
-                    .handler { println("You have no friends"); return@handler true }
+                    .handler { println("You have no friends"); return@handler }
                     .build()
             )
             .build()
