@@ -22,7 +22,9 @@ package net.ccbluex.liquidbounce.features.command
 import net.ccbluex.liquidbounce.event.ChatSendEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.command.commands.CommandBind
 import net.ccbluex.liquidbounce.features.command.commands.CommandFriend
+import net.ccbluex.liquidbounce.features.command.commands.CommandHelp
 import net.ccbluex.liquidbounce.features.command.commands.CommandToggle
 import net.ccbluex.liquidbounce.utils.chat
 
@@ -77,7 +79,7 @@ object CommandExecutor : Listenable {
  */
 object CommandManager {
 
-    private val commands = mutableListOf<Command>()
+    internal val commands = mutableListOf<Command>()
 
     /**
      * The prefix of the commands.
@@ -94,6 +96,8 @@ object CommandManager {
     fun registerInbuilt() {
         addCommand(CommandFriend.createCommand())
         addCommand(CommandToggle.createCommand())
+        addCommand(CommandBind.createCommand())
+        addCommand(CommandHelp.createCommand())
     }
 
     fun addCommand(command: Command) {

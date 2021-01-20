@@ -23,12 +23,11 @@ import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.extensions.moving
-import org.lwjgl.glfw.GLFW
 import java.lang.Math.toRadians
 import kotlin.math.cos
 import kotlin.math.sin
 
-object ModuleSpeed : Module("Speed", Category.COMBAT, bind = GLFW.GLFW_KEY_V) {
+object ModuleSpeed : Module("Speed", Category.COMBAT) {
 
     private var port by boolean("yPort", true)
 
