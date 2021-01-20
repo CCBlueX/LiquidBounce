@@ -71,7 +71,7 @@ object LiquidBounce {
      * Should be executed to start the client.
      */
     fun start() {
-        CommandManager.registerInbuilt()
+        commandManager.registerInbuilt()
         // Initialize the executor
         CommandExecutor
         // Initialize the enemy configurable
@@ -83,7 +83,6 @@ object LiquidBounce {
         Tabs
 
         moduleManager.registerInbuilt()
-        commandManager.registerInbuilt()
         scriptManager.loadScripts()
         configSystem.load()
         chat.connect()

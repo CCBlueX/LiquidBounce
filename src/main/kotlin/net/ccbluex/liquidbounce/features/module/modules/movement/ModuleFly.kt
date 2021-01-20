@@ -20,9 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import org.lwjgl.glfw.GLFW
 
-object ModuleFly : Module("Fly", Category.MOVEMENT, bind = GLFW.GLFW_KEY_R) {
+object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     override fun enable() {
         player.abilities!!.flying = true

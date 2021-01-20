@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.client.util.InputUtil
 import net.minecraft.world.World
-import org.lwjgl.glfw.GLFW
 
-open class Module(val name: String, val category: Category, var description: String = "", val bind: Int = GLFW.GLFW_KEY_UNKNOWN,
+open class Module(val name: String, val category: Category, var description: String = "", var bind: InputUtil.Key = InputUtil.UNKNOWN_KEY,
                   defaultState: Boolean = false, val disableActivation: Boolean = false) : Listenable, Configurable(name) {
 
     private var enabled by boolean("enabled", defaultState)

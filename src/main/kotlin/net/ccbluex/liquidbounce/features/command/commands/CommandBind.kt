@@ -1,13 +1,14 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.chat
-import org.lwjgl.glfw.GLFW
+import net.minecraft.client.util.InputUtil
 
-object BindCommand {
+object CommandBind {
 
     fun createCommand(): Command {
         return CommandBuilder
@@ -23,28 +24,23 @@ object BindCommand {
             ).parameter(
                 ParameterBuilder
                     .begin<String>("key")
-                    .description("The new key to set the module")
+                    .description("The new key to bind")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                     .required()
                     .build()
             )
             .handler { args ->
                 val name = args[0] as String
-                val module = LiquidBounce.moduleManager.find { it.name.equals(name, true) } ?: return@handler false
+                val key = args[1] as String
+                val module = ModuleManager.find { it.name.equals(name, true) }
+                    ?: throw CommandException("Module §b§l${args[1]}§c not found.")
 
-                if (module == null) {
-                    chat("Module §a§l" + args[1] + "§3 not found.")
-                }
+                val bindKey = runCatching {
+                    InputUtil.fromTranslationKey("key.keyboard.${key.toLowerCase()}")
+                }.getOrElse { InputUtil.UNKNOWN_KEY }
 
-                try {
-                    module.bind =
-                        GLFW::class.java.getField("GLFW_KEY_" + (args[1] as String).toUpperCase()).getInt(GLFW::class);
-                } catch(e: Exception) {
-                    chat("invalid keybinding.");
-                e.printStackTrace();
-                    return@handler true;
-                }
-                chat("set bind to " + (args[1] as String).toUpperCase())
+                module.bind = bindKey
+                chat("Bound module §a§l${module.name}§3 to key §a§l${bindKey.localizedText.toString()}§3.")
                 true
             }
             .build()
