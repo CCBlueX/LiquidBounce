@@ -677,6 +677,8 @@ class KillAura : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
+		// FIXME: Broken target finding algorithm order
+
 		for (entity in theWorld.loadedEntityList)
 		{
 			if (entity !is EntityLivingBase || !EntityUtils.isEnemy(entity, aacValue.get()) || (switchMode && previouslySwitchedTargets.contains(entity.entityId))) continue
@@ -714,8 +716,6 @@ class KillAura : Module()
 			if ((fov == 180F || entityFov <= fov) && distance <= maxTargetRange && entity.asEntityLivingBase().hurtTime <= hurtTime) targets.add(entity.asEntityLivingBase())
 		}
 
-		thePlayer.sendChatMessage("Found ${targets.size} entities to pre-aim or pre-swing")
-
 		// Sort targets by priority
 		when (priorityValue.get().toLowerCase())
 		{
@@ -732,13 +732,13 @@ class KillAura : Module()
 			}
 
 			"serverdirection" ->
-			{                // Sort by serverside-rotation difference
+			{                // Sort by server-sided rotation difference
 				targets.sortBy { RotationUtils.getServerRotationDifference(it) }
 				abTargets.sortBy { RotationUtils.getServerRotationDifference(it) }
 			}
 
 			"clientdirection" ->
-			{                // Sort by clientside-rotation difference
+			{                // Sort by client-sided rotation difference
 				targets.sortBy { RotationUtils.getClientRotationDifference(it) }
 				abTargets.sortBy { RotationUtils.getClientRotationDifference(it) }
 			}
