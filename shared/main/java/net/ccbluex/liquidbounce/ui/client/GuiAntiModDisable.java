@@ -17,11 +17,11 @@ import net.ccbluex.liquidbounce.ui.font.Fonts;
 
 import org.lwjgl.input.Keyboard;
 
-public class GuiAntiForge extends WrappedGuiScreen
+public class GuiAntiModDisable extends WrappedGuiScreen
 {
 	public static final String BLOCK_FML = "Block FML ";
 	public static final String BLOCK_FMLPROXY_PACKET = "Block FMLProxyPackets ";
-	public static final String SPOOF_MC_BRAND_PAYLOAD_PACKETS = "Spoof FML ClientBrandRetriever(MC|Brand Payload) Payloads ";
+	public static final String SPOOF_MC_BRAND_PAYLOAD_PACKETS = "Spoof FML ClientBrandRetriever Payloads ";
 	public static final String BLOCK_WORLD_DOWNLOADER_PAYLOAD_PACKETS = "Block WorldDownloader Payloads ";
 	public static final String BLOCK_THE_5_ZIG_S_MOD_PAYLOAD_PACKETS = "Block The 5zig's mod Payloads ";
 	public static final String BLOCK_BETTER_SPRINTING_PAYLOAD_PACKETS = "Block Better Sprinting mod Payloads ";
@@ -46,7 +46,7 @@ public class GuiAntiForge extends WrappedGuiScreen
 	private IGuiButton permsreplButton;
 	private IGuiButton schematicaButton;
 
-	public GuiAntiForge(final IGuiScreen prevGui)
+	public GuiAntiModDisable(final IGuiScreen prevGui)
 	{
 		this.prevGui = prevGui;
 	}
@@ -58,7 +58,7 @@ public class GuiAntiForge extends WrappedGuiScreen
 		final int width = representedScreen.getWidth();
 		final int height = representedScreen.getHeight();
 
-		buttonsList.add(enabledButton = classProvider.createGuiButton(1, width / 2 - 100, representedScreen.getHeight() / 4 + 35, "Enabled (" + (AntiModDisable.enabled ? "On" : "Off") + ")"));
+		buttonsList.add(enabledButton = classProvider.createGuiButton(1, width / 2 - 100, representedScreen.getHeight() / 4 + 35, "Enabled (" + (AntiModDisable.enabled ? "\u00a7a(On)" : "\u00a7c(Off)") + ")"));
 		buttonsList.add(fmlButton = classProvider.createGuiButton(2, width / 2 - 100, height / 4 + 50 + 25, BLOCK_FML + (AntiModDisable.enabled && AntiModDisable.blockFMLPackets ? "\u00a7a(On)" : "\u00a7c(Off)")));
 		buttonsList.add(fmlProxyPacket = classProvider.createGuiButton(3, width / 2 - 100, height / 4 + 50 + 50, BLOCK_FMLPROXY_PACKET + (AntiModDisable.enabled && AntiModDisable.blockFMLProxyPackets ? "\u00a7a(On)" : "\u00a7c(Off)")));
 		buttonsList.add(clientBrandPayloadPacket = classProvider.createGuiButton(4, width / 2 - 100, height / 4 + 50 + 75, SPOOF_MC_BRAND_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockClientBrandRetrieverPackets ? "\u00a7a(On)" : "\u00a7c(Off)")));
@@ -72,7 +72,7 @@ public class GuiAntiForge extends WrappedGuiScreen
 
 		buttonsList.add(debugmode = classProvider.createGuiButton(999, width / 2 - 100, height / 4 + 50 + 275, PRINT_BLOCKED_SPOOFED_PACKETS + (AntiModDisable.enabled && AntiModDisable.debug ? "\u00a7a(On)" : "\u00a7c(Off)")));
 
-		buttonsList.add(classProvider.createGuiButton(0, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 55 + 25 * 4 + 5, "Back"));
+		buttonsList.add(classProvider.createGuiButton(0, width / 2 - 100, height / 4 + 55 + 300 + 5, "Back"));
 	}
 
 	@Override
