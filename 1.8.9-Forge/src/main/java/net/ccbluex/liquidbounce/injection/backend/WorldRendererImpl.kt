@@ -47,8 +47,5 @@ class WorldRendererImpl(val wrapped: WorldRenderer) : IWorldRenderer
 
 	override fun reset() = wrapped.reset()
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is WorldRendererImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is WorldRendererImpl && other.wrapped == wrapped
 }

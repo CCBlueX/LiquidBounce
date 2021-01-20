@@ -47,10 +47,7 @@ fun IEntityPlayer.getPing(): Int
 	return playerInfo?.responseTime ?: 0
 }
 
-fun IEntity.isAnimal(): Boolean
-{
-	return MinecraftInstance.classProvider.isEntityAnimal(this) || MinecraftInstance.classProvider.isEntitySquid(this) || MinecraftInstance.classProvider.isEntityGolem(this) || MinecraftInstance.classProvider.isEntityBat(this)
-}
+fun IEntity.isAnimal(): Boolean = MinecraftInstance.classProvider.isEntityAnimal(this) || MinecraftInstance.classProvider.isEntitySquid(this) || MinecraftInstance.classProvider.isEntityGolem(this) || MinecraftInstance.classProvider.isEntityBat(this)
 
 fun IEntity.isMob(): Boolean
 {

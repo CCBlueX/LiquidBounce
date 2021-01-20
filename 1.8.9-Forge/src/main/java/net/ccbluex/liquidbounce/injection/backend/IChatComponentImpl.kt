@@ -29,10 +29,7 @@ class IChatComponentImpl(val wrapped: IChatComponent) : IIChatComponent
 		wrapped.appendSibling(component.unwrap())
 	}
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is IChatComponentImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is IChatComponentImpl && other.wrapped == wrapped
 }
 
 inline fun IIChatComponent.unwrap(): IChatComponent = (this as IChatComponentImpl).wrapped

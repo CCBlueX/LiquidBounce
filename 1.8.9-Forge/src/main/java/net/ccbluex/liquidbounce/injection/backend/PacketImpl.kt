@@ -45,10 +45,7 @@ open class PacketImpl<T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun asCPacketHandshake(): ICPacketHandshake = CPacketHandshakeImpl(wrapped as C00Handshake)
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is PacketImpl<*> && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is PacketImpl<*> && other.wrapped == wrapped
 }
 
 inline fun IPacket.unwrap(): Packet<*> = (this as PacketImpl<*>).wrapped

@@ -21,10 +21,7 @@ class TeamImpl(val wrapped: Team) : ITeam
 
 	override fun isSameTeam(team: ITeam): Boolean = wrapped.isSameTeam(team.unwrap())
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is TeamImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is TeamImpl && other.wrapped == wrapped
 }
 
 inline fun ITeam.unwrap(): Team = (this as TeamImpl).wrapped

@@ -15,10 +15,7 @@ class IBlockStateImpl(val wrapped: IBlockState) : IIBlockState
 	override val block: IBlock
 		get() = BlockImpl(wrapped.block)
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is IBlockStateImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is IBlockStateImpl && other.wrapped == wrapped
 }
 
 inline fun IIBlockState.unwrap(): IBlockState = (this as IBlockStateImpl).wrapped

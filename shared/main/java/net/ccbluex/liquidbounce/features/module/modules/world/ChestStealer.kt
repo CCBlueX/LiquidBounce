@@ -180,10 +180,8 @@ class ChestStealer : Module()
 		if (classProvider.isSPacketWindowItems(packet)) contentReceived = packet.asSPacketWindowItems().windowId
 	}
 
-	private inline fun shouldTake(stack: IItemStack?, inventoryCleaner: InventoryCleaner): Boolean
-	{
-		return stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))
-	}
+	private inline fun shouldTake(stack: IItemStack?, inventoryCleaner: InventoryCleaner): Boolean =
+		stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))
 
 	private fun move(screen: IGuiChest, slot: ISlot)
 	{

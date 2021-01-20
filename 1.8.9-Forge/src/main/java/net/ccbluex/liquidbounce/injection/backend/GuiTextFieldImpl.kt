@@ -42,10 +42,7 @@ class GuiTextFieldImpl(val wrapped: GuiTextField) : IGuiTextField
 
 	override fun keyTyped(typedChar: Char, keyCode: Int) = wrapped.textboxKeyTyped(typedChar, keyCode)
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is GuiTextFieldImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is GuiTextFieldImpl && other.wrapped == wrapped
 }
 
 inline fun IGuiTextField.unwrap(): GuiTextField = (this as GuiTextFieldImpl).wrapped

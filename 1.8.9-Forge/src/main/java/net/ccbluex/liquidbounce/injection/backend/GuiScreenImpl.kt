@@ -58,10 +58,7 @@ open class GuiScreenImpl<T : GuiScreen>(wrapped: T) : GuiImpl<T>(wrapped), IGuiS
 			wrapped.width = value
 		}
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is GuiScreenImpl<*> && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is GuiScreenImpl<*> && other.wrapped == wrapped
 }
 
 inline fun IGuiScreen.unwrap(): GuiScreen = (this as GuiScreenImpl<*>).wrapped

@@ -22,10 +22,7 @@ class ScoreboardImpl(val wrapped: Scoreboard) : IScoreboard
 
 	override fun getSortedScores(objective: IScoreObjective): Collection<IScore> = WrappedCollection(wrapped.getSortedScores(objective.unwrap()), IScore::unwrap, Score::wrap)
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is ScoreboardImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is ScoreboardImpl && other.wrapped == wrapped
 }
 
 inline fun IScoreboard.unwrap(): Scoreboard = (this as ScoreboardImpl).wrapped

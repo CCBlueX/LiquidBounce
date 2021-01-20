@@ -11,10 +11,7 @@ import net.minecraft.client.renderer.vertex.VertexFormat
 
 class VertexFormatImpl(val wrapped: VertexFormat) : IVertexFormat
 {
-	override fun equals(other: Any?): Boolean
-	{
-		return other is VertexFormatImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is VertexFormatImpl && other.wrapped == wrapped
 }
 
 inline fun IVertexFormat.unwrap(): VertexFormat = (this as VertexFormatImpl).wrapped

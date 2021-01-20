@@ -73,8 +73,5 @@ class Boost : SpeedMode("Boost")
 	{
 	}
 
-	private fun shouldSpeedUp(): Boolean
-	{
-		return !mc.thePlayer!!.isInLava && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.sneaking && MovementUtils.isMoving
-	}
+	private fun shouldSpeedUp(): Boolean = !mc.thePlayer!!.isInLava && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.sneaking && MovementUtils.isMoving
 }

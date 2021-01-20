@@ -33,10 +33,7 @@ class FontRendererImpl(val wrapped: FontRenderer) : IFontRenderer
 
 	override fun getGameFontRenderer(): GameFontRenderer = (wrapped as FontRendererWrapper).wrapped as GameFontRenderer
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is FontRendererImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is FontRendererImpl && other.wrapped == wrapped
 }
 
 inline fun IFontRenderer.unwrap(): FontRenderer = (this as FontRendererImpl).wrapped

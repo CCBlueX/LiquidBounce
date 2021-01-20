@@ -146,10 +146,7 @@ class YPort : SpeedMode("YPort")
 		return null
 	}
 
-	private fun getBlock(offset: Double): IBlock?
-	{
-		return this.getBlock(mc.thePlayer!!.entityBoundingBox.offset(0.0, offset, 0.0))
-	}
+	private fun getBlock(offset: Double): IBlock? = this.getBlock(mc.thePlayer!!.entityBoundingBox.offset(0.0, offset, 0.0))
 
 	private fun round(value: Double): Double
 	{

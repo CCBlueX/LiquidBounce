@@ -46,10 +46,7 @@ class ScriptModule(private val moduleObject: JSObject) : Module()
 	}
 
 	override val values: List<Value<*>>
-		get()
-		{
-			return _values.values.toList()
-		}
+		get() = _values.values.toList()
 
 	override var tag: String?
 		get() = _tag

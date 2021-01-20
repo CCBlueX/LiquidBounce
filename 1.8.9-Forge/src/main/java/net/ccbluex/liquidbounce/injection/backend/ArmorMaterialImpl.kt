@@ -18,10 +18,7 @@ class ArmorMaterialImpl(val wrapped: ItemArmor.ArmorMaterial) : IArmorMaterial
 
 	override fun getDurability(type: Int): Int = wrapped.getDurability(type)
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is ArmorMaterialImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is ArmorMaterialImpl && other.wrapped == wrapped
 }
 
 inline fun IArmorMaterial.unwrap(): ItemArmor.ArmorMaterial = (this as ArmorMaterialImpl).wrapped

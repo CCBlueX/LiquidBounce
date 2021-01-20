@@ -18,10 +18,7 @@ class MovementInputImpl(val wrapped: MovementInput) : IMovementInput
 	override val jump: Boolean
 		get() = wrapped.jump
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is MovementInputImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is MovementInputImpl && other.wrapped == wrapped
 }
 
 inline fun IMovementInput.unwrap(): MovementInput = (this as MovementInputImpl).wrapped

@@ -26,10 +26,7 @@ object MiniMapRegister : MinecraftInstance()
 		}
 	}
 
-	fun getChunkTextureAt(x: Int, z: Int): MiniMapTexture?
-	{
-		return chunkTextureMap[ChunkLocation(x, z)]
-	}
+	fun getChunkTextureAt(x: Int, z: Int): MiniMapTexture? = chunkTextureMap[ChunkLocation(x, z)]
 
 	fun updateChunks()
 	{
@@ -66,10 +63,7 @@ object MiniMapRegister : MinecraftInstance()
 		}
 	}
 
-	fun getLoadedChunkCount(): Int
-	{
-		return chunkTextureMap.size
-	}
+	fun getLoadedChunkCount(): Int = chunkTextureMap.size
 
 	fun unloadChunk(x: Int, z: Int)
 	{

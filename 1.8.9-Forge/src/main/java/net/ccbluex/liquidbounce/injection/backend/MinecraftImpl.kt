@@ -104,10 +104,7 @@ class MinecraftImpl(val wrapped: Minecraft) : IMinecraft
 	override fun shutdown() = wrapped.shutdown()
 	override fun toggleFullscreen() = wrapped.toggleFullscreen()
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is MinecraftImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is MinecraftImpl && other.wrapped == wrapped
 }
 
 inline fun IMinecraft.unwrap(): Minecraft = (this as MinecraftImpl).wrapped

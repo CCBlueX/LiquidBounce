@@ -24,10 +24,7 @@ abstract class Command(val command: String, vararg val alias: String) : Minecraf
 	 * @return a list of matching completions for the command the player is trying to autocomplete
 	 * @author NurMarvin
 	 */
-	open fun tabComplete(args: Array<String>): List<String>
-	{
-		return emptyList()
-	}
+	open fun tabComplete(args: Array<String>): List<String> = emptyList()
 
 	/**
 	 * Print [msg] to chat

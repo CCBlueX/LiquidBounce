@@ -168,10 +168,7 @@ open class ListValue(name: String, val values: Array<String>, value: String) : V
 		this.value = value
 	}
 
-	operator fun contains(string: String?): Boolean
-	{
-		return Arrays.stream(values).anyMatch { s: String -> s.equals(string, ignoreCase = true) }
-	}
+	operator fun contains(string: String?): Boolean = Arrays.stream(values).anyMatch { s: String -> s.equals(string, ignoreCase = true) }
 
 	override fun changeValue(value: String)
 	{

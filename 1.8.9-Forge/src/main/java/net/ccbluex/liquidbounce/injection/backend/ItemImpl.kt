@@ -21,10 +21,7 @@ open class ItemImpl<T : Item>(val wrapped: T) : IItem
 	override fun asItemSword(): IItemSword = ItemSwordImpl(wrapped as ItemSword)
 	override fun asItemBucket(): IItemBucket = ItemBucketImpl(wrapped as ItemBucket)
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is ItemImpl<*> && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is ItemImpl<*> && other.wrapped == wrapped
 }
 
 inline fun IItem.unwrap(): Item = (this as ItemImpl<*>).wrapped

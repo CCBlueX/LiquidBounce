@@ -11,10 +11,7 @@ import net.minecraft.nbt.NBTBase
 
 open class NBTBaseImpl<T : NBTBase>(val wrapped: T) : INBTBase
 {
-	override fun equals(other: Any?): Boolean
-	{
-		return other is NBTBaseImpl<*> && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is NBTBaseImpl<*> && other.wrapped == wrapped
 }
 
 inline fun INBTBase.unwrap(): NBTBase = (this as NBTBaseImpl<*>).wrapped

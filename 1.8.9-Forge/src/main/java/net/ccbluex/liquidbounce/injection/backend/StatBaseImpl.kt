@@ -11,10 +11,7 @@ import net.minecraft.stats.StatBase
 
 class StatBaseImpl(val wrapped: StatBase) : IStatBase
 {
-	override fun equals(other: Any?): Boolean
-	{
-		return other is StatBaseImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is StatBaseImpl && other.wrapped == wrapped
 }
 
 inline fun IStatBase.unwrap(): StatBase = (this as StatBaseImpl).wrapped

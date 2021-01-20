@@ -14,10 +14,7 @@ object ColorUtils
 	/** Array of the special characters that are allowed in any text drawing of Minecraft.  */
 	val allowedCharactersArray = charArrayOf('/', '\n', '\r', '\t', '\u0000', '', '`', '?', '*', '\\', '<', '>', '|', '\"', ':')
 
-	fun isAllowedCharacter(character: Char): Boolean
-	{
-		return character.toInt() != 167 && character.toInt() >= 32 && character.toInt() != 127
-	}
+	fun isAllowedCharacter(character: Char): Boolean = character.toInt() != 167 && character.toInt() >= 32 && character.toInt() != 127
 
 	private val COLOR_PATTERN = Pattern.compile("(?i)\u00A7[0-9A-FK-OR]")
 

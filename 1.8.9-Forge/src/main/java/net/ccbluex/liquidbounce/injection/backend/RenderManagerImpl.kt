@@ -48,10 +48,7 @@ class RenderManagerImpl(val wrapped: RenderManager) : IRenderManager
 
 	override fun renderEntityWithPosYaw(entityLivingBase: IEntityLivingBase, d: Double, d1: Double, d2: Double, fl: Float, fl1: Float) = wrapped.renderEntityWithPosYaw(entityLivingBase.unwrap(), d, d1, d2, fl, fl1)
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is RenderManagerImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is RenderManagerImpl && other.wrapped == wrapped
 }
 
 inline fun IRenderManager.unwrap(): RenderManager = (this as RenderManagerImpl).wrapped

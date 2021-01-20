@@ -14,10 +14,7 @@ class MaterialImpl(val wrapped: Material) : IMaterial
 	override val isReplaceable: Boolean
 		get() = wrapped.isReplaceable
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is MaterialImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is MaterialImpl && other.wrapped == wrapped
 }
 
 inline fun IMaterial.unwrap(): Material = (this as MaterialImpl).wrapped

@@ -27,10 +27,7 @@ class MovingObjectPositionImpl(val wrapped: MovingObjectPosition) : IMovingObjec
 	override val typeOfHit: IMovingObjectPosition.WMovingObjectType
 		get() = wrapped.typeOfHit.wrap()
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is MovingObjectPositionImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is MovingObjectPositionImpl && other.wrapped == wrapped
 }
 
 inline fun IMovingObjectPosition.unwrap(): MovingObjectPosition = (this as MovingObjectPositionImpl).wrapped

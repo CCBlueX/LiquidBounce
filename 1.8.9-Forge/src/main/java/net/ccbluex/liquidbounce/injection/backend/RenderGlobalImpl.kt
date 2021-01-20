@@ -13,10 +13,7 @@ class RenderGlobalImpl(val wrapped: RenderGlobal) : IRenderGlobal
 {
 	override fun loadRenderers() = wrapped.loadRenderers()
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is RenderGlobalImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is RenderGlobalImpl && other.wrapped == wrapped
 }
 
 inline fun IRenderGlobal.unwrap(): RenderGlobal = (this as RenderGlobalImpl).wrapped

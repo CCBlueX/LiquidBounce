@@ -15,10 +15,7 @@ class WorldBorderImpl(val wrapped: WorldBorder) : IWorldBorder
 {
 	override fun contains(blockPos: WBlockPos): Boolean = wrapped.contains(blockPos.unwrap())
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is WorldBorderImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is WorldBorderImpl && other.wrapped == wrapped
 }
 
 inline fun IWorldBorder.unwrap(): WorldBorder = (this as WorldBorderImpl).wrapped

@@ -26,10 +26,7 @@ class ServerDataImpl(val wrapped: ServerData) : IServerData
 	override val serverIP: String
 		get() = wrapped.serverIP
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is ServerDataImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is ServerDataImpl && other.wrapped == wrapped
 }
 
 inline fun IServerData.unwrap(): ServerData = (this as ServerDataImpl).wrapped

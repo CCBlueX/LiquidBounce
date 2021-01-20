@@ -18,10 +18,7 @@ class CreativeTabsImpl(val wrapped: CreativeTabs) : ICreativeTabs
 			wrapped.backgroundImageName = value
 		}
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is CreativeTabsImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is CreativeTabsImpl && other.wrapped == wrapped
 }
 
 inline fun ICreativeTabs.unwrap(): CreativeTabs = (this as CreativeTabsImpl).wrapped

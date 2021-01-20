@@ -11,10 +11,7 @@ import net.minecraft.client.renderer.ThreadDownloadImageData
 
 class ThreadDownloadImageDataImpl<T : ThreadDownloadImageData>(wrapped: T) : AbstractTextureImpl<T>(wrapped), IThreadDownloadImageData
 {
-	override fun equals(other: Any?): Boolean
-	{
-		return other is ThreadDownloadImageDataImpl<*> && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is ThreadDownloadImageDataImpl<*> && other.wrapped == wrapped
 }
 
 inline fun IThreadDownloadImageData.unwrap(): ThreadDownloadImageData = (this as ThreadDownloadImageDataImpl<*>).wrapped

@@ -65,10 +65,7 @@ class AACHop350 : SpeedMode("AACHop3.5.0"), Listenable
 		mc.thePlayer?.jumpMovementFactor = 0.02f
 	}
 
-	override fun handleEvents(): Boolean
-	{
-		return isActive
-	}
+	override fun handleEvents(): Boolean = isActive
 
 	init
 	{

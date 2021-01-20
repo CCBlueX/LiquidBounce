@@ -19,10 +19,7 @@ class NetworkManagerImpl(val wrapped: NetworkManager) : INetworkManager
 
 	override fun enableEncryption(secretKey: SecretKey) = wrapped.enableEncryption(secretKey)
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is NetworkManagerImpl && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is NetworkManagerImpl && other.wrapped == wrapped
 }
 
 inline fun INetworkManager.unwrap(): NetworkManager = (this as NetworkManagerImpl).wrapped

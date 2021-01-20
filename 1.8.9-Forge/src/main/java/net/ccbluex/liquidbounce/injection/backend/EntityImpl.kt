@@ -226,10 +226,7 @@ open class EntityImpl<T : Entity>(val wrapped: T) : IEntity
 
 	override fun setPositionAndRotation(oldX: Double, oldY: Double, oldZ: Double, rotationYaw: Float, rotationPitch: Float) = wrapped.setPositionAndRotation(oldX, oldY, oldZ, rotationYaw, rotationPitch)
 
-	override fun equals(other: Any?): Boolean
-	{
-		return other is EntityImpl<*> && other.wrapped == wrapped
-	}
+	override fun equals(other: Any?): Boolean = other is EntityImpl<*> && other.wrapped == wrapped
 }
 
 inline fun IEntity.unwrap(): Entity = (this as EntityImpl<*>).wrapped

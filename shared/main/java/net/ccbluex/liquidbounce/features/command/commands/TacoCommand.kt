@@ -74,8 +74,5 @@ class TacoCommand : Command("taco"), Listenable
 
 	override fun handleEvents() = true
 
-	override fun tabComplete(args: Array<String>): List<String>
-	{
-		return listOf("TACO")
-	}
+	override fun tabComplete(args: Array<String>): List<String> = listOf("TACO")
 }
