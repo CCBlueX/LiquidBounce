@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
@@ -105,7 +104,6 @@ class KillAura : Module()
 	// Modes
 	private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "ServerDirection", "ClientDirection", "LivingTime"), "Distance")
 	private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
-	private val switchDelay = IntegerValue("SwitchDelay", 100, 0, 1000)
 
 	// Bypass
 	private val swingValue = BoolValue("Swing", true)
@@ -332,26 +330,6 @@ class KillAura : Module()
 	 */
 	private var autoBlockTarget: IEntityLivingBase? = null
 
-	/**
-	 * Delayed-attack timer
-	 */
-	private val delayedAttackTimer = TickTimer()
-
-	/**
-	 * Target of delayed-attack
-	 */
-	private var delayedAttack: IEntityLivingBase? = null
-
-	/**
-	 * Delayed-block timer
-	 */
-	private val delayedBlockTimer = TickTimer()
-
-	/**
-	 * Target of delayed-block
-	 */
-	private var delayedBlock: IEntityLivingBase? = null
-
 	init
 	{
 		cooldownValue.isSupported = Backend.REPRESENTED_BACKEND_VERSION != MinecraftVersion.MC_1_8
@@ -400,7 +378,7 @@ class KillAura : Module()
 			updateHitable()
 
 			// Delayed-AutoBlock
-			if (autoBlockValue.get().equals("AfterTick", true) && canBlock) startBlocking(currentTarget ?: return, interactAutoBlockValue.get() && hitable)
+			if (autoBlockValue.get().equals("AfterTick", true) && canBlock && currentTarget != null) startBlocking(currentTarget, interactAutoBlockValue.get() && hitable)
 
 			return
 		}
@@ -473,9 +451,8 @@ class KillAura : Module()
 		updateTarget()
 
 		// Pre-AutoBlock
-		if (autoBlockTarget != null && !autoBlockValue.get().equals("AfterTick") && canBlock && (!autoBlockHitableCheckValue.get() || hitable)) startBlocking(autoBlockTarget ?: return, interactAutoBlockValue.get())
+		if (autoBlockTarget != null && !autoBlockValue.get().equals("AfterTick") && canBlock && (!autoBlockHitableCheckValue.get() || hitable)) startBlocking(autoBlockTarget, interactAutoBlockValue.get())
 		else if (canBlock) stopBlocking()
-
 
 		target ?: return
 
@@ -623,18 +600,10 @@ class KillAura : Module()
 			}
 
 			// FAKE Swing (to bypass hit/miss rate checks)
-			if (swing && ((thePlayer.getDistanceToEntityBox(currentTarget ?: return) <= swingRange && fakeSwingValue.get()) || failedToHit)) thePlayer.swingItem()
+			if (swing && ((thePlayer.getDistanceToEntityBox(currentTarget!!) <= swingRange && fakeSwingValue.get()) || failedToHit)) thePlayer.swingItem()
 
 			// Start blocking after FAKE attack
-			if (thePlayer.isBlocking || (canBlock && thePlayer.getDistanceToEntityBox(currentTarget ?: return) <= blockRange && (blockRate.get() > 0 && Random().nextInt(100) <= blockRate.get())))
-			{
-				if (!autoBlockValue.get().equals("AfterTick")) startBlocking(currentTarget ?: return, interactAutoBlockValue.get())
-				else
-				{
-					delayedBlock = currentTarget
-					delayedBlockTimer.reset()
-				}
-			}
+			if ((thePlayer.isBlocking || (canBlock && thePlayer.getDistanceToEntityBox(currentTarget!!) <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(currentTarget!!, interactAutoBlockValue.get())
 		} else
 		{ // Attack
 			if (!multi)
@@ -707,8 +676,6 @@ class KillAura : Module()
 			}
 		}
 
-		thePlayer.sendChatMessage("Found ${targets.size} entities to attack")
-
 		if (targets.isEmpty()) for (entity in theWorld.loadedEntityList)  // If there is no attackable entities found, search about pre-aimable entities and pre-swingable entities instead.
 		{
 			if (!classProvider.isEntityLivingBase(entity) || !EntityUtils.isEnemy(
@@ -759,6 +726,8 @@ class KillAura : Module()
 				abTargets.sortBy { -it.ticksExisted }
 			}
 		}
+
+		autoBlockTarget = abTargets.firstOrNull()
 
 		// Find best target
 		for (entity in targets)
@@ -820,15 +789,7 @@ class KillAura : Module()
 		}
 
 		// Start blocking after attack
-		if (thePlayer.isBlocking || (canBlock && thePlayer.getDistanceToEntityBox(entity) <= blockRange && (blockRate.get() > 0 && Random().nextInt(100) <= blockRate.get())))
-		{
-			if (!autoBlockValue.get().equals("AfterTick")) startBlocking(entity, interactAutoBlockValue.get())
-			else
-			{
-				delayedBlock = entity
-				delayedBlockTimer.reset()
-			}
-		}
+		if ((thePlayer.isBlocking || (canBlock && thePlayer.getDistanceToEntityBox(entity) <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(entity, interactAutoBlockValue.get())
 
 		@Suppress("ConstantConditionIf") if (Backend.MINECRAFT_VERSION_MINOR != 8)
 		{
@@ -930,16 +891,20 @@ class KillAura : Module()
 	/**
 	 * Start blocking
 	 */
-	private fun startBlocking(interactEntity: IEntity, interact: Boolean)
+	private fun startBlocking(interactEntity: IEntity?, interact: Boolean)
 	{
+
+		// BlockRate check
 		if (!(blockRate.get() > 0 && Random().nextInt(100) <= blockRate.get())) return
 
-		val visual = !autoBlockValue.get().equals("Off") // Fake, Packet, AfterTick
-		val packet = !visual && !autoBlockValue.get().equals("Fake") // Packet, AfterTick
+		val visual = !autoBlockValue.get().equals("Off", true) // Fake, Packet, AfterTick
+		val packet = visual && !autoBlockValue.get().equals("Fake", true) // Packet, AfterTick
 
 		if (packet && !serverSideBlockingStatus)
 		{
-			if (interact)
+
+			// Interact block
+			if (interact && interactEntity != null)
 			{
 				val positionEye = mc.renderViewEntity?.getPositionEyes(1F)
 
