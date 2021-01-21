@@ -104,4 +104,6 @@ interface IEntity
 	fun isInsideOfMaterial(material: IMaterial): Boolean
 	fun copyLocationAndAnglesFrom(player: IEntityPlayerSP)
 	fun setPositionAndRotation(oldX: Double, oldY: Double, oldZ: Double, rotationYaw: Float, rotationPitch: Float)
+
+	fun isEntityEqual(other: IEntity?): Boolean
 }

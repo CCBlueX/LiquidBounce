@@ -30,4 +30,5 @@ interface IPacket
 	fun asCPacketCustomPayload(): ICPacketCustomPayload
 	fun asCPacketHandshake(): ICPacketHandshake
 	fun asCPacketPlayerDigging(): ICPacketPlayerDigging
+	fun asCPacketPlayerBlockPlacement(): ICPacketPlayerBlockPlacement
 }

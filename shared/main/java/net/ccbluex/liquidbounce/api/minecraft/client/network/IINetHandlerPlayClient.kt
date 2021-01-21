@@ -16,5 +16,5 @@ interface IINetHandlerPlayClient
 	val playerInfoMap: Collection<INetworkPlayerInfo>
 
 	fun getPlayerInfo(uuid: UUID): INetworkPlayerInfo?
-	fun addToSendQueue(classProviderCPacketHeldItemChange: IPacket)
+	fun addToSendQueue(packet: IPacket)
 }

@@ -180,7 +180,9 @@ class ModuleManager : Listenable
 			NoSlowBreak::class.java,
 			PortalMenu::class.java,
 			AutoLogin::class.java,
-			ItemPhysics::class.java
+			ItemPhysics::class.java,
+			ExtendedReach::class.java,
+			TpAura::class.java
 		)
 
 		registerModule(NoScoreboard)

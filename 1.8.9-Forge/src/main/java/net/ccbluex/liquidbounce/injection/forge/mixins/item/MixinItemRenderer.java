@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.item;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
+import net.ccbluex.liquidbounce.features.module.modules.combat.TpAura;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.SwingAnimation;
 import net.minecraft.client.Minecraft;
@@ -218,7 +219,7 @@ public abstract class MixinItemRenderer
 		if (itemToRender != null)
 		{
 			final KillAura killAura = (KillAura) LiquidBounce.moduleManager.get(KillAura.class);
-//			final TpAura tpaura = (TpAura) LiquidBounce.moduleManager.get(TpAura.class);
+			final TpAura tpaura = (TpAura) LiquidBounce.moduleManager.get(TpAura.class);
 			final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
 			if (sa.getState())
 				equipProgress *= sa.getEquipProgressAffectMultiplier().get();
@@ -226,8 +227,7 @@ public abstract class MixinItemRenderer
 			if (itemToRender.getItem() instanceof ItemMap)
 				renderItemMap(abstractclientplayer, smoothPitchRotation, equipProgress, swingProgress);
 			else // Swing
-				 // noinspection UnnecessaryParentheses
-			if (abstractclientplayer.getItemInUseCount() > 0 || itemToRender.getItem() instanceof ItemSword && (killAura.getClientSideBlockingStatus()/* || tpaura.blockingRenderStatus */))
+			if (abstractclientplayer.getItemInUseCount() > 0 || itemToRender.getItem() instanceof ItemSword && (killAura.getClientSideBlockingStatus() || tpaura.clientsideBlockingStatus))
 			{
 				final EnumAction enumaction = killAura.getClientSideBlockingStatus()/* || tpaura.blockingRenderStatus */ ? EnumAction.BLOCK : itemToRender.getItemUseAction();
 

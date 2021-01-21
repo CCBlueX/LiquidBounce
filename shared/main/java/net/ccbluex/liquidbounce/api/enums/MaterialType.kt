@@ -8,5 +8,5 @@ package net.ccbluex.liquidbounce.api.enums
 
 enum class MaterialType
 {
-	AIR, WATER, LAVA
+	AIR, WATER, LAVA, PLANTS, VINE
 }

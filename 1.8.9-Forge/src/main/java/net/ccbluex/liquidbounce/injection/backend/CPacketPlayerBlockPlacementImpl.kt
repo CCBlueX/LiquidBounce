@@ -6,10 +6,20 @@
 
 package net.ccbluex.liquidbounce.injection.backend
 
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerBlockPlacement
+import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 
 class CPacketPlayerBlockPlacementImpl<T : C08PacketPlayerBlockPlacement>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketPlayerBlockPlacement
+{
+	override val position: WBlockPos
+		get() = wrapped.position.wrap()
+
+	override val stack: IItemStack
+		get() = wrapped.stack.wrap()
+}
 
 inline fun ICPacketPlayerBlockPlacement.unwrap(): C08PacketPlayerBlockPlacement = (this as CPacketPlayerBlockPlacementImpl<*>).wrapped
 inline fun C08PacketPlayerBlockPlacement.wrap(): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(this)

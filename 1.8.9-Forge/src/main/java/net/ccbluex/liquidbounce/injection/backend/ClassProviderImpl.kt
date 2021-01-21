@@ -376,6 +376,60 @@ object ClassProviderImpl : IClassProvider
 	override fun isBlockSign(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSign
 
 	override fun isBlockDoor(obj: Any?): Boolean = obj is BlockImpl && (obj.wrapped is BlockDoor || obj.wrapped is BlockTrapDoor)
+	override fun isBlockChest(obj: Any?): Boolean
+	{
+		return obj is BlockImpl && obj.wrapped is BlockChest
+	}
+
+	override fun isBlockEnderChest(obj: Any?): Boolean
+	{
+		return obj is BlockImpl && obj.wrapped is BlockEnderChest
+	}
+
+	override fun isBlockSkull(obj: Any?): Boolean
+	{
+		return obj is BlockImpl && obj.wrapped is BlockSkull
+	}
+
+	override fun isBlockWall(obj: Any?): Boolean
+	{
+		return obj is BlockImpl && obj.wrapped is BlockWall
+	}
+
+	override fun isBlockGlass(obj: Any?): Boolean
+	{
+		return obj is BlockImpl && obj.wrapped is BlockGlass
+	}
+
+	override fun isBlockPistonBase(obj: Any?): Boolean
+	{
+		return obj is BlockImpl && obj.wrapped is BlockPistonBase
+	}
+
+	override fun isBlockPistonExtension(obj: Any?): Boolean
+	{
+		return obj is BlockImpl && obj.wrapped is BlockPistonExtension
+	}
+
+	override fun isBlockPistonMoving(obj: Any?): Boolean
+	{
+		return obj is BlockImpl && obj.wrapped is BlockPistonMoving
+	}
+
+	override fun isBlockStainedGlass(obj: Any?): Boolean
+	{
+		return obj is BlockImpl && obj.wrapped is BlockStainedGlass
+	}
+
+	override fun isBlockTrapDoor(obj: Any?): Boolean
+	{
+		return obj is BlockImpl && obj.wrapped is BlockTrapDoor
+	}
+
+	override fun isBlockContainer(obj: Any?): Boolean
+	{
+		return obj is BlockImpl && obj.wrapped is BlockContainer
+	}
 
 	override fun isGuiInventory(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiInventory
 
@@ -498,6 +552,8 @@ object ClassProviderImpl : IClassProvider
 			BlockType.LIGHT_WEIGHTED_PRESSURE_PLATE -> Blocks.light_weighted_pressure_plate.wrap()
 			BlockType.HEAVY_WEIGHTED_PRESSURE_PLATE -> Blocks.heavy_weighted_pressure_plate.wrap()
 			BlockType.GRAVEL -> Blocks.gravel.wrap()
+			BlockType.STANDING_SIGN -> Blocks.standing_sign.wrap()
+			BlockType.WALL_SIGN -> Blocks.wall_sign.wrap()
 		}
 	}
 
@@ -508,6 +564,8 @@ object ClassProviderImpl : IClassProvider
 			MaterialType.AIR -> Material.air
 			MaterialType.WATER -> Material.water
 			MaterialType.LAVA -> Material.lava
+			MaterialType.PLANTS -> Material.plants
+			MaterialType.VINE -> Material.vine
 		})
 	}
 

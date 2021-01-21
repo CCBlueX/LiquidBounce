@@ -22,7 +22,7 @@ class WBlockPos(x: Int, y: Int, z: Int) : WVec3i(x, y, z)
 	constructor(x: Double, y: Double, z: Double) : this(floor(x).toInt(), floor(y).toInt(), floor(z).toInt())
 
 	constructor(source: IEntity) : this(source.posX, source.posY, source.posZ)
-
+	
 	/**
 	 * Add the given coordinates to the coordinates of this BlockPos
 	 */
