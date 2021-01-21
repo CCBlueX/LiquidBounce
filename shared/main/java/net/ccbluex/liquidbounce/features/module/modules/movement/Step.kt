@@ -14,9 +14,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
+import java.util.stream.Stream
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -30,13 +29,16 @@ class Step : Module()
 
 	private val modeValue = ListValue(
 		"Mode", arrayOf(
-			"Vanilla", "Jump", "NCP", "MotionNCP", "OldNCP", "AAC", "LAAC", "AAC3.3.4", "Spartan", "Rewinside"
+			"Vanilla", "Jump", "NCP", "MotionNCP", "OldNCP", "AAC3.1.5", "AAC3.2.0", "AAC3.3.4", "Spartan", "Rewinside"
 		), "NCP"
 	)
 
+	val airStepValue = BoolValue("AirStep", false)
 	private val heightValue = FloatValue("Height", 1F, 0.6F, 10F)
 	private val jumpHeightValue = FloatValue("JumpHeight", 0.42F, 0.37F, 0.42F)
 	private val delayValue = IntegerValue("Delay", 0, 0, 500)
+
+	private val motionNCPBoostValue = FloatValue("MotionNCP-Boost", 0.7F, 0F, 0.7F)
 
 	/**
 	 * VALUES
@@ -76,7 +78,7 @@ class Step : Module()
 				thePlayer.motionY = jumpHeightValue.get().toDouble()
 			}
 
-			mode.equals("laac", true) -> if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb)
+			mode.equals("aac3.2.0", true) -> if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb)
 			{
 				if (thePlayer.onGround && timer.hasTimePassed(delayValue.get().toLong()))
 				{
@@ -119,6 +121,7 @@ class Step : Module()
 	{
 		val mode = modeValue.get()
 		val thePlayer = mc.thePlayer ?: return
+		val motionNCPBoost = motionNCPBoostValue.get()
 
 		// Motion steps
 		when
@@ -146,8 +149,13 @@ class Step : Module()
 						val yaw = MovementUtils.direction
 
 						event.y = 1.001335979112147 - 0.7531999805212
-						event.x = -sin(yaw) * 0.7
-						event.z = cos(yaw) * 0.7
+
+						if (motionNCPBoost > 0.0F)
+						{
+
+							event.x = -sin(yaw) * motionNCPBoost
+							event.z = cos(yaw) * motionNCPBoost
+						}
 
 						ncpNextStep = 0
 					}
@@ -174,7 +182,7 @@ class Step : Module()
 		{
 			val flyMode = fly.modeValue.get()
 
-			if (flyMode.equals("Hypixel", ignoreCase = true) || flyMode.equals("OtherHypixel", ignoreCase = true) || flyMode.equals("LatestHypixel", ignoreCase = true) || flyMode.equals("Rewinside", ignoreCase = true) || flyMode.equals(
+			if (flyMode.equals("Hypixel", ignoreCase = true) || flyMode.equals("Rewinside", ignoreCase = true) || flyMode.equals(
 					"Mineplex", ignoreCase = true
 				) && thePlayer.inventory.getCurrentItemInHand() == null
 			)
@@ -187,7 +195,7 @@ class Step : Module()
 		val mode = modeValue.get()
 
 		// Set step to default in some cases
-		if (!thePlayer.onGround || !timer.hasTimePassed(delayValue.get().toLong()) || mode.equals("Jump", ignoreCase = true) || mode.equals("MotionNCP", ignoreCase = true) || mode.equals("LAAC", ignoreCase = true) || mode.equals(
+		if (!thePlayer.onGround || !timer.hasTimePassed(delayValue.get().toLong()) || mode.equals("Jump", ignoreCase = true) || mode.equals("MotionNCP", ignoreCase = true) || mode.equals("AAC3.2.0", ignoreCase = true) || mode.equals(
 				"AAC3.3.4", ignoreCase = true
 			)
 		)
@@ -226,7 +234,7 @@ class Step : Module()
 
 			when
 			{
-				mode.equals("NCP", ignoreCase = true) || mode.equals("AAC", ignoreCase = true) ->
+				mode.equals("NCP", ignoreCase = true) || mode.equals("AAC3.1.5", ignoreCase = true) ->
 				{
 					fakeJump()
 
@@ -341,6 +349,9 @@ class Step : Module()
 
 		return mc.theWorld!!.getCollisionBoxes(mc.thePlayer!!.entityBoundingBox.offset(x, 1.001335979112147, z)).isEmpty()
 	}
+
+	val canAirStep: Boolean // Is current step mode is able to air-step?
+		get() = Stream.of("Vanilla", "NCP", "OldNCP", "AAC3.1.5", "Spartan", "Rewinside").anyMatch { modeValue.get().equals(it, ignoreCase = true) }
 
 	override val tag: String
 		get() = modeValue.get()

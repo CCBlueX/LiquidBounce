@@ -13,10 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AntiHunger;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.PortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.fun.Derp;
-import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove;
-import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
-import net.ccbluex.liquidbounce.features.module.modules.movement.Sneak;
-import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
+import net.ccbluex.liquidbounce.features.module.modules.movement.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
@@ -529,7 +526,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				y = axisalignedbb1.calculateYOffset(getEntityBoundingBox(), y);
 
 			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
-			final boolean flag1 = onGround || d4 != y && d4 < 0.0D;
+			final Step step = (Step) LiquidBounce.moduleManager.get(Step.class);
+			final boolean steppable = onGround || step.getState() && step.getAirStepValue().get() && step.getCanAirStep()|| d4 != y && d4 < 0.0D;
 
 			for (final AxisAlignedBB axisalignedbb2 : list1)
 				x = axisalignedbb2.calculateXOffset(getEntityBoundingBox(), x);
@@ -541,7 +539,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, 0.0D, z));
 
-			if (stepHeight > 0.0F && flag1 && (d3 != x || d5 != z))
+			if (stepHeight > 0.0F && steppable && (d3 != x || d5 != z))
 			{
 				final StepEvent stepEvent = new StepEvent(stepHeight);
 				LiquidBounce.eventManager.callEvent(stepEvent);
