@@ -195,10 +195,7 @@ class Step : Module()
 		val mode = modeValue.get()
 
 		// Set step to default in some cases
-		if (!thePlayer.onGround || !timer.hasTimePassed(delayValue.get().toLong()) || mode.equals("Jump", ignoreCase = true) || mode.equals("MotionNCP", ignoreCase = true) || mode.equals("AAC3.2.0", ignoreCase = true) || mode.equals(
-				"AAC3.3.4", ignoreCase = true
-			)
-		)
+		if ((!thePlayer.onGround && !airStepValue.get()) || !timer.hasTimePassed(delayValue.get().toLong()) || Stream.of("Jump", "MotionNCP", "AAC3.2.0", "AAC3.3.4").anyMatch { modeValue.get().equals(it, ignoreCase = true) })
 		{
 			thePlayer.stepHeight = 0.5F
 			event.stepHeight = 0.5F
@@ -350,8 +347,7 @@ class Step : Module()
 		return mc.theWorld!!.getCollisionBoxes(mc.thePlayer!!.entityBoundingBox.offset(x, 1.001335979112147, z)).isEmpty()
 	}
 
-	val canAirStep: Boolean // Is current step mode is able to air-step?
-		get() = Stream.of("Vanilla", "NCP", "OldNCP", "AAC3.1.5", "Spartan", "Rewinside").anyMatch { modeValue.get().equals(it, ignoreCase = true) }
+	fun canAirStep(): Boolean = Stream.of("Vanilla", "NCP", "OldNCP", "AAC3.1.5", "Spartan", "Rewinside").anyMatch { modeValue.get().equals(it, ignoreCase = true) }
 
 	override val tag: String
 		get() = modeValue.get()
