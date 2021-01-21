@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach;
 import net.ccbluex.liquidbounce.features.module.modules.render.CameraClip;
-import net.ccbluex.liquidbounce.features.module.modules.render.NoHurtCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.HurtCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.Tracers;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -78,7 +78,8 @@ public abstract class MixinEntityRenderer
 	@Inject(method = "hurtCameraEffect", at = @At("HEAD"), cancellable = true)
 	private void injectHurtCameraEffect(final CallbackInfo callbackInfo)
 	{
-		if (LiquidBounce.moduleManager.getModule(NoHurtCam.class).getState())
+		final HurtCam hurtCam = (HurtCam) LiquidBounce.moduleManager.getModule(HurtCam.class);
+		if (hurtCam.getState() && hurtCam.getNoHurtCam().get())
 			callbackInfo.cancel();
 	}
 
@@ -94,8 +95,8 @@ public abstract class MixinEntityRenderer
 
 			if (entity instanceof EntityLivingBase && ((EntityLivingBase) entity).isPlayerSleeping())
 			{
-				f = (float) (f + 1D);
-				GlStateManager.translate(0F, 0.3F, 0.0F);
+				f += 1.0F;
+				GlStateManager.translate(0.0F, 0.3F, 0.0F);
 
 				if (!mc.gameSettings.debugCamEnable)
 				{

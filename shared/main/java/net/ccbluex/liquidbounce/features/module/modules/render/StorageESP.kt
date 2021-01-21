@@ -198,4 +198,7 @@ class StorageESP : Module()
 
 		shader.stopDraw(Color(0, 66, 255), if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f, 1f)
 	}
+
+	override val tag: String
+		get() = modeValue.get()
 }

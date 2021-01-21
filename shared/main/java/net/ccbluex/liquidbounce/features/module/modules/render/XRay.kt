@@ -14,8 +14,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 @ModuleInfo(name = "XRay", description = "Allows you to see ores through walls.", category = ModuleCategory.RENDER)
 class XRay : Module()
 {
-
-	val xrayBlocks = mutableListOf<IBlock>(
+	val xrayBlocks = mutableListOf(
 		classProvider.getBlockEnum(BlockType.COAL_ORE),
 		classProvider.getBlockEnum(BlockType.IRON_ORE),
 		classProvider.getBlockEnum(BlockType.GOLD_ORE),

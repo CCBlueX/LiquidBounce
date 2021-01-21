@@ -24,7 +24,7 @@ public abstract class MixinRender
 	protected abstract <T extends Entity> boolean bindEntityTexture(T entity);
 
 	@Inject(method = "doRender", at = @At("HEAD"))
-	private void doRender(final Entity entity, final double x, final double y, final double z, final float entityYaw, final float partialTicks, final CallbackInfo callbackInfo)
+	protected void doRender(final Entity entity, final double x, final double y, final double z, final float entityYaw, final float partialTicks, final CallbackInfo callbackInfo)
 	{
 		LiquidBounce.eventManager.callEvent(new RenderEntityEvent(EntityImplKt.wrap(entity), x, y, z, entityYaw, partialTicks));
 	}

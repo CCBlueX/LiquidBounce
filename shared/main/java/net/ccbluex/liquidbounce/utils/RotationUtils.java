@@ -42,7 +42,8 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 	private static float maxResetTurnSpeed = 180.0f;
 
 	public static Rotation targetRotation;
-	public static Rotation serverRotation = new Rotation(0F, 0F);
+	public static Rotation serverRotation = new Rotation(0.0F, 0.0F);
+	public static Rotation lastServerRotation = new Rotation(0.0F, 0.0F);
 
 	public static boolean keepCurrentRotation;
 
@@ -77,7 +78,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 
 					final double diffXZ = sqrt(diffX * diffX + diffZ * diffZ);
 
-					final Rotation rotation = new Rotation(WMathHelper.wrapAngleTo180_float((float) toDegrees(atan2(diffZ, diffX)) - 90F), WMathHelper.wrapAngleTo180_float((float) -toDegrees(atan2(diffY, diffXZ))));
+					final Rotation rotation = new Rotation(WMathHelper.wrapAngleTo180_float((float) toDegrees(atan2(diffZ, diffX)) - 90.0F), WMathHelper.wrapAngleTo180_float((float) -toDegrees(atan2(diffY, diffXZ))));
 
 					final WVec3 rotationVector = getVectorForRotation(rotation);
 					final WVec3 vector = eyesPos.addVector(rotationVector.getXCoord() * dist, rotationVector.getYCoord() * dist, rotationVector.getZCoord() * dist);
@@ -172,7 +173,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 		final double diffY = vec.getYCoord() - eyesPos.getYCoord();
 		final double diffZ = vec.getZCoord() - eyesPos.getZCoord();
 
-		return new Rotation(WMathHelper.wrapAngleTo180_float((float) toDegrees(atan2(diffZ, diffX)) - 90F), WMathHelper.wrapAngleTo180_float((float) -toDegrees(atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ)))));
+		return new Rotation(WMathHelper.wrapAngleTo180_float((float) toDegrees(atan2(diffZ, diffX)) - 90.0F), WMathHelper.wrapAngleTo180_float((float) -toDegrees(atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ)))));
 	}
 
 	/**
@@ -365,7 +366,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 	 */
 	public static double getRotationDifference(final Rotation rotation)
 	{
-		return Optional.ofNullable(serverRotation).map(serverRotation1 -> getRotationDifference(rotation, serverRotation1)).orElse(0D);
+		return Optional.ofNullable(serverRotation).map(serverRotation1 -> getRotationDifference(rotation, serverRotation1)).orElse(0.0D);
 	}
 
 	/**
@@ -423,7 +424,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 	 */
 	private static float getAngleDifference(final float a, final float b)
 	{
-		return ((a - b) % 360F + 540F) % 360F - 180F;
+		return ((a - b) % 360.0F + 540.0F) % 360.0F - 180.0F;
 	}
 
 	/**
@@ -545,6 +546,9 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 				packetPlayer.setPitch(targetRotation.getPitch());
 				packetPlayer.setRotating(true);
 			}
+
+			if (serverRotation != null)
+				lastServerRotation = new Rotation(serverRotation.getYaw(), serverRotation.getPitch());
 
 			if (packetPlayer.isRotating())
 				serverRotation = new Rotation(packetPlayer.getYaw(), packetPlayer.getPitch());

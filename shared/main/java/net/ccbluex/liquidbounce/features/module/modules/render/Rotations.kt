@@ -23,7 +23,9 @@ import net.ccbluex.liquidbounce.value.BoolValue
 class Rotations : Module()
 {
 
-	private val bodyValue = BoolValue("Body", true)
+	val bodyValue = BoolValue("Body", true)
+	val interpolateRotationsValue = BoolValue("Interpolate", true)
+
 
 	private var playerYaw: Float? = null
 
@@ -38,7 +40,7 @@ class Rotations : Module()
 	{
 		val thePlayer = mc.thePlayer
 
-		if (!bodyValue.get() || !shouldRotate() || thePlayer == null) return
+		if (!bodyValue.get() || !isRotating() || thePlayer == null) return
 
 		val packet = event.packet
 
@@ -60,11 +62,14 @@ class Rotations : Module()
 
 	private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module].state
 
-	private fun shouldRotate(): Boolean
+	fun isRotating(): Boolean
 	{
 		val killAura = LiquidBounce.moduleManager.getModule(KillAura::class.java) as KillAura
 		return getState(Scaffold::class.java) || getState(Tower::class.java) || (getState(KillAura::class.java) && killAura.target != null) || getState(Derp::class.java) || getState(BowAimbot::class.java) || getState(Fucker::class.java) || getState(
 			CivBreak::class.java
 		) || getState(Nuker::class.java) || getState(ChestAura::class.java)
 	}
+
+	override val tag: String
+		get() = if (bodyValue.get()) "Body and Head" else "Head only"
 }

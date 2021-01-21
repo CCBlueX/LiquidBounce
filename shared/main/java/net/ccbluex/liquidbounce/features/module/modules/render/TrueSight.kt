@@ -15,4 +15,12 @@ class TrueSight : Module()
 {
 	val barriersValue = BoolValue("Barriers", true)
 	val entitiesValue = BoolValue("Entities", true)
+
+	override val tag: String
+		get() = if (barriersValue.get() && entitiesValue.get()) "Both" else when
+		{
+			barriersValue.get() -> "Barriers"
+			entitiesValue.get() -> "Entities"
+			else -> "Off"
+		}
 }

@@ -14,4 +14,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 class NoSwing : Module()
 {
 	val serverSideValue = BoolValue("ServerSide", true)
+
+	override val tag: String
+		get() = if (serverSideValue.get()) "Server-sided" else "Client-sided"
 }
