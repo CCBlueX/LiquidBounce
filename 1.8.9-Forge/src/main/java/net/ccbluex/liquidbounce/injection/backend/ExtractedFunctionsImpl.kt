@@ -67,7 +67,7 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 
 	override fun getBlockFromName(name: String): IBlock? = Block.getBlockFromName(name)?.wrap()
 
-	override fun getItemByName(name: String): IItem? = (Items::class.java.getField(name).get(null) as Item).wrap()
+	override fun getItemByName(name: String): IItem = (Items::class.java.getField(name).get(null) as Item).wrap()
 
 	override fun getEnchantmentByLocation(location: String): IEnchantment? = Enchantment.getEnchantmentByLocation(location)?.wrap()
 

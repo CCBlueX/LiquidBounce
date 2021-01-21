@@ -53,7 +53,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 	private val tabHeight = FloatValue("TabHeight", 12F, 10F, 15F)
 	private val upperCaseValue = BoolValue("UpperCase", false)
-	
+
 	private val fontValue = FontValue("Font", Fonts.font35)
 
 	private val tabs = mutableListOf<Tab>()
@@ -77,7 +77,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 		}
 	}
 
-	override fun drawElement(): Border?
+	override fun drawElement(): Border
 	{
 		updateAnimation()
 

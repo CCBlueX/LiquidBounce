@@ -99,6 +99,6 @@ class Criticals : Module()
 		if (classProvider.isCPacketPlayer(packet) && modeValue.get().equals("NoGround", ignoreCase = true)) packet.asCPacketPlayer().onGround = false
 	}
 
-	override val tag: String?
+	override val tag: String
 		get() = modeValue.get()
 }

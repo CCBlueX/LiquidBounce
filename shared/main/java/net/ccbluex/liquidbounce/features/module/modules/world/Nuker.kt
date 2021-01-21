@@ -256,6 +256,6 @@ class Nuker : Module()
 		var currentDamage = 0F
 	}
 
-	override val tag: String?
+	override val tag: String
 		get() = "${radiusValue.get()}"
 }

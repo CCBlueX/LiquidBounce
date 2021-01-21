@@ -98,6 +98,6 @@ object ChestAura : Module()
 
 	override fun onDisable() = clickedBlocks.clear()
 
-	override val tag: String?
+	override val tag: String
 		get() = "${rangeValue.get()}"
 }

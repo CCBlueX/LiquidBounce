@@ -90,6 +90,6 @@ class CivBreak : Module()
 		RenderUtils.drawBlockBox(blockPos ?: return, Color.RED, true)
 	}
 
-	override val tag: String?
+	override val tag: String
 		get() = "${range.get()}"
 }

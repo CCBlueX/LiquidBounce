@@ -294,6 +294,6 @@ class ChestStealer : Module()
 	private val fullInventory: Boolean
 		get() = mc.thePlayer?.inventory?.mainInventory?.none(ItemUtils::isStackEmpty) ?: false
 
-	override val tag: String?
+	override val tag: String
 		get() = "${minDelayValue.get()} ~ ${maxDelayValue.get()}"
 }

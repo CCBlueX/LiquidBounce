@@ -29,6 +29,6 @@ class FastBreak : Module()
 		if (Nuker.currentDamage > breakDamage.get()) Nuker.currentDamage = 1F
 	}
 
-	override val tag: String?
+	override val tag: String
 		get() = "${breakDamage.get()}"
 }
