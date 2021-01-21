@@ -25,7 +25,6 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.MathHelper;
-import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderLivingEvent.Post;
 import net.minecraftforge.client.event.RenderLivingEvent.Pre;
 import net.minecraftforge.common.MinecraftForge;
@@ -58,10 +57,10 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	protected FloatBuffer brightnessBuffer;
 
 	@Shadow
-	protected abstract float interpolateRotation(float par1, float par2, float par3);
+	protected abstract float interpolateRotation(float prevRotation, float rotation, float partialTicks);
 
 	@Shadow
-	protected abstract float getSwingProgress(EntityLivingBase livingBase, float partialTickTime);
+	protected abstract float getSwingProgress(EntityLivingBase livingBase, float partialTicks);
 
 	@Shadow
 	protected abstract void renderLayers(EntityLivingBase entitylivingbaseIn, float p_177093_2_, float p_177093_3_, float partialTicks, float p_177093_5_, float p_177093_6_, float p_177093_7_, float p_177093_8_);
@@ -142,8 +141,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 
 			float interpolatedPitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
 
-			// TODO: ServerSideRotations
-			if (entity instanceof EntityPlayer && entity == Minecraft.getMinecraft().thePlayer && entityYaw != 0 && rotations.getState() && rotations.isRotating() && RotationUtils.serverRotation != null && RotationUtils.lastServerRotation != null)
+			if (entity instanceof EntityPlayer && entity == Minecraft.getMinecraft().thePlayer && entityYaw != 0 && rotations.getState() && rotations.getBodyValue().get() && rotations.isRotating() && RotationUtils.serverRotation != null && RotationUtils.lastServerRotation != null)
 			{
 				final boolean interpolate = rotations.getInterpolateRotationsValue().get();
 				interpolatedYawOffset = interpolate ? interpolateRotation(RotationUtils.lastServerRotation.getYaw(), RotationUtils.serverRotation.getYaw(), partialTicks) : RotationUtils.serverRotation.getYaw(); // Body Rotation

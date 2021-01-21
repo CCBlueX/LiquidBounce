@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -26,38 +25,12 @@ class Rotations : Module()
 	val bodyValue = BoolValue("Body", true)
 	val interpolateRotationsValue = BoolValue("Interpolate", true)
 
-
-	private var playerYaw: Float? = null
-
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
 	{
-		if (RotationUtils.serverRotation != null && !bodyValue.get()) mc.thePlayer?.rotationYawHead = RotationUtils.serverRotation.yaw
-	}
+		mc.thePlayer ?: return
 
-	@EventTarget
-	fun onPacket(event: PacketEvent)
-	{
-		val thePlayer = mc.thePlayer
-
-		if (!bodyValue.get() || !isRotating() || thePlayer == null) return
-
-		val packet = event.packet
-
-		if (classProvider.isCPacketPlayerPosLook(packet) || classProvider.isCPacketPlayerLook(packet))
-		{
-			val packetPlayer = packet.asCPacketPlayer()
-
-			playerYaw = packetPlayer.yaw
-
-			thePlayer.renderYawOffset = packetPlayer.yaw
-			thePlayer.rotationYawHead = packetPlayer.yaw
-		} else
-		{
-			if (playerYaw != null) thePlayer.renderYawOffset = playerYaw!!
-
-			thePlayer.rotationYawHead = thePlayer.renderYawOffset
-		}
+		if (RotationUtils.serverRotation != null && !bodyValue.get()) mc.thePlayer!!.rotationYawHead = if (interpolateRotationsValue.get()) interpolateRotation(RotationUtils.lastServerRotation.yaw, RotationUtils.serverRotation.yaw, event.partialTicks) else RotationUtils.serverRotation.yaw
 	}
 
 	private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module].state
@@ -68,6 +41,23 @@ class Rotations : Module()
 		return getState(Scaffold::class.java) || getState(Tower::class.java) || (getState(KillAura::class.java) && killAura.target != null) || getState(Derp::class.java) || getState(BowAimbot::class.java) || getState(Fucker::class.java) || getState(
 			CivBreak::class.java
 		) || getState(Nuker::class.java) || getState(ChestAura::class.java)
+	}
+
+	private fun interpolateRotation(prev: Float, current: Float, partialTicks: Float): Float
+	{
+		var delta = current - prev
+
+		while (delta < -180.0f)
+		{
+			delta += 360.0f
+		}
+
+		while (delta >= 180.0f)
+		{
+			delta -= 360.0f
+		}
+
+		return prev + delta * partialTicks
 	}
 
 	override val tag: String
