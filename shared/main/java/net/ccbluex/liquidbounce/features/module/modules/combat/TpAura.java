@@ -86,14 +86,21 @@ public class TpAura extends Module
 	}, "Packet");
 	private final BoolValue swingValue = new BoolValue("Swing", true);
 
+	// Attack Delay
 	private final MSTimer attackTimer = new MSTimer();
 	private long attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get());
+
+	// Paths
 	private final List<List<ImmutableVec3>> targetPaths = new ArrayList<>();
+
+	// Targets
 	public List<IEntityLivingBase> currentTargets = new CopyOnWriteArrayList<>();
 	public IEntityLivingBase currentTarget;
 	private List<ImmutableVec3> currentPath = new ArrayList<>();
-	public boolean clientsideBlockingStatus;
-	private boolean serversideBlockingStatus;
+
+	// Blocking Status
+	public boolean clientSideBlockingStatus;
+	private boolean serverSideBlockingStatus;
 
 	@Override
 	public final void onEnable()
@@ -105,7 +112,7 @@ public class TpAura extends Module
 	public final void onDisable()
 	{
 		currentTargets.clear();
-		clientsideBlockingStatus = false;
+		clientSideBlockingStatus = false;
 	}
 
 	@EventTarget
@@ -122,7 +129,7 @@ public class TpAura extends Module
 				targetPaths.clear();
 
 				if (canBlock() && (mc.getThePlayer().isBlocking() || !"Off".equalsIgnoreCase(autoBlockValue.get())))
-					clientsideBlockingStatus = true;
+					clientSideBlockingStatus = true;
 
 				for (int targetIndex = 0, targetCount = currentTargets.size() > maxTargetsValue.get() ? maxTargetsValue.get() : currentTargets.size(); targetIndex < targetCount; targetIndex++)
 				{
@@ -133,12 +140,14 @@ public class TpAura extends Module
 					currentPath = computePath(from, to);
 					targetPaths.add(currentPath); // Used for path esp
 
-					if (mc.getThePlayer().isBlocking() || "Packet".equalsIgnoreCase(autoBlockValue.get()) || serversideBlockingStatus)
+					// Unblock before attack
+					if (mc.getThePlayer().isBlocking() || "Packet".equalsIgnoreCase(autoBlockValue.get()) || serverSideBlockingStatus)
 					{
 						mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerDigging(WAction.RELEASE_USE_ITEM, WBlockPos.Companion.getORIGIN(), classProvider.getEnumFacing(EnumFacingType.DOWN)));
-						serversideBlockingStatus = false;
+						serverSideBlockingStatus = false;
 					}
 
+					// Travel to the target
 					for (final ImmutableVec3 path : currentPath)
 						mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(path.getX(), path.getY(), path.getZ(), true));
 
@@ -152,13 +161,14 @@ public class TpAura extends Module
 					// Attack target
 					mc.getNetHandler().addToSendQueue(classProvider.createCPacketUseEntity(currentTarget, ICPacketUseEntity.WAction.ATTACK));
 
-					if (canBlock() && !serversideBlockingStatus && (mc.getThePlayer().isBlocking() || "Packet".equalsIgnoreCase(autoBlockValue.get())))
+					// Block after attack
+					if (canBlock() && !serverSideBlockingStatus && (mc.getThePlayer().isBlocking() || "Packet".equalsIgnoreCase(autoBlockValue.get())))
 					{
-						// Auto-Block
 						mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(mc.getThePlayer().getInventory().getCurrentItemInHand()));
-						serversideBlockingStatus = true;
+						serverSideBlockingStatus = true;
 					}
 
+					// Travel back to the original position
 					Collections.reverse(currentPath);
 					for (final ImmutableVec3 path : currentPath)
 						mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(path.getX(), path.getY(), path.getZ(), true));
@@ -168,7 +178,7 @@ public class TpAura extends Module
 				attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get());
 			}
 			else
-				clientsideBlockingStatus = false;
+				clientSideBlockingStatus = false;
 	}
 
 	@EventTarget
@@ -176,17 +186,16 @@ public class TpAura extends Module
 	{
 		if (!currentPath.isEmpty() && pathEspValue.get())
 		{
-			for (int i = 0; i < targetPaths.size(); i++)
+			for (final List<ImmutableVec3> targetPath : targetPaths)
 				try
 				{
-					if (targetPaths != null)
-						for (final ImmutableVec3 pos : targetPaths.get(i))
-							if (pos != null)
-								drawPath(pos);
+					for (final ImmutableVec3 pos : targetPath)
+						if (pos != null)
+							drawPath(pos);
 				}
 				catch (final Exception e)
 				{
-					// it seems sometime there is unknown interupption on these codes.
+					// it seems sometime there is unknown interruption on these codes.
 				}
 
 			if (attackTimer.hasTimePassed(pathEspTime.get()))

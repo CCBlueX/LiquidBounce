@@ -227,7 +227,7 @@ public abstract class MixinItemRenderer
 			if (itemToRender.getItem() instanceof ItemMap)
 				renderItemMap(abstractclientplayer, smoothPitchRotation, equipProgress, swingProgress);
 			else // Swing
-			if (abstractclientplayer.getItemInUseCount() > 0 || itemToRender.getItem() instanceof ItemSword && (killAura.getClientSideBlockingStatus() || tpaura.clientsideBlockingStatus))
+			if (abstractclientplayer.getItemInUseCount() > 0 || itemToRender.getItem() instanceof ItemSword && (killAura.getClientSideBlockingStatus() || tpaura.clientSideBlockingStatus))
 			{
 				final EnumAction enumaction = killAura.getClientSideBlockingStatus()/* || tpaura.blockingRenderStatus */ ? EnumAction.BLOCK : itemToRender.getItemUseAction();
 
@@ -250,7 +250,6 @@ public abstract class MixinItemRenderer
 
 							final float sq = getAnimationProgress(swingProgress, true, false);
 							final float sqrt = getAnimationProgress(swingProgress, false, false);
-							// float sqrtsqrt = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * (float) (float) Math.PI);
 							final float equipProgressAffectness = sa.getEquipProgressAnimationAffectness().get() / 100.0F;
 							final float equipProgressAffect = sa.getEquipProgressAffectsAnimation().get() ? 1 - equipProgressAffectness + interpolatedEquipProgress * equipProgressAffectness : 1;
 
