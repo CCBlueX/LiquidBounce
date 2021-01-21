@@ -20,6 +20,11 @@ public final class MSTimer
 		return MS + time - System.currentTimeMillis();
 	}
 
+	public long getTime()
+	{
+		return System.currentTimeMillis() - time;
+	}
+
 	public void reset()
 	{
 		time = System.currentTimeMillis();

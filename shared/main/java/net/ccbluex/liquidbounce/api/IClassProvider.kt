@@ -168,6 +168,7 @@ interface IClassProvider
 	fun isCPacketCustomPayload(obj: Any?): Boolean
 	fun isCPacketHandshake(obj: Any?): Boolean
 	fun isCPacketPlayerDigging(obj: Any?): Boolean
+	fun isCPacketConfirmTransaction(obj: Any?): Boolean
 
 	fun isItemSword(obj: Any?): Boolean
 	fun isItemTool(obj: Any?): Boolean
