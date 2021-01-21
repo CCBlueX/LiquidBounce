@@ -127,7 +127,7 @@ class InventoryCleaner : Module()
 	private val foodValue = BoolValue("Food", true)
 
 	// Visuals
-	private val indicate = BoolValue("ClickIndicationh", false)
+	private val indicateClick = BoolValue("ClickIndicationh", false)
 	private val indicateLength = IntegerValue("ClickIndicationLength", 100, 50, 200)
 
 	/**
@@ -145,7 +145,7 @@ class InventoryCleaner : Module()
 		if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0) return
 
 		// Clean hotbar
-		while (hotbarValue.get() && !classProvider.isGuiInventory(mc.currentScreen) && (thePlayer.openContainer == null || thePlayer.openContainer!!.windowId == 0) && InventoryUtils.CLICK_TIMER.hasTimePassed(delay))
+		while (hotbarValue.get() && !classProvider.isGuiInventory(mc.currentScreen) && InventoryUtils.CLICK_TIMER.hasTimePassed(delay))
 		{
 			val hotbarItems = items(36, 45)
 			val garbageItemsHotbarSlots = hotbarItems.filter { !isUseful(it.value, it.key) }.keys.toMutableList()
@@ -173,7 +173,7 @@ class InventoryCleaner : Module()
 			val action = if (amount > 1 || (amount == 1 && Math.random() > 0.8)) ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS else ICPacketPlayerDigging.WAction.DROP_ITEM
 			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(action, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
 
-			if (indicate.get() && classProvider.isGuiContainer(mc.currentScreen)) mc.currentScreen!!.asGuiContainer().highlight(garbageHotbarItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
+			if (indicateClick.get() && classProvider.isGuiContainer(mc.currentScreen)) mc.currentScreen!!.asGuiContainer().highlight(garbageHotbarItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
 
 			// Back to the original holding slot
 			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
@@ -235,7 +235,7 @@ class InventoryCleaner : Module()
 			if (amount > 1 || /* Click mistake simulation */ (amount == -1 && Random.nextBoolean())) mc.playerController.windowClick(thePlayer.openContainer!!.windowId, garbageItem, 1, 4, thePlayer)
 			else mc.playerController.windowClick(thePlayer.openContainer!!.windowId, garbageItem, 0, 4, thePlayer)
 
-			if (indicate.get() && classProvider.isGuiContainer(mc.currentScreen)) mc.currentScreen!!.asGuiContainer().highlight(garbageItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
+			if (indicateClick.get() && classProvider.isGuiContainer(mc.currentScreen)) mc.currentScreen!!.asGuiContainer().highlight(garbageItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
 
 			timer.reset() // For more compatibility with custom MSTimer(s)
 

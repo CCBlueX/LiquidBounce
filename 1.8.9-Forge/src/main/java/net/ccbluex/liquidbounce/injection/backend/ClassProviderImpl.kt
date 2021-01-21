@@ -392,39 +392,35 @@ object ClassProviderImpl : IClassProvider
 
 	override fun getPotionEnum(type: PotionType): IPotion
 	{
-		return PotionImpl(
-			when (type)
-			{
-				PotionType.HEAL -> Potion.heal
-				PotionType.REGENERATION -> Potion.regeneration
-				PotionType.BLINDNESS -> Potion.blindness
-				PotionType.MOVE_SPEED -> Potion.moveSpeed
-				PotionType.HUNGER -> Potion.hunger
-				PotionType.DIG_SLOWDOWN -> Potion.digSlowdown
-				PotionType.CONFUSION -> Potion.confusion
-				PotionType.WEAKNESS -> Potion.weakness
-				PotionType.MOVE_SLOWDOWN -> Potion.moveSlowdown
-				PotionType.HARM -> Potion.harm
-				PotionType.WITHER -> Potion.wither
-				PotionType.POISON -> Potion.poison
-				PotionType.NIGHT_VISION -> Potion.nightVision
-			}
-		)
+		return PotionImpl(when (type)
+		{
+			PotionType.HEAL -> Potion.heal
+			PotionType.REGENERATION -> Potion.regeneration
+			PotionType.BLINDNESS -> Potion.blindness
+			PotionType.MOVE_SPEED -> Potion.moveSpeed
+			PotionType.HUNGER -> Potion.hunger
+			PotionType.DIG_SLOWDOWN -> Potion.digSlowdown
+			PotionType.CONFUSION -> Potion.confusion
+			PotionType.WEAKNESS -> Potion.weakness
+			PotionType.MOVE_SLOWDOWN -> Potion.moveSlowdown
+			PotionType.HARM -> Potion.harm
+			PotionType.WITHER -> Potion.wither
+			PotionType.POISON -> Potion.poison
+			PotionType.NIGHT_VISION -> Potion.nightVision
+		})
 	}
 
 	override fun getEnumFacing(type: EnumFacingType): IEnumFacing
 	{
-		return EnumFacingImpl(
-			when (type)
-			{
-				EnumFacingType.DOWN -> EnumFacing.DOWN
-				EnumFacingType.UP -> EnumFacing.UP
-				EnumFacingType.NORTH -> EnumFacing.NORTH
-				EnumFacingType.SOUTH -> EnumFacing.SOUTH
-				EnumFacingType.WEST -> EnumFacing.WEST
-				EnumFacingType.EAST -> EnumFacing.EAST
-			}
-		)
+		return EnumFacingImpl(when (type)
+		{
+			EnumFacingType.DOWN -> EnumFacing.DOWN
+			EnumFacingType.UP -> EnumFacing.UP
+			EnumFacingType.NORTH -> EnumFacing.NORTH
+			EnumFacingType.SOUTH -> EnumFacing.SOUTH
+			EnumFacingType.WEST -> EnumFacing.WEST
+			EnumFacingType.EAST -> EnumFacing.EAST
+		})
 	}
 
 	override fun getBlockEnum(type: BlockType): IBlock
@@ -504,75 +500,65 @@ object ClassProviderImpl : IClassProvider
 
 	override fun getMaterialEnum(type: MaterialType): IMaterial
 	{
-		return MaterialImpl(
-			when (type)
-			{
-				MaterialType.AIR -> Material.air
-				MaterialType.WATER -> Material.water
-				MaterialType.LAVA -> Material.lava
-			}
-		)
+		return MaterialImpl(when (type)
+		{
+			MaterialType.AIR -> Material.air
+			MaterialType.WATER -> Material.water
+			MaterialType.LAVA -> Material.lava
+		})
 	}
 
 	override fun getStatEnum(type: StatType): IStatBase
 	{
-		return StatBaseImpl(
-			when (type)
-			{
-				StatType.JUMP_STAT -> StatList.jumpStat
-			}
-		)
+		return StatBaseImpl(when (type)
+		{
+			StatType.JUMP_STAT -> StatList.jumpStat
+		})
 	}
 
 	override fun getItemEnum(type: ItemType): IItem
 	{
-		return ItemImpl(
-			when (type)
-			{
-				ItemType.MUSHROOM_STEW -> Items.mushroom_stew
-				ItemType.BOWL -> Items.bowl
-				ItemType.FLINT_AND_STEEL -> Items.flint_and_steel
-				ItemType.LAVA_BUCKET -> Items.lava_bucket
-				ItemType.WRITABLE_BOOK -> Items.writable_book
-				ItemType.WATER_BUCKET -> Items.water_bucket
-				ItemType.COMMAND_BLOCK_MINECART -> Items.command_block_minecart
-				ItemType.POTION_ITEM -> Items.potionitem
-				ItemType.SKULL -> Items.skull
-				ItemType.ARMOR_STAND -> Items.armor_stand
-			}
-		)
+		return ItemImpl(when (type)
+		{
+			ItemType.MUSHROOM_STEW -> Items.mushroom_stew
+			ItemType.BOWL -> Items.bowl
+			ItemType.FLINT_AND_STEEL -> Items.flint_and_steel
+			ItemType.LAVA_BUCKET -> Items.lava_bucket
+			ItemType.WRITABLE_BOOK -> Items.writable_book
+			ItemType.WATER_BUCKET -> Items.water_bucket
+			ItemType.COMMAND_BLOCK_MINECART -> Items.command_block_minecart
+			ItemType.POTION_ITEM -> Items.potionitem
+			ItemType.SKULL -> Items.skull
+			ItemType.ARMOR_STAND -> Items.armor_stand
+		})
 	}
 
 	override fun getEnchantmentEnum(type: EnchantmentType): IEnchantment
 	{
-		return EnchantmentImpl(
-			when (type)
-			{
-				EnchantmentType.SHARPNESS -> Enchantment.sharpness
-				EnchantmentType.POWER -> Enchantment.power
-				EnchantmentType.PROTECTION -> Enchantment.protection
-				EnchantmentType.FEATHER_FALLING -> Enchantment.featherFalling
-				EnchantmentType.PROJECTILE_PROTECTION -> Enchantment.projectileProtection
-				EnchantmentType.THORNS -> Enchantment.thorns
-				EnchantmentType.FIRE_PROTECTION -> Enchantment.fireProtection
-				EnchantmentType.RESPIRATION -> Enchantment.respiration
-				EnchantmentType.AQUA_AFFINITY -> Enchantment.aquaAffinity
-				EnchantmentType.BLAST_PROTECTION -> Enchantment.blastProtection
-				EnchantmentType.UNBREAKING -> Enchantment.unbreaking
-			}
-		)
+		return EnchantmentImpl(when (type)
+		{
+			EnchantmentType.SHARPNESS -> Enchantment.sharpness
+			EnchantmentType.POWER -> Enchantment.power
+			EnchantmentType.PROTECTION -> Enchantment.protection
+			EnchantmentType.FEATHER_FALLING -> Enchantment.featherFalling
+			EnchantmentType.PROJECTILE_PROTECTION -> Enchantment.projectileProtection
+			EnchantmentType.THORNS -> Enchantment.thorns
+			EnchantmentType.FIRE_PROTECTION -> Enchantment.fireProtection
+			EnchantmentType.RESPIRATION -> Enchantment.respiration
+			EnchantmentType.AQUA_AFFINITY -> Enchantment.aquaAffinity
+			EnchantmentType.BLAST_PROTECTION -> Enchantment.blastProtection
+			EnchantmentType.UNBREAKING -> Enchantment.unbreaking
+		})
 	}
 
 	override fun getVertexFormatEnum(type: WDefaultVertexFormats): IVertexFormat
 	{
-		return VertexFormatImpl(
-			when (type)
-			{
-				WDefaultVertexFormats.POSITION -> DefaultVertexFormats.POSITION
-				WDefaultVertexFormats.POSITION_TEX -> DefaultVertexFormats.POSITION_TEX
-				WDefaultVertexFormats.POSITION_COLOR -> DefaultVertexFormats.POSITION_COLOR
-			}
-		)
+		return VertexFormatImpl(when (type)
+		{
+			WDefaultVertexFormats.POSITION -> DefaultVertexFormats.POSITION
+			WDefaultVertexFormats.POSITION_TEX -> DefaultVertexFormats.POSITION_TEX
+			WDefaultVertexFormats.POSITION_COLOR -> DefaultVertexFormats.POSITION_COLOR
+		})
 	}
 
 	override fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer = FontRendererImpl(FontRendererWrapper(fontRenderer))

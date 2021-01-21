@@ -260,7 +260,7 @@ class ChestStealer : Module()
 	private fun move(screen: IGuiChest, slot: ISlot, misclick: Boolean)
 	{
 		screen.handleMouseClick(slot, slot.slotNumber, 0, 1)
-		screen.asGuiContainer().highlight(slot.slotNumber, indicateLength.get().toLong(), if (misclick) -2130771968 /* 0x80FF0000 */ else -2147418368 /* 0x8000FF00 */)
+		if (indicateClick.get()) screen.asGuiContainer().highlight(slot.slotNumber, indicateLength.get().toLong(), if (misclick) -2130771968 /* 0x80FF0000 */ else -2147418368 /* 0x8000FF00 */)
 		delayTimer.reset()
 		nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 	}
