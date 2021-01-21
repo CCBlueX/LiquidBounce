@@ -13,6 +13,13 @@ import net.minecraft.util.EnumFacing
 
 class EnumFacingImpl(val wrapped: EnumFacing) : IEnumFacing
 {
+	override val opposite: IEnumFacing
+		get() = wrapped.opposite.wrap()
+	override val directionVec: WVec3i
+		get() = wrapped.directionVec.wrap()
+	override val axisOrdinal: Int
+		get() = wrapped.axis.ordinal
+
 	override fun isNorth(): Boolean = wrapped == EnumFacing.NORTH
 
 	override fun isSouth(): Boolean = wrapped == EnumFacing.SOUTH
@@ -22,13 +29,6 @@ class EnumFacingImpl(val wrapped: EnumFacing) : IEnumFacing
 	override fun isWest(): Boolean = wrapped == EnumFacing.WEST
 
 	override fun isUp(): Boolean = wrapped == EnumFacing.UP
-
-	override val opposite: IEnumFacing
-		get() = wrapped.opposite.wrap()
-	override val directionVec: WVec3i
-		get() = wrapped.directionVec.wrap()
-	override val axisOrdinal: Int
-		get() = wrapped.axis.ordinal
 
 	override fun equals(other: Any?): Boolean = other is EnumFacingImpl && other.wrapped == wrapped
 }

@@ -29,4 +29,5 @@ interface IPacket
 	fun asCPacketHeldItemChange(): ICPacketHeldItemChange
 	fun asCPacketCustomPayload(): ICPacketCustomPayload
 	fun asCPacketHandshake(): ICPacketHandshake
+	fun asCPacketPlayerDigging(): ICPacketPlayerDigging
 }

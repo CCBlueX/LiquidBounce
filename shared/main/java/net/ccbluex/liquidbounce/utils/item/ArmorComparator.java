@@ -26,14 +26,22 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 			classProvider.getEnchantmentEnum(EnchantmentType.FIRE_PROTECTION),
 			classProvider.getEnchantmentEnum(EnchantmentType.BLAST_PROTECTION)
 	};
+
 	private static final float[] ENCHANTMENT_FACTORS =
 	{
-			1.5f, 0.4f, 0.39f, 0.38f
+			1.5f, // PROTECTION
+			0.4f, // PROJECTILE_PROTECTION
+			0.39f, // FIRE_PROTECTION
+			0.38f // BLAST_PROTECTION
 	};
 	private static final float[] ENCHANTMENT_DAMAGE_REDUCTION_FACTOR =
 	{
-			0.04f, 0.08f, 0.15f, 0.08f
+			0.04f, // PROTECTION
+			0.08f, // PROJECTILE_PROTECTION
+			0.15f, // FIRE_PROTECTION
+			0.08f // BLAST_PROTECTION
 	};
+
 	private static final IEnchantment[] OTHER_ENCHANTMENTS =
 	{
 			classProvider.getEnchantmentEnum(EnchantmentType.FEATHER_FALLING),
@@ -44,7 +52,11 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 	};
 	private static final float[] OTHER_ENCHANTMENT_FACTORS =
 	{
-			3.0f, 1.0f, 0.1f, 0.05f, 0.01f
+			3.0f, //FEATHER_FALLING
+			1.0f, //THORNS
+			0.1f, //RESPIRATION
+			0.05f, //AQUA_AFFINITY
+			0.01f //UNBREAKING
 	};
 
 	/**
@@ -59,10 +71,9 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 	public static double round(final double value, final int places)
 	{
 		if (places < 0)
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("places");
 
-		BigDecimal bd = BigDecimal.valueOf(value);
-		bd = bd.setScale(places, RoundingMode.HALF_UP);
+		final BigDecimal bd = BigDecimal.valueOf(value).setScale(places, RoundingMode.HALF_UP);
 		return bd.doubleValue();
 	}
 

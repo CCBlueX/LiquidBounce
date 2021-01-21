@@ -295,6 +295,7 @@ object ClassProviderImpl : IClassProvider
 	override fun isCPacketCustomPayload(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C17PacketCustomPayload
 
 	override fun isCPacketHandshake(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C00Handshake
+	override fun isCPacketPlayerDigging(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C07PacketPlayerDigging
 
 	override fun isItemSword(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSword
 

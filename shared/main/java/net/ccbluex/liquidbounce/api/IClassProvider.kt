@@ -149,6 +149,7 @@ interface IClassProvider
 	fun isSPacketCloseWindow(obj: Any?): Boolean
 	fun isSPacketTabComplete(obj: Any?): Boolean
 	fun isSPacketChat(obj: Any?): Boolean
+	fun isSPacketWindowItems(obj: Any?): Boolean
 	fun isSPacketCustomPayload(obj: Any?): Boolean
 
 	fun isCPacketPlayer(obj: Any?): Boolean
@@ -162,11 +163,11 @@ interface IClassProvider
 	fun isCPacketClientStatus(obj: Any?): Boolean
 	fun isCPacketAnimation(obj: Any?): Boolean
 	fun isCPacketEntityAction(obj: Any?): Boolean
-	fun isSPacketWindowItems(obj: Any?): Boolean
 	fun isCPacketHeldItemChange(obj: Any?): Boolean
 	fun isCPacketPlayerLook(obj: Any?): Boolean
 	fun isCPacketCustomPayload(obj: Any?): Boolean
 	fun isCPacketHandshake(obj: Any?): Boolean
+	fun isCPacketPlayerDigging(obj: Any?): Boolean
 
 	fun isItemSword(obj: Any?): Boolean
 	fun isItemTool(obj: Any?): Boolean

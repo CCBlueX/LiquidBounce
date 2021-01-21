@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
-import net.ccbluex.liquidbounce.api.util.WrappedMutableList
 import net.minecraft.entity.player.EnumPlayerModelParts
 import net.minecraft.event.ClickEvent
 import net.minecraft.network.play.client.*
@@ -220,5 +219,18 @@ inline fun ICPacketEntityAction.WAction.unwrap(): C0BPacketEntityAction.Action
 		ICPacketEntityAction.WAction.START_SPRINTING -> C0BPacketEntityAction.Action.START_SPRINTING
 		ICPacketEntityAction.WAction.STOP_SPRINTING -> C0BPacketEntityAction.Action.STOP_SPRINTING
 		ICPacketEntityAction.WAction.OPEN_INVENTORY -> C0BPacketEntityAction.Action.OPEN_INVENTORY
+	}
+}
+
+inline fun C07PacketPlayerDigging.Action.wrap(): ICPacketPlayerDigging.WAction
+{
+	return when (this)
+	{
+		C07PacketPlayerDigging.Action.START_DESTROY_BLOCK -> ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK
+		C07PacketPlayerDigging.Action.ABORT_DESTROY_BLOCK -> ICPacketPlayerDigging.WAction.ABORT_DESTROY_BLOCK
+		C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK -> ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK
+		C07PacketPlayerDigging.Action.DROP_ALL_ITEMS -> ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS
+		C07PacketPlayerDigging.Action.DROP_ITEM -> ICPacketPlayerDigging.WAction.DROP_ITEM
+		C07PacketPlayerDigging.Action.RELEASE_USE_ITEM -> ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM
 	}
 }

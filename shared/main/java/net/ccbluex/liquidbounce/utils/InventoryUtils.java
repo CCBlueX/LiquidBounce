@@ -9,12 +9,15 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 import net.ccbluex.liquidbounce.api.enums.BlockType;
+import net.ccbluex.liquidbounce.api.enums.EnumFacingType;
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemBlock;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack;
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket;
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging;
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging.WAction;
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB;
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos;
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld;
@@ -23,10 +26,6 @@ import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.Listenable;
 import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
-import net.minecraft.block.Block;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
 
 public final class InventoryUtils extends MinecraftInstance implements Listenable
 {
@@ -137,7 +136,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 		return -1;
 	}
 
-	public static boolean canAutoBlock(IBlock block)
+	public static boolean canAutoBlock(final IBlock block)
 	{
 		return !AUTOBLOCK_BLACKLIST.contains(block) && !classProvider.isBlockBush(block) && !classProvider.isBlockRailBase(block) && !classProvider.isBlockSign(block) && !classProvider.isBlockDoor(block);
 	}
@@ -152,6 +151,13 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 	public void onPacket(final PacketEvent event)
 	{
 		final IPacket packet = event.getPacket();
+
+		if (classProvider.isCPacketPlayerDigging(packet))
+		{
+			final ICPacketPlayerDigging digging = packet.asCPacketPlayerDigging();
+			if ((digging.getStatus() == WAction.DROP_ITEM || digging.getStatus() == WAction.DROP_ALL_ITEMS) && WBlockPos.Companion.getORIGIN().equals(digging.getPosition()) && classProvider.getEnumFacing(EnumFacingType.DOWN).equals(digging.getFacing()))
+				CLICK_TIMER.reset(); // Drop (all) item(s) in hotbar with Q (Ctrl+Q)
+		}
 
 		if (classProvider.isCPacketPlayerBlockPlacement(packet))
 			CLICK_TIMER.reset();

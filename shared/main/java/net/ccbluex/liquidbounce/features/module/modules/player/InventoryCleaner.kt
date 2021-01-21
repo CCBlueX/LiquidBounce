@@ -8,24 +8,27 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnchantmentType
+import net.ccbluex.liquidbounce.api.enums.EnumFacingType
+import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
+import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
-import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
+import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import kotlin.random.Random
 
 @ModuleInfo(name = "InventoryCleaner", description = "Automatically throws away useless items.", category = ModuleCategory.PLAYER)
 class InventoryCleaner : Module()
@@ -53,16 +56,46 @@ class InventoryCleaner : Module()
 		}
 	}
 
+	private val maxHotbarDelayValue: IntegerValue = object : IntegerValue("MaxHotbarDelay", 250, 1, 1000)
+	{
+		override fun onChanged(prevValue: Int, newValue: Int)
+		{
+			val minDelay = minHotbarDelayValue.get()
+			if (minDelay <= 0) this.set(1) // Hotbar delay < 1 will make infinity loop
+			if (minDelay > newValue) this.set(minDelay)
+		}
+	}
+
+	private val minHotbarDelayValue: IntegerValue = object : IntegerValue("MinHotbarDelay", 200, 1, 1000)
+	{
+		override fun onChanged(prevValue: Int, newValue: Int)
+		{
+			val maxDelay = maxHotbarDelayValue.get()
+			if (maxDelay <= 0) this.set(1) // Hotbar delay < 1 will make infinity loop
+			if (maxDelay < newValue) this.set(maxDelay)
+		}
+	}
+
+	// Bypass
 	private val invOpenValue = BoolValue("InvOpen", false)
 	private val simulateInventory = BoolValue("SimulateInventory", true)
 	private val noMoveValue = BoolValue("NoMove", false)
 	private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
+
+	// Hotbar
 	val hotbarValue = BoolValue("Hotbar", true)
+
+	// Bypass
 	private val randomSlotValue = BoolValue("RandomSlot", false)
-	private val sortValue = BoolValue("Sort", true)
 	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
+	private val allowMisclicksValue = BoolValue("ClickMistakes", false)
+	private val misclicksRateValue = IntegerValue("ClickMistakeRate", 5, 0, 100)
+
+	// Sort
 	private val items = arrayOf("None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water", "Gapple", "Pearl")
+
+	private val sortValue = BoolValue("Sort", true)
 	private val sortSlot1Value = ListValue("SortSlot-1", items, "Sword")
 	private val sortSlot2Value = ListValue("SortSlot-2", items, "Bow")
 	private val sortSlot3Value = ListValue("SortSlot-3", items, "Pickaxe")
@@ -72,6 +105,30 @@ class InventoryCleaner : Module()
 	private val sortSlot7Value = ListValue("SortSlot-7", items, "Food")
 	private val sortSlot8Value = ListValue("SortSlot-8", items, "Block")
 	private val sortSlot9Value = ListValue("SortSlot-9", items, "Block")
+
+	// Item Filter Options
+	private val keepOldSwordValue = BoolValue("KeepOldSword", false)
+	private val keepOldToolsValue = BoolValue("KeepOldTools", false)
+
+	private val bowValue = BoolValue("Bow", true)
+	private val arrowValue = BoolValue("Arrow", true)
+	private val waterBucketValue = BoolValue("WaterBucket", true)
+	private val lavaBucketValue = BoolValue("LavaBucket", false)
+	private val compassValue = BoolValue("Compass", true)
+	private val enderPearlValue = BoolValue("EnderPearl", true)
+	private val bedValue = BoolValue("Bed", true)
+	private val ironIngotValue = BoolValue("IronIngot", true)
+	private val goldIngotValue = BoolValue("GoldIngot", true)
+	private val diamondValue = BoolValue("Diamond", true)
+	private val emeraldValue = BoolValue("Emerald", true)
+	private val flintValue = BoolValue("Flint", true)
+	private val vehiclesValue = BoolValue("Vehicles", true)
+	private val potionValue = BoolValue("Potion", true)
+	private val foodValue = BoolValue("Food", true)
+
+	// Visuals
+	private val indicate = BoolValue("ClickIndicationh", false)
+	private val indicateLength = IntegerValue("ClickIndicationLength", 100, 50, 200)
 
 	/**
 	 * VALUES
@@ -84,30 +141,111 @@ class InventoryCleaner : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || !classProvider.isGuiInventory(mc.currentScreen) && invOpenValue.get() || noMoveValue.get() && MovementUtils.isMoving || thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0 || (LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) return
+		// Delay, openContainer Check
+		if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0) return
 
+		// Clean hotbar
+		while (hotbarValue.get() && !classProvider.isGuiInventory(mc.currentScreen) && (thePlayer.openContainer == null || thePlayer.openContainer!!.windowId == 0) && InventoryUtils.CLICK_TIMER.hasTimePassed(delay))
+		{
+			val hotbarItems = items(36, 45)
+			val garbageItemsHotbarSlots = hotbarItems.filter { !isUseful(it.value, it.key) }.keys.toMutableList()
+
+			// Break if there is no garbage items in hotbar
+			if (garbageItemsHotbarSlots.isEmpty()) break
+
+			var garbageHotbarItem = if (randomSlotValue.get()) garbageItemsHotbarSlots[Random.nextInt(garbageItemsHotbarSlots.size)] else garbageItemsHotbarSlots.first()
+
+			var misclick = false
+
+			// Simulate Click Mistakes to bypass some anti-cheats
+			if (allowMisclicksValue.get() && misclicksRateValue.get() > 0 && Random.nextInt(100) <= misclicksRateValue.get())
+			{
+				val firstEmpty: Int = firstEmpty(hotbarItems, randomSlotValue.get())
+				if (firstEmpty != -1) garbageHotbarItem = firstEmpty
+				misclick = true
+			}
+
+			// Switch to the slot of garbage item
+			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(garbageHotbarItem - 36))
+
+			// Drop items
+			val amount = getAmount(garbageHotbarItem)
+			val action = if (amount > 1 || (amount == 1 && Math.random() > 0.8)) ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS else ICPacketPlayerDigging.WAction.DROP_ITEM
+			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(action, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+
+			if (indicate.get() && classProvider.isGuiContainer(mc.currentScreen)) mc.currentScreen!!.asGuiContainer().highlight(garbageHotbarItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
+
+			// Back to the original holding slot
+			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+
+			delay = TimeUtils.randomDelay(minHotbarDelayValue.get(), maxHotbarDelayValue.get())
+		}
+
+		// NoMove, AutoArmorLock Check
+		if (noMoveValue.get() && MovementUtils.isMoving || (LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) return
+
+		// Sort hotbar
 		if (sortValue.get()) sortHotbar()
 
-		while (InventoryUtils.CLICK_TIMER.hasTimePassed(delay))
+		// Clean inventory
+		if (classProvider.isGuiInventory(mc.currentScreen) || !invOpenValue.get()) cleanInventory(end = if (hotbarValue.get()) 45 else 36)
+	}
+
+	fun cleanInventory(
+		start: Int = 9,
+		end: Int = 45,
+		timer: MSTimer = InventoryUtils.CLICK_TIMER,
+		container: IContainer = mc.thePlayer!!.inventoryContainer,
+		delayResetFunc: Runnable = Runnable { delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get()) }
+	): Boolean
+	{
+		val thePlayer = mc.thePlayer ?: return true
+
+		var invItems = items(start, end, container)
+		var garbageItems = invItems.filter { !isUseful(it.value, it.key) }.keys.toMutableList()
+
+		if (garbageItems.isEmpty()) return true
+
+		while (timer.hasTimePassed(delay))
 		{
-			val garbageItems = items(9, if (hotbarValue.get()) 45 else 36).filter { !isUseful(it.value, it.key) }.keys.toMutableList()
+			invItems = items(start, end, container)
+			garbageItems = invItems.filter { !isUseful(it.value, it.key) }.keys.toMutableList()
 
-			// Shuffle items
-			if (randomSlotValue.get()) garbageItems.shuffle()
+			// Return true if there is no remaining garbage items in the inventory
+			if (garbageItems.isEmpty()) return true
 
-			val garbageItem = garbageItems.firstOrNull() ?: break
+			var garbageItem = if (randomSlotValue.get()) garbageItems[Random.nextInt(garbageItems.size)] else garbageItems.first()
 
-			// Drop all useless items
+			var misclick = false
+
+			// Simulate Click Mistakes to bypass some anti-cheats
+			if (allowMisclicksValue.get() && misclicksRateValue.get() > 0 && Random.nextInt(100) <= misclicksRateValue.get())
+			{
+				val firstEmpty: Int = firstEmpty(invItems, randomSlotValue.get())
+				if (firstEmpty != -1) garbageItem = firstEmpty
+				misclick = true
+			}
+
+			// SimulateInventory
 			val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
-
 			if (openInventory) mc.netHandler.addToSendQueue(createOpenInventoryPacket())
 
-			mc.playerController.windowClick(thePlayer.openContainer!!.windowId, garbageItem, 1, 4, thePlayer)
+			// Drop all useless items
+			val amount = getAmount(garbageItem, container)
+			if (amount > 1 || /* Click mistake simulation */ (amount == -1 && Random.nextBoolean())) mc.playerController.windowClick(thePlayer.openContainer!!.windowId, garbageItem, 1, 4, thePlayer)
+			else mc.playerController.windowClick(thePlayer.openContainer!!.windowId, garbageItem, 0, 4, thePlayer)
 
+			if (indicate.get() && classProvider.isGuiContainer(mc.currentScreen)) mc.currentScreen!!.asGuiContainer().highlight(garbageItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
+
+			timer.reset() // For more compatibility with custom MSTimer(s)
+
+			// SimulateInventory
 			if (openInventory) mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
 
-			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+			delayResetFunc.run()
 		}
+
+		return false
 	}
 
 	/**
@@ -142,9 +280,8 @@ class InventoryCleaner : Module()
 				val damage = (itemStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 
 				items(0, 45).none { (_, stack) ->
-					stack != itemStack && stack.javaClass == itemStack.javaClass && damage < (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(
-						stack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS)
-					)
+					stack != itemStack && stack.javaClass == itemStack.javaClass && damage < (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(stack,
+						classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 				}
 			} else if (classProvider.isItemBow(item))
 			{
@@ -170,10 +307,8 @@ class InventoryCleaner : Module()
 			{
 				items(0, 45).none { (_, stack) -> itemStack != stack && stack.unlocalizedName == "item.compass" }
 			} else classProvider.isItemFood(item) || itemStack.unlocalizedName == "item.arrow" || classProvider.isItemBlock(item) && !classProvider.isBlockBush(item?.asItemBlock()?.block) || classProvider.isItemBed(item) || itemStack.unlocalizedName == "item.diamond" || itemStack.unlocalizedName == "item.ingotIron" || classProvider.isItemPotion(
-				item
-			) || classProvider.isItemEnderPearl(item) || classProvider.isItemEnchantedBook(item) || classProvider.isItemBucket(item) || itemStack.unlocalizedName == "item.stick" || ignoreVehiclesValue.get() && (classProvider.isItemBoat(item) || classProvider.isItemMinecart(
-				item
-			))
+				item) || classProvider.isItemEnderPearl(item) || classProvider.isItemEnchantedBook(item) || classProvider.isItemBucket(item) || itemStack.unlocalizedName == "item.stick" || ignoreVehiclesValue.get() && (classProvider.isItemBoat(item) || classProvider.isItemMinecart(
+				item))
 		} catch (ex: Exception)
 		{
 			ClientUtils.getLogger().error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
@@ -203,9 +338,7 @@ class InventoryCleaner : Module()
 
 				if (openInventory) mc.netHandler.addToSendQueue(createOpenInventoryPacket())
 
-				mc.playerController.windowClick(
-					0, if (bestItem < 9) bestItem + 36 else bestItem, index, 2, thePlayer
-				)
+				mc.playerController.windowClick(0, if (bestItem < 9) bestItem + 36 else bestItem, index, 2, thePlayer)
 
 				if (openInventory) mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
 
@@ -377,13 +510,13 @@ class InventoryCleaner : Module()
 	/**
 	 * Get items in inventory
 	 */
-	private fun items(start: Int = 0, end: Int = 45): Map<Int, IItemStack>
+	private fun items(start: Int = 0, end: Int = 45, container: IContainer = mc.thePlayer!!.inventoryContainer): Map<Int, IItemStack>
 	{
 		val items = mutableMapOf<Int, IItemStack>()
 
 		for (i in end - 1 downTo start)
 		{
-			val itemStack = mc.thePlayer?.inventoryContainer?.getSlot(i)?.stack ?: continue
+			val itemStack = container.getSlot(i).stack ?: continue
 
 			if (ItemUtils.isStackEmpty(itemStack)) continue
 
@@ -393,6 +526,28 @@ class InventoryCleaner : Module()
 		}
 
 		return items
+	}
+
+	private fun firstEmpty(slots: Map<Int, IItemStack?>?, random: Boolean): Int
+	{
+		slots ?: return -1
+
+		val emptySlots = mutableListOf<Int>()
+
+		slots.forEach { map: Map.Entry<Int, IItemStack?> ->
+			if (map.value == null) emptySlots.add(map.key)
+		}
+
+		if (emptySlots.isEmpty()) return -1
+
+		return if (random) emptySlots[Random.nextInt(emptySlots.size)] else emptySlots.first()
+	}
+
+	private fun getAmount(slot: Int, container: IContainer = mc.thePlayer!!.inventoryContainer): Int
+	{
+		val itemStack = container.inventorySlots[slot].stack ?: return -1
+		itemStack.item ?: return -1
+		return itemStack.stackSize
 	}
 
 	/**
