@@ -145,6 +145,8 @@ interface IClassProvider
 	fun isSPacketChat(obj: Any?): Boolean
 	fun isSPacketWindowItems(obj: Any?): Boolean
 	fun isSPacketCustomPayload(obj: Any?): Boolean
+	fun isSPacketSpawnPlayer(obj: Any?): Boolean
+	fun isSPacketEntityTeleport(obj: Any?): Boolean
 
 	fun isCPacketPlayer(obj: Any?): Boolean
 	fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean

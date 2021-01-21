@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
+import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 
 interface IEntityLivingBase : IEntity
 {
@@ -29,6 +30,7 @@ interface IEntityLivingBase : IEntity
 	val moveForward: Float
 	var health: Float
 	var rotationYawHead: Float
+	var customNameTag: String
 
 	fun canEntityBeSeen(it: IEntity): Boolean
 	fun isPotionActive(potion: IPotion): Boolean

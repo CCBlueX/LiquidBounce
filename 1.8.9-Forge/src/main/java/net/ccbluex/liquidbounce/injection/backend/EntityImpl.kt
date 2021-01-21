@@ -7,10 +7,7 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.block.material.IMaterial
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityTNTPrimed
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.*
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
@@ -213,6 +210,8 @@ open class EntityImpl<T : Entity>(val wrapped: T) : IEntity
 	override fun setPosition(x: Double, y: Double, z: Double) = wrapped.setPosition(x, y, z)
 
 	override fun getDistanceSq(blockPos: WBlockPos): Double = wrapped.getDistanceSq(blockPos.unwrap())
+
+	override fun getDistanceSq(x: Double, y: Double, z: Double): Double = wrapped.getDistanceSq(x, y, z)
 
 	override fun setPositionAndUpdate(posX: Double, posY: Double, posZ: Double) = wrapped.setPositionAndUpdate(posX, posY, posZ)
 

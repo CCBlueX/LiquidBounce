@@ -37,6 +37,10 @@ open class PacketImpl<T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun asSPacketCustomPayload(): ISPacketCustomPayload = SPacketCustomPayloadImpl(wrapped as S3FPacketCustomPayload)
 
+	override fun asSPacketSpawnPlayer(): ISPacketPlayerSpawn = SPacketPlayerSpawnImpl(wrapped as S0CPacketSpawnPlayer)
+
+	override fun asSPacketEntityTeleport(): ISPacketEntityTeleport = SPacketEntityTeleportImpl(wrapped as S18PacketEntityTeleport)
+
 	override fun asCPacketChatMessage(): ICPacketChatMessage = CPacketChatMessageImpl(wrapped as C01PacketChatMessage)
 
 	override fun asCPacketHeldItemChange(): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(wrapped as C09PacketHeldItemChange)

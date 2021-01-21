@@ -74,6 +74,13 @@ open class EntityLivingBaseImpl<T : EntityLivingBase>(wrapped: T) : EntityImpl<T
 			wrapped.rotationYawHead = value
 		}
 
+	override var customNameTag: String
+		get() = wrapped.customNameTag
+		set(value)
+		{
+			wrapped.customNameTag = value
+		}
+
 	override fun canEntityBeSeen(it: IEntity): Boolean = wrapped.canEntityBeSeen(it.unwrap())
 
 	override fun isPotionActive(potion: IPotion): Boolean = wrapped.isPotionActive(potion.unwrap())

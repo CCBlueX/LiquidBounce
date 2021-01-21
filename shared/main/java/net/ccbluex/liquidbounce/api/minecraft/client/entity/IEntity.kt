@@ -98,6 +98,7 @@ interface IEntity
 	fun setPosition(x: Double, y: Double, z: Double)
 
 	fun getDistanceSq(blockPos: WBlockPos): Double
+	fun getDistanceSq(x: Double, y: Double, z: Double): Double
 	fun setPositionAndUpdate(posX: Double, posY: Double, posZ: Double)
 	fun rayTrace(range: Double, partialTicks: Float): IMovingObjectPosition?
 	fun getLook(partialTicks: Float): WVec3
