@@ -34,16 +34,12 @@ class SpeedGraph(
 	private val colorGreenValue = IntegerValue("G", 111, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
 
-	private val graphSpeedValue = FloatValue("GraphSpeed", 1.0F, 0.5F, 2.0F)
-
 	private val speedList = ArrayList<Double>()
 	private var lastTick = -1
 
 	override fun drawElement(): Border
 	{
 		val width = width.get()
-		val graphSpeed = graphSpeedValue.get()
-
 		if (lastTick != mc.thePlayer!!.ticksExisted)
 		{
 
@@ -58,9 +54,11 @@ class SpeedGraph(
 			if (speed < 0) speed = -speed
 
 			speedList.add(speed)
-			while (speedList.size > width) speedList.removeAt(0)
+			while (speedList.size > width)
+			{
+				speedList.removeAt(0)
+			}
 		}
-
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 		GL11.glEnable(GL11.GL_BLEND)
 		GL11.glEnable(GL11.GL_LINE_SMOOTH)
@@ -81,7 +79,7 @@ class SpeedGraph(
 
 			RenderUtils.glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
 			GL11.glVertex2d(i.toDouble() - start, height.get() + 1 - y.coerceAtMost(height.get().toDouble()))
-			GL11.glVertex2d(i + graphSpeed.toDouble() - start, height.get() + 1 - y1.coerceAtMost(height.get().toDouble()))
+			GL11.glVertex2d(i + 1.0 - start, height.get() + 1 - y1.coerceAtMost(height.get().toDouble()))
 		}
 
 		GL11.glEnd()
