@@ -6,12 +6,11 @@
 
 package net.ccbluex.liquidbounce.injection.backend
 
-import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScore
-import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreObjective
-import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
-import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
+import net.ccbluex.liquidbounce.api.minecraft.scoreboard.*
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
+import net.ccbluex.liquidbounce.api.util.WrappedMap
 import net.minecraft.scoreboard.Score
+import net.minecraft.scoreboard.ScoreObjective
 import net.minecraft.scoreboard.Scoreboard
 
 class ScoreboardImpl(val wrapped: Scoreboard) : IScoreboard
@@ -21,6 +20,8 @@ class ScoreboardImpl(val wrapped: Scoreboard) : IScoreboard
 	override fun getObjectiveInDisplaySlot(index: Int): IScoreObjective? = wrapped.getObjectiveInDisplaySlot(index)?.wrap()
 
 	override fun getSortedScores(objective: IScoreObjective): Collection<IScore> = WrappedCollection(wrapped.getSortedScores(objective.unwrap()), IScore::unwrap, Score::wrap)
+
+	override fun getObjectivesForEntity(entityName: String): Map<IScoreObjective, IScore> = WrappedMap(wrapped.getObjectivesForEntity(entityName), ScoreObjective::wrap, IScoreObjective::unwrap, Score::wrap, IScore::unwrap)
 
 	override fun equals(other: Any?): Boolean = other is ScoreboardImpl && other.wrapped == wrapped
 }

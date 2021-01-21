@@ -50,7 +50,7 @@ public class ClickGUI extends Module
 
 	public static Color generateColor()
 	{
-		return colorRainbow.get() ? ColorUtils.rainbow() : new Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get());
+		return colorRainbow.get() ? ColorUtils.rainbow(10, 1.0F, 1.0F) : new Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get());
 	}
 
 	@Override

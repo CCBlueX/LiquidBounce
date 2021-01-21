@@ -98,7 +98,7 @@ class Notifications(
 
 }
 
-class Notification(private val header: String, private val message: String, private val rectColor: Color?, private val stayTime: Long = 0L)
+class Notification(private val header: String, private val message: String, private val rectColor: Color? = null, private val stayTime: Long = 0L)
 {
 	var x = 0F
 	var textLength = 0

@@ -156,7 +156,7 @@ class Text(
 			"mcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.MIDDLE).toString()
 			"rcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.RIGHT).toString()
 			"timer" -> return mc.timer.timerSpeed.toString()
-			"lastPacket" -> return mc.netHandler.networkManager.lastPacket.toString()
+			"lastpacket" -> return mc.netHandler.networkManager.lastPacket.toString()
 			else -> null // Null = don't replace
 		}
 	}
