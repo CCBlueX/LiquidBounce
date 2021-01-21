@@ -11,7 +11,10 @@ import javax.crypto.SecretKey
 
 interface INetworkManager
 {
+	val lastPacket: Long
+
 	fun sendPacket(packet: IPacket)
 	fun enableEncryption(secretKey: SecretKey)
 	fun sendPacket(packet: IPacket, any: () -> Unit)
+	fun sendPacketWithoutEvent(packet: IPacket)
 }

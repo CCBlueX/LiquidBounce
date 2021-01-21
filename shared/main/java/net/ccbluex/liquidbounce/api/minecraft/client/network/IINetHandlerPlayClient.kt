@@ -17,5 +17,4 @@ interface IINetHandlerPlayClient
 
 	fun getPlayerInfo(uuid: UUID): INetworkPlayerInfo?
 	fun addToSendQueue(classProviderCPacketHeldItemChange: IPacket)
-
 }
