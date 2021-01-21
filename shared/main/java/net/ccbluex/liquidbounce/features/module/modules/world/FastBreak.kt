@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.value.FloatValue
 @ModuleInfo(name = "FastBreak", description = "Allows you to break blocks faster.", category = ModuleCategory.WORLD)
 class FastBreak : Module()
 {
-
 	private val breakDamage = FloatValue("BreakDamage", 0.8F, 0.1F, 1F)
 
 	@EventTarget
@@ -29,4 +28,7 @@ class FastBreak : Module()
 
 		if (Nuker.currentDamage > breakDamage.get()) Nuker.currentDamage = 1F
 	}
+
+	override val tag: String?
+		get() = "${breakDamage.get()}"
 }

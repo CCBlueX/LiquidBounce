@@ -22,16 +22,16 @@ import java.awt.Color
 @ModuleInfo(name = "CivBreak", description = "Allows you to break blocks instantly.", category = ModuleCategory.WORLD)
 class CivBreak : Module()
 {
+	private val range = FloatValue("Range", 5F, 1F, 6F)
+
+	private val rotationsValue = BoolValue("Rotations", true)
+	private val visualSwingValue = BoolValue("VisualSwing", true)
+	private val airResetValue = BoolValue("Air-Reset", true)
+
+	private val rangeResetValue = BoolValue("Range-Reset", true)
 
 	private var blockPos: WBlockPos? = null
 	private var enumFacing: IEnumFacing? = null
-
-	private val range = FloatValue("Range", 5F, 1F, 6F)
-	private val rotationsValue = BoolValue("Rotations", true)
-	private val visualSwingValue = BoolValue("VisualSwing", true)
-
-	private val airResetValue = BoolValue("Air-Reset", true)
-	private val rangeResetValue = BoolValue("Range-Reset", true)
 
 	@EventTarget
 	fun onBlockClick(event: ClickBlockEvent)
@@ -89,4 +89,7 @@ class CivBreak : Module()
 	{
 		RenderUtils.drawBlockBox(blockPos ?: return, Color.RED, true)
 	}
+
+	override val tag: String?
+		get() = "${range.get()}"
 }

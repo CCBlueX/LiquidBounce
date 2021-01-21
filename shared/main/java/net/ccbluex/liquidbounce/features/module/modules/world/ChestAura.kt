@@ -22,10 +22,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.extensions.getVec
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.BlockValue
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.*
 
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
 object ChestAura : Module()
@@ -48,8 +45,8 @@ object ChestAura : Module()
 	{
 		if (LiquidBounce.moduleManager[Blink::class.java].state || (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).hasTarget) return
 
-		val thePlayer = mc.thePlayer!!
-		val theWorld = mc.theWorld!!
+		val thePlayer = mc.thePlayer ?: return
+		val theWorld = mc.theWorld ?: return
 
 		when (event.eventState)
 		{
@@ -99,8 +96,8 @@ object ChestAura : Module()
 		}
 	}
 
-	override fun onDisable()
-	{
-		clickedBlocks.clear()
-	}
+	override fun onDisable() = clickedBlocks.clear()
+
+	override val tag: String?
+		get() = "${rangeValue.get()}"
 }

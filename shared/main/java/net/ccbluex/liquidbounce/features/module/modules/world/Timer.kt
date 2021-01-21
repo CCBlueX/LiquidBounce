@@ -48,4 +48,7 @@ class Timer : Module()
 
 		state = false
 	}
+
+	override val tag: String
+		get() = "${speedValue.get()}"
 }

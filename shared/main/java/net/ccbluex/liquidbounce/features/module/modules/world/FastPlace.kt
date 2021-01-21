@@ -14,4 +14,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 class FastPlace : Module()
 {
 	val speedValue = IntegerValue("Speed", 0, 0, 4)
+
+	override val tag: String
+		get() = "${speedValue.get()}"
 }
