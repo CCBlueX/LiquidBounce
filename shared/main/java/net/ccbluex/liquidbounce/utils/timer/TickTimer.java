@@ -20,6 +20,11 @@ public final class TickTimer
 		tick = 0;
 	}
 
+	public int getTick()
+	{
+		return tick;
+	}
+
 	public boolean hasTimePassed(final int ticks)
 	{
 		return tick >= ticks;
