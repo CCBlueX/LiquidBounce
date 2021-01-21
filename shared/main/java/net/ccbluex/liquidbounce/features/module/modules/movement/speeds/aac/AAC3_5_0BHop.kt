@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AACHop350 : SpeedMode("AACHop3.5.0"), Listenable
+class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop"), Listenable
 {
 	override fun onMotion()
 	{

@@ -17,6 +17,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spartan.
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreBHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreOnGround
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.vanilla.Vanilla
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.vanilla.VanillaHop
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -26,13 +28,40 @@ import java.util.*
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
 class Speed : Module()
 {
-	private val speedModes = arrayOf( // NCP
-		NCPBHop(), NCPFHop(), SNCPBHop(), NCPHop(), YPort(), YPort2(), NCPYPort(), Boost(), Frame(), MiJump(), OnGround(),  // AAC
-		AACBHop(), AAC2BHop(), AAC3BHop(), AAC4BHop(), AAC5BHop(), AAC6BHop(), AAC7BHop(), AACHop3313(), AACHop350(), AACLowHop(), AACLowHop2(), AACLowHop3(), AACGround(), AACGround2(), AACYPort(), AACYPort2(), AACPort(), OldAACBHop(),  // Spartan
-		SpartanYPort(),  // Spectre
-		SpectreLowHop(), SpectreBHop(), SpectreOnGround(), TeleportCubeCraft(),  // Server
-		HiveHop(), HypixelHop(), Mineplex(), MineplexGround(),  // Other
-		Matrix(), SlowHop(), CustomSpeed()
+	private val speedModes = arrayOf(
+
+		// Vanilla
+		Vanilla(), VanillaHop(),
+
+		// NCP
+		OldNCPBHop(), NCPFHop(), NCPTimerBHop(), NCPBHop(), YPort(), YPort2(), NCPYPort(), Boost(), Frame(), MiJump(), OnGround(),
+
+		// AAC BHop
+		AAC1_9_10BHop(), AAC3_0_3BHop(), AAC3_0_5BHop(), AAC3_2_1BHop(), AAC4BHop(), AAC3_3_9BHop(), AAC6BHop(), AAC7BHop(), AAC3_3_13BHop(), AAC3_5_0BHop(),
+
+		// AAC LowHop
+		AAC3_1_5LowHop(), AAC3_1_5FastLowHop(), AAC3_5_0LowHop(),
+
+		// AAC Ground
+		AAC3_3_11Ground(), AAC3_3_11Ground2(),
+
+		// AAC Port, YPort
+		AACPort(), AAC3_1_0YPort(), AAC3_1_7YPort(),
+
+		// Spartan
+		SpartanYPort(),
+
+		// Other AntiCheats
+		ACP(), ACPBHop(), ACRBHop(), PACBHop(), DaedalusAACBHop(), MatrixBHop(),
+
+		// Spectre
+		SpectreLowHop(), SpectreBHop(), SpectreOnGround(), TeleportCubeCraft(),
+
+		// Server
+		HiveHop(), HypixelBHop(), Mineplex(), MineplexGround(), MineplexBHop(),
+
+		// Other
+		SlowHop(), CustomSpeed()
 	)
 
 	val modeValue: ListValue = object : ListValue("Mode", modes, "NCPBHop")
@@ -47,15 +76,28 @@ class Speed : Module()
 			if (state) onEnable()
 		}
 	}
+
+	// Vanilla Speed
+	val vanillaSpeedValue = FloatValue("VanillaSpeed", 0.5f, 0.2f, 10.0f)
+
+	// Custom Speed
 	val customSpeedValue = FloatValue("CustomSpeed", 1.6f, 0.2f, 2f)
 	val customYValue = FloatValue("CustomY", 0f, 0f, 4f)
 	val customTimerValue = FloatValue("CustomTimer", 1f, 0.1f, 2f)
 	val customStrafeValue = BoolValue("CustomStrafe", true)
 	val resetXZValue = BoolValue("CustomResetXZ", false)
 	val resetYValue = BoolValue("CustomResetY", false)
+
+	// AAC Port length
 	val portMax = FloatValue("AAC-PortLength", 1f, 1f, 20f)
+
+	// AAC Ground timer
 	val aacGroundTimerValue = FloatValue("AACGround-Timer", 3f, 1.1f, 10f)
+
+	// Cubecraft Port length
 	val cubecraftPortLengthValue = FloatValue("CubeCraft-PortLength", 1f, 0.1f, 2f)
+
+	// Mineplex Ground speed
 	val mineplexGroundSpeedValue = FloatValue("MineplexGround-Speed", 0.5f, 0.1f, 1f)
 
 	@EventTarget
@@ -134,8 +176,7 @@ class Speed : Module()
 	private val modes: Array<String>
 		get()
 		{
-			val list: MutableList<String> = ArrayList()
-			for (speedMode in speedModes) list.add(speedMode.modeName)
+			val list: MutableList<String> = speedModes.mapTo(ArrayList()) { it.modeName }
 			return list.toTypedArray()
 		}
 }

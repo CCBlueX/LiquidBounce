@@ -19,7 +19,7 @@ class NCPFHop : SpeedMode("NCPFHop")
 
 	override fun onDisable()
 	{
-		mc.thePlayer!!.speedInAir = 0.02f
+		(mc.thePlayer ?: return).speedInAir = 0.02f
 		mc.timer.timerSpeed = 1f
 		super.onDisable()
 	}
@@ -30,21 +30,23 @@ class NCPFHop : SpeedMode("NCPFHop")
 
 	override fun onUpdate()
 	{
+		val thePlayer = mc.thePlayer ?: return
+
 		if (MovementUtils.isMoving)
 		{
-			if (mc.thePlayer!!.onGround)
+			if (thePlayer.onGround)
 			{
-				mc.thePlayer!!.jump()
-				mc.thePlayer!!.motionX *= 1.01
-				mc.thePlayer!!.motionZ *= 1.01
-				mc.thePlayer!!.speedInAir = 0.0223f
+				thePlayer.jump()
+				thePlayer.motionX *= 1.01
+				thePlayer.motionZ *= 1.01
+				thePlayer.speedInAir = 0.0223f
 			}
-			mc.thePlayer!!.motionY -= 0.00099999
+			thePlayer.motionY -= 0.00099999
 			MovementUtils.strafe()
 		} else
 		{
-			mc.thePlayer!!.motionX = 0.0
-			mc.thePlayer!!.motionZ = 0.0
+			thePlayer.motionX = 0.0
+			thePlayer.motionZ = 0.0
 		}
 	}
 

@@ -17,30 +17,32 @@ class Frame : SpeedMode("Frame")
 	private val tickTimer = TickTimer()
 	override fun onMotion()
 	{
-		if (mc.thePlayer!!.movementInput.moveForward > 0.0f || mc.thePlayer!!.movementInput.moveStrafe > 0.0f)
+		val thePlayer = mc.thePlayer ?: return
+
+		if (thePlayer.movementInput.moveForward > 0.0f || thePlayer.movementInput.moveStrafe > 0.0f)
 		{
 			val speed = 4.25
-			if (mc.thePlayer!!.onGround)
+			if (thePlayer.onGround)
 			{
-				mc.thePlayer!!.jump()
+				thePlayer.jump()
 				if (motionTicks == 1)
 				{
 					tickTimer.reset()
 					if (move)
 					{
-						mc.thePlayer!!.motionX = 0.0
-						mc.thePlayer!!.motionZ = 0.0
+						thePlayer.motionX = 0.0
+						thePlayer.motionZ = 0.0
 						move = false
 					}
 					motionTicks = 0
 				} else motionTicks = 1
 			} else if (!move && motionTicks == 1 && tickTimer.hasTimePassed(5))
 			{
-				mc.thePlayer!!.motionX *= speed
-				mc.thePlayer!!.motionZ *= speed
+				thePlayer.motionX *= speed
+				thePlayer.motionZ *= speed
 				move = true
 			}
-			if (!mc.thePlayer!!.onGround) MovementUtils.strafe()
+			if (!thePlayer.onGround) MovementUtils.strafe()
 			tickTimer.update()
 		}
 	}

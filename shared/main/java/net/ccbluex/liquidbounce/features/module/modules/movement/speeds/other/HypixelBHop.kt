@@ -10,25 +10,27 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class HypixelHop : SpeedMode("HypixelHop")
+class HypixelBHop : SpeedMode("HypixelHop")
 {
 	override fun onMotion()
 	{
+		val thePlayer = mc.thePlayer ?: return
+		
 		if (MovementUtils.isMoving)
 		{
-			if (mc.thePlayer!!.onGround)
+			if (thePlayer.onGround)
 			{
-				mc.thePlayer!!.jump()
+				thePlayer.jump()
 				var speed = if (MovementUtils.speed < 0.56f) MovementUtils.speed * 1.045f else 0.56f
-				if (mc.thePlayer!!.onGround && mc.thePlayer!!.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) speed *= 1f + 0.13f * (1 + mc.thePlayer!!.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier)
+				if (thePlayer.onGround && thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) speed *= 1f + 0.13f * (1 + thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier)
 				MovementUtils.strafe(speed)
 				return
-			} else if (mc.thePlayer!!.motionY < 0.2) mc.thePlayer!!.motionY -= 0.02
+			} else if (thePlayer.motionY < 0.2) thePlayer.motionY -= 0.02
 			MovementUtils.strafe(MovementUtils.speed * 1.01889f)
 		} else
 		{
-			mc.thePlayer!!.motionZ = 0.0
-			mc.thePlayer!!.motionX = mc.thePlayer!!.motionZ
+			thePlayer.motionZ = 0.0
+			thePlayer.motionX = thePlayer.motionZ
 		}
 	}
 

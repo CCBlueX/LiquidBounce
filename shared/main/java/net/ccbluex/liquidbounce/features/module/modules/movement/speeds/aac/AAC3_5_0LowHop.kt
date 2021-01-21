@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import kotlin.math.cos
 import kotlin.math.sin
 
-class AACLowHop3 : SpeedMode("AACLowHop3")
+class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop")
 {
 	private var firstJump = false
 	private var waitForGround = false

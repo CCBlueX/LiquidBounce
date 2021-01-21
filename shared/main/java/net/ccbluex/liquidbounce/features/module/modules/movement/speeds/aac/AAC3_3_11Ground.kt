@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AACGround : SpeedMode("AACGround")
+class AAC3_3_11Ground : SpeedMode("AAC3.3.11-Ground")
 {
 	override fun onUpdate()
 	{

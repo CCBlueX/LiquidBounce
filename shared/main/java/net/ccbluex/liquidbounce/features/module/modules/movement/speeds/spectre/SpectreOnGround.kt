@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import kotlin.math.cos
 import kotlin.math.sin
 
-class SpectreOnGround : SpeedMode("SpectreOnGround")
+class SpectreOnGround : SpeedMode("Spectre-OnGround")
 {
 	private var speedUp = 0
 	override fun onMotion()
@@ -24,25 +24,27 @@ class SpectreOnGround : SpeedMode("SpectreOnGround")
 
 	override fun onMove(event: MoveEvent)
 	{
-		if (!MovementUtils.isMoving || mc.thePlayer!!.movementInput.jump) return
+		val thePlayer = mc.thePlayer ?: return
+		
+		if (!MovementUtils.isMoving || thePlayer.movementInput.jump) return
 		if (speedUp >= 10)
 		{
-			if (mc.thePlayer!!.onGround)
+			if (thePlayer.onGround)
 			{
-				mc.thePlayer!!.motionX = 0.0
-				mc.thePlayer!!.motionZ = 0.0
+				thePlayer.motionX = 0.0
+				thePlayer.motionZ = 0.0
 				speedUp = 0
 			}
 			return
 		}
-		if (mc.thePlayer!!.onGround && mc.gameSettings.keyBindForward.isKeyDown)
+		if (thePlayer.onGround && mc.gameSettings.keyBindForward.isKeyDown)
 		{
-			val f = mc.thePlayer!!.rotationYaw * 0.017453292f
-			mc.thePlayer!!.motionX -= sin(f) * 0.145f
-			mc.thePlayer!!.motionZ += cos(f) * 0.145f
-			event.x = mc.thePlayer!!.motionX
+			val f = thePlayer.rotationYaw * 0.017453292f
+			thePlayer.motionX -= sin(f) * 0.145f
+			thePlayer.motionZ += cos(f) * 0.145f
+			event.x = thePlayer.motionX
 			event.y = 0.005
-			event.z = mc.thePlayer!!.motionZ
+			event.z = thePlayer.motionZ
 			speedUp++
 		}
 	}

@@ -13,8 +13,10 @@ class YPort2 : SpeedMode("YPort2")
 {
 	override fun onMotion()
 	{
-		if (mc.thePlayer!!.isOnLadder || mc.thePlayer!!.isInWater || mc.thePlayer!!.isInLava || mc.thePlayer!!.isInWeb || !MovementUtils.isMoving) return
-		if (mc.thePlayer!!.onGround) mc.thePlayer!!.jump() else mc.thePlayer!!.motionY = -1.0
+		val thePlayer = mc.thePlayer ?: return
+
+		if (thePlayer.isOnLadder || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb || !MovementUtils.isMoving) return
+		if (thePlayer.onGround) thePlayer.jump() else thePlayer.motionY = -1.0
 		MovementUtils.strafe()
 	}
 

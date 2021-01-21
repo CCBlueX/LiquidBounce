@@ -21,10 +21,7 @@ class Boost : SpeedMode("Boost")
 		var offset = 4.69
 		var shouldOffset = true
 
-		if (mc.theWorld!!.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(thePlayer.motionX / offset, 0.0, thePlayer.motionZ / offset)).isNotEmpty())
-		{
-			shouldOffset = false
-		}
+		if ((mc.theWorld ?: return).getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(thePlayer.motionX / offset, 0.0, thePlayer.motionZ / offset)).isNotEmpty()) shouldOffset = false
 
 		if (thePlayer.onGround && ground < 1.0f) ground += 0.2f
 		if (!thePlayer.onGround) ground = 0.0f

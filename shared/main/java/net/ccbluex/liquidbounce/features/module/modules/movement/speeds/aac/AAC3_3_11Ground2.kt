@@ -5,34 +5,32 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.MoveEvent
+import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AACYPort : SpeedMode("AACYPort")
+class AAC3_3_11Ground2 : SpeedMode("AAC3.3.11-Ground2")
 {
 	override fun onMotion()
 	{
-		val thePlayer = mc.thePlayer ?: return
-
-		if (MovementUtils.isMoving && !thePlayer.sneaking)
-		{
-			thePlayer.cameraPitch = 0f
-
-			if (thePlayer.onGround)
-			{
-				thePlayer.motionY = 0.3425
-				thePlayer.motionX *= 1.5893
-				thePlayer.motionZ *= 1.5893
-			} else thePlayer.motionY = -0.19
-		}
 	}
 
 	override fun onUpdate()
 	{
+		if (!MovementUtils.isMoving) return
+
+		mc.timer.timerSpeed = (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?)!!.aacGroundTimerValue.get()
+		MovementUtils.strafe(0.02f)
 	}
 
 	override fun onMove(event: MoveEvent)
 	{
+	}
+
+	override fun onDisable()
+	{
+		mc.timer.timerSpeed = 1f
 	}
 }

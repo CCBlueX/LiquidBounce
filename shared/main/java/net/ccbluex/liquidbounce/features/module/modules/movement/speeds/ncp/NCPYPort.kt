@@ -16,16 +16,18 @@ class NCPYPort : SpeedMode("NCPYPort")
 	private var jumps = 0
 	override fun onMotion()
 	{
-		if (mc.thePlayer!!.isOnLadder || mc.thePlayer!!.isInWater || mc.thePlayer!!.isInLava || mc.thePlayer!!.isInWeb || !MovementUtils.isMoving || mc.thePlayer!!.isInWater) return
-		if (jumps >= 4 && mc.thePlayer!!.onGround) jumps = 0
-		if (mc.thePlayer!!.onGround)
+		val thePlayer = mc.thePlayer ?: return
+
+		if (thePlayer.isOnLadder || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb || !MovementUtils.isMoving || thePlayer.isInWater) return
+		if (jumps >= 4 && thePlayer.onGround) jumps = 0
+		if (thePlayer.onGround)
 		{
-			mc.thePlayer!!.motionY = if (jumps <= 1) 0.42 else 0.4
-			val f = mc.thePlayer!!.rotationYaw * 0.017453292f
-			mc.thePlayer!!.motionX -= sin(f) * 0.2f
-			mc.thePlayer!!.motionZ += cos(f) * 0.2f
+			thePlayer.motionY = if (jumps <= 1) 0.42 else 0.4
+			val f = thePlayer.rotationYaw * 0.017453292f
+			thePlayer.motionX -= sin(f) * 0.2f
+			thePlayer.motionZ += cos(f) * 0.2f
 			jumps++
-		} else if (jumps <= 1) mc.thePlayer!!.motionY = -5.0
+		} else if (jumps <= 1) thePlayer.motionY = -5.0
 		MovementUtils.strafe()
 	}
 

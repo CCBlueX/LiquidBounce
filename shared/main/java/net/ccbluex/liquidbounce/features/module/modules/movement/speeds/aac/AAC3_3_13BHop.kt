@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import kotlin.math.cos
 import kotlin.math.sin
 
-class AACHop3313 : SpeedMode("AACHop3.3.13")
+class AAC3_3_13BHop : SpeedMode("AAC3.3.13-BHop")
 {
 	override fun onMotion()
 	{

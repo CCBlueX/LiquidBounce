@@ -13,14 +13,16 @@ class SlowHop : SpeedMode("SlowHop")
 {
 	override fun onMotion()
 	{
-		if (mc.thePlayer!!.isInWater) return
+		val thePlayer = mc.thePlayer ?: return
+		
+		if (thePlayer.isInWater) return
 		if (MovementUtils.isMoving)
 		{
-			if (mc.thePlayer!!.onGround) mc.thePlayer!!.jump() else MovementUtils.strafe(MovementUtils.speed * 1.011f)
+			if (thePlayer.onGround) thePlayer.jump() else MovementUtils.strafe(MovementUtils.speed * 1.011f)
 		} else
 		{
-			mc.thePlayer!!.motionX = 0.0
-			mc.thePlayer!!.motionZ = 0.0
+			thePlayer.motionX = 0.0
+			thePlayer.motionZ = 0.0
 		}
 	}
 

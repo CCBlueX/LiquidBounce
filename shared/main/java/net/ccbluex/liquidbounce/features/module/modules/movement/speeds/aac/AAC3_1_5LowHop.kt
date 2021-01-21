@@ -3,46 +3,48 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
+package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class NCPHop : SpeedMode("NCPHop")
+class AAC3_1_5LowHop : SpeedMode("AAC3.1.5-LowHop")
 {
+	private var legitJump = false
 	override fun onEnable()
 	{
-		mc.timer.timerSpeed = 1.0865f
+		legitJump = true
 		super.onEnable()
-	}
-
-	override fun onDisable()
-	{
-		mc.thePlayer!!.speedInAir = 0.02f
-		mc.timer.timerSpeed = 1f
-		super.onDisable()
 	}
 
 	override fun onMotion()
 	{
+		val thePlayer = mc.thePlayer ?: return
+
+		if (MovementUtils.isMoving)
+		{
+			if (thePlayer.onGround)
+			{
+				if (legitJump)
+				{
+					thePlayer.jump()
+					legitJump = false
+					return
+				}
+				thePlayer.motionY = 0.343
+				MovementUtils.strafe(0.534f)
+			}
+		} else
+		{
+			legitJump = true
+			thePlayer.motionX = 0.0
+			thePlayer.motionZ = 0.0
+		}
 	}
 
 	override fun onUpdate()
 	{
-		if (MovementUtils.isMoving)
-		{
-			if (mc.thePlayer!!.onGround)
-			{
-				mc.thePlayer!!.jump()
-				mc.thePlayer!!.speedInAir = 0.0223f
-			}
-			MovementUtils.strafe()
-		} else
-		{
-			mc.thePlayer!!.motionX = 0.0
-			mc.thePlayer!!.motionZ = 0.0
-		}
 	}
 
 	override fun onMove(event: MoveEvent)

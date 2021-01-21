@@ -8,53 +8,40 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import kotlin.math.cos
+import kotlin.math.sin
 
-class AAC5BHop : SpeedMode("AAC5BHop")
+class AAC3_0_3BHop : SpeedMode("AAC3.0.3-BHop")
 {
-	private var legitJump = false
-	override fun onTick()
+	override fun onMotion()
 	{
 		val thePlayer = mc.thePlayer ?: return
-
-		mc.timer.timerSpeed = 1f
 
 		if (thePlayer.isInWater) return
 
 		if (MovementUtils.isMoving)
 		{
-			when
+			mc.timer.timerSpeed = 1.08f
+
+			if (thePlayer.onGround)
 			{
-				thePlayer.onGround ->
-				{
-					if (legitJump)
-					{
-						thePlayer.jump()
-						legitJump = false
-						return
-					}
-					thePlayer.motionY = 0.41
-					thePlayer.onGround = false
-					MovementUtils.strafe(0.374f)
-				}
-
-				thePlayer.motionY < 0.0 ->
-				{
-					thePlayer.speedInAir = 0.0201f
-					mc.timer.timerSpeed = 1.02f
-				}
-
-				else -> mc.timer.timerSpeed = 1.01f
+				thePlayer.motionY = 0.399
+				val f = thePlayer.rotationYaw * 0.017453292f
+				thePlayer.motionX -= sin(f) * 0.2f
+				thePlayer.motionZ += cos(f) * 0.2f
+				mc.timer.timerSpeed = 2f
+			} else
+			{
+				thePlayer.motionY *= 0.97
+				thePlayer.motionX *= 1.008
+				thePlayer.motionZ *= 1.008
 			}
 		} else
 		{
-			legitJump = true
 			thePlayer.motionX = 0.0
 			thePlayer.motionZ = 0.0
+			mc.timer.timerSpeed = 1f
 		}
-	}
-
-	override fun onMotion()
-	{
 	}
 
 	override fun onUpdate()
@@ -67,7 +54,6 @@ class AAC5BHop : SpeedMode("AAC5BHop")
 
 	override fun onDisable()
 	{
-		mc.thePlayer!!.speedInAir = 0.02f
 		mc.timer.timerSpeed = 1f
 	}
 }

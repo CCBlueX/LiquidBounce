@@ -13,19 +13,21 @@ class MiJump : SpeedMode("MiJump")
 {
 	override fun onMotion()
 	{
+		val thePlayer = mc.thePlayer ?: return
+
 		if (!MovementUtils.isMoving) return
-		if (mc.thePlayer!!.onGround && !mc.thePlayer!!.movementInput.jump)
+		if (thePlayer.onGround && !thePlayer.movementInput.jump)
 		{
-			mc.thePlayer!!.motionY += 0.1
+			thePlayer.motionY += 0.1
 			val multiplier = 1.8
-			mc.thePlayer!!.motionX *= multiplier
-			mc.thePlayer!!.motionZ *= multiplier
-			val currentSpeed = Math.sqrt(Math.pow(mc.thePlayer!!.motionX, 2.0) + Math.pow(mc.thePlayer!!.motionZ, 2.0))
+			thePlayer.motionX *= multiplier
+			thePlayer.motionZ *= multiplier
+			val currentSpeed = Math.sqrt(Math.pow(thePlayer.motionX, 2.0) + Math.pow(thePlayer.motionZ, 2.0))
 			val maxSpeed = 0.66
 			if (currentSpeed > maxSpeed)
 			{
-				mc.thePlayer!!.motionX = mc.thePlayer!!.motionX / currentSpeed * maxSpeed
-				mc.thePlayer!!.motionZ = mc.thePlayer!!.motionZ / currentSpeed * maxSpeed
+				thePlayer.motionX = thePlayer.motionX / currentSpeed * maxSpeed
+				thePlayer.motionZ = thePlayer.motionZ / currentSpeed * maxSpeed
 			}
 		}
 		MovementUtils.strafe()
