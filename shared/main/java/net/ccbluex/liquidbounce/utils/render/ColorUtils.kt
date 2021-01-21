@@ -6,8 +6,10 @@
 package net.ccbluex.liquidbounce.utils.render
 
 import java.awt.Color
+import java.text.NumberFormat
 import java.util.*
 import java.util.regex.Pattern
+import kotlin.math.pow
 
 object ColorUtils
 {
@@ -72,40 +74,92 @@ object ColorUtils
 			}
 		}
 
-		return stringBuilder.toString()
+		return "$stringBuilder"
 	}
 
 	@JvmStatic
-	fun rainbow(): Color
+	fun rainbow(speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color
 	{
-		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + 400000L) / 10000000000F % 1, 1F, 1F))
+		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + 400000L) / 10F.pow(speed) % 1, saturation, brightness))
 		return Color(currentColor.red / 255F * 1F, currentColor.green / 255f * 1F, currentColor.blue / 255F * 1F, currentColor.alpha / 255F)
 	}
 
-	// TODO: Use kotlin optional argument feature
-
 	@JvmStatic
-	fun rainbow(offset: Long): Color
+	fun rainbow(offset: Long, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color
 	{
-		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10000000000F % 1, 1F, 1F))
+		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(speed) % 1, saturation, brightness))
 		return Color(
 			currentColor.red / 255F * 1F, currentColor.green / 255F * 1F, currentColor.blue / 255F * 1F, currentColor.alpha / 255F
 		)
 	}
 
 	@JvmStatic
-	fun rainbow(alpha: Float) = rainbow(400000L, alpha)
+	fun rainbow(alpha: Float, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F) = rainbow(400000L, alpha, speed = speed, saturation = saturation, brightness = brightness)
 
 	@JvmStatic
-	fun rainbow(alpha: Int) = rainbow(400000L, alpha / 255)
+	fun rainbow(alpha: Int, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F) = rainbow(400000L, alpha / 255, speed = speed, saturation = saturation, brightness = brightness)
 
 	@JvmStatic
-	fun rainbow(offset: Long, alpha: Int) = rainbow(offset, alpha.toFloat() / 255)
+	fun rainbow(offset: Long, alpha: Int, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F) = rainbow(offset, alpha.toFloat() / 255, speed = speed, saturation = saturation, brightness = brightness)
 
 	@JvmStatic
-	fun rainbow(offset: Long, alpha: Float): Color
+	fun rainbow(offset: Long, alpha: Float, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color
 	{
-		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10000000000F % 1, 1F, 1F))
+		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(speed) % 1, saturation, brightness))
 		return Color(currentColor.red / 255F * 1F, currentColor.green / 255f * 1F, currentColor.blue / 255F * 1F, alpha)
 	}
+
+	@JvmStatic
+	fun blendColors(fractions: FloatArray, colors: Array<Color>, progress: Float): Color?
+	{
+		return if (fractions.size == colors.size)
+		{
+			val indices = getFractionIndices(fractions, progress)
+			if (indices[0] < 0 || indices[0] >= fractions.size || indices[1] < 0 || indices[1] >= fractions.size) return colors[0]
+			val range = floatArrayOf(fractions[indices[0]], fractions[indices[1]])
+			val colorRange = arrayOf(colors[indices[0]], colors[indices[1]])
+			blend(colorRange[0], colorRange[1], 1.0 - ((progress - range[0]) / (range[1] - range[0])))
+		} else throw IllegalArgumentException("Fractions and colours must have equal number of elements")
+	}
+
+	@JvmStatic
+	fun getFractionIndices(fractions: FloatArray, progress: Float): IntArray
+	{
+		val range = IntArray(2)
+		var startPoint = 0
+		while (startPoint < fractions.size && fractions[startPoint] <= progress) startPoint++
+		if (startPoint >= fractions.size) startPoint = fractions.size - 1
+		range[0] = startPoint - 1
+		range[1] = startPoint
+		return range
+	}
+
+	@JvmStatic
+	fun blend(color1: Color, color2: Color, ratio: Double): Color?
+	{
+		val r = ratio.toFloat()
+		val ir = 1.0.toFloat() - r
+		val rgb1 = FloatArray(3)
+		val rgb2 = FloatArray(3)
+		color1.getColorComponents(rgb1)
+		color2.getColorComponents(rgb2)
+		val red = (rgb1[0] * r + rgb2[0] * ir).coerceAtLeast(0F).coerceAtMost(1F)
+		val green = (rgb1[1] * r + rgb2[1] * ir).coerceAtLeast(0F).coerceAtMost(1F)
+		val blue = (rgb1[2] * r + rgb2[2] * ir).coerceAtLeast(0F).coerceAtMost(1F)
+
+		var color: Color? = null
+		try
+		{
+			color = Color(red, green, blue)
+		} catch (exp: IllegalArgumentException)
+		{
+			val nf = NumberFormat.getNumberInstance()
+			println(nf.format(red.toDouble()) + "; " + nf.format(green.toDouble()) + "; " + nf.format(blue.toDouble()))
+			exp.printStackTrace()
+		}
+		return color
+	}
+
+	@JvmStatic
+	fun getHealthColor(health: Float, maxHealth: Float): Color = blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), health / maxHealth)!!.brighter()
 }

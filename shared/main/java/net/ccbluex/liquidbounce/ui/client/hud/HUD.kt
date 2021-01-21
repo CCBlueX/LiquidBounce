@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Target
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import org.lwjgl.opengl.GL11
+import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
 
@@ -193,9 +194,10 @@ open class HUD : MinecraftInstance()
 	 */
 	fun addNotification(notification: Notification) = elements.any { it is Notifications } && notifications.add(notification)
 
-	/**
-	 * Remove [notification]
-	 */
-	fun removeNotification(notification: Notification) = notifications.remove(notification)
+	fun addNotification(header: String, text: String, rectColor: Color?, keepTime: Long) = addNotification(Notification(header, text, rectColor, keepTime))
 
+	// TODO: Convert it to kotlin optional argument when all class converted to kotlin
+	fun addNotification(header: String, message: String, stayTime: Long): Boolean = addNotification(header, message, null, stayTime)
+
+	fun clearNotifications() = notifications.clear()
 }

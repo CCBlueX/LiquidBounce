@@ -11,4 +11,5 @@ interface IScoreboard
 	fun getPlayersTeam(name: String?): ITeam?
 	fun getObjectiveInDisplaySlot(index: Int): IScoreObjective?
 	fun getSortedScores(objective: IScoreObjective): Collection<IScore>
+	fun getObjectivesForEntity(entityName: String): Map<IScoreObjective, IScore>
 }

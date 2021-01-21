@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Vertical
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
@@ -30,17 +31,15 @@ class Arraylist(
 	x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side = Side(Horizontal.RIGHT, Vertical.UP)
 ) : Element(x, y, scale, side)
 {
-	private val rainbowX = FloatValue("Rainbow-X", -1000F, -2000F, 2000F)
-	private val rainbowY = FloatValue("Rainbow-Y", -1000F, -2000F, 2000F)
 
-	private val colorModeValue = ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+	private val colorModeValue = ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow", "RainbowShader"), "Custom")
 	private val colorRedValue = IntegerValue("Text-R", 0, 0, 255)
 	private val colorGreenValue = IntegerValue("Text-G", 111, 0, 255)
 	private val colorBlueValue = IntegerValue("Text-B", 255, 0, 255)
 	private val shadow = BoolValue("ShadowText", true)
 
 	private val rectValue = ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
-	private val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow"), "Rainbow")
+	private val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow", "RainbowShader"), "Rainbow")
 	private val rectColorRedValue = IntegerValue("Rect-R", 255, 0, 255)
 	private val rectColorGreenValue = IntegerValue("Rect-G", 255, 0, 255)
 	private val rectColorBlueValue = IntegerValue("Rect-B", 255, 0, 255)
@@ -48,22 +47,26 @@ class Arraylist(
 
 	private val tags = BoolValue("Tags", true)
 	private val tagTypeValue = ListValue("TagType", arrayOf("Space-Only", "Square-Bracket", "Round-Bracket"), "Space-Only")
-	private val tagColorModeValue = ListValue("Tag-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+	private val tagColorModeValue = ListValue("Tag-Color", arrayOf("Custom", "Random", "Rainbow", "RainbowShader"), "Custom")
 	private val tagColorRedValue = IntegerValue("Tag-R", 0, 0, 255)
 	private val tagColorGreenValue = IntegerValue("Tag-G", 111, 0, 255)
 	private val tagColorBlueValue = IntegerValue("Tag-B", 255, 0, 255)
-	private val tagColorAlphaValue = IntegerValue("Tag-Alpha", 255, 0, 255)
 	private val tagSpaceValue = FloatValue("TagSpace", 2.5F, 1F, 5F)
 
-	private val backgroundColorModeValue = ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+	private val backgroundColorModeValue = ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow", "RainbowShader"), "Custom")
 	private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0, 255)
 	private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0, 255)
 	private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0, 255)
 	private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 0, 0, 255)
 	private val upperCaseValue = BoolValue("UpperCase", false)
 
-	private val saturationValue = FloatValue("Random-Saturation", 0.9f, 0f, 1f)
-	private val brightnessValue = FloatValue("Random-Brightness", 1f, 0f, 1f)
+	private val saturationValue = FloatValue("HSB-Saturation", 0.9f, 0f, 1f)
+	private val brightnessValue = FloatValue("HSB-Brightness", 1f, 0f, 1f)
+
+	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
+
+	private val rainbowShaderXValue = FloatValue("RainbowShader-X", -1000F, -2000F, 2000F)
+	private val rainbowShaderYValue = FloatValue("RainbowShader-Y", -1000F, -2000F, 2000F)
 
 	private val spaceValue = FloatValue("Space", 0F, 0F, 5F)
 	private val textHeightValue = FloatValue("TextHeight", 11F, 1F, 20F)
@@ -130,18 +133,24 @@ class Arraylist(
 		val rectColorMode = rectColorModeValue.get()
 		val backgroundColorMode = backgroundColorModeValue.get()
 		val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 1).rgb
-		val rectCustomColor = Color(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorBlueAlpha.get()).rgb
+		val rectColorAlpha = rectColorBlueAlpha.get()
+		val rectCustomColor = Color(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha).rgb
 		val space = spaceValue.get()
 		val textHeight = textHeightValue.get()
 		val textY = textYValue.get()
 		val rectMode = rectValue.get()
-		val backgroundCustomColor = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get()).rgb
+		val backgroundColorAlpha = backgroundColorAlphaValue.get()
+		val backgroundCustomColor = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha).rgb
 		val textShadow = shadow.get()
 		val textSpacer = textHeight + space
-		val customTagColor = Color(tagColorRedValue.get(), tagColorGreenValue.get(), tagColorBlueValue.get(), tagColorAlphaValue.get()).rgb
+		val customTagColor = Color(tagColorRedValue.get(), tagColorGreenValue.get(), tagColorBlueValue.get(), 1).rgb
 		val saturation = saturationValue.get()
 		val brightness = brightnessValue.get()
+		val rainbowSpeed = 11 - rainbowSpeedValue.get().coerceAtLeast(1).coerceAtMost(10)
 		val tagColorMode = tagColorModeValue.get()
+		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
+		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
+		val rainbowShaderOffset = System.currentTimeMillis() % 10000 / 10000F
 
 		when (side.horizontal)
 		{
@@ -167,15 +176,16 @@ class Arraylist(
 					val yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) * if (side.vertical == Vertical.DOWN) index + 1 else index
 					val moduleRandomColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
-					val backgroundRectRainbow = backgroundColorMode.equals("Rainbow", ignoreCase = true)
-
 					// Draw Background
-					RainbowShader.begin(backgroundRectRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+					val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
+
+					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, System.currentTimeMillis() % 10000 / 10000F).use {
 						val xPosCorrection = if (rectMode.equals("right", true)) 5 else 2
 						val x2Pos = if (rectMode.equals("right", true)) -3F else 0F
 						val color = when
 						{
-							backgroundRectRainbow -> -16777216
+							backgroundRainbowShader -> -16777216
+							backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 							backgroundColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 							else -> backgroundCustomColor
 						}
@@ -186,13 +196,14 @@ class Arraylist(
 					classProvider.getGlStateManager().resetColor()
 
 					// Draw Module Name
-					val rainbow = colorMode.equals("Rainbow", ignoreCase = true)
+					val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
 
-					RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+					RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 						val xPosCorrection = if (rectMode.equals("right", true)) 3 else 0
 						val color = when
 						{
-							rainbow -> 0
+							textRainbowShader -> 0
+							colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 							colorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 							else -> customColor
 						}
@@ -203,13 +214,14 @@ class Arraylist(
 					// Draw Tag
 					if (originalTagString.isNotEmpty())
 					{
-						val tagRainbow = tagColorMode.equals("Rainbow", ignoreCase = true)
+						val tagRainbowShader = tagColorMode.equals("RainbowShader", ignoreCase = true)
 
-						RainbowFontShader.begin(tagRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+						RainbowFontShader.begin(tagRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 							val xPosCorrection = fontRenderer.getStringWidth(displayString) + tagDistance - if (rectMode.equals("right", true)) 3 else 0
 							val color = when
 							{
-								tagRainbow -> Color(0, 0, 0, tagColorAlphaValue.get()).rgb
+								tagRainbowShader -> Color(0, 0, 0, 1).rgb
+								tagColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 								tagColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 								else -> customTagColor
 							}
@@ -221,12 +233,13 @@ class Arraylist(
 					// Draw Rect
 					if (!rectMode.equals("none", true))
 					{
-						val rectRainbow = rectColorMode.equals("Rainbow", ignoreCase = true)
+						val rectRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 
-						RainbowShader.begin(rectRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+						RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 							val rectColor = when
 							{
-								rectRainbow -> 0
+								rectRainbowShader -> 0
+								rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 								rectColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 								else -> rectCustomColor
 							}
@@ -265,13 +278,14 @@ class Arraylist(
 					val moduleRandomColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
 					// Draw Background
-					val backgroundRectRainbow = backgroundColorMode.equals("Rainbow", ignoreCase = true)
+					val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
 
-					RainbowShader.begin(backgroundRectRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 						val xPosCorrection = if (rectMode.equals("right", true)) 5 else 2
 						val color = when
 						{
-							backgroundRectRainbow -> 0
+							backgroundRainbowShader -> 0
+							backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 							backgroundColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 							else -> backgroundCustomColor
 						}
@@ -282,12 +296,13 @@ class Arraylist(
 					classProvider.getGlStateManager().resetColor()
 
 					// Draw Module Name
-					val rainbow = colorMode.equals("Rainbow", ignoreCase = true)
+					val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
 
-					RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+					RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 						val color = when
 						{
-							rainbow -> 0
+							textRainbowShader -> 0
+							colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 							colorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 							else -> customColor
 						}
@@ -298,12 +313,12 @@ class Arraylist(
 					// Draw Tag
 					if (originalTagString.isNotEmpty())
 					{
-						val tagRainbow = tagColorMode.equals("Rainbow", ignoreCase = true)
+						val tagRainbow = tagColorMode.equals("RainbowShader", ignoreCase = true)
 
-						RainbowFontShader.begin(tagRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+						RainbowFontShader.begin(tagRainbow, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 							val color = when
 							{
-								tagRainbow -> Color(0, 0, 0, tagColorAlphaValue.get()).rgb
+								tagRainbow -> Color(0, 0, 0, 1).rgb
 								tagColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 								else -> customTagColor
 							}
@@ -313,14 +328,15 @@ class Arraylist(
 					}
 
 					// Draw Rect
-					val rectColorRainbow = rectColorMode.equals("Rainbow", ignoreCase = true)
+					val rectColorRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 
-					RainbowShader.begin(rectColorRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+					RainbowShader.begin(rectColorRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 						if (!rectMode.equals("none", true))
 						{
 							val rectColor = when
 							{
-								rectColorRainbow -> 0
+								rectColorRainbowShader -> 0
+								rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 								rectColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 								else -> rectCustomColor
 							}

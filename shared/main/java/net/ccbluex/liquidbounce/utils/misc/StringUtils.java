@@ -51,4 +51,31 @@ public final class StringUtils
 
 		return stringBuilder.toString();
 	}
+
+	public static String getHorizontalFacing(final float yaw)
+	{
+		final String[] facings =
+		{
+				"S", "SE", "E", "NE", "N", "NW", "W", "SW"
+		};
+		return facings[(int) Math.abs(Math.floor(yaw * facings.length / 360 + 0.5)) & facings.length - 1];
+	}
+
+	public static String getHorizontalFacingAdv(final float yaw)
+	{
+		final String[] facings =
+		{
+				"S", "SSE", "SE", "SEE", "E", "NEE", "NE", "NNE", "N", "NNW", "NW", "NWW", "W", "SWW", "SW", "SSW"
+		};
+		return facings[(int) Math.abs(Math.floor(yaw * facings.length / 360 + 0.5)) & facings.length - 1];
+	}
+
+	public static String getHorizontalFacingTowards(final float yaw)
+	{
+		final String[] facings =
+		{
+				"+Z", "+X +Z", "+X", "+X -Z", "-Z", "-X -Z", "-Z", "-X +Z"
+		};
+		return facings[(int) Math.abs(Math.floor(yaw * facings.length / 360 + 0.5)) & facings.length - 1];
+	}
 }

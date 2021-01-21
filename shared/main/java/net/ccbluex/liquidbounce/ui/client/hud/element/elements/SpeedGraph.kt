@@ -42,6 +42,9 @@ class SpeedGraph(
 		val width = width.get()
 		if (lastTick != mc.thePlayer!!.ticksExisted)
 		{
+
+			// Update speed
+
 			lastTick = mc.thePlayer!!.ticksExisted
 			val z2 = mc.thePlayer!!.posZ
 			val z1 = mc.thePlayer!!.prevPosZ

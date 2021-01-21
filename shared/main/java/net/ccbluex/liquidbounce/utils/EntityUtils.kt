@@ -8,8 +8,8 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
+import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
 import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends
-import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.isAnimal
@@ -97,5 +97,18 @@ object EntityUtils : MinecraftInstance()
 		}
 
 		return false
+	}
+
+	@JvmStatic
+	fun getPlayerHealthFromScoreboard(playername: String?, mineplex: Boolean): Int
+	{
+		val scoreboard: IScoreboard = mc.theWorld!!.scoreboard
+		for (entity in mc.theWorld!!.loadedEntityList) if (classProvider.isEntityPlayer(entity) && entity != mc.thePlayer)
+		{
+			val player = entity.asEntityPlayer()
+			val objectives = scoreboard.getObjectivesForEntity(player.gameProfile.name)
+			for (score in objectives.values) if (player.gameProfile.name.equals(playername, ignoreCase = true)) return score.scorePoints * if (mineplex) 2 else 1
+		}
+		return 0
 	}
 }

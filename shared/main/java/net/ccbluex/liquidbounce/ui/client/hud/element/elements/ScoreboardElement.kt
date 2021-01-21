@@ -45,6 +45,11 @@ class ScoreboardElement(
 	private val rectColorBlueValue = IntegerValue("Rect-B", 255, 0, 255)
 	private val rectColorBlueAlpha = IntegerValue("Rect-Alpha", 255, 0, 255)
 
+	private val saturationValue = FloatValue("HSB-Saturation", 0.9f, 0f, 1f)
+	private val brightnessValue = FloatValue("HSB-Brightness", 1f, 0f, 1f)
+
+	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
+
 	private val shadowValue = BoolValue("Shadow", false)
 	private val fontValue = FontValue("Font", Fonts.minecraftFont)
 
@@ -63,6 +68,10 @@ class ScoreboardElement(
 		val rectCustomColor = Color(
 			rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorBlueAlpha.get()
 		).rgb
+
+		val saturation = saturationValue.get()
+		val brightness = brightnessValue.get()
+		val rainbowSpeed = rainbowSpeedValue.get()
 
 		val worldScoreboard = mc.theWorld!!.scoreboard
 		var currObjective: IScoreObjective? = null
@@ -131,7 +140,7 @@ class ScoreboardElement(
 			{
 				val rectColor = when
 				{
-					rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index).rgb
+					rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 					else -> rectCustomColor
 				}
 

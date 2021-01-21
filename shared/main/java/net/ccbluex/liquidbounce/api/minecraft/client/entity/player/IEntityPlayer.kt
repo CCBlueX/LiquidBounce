@@ -30,6 +30,8 @@ interface IEntityPlayer : IEntityLivingBase
 	val isPlayerSleeping: Boolean
 	var speedInAir: Float
 	var cameraYaw: Float
+	val absorptionAmount: Float
+	val totalArmorValue: Int
 
 	@get:JvmName("isBlocking")
 	val isBlocking: Boolean
