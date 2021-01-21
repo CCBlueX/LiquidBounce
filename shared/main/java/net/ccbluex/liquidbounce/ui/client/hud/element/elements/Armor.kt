@@ -33,6 +33,8 @@ class Armor(
 			GL11.glPushMatrix()
 
 			val renderItem = mc.renderItem
+
+			// Prevents being conflicted with the bubbles
 			val isInsideWater = mc.thePlayer!!.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.WATER))
 
 			var x = 1

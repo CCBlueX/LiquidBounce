@@ -32,30 +32,43 @@ class Arraylist(
 {
 	private val rainbowX = FloatValue("Rainbow-X", -1000F, -2000F, 2000F)
 	private val rainbowY = FloatValue("Rainbow-Y", -1000F, -2000F, 2000F)
+
 	private val colorModeValue = ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
 	private val colorRedValue = IntegerValue("Text-R", 0, 0, 255)
 	private val colorGreenValue = IntegerValue("Text-G", 111, 0, 255)
 	private val colorBlueValue = IntegerValue("Text-B", 255, 0, 255)
+	private val shadow = BoolValue("ShadowText", true)
+
+	private val rectValue = ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
 	private val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow"), "Rainbow")
 	private val rectColorRedValue = IntegerValue("Rect-R", 255, 0, 255)
 	private val rectColorGreenValue = IntegerValue("Rect-G", 255, 0, 255)
 	private val rectColorBlueValue = IntegerValue("Rect-B", 255, 0, 255)
 	private val rectColorBlueAlpha = IntegerValue("Rect-Alpha", 255, 0, 255)
-	private val saturationValue = FloatValue("Random-Saturation", 0.9f, 0f, 1f)
-	private val brightnessValue = FloatValue("Random-Brightness", 1f, 0f, 1f)
+
 	private val tags = BoolValue("Tags", true)
-	private val shadow = BoolValue("ShadowText", true)
+	private val tagTypeValue = ListValue("TagType", arrayOf("Space-Only", "Square-Bracket", "Round-Bracket"), "Space-Only")
+	private val tagColorModeValue = ListValue("Tag-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+	private val tagColorRedValue = IntegerValue("Tag-R", 0, 0, 255)
+	private val tagColorGreenValue = IntegerValue("Tag-G", 111, 0, 255)
+	private val tagColorBlueValue = IntegerValue("Tag-B", 255, 0, 255)
+	private val tagColorAlphaValue = IntegerValue("Tag-Alpha", 255, 0, 255)
+	private val tagSpaceValue = FloatValue("TagSpace", 2.5F, 1F, 5F)
+
 	private val backgroundColorModeValue = ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
 	private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0, 255)
 	private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0, 255)
 	private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0, 255)
 	private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 0, 0, 255)
-	private val rectValue = ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
 	private val upperCaseValue = BoolValue("UpperCase", false)
+
+	private val saturationValue = FloatValue("Random-Saturation", 0.9f, 0f, 1f)
+	private val brightnessValue = FloatValue("Random-Brightness", 1f, 0f, 1f)
+
 	private val spaceValue = FloatValue("Space", 0F, 0F, 5F)
 	private val textHeightValue = FloatValue("TextHeight", 11F, 1F, 20F)
 	private val textYValue = FloatValue("TextY", 1F, 0F, 20F)
-	private val tagsArrayColor = BoolValue("TagsArrayColor", false)
+
 	private val fontValue = FontValue("Font", Fonts.font40)
 
 	private var x2 = 0
@@ -69,36 +82,47 @@ class Arraylist(
 
 		AWTFontRenderer.assumeNonVolatile = true
 
+		val tagDistance = tagSpaceValue.get()
+		val tagType = tagTypeValue.get().toLowerCase()
+
 		// Slide animation - update every render
 		val delta = RenderUtils.deltaTime
 
 		for (module in LiquidBounce.moduleManager.modules)
 		{
 			if (!module.array || (!module.state && module.slide == 0F)) continue
+			var displayString = module.name
+			val originalTagString = if (tags.get() && module.tag != null) module.tag!! else ""
+			var tagString = if (originalTagString.isNotEmpty()) when (tagType)
+			{
+				"square-bracket" -> "[$originalTagString]"
+				"round-bracket" -> "($originalTagString)"
+				else -> originalTagString
+			} else originalTagString
 
-			var displayString = if (!tags.get()) module.name
-			else if (tagsArrayColor.get()) module.colorlessTagName
-			else module.tagName
+			if (upperCaseValue.get())
+			{
+				displayString = displayString.toUpperCase()
+				tagString = tagString.toUpperCase()
+			}
 
-			if (upperCaseValue.get()) displayString = displayString.toUpperCase()
-
-			val width = fontRenderer.getStringWidth(displayString)
+			val width = fontRenderer.getStringWidth(displayString) + if (originalTagString.isEmpty()) 0f else tagDistance + fontRenderer.getStringWidth(tagString)
 
 			if (module.state)
 			{
 				if (module.slide < width)
 				{
-					module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
+					module.slide = AnimationUtils.easeOut(module.slideStep, width) * width
 					module.slideStep += delta / 4F
 				}
 			} else if (module.slide > 0)
 			{
-				module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
+				module.slide = AnimationUtils.easeOut(module.slideStep, width) * width
 				module.slideStep -= delta / 4F
 			}
 
-			module.slide = module.slide.coerceIn(0F, width.toFloat())
-			module.slideStep = module.slideStep.coerceIn(0F, width.toFloat())
+			module.slide = module.slide.coerceIn(0F, width)
+			module.slideStep = module.slideStep.coerceIn(0F, width)
 		}
 
 		// Draw arraylist
@@ -106,63 +130,95 @@ class Arraylist(
 		val rectColorMode = rectColorModeValue.get()
 		val backgroundColorMode = backgroundColorModeValue.get()
 		val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 1).rgb
-		val rectCustomColor = Color(
-			rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorBlueAlpha.get()
-		).rgb
+		val rectCustomColor = Color(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorBlueAlpha.get()).rgb
 		val space = spaceValue.get()
 		val textHeight = textHeightValue.get()
 		val textY = textYValue.get()
 		val rectMode = rectValue.get()
-		val backgroundCustomColor = Color(
-			backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get()
-		).rgb
+		val backgroundCustomColor = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get()).rgb
 		val textShadow = shadow.get()
 		val textSpacer = textHeight + space
+		val customTagColor = Color(tagColorRedValue.get(), tagColorGreenValue.get(), tagColorBlueValue.get(), tagColorAlphaValue.get()).rgb
 		val saturation = saturationValue.get()
 		val brightness = brightnessValue.get()
+		val tagColorMode = tagColorModeValue.get()
 
 		when (side.horizontal)
 		{
 			Horizontal.RIGHT, Horizontal.MIDDLE ->
 			{
 				modules.forEachIndexed { index, module ->
-					var displayString = if (!tags.get()) module.name
-					else if (tagsArrayColor.get()) module.colorlessTagName
-					else module.tagName
+					var displayString = module.name
+					val originalTagString = if (tags.get() && module.tag != null) module.tag!! else ""
+					var tagString = when (tagType)
+					{
+						"square-bracket" -> "[$originalTagString]"
+						"round-bracket" -> "($originalTagString)"
+						else -> originalTagString
+					}
 
-					if (upperCaseValue.get()) displayString = displayString.toUpperCase()
+					if (upperCaseValue.get())
+					{
+						displayString = displayString.toUpperCase()
+						tagString = tagString.toUpperCase()
+					}
 
 					val xPos = -module.slide - 2
 					val yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) * if (side.vertical == Vertical.DOWN) index + 1 else index
-					val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
+					val moduleRandomColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
 					val backgroundRectRainbow = backgroundColorMode.equals("Rainbow", ignoreCase = true)
 
+					// Draw Background
 					RainbowShader.begin(backgroundRectRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-						RenderUtils.drawRect(
-							xPos - if (rectMode.equals("right", true)) 5 else 2, yPos, if (rectMode.equals("right", true)) -3F else 0F, yPos + textHeight, when
-							{
-								backgroundRectRainbow -> 0xFF shl 24
-								backgroundColorMode.equals("Random", ignoreCase = true) -> moduleColor
-								else -> backgroundCustomColor
-							}
-						)
-					}
+						val xPosCorrection = if (rectMode.equals("right", true)) 5 else 2
+						val x2Pos = if (rectMode.equals("right", true)) -3F else 0F
+						val color = when
+						{
+							backgroundRectRainbow -> -16777216
+							backgroundColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
+							else -> backgroundCustomColor
+						}
 
-					val rainbow = colorMode.equals("Rainbow", ignoreCase = true)
+						RenderUtils.drawRect(xPos - xPosCorrection, yPos, x2Pos, yPos + textHeight, color)
+					}
 
 					classProvider.getGlStateManager().resetColor()
+
+					// Draw Module Name
+					val rainbow = colorMode.equals("Rainbow", ignoreCase = true)
+
 					RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-						fontRenderer.drawString(
-							displayString, xPos - if (rectMode.equals("right", true)) 3 else 0, yPos + textY, when
-							{
-								rainbow -> 0
-								colorMode.equals("Random", ignoreCase = true) -> moduleColor
-								else -> customColor
-							}, textShadow
-						)
+						val xPosCorrection = if (rectMode.equals("right", true)) 3 else 0
+						val color = when
+						{
+							rainbow -> 0
+							colorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
+							else -> customColor
+						}
+
+						fontRenderer.drawString(displayString, xPos - xPosCorrection, yPos + textY, color, textShadow)
 					}
 
+					// Draw Tag
+					if (originalTagString.isNotEmpty())
+					{
+						val tagRainbow = tagColorMode.equals("Rainbow", ignoreCase = true)
+
+						RainbowFontShader.begin(tagRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+							val xPosCorrection = fontRenderer.getStringWidth(displayString) + tagDistance - if (rectMode.equals("right", true)) 3 else 0
+							val color = when
+							{
+								tagRainbow -> Color(0, 0, 0, tagColorAlphaValue.get()).rgb
+								tagColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
+								else -> customTagColor
+							}
+
+							fontRenderer.drawString(tagString, xPos + xPosCorrection, yPos + textY, color, textShadow)
+						}
+					}
+
+					// Draw Rect
 					if (!rectMode.equals("none", true))
 					{
 						val rectRainbow = rectColorMode.equals("Rainbow", ignoreCase = true)
@@ -171,18 +227,14 @@ class Arraylist(
 							val rectColor = when
 							{
 								rectRainbow -> 0
-								rectColorMode.equals("Random", ignoreCase = true) -> moduleColor
+								rectColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 								else -> rectCustomColor
 							}
 
 							when
 							{
-								rectMode.equals("left", true) -> RenderUtils.drawRect(
-									xPos - 5, yPos, xPos - 2, yPos + textHeight, rectColor
-								)
-								rectMode.equals("right", true) -> RenderUtils.drawRect(
-									-3F, yPos, 0F, yPos + textHeight, rectColor
-								)
+								rectMode.equals("left", true) -> RenderUtils.drawRect(xPos - 5, yPos, xPos - 2, yPos + textHeight, rectColor)
+								rectMode.equals("right", true) -> RenderUtils.drawRect(-3F, yPos, 0F, yPos + textHeight, rectColor)
 							}
 						}
 					}
@@ -192,44 +244,75 @@ class Arraylist(
 			Horizontal.LEFT ->
 			{
 				modules.forEachIndexed { index, module ->
-					var displayString = if (!tags.get()) module.name
-					else if (tagsArrayColor.get()) module.colorlessTagName
-					else module.tagName
+					var displayString = module.name
+					val originalTagString = if (tags.get() && module.tag != null) module.tag!! else ""
+					var tagString = when (tagType)
+					{
+						"square-bracket" -> "[$originalTagString]"
+						"round-bracket" -> "($originalTagString)"
+						else -> originalTagString
+					}
 
-					if (upperCaseValue.get()) displayString = displayString.toUpperCase()
+					if (upperCaseValue.get())
+					{
+						displayString = displayString.toUpperCase()
+						tagString = tagString.toUpperCase()
+					}
 
-					val width = fontRenderer.getStringWidth(displayString)
+					val width = fontRenderer.getStringWidth(displayString) + if (originalTagString.isEmpty()) 0f else tagDistance + fontRenderer.getStringWidth(tagString)
 					val xPos = -(width - module.slide) + if (rectMode.equals("left", true)) 5 else 2
 					val yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) * if (side.vertical == Vertical.DOWN) index + 1 else index
-					val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
+					val moduleRandomColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
+					// Draw Background
 					val backgroundRectRainbow = backgroundColorMode.equals("Rainbow", ignoreCase = true)
 
 					RainbowShader.begin(backgroundRectRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-						RenderUtils.drawRect(
-							0F, yPos, xPos + width + if (rectMode.equals("right", true)) 5 else 2, yPos + textHeight, when
-							{
-								backgroundRectRainbow -> 0
-								backgroundColorMode.equals("Random", ignoreCase = true) -> moduleColor
-								else -> backgroundCustomColor
-							}
-						)
-					}
+						val xPosCorrection = if (rectMode.equals("right", true)) 5 else 2
+						val color = when
+						{
+							backgroundRectRainbow -> 0
+							backgroundColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
+							else -> backgroundCustomColor
+						}
 
-					val rainbow = colorMode.equals("Rainbow", ignoreCase = true)
+						RenderUtils.drawRect(0F, yPos, xPos + width + xPosCorrection, yPos + textHeight, color)
+					}
 
 					classProvider.getGlStateManager().resetColor()
+
+					// Draw Module Name
+					val rainbow = colorMode.equals("Rainbow", ignoreCase = true)
+
 					RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-						fontRenderer.drawString(
-							displayString, xPos, yPos + textY, when
-							{
-								rainbow -> 0
-								colorMode.equals("Random", ignoreCase = true) -> moduleColor
-								else -> customColor
-							}, textShadow
-						)
+						val color = when
+						{
+							rainbow -> 0
+							colorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
+							else -> customColor
+						}
+
+						fontRenderer.drawString(displayString, xPos, yPos + textY, color, textShadow)
 					}
 
+					// Draw Tag
+					if (originalTagString.isNotEmpty())
+					{
+						val tagRainbow = tagColorMode.equals("Rainbow", ignoreCase = true)
+
+						RainbowFontShader.begin(tagRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+							val color = when
+							{
+								tagRainbow -> Color(0, 0, 0, tagColorAlphaValue.get()).rgb
+								tagColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
+								else -> customTagColor
+							}
+
+							fontRenderer.drawString(tagString, xPos + fontRenderer.getStringWidth(displayString) + tagDistance, yPos + textY, color, textShadow)
+						}
+					}
+
+					// Draw Rect
 					val rectColorRainbow = rectColorMode.equals("Rainbow", ignoreCase = true)
 
 					RainbowShader.begin(rectColorRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
@@ -238,18 +321,14 @@ class Arraylist(
 							val rectColor = when
 							{
 								rectColorRainbow -> 0
-								rectColorMode.equals("Random", ignoreCase = true) -> moduleColor
+								rectColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 								else -> rectCustomColor
 							}
 
 							when
 							{
-								rectMode.equals("left", true) -> RenderUtils.drawRect(
-									0F, yPos - 1, 3F, yPos + textHeight, rectColor
-								)
-								rectMode.equals("right", true) -> RenderUtils.drawRect(
-									xPos + width + 2, yPos, xPos + width + 2 + 3, yPos + textHeight, rectColor
-								)
+								rectMode.equals("left", true) -> RenderUtils.drawRect(0F, yPos - 1, 3F, yPos + textHeight, rectColor)
+								rectMode.equals("right", true) -> RenderUtils.drawRect(xPos + width + 2, yPos, xPos + width + 2 + 3, yPos + textHeight, rectColor)
 							}
 						}
 					}
@@ -297,9 +376,25 @@ class Arraylist(
 
 	override fun updateElement()
 	{
+		val font = fontValue.get()
+		val tagDistance = tagSpaceValue.get()
+
 		modules = LiquidBounce.moduleManager.modules.filter { it.array && it.slide > 0 }.sortedBy {
-			-fontValue.get()
-				.getStringWidth(if (upperCaseValue.get()) (if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName).toUpperCase() else if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName)
+			var name = it.name
+			var tag = if (tags.get() && it.tag != null && it.tag!!.isNotEmpty()) when (tagTypeValue.get().toLowerCase())
+			{
+				"square-bracket" -> "[${it.tag!!}]"
+				"round-bracket" -> "(${it.tag!!})"
+				else -> it.tag!!
+			} else ""
+
+			if (upperCaseValue.get())
+			{
+				name = name.toUpperCase()
+				tag = tag.toUpperCase()
+			}
+
+			-(font.getStringWidth(name) + if (tag.isEmpty()) 0f else tagDistance + font.getStringWidth(tag))
 		}
 	}
 }

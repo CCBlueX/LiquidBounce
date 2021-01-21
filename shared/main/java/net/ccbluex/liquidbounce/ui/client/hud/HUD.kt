@@ -23,8 +23,7 @@ open class HUD : MinecraftInstance()
 	companion object
 	{
 
-		val elements = arrayOf(
-			Armor::class.java,
+		val elements = arrayOf(Armor::class.java,
 			Arraylist::class.java,
 			Effects::class.java,
 			Image::class.java,
@@ -35,8 +34,7 @@ open class HUD : MinecraftInstance()
 			ScoreboardElement::class.java,
 			Target::class.java,
 			Radar::class.java,
-			SpeedGraph::class.java
-		)
+			SpeedGraph::class.java)
 
 		/**
 		 * Create default HUD
@@ -85,18 +83,13 @@ open class HUD : MinecraftInstance()
 	 */
 	fun handleMouseClick(mouseX: Int, mouseY: Int, button: Int)
 	{
-		for (element in elements) element.handleMouseClick(
-			(mouseX / element.scale) - element.renderX, (mouseY / element.scale) - element.renderY, button
-		)
+		for (element in elements) element.handleMouseClick((mouseX / element.scale) - element.renderX, (mouseY / element.scale) - element.renderY, button)
 
 		if (button == 0)
 		{
 			for (element in elements.reversed())
 			{
-				if (!element.isInBorder(
-						(mouseX / element.scale) - element.renderX, (mouseY / element.scale) - element.renderY
-					)
-				) continue
+				if (!element.isInBorder((mouseX / element.scale) - element.renderX, (mouseY / element.scale) - element.renderY)) continue
 
 				element.drag = true
 				elements.remove(element)
