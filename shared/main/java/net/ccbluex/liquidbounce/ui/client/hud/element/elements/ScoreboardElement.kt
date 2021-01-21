@@ -73,9 +73,9 @@ class ScoreboardElement(
 		val brightness = brightnessValue.get()
 		val rainbowSpeed = rainbowSpeedValue.get()
 
-		val worldScoreboard = mc.theWorld!!.scoreboard
+		val worldScoreboard = (mc.theWorld ?: return null).scoreboard
 		var currObjective: IScoreObjective? = null
-		val playerTeam = worldScoreboard.getPlayersTeam(mc.thePlayer!!.name)
+		val playerTeam = worldScoreboard.getPlayersTeam((mc.thePlayer ?: return null).name)
 
 		if (playerTeam != null)
 		{

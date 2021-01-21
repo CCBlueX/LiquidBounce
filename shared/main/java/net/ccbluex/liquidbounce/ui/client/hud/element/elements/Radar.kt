@@ -61,7 +61,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 	private var fovMarkerVertexBuffer: IVertexBuffer? = null
 	private var lastFov = 0f
 
-	override fun drawElement(): Border?
+	override fun drawElement(): Border
 	{
 		MiniMapRegister.updateChunks()
 

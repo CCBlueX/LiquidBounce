@@ -67,7 +67,7 @@ class Notifications(
 	{
 		if (LiquidBounce.hud.notifications.size > 0)
 		{
-			var index = 0;
+			var index = 0
 			val itr = LiquidBounce.hud.notifications.iterator()
 			while (itr.hasNext() && index + 1 <= maxRendered.get())
 			{
@@ -192,7 +192,7 @@ class Notification(private val header: String, private val message: String, priv
 		val delta = RenderUtils.deltaTime
 		val width = textLength + 8F
 
-		when (fadeState)
+		@Suppress("NON_EXHAUSTIVE_WHEN") when (fadeState)
 		{
 			FadeState.IN ->
 			{

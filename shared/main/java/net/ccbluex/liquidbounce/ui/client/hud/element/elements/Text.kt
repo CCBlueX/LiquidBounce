@@ -129,7 +129,7 @@ class Text(
 				"mzdp" -> return thePlayer.motionZ.toString()
 
 				"velocity" -> return DECIMAL_FORMAT.format(sqrt(thePlayer.motionX * thePlayer.motionX + thePlayer.motionZ * thePlayer.motionZ))
-				"velocitydp" -> return sqrt(thePlayer.motionX * thePlayer.motionX + thePlayer.motionZ * thePlayer.motionZ).toString()
+				"velocitydp" -> return "${sqrt(thePlayer.motionX * thePlayer.motionX + thePlayer.motionZ * thePlayer.motionZ)}"
 
 				"ping" -> return thePlayer.getPing().toString()
 				"health" -> return DECIMAL_FORMAT.format(thePlayer.health)
@@ -196,13 +196,13 @@ class Text(
 			result.append(str, lastPercent, str.length)
 		}
 
-		return result.toString()
+		return "$result"
 	}
 
 	/**
 	 * Draw element
 	 */
-	override fun drawElement(): Border?
+	override fun drawElement(): Border
 	{
 		val colorMode = colorModeValue.get()
 		val rectMode = rectValue.get()
@@ -212,7 +212,7 @@ class Text(
 		val customColor = Color(redValue.get(), greenValue.get(), blueValue.get(), colorAlpha).rgb
 		val rectColorAlpha = rectColorAlphaValue.get()
 		val rectCustomColor = Color(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha).rgb
-		val backgroundColorAlpha = backgroundColorAlphaValue.get();
+		val backgroundColorAlpha = backgroundColorAlphaValue.get()
 		val backgroundCustomColor = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha).rgb
 		val fontRenderer = fontValue.get()
 		val rainbowSpeed = rainbowSpeedValue.get()
@@ -221,7 +221,7 @@ class Text(
 		val rainbowShaderOffset = System.currentTimeMillis() % 10000 / 10000F
 		val saturation = saturationValue.get()
 		val brightness = brightnessValue.get()
-		val shadow = shadowValue.get();
+		val shadow = shadowValue.get()
 
 		val startX = -2f
 		val endX = fontRenderer.getStringWidth(displayText) + 2F
@@ -260,20 +260,21 @@ class Text(
 		}
 
 		val textRainbowShader = colorMode.equals("RainbowShader", true)
-		RainbowFontShader.begin(textRainbowShader, if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get(), if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get(), System.currentTimeMillis() % 10000 / 10000F)
-			.use {
-				val color = when
-				{
-					textRainbowShader -> 0
-					colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(colorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-					else -> customColor
-				}
-				fontRenderer.drawString(displayText, if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f, 0F, color, shadow)
-
-				if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40) fontRenderer.drawString(
-					"_", if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f + fontRenderer.getStringWidth(displayText) + 2F, 0F, color, shadow
-				)
+		RainbowFontShader.begin(
+			textRainbowShader, if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get(), if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get(), System.currentTimeMillis() % 10000 / 10000F
+		).use {
+			val color = when
+			{
+				textRainbowShader -> 0
+				colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(colorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				else -> customColor
 			}
+			fontRenderer.drawString(displayText, if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f, 0F, color, shadow)
+
+			if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40) fontRenderer.drawString(
+				"_", if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f + fontRenderer.getStringWidth(displayText) + 2F, 0F, color, shadow
+			)
+		}
 
 		if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen))
 		{

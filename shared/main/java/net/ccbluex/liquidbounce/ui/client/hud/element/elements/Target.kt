@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.resources.DefaultPlayerSkin
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.text.DecimalFormat
