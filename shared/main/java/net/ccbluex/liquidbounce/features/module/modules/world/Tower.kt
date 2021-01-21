@@ -496,7 +496,7 @@ class Tower : Module()
 			val blockOverlay = LiquidBounce.moduleManager.getModule(BlockOverlay::class.java) as BlockOverlay
 			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) GL11.glTranslatef(0f, 15f, 0f)
 
-			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}7$blocksAmount"
+			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}$blocksAmount"
 			val scaledResolution = classProvider.createScaledResolution(mc)
 
 			RenderUtils.drawBorderedRect(
@@ -537,10 +537,7 @@ class Tower : Module()
 				if (itemStack != null && classProvider.isItemBlock(itemStack.item))
 				{
 					val block = itemStack.item!!.asItemBlock().block
-					if (mc.thePlayer!!.heldItem == itemStack || !InventoryUtils.AUTOBLOCK_BLACKLIST.contains(block))
-					{
-						amount += itemStack.stackSize
-					}
+					if (mc.thePlayer!!.heldItem == itemStack || InventoryUtils.canAutoBlock(block)) amount += itemStack.stackSize
 				}
 			}
 			return amount
