@@ -32,7 +32,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 		{
 			if (gcTicks++ > GC_TICKS)
 			{
-				activeFontRenderers.forEach { it.collectGarbage() }
+				activeFontRenderers.forEach(AWTFontRenderer::collectGarbage)
 
 				gcTicks = 0
 			}
@@ -232,13 +232,9 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 		graphics2D.fillRect(0, 0, textureWidth, textureHeight)
 		graphics2D.color = Color.white
 
-		for (targetChar in startChar until stopChar) if (fontImages[targetChar] != null && charLocations[targetChar] != null) graphics2D.drawImage(
-			fontImages[targetChar], charLocations[targetChar]!!.x, charLocations[targetChar]!!.y, null
-		)
+		for (targetChar in startChar until stopChar) if (fontImages[targetChar] != null && charLocations[targetChar] != null) graphics2D.drawImage(fontImages[targetChar], charLocations[targetChar]!!.x, charLocations[targetChar]!!.y, null)
 
-		textureID = TextureUtil.uploadTextureImageAllocate(
-			TextureUtil.glGenTextures(), bufferedImage, true, true
-		)
+		textureID = TextureUtil.uploadTextureImageAllocate(TextureUtil.glGenTextures(), bufferedImage, true, true)
 	}
 
 	/**
@@ -267,7 +263,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 		graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
 		graphics.font = font
 		graphics.color = Color.WHITE
-		graphics.drawString(ch.toString(), 3, 1 + fontMetrics.ascent)
+		graphics.drawString("$ch", 3, 1 + fontMetrics.ascent)
 
 		return fontImage
 	}

@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.file.FileConfig;
 import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
+import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType;
 
 public class AccountsConfig extends FileConfig
 {
@@ -50,16 +51,29 @@ public class AccountsConfig extends FileConfig
 			for (final JsonElement accountElement : jsonElement.getAsJsonArray())
 			{
 				final JsonObject accountObject = accountElement.getAsJsonObject();
+				final JsonElement type = accountObject.get("type");
 				final JsonElement name = accountObject.get("name");
 				final JsonElement password = accountObject.get("password");
 				final JsonElement inGameName = accountObject.get("inGameName");
+				final JsonElement bannedServers = accountObject.get("bannedServers");
 
-				if (inGameName == null || inGameName.isJsonNull())
-					addAccount(name.getAsString(), password.getAsString());
-				else if (inGameName.isJsonNull() && password.isJsonNull())
-					addAccount(name.getAsString());
+				final MinecraftAccount account;
+				if ((inGameName == null || inGameName.isJsonNull()) && !(password == null || password.isJsonNull()))
+					account = new MinecraftAccount(AltServiceType.getById(type.getAsString()), name.getAsString(), password.getAsString());
+				else if (type == null || type.isJsonNull())
+					account = new MinecraftAccount(AltServiceType.MOJANG, name.getAsString());
 				else
-					addAccount(name.getAsString(), accountObject.get("password").getAsString(), accountObject.get("inGameName").getAsString());
+					account = (inGameName == null || inGameName.isJsonNull()) && (password == null || password.isJsonNull()) ? new MinecraftAccount(AltServiceType.getById(type.getAsString()), name.getAsString()) : new MinecraftAccount(AltServiceType.getById(type.getAsString()), name.getAsString(), password.getAsString(), inGameName.getAsString());
+
+				if (!bannedServers.isJsonNull())
+				{
+					final List<String> servers = new ArrayList<>();
+					for (final JsonElement element : bannedServers.getAsJsonArray())
+						servers.add(element.getAsString());
+					account.setBannedServers(servers);
+				}
+
+				addAccount(account);
 			}
 
 		}
@@ -76,14 +90,29 @@ public class AccountsConfig extends FileConfig
 
 			for (final String account : accountList)
 			{
-				final String[] information = account.split(":");
+				final String[] info = account.split("/", 2);
+				if (info.length > 0)
+				{
+					final String[] information = info[0].split(":");
 
-				if (information.length >= 3)
-					accounts.add(new MinecraftAccount(information[0], information[1], information[2]));
-				else if (information.length == 2)
-					accounts.add(new MinecraftAccount(information[0], information[1]));
-				else
-					accounts.add(new MinecraftAccount(information[0]));
+					MinecraftAccount acc = null;
+
+					if (information.length == 1)
+						acc = new MinecraftAccount(AltServiceType.MOJANG, information[0]);
+					else if (information.length == 2)
+						acc = new MinecraftAccount(AltServiceType.getById(information[0]), information[1]);
+					else if (information.length == 3)
+						acc = new MinecraftAccount(AltServiceType.getById(information[0]), information[1], information[2]);
+					else if (information.length >= 4)
+						acc = new MinecraftAccount(AltServiceType.getById(information[0]), information[1], information[2], information[3]);
+
+					if (acc != null)
+					{
+						if (info.length > 1)
+							acc.setBannedServers(MinecraftAccount.deserializeBannedServers(info[1]));
+						accounts.add(acc);
+					}
+				}
 			}
 			ClientUtils.getLogger().info("[FileManager] Loaded old Accounts config...");
 
@@ -106,11 +135,19 @@ public class AccountsConfig extends FileConfig
 
 		for (final MinecraftAccount minecraftAccount : accounts)
 		{
-			final JsonObject friendObject = new JsonObject();
-			friendObject.addProperty("name", minecraftAccount.getName());
-			friendObject.addProperty("password", minecraftAccount.getPassword());
-			friendObject.addProperty("inGameName", minecraftAccount.getAccountName());
-			jsonArray.add(friendObject);
+			final JsonObject accountObject = new JsonObject();
+			accountObject.addProperty("type", minecraftAccount.getServiceType().getId());
+			accountObject.addProperty("name", minecraftAccount.getName());
+			accountObject.addProperty("password", minecraftAccount.getPassword());
+			accountObject.addProperty("inGameName", minecraftAccount.getAccountName());
+			if (!minecraftAccount.getBannedServers().isEmpty())
+			{
+				final JsonArray arr = new JsonArray();
+				for (final String server : minecraftAccount.getBannedServers())
+					arr.add(new JsonPrimitive(server));
+				accountObject.add("bannedServers", arr);
+			}
+			jsonArray.add(accountObject);
 		}
 
 		final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
@@ -121,47 +158,15 @@ public class AccountsConfig extends FileConfig
 	/**
 	 * Add cracked account to config
 	 *
-	 * @param name
-	 *             of account
+	 * @param account
+	 *             The account
 	 */
-	public void addAccount(final String name)
+	public void addAccount(final MinecraftAccount account)
 	{
-		if (accountExists(name))
+		if (accountExists(account.getName()))
 			return;
 
-		accounts.add(new MinecraftAccount(name));
-	}
-
-	/**
-	 * Add account to config
-	 *
-	 * @param name
-	 *                 of account
-	 * @param password
-	 *                 of password
-	 */
-	public void addAccount(final String name, final String password)
-	{
-		if (accountExists(name))
-			return;
-
-		accounts.add(new MinecraftAccount(name, password));
-	}
-
-	/**
-	 * Add account to config
-	 *
-	 * @param name
-	 *                 of account
-	 * @param password
-	 *                 of account
-	 */
-	public void addAccount(final String name, final String password, final String inGameName)
-	{
-		if (accountExists(name))
-			return;
-
-		accounts.add(new MinecraftAccount(name, password, inGameName));
+		accounts.add(account);
 	}
 
 	/**

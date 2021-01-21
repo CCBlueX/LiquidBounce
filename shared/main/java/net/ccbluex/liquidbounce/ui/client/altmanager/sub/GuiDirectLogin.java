@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.TabUtils;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
+import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 
@@ -99,10 +100,7 @@ public class GuiDirectLogin extends WrappedGuiScreen
 				{
 					status = "\u00A7aLogging in...";
 
-					if (password.getText().isEmpty())
-						status = GuiAltManager.login(new MinecraftAccount(ColorUtils.translateAlternateColorCodes(username.getText())));
-					else
-						status = GuiAltManager.login(new MinecraftAccount(username.getText(), password.getText()));
+					status = password.getText().isEmpty() ? GuiAltManager.login(new MinecraftAccount(AltServiceType.MOJANG, ColorUtils.translateAlternateColorCodes(username.getText()))) : GuiAltManager.login(new MinecraftAccount(AltServiceType.MOJANG, username.getText(), password.getText()));
 
 					loginButton.setEnabled(true);
 					clipboardLoginButton.setEnabled(true);
@@ -127,7 +125,7 @@ public class GuiDirectLogin extends WrappedGuiScreen
 					{
 						status = "\u00A7aLogging in...";
 
-						status = GuiAltManager.login(new MinecraftAccount(args[0], args[1]));
+						status = GuiAltManager.login(new MinecraftAccount(AltServiceType.MOJANG, args[0], args[1]));
 
 						loginButton.setEnabled(true);
 						clipboardLoginButton.setEnabled(true);

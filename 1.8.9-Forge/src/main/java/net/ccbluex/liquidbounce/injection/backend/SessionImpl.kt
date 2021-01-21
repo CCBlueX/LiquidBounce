@@ -22,9 +22,11 @@ class SessionImpl(val wrapped: Session) : ISession
 		get() = wrapped.sessionType.name
 	override val token: String
 		get() = wrapped.token
+	override val sessionID: String
+		get() = wrapped.sessionID
 
 	override fun equals(other: Any?): Boolean = other is SessionImpl && other.wrapped == wrapped
 }
 
-inline fun ISession.unwrap(): Session = (this as SessionImpl).wrapped
-inline fun Session.wrap(): ISession = SessionImpl(this)
+fun ISession.unwrap(): Session = (this as SessionImpl).wrapped
+fun Session.wrap(): ISession = SessionImpl(this)

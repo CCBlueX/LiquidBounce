@@ -6,12 +6,14 @@
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator
 
 import com.thealtening.AltService
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.mcleaks.MCLeaks
@@ -33,7 +35,9 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		if (MCLeaks.isAltActive()) status = "\u00A7aToken active. Using \u00A79${MCLeaks.getSession().username}\u00A7a to login!"
 
 		// Add buttons
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 65, 200, 20, "Login"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(4, representedScreen.width / 2 - 100, representedScreen.height / 4 + 65, 98, 20, "Add Alt and Login"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 + 2, representedScreen.height / 4 + 65, 98, 20, "Just Login"))
+
 		representedScreen.buttonList.add(classProvider.createGuiButton(2, representedScreen.width / 2 - 100, representedScreen.height - 54, 98, 20, "Get Token"))
 		representedScreen.buttonList.add(classProvider.createGuiButton(3, representedScreen.width / 2 + 2, representedScreen.height - 54, 98, 20, "Back"))
 
@@ -51,7 +55,7 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 		when (button.id)
 		{
-			1 ->
+			1, 4 ->
 			{
 				if (tokenField.text.length != 16)
 				{
@@ -61,6 +65,8 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 				button.enabled = false
 				button.displayString = "Please wait ..."
+
+				val account = MinecraftAccount(MinecraftAccount.AltServiceType.MCLEAKS, tokenField.text, LiquidBounce.CLIENT_NAME)
 
 				MCLeaks.redeem(tokenField.text) {
 					if (it is String)
@@ -73,7 +79,7 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 					val redeemResponse = it as RedeemResponse
 					MCLeaks.refresh(Session(redeemResponse.username, redeemResponse.token))
-
+					account.accountName = redeemResponse.username
 					try
 					{
 						GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
@@ -82,7 +88,20 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 						ClientUtils.getLogger().error("Failed to change alt service to Mojang.", e)
 					}
 
-					status = "\u00A7aYour token was redeemed successfully!"
+					if (button.id == 4)
+					{
+						var moreMessage = ""
+						if (LiquidBounce.fileManager.accountsConfig.accounts.stream().anyMatch { acc: MinecraftAccount ->
+								account.name.equals(acc.name, true) && account.accountName.equals(acc.accountName ?: "", true)
+							}) moreMessage = " But the account has already been added."
+						else
+						{
+							LiquidBounce.fileManager.accountsConfig.accounts.add(account)
+							LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
+						}
+						status = "\u00a7aYour token was redeemed successfully!\u00a7c$moreMessage"
+					} else status = "\u00A7aYour token was redeemed successfully!"
+
 					button.enabled = true
 					button.displayString = "Login"
 

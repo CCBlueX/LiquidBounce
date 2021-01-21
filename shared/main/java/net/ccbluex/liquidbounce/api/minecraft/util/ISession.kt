@@ -14,6 +14,7 @@ interface ISession
 	val username: String
 	val playerId: String
 	val sessionType: String
+	val sessionID: String
 
 	val token: String
 }

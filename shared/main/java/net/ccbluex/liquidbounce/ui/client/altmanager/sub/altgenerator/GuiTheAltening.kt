@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.mcleaks.MCLeaks
@@ -37,6 +38,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	// Buttons
 	private lateinit var loginButton: IGuiButton
 	private lateinit var generateButton: IGuiButton
+	private lateinit var addAltAndLoginButton: IGuiButton
 
 	// User Input Fields
 	private lateinit var apiKeyField: IGuiTextField
@@ -52,8 +54,10 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	{ // Enable keyboard repeat events
 		Keyboard.enableRepeatEvents(true)
 
-		// Login button
-		loginButton = classProvider.createGuiButton(2, representedScreen.width / 2 - 100, 75, "Login")
+		// Login button & Add to alt list and Login button
+		addAltAndLoginButton = classProvider.createGuiButton(4, representedScreen.width / 2 - 100, 75, 98, 20, "Add Alt and Login")
+		representedScreen.buttonList.add(addAltAndLoginButton)
+		loginButton = classProvider.createGuiButton(2, representedScreen.width / 2 + 2, 75, 98, 20, "Just Login")
 		representedScreen.buttonList.add(loginButton)
 
 		// Generate button
@@ -141,9 +145,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 						{
 							yggdrasilUserAuthentication.logIn()
 
-							mc.session = classProvider.createSession(
-								yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication.selectedProfile.id.toString(), yggdrasilUserAuthentication.authenticatedToken, "mojang"
-							)
+							mc.session = classProvider.createSession(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication.selectedProfile.id.toString(), yggdrasilUserAuthentication.authenticatedToken, "mojang")
 							LiquidBounce.eventManager.callEvent(SessionEvent())
 							MCLeaks.remove()
 
@@ -174,12 +176,14 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 				}
 			}
 
-			2 ->
+			2, 4 ->
 			{
 				loginButton.enabled = false
 				generateButton.enabled = false
 
-				Thread(Runnable {
+				val account = MinecraftAccount(MinecraftAccount.AltServiceType.THEALTENING, tokenField.text, LiquidBounce.CLIENT_NAME)
+
+				Thread {
 					try
 					{
 						status = "\u00A7cSwitching Alt Service..."
@@ -197,15 +201,29 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 						{
 							yggdrasilUserAuthentication.logIn()
 
-							mc.session = classProvider.createSession(
-								yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication.selectedProfile.id.toString(), yggdrasilUserAuthentication.authenticatedToken, "mojang"
-							)
+							account.accountName = yggdrasilUserAuthentication.selectedProfile.name
+
+							mc.session = classProvider.createSession(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication.selectedProfile.id.toString(), yggdrasilUserAuthentication.authenticatedToken, "mojang")
 							LiquidBounce.eventManager.callEvent(SessionEvent())
 							MCLeaks.remove()
 
 							prevGui.status = "\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c."
 							mc.displayGuiScreen(prevGui.representedScreen)
-							"\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c."
+
+							if (button.id == 4)
+							{
+								var moreMessage = ""
+								if (LiquidBounce.fileManager.accountsConfig.accounts.stream().anyMatch { acc: MinecraftAccount ->
+										account.name.equals(acc.name, true) && account.accountName.equals(acc.accountName ?: "", true)
+									}) moreMessage = " But the account has already been added."
+								else
+								{
+									LiquidBounce.fileManager.accountsConfig.accounts.add(account)
+									LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
+								}
+
+								"\u00a7aYour name is now \u00a7b\u00a7l${yggdrasilUserAuthentication.selectedProfile.name}\u00a7c.$moreMessage"
+							} else "\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c."
 						} catch (e: AuthenticationException)
 						{
 							GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
@@ -221,7 +239,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 					loginButton.enabled = true
 					generateButton.enabled = true
-				}).start()
+				}.start()
 			}
 
 			3 -> MiscUtils.showURL("https://thealtening.com/?ref=liquidbounce")

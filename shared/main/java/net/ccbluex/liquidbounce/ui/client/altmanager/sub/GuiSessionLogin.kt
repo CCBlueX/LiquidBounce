@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.ui.client.altmanager.sub
 
 import com.thealtening.AltService
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
@@ -18,7 +19,7 @@ import net.mcleaks.MCLeaks
 import org.lwjgl.input.Keyboard
 import kotlin.concurrent.thread
 
-class GuiSessionLogin(private val prevGui: GuiAltManager) : WrappedGuiScreen()
+class GuiSessionLogin(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 {
 
 	// Buttons
@@ -85,47 +86,49 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 		when (button.id)
 		{
-			0 -> mc.displayGuiScreen(prevGui.representedScreen)
+			0 -> mc.displayGuiScreen(prevGui)
 
-			1 ->
+			1 -> processToken(sessionTokenField.text)
+		}
+	}
+
+	fun processToken(token: String)
+	{
+		loginButton.enabled = false
+		status = "\u00A7aLogging in..."
+
+		thread {
+			val loginResult = LoginUtils.loginSessionId(sessionTokenField.text)
+
+			status = when (loginResult)
 			{
-				loginButton.enabled = false
-				status = "\u00A7aLogging in..."
-
-				thread {
-					val loginResult = LoginUtils.loginSessionId(sessionTokenField.text)
-
-					status = when (loginResult)
+				LoginUtils.LoginResult.LOGGED_IN ->
+				{
+					if (GuiAltManager.altService.currentService != AltService.EnumAltService.MOJANG)
 					{
-						LoginUtils.LoginResult.LOGGED ->
+						try
 						{
-							if (GuiAltManager.altService.currentService != AltService.EnumAltService.MOJANG)
-							{
-								try
-								{
-									GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
-								} catch (e: NoSuchFieldException)
-								{
-									ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
-								} catch (e: IllegalAccessException)
-								{
-									ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
-								}
-							}
-
-							MCLeaks.remove()
-
-							"\u00A7cYour name is now \u00A7f\u00A7l${mc.session.username}\u00A7c"
+							GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
+						} catch (e: NoSuchFieldException)
+						{
+							ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+						} catch (e: IllegalAccessException)
+						{
+							ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
 						}
-
-						LoginUtils.LoginResult.FAILED_PARSE_TOKEN -> "\u00A7cFailed to parse Session ID!"
-						LoginUtils.LoginResult.INVALID_ACCOUNT_DATA -> "\u00A7cInvalid Session ID!"
-						else -> ""
 					}
 
-					loginButton.enabled = true
+					MCLeaks.remove()
+
+					"\u00A7cYour name is now \u00A7f\u00A7l${mc.session.username}\u00A7c"
 				}
+
+				LoginUtils.LoginResult.FAILED_PARSE_SESSION -> "\u00A7cFailed to parse Session ID!"
+				LoginUtils.LoginResult.INVALID_ACCOUNT_DATA -> "\u00A7cInvalid Session ID!"
+				else -> ""
 			}
+
+			loginButton.enabled = true
 		}
 	}
 
@@ -136,7 +139,7 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	{ // Check if user want to escape from screen
 		if (Keyboard.KEY_ESCAPE == keyCode)
 		{ // Send back to prev screen
-			mc.displayGuiScreen(prevGui.representedScreen)
+			mc.displayGuiScreen(prevGui)
 
 			// Quit
 			return

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.TabUtils;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
+import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 
 import org.lwjgl.input.Keyboard;
@@ -181,7 +182,7 @@ public class GuiAdd extends WrappedGuiScreen
 		addButton.setEnabled(false);
 		clipboardButton.setEnabled(false);
 
-		final MinecraftAccount account = new MinecraftAccount(name, password);
+		final MinecraftAccount account = new MinecraftAccount(AltServiceType.MOJANG, name, password);
 
 		new Thread(() ->
 		{

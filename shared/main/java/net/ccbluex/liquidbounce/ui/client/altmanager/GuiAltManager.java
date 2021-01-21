@@ -30,9 +30,11 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiMCLeaks
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
+import net.ccbluex.liquidbounce.utils.ServerUtils;
 import net.ccbluex.liquidbounce.utils.login.LoginUtils;
 import net.ccbluex.liquidbounce.utils.login.LoginUtils.LoginResult;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
+import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType;
 import net.ccbluex.liquidbounce.utils.login.UserUtils;
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils;
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
@@ -49,7 +51,7 @@ public class GuiAltManager extends WrappedGuiScreen
 	public String status = "\u00A77Idle...";
 	private IGuiButton loginButton;
 	private IGuiButton randomButton;
-	private GuiList altsList;
+	private GuiAltsList altsList;
 	private IGuiTextField searchField;
 
 	public GuiAltManager(final IGuiScreen prevGui)
@@ -85,13 +87,17 @@ public class GuiAltManager extends WrappedGuiScreen
 		if (minecraftAccount == null)
 			return "";
 
-		if (altService.getCurrentService() != EnumAltService.MOJANG)
-			try {
+		if (AltServiceType.MOJANG.equals(minecraftAccount.getServiceType()) && altService.getCurrentService() != EnumAltService.MOJANG)
+			try
+			{
 				altService.switchService(EnumAltService.MOJANG);
-			} catch (final NoSuchFieldException | IllegalAccessException e) {
+			}
+			catch (final NoSuchFieldException | IllegalAccessException e)
+			{
 				ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e);
 			}
 
+		// Cracked account (not premium) login
 		if (minecraftAccount.isCracked())
 		{
 			LoginUtils.loginCracked(minecraftAccount.getName());
@@ -99,44 +105,108 @@ public class GuiAltManager extends WrappedGuiScreen
 			return "\u00A7cYour name is now \u00A78" + minecraftAccount.getName() + "\u00A7c.";
 		}
 
-		final LoginResult result = LoginUtils.login(minecraftAccount.getName(), minecraftAccount.getPassword());
-		if (result == LoginResult.LOGGED)
+		final LoginResult result = LoginUtils.login(minecraftAccount.getServiceType(), minecraftAccount.getName(), minecraftAccount.getPassword());
+
+		switch (result)
 		{
-			MCLeaks.remove();
-			final String userName = mc.getSession().getUsername();
-			minecraftAccount.setAccountName(userName);
-			LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
-			return "\u00A7cYour name is now \u00A7f\u00A7l" + userName + "\u00A7c.";
+			case LOGGED_IN:
+			{
+				if (!AltServiceType.MCLEAKS.equals(minecraftAccount.getServiceType()))
+					MCLeaks.remove();
+
+				final String userName = mc.getSession().getUsername();
+				minecraftAccount.setAccountName(userName);
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+				return "\u00A7aYour name is now \u00A7b\u00A7l" + userName + "\u00A7c.";
+			}
+			case AUTHENTICATION_FAILURE:
+			{
+				return "\u00a7cAuthentication failed. Please check e-mail and password.";
+			}
+			case AUTHENTICATION_UNAVAILABLE:
+			{
+				return "\u00a7cCannot contact authentication server.";
+			}
+			case INVALID_ACCOUNT_DATA:
+			{
+				switch (minecraftAccount.getServiceType())
+				{
+					case MCLEAKS:
+						minecraftAccount.setServiceType(AltServiceType.MCLEAKS_INVALID);
+						// noinspection fallthrough
+					case MCLEAKS_INVALID:
+						LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+						return "\u00a7cThe MCLeaks token has to be 16 characters long!";
+
+					default:
+						minecraftAccount.setServiceType(AltServiceType.MOJANG_INVALID);
+						LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+
+						return "\u00a7cInvalid username or wrong password or the account is get mojang-banned.";
+				}
+			}
+			case MIGRATED:
+			{
+				minecraftAccount.setServiceType(AltServiceType.MOJANG_MIGRATED);
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+				return "\u00a7cAccount migrated.";
+			}
+			case MCLEAKS_INVALID:
+			{
+				minecraftAccount.setServiceType(AltServiceType.MCLEAKS_INVALID);
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+
+				return "\u00a7cMCLeaks token invalid or expired.";
+			}
+			case THEALTENING_INVALID:
+			{
+				minecraftAccount.setServiceType(AltServiceType.THEALTENING_INVALID);
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+				return "\u00a7cTheAltening token invalid or expired.";
+			}
+			default:
+				return "";
 		}
+	}
 
-		if (result == LoginResult.WRONG_PASSWORD)
-			return "\u00A7cWrong password.";
+	public static boolean canMarkBannedCurrent(final String serverIp)
+	{
+		if (serverIp == null)
+			return true;
 
-		if (result == LoginResult.NO_CONTACT)
-			return "\u00A7cCannot contact authentication server.";
+		return LiquidBounce.fileManager.accountsConfig.getAccounts().stream().filter(acc -> mc.getSession().getProfile().getName().equalsIgnoreCase(acc.getName()) || mc.getSession().getProfile().getName().equalsIgnoreCase(acc.getAccountName())).findFirst().map(acc -> !acc.getBannedServers().contains(serverIp)).orElse(true);
+	}
 
-		if (result == LoginResult.INVALID_ACCOUNT_DATA)
-			return "\u00A7cInvalid username or password.";
-
-		if (result == LoginResult.MIGRATED)
-			return "\u00A7cAccount migrated.";
-
-		return "";
+	public static void toggleMarkBanned(final String serverIp)
+	{
+		for (final MinecraftAccount acc : LiquidBounce.fileManager.accountsConfig.getAccounts())
+			if (mc.getSession().getProfile().getName().equalsIgnoreCase(acc.getName()) || mc.getSession().getProfile().getName().equalsIgnoreCase(acc.getAccountName()))
+			{
+				final boolean canmarkbanned = canMarkBannedCurrent(serverIp);
+				if (canmarkbanned)
+					acc.getBannedServers().add(serverIp);
+				else
+					acc.getBannedServers().remove(serverIp);
+				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+				ClientUtils.getLogger().info("Marked account {} {} on {}", acc.getName(), canmarkbanned ? "banned" : "un-banned", serverIp);
+			}
 	}
 
 	public void initGui()
 	{
-		final int textFieldWidth = Math.max(representedScreen.getWidth() / 8, 70);
+		final int width = representedScreen.getWidth();
+		final int textFieldWidth = Math.max(width / 8, 70);
 
-		searchField = classProvider.createGuiTextField(2, Fonts.font40, representedScreen.getWidth() - textFieldWidth - 10, 10, textFieldWidth, 20);
+		searchField = classProvider.createGuiTextField(2, Fonts.font40, width - textFieldWidth - 10, 10, textFieldWidth, 20);
 		searchField.setMaxStringLength(Integer.MAX_VALUE);
 
-		altsList = new GuiList(representedScreen);
+		altsList = new GuiAltsList(representedScreen);
 		altsList.represented.registerScrollButtons(7, 8);
 
 		int index = -1;
 
-		for (int i = 0; i < LiquidBounce.fileManager.accountsConfig.getAccounts().size(); i++)
+		// Find the current logged-on account and automatically select it
+		for (int i = 0, j = LiquidBounce.fileManager.accountsConfig.getAccounts().size(); i < j; i++)
 		{
 			final MinecraftAccount minecraftAccount = LiquidBounce.fileManager.accountsConfig.getAccounts().get(i);
 
@@ -151,18 +221,18 @@ public class GuiAltManager extends WrappedGuiScreen
 		altsList.represented.scrollBy(index * altsList.represented.getSlotHeight());
 
 		final int j = 22;
-		representedScreen.getButtonList().add(classProvider.createGuiButton(1, representedScreen.getWidth() - 80, j + 24, 70, 20, "Add"));
-		representedScreen.getButtonList().add(classProvider.createGuiButton(2, representedScreen.getWidth() - 80, j + 24 * 2, 70, 20, "Remove"));
-		representedScreen.getButtonList().add(classProvider.createGuiButton(7, representedScreen.getWidth() - 80, j + 24 * 3, 70, 20, "Import"));
-		representedScreen.getButtonList().add(classProvider.createGuiButton(12, representedScreen.getWidth() - 80, j + 24 * 4, 70, 20, "Export"));
-		representedScreen.getButtonList().add(classProvider.createGuiButton(8, representedScreen.getWidth() - 80, j + 24 * 5, 70, 20, "Copy"));
+		representedScreen.getButtonList().add(classProvider.createGuiButton(1, width - 80, j + 24, 70, 20, "Add"));
+		representedScreen.getButtonList().add(classProvider.createGuiButton(2, width - 80, j + (24 << 1), 70, 20, "Remove"));
+		representedScreen.getButtonList().add(classProvider.createGuiButton(8, width - 80, j + 24 * 3, 70, 20, "Copy"));
+		representedScreen.getButtonList().add(classProvider.createGuiButton(7, width - 80, j + (24 << 2), 70, 20, "Import"));
+		representedScreen.getButtonList().add(classProvider.createGuiButton(12, width - 80, j + 24 * 5, 70, 20, "Export"));
 
-		representedScreen.getButtonList().add(classProvider.createGuiButton(0, representedScreen.getWidth() - 80, representedScreen.getHeight() - 65, 70, 20, "Back"));
+		representedScreen.getButtonList().add(classProvider.createGuiButton(0, width - 80, representedScreen.getHeight() - 65, 70, 20, "Back"));
 
 		representedScreen.getButtonList().add(loginButton = classProvider.createGuiButton(3, 5, j + 24, 90, 20, "Login"));
-		representedScreen.getButtonList().add(randomButton = classProvider.createGuiButton(4, 5, j + 24 * 2, 90, 20, "Random"));
+		representedScreen.getButtonList().add(randomButton = classProvider.createGuiButton(4, 5, j + (24 << 1), 90, 20, "Random"));
 		representedScreen.getButtonList().add(classProvider.createGuiButton(6, 5, j + 24 * 3, 90, 20, "Direct Login"));
-		representedScreen.getButtonList().add(classProvider.createGuiButton(88, 5, j + 24 * 4, 90, 20, "Change Name"));
+		representedScreen.getButtonList().add(classProvider.createGuiButton(88, 5, j + (24 << 2), 90, 20, "Change Name"));
 
 		if (GENERATORS.getOrDefault("mcleaks", true))
 			representedScreen.getButtonList().add(classProvider.createGuiButton(5, 5, j + 24 * 5 + 5, 90, 20, "MCLeaks"));
@@ -170,22 +240,27 @@ public class GuiAltManager extends WrappedGuiScreen
 			representedScreen.getButtonList().add(classProvider.createGuiButton(9, 5, j + 24 * 6 + 5, 90, 20, "TheAltening"));
 
 		representedScreen.getButtonList().add(classProvider.createGuiButton(10, 5, j + 24 * 7 + 5, 90, 20, "Session Login"));
-		representedScreen.getButtonList().add(classProvider.createGuiButton(11, 5, j + 24 * 8 + 10, 90, 20, "Cape"));
+		representedScreen.getButtonList().add(classProvider.createGuiButton(11, 5, j + (24 << 3) + 10, 90, 20, "Cape"));
+		representedScreen.getButtonList().add(classProvider.createGuiButton(99, 5, 248, 90, 20, "Reconnect to last server"));
 
+		representedScreen.getButtonList().add(classProvider.createGuiButton(13, width - 80, 166, 70, 20, "Banned Servers"));
+		representedScreen.getButtonList().add(classProvider.createGuiButton(14, width - 80, 190, 70, 20, "Copy Current Session Into Clipboard"));
+		representedScreen.getButtonList().add(classProvider.createGuiButton(15, width - 80, 214, 70, 20, "Current Session Info"));
 	}
 
 	@Override
 	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
 	{
+		final int width = representedScreen.getWidth();
 		representedScreen.drawBackground(0);
 
 		altsList.represented.drawScreen(mouseX, mouseY, partialTicks);
 
-		Fonts.font40.drawCenteredString("AltManager", representedScreen.getWidth() / 2.0f, 6, 0xffffff);
-		Fonts.font35.drawCenteredString(searchField.getText().isEmpty() ? LiquidBounce.fileManager.accountsConfig.getAccounts().size() + " Alts" : altsList.accounts.size() + " Search Results", representedScreen.getWidth() / 2.0f, 18, 0xffffff);
-		Fonts.font35.drawCenteredString(status, representedScreen.getWidth() / 2.0f, 32, 0xffffff);
+		Fonts.font40.drawCenteredString("AltManager", width / 2.0f, 6, 0xffffff);
+		Fonts.font35.drawCenteredString(searchField.getText().isEmpty() ? LiquidBounce.fileManager.accountsConfig.getAccounts().size() + " Alts" : altsList.accounts.size() + " Search Results", width / 2.0f, 18, 0xffffff);
+		Fonts.font35.drawCenteredString(status, width / 2.0f, 32, 0xffffff);
 		Fonts.font35.drawStringWithShadow("\u00A77User: \u00A7a" + (MCLeaks.isAltActive() ? MCLeaks.getSession().getUsername() : mc.getSession().getUsername()), 6, 6, 0xffffff);
-		Fonts.font35.drawStringWithShadow("\u00A77Type: \u00A7a" + (altService.getCurrentService() == EnumAltService.THEALTENING ? "TheAltening" : MCLeaks.isAltActive() ? "MCLeaks" : UserUtils.INSTANCE.isValidTokenOffline(mc.getSession().getToken()) ? "Premium" : "Cracked"), 6, 15, 0xffffff);
+		Fonts.font35.drawStringWithShadow("\u00A77Type: \u00A7a" + (altService.getCurrentService() == EnumAltService.THEALTENING ? "\u00a7aTheAltening" : MCLeaks.isAltActive() ? "\u00a7bMCLeaks" : UserUtils.INSTANCE.isValidTokenOffline(mc.getSession().getToken()) ? "\u00a76Mojang" : "\u00a78Cracked"), 6, 15, 0xffffff);
 
 		searchField.drawTextBox();
 
@@ -229,12 +304,17 @@ public class GuiAltManager extends WrappedGuiScreen
 
 					final Thread thread = new Thread(() ->
 					{
-						final MinecraftAccount minecraftAccount = altsList.accounts.get(altsList.getSelectedSlot());
-						status = "\u00A7aLogging in...";
-						status = login(minecraftAccount);
-
-						loginButton.setEnabled(true);
-						randomButton.setEnabled(true);
+						try
+						{
+							final MinecraftAccount minecraftAccount = altsList.accounts.get(altsList.getSelectedSlot());
+							status = "\u00A7aLogging in...";
+							status = login(minecraftAccount);
+						}
+						finally
+						{
+							loginButton.setEnabled(true);
+							randomButton.setEnabled(true);
+						}
 					}, "AltLogin");
 					thread.start();
 				}
@@ -242,7 +322,7 @@ public class GuiAltManager extends WrappedGuiScreen
 					status = "\u00A7cSelect an account.";
 				break;
 			case 4:
-				if (altsList.accounts.size() <= 0)
+				if (altsList.accounts.isEmpty())
 				{
 					status = "\u00A7cThe list is empty.";
 					return;
@@ -258,12 +338,17 @@ public class GuiAltManager extends WrappedGuiScreen
 
 				final Thread thread = new Thread(() ->
 				{
-					final MinecraftAccount minecraftAccount = altsList.accounts.get(randomInteger);
-					status = "\u00A7aLogging in...";
-					status = login(minecraftAccount);
-
-					loginButton.setEnabled(true);
-					randomButton.setEnabled(true);
+					try
+					{
+						final MinecraftAccount minecraftAccount = altsList.accounts.get(randomInteger);
+						status = "\u00A7aLogging in...";
+						status = login(minecraftAccount);
+					}
+					finally
+					{
+						loginButton.setEnabled(true);
+						randomButton.setEnabled(true);
+					}
 				}, "AltLogin");
 				thread.start();
 				break;
@@ -288,10 +373,7 @@ public class GuiAltManager extends WrappedGuiScreen
 					final String[] accountData = line.split(":", 2);
 
 					if (!LiquidBounce.fileManager.accountsConfig.accountExists(accountData[0]))
-						if (accountData.length > 1)
-							LiquidBounce.fileManager.accountsConfig.addAccount(accountData[0], accountData[1]);
-						else
-							LiquidBounce.fileManager.accountsConfig.addAccount(accountData[0]);
+						LiquidBounce.fileManager.accountsConfig.addAccount(accountData.length > 1 ? new MinecraftAccount(AltServiceType.MOJANG, accountData[0], accountData[1]) : new MinecraftAccount(AltServiceType.MOJANG, accountData[0]));
 				}
 
 				fileReader.close();
@@ -299,6 +381,7 @@ public class GuiAltManager extends WrappedGuiScreen
 
 				altsList.updateAccounts(searchField.getText());
 				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+
 				status = "\u00A7aThe accounts were imported successfully.";
 				break;
 			case 8:
@@ -322,7 +405,7 @@ public class GuiAltManager extends WrappedGuiScreen
 				mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiTheAltening(this)));
 				break;
 			case 10:
-				mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiSessionLogin(this)));
+				mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiSessionLogin(representedScreen)));
 				break;
 			case 11:
 				mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiDonatorCape(this)));
@@ -361,6 +444,22 @@ public class GuiAltManager extends WrappedGuiScreen
 					e.printStackTrace();
 					MiscUtils.showErrorPopup("Error", "Exception class: " + e.getClass().getName() + "\nMessage: " + e.getMessage());
 				}
+				break;
+			case 99:
+				ServerUtils.connectToLastServer();
+				break;
+			case 13:
+				if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize())
+					mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiBannedServers(this, LiquidBounce.fileManager.accountsConfig.getAccounts().get(altsList.getSelectedSlot()))));
+				else
+					status = "\u00a7cSelect an account.";
+				break;
+			case 14:
+				Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(mc.getSession().getSessionID()), null);
+				status = "\u00a7aCopied current session id into your clipboard.";
+				break;
+			case 15:
+				mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiSessionInfo(representedScreen, null)));
 				break;
 		}
 	}
@@ -416,7 +515,7 @@ public class GuiAltManager extends WrappedGuiScreen
 	}
 
 	@Override
-	public void handleMouseInput() throws IOException
+	public void handleMouseInput()
 	{
 		representedScreen.superHandleMouseInput();
 
@@ -437,12 +536,13 @@ public class GuiAltManager extends WrappedGuiScreen
 		searchField.updateCursorCounter();
 	}
 
-	private class GuiList extends WrappedGuiSlot
+	private class GuiAltsList extends WrappedGuiSlot
 	{
-		private List<MinecraftAccount> accounts;
+		@SuppressWarnings("WeakerAccess")
+		List<MinecraftAccount> accounts;
 		private int selectedSlot;
 
-		GuiList(final IGuiScreen prevGui)
+		GuiAltsList(final IGuiScreen prevGui)
 		{
 			super(mc, prevGui.getWidth(), prevGui.getHeight(), 40, prevGui.getHeight() - 40, 30);
 
@@ -479,10 +579,10 @@ public class GuiAltManager extends WrappedGuiScreen
 			return selectedSlot;
 		}
 
-		public void setSelectedSlot(final int selectedSlot)
-		{
-			this.selectedSlot = selectedSlot;
-		}
+//		public void setSelectedSlot(final int selectedSlot)
+//		{
+//			this.selectedSlot = selectedSlot;
+//		}
 
 		@Override
 		public int getSize()
@@ -496,7 +596,8 @@ public class GuiAltManager extends WrappedGuiScreen
 			selectedSlot = var1;
 
 			if (doubleClick)
-				if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize() && loginButton.getEnabled()) {
+				if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize() && loginButton.getEnabled())
+				{
 					loginButton.setEnabled(false);
 					randomButton.setEnabled(false);
 
@@ -509,17 +610,23 @@ public class GuiAltManager extends WrappedGuiScreen
 						loginButton.setEnabled(true);
 						randomButton.setEnabled(true);
 					}, "AltManagerLogin").start();
-				} else
+				}
+				else
 					status = "\u00A7cSelect an account.";
 		}
 
 		@Override
 		public void drawSlot(final int id, final int x, final int y, final int var4, final int var5, final int var6)
 		{
+			final int width = getRepresented().getWidth();
 			final MinecraftAccount minecraftAccount = accounts.get(id);
+			final AltServiceType serviceType = minecraftAccount.getServiceType();
+			final boolean invalid = serviceType == AltServiceType.MOJANG_INVALID || serviceType == AltServiceType.MOJANG_MIGRATED || serviceType == AltServiceType.MCLEAKS_INVALID || serviceType == AltServiceType.THEALTENING_INVALID;
 
-			Fonts.font40.drawCenteredString(minecraftAccount.getAccountName() == null ? minecraftAccount.getName() : minecraftAccount.getAccountName(), representedScreen.getWidth() / 2, y + 2, Color.WHITE.getRGB(), true);
-			Fonts.font40.drawCenteredString(minecraftAccount.isCracked() ? "Cracked" : minecraftAccount.getAccountName() == null ? "Premium" : minecraftAccount.getName(), representedScreen.getWidth() / 2, y + 15, minecraftAccount.isCracked() ? Color.GRAY.getRGB() : minecraftAccount.getAccountName() == null ? Color.GREEN.getRGB() : Color.LIGHT_GRAY.getRGB(), true);
+			Fonts.font40.drawCenteredString(minecraftAccount.getAccountName() == null ? minecraftAccount.getName() : minecraftAccount.getAccountName(), width / 2, y + 2, Color.WHITE.getRGB(), true);
+			Fonts.font40.drawCenteredString(minecraftAccount.isCracked() ? "Cracked" : minecraftAccount.getServiceType().getId(), width / 2, y + 10, minecraftAccount.isCracked() ? Color.GRAY.getRGB() : minecraftAccount.getAccountName() == null ? Color.LIGHT_GRAY.getRGB() : invalid ? Color.RED.getRGB() : Color.GREEN.getRGB(), true);
+			if (!minecraftAccount.getBannedServers().isEmpty())
+				Fonts.font35.drawCenteredString("Banned on " + minecraftAccount.serializeBannedServers(), width / 2, y + 20, Color.RED.getRGB(), true);
 		}
 
 		@Override
@@ -527,5 +634,4 @@ public class GuiAltManager extends WrappedGuiScreen
 		{
 		}
 	}
-
 }

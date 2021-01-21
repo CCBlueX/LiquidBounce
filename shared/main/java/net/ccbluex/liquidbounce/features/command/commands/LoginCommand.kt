@@ -23,8 +23,8 @@ class LoginCommand : Command("login")
 			return
 		}
 
-		val result: String = if (args.size > 2) GuiAltManager.login(MinecraftAccount(args[1], args[2]))
-		else GuiAltManager.login(MinecraftAccount(args[1]))
+		val result: String = if (args.size > 2) GuiAltManager.login(MinecraftAccount(MinecraftAccount.AltServiceType.MOJANG, args[1], args[2]))
+		else GuiAltManager.login(MinecraftAccount(MinecraftAccount.AltServiceType.MOJANG, args[1]))
 
 		chat(result)
 
