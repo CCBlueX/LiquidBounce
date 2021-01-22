@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 class NoWeb : Module()
 {
 
-	private val modeValue = ListValue("Mode", arrayOf("None", "AAC", "LAAC", "Rewi"), "None")
+	private val modeValue = ListValue("Mode", arrayOf("None", "AAC", "AAC3.3.6-WebWalk", "Rewinside"), "None")
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
@@ -36,7 +36,7 @@ class NoWeb : Module()
 				if (!mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY = 0.0
 			}
 
-			"laac" ->
+			"aac3.3.6-webwalk" ->
 			{
 				thePlayer.jumpMovementFactor = if (thePlayer.movementInput.moveStrafe != 0f) 1.0f else 1.21f
 
@@ -45,7 +45,7 @@ class NoWeb : Module()
 				if (thePlayer.onGround) thePlayer.jump()
 			}
 
-			"rewi" ->
+			"rewinside" ->
 			{
 				thePlayer.jumpMovementFactor = 0.42f
 

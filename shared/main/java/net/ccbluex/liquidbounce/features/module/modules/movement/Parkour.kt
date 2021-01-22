@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 @ModuleInfo(name = "Parkour", description = "Automatically jumps when reaching the edge of a block.", category = ModuleCategory.MOVEMENT)
 class Parkour : Module()
 {
-
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{

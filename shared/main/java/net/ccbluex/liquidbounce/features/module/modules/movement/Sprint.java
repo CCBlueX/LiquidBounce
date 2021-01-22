@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
+import org.jetbrains.annotations.Nullable;
 
 @ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
 public class Sprint extends Module
@@ -38,5 +39,10 @@ public class Sprint extends Module
 
 		if (allDirectionsValue.get() || mc.getThePlayer().getMovementInput().getMoveForward() >= 0.8F)
 			mc.getThePlayer().setSprinting(true);
+	}
+
+	@Override
+	public String getTag() {
+		return allDirectionsValue.get() ? "AllDirection" : null;
 	}
 }

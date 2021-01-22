@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 @ModuleInfo(name = "IceSpeed", description = "Allows you to walk faster on ice.", category = ModuleCategory.MOVEMENT)
 class IceSpeed : Module()
 {
-	private val modeValue = ListValue("Mode", arrayOf("NCP", "AAC", "Spartan"), "NCP")
+	private val modeValue = ListValue("Mode", arrayOf("NCP", "AAC3.2.0", "Spartan"), "NCP")
 	override fun onEnable()
 	{
 		if (modeValue.get().equals("NCP", ignoreCase = true))
@@ -49,7 +49,7 @@ class IceSpeed : Module()
 
 		if (thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.sneaking && thePlayer.sprinting && thePlayer.movementInput.moveForward > 0.0)
 		{
-			if (mode.equals("AAC", ignoreCase = true))
+			if (mode.equals("AAC3.2.0", ignoreCase = true))
 			{
 				getMaterial(thePlayer.position.down()).let {
 					if (it == classProvider.getBlockEnum(BlockType.ICE) || it == classProvider.getBlockEnum(BlockType.ICE_PACKED))

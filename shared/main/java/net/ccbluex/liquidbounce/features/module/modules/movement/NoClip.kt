@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -34,7 +35,8 @@ class NoClip : Module()
 		thePlayer.motionY = 0.0
 		thePlayer.motionZ = 0.0
 
-		val speed = 0.32f
+		val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
+		val speed = fly.vanillaSpeedValue.get()
 
 		thePlayer.jumpMovementFactor = speed
 

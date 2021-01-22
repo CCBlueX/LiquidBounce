@@ -14,6 +14,8 @@ import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.ccbluex.liquidbounce.injection.backend.PacketImplKt;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinNetworkManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
+import net.ccbluex.liquidbounce.utils.PPSCounter;
+import net.ccbluex.liquidbounce.utils.PPSCounter.BoundType;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.NetworkManager;
@@ -63,6 +65,8 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 
 			if (event.isCancelled())
 				callback.cancel();
+			else
+				PPSCounter.registerPacket(BoundType.INBOUND);
 		}
 	}
 
@@ -77,6 +81,8 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 
 			if (event.isCancelled())
 				callback.cancel();
+			else
+				PPSCounter.registerPacket(BoundType.OUTBOUND);
 		}
 	}
 
@@ -98,6 +104,8 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 				for (final Class nwmanInnerClasses : NetworkManager.class.getDeclaredClasses())
 					if (nwmanInnerClasses.getSimpleName().equalsIgnoreCase("InboundHandlerTuplePacketListener"))
 						outboundPacketsQueue.add(nwmanInnerClasses.getConstructor(Packet.class, GenericFutureListener[].class).newInstance(packetIn, null));
+
+				PPSCounter.registerPacket(BoundType.OUTBOUND);
 			}
 			catch (final InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e)
 			{

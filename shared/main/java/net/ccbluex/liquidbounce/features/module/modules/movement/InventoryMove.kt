@@ -53,10 +53,7 @@ class InventoryMove : Module()
 	{
 		val isIngame = mc.currentScreen != null
 
-		for (affectedBinding in affectedBindings)
-		{
-			if (!mc.gameSettings.isKeyDown(affectedBinding) || isIngame) affectedBinding.pressed = false
-		}
+		affectedBindings.filter { !mc.gameSettings.isKeyDown(it) || isIngame }.forEach { it.pressed = false }
 	}
 
 	override val tag: String?

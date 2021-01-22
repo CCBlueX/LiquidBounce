@@ -123,4 +123,7 @@ class WallClimb : Module()
 				classProvider.createAxisAlignedBB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0).offset(thePlayer.posX, thePlayer.posY.toInt() - 1.0, thePlayer.posZ)
 		}
 	}
+
+	override val tag: String?
+		get() = modeValue.get()
 }

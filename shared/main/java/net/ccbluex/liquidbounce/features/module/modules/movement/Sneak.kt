@@ -20,7 +20,6 @@ import net.ccbluex.liquidbounce.value.ListValue
 @ModuleInfo(name = "Sneak", description = "Automatically sneaks all the time.", category = ModuleCategory.MOVEMENT)
 class Sneak : Module()
 {
-
 	@JvmField
 	val modeValue = ListValue("Mode", arrayOf("Legit", "Vanilla", "Switch", "MineSecure"), "MineSecure")
 
@@ -32,6 +31,8 @@ class Sneak : Module()
 	@EventTarget
 	fun onMotion(event: MotionEvent)
 	{
+		val thePlayer = mc.thePlayer ?: return
+		
 		if (stopMoveValue.get() && MovementUtils.isMoving)
 		{
 			if (sneaking) onDisable()
@@ -46,7 +47,7 @@ class Sneak : Module()
 			{
 				if (sneaking) return
 
-				mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
+				mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
 			}
 
 			"switch" ->
@@ -55,14 +56,14 @@ class Sneak : Module()
 				{
 					EventState.PRE ->
 					{
-						mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
-						mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.STOP_SNEAKING))
+						mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
+						mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SNEAKING))
 					}
 
 					EventState.POST ->
 					{
-						mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.STOP_SNEAKING))
-						mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
+						mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SNEAKING))
+						mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
 					}
 				}
 			}
@@ -71,7 +72,7 @@ class Sneak : Module()
 			{
 				if (event.eventState == EventState.PRE) return
 
-				mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
+				mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
 			}
 		}
 	}
@@ -100,4 +101,7 @@ class Sneak : Module()
 		}
 		sneaking = false
 	}
+
+	override val tag: String
+		get() = modeValue.get()
 }

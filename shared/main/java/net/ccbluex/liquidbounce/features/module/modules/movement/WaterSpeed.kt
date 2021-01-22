@@ -31,4 +31,7 @@ class WaterSpeed : Module()
 			thePlayer.motionZ *= speed
 		}
 	}
+
+	override val tag: String
+		get() = "${speedValue.get()}"
 }

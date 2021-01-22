@@ -15,7 +15,7 @@ public class CPSCounter
 
 	static
 	{
-		for (int i = 0; i < TIMESTAMP_BUFFERS.length; i++)
+		for (int i = 0, j = TIMESTAMP_BUFFERS.length; i < j; i++)
 			TIMESTAMP_BUFFERS[i] = new RollingArrayLongBuffer(MAX_CPS);
 	}
 
@@ -27,7 +27,7 @@ public class CPSCounter
 	 */
 	public static void registerClick(final MouseButton button)
 	{
-		TIMESTAMP_BUFFERS[button.getIndex()].add(System.currentTimeMillis());
+		TIMESTAMP_BUFFERS[button.index].add(System.currentTimeMillis());
 	}
 
 	/**
@@ -39,7 +39,7 @@ public class CPSCounter
 	 */
 	public static int getCPS(final MouseButton button)
 	{
-		return TIMESTAMP_BUFFERS[button.getIndex()].getTimestampsSince(System.currentTimeMillis() - 1000L);
+		return TIMESTAMP_BUFFERS[button.index].getTimestampsSince(System.currentTimeMillis() - 1000L);
 	}
 
 	public enum MouseButton
@@ -48,17 +48,11 @@ public class CPSCounter
 		MIDDLE(1),
 		RIGHT(2);
 
-		private final int index;
+		final int index;
 
 		MouseButton(final int index)
 		{
 			this.index = index;
 		}
-
-		private int getIndex()
-		{
-			return index;
-		}
 	}
-
 }

@@ -6,20 +6,17 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.Render3DEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.utils.timer.TickTimer
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import kotlin.math.abs
@@ -31,7 +28,14 @@ class BugUp : Module()
 {
 	private val modeValue = ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag"), "FlyFlag")
 	private val maxFallDistance = IntegerValue("MaxFallDistance", 10, 2, 255)
+	private val maxVoidFallDistance = IntegerValue("MaxVoidFallDistance", 3, 1, 255)
 	private val maxDistanceWithoutGround = FloatValue("MaxDistanceToSetback", 2.5f, 1f, 30f)
+
+	private val flagMethodValue = ListValue("FlyFlag-Method", arrayOf("Packet", "Motion"), "Packet")
+	private val flagYPacket = FloatValue("FlyFlag-PacketY", 5f, -10f, 10f)
+	private val flagYMotion = FloatValue("FlyFlag-MotionY", 1f, -10f, 10f)
+
+	private val onlyCatchVoid = BoolValue("OnlyVoid", true)
 	private val indicator = BoolValue("Indicator", true)
 
 	private var detectedLocation: WBlockPos? = null
@@ -39,6 +43,9 @@ class BugUp : Module()
 	private var prevX = 0.0
 	private var prevY = 0.0
 	private var prevZ = 0.0
+
+	private val flagTimer = TickTimer()
+	private var tryingFlag = false
 
 	override fun onDisable()
 	{
@@ -76,10 +83,9 @@ class BugUp : Module()
 
 			detectedLocation = fallingPlayer.findCollision(60)?.pos
 
-			if (detectedLocation != null && abs(thePlayer.posY - detectedLocation!!.y) + thePlayer.fallDistance <= maxFallDistance.get())
-			{
-				lastFound = thePlayer.fallDistance
-			}
+			if (detectedLocation != null && (onlyCatchVoid.get() || abs(thePlayer.posY - detectedLocation!!.y) + thePlayer.fallDistance <= maxFallDistance.get())) lastFound = thePlayer.fallDistance
+
+			if (detectedLocation == null && thePlayer.fallDistance <= maxVoidFallDistance.get()) lastFound = thePlayer.fallDistance
 
 			if (thePlayer.fallDistance - lastFound > maxDistanceWithoutGround.get())
 			{
@@ -96,8 +102,8 @@ class BugUp : Module()
 
 					"flyflag" ->
 					{
-						thePlayer.motionY += 0.1
-						thePlayer.fallDistance = 0F
+						tryingFlag = true //						thePlayer.motionY += 0.1
+						//						thePlayer.fallDistance = 0F
 					}
 
 					"ongroundspoof" -> mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(true))
@@ -114,6 +120,28 @@ class BugUp : Module()
 				}
 			}
 		}
+
+		if (tryingFlag)
+		{
+			if (!flagTimer.hasTimePassed(10))
+			{
+				when (flagMethodValue.get().toLowerCase())
+				{
+					"motion" ->
+					{
+						thePlayer.motionY = flagYMotion.get().toDouble()
+						thePlayer.fallDistance = 0F
+					}
+
+					"packet" -> mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + flagYPacket.get(), thePlayer.posZ, false))
+				}
+			} else
+			{
+				tryingFlag = false
+				flagTimer.reset()
+			}
+			flagTimer.update()
+		} else flagTimer.reset()
 	}
 
 	@EventTarget
@@ -154,4 +182,25 @@ class BugUp : Module()
 
 		classProvider.getGlStateManager().resetColor()
 	}
+
+	@EventTarget
+	fun onPacket(event: PacketEvent)
+	{
+		val packet = event.packet
+		if (classProvider.isSPacketPlayerPosLook(packet))
+		{
+			val mode = modeValue.get()
+
+			if (mode.equals("FlyFlag", true) && tryingFlag)
+			{
+
+				// Automatically stop flagging after teleported back.
+				ClientUtils.displayChatMessage("\u00a78[\u00a7c\u00a7lBugUp\u00a78] \u00a7cTeleported.")
+				tryingFlag = false
+			}
+		}
+	}
+
+	override val tag: String
+		get() = modeValue.get()
 }

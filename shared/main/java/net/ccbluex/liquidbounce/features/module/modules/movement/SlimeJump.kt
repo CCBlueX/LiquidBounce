@@ -17,8 +17,8 @@ import net.ccbluex.liquidbounce.value.ListValue
 @ModuleInfo(name = "SlimeJump", description = "Allows you to to jump higher on slime blocks.", category = ModuleCategory.MOVEMENT)
 class SlimeJump : Module()
 {
-	private val motionValue = FloatValue("Motion", 0.42f, 0.2f, 1f)
 	private val modeValue = ListValue("Mode", arrayOf("Set", "Add"), "Add")
+	private val motionValue = FloatValue("Motion", 0.42f, 0.2f, 1f)
 
 	@EventTarget
 	fun onJump(event: JumpEvent)
@@ -36,4 +36,7 @@ class SlimeJump : Module()
 			}
 		}
 	}
+
+	override val tag: String?
+		get() = "${if (modeValue.get().equals("Add", ignoreCase = true)) "+" else ""}${motionValue.get()}"
 }

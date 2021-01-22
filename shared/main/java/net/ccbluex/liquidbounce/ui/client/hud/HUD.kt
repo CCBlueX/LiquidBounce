@@ -24,7 +24,8 @@ open class HUD : MinecraftInstance()
 	companion object
 	{
 
-		val elements = arrayOf(Armor::class.java,
+		val elements = arrayOf(
+			Armor::class.java,
 			Arraylist::class.java,
 			Effects::class.java,
 			Image::class.java,
@@ -35,7 +36,9 @@ open class HUD : MinecraftInstance()
 			ScoreboardElement::class.java,
 			Target::class.java,
 			Radar::class.java,
-			SpeedGraph::class.java)
+			SpeedGraph::class.java,
+			NetGraph::class.java
+		)
 
 		/**
 		 * Create default HUD

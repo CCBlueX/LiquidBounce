@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.enums.WEnumHand
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
@@ -17,12 +16,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.injection.backend.Backend
-import net.ccbluex.liquidbounce.injection.backend.WrapperImpl
-import net.ccbluex.liquidbounce.injection.backend.unwrap
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.createUseItemPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 
 @ModuleInfo(
 	name = "NoSlow", description = "Cancels slowness effects caused by soulsand and using items.", category = ModuleCategory.MOVEMENT
@@ -42,11 +39,14 @@ class NoSlow : Module()
 	private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1.0F, 0.2F, 1.0F)
 
 	// NCP mode
-	private val packet = BoolValue("Packet", true)
+	private val ncpValue = BoolValue("Packet", true)
+	private val ncpPacketsDelayValue = IntegerValue("Packet-PacketsDelay", 0, 0, 2)
 
 	// Blocks
 	val soulsandValue = BoolValue("Soulsand", true)
 	val liquidPushValue = BoolValue("LiquidPush", true)
+
+	private var ncpDelay = ncpPacketsDelayValue.get()
 
 	@EventTarget
 	fun onMotion(event: MotionEvent)
@@ -59,22 +59,23 @@ class NoSlow : Module()
 		val aura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
 		if (!thePlayer.isBlocking && !aura.serverSideBlockingStatus) return
 
-		if (packet.get() && Backend.MINECRAFT_VERSION_MINOR == 8)
+		if (ncpValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8 && ++ncpDelay > ncpPacketsDelayValue.get())
 		{
 			when (event.eventState)
 			{
 				EventState.PRE ->
 				{
-					val digging = classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), classProvider.getEnumFacing(EnumFacingType.DOWN))
-					mc.netHandler.addToSendQueue(digging)
+					val unblock = classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), classProvider.getEnumFacing(EnumFacingType.DOWN))
+					mc.netHandler.addToSendQueue(unblock)
 				}
 
 				EventState.POST ->
 				{
-					val blockPlace = classProvider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F)
-					mc.netHandler.addToSendQueue(blockPlace)
+					val block = classProvider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F)
+					mc.netHandler.addToSendQueue(block)
 				}
 			}
+			ncpDelay = 0
 		}
 	}
 
