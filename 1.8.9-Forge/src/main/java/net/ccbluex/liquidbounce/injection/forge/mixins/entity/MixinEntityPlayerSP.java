@@ -530,7 +530,6 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			final Step step = (Step) LiquidBounce.moduleManager.getModule(Step.class);
 			final boolean airStep = step.getState() && step.getAirStepValue().get() && step.canAirStep();
 			final boolean steppable = onGround || airStep || d4 != y && d4 < 0.0D;
-			ClientUtils.displayChatMessage("steppable: " + steppable + "(airstep: " + airStep + ")");
 
 			for (final AxisAlignedBB axisalignedbb2 : list1)
 				x = axisalignedbb2.calculateXOffset(getEntityBoundingBox(), x);
