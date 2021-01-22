@@ -59,22 +59,20 @@ class InventoryCleaner : Module()
 		}
 	}
 
-	private val maxHotbarDelayValue: IntegerValue = object : IntegerValue("MaxHotbarDelay", 250, 1, 1000)
+	private val maxHotbarDelayValue: IntegerValue = object : IntegerValue("MaxHotbarDelay", 250, 0, 1000)
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
 		{
 			val minDelay = minHotbarDelayValue.get()
-			if (minDelay <= 0) this.set(1) // Hotbar delay < 1 will make infinity loop
 			if (minDelay > newValue) this.set(minDelay)
 		}
 	}
 
-	private val minHotbarDelayValue: IntegerValue = object : IntegerValue("MinHotbarDelay", 200, 1, 1000)
+	private val minHotbarDelayValue: IntegerValue = object : IntegerValue("MinHotbarDelay", 200, 0, 1000)
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
 		{
 			val maxDelay = maxHotbarDelayValue.get()
-			if (maxDelay <= 0) this.set(1) // Hotbar delay < 1 will make infinity loop
 			if (maxDelay < newValue) this.set(maxDelay)
 		}
 	}
@@ -144,40 +142,41 @@ class InventoryCleaner : Module()
 		if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0) return
 
 		// Clean hotbar
-		while (hotbarValue.get() && !classProvider.isGuiInventory(mc.currentScreen) && InventoryUtils.CLICK_TIMER.hasTimePassed(delay))
+		if (hotbarValue.get() && !classProvider.isGuiInventory(mc.currentScreen))
 		{
 			val hotbarItems = items(36, 45)
 			val garbageItemsHotbarSlots = hotbarItems.filter { !isUseful(it.value, it.key) }.keys.toMutableList()
 
 			// Break if there is no garbage items in hotbar
-			if (garbageItemsHotbarSlots.isEmpty()) break
-
-			var garbageHotbarItem = if (randomSlotValue.get()) garbageItemsHotbarSlots[Random.nextInt(garbageItemsHotbarSlots.size)] else garbageItemsHotbarSlots.first()
-
-			var misclick = false
-
-			// Simulate Click Mistakes to bypass some anti-cheats
-			if (allowMisclicksValue.get() && misclicksRateValue.get() > 0 && Random.nextInt(100) <= misclicksRateValue.get())
+			if (garbageItemsHotbarSlots.isNotEmpty())
 			{
-				val firstEmpty: Int = firstEmpty(hotbarItems, randomSlotValue.get())
-				if (firstEmpty != -1) garbageHotbarItem = firstEmpty
-				misclick = true
+				var garbageHotbarItem = if (randomSlotValue.get()) garbageItemsHotbarSlots[Random.nextInt(garbageItemsHotbarSlots.size)] else garbageItemsHotbarSlots.first()
+
+				var misclick = false
+
+				// Simulate Click Mistakes to bypass some anti-cheats
+				if (allowMisclicksValue.get() && misclicksRateValue.get() > 0 && Random.nextInt(100) <= misclicksRateValue.get())
+				{
+					val firstEmpty: Int = firstEmpty(hotbarItems, randomSlotValue.get())
+					if (firstEmpty != -1) garbageHotbarItem = firstEmpty
+					misclick = true
+				}
+
+				// Switch to the slot of garbage item
+				mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(garbageHotbarItem - 36))
+
+				// Drop items
+				val amount = getAmount(garbageHotbarItem)
+				val action = if (amount > 1 || (amount == 1 && Math.random() > 0.8)) ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS else ICPacketPlayerDigging.WAction.DROP_ITEM
+				mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(action, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+
+				if (indicateClick.get() && classProvider.isGuiContainer(mc.currentScreen)) mc.currentScreen!!.asGuiContainer().highlight(garbageHotbarItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
+
+				// Back to the original holding slot
+				mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+
+				delay = TimeUtils.randomDelay(minHotbarDelayValue.get(), maxHotbarDelayValue.get())
 			}
-
-			// Switch to the slot of garbage item
-			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(garbageHotbarItem - 36))
-
-			// Drop items
-			val amount = getAmount(garbageHotbarItem)
-			val action = if (amount > 1 || (amount == 1 && Math.random() > 0.8)) ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS else ICPacketPlayerDigging.WAction.DROP_ITEM
-			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(action, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
-
-			if (indicateClick.get() && classProvider.isGuiContainer(mc.currentScreen)) mc.currentScreen!!.asGuiContainer().highlight(garbageHotbarItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
-
-			// Back to the original holding slot
-			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
-
-			delay = TimeUtils.randomDelay(minHotbarDelayValue.get(), maxHotbarDelayValue.get())
 		}
 
 		// NoMove, AutoArmorLock Check

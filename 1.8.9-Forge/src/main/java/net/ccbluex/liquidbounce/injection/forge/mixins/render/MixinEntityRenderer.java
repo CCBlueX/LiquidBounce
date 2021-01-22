@@ -12,6 +12,7 @@ import com.google.common.base.Predicates;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
+import net.ccbluex.liquidbounce.features.module.modules.player.ExtendedReach;
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach;
 import net.ccbluex.liquidbounce.features.module.modules.render.CameraClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.HurtCam;
@@ -190,40 +191,41 @@ public abstract class MixinEntityRenderer
 			mc.pointedEntity = null;
 
 			final Reach reach = (Reach) LiquidBounce.moduleManager.getModule(Reach.class);
+			final ExtendedReach extendedReach = (ExtendedReach) LiquidBounce.moduleManager.get(ExtendedReach.class);
 
-			double d0 = reach.getState() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();
-			mc.objectMouseOver = entity.rayTrace(reach.getState() ? reach.getBuildReachValue().get() : d0, p_getMouseOver_1_);
-			double d1 = d0;
+			double blockReach = extendedReach.getState() ? extendedReach.buildReach.get() : reach.getState() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();
+			mc.objectMouseOver = entity.rayTrace(reach.getState() ? reach.getBuildReachValue().get() : blockReach, p_getMouseOver_1_);
+			double hitvecDistance = blockReach;
 			final Vec3 vec3 = entity.getPositionEyes(p_getMouseOver_1_);
 			boolean flag = false;
 			if (mc.playerController.extendedReach())
 			{
-				d0 = 6.0D;
-				d1 = 6.0D;
+				blockReach = 6.0D;
+				hitvecDistance = 6.0D;
 			}
-			else if (d0 > 3.0D)
+			else if (blockReach > 3.0D)
 				flag = true;
 
 			if (mc.objectMouseOver != null)
-				d1 = mc.objectMouseOver.hitVec.distanceTo(vec3);
+				hitvecDistance = mc.objectMouseOver.hitVec.distanceTo(vec3);
 
 			if (reach.getState())
 			{
-				d1 = reach.getCombatReachValue().get();
+				hitvecDistance = reach.getCombatReachValue().get();
 
-				final MovingObjectPosition movingObjectPosition = entity.rayTrace(d1, p_getMouseOver_1_);
+				final MovingObjectPosition movingObjectPosition = entity.rayTrace(hitvecDistance, p_getMouseOver_1_);
 
 				if (movingObjectPosition != null)
-					d1 = movingObjectPosition.hitVec.distanceTo(vec3);
+					hitvecDistance = movingObjectPosition.hitVec.distanceTo(vec3);
 			}
 
 			final Vec3 vec31 = entity.getLook(p_getMouseOver_1_);
-			final Vec3 vec32 = vec3.addVector(vec31.xCoord * d0, vec31.yCoord * d0, vec31.zCoord * d0);
+			final Vec3 vec32 = vec3.addVector(vec31.xCoord * blockReach, vec31.yCoord * blockReach, vec31.zCoord * blockReach);
 			pointedEntity = null;
 			Vec3 vec33 = null;
 			final float f = 1.0F;
-			final List<Entity> list = mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(vec31.xCoord * d0, vec31.yCoord * d0, vec31.zCoord * d0).expand(f, f, f), Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith()));
-			double d2 = d1;
+			final List<Entity> list = mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(vec31.xCoord * blockReach, vec31.yCoord * blockReach, vec31.zCoord * blockReach).expand(f, f, f), Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith()));
+			double d2 = hitvecDistance;
 
 			for (final Entity entity1 : list)
 			{
@@ -262,7 +264,7 @@ public abstract class MixinEntityRenderer
 				mc.objectMouseOver = new MovingObjectPosition(MovingObjectType.MISS, Objects.requireNonNull(vec33), null, new BlockPos(vec33));
 			}
 
-			if (pointedEntity != null && (d2 < d1 || mc.objectMouseOver == null))
+			if (pointedEntity != null && (d2 < hitvecDistance || mc.objectMouseOver == null))
 			{
 				mc.objectMouseOver = new MovingObjectPosition(pointedEntity, vec33);
 				if (pointedEntity instanceof EntityLivingBase || pointedEntity instanceof EntityItemFrame)
