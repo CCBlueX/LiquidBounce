@@ -145,13 +145,39 @@ class Sciter(private val windowHandle: Long) {
         // causing crashes
         // draw0(windowHandle)
         checkInitialized()
-        render0(windowHandle, MemoryUtil.memAddress(framebuffer!!), currentWidth * currentHeight * 4)
+        val framebuffer = framebuffer!!
 
+        render0(windowHandle, MemoryUtil.memAddress(framebuffer), currentWidth * currentHeight * 4)
+
+
+        GL11.glPixelStorei(GL11.GL_PACK_SKIP_ROWS, 0)
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
+
+//        GL11.glPixelStorei(GL11.GL_PACK_SWAP_BYTES, 0)
+//        GL11.glPixelStorei(GL11.GL_PACK_LSB_FIRST, 0)
+//        GL11.glPixelStorei(GL11.GL_PACK_ROW_LENGTH, 0)
+//        GL11.glPixelStorei(GL12.GL_PACK_IMAGE_HEIGHT, 0)
+//        GL11.glPixelStorei(GL12.GL_PACK_SKIP_ROWS, 0)
+//        GL11.glPixelStorei(GL12.GL_PACK_SKIP_ROWS, 0)
+//        GL11.glPixelStorei(GL12.GL_PACK_SKIP_PIXELS, 0)
+//        GL11.glPixelStorei(GL12.GL_PACK_SKIP_IMAGES, 0)
+//        GL11.glPixelStorei(GL12.GL_PACK_ALIGNMENT, 0)
+
+        GL11.glPixelStorei(GL12.GL_PACK_ALIGNMENT, 4)
+        GL11.glPixelStorei(GL12.GL_UNPACK_SWAP_BYTES, 0)
+        GL11.glPixelStorei(GL12.GL_UNPACK_LSB_FIRST, 0)
+        GL11.glPixelStorei(GL12.GL_UNPACK_ROW_LENGTH, 0)
+        GL11.glPixelStorei(GL12.GL_UNPACK_IMAGE_HEIGHT, 0)
+        GL11.glPixelStorei(GL12.GL_UNPACK_SKIP_ROWS, 0)
+        GL11.glPixelStorei(GL12.GL_UNPACK_SKIP_PIXELS, 0)
+        GL11.glPixelStorei(GL12.GL_UNPACK_SKIP_IMAGES, 0)
+        GL11.glPixelStorei(GL12.GL_UNPACK_ALIGNMENT, 4)
+
+        // TODO For whatever reason, the driver doesn't like this. Fix this
         GL11.glTexImage2D(
             GL11.GL_TEXTURE_2D,
             0,
-            GL11.GL_RGBA8,
+            GL12.GL_RGBA,
             currentWidth,
             currentHeight,
             0,
@@ -159,7 +185,6 @@ class Sciter(private val windowHandle: Long) {
             GL11.GL_UNSIGNED_BYTE,
             framebuffer
         )
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
     }
 
     /**

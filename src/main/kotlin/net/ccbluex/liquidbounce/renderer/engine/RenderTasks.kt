@@ -19,14 +19,34 @@
 
 package net.ccbluex.liquidbounce.renderer.engine
 
+import net.ccbluex.liquidbounce.utils.Mat4
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.nio.ByteBuffer
 
-enum class OpenGLLevel {
-    OpenGL1_2,
-    OpenGL3_1,
-    OpenGL4_3
+enum class OpenGLLevel(val minor: Int, val major: Int, val backendInfo: String) {
+    OpenGL4_3(4, 3, "OpenGL 4.3+ (Multi rendering)"),
+    OpenGL3_1(3, 1, "OpenGL 3.1+ (VAOs, VBOs, Shaders)"),
+    OpenGL1_2(1, 2, "OpenGL 1.2+ (Immediate mode, Display Lists)");
+
+    /**
+     * Determines if an OpenGL level is supported
+     */
+    fun isSupported(major: Int, minor: Int): Boolean {
+        if (major > this.major)
+            return true
+
+        return major >= this.major && minor >= this.minor
+    }
+
+    companion object {
+        /**
+         * Determines the best backend level for the given arguments
+         */
+        fun getBestLevelFor(major: Int, minor: Int): OpenGLLevel {
+            return enumValues<OpenGLLevel>().first { it.isSupported(major, minor) }
+        }
+    }
 }
 
 /**
@@ -54,7 +74,7 @@ abstract class RenderTask {
     /**
      * Sets up everything needed for rendering
      */
-    abstract fun initRendering(level: OpenGLLevel)
+    abstract fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4)
 
     /**
      * Executes the current render task. Always called after [initRendering] was called. Since some render tasks

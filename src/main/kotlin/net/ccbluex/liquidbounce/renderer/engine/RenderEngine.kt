@@ -19,10 +19,14 @@
 
 package net.ccbluex.liquidbounce.renderer.engine
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.renderer.engine.font.GlyphPage
+import net.ccbluex.liquidbounce.utils.Mat4
+import net.minecraft.client.MinecraftClient
 import org.lwjgl.opengl.GL11
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.regex.Pattern
 
 class Layer(val renderTasks: ArrayList<RenderTask> = ArrayList(200))
 
@@ -47,6 +51,16 @@ object RenderEngine : Listenable {
      */
     val deferredForRenderThread: LinkedBlockingQueue<Runnable> = LinkedBlockingQueue()
 
+    /**
+     * What OpenGL level is this client supposed to use? Determined when initialized
+     */
+    var openglLevel: OpenGLLevel = OpenGLLevel.OpenGL1_2
+
+    /**
+     * Used to recognize what GL version we are on
+     */
+    val openGlVersionRegex = Pattern.compile("(\\d+)\\.(\\d+)(\\.(\\d+))?(.*)")
+
     val renderHandler = handler<RenderHudEvent> {
         EventManager.callEvent(LiquidBounceRenderEvent())
 
@@ -66,6 +80,30 @@ object RenderEngine : Listenable {
     fun init() {
         Shaders.init()
         GlyphPage.init()
+
+        val versionString = GL11.glGetString(GL11.GL_VERSION)
+
+        if (versionString == null) {
+            LiquidBounce.logger.error("OpenGL didn't return a version string.")
+
+            return
+        }
+
+        val matcher = openGlVersionRegex.matcher(versionString)
+
+        if (!matcher.matches()) {
+            LiquidBounce.logger.error("OpenGL returned an invalid version string: $versionString")
+
+            return
+        }
+
+        val majorVersion = matcher.group(1).toInt()
+        val minorVersion = matcher.group(2).toInt()
+        val patchVersion = if (matcher.groupCount() >= 5) matcher.group(4).toInt() else null
+
+        openglLevel = OpenGLLevel.getBestLevelFor(majorVersion, minorVersion)
+
+        println("Found out OpenGL version to be $majorVersion.$minorVersion${if (patchVersion != null) ".$patchVersion" else ""}. Using backend for ${openglLevel.backendInfo}")
     }
 
     /**
@@ -98,14 +136,23 @@ object RenderEngine : Listenable {
      * Draws all enqueued render tasks.
      */
     fun render() {
-        val lvl = OpenGLLevel.OpenGL4_3
+        val lvl = this.openglLevel
 
         GL11.glEnable(GL11.GL_ALPHA_TEST)
         GL11.glEnable(GL11.GL_BLEND)
 
+        val matrix = Mat4.projectionMatrix(
+            0.0f,
+            0.0f,
+            MinecraftClient.getInstance().window.framebufferWidth.toFloat(),
+            MinecraftClient.getInstance().window.framebufferHeight.toFloat(),
+            -1.0f,
+            1.0f
+        )
+
         for (layer in renderTaskTable) {
             for (renderTask in layer.renderTasks) {
-                renderTask.initRendering(lvl)
+                renderTask.initRendering(lvl, matrix)
                 renderTask.draw(lvl)
                 renderTask.cleanupRendering(lvl)
             }

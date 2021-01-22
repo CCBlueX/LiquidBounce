@@ -165,7 +165,7 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, private val
 
     override fun getBatchRenderer(): BatchRenderer? = null
 
-    override fun initRendering(level: OpenGLLevel) {
+    override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
         when (level) {
             OpenGLLevel.OpenGL3_1, OpenGLLevel.OpenGL4_3 -> {
                 val mc = MinecraftClient.getInstance()

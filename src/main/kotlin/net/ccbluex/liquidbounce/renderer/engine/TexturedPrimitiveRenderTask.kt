@@ -150,24 +150,24 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
 
     override fun getBatchRenderer(): BatchRenderer? = null
 
-    override fun initRendering(level: OpenGLLevel) {
+    override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
         when (level) {
             OpenGLLevel.OpenGL3_1, OpenGLLevel.OpenGL4_3 -> {
                 val mc = MinecraftClient.getInstance()
 
                 // Create an orthographic projection matrix
-                TexturedPrimitiveShader.bind(
-                    Mat4.projectionMatrix(
-                        0.0f,
-                        0.0f,
-                        mc.window.framebufferWidth.toFloat(),
-                        mc.window.framebufferHeight.toFloat(),
-                        -1.0f,
-                        1.0f
-                    )
-                )
+                TexturedPrimitiveShader.bind(mvpMatrix)
             }
-            else -> {
+            OpenGLLevel.OpenGL1_2 -> {
+                // Reset model view matrix
+                GL11.glMatrixMode(GL11.GL_MODELVIEW)
+                GL11.glPushMatrix()
+                GL11.glLoadIdentity()
+
+                // Load the MVP matrix
+                GL11.glMatrixMode(GL11.GL_PROJECTION)
+                GL11.glPushMatrix()
+                GL11.glLoadMatrixf(mvpMatrix.toArray())
             }
         }
     }
@@ -176,12 +176,12 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
         when (level) {
             // Use Immediate mode for OpenGL 1.2. A cheap emulated version of the OpenGL 2.1 backend.
             OpenGLLevel.OpenGL1_2 -> {
+                this.texture.bind()
+
                 // Begin rendering with the type's mode
                 GL11.glBegin(this.type.mode)
 
-                val floatBuffer = this.vertexBuffer.asFloatBuffer()
-                val intBuffer = this.vertexBuffer.asIntBuffer()
-                val shortBuffer = this.vertexBuffer.asShortBuffer()
+                val vertexBuffer = this.vertexBuffer
 
                 // Iterate through the indices
                 for (i in 0 until this.indexBufferIndex) {
@@ -191,24 +191,26 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
                     // Where does the vertex start?
                     val idx = vertexIndex * WORDS_PER_VERTEX
 
-                    val color = intBuffer[idx + 3]
-
                     // Set the vertex color
                     GL11.glColor4f(
-                        ((color shr 8) and 255) / 255.0f,
-                        ((color shr 16) and 255) / 255.0f,
-                        (color and 255) / 255.0f,
-                        ((color shr 24) and 255) / 255.0f
+                        (vertexBuffer.get((idx + 3) * 4).toInt() and 255) / 255.0f,
+                        (vertexBuffer.get((idx + 3) * 4 + 1).toInt() and 255) / 255.0f,
+                        (vertexBuffer.get((idx + 3) * 4 + 2).toInt() and 255) / 255.0f,
+                        (vertexBuffer.get((idx + 3) * 4 + 3).toInt() and 255) / 255.0f
                     )
 
                     // Set UV
                     GL11.glTexCoord2f(
-                        shortBuffer.get((idx + 4) * 2).toFloat() / 65535.0f,
-                        shortBuffer.get((idx + 4) * 2 + 1).toFloat() / 65535.0f,
+                        (vertexBuffer.getShort((idx + 4) * 4).toInt() and 0xFFFF).toFloat() / 65535.0f,
+                        (vertexBuffer.getShort((idx + 4) * 4 + 2).toInt() and 0xFFFF).toFloat() / 65535.0f,
                     )
 
                     // Set the vertex position
-                    GL11.glVertex3f(floatBuffer[idx], floatBuffer[idx + 1], floatBuffer[idx + 2])
+                    GL11.glVertex3f(
+                        vertexBuffer.getFloat(idx * 4),
+                        vertexBuffer.getFloat((idx + 1) * 4),
+                        vertexBuffer.getFloat((idx + 2) * 4)
+                    )
 
                 }
 
@@ -278,7 +280,13 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
                 // Unbind VBOs, only needs to be done once during rendering
                 this.vboData.unbind()
             }
-            else -> {
+            OpenGLLevel.OpenGL1_2 -> {
+                // Pop model view matrix
+                GL11.glMatrixMode(GL11.GL_MODELVIEW)
+                GL11.glPopMatrix()
+                // Pop projection matrix
+                GL11.glMatrixMode(GL11.GL_PROJECTION)
+                GL11.glPopMatrix()
             }
         }
     }

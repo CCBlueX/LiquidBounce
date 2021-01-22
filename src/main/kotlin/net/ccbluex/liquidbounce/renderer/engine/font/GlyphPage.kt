@@ -176,7 +176,7 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
                 // Draw the character to the atlas, offset by start of the character + a pixel padding
                 atlasGraphics.drawString(
                     characterInfo.c.toString(),
-                    characterInfo.atlasLocation.x - characterInfo.glyphMetrics.bounds2D.x.toInt(),
+                    characterInfo.atlasLocation.x - characterInfo.glyphMetrics.bounds2D.x.toInt() + 1,
                     characterInfo.atlasLocation.y - characterInfo.glyphMetrics.bounds2D.y.toInt() + 1
                 )
             }
@@ -193,7 +193,7 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
                     BoundingBox2f(
                         x,
                         y,
-                        (x + ceil(it.glyphMetrics.bounds2D.width.toFloat())),
+                        (x + ceil(it.glyphMetrics.bounds2D.width.toFloat()) + 1.0f),
                         (y + ceil(it.glyphMetrics.bounds2D.height.toFloat()) + 1.0f)
                     )
                 }
@@ -261,7 +261,7 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
                     continue
 
                 // 1px padding to prevent stuff from happening
-                val glyphWidth = ceil(glyph.glyphMetrics.bounds2D.width).toInt() + 1
+                val glyphWidth = ceil(glyph.glyphMetrics.bounds2D.width).toInt() + 2
                 val glyphHeight = ceil(glyph.glyphMetrics.bounds2D.height).toInt() + 2
 
                 // Would the character be longer than the atlas?

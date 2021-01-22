@@ -68,6 +68,29 @@ $a30 $a31 $a32 $a33
         floatBuffer.put(pack(3, 3), a33)
     }
 
+    fun toArray(): FloatArray {
+        val array = FloatArray(16)
+
+        array[pack(0, 0)] = a00
+        array[pack(0, 1)] = a01
+        array[pack(0, 2)] = a02
+        array[pack(0, 3)] = a03
+        array[pack(1, 0)] = a10
+        array[pack(1, 1)] = a11
+        array[pack(1, 2)] = a12
+        array[pack(1, 3)] = a13
+        array[pack(2, 0)] = a20
+        array[pack(2, 1)] = a21
+        array[pack(2, 2)] = a22
+        array[pack(2, 3)] = a23
+        array[pack(3, 0)] = a30
+        array[pack(3, 1)] = a31
+        array[pack(3, 2)] = a32
+        array[pack(3, 3)] = a33
+
+        return array
+    }
+
     fun loadIdentity() {
         a00 = 1.0f
         a01 = 0.0f

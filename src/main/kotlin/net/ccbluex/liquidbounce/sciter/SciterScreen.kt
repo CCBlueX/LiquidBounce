@@ -42,6 +42,11 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
     // download from https://sciter.com/download/
     val LIBRARY_SCITER_LOCATION = File(NATIVES, "sciter.dll").absolutePath
 
+    /**
+     * The factor of the minecraft gui scaling
+     */
+    var scale: Int = 1
+
     init {
         System.load(LIBRARY_WRAPPER_LOCATION)
     }
@@ -56,23 +61,23 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
-        sciter.mouseMoved(mouseX.toInt(), mouseY.toInt(), this.buttonStates)
+        sciter.mouseMoved(mouseX.toInt() * scale, mouseY.toInt() * scale, this.buttonStates)
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        sciter.mouseButtonEvent(mouseX.toInt(), mouseY.toInt(), button + 1, false, 0)
+        sciter.mouseButtonEvent(mouseX.toInt() * scale, mouseY.toInt() * scale, button + 1, false, 0)
 
         return super.mouseClicked(mouseX, mouseY, button)
     }
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        sciter.mouseButtonEvent(mouseX.toInt(), mouseY.toInt(), button + 1, true, 0)
+        sciter.mouseButtonEvent(mouseX.toInt() * scale, mouseY.toInt() * scale, button + 1, true, 0)
 
         return super.mouseReleased(mouseX, mouseY, button)
     }
 
     override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
-        sciter.mouseMoved(mouseX.toInt(), mouseY.toInt(), this.buttonStates)
+        sciter.mouseMoved(mouseX.toInt() * scale, mouseY.toInt() * scale, this.buttonStates)
 
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
     }
@@ -149,9 +154,7 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
     override fun init() {
         super.init()
 
-        sciter.setSize(this.width, this.height)
-        sciter.setResolution(mc.options.guiScale * 92 / 2)
-
+        resize(this.width, this.height)
 
         sciter.loadHtml(
             """<html lang="en"><head>
@@ -177,7 +180,8 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
                         <input type="number">
                         <input type="password">
                         <input type="text">
-                    </body></html>""", null)
+                    </body></html>""", null
+        )
     }
 
     override fun isPauseScreen(): Boolean {
@@ -187,7 +191,13 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
     override fun resize(client: MinecraftClient?, width: Int, height: Int) {
         super.resize(client, width, height)
 
-        sciter.setSize(this.width, this.height)
-        sciter.setResolution(mc.options.guiScale * 92 / 2)
+        resize(width, height)
+    }
+
+    private fun resize(width: Int, height: Int) {
+        this.scale = mc.options.guiScale
+
+        sciter.setSize(width * this.scale, height * this.scale)
+        sciter.setResolution(mc.options.guiScale * 92)
     }
 }
