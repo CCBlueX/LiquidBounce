@@ -21,5 +21,5 @@ class TextureManagerImpl(val wrapped: TextureManager) : ITextureManager {
     }
 }
 
-inline fun ITextureManager.unwrap(): TextureManager = (this as TextureManagerImpl).wrapped
-inline fun TextureManager.wrap(): ITextureManager = TextureManagerImpl(this)
+ fun ITextureManager.unwrap(): TextureManager = (this as TextureManagerImpl).wrapped
+ fun TextureManager.wrap(): ITextureManager = TextureManagerImpl(this)

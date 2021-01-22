@@ -21,5 +21,5 @@ class CreativeTabsImpl(val wrapped: CreativeTabs) : ICreativeTabs {
     }
 }
 
-inline fun ICreativeTabs.unwrap(): CreativeTabs = (this as CreativeTabsImpl).wrapped
-inline fun CreativeTabs.wrap(): ICreativeTabs = CreativeTabsImpl(this)
+ fun ICreativeTabs.unwrap(): CreativeTabs = (this as CreativeTabsImpl).wrapped
+ fun CreativeTabs.wrap(): ICreativeTabs = CreativeTabsImpl(this)

@@ -120,7 +120,7 @@ class ModuleManager : Listenable
 			MultiActions::class.java,
 			AirJump::class.java,
 			AutoClicker::class.java,
-			NoBob::class.java,
+			Bobbing::class.java,
 			BlockOverlay::class.java,
 			NoFriends::class.java,
 			BlockESP::class.java,

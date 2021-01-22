@@ -51,5 +51,5 @@ class RenderManagerImpl(val wrapped: RenderManager) : IRenderManager
 	override fun equals(other: Any?): Boolean = other is RenderManagerImpl && other.wrapped == wrapped
 }
 
-inline fun IRenderManager.unwrap(): RenderManager = (this as RenderManagerImpl).wrapped
-inline fun RenderManager.wrap(): IRenderManager = RenderManagerImpl(this)
+ fun IRenderManager.unwrap(): RenderManager = (this as RenderManagerImpl).wrapped
+ fun RenderManager.wrap(): IRenderManager = RenderManagerImpl(this)

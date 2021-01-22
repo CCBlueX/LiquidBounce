@@ -49,6 +49,7 @@ public class MixinTileEntityItemStackRenderer
 
 	/**
 	 * @author CCBlueX
+	 * @reason
 	 */
 	@Overwrite
 	public void renderByItem(final ItemStack itemStackIn)

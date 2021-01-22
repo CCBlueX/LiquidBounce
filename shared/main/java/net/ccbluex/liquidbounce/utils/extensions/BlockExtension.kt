@@ -7,12 +7,6 @@ package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
-
-/**
- * Get block by position
- */
-fun WBlockPos.getBlock() = BlockUtils.getBlock(this)
 
 /**
  * Get vector of block position

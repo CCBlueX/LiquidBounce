@@ -83,7 +83,7 @@ class BlockOverlay : Module()
 	}
 
 	@EventTarget
-	fun onRender2D(event: Render2DEvent)
+	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
 		if (infoValue.get())
 		{

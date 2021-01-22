@@ -19,5 +19,5 @@ open class GuiContainerImpl<T : GuiContainer>(wrapped: T) : GuiScreenImpl<T>(wra
         get() = wrapped.inventorySlots?.wrap()
 }
 
-inline fun IGuiContainer.unwrap(): GuiContainer = (this as GuiContainerImpl<*>).wrapped
-inline fun GuiContainer.wrap(): IGuiContainer = GuiContainerImpl(this)
+ fun IGuiContainer.unwrap(): GuiContainer = (this as GuiContainerImpl<*>).wrapped
+ fun GuiContainer.wrap(): IGuiContainer = GuiContainerImpl(this)

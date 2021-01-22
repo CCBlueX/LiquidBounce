@@ -98,9 +98,9 @@ class Tower : Module()
 	private val onJumpNoDelayIfNotMovingValue = BoolValue("OnJumpNoDelayIfNotMoving", true)
 	private val disableOnJumpWhileMoving: BoolValue = object : BoolValue("DisableOnJumpWhileMoving", true)
 	{
-		override fun onChanged(prev: Boolean, current: Boolean)
+		override fun onChanged(oldValue: Boolean, newValue: Boolean)
 		{
-			if (current && !onJumpNoDelayIfNotMovingValue.get()) onJumpNoDelayIfNotMovingValue.set(true)
+			if (newValue && !onJumpNoDelayIfNotMovingValue.get()) onJumpNoDelayIfNotMovingValue.set(true)
 		}
 	}
 	private val placeModeValue = ListValue("PlaceTiming", arrayOf("Pre", "Post"), "Post")
@@ -488,7 +488,7 @@ class Tower : Module()
 	 * Tower visuals
 	 */
 	@EventTarget
-	fun onRender2D(event: Render2DEvent)
+	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
 		if (counterDisplayValue.get())
 		{

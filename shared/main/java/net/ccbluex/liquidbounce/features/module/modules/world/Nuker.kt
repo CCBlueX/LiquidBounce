@@ -60,7 +60,7 @@ class Nuker : Module()
 	private var nuke = 0
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{ // Block hit delay
 		if (blockHitDelay > 0 && !LiquidBounce.moduleManager[FastBreak::class.java].state)
 		{
@@ -113,7 +113,7 @@ class Nuker : Module()
 			{
 				val (blockPos, block) = when (priorityValue.get())
 				{
-					"Distance" -> validBlocks.minBy { (pos, block) ->
+					"Distance" -> validBlocks.minBy { (pos, _) ->
 						val distance = getCenterDistance(pos)
 						val safePos = WBlockPos(thePlayer.posX, thePlayer.posY - 1, thePlayer.posZ)
 
@@ -233,7 +233,7 @@ class Nuker : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{ // Safe block
 		if (!layerValue.get())
 		{

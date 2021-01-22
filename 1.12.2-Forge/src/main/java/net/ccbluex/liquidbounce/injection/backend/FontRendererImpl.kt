@@ -37,5 +37,5 @@ class FontRendererImpl(val wrapped: FontRenderer) : IFontRenderer {
     }
 }
 
-inline fun IFontRenderer.unwrap(): FontRenderer = (this as FontRendererImpl).wrapped
-inline fun FontRenderer.wrap(): IFontRenderer = FontRendererImpl(this)
+ fun IFontRenderer.unwrap(): FontRenderer = (this as FontRendererImpl).wrapped
+ fun FontRenderer.wrap(): IFontRenderer = FontRendererImpl(this)

@@ -25,5 +25,5 @@ class TeamImpl(val wrapped: Team) : ITeam {
     }
 }
 
-inline fun ITeam.unwrap(): Team = (this as TeamImpl).wrapped
-inline fun Team.wrap(): ITeam = TeamImpl(this)
+ fun ITeam.unwrap(): Team = (this as TeamImpl).wrapped
+ fun Team.wrap(): ITeam = TeamImpl(this)

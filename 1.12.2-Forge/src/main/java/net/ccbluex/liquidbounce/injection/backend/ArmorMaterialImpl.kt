@@ -24,5 +24,5 @@ class ArmorMaterialImpl(val wrapped: ItemArmor.ArmorMaterial) : IArmorMaterial {
     }
 }
 
-inline fun IArmorMaterial.unwrap(): ItemArmor.ArmorMaterial = (this as ArmorMaterialImpl).wrapped
-inline fun ItemArmor.ArmorMaterial.wrap(): IArmorMaterial = ArmorMaterialImpl(this)
+ fun IArmorMaterial.unwrap(): ItemArmor.ArmorMaterial = (this as ArmorMaterialImpl).wrapped
+ fun ItemArmor.ArmorMaterial.wrap(): IArmorMaterial = ArmorMaterialImpl(this)

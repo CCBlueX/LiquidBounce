@@ -214,5 +214,5 @@ open class EntityImpl<T : Entity>(val wrapped: T) : IEntity {
     }
 }
 
-inline fun IEntity.unwrap(): Entity = (this as EntityImpl<*>).wrapped
-inline fun Entity.wrap(): IEntity = EntityImpl(this)
+ fun IEntity.unwrap(): Entity = (this as EntityImpl<*>).wrapped
+ fun Entity.wrap(): IEntity = EntityImpl(this)

@@ -40,7 +40,7 @@ class AutoSoup : Module()
 		get() = healthValue.get().toString()
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
 		if (!timer.hasTimePassed(delayValue.get().toLong())) return
 

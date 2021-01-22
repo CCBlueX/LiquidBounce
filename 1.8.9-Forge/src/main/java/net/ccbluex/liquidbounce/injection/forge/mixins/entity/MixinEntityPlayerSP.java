@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.AntiHunger;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.PortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.fun.Derp;
 import net.ccbluex.liquidbounce.features.module.modules.movement.*;
+import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
@@ -112,6 +113,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	@Shadow
 	private boolean serverSneakState;
 
+	@SuppressWarnings("AbstractMethodOverridesAbstractMethod")
 	@Shadow
 	public abstract boolean isSneaking();
 
@@ -138,6 +140,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 	/**
 	 * @author CCBlueX
+	 * @reason InventoryMove, Sneak, MotionEvent
 	 */
 	@Overwrite
 	public void onUpdateWalkingPlayer()
@@ -208,10 +211,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 						sendQueue.addToSendQueue(new C06PacketPlayerPosLook(posX, getEntityBoundingBox().minY, posZ, yaw, pitch, onGround));
 					else if (moved)
 						sendQueue.addToSendQueue(new C04PacketPlayerPosition(posX, getEntityBoundingBox().minY, posZ, onGround));
-					else if (rotated)
-						sendQueue.addToSendQueue(new C05PacketPlayerLook(yaw, pitch, onGround));
 					else
-						sendQueue.addToSendQueue(new C03PacketPlayer(onGround));
+						sendQueue.addToSendQueue(rotated ? new C05PacketPlayerLook(yaw, pitch, onGround) : new C03PacketPlayer(onGround));
 				else
 				{
 					sendQueue.addToSendQueue(new C06PacketPlayerPosLook(motionX, -999.0D, motionZ, yaw, pitch, onGround));
@@ -271,6 +272,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 	/**
 	 * @author CCBlueX
+	 * @reason Sprint
 	 */
 	@Overwrite
 	public void onLivingUpdate()
@@ -488,19 +490,15 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				for (d6 = 0.05D; x != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, 0.0D)).isEmpty(); d3 = x)
 					if (x < d6 && x >= -d6)
 						x = 0.0D;
-					else if (x > 0.0D)
-						x -= d6;
 					else
-						x += d6;
+						x -= x > 0.0D ? d6 : -d6;
 
 				// noinspection ConstantConditions
 				for (; z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0.0D, -1.0D, z)).isEmpty(); d5 = z)
 					if (z < d6 && z >= -d6)
 						z = 0.0D;
-					else if (z > 0.0D)
-						z -= d6;
 					else
-						z += d6;
+						z -= z > 0.0D ? d6 : -d6;
 
 				// noinspection ConstantConditions
 				for (; x != 0.0D && z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, z)).isEmpty(); d5 = z)
@@ -516,10 +514,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 					if (z < d6 && z >= -d6)
 						z = 0.0D;
-					else if (z > 0.0D)
-						z -= d6;
 					else
-						z += d6;
+						z -= z > 0.0D ? d6 : -d6;
 				}
 			}
 
@@ -665,7 +661,6 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			if (d5 != z)
 				motionZ = 0.0D;
 
-			// noinspection ConstantConditions
 			if (d4 != y)
 				block1.onLanded(worldObj, (Entity) (Object) this);
 
@@ -678,12 +673,12 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				if (block1 != Blocks.ladder)
 					d13 = 0.0D;
 
-				// noinspection ConstantConditions
 				if (onGround)
 					block1.onEntityCollidedWithBlock(worldObj, blockpos, (Entity) (Object) this);
 
-				distanceWalkedModified = (float) (distanceWalkedModified + MathHelper.sqrt_double(d12 * d12 + d14 * d14) * 0.6D);
-				distanceWalkedOnStepModified = (float) (distanceWalkedOnStepModified + MathHelper.sqrt_double(d12 * d12 + d13 * d13 + d14 * d14) * 0.6D);
+				final Bobbing bobbing = (Bobbing) LiquidBounce.moduleManager.get(Bobbing.class);
+				distanceWalkedModified += MathHelper.sqrt_double(d12 * d12 + d14 * d14) * (bobbing.getState() ? bobbing.getMultiplierValue().get() : 0.6D);
+				distanceWalkedOnStepModified += MathHelper.sqrt_double(d12 * d12 + d13 * d13 + d14 * d14) * (bobbing.getState() ? bobbing.getMultiplierValue().get() : 0.6D);
 
 				if (distanceWalkedOnStepModified > getNextStepDistance() && block1.getMaterial() != Material.air)
 				{

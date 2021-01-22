@@ -58,5 +58,5 @@ class GameSettingsImpl(val wrapped: GameSettings) : IGameSettings {
     }
 }
 
-inline fun IGameSettings.unwrap(): GameSettings = (this as GameSettingsImpl).wrapped
-inline fun GameSettings.wrap(): IGameSettings = GameSettingsImpl(this)
+ fun IGameSettings.unwrap(): GameSettings = (this as GameSettingsImpl).wrapped
+ fun GameSettings.wrap(): IGameSettings = GameSettingsImpl(this)

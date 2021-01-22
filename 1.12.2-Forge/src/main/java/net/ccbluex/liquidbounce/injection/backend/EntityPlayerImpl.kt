@@ -95,5 +95,5 @@ open class EntityPlayerImpl<T : EntityPlayer>(wrapped: T) : EntityLivingBaseImpl
 
 }
 
-inline fun IEntityPlayer.unwrap(): EntityPlayer = (this as EntityPlayerImpl<*>).wrapped
-inline fun EntityPlayer.wrap(): IEntityPlayer = EntityPlayerImpl(this)
+ fun IEntityPlayer.unwrap(): EntityPlayer = (this as EntityPlayerImpl<*>).wrapped
+ fun EntityPlayer.wrap(): IEntityPlayer = EntityPlayerImpl(this)

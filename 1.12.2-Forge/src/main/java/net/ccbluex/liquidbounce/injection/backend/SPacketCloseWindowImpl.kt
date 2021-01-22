@@ -14,5 +14,5 @@ class SPacketCloseWindowImpl<T : SPacketCloseWindow>(wrapped: T) : PacketImpl<T>
         get() = wrapped.windowId
 }
 
-inline fun ISPacketCloseWindow.unwrap(): SPacketCloseWindow = (this as SPacketCloseWindowImpl<*>).wrapped
-inline fun SPacketCloseWindow.wrap(): ISPacketCloseWindow = SPacketCloseWindowImpl(this)
+ fun ISPacketCloseWindow.unwrap(): SPacketCloseWindow = (this as SPacketCloseWindowImpl<*>).wrapped
+ fun SPacketCloseWindow.wrap(): ISPacketCloseWindow = SPacketCloseWindowImpl(this)

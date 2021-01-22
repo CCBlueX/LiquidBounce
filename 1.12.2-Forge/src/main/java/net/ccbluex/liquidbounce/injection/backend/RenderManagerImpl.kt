@@ -59,5 +59,5 @@ class RenderManagerImpl(val wrapped: RenderManager) : IRenderManager {
     }
 }
 
-inline fun IRenderManager.unwrap(): RenderManager = (this as RenderManagerImpl).wrapped
-inline fun RenderManager.wrap(): IRenderManager = RenderManagerImpl(this)
+ fun IRenderManager.unwrap(): RenderManager = (this as RenderManagerImpl).wrapped
+ fun RenderManager.wrap(): IRenderManager = RenderManagerImpl(this)

@@ -48,5 +48,5 @@ class CPacketPlayerImpl<T : CPacketPlayer>(wrapped: T) : PacketImpl<T>(wrapped),
 
 }
 
-inline fun ICPacketPlayer.unwrap(): CPacketPlayer = (this as CPacketPlayerImpl<*>).wrapped
-inline fun CPacketPlayer.wrap(): ICPacketPlayer = CPacketPlayerImpl(this)
+ fun ICPacketPlayer.unwrap(): CPacketPlayer = (this as CPacketPlayerImpl<*>).wrapped
+ fun CPacketPlayer.wrap(): ICPacketPlayer = CPacketPlayerImpl(this)

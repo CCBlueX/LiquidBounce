@@ -52,5 +52,5 @@ class BlockImpl(val wrapped: Block) : IBlock {
     }
 }
 
-inline fun IBlock.unwrap(): Block = (this as BlockImpl).wrapped
-inline fun Block.wrap(): IBlock = BlockImpl(this)
+ fun IBlock.unwrap(): Block = (this as BlockImpl).wrapped
+ fun Block.wrap(): IBlock = BlockImpl(this)

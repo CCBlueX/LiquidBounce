@@ -4,7 +4,7 @@
  * https://github.com/CCBlueX/LiquidBounce/
  */
 
-@file:Suppress("NOTHING_TO_INLINE")
+@file:Suppress("NOTHING_TO_")
 
 package net.ccbluex.liquidbounce.injection.backend.utils
 
@@ -28,15 +28,15 @@ import net.minecraft.util.text.TextFormatting
 import net.minecraft.util.text.event.ClickEvent
 import net.minecraft.world.GameType
 
-inline fun WVec3.unwrap(): Vec3d = Vec3d(this.xCoord, this.yCoord, this.zCoord)
-inline fun WVec3i.unwrap(): Vec3i = Vec3i(this.x, this.y, this.z)
-inline fun WBlockPos.unwrap(): BlockPos = BlockPos(this.x, this.y, this.z)
+ fun WVec3.unwrap(): Vec3d = Vec3d(this.xCoord, this.yCoord, this.zCoord)
+ fun WVec3i.unwrap(): Vec3i = Vec3i(this.x, this.y, this.z)
+ fun WBlockPos.unwrap(): BlockPos = BlockPos(this.x, this.y, this.z)
 
-inline fun BlockPos.wrap(): WBlockPos = WBlockPos(this.x, this.y, this.z)
-inline fun Vec3d.wrap(): WVec3 = WVec3(this.x, this.y, this.z)
-inline fun Vec3i.wrap(): WVec3i = WVec3i(this.x, this.y, this.z)
+ fun BlockPos.wrap(): WBlockPos = WBlockPos(this.x, this.y, this.z)
+ fun Vec3d.wrap(): WVec3 = WVec3(this.x, this.y, this.z)
+ fun Vec3i.wrap(): WVec3i = WVec3i(this.x, this.y, this.z)
 
-inline fun RayTraceResult.Type.wrap(): IMovingObjectPosition.WMovingObjectType {
+ fun RayTraceResult.Type.wrap(): IMovingObjectPosition.WMovingObjectType {
     return when (this) {
         RayTraceResult.Type.MISS -> IMovingObjectPosition.WMovingObjectType.MISS
         RayTraceResult.Type.BLOCK -> IMovingObjectPosition.WMovingObjectType.BLOCK
@@ -44,7 +44,7 @@ inline fun RayTraceResult.Type.wrap(): IMovingObjectPosition.WMovingObjectType {
     }
 }
 
-inline fun WEnumPlayerModelParts.unwrap(): EnumPlayerModelParts {
+ fun WEnumPlayerModelParts.unwrap(): EnumPlayerModelParts {
     return when (this) {
         WEnumPlayerModelParts.CAPE -> EnumPlayerModelParts.CAPE
         WEnumPlayerModelParts.JACKET -> EnumPlayerModelParts.JACKET
@@ -56,7 +56,7 @@ inline fun WEnumPlayerModelParts.unwrap(): EnumPlayerModelParts {
     }
 }
 
-inline fun EnumPlayerModelParts.wrap(): WEnumPlayerModelParts {
+ fun EnumPlayerModelParts.wrap(): WEnumPlayerModelParts {
     return when (this) {
         EnumPlayerModelParts.CAPE -> WEnumPlayerModelParts.CAPE
         EnumPlayerModelParts.JACKET -> WEnumPlayerModelParts.JACKET
@@ -68,7 +68,7 @@ inline fun EnumPlayerModelParts.wrap(): WEnumPlayerModelParts {
     }
 }
 
-inline fun TextFormatting.wrap(): WEnumChatFormatting {
+ fun TextFormatting.wrap(): WEnumChatFormatting {
     return when (this) {
         TextFormatting.BLACK -> WEnumChatFormatting.BLACK
         TextFormatting.DARK_BLUE -> WEnumChatFormatting.DARK_BLUE
@@ -95,7 +95,7 @@ inline fun TextFormatting.wrap(): WEnumChatFormatting {
     }
 }
 
-inline fun WEnumChatFormatting.unwrap(): TextFormatting {
+ fun WEnumChatFormatting.unwrap(): TextFormatting {
     return when (this) {
         WEnumChatFormatting.BLACK -> TextFormatting.BLACK
         WEnumChatFormatting.DARK_BLUE -> TextFormatting.DARK_BLUE
@@ -123,7 +123,7 @@ inline fun WEnumChatFormatting.unwrap(): TextFormatting {
 }
 
 
-inline fun IWorldSettings.WGameType.unwrap(): GameType {
+ fun IWorldSettings.WGameType.unwrap(): GameType {
     return when (this) {
         IWorldSettings.WGameType.NOT_SET -> GameType.NOT_SET
         IWorldSettings.WGameType.SURVIVAL -> GameType.SURVIVAL
@@ -133,7 +133,7 @@ inline fun IWorldSettings.WGameType.unwrap(): GameType {
     }
 }
 
-inline fun GameType.wrap(): IWorldSettings.WGameType {
+ fun GameType.wrap(): IWorldSettings.WGameType {
     return when (this) {
         GameType.NOT_SET -> IWorldSettings.WGameType.NOT_SET
         GameType.SURVIVAL -> IWorldSettings.WGameType.SURVIVAL
@@ -143,7 +143,7 @@ inline fun GameType.wrap(): IWorldSettings.WGameType {
     }
 }
 
-inline fun CPacketUseEntity.Action.wrap(): ICPacketUseEntity.WAction {
+ fun CPacketUseEntity.Action.wrap(): ICPacketUseEntity.WAction {
     return when (this) {
         CPacketUseEntity.Action.INTERACT -> ICPacketUseEntity.WAction.INTERACT
         CPacketUseEntity.Action.ATTACK -> ICPacketUseEntity.WAction.ATTACK
@@ -151,7 +151,7 @@ inline fun CPacketUseEntity.Action.wrap(): ICPacketUseEntity.WAction {
     }
 }
 
-inline fun ICPacketUseEntity.WAction.unwrap(): CPacketUseEntity.Action {
+ fun ICPacketUseEntity.WAction.unwrap(): CPacketUseEntity.Action {
     return when (this) {
         ICPacketUseEntity.WAction.INTERACT -> CPacketUseEntity.Action.INTERACT
         ICPacketUseEntity.WAction.ATTACK -> CPacketUseEntity.Action.ATTACK
@@ -159,13 +159,13 @@ inline fun ICPacketUseEntity.WAction.unwrap(): CPacketUseEntity.Action {
     }
 }
 
-inline fun IClickEvent.WAction.unwrap(): ClickEvent.Action {
+ fun IClickEvent.WAction.unwrap(): ClickEvent.Action {
     return when (this) {
         IClickEvent.WAction.OPEN_URL -> ClickEvent.Action.OPEN_URL
     }
 }
 
-inline fun ICPacketClientStatus.WEnumState.unwrap(): CPacketClientStatus.State {
+ fun ICPacketClientStatus.WEnumState.unwrap(): CPacketClientStatus.State {
     return when (this) {
         ICPacketClientStatus.WEnumState.PERFORM_RESPAWN -> CPacketClientStatus.State.PERFORM_RESPAWN
         ICPacketClientStatus.WEnumState.REQUEST_STATS -> CPacketClientStatus.State.REQUEST_STATS
@@ -173,7 +173,7 @@ inline fun ICPacketClientStatus.WEnumState.unwrap(): CPacketClientStatus.State {
     }
 }
 
-inline fun ICPacketPlayerDigging.WAction.unwrap(): CPacketPlayerDigging.Action {
+ fun ICPacketPlayerDigging.WAction.unwrap(): CPacketPlayerDigging.Action {
     return when (this) {
         ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK -> CPacketPlayerDigging.Action.START_DESTROY_BLOCK
         ICPacketPlayerDigging.WAction.ABORT_DESTROY_BLOCK -> CPacketPlayerDigging.Action.ABORT_DESTROY_BLOCK
@@ -184,7 +184,7 @@ inline fun ICPacketPlayerDigging.WAction.unwrap(): CPacketPlayerDigging.Action {
     }
 }
 
-inline fun ICPacketResourcePackStatus.WAction.unwrap(): CPacketResourcePackStatus.Action {
+ fun ICPacketResourcePackStatus.WAction.unwrap(): CPacketResourcePackStatus.Action {
     return when (this) {
         ICPacketResourcePackStatus.WAction.SUCCESSFULLY_LOADED -> CPacketResourcePackStatus.Action.SUCCESSFULLY_LOADED
         ICPacketResourcePackStatus.WAction.DECLINED -> CPacketResourcePackStatus.Action.DECLINED
@@ -193,7 +193,7 @@ inline fun ICPacketResourcePackStatus.WAction.unwrap(): CPacketResourcePackStatu
     }
 }
 
-inline fun ICPacketEntityAction.WAction.unwrap(): CPacketEntityAction.Action {
+ fun ICPacketEntityAction.WAction.unwrap(): CPacketEntityAction.Action {
     return when (this) {
         ICPacketEntityAction.WAction.START_SNEAKING -> CPacketEntityAction.Action.START_SNEAKING
         ICPacketEntityAction.WAction.STOP_SNEAKING -> CPacketEntityAction.Action.STOP_SNEAKING
@@ -204,7 +204,7 @@ inline fun ICPacketEntityAction.WAction.unwrap(): CPacketEntityAction.Action {
     }
 }
 
-inline fun Int.toEntityEquipmentSlot(): EntityEquipmentSlot {
+ fun Int.toEntityEquipmentSlot(): EntityEquipmentSlot {
     return when (this) {
         0 -> EntityEquipmentSlot.FEET
         1 -> EntityEquipmentSlot.LEGS
@@ -216,7 +216,7 @@ inline fun Int.toEntityEquipmentSlot(): EntityEquipmentSlot {
     }
 }
 
-inline fun Int.toClickType(): ClickType {
+ fun Int.toClickType(): ClickType {
     return when (this) {
         0 -> ClickType.PICKUP
         1 -> ClickType.QUICK_MOVE
@@ -229,7 +229,7 @@ inline fun Int.toClickType(): ClickType {
     }
 }
 
-inline fun ClickType.toInt(): Int {
+ fun ClickType.toInt(): Int {
     return when (this) {
         ClickType.PICKUP -> 0
         ClickType.QUICK_MOVE -> 1
@@ -242,7 +242,7 @@ inline fun ClickType.toInt(): Int {
     }
 }
 
-inline fun WEnumHand.unwrap(): EnumHand {
+ fun WEnumHand.unwrap(): EnumHand {
     return when (this) {
         WEnumHand.MAIN_HAND -> EnumHand.MAIN_HAND
         WEnumHand.OFF_HAND -> EnumHand.OFF_HAND

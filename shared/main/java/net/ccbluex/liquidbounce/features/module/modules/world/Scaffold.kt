@@ -309,7 +309,7 @@ class Scaffold : Module()
 	// UPDATE EVENTS
 
 	@EventTarget
-	private fun onUpdate(event: UpdateEvent)
+	private fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		mc.timer.timerSpeed = timerValue.get()
 		shouldGoDown = downValue.get() && !sameYValue.get() && mc.gameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && blocksAmount > 1
@@ -880,7 +880,7 @@ class Scaffold : Module()
 	 * Scaffold visuals
 	 */
 	@EventTarget
-	fun onRender2D(event: Render2DEvent)
+	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
 		if (counterDisplayValue.get())
 		{
@@ -911,7 +911,7 @@ class Scaffold : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		if (!markValue.get()) return
 		val thePlayer = mc.thePlayer ?: return

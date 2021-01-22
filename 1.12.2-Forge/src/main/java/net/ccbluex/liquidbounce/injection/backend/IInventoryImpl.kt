@@ -18,5 +18,5 @@ class IInventoryImpl(val wrapped: IInventory) : IIInventory {
     }
 }
 
-inline fun IIInventory.unwrap(): IInventory = (this as IInventoryImpl).wrapped
-inline fun IInventory.wrap(): IIInventory = IInventoryImpl(this)
+ fun IIInventory.unwrap(): IInventory = (this as IInventoryImpl).wrapped
+ fun IInventory.wrap(): IIInventory = IInventoryImpl(this)

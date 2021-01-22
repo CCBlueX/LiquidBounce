@@ -64,5 +64,5 @@ class GameSettingsImpl(val wrapped: GameSettings) : IGameSettings
 	override fun equals(other: Any?): Boolean = other is GameSettingsImpl && other.wrapped == wrapped
 }
 
-inline fun IGameSettings.unwrap(): GameSettings = (this as GameSettingsImpl).wrapped
-inline fun GameSettings.wrap(): IGameSettings = GameSettingsImpl(this)
+ fun IGameSettings.unwrap(): GameSettings = (this as GameSettingsImpl).wrapped
+ fun GameSettings.wrap(): IGameSettings = GameSettingsImpl(this)

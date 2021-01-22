@@ -13,5 +13,5 @@ class CPacketKeepAliveImpl<T : CPacketKeepAlive>(wrapped: T) : PacketImpl<T>(wra
 
 }
 
-inline fun ICPacketKeepAlive.unwrap(): CPacketKeepAlive = (this as CPacketKeepAliveImpl<*>).wrapped
-inline fun CPacketKeepAlive.wrap(): ICPacketKeepAlive = CPacketKeepAliveImpl(this)
+ fun ICPacketKeepAlive.unwrap(): CPacketKeepAlive = (this as CPacketKeepAliveImpl<*>).wrapped
+ fun CPacketKeepAlive.wrap(): ICPacketKeepAlive = CPacketKeepAliveImpl(this)

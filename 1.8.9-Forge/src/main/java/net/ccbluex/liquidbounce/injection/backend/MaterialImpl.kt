@@ -19,5 +19,5 @@ class MaterialImpl(val wrapped: Material) : IMaterial
 	override fun equals(other: Any?): Boolean = other is MaterialImpl && other.wrapped == wrapped
 }
 
-inline fun IMaterial.unwrap(): Material = (this as MaterialImpl).wrapped
-inline fun Material.wrap(): IMaterial = MaterialImpl(this)
+ fun IMaterial.unwrap(): Material = (this as MaterialImpl).wrapped
+ fun Material.wrap(): IMaterial = MaterialImpl(this)

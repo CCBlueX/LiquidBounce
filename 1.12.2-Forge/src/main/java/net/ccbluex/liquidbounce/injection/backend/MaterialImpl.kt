@@ -18,5 +18,5 @@ class MaterialImpl(val wrapped: Material) : IMaterial {
     }
 }
 
-inline fun IMaterial.unwrap(): Material = (this as MaterialImpl).wrapped
-inline fun Material.wrap(): IMaterial = MaterialImpl(this)
+ fun IMaterial.unwrap(): Material = (this as MaterialImpl).wrapped
+ fun Material.wrap(): IMaterial = MaterialImpl(this)

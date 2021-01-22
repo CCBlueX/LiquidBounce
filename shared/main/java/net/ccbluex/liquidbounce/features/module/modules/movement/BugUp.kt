@@ -48,7 +48,7 @@ class BugUp : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(e: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		detectedLocation = null
 
@@ -117,7 +117,7 @@ class BugUp : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 

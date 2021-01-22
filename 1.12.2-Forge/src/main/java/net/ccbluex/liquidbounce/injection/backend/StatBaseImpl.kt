@@ -15,5 +15,5 @@ class StatBaseImpl(val wrapped: StatBase) : IStatBase {
     }
 }
 
-inline fun IStatBase.unwrap(): StatBase = (this as StatBaseImpl).wrapped
-inline fun StatBase.wrap(): IStatBase = StatBaseImpl(this)
+ fun IStatBase.unwrap(): StatBase = (this as StatBaseImpl).wrapped
+ fun StatBase.wrap(): IStatBase = StatBaseImpl(this)

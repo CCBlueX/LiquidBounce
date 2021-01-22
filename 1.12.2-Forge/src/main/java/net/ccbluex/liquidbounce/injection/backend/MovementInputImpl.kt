@@ -23,5 +23,5 @@ class MovementInputImpl(val wrapped: MovementInput) : IMovementInput {
     }
 }
 
-inline fun IMovementInput.unwrap(): MovementInput = (this as MovementInputImpl).wrapped
-inline fun MovementInput.wrap(): IMovementInput = MovementInputImpl(this)
+ fun IMovementInput.unwrap(): MovementInput = (this as MovementInputImpl).wrapped
+ fun MovementInput.wrap(): IMovementInput = MovementInputImpl(this)

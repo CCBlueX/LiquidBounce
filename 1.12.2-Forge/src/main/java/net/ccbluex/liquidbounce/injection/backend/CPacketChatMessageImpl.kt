@@ -17,5 +17,5 @@ class CPacketChatMessageImpl<T : CPacketChatMessage>(wrapped: T) : PacketImpl<T>
         }
 }
 
-inline fun ICPacketChatMessage.unwrap(): CPacketChatMessage = (this as CPacketChatMessageImpl<*>).wrapped
-inline fun CPacketChatMessage.wrap(): ICPacketChatMessage = CPacketChatMessageImpl(this)
+ fun ICPacketChatMessage.unwrap(): CPacketChatMessage = (this as CPacketChatMessageImpl<*>).wrapped
+ fun CPacketChatMessage.wrap(): ICPacketChatMessage = CPacketChatMessageImpl(this)

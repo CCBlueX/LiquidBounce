@@ -9,5 +9,5 @@ class SPacketEncryptionRequestImpl<T : SPacketEncryptionRequest>(wrapped: T) : P
 
 }
 
-inline fun ISPacketEncryptionRequest.unwrap(): SPacketEncryptionRequest = (this as SPacketEncryptionRequestImpl<*>).wrapped
-inline fun SPacketEncryptionRequest.wrap(): ISPacketEncryptionRequest = SPacketEncryptionRequestImpl(this)
+ fun ISPacketEncryptionRequest.unwrap(): SPacketEncryptionRequest = (this as SPacketEncryptionRequestImpl<*>).wrapped
+ fun SPacketEncryptionRequest.wrap(): ISPacketEncryptionRequest = SPacketEncryptionRequestImpl(this)

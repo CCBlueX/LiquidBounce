@@ -21,5 +21,5 @@ class SoundHandlerImpl(val wrapped: SoundHandler) : ISoundHandler {
     }
 }
 
-inline fun ISoundHandler.unwrap(): SoundHandler = (this as SoundHandlerImpl).wrapped
-inline fun SoundHandler.wrap(): ISoundHandler = SoundHandlerImpl(this)
+ fun ISoundHandler.unwrap(): SoundHandler = (this as SoundHandlerImpl).wrapped
+ fun SoundHandler.wrap(): ISoundHandler = SoundHandlerImpl(this)

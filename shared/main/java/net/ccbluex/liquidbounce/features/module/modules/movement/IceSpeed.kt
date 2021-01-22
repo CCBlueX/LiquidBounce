@@ -32,7 +32,7 @@ class IceSpeed : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
 		val mode = modeValue.get()
 		if (mode.equals("NCP", ignoreCase = true))

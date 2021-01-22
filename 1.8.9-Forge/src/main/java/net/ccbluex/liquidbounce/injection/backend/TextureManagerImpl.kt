@@ -20,5 +20,5 @@ class TextureManagerImpl(val wrapped: TextureManager) : ITextureManager
 	override fun equals(other: Any?): Boolean = other is TextureManagerImpl && other.wrapped == wrapped
 }
 
-inline fun ITextureManager.unwrap(): TextureManager = (this as TextureManagerImpl).wrapped
-inline fun TextureManager.wrap(): ITextureManager = TextureManagerImpl(this)
+ fun ITextureManager.unwrap(): TextureManager = (this as TextureManagerImpl).wrapped
+ fun TextureManager.wrap(): ITextureManager = TextureManagerImpl(this)

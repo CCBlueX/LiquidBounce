@@ -79,7 +79,7 @@ public abstract class MixinItemRenderer
 
 	/**
 	 * @author eric0210
-	 * @reason sword block rotation angle
+	 * @reason SwingAnimation
 	 */
 	@Overwrite
 	protected void doBlockTransformations()
@@ -96,7 +96,7 @@ public abstract class MixinItemRenderer
 	 * Performs transformations prior to the rendering of a held item in first person.
 	 *
 	 * @author Mojang
-	 * @reason sword swing animation center point modification
+	 * @reason SwingAnimation
 	 * @see    SwingAnimation
 	 */
 	@Overwrite
@@ -197,7 +197,7 @@ public abstract class MixinItemRenderer
 
 	/**
 	 * @author CCBlueX
-	 * @reason Swing Animations
+	 * @reason SwingAnimation
 	 * @see    KillAura
 	 * @see    SwingAnimation
 	 */

@@ -10,5 +10,5 @@ object Backend {
     public val REPRESENTED_BACKEND_VERSION = MinecraftVersion.MC_1_12
 
 
-    public inline fun BACKEND_UNSUPPORTED(): Nothing = throw NotImplementedError("$MINECRAFT_VERSION doesn't support this feature'")
+    public  fun BACKEND_UNSUPPORTED(): Nothing = throw NotImplementedError("$MINECRAFT_VERSION doesn't support this feature'")
 }

@@ -11,5 +11,5 @@ import net.minecraft.network.play.client.C16PacketClientStatus
 
 class CPacketClientStatusImpl<T : C16PacketClientStatus>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketClientStatus
 
-inline fun ICPacketClientStatus.unwrap(): C16PacketClientStatus = (this as CPacketClientStatusImpl<*>).wrapped
-inline fun C16PacketClientStatus.wrap(): ICPacketClientStatus = CPacketClientStatusImpl(this)
+ fun ICPacketClientStatus.unwrap(): C16PacketClientStatus = (this as CPacketClientStatusImpl<*>).wrapped
+ fun C16PacketClientStatus.wrap(): ICPacketClientStatus = CPacketClientStatusImpl(this)

@@ -4,7 +4,7 @@
  * https://github.com/CCBlueX/LiquidBounce/
  */
 
-@file:Suppress("NOTHING_TO_INLINE")
+@file:Suppress("NOTHING_TO_")
 
 package net.ccbluex.liquidbounce.injection.backend.utils
 
@@ -19,15 +19,15 @@ import net.minecraft.network.play.client.*
 import net.minecraft.util.*
 import net.minecraft.world.WorldSettings
 
-inline fun WVec3.unwrap(): Vec3 = Vec3(xCoord, yCoord, zCoord)
-inline fun WVec3i.unwrap(): Vec3i = Vec3i(x, y, z)
-inline fun WBlockPos.unwrap(): BlockPos = BlockPos(x, y, z)
+ fun WVec3.unwrap(): Vec3 = Vec3(xCoord, yCoord, zCoord)
+ fun WVec3i.unwrap(): Vec3i = Vec3i(x, y, z)
+ fun WBlockPos.unwrap(): BlockPos = BlockPos(x, y, z)
 
-inline fun BlockPos.wrap(): WBlockPos = WBlockPos(x, y, z)
-inline fun Vec3.wrap(): WVec3 = WVec3(xCoord, yCoord, zCoord)
-inline fun Vec3i.wrap(): WVec3i = WVec3i(x, y, z)
+ fun BlockPos.wrap(): WBlockPos = WBlockPos(x, y, z)
+ fun Vec3.wrap(): WVec3 = WVec3(xCoord, yCoord, zCoord)
+ fun Vec3i.wrap(): WVec3i = WVec3i(x, y, z)
 
-inline fun MovingObjectPosition.MovingObjectType.wrap(): IMovingObjectPosition.WMovingObjectType
+ fun MovingObjectPosition.MovingObjectType.wrap(): IMovingObjectPosition.WMovingObjectType
 {
 	return when (this)
 	{
@@ -37,7 +37,7 @@ inline fun MovingObjectPosition.MovingObjectType.wrap(): IMovingObjectPosition.W
 	}
 }
 
-inline fun WEnumPlayerModelParts.unwrap(): EnumPlayerModelParts
+ fun WEnumPlayerModelParts.unwrap(): EnumPlayerModelParts
 {
 	return when (this)
 	{
@@ -51,7 +51,7 @@ inline fun WEnumPlayerModelParts.unwrap(): EnumPlayerModelParts
 	}
 }
 
-inline fun EnumPlayerModelParts.wrap(): WEnumPlayerModelParts
+ fun EnumPlayerModelParts.wrap(): WEnumPlayerModelParts
 {
 	return when (this)
 	{
@@ -65,7 +65,7 @@ inline fun EnumPlayerModelParts.wrap(): WEnumPlayerModelParts
 	}
 }
 
-inline fun EnumChatFormatting.wrap(): WEnumChatFormatting
+ fun EnumChatFormatting.wrap(): WEnumChatFormatting
 {
 	return when (this)
 	{
@@ -94,7 +94,7 @@ inline fun EnumChatFormatting.wrap(): WEnumChatFormatting
 	}
 }
 
-inline fun WEnumChatFormatting.unwrap(): EnumChatFormatting
+ fun WEnumChatFormatting.unwrap(): EnumChatFormatting
 {
 	return when (this)
 	{
@@ -123,7 +123,7 @@ inline fun WEnumChatFormatting.unwrap(): EnumChatFormatting
 	}
 }
 
-inline fun IWorldSettings.WGameType.unwrap(): WorldSettings.GameType
+ fun IWorldSettings.WGameType.unwrap(): WorldSettings.GameType
 {
 	return when (this)
 	{
@@ -135,7 +135,7 @@ inline fun IWorldSettings.WGameType.unwrap(): WorldSettings.GameType
 	}
 }
 
-inline fun WorldSettings.GameType.wrap(): IWorldSettings.WGameType
+ fun WorldSettings.GameType.wrap(): IWorldSettings.WGameType
 {
 	return when (this)
 	{
@@ -147,7 +147,7 @@ inline fun WorldSettings.GameType.wrap(): IWorldSettings.WGameType
 	}
 }
 
-inline fun C02PacketUseEntity.Action.wrap(): ICPacketUseEntity.WAction
+ fun C02PacketUseEntity.Action.wrap(): ICPacketUseEntity.WAction
 {
 	return when (this)
 	{
@@ -157,7 +157,7 @@ inline fun C02PacketUseEntity.Action.wrap(): ICPacketUseEntity.WAction
 	}
 }
 
-inline fun ICPacketUseEntity.WAction.unwrap(): C02PacketUseEntity.Action
+ fun ICPacketUseEntity.WAction.unwrap(): C02PacketUseEntity.Action
 {
 	return when (this)
 	{
@@ -167,7 +167,7 @@ inline fun ICPacketUseEntity.WAction.unwrap(): C02PacketUseEntity.Action
 	}
 }
 
-inline fun IClickEvent.WAction.unwrap(): ClickEvent.Action
+ fun IClickEvent.WAction.unwrap(): ClickEvent.Action
 {
 	return when (this)
 	{
@@ -175,7 +175,7 @@ inline fun IClickEvent.WAction.unwrap(): ClickEvent.Action
 	}
 }
 
-inline fun ICPacketClientStatus.WEnumState.unwrap(): C16PacketClientStatus.EnumState
+ fun ICPacketClientStatus.WEnumState.unwrap(): C16PacketClientStatus.EnumState
 {
 	return when (this)
 	{
@@ -185,7 +185,7 @@ inline fun ICPacketClientStatus.WEnumState.unwrap(): C16PacketClientStatus.EnumS
 	}
 }
 
-inline fun ICPacketPlayerDigging.WAction.unwrap(): C07PacketPlayerDigging.Action
+ fun ICPacketPlayerDigging.WAction.unwrap(): C07PacketPlayerDigging.Action
 {
 	return when (this)
 	{
@@ -198,7 +198,7 @@ inline fun ICPacketPlayerDigging.WAction.unwrap(): C07PacketPlayerDigging.Action
 	}
 }
 
-inline fun ICPacketResourcePackStatus.WAction.unwrap(): C19PacketResourcePackStatus.Action
+ fun ICPacketResourcePackStatus.WAction.unwrap(): C19PacketResourcePackStatus.Action
 {
 	return when (this)
 	{
@@ -209,7 +209,7 @@ inline fun ICPacketResourcePackStatus.WAction.unwrap(): C19PacketResourcePackSta
 	}
 }
 
-inline fun ICPacketEntityAction.WAction.unwrap(): C0BPacketEntityAction.Action
+ fun ICPacketEntityAction.WAction.unwrap(): C0BPacketEntityAction.Action
 {
 	return when (this)
 	{
@@ -222,7 +222,7 @@ inline fun ICPacketEntityAction.WAction.unwrap(): C0BPacketEntityAction.Action
 	}
 }
 
-inline fun C07PacketPlayerDigging.Action.wrap(): ICPacketPlayerDigging.WAction
+ fun C07PacketPlayerDigging.Action.wrap(): ICPacketPlayerDigging.WAction
 {
 	return when (this)
 	{

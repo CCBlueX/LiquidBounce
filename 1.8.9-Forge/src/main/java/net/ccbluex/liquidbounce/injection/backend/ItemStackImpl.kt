@@ -15,11 +15,10 @@ import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTBase
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagCompound
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagList
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
+import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.minecraft.entity.ai.attributes.AttributeModifier
 import net.minecraft.item.ItemPotion
 import net.minecraft.item.ItemStack
-
-import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 
 class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 {
@@ -56,11 +55,13 @@ class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 		}
 	override val item: IItem?
 		get() = wrapped.item?.wrap()
+
+	@Suppress("CAST_NEVER_SUCCEEDS")
 	override val itemDelay: Long
 		get() = (wrapped as IMixinItemStack).itemDelay
 
 	override fun getStrVsBlock(block: IIBlockState): Float = wrapped.getStrVsBlock(block.block.unwrap())
 }
 
-inline fun IItemStack.unwrap(): ItemStack = (this as ItemStackImpl).wrapped
-inline fun ItemStack.wrap(): IItemStack = ItemStackImpl(this)
+fun IItemStack.unwrap(): ItemStack = (this as ItemStackImpl).wrapped
+fun ItemStack.wrap(): IItemStack = ItemStackImpl(this)

@@ -24,5 +24,5 @@ open class ItemImpl<T : Item>(val wrapped: T) : IItem {
     }
 }
 
-inline fun IItem.unwrap(): Item = (this as ItemImpl<*>).wrapped
-inline fun Item.wrap(): IItem = ItemImpl(this)
+ fun IItem.unwrap(): Item = (this as ItemImpl<*>).wrapped
+ fun Item.wrap(): IItem = ItemImpl(this)

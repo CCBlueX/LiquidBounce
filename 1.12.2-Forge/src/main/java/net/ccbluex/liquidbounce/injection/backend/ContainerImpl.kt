@@ -21,5 +21,5 @@ class ContainerImpl(val wrapped: Container) : IContainer {
     }
 }
 
-inline fun IContainer.unwrap(): Container = (this as ContainerImpl).wrapped
-inline fun Container.wrap(): IContainer = ContainerImpl(this)
+ fun IContainer.unwrap(): Container = (this as ContainerImpl).wrapped
+ fun Container.wrap(): IContainer = ContainerImpl(this)

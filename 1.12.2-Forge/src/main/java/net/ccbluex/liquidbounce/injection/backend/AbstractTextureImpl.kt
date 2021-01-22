@@ -15,5 +15,5 @@ open class AbstractTextureImpl<T : AbstractTexture>(val wrapped: T) : IAbstractT
     }
 }
 
-inline fun IAbstractTexture.unwrap(): AbstractTexture = (this as AbstractTextureImpl<*>).wrapped
-inline fun AbstractTexture.wrap(): IAbstractTexture = AbstractTextureImpl(this)
+ fun IAbstractTexture.unwrap(): AbstractTexture = (this as AbstractTextureImpl<*>).wrapped
+ fun AbstractTexture.wrap(): IAbstractTexture = AbstractTextureImpl(this)

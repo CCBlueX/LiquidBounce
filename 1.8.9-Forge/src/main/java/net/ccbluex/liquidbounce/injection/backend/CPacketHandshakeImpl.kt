@@ -24,5 +24,5 @@ class CPacketHandshakeImpl<T : C00Handshake>(wrapped: T) : PacketImpl<T>(wrapped
 		get() = wrapped.requestedState.wrap()
 }
 
-inline fun ICPacketHandshake.unwrap(): C00Handshake = (this as CPacketHandshakeImpl<*>).wrapped
-inline fun C00Handshake.wrap(): ICPacketHandshake = CPacketHandshakeImpl(this)
+ fun ICPacketHandshake.unwrap(): C00Handshake = (this as CPacketHandshakeImpl<*>).wrapped
+ fun C00Handshake.wrap(): ICPacketHandshake = CPacketHandshakeImpl(this)

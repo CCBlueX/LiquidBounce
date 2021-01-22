@@ -15,5 +15,5 @@ class SPacketPlayerSpawnImpl<T : S0CPacketSpawnPlayer>(wrapped: T) : PacketImpl<
 		get() = wrapped.z
 }
 
-inline fun ISPacketPlayerSpawn.unwrap(): S0CPacketSpawnPlayer = (this as SPacketPlayerSpawnImpl<*>).wrapped
-inline fun S0CPacketSpawnPlayer.wrap(): ISPacketPlayerSpawn = SPacketPlayerSpawnImpl(this)
+ fun ISPacketPlayerSpawn.unwrap(): S0CPacketSpawnPlayer = (this as SPacketPlayerSpawnImpl<*>).wrapped
+ fun S0CPacketSpawnPlayer.wrap(): ISPacketPlayerSpawn = SPacketPlayerSpawnImpl(this)

@@ -20,5 +20,5 @@ class SlotImpl(val wrapped: Slot) : ISlot
 	override fun equals(other: Any?): Boolean = other is SlotImpl && other.wrapped == wrapped
 }
 
-inline fun ISlot.unwrap(): Slot = (this as SlotImpl).wrapped
-inline fun Slot.wrap(): ISlot = SlotImpl(this)
+ fun ISlot.unwrap(): Slot = (this as SlotImpl).wrapped
+ fun Slot.wrap(): ISlot = SlotImpl(this)

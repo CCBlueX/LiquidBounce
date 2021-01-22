@@ -14,5 +14,5 @@ class SPacketTabCompleteImpl<T : SPacketTabComplete>(wrapped: T) : PacketImpl<T>
         get() = wrapped.matches
 }
 
-inline fun ISPacketTabComplete.unwrap(): SPacketTabComplete = (this as SPacketTabCompleteImpl<*>).wrapped
-inline fun SPacketTabComplete.wrap(): ISPacketTabComplete = SPacketTabCompleteImpl(this)
+ fun ISPacketTabComplete.unwrap(): SPacketTabComplete = (this as SPacketTabCompleteImpl<*>).wrapped
+ fun SPacketTabComplete.wrap(): ISPacketTabComplete = SPacketTabCompleteImpl(this)

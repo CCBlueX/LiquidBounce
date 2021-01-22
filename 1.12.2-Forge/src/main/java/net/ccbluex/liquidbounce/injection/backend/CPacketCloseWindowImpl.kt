@@ -11,5 +11,5 @@ import net.minecraft.network.play.client.CPacketCloseWindow
 
 class CPacketCloseWindowImpl<T : CPacketCloseWindow>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketCloseWindow
 
-inline fun ICPacketCloseWindow.unwrap(): CPacketCloseWindow = (this as CPacketCloseWindowImpl<*>).wrapped
-inline fun CPacketCloseWindow.wrap(): ICPacketCloseWindow = CPacketCloseWindowImpl(this)
+ fun ICPacketCloseWindow.unwrap(): CPacketCloseWindow = (this as CPacketCloseWindowImpl<*>).wrapped
+ fun CPacketCloseWindow.wrap(): ICPacketCloseWindow = CPacketCloseWindowImpl(this)

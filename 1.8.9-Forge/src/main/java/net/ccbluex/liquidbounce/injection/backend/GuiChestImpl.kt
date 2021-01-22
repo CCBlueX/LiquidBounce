@@ -28,5 +28,5 @@ class GuiChestImpl<T : GuiChest>(wrapped: T) : GuiScreenImpl<T>(wrapped), IGuiCh
 	}
 }
 
-inline fun IGuiChest.unwrap(): GuiChest = (this as GuiChestImpl<*>).wrapped
-inline fun GuiChest.wrap(): IGuiChest = GuiChestImpl(this)
+ fun IGuiChest.unwrap(): GuiChest = (this as GuiChestImpl<*>).wrapped
+ fun GuiChest.wrap(): IGuiChest = GuiChestImpl(this)

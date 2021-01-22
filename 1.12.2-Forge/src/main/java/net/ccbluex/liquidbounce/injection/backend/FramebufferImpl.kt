@@ -17,5 +17,5 @@ class FramebufferImpl(val wrapped: Framebuffer) : IFramebuffer {
     }
 }
 
-inline fun IFramebuffer.unwrap(): Framebuffer = (this as FramebufferImpl).wrapped
-inline fun Framebuffer.wrap(): IFramebuffer = FramebufferImpl(this)
+ fun IFramebuffer.unwrap(): Framebuffer = (this as FramebufferImpl).wrapped
+ fun Framebuffer.wrap(): IFramebuffer = FramebufferImpl(this)

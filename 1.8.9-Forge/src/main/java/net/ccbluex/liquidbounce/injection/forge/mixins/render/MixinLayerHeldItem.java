@@ -39,6 +39,7 @@ public class MixinLayerHeldItem
 
 	/**
 	 * @author CCBlueX
+	 * @reason
 	 */
 	@Overwrite
 	public void doRenderLayer(final EntityLivingBase entitylivingbaseIn, final float p_177141_2_, final float p_177141_3_, final float partialTicks, final float p_177141_5_, final float p_177141_6_, final float p_177141_7_, final float scale)

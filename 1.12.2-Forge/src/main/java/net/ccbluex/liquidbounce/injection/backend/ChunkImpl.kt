@@ -36,5 +36,5 @@ class ChunkImpl(val wrapped: Chunk) : IChunk {
     }
 }
 
-inline fun IChunk.unwrap(): Chunk = (this as ChunkImpl).wrapped
-inline fun Chunk.wrap(): IChunk = ChunkImpl(this)
+ fun IChunk.unwrap(): Chunk = (this as ChunkImpl).wrapped
+ fun Chunk.wrap(): IChunk = ChunkImpl(this)

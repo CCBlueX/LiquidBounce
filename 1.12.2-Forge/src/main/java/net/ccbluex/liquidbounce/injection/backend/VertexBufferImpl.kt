@@ -26,5 +26,5 @@ class VertexBufferImpl(val wrapped: VertexBuffer) : IVertexBuffer {
     }
 }
 
-inline fun IVertexBuffer.unwrap(): VertexBuffer = (this as VertexBufferImpl).wrapped
-inline fun VertexBuffer.wrap(): IVertexBuffer = VertexBufferImpl(this)
+ fun IVertexBuffer.unwrap(): VertexBuffer = (this as VertexBufferImpl).wrapped
+ fun VertexBuffer.wrap(): IVertexBuffer = VertexBufferImpl(this)

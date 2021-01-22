@@ -33,6 +33,7 @@ public abstract class MixinBlockLadder extends MixinBlock
 
 	/**
 	 * @author CCBlueX
+	 * @reason FastClimb AAC3.0.0
 	 */
 	@Overwrite
 	public void setBlockBoundsBasedOnState(final IBlockAccess worldIn, final BlockPos pos)

@@ -55,7 +55,7 @@ class ChestStealer : Module()
 	private val delayOnFirstValue = BoolValue("DelayOnFirst", false)
 	private val maxStartDelay: IntegerValue = object : IntegerValue("MaxFirstDelay", 0, 0, 1000)
 	{
-		override fun onChanged(prevValue: Int, newValue: Int)
+		override fun onChanged(oldValue: Int, newValue: Int)
 		{
 			val i = minStartDelay.get()
 			if (i > newValue) this.set(i)
@@ -65,7 +65,7 @@ class ChestStealer : Module()
 
 	private val minStartDelay: IntegerValue = object : IntegerValue("MinFirstDelay", 0, 0, 1000)
 	{
-		override fun onChanged(prevValue: Int, newValue: Int)
+		override fun onChanged(oldValue: Int, newValue: Int)
 		{
 			val i = maxStartDelay.get()
 			if (i < newValue) this.set(i)
@@ -137,7 +137,7 @@ class ChestStealer : Module()
 	private var remainingMisclickCount = maxAllowedMisclicksPerChestValue.get()
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
 		val thePlayer = mc.thePlayer ?: return
 
@@ -254,7 +254,7 @@ class ChestStealer : Module()
 		if (classProvider.isSPacketWindowItems(packet)) contentReceived = packet.asSPacketWindowItems().windowId
 	}
 
-	private inline fun shouldTake(stack: IItemStack?, inventoryCleaner: InventoryCleaner): Boolean =
+	private  fun shouldTake(stack: IItemStack?, inventoryCleaner: InventoryCleaner): Boolean =
 		stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))
 
 	private fun move(screen: IGuiChest, slot: ISlot, misclick: Boolean)

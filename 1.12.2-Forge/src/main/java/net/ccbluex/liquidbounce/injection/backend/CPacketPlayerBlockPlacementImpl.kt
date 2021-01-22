@@ -11,5 +11,5 @@ import net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock
 
 class CPacketPlayerBlockPlacementImpl<T : CPacketPlayerTryUseItemOnBlock>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketPlayerBlockPlacement
 
-inline fun ICPacketPlayerBlockPlacement.unwrap(): CPacketPlayerTryUseItemOnBlock = (this as CPacketPlayerBlockPlacementImpl<*>).wrapped
-inline fun CPacketPlayerTryUseItemOnBlock.wrap(): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(this)
+ fun ICPacketPlayerBlockPlacement.unwrap(): CPacketPlayerTryUseItemOnBlock = (this as CPacketPlayerBlockPlacementImpl<*>).wrapped
+ fun CPacketPlayerTryUseItemOnBlock.wrap(): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(this)

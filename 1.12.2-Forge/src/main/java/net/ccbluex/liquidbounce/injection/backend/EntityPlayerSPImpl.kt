@@ -44,5 +44,5 @@ open class EntityPlayerSPImpl<T : EntityPlayerSP>(wrapped: T) : AbstractClientPl
     override fun closeScreen() = wrapped.closeScreen()
 }
 
-inline fun IEntityPlayerSP.unwrap(): EntityPlayerSP = (this as EntityPlayerSPImpl<*>).wrapped
-inline fun EntityPlayerSP.wrap(): IEntityPlayerSP = EntityPlayerSPImpl(this)
+ fun IEntityPlayerSP.unwrap(): EntityPlayerSP = (this as EntityPlayerSPImpl<*>).wrapped
+ fun EntityPlayerSP.wrap(): IEntityPlayerSP = EntityPlayerSPImpl(this)

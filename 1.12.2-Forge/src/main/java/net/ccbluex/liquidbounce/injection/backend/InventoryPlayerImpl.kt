@@ -34,5 +34,5 @@ class InventoryPlayerImpl(val wrapped: InventoryPlayer) : IInventoryPlayer {
     }
 }
 
-inline fun IInventoryPlayer.unwrap(): InventoryPlayer = (this as InventoryPlayerImpl).wrapped
-inline fun InventoryPlayer.wrap(): IInventoryPlayer = InventoryPlayerImpl(this)
+ fun IInventoryPlayer.unwrap(): InventoryPlayer = (this as InventoryPlayerImpl).wrapped
+ fun InventoryPlayer.wrap(): IInventoryPlayer = InventoryPlayerImpl(this)

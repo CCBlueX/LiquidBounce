@@ -19,5 +19,5 @@ class WorldBorderImpl(val wrapped: WorldBorder) : IWorldBorder {
     }
 }
 
-inline fun IWorldBorder.unwrap(): WorldBorder = (this as WorldBorderImpl).wrapped
-inline fun WorldBorder.wrap(): IWorldBorder = WorldBorderImpl(this)
+ fun IWorldBorder.unwrap(): WorldBorder = (this as WorldBorderImpl).wrapped
+ fun WorldBorder.wrap(): IWorldBorder = WorldBorderImpl(this)

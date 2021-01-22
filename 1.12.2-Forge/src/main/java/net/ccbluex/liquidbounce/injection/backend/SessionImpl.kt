@@ -28,5 +28,5 @@ class SessionImpl(val wrapped: Session) : ISession {
     }
 }
 
-inline fun ISession.unwrap(): Session = (this as SessionImpl).wrapped
-inline fun Session.wrap(): ISession = SessionImpl(this)
+ fun ISession.unwrap(): Session = (this as SessionImpl).wrapped
+ fun Session.wrap(): ISession = SessionImpl(this)

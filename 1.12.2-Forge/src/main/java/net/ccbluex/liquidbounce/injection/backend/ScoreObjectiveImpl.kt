@@ -22,5 +22,5 @@ class ScoreObjectiveImpl(val wrapped: ScoreObjective) : IScoreObjective {
     }
 }
 
-inline fun IScoreObjective.unwrap(): ScoreObjective = (this as ScoreObjectiveImpl).wrapped
-inline fun ScoreObjective.wrap(): IScoreObjective = ScoreObjectiveImpl(this)
+ fun IScoreObjective.unwrap(): ScoreObjective = (this as ScoreObjectiveImpl).wrapped
+ fun ScoreObjective.wrap(): IScoreObjective = ScoreObjectiveImpl(this)

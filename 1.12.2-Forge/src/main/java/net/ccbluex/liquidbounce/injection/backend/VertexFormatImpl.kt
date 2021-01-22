@@ -15,5 +15,5 @@ class VertexFormatImpl(val wrapped: VertexFormat) : IVertexFormat {
     }
 }
 
-inline fun IVertexFormat.unwrap(): VertexFormat = (this as VertexFormatImpl).wrapped
-inline fun VertexFormat.wrap(): IVertexFormat = VertexFormatImpl(this)
+ fun IVertexFormat.unwrap(): VertexFormat = (this as VertexFormatImpl).wrapped
+ fun VertexFormat.wrap(): IVertexFormat = VertexFormatImpl(this)

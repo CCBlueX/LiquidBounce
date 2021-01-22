@@ -41,7 +41,7 @@ class BlockESP : Module()
 	private var thread: Thread? = null
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
 		if (searchTimer.hasTimePassed(1000L) && (thread == null || !thread!!.isAlive))
 		{
@@ -85,7 +85,7 @@ class BlockESP : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
 		synchronized(posList) {
 			val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())

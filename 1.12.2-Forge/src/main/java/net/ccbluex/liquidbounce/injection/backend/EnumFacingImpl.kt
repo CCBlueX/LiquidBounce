@@ -34,5 +34,5 @@ class EnumFacingImpl(val wrapped: EnumFacing) : IEnumFacing {
     }
 }
 
-inline fun IEnumFacing.unwrap(): EnumFacing = (this as EnumFacingImpl).wrapped
-inline fun EnumFacing.wrap(): IEnumFacing = EnumFacingImpl(this)
+ fun IEnumFacing.unwrap(): EnumFacing = (this as EnumFacingImpl).wrapped
+ fun EnumFacing.wrap(): IEnumFacing = EnumFacingImpl(this)

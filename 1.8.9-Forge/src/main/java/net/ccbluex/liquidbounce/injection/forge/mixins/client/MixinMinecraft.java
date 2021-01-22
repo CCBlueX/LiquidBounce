@@ -260,6 +260,7 @@ public abstract class MixinMinecraft
 
 	/**
 	 * @author CCBlueX
+	 * @reason ClickBlockEvent
 	 */
 	@Overwrite
 	private void sendClickBlockToController(final boolean leftClick)
@@ -283,7 +284,8 @@ public abstract class MixinMinecraft
 	}
 
 	/**
-	 * @author
+	 * @author CCBlueX
+	 * @reason Limit framerate when ClickGui is open
 	 */
 	@Overwrite
 	public int getLimitFramerate()

@@ -33,5 +33,5 @@ class GuiSlotImpl(val wrapped: GuiSlot) : IGuiSlot
 
 }
 
-inline fun IGuiSlot.unwrap(): GuiSlot = (this as GuiSlotImpl).wrapped
-inline fun GuiSlot.wrap(): IGuiSlot = GuiSlotImpl(this)
+ fun IGuiSlot.unwrap(): GuiSlot = (this as GuiSlotImpl).wrapped
+ fun GuiSlot.wrap(): IGuiSlot = GuiSlotImpl(this)

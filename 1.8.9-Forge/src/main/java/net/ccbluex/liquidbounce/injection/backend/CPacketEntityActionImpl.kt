@@ -11,5 +11,5 @@ import net.minecraft.network.play.client.C0BPacketEntityAction
 
 class CPacketEntityActionImpl<T : C0BPacketEntityAction>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketEntityAction
 
-inline fun ICPacketEntityAction.unwrap(): C0BPacketEntityAction = (this as CPacketEntityActionImpl<*>).wrapped
-inline fun C0BPacketEntityAction.wrap(): ICPacketEntityAction = CPacketEntityActionImpl(this)
+ fun ICPacketEntityAction.unwrap(): C0BPacketEntityAction = (this as CPacketEntityActionImpl<*>).wrapped
+ fun C0BPacketEntityAction.wrap(): ICPacketEntityAction = CPacketEntityActionImpl(this)

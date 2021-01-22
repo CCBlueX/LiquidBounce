@@ -18,5 +18,5 @@ class FoodStatsImpl(val wrapped: FoodStats) : IFoodStats {
     }
 }
 
-inline fun IFoodStats.unwrap(): FoodStats = (this as FoodStatsImpl).wrapped
-inline fun FoodStats.wrap(): IFoodStats = FoodStatsImpl(this)
+ fun IFoodStats.unwrap(): FoodStats = (this as FoodStatsImpl).wrapped
+ fun FoodStats.wrap(): IFoodStats = FoodStatsImpl(this)

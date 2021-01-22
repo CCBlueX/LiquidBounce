@@ -43,5 +43,5 @@ class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB {
     }
 }
 
-inline fun IAxisAlignedBB.unwrap(): AxisAlignedBB = (this as AxisAlignedBBImpl).wrapped
-inline fun AxisAlignedBB.wrap(): IAxisAlignedBB = AxisAlignedBBImpl(this)
+ fun IAxisAlignedBB.unwrap(): AxisAlignedBB = (this as AxisAlignedBBImpl).wrapped
+ fun AxisAlignedBB.wrap(): IAxisAlignedBB = AxisAlignedBBImpl(this)

@@ -21,5 +21,5 @@ class ScoreImpl(val wrapped: Score) : IScore {
     }
 }
 
-inline fun IScore.unwrap(): Score = (this as ScoreImpl).wrapped
-inline fun Score.wrap(): IScore = ScoreImpl(this)
+ fun IScore.unwrap(): Score = (this as ScoreImpl).wrapped
+ fun Score.wrap(): IScore = ScoreImpl(this)

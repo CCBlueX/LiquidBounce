@@ -19,5 +19,5 @@ class TileEntityImpl(val wrapped: TileEntity) : ITileEntity
 	override fun equals(other: Any?): Boolean = other is TileEntityImpl && other.wrapped == wrapped
 }
 
-inline fun ITileEntity.unwrap(): TileEntity = (this as TileEntityImpl).wrapped
-inline fun TileEntity.wrap(): ITileEntity = TileEntityImpl(this)
+ fun ITileEntity.unwrap(): TileEntity = (this as TileEntityImpl).wrapped
+ fun TileEntity.wrap(): ITileEntity = TileEntityImpl(this)

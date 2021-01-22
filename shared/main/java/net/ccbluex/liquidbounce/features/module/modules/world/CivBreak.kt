@@ -85,7 +85,7 @@ class CivBreak : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		RenderUtils.drawBlockBox(blockPos ?: return, Color.RED, true)
 	}

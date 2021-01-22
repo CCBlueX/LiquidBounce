@@ -58,7 +58,7 @@ object Fucker : Module()
 	var currentDamage = 0F
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 
@@ -208,7 +208,7 @@ object Fucker : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		RenderUtils.drawBlockBox(pos ?: return, Color.RED, true)
 	}

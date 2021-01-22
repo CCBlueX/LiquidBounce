@@ -14,5 +14,5 @@ class SPacketWindowItemsImpl<T : SPacketWindowItems>(wrapped: T) : PacketImpl<T>
         get() = wrapped.windowId
 }
 
-inline fun ISPacketWindowItems.unwrap(): SPacketWindowItems = (this as SPacketWindowItemsImpl<*>).wrapped
-inline fun SPacketWindowItems.wrap(): ISPacketWindowItems = SPacketWindowItemsImpl(this)
+ fun ISPacketWindowItems.unwrap(): SPacketWindowItems = (this as SPacketWindowItemsImpl<*>).wrapped
+ fun SPacketWindowItems.wrap(): ISPacketWindowItems = SPacketWindowItemsImpl(this)

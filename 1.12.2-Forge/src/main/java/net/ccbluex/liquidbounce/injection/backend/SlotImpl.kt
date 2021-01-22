@@ -22,5 +22,5 @@ class SlotImpl(val wrapped: Slot) : ISlot {
     }
 }
 
-inline fun ISlot.unwrap(): Slot = (this as SlotImpl).wrapped
-inline fun Slot.wrap(): ISlot = SlotImpl(this)
+ fun ISlot.unwrap(): Slot = (this as SlotImpl).wrapped
+ fun Slot.wrap(): ISlot = SlotImpl(this)

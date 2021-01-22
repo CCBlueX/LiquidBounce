@@ -36,5 +36,5 @@ class ChatStyleImpl(val wrapped: Style) : IChatStyle {
 
 }
 
-inline fun IChatStyle.unwrap(): Style = (this as ChatStyleImpl).wrapped
-inline fun Style.wrap(): IChatStyle = ChatStyleImpl(this)
+ fun IChatStyle.unwrap(): Style = (this as ChatStyleImpl).wrapped
+ fun Style.wrap(): IChatStyle = ChatStyleImpl(this)

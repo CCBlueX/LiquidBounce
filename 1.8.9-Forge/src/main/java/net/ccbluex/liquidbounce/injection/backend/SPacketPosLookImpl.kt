@@ -26,5 +26,5 @@ class SPacketPosLookImpl<T : S08PacketPlayerPosLook>(wrapped: T) : PacketImpl<T>
 
 }
 
-inline fun ISPacketPosLook.unwrap(): S08PacketPlayerPosLook = (this as SPacketPosLookImpl<*>).wrapped
-inline fun S08PacketPlayerPosLook.wrap(): ISPacketPosLook = SPacketPosLookImpl(this)
+ fun ISPacketPosLook.unwrap(): S08PacketPlayerPosLook = (this as SPacketPosLookImpl<*>).wrapped
+ fun S08PacketPlayerPosLook.wrap(): ISPacketPosLook = SPacketPosLookImpl(this)

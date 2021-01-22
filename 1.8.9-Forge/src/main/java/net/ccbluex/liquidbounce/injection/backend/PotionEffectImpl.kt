@@ -24,5 +24,5 @@ class PotionEffectImpl(val wrapped: PotionEffect) : IPotionEffect
 	override fun equals(other: Any?): Boolean = other is PotionEffectImpl && other.wrapped == wrapped
 }
 
-inline fun IPotionEffect.unwrap(): PotionEffect = (this as PotionEffectImpl).wrapped
-inline fun PotionEffect.wrap(): IPotionEffect = PotionEffectImpl(this)
+ fun IPotionEffect.unwrap(): PotionEffect = (this as PotionEffectImpl).wrapped
+ fun PotionEffect.wrap(): IPotionEffect = PotionEffectImpl(this)

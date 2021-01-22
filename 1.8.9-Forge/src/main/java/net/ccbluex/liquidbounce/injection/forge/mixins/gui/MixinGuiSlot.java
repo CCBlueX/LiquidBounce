@@ -92,6 +92,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 
 	/**
 	 * @author CCBlueX
+	 * @reason
 	 */
 	@Overwrite
 	public void drawScreen(final int mouseXIn, final int mouseYIn, final float p_148128_3_)
@@ -185,6 +186,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 
 	/**
 	 * @author CCBlueX
+	 * @reason
 	 */
 	@Overwrite
 	protected int getScrollBarX()
@@ -200,6 +202,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 
 	/**
 	 * @author CCBlueX (superblaubeere27)
+	 * @reason
 	 */
 	@Overwrite
 	public int getListWidth()

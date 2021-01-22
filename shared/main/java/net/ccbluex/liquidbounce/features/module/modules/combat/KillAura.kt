@@ -465,7 +465,7 @@ class KillAura : Module()
 	 * Update event
 	 */
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		if (cancelRun)
 		{
@@ -506,7 +506,7 @@ class KillAura : Module()
 	 * Render event
 	 */
 	@EventTarget
-	fun onRender3D(event: Render3DEvent)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		if (cancelRun)
 		{
@@ -549,7 +549,7 @@ class KillAura : Module()
 	}
 
 	@EventTarget
-	fun onRender2D(event: Render2DEvent)
+	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
 		if (suspended) return
 
@@ -963,13 +963,13 @@ class KillAura : Module()
 	 * Check if run should be cancelled
 	 */
 	private val cancelRun: Boolean
-		inline get() = mc.thePlayer!!.spectator || !EntityUtils.isAlive(mc.thePlayer!!, aacValue.get()) || LiquidBounce.moduleManager[Blink::class.java].state || LiquidBounce.moduleManager[FreeCam::class.java].state
+		 get() = mc.thePlayer!!.spectator || !EntityUtils.isAlive(mc.thePlayer!!, aacValue.get()) || LiquidBounce.moduleManager[Blink::class.java].state || LiquidBounce.moduleManager[FreeCam::class.java].state
 
 	/**
 	 * Check if player is able to block
 	 */
 	private val canBlock: Boolean
-		inline get() = mc.thePlayer!!.heldItem != null && classProvider.isItemSword(mc.thePlayer!!.heldItem!!.item) && Backend.MINECRAFT_VERSION_MINOR == 8
+		 get() = mc.thePlayer!!.heldItem != null && classProvider.isItemSword(mc.thePlayer!!.heldItem!!.item) && Backend.MINECRAFT_VERSION_MINOR == 8
 
 	/**
 	 * Range

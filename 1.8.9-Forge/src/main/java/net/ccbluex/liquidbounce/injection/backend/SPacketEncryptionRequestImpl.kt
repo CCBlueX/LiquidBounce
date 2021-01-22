@@ -9,5 +9,5 @@ class SPacketEncryptionRequestImpl<T : S01PacketEncryptionRequest>(wrapped: T) :
 		get() = wrapped.verifyToken
 }
 
-inline fun ISPacketEncryptionRequest.unwrap(): S01PacketEncryptionRequest = (this as SPacketEncryptionRequestImpl<*>).wrapped
-inline fun S01PacketEncryptionRequest.wrap(): ISPacketEncryptionRequest = SPacketEncryptionRequestImpl(this)
+ fun ISPacketEncryptionRequest.unwrap(): S01PacketEncryptionRequest = (this as SPacketEncryptionRequestImpl<*>).wrapped
+ fun S01PacketEncryptionRequest.wrap(): ISPacketEncryptionRequest = SPacketEncryptionRequestImpl(this)

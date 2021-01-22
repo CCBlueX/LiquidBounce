@@ -111,5 +111,5 @@ class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControlle
     }
 }
 
-inline fun IPlayerControllerMP.unwrap(): PlayerControllerMP = (this as PlayerControllerMPImpl).wrapped
-inline fun PlayerControllerMP.wrap(): IPlayerControllerMP = PlayerControllerMPImpl(this)
+ fun IPlayerControllerMP.unwrap(): PlayerControllerMP = (this as PlayerControllerMPImpl).wrapped
+ fun PlayerControllerMP.wrap(): IPlayerControllerMP = PlayerControllerMPImpl(this)

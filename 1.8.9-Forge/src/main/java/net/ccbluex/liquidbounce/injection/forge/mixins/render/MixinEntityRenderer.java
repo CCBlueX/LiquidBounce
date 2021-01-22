@@ -177,7 +177,8 @@ public abstract class MixinEntityRenderer
 	}
 
 	/**
-	 * @author
+	 * @author CCBlueX
+	 * @reason
 	 */
 	@Overwrite
 	public void getMouseOver(final float p_getMouseOver_1_)

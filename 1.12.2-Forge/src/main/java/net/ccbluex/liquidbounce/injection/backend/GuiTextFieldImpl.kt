@@ -45,5 +45,5 @@ class GuiTextFieldImpl(val wrapped: GuiTextField) : IGuiTextField {
     }
 }
 
-inline fun IGuiTextField.unwrap(): GuiTextField = (this as GuiTextFieldImpl).wrapped
-inline fun GuiTextField.wrap(): IGuiTextField = GuiTextFieldImpl(this)
+ fun IGuiTextField.unwrap(): GuiTextField = (this as GuiTextFieldImpl).wrapped
+ fun GuiTextField.wrap(): IGuiTextField = GuiTextFieldImpl(this)

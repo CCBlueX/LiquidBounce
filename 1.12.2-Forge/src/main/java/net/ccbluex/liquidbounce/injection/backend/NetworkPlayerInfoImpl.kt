@@ -30,5 +30,5 @@ class NetworkPlayerInfoImpl(val wrapped: NetworkPlayerInfo) : INetworkPlayerInfo
     }
 }
 
-inline fun INetworkPlayerInfo.unwrap(): NetworkPlayerInfo = (this as NetworkPlayerInfoImpl).wrapped
-inline fun NetworkPlayerInfo.wrap(): INetworkPlayerInfo = NetworkPlayerInfoImpl(this)
+ fun INetworkPlayerInfo.unwrap(): NetworkPlayerInfo = (this as NetworkPlayerInfoImpl).wrapped
+ fun NetworkPlayerInfo.wrap(): INetworkPlayerInfo = NetworkPlayerInfoImpl(this)

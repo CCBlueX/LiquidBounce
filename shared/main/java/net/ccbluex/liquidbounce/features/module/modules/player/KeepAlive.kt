@@ -26,7 +26,7 @@ class KeepAlive : Module()
 	private var runOnce = false
 
 	@EventTarget
-	fun onMotion(event: MotionEvent)
+	fun onMotion(@Suppress("UNUSED_PARAMETER") event: MotionEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 

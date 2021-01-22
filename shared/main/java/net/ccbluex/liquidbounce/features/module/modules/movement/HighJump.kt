@@ -27,9 +27,9 @@ class HighJump : Module()
 	private val glassValue = BoolValue("OnlyGlassPane", false)
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
-		val thePlayer = mc.thePlayer!!
+		val thePlayer = mc.thePlayer ?: return
 
 		if (glassValue.get() && !classProvider.isBlockPane(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
 
@@ -43,7 +43,7 @@ class HighJump : Module()
 	}
 
 	@EventTarget
-	fun onMove(event: MoveEvent?)
+	fun onMove(@Suppress("UNUSED_PARAMETER") event: MoveEvent?)
 	{
 		val thePlayer = mc.thePlayer ?: return
 

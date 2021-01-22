@@ -87,5 +87,5 @@ open class EntityLivingBaseImpl<T : EntityLivingBase>(wrapped: T) : EntityImpl<T
     override fun getEquipmentInSlot(index: Int): IItemStack? = wrapped.getItemStackFromSlot(index.toEntityEquipmentSlot()).wrap()
 }
 
-inline fun IEntityLivingBase.unwrap(): EntityLivingBase = (this as EntityLivingBaseImpl<*>).wrapped
-inline fun EntityLivingBase.wrap(): IEntityLivingBase = EntityLivingBaseImpl(this)
+ fun IEntityLivingBase.unwrap(): EntityLivingBase = (this as EntityLivingBaseImpl<*>).wrapped
+ fun EntityLivingBase.wrap(): IEntityLivingBase = EntityLivingBaseImpl(this)

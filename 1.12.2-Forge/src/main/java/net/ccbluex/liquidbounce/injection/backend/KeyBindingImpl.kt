@@ -27,5 +27,5 @@ class KeyBindingImpl(val wrapped: KeyBinding) : IKeyBinding {
     }
 }
 
-inline fun IKeyBinding.unwrap(): KeyBinding = (this as KeyBindingImpl).wrapped
-inline fun KeyBinding.wrap(): IKeyBinding = KeyBindingImpl(this)
+ fun IKeyBinding.unwrap(): KeyBinding = (this as KeyBindingImpl).wrapped
+ fun KeyBinding.wrap(): IKeyBinding = KeyBindingImpl(this)

@@ -18,5 +18,5 @@ class EnumConnectionStateImpl(val wrapped: EnumConnectionState) : IEnumConnectio
     }
 }
 
-inline fun IEnumConnectionState.unwrap(): EnumConnectionState = (this as EnumConnectionStateImpl).wrapped
-inline fun EnumConnectionState.wrap(): IEnumConnectionState = EnumConnectionStateImpl(this)
+ fun IEnumConnectionState.unwrap(): EnumConnectionState = (this as EnumConnectionStateImpl).wrapped
+ fun EnumConnectionState.wrap(): IEnumConnectionState = EnumConnectionStateImpl(this)

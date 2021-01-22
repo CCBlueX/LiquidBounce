@@ -30,5 +30,5 @@ class MovingObjectPositionImpl(val wrapped: MovingObjectPosition) : IMovingObjec
 	override fun equals(other: Any?): Boolean = other is MovingObjectPositionImpl && other.wrapped == wrapped
 }
 
-inline fun IMovingObjectPosition.unwrap(): MovingObjectPosition = (this as MovingObjectPositionImpl).wrapped
-inline fun MovingObjectPosition.wrap(): IMovingObjectPosition = MovingObjectPositionImpl(this)
+ fun IMovingObjectPosition.unwrap(): MovingObjectPosition = (this as MovingObjectPositionImpl).wrapped
+ fun MovingObjectPosition.wrap(): IMovingObjectPosition = MovingObjectPositionImpl(this)

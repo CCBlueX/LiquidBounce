@@ -103,5 +103,5 @@ class MinecraftImpl(val wrapped: Minecraft) : IMinecraft {
     }
 }
 
-inline fun IMinecraft.unwrap(): Minecraft = (this as MinecraftImpl).wrapped
-inline fun Minecraft.wrap(): IMinecraft = MinecraftImpl(this)
+ fun IMinecraft.unwrap(): Minecraft = (this as MinecraftImpl).wrapped
+ fun Minecraft.wrap(): IMinecraft = MinecraftImpl(this)

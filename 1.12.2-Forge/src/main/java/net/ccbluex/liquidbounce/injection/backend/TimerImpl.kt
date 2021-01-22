@@ -24,5 +24,5 @@ class TimerImpl(val wrapped: Timer) : ITimer {
     }
 }
 
-inline fun ITimer.unwrap(): Timer = (this as TimerImpl).wrapped
-inline fun Timer.wrap(): ITimer = TimerImpl(this)
+ fun ITimer.unwrap(): Timer = (this as TimerImpl).wrapped
+ fun Timer.wrap(): ITimer = TimerImpl(this)

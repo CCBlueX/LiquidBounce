@@ -31,5 +31,5 @@ class IChatComponentImpl(val wrapped: ITextComponent) : IIChatComponent {
     }
 }
 
-inline fun IIChatComponent.unwrap(): ITextComponent = (this as IChatComponentImpl).wrapped
-inline fun ITextComponent.wrap(): IIChatComponent = IChatComponentImpl(this)
+ fun IIChatComponent.unwrap(): ITextComponent = (this as IChatComponentImpl).wrapped
+ fun ITextComponent.wrap(): IIChatComponent = IChatComponentImpl(this)

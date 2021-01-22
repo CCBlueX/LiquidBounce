@@ -23,5 +23,5 @@ class ScaledResolutionImpl(val wrapped: ScaledResolution) : IScaledResolution {
     }
 }
 
-inline fun IScaledResolution.unwrap(): ScaledResolution = (this as ScaledResolutionImpl).wrapped
-inline fun ScaledResolution.wrap(): IScaledResolution = ScaledResolutionImpl(this)
+ fun IScaledResolution.unwrap(): ScaledResolution = (this as ScaledResolutionImpl).wrapped
+ fun ScaledResolution.wrap(): IScaledResolution = ScaledResolutionImpl(this)

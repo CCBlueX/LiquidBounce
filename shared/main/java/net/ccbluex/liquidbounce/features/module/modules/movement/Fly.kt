@@ -266,10 +266,10 @@ class Fly : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
 		val vanillaSpeed = vanillaSpeedValue.get()
-		val thePlayer = mc.thePlayer!!
+		val thePlayer = mc.thePlayer ?: return
 
 		run {
 			when (modeValue.get().toLowerCase())
@@ -661,7 +661,7 @@ class Fly : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
 		val mode = modeValue.get()
 		if (!markValue.get() || mode.equals("Vanilla", ignoreCase = true) || mode.equals("SmoothVanilla", ignoreCase = true)) return

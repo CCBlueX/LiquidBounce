@@ -58,7 +58,7 @@ class InventoryCleaner : Module()
 
 	private val maxHotbarDelayValue: IntegerValue = object : IntegerValue("MaxHotbarDelay", 250, 1, 1000)
 	{
-		override fun onChanged(prevValue: Int, newValue: Int)
+		override fun onChanged(oldValue: Int, newValue: Int)
 		{
 			val minDelay = minHotbarDelayValue.get()
 			if (minDelay <= 0) this.set(1) // Hotbar delay < 1 will make infinity loop
@@ -68,7 +68,7 @@ class InventoryCleaner : Module()
 
 	private val minHotbarDelayValue: IntegerValue = object : IntegerValue("MinHotbarDelay", 200, 1, 1000)
 	{
-		override fun onChanged(prevValue: Int, newValue: Int)
+		override fun onChanged(oldValue: Int, newValue: Int)
 		{
 			val maxDelay = maxHotbarDelayValue.get()
 			if (maxDelay <= 0) this.set(1) // Hotbar delay < 1 will make infinity loop
@@ -137,7 +137,7 @@ class InventoryCleaner : Module()
 	private var delay = 0L
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 

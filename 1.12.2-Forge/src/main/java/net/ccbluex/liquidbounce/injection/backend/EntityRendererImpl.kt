@@ -31,5 +31,5 @@ class EntityRendererImpl(val wrapped: EntityRenderer) : IEntityRenderer {
     }
 }
 
-inline fun IEntityRenderer.unwrap(): EntityRenderer = (this as EntityRendererImpl).wrapped
-inline fun EntityRenderer.wrap(): IEntityRenderer = EntityRendererImpl(this)
+ fun IEntityRenderer.unwrap(): EntityRenderer = (this as EntityRendererImpl).wrapped
+ fun EntityRenderer.wrap(): IEntityRenderer = EntityRendererImpl(this)

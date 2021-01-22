@@ -9,5 +9,5 @@ class SPacketCustomPayloadImpl<T : S3FPacketCustomPayload>(wrapped: T) : PacketI
 		get() = wrapped.channelName
 }
 
-inline fun ISPacketCustomPayload.unwrap(): S3FPacketCustomPayload = (this as SPacketCustomPayloadImpl<*>).wrapped
-inline fun S3FPacketCustomPayload.wrap(): ISPacketCustomPayload = SPacketCustomPayloadImpl(this)
+ fun ISPacketCustomPayload.unwrap(): S3FPacketCustomPayload = (this as SPacketCustomPayloadImpl<*>).wrapped
+ fun S3FPacketCustomPayload.wrap(): ISPacketCustomPayload = SPacketCustomPayloadImpl(this)

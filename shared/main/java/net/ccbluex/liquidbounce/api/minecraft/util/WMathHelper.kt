@@ -28,8 +28,8 @@ object WMathHelper
 	}
 
 	@JvmStatic
-	inline fun clamp_float(num: Float, min: Float, max: Float): Float = if (num < min) min else if (num > max) max else num
+	 fun clamp_float(num: Float, min: Float, max: Float): Float = if (num < min) min else if (num > max) max else num
 
 	@JvmStatic
-	inline fun clamp_double(num: Double, min: Double, max: Double): Double = if (num < min) min else if (num > max) max else num
+	 fun clamp_double(num: Double, min: Double, max: Double): Double = if (num < min) min else if (num > max) max else num
 }

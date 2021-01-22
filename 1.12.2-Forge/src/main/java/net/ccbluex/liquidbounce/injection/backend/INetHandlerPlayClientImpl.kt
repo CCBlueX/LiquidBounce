@@ -31,5 +31,5 @@ class INetHandlerPlayClientImpl(val wrapped: NetHandlerPlayClient) : IINetHandle
     }
 }
 
-inline fun IINetHandlerPlayClient.unwrap(): INetHandlerPlayClient = (this as INetHandlerPlayClientImpl).wrapped
-inline fun NetHandlerPlayClient.wrap(): IINetHandlerPlayClient = INetHandlerPlayClientImpl(this)
+ fun IINetHandlerPlayClient.unwrap(): INetHandlerPlayClient = (this as INetHandlerPlayClientImpl).wrapped
+ fun NetHandlerPlayClient.wrap(): IINetHandlerPlayClient = INetHandlerPlayClientImpl(this)

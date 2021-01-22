@@ -20,5 +20,5 @@ class GuiChestImpl<T : GuiChest>(wrapped: T) : GuiContainerImpl<T>(wrapped), IGu
         get() = wrapped.inventorySlots?.wrap()
 }
 
-inline fun IGuiChest.unwrap(): GuiChest = (this as GuiChestImpl<*>).wrapped
-inline fun GuiChest.wrap(): IGuiChest = GuiChestImpl(this)
+ fun IGuiChest.unwrap(): GuiChest = (this as GuiChestImpl<*>).wrapped
+ fun GuiChest.wrap(): IGuiChest = GuiChestImpl(this)

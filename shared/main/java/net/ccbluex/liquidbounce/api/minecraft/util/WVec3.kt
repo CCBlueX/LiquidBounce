@@ -14,7 +14,7 @@ class WVec3(
 	val xCoord: Double, val yCoord: Double, val zCoord: Double
 )
 {
-	inline fun addVector(x: Double, y: Double, z: Double): WVec3 = WVec3(xCoord + x, yCoord + y, zCoord + z)
+	 fun addVector(x: Double, y: Double, z: Double): WVec3 = WVec3(xCoord + x, yCoord + y, zCoord + z)
 
 	fun distanceTo(vec: WVec3): Double
 	{
@@ -25,7 +25,7 @@ class WVec3(
 		return sqrt(d0 * d0 + d1 * d1 + d2 * d2)
 	}
 
-	inline fun squareDistanceTo(vec: WVec3): Double
+	 fun squareDistanceTo(vec: WVec3): Double
 	{
 		val d0 = vec.xCoord - xCoord
 		val d1 = vec.yCoord - yCoord
@@ -34,7 +34,7 @@ class WVec3(
 		return d0 * d0 + d1 * d1 + d2 * d2
 	}
 
-	inline fun add(vec: WVec3): WVec3 = addVector(vec.xCoord, vec.yCoord, vec.zCoord)
+	 fun add(vec: WVec3): WVec3 = addVector(vec.xCoord, vec.yCoord, vec.zCoord)
 
 	fun rotatePitch(pitch: Float): WVec3
 	{

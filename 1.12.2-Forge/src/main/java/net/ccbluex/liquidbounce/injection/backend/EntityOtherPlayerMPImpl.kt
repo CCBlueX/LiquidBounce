@@ -11,5 +11,5 @@ import net.minecraft.client.entity.EntityOtherPlayerMP
 
 class EntityOtherPlayerMPImpl<T : EntityOtherPlayerMP>(wrapped: T) : EntityPlayerImpl<T>(wrapped), IEntityOtherPlayerMP
 
-inline fun IEntityOtherPlayerMP.unwrap(): EntityOtherPlayerMP = (this as EntityOtherPlayerMPImpl<*>).wrapped
-inline fun EntityOtherPlayerMP.wrap(): IEntityOtherPlayerMP = EntityOtherPlayerMPImpl(this)
+ fun IEntityOtherPlayerMP.unwrap(): EntityOtherPlayerMP = (this as EntityOtherPlayerMPImpl<*>).wrapped
+ fun EntityOtherPlayerMP.wrap(): IEntityOtherPlayerMP = EntityOtherPlayerMPImpl(this)

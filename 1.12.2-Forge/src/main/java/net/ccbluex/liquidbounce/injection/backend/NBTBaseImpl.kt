@@ -15,5 +15,5 @@ open class NBTBaseImpl<T : NBTBase>(val wrapped: T) : INBTBase {
     }
 }
 
-inline fun INBTBase.unwrap(): NBTBase = (this as NBTBaseImpl<*>).wrapped
-inline fun NBTBase.wrap(): INBTBase = NBTBaseImpl(this)
+ fun INBTBase.unwrap(): NBTBase = (this as NBTBaseImpl<*>).wrapped
+ fun NBTBase.wrap(): INBTBase = NBTBaseImpl(this)

@@ -64,5 +64,5 @@ class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControlle
 	override fun equals(other: Any?): Boolean = other is PlayerControllerMPImpl && other.wrapped == wrapped
 }
 
-inline fun IPlayerControllerMP.unwrap(): PlayerControllerMP = (this as PlayerControllerMPImpl).wrapped
-inline fun PlayerControllerMP.wrap(): IPlayerControllerMP = PlayerControllerMPImpl(this)
+ fun IPlayerControllerMP.unwrap(): PlayerControllerMP = (this as PlayerControllerMPImpl).wrapped
+ fun PlayerControllerMP.wrap(): IPlayerControllerMP = PlayerControllerMPImpl(this)

@@ -14,5 +14,5 @@ class CPacketHeldItemChangeImpl<T : CPacketHeldItemChange>(wrapped: T) : PacketI
         get() = wrapped.slotId
 }
 
-inline fun ICPacketHeldItemChange.unwrap(): CPacketHeldItemChange = (this as CPacketHeldItemChangeImpl<*>).wrapped
-inline fun CPacketHeldItemChange.wrap(): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(this)
+ fun ICPacketHeldItemChange.unwrap(): CPacketHeldItemChange = (this as CPacketHeldItemChangeImpl<*>).wrapped
+ fun CPacketHeldItemChange.wrap(): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(this)

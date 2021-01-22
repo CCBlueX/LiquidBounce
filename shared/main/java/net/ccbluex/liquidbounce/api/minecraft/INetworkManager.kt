@@ -15,6 +15,6 @@ interface INetworkManager
 
 	fun sendPacket(packet: IPacket)
 	fun enableEncryption(secretKey: SecretKey)
-	fun sendPacket(packet: IPacket, any: () -> Unit)
+	fun sendPacket(packet: IPacket, listener: () -> Unit)
 	fun sendPacketWithoutEvent(packet: IPacket)
 }

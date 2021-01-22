@@ -13,5 +13,5 @@ class CPacketAnimationImpl<T : CPacketAnimation>(wrapped: T) : PacketImpl<T>(wra
 
 }
 
-inline fun ICPacketAnimation.unwrap(): CPacketAnimation = (this as CPacketAnimationImpl<*>).wrapped
-inline fun CPacketAnimation.wrap(): ICPacketAnimation = CPacketAnimationImpl(this)
+ fun ICPacketAnimation.unwrap(): CPacketAnimation = (this as CPacketAnimationImpl<*>).wrapped
+ fun CPacketAnimation.wrap(): ICPacketAnimation = CPacketAnimationImpl(this)

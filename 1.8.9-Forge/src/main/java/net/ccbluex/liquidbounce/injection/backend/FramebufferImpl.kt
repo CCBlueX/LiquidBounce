@@ -16,5 +16,5 @@ class FramebufferImpl(val wrapped: Framebuffer) : IFramebuffer
 	override fun equals(other: Any?): Boolean = other is FramebufferImpl && other.wrapped == wrapped
 }
 
-inline fun IFramebuffer.unwrap(): Framebuffer = (this as FramebufferImpl).wrapped
-inline fun Framebuffer.wrap(): IFramebuffer = FramebufferImpl(this)
+ fun IFramebuffer.unwrap(): Framebuffer = (this as FramebufferImpl).wrapped
+ fun Framebuffer.wrap(): IFramebuffer = FramebufferImpl(this)

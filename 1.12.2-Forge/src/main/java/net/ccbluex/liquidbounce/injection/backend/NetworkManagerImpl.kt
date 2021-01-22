@@ -24,5 +24,5 @@ class NetworkManagerImpl(val wrapped: NetworkManager) : INetworkManager {
     }
 }
 
-inline fun INetworkManager.unwrap(): NetworkManager = (this as NetworkManagerImpl).wrapped
-inline fun NetworkManager.wrap(): INetworkManager = NetworkManagerImpl(this)
+ fun INetworkManager.unwrap(): NetworkManager = (this as NetworkManagerImpl).wrapped
+ fun NetworkManager.wrap(): INetworkManager = NetworkManagerImpl(this)

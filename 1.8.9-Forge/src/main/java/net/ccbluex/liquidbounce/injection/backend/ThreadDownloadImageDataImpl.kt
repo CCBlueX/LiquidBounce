@@ -14,5 +14,5 @@ class ThreadDownloadImageDataImpl<T : ThreadDownloadImageData>(wrapped: T) : Abs
 	override fun equals(other: Any?): Boolean = other is ThreadDownloadImageDataImpl<*> && other.wrapped == wrapped
 }
 
-inline fun IThreadDownloadImageData.unwrap(): ThreadDownloadImageData = (this as ThreadDownloadImageDataImpl<*>).wrapped
-inline fun ThreadDownloadImageData.wrap(): IThreadDownloadImageData = ThreadDownloadImageDataImpl(this)
+ fun IThreadDownloadImageData.unwrap(): ThreadDownloadImageData = (this as ThreadDownloadImageDataImpl<*>).wrapped
+ fun ThreadDownloadImageData.wrap(): IThreadDownloadImageData = ThreadDownloadImageDataImpl(this)

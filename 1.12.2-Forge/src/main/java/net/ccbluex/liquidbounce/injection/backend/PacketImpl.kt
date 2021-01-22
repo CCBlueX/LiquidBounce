@@ -49,5 +49,5 @@ open class PacketImpl<T : Packet<*>>(val wrapped: T) : IPacket {
     }
 }
 
-inline fun IPacket.unwrap(): Packet<*> = (this as PacketImpl<*>).wrapped
-inline fun Packet<*>.wrap(): IPacket = PacketImpl(this)
+ fun IPacket.unwrap(): Packet<*> = (this as PacketImpl<*>).wrapped
+ fun Packet<*>.wrap(): IPacket = PacketImpl(this)

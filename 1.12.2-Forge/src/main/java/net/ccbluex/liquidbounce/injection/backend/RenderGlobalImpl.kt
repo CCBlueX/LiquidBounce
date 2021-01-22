@@ -17,5 +17,5 @@ class RenderGlobalImpl(val wrapped: RenderGlobal) : IRenderGlobal {
     }
 }
 
-inline fun IRenderGlobal.unwrap(): RenderGlobal = (this as RenderGlobalImpl).wrapped
-inline fun RenderGlobal.wrap(): IRenderGlobal = RenderGlobalImpl(this)
+ fun IRenderGlobal.unwrap(): RenderGlobal = (this as RenderGlobalImpl).wrapped
+ fun RenderGlobal.wrap(): IRenderGlobal = RenderGlobalImpl(this)

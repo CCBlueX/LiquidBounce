@@ -30,5 +30,5 @@ class PacketBufferImpl(val wrapped: PacketBuffer) : IPacketBuffer {
     }
 }
 
-inline fun IPacketBuffer.unwrap(): PacketBuffer = (this as PacketBufferImpl).wrapped
-inline fun PacketBuffer.wrap(): IPacketBuffer = PacketBufferImpl(this)
+ fun IPacketBuffer.unwrap(): PacketBuffer = (this as PacketBufferImpl).wrapped
+ fun PacketBuffer.wrap(): IPacketBuffer = PacketBufferImpl(this)

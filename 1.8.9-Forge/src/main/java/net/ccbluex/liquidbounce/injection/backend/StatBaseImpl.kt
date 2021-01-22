@@ -14,5 +14,5 @@ class StatBaseImpl(val wrapped: StatBase) : IStatBase
 	override fun equals(other: Any?): Boolean = other is StatBaseImpl && other.wrapped == wrapped
 }
 
-inline fun IStatBase.unwrap(): StatBase = (this as StatBaseImpl).wrapped
-inline fun StatBase.wrap(): IStatBase = StatBaseImpl(this)
+ fun IStatBase.unwrap(): StatBase = (this as StatBaseImpl).wrapped
+ fun StatBase.wrap(): IStatBase = StatBaseImpl(this)

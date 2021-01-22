@@ -20,5 +20,5 @@ class IBlockStateImpl(val wrapped: IBlockState) : IIBlockState {
     }
 }
 
-inline fun IIBlockState.unwrap(): IBlockState = (this as IBlockStateImpl).wrapped
-inline fun IBlockState.wrap(): IIBlockState = IBlockStateImpl(this)
+ fun IIBlockState.unwrap(): IBlockState = (this as IBlockStateImpl).wrapped
+ fun IBlockState.wrap(): IIBlockState = IBlockStateImpl(this)

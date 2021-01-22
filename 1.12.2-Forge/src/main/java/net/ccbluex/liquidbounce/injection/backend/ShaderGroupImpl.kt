@@ -19,5 +19,5 @@ class ShaderGroupImpl(val wrapped: ShaderGroup) : IShaderGroup {
     }
 }
 
-inline fun IShaderGroup.unwrap(): ShaderGroup = (this as ShaderGroupImpl).wrapped
-inline fun ShaderGroup.wrap(): IShaderGroup = ShaderGroupImpl(this)
+ fun IShaderGroup.unwrap(): ShaderGroup = (this as ShaderGroupImpl).wrapped
+ fun ShaderGroup.wrap(): IShaderGroup = ShaderGroupImpl(this)

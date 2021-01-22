@@ -14,4 +14,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 class NoFOV : Module()
 {
 	val fovValue = FloatValue("FOV", 1f, 0f, 1.5f)
+
+	override val tag: String
+		get() = "${fovValue.get()}"
 }

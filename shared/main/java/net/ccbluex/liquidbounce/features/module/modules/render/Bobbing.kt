@@ -10,14 +10,13 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.value.FloatValue
 
-@ModuleInfo(name = "NoBob", description = "Disables the view bobbing effect.", category = ModuleCategory.RENDER)
-class NoBob : Module()
+@ModuleInfo(name = "Bobbing", description = "Modify the view bobbing effect multiplier.", category = ModuleCategory.RENDER)
+class Bobbing : Module()
 {
+	val multiplierValue = FloatValue("Multiplier", .6F, 0F, 10F)
 
-	@EventTarget
-	fun onUpdate(event: UpdateEvent)
-	{
-		mc.thePlayer?.distanceWalkedModified = 0f
-	}
+	override val tag: String?
+		get() = multiplierValue.get().toString()
 }

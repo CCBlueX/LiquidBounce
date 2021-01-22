@@ -19,5 +19,5 @@ class SPacketEntityImpl<T : S14PacketEntity>(wrapped: T) : PacketImpl<T>(wrapped
 	override fun getEntity(world: IWorld): IEntity? = wrapped.getEntity(world.unwrap())?.wrap()
 }
 
-inline fun ISPacketEntity.unwrap(): S14PacketEntity = (this as SPacketEntityImpl<*>).wrapped
-inline fun S14PacketEntity.wrap(): ISPacketEntity = SPacketEntityImpl(this)
+ fun ISPacketEntity.unwrap(): S14PacketEntity = (this as SPacketEntityImpl<*>).wrapped
+ fun S14PacketEntity.wrap(): ISPacketEntity = SPacketEntityImpl(this)

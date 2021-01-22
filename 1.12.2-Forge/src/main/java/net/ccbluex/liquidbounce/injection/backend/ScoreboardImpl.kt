@@ -26,5 +26,5 @@ class ScoreboardImpl(val wrapped: Scoreboard) : IScoreboard {
     }
 }
 
-inline fun IScoreboard.unwrap(): Scoreboard = (this as ScoreboardImpl).wrapped
-inline fun Scoreboard.wrap(): IScoreboard = ScoreboardImpl(this)
+ fun IScoreboard.unwrap(): Scoreboard = (this as ScoreboardImpl).wrapped
+ fun Scoreboard.wrap(): IScoreboard = ScoreboardImpl(this)

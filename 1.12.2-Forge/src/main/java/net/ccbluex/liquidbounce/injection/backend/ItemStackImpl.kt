@@ -60,5 +60,5 @@ class ItemStackImpl(val wrapped: ItemStack) : IItemStack {
         get() = (wrapped as IMixinItemStack).itemDelay
 }
 
-inline fun IItemStack.unwrap(): ItemStack = (this as ItemStackImpl).wrapped
-inline fun ItemStack.wrap(): IItemStack = ItemStackImpl(this)
+ fun IItemStack.unwrap(): ItemStack = (this as ItemStackImpl).wrapped
+ fun ItemStack.wrap(): IItemStack = ItemStackImpl(this)

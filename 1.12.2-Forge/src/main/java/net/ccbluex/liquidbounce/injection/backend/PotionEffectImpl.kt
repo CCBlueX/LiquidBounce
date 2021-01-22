@@ -25,5 +25,5 @@ class PotionEffectImpl(val wrapped: PotionEffect) : IPotionEffect {
     }
 }
 
-inline fun IPotionEffect.unwrap(): PotionEffect = (this as PotionEffectImpl).wrapped
-inline fun PotionEffect.wrap(): IPotionEffect = PotionEffectImpl(this)
+ fun IPotionEffect.unwrap(): PotionEffect = (this as PotionEffectImpl).wrapped
+ fun PotionEffect.wrap(): IPotionEffect = PotionEffectImpl(this)

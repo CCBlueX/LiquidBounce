@@ -92,6 +92,10 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	@Shadow
 	protected abstract int getColorMultiplier(EntityLivingBase entitylivingbaseIn, float lightBrightness, float partialTickTime);
 
+	/**
+	 * @author CCBlueX
+	 * @reason
+	 */
 	@Overwrite
 	public void doRender(final EntityLivingBase entity, final double x, final double y, final double z, final float entityYaw, final float partialTicks)
 	{
@@ -257,6 +261,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 
 	/**
 	 * @author CCBlueX
+	 * @reason
 	 */
 	@Overwrite
 	protected <T extends EntityLivingBase> void renderModel(final T entitylivingbaseIn, final float p_77036_2_, final float p_77036_3_, final float p_77036_4_, final float p_77036_5_, final float p_77036_6_, final float scaleFactor)
@@ -345,6 +350,10 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 		}
 	}
 
+	/**
+	 * @author CCBlueX
+	 * @reason
+	 */
 	@Overwrite
 	protected <T extends EntityLivingBase> boolean setBrightness(final T entitylivingbaseIn, final float partialTicks, final boolean combineTextures)
 	{

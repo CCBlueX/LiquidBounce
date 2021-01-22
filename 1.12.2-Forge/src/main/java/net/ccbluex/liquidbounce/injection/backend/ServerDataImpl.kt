@@ -31,5 +31,5 @@ class ServerDataImpl(val wrapped: ServerData) : IServerData {
     }
 }
 
-inline fun IServerData.unwrap(): ServerData = (this as ServerDataImpl).wrapped
-inline fun ServerData.wrap(): IServerData = ServerDataImpl(this)
+ fun IServerData.unwrap(): ServerData = (this as ServerDataImpl).wrapped
+ fun ServerData.wrap(): IServerData = ServerDataImpl(this)

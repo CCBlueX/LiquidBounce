@@ -32,5 +32,5 @@ class MovingObjectPositionImpl(val wrapped: RayTraceResult) : IMovingObjectPosit
     }
 }
 
-inline fun IMovingObjectPosition.unwrap(): RayTraceResult = (this as MovingObjectPositionImpl).wrapped
-inline fun RayTraceResult.wrap(): IMovingObjectPosition = MovingObjectPositionImpl(this)
+ fun IMovingObjectPosition.unwrap(): RayTraceResult = (this as MovingObjectPositionImpl).wrapped
+ fun RayTraceResult.wrap(): IMovingObjectPosition = MovingObjectPositionImpl(this)

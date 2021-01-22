@@ -15,5 +15,5 @@ class GuiGameOverImpl<T : GuiGameOver>(wrapped: T) : GuiScreenImpl<T>(wrapped), 
 		get() = wrapped.enableButtonsTimer
 }
 
-inline fun IGuiGameOver.unwrap(): GuiGameOver = (this as GuiGameOverImpl<*>).wrapped
-inline fun GuiGameOver.wrap(): IGuiGameOver = GuiGameOverImpl(this)
+ fun IGuiGameOver.unwrap(): GuiGameOver = (this as GuiGameOverImpl<*>).wrapped
+ fun GuiGameOver.wrap(): IGuiGameOver = GuiGameOverImpl(this)

@@ -21,5 +21,5 @@ class CPacketPlayerBlockPlacementImpl<T : C08PacketPlayerBlockPlacement>(wrapped
 		get() = wrapped.stack.wrap()
 }
 
-inline fun ICPacketPlayerBlockPlacement.unwrap(): C08PacketPlayerBlockPlacement = (this as CPacketPlayerBlockPlacementImpl<*>).wrapped
-inline fun C08PacketPlayerBlockPlacement.wrap(): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(this)
+ fun ICPacketPlayerBlockPlacement.unwrap(): C08PacketPlayerBlockPlacement = (this as CPacketPlayerBlockPlacementImpl<*>).wrapped
+ fun C08PacketPlayerBlockPlacement.wrap(): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(this)

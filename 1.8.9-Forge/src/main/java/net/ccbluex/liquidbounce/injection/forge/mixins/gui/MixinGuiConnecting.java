@@ -81,6 +81,7 @@ public abstract class MixinGuiConnecting extends GuiScreen
 
 	/**
 	 * @author CCBlueX
+	 * @reason
 	 */
 	@Overwrite
 	private void connect(final String ip, final int port)
@@ -131,6 +132,7 @@ public abstract class MixinGuiConnecting extends GuiScreen
 
 	/**
 	 * @author CCBlueX
+	 * @reason
 	 */
 	@Overwrite
 	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)

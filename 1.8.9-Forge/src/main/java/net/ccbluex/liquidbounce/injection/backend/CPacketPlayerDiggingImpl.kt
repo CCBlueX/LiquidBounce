@@ -16,5 +16,5 @@ class CPacketPlayerDiggingImpl<T : C07PacketPlayerDigging>(wrapped: T) : PacketI
 		get() = wrapped.facing.wrap()
 }
 
-inline fun ICPacketPlayerDigging.unwrap(): C07PacketPlayerDigging = (this as CPacketPlayerDiggingImpl<*>).wrapped
-inline fun C07PacketPlayerDigging.wrap(): ICPacketPlayerDigging = CPacketPlayerDiggingImpl(this)
+ fun ICPacketPlayerDigging.unwrap(): C07PacketPlayerDigging = (this as CPacketPlayerDiggingImpl<*>).wrapped
+ fun C07PacketPlayerDigging.wrap(): ICPacketPlayerDigging = CPacketPlayerDiggingImpl(this)

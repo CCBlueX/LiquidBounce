@@ -49,9 +49,9 @@ object RainbowFontShader : Shader("rainbow_font_shader.frag"), Closeable
 		if (isInUse) stopShader()
 	}
 
-	@Suppress("NOTHING_TO_INLINE")
+	@Suppress("NOTHING_TO_")
 	@JvmStatic
-	inline fun begin(enable: Boolean, x: Float, y: Float, offset: Float): RainbowFontShader
+	 fun begin(enable: Boolean, x: Float, y: Float, offset: Float): RainbowFontShader
 	{
 		if (enable)
 		{

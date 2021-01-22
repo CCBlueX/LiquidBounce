@@ -36,6 +36,8 @@ public class MixinC00Handshake
 
 	/**
 	 * @author CCBlueX
+	 * @reason AntiModDisable
+	 * @see AntiModDisable
 	 */
 	@Overwrite
 	public void writePacketData(final PacketBuffer buf)

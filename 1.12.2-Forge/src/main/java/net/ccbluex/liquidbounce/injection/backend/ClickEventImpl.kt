@@ -16,5 +16,5 @@ class ClickEventImpl(val wrapped: ClickEvent) : IClickEvent {
     }
 }
 
-inline fun IClickEvent.unwrap(): ClickEvent = (this as ClickEventImpl).wrapped
-inline fun ClickEvent.wrap(): IClickEvent = ClickEventImpl(this)
+ fun IClickEvent.unwrap(): ClickEvent = (this as ClickEventImpl).wrapped
+ fun ClickEvent.wrap(): IClickEvent = ClickEventImpl(this)
