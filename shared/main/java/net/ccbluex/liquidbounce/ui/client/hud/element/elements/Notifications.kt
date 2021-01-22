@@ -30,8 +30,8 @@ class Notifications(
 	{
 		val bodyColorModeValue = ListValue("Body-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
 		val bodyRedValue = IntegerValue("Body-R", 0, 0, 255)
-		val bodyGreenValue = IntegerValue("Body-G", 111, 0, 255)
-		val bodyBlueValue = IntegerValue("Body-B", 255, 0, 255)
+		val bodyGreenValue = IntegerValue("Body-G", 0, 0, 255)
+		val bodyBlueValue = IntegerValue("Body-B", 0, 0, 255)
 		val bodyAlphaValue = IntegerValue("Body-Alpha", 255, 0, 255)
 
 		val rectValue = BoolValue("Rect", true)
@@ -90,7 +90,7 @@ class Notifications(
 			exampleNotification.fadeState = Notification.FadeState.STAY
 			exampleNotification.x = exampleNotification.textLength + 8F
 
-			return Border(-95F, -20F, 0F, 0F)
+			return Border(-120F, -30F, 0F, 0F)
 		}
 
 		return null
@@ -138,8 +138,9 @@ class Notification(private val header: String, private val message: String, priv
 		val rectColorAlpha = Notifications.rectAlphaValue.get()
 		val rectCustomColor = Color(Notifications.rectRedValue.get(), Notifications.rectGreenValue.get(), Notifications.rectBlueValue.get(), rectColorAlpha).rgb
 
-		val rainbowShaderX = Notifications.rainbowShaderXValue.get()
-		val rainbowShaderY = Notifications.rainbowShaderYValue.get()
+		val rainbowShaderX = if (Notifications.rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / Notifications.rainbowShaderXValue.get()
+		val rainbowShaderY = if (Notifications.rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / Notifications.rainbowShaderYValue.get()
+		val rainbowShaderOffset = System.currentTimeMillis() % 10000 / 10000F
 
 		val saturation = Notifications.saturationValue.get()
 		val brightness = Notifications.brightnessValue.get()
@@ -148,7 +149,7 @@ class Notification(private val header: String, private val message: String, priv
 		// Draw Background (Body)
 		val bodyRainbowShader = bodyColorMode.equals("RainbowShader", ignoreCase = true)
 
-		RainbowShader.begin(bodyRainbowShader, if (rainbowShaderX == 0.0F) 0.0F else 1.0F / rainbowShaderX, if (rainbowShaderY == 0.0F) 0.0F else 1.0F / rainbowShaderY, System.currentTimeMillis() % 10000 / 10000F).use {
+		RainbowShader.begin(bodyRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 			val color = when
 			{
 				bodyRainbowShader -> 0
@@ -156,14 +157,14 @@ class Notification(private val header: String, private val message: String, priv
 				else -> bodyCustomColor
 			}
 
-			RenderUtils.drawRect(-x, 0F, -x - 5, -30F, color)
+			RenderUtils.drawRect(-x + 8 + textLength, 0F, -x, -30F, color)
 		}
-
-		RenderUtils.drawRect(-x + 8 + textLength, 0F, -x, -30F, Color.BLACK.rgb)
 
 		// Draw remaining time line
 		val remainingTimePercentage = stayTimer.hasTimeLeft(stayTime).coerceAtLeast(0).toFloat() / stayTime.toFloat()
-		RenderUtils.drawRect(-x + 8 + textLength, -28F, -x + (10 + textLength) * (1 - remainingTimePercentage), -30F, (ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), remainingTimePercentage)!!).brighter())
+		val color = (ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), remainingTimePercentage)!!).brighter()
+		RenderUtils.drawRect(-x + 8 + textLength, -28F, -x - 2 + (10 + textLength) * (1 - remainingTimePercentage), -30F, color)
+
 
 		headerFont.drawString(header, -x.toInt() + 4, -25, Int.MAX_VALUE)
 		messageFont.drawString(message, -x.toInt() + 4, -12, Int.MAX_VALUE)
@@ -173,15 +174,15 @@ class Notification(private val header: String, private val message: String, priv
 		{
 			val rectRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 
-			RainbowShader.begin(rectRainbowShader, if (rainbowShaderX == 0.0F) 0.0F else 1.0F / rainbowShaderX, if (rainbowShaderY == 0.0F) 0.0F else 1.0F / rainbowShaderY, System.currentTimeMillis() % 10000 / 10000F).use {
-				val color = rectColor?.rgb ?: when
+			RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+				val rectColor = rectColor?.rgb ?: when
 				{
 					rectRainbowShader -> 0
 					rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 					else -> rectCustomColor
 				}
 
-				RenderUtils.drawRect(-x, 0F, -x - 5, -30F, color)
+				RenderUtils.drawRect(-x, 0F, -x - 5, -30F, rectColor)
 			}
 		}
 

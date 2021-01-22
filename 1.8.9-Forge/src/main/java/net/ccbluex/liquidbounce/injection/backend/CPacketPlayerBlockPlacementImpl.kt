@@ -17,9 +17,9 @@ class CPacketPlayerBlockPlacementImpl<T : C08PacketPlayerBlockPlacement>(wrapped
 	override val position: WBlockPos
 		get() = wrapped.position.wrap()
 
-	override val stack: IItemStack
-		get() = wrapped.stack.wrap()
+	override val stack: IItemStack?
+		get() = wrapped.stack?.wrap()
 }
 
- fun ICPacketPlayerBlockPlacement.unwrap(): C08PacketPlayerBlockPlacement = (this as CPacketPlayerBlockPlacementImpl<*>).wrapped
- fun C08PacketPlayerBlockPlacement.wrap(): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(this)
+fun ICPacketPlayerBlockPlacement.unwrap(): C08PacketPlayerBlockPlacement = (this as CPacketPlayerBlockPlacementImpl<*>).wrapped
+fun C08PacketPlayerBlockPlacement.wrap(): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(this)

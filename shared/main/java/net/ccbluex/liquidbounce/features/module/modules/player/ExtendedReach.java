@@ -145,7 +145,7 @@ public class ExtendedReach extends Module
 			final IEntity facedEntity = RaycastUtils.raycastEntity(combatReach.get(), classProvider::isEntityLivingBase);
 			IEntityLivingBase targetEntity = null;
 			if (mc.getGameSettings().getKeyBindAttack().isKeyDown() && EntityUtils.isSelected(facedEntity, true) && Objects.requireNonNull(mc.getThePlayer()).getDistanceSqToEntity(facedEntity) >= 1)
-				targetEntity = (IEntityLivingBase) facedEntity;
+				targetEntity = facedEntity.asEntityLivingBase();
 
 			if (targetEntity != null)
 			{

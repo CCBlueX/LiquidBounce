@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.injection.backend.PacketImplKt;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinNetworkManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 
@@ -54,21 +55,29 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 	@Inject(method = "channelRead0", at = @At("HEAD"), cancellable = true)
 	private void read(final ChannelHandlerContext context, final Packet<?> packet, final CallbackInfo callback)
 	{
-		final PacketEvent event = new PacketEvent(PacketImplKt.wrap(packet));
-		LiquidBounce.eventManager.callEvent(event);
+		// In-bound(Coming from server) packet name starts with 'S' (Server) (example: S00PacketKeepAlive)
+		if (!Minecraft.getMinecraft().isIntegratedServerRunning() || packet.getClass().getSimpleName().charAt(0) == 'S')
+		{
+			final PacketEvent event = new PacketEvent(PacketImplKt.wrap(packet));
+			LiquidBounce.eventManager.callEvent(event);
 
-		if (event.isCancelled())
-			callback.cancel();
+			if (event.isCancelled())
+				callback.cancel();
+		}
 	}
 
 	@Inject(method = "sendPacket(Lnet/minecraft/network/Packet;)V", at = @At("HEAD"), cancellable = true)
 	private void send(final Packet<?> packet, final CallbackInfo callback)
 	{
-		final PacketEvent event = new PacketEvent(PacketImplKt.wrap(packet));
-		LiquidBounce.eventManager.callEvent(event);
+		// Out-bound(Outgoing to server) packet name starts with 'C' (Client) (example: C00PacketKeepAlive)
+		if (!Minecraft.getMinecraft().isIntegratedServerRunning() || packet.getClass().getSimpleName().charAt(0) == 'C')
+		{
+			final PacketEvent event = new PacketEvent(PacketImplKt.wrap(packet));
+			LiquidBounce.eventManager.callEvent(event);
 
-		if (event.isCancelled())
-			callback.cancel();
+			if (event.isCancelled())
+				callback.cancel();
+		}
 	}
 
 	@Override

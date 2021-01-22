@@ -194,7 +194,7 @@ public abstract class MixinEntityRenderer
 			final ExtendedReach extendedReach = (ExtendedReach) LiquidBounce.moduleManager.get(ExtendedReach.class);
 
 			double blockReach = extendedReach.getState() ? extendedReach.buildReach.get() : reach.getState() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();
-			mc.objectMouseOver = entity.rayTrace(reach.getState() ? reach.getBuildReachValue().get() : blockReach, p_getMouseOver_1_);
+			mc.objectMouseOver = entity.rayTrace(reach.getState() && !extendedReach.getState() ? reach.getBuildReachValue().get() : blockReach, p_getMouseOver_1_);
 			double hitvecDistance = blockReach;
 			final Vec3 vec3 = entity.getPositionEyes(p_getMouseOver_1_);
 			boolean flag = false;
