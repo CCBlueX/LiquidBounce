@@ -236,12 +236,12 @@ class Step : Module()
 					fakeJump()
 
 					// Half legit step (1 packet missing) [COULD TRIGGER TOO MANY PACKETS]
-					mc.netHandler.addToSendQueue(
+					mc.netHandler.networkManager.sendPacketWithoutEvent(
 						classProvider.createCPacketPlayerPosition(
 							stepX, stepY + 0.41999998688698, stepZ, false
 						)
 					)
-					mc.netHandler.addToSendQueue(
+					mc.netHandler.networkManager.sendPacketWithoutEvent(
 						classProvider.createCPacketPlayerPosition(
 							stepX, stepY + 0.7531999805212, stepZ, false
 						)
@@ -255,23 +255,23 @@ class Step : Module()
 
 					if (spartanSwitch)
 					{ // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-						mc.netHandler.addToSendQueue(
+						mc.netHandler.networkManager.sendPacketWithoutEvent(
 							classProvider.createCPacketPlayerPosition(
 								stepX, stepY + 0.41999998688698, stepZ, false
 							)
 						)
-						mc.netHandler.addToSendQueue(
+						mc.netHandler.networkManager.sendPacketWithoutEvent(
 							classProvider.createCPacketPlayerPosition(
 								stepX, stepY + 0.7531999805212, stepZ, false
 							)
 						)
-						mc.netHandler.addToSendQueue(
+						mc.netHandler.networkManager.sendPacketWithoutEvent(
 							classProvider.createCPacketPlayerPosition(
 								stepX, stepY + 1.001335979112147, stepZ, false
 							)
 						)
 					} else // Force step
-						mc.netHandler.addToSendQueue(
+						mc.netHandler.networkManager.sendPacketWithoutEvent(
 							classProvider.createCPacketPlayerPosition(
 								stepX, stepY + 0.6, stepZ, false
 							)
@@ -289,17 +289,17 @@ class Step : Module()
 					fakeJump()
 
 					// Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-					mc.netHandler.addToSendQueue(
+					mc.netHandler.networkManager.sendPacketWithoutEvent(
 						classProvider.createCPacketPlayerPosition(
 							stepX, stepY + 0.41999998688698, stepZ, false
 						)
 					)
-					mc.netHandler.addToSendQueue(
+					mc.netHandler.networkManager.sendPacketWithoutEvent(
 						classProvider.createCPacketPlayerPosition(
 							stepX, stepY + 0.7531999805212, stepZ, false
 						)
 					)
-					mc.netHandler.addToSendQueue(
+					mc.netHandler.networkManager.sendPacketWithoutEvent(
 						classProvider.createCPacketPlayerPosition(
 							stepX, stepY + 1.001335979112147, stepZ, false
 						)

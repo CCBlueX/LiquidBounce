@@ -87,7 +87,7 @@ class NoFall : Module()
 				val nospoofticks: Int = noSpoofTicks.get()
 				if (noSpoof >= nospoofticks)
 				{
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(true))
+					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
 					noSpoof = 0
 				}
 				noSpoof++
@@ -96,14 +96,14 @@ class NoFall : Module()
 			"cubecraft" -> if (thePlayer.fallDistance > 2f)
 			{
 				thePlayer.onGround = false
-				thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketPlayer(true))
+				thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
 			}
 
 			"aac3.1.0" ->
 			{
 				if (thePlayer.fallDistance > 2f)
 				{
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(true))
+					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
 					currentState = 2
 				} else if (currentState == 2 && thePlayer.fallDistance < 2)
 				{
@@ -139,17 +139,17 @@ class NoFall : Module()
 			{
 				thePlayer.motionZ = 0.0
 				thePlayer.motionX = thePlayer.motionZ
-				mc.netHandler.addToSendQueue(
+				mc.netHandler.networkManager.sendPacketWithoutEvent(
 					classProvider.createCPacketPlayerPosition(
 						thePlayer.posX, thePlayer.posY - 10E-4, thePlayer.posZ, thePlayer.onGround
 					)
 				)
-				mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(true))
+				mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
 			}
 
 			"aac3.3.15" -> if (thePlayer.fallDistance > 2)
 			{
-				if (!mc.isIntegratedServerRunning) mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(thePlayer.posX, Double.NaN, thePlayer.posZ, false))
+				if (!mc.isIntegratedServerRunning) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, Double.NaN, thePlayer.posZ, false))
 				thePlayer.fallDistance = (-9999).toFloat()
 			}
 
@@ -158,12 +158,12 @@ class NoFall : Module()
 				spartanTimer.update()
 				if (thePlayer.fallDistance > 1.5 && spartanTimer.hasTimePassed(10))
 				{
-					mc.netHandler.addToSendQueue(
+					mc.netHandler.networkManager.sendPacketWithoutEvent(
 						classProvider.createCPacketPlayerPosition(
 							thePlayer.posX, thePlayer.posY + 10, thePlayer.posZ, true
 						)
 					)
-					mc.netHandler.addToSendQueue(
+					mc.netHandler.networkManager.sendPacketWithoutEvent(
 						classProvider.createCPacketPlayerPosition(
 							thePlayer.posX, thePlayer.posY - 10, thePlayer.posZ, true
 						)
@@ -289,10 +289,7 @@ class NoFall : Module()
 				currentMlgItemIndex = index
 				currentMlgBlock = collision.pos
 
-				if (thePlayer.inventory.currentItem != index)
-				{
-					thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketHeldItemChange(index))
-				}
+				if (thePlayer.inventory.currentItem != index) thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketHeldItemChange(index))
 
 				currentMlgRotation = RotationUtils.faceBlock(collision.pos)
 

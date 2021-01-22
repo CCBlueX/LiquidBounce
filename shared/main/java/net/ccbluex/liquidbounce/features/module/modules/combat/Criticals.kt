@@ -53,18 +53,18 @@ class Criticals : Module()
 			{
 				"packet" ->
 				{
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y + 0.0625, z, true))
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y, z, false))
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y + 1.1E-5, z, false))
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y, z, false))
+					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.0625, z, true))
+					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y, z, false))
+					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 1.1E-5, z, false))
+					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y, z, false))
 					thePlayer.onCriticalHit(entity)
 				}
 
 				"ncppacket" ->
 				{
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y + 0.11, z, false))
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y + 0.1100013579, z, false))
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y + 0.0000013579, z, false))
+					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.11, z, false))
+					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.1100013579, z, false))
+					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.0000013579, z, false))
 					thePlayer.onCriticalHit(entity)
 				}
 
@@ -77,8 +77,8 @@ class Criticals : Module()
 
 				"tphop" ->
 				{
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y + 0.02, z, false))
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y + 0.01, z, false))
+					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.02, z, false))
+					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.01, z, false))
 					thePlayer.setPosition(x, y + 0.01, z)
 				}
 

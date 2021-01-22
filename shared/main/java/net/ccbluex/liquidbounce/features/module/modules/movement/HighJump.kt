@@ -114,10 +114,8 @@ class HighJump : Module()
 			{
 				mineplexStage = 1
 				jumped = true
-				val p1 = classProvider.createCPacketPlayerPosition(nextX, y + a, nextZ, true)
-				val p2 = classProvider.createCPacketPlayerPosition(nextX, y, nextZ, true)
-				mc.netHandler.networkManager.sendPacketWithoutEvent(p2)
-				mc.netHandler.networkManager.sendPacketWithoutEvent(p1)
+				mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(nextX, y, nextZ, true))
+				mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(nextX, y + a, nextZ, true))
 				thePlayer.setPosition(nextX, y, nextZ)
 
 				// em.setX(nextX);

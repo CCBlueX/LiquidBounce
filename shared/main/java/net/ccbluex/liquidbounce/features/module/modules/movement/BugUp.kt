@@ -106,12 +106,12 @@ class BugUp : Module()
 						//						thePlayer.fallDistance = 0F
 					}
 
-					"ongroundspoof" -> mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(true))
+					"ongroundspoof" -> mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
 
 					"motionteleport-flag" ->
 					{
 						thePlayer.setPositionAndUpdate(thePlayer.posX, thePlayer.posY + 1f, thePlayer.posZ)
-						mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
+						mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
 						thePlayer.motionY = 0.1
 
 						MovementUtils.strafe()
