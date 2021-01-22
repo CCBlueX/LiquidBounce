@@ -26,6 +26,8 @@ class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB
 
 	override fun intersectsWith(boundingBox: IAxisAlignedBB): Boolean = wrapped.intersectsWith(boundingBox.unwrap())
 
+	override fun toString(): String = "$wrapped"
+
 	override val minX: Double
 		get() = wrapped.minX
 	override val minY: Double

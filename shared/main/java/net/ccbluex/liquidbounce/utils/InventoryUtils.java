@@ -90,12 +90,12 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 		}
 		final Optional<Integer> pred = boundingBoxYLimit == -1 ? Optional.ofNullable(hotbarSlots.isEmpty() ? null : hotbarSlots.get(0)) : hotbarSlots.stream().filter(c ->
 		{
-			final IBlock b = ((IItemBlock) Objects.requireNonNull(Objects.requireNonNull(mc.getThePlayer().getInventoryContainer().getSlot(c).getStack()).getItem())).getBlock();
+			final IBlock b = mc.getThePlayer().getInventoryContainer().getSlot(c).getStack().getItem().asItemBlock().getBlock();
 			final IAxisAlignedBB box = b.getCollisionBoundingBox(theWorld, WBlockPos.Companion.getORIGIN(), Objects.requireNonNull(b.getDefaultState()));
 			return box != null && box.getMaxY() - box.getMinY() <= boundingBoxYLimit;
 		}).max(Comparator.comparingDouble(c ->
 		{
-			final IBlock block = ((IItemBlock) Objects.requireNonNull(Objects.requireNonNull(mc.getThePlayer().getInventoryContainer().getSlot(c).getStack()).getItem())).getBlock();
+			final IBlock block = mc.getThePlayer().getInventoryContainer().getSlot(c).getStack().getItem().asItemBlock().getBlock();
 			return block.getBlockBoundsMaxY() - block.getBlockBoundsMinY();
 		}));
 		if (pred.isPresent())
@@ -120,12 +120,12 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 			}
 			final Optional<Integer> pred2 = boundingBoxYLimit == -1 ? Optional.ofNullable(hotbarSlots.isEmpty() ? null : hotbarSlots.get(0)) : hotbarSlots.stream().filter(c ->
 			{
-				final IBlock block = ((IItemBlock) Objects.requireNonNull(Objects.requireNonNull(thePlayer.getInventoryContainer().getSlot(c).getStack()).getItem())).getBlock();
+				final IBlock block = thePlayer.getInventoryContainer().getSlot(c).getStack().getItem().asItemBlock().getBlock();
 				final IAxisAlignedBB box = block.getCollisionBoundingBox(theWorld, WBlockPos.Companion.getORIGIN(), Objects.requireNonNull(block.getDefaultState()));
 				return box != null && box.getMaxY() - box.getMinY() <= boundingBoxYLimit;
 			}).max(Comparator.comparingDouble(c ->
 			{
-				final IBlock block = ((IItemBlock) Objects.requireNonNull(Objects.requireNonNull(thePlayer.getInventoryContainer().getSlot(c).getStack()).getItem())).getBlock();
+				final IBlock block = thePlayer.getInventoryContainer().getSlot(c).getStack().getItem().asItemBlock().getBlock();
 				return block.getBlockBoundsMaxY() - block.getBlockBoundsMinY();
 			}));
 

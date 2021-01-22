@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemBlock
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketEntityAction
@@ -665,12 +664,12 @@ class Scaffold : Module()
 		val ySteps = calcStepSize(yRange.toFloat()) * deltaY
 		val zSteps = calcStepSize(xzRange.toFloat()) * deltaZ
 
-		val sMinX = (0.5 - xzRange / 2) * deltaX
-		val sMaxX = (0.5 + xzRange / 2) * deltaX
-		val sMinY = (0.5 - yRange / 2) * deltaY
-		val sMaxY = (0.5 + yRange / 2) * deltaY
-		val sMinZ = (0.5 - xzRange / 2) * deltaZ
-		val sMaxZ = (0.5 + xzRange / 2) * deltaZ
+		val sMinX = (0.5 - xzRange / 2) * deltaX + gBB.minX
+		val sMaxX = (0.5 + xzRange / 2) * deltaX + gBB.minX
+		val sMinY = (0.5 - yRange / 2) * deltaY + gBB.minY
+		val sMaxY = (0.5 + yRange / 2) * deltaY + gBB.minY
+		val sMinZ = (0.5 - xzRange / 2) * deltaZ + gBB.minZ
+		val sMaxZ = (0.5 + xzRange / 2) * deltaZ + gBB.minZ
 
 		val searchBounds = SearchBounds(sMinX, sMaxX, xSteps, sMinY, sMaxY, ySteps, sMinZ, sMaxZ, zSteps)
 
@@ -684,18 +683,18 @@ class Scaffold : Module()
 			searchPosition = WBlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY - 1.5, thePlayer.posZ)
 			state = "Clutch"
 			clutching = true
-		} else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1 && lastGroundBlockBB!!.maxY < 1 && abCollisionBB.maxY - abCollisionBB.minY < lastGroundBlockBB!!.maxY - lastGroundBlockBB!!.minY)
+		} else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && lastGroundBlockBB!!.maxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY < lastGroundBlockBB!!.maxY - lastGroundBlockBB!!.minY)
 		{
 			searchPosition = pos
 
 			// Failsafe for slab: Limits maxY to 0.5 to place slab safely.
 			if (searchBounds.maxY >= 0.5)
 			{
-				searchBounds.minY = 0.25 - (yRange / 4)
-				searchBounds.maxY = 0.25 + (yRange / 4)
+				searchBounds.minY = 0.125 - (yRange / 4)
+				searchBounds.maxY = 0.125 + (yRange / 4)
 			}
 			state = "Non-Fullblock-SlabCorrection"
-		} else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1 && lastGroundBlockBB!!.maxY < 1 && abCollisionBB.maxY - abCollisionBB.minY == lastGroundBlockBB!!.maxY - lastGroundBlockBB!!.minY)
+		} else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && lastGroundBlockBB!!.maxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY == lastGroundBlockBB!!.maxY - lastGroundBlockBB!!.minY)
 		{
 			searchPosition = pos
 			state = "Non-Fullblock"
@@ -925,7 +924,7 @@ class Scaffold : Module()
 						EnumFacingType.EAST
 					) -> i.toDouble()
 					else -> 0.0
-				}, if (sameYValue.get() && launchY <= thePlayer.posY) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY == thePlayer.posY + 0.5) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (thePlayer.horizontalFacing)
+				}, if (sameYValue.get() && launchY <= thePlayer.posY) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY >= floor(thePlayer.posY).toInt()) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (thePlayer.horizontalFacing)
 				{
 					classProvider.getEnumFacing(EnumFacingType.NORTH) -> -i.toDouble()
 					classProvider.getEnumFacing(

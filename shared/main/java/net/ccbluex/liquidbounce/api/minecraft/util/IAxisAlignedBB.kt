@@ -16,6 +16,8 @@ interface IAxisAlignedBB
 	fun offset(sx: Double, sy: Double, sz: Double): IAxisAlignedBB
 	fun intersectsWith(boundingBox: IAxisAlignedBB): Boolean
 
+	override fun toString(): String
+
 	val minX: Double
 	val minY: Double
 	val minZ: Double
