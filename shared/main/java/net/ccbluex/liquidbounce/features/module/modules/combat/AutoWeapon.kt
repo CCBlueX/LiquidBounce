@@ -26,7 +26,7 @@ class AutoWeapon : Module()
 	private var spoofedSlot = 0
 
 	@EventTarget
-	fun onAttack(event: AttackEvent)
+	fun onAttack(@Suppress("UNUSED_PARAMETER") event: AttackEvent)
 	{
 		attackEnemy = true
 	}

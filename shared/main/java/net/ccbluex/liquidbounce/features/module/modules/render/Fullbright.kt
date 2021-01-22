@@ -37,7 +37,7 @@ class Fullbright : Module()
 	}
 
 	@EventTarget(ignoreCondition = true)
-	fun onUpdate(event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
 		if (state || LiquidBounce.moduleManager.getModule(XRay::class.java).state) when (modeValue.get().toLowerCase())
 		{
@@ -51,7 +51,7 @@ class Fullbright : Module()
 	}
 
 	@EventTarget(ignoreCondition = true)
-	fun onShutdown(event: ClientShutdownEvent?)
+	fun onShutdown(@Suppress("UNUSED_PARAMETER") event: ClientShutdownEvent?)
 	{
 		onDisable()
 	}

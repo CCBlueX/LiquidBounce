@@ -42,7 +42,7 @@ class NameTags : Module()
 	private val botValue = BoolValue("Bots", true)
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		glPushAttrib(GL_ENABLE_BIT)
 		glPushMatrix()

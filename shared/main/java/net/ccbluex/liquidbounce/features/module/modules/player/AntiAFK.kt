@@ -40,7 +40,7 @@ class AntiAFK : Module()
 	private var randomTimerDelay = 500L
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 

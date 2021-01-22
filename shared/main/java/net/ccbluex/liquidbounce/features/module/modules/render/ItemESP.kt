@@ -30,18 +30,13 @@ class ItemESP : Module()
 	private val colorRainbow = BoolValue("Rainbow", true)
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
 		if (modeValue.get().equals("Box", ignoreCase = true))
 		{
 			val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
-			for (entity in mc.theWorld!!.loadedEntityList)
-			{
-				if (!(classProvider.isEntityItem(entity) || classProvider.isEntityArrow(entity))) continue
-
-				RenderUtils.drawEntityBox(entity, color, true)
-			}
+			(mc.theWorld ?: return).loadedEntityList.filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, true) }
 		}
 	}
 

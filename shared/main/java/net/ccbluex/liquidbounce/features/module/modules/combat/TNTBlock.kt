@@ -23,7 +23,7 @@ class TNTBlock : Module()
 	private var blocked = false
 
 	@EventTarget
-	fun onMotionUpdate(event: MotionEvent?)
+	fun onMotionUpdate(@Suppress("UNUSED_PARAMETER") event: MotionEvent?)
 	{
 		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return

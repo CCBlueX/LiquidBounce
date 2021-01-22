@@ -205,14 +205,14 @@ class LiquidChat : Module()
 	}
 
 	@EventTarget
-	fun onSession(sessionEvent: SessionEvent)
+	fun onSession(@Suppress("UNUSED_PARAMETER") sessionEvent: SessionEvent)
 	{
 		client.disconnect()
 		connect()
 	}
 
 	@EventTarget
-	fun onUpdate(updateEvent: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") updateEvent: UpdateEvent)
 	{
 		if (client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
 

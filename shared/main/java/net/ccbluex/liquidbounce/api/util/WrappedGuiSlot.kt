@@ -19,9 +19,9 @@ abstract class WrappedGuiSlot(mc: IMinecraft, width: Int, height: Int, top: Int,
 		classProvider.wrapGuiSlot(this, mc, width, height, top, bottom, slotHeight)
 	}
 
-	abstract fun drawSlot(id: Int, x: Int, y: Int, var4: Int, var5: Int, var6: Int)
+	abstract fun drawSlot(id: Int, x: Int, y: Int, var4: Int, mouseXIn: Int, mouseYIn: Int)
 	abstract fun drawBackground()
-	abstract fun elementClicked(var1: Int, doubleClick: Boolean, var3: Int, var4: Int)
+	abstract fun elementClicked(id: Int, doubleClick: Boolean, var3: Int, var4: Int)
 	abstract fun getSize(): Int
 	abstract fun isSelected(id: Int): Boolean
 }

@@ -27,12 +27,12 @@ class InventoryMove : Module()
 	)
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		tick()
 	}
 
-	fun tick()
+	private fun tick()
 	{
 		if (!classProvider.isGuiChat(mc.currentScreen) && !classProvider.isGuiIngameMenu(mc.currentScreen) && (!undetectable.get() || !classProvider.isGuiContainer(mc.currentScreen)))
 		{

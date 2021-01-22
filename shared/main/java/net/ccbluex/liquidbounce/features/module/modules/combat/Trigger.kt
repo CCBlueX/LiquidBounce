@@ -42,7 +42,7 @@ class Trigger : Module()
 	private var lastSwing = 0L
 
 	@EventTarget
-	fun onRender(event: Render3DEvent)
+	fun onRender(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		val objectMouseOver = mc.objectMouseOver
 

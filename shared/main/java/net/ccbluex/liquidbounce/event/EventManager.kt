@@ -23,7 +23,7 @@ class EventManager
 			{
 				if (!method.isAccessible) method.isAccessible = true
 
-				val eventClass = method.parameterTypes[0] as Class<out Event>
+				@Suppress("UNCHECKED_CAST") val eventClass = method.parameterTypes[0] as Class<out Event>
 				val eventTarget = method.getAnnotation(EventTarget::class.java)
 
 				val invokableEventTargets = registry.getOrDefault(eventClass, ArrayList())

@@ -275,7 +275,7 @@ object AntiBot : Module()
 
 		if (npcValue.get() && (entity.displayName?.formattedText?.contains("\u00A78[NPC]") == true)) return true
 
-		if (bedWarsNPCValue.get() && (displayName!!.isEmpty() || displayName!![0] != '\u00A7') && displayName.endsWith("\u00A7r")) return true
+		if (bedWarsNPCValue.get() && (displayName!!.isEmpty() || displayName[0] != '\u00A7') && displayName.endsWith("\u00A7r")) return true
 
 		if (gwenValue.get() && gwenBots.contains(entity.entityId)) return true
 
@@ -471,7 +471,7 @@ object AntiBot : Module()
 	}
 
 	@EventTarget
-	fun onWorld(event: WorldEvent?)
+	fun onWorld(@Suppress("UNUSED_PARAMETER") event: WorldEvent?)
 	{
 		clearAll()
 	}

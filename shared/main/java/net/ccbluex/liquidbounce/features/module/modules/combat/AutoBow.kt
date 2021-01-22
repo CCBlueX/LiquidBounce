@@ -23,7 +23,7 @@ class AutoBow : Module()
 	private val waitForBowAimbot = BoolValue("WaitForBowAimbot", true)
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val bowAimbot = LiquidBounce.moduleManager[BowAimbot::class.java] as BowAimbot
 

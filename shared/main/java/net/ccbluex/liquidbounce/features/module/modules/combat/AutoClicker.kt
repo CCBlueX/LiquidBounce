@@ -52,7 +52,7 @@ class AutoClicker : Module()
 	private var leftLastSwing = 0L
 
 	@EventTarget
-	fun onRender(event: Render3DEvent)
+	fun onRender(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{ // Left click
 		if (mc.gameSettings.keyBindAttack.isKeyDown && leftValue.get() && System.currentTimeMillis() - leftLastSwing >= leftDelay && mc.playerController.curBlockDamageMP == 0F)
 		{
@@ -73,7 +73,7 @@ class AutoClicker : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 

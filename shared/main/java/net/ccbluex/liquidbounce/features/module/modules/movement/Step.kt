@@ -64,7 +64,7 @@ class Step : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val mode = modeValue.get()
 		val thePlayer = mc.thePlayer ?: return
@@ -195,7 +195,7 @@ class Step : Module()
 		val mode = modeValue.get()
 
 		// Set step to default in some cases
-		if ((!thePlayer.onGround && !airStepValue.get()) || !timer.hasTimePassed(delayValue.get().toLong()) || Stream.of("Jump", "MotionNCP", "AAC3.2.0", "AAC3.3.4").anyMatch { modeValue.get().equals(it, ignoreCase = true) })
+		if ((!thePlayer.onGround && !airStepValue.get()) || !timer.hasTimePassed(delayValue.get().toLong()) || Stream.of("Jump", "MotionNCP", "AAC3.2.0", "AAC3.3.4").anyMatch { mode.equals(it, ignoreCase = true) })
 		{
 			thePlayer.stepHeight = 0.5F
 			event.stepHeight = 0.5F
@@ -218,7 +218,7 @@ class Step : Module()
 	}
 
 	@EventTarget(ignoreCondition = true)
-	fun onStepConfirm(event: StepConfirmEvent)
+	fun onStepConfirm(@Suppress("UNUSED_PARAMETER") event: StepConfirmEvent)
 	{
 		val thePlayer = mc.thePlayer
 

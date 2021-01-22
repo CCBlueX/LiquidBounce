@@ -119,7 +119,7 @@ class WallClimb : Module()
 		when (mode.toLowerCase())
 		{
 			"checkerclimb" -> if (event.y > thePlayer.posY) event.boundingBox = null
-			"clip" -> if (event.block != null && mc.thePlayer != null && classProvider.isBlockAir(event.block) && event.y < thePlayer.posY && thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava) event.boundingBox =
+			"clip" -> if (mc.thePlayer != null && classProvider.isBlockAir(event.block) && event.y < thePlayer.posY && thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava) event.boundingBox =
 				classProvider.createAxisAlignedBB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0).offset(thePlayer.posX, thePlayer.posY.toInt() - 1.0, thePlayer.posZ)
 		}
 	}

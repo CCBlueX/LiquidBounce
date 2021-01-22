@@ -16,7 +16,7 @@ class AutoWalk : Module()
 {
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		mc.gameSettings.keyBindForward.pressed = true
 	}

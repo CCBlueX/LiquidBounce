@@ -15,6 +15,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.createUseItemPacket
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "KeepAlive", description = "Tries to prevent you from dying.", category = ModuleCategory.PLAYER)
@@ -22,6 +24,8 @@ class KeepAlive : Module()
 {
 
 	val modeValue = ListValue("Mode", arrayOf("/heal", "Soup"), "/heal")
+	private val randomSlotValue = BoolValue("RandomSlot", false)
+	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 1000)
 
 	private var runOnce = false
 
@@ -40,7 +44,7 @@ class KeepAlive : Module()
 
 				"soup" ->
 				{
-					val soupInHotbar = InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.MUSHROOM_STEW))
+					val soupInHotbar = InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelayValue.get().toLong(), randomSlotValue.get())
 
 					if (soupInHotbar != -1)
 					{

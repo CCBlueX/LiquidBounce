@@ -22,7 +22,7 @@ abstract class WrappedCreativeTabs(val name: String)
 		LiquidBounce.wrapper.classProvider.wrapCreativeTab(name, this)
 	}
 
-	open fun displayAllReleventItems(items: MutableList<IItemStack>)
+	open fun displayAllReleventItems(itemList: MutableList<IItemStack>)
 	{
 	}
 

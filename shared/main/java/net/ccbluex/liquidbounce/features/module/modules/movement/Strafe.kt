@@ -38,19 +38,21 @@ class Strafe : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
-		if (mc.thePlayer!!.onGround && mc.gameSettings.keyBindJump.isKeyDown && allDirectionsJumpValue.get() && (mc.thePlayer!!.movementInput.moveForward != 0F || mc.thePlayer!!.movementInput.moveStrafe != 0F) && !(mc.thePlayer!!.isInWater || mc.thePlayer!!.isInLava || mc.thePlayer!!.isOnLadder || mc.thePlayer!!.isInWeb))
+		val thePlayer = mc.thePlayer ?: return
+		
+		if (thePlayer.onGround && mc.gameSettings.keyBindJump.isKeyDown && allDirectionsJumpValue.get() && (thePlayer.movementInput.moveForward != 0F || thePlayer.movementInput.moveStrafe != 0F) && !(thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isInWeb))
 		{
 			if (mc.gameSettings.keyBindJump.isKeyDown)
 			{
 				mc.gameSettings.keyBindJump.pressed = false
 				wasDown = true
 			}
-			val yaw = mc.thePlayer!!.rotationYaw
-			mc.thePlayer!!.rotationYaw = getMoveYaw()
-			mc.thePlayer!!.jump()
-			mc.thePlayer!!.rotationYaw = yaw
+			val yaw = thePlayer.rotationYaw
+			thePlayer.rotationYaw = getMoveYaw()
+			thePlayer.jump()
+			thePlayer.rotationYaw = yaw
 			jump = true
 			if (wasDown)
 			{
@@ -64,7 +66,7 @@ class Strafe : Module()
 	}
 
 	@EventTarget
-	fun onStrafe(event: StrafeEvent)
+	fun onStrafe(@Suppress("UNUSED_PARAMETER") event: StrafeEvent)
 	{
 		val shotSpeed = sqrt((mc.thePlayer!!.motionX * mc.thePlayer!!.motionX) + (mc.thePlayer!!.motionZ * mc.thePlayer!!.motionZ))
 		val speed = (shotSpeed * strengthValue.get())

@@ -70,7 +70,7 @@ class ScriptModule(private val moduleObject: JSObject) : Module()
 	override fun onDisable() = callEvent("disable")
 
 	@EventTarget
-	fun onUpdate(updateEvent: UpdateEvent) = callEvent("update")
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") updateEvent: UpdateEvent) = callEvent("update")
 
 	@EventTarget
 	fun onMotion(motionEvent: MotionEvent) = callEvent("motion", motionEvent)
@@ -100,13 +100,13 @@ class ScriptModule(private val moduleObject: JSObject) : Module()
 	fun onStep(stepEvent: StepEvent) = callEvent("step", stepEvent)
 
 	@EventTarget
-	fun onStepConfirm(stepConfirmEvent: StepConfirmEvent) = callEvent("stepConfirm")
+	fun onStepConfirm(@Suppress("UNUSED_PARAMETER") stepConfirmEvent: StepConfirmEvent) = callEvent("stepConfirm")
 
 	@EventTarget
 	fun onWorld(worldEvent: WorldEvent) = callEvent("world", worldEvent)
 
 	@EventTarget
-	fun onSession(sessionEvent: SessionEvent) = callEvent("session")
+	fun onSession(@Suppress("UNUSED_PARAMETER") sessionEvent: SessionEvent) = callEvent("session")
 
 	@EventTarget
 	fun onClickBlock(clickBlockEvent: ClickBlockEvent) = callEvent("clickBlock", clickBlockEvent)
@@ -118,7 +118,7 @@ class ScriptModule(private val moduleObject: JSObject) : Module()
 	fun onSlowDown(slowDownEvent: SlowDownEvent) = callEvent("slowDown", slowDownEvent)
 
 	@EventTarget
-	fun onShutdown(shutdownEvent: ClientShutdownEvent) = callEvent("shutdown")
+	fun onShutdown(@Suppress("UNUSED_PARAMETER") shutdownEvent: ClientShutdownEvent) = callEvent("shutdown")
 
 	/**
 	 * Calls the handler of a registered event.

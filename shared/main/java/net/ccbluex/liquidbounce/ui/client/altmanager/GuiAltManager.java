@@ -591,9 +591,9 @@ public class GuiAltManager extends WrappedGuiScreen
 		}
 
 		@Override
-		public void elementClicked(final int var1, final boolean doubleClick, final int var3, final int var4)
+		public void elementClicked(final int id, final boolean doubleClick, final int var3, final int var4)
 		{
-			selectedSlot = var1;
+			selectedSlot = id;
 
 			if (doubleClick)
 				if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize() && loginButton.getEnabled())
@@ -616,7 +616,7 @@ public class GuiAltManager extends WrappedGuiScreen
 		}
 
 		@Override
-		public void drawSlot(final int id, final int x, final int y, final int var4, final int var5, final int var6)
+		public void drawSlot(final int id, final int x, final int y, final int var4, final int mouseXIn, final int mouseYIn)
 		{
 			final int width = getRepresented().getWidth();
 			final MinecraftAccount minecraftAccount = accounts.get(id);

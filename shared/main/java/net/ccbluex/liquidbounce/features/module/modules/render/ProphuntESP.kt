@@ -39,15 +39,15 @@ class ProphuntESP : Module()
 
 	override fun onDisable()
 	{
-		synchronized(blocks) { blocks.clear() }
+		synchronized(blocks, blocks::clear)
 	}
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
 		val mode = modeValue.get()
 		val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
-		for (entity in mc.theWorld!!.loadedEntityList)
+		for (entity in (mc.theWorld ?: return).loadedEntityList)
 		{
 			if (!mode.equals("Box", true) || !mode.equals("OtherBox", true)) break
 			if (!classProvider.isEntityFallingBlock(entity)) continue

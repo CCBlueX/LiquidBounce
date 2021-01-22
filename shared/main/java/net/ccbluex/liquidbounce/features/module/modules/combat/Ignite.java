@@ -26,12 +26,16 @@ import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.ccbluex.liquidbounce.value.BoolValue;
+import net.ccbluex.liquidbounce.value.IntegerValue;
 
 @ModuleInfo(name = "Ignite", description = "Automatically sets targets around you on fire.", category = ModuleCategory.COMBAT)
 public class Ignite extends Module
 {
 	private final BoolValue lighterValue = new BoolValue("Lighter", true);
 	private final BoolValue lavaBucketValue = new BoolValue("Lava", true);
+
+	private final BoolValue randomSlotValue = new BoolValue("RandomSlot", false);
+	private final IntegerValue itemDelayValue = new IntegerValue("ItemDelay", 0, 0, 1000);
 
 	private final MSTimer msTimer = new MSTimer();
 
@@ -47,8 +51,11 @@ public class Ignite extends Module
 		if (thePlayer == null || theWorld == null)
 			return;
 
-		final int lighterInHotbar = lighterValue.get() ? InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.FLINT_AND_STEEL)) : -1;
-		final int lavaInHotbar = lavaBucketValue.get() ? InventoryUtils.findItem(26, 45, classProvider.getItemEnum(ItemType.LAVA_BUCKET)) : -1;
+		final int itemDelay = itemDelayValue.get();
+		final boolean randomSlot = randomSlotValue.get();
+
+		final int lighterInHotbar = lighterValue.get() ? InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.FLINT_AND_STEEL), itemDelay, randomSlot) : -1;
+		final int lavaInHotbar = lavaBucketValue.get() ? InventoryUtils.findItem(26, 45, classProvider.getItemEnum(ItemType.LAVA_BUCKET), itemDelay, randomSlot) : -1;
 
 		if (lighterInHotbar == -1 && lavaInHotbar == -1)
 			return;

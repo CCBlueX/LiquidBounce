@@ -25,7 +25,7 @@ class DonatorCape : Listenable, MinecraftInstance()
 {
 
 	@EventTarget
-	fun onSession(event: SessionEvent)
+	fun onSession(@Suppress("UNUSED_PARAMETER")event: SessionEvent)
 	{
 		if (!GuiDonatorCape.capeEnabled || GuiDonatorCape.transferCode.isEmpty() || !UserUtils.isValidTokenOffline(mc.session.token)) return
 

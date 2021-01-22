@@ -77,7 +77,7 @@ class Sneak : Module()
 	}
 
 	@EventTarget
-	fun onWorld(worldEvent: WorldEvent)
+	fun onWorld(@Suppress("UNUSED_PARAMETER") worldEvent: WorldEvent)
 	{
 		sneaking = false
 	}

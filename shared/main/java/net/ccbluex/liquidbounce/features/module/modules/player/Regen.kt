@@ -30,7 +30,7 @@ class Regen : Module()
 	private var resetTimer = false
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		if (resetTimer) mc.timer.timerSpeed = 1F
 		resetTimer = false

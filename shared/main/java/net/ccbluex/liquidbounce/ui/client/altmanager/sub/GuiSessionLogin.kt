@@ -98,7 +98,7 @@ class GuiSessionLogin(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		status = "\u00A7aLogging in..."
 
 		thread {
-			val loginResult = LoginUtils.loginSessionId(sessionTokenField.text)
+			val loginResult = LoginUtils.loginSessionId(token)
 
 			status = when (loginResult)
 			{

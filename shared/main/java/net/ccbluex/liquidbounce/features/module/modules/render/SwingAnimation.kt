@@ -61,7 +61,7 @@ class SwingAnimation : Module()
 
 	val swingProgressLimit: IntegerValue = object : IntegerValue("SwingProgressLimit", 3, 1, 20)
 	{
-		override fun onChanged(prevValue: Int, newValue: Int)
+		override fun onChanged(oldValue: Int, newValue: Int)
 		{
 			if (newValue > 8 + (if (customSwingSpeed.get()) swingSpeed.get() else 0)) this.set(8 + if (customSwingSpeed.get()) swingSpeed.get() else 0)
 		}

@@ -40,7 +40,7 @@ class Projectiles : Module()
 	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return

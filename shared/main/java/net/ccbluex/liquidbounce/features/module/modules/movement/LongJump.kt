@@ -29,7 +29,7 @@ class LongJump : Module()
 	private var canMineplexBoost = false
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
 		if (LadderJump.jumped) MovementUtils.strafe(MovementUtils.speed * 1.08f)
 

@@ -21,7 +21,7 @@ class ReverseStep : Module()
 	private var jumped = false
 
 	@EventTarget(ignoreCondition = true)
-	fun onUpdate(event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
 		val thePlayer = mc.thePlayer ?: return
 
@@ -42,7 +42,7 @@ class ReverseStep : Module()
 	}
 
 	@EventTarget(ignoreCondition = true)
-	fun onJump(event: JumpEvent?)
+	fun onJump(@Suppress("UNUSED_PARAMETER") event: JumpEvent?)
 	{
 		jumped = true
 	}

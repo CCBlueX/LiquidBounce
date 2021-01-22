@@ -113,7 +113,7 @@ class Aimbot : Module()
 	var target: IEntity? = null
 
 	@EventTarget
-	fun onStrafe(event: StrafeEvent)
+	fun onStrafe(@Suppress("UNUSED_PARAMETER") event: StrafeEvent)
 	{
 		if (mc.gameSettings.keyBindAttack.isKeyDown) clickTimer.reset()
 
@@ -155,7 +155,7 @@ class Aimbot : Module()
 	}
 
 	@EventTarget
-	fun onRender2D(event: Render2DEvent)
+	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
 		if (fovValue.get() < 180) RenderUtils.drawFoVCircle(fovValue.get())
 	}

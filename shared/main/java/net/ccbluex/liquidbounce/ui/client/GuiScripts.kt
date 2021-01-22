@@ -198,7 +198,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			selectedSlot = id
 		}
 
-		override fun drawSlot(id: Int, x: Int, y: Int, var4: Int, var5: Int, var6: Int)
+		override fun drawSlot(id: Int, x: Int, y: Int, var4: Int, mouseXIn: Int, mouseYIn: Int)
 		{
 			val script = LiquidBounce.scriptManager.scripts[id]
 

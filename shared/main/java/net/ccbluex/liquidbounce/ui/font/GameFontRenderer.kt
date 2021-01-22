@@ -86,7 +86,7 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 
 		if (currentColor and -0x4000000 == 0) currentColor = currentColor or -16777216
 
-		val defaultColor = currentColor
+		//		val defaultColor = currentColor
 
 		val alpha: Int = (currentColor shr 24 and 0xff)
 

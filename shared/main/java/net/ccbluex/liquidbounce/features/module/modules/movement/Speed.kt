@@ -101,7 +101,7 @@ class Speed : Module()
 	val mineplexGroundSpeedValue = FloatValue("MineplexGround-Speed", 0.5f, 0.1f, 1f)
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
 		val thePlayer = mc.thePlayer ?: return
 
@@ -135,9 +135,9 @@ class Speed : Module()
 	}
 
 	@EventTarget
-	fun onTick(event: TickEvent?)
+	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent?)
 	{
-		if (mc.thePlayer!!.sneaking) return
+		if ((mc.thePlayer ?: return).sneaking) return
 
 		mode?.onTick()
 	}

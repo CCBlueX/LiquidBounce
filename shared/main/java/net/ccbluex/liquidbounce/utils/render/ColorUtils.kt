@@ -132,7 +132,6 @@ object ColorUtils : MinecraftInstance()
 						}
 						color = hexColors[index]
 						break
-						i++
 					}
 					return Color(color)
 				}

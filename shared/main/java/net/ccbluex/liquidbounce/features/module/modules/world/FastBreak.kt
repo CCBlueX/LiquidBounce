@@ -18,7 +18,7 @@ class FastBreak : Module()
 	private val breakDamage = FloatValue("BreakDamage", 0.8F, 0.1F, 1F)
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		mc.playerController.blockHitDelay = 0
 

@@ -22,7 +22,7 @@ class FastBow : Module()
 	val packetsValue = IntegerValue("Packets", 20, 3, 20)
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 

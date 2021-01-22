@@ -17,7 +17,7 @@ class AutoBreak : Module()
 {
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		if (mc.objectMouseOver == null || mc.objectMouseOver!!.blockPos == null || mc.theWorld == null) return
 

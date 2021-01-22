@@ -274,16 +274,16 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		fun getSelectedSlot() = if (selectedSlot > credits.size) -1 else selectedSlot
 
-		override fun elementClicked(index: Int, doubleClick: Boolean, var3: Int, var4: Int)
+		override fun elementClicked(id: Int, doubleClick: Boolean, var3: Int, var4: Int)
 		{
-			selectedSlot = index
+			selectedSlot = id
 		}
 
-		override fun drawSlot(entryID: Int, p_180791_2_: Int, p_180791_3_: Int, p_180791_4_: Int, mouseXIn: Int, mouseYIn: Int)
+		override fun drawSlot(id: Int, x: Int, y: Int, var4: Int, mouseXIn: Int, mouseYIn: Int)
 		{
-			val credit = credits[entryID]
+			val credit = credits[id]
 
-			Fonts.font40.drawCenteredString(credit.name, represented.width / 2F, p_180791_3_ + 2F, Color.WHITE.rgb, true)
+			Fonts.font40.drawCenteredString(credit.name, represented.width / 2F, y + 2F, Color.WHITE.rgb, true)
 		}
 
 		override fun drawBackground()

@@ -162,13 +162,13 @@ public class GuiBannedServers extends WrappedGuiScreen
 		}
 
 		@Override
-		public final void elementClicked(final int var1, final boolean doubleClick, final int var3, final int var4)
+		public final void elementClicked(final int id, final boolean doubleClick, final int var3, final int var4)
 		{
-			selectedSlot = var1;
+			selectedSlot = id;
 		}
 
 		@Override
-		public final void drawSlot(final int id, final int x, final int y, final int var4, final int var5, final int var6)
+		public final void drawSlot(final int id, final int x, final int y, final int var4, final int mouseXIn, final int mouseYIn)
 		{
 			final String server = account.getBannedServers().get(id);
 

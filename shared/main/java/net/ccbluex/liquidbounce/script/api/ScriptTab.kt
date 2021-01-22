@@ -20,8 +20,8 @@ class ScriptTab(private val tabObject: JSObject) : WrappedCreativeTabs(tabObject
 
 	override fun getTranslatedTabLabel() = tabObject.getMember("name") as String
 
-	override fun displayAllReleventItems(items: MutableList<IItemStack>)
+	override fun displayAllReleventItems(itemList: MutableList<IItemStack>)
 	{
-		items.forEach { items.add(it) }
+		itemList.forEach { itemList.add(it) }
 	}
 }
