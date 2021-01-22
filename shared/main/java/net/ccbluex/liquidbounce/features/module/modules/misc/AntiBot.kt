@@ -273,9 +273,9 @@ object AntiBot : Module()
 
 		if (customNameValue.get() && entity.customNameTag == "") return true
 
-		if (npcValue.get() && (entity.displayName?.formattedText?.contains("\u00a78[NPC]") == true)) return true
+		if (npcValue.get() && (entity.displayName?.formattedText?.contains("\u00A78[NPC]") == true)) return true
 
-		if (bedWarsNPCValue.get() && (displayName!!.isEmpty() || displayName!![0] != '\u00a7') && displayName.endsWith("\u00a7r")) return true
+		if (bedWarsNPCValue.get() && (displayName!!.isEmpty() || displayName!![0] != '\u00A7') && displayName.endsWith("\u00A7r")) return true
 
 		if (gwenValue.get() && gwenBots.contains(entity.entityId)) return true
 
@@ -385,8 +385,8 @@ object AntiBot : Module()
 				// ticksExisted > 40 && custom name tag is empty = Mineplex GWEN bot
 				if (mc.thePlayer!!.ticksExisted > 40 && entity.asEntityPlayer().customNameTag == "" && !gwenBots.contains(entity.entityId)) gwenBots.add(entity.entityId)
 
-				// invisible + display name isn't red but ends with color reset char (\u00a7r) + displayname equals customname + entity is near than 3 block horizontally + y delta between entity and player is 10~13 = Watchdog Bot
-				if (entity.invisible && displayName?.startsWith("\u00a7c") == false && displayName.endsWith("\u00a7r") && displayName == customName)
+				// invisible + display name isn't red but ends with color reset char (\u00A7r) + displayname equals customname + entity is near than 3 block horizontally + y delta between entity and player is 10~13 = Watchdog Bot
+				if (entity.invisible && displayName?.startsWith("\u00A7c") == false && displayName.endsWith("\u00A7r") && displayName == customName)
 				{
 					val deltaX = abs(entity.posX - mc.thePlayer!!.posX)
 					val deltaY = abs(entity.posY - mc.thePlayer!!.posY)
@@ -404,8 +404,8 @@ object AntiBot : Module()
 					}
 				}
 
-				// invisible + custom name is red and contains color reset char (\u00a7r) = watchdog bot
-				if (entity.invisible && customName.toLowerCase().contains("\u00a7c") && customName.toLowerCase().contains("\u00a7r"))
+				// invisible + custom name is red and contains color reset char (\u00A7r) = watchdog bot
+				if (entity.invisible && customName.toLowerCase().contains("\u00A7c") && customName.toLowerCase().contains("\u00A7r"))
 				{
 					if (watchdogRemoveValue.get())
 					{
@@ -417,7 +417,7 @@ object AntiBot : Module()
 				}
 
 				// display name isn't red + custom name isn't empty = watchdog bot
-				if (displayName?.contains("\u00a7c") == false && !customName.isEmpty()) watchdogBots.add(entity.entityId)
+				if (displayName?.contains("\u00A7c") == false && !customName.isEmpty()) watchdogBots.add(entity.entityId)
 			}
 		}
 

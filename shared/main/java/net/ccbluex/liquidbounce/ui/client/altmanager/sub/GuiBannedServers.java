@@ -22,7 +22,7 @@ import org.lwjgl.input.Keyboard;
 
 public class GuiBannedServers extends WrappedGuiScreen
 {
-	public String status = "\u00a77Idle...";
+	public String status = "\u00A77Idle...";
 	private final GuiAltManager prevGui;
 	private final MinecraftAccount account;
 	GuiServersList serversList;
@@ -56,8 +56,8 @@ public class GuiBannedServers extends WrappedGuiScreen
 
 		serversList.represented.drawScreen(mouseX, mouseY, partialTicks);
 
-		Fonts.font40.drawCenteredString("\u00a7cBanned servers\u00a78 of \u00a7a" + (account.getAccountName() == null ? account.getName() : account.getAccountName()), width / 2, 6, 0xffffff);
-		Fonts.font35.drawCenteredString("\u00a7a" + (account.getAccountName() == null ? account.getName() : account.getAccountName()) + "\u00a78 is \u00a7cbanned\u00a78 from \u00a7c" + serversList.getSize() + "\u00a7a servers.", width / 2, 18, 0xffffff);
+		Fonts.font40.drawCenteredString("\u00A7cBanned servers\u00A78 of \u00A7a" + (account.getAccountName() == null ? account.getName() : account.getAccountName()), width / 2, 6, 0xffffff);
+		Fonts.font35.drawCenteredString("\u00A7a" + (account.getAccountName() == null ? account.getName() : account.getAccountName()) + "\u00A78 is \u00A7cbanned\u00A78 from \u00A7c" + serversList.getSize() + "\u00A7a servers.", width / 2, 18, 0xffffff);
 		Fonts.font35.drawCenteredString(status, representedScreen.getWidth() / 2, 32, 0xffffff);
 
 		super.drawScreen(mouseX, mouseY, partialTicks);
@@ -79,10 +79,10 @@ public class GuiBannedServers extends WrappedGuiScreen
 				{
 					account.getBannedServers().remove(account.getBannedServers().get(serversList.getSelectedSlot()));
 					LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
-					status = "\u00a7aThe server has been removed.";
+					status = "\u00A7aThe server has been removed.";
 				}
 				else
-					status = "\u00a7cSelect a server.";
+					status = "\u00A7cSelect a server.";
 				break;
 		}
 		super.actionPerformed(button);
@@ -225,7 +225,7 @@ public class GuiBannedServers extends WrappedGuiScreen
 			name.drawTextBox();
 
 			if (name.getText().isEmpty() && !name.isFocused())
-				Fonts.font40.drawCenteredString("\u00a77Add Server", width / 2 - 74, 66, 0xffffff);
+				Fonts.font40.drawCenteredString("\u00A77Add Server", width / 2 - 74, 66, 0xffffff);
 
 			super.drawScreen(mouseX, mouseY, partialTicks);
 		}
@@ -242,20 +242,20 @@ public class GuiBannedServers extends WrappedGuiScreen
 					final String server = name.getText();
 					if (server.isEmpty())
 					{
-						status = "\u00a7cEnter a server address!";
+						status = "\u00A7cEnter a server address!";
 						return;
 					}
 
 					if (account.getBannedServers().contains(server))
 					{
-						status = "\u00a7cServer already exists!";
+						status = "\u00A7cServer already exists!";
 						return;
 					}
 
 					account.getBannedServers().add(server);
 					LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 
-					prevGui.status = "\u00a7aAdded banned server \u00a7c" + server + " \u00a7aof " + (account.getAccountName() == null ? account.getName() : account.getAccountName()) + "\u00a7c.";
+					prevGui.status = "\u00A7aAdded banned server \u00A7c" + server + " \u00A7aof " + (account.getAccountName() == null ? account.getName() : account.getAccountName()) + "\u00A7c.";
 					mc.displayGuiScreen(prevGui.representedScreen);
 					break;
 			}

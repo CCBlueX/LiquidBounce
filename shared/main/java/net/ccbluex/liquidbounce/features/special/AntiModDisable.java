@@ -28,7 +28,7 @@ import io.netty.buffer.Unpooled;
 public class AntiModDisable extends MinecraftInstance implements Listenable
 {
 
-	private static final Pattern CHATCOLOR_RESET_PATTERN = Pattern.compile("\u00a7r", Pattern.LITERAL);
+	private static final Pattern CHATCOLOR_RESET_PATTERN = Pattern.compile("\u00A7r", Pattern.LITERAL);
 
 	public static boolean enabled = true;
 	public static boolean blockFMLPackets = true;
@@ -98,25 +98,25 @@ public class AntiModDisable extends MinecraftInstance implements Listenable
 					if (blockCrackedVapeSabotages)
 					{
 						// Cracked vapes are responding 'I'm using cracked vape!' when a specified chat is received.
-						if (text.contains("\u00a7c \u00a7r\u00a75 \u00a7r\u00a71 \u00a7r\u00a7f"))
+						if (text.contains("\u00A7c \u00A7r\u00A75 \u00A7r\u00A71 \u00A7r\u00A7f"))
 							action(event, "CrackedVape Type A(type: \"&C &R &5 &R &1 &R &F\", text: \"" + text + "\")", "BLOCKED");
 
-						if (CHATCOLOR_RESET_PATTERN.matcher(text).replaceAll(Matcher.quoteReplacement("")).contains("\u00a73 \u00a76 \u00a73 \u00a76 \u00a73 \u00a76 \u00a7d"))
+						if (CHATCOLOR_RESET_PATTERN.matcher(text).replaceAll(Matcher.quoteReplacement("")).contains("\u00A73 \u00A76 \u00A73 \u00A76 \u00A73 \u00A76 \u00A7d"))
 							action(event, "CrackedVape Type B(type: \"&3 &6 &3 &6 &3 &6 &D\", text: \"" + text + "\")", "BLOCKED");
 
-						if (text.contains("\u00a70\u00a71") && text.contains("\u00a7f\u00a7f"))
+						if (text.contains("\u00A70\u00A71") && text.contains("\u00A7f\u00A7f"))
 							action(event, "CrackedVape Type C(type: \"&0&1\" and \"&F&F\"; text: \"" + text + "\")", "BLOCKED");
 
-						if (text.contains("\u00a70\u00a72\u00a70\u00a70\u00a7e\u00a7f"))
+						if (text.contains("\u00A70\u00A72\u00A70\u00A70\u00A7e\u00A7f"))
 							action(event, "CrackedVape Type D(text: \"&0&2&0&0&E&F\", text: \"" + text + "\")", "BLOCKED");
 
-						if (text.contains("\u00a70\u00a72\u00a71\u00a70\u00a7e\u00a7f"))
+						if (text.contains("\u00A70\u00A72\u00A71\u00A70\u00A7e\u00A7f"))
 							action(event, "CrackedVape Type E(text: \"&0&2&1&0&E&F\", text: \"" + text + "\")", "BLOCKED");
 
-						if (text.contains("\u00a70\u00a72\u00a71\u00a71\u00a7e\u00a7f"))
+						if (text.contains("\u00A70\u00A72\u00A71\u00A71\u00A7e\u00A7f"))
 							action(event, "CrackedVape Type F(text: \"&0&2&1&1&E&F\", text: \"" + text + "\")", "BLOCKED");
 
-						if (text.startsWith("\u00a70\u00a70") && text.endsWith("\u00a7e\u00a7f"))
+						if (text.startsWith("\u00A70\u00A70") && text.endsWith("\u00A7e\u00A7f"))
 							action(event, "CrackedVape Type G(type: startsWith \"&0&0\" and endsWith \"&E&F\", text: \"" + text + "\")", "BLOCKED");
 					}
 				}

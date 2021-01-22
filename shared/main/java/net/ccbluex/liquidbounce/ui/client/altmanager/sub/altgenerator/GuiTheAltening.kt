@@ -222,7 +222,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 									LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
 								}
 
-								"\u00a7aYour name is now \u00a7b\u00a7l${yggdrasilUserAuthentication.selectedProfile.name}\u00a7c.$moreMessage"
+								"\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c.$moreMessage"
 							} else "\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c."
 						} catch (e: AuthenticationException)
 						{

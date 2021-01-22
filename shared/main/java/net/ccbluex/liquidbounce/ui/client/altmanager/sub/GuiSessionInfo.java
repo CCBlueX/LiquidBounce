@@ -39,7 +39,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 	private IGuiButton loginButton;
 
 	private final String defaultSessionId;
-	private String status = "\u00a77Idle...";
+	private String status = "\u00A77Idle...";
 
 	@Nullable
 	private String algorithm;
@@ -117,15 +117,15 @@ public class GuiSessionInfo extends WrappedGuiScreen
 
 		if (accesstoken != null)
 			if (accesstokenChecked)
-				Fonts.font35.drawCenteredString((accesstokenValid ? "\u00a7a" : "\u00a7c") + "Access Token: " + accesstoken + " \u00a78(" + (accesstokenValid ? "\u00a7aValid" : "\u00a7cInvalid") + "\u00a78)", width / 2, 175, Color.GREEN.getRGB());
+				Fonts.font35.drawCenteredString((accesstokenValid ? "\u00A7a" : "\u00A7c") + "Access Token: " + accesstoken + " \u00A78(" + (accesstokenValid ? "\u00A7aValid" : "\u00A7cInvalid") + "\u00A78)", width / 2, 175, Color.GREEN.getRGB());
 			else
-				Fonts.font35.drawCenteredString("\u00a78Access Token: " + accesstoken + " \u00a78(Checking...)", width / 2, 175, Color.GREEN.getRGB());
+				Fonts.font35.drawCenteredString("\u00A78Access Token: " + accesstoken + " \u00A78(Checking...)", width / 2, 175, Color.GREEN.getRGB());
 
 		if (uuid != null)
 			if (nickname != null)
-				Fonts.font35.drawCenteredString("\u00a7aUUID: " + uuid + " \u00a78(\u00a7a" + nickname + "\u00a78)", width / 2, 195, Color.GREEN.getRGB());
+				Fonts.font35.drawCenteredString("\u00A7aUUID: " + uuid + " \u00A78(\u00A7a" + nickname + "\u00A78)", width / 2, 195, Color.GREEN.getRGB());
 			else
-				Fonts.font35.drawCenteredString((nicknameChecked ? "\u00a7c" : "\u00a78") + "UUID: " + uuid + " \u00a78(Unknown)", width / 2, 195, Color.GREEN.getRGB());
+				Fonts.font35.drawCenteredString((nicknameChecked ? "\u00A7c" : "\u00A78") + "UUID: " + uuid + " \u00A78(Unknown)", width / 2, 195, Color.GREEN.getRGB());
 
 		if (issuer != null)
 			Fonts.font35.drawCenteredString("Issuer: " + issuer, width / 2, 215, 0xffffff);
@@ -143,7 +143,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 		sessionIdField.drawTextBox();
 
 		if (sessionIdField.getText().isEmpty() && !sessionIdField.isFocused())
-			Fonts.font40.drawCenteredString("\u00a77Session ID", width / 2, 66, 0xffffff);
+			Fonts.font40.drawCenteredString("\u00A77Session ID", width / 2, 66, 0xffffff);
 
 		super.drawScreen(mouseX, mouseY, partialTicks);
 	}
@@ -180,7 +180,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 				}
 				catch (final UnsupportedFlavorException e)
 				{
-					status = "\u00a7cClipboard flavor unsupported!";
+					status = "\u00A7cClipboard flavor unsupported!";
 					ClientUtils.getLogger().error("Failed to read data from clipboard.", e);
 				}
 				break;
@@ -246,7 +246,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 		final String[] tokenPieces = token.split("\\.", 3);
 		if (tokenPieces.length < 3)
 		{
-			status = "\u00a7cSession token is invalid! (pieces: " + tokenPieces.length + ")";
+			status = "\u00A7cSession token is invalid! (pieces: " + tokenPieces.length + ")";
 			return false;
 		}
 
@@ -260,7 +260,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 		}
 		catch (final Exception e)
 		{
-			status = "\u00a7cSession token is invalid! (" + e + ")";
+			status = "\u00A7cSession token is invalid! (" + e + ")";
 			trouble = true;
 		}
 
@@ -275,7 +275,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 			}
 			catch (final Exception e)
 			{
-				status = "\u00a7cFailed to parse header from session token!";
+				status = "\u00A7cFailed to parse header from session token!";
 				trouble = true;
 			}
 
@@ -285,7 +285,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 					algorithm = headerJson.get("alg").getAsString();
 				else
 				{
-					status = "\u00a7cFailed to parse algorithm member from header! This cannot be happened!";
+					status = "\u00A7cFailed to parse algorithm member from header! This cannot be happened!";
 					trouble = true;
 				}
 
@@ -314,7 +314,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 			}
 			catch (final Exception e)
 			{
-				status = "\u00a7cFailed to parse payload from session token!";
+				status = "\u00A7cFailed to parse payload from session token!";
 				trouble = true;
 			}
 			if (payloadJson != null)
@@ -323,7 +323,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 					subject = payloadJson.get("sub").getAsString();
 				else
 				{
-					status = "\u00a7cFailed to parse subject member from payload! This cannot be happened!";
+					status = "\u00A7cFailed to parse subject member from payload! This cannot be happened!";
 					trouble = true;
 				}
 
@@ -338,7 +338,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 				}
 				else
 				{
-					status = "\u00a7cFailed to parse access token member(yggt) from payload!";
+					status = "\u00A7cFailed to parse access token member(yggt) from payload!";
 					trouble = true;
 				}
 
@@ -353,7 +353,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 				}
 				else
 				{
-					status = "\u00a7cFailed to parse uuid member(spr) from payload!";
+					status = "\u00A7cFailed to parse uuid member(spr) from payload!";
 					trouble = true;
 				}
 
@@ -367,14 +367,14 @@ public class GuiSessionInfo extends WrappedGuiScreen
 					issuedAt = payloadJson.get("iat").getAsString();
 				else
 				{
-					status = "\u00a7cFailed to parse issued at member(iat) from payload! This cannot be happened!";
+					status = "\u00A7cFailed to parse issued at member(iat) from payload! This cannot be happened!";
 					trouble = true;
 				}
 			}
 		}
 
 		if (!trouble)
-			status = "\u00a7aSession token successfully decoded.";
+			status = "\u00A7aSession token successfully decoded.";
 		return !trouble;
 	}
 }

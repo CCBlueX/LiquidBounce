@@ -99,7 +99,7 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 							LiquidBounce.fileManager.accountsConfig.accounts.add(account)
 							LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
 						}
-						status = "\u00a7aYour token was redeemed successfully!\u00a7c$moreMessage"
+						status = "\u00A7aYour token was redeemed successfully!\u00A7c$moreMessage"
 					} else status = "\u00A7aYour token was redeemed successfully!"
 
 					button.enabled = true

@@ -43,7 +43,7 @@ public class MurderDetector extends Module
 				if (ent != mc.getThePlayer() && ent.getCurrentEquippedItem() != null && isMurder(ent.getCurrentEquippedItem().getItem()) && !murders.contains(ent))
 				{
 					murders.add(ent);
-					ClientUtils.displayChatMessage("\u00a7a\u00a7l" + ent.getName() + "\u00a7r is the \u00a74\u00a7lmurderer\u00a7r!");
+					ClientUtils.displayChatMessage("\u00A7a\u00A7l" + ent.getName() + "\u00A7r is the \u00A74\u00A7lmurderer\u00A7r!");
 				}
 			}
 	}

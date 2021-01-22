@@ -118,7 +118,7 @@ object ColorUtils : MinecraftInstance()
 					var i = 0
 					while (i < chars.size)
 					{
-						if (chars[i] != '\u00a7' || i + 1 >= chars.size)
+						if (chars[i] != '\u00A7' || i + 1 >= chars.size)
 						{
 							i++
 							continue

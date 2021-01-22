@@ -17,7 +17,7 @@ import kotlin.math.min
 
 open class HUD : MinecraftInstance()
 {
-
+	// TODO: Add YSpeed option in SpeedGraph and Make NetworkGraph
 	val elements = mutableListOf<Element>()
 	val notifications = mutableListOf<Notification>()
 

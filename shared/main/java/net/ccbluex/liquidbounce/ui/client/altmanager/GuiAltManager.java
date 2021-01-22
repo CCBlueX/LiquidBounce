@@ -121,11 +121,11 @@ public class GuiAltManager extends WrappedGuiScreen
 			}
 			case AUTHENTICATION_FAILURE:
 			{
-				return "\u00a7cAuthentication failed. Please check e-mail and password.";
+				return "\u00A7cAuthentication failed. Please check e-mail and password.";
 			}
 			case AUTHENTICATION_UNAVAILABLE:
 			{
-				return "\u00a7cCannot contact authentication server.";
+				return "\u00A7cCannot contact authentication server.";
 			}
 			case INVALID_ACCOUNT_DATA:
 			{
@@ -136,33 +136,33 @@ public class GuiAltManager extends WrappedGuiScreen
 						// noinspection fallthrough
 					case MCLEAKS_INVALID:
 						LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
-						return "\u00a7cThe MCLeaks token has to be 16 characters long!";
+						return "\u00A7cThe MCLeaks token has to be 16 characters long!";
 
 					default:
 						minecraftAccount.setServiceType(AltServiceType.MOJANG_INVALID);
 						LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 
-						return "\u00a7cInvalid username or wrong password or the account is get mojang-banned.";
+						return "\u00A7cInvalid username or wrong password or the account is get mojang-banned.";
 				}
 			}
 			case MIGRATED:
 			{
 				minecraftAccount.setServiceType(AltServiceType.MOJANG_MIGRATED);
 				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
-				return "\u00a7cAccount migrated.";
+				return "\u00A7cAccount migrated.";
 			}
 			case MCLEAKS_INVALID:
 			{
 				minecraftAccount.setServiceType(AltServiceType.MCLEAKS_INVALID);
 				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 
-				return "\u00a7cMCLeaks token invalid or expired.";
+				return "\u00A7cMCLeaks token invalid or expired.";
 			}
 			case THEALTENING_INVALID:
 			{
 				minecraftAccount.setServiceType(AltServiceType.THEALTENING_INVALID);
 				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
-				return "\u00a7cTheAltening token invalid or expired.";
+				return "\u00A7cTheAltening token invalid or expired.";
 			}
 			default:
 				return "";
@@ -260,7 +260,7 @@ public class GuiAltManager extends WrappedGuiScreen
 		Fonts.font35.drawCenteredString(searchField.getText().isEmpty() ? LiquidBounce.fileManager.accountsConfig.getAccounts().size() + " Alts" : altsList.accounts.size() + " Search Results", width / 2.0f, 18, 0xffffff);
 		Fonts.font35.drawCenteredString(status, width / 2.0f, 32, 0xffffff);
 		Fonts.font35.drawStringWithShadow("\u00A77User: \u00A7a" + (MCLeaks.isAltActive() ? MCLeaks.getSession().getUsername() : mc.getSession().getUsername()), 6, 6, 0xffffff);
-		Fonts.font35.drawStringWithShadow("\u00A77Type: \u00A7a" + (altService.getCurrentService() == EnumAltService.THEALTENING ? "\u00a7aTheAltening" : MCLeaks.isAltActive() ? "\u00a7bMCLeaks" : UserUtils.INSTANCE.isValidTokenOffline(mc.getSession().getToken()) ? "\u00a76Mojang" : "\u00a78Cracked"), 6, 15, 0xffffff);
+		Fonts.font35.drawStringWithShadow("\u00A77Type: \u00A7a" + (altService.getCurrentService() == EnumAltService.THEALTENING ? "\u00A7aTheAltening" : MCLeaks.isAltActive() ? "\u00A7bMCLeaks" : UserUtils.INSTANCE.isValidTokenOffline(mc.getSession().getToken()) ? "\u00A76Mojang" : "\u00A78Cracked"), 6, 15, 0xffffff);
 
 		searchField.drawTextBox();
 
@@ -452,11 +452,11 @@ public class GuiAltManager extends WrappedGuiScreen
 				if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize())
 					mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiBannedServers(this, LiquidBounce.fileManager.accountsConfig.getAccounts().get(altsList.getSelectedSlot()))));
 				else
-					status = "\u00a7cSelect an account.";
+					status = "\u00A7cSelect an account.";
 				break;
 			case 14:
 				Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(mc.getSession().getSessionID()), null);
-				status = "\u00a7aCopied current session id into your clipboard.";
+				status = "\u00A7aCopied current session id into your clipboard.";
 				break;
 			case 15:
 				mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiSessionInfo(representedScreen, null)));
