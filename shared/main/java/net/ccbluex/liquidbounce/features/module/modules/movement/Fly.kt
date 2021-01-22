@@ -67,7 +67,7 @@ class Fly : Module()
 			"Jetpack", "KeepAlive", "Flag"
 		), "Vanilla"
 	)
-	private val vanillaSpeedValue = FloatValue("VanillaSpeed", 2f, 0f, 5f)
+	val vanillaSpeedValue = FloatValue("VanillaSpeed", 2f, 0f, 5f)
 	private val vanillaKickBypassValue = BoolValue("VanillaKickBypass", false)
 	private val ncpMotionValue = FloatValue("NCPMotion", 0f, 0f, 1f)
 
