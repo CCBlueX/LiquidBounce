@@ -276,7 +276,7 @@ class Text(
 			)
 		}
 
-		if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen))
+		if (editMode && !classProvider.isGuiHudDesigner(mc.currentScreen))
 		{
 			editMode = false
 			updateElement()

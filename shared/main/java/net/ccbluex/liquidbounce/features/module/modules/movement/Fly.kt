@@ -269,7 +269,7 @@ class Fly : Module()
 				}
 
 				"redesky" -> if (thePlayer.onGround) redeskyVClip(redeskyVClipHeight.get())
-				
+
 				"mccentral" -> mc.timer.timerSpeed = mccTimerSpeedValue.get()
 
 				"anticheatplus" -> mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.4, thePlayer.posZ, thePlayer.onGround))
@@ -772,9 +772,9 @@ class Fly : Module()
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
 		val mode = modeValue.get()
-		val y = startY + 2.0
 
 		if (!markValue.get() || mode.equals("Vanilla", ignoreCase = true) || mode.equals("SmoothVanilla", ignoreCase = true)) return
+		val y = markStartY + 2.0
 
 		RenderUtils.drawPlatform(y, if ((mc.thePlayer ?: return).entityBoundingBox.maxY < y) Color(0, 255, 0, 90) else Color(255, 0, 0, 90), 1.0)
 
