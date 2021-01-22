@@ -12,18 +12,23 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 
 @ModuleInfo(name = "FastUse", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
 class FastUse : Module()
 {
 
 	private val modeValue = ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
+	private val ncpModeValue = ListValue("NCP-Mode", arrayOf("AtOnce", "Constant"), "AtOnce")
 
 	private val noMoveValue = BoolValue("NoMove", false)
+
+	private val ncpWaitTicksValue = IntegerValue("NCP-AtOnce-WaitTicks", 14, 0, 20)
+	private val ncpPacketsValue = IntegerValue("NCP-AtOnce-Packets", 20, 10, 100)
+	private val ncpConstantPacketsValue = IntegerValue("NCP-Constant-Packets", 1, 1, 10)
+	private val ncpTimerValue = FloatValue("NCP-Timer", 1.0f, 0.2f, 1.5f)
+
+	private val aacTimerValue = FloatValue("AAC-Timer", 1.22f, 1.1f, 1.5f)
 
 	private val delayValue = IntegerValue("CustomDelay", 0, 0, 300)
 	private val customSpeedValue = IntegerValue("CustomSpeed", 2, 1, 35)
@@ -33,7 +38,7 @@ class FastUse : Module()
 	private var usedTimer = false
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 
@@ -64,18 +69,31 @@ class FastUse : Module()
 					mc.playerController.onStoppedUsingItem(thePlayer)
 				}
 
-				"ncp" -> if (thePlayer.itemInUseDuration > 14)
+				"ncp" ->
 				{
-					repeat(20) {
-						mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+					mc.timer.timerSpeed = ncpTimerValue.get()
+					when (ncpModeValue.get().toLowerCase())
+					{
+						"atonce" -> if (thePlayer.itemInUseDuration > ncpWaitTicksValue.get())
+						{
+							repeat(ncpPacketsValue.get()) {
+								mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+							}
+
+							mc.playerController.onStoppedUsingItem(thePlayer)
+						}
+
+						"constant" -> repeat(ncpConstantPacketsValue.get()) {
+							mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+						}
 					}
 
-					mc.playerController.onStoppedUsingItem(thePlayer)
+					usedTimer = true
 				}
 
 				"aac" ->
 				{
-					mc.timer.timerSpeed = 1.22F
+					mc.timer.timerSpeed = aacTimerValue.get()
 					usedTimer = true
 				}
 

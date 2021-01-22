@@ -25,4 +25,7 @@ class Reach : Module()
 
 			return if (combatRange > buildRange) combatRange else buildRange
 		}
+
+	override val tag: String
+		get() = "$maxRange"
 }

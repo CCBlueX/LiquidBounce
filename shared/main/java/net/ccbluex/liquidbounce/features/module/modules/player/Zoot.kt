@@ -5,32 +5,36 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
+import java.util.stream.Stream
 
 @ModuleInfo(name = "Zoot", description = "Removes all bad potion effects/fire.", category = ModuleCategory.PLAYER)
 class Zoot : Module()
 {
-
 	private val badEffectsValue = BoolValue("BadEffects", true)
 	private val fireValue = BoolValue("Fire", true)
 	private val noAirValue = BoolValue("NoAir", false)
+	private val noMoveValue = BoolValue("NoMove", false)
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 
+		if (noMoveValue.get() && MovementUtils.isMoving) return
 		if (noAirValue.get() && !thePlayer.onGround) return
 
 		if (badEffectsValue.get())
 		{
-			val effect = thePlayer.activePotionEffects.maxBy { it.duration }
+			val effect = thePlayer.activePotionEffects.filter(this::isBadEffect).maxBy(IPotionEffect::duration)
 
 			if (effect != null)
 			{
@@ -50,15 +54,20 @@ class Zoot : Module()
 	}
 
 	// TODO: Check current potion
-	private fun hasBadEffect(): Boolean
+	private fun isBadEffect(effect: IPotionEffect): Boolean
 	{
-		val thePlayer = mc.thePlayer ?: return false
+		return Stream.of(
 
-		return thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.HUNGER)) || thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SLOWDOWN)) || thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.DIG_SLOWDOWN)) || thePlayer.isPotionActive(
-			classProvider.getPotionEnum(PotionType.HARM)
-		) || thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.CONFUSION)) || thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) || thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.WEAKNESS)) || thePlayer.isPotionActive(
-			classProvider.getPotionEnum(PotionType.WITHER)
-		) || thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.POISON))
+			classProvider.getPotionEnum(PotionType.HUNGER),
+			classProvider.getPotionEnum(PotionType.MOVE_SLOWDOWN),
+			classProvider.getPotionEnum(PotionType.DIG_SLOWDOWN),
+			classProvider.getPotionEnum(PotionType.HARM),
+			classProvider.getPotionEnum(PotionType.CONFUSION),
+			classProvider.getPotionEnum(PotionType.BLINDNESS),
+			classProvider.getPotionEnum(PotionType.WEAKNESS),
+			classProvider.getPotionEnum(PotionType.WITHER),
+			classProvider.getPotionEnum(PotionType.POISON)
+
+		).anyMatch { effect.potionID == it.id }
 	}
-
 }
