@@ -6,10 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.JumpEvent
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -29,9 +26,9 @@ class Velocity : Module()
 	/**
 	 * OPTIONS
 	 */
-	private val horizontalValue = FloatValue("Horizontal", 0F, 0F, 1F)
-	private val verticalValue = FloatValue("Vertical", 0F, 0F, 1F)
-	private val modeValue = ListValue(
+	val horizontalValue = FloatValue("Horizontal", 0F, 0F, 1F)
+	val verticalValue = FloatValue("Vertical", 0F, 0F, 1F)
+	val modeValue = ListValue(
 		"Mode", arrayOf(
 			"Simple", "AAC", "AACPush", "AACZero", "Reverse", "SmoothReverse", "Jump", "Glitch"
 		), "Simple"
@@ -48,8 +45,8 @@ class Velocity : Module()
 	/**
 	 * VALUES
 	 */
-	private var velocityTimer = MSTimer()
-	private var velocityInput = false
+	var velocityTimer = MSTimer()
+	var velocityInput = false
 
 	// SmoothReverse
 	private var reverseHurt = false
@@ -66,7 +63,7 @@ class Velocity : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 
@@ -136,7 +133,9 @@ class Velocity : Module()
 				{
 					if (thePlayer.onGround) jump = false
 				} else
-				{ // Strafe
+				{
+
+					// Strafe
 					if (thePlayer.hurtTime > 0 && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0) thePlayer.onGround = true
 
 					// Reduce Y
@@ -204,18 +203,17 @@ class Velocity : Module()
 					event.cancelEvent()
 				}
 			}
-		} else if (classProvider.isSPacketExplosion(packet))
-		{ // TODO: Support velocity for explosions
-			event.cancelEvent()
 		}
+
+		// Explosion packets are handled by MixinNetHandlerPlayClient
 	}
 
 	@EventTarget
 	fun onJump(event: JumpEvent)
 	{
-		val thePlayer = mc.thePlayer
+		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer == null || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb) return
+		if (thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb) return
 
 		when (modeValue.get().toLowerCase())
 		{

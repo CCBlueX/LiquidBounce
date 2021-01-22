@@ -13,20 +13,14 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
-import net.ccbluex.liquidbounce.ui.font.GameFontRenderer.Companion.getColorIndex
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import org.lwjgl.util.vector.Vector3f
 import java.awt.Color
@@ -37,7 +31,7 @@ import kotlin.math.min
 class ESP : Module()
 {
 	@JvmField
-	val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"), "Box")
+	val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow", "Fill", "CSGO"), "Box")
 
 	@JvmField
 	val outlineWidth = FloatValue("Outline-Width", 3f, 0.5f, 5f)
@@ -46,20 +40,37 @@ class ESP : Module()
 	val wireframeWidth = FloatValue("WireFrame-Width", 2f, 0.5f, 5f)
 	private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
 	private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
+
+	private val colorValue = ListValue(
+		"Color", arrayOf(
+			"Static", "Rainbow", "Team", "Health"
+		), "Static"
+	)
 	private val colorRedValue = IntegerValue("R", 255, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 255, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
-	private val colorRainbow = BoolValue("Rainbow", false)
-	private val colorTeam = BoolValue("Team", false)
+
 	private val botValue = BoolValue("Bots", true)
+	private val friendValue = BoolValue("Friends", true)
+	private val targetValue = BoolValue("Targets", true)
+	private val hurtValue = BoolValue("Hurt", true)
+
+	private val healthModeValue = ListValue(
+		"PlayerHealthMethod", arrayOf(
+			"Datawatcher", "Mineplex", "Hive"
+		), "Datawatcher"
+	)
+
+	private val saturationValue = FloatValue("Rainbow-Saturation", 1.0f, 0.0f, 1.0f)
+	private val brightnessValue = FloatValue("Rainbow-Brightness", 1.0f, 0.0f, 1.0f)
 
 	@EventTarget
-	fun onRender3D(event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
 		val mode = modeValue.get()
 		val mvMatrix = WorldToScreen.getMatrix(GL11.GL_MODELVIEW_MATRIX)
 		val projectionMatrix = WorldToScreen.getMatrix(GL11.GL_PROJECTION_MATRIX)
-		val real2d = mode.equals("real2d", ignoreCase = true)
+		val real2d = mode.equals("Real2D", ignoreCase = true)
 
 		if (real2d)
 		{
@@ -81,7 +92,7 @@ class ESP : Module()
 			GL11.glLineWidth(1.0f)
 		}
 
-		for (entity in mc.theWorld!!.loadedEntityList)
+		for (entity in (mc.theWorld ?: return).loadedEntityList)
 		{
 			if (!classProvider.isEntityLivingBase(entity) || !botValue.get() && AntiBot.isBot(entity.asEntityLivingBase())) continue
 			if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false))
@@ -164,59 +175,30 @@ class ESP : Module()
 	fun onRender2D(event: Render2DEvent)
 	{
 		val mode = modeValue.get().toLowerCase()
-		val shader = (if (mode.equals("shaderoutline", ignoreCase = true)) OutlineShader.OUTLINE_SHADER else if (mode.equals("shaderglow", ignoreCase = true)) GlowShader.GLOW_SHADER else null) ?: return
+		val shader = (if (mode.equals("ShaderOutline", ignoreCase = true)) OutlineShader.OUTLINE_SHADER else if (mode.equals("ShaderGlow", ignoreCase = true)) GlowShader.GLOW_SHADER else null) ?: return
 		shader.startDraw(event.partialTicks)
 		renderNameTags = false
 		try
 		{
-			for (entity in mc.theWorld!!.loadedEntityList)
-			{
-				if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
-				if (!EntityUtils.isSelected(entity, false)) continue
-				mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
-			}
+			(mc.theWorld ?: return).loadedEntityList.filter { !(!botValue.get() && AntiBot.isBot(it.asEntityLivingBase())) && EntityUtils.isSelected(it, false) }.forEach { mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true) }
 		} catch (ex: Exception)
 		{
 			ClientUtils.getLogger().error("An error occurred while rendering all entities for shader esp", ex)
 		}
 		renderNameTags = true
-		val radius = if (mode.equals("shaderoutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("shaderglow", ignoreCase = true)) shaderGlowRadius.get() else 1f
+		val radius = if (mode.equals("ShaderOutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("ShaderGlow", ignoreCase = true)) shaderGlowRadius.get() else 1f
 		shader.stopDraw(getColor(null), radius, 1f)
+	}
+
+	fun getColor(entity: IEntity?): Color
+	{
+		return ColorUtils.getESPColor(
+			entity, colorValue.get(), Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), healthModeValue.get(), hurtValue.get(), targetValue.get(), friendValue.get(), saturationValue.get(), brightnessValue.get()
+		)
 	}
 
 	override val tag: String
 		get() = modeValue.get()
-
-	fun getColor(entity: IEntity?): Color
-	{
-		run {
-			if (entity != null && classProvider.isEntityLivingBase(entity))
-			{
-				val entityLivingBase = entity.asEntityLivingBase()
-
-				if (entityLivingBase.hurtTime > 0) return Color.RED
-				if (classProvider.isEntityPlayer(entityLivingBase) && entityLivingBase.asEntityPlayer().isClientFriend()) return Color.BLUE
-
-				if (colorTeam.get())
-				{
-					val chars: CharArray = (entityLivingBase.displayName ?: return@run).formattedText.toCharArray()
-					var color = Int.MAX_VALUE
-					for (i in chars.indices)
-					{
-						if (chars[i] != '\u00A7' || i + 1 >= chars.size) continue
-						val index = getColorIndex(chars[i + 1])
-						if (index < 0 || index > 15) continue
-						color = ColorUtils.hexColors[index]
-						break
-					}
-
-					return Color(color)
-				}
-			}
-		}
-
-		return if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
-	}
 
 	companion object
 	{

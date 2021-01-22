@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 import java.util.List;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.minecraft.client.Minecraft;
@@ -70,18 +71,19 @@ public abstract class MixinGuiNewChat
 
 		if (hud.getState() && hud.getFontChatValue().get())
 		{
+			final IFontRenderer font = hud.getChatFontValue().get();
 			callbackInfo.cancel();
 			if (mc.gameSettings.chatVisibility != EnumChatVisibility.HIDDEN)
 			{
 				final int lvt_2_1_ = getLineCount();
-				boolean lvt_3_1_ = false;
+				boolean chatOpen = false;
 				int lvt_4_1_ = 0;
 				final int lvt_5_1_ = drawnChatLines.size();
 				final float lvt_6_1_ = mc.gameSettings.chatOpacity * 0.9F + 0.1F;
 				if (lvt_5_1_ > 0)
 				{
 					if (getChatOpen())
-						lvt_3_1_ = true;
+						chatOpen = true;
 
 					final float lvt_7_1_ = getChatScale();
 					final int lvt_8_1_ = MathHelper.ceiling_float_int(getChatWidth() / lvt_7_1_);
@@ -98,7 +100,7 @@ public abstract class MixinGuiNewChat
 						if (lvt_10_1_ != null)
 						{
 							lvt_11_1_ = p_drawChat_1_ - lvt_10_1_.getUpdatedCounter();
-							if (lvt_11_1_ < 200 || lvt_3_1_)
+							if (lvt_11_1_ < 200 || chatOpen)
 							{
 								double lvt_12_1_ = lvt_11_1_ / 200.0D;
 								lvt_12_1_ = 1.0D - lvt_12_1_;
@@ -106,10 +108,10 @@ public abstract class MixinGuiNewChat
 								lvt_12_1_ = MathHelper.clamp_double(lvt_12_1_, 0.0D, 1.0D);
 								lvt_12_1_ *= lvt_12_1_;
 								lvt_14_1_ = (int) (255.0D * lvt_12_1_);
-								if (lvt_3_1_)
+								if (chatOpen)
 									lvt_14_1_ = 255;
 
-								lvt_14_1_ = (int) (lvt_14_1_ * lvt_6_1_);
+								lvt_14_1_ *= lvt_6_1_;
 								++lvt_4_1_;
 								if (lvt_14_1_ > 3)
 								{
@@ -117,7 +119,7 @@ public abstract class MixinGuiNewChat
 									final int lvt_16_1_ = -lvt_9_1_ * 9;
 									Gui.drawRect(lvt_15_1_, lvt_16_1_ - 9, lvt_15_1_ + lvt_8_1_ + 4, lvt_16_1_, lvt_14_1_ / 2 << 24);
 									final String lvt_17_1_ = lvt_10_1_.getChatComponent().getFormattedText();
-									Fonts.font40.drawStringWithShadow(lvt_17_1_, lvt_15_1_ + 2, lvt_16_1_ - 8, 16777215 + (lvt_14_1_ << 24));
+									font.drawStringWithShadow(lvt_17_1_, lvt_15_1_ + 2, lvt_16_1_ - 8, 16777215 + (lvt_14_1_ << 24));
 									GL11.glColor4f(1, 1, 1, 1);
 									GlStateManager.resetColor();
 								}
@@ -125,7 +127,7 @@ public abstract class MixinGuiNewChat
 						}
 					}
 
-					if (lvt_3_1_)
+					if (chatOpen)
 					{
 						lvt_9_1_ = Fonts.font40.getFontHeight();
 						GlStateManager.translate(-3.0F, 0.0F, 0.0F);
@@ -177,6 +179,7 @@ public abstract class MixinGuiNewChat
 
 		if (hud.getState() && hud.getFontChatValue().get())
 		{
+			final IFontRenderer font = hud.getChatFontValue().get();
 			if (getChatOpen())
 			{
 				final ScaledResolution lvt_3_1_ = new ScaledResolution(mc);
@@ -191,7 +194,7 @@ public abstract class MixinGuiNewChat
 					final int lvt_8_1_ = Math.min(getLineCount(), drawnChatLines.size());
 					if (lvt_6_1_ <= MathHelper.floor_float(getChatWidth() / getChatScale()) && lvt_7_1_ < Fonts.font40.getFontHeight() * lvt_8_1_ + lvt_8_1_)
 					{
-						final int lvt_9_1_ = lvt_7_1_ / Fonts.font40.getFontHeight() + scrollPos;
+						final int lvt_9_1_ = lvt_7_1_ / font.getFontHeight() + scrollPos;
 						if (lvt_9_1_ >= 0 && lvt_9_1_ < drawnChatLines.size())
 						{
 							final ChatLine lvt_10_1_ = drawnChatLines.get(lvt_9_1_);
@@ -199,7 +202,7 @@ public abstract class MixinGuiNewChat
 
 							for (final IChatComponent lvt_13_1_ : lvt_10_1_.getChatComponent())
 								if (lvt_13_1_ instanceof ChatComponentText) {
-									lvt_11_1_ += Fonts.font40.getStringWidth(GuiUtilRenderComponents.func_178909_a(((ChatComponentText) lvt_13_1_).getChatComponentText_TextValue(), false));
+									lvt_11_1_ += font.getStringWidth(GuiUtilRenderComponents.func_178909_a(((ChatComponentText) lvt_13_1_).getChatComponentText_TextValue(), false));
 									if (lvt_11_1_ > lvt_6_1_) {
 										callbackInfo.setReturnValue(lvt_13_1_);
 										return;

@@ -187,6 +187,7 @@ interface IClassProvider
 	fun isItemEgg(obj: Any?): Boolean
 	fun isItemFishingRod(obj: Any?): Boolean
 	fun isItemAir(obj: Any?): Boolean
+	fun isItemMap(obj: Any?): Boolean
 
 	fun isBlockAir(obj: Any?): Boolean
 	fun isBlockFence(obj: Any?): Boolean

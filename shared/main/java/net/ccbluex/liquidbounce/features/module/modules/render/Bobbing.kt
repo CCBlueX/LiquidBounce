@@ -17,6 +17,6 @@ class Bobbing : Module()
 {
 	val multiplierValue = FloatValue("Multiplier", .6F, 0F, 10F)
 
-	override val tag: String?
-		get() = multiplierValue.get().toString()
+	override val tag: String
+		get() = "${multiplierValue.get()}"
 }

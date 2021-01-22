@@ -347,6 +347,8 @@ object ClassProviderImpl : IClassProvider
 	// ItemAir is not a thing in 1.8.9
 	override fun isItemAir(obj: Any?): Boolean = false
 
+	override fun isItemMap(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemMap
+
 	override fun isBlockAir(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockAir
 
 	override fun isBlockFence(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockFence

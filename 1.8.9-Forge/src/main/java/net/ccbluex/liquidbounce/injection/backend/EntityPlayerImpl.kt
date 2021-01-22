@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.IFoodStats
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.item.ItemStack
 
 open class EntityPlayerImpl<T : EntityPlayer>(wrapped: T) : EntityLivingBaseImpl<T>(wrapped), IEntityPlayer
 {
@@ -88,6 +89,8 @@ open class EntityPlayerImpl<T : EntityPlayer>(wrapped: T) : EntityLivingBaseImpl
 		get() = wrapped.itemInUseDuration
 	override val displayNameString: String
 		get() = wrapped.displayNameString
+	override val currentEquippedItem: IItemStack?
+		get() = wrapped.currentEquippedItem.wrap()
 	override val spectator: Boolean
 		get() = wrapped.isSpectator
 

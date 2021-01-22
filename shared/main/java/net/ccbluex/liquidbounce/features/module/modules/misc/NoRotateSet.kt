@@ -16,9 +16,9 @@ import net.ccbluex.liquidbounce.value.BoolValue
 @ModuleInfo(name = "NoRotateSet", description = "Prevents the server from rotating your head.", category = ModuleCategory.MISC)
 class NoRotateSet : Module()
 {
-	private val confirmValue = BoolValue("Confirm", true)
-	private val illegalRotationValue = BoolValue("ConfirmIllegalRotation", false)
-	private val noZeroValue = BoolValue("NoZero", false)
+	val confirmValue = BoolValue("Confirm", true)
+	val confirmIllegalRotationValue = BoolValue("ConfirmIllegalRotation", false)
+	val noZeroValue = BoolValue("NoZero", false)
 
 	@EventTarget
 	fun onPacket(event: PacketEvent)
@@ -31,7 +31,7 @@ class NoRotateSet : Module()
 
 			if (noZeroValue.get() && packet.yaw == 0F && packet.pitch == 0F) return
 
-			if (illegalRotationValue.get() || packet.pitch <= 90 && packet.pitch >= -90 && RotationUtils.serverRotation != null && packet.yaw != RotationUtils.serverRotation.yaw && packet.pitch != RotationUtils.serverRotation.pitch)
+			if (confirmIllegalRotationValue.get() || packet.pitch <= 90 && packet.pitch >= -90 && RotationUtils.serverRotation != null && packet.yaw != RotationUtils.serverRotation.yaw && packet.pitch != RotationUtils.serverRotation.pitch)
 			{
 
 				if (confirmValue.get()) mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerLook(packet.yaw, packet.pitch, thePlayer.onGround))

@@ -45,6 +45,7 @@ interface IEntityPlayer : IEntityLivingBase
 	val openContainer: IContainer?
 	val itemInUseDuration: Int
 	val displayNameString: String
+	val currentEquippedItem: IItemStack?
 
 	@get:JvmName("isSpectator")
 	val spectator: Boolean

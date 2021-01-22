@@ -5,13 +5,22 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.features.module.modules.combat.Aimbot
+import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.TpAura
+import net.ccbluex.liquidbounce.features.module.modules.misc.MurderDetector
+import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
+import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.awt.Color
 import java.text.NumberFormat
 import java.util.*
 import java.util.regex.Pattern
 import kotlin.math.pow
 
-object ColorUtils
+object ColorUtils : MinecraftInstance()
 {
 	/** Array of the special characters that are allowed in any text drawing of Minecraft.  */
 	val allowedCharactersArray = charArrayOf('/', '\n', '\r', '\t', '\u0000', '', '`', '?', '*', '\\', '<', '>', '|', '\"', ':')
@@ -75,6 +84,70 @@ object ColorUtils
 		}
 
 		return "$stringBuilder"
+	}
+
+	@JvmStatic
+	fun getESPColor(entity: IEntity?, colorMode: String, customStaticColor: Color, healthMode: String, indicateHurt: Boolean, indicateTarget: Boolean, indicateFriend: Boolean, rainbowSaturation: Float, rainbowBrightness: Float): Color
+	{
+		if (classProvider.isEntityLivingBase(entity))
+		{
+			val entityLiving = entity!!.asEntityLivingBase()
+
+			val aimBot = LiquidBounce.moduleManager[Aimbot::class.java] as Aimbot
+			val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
+			val tpAura = LiquidBounce.moduleManager[TpAura::class.java] as TpAura
+			val murderDetector = LiquidBounce.moduleManager[MurderDetector::class.java] as MurderDetector
+
+			// Indicate Hurt
+			if (indicateHurt && entityLiving.hurtTime > 0 || indicateTarget && (entity.isEntityEqual(aimBot.target) || entity.isEntityEqual(killAura.target) || tpAura.isTarget(entityLiving))) return Color.RED
+
+			// Indicate Friend
+			if (indicateFriend && EntityUtils.isFriend(entityLiving)) return Color.BLUE
+
+			// Indicate Murder
+			if (murderDetector.state && murderDetector.murders.contains(entity)) return Color.RED
+
+			when (colorMode.toLowerCase())
+			{
+				"rainbow" -> return rainbow(saturation = rainbowSaturation, brightness = rainbowBrightness)
+
+				"team" ->
+				{
+					val chars = entity.displayName!!.formattedText.toCharArray()
+					var color = Int.MAX_VALUE
+					var i = 0
+					while (i < chars.size)
+					{
+						if (chars[i] != '\u00a7' || i + 1 >= chars.size)
+						{
+							i++
+							continue
+						}
+						val index = GameFontRenderer.getColorIndex(chars[i + 1])
+						if (index < 0 || index > 15)
+						{
+							i++
+							continue
+						}
+						color = hexColors[index]
+						break
+						i++
+					}
+					return Color(color)
+				}
+
+				"health" ->
+				{
+					var health = entityLiving.health
+					val maxHealth = entityLiving.maxHealth
+					if (classProvider.isEntityPlayer(entity) && (healthMode.equals("Mineplex", ignoreCase = true) || healthMode.equals("Hive", ignoreCase = true))) health =
+						EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, healthMode.equals("mineplex", ignoreCase = true)).toFloat()
+					return getHealthColor(health, maxHealth)
+				}
+			}
+		}
+
+		return if (colorMode.equals("Rainbow", ignoreCase = true)) rainbow(saturation = rainbowSaturation, brightness = rainbowBrightness) else customStaticColor
 	}
 
 	@JvmStatic

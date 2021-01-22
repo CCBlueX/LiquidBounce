@@ -46,11 +46,15 @@ public class ClickGUI extends Module
 	private static final IntegerValue colorRedValue = new IntegerValue("R", 0, 0, 255);
 	private static final IntegerValue colorGreenValue = new IntegerValue("G", 160, 0, 255);
 	private static final IntegerValue colorBlueValue = new IntegerValue("B", 255, 0, 255);
-	private static final BoolValue colorRainbow = new BoolValue("Rainbow", false);
+
+	private static final BoolValue colorRainbowValue = new BoolValue("Rainbow", false);
+	private static final IntegerValue rainbowSpeedValue = new IntegerValue("Rainbow-Speed", 10, 1, 10);
+	private static final FloatValue saturationValue = new FloatValue("HSB-Saturation", 1.0F, 0.0F, 1.0F);
+	private static final FloatValue brightnessValue = new FloatValue("HSB-Brightness", 1.0F, 0.0F, 1.0F);
 
 	public static Color generateColor()
 	{
-		return colorRainbow.get() ? ColorUtils.rainbow(10, 1.0F, 1.0F) : new Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get());
+		return colorRainbowValue.get() ? ColorUtils.rainbow(11 - Math.min(Math.max(rainbowSpeedValue.get(), 1), 10), saturationValue.get(), brightnessValue.get()) : new Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get());
 	}
 
 	@Override

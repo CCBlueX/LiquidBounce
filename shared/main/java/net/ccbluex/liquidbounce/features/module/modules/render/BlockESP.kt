@@ -18,10 +18,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.BlockValue
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import java.awt.Color
 import java.util.*
 
@@ -29,13 +26,21 @@ import java.util.*
 class BlockESP : Module()
 {
 	private val modeValue = ListValue("Mode", arrayOf("Box", "2D"), "Box")
+
 	private val blockValue = BlockValue("Block", 168)
 	private val radiusValue = IntegerValue("Radius", 40, 5, 120)
 	private val blockLimitValue = IntegerValue("BlockLimit", 256, 0, 2056)
+
 	private val colorRedValue = IntegerValue("R", 255, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 179, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 72, 0, 255)
+	private val colorAlphaValue = IntegerValue("Alpha", 72, 0, 255)
+
 	private val colorRainbow = BoolValue("Rainbow", false)
+	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
+	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
+	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+
 	private val searchTimer = MSTimer()
 	private val posList: MutableList<WBlockPos> = ArrayList()
 	private var thread: Thread? = null
@@ -50,7 +55,7 @@ class BlockESP : Module()
 
 			if (selectedBlock == null || selectedBlock == classProvider.getBlockEnum(BlockType.AIR)) return
 
-			thread = Thread(Runnable {
+			thread = Thread({
 				val blockList: MutableList<WBlockPos> = ArrayList()
 
 				for (x in -radius until radius)
@@ -87,8 +92,11 @@ class BlockESP : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
+		val alpha = colorAlphaValue.get()
 		synchronized(posList) {
-			val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+			val color =
+				if (colorRainbow.get()) rainbow(alpha = alpha, speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
+
 			for (blockPos in posList)
 			{
 				when (modeValue.get().toLowerCase())

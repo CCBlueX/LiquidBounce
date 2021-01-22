@@ -16,9 +16,11 @@ import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -29,7 +31,13 @@ class BlockOverlay : Module()
 	private val colorRedValue = IntegerValue("R", 68, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 117, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+	private val colorAlphaValue = IntegerValue("Alpha", 102, 0, 255)
+
 	private val colorRainbow = BoolValue("Rainbow", false)
+	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
+	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
+	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+
 	val infoValue = BoolValue("Info", false)
 
 	val currentBlock: WBlockPos?
@@ -49,10 +57,9 @@ class BlockOverlay : Module()
 
 		val block = mc.theWorld!!.getBlockState(blockPos).block
 		val partialTicks = event.partialTicks
-
-		val color = if (colorRainbow.get()) rainbow(0.4F) else Color(
-			colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), (0.4F * 255).toInt()
-		)
+		val alpha = colorAlphaValue.get()
+		val rainbowSpeed = rainbowSpeedValue.get().coerceAtLeast(1).coerceAtMost(10)
+		val color = if (colorRainbow.get()) rainbow(alpha = alpha / 255.0F, speed = rainbowSpeed, saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
 
 		classProvider.getGlStateManager().enableBlend()
 		classProvider.getGlStateManager().tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)

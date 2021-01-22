@@ -182,7 +182,8 @@ class ModuleManager : Listenable
 			AutoLogin::class.java,
 			ItemPhysics::class.java,
 			ExtendedReach::class.java,
-			TpAura::class.java
+			TpAura::class.java,
+			MurderDetector::class.java
 		)
 
 		registerModule(NoScoreboard)

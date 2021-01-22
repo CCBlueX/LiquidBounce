@@ -45,7 +45,7 @@ class FreeCam : Module()
 		playerMP.rotationYawHead = thePlayer.rotationYawHead
 		playerMP.copyLocationAndAnglesFrom(thePlayer)
 
-		mc.theWorld!!.addEntityToWorld(-1000, playerMP)
+		(mc.theWorld ?: return).addEntityToWorld(-1000, playerMP)
 
 		if (noClipValue.get()) thePlayer.noClip = true
 
@@ -54,13 +54,13 @@ class FreeCam : Module()
 
 	override fun onDisable()
 	{
-		val thePlayer = mc.thePlayer
+		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer == null || fakePlayer == null) return
+		if (fakePlayer == null) return
 
 		thePlayer.setPositionAndRotation(oldX, oldY, oldZ, thePlayer.rotationYaw, thePlayer.rotationPitch)
 
-		mc.theWorld!!.removeEntityFromWorld(fakePlayer!!.entityId)
+		(mc.theWorld ?: return).removeEntityFromWorld(fakePlayer!!.entityId)
 		fakePlayer = null
 
 		thePlayer.motionX = 0.0
