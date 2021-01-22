@@ -14,7 +14,9 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.VecRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
@@ -65,7 +67,7 @@ class NoFall : Module()
 			jumped = true
 		}
 
-		if (!state || LiquidBounce.moduleManager.getModule(FreeCam::class.java).state /*|| Fly.waitForDamage*/) return
+		if (!state || LiquidBounce.moduleManager[FreeCam::class.java].state || Fly.waitForDamage) return
 
 		if (collideBlock(thePlayer.entityBoundingBox, classProvider::isBlockLiquid) || collideBlock(
 				classProvider.createAxisAlignedBB(
@@ -179,7 +181,7 @@ class NoFall : Module()
 
 		val packet = event.packet
 		val mode = modeValue.get()
-		if (classProvider.isCPacketPlayer(packet)/* && !Fly.waitForDamage*/)
+		if (classProvider.isCPacketPlayer(packet) && !Fly.waitForDamage)
 		{
 			val playerPacket = packet.asCPacketPlayer()
 
@@ -217,14 +219,14 @@ class NoFall : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (collideBlock(thePlayer.entityBoundingBox, classProvider::isBlockLiquid) || collideBlock(
+		if (Fly.waitForDamage || collideBlock(thePlayer.entityBoundingBox, classProvider::isBlockLiquid) || collideBlock(
 				classProvider.createAxisAlignedBB(
 					thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ
 				), classProvider::isBlockLiquid
 			)
 		) return
 
-		if (modeValue.get().equals("laac", ignoreCase = true))
+		if (modeValue.get().equals("AAC3.3.4", ignoreCase = true))
 		{
 			if (!jumped && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInWeb && thePlayer.motionY < 0.0)
 			{

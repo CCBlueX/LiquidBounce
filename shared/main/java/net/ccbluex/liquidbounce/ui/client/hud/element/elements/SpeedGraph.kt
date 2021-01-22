@@ -41,8 +41,15 @@ class SpeedGraph(
 	private val yspeedColorGreenValue = IntegerValue("YSpeed-G", 0, 0, 255)
 	private val yspeedColorBlueValue = IntegerValue("YSpeed-B", 255, 0, 255)
 
+	private val timerYMultiplier = FloatValue("Timer-yMultiplier", 7F, 1F, 20F)
+	private val timerThicknessValue = FloatValue("Timer-Thickness", 2F, 1F, 3F)
+	private val timerColorRedValue = IntegerValue("Timer-R", 111, 0, 255)
+	private val timerColorGreenValue = IntegerValue("Timer-G", 0, 0, 255)
+	private val timerColorBlueValue = IntegerValue("Timer-B", 255, 0, 255)
+
 	private val speedList = ArrayList<Double>()
 	private val yspeedList = ArrayList<Double>()
+	private val timerList = ArrayList<Float>()
 	private var lastTick = -1
 
 	override fun drawElement(): Border?
@@ -70,14 +77,19 @@ class SpeedGraph(
 
 			val yspeed = abs(y - prevY)
 
+			val timer = mc.timer.timerSpeed
+
 			speedList.add(speed)
 			yspeedList.add(yspeed)
+			timerList.add(timer)
 			while (speedList.size > width) speedList.removeAt(0)
 			while (yspeedList.size > width) yspeedList.removeAt(0)
+			while (timerList.size > width) timerList.removeAt(0)
 		}
 
 		val speedYMul = speedyMultiplier.get()
 		val yspeedYMul = yspeedYMultiplier.get()
+		val timerYMul = timerYMultiplier.get()
 
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 		GL11.glEnable(GL11.GL_BLEND)
@@ -120,6 +132,25 @@ class SpeedGraph(
 				RenderUtils.glColor(Color(yspeedColorRedValue.get(), yspeedColorGreenValue.get(), yspeedColorBlueValue.get(), 255))
 				GL11.glVertex2d(i.toDouble() - yspeedListStart, height + 1 - yspeedY.coerceAtMost(height.toDouble()))
 				GL11.glVertex2d(i + 1.0 - yspeedListStart, height + 1 - yspeedNextY.coerceAtMost(height.toDouble()))
+			}
+		}
+
+		GL11.glEnd()
+		GL11.glLineWidth(timerThicknessValue.get())
+		GL11.glBegin(GL11.GL_LINES)
+
+		run {
+			val timerListSize = timerList.size
+
+			val timerListStart = (if (timerListSize > width) timerListSize - width else 0)
+			for (i in timerListStart until timerListSize - 1)
+			{
+				val timerY = timerList[i] * 10 * timerYMul
+				val timerNextY = timerList[i + 1] * 10 * timerYMul
+
+				RenderUtils.glColor(Color(timerColorRedValue.get(), timerColorGreenValue.get(), timerColorBlueValue.get(), 255))
+				GL11.glVertex2f(i.toFloat() - timerListStart, height + 1 - timerY.coerceAtMost(height.toFloat()))
+				GL11.glVertex2f(i + 1.0F - timerListStart, height + 1 - timerNextY.coerceAtMost(height.toFloat()))
 			}
 		}
 
