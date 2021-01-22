@@ -46,4 +46,7 @@ class FastBow : Module()
 			thePlayer.itemInUseCount = currentItem.maxItemUseDuration - 1
 		}
 	}
+
+	override val tag: String
+		get() = "${packetsValue.get()}"
 }

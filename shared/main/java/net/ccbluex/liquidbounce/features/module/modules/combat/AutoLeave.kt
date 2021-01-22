@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import java.util.*
+import kotlin.random.Random
 
 @ModuleInfo(name = "AutoLeave", description = "Automatically makes you leave the server whenever your health is low.", category = ModuleCategory.COMBAT)
 class AutoLeave : Module()
@@ -33,7 +33,7 @@ class AutoLeave : Module()
 				"quit" -> mc.theWorld!!.sendQuittingDisconnectingPacket()
 				"invalidpacket" -> mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !thePlayer.onGround))
 				"selfhurt" -> mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(thePlayer, ICPacketUseEntity.WAction.ATTACK))
-				"illegalchat" -> thePlayer.sendChatMessage(Random().nextInt().toString() + "\u00A7\u00A7\u00A7" + Random().nextInt())
+				"illegalchat" -> thePlayer.sendChatMessage(Random.nextInt().toString() + "\u00A7\u00A7\u00A7" + Random.nextInt())
 			}
 
 			state = false

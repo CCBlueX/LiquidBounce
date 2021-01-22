@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import net.ccbluex.liquidbounce.api.enums.BlockType;
@@ -139,6 +140,16 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 	public static boolean canAutoBlock(final IBlock block)
 	{
 		return !AUTOBLOCK_BLACKLIST.contains(block) && !classProvider.isBlockBush(block) && !classProvider.isBlockRailBase(block) && !classProvider.isBlockSign(block) && !classProvider.isBlockDoor(block);
+	}
+
+	public static int firstEmpty(final int startSlot, final int endSlot, final boolean randomSlot)
+	{
+		final List<Integer> emptySlots = IntStream.range(startSlot, endSlot).filter(i -> mc.getThePlayer().getInventoryContainer().getSlot(i).getStack() == null).boxed().collect(Collectors.toList());
+
+		if (emptySlots.isEmpty())
+			return -1;
+
+		return randomSlot ? emptySlots.get(new Random().nextInt(emptySlots.size())) : emptySlots.get(0);
 	}
 
 	@EventTarget

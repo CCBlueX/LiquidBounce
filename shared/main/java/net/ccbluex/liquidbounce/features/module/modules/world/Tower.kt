@@ -32,6 +32,7 @@ import java.util.*
 import kotlin.math.atan2
 import kotlin.math.sqrt
 import kotlin.math.truncate
+import kotlin.random.Random
 
 @ModuleInfo(name = "Tower", description = "Automatically builds a tower beneath you.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_O)
 class Tower : Module()
@@ -550,6 +551,6 @@ class Tower : Module()
 
 	private val keepRotationTicks: Int
 		get() = if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get()
-		else minKeepRotationTicksValue.get() + Random().nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get())
+		else minKeepRotationTicksValue.get() + Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get())
 		else 0
 }

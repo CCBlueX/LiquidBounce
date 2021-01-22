@@ -35,6 +35,7 @@ import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.util.*
 import kotlin.math.*
+import kotlin.random.Random
 
 @ModuleInfo(
 	name = "KillAura", description = "Automatically attacks targets around you.", category = ModuleCategory.COMBAT, keyBind = Keyboard.KEY_R
@@ -586,7 +587,7 @@ class KillAura : Module()
 		val openInventory = aacValue.get() && classProvider.isGuiContainer(mc.currentScreen)
 
 		// FailRate
-		failedToHit = failRate > 0 && Random().nextInt(100) <= failRate
+		failedToHit = failRate > 0 && Random.nextInt(100) <= failRate
 
 		// Close inventory when open
 		if (openInventory) mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
@@ -847,7 +848,7 @@ class KillAura : Module()
 
 		if (silentRotationValue.get()) RotationUtils.setTargetRotation(
 			limitedRotation, if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get()
-			else minKeepRotationTicksValue.get() + Random().nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get())
+			else minKeepRotationTicksValue.get() + kotlin.random.Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get())
 			else 0
 		)
 		else limitedRotation.applyRotationToPlayer(mc.thePlayer!!)
@@ -898,7 +899,7 @@ class KillAura : Module()
 	{
 
 		// BlockRate check
-		if (!(blockRate.get() > 0 && Random().nextInt(100) <= blockRate.get())) return
+		if (!(blockRate.get() > 0 && kotlin.random.Random.nextInt(100) <= blockRate.get())) return
 
 		val visual = !autoBlockValue.get().equals("Off", true) // Fake, Packet, AfterTick
 		val packet = visual && !autoBlockValue.get().equals("Fake", true) // Packet, AfterTick
@@ -963,13 +964,13 @@ class KillAura : Module()
 	 * Check if run should be cancelled
 	 */
 	private val cancelRun: Boolean
-		 get() = mc.thePlayer!!.spectator || !EntityUtils.isAlive(mc.thePlayer!!, aacValue.get()) || LiquidBounce.moduleManager[Blink::class.java].state || LiquidBounce.moduleManager[FreeCam::class.java].state
+		get() = mc.thePlayer!!.spectator || !EntityUtils.isAlive(mc.thePlayer!!, aacValue.get()) || LiquidBounce.moduleManager[Blink::class.java].state || LiquidBounce.moduleManager[FreeCam::class.java].state
 
 	/**
 	 * Check if player is able to block
 	 */
 	private val canBlock: Boolean
-		 get() = mc.thePlayer!!.heldItem != null && classProvider.isItemSword(mc.thePlayer!!.heldItem!!.item) && Backend.MINECRAFT_VERSION_MINOR == 8
+		get() = mc.thePlayer!!.heldItem != null && classProvider.isItemSword(mc.thePlayer!!.heldItem!!.item) && Backend.MINECRAFT_VERSION_MINOR == 8
 
 	/**
 	 * Range

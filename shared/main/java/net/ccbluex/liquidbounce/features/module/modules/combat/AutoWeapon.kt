@@ -7,10 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.api.enums.EnchantmentType
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -48,7 +45,7 @@ class AutoWeapon : Module()
 			attackEnemy = false
 
 			// Find best weapon in hotbar (#Kotlin Style)
-			val (slot, _) = (0..8).map { Pair(it, thePlayer.inventory.getStackInSlot(it)) }.filter { it.second != null && (classProvider.isItemSword(it.second?.item) || classProvider.isItemTool(it.second?.item)) }.maxBy {
+			val (slot, _) = (0..8).map { it to thePlayer.inventory.getStackInSlot(it) }.filter { it.second != null && (classProvider.isItemSword(it.second?.item) || classProvider.isItemTool(it.second?.item)) }.maxBy {
 				it.second!!.getAttributeModifier("generic.attackDamage").first().amount + 1.25 * ItemUtils.getEnchantment(it.second, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 			} ?: return
 
@@ -73,12 +70,17 @@ class AutoWeapon : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(update: UpdateEvent)
-	{ // Switch back to old item after some time
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") update: UpdateEvent)
+	{
+
+		// Switch back to old item after some time
 		if (spoofedSlot > 0)
 		{
 			if (spoofedSlot == 1) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(mc.thePlayer!!.inventory.currentItem))
 			spoofedSlot--
 		}
 	}
+
+	override val tag: String?
+		get() = if (silentValue.get()) "Silent" else null
 }

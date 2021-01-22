@@ -19,6 +19,7 @@ import java.text.NumberFormat
 import java.util.*
 import java.util.regex.Pattern
 import kotlin.math.pow
+import kotlin.random.Random
 
 object ColorUtils : MinecraftInstance()
 {
@@ -78,7 +79,7 @@ object ColorUtils : MinecraftInstance()
 		{
 			if (isAllowedCharacter(c))
 			{
-				val index = Random().nextInt(allowedCharacters.length)
+				val index = Random.nextInt(allowedCharacters.length)
 				stringBuilder.append(allowedCharacters.toCharArray()[index])
 			}
 		}
