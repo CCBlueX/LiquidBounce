@@ -239,15 +239,13 @@ class Scaffold : Module()
 	private val airSafeValue = BoolValue("AirSafe", false)
 
 	// Killaura bypass
-	private val killauraBypassValue = ListValue(
+	val killauraBypassValue = ListValue(
 		"KillauraBypassMode", arrayOf(
 			"None", "SuspendKillaura", "WaitForKillauraEnd"
-		), "DisableKillaura"
+		), "SuspendKillaura"
 	)
 
 	private val suspendKillauraDuration = IntegerValue("SuspendKillauraDuration", 300, 300, 1000)
-
-	var shouldDisableKillaura = false
 
 	// Visuals
 	private val counterDisplayValue = BoolValue("Counter", true)
@@ -766,7 +764,7 @@ class Scaffold : Module()
 		// Delay & SameY check
 		if (!delayTimer.hasTimePassed(delay) || sameYValue.get() && launchY - 1 != targetPlace!!.vec3.yCoord.toInt()) return
 
-		if (killauraBypassValue.get().equals("DisableKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
+		if (killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
 
 		// Check if the player is holding block
 		var itemStack: IItemStack? = thePlayer.heldItem
@@ -864,8 +862,6 @@ class Scaffold : Module()
 		shouldGoDown = false
 
 		if (slot != thePlayer.inventory.currentItem) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
-
-		if (shouldDisableKillaura) shouldDisableKillaura = false
 	}
 
 	@EventTarget

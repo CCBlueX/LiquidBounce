@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
+import net.ccbluex.liquidbounce.features.module.modules.combat.AutoPot
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
@@ -28,6 +29,8 @@ import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.item.ItemSword
+import net.minecraft.item.ItemTool
 import kotlin.random.Random
 
 @ModuleInfo(name = "InventoryCleaner", description = "Automatically throws away useless items.", category = ModuleCategory.PLAYER)
@@ -80,7 +83,6 @@ class InventoryCleaner : Module()
 	private val invOpenValue = BoolValue("InvOpen", false)
 	private val simulateInventory = BoolValue("SimulateInventory", true)
 	private val noMoveValue = BoolValue("NoMove", false)
-	private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
 
 	// Hotbar
 	val hotbarValue = BoolValue("Hotbar", true)
@@ -112,19 +114,16 @@ class InventoryCleaner : Module()
 
 	private val bowValue = BoolValue("Bow", true)
 	private val arrowValue = BoolValue("Arrow", true)
-	private val waterBucketValue = BoolValue("WaterBucket", true)
-	private val lavaBucketValue = BoolValue("LavaBucket", false)
+	private val bucketValue = BoolValue("Bucket", true)
 	private val compassValue = BoolValue("Compass", true)
 	private val enderPearlValue = BoolValue("EnderPearl", true)
 	private val bedValue = BoolValue("Bed", true)
 	private val ironIngotValue = BoolValue("IronIngot", true)
-	private val goldIngotValue = BoolValue("GoldIngot", true)
 	private val diamondValue = BoolValue("Diamond", true)
-	private val emeraldValue = BoolValue("Emerald", true)
-	private val flintValue = BoolValue("Flint", true)
-	private val vehiclesValue = BoolValue("Vehicles", true)
 	private val potionValue = BoolValue("Potion", true)
 	private val foodValue = BoolValue("Food", true)
+
+	private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
 
 	// Visuals
 	private val indicateClick = BoolValue("ClickIndicationh", false)
@@ -192,11 +191,7 @@ class InventoryCleaner : Module()
 	}
 
 	fun cleanInventory(
-		start: Int = 9,
-		end: Int = 45,
-		timer: MSTimer = InventoryUtils.CLICK_TIMER,
-		container: IContainer = mc.thePlayer!!.inventoryContainer,
-		delayResetFunc: Runnable = Runnable { delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get()) }
+		start: Int = 9, end: Int = 45, timer: MSTimer = InventoryUtils.CLICK_TIMER, container: IContainer = mc.thePlayer!!.inventoryContainer, delayResetFunc: Runnable = Runnable { delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get()) }
 	): Boolean
 	{
 		val thePlayer = mc.thePlayer ?: return true
@@ -264,6 +259,8 @@ class InventoryCleaner : Module()
 			{
 				val thePlayer = mc.thePlayer ?: return true
 
+				if ((item is ItemSword && keepOldSwordValue.get()) || (item is ItemTool && keepOldToolsValue.get())) return true
+
 				if (slot >= 36 && findBetterItem(slot - 36, thePlayer.inventory.getStackInSlot(slot - 36)) == slot - 36) return true
 
 				for (i in 0..8)
@@ -280,10 +277,11 @@ class InventoryCleaner : Module()
 				val damage = (itemStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 
 				items(0, 45).none { (_, stack) ->
-					stack != itemStack && stack.javaClass == itemStack.javaClass && damage < (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(stack,
-						classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
+					stack != itemStack && stack.javaClass == itemStack.javaClass && damage < (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(
+						stack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS)
+					)
 				}
-			} else if (classProvider.isItemBow(item))
+			} else if (bowValue.get() && classProvider.isItemBow(item))
 			{
 				val currPower = ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER))
 
@@ -303,12 +301,18 @@ class InventoryCleaner : Module()
 						else AutoArmor.ARMOR_COMPARATOR.compare(currArmor, armor) <= 0
 					} else false
 				}
-			} else if (itemStack.unlocalizedName == "item.compass")
+			} else if (compassValue.get() && itemStack.unlocalizedName == "item.compass")
 			{
 				items(0, 45).none { (_, stack) -> itemStack != stack && stack.unlocalizedName == "item.compass" }
-			} else classProvider.isItemFood(item) || itemStack.unlocalizedName == "item.arrow" || classProvider.isItemBlock(item) && !classProvider.isBlockBush(item?.asItemBlock()?.block) || classProvider.isItemBed(item) || itemStack.unlocalizedName == "item.diamond" || itemStack.unlocalizedName == "item.ingotIron" || classProvider.isItemPotion(
-				item) || classProvider.isItemEnderPearl(item) || classProvider.isItemEnchantedBook(item) || classProvider.isItemBucket(item) || itemStack.unlocalizedName == "item.stick" || ignoreVehiclesValue.get() && (classProvider.isItemBoat(item) || classProvider.isItemMinecart(
-				item))
+			} else foodValue.get() && classProvider.isItemFood(item) || arrowValue.get() && itemStack.unlocalizedName == "item.arrow" || classProvider.isItemBlock(item) && !classProvider.isBlockBush(item?.asItemBlock()?.block) || bedValue.get() && classProvider.isItemBed(
+				item
+			) || diamondValue.get() && itemStack.unlocalizedName == "item.diamond" || ironIngotValue.get() && itemStack.unlocalizedName == "item.ingotIron" || potionValue.get() && classProvider.isItemPotion(
+				item
+			) && AutoPot.isPotionUseful(itemStack) || enderPearlValue.get() && classProvider.isItemEnderPearl(item) || classProvider.isItemEnchantedBook(item) || bucketValue.get() && classProvider.isItemBucket(item) || itemStack.unlocalizedName == "item.stick" || ignoreVehiclesValue.get() && (classProvider.isItemBoat(
+				item
+			) || classProvider.isItemMinecart(
+				item
+			))
 		} catch (ex: Exception)
 		{
 			ClientUtils.getLogger().error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)

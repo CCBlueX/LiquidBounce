@@ -71,6 +71,8 @@ class AutoSoup : Module()
 
 	private val bowlValue = ListValue("Bowl", arrayOf("Drop", "Move", "Stay"), "Drop")
 
+	private val ignoreScreen = BoolValue("IgnoreScreen", true)
+
 	private val soupDelayTimer = MSTimer()
 	private var soupDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 
@@ -85,9 +87,9 @@ class AutoSoup : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (soupDelayTimer.hasTimePassed(soupDelay))
+		if (soupDelayTimer.hasTimePassed(soupDelay) && (ignoreScreen.get() || classProvider.isGuiContainer(mc.currentScreen)))
 		{
-			val soupInHotbar = InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.MUSHROOM_STEW))
+			val soupInHotbar = InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelayValue.get().toLong(), randomSlotValue.get())
 
 			if (thePlayer.health <= healthValue.get() && soupInHotbar != -1)
 			{
@@ -102,41 +104,49 @@ class AutoSoup : Module()
 			}
 		}
 
-		val bowlInHotbar = InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.BOWL))
-		if (bowlValue.get().equals("Move", true) && bowlInHotbar != -1)
+		if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving) && !(thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0))
 		{
-			if (openInventoryValue.get() && !classProvider.isGuiInventory(mc.currentScreen)) return
 
-			var bowlMovable = false
+			// Move empty bowls to inventory
+			val bowlInHotbar = InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.BOWL), itemDelayValue.get().toLong(), randomSlotValue.get())
 
-			for (i in 9..36)
+			if (bowlValue.get().equals("Move", true) && bowlInHotbar != -1)
 			{
-				val itemStack = thePlayer.inventory.getStackInSlot(i)
+				if (openInventoryValue.get() && !classProvider.isGuiInventory(mc.currentScreen)) return
 
-				if (itemStack == null)
+				var bowlMovable = false
+
+				@Suppress("LoopToCallChain") for (i in 9..36)
 				{
-					bowlMovable = true
-					break
-				} else if (itemStack.item == classProvider.getItemEnum(ItemType.BOWL) && itemStack.stackSize < 64)
+					val itemStack = thePlayer.inventory.getStackInSlot(i)
+
+					if (itemStack == null)
+					{
+						bowlMovable = true
+						break
+					} else if (itemStack.item == classProvider.getItemEnum(ItemType.BOWL) && itemStack.stackSize < 64)
+					{
+						bowlMovable = true
+						break
+					}
+				}
+
+				if (bowlMovable)
 				{
-					bowlMovable = true
-					break
+					val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventoryValue.get()
+
+					if (openInventory) mc.netHandler.addToSendQueue(createOpenInventoryPacket())
+
+					mc.playerController.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
+
+					invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
+					invDelayTimer.reset()
+					return
 				}
 			}
 
-			if (bowlMovable)
-			{
-				val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventoryValue.get()
-
-				if (openInventory) mc.netHandler.addToSendQueue(createOpenInventoryPacket())
-
-				mc.playerController.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
-			}
-		}
-
-		if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving) && !(thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0))
-		{
-			var soupInInventory = InventoryUtils.findItem(9, 36, classProvider.getItemEnum(ItemType.MUSHROOM_STEW))
+			// Move soups to hotbar
+			var soupInInventory = InventoryUtils.findItem(9, 36, classProvider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelayValue.get().toLong(), randomSlotValue.get())
 
 			if (soupInInventory != -1 && InventoryUtils.hasSpaceHotbar())
 			{

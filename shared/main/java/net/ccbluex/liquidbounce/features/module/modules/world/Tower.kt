@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
@@ -354,6 +355,11 @@ class Tower : Module()
 	{
 		if (placeInfo == null) return
 		val thePlayer = mc.thePlayer ?: return
+
+		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
+		val scaffold = LiquidBounce.moduleManager[Scaffold::class.java] as Scaffold
+
+		if (scaffold.killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
 
 		// AutoBlock
 		var itemStack = thePlayer.heldItem

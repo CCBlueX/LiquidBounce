@@ -52,17 +52,22 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 
 	public static final MSTimer CLICK_TIMER = new MSTimer();
 
-	public static int findItem(final int startSlot, final int endSlot, final IItem item)
+	public static int findItem(final int startSlot, final int endSlot, final IItem item, final long itemDelay, final boolean random)
 	{
+		final List<Integer> candidates = new ArrayList<>();
+
 		for (int i = startSlot; i < endSlot; i++)
 		{
 			final IItemStack stack = Objects.requireNonNull(mc.getThePlayer()).getInventoryContainer().getSlot(i).getStack();
 
-			if (stack != null && Objects.equals(stack.getItem(), item))
-				return i;
+			if (stack != null && Objects.equals(stack.getItem(), item) && stack.getItemDelay() >= itemDelay)
+				candidates.add(i);
 		}
 
-		return -1;
+		if (candidates.isEmpty())
+			return -1;
+
+		return random ? candidates.get(new Random().nextInt(candidates.size())) : candidates.get(0);
 	}
 
 	public static boolean hasSpaceHotbar()
