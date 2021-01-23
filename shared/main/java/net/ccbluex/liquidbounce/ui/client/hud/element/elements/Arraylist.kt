@@ -72,7 +72,7 @@ class Arraylist(
 	private val textHeightValue = FloatValue("TextHeight", 11F, 1F, 20F)
 	private val textYValue = FloatValue("TextY", 1F, 0F, 20F)
 
-	private val animationSpeedValue = FloatValue("AnimationSpeed", 4F, 0.1F, 20F)
+	private val animationSpeedValue = FloatValue("AnimationSpeed", 17F, 0.1F, 20F)
 
 	private val fontValue = FontValue("Font", Fonts.font40)
 
