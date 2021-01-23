@@ -25,6 +25,7 @@ import java.awt.Color
  * CustomHUD Arraylist element
  *
  * Shows a list of enabled modules
+ * TODO: Fix Rainbow mode index-relative offset
  */
 @ElementInfo(name = "Arraylist", single = true)
 class Arraylist(
