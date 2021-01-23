@@ -68,7 +68,7 @@ class CommandManager
 		{
 			val args = input.split(" ").toTypedArray()
 
-			if (args[0].equals(prefix.toString() + command.command, ignoreCase = true))
+			if (args[0].equals("$prefix" + command.command, ignoreCase = true))
 			{
 				command.execute(args)
 				return
@@ -76,7 +76,7 @@ class CommandManager
 
 			for (alias in command.alias)
 			{
-				if (!args[0].equals(prefix.toString() + alias, ignoreCase = true)) continue
+				if (!args[0].equals("$prefix" + alias, ignoreCase = true)) continue
 
 				command.execute(args)
 				return

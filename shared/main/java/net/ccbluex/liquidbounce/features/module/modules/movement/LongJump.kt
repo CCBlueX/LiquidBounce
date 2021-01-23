@@ -134,7 +134,7 @@ class LongJump : Module()
 						if (thePlayer.fallDistance > 1.5f)
 						{
 							thePlayer.jumpMovementFactor = 0f
-							thePlayer.motionY = (-10f).toDouble()
+							thePlayer.motionY = -10.0
 						}
 						boosted = true
 						MovementUtils.strafe()

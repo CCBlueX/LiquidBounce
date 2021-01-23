@@ -33,5 +33,5 @@ class EnumFacingImpl(val wrapped: EnumFacing) : IEnumFacing
 	override fun equals(other: Any?): Boolean = other is EnumFacingImpl && other.wrapped == wrapped
 }
 
- fun IEnumFacing.unwrap(): EnumFacing = (this as EnumFacingImpl).wrapped
- fun EnumFacing.wrap(): IEnumFacing = EnumFacingImpl(this)
+fun IEnumFacing.unwrap(): EnumFacing = (this as EnumFacingImpl).wrapped
+fun EnumFacing.wrap(): IEnumFacing = EnumFacingImpl(this)

@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import kotlin.random.Random
 
 @ModuleInfo(name = "Aimbot", description = "Automatically faces selected entities around you.", category = ModuleCategory.COMBAT)
 class Aimbot : Module()
@@ -145,7 +146,7 @@ class Aimbot : Module()
 				range,
 				hitboxDecrementValue.get().toDouble(),
 				centerSearchSensitivityValue.get().toDouble()
-			).rotation, (Math.random() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get()).toFloat(), (Math.random() * (maxAccelerationRatio.get() - minAccelerationRatio.get()) + minAccelerationRatio.get()).toFloat()
+			).rotation, Random.nextFloat() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get(), Random.nextFloat() * (maxAccelerationRatio.get() - minAccelerationRatio.get()) + minAccelerationRatio.get()
 		).applyRotationToPlayer(thePlayer)
 	}
 

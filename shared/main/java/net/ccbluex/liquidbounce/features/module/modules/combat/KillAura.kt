@@ -838,8 +838,8 @@ class KillAura : Module()
 		if (maxTurnSpeed.get() <= 0F || !rotationsValue.get()) return true
 
 		// Smooth aim
-		val turnSpeed = (Math.random() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get()).toFloat()
-		val acceleration = (Math.random() * (maxAccelerationRatio.get() - minAccelerationRatio.get()) + minAccelerationRatio.get()).toFloat()
+		val turnSpeed = (Random.nextFloat() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get())
+		val acceleration = (Random.nextFloat() * (maxAccelerationRatio.get() - minAccelerationRatio.get()) + minAccelerationRatio.get())
 
 		val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation, turnSpeed, acceleration)
 
@@ -848,7 +848,7 @@ class KillAura : Module()
 
 		if (silentRotationValue.get()) RotationUtils.setTargetRotation(
 			limitedRotation, if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get()
-			else minKeepRotationTicksValue.get() + kotlin.random.Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get())
+			else minKeepRotationTicksValue.get() + Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get())
 			else 0
 		)
 		else limitedRotation.applyRotationToPlayer(mc.thePlayer!!)
@@ -899,7 +899,7 @@ class KillAura : Module()
 	{
 
 		// BlockRate check
-		if (!(blockRate.get() > 0 && kotlin.random.Random.nextInt(100) <= blockRate.get())) return
+		if (!(blockRate.get() > 0 && Random.nextInt(100) <= blockRate.get())) return
 
 		val visual = !autoBlockValue.get().equals("Off", true) // Fake, Packet, AfterTick
 		val packet = visual && !autoBlockValue.get().equals("Fake", true) // Packet, AfterTick

@@ -129,7 +129,7 @@ object CapeAPI : MinecraftInstance()
 		val url = (capeService ?: return null).getCape(uuid) ?: return null
 
 		// Load cape
-		val resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation("capes/%s.png".format(uuid.toString()))
+		val resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation("capes/%s.png".format("$uuid"))
 		val capeInfo = CapeInfo(resourceLocation)
 		val threadDownloadImageData = LiquidBounce.wrapper.classProvider.createThreadDownloadImageData(null, url, null, object : WIImageBuffer
 		{

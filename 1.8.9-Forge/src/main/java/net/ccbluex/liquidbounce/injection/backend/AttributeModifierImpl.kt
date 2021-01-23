@@ -9,5 +9,5 @@ class AttributeModifierImpl(val wrapped: AttributeModifier) : IAttributeModifier
 		get() = wrapped.amount
 }
 
- fun IAttributeModifier.unwrap(): AttributeModifier = (this as AttributeModifierImpl).wrapped
- fun AttributeModifier.wrap(): IAttributeModifier = AttributeModifierImpl(this)
+fun IAttributeModifier.unwrap(): AttributeModifier = (this as AttributeModifierImpl).wrapped
+fun AttributeModifier.wrap(): IAttributeModifier = AttributeModifierImpl(this)

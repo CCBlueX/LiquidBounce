@@ -23,5 +23,5 @@ class TimerImpl(val wrapped: Timer) : ITimer
 	override fun equals(other: Any?): Boolean = other is TimerImpl && other.wrapped == wrapped
 }
 
- fun ITimer.unwrap(): Timer = (this as TimerImpl).wrapped
- fun Timer.wrap(): ITimer = TimerImpl(this)
+fun ITimer.unwrap(): Timer = (this as TimerImpl).wrapped
+fun Timer.wrap(): ITimer = TimerImpl(this)

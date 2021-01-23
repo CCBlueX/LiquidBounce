@@ -10,5 +10,5 @@ class SPacketChatImpl<T : S02PacketChat>(wrapped: T) : PacketImpl<T>(wrapped), I
 		get() = wrapped.chatComponent.wrap()
 }
 
- fun ISPacketChat.unwrap(): S02PacketChat = (this as SPacketChatImpl<*>).wrapped
- fun S02PacketChat.wrap(): ISPacketChat = SPacketChatImpl(this)
+fun ISPacketChat.unwrap(): S02PacketChat = (this as SPacketChatImpl<*>).wrapped
+fun S02PacketChat.wrap(): ISPacketChat = SPacketChatImpl(this)

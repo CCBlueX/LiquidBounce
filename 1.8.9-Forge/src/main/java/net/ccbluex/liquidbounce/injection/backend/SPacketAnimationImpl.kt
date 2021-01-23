@@ -17,5 +17,5 @@ class SPacketAnimationImpl<T : S0BPacketAnimation>(wrapped: T) : PacketImpl<T>(w
 		get() = wrapped.entityID
 }
 
- fun ISPacketAnimation.unwrap(): S0BPacketAnimation = (this as SPacketAnimationImpl<*>).wrapped
- fun S0BPacketAnimation.wrap(): ISPacketAnimation = SPacketAnimationImpl(this)
+fun ISPacketAnimation.unwrap(): S0BPacketAnimation = (this as SPacketAnimationImpl<*>).wrapped
+fun S0BPacketAnimation.wrap(): ISPacketAnimation = SPacketAnimationImpl(this)

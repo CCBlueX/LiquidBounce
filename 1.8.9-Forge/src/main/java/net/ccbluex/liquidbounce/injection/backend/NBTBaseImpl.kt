@@ -14,5 +14,5 @@ open class NBTBaseImpl<T : NBTBase>(val wrapped: T) : INBTBase
 	override fun equals(other: Any?): Boolean = other is NBTBaseImpl<*> && other.wrapped == wrapped
 }
 
- fun INBTBase.unwrap(): NBTBase = (this as NBTBaseImpl<*>).wrapped
- fun NBTBase.wrap(): INBTBase = NBTBaseImpl(this)
+fun INBTBase.unwrap(): NBTBase = (this as NBTBaseImpl<*>).wrapped
+fun NBTBase.wrap(): INBTBase = NBTBaseImpl(this)

@@ -18,5 +18,5 @@ class EnchantmentImpl(val wrapped: Enchantment) : IEnchantment
 
 }
 
- fun IEnchantment.unwrap(): Enchantment = (this as EnchantmentImpl).wrapped
- fun Enchantment.wrap(): IEnchantment = EnchantmentImpl(this)
+fun IEnchantment.unwrap(): Enchantment = (this as EnchantmentImpl).wrapped
+fun Enchantment.wrap(): IEnchantment = EnchantmentImpl(this)

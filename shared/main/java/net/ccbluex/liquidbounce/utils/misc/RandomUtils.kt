@@ -10,13 +10,13 @@ import kotlin.random.Random
 object RandomUtils
 {
 	@JvmStatic
-	fun nextInt(startInclusive: Int, endExclusive: Int): Int = if (endExclusive - startInclusive <= 0) startInclusive else startInclusive + kotlin.random.Random.nextInt(endExclusive - startInclusive)
+	fun nextInt(startInclusive: Int, endExclusive: Int): Int = if (endExclusive - startInclusive <= 0) startInclusive else startInclusive + Random.nextInt(endExclusive - startInclusive)
+
+	//	@JvmStatic
+	//	fun nextDouble(startInclusive: Double, endInclusive: Double): Double = if (startInclusive == endInclusive || endInclusive - startInclusive <= 0.0) startInclusive else startInclusive + (endInclusive - startInclusive) * Math.random()
 
 	@JvmStatic
-	fun nextDouble(startInclusive: Double, endInclusive: Double): Double = if (startInclusive == endInclusive || endInclusive - startInclusive <= 0.0) startInclusive else startInclusive + (endInclusive - startInclusive) * Math.random()
-
-	@JvmStatic
-	fun nextFloat(startInclusive: Float, endInclusive: Float): Float = if (startInclusive == endInclusive || endInclusive - startInclusive <= 0f) startInclusive else (startInclusive + (endInclusive - startInclusive) * Math.random()).toFloat()
+	fun nextFloat(startInclusive: Float, endInclusive: Float): Float = if (startInclusive == endInclusive || endInclusive - startInclusive <= 0f) startInclusive else (startInclusive + (endInclusive - startInclusive) * Random.nextFloat())
 
 	@JvmStatic
 	fun randomNumber(length: Int): String = random(length, "123456789")
@@ -32,6 +32,6 @@ object RandomUtils
 	{
 		val stringBuilder = StringBuilder()
 		for (i in 0 until length) stringBuilder.append(chars[Random.nextInt(chars.size)])
-		return stringBuilder.toString()
+		return "$stringBuilder"
 	}
 }

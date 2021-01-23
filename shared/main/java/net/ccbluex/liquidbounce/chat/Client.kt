@@ -215,7 +215,7 @@ abstract class Client : ClientListener, MinecraftInstance()
 
 			val uuid = StringBuffer(incomingUUID).insert(20, '-').insert(16, '-').insert(12, '-').insert(8, '-')
 
-			uuid.toString()
+			"$uuid"
 		}
 	}
 }

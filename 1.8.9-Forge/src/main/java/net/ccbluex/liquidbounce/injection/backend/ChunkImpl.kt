@@ -34,5 +34,5 @@ class ChunkImpl(val wrapped: Chunk) : IChunk
 	override fun equals(other: Any?): Boolean = other is ChunkImpl && other.wrapped == wrapped
 }
 
- fun IChunk.unwrap(): Chunk = (this as ChunkImpl).wrapped
- fun Chunk.wrap(): IChunk = ChunkImpl(this)
+fun IChunk.unwrap(): Chunk = (this as ChunkImpl).wrapped
+fun Chunk.wrap(): IChunk = ChunkImpl(this)

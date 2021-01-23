@@ -163,6 +163,6 @@ class SpeedGraph(
 		GL11.glDisable(GL11.GL_BLEND)
 		GlStateManager.resetColor()
 
-		return Border(0F, 0F, width.toFloat(), height.toFloat() + 2)
+		return Border(0F, 0F, width.toFloat(), height + 2.0f)
 	}
 }

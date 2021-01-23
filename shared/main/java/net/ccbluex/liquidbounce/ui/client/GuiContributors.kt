@@ -105,9 +105,9 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 			y += imageSize
 
-			Fonts.font40.drawString("@" + credit.name, (x + infoOffset + 5).toFloat(), 48f, Color.WHITE.rgb, true)
+			Fonts.font40.drawString("@" + credit.name, x + infoOffset + 5.0f, 48f, Color.WHITE.rgb, true)
 			Fonts.font40.drawString(
-				"${credit.commits} commits \u00A7a${DECIMAL_FORMAT.format(credit.additions)}++ \u00A74${DECIMAL_FORMAT.format(credit.deletions)}--", (x + infoOffset + 5).toFloat(), (y - Fonts.font40.fontHeight).toFloat(), Color.WHITE.rgb, true
+				"${credit.commits} commits \u00A7a${DECIMAL_FORMAT.format(credit.additions)}++ \u00A74${DECIMAL_FORMAT.format(credit.deletions)}--", x + infoOffset + 5.0f, (y - Fonts.font40.fontHeight).toFloat(), Color.WHITE.rgb, true
 			)
 
 			for (s in credit.contributions)
@@ -138,7 +138,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			} else
 			{
 				Fonts.font40.drawCenteredString("Loading...", representedScreen.width / 8.0f, representedScreen.height / 2.0f, Color.WHITE.rgb)
-				RenderUtils.drawLoadingCircle((representedScreen.width / 8).toFloat(), (representedScreen.height / 2 - 40).toFloat())
+				RenderUtils.drawLoadingCircle((representedScreen.width / 8).toFloat(), representedScreen.height / 2 - 40.0f)
 			}
 		}
 

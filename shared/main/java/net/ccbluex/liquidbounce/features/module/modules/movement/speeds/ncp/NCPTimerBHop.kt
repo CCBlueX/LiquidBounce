@@ -127,11 +127,11 @@ class NCPTimerBHop : SpeedMode("SNCPBHop")
 		{
 			if (strafe >= 1.0f)
 			{
-				yaw += (if (forward > 0.0f) -45 else 45).toFloat()
+				yaw += if (forward > 0.0f) -45 else 45
 				strafe = 0.0f
 			} else if (strafe <= -1.0f)
 			{
-				yaw += (if (forward > 0.0f) 45 else -45).toFloat()
+				yaw += if (forward > 0.0f) 45 else -45
 				strafe = 0.0f
 			}
 			if (forward > 0.0f)

@@ -170,6 +170,6 @@ object SettingsUtils
 			if (binds) stringBuilder.append(it.name).append(" bind ").append(Keyboard.getKeyName(it.keyBind)).append("\n")
 		}
 
-		return stringBuilder.toString()
+		return "$stringBuilder"
 	}
 }

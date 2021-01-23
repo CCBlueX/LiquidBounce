@@ -16,5 +16,5 @@ class CPacketUseEntityImpl<T : C02PacketUseEntity>(wrapped: T) : PacketImpl<T>(w
 		get() = wrapped.action.wrap()
 }
 
- fun ICPacketUseEntity.unwrap(): C02PacketUseEntity = (this as CPacketUseEntityImpl<*>).wrapped
- fun C02PacketUseEntity.wrap(): ICPacketUseEntity = CPacketUseEntityImpl(this)
+fun ICPacketUseEntity.unwrap(): C02PacketUseEntity = (this as CPacketUseEntityImpl<*>).wrapped
+fun C02PacketUseEntity.wrap(): ICPacketUseEntity = CPacketUseEntityImpl(this)

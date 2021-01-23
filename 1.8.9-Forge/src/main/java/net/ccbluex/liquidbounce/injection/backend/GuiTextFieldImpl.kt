@@ -45,5 +45,5 @@ class GuiTextFieldImpl(val wrapped: GuiTextField) : IGuiTextField
 	override fun equals(other: Any?): Boolean = other is GuiTextFieldImpl && other.wrapped == wrapped
 }
 
- fun IGuiTextField.unwrap(): GuiTextField = (this as GuiTextFieldImpl).wrapped
- fun GuiTextField.wrap(): IGuiTextField = GuiTextFieldImpl(this)
+fun IGuiTextField.unwrap(): GuiTextField = (this as GuiTextFieldImpl).wrapped
+fun GuiTextField.wrap(): IGuiTextField = GuiTextFieldImpl(this)

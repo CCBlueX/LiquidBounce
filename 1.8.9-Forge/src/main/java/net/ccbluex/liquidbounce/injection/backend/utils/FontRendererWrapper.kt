@@ -7,7 +7,6 @@
 package net.ccbluex.liquidbounce.injection.backend.utils
 
 import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
-import net.ccbluex.liquidbounce.utils.ClassUtils
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.FontRenderer
 import net.minecraft.util.ResourceLocation

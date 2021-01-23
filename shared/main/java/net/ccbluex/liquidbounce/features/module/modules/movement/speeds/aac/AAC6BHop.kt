@@ -36,7 +36,7 @@ class AAC6BHop : SpeedMode("AAC6BHop")
 				MovementUtils.strafe(0.47458485f)
 			}
 
-			if (thePlayer.motionY < 0 && thePlayer.motionY > -0.2) mc.timer.timerSpeed = (1.2 + thePlayer.motionY).toFloat()
+			if (thePlayer.motionY < 0 && thePlayer.motionY > -0.2) mc.timer.timerSpeed = (1.2f + thePlayer.motionY).toFloat()
 
 			thePlayer.speedInAir = 0.022151f
 		} else

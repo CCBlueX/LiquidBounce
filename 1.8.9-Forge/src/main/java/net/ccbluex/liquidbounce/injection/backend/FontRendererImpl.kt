@@ -36,5 +36,5 @@ class FontRendererImpl(val wrapped: FontRenderer) : IFontRenderer
 	override fun equals(other: Any?): Boolean = other is FontRendererImpl && other.wrapped == wrapped
 }
 
- fun IFontRenderer.unwrap(): FontRenderer = (this as FontRendererImpl).wrapped
- fun FontRenderer.wrap(): IFontRenderer = FontRendererImpl(this)
+fun IFontRenderer.unwrap(): FontRenderer = (this as FontRendererImpl).wrapped
+fun FontRenderer.wrap(): IFontRenderer = FontRendererImpl(this)

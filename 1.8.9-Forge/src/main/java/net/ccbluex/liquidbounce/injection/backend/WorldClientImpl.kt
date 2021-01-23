@@ -40,5 +40,5 @@ class WorldClientImpl(wrapped: WorldClient) : WorldImpl<WorldClient>(wrapped), I
 
 }
 
- fun IWorldClient.unwrap(): WorldClient = (this as WorldClientImpl).wrapped
- fun WorldClient.wrap(): IWorldClient = WorldClientImpl(this)
+fun IWorldClient.unwrap(): WorldClient = (this as WorldClientImpl).wrapped
+fun WorldClient.wrap(): IWorldClient = WorldClientImpl(this)

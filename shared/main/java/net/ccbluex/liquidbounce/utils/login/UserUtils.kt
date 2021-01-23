@@ -44,7 +44,7 @@ object UserUtils
 
 		val body = JSONObject()
 		body.put("accessToken", token)
-		request.entity = StringEntity(body.toString())
+		request.entity = StringEntity("$body")
 
 		val response = client.execute(request)
 		val valid = response.statusLine.statusCode == 204

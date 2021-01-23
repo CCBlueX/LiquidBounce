@@ -49,13 +49,13 @@ class LiquidWalk : Module()
 						thePlayer.motionX *= 0.99999
 						thePlayer.motionY *= 0.0
 						thePlayer.motionZ *= 0.99999
-						if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((thePlayer.posY - (thePlayer.posY - 1).toInt()).toInt() / 8f).toDouble()
+						if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((thePlayer.posY - (thePlayer.posY - 1).toInt()).toInt() / 8.0)
 					} else
 					{
 						thePlayer.motionX *= 0.99999
 						thePlayer.motionY *= 0.0
 						thePlayer.motionZ *= 0.99999
-						if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((thePlayer.posY - (thePlayer.posY - 1).toInt()).toInt() / 8f).toDouble()
+						if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((thePlayer.posY - (thePlayer.posY - 1).toInt()).toInt() / 8.0)
 					}
 					if (thePlayer.fallDistance >= 4) thePlayer.motionY = -0.004 else if (thePlayer.isInWater) thePlayer.motionY = 0.09
 				}
@@ -118,7 +118,7 @@ class LiquidWalk : Module()
 		{
 			when (modeValue.get().toLowerCase())
 			{
-				"ncp", "vanilla" -> event.boundingBox = classProvider.createAxisAlignedBB(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.toDouble(), event.y + 1.toDouble(), event.z + 1.toDouble())
+				"ncp", "vanilla" -> event.boundingBox = classProvider.createAxisAlignedBB(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.0, event.y + 1.0, event.z + 1.0)
 			}
 		}
 	}

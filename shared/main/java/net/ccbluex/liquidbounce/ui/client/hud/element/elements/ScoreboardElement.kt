@@ -132,7 +132,7 @@ class ScoreboardElement(
 				GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
 				fontRenderer.drawString(
-					displayName, (l1 + maxWidth / 2 - fontRenderer.getStringWidth(displayName) / 2).toFloat(), (height - fontRenderer.fontHeight), textColor, shadowValue.get()
+					displayName, (l1 + maxWidth / 2 - fontRenderer.getStringWidth(displayName) / 2.0f), (height - fontRenderer.fontHeight), textColor, shadowValue.get()
 				)
 			}
 
@@ -148,7 +148,7 @@ class ScoreboardElement(
 			}
 		}
 
-		return Border(-maxWidth.toFloat() - 5 - if (rectValue.get()) 3 else 0, -2F, 5F, maxHeight + fontRenderer.fontHeight.toFloat())
+		return Border(-maxWidth - 5.0f - if (rectValue.get()) 3 else 0, -2F, 5F, maxHeight + fontRenderer.fontHeight.toFloat())
 	}
 
 	private fun backgroundColor() = Color(

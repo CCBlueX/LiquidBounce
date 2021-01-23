@@ -21,5 +21,5 @@ class CreativeTabsImpl(val wrapped: CreativeTabs) : ICreativeTabs
 	override fun equals(other: Any?): Boolean = other is CreativeTabsImpl && other.wrapped == wrapped
 }
 
- fun ICreativeTabs.unwrap(): CreativeTabs = (this as CreativeTabsImpl).wrapped
- fun CreativeTabs.wrap(): ICreativeTabs = CreativeTabsImpl(this)
+fun ICreativeTabs.unwrap(): CreativeTabs = (this as CreativeTabsImpl).wrapped
+fun CreativeTabs.wrap(): ICreativeTabs = CreativeTabsImpl(this)

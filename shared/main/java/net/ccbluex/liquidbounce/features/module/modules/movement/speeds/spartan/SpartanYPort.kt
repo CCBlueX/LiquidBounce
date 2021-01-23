@@ -25,7 +25,7 @@ class SpartanYPort : SpeedMode("Spartan-YPort")
 			{
 				mc.timer.timerSpeed = 1.08f
 				if (airMoves >= 3) thePlayer.jumpMovementFactor = 0.0275f
-				if (airMoves >= 4 && airMoves % 2.toDouble() == 0.0)
+				if (airMoves >= 4 && airMoves % 2.0 == 0.0)
 				{
 					thePlayer.motionY = -0.32f - 0.009 * Math.random()
 					thePlayer.jumpMovementFactor = 0.0238f

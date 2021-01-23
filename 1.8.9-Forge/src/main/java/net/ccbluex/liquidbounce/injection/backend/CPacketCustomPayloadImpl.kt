@@ -23,5 +23,5 @@ class CPacketCustomPayloadImpl<T : C17PacketCustomPayload>(wrapped: T) : PacketI
 
 }
 
- fun ICPacketCustomPayload.unwrap(): C17PacketCustomPayload = (this as CPacketCustomPayloadImpl<*>).wrapped
- fun C17PacketCustomPayload.wrap(): ICPacketCustomPayload = CPacketCustomPayloadImpl(this)
+fun ICPacketCustomPayload.unwrap(): C17PacketCustomPayload = (this as CPacketCustomPayloadImpl<*>).wrapped
+fun C17PacketCustomPayload.wrap(): ICPacketCustomPayload = CPacketCustomPayloadImpl(this)

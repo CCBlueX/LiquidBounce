@@ -101,7 +101,7 @@ class HighJump : Module()
 		if (jumped) if (!thePlayer.onGround)
 		{
 			if (!isMoving) strafe(0.05f)
-			var speed = 0.55f - mineplexStage.toFloat() / 650
+			var speed = 0.55f - mineplexStage / 650.0f
 			if (speed < MovementUtils.speed) speed = MovementUtils.speed
 			strafe(speed)
 			mineplexStage++

@@ -15,5 +15,5 @@ class SPacketWindowItemsImpl<T : S30PacketWindowItems>(wrapped: T) : PacketImpl<
 		get() = wrapped.func_148911_c()
 }
 
- fun ISPacketWindowItems.unwrap(): S30PacketWindowItems = (this as SPacketWindowItemsImpl<*>).wrapped
- fun S30PacketWindowItems.wrap(): ISPacketWindowItems = SPacketWindowItemsImpl(this)
+fun ISPacketWindowItems.unwrap(): S30PacketWindowItems = (this as SPacketWindowItemsImpl<*>).wrapped
+fun S30PacketWindowItems.wrap(): ISPacketWindowItems = SPacketWindowItemsImpl(this)

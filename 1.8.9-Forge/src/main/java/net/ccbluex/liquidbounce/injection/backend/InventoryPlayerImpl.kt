@@ -34,5 +34,5 @@ class InventoryPlayerImpl(val wrapped: InventoryPlayer) : IInventoryPlayer
 	override fun equals(other: Any?): Boolean = other is InventoryPlayerImpl && other.wrapped == wrapped
 }
 
- fun IInventoryPlayer.unwrap(): InventoryPlayer = (this as InventoryPlayerImpl).wrapped
- fun InventoryPlayer.wrap(): IInventoryPlayer = InventoryPlayerImpl(this)
+fun IInventoryPlayer.unwrap(): InventoryPlayer = (this as InventoryPlayerImpl).wrapped
+fun InventoryPlayer.wrap(): IInventoryPlayer = InventoryPlayerImpl(this)

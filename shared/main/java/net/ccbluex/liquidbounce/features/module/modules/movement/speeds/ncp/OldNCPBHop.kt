@@ -68,7 +68,7 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 			}
 		}
 		if (thePlayer.onGround && MovementUtils.isMoving) level = 2
-		if (round(thePlayer.posY - thePlayer.posY.toInt().toDouble()) == round(0.138))
+		if (round(thePlayer.posY - thePlayer.posY.roundToInt().toDouble()) == round(0.138))
 		{
 			thePlayer.motionY -= 0.08
 			event.y = event.y - 0.09316090325960147
@@ -107,11 +107,11 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		{
 			if (strafe >= 1.0f)
 			{
-				yaw += (if (forward > 0.0f) -45 else 45).toFloat()
+				yaw += if (forward > 0.0f) -45 else 45
 				strafe = 0.0f
 			} else if (strafe <= -1.0f)
 			{
-				yaw += (if (forward > 0.0f) 45 else -45).toFloat()
+				yaw += if (forward > 0.0f) 45 else -45
 				strafe = 0.0f
 			}
 			if (forward > 0.0f)
@@ -126,8 +126,8 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		val yawRadians = WMathHelper.toRadians(yaw + 90.0f)
 		val mx2 = functions.cos(yawRadians)
 		val mz2 = functions.sin(yawRadians)
-		event.x = forward.toDouble() * moveSpeed * mx2 + strafe.toDouble() * moveSpeed * mz2
-		event.z = forward.toDouble() * moveSpeed * mz2 - strafe.toDouble() * moveSpeed * mx2
+		event.x = forward * moveSpeed * mx2 + strafe * moveSpeed * mz2
+		event.z = forward * moveSpeed * mz2 - strafe * moveSpeed * mx2
 		thePlayer.stepHeight = 0.5f
 		if (forward == 0.0f && strafe == 0.0f)
 		{

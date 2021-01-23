@@ -315,7 +315,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 
 			RainbowShader.begin(rectRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-				RenderUtils.drawRect(x - 1.toFloat(), y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight.get() - 1, color)
+				RenderUtils.drawRect(x - 1.0f, y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight.get() - 1, color)
 			}
 
 			GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)

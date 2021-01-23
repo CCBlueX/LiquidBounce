@@ -57,9 +57,8 @@ open class PacketImpl<T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun asCPacketPlayerBlockPlacement(): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(wrapped as C08PacketPlayerBlockPlacement)
 
-
 	override fun equals(other: Any?): Boolean = other is PacketImpl<*> && other.wrapped == wrapped
 }
 
- fun IPacket.unwrap(): Packet<*> = (this as PacketImpl<*>).wrapped
- fun Packet<*>.wrap(): IPacket = PacketImpl(this)
+fun IPacket.unwrap(): Packet<*> = (this as PacketImpl<*>).wrapped
+fun Packet<*>.wrap(): IPacket = PacketImpl(this)

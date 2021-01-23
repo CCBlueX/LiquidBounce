@@ -11,5 +11,5 @@ import net.minecraft.client.gui.Gui
 
 open class GuiImpl<T : Gui>(val wrapped: T) : IGui
 
- fun IGui.unwrap(): Gui = (this as GuiImpl<*>).wrapped
- fun Gui.wrap(): IGui = GuiImpl(this)
+fun IGui.unwrap(): Gui = (this as GuiImpl<*>).wrapped
+fun Gui.wrap(): IGui = GuiImpl(this)

@@ -23,5 +23,5 @@ class NBTTagCompoundImpl(wrapped: NBTTagCompound) : NBTBaseImpl<NBTTagCompound>(
 	override fun setInteger(key: String, value: Int) = wrapped.setInteger(key, value)
 }
 
- fun INBTTagCompound.unwrap(): NBTTagCompound = (this as NBTTagCompoundImpl).wrapped
- fun NBTTagCompound.wrap(): INBTTagCompound = NBTTagCompoundImpl(this)
+fun INBTTagCompound.unwrap(): NBTTagCompound = (this as NBTTagCompoundImpl).wrapped
+fun NBTTagCompound.wrap(): INBTTagCompound = NBTTagCompoundImpl(this)

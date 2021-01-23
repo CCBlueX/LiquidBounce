@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import kotlin.random.Random
 
 @ModuleInfo(name = "Derp", description = "Makes it look like you were derping around.", category = ModuleCategory.FUN)
 class Derp : Module()
@@ -24,7 +25,7 @@ class Derp : Module()
 	val rotation: FloatArray
 		get()
 		{
-			val derpRotations = floatArrayOf(mc.thePlayer!!.rotationYaw + (Math.random() * 360 - 180).toFloat(), (Math.random() * 180 - 90).toFloat())
+			val derpRotations = floatArrayOf(mc.thePlayer!!.rotationYaw + (Random.nextFloat() * 360.0f - 180.0f), (Random.nextFloat() * 180.0f - 90.0f))
 
 			if (headlessValue.get()) derpRotations[1] = 180F
 

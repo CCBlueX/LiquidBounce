@@ -11,5 +11,5 @@ import net.minecraft.network.play.client.C00PacketKeepAlive
 
 class CPacketKeepAliveImpl<T : C00PacketKeepAlive>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketKeepAlive
 
- fun ICPacketKeepAlive.unwrap(): C00PacketKeepAlive = (this as CPacketKeepAliveImpl<*>).wrapped
- fun C00PacketKeepAlive.wrap(): ICPacketKeepAlive = CPacketKeepAliveImpl(this)
+fun ICPacketKeepAlive.unwrap(): C00PacketKeepAlive = (this as CPacketKeepAliveImpl<*>).wrapped
+fun C00PacketKeepAlive.wrap(): ICPacketKeepAlive = CPacketKeepAliveImpl(this)

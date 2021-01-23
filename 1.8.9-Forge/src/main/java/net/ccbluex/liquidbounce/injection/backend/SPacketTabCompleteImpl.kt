@@ -15,5 +15,5 @@ class SPacketTabCompleteImpl<T : S3APacketTabComplete>(wrapped: T) : PacketImpl<
 		get() = wrapped.func_149630_c()
 }
 
- fun ISPacketTabComplete.unwrap(): S3APacketTabComplete = (this as SPacketTabCompleteImpl<*>).wrapped
- fun S3APacketTabComplete.wrap(): ISPacketTabComplete = SPacketTabCompleteImpl(this)
+fun ISPacketTabComplete.unwrap(): S3APacketTabComplete = (this as SPacketTabCompleteImpl<*>).wrapped
+fun S3APacketTabComplete.wrap(): ISPacketTabComplete = SPacketTabCompleteImpl(this)

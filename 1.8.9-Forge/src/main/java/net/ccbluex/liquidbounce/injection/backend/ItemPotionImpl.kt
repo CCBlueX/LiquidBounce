@@ -10,8 +10,6 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemPotion
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
-import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
-import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.item.ItemPotion
 import net.minecraft.potion.PotionEffect
 

@@ -11,5 +11,5 @@ import net.minecraft.nbt.NBTTagString
 
 class NBTTagStringImpl<T : NBTTagString>(wrapped: T) : NBTBaseImpl<T>(wrapped), INBTTagString
 
- fun INBTTagString.unwrap(): NBTTagString = (this as NBTTagStringImpl<*>).wrapped
- fun NBTTagString.wrap(): INBTTagString = NBTTagStringImpl(this)
+fun INBTTagString.unwrap(): NBTTagString = (this as NBTTagStringImpl<*>).wrapped
+fun NBTTagString.wrap(): INBTTagString = NBTTagStringImpl(this)

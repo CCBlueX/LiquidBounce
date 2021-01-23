@@ -32,5 +32,5 @@ class IChatComponentImpl(val wrapped: IChatComponent) : IIChatComponent
 	override fun equals(other: Any?): Boolean = other is IChatComponentImpl && other.wrapped == wrapped
 }
 
- fun IIChatComponent.unwrap(): IChatComponent = (this as IChatComponentImpl).wrapped
- fun IChatComponent.wrap(): IIChatComponent = IChatComponentImpl(this)
+fun IIChatComponent.unwrap(): IChatComponent = (this as IChatComponentImpl).wrapped
+fun IChatComponent.wrap(): IIChatComponent = IChatComponentImpl(this)

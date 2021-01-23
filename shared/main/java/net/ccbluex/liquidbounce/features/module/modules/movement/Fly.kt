@@ -691,7 +691,7 @@ class Fly : Module()
 						// TimerBoost
 						if (hypixelTimerBoost.get())
 						{
-							if (!hypixelFlyTimer.hasTimePassed(boostDelay.toLong())) mc.timer.timerSpeed = 1.0F + hypixelTimerBoostTimer.get() * (hypixelFlyTimer.hasTimeLeft(boostDelay.toLong()).toFloat() / boostDelay.toFloat())
+							if (!hypixelFlyTimer.hasTimePassed(boostDelay.toLong())) mc.timer.timerSpeed = 1.0F + hypixelTimerBoostTimer.get() * (hypixelFlyTimer.hasTimeLeft(boostDelay.toLong()) / boostDelay)
 							else mc.timer.timerSpeed = 1.0F
 						}
 

@@ -92,9 +92,9 @@ class Target : Element()
 			if (targetPlayer != lastTarget || easingAbsorption < 0 || easingAbsorption > targetPlayer.absorptionAmount || abs(easingAbsorption - targetPlayer.absorptionAmount) < 0.01) easingAbsorption = targetPlayer.absorptionAmount
 			if (targetPlayer != lastTarget || easingArmor < 0 || easingArmor > 20 || abs(easingArmor - targetArmor) < 0.01) easingArmor = targetArmor.toFloat()
 
-			val healthColor = ColorUtils.getHealthColor(/* ptargetHealth */ easingHealth, targetMaxHealth)
+			val healthColor = ColorUtils.getHealthColor(easingHealth, targetMaxHealth)
 
-			val width = (98 + Fonts.font60.getStringWidth(targetPlayer.name!!)).coerceAtLeast(200).toFloat()
+			val width = (98.0F + Fonts.font60.getStringWidth(targetPlayer.name!!)).coerceAtLeast(200.0F)
 
 			// Draw rect box
 			RenderUtils.drawBorderedRect(0F, 0F, width, 80F, borderWidth.get(), Color(borderColorRed.get(), borderColorGreen.get(), borderColorBlue.get()).rgb, Color.BLACK.rgb)

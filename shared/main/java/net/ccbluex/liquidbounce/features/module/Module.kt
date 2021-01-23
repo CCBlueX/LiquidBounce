@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.value.Value
 import org.lwjgl.input.Keyboard
+import kotlin.random.Random
 
 open class Module : MinecraftInstance(), Listenable
 {
@@ -87,7 +88,7 @@ open class Module : MinecraftInstance(), Listenable
 		}
 
 	// HUD
-	val hue = Math.random().toFloat()
+	val hue = Random.nextFloat()
 	var slide = 0F
 
 	// Tag

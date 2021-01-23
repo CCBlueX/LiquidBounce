@@ -24,7 +24,7 @@ class Mineplex : SpeedMode("Mineplex")
 
 		val x = thePlayer.posX - thePlayer.prevPosX
 		val z = thePlayer.posZ - thePlayer.prevPosZ
-		val distance = hypot(x, z)
+		val distance = hypot(x, z).toFloat()
 		if (MovementUtils.isMoving && thePlayer.onGround)
 		{
 			thePlayer.motionY = 0.4052393
@@ -37,7 +37,7 @@ class Mineplex : SpeedMode("Mineplex")
 			{
 				speed1 = (speed2 + (0.46532f * min(fallDistance, 1f)))
 				wfg = false
-			} else speed1 = ((distance * 0.936f).toFloat())
+			} else speed1 = distance * 0.936f
 			fallDistance = thePlayer.fallDistance
 		}
 		var minimum = 0f

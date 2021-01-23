@@ -211,7 +211,7 @@ object ColorUtils : MinecraftInstance()
 	fun blend(color1: Color, color2: Color, ratio: Double): Color?
 	{
 		val r = ratio.toFloat()
-		val ir = 1.0.toFloat() - r
+		val ir = 1.0F - r
 		val rgb1 = FloatArray(3)
 		val rgb2 = FloatArray(3)
 		color1.getColorComponents(rgb1)

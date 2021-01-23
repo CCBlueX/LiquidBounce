@@ -44,5 +44,5 @@ class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB
 	override fun equals(other: Any?): Boolean = other is AxisAlignedBBImpl && other.wrapped == wrapped
 }
 
- fun IAxisAlignedBB.unwrap(): AxisAlignedBB = (this as AxisAlignedBBImpl).wrapped
- fun AxisAlignedBB.wrap(): IAxisAlignedBB = AxisAlignedBBImpl(this)
+fun IAxisAlignedBB.unwrap(): AxisAlignedBB = (this as AxisAlignedBBImpl).wrapped
+fun AxisAlignedBB.wrap(): IAxisAlignedBB = AxisAlignedBBImpl(this)

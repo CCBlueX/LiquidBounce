@@ -9,10 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
-import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
-import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.minecraft.world.IChunk
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.api.minecraft.world.border.IWorldBorder
@@ -72,5 +69,5 @@ open class WorldImpl<T : World>(val wrapped: T) : IWorld
 	override fun equals(other: Any?): Boolean = other is WorldImpl<*> && other.wrapped == wrapped
 }
 
- fun IWorld.unwrap(): World = (this as WorldImpl<*>).wrapped
- fun World.wrap(): IWorld = WorldImpl(this)
+fun IWorld.unwrap(): World = (this as WorldImpl<*>).wrapped
+fun World.wrap(): IWorld = WorldImpl(this)

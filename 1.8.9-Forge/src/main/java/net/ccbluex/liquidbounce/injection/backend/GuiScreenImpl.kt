@@ -6,10 +6,7 @@
 
 package net.ccbluex.liquidbounce.injection.backend
 
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiGameOver
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.*
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiContainer
 import net.ccbluex.liquidbounce.api.util.WrappedMutableList
@@ -61,5 +58,5 @@ open class GuiScreenImpl<T : GuiScreen>(wrapped: T) : GuiImpl<T>(wrapped), IGuiS
 	override fun equals(other: Any?): Boolean = other is GuiScreenImpl<*> && other.wrapped == wrapped
 }
 
- fun IGuiScreen.unwrap(): GuiScreen = (this as GuiScreenImpl<*>).wrapped
- fun GuiScreen.wrap(): IGuiScreen = GuiScreenImpl(this)
+fun IGuiScreen.unwrap(): GuiScreen = (this as GuiScreenImpl<*>).wrapped
+fun GuiScreen.wrap(): IGuiScreen = GuiScreenImpl(this)

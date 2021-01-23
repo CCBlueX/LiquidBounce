@@ -248,7 +248,7 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 		} else defaultFont.getStringWidth(currentText) / 2
 	}
 
-	override fun getCharWidth(character: Char) = getStringWidth(character.toString())
+	override fun getCharWidth(character: Char) = getStringWidth("$character")
 
 	companion object
 	{

@@ -25,5 +25,5 @@ class PlayerCapabilitiesImpl(val wrapped: PlayerCapabilities) : IPlayerCapabilit
 	override fun equals(other: Any?): Boolean = other is PlayerCapabilitiesImpl && other.wrapped == wrapped
 }
 
- fun IPlayerCapabilities.unwrap(): PlayerCapabilities = (this as PlayerCapabilitiesImpl).wrapped
- fun PlayerCapabilities.wrap(): IPlayerCapabilities = PlayerCapabilitiesImpl(this)
+fun IPlayerCapabilities.unwrap(): PlayerCapabilities = (this as PlayerCapabilitiesImpl).wrapped
+fun PlayerCapabilities.wrap(): IPlayerCapabilities = PlayerCapabilitiesImpl(this)

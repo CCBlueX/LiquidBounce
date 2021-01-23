@@ -150,7 +150,7 @@ class NoFall : Module()
 			"aac3.3.15" -> if (thePlayer.fallDistance > 2)
 			{
 				if (!mc.isIntegratedServerRunning) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, Double.NaN, thePlayer.posZ, false))
-				thePlayer.fallDistance = (-9999).toFloat()
+				thePlayer.fallDistance = -9999.0F
 			}
 
 			"spartan" ->

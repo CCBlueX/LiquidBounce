@@ -23,5 +23,5 @@ class ContainerImpl(val wrapped: Container) : IContainer
 	override fun equals(other: Any?): Boolean = other is ContainerImpl && other.wrapped == wrapped
 }
 
- fun IContainer.unwrap(): Container = (this as ContainerImpl).wrapped
- fun Container.wrap(): IContainer = ContainerImpl(this)
+fun IContainer.unwrap(): Container = (this as ContainerImpl).wrapped
+fun Container.wrap(): IContainer = ContainerImpl(this)

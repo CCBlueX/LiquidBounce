@@ -25,5 +25,5 @@ class VertexBufferImpl(val wrapped: VertexBuffer) : IVertexBuffer
 	override fun equals(other: Any?): Boolean = other is VertexBufferImpl && other.wrapped == wrapped
 }
 
- fun IVertexBuffer.unwrap(): VertexBuffer = (this as VertexBufferImpl).wrapped
- fun VertexBuffer.wrap(): IVertexBuffer = VertexBufferImpl(this)
+fun IVertexBuffer.unwrap(): VertexBuffer = (this as VertexBufferImpl).wrapped
+fun VertexBuffer.wrap(): IVertexBuffer = VertexBufferImpl(this)

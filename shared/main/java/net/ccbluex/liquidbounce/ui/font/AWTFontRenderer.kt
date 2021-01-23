@@ -81,11 +81,11 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 	 */
 	fun drawString(text: String, x: Double, y: Double, color: Int)
 	{
-		val scale = 0.25
+		val scale = 0.25F
 		val reverse = 1 / scale
 
 		GL11.glPushMatrix()
-		GL11.glScaled(scale, scale, scale)
+		GL11.glScalef(scale, scale, scale)
 		GL11.glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
 
 		if (loadingScreen) GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
@@ -98,7 +98,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 
 		GL11.glColor4f(red, green, blue, alpha)
 
-		var currX = 0.0
+		var currX = 0.0F
 
 		val cached: CachedFont? = cachedStrings[text]
 
@@ -131,11 +131,11 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 				GL11.glEnd()
 
 				// Ugly solution, because floating point numbers, but I think that shouldn't be that much of a problem
-				GL11.glScaled(reverse, reverse, reverse)
-				mc.fontRendererObj.drawString("$char", currX.toFloat() * scale.toFloat() + 1, 2f, color, false)
+				GL11.glScalef(reverse, reverse, reverse)
+				mc.fontRendererObj.drawString("$char", currX * scale + 1, 2f, color, false)
 				currX += mc.fontRendererObj.getStringWidth("$char") * reverse
 
-				GL11.glScaled(scale, scale, scale)
+				GL11.glScalef(scale, scale, scale)
 
 				if (loadingScreen) GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
 				else classProvider.getGlStateManager().bindTexture(textureID)
@@ -147,8 +147,8 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 			{
 				val fontChar = charLocations[char.toInt()] ?: continue
 
-				drawChar(fontChar, currX.toFloat(), 0f)
-				currX += fontChar.width - 8.0
+				drawChar(fontChar, currX, 0.0f)
+				currX += fontChar.width - 8.0F
 			}
 		}
 

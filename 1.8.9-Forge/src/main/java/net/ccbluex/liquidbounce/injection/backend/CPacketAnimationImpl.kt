@@ -11,5 +11,5 @@ import net.minecraft.network.play.client.C0APacketAnimation
 
 class CPacketAnimationImpl<T : C0APacketAnimation>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketAnimation
 
- fun ICPacketAnimation.unwrap(): C0APacketAnimation = (this as CPacketAnimationImpl<*>).wrapped
- fun C0APacketAnimation.wrap(): ICPacketAnimation = CPacketAnimationImpl(this)
+fun ICPacketAnimation.unwrap(): C0APacketAnimation = (this as CPacketAnimationImpl<*>).wrapped
+fun C0APacketAnimation.wrap(): ICPacketAnimation = CPacketAnimationImpl(this)

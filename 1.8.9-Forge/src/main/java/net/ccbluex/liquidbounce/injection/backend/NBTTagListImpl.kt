@@ -19,5 +19,5 @@ class NBTTagListImpl(wrapped: NBTTagList) : NBTBaseImpl<NBTTagList>(wrapped), IN
 	override fun appendTag(createNBTTagString: INBTBase) = wrapped.appendTag(createNBTTagString.unwrap())
 }
 
- fun INBTTagList.unwrap(): NBTTagList = (this as NBTTagListImpl).wrapped
- fun NBTTagList.wrap(): INBTTagList = NBTTagListImpl(this)
+fun INBTTagList.unwrap(): NBTTagList = (this as NBTTagListImpl).wrapped
+fun NBTTagList.wrap(): INBTTagList = NBTTagListImpl(this)

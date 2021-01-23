@@ -9,7 +9,6 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.render.entity.IRenderItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.minecraft.client.renderer.ItemModelMesher
 import net.minecraft.client.renderer.entity.RenderItem
 
 class RenderItemImpl(val wrapped: RenderItem) : IRenderItem
@@ -30,5 +29,5 @@ class RenderItemImpl(val wrapped: RenderItem) : IRenderItem
 	override fun equals(other: Any?): Boolean = other is RenderItemImpl && other.wrapped == wrapped
 }
 
- fun IRenderItem.unwrap(): RenderItem = (this as RenderItemImpl).wrapped
- fun RenderItem.wrap(): IRenderItem = RenderItemImpl(this)
+fun IRenderItem.unwrap(): RenderItem = (this as RenderItemImpl).wrapped
+fun RenderItem.wrap(): IRenderItem = RenderItemImpl(this)

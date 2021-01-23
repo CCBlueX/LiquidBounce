@@ -9,7 +9,6 @@ package net.ccbluex.liquidbounce.injection.backend
 import com.mojang.authlib.GameProfile
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.entity.player.IInventoryPlayer
 import net.ccbluex.liquidbounce.api.minecraft.entity.player.IPlayerCapabilities
@@ -18,7 +17,6 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.IFoodStats
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.item.ItemStack
 
 open class EntityPlayerImpl<T : EntityPlayer>(wrapped: T) : EntityLivingBaseImpl<T>(wrapped), IEntityPlayer
 {
@@ -114,5 +112,5 @@ open class EntityPlayerImpl<T : EntityPlayer>(wrapped: T) : EntityLivingBaseImpl
 
 }
 
- fun IEntityPlayer.unwrap(): EntityPlayer = (this as EntityPlayerImpl<*>).wrapped
- fun EntityPlayer.wrap(): IEntityPlayer = EntityPlayerImpl(this)
+fun IEntityPlayer.unwrap(): EntityPlayer = (this as EntityPlayerImpl<*>).wrapped
+fun EntityPlayer.wrap(): IEntityPlayer = EntityPlayerImpl(this)

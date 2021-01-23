@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import java.util.*
 import kotlin.math.atan2
 import kotlin.math.sqrt
 import kotlin.math.truncate
@@ -507,19 +506,13 @@ class Tower : Module()
 			val scaledResolution = classProvider.createScaledResolution(mc)
 
 			RenderUtils.drawBorderedRect(
-				scaledResolution.scaledWidth / 2 - 2.toFloat(),
-				scaledResolution.scaledHeight / 2 + 5.toFloat(),
-				scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2.toFloat(),
-				scaledResolution.scaledHeight / 2 + 16.toFloat(),
-				3f,
-				Color.BLACK.rgb,
-				Color.BLACK.rgb
+				scaledResolution.scaledWidth / 2 - 2.0f, scaledResolution.scaledHeight / 2 + 5.0f, scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2.0f, scaledResolution.scaledHeight / 2 + 16.0f, 3f, Color.BLACK.rgb, Color.BLACK.rgb
 			)
 
 			classProvider.getGlStateManager().resetColor()
 
 			Fonts.font40.drawString(
-				info, scaledResolution.scaledWidth / 2.toFloat(), scaledResolution.scaledHeight / 2 + 7.toFloat(), Color.WHITE.rgb
+				info, scaledResolution.scaledWidth / 2.0f, scaledResolution.scaledHeight / 2 + 7.0f, Color.WHITE.rgb
 			)
 			GL11.glPopMatrix()
 		}

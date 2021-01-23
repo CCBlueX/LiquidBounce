@@ -11,5 +11,5 @@ import net.minecraft.client.renderer.texture.DynamicTexture
 
 class DynamicTextureImpl<T : DynamicTexture>(wrapped: T) : AbstractTextureImpl<T>(wrapped), IDynamicTexture
 
- fun IDynamicTexture.unwrap(): DynamicTexture = (this as DynamicTextureImpl<*>).wrapped
- fun DynamicTexture.wrap(): IDynamicTexture = DynamicTextureImpl(this)
+fun IDynamicTexture.unwrap(): DynamicTexture = (this as DynamicTextureImpl<*>).wrapped
+fun DynamicTexture.wrap(): IDynamicTexture = DynamicTextureImpl(this)

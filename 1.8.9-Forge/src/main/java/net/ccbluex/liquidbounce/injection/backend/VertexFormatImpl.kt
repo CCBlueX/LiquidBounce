@@ -14,5 +14,5 @@ class VertexFormatImpl(val wrapped: VertexFormat) : IVertexFormat
 	override fun equals(other: Any?): Boolean = other is VertexFormatImpl && other.wrapped == wrapped
 }
 
- fun IVertexFormat.unwrap(): VertexFormat = (this as VertexFormatImpl).wrapped
- fun VertexFormat.wrap(): IVertexFormat = VertexFormatImpl(this)
+fun IVertexFormat.unwrap(): VertexFormat = (this as VertexFormatImpl).wrapped
+fun VertexFormat.wrap(): IVertexFormat = VertexFormatImpl(this)

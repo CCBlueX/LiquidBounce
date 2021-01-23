@@ -647,12 +647,12 @@ class Scaffold : Module()
 		val deltaZ = gBB.maxZ - gBB.minZ
 
 		// Search Ranges
-		val xzRange = xzRangeValue.get().toDouble()
-		val yRange = yRangeValue.get().toDouble()
+		val xzRange = xzRangeValue.get()
+		val yRange = yRangeValue.get()
 
-		val xSteps = calcStepSize(xzRange.toFloat()) * deltaX
-		val ySteps = calcStepSize(yRange.toFloat()) * deltaY
-		val zSteps = calcStepSize(xzRange.toFloat()) * deltaZ
+		val xSteps = calcStepSize(xzRange) * deltaX
+		val ySteps = calcStepSize(yRange) * deltaY
+		val zSteps = calcStepSize(xzRange) * deltaZ
 
 		val sMinX = (0.5 - xzRange / 2) * deltaX + gBB.minX
 		val sMaxX = (0.5 + xzRange / 2) * deltaX + gBB.minX
@@ -880,19 +880,13 @@ class Scaffold : Module()
 			val scaledResolution = classProvider.createScaledResolution(mc)
 
 			RenderUtils.drawBorderedRect(
-				scaledResolution.scaledWidth / 2 - 2.toFloat(),
-				scaledResolution.scaledHeight / 2 + 5.toFloat(),
-				scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2.toFloat(),
-				scaledResolution.scaledHeight / 2 + 16.toFloat(),
-				3f,
-				Color.BLACK.rgb,
-				Color.BLACK.rgb
+				scaledResolution.scaledWidth / 2 - 2.0f, scaledResolution.scaledHeight / 2 + 5.0f, scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2.0f, scaledResolution.scaledHeight / 2 + 16.0f, 3f, Color.BLACK.rgb, Color.BLACK.rgb
 			)
 
 			classProvider.getGlStateManager().resetColor()
 
 			Fonts.font40.drawString(
-				info, scaledResolution.scaledWidth / 2.toFloat(), scaledResolution.scaledHeight / 2 + 7.toFloat(), Color.WHITE.rgb
+				info, scaledResolution.scaledWidth / 2.0f, scaledResolution.scaledHeight / 2 + 7.0f, Color.WHITE.rgb
 			)
 			GL11.glPopMatrix()
 		}
@@ -1049,7 +1043,7 @@ class Scaffold : Module()
 			if (minTurnSpeedValue.get() < 180)
 			{
 				limitedRotation = RotationUtils.limitAngleChange(
-					RotationUtils.serverRotation, placeRotation.rotation, (Math.random() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()).toFloat(), 0.0F
+					RotationUtils.serverRotation, placeRotation.rotation, (Random.nextFloat() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()).toFloat(), 0.0F
 				) // TODO: Apply some settings here too
 				setRotation(limitedRotation!!, keepRotationTicks)
 				tower.lockRotation = null // Prevents conflict

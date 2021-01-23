@@ -67,7 +67,7 @@ object ShortcutParser
 	{
 		if (tokenBuf.isNotEmpty())
 		{
-			tokens += Literal(tokenBuf.toString())
+			tokens += Literal("$tokenBuf")
 
 			tokenBuf.clear()
 		}

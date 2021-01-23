@@ -42,7 +42,7 @@ class DonatorCape : Listenable, MinecraftInstance()
 
 			val body = JSONObject()
 			body.put("uuid", uuid)
-			request.entity = StringEntity(body.toString())
+			request.entity = StringEntity("$body")
 
 			val response = httpClient.execute(request)
 			val statusCode = response.statusLine.statusCode

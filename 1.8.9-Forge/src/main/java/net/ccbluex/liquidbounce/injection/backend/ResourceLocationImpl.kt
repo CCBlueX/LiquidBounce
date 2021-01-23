@@ -17,5 +17,5 @@ class ResourceLocationImpl(val wrapped: ResourceLocation) : IResourceLocation
 	override fun equals(other: Any?): Boolean = other is ResourceLocationImpl && other.wrapped == wrapped
 }
 
- fun IResourceLocation.unwrap(): ResourceLocation = (this as ResourceLocationImpl).wrapped
- fun ResourceLocation.wrap(): IResourceLocation = ResourceLocationImpl(this)
+fun IResourceLocation.unwrap(): ResourceLocation = (this as ResourceLocationImpl).wrapped
+fun ResourceLocation.wrap(): IResourceLocation = ResourceLocationImpl(this)

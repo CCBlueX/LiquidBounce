@@ -36,6 +36,6 @@ class ServiceList(private val users: Map<String, String>) : CapeService
 	 * @param uuid of user
 	 * @return url of cape
 	 */
-	override fun getCape(uuid: UUID) = users[uuid.toString().replace("-", "")]
+	override fun getCape(uuid: UUID) = users["$uuid".replace("-", "")]
 
 }

@@ -6,13 +6,18 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import kotlin.math.hypot
 import kotlin.math.sqrt
 
 object MovementUtils : MinecraftInstance()
 {
-
 	val speed: Float
-		get() = sqrt(mc.thePlayer!!.motionX * mc.thePlayer!!.motionX + mc.thePlayer!!.motionZ * mc.thePlayer!!.motionZ).toFloat()
+		get()
+		{
+			val mX = mc.thePlayer!!.motionX
+			val mZ = mc.thePlayer!!.motionZ
+			return hypot(mX, mZ).toFloat()
+		}
 
 	@JvmStatic
 	val isMoving: Boolean

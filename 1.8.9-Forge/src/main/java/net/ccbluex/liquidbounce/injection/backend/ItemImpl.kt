@@ -7,7 +7,6 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.item.*
-import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.minecraft.item.*
 
 open class ItemImpl<T : Item>(val wrapped: T) : IItem
@@ -24,5 +23,5 @@ open class ItemImpl<T : Item>(val wrapped: T) : IItem
 	override fun equals(other: Any?): Boolean = other is ItemImpl<*> && other.wrapped == wrapped
 }
 
- fun IItem.unwrap(): Item = (this as ItemImpl<*>).wrapped
- fun Item.wrap(): IItem = ItemImpl(this)
+fun IItem.unwrap(): Item = (this as ItemImpl<*>).wrapped
+fun Item.wrap(): IItem = ItemImpl(this)

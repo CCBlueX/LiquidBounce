@@ -27,5 +27,5 @@ class GuiButtonImpl(val wrapped: GuiButton) : IGuiButton
 		}
 }
 
- fun IGuiButton.unwrap(): GuiButton = (this as GuiButtonImpl).wrapped
- fun GuiButton.wrap(): IGuiButton = GuiButtonImpl(this)
+fun IGuiButton.unwrap(): GuiButton = (this as GuiButtonImpl).wrapped
+fun GuiButton.wrap(): IGuiButton = GuiButtonImpl(this)

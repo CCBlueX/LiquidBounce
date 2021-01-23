@@ -104,11 +104,11 @@ class YPort : SpeedMode("YPort")
 		{
 			if (strafe >= 1f)
 			{
-				yaw += (if (forward > 0f) -45 else 45).toFloat()
+				yaw += if (forward > 0f) -45 else 45
 				strafe = 0f
 			} else if (strafe <= -1.0f)
 			{
-				yaw += (if (forward > 0f) 45 else -45).toFloat()
+				yaw += if (forward > 0f) 45 else -45
 				strafe = 0f
 			}
 			if (forward > 0f) forward = 1f else if (forward < 0f) forward = -1f

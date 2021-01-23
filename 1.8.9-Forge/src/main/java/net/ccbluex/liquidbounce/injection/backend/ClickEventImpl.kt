@@ -15,5 +15,5 @@ class ClickEventImpl(val wrapped: ClickEvent) : IClickEvent
 	override fun equals(other: Any?): Boolean = other is ClickEventImpl && other.wrapped == wrapped
 }
 
- fun IClickEvent.unwrap(): ClickEvent = (this as ClickEventImpl).wrapped
- fun ClickEvent.wrap(): IClickEvent = ClickEventImpl(this)
+fun IClickEvent.unwrap(): ClickEvent = (this as ClickEventImpl).wrapped
+fun ClickEvent.wrap(): IClickEvent = ClickEventImpl(this)

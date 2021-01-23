@@ -17,5 +17,5 @@ class FoodStatsImpl(val wrapped: FoodStats) : IFoodStats
 	override fun equals(other: Any?): Boolean = other is FoodStatsImpl && other.wrapped == wrapped
 }
 
- fun IFoodStats.unwrap(): FoodStats = (this as FoodStatsImpl).wrapped
- fun FoodStats.wrap(): IFoodStats = FoodStatsImpl(this)
+fun IFoodStats.unwrap(): FoodStats = (this as FoodStatsImpl).wrapped
+fun FoodStats.wrap(): IFoodStats = FoodStatsImpl(this)

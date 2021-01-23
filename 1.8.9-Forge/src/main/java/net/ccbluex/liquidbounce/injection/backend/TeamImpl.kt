@@ -24,5 +24,5 @@ class TeamImpl(val wrapped: Team) : ITeam
 	override fun equals(other: Any?): Boolean = other is TeamImpl && other.wrapped == wrapped
 }
 
- fun ITeam.unwrap(): Team = (this as TeamImpl).wrapped
- fun Team.wrap(): ITeam = TeamImpl(this)
+fun ITeam.unwrap(): Team = (this as TeamImpl).wrapped
+fun Team.wrap(): ITeam = TeamImpl(this)

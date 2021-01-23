@@ -156,7 +156,7 @@ class NetGraph(
 				val outPacketNextY = outPacketList[i + 1] * outPacketYMul
 
 				RenderUtils.glColor(Color(outPacketColorRedValue.get(), outPacketColorGreenValue.get(), outPacketColorBlueValue.get(), 255))
-				GL11.glVertex2f(i.toFloat() - outPacketListStart, height + 1 - outPacketY.coerceAtMost(height.toFloat()))
+				GL11.glVertex2f((i - outPacketListStart).toFloat(), height + 1 - outPacketY.coerceAtMost(height.toFloat()))
 				GL11.glVertex2f(i + 1.0F - outPacketListStart, height + 1 - outPacketNextY.coerceAtMost(height.toFloat()))
 			}
 		}

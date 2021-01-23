@@ -11,5 +11,5 @@ import net.minecraft.network.play.client.C03PacketPlayer
 
 class CPacketPlayerPosLookImpl<T : C03PacketPlayer.C06PacketPlayerPosLook>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketPlayerPosLook
 
- fun ICPacketPlayerPosLook.unwrap(): C03PacketPlayer.C06PacketPlayerPosLook = (this as CPacketPlayerPosLookImpl<*>).wrapped
- fun C03PacketPlayer.C06PacketPlayerPosLook.wrap(): ICPacketPlayerPosLook = CPacketPlayerPosLookImpl(this)
+fun ICPacketPlayerPosLook.unwrap(): C03PacketPlayer.C06PacketPlayerPosLook = (this as CPacketPlayerPosLookImpl<*>).wrapped
+fun C03PacketPlayer.C06PacketPlayerPosLook.wrap(): ICPacketPlayerPosLook = CPacketPlayerPosLookImpl(this)

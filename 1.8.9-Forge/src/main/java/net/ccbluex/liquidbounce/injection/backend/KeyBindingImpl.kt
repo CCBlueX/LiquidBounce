@@ -27,5 +27,5 @@ class KeyBindingImpl(val wrapped: KeyBinding) : IKeyBinding
 	override fun equals(other: Any?): Boolean = other is KeyBindingImpl && other.wrapped == wrapped
 }
 
- fun IKeyBinding.unwrap(): KeyBinding = (this as KeyBindingImpl).wrapped
- fun KeyBinding.wrap(): IKeyBinding = KeyBindingImpl(this)
+fun IKeyBinding.unwrap(): KeyBinding = (this as KeyBindingImpl).wrapped
+fun KeyBinding.wrap(): IKeyBinding = KeyBindingImpl(this)
