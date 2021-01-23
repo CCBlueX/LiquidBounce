@@ -69,32 +69,32 @@ class Target : Element()
 
 	override fun drawElement(): Border
 	{
-		val target = (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target ?: (LiquidBounce.moduleManager[Aimbot::class.java] as Aimbot).target
+		val targetEntity = (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target ?: (LiquidBounce.moduleManager[Aimbot::class.java] as Aimbot).target
 
-		if (classProvider.isEntityPlayer(target) && target!!.asEntityPlayer().entityAlive)
+		if (classProvider.isEntityPlayer(targetEntity) && targetEntity!!.asEntityPlayer().entityAlive)
 		{
-			val ptarget: IEntityPlayer = target.asEntityPlayer()
-			val ptargetHealth = when (healthGetMethod.get().toLowerCase())
+			val targetPlayer: IEntityPlayer = targetEntity.asEntityPlayer()
+			val targetHealth = when (healthGetMethod.get().toLowerCase())
 			{
-				"mineplex", "hive" -> EntityUtils.getPlayerHealthFromScoreboard(ptarget.gameProfile.name, healthGetMethod.get().equals("Mineplex", true)).toFloat()
-				else -> ptarget.health
-			} + ptarget.absorptionAmount
+				"mineplex", "hive" -> EntityUtils.getPlayerHealthFromScoreboard(targetPlayer.gameProfile.name, healthGetMethod.get().equals("Mineplex", true)).toFloat()
+				else -> targetPlayer.health
+			} + targetPlayer.absorptionAmount
 
-			val ptargetArmor = ptarget.totalArmorValue
+			val targetArmor = targetPlayer.totalArmorValue
 
-			val ptargetMaxHealth = ptarget.maxHealth /* + ptargetHealthBoost + ptargetAbsorption */ + ptarget.absorptionAmount
-			val ptargetMaxHealthInt = ptargetMaxHealth.roundToInt()
+			val targetMaxHealth = targetPlayer.maxHealth /* + ptargetHealthBoost + ptargetAbsorption */ + targetPlayer.absorptionAmount
+			val targetMaxHealthInt = targetMaxHealth.roundToInt()
 
 			val damageColor = Color(damageAnimationColorRed.get(), damageAnimationColorGreen.get(), damageAnimationColorBlue.get())
 			val healColor = Color(healAnimationColorRed.get(), healAnimationColorGreen.get(), healAnimationColorBlue.get())
 
-			if (ptarget != lastTarget || easingHealth < 0 || easingHealth > ptargetMaxHealth || abs(easingHealth - ptargetHealth) < 0.01) easingHealth = ptargetHealth
-			if (ptarget != lastTarget || easingAbsorption < 0 || easingAbsorption > ptarget.absorptionAmount || abs(easingAbsorption - ptarget.absorptionAmount) < 0.01) easingAbsorption = ptarget.absorptionAmount
-			if (ptarget != lastTarget || easingArmor < 0 || easingArmor > 20 || abs(easingArmor - ptargetArmor) < 0.01) easingArmor = ptargetArmor.toFloat()
+			if (targetPlayer != lastTarget || easingHealth < 0 || easingHealth > targetMaxHealth || abs(easingHealth - targetHealth) < 0.01) easingHealth = targetHealth
+			if (targetPlayer != lastTarget || easingAbsorption < 0 || easingAbsorption > targetPlayer.absorptionAmount || abs(easingAbsorption - targetPlayer.absorptionAmount) < 0.01) easingAbsorption = targetPlayer.absorptionAmount
+			if (targetPlayer != lastTarget || easingArmor < 0 || easingArmor > 20 || abs(easingArmor - targetArmor) < 0.01) easingArmor = targetArmor.toFloat()
 
-			val healthColor = ColorUtils.getHealthColor(/* ptargetHealth */ easingHealth, ptargetMaxHealth)
+			val healthColor = ColorUtils.getHealthColor(/* ptargetHealth */ easingHealth, targetMaxHealth)
 
-			val width = (98 + Fonts.font60.getStringWidth(ptarget.name!!)).coerceAtLeast(200).toFloat()
+			val width = (98 + Fonts.font60.getStringWidth(targetPlayer.name!!)).coerceAtLeast(200).toFloat()
 
 			// Draw rect box
 			RenderUtils.drawBorderedRect(0F, 0F, width, 80F, borderWidth.get(), Color(borderColorRed.get(), borderColorGreen.get(), borderColorBlue.get()).rgb, Color.BLACK.rgb)
@@ -103,18 +103,18 @@ class Target : Element()
 			RenderUtils.drawRect(2F, 2F, 62F, 62F, 0x333333)
 
 			// Absorption
-			RenderUtils.drawRect(((easingHealth / ptargetMaxHealth) * width) - ((/* ptargetAbsorption */ easingAbsorption / ptargetMaxHealth) * width) + 1, 73F, (easingHealth / ptargetMaxHealth) * width, 74F, Color.YELLOW.rgb)
+			RenderUtils.drawRect(((easingHealth / targetMaxHealth) * width) - ((/* ptargetAbsorption */ easingAbsorption / targetMaxHealth) * width) + 1, 73F, (easingHealth / targetMaxHealth) * width, 74F, Color.YELLOW.rgb)
 
 			// Damage animation
-			if (easingHealth > ptargetHealth) RenderUtils.drawRect(0F, 75F, (easingHealth / ptargetMaxHealth) * width, 77F, damageColor.rgb)
+			if (easingHealth > targetHealth) RenderUtils.drawRect(0F, 75F, (easingHealth / targetMaxHealth) * width, 77F, damageColor.rgb)
 
 			// Health bar
-			RenderUtils.drawRect(0F, 75F, (ptargetHealth / ptargetMaxHealth) * width, 77F, healthColor.rgb)
+			RenderUtils.drawRect(0F, 75F, (targetHealth / targetMaxHealth) * width, 77F, healthColor.rgb)
 
 			// Heal animation
-			if (easingHealth < ptargetHealth) RenderUtils.drawRect((easingHealth / ptargetMaxHealth) * width, 75F, (ptargetHealth / ptargetMaxHealth) * width, 77F, healColor.rgb)
+			if (easingHealth < targetHealth) RenderUtils.drawRect((easingHealth / targetMaxHealth) * width, 75F, (targetHealth / targetMaxHealth) * width, 77F, healColor.rgb)
 
-			for (index in 1..ptargetMaxHealthInt) RenderUtils.drawRect(width / ptargetMaxHealthInt * index, 73F, width / ptargetMaxHealthInt * index + 1, 77F, Color.BLACK.rgb)
+			for (index in 1..targetMaxHealthInt) RenderUtils.drawRect(width / targetMaxHealthInt * index, 73F, width / targetMaxHealthInt * index + 1, 77F, Color.BLACK.rgb)
 
 			// Indicate total armor value
 			RenderUtils.drawRect(0F, 79F, (easingArmor / 20) * width, 80F, Color.CYAN.rgb)
@@ -122,14 +122,14 @@ class Target : Element()
 			for (index in 1..20) RenderUtils.drawRect(width / 20 * index, 79F, width / 20 * index + 1, 80F, Color.BLACK.rgb)
 
 
-			easingHealth += ((ptargetHealth - easingHealth) / 2.0F.pow(10.0F - healthFadeSpeed.get())) * RenderUtils.deltaTime
-			easingAbsorption += ((ptarget.absorptionAmount - easingAbsorption) / 2.0F.pow(10.0F - absorptionFadeSpeed.get())) * RenderUtils.deltaTime
-			easingArmor += ((ptargetArmor - easingArmor) / 2.0F.pow(10.0F - armorFadeSpeed.get())) * RenderUtils.deltaTime
+			easingHealth += ((targetHealth - easingHealth) / 2.0F.pow(10.0F - healthFadeSpeed.get())) * RenderUtils.deltaTime
+			easingAbsorption += ((targetPlayer.absorptionAmount - easingAbsorption) / 2.0F.pow(10.0F - absorptionFadeSpeed.get())) * RenderUtils.deltaTime
+			easingArmor += ((targetArmor - easingArmor) / 2.0F.pow(10.0F - armorFadeSpeed.get())) * RenderUtils.deltaTime
 
-			Fonts.font60.drawString(ptarget.displayNameString, 78, 3, 0xffffff)
+			Fonts.font60.drawString(targetPlayer.displayNameString, 78, 3, 0xffffff)
 
 			// Draw informations
-			val playerInfo = mc.netHandler.getPlayerInfo(ptarget.uniqueID)
+			val playerInfo = mc.netHandler.getPlayerInfo(targetPlayer.uniqueID)
 			if (playerInfo != null)
 			{
 				val ping = playerInfo.responseTime.coerceAtLeast(0)
@@ -141,29 +141,29 @@ class Target : Element()
 			} else
 			{
 				Fonts.font35.drawString("0ms", 80, 20, 0x808080)
-				drawHead(WDefaultPlayerSkin.getDefaultSkin(ptarget.uniqueID), 60, 60)
+				drawHead(WDefaultPlayerSkin.getDefaultSkin(targetPlayer.uniqueID), 60, 60)
 				WBlockPos
 			}
 
-			Fonts.font35.drawString("${if (ptarget.onGround) "On" else "Off"} Ground", 75, 30, 0xffffff)
-			Fonts.font35.drawString("${if (!ptarget.sprinting) "Not " else ""}Sprinting | ${if (!ptarget.sneaking) "Not " else ""}Sneaking", 75, 40, 0xffffff)
-			Fonts.font35.drawString("Distance > ${decimalFormat.format(mc.thePlayer!!.getDistanceToEntityBox(ptarget))}m", 75, 50, 0xffffff)
-			Fonts.font35.drawString("Hurt > ${ptarget.hurtTime}", 75, 60, if (ptarget.hurtTime > 0) 0xff0000 /* RED */ else 0x00ff00 /* GREEN */)
+			Fonts.font35.drawString("${if (targetPlayer.onGround) "On" else "Off"} Ground", 75, 30, 0xffffff)
+			Fonts.font35.drawString("${if (!targetPlayer.sprinting) "Not " else ""}Sprinting | ${if (!targetPlayer.sneaking) "Not " else ""}Sneaking", 75, 40, 0xffffff)
+			Fonts.font35.drawString("Distance > ${decimalFormat.format(mc.thePlayer!!.getDistanceToEntityBox(targetPlayer))}m", 75, 50, 0xffffff)
+			Fonts.font35.drawString("Hurt > ${targetPlayer.hurtTime}", 75, 60, if (targetPlayer.hurtTime > 0) 0xff0000 /* RED */ else 0x00ff00 /* GREEN */)
 
 			// Render equipments
 			if (armor.get())
 			{
 				for (index in 0..4)
 				{
-					if (ptarget.getEquipmentInSlot(index) == null) continue
+					if (targetPlayer.getEquipmentInSlot(index) == null) continue
 
 					mc.renderItem.zLevel = -147F
-					mc.renderItem.renderItemAndEffectIntoGUI(ptarget.getEquipmentInSlot(index)!!, width.toInt() - 20, 2 + (4 - index) * 12)
+					mc.renderItem.renderItemAndEffectIntoGUI(targetPlayer.getEquipmentInSlot(index)!!, width.toInt() - 20, 2 + (4 - index) * 12)
 				}
 			}
 		}
 
-		lastTarget = target
+		lastTarget = targetEntity
 		return Border(0F, 0F, 200F, 80F)
 	}
 
