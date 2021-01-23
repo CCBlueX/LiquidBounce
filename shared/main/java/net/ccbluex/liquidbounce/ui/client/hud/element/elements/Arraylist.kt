@@ -147,7 +147,7 @@ class Arraylist(
 		val brightness = brightnessValue.get()
 		val rainbowSpeed = rainbowSpeedValue.get()
 		val tagColorMode = tagColorModeValue.get()
-		val rainbowOffsetVal = 400000000L + 400000000L * rainbowOffsetValue.get()
+		val rainbowOffsetVal = 400000000L + 40000000L * rainbowOffsetValue.get()
 		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
 		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
 		val rainbowShaderOffset = System.currentTimeMillis() % 10000 / 10000F
