@@ -24,6 +24,9 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.chat
+import net.ccbluex.liquidbounce.utils.dot
+import net.ccbluex.liquidbounce.utils.regular
+import net.ccbluex.liquidbounce.utils.variable
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -49,10 +52,10 @@ object CommandHide {
                     .handler { args ->
                         val name = args[0] as String
                         val module = ModuleManager.find { it.name.equals(name, true) }
-                            ?: throw CommandException("Module §b§l${args[1]}§c not found.")
+                            ?: throw CommandException("Module ${args[1]} not found.")
 
                         module.hidden = true
-                        chat("Module §a§l${module.name}§3 is now hidden.")
+                        chat(regular("Module "), variable(module.name), regular(" is now hidden"), dot())
                     }
                     .build()
             )
@@ -71,10 +74,10 @@ object CommandHide {
                     .handler { args ->
                         val name = args[0] as String
                         val module = ModuleManager.find { it.name.equals(name, true) }
-                            ?: throw CommandException("Module §b§l${args[1]}§c not found.")
+                            ?: throw CommandException("Module ${args[1]} not found.")
 
                         module.hidden = false
-                        chat("Module §a§l${module.name}§3 is not hidden anymore.")
+                        chat(regular("Module "), variable(module.name), regular(" is not hidden anymore"), dot())
                     }
                     .build()
             )

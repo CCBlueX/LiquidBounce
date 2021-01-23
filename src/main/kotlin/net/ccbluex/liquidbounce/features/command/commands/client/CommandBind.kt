@@ -24,6 +24,9 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.chat
+import net.ccbluex.liquidbounce.utils.dot
+import net.ccbluex.liquidbounce.utils.regular
+import net.ccbluex.liquidbounce.utils.variable
 import net.minecraft.client.util.InputUtil
 
 object CommandBind {
@@ -60,7 +63,7 @@ object CommandBind {
                 }.getOrElse { InputUtil.UNKNOWN_KEY }
 
                 module.bind = bindKey
-                chat("Bound module ${module.name} to key ${bindKey.localizedText.asString()}.")
+                chat(regular("Bound module "), variable(module.name), regular(" to key "), bindKey.localizedText, dot())
             }
             .build()
     }

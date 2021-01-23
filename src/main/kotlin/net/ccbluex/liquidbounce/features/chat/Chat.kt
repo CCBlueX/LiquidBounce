@@ -31,11 +31,11 @@ class Chat : Configurable("chat"), ClientListener, Listenable {
                 .begin<String>("message")
                 .description("Message to send")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .required()
+                .optional()
+                .vararg()
                 .build())
         .handler { args ->
             client.sendMessage(args[0] as String)
-            true
         }
         .build()
 

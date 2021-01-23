@@ -24,6 +24,9 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.chat
+import net.ccbluex.liquidbounce.utils.dot
+import net.ccbluex.liquidbounce.utils.regular
+import net.ccbluex.liquidbounce.utils.variable
 import net.minecraft.client.util.InputUtil
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -65,7 +68,7 @@ object CommandBinds {
                         }.getOrElse { InputUtil.UNKNOWN_KEY }
 
                         module.bind = bindKey
-                        chat("Bound module §a§l${module.name}§3 to key §a§l${bindKey.localizedText.asString()}§3.")
+                        chat(regular("Bound module "), variable(module.name), regular(" to key "), bindKey.localizedText, dot())
                     }
                     .build()
             )
@@ -87,7 +90,7 @@ object CommandBinds {
                             ?: throw CommandException("Module ${args[1]} not found.")
 
                         module.bind = InputUtil.UNKNOWN_KEY
-                        chat("The bind for module ${module.name} has been removed.")
+                        chat(regular("The bind for module "), variable(module.name), regular(" has been removed"), dot())
                     }
                     .build()
             )

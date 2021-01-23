@@ -23,7 +23,10 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.chat
+import net.ccbluex.liquidbounce.utils.dot
+import net.ccbluex.liquidbounce.utils.regular
+import net.ccbluex.liquidbounce.utils.variable
 
 object CommandToggle {
 
@@ -44,7 +47,7 @@ object CommandToggle {
 
                 val newState = !module.state
                 module.state = newState
-                chat(variable(module.name), regular(" has been "), status(if (newState) "enabled" else "disabled"), dot())
+                chat(variable(module.name), regular(" has been "), variable(if (newState) "enabled" else "disabled"), dot())
             }
             .build()
     }

@@ -41,8 +41,6 @@ fun regular(text: String) = text.asText().styled { it.withColor(Formatting.GRAY)
 
 fun variable(text: String) = text.asText().styled { it.withColor(Formatting.DARK_GRAY) }
 
-fun status(text: String) = text.asText().styled { it.withColor(Formatting.DARK_GRAY) }
-
 fun chat(vararg texts: Text, prefix: Boolean = true) {
     val literalText = if (prefix) clientPrefix.copy() else LiteralText("")
     texts.forEach { literalText.append(it) }

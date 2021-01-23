@@ -5,6 +5,9 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.chat
+import net.ccbluex.liquidbounce.utils.dot
+import net.ccbluex.liquidbounce.utils.regular
+import net.ccbluex.liquidbounce.utils.variable
 
 object CommandPrefix {
 
@@ -22,7 +25,7 @@ object CommandPrefix {
             .handler { args ->
                 val prefix = args[0] as String
                 CommandManager.prefix = prefix
-                chat("Successfully changed prefix to '$prefix'.")
+                chat(regular("Successfully changed prefix to "), variable(prefix), dot())
             }
             .build()
     }

@@ -22,6 +22,8 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.regular
+import net.ccbluex.liquidbounce.utils.variable
 import org.lwjgl.glfw.GLFW
 
 object CommandUsername {
@@ -32,7 +34,7 @@ object CommandUsername {
             .description("Copies your username to the clipboard")
             .handler {
                 val username = mc.player!!.name.asString()
-                chat("Username: $username")
+                chat(regular("Username: "), variable(username))
                 GLFW.glfwSetClipboardString(mc.window.handle, username)
             }
             .build()
