@@ -308,53 +308,42 @@ class Scaffold : Module()
 	@EventTarget
 	private fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
+		val thePlayer = mc.thePlayer ?: return
+
 		mc.timer.timerSpeed = timerValue.get()
 		shouldGoDown = downValue.get() && !sameYValue.get() && mc.gameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && blocksAmount > 1
 		if (shouldGoDown) mc.gameSettings.keyBindSneak.pressed = false
+
+		// Slow
 		if (slowValue.get())
 		{
-			mc.thePlayer!!.motionX = mc.thePlayer!!.motionX * slowSpeed.get()
-			mc.thePlayer!!.motionZ = mc.thePlayer!!.motionZ * slowSpeed.get()
+			thePlayer.motionX = thePlayer.motionX * slowSpeed.get()
+			thePlayer.motionZ = thePlayer.motionZ * slowSpeed.get()
 		}
-		if (sprintValue.get())
+
+		// Sprint
+		// This can cause compatibility issue with other mods which tamper the sprinting state (example: BetterSprinting)
+		//		if (sprintValue.get())
+		//		{
+		//			if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindSprint)) mc.gameSettings.keyBindSprint.pressed = false
+		//			if (mc.gameSettings.isKeyDown(mc.gameSettings.keyBindSprint)) mc.gameSettings.keyBindSprint.pressed = true
+		//			if (mc.gameSettings.keyBindSprint.isKeyDown) thePlayer.sprinting = true
+		//			if (!mc.gameSettings.keyBindSprint.isKeyDown) thePlayer.sprinting = false
+		//		}
+
+		if (thePlayer.onGround)
 		{
-			if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindSprint))
+			if (modeValue.get().equals("Rewinside", ignoreCase = true))
 			{
-				mc.gameSettings.keyBindSprint.pressed = false
+				MovementUtils.strafe(0.2F)
+				thePlayer.motionY = 0.0
 			}
-			if (mc.gameSettings.isKeyDown(mc.gameSettings.keyBindSprint))
-			{
-				mc.gameSettings.keyBindSprint.pressed = true
-			}
-			if (mc.gameSettings.keyBindSprint.isKeyDown)
-			{
-				mc.thePlayer!!.sprinting = true
-			}
-			if (!mc.gameSettings.keyBindSprint.isKeyDown)
-			{
-				mc.thePlayer!!.sprinting = false
-			}
-		}
-		if (mc.thePlayer!!.onGround)
-		{
-			when (modeValue.get().toLowerCase())
-			{
-				"rewinside" ->
-				{
-					MovementUtils.strafe(0.2F)
-					mc.thePlayer!!.motionY = 0.0
-				}
-			}
+
+			// Smooth Zitter
 			if (zitterValue.get() && zitterModeValue.get().equals("Smooth", true))
 			{
-				if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindRight))
-				{
-					mc.gameSettings.keyBindRight.pressed = false
-				}
-				if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindLeft))
-				{
-					mc.gameSettings.keyBindLeft.pressed = false
-				}
+				if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindRight)) mc.gameSettings.keyBindRight.pressed = false
+				if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindLeft)) mc.gameSettings.keyBindLeft.pressed = false
 				if (zitterTimer.hasTimePassed(100))
 				{
 					zitterDirection = !zitterDirection
@@ -370,7 +359,9 @@ class Scaffold : Module()
 					mc.gameSettings.keyBindLeft.pressed = true
 				}
 			}
-		} // Eagle
+		}
+
+		// Eagle
 		if (!eagleValue.get().equals("Off", true) && !shouldGoDown)
 		{
 			var dif = 0.5
@@ -381,12 +372,12 @@ class Scaffold : Module()
 					0 ->
 					{
 						val blockPos = WBlockPos(
-							mc.thePlayer!!.posX - 1.0, mc.thePlayer!!.posY - (if (mc.thePlayer!!.posY == mc.thePlayer!!.posY.toInt() + 0.5) 0.0 else 1.0), mc.thePlayer!!.posZ
+							thePlayer.posX - 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ
 						)
 						val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
 						if (isReplaceable(blockPos) && placeInfo != null)
 						{
-							var calcDif: Double = mc.thePlayer!!.posX - blockPos.x
+							var calcDif: Double = thePlayer.posX - blockPos.x
 							calcDif -= 0.5
 
 							if (calcDif < 0)
@@ -404,13 +395,13 @@ class Scaffold : Module()
 					1 ->
 					{
 						val blockPos = WBlockPos(
-							mc.thePlayer!!.posX + 1.0, mc.thePlayer!!.posY - (if (mc.thePlayer!!.posY == mc.thePlayer!!.posY.toInt() + 0.5) 0.0 else 1.0), mc.thePlayer!!.posZ
+							thePlayer.posX + 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ
 						)
 						val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
 
 						if (isReplaceable(blockPos) && placeInfo != null)
 						{
-							var calcDif: Double = mc.thePlayer!!.posX - blockPos.x
+							var calcDif: Double = thePlayer.posX - blockPos.x
 							calcDif -= 0.5
 
 							if (calcDif < 0)
@@ -428,13 +419,13 @@ class Scaffold : Module()
 					2 ->
 					{
 						val blockPos = WBlockPos(
-							mc.thePlayer!!.posX, mc.thePlayer!!.posY - (if (mc.thePlayer!!.posY == mc.thePlayer!!.posY.toInt() + 0.5) 0.0 else 1.0), mc.thePlayer!!.posZ - 1.0
+							thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ - 1.0
 						)
 						val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
 
 						if (isReplaceable(blockPos) && placeInfo != null)
 						{
-							var calcDif: Double = mc.thePlayer!!.posZ - blockPos.z
+							var calcDif: Double = thePlayer.posZ - blockPos.z
 							calcDif -= 0.5
 
 							if (calcDif < 0)
@@ -452,13 +443,13 @@ class Scaffold : Module()
 					3 ->
 					{
 						val blockPos = WBlockPos(
-							mc.thePlayer!!.posX, mc.thePlayer!!.posY - (if (mc.thePlayer!!.posY == mc.thePlayer!!.posY.toInt() + 0.5) 0.0 else 1.0), mc.thePlayer!!.posZ + 1.0
+							thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ + 1.0
 						)
 						val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
 
 						if (isReplaceable(blockPos) && placeInfo != null)
 						{
-							var calcDif: Double = mc.thePlayer!!.posZ - blockPos.z
+							var calcDif: Double = thePlayer.posZ - blockPos.z
 							calcDif -= 0.5
 
 							if (calcDif < 0)
@@ -474,11 +465,12 @@ class Scaffold : Module()
 					}
 				}
 			}
+
 			if (placedBlocksWithoutEagle >= blocksToEagleValue.get())
 			{
-				val shouldEagle: Boolean = mc.theWorld!!.getBlockState(
+				val shouldEagle: Boolean = (mc.theWorld ?: return).getBlockState(
 					WBlockPos(
-						mc.thePlayer!!.posX, mc.thePlayer!!.posY - 1.0, mc.thePlayer!!.posZ
+						thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ
 					)
 				).block == (classProvider.getBlockEnum(BlockType.AIR)) || (dif < edgeDistanceValue.get() && eagleValue.get().equals("EdgeDistance", true))
 				if (eagleValue.get().equals("Silent", true) && !shouldGoDown)
@@ -487,7 +479,7 @@ class Scaffold : Module()
 					{
 						mc.netHandler.addToSendQueue(
 							classProvider.createCPacketEntityAction(
-								mc.thePlayer!!, if (shouldEagle) ICPacketEntityAction.WAction.START_SNEAKING
+								thePlayer, if (shouldEagle) ICPacketEntityAction.WAction.START_SNEAKING
 								else ICPacketEntityAction.WAction.STOP_SNEAKING
 							)
 						)
@@ -498,16 +490,15 @@ class Scaffold : Module()
 					mc.gameSettings.keyBindSneak.pressed = shouldEagle
 					placedBlocksWithoutEagle = 0
 				}
-			} else
-			{
-				placedBlocksWithoutEagle++
-			}
+			} else placedBlocksWithoutEagle++
+
+			// Teleport Zitter
 			if (zitterValue.get() && zitterModeValue.get().equals("teleport", true))
 			{
 				MovementUtils.strafe(zitterSpeed.get())
-				val yaw: Double = Math.toRadians(mc.thePlayer!!.rotationYaw + if (zitterDirection) 90.0 else -90.0)
-				mc.thePlayer!!.motionX = mc.thePlayer!!.motionX - sin(yaw) * zitterStrength.get()
-				mc.thePlayer!!.motionZ = mc.thePlayer!!.motionZ + cos(yaw) * zitterStrength.get()
+				val yaw: Double = Math.toRadians(thePlayer.rotationYaw + if (zitterDirection) 90.0 else -90.0)
+				thePlayer.motionX = thePlayer.motionX - sin(yaw) * zitterStrength.get()
+				thePlayer.motionZ = thePlayer.motionZ + cos(yaw) * zitterStrength.get()
 				zitterDirection = !zitterDirection
 			}
 		}
@@ -806,6 +797,7 @@ class Scaffold : Module()
 		// Switch Delay wait
 		if (!switchTimer.hasTimePassed(switchDelay)) return
 
+		// Place block
 		if (mc.playerController.onPlayerRightClick(
 				thePlayer, theWorld, itemStack, targetPlace!!.blockPos, targetPlace!!.enumFacing, targetPlace!!.vec3
 			)
@@ -868,7 +860,7 @@ class Scaffold : Module()
 	fun onMove(event: MoveEvent)
 	{
 		if (!safeWalkValue.get() || shouldGoDown) return
-		if (airSafeValue.get() || mc.thePlayer!!.onGround) event.isSafeWalk = true
+		if (airSafeValue.get() || (mc.thePlayer ?: return).onGround) event.isSafeWalk = true
 	}
 
 	/**
@@ -880,7 +872,7 @@ class Scaffold : Module()
 		if (counterDisplayValue.get())
 		{
 			GL11.glPushMatrix()
-			val blockOverlay = LiquidBounce.moduleManager.getModule(BlockOverlay::class.java) as BlockOverlay
+			val blockOverlay = LiquidBounce.moduleManager[BlockOverlay::class.java] as BlockOverlay
 			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) GL11.glTranslatef(0f, 15f, 0f)
 
 			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}$blocksAmount"

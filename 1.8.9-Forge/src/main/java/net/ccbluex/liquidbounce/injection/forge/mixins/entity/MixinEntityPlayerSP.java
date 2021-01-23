@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
-import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
@@ -351,22 +350,23 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		final Sprint sprint = (Sprint) LiquidBounce.moduleManager.getModule(Sprint.class);
 
-		final boolean flag3 = !sprint.foodValue.get() || getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
+		final boolean foodCheck = !sprint.foodValue.get() || getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
 
-		if (onGround && !sneak && !forward && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness))
+		if (onGround && !sneak && !forward && movementInput.moveForward >= f && !isSprinting() && foodCheck && !isUsingItem() && !isPotionActive(Potion.blindness))
 			if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown())
 				sprintToggleTimer = 7;
 			else
 				setSprinting(true);
 
-		if (!isSprinting() && movementInput.moveForward >= f && flag3 && (noSlow.getState() || !isUsingItem()) && !isPotionActive(Potion.blindness) && mc.gameSettings.keyBindSprint.isKeyDown())
+		if (!isSprinting() && movementInput.moveForward >= f && foodCheck && (noSlow.getState() || !isUsingItem()) && !isPotionActive(Potion.blindness) && mc.gameSettings.keyBindSprint.isKeyDown())
 			setSprinting(true);
 
 		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.getModule(Scaffold.class);
 		if (scaffold.getState() && !scaffold.sprintValue.get() || sprint.getState() && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)
 			setSprinting(false);
 
-		if (isSprinting() && (!(sprint.getState() && sprint.allDirectionsValue.get()) && movementInput.moveForward < f || isCollidedHorizontally || !flag3))
+		final boolean allDirection = sprint.getState() && sprint.allDirectionsValue.get();
+		if (isSprinting() && (!allDirection && movementInput.moveForward < f || isCollidedHorizontally || !foodCheck))
 			setSprinting(false);
 
 		if (capabilities.allowFlying)
@@ -421,10 +421,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			{
 				++horseJumpPowerCounter;
 
-				if (horseJumpPowerCounter < 10)
-					horseJumpPower = horseJumpPowerCounter * 0.1F;
-				else
-					horseJumpPower = 0.8F + 2.0F / (horseJumpPowerCounter - 9) * 0.1F;
+				horseJumpPower = horseJumpPowerCounter < 10 ? horseJumpPowerCounter * 0.1F : 0.8F + 2.0F / (horseJumpPowerCounter - 9) * 0.1F;
 			}
 		}
 		else

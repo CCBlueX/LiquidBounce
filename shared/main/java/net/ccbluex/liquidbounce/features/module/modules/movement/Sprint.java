@@ -11,11 +11,11 @@ import net.ccbluex.liquidbounce.event.UpdateEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
+import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
-import org.jetbrains.annotations.Nullable;
 
 @ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
 public class Sprint extends Module
@@ -31,7 +31,13 @@ public class Sprint extends Module
 	@EventTarget
 	public void onUpdate(final UpdateEvent event)
 	{
-		if (!MovementUtils.isMoving() || mc.getThePlayer().isSneaking() || blindnessValue.get() && mc.getThePlayer().isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) || foodValue.get() && !(mc.getThePlayer().getFoodStats().getFoodLevel() > 6.0F || mc.getThePlayer().getCapabilities().getAllowFlying()) || checkServerSide.get() && (mc.getThePlayer().getOnGround() || !checkServerSideGround.get()) && !allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.getThePlayer().getRotationYaw(), mc.getThePlayer().getRotationPitch())) > 30)
+		if (mc.getThePlayer() == null)
+			return;
+
+		final boolean blindCheck = blindnessValue.get() && mc.getThePlayer().isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS));
+		final boolean foodCheck = foodValue.get() && !(mc.getThePlayer().getFoodStats().getFoodLevel() > 6.0F || mc.getThePlayer().getCapabilities().getAllowFlying());
+		final boolean serversideCheck = checkServerSide.get() && (mc.getThePlayer().getOnGround() || !checkServerSideGround.get()) && !allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.getThePlayer().getRotationYaw(), mc.getThePlayer().getRotationPitch())) > 30;
+		if (!MovementUtils.isMoving() || mc.getThePlayer().isSneaking() || blindCheck || foodCheck || serversideCheck)
 		{
 			mc.getThePlayer().setSprinting(false);
 			return;
@@ -42,7 +48,8 @@ public class Sprint extends Module
 	}
 
 	@Override
-	public String getTag() {
+	public String getTag()
+	{
 		return allDirectionsValue.get() ? "AllDirection" : null;
 	}
 }
