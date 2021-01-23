@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -94,7 +95,7 @@ class Tracers : Module()
 		val y = (entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * mc.timer.renderPartialTicks - mc.renderManager.renderPosY)
 		val z = (entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * mc.timer.renderPartialTicks - mc.renderManager.renderPosZ)
 
-		val eyeVector = WVec3(0.0, 0.0, 1.0).rotatePitch((-Math.toRadians(thePlayer.rotationPitch.toDouble())).toFloat()).rotateYaw((-Math.toRadians(thePlayer.rotationYaw.toDouble())).toFloat())
+		val eyeVector = WVec3(0.0, 0.0, 1.0).rotatePitch(-WMathHelper.toRadians(thePlayer.rotationPitch)).rotateYaw(-WMathHelper.toRadians(thePlayer.rotationYaw))
 
 		RenderUtils.glColor(color)
 

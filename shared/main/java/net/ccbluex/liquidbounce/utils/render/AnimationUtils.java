@@ -6,11 +6,11 @@
 package net.ccbluex.liquidbounce.utils.render;
 
 import static java.lang.Math.pow;
-import static java.lang.Math.sin;
+
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
 
 public class AnimationUtils
 {
-
 	/**
 	 * In-out-easing function https://github.com/jesusgollonet/processing-penner-easing
 	 *
@@ -32,9 +32,8 @@ public class AnimationUtils
 	 */
 	public static float easeOutElastic(final float x)
 	{
-		final double c4 = 2 * Math.PI / 3.0f;
+		final float c4 = 2 * (float) Math.PI / 3.0f;
 
-		return x == 0 ? 0 : (float) (x == 1 ? 1 : pow(2, -10 * x) * sin((x * 10 - 0.75) * c4) + 1);
-
+		return x == 0 ? 0 : (float) (x == 1 ? 1 : pow(2, -10 * x) * WMathHelper.sin((x * 10 - 0.75f) * c4) + 1);
 	}
 }

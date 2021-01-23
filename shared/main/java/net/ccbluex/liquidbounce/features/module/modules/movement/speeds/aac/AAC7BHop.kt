@@ -5,11 +5,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import kotlin.math.cos
-import kotlin.math.sin
 
 class AAC7BHop : SpeedMode("AAC7BHop")
 {
@@ -29,10 +28,10 @@ class AAC7BHop : SpeedMode("AAC7BHop")
 		}
 
 		val speed = MovementUtils.speed * 1.0072
-		val yaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
 
-		thePlayer.motionX = -sin(yaw) * speed
-		thePlayer.motionZ = cos(yaw) * speed
+		val yaw = WMathHelper.toRadians(thePlayer.rotationYaw)
+		thePlayer.motionX = -functions.sin(yaw) * speed
+		thePlayer.motionZ = functions.cos(yaw) * speed
 	}
 
 	override fun onMotion()

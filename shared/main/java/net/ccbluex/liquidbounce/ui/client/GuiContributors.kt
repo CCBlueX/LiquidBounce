@@ -25,7 +25,6 @@ import java.text.NumberFormat
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.concurrent.thread
-import kotlin.math.sin
 
 class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 {
@@ -66,7 +65,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 			val avatar = credit.avatar
 
-			val imageSize = representedScreen.fontRendererObj.fontHeight.toInt() * 4
+			val imageSize = representedScreen.fontRendererObj.fontHeight * 4
 
 			if (avatar != null)
 			{
@@ -113,7 +112,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 			for (s in credit.contributions)
 			{
-				y += Fonts.font40.fontHeight.toInt() + 2
+				y += Fonts.font40.fontHeight + 2
 
 				classProvider.getGlStateManager().disableTexture2D()
 				GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
@@ -134,7 +133,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		{
 			if (failed)
 			{
-				val gb = ((sin(System.currentTimeMillis() * (1 / 333.0)) + 1) * (0.5 * 255)).toInt()
+				val gb = ((functions.sin(System.currentTimeMillis() * (1 / 333.0F)) + 1) * (0.5 * 255)).toInt()
 				Fonts.font40.drawCenteredString("Failed to load", representedScreen.width / 8.0f, representedScreen.height / 2.0f, Color(255, gb, gb).rgb)
 			} else
 			{

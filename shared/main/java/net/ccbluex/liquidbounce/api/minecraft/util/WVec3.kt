@@ -6,8 +6,6 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.util
 
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.floor
 
@@ -37,20 +35,20 @@ class WVec3(
 
 	fun add(vec: WVec3): WVec3 = addVector(vec.xCoord, vec.yCoord, vec.zCoord)
 
-	fun rotatePitch(pitch: Float): WVec3
+	fun rotatePitch(pitchRadians: Float): WVec3
 	{
-		val cos: Float = cos(pitch)
-		val sin: Float = sin(pitch)
+		val cos: Float = WMathHelper.cos(pitchRadians)
+		val sin: Float = WMathHelper.sin(pitchRadians)
 		val x = xCoord
 		val y = yCoord * cos.toDouble() + zCoord * sin.toDouble()
 		val z = zCoord * cos.toDouble() - yCoord * sin.toDouble()
 		return WVec3(x, y, z)
 	}
 
-	fun rotateYaw(yaw: Float): WVec3
+	fun rotateYaw(yawRadians: Float): WVec3
 	{
-		val cos: Float = cos(yaw)
-		val sin: Float = sin(yaw)
+		val cos: Float = WMathHelper.cos(yawRadians)
+		val sin: Float = WMathHelper.sin(yawRadians)
 		val x = xCoord * cos.toDouble() + zCoord * sin.toDouble()
 		val y = yCoord
 		val z = zCoord * cos.toDouble() - xCoord * sin.toDouble()

@@ -5,11 +5,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import kotlin.math.cos
-import kotlin.math.sin
 
 class NCPYPort : SpeedMode("NCPYPort")
 {
@@ -23,9 +22,9 @@ class NCPYPort : SpeedMode("NCPYPort")
 		if (thePlayer.onGround)
 		{
 			thePlayer.motionY = if (jumps <= 1) 0.42 else 0.4
-			val f = thePlayer.rotationYaw * 0.017453292f
-			thePlayer.motionX -= sin(f) * 0.2f
-			thePlayer.motionZ += cos(f) * 0.2f
+			val f = WMathHelper.toRadians(thePlayer.rotationYaw)
+			thePlayer.motionX -= functions.sin(f) * 0.2f
+			thePlayer.motionZ += functions.cos(f) * 0.2f
 			jumps++
 		} else if (jumps <= 1) thePlayer.motionY = -5.0
 		MovementUtils.strafe()

@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.AirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.LiquidWalk;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
+import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.EntityLivingBase;
@@ -86,7 +87,8 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 
 		if (isSprinting())
 		{
-			final float f = rotationYaw * 0.017453292F;
+			// final float f = rotationYaw * 0.017453292F;
+			final float f = MovementUtils.getDirection(); // Compatibility with Sprint AllDirection mode
 			motionX -= MathHelper.sin(f) * 0.2F;
 			motionZ += MathHelper.cos(f) * 0.2F;
 		}

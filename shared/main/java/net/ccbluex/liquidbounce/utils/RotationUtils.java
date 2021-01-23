@@ -23,10 +23,6 @@ import net.ccbluex.liquidbounce.event.TickEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow;
 
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.Vec3;
 import org.jetbrains.annotations.NotNull;
 
 import static java.lang.Math.*;
@@ -436,10 +432,14 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 	 */
 	public static WVec3 getVectorForRotation(final Rotation rotation)
 	{
-		final float yawCos = (float) cos(-rotation.getYaw() * 0.017453292F - (float) PI);
-		final float yawSin = (float) sin(-rotation.getYaw() * 0.017453292F - (float) PI);
-		final float pitchCos = (float) -cos(-rotation.getPitch() * 0.017453292F);
-		final float pitchSin = (float) sin(-rotation.getPitch() * 0.017453292F);
+		final float yawRadians = WMathHelper.toRadians(rotation.getYaw());
+		final float pitchRadians = WMathHelper.toRadians(rotation.getPitch());
+
+		final float yawCos = WMathHelper.cos(-yawRadians - (float) PI);
+		final float yawSin = WMathHelper.sin(-yawRadians - (float) PI);
+		final float pitchCos = -WMathHelper.cos(-pitchRadians);
+		final float pitchSin = WMathHelper.sin(-pitchRadians);
+
 		return new WVec3(yawSin * pitchCos, pitchSin, yawCos * pitchCos);
 	}
 

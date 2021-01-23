@@ -8,9 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.api.enums.MaterialType
 import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -25,9 +23,7 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.util.glu.Cylinder
 import org.lwjgl.util.glu.GLU
 import java.awt.Color
-import kotlin.math.cos
 import kotlin.math.floor
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 @ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land.", category = ModuleCategory.RENDER)
@@ -97,20 +93,20 @@ class Projectiles : Module()
 		val pitch = if (RotationUtils.targetRotation != null) RotationUtils.targetRotation.pitch
 		else thePlayer.rotationPitch
 
-		val yawRadians = yaw / 180f * Math.PI.toFloat()
-		val pitchRadians = pitch / 180f * Math.PI.toFloat()
+		val yawRadians = yaw / 180f * WMathHelper.PI
+		val pitchRadians = pitch / 180f * WMathHelper.PI
 
 		// Positions
-		var posX = renderManager.renderPosX - cos(yawRadians) * 0.16F
+		var posX = renderManager.renderPosX - functions.cos(yawRadians) * 0.16F
 		var posY = renderManager.renderPosY + thePlayer.eyeHeight - 0.10000000149011612
-		var posZ = renderManager.renderPosZ - sin(yawRadians) * 0.16F
+		var posZ = renderManager.renderPosZ - functions.sin(yawRadians) * 0.16F
 
 		// Motions
-		var motionX = (-sin(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4)
-		var motionY = -sin(
-			(pitch + if (classProvider.isItemPotion(item) && heldItem.isSplash()) -20 else 0) / 180f * 3.1415927f
+		var motionX = (-functions.sin(yawRadians) * functions.cos(pitchRadians) * if (isBow) 1.0 else 0.4)
+		var motionY = -functions.sin(
+			(pitch + if (classProvider.isItemPotion(item) && heldItem.isSplash()) -20 else 0) / 180f * WMathHelper.PI
 		) * if (isBow) 1.0 else 0.4
-		var motionZ = (cos(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4)
+		var motionZ = (functions.cos(yawRadians) * functions.cos(pitchRadians) * if (isBow) 1.0 else 0.4)
 		val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
 
 		motionX /= distance

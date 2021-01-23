@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -16,8 +17,6 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import kotlin.math.cos
-import kotlin.math.sin
 
 @ModuleInfo(name = "Velocity", description = "Allows you to modify the amount of knockback you take.", category = ModuleCategory.COMBAT)
 class Velocity : Module()
@@ -75,10 +74,10 @@ class Velocity : Module()
 			{
 				thePlayer.motionY = 0.42
 
-				val yaw = thePlayer.rotationYaw * 0.017453292F
+				val yaw = WMathHelper.toRadians(thePlayer.rotationYaw)
 
-				thePlayer.motionX -= sin(yaw) * 0.2
-				thePlayer.motionZ += cos(yaw) * 0.2
+				thePlayer.motionX -= functions.sin(yaw) * 0.2
+				thePlayer.motionZ += functions.cos(yaw) * 0.2
 			}
 
 			"glitch" ->

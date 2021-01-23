@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -121,11 +122,13 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 				forward = -1.0f
 			}
 		}
-		val mx2 = cos(Math.toRadians(yaw + 90.0f.toDouble()))
-		val mz2 = sin(Math.toRadians(yaw + 90.0f.toDouble()))
+
+		val yawRadians = WMathHelper.toRadians(yaw + 90.0f)
+		val mx2 = functions.cos(yawRadians)
+		val mz2 = functions.sin(yawRadians)
 		event.x = forward.toDouble() * moveSpeed * mx2 + strafe.toDouble() * moveSpeed * mz2
 		event.z = forward.toDouble() * moveSpeed * mz2 - strafe.toDouble() * moveSpeed * mx2
-		thePlayer.stepHeight = 0.6f
+		thePlayer.stepHeight = 0.5f
 		if (forward == 0.0f && strafe == 0.0f)
 		{
 			event.x = 0.0

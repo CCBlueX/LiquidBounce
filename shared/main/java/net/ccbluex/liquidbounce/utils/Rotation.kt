@@ -10,8 +10,6 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
@@ -157,8 +155,8 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
 			d = friction / d
 			calcStrafe *= d
 			calcForward *= d
-			val yawSin = sin((yaw * Math.PI / 180f).toFloat())
-			val yawCos = cos((yaw * Math.PI / 180f).toFloat())
+			val yawSin = WMathHelper.sin((yaw * WMathHelper.PI / 180f))
+			val yawCos = WMathHelper.cos((yaw * WMathHelper.PI / 180f))
 			player.motionX += calcStrafe * yawCos - calcForward * yawSin.toDouble()
 			player.motionZ += calcForward * yawCos + calcStrafe * yawSin.toDouble()
 		}

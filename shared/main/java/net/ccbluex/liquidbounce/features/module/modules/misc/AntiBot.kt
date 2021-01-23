@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -293,14 +294,15 @@ object AntiBot : Module()
 	@EventTarget
 	fun onPacket(event: PacketEvent)
 	{
-		if (mc.thePlayer == null || mc.theWorld == null) return
+		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
 
 		val packet = event.packet
 
 		if (classProvider.isSPacketEntity(packet))
 		{
 			val packetEntity = packet.asSPacketEntity()
-			val entity = packetEntity.getEntity(mc.theWorld!!)
+			val entity = packetEntity.getEntity(theWorld)
 
 			if (classProvider.isEntityPlayer(entity) && entity != null)
 			{
@@ -328,7 +330,7 @@ object AntiBot : Module()
 				if (entity.invisible && !invisible.contains(entity.entityId)) invisible.add(entity.entityId)
 
 				// Always in radius
-				if (!notAlwaysInRadius.contains(entity.entityId) && mc.thePlayer!!.getDistanceToEntity(entity) > alwaysRadiusValue.get()) notAlwaysInRadius.add(entity.entityId)
+				if (!notAlwaysInRadius.contains(entity.entityId) && thePlayer.getDistanceToEntity(entity) > alwaysRadiusValue.get()) notAlwaysInRadius.add(entity.entityId)
 
 				if (hypot(abs(entity.prevPosX - entity.posX), abs(entity.prevPosZ - entity.posZ)) > speedLimitValue.get()) xzspeed[entity.entityId] = xzspeed.getOrDefault(entity.entityId, 0) + 1 else if (speedCountDecremSysValue.get())
 				{
@@ -342,15 +344,15 @@ object AntiBot : Module()
 					if (currentVL <= 0) yspeed.remove(entity.entityId) else yspeed[entity.entityId] = currentVL
 				}
 
-				val yaw = if (RotationUtils.serverRotation != null) RotationUtils.serverRotation.yaw.toDouble() else mc.thePlayer!!.rotationYaw.toDouble()
-				val dir = Math.toRadians(yaw - 180)
-				val expectedX = mc.thePlayer!!.posX - sin(dir) * positionBackValue.get()
-				val expectedY = mc.thePlayer!!.posY + positionYValue.get()
-				val expectedZ = mc.thePlayer!!.posZ + cos(dir) * positionBackValue.get()
+				val yaw = if (RotationUtils.serverRotation != null) RotationUtils.serverRotation.yaw else thePlayer.rotationYaw
+				val dir = WMathHelper.toRadians(yaw - 180.0F)
+				val expectedX = thePlayer.posX - functions.sin(dir) * positionBackValue.get()
+				val expectedY = thePlayer.posY + positionYValue.get()
+				val expectedZ = thePlayer.posZ + functions.cos(dir) * positionBackValue.get()
 
-				val expectedX2 = mc.thePlayer!!.posX - sin(dir) * positionBack2Value.get()
-				val expectedY2 = mc.thePlayer!!.posY + positionY2Value.get()
-				val expectedZ2 = mc.thePlayer!!.posZ + cos(dir) * positionBack2Value.get()
+				val expectedX2 = thePlayer.posX - functions.sin(dir) * positionBack2Value.get()
+				val expectedY2 = thePlayer.posY + positionY2Value.get()
+				val expectedZ2 = thePlayer.posZ + functions.cos(dir) * positionBack2Value.get()
 
 				val distances = doubleArrayOf(entity.getDistance(expectedX, expectedY, expectedZ), entity.getDistance(expectedX2, expectedY2, expectedZ2))
 				for (distance in distances)
@@ -383,14 +385,14 @@ object AntiBot : Module()
 				}
 
 				// ticksExisted > 40 && custom name tag is empty = Mineplex GWEN bot
-				if (mc.thePlayer!!.ticksExisted > 40 && entity.asEntityPlayer().customNameTag == "" && !gwenBots.contains(entity.entityId)) gwenBots.add(entity.entityId)
+				if (thePlayer.ticksExisted > 40 && entity.asEntityPlayer().customNameTag == "" && !gwenBots.contains(entity.entityId)) gwenBots.add(entity.entityId)
 
 				// invisible + display name isn't red but ends with color reset char (\u00A7r) + displayname equals customname + entity is near than 3 block horizontally + y delta between entity and player is 10~13 = Watchdog Bot
 				if (entity.invisible && displayName?.startsWith("\u00A7c") == false && displayName.endsWith("\u00A7r") && displayName == customName)
 				{
-					val deltaX = abs(entity.posX - mc.thePlayer!!.posX)
-					val deltaY = abs(entity.posY - mc.thePlayer!!.posY)
-					val deltaZ = abs(entity.posZ - mc.thePlayer!!.posZ)
+					val deltaX = abs(entity.posX - thePlayer.posX)
+					val deltaY = abs(entity.posY - thePlayer.posY)
+					val deltaZ = abs(entity.posZ - thePlayer.posZ)
 					val horizontalDistance = sqrt(deltaX * deltaX + deltaZ * deltaZ)
 					if (deltaY < 13 && deltaY > 10 && horizontalDistance < 3 && !checkTabList(entity.asEntityPlayer().gameProfile.name, false, true, true))
 					{
@@ -398,7 +400,7 @@ object AntiBot : Module()
 						{
 							lastRemoved.reset()
 							removedBots.add(entity.entityId)
-							mc.theWorld!!.removeEntityFromWorld(entity.entityId)
+							theWorld.removeEntityFromWorld(entity.entityId)
 						}
 						watchdogBots.add(entity.entityId)
 					}
@@ -411,7 +413,7 @@ object AntiBot : Module()
 					{
 						lastRemoved.reset()
 						removedBots.add(entity.entityId)
-						mc.theWorld!!.removeEntityFromWorld(entity.entityId)
+						theWorld.removeEntityFromWorld(entity.entityId)
 					}
 					watchdogBots.add(entity.entityId)
 				}
@@ -424,7 +426,7 @@ object AntiBot : Module()
 		if (classProvider.isSPacketEntityTeleport(packet))
 		{
 			val packetEntityTeleport = packet.asSPacketEntityTeleport()
-			val entity: IEntity? = mc.theWorld!!.getEntityByID(packetEntityTeleport.entityId)
+			val entity: IEntity? = theWorld.getEntityByID(packetEntityTeleport.entityId)
 
 			if (entity != null && classProvider.isEntityPlayer(entity))
 			{
@@ -443,7 +445,7 @@ object AntiBot : Module()
 		if (classProvider.isSPacketAnimation(packet))
 		{
 			val packetAnimation = packet.asSPacketAnimation()
-			val entity = mc.theWorld!!.getEntityByID(packetAnimation.entityID)
+			val entity = theWorld.getEntityByID(packetAnimation.entityID)
 
 			if (entity != null && classProvider.isEntityLivingBase(entity) && packetAnimation.animationType == 0 && !swing.contains(entity.entityId)) swing.add(entity.entityId)
 		}
@@ -454,11 +456,11 @@ object AntiBot : Module()
 			val entityX: Double = packetPlayerSpawn.x.toDouble()
 			val entityY: Double = packetPlayerSpawn.y.toDouble()
 			val entityZ: Double = packetPlayerSpawn.z.toDouble()
-			val deltaX = mc.thePlayer!!.posX - entityX
-			val deltaY = mc.thePlayer!!.posY - entityY
-			val deltaZ = mc.thePlayer!!.posZ - entityZ
+			val deltaX = thePlayer.posX - entityX
+			val deltaY = thePlayer.posY - entityY
+			val deltaZ = thePlayer.posZ - entityZ
 			val distance = sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ)
-			if (distance <= 18 && entityY > mc.thePlayer!!.posY + 1.0 && mc.thePlayer!!.posX != entityX && mc.thePlayer!!.posY != entityY && mc.thePlayer!!.posZ != entityZ) spawnedposition.add(packetPlayerSpawn.entityID)
+			if (distance <= 18 && entityY > thePlayer.posY + 1.0 && thePlayer.posX != entityX && thePlayer.posY != entityY && thePlayer.posZ != entityZ) spawnedposition.add(packetPlayerSpawn.entityID)
 		}
 	}
 

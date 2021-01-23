@@ -9,9 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.StatType
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
-import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -377,8 +375,8 @@ class Fly : Module()
 						var z = 0.0
 						if (isMoving && !thePlayer.isCollidedHorizontally)
 						{
-							x = -sin(yaw) * speed
-							z = cos(yaw) * speed
+							x = -functions.sin(yaw) * speed
+							z = functions.cos(yaw) * speed
 						}
 
 						if (!thePlayer.isCollidedVertically) if (mc.gameSettings.keyBindJump.isKeyDown && !mc.gameSettings.keyBindSneak.isKeyDown) y = speed else if (!mc.gameSettings.keyBindJump.isKeyDown && mc.gameSettings.keyBindSneak.isKeyDown) y =
@@ -386,8 +384,8 @@ class Fly : Module()
 
 						if (isMoving && !thePlayer.isCollidedHorizontally)
 						{
-							x = -sin(yaw) * speed
-							z = cos(yaw) * speed
+							x = -functions.sin(yaw) * speed
+							z = functions.cos(yaw) * speed
 						}
 
 						if (!thePlayer.isCollidedVertically) if (mc.gameSettings.keyBindJump.isKeyDown && !mc.gameSettings.keyBindSneak.isKeyDown) y = speed else if (!mc.gameSettings.keyBindJump.isKeyDown && mc.gameSettings.keyBindSneak.isKeyDown) y =
@@ -505,9 +503,9 @@ class Fly : Module()
 					{
 						mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + 5, thePlayer.posZ, false))
 						mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(0.5, -1000.0, 0.5, false))
-						val yaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
-						val x = -sin(yaw) * 0.4
-						val z = cos(yaw) * 0.4
+						val yaw = WMathHelper.toRadians(thePlayer.rotationYaw)
+						val x = -functions.sin(yaw) * 0.4
+						val z = functions.cos(yaw) * 0.4
 
 						thePlayer.setPosition(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z)
 						mineSecureVClipTimer.reset()
@@ -529,10 +527,10 @@ class Fly : Module()
 					val yaw = -thePlayer.rotationYaw
 					val pitch = -thePlayer.rotationPitch
 					val length = 9.9
+					val yawRadians = WMathHelper.toRadians(yaw)
+					val pitchRadians = WMathHelper.toRadians(pitch)
 					val vectorEnd = WVec3(
-						sin(Math.toRadians(yaw.toDouble())) * cos(Math.toRadians(pitch.toDouble())) * length + vectorStart.xCoord,
-						sin(Math.toRadians(pitch.toDouble())) * length + vectorStart.yCoord,
-						cos(Math.toRadians(yaw.toDouble())) * cos(Math.toRadians(pitch.toDouble())) * length + vectorStart.zCoord
+						functions.sin(yawRadians) * functions.cos(pitchRadians) * length + vectorStart.xCoord, functions.sin(pitchRadians) * length + vectorStart.yCoord, functions.cos(yawRadians) * functions.cos(pitchRadians) * length + vectorStart.zCoord
 					)
 					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(vectorEnd.xCoord, thePlayer.posY + 2, vectorEnd.zCoord, true))
 					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(vectorStart.xCoord, thePlayer.posY + 2, vectorStart.zCoord, true))
@@ -886,16 +884,16 @@ class Fly : Module()
 		{
 			"cubecraft" ->
 			{
-				val yaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
+				val yaw = WMathHelper.toRadians(thePlayer.rotationYaw)
 				if (cubecraftTeleportTickTimer.hasTimePassed(2))
 				{
-					event.x = -sin(yaw) * 2.4
-					event.z = cos(yaw) * 2.4
+					event.x = -functions.sin(yaw) * 2.4
+					event.z = functions.cos(yaw) * 2.4
 					cubecraftTeleportTickTimer.reset()
 				} else
 				{
-					event.x = -sin(yaw) * 0.2
-					event.z = cos(yaw) * 0.2
+					event.x = -functions.sin(yaw) * 0.2
+					event.z = functions.cos(yaw) * 0.2
 				}
 			}
 
@@ -944,8 +942,8 @@ class Fly : Module()
 
 				val dir = direction
 
-				event.x = -sin(dir) * hypixelBoostSpeed
-				event.z = cos(dir) * hypixelBoostSpeed
+				event.x = -functions.sin(dir) * hypixelBoostSpeed
+				event.z = functions.cos(dir) * hypixelBoostSpeed
 
 				thePlayer.motionX = event.x
 				thePlayer.motionZ = event.z
@@ -1022,16 +1020,16 @@ class Fly : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		val playerYaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
-		thePlayer.setPosition(thePlayer.posX + horizontal * -sin(playerYaw), thePlayer.posY, thePlayer.posZ + horizontal * cos(playerYaw))
+		val playerYaw = WMathHelper.toRadians(thePlayer.rotationYaw)
+		thePlayer.setPosition(thePlayer.posX + horizontal * -functions.sin(playerYaw), thePlayer.posY, thePlayer.posZ + horizontal * functions.cos(playerYaw))
 	}
 
 	private fun redeskyPacketHClip(horizontal: Double)
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		val playerYaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
-		mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX + horizontal * -sin(playerYaw), thePlayer.posY, thePlayer.posZ + horizontal * cos(playerYaw), false))
+		val playerYaw = WMathHelper.toRadians(thePlayer.rotationYaw)
+		mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX + horizontal * -functions.sin(playerYaw), thePlayer.posY, thePlayer.posZ + horizontal * functions.cos(playerYaw), false))
 	}
 
 	private fun redeskyVClip(vertical: Float)
@@ -1052,9 +1050,9 @@ class Fly : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		val playerYaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
-		thePlayer.motionX = speed * -sin(playerYaw)
-		thePlayer.motionZ = speed * cos(playerYaw)
+		val playerYaw = WMathHelper.toRadians(thePlayer.rotationYaw)
+		thePlayer.motionX = (speed * -functions.sin(playerYaw)).toDouble()
+		thePlayer.motionZ = (speed * functions.cos(playerYaw)).toDouble()
 	}
 
 	// TODO: Make better and faster calculation lol
@@ -1090,8 +1088,8 @@ class Fly : Module()
 		if (thePlayer.sprinting)
 		{
 			val f = direction
-			thePlayer.motionX -= sin(f) * 0.2f
-			thePlayer.motionZ += cos(f) * 0.2f
+			thePlayer.motionX -= functions.sin(f) * 0.2f
+			thePlayer.motionZ += functions.cos(f) * 0.2f
 		}
 		thePlayer.isAirBorne = true
 

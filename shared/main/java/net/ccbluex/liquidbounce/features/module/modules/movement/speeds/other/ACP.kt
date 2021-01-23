@@ -5,8 +5,6 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
@@ -48,8 +46,8 @@ class ACP : SpeedMode("AntiCheatPlus")
 				}
 			}
 
-			event.x = -sin(yaw) * moveSpeed
-			event.z = cos(yaw) * moveSpeed
+			event.x = (-functions.sin(yaw) * moveSpeed).toDouble()
+			event.z = (functions.cos(yaw) * moveSpeed).toDouble()
 		}
 	}
 }

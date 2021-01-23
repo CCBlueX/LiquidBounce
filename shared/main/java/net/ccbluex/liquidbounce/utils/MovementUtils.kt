@@ -5,8 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import kotlin.math.cos
-import kotlin.math.sin
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import kotlin.math.sqrt
 
 object MovementUtils : MinecraftInstance()
@@ -28,21 +27,22 @@ object MovementUtils : MinecraftInstance()
 		if (!isMoving) return
 		val yaw = direction
 		val thePlayer = mc.thePlayer!!
-		thePlayer.motionX = -sin(yaw) * speed
-		thePlayer.motionZ = cos(yaw) * speed
+		thePlayer.motionX = (-functions.sin(yaw) * speed).toDouble()
+		thePlayer.motionZ = (functions.cos(yaw) * speed).toDouble()
 	}
 
 	@JvmStatic
 	fun forward(length: Double)
 	{
-		val thePlayer = mc.thePlayer!!
-		val yaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
-		thePlayer.setPosition(thePlayer.posX + -sin(yaw) * length, thePlayer.posY, thePlayer.posZ + cos(yaw) * length)
+		val thePlayer = mc.thePlayer ?: return
+
+		val yaw = WMathHelper.toRadians(thePlayer.rotationYaw)
+		thePlayer.setPosition(thePlayer.posX + -functions.sin(yaw) * length, thePlayer.posY, thePlayer.posZ + functions.cos(yaw) * length)
 	}
 
 	@JvmStatic
-	val direction: Double
-		get() = Math.toRadians(directionDegrees.toDouble())
+	val direction: Float
+		get() = WMathHelper.toRadians(directionDegrees)
 
 	@JvmStatic
 	val directionDegrees: Float

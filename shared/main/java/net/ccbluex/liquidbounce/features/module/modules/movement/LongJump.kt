@@ -15,8 +15,6 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import kotlin.math.cos
-import kotlin.math.sin
 
 @ModuleInfo(name = "LongJump", description = "Allows you to jump further.", category = ModuleCategory.MOVEMENT)
 class LongJump : Module()
@@ -172,8 +170,8 @@ class LongJump : Module()
 			if (mode.equals("Teleport", ignoreCase = true) && isMoving && canBoost)
 			{
 				val dir = direction
-				event.x = -sin(dir) * teleportDistanceValue.get()
-				event.z = cos(dir) * teleportDistanceValue.get()
+				event.x = (-functions.sin(dir) * teleportDistanceValue.get()).toDouble()
+				event.z = (functions.cos(dir) * teleportDistanceValue.get()).toDouble()
 				canBoost = false
 				boosted = true
 				if (autoDisableValue.get()) state = false

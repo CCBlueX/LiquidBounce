@@ -5,8 +5,6 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
@@ -52,8 +50,8 @@ class PACBHop : SpeedMode("PhoenixAC-BHop")
 				event.y = 0.42
 				thePlayer.jump()
 			}
-			event.x = -sin(dir) * moveSpeed
-			event.z = cos(dir) * moveSpeed
+			event.x = -functions.sin(dir) * moveSpeed
+			event.z = functions.cos(dir) * moveSpeed
 		}
 	}
 }

@@ -8,8 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import kotlin.math.cos
-import kotlin.math.sin
 
 class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop")
 {
@@ -53,8 +51,8 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop")
 			thePlayer.motionX = 0.0
 		}
 		val speed = MovementUtils.speed.toDouble()
-		thePlayer.motionX = -(sin(MovementUtils.direction) * speed)
-		thePlayer.motionZ = cos(MovementUtils.direction) * speed
+		thePlayer.motionX = -(functions.sin(MovementUtils.direction) * speed)
+		thePlayer.motionZ = functions.cos(MovementUtils.direction) * speed
 	}
 
 	override fun onUpdate()

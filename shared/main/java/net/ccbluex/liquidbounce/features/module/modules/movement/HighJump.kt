@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -20,8 +21,6 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import kotlin.math.cos
-import kotlin.math.sin
 
 @ModuleInfo(name = "HighJump", description = "Allows you to jump higher.", category = ModuleCategory.MOVEMENT)
 class HighJump : Module()
@@ -90,9 +89,9 @@ class HighJump : Module()
 		val strafe = thePlayer.movementInput.moveStrafe.toDouble()
 		val dist = 1.0 // .1
 
-		val yaw = thePlayer.rotationYaw
-		val cos = cos(Math.toRadians((yaw + 90.0f).toDouble()))
-		val sin = sin(Math.toRadians((yaw + 90.0f).toDouble()))
+		val yawRadians = WMathHelper.toRadians((thePlayer.rotationYaw + 90.0f))
+		val cos = functions.cos(yawRadians)
+		val sin = functions.sin(yawRadians)
 		val nextX = x + (forward * 0.45 * cos + strafe * 0.45 * sin) * dist
 		val nextZ = z + (forward * 0.45 * sin - strafe * 0.45 * cos) * dist
 

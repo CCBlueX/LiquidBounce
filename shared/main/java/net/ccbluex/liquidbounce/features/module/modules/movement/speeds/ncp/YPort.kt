@@ -10,12 +10,14 @@ import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import java.math.BigDecimal
 import java.math.RoundingMode
-import kotlin.math.*
+import kotlin.math.floor
+import kotlin.math.sqrt
 
 class YPort : SpeedMode("YPort")
 {
@@ -111,11 +113,14 @@ class YPort : SpeedMode("YPort")
 			}
 			if (forward > 0f) forward = 1f else if (forward < 0f) forward = -1f
 		}
-		val mx = cos(Math.toRadians(yaw + 90.0f.toDouble()))
-		val mz = sin(Math.toRadians(yaw + 90.0f.toDouble()))
+
+		val yawRadians = WMathHelper.toRadians(yaw + 90.0f)
+		val mx = functions.cos(yawRadians)
+		val mz = functions.sin(yawRadians)
 		event.x = forward * moveSpeed * mx + strafe * moveSpeed * mz
 		event.z = forward * moveSpeed * mz - strafe * moveSpeed * mx
-		thePlayer.stepHeight = 0.6f
+
+		thePlayer.stepHeight = 0.5f
 		if (forward == 0f && strafe == 0f)
 		{
 			event.x = 0.0

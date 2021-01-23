@@ -6,9 +6,8 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
-import kotlin.math.cos
-import kotlin.math.sin
 
 object RaycastUtils : MinecraftInstance()
 {
@@ -26,10 +25,12 @@ object RaycastUtils : MinecraftInstance()
 			var blockReachDistance = range
 			val eyePosition = renderViewEntity.getPositionEyes(1f)
 
-			val yawCos = cos(-yaw * 0.017453292f - Math.PI.toFloat())
-			val yawSin = sin(-yaw * 0.017453292f - Math.PI.toFloat())
-			val pitchCos = (-cos(-pitch * 0.017453292f.toDouble())).toFloat()
-			val pitchSin = sin(-pitch * 0.017453292f.toDouble()).toFloat()
+			val yawRadians = WMathHelper.toRadians(yaw)
+			val pitchRadians = WMathHelper.toRadians(pitch)
+			val yawCos = functions.cos(-yawRadians - WMathHelper.PI)
+			val yawSin = functions.sin(-yawRadians - WMathHelper.PI)
+			val pitchCos = -functions.cos(-pitchRadians)
+			val pitchSin = functions.sin(-pitchRadians)
 
 			val entityLook = WVec3((yawSin * pitchCos).toDouble(), pitchSin.toDouble(), (yawCos * pitchCos).toDouble())
 			val vector = eyePosition.addVector(entityLook.xCoord * blockReachDistance, entityLook.yCoord * blockReachDistance, entityLook.zCoord * blockReachDistance)

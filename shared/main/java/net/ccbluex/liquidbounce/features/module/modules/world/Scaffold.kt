@@ -496,9 +496,10 @@ class Scaffold : Module()
 			if (zitterValue.get() && zitterModeValue.get().equals("teleport", true))
 			{
 				MovementUtils.strafe(zitterSpeed.get())
-				val yaw: Double = Math.toRadians(thePlayer.rotationYaw + if (zitterDirection) 90.0 else -90.0)
-				thePlayer.motionX = thePlayer.motionX - sin(yaw) * zitterStrength.get()
-				thePlayer.motionZ = thePlayer.motionZ + cos(yaw) * zitterStrength.get()
+
+				val yaw = WMathHelper.toRadians(thePlayer.rotationYaw + if (zitterDirection) 90.0F else -90.0F)
+				thePlayer.motionX = thePlayer.motionX - functions.sin(yaw) * zitterStrength.get()
+				thePlayer.motionZ = thePlayer.motionZ + functions.cos(yaw) * zitterStrength.get()
 				zitterDirection = !zitterDirection
 			}
 		}

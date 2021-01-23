@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayer
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
 import net.ccbluex.liquidbounce.event.*
@@ -33,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import java.awt.Color
-import java.util.*
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -422,8 +422,8 @@ class KillAura : Module()
 						strafe *= f
 						forward *= f
 
-						val yawSin = sin((yaw * Math.PI / 180F).toFloat())
-						val yawCos = cos((yaw * Math.PI / 180F).toFloat())
+						val yawSin = functions.sin((yaw * WMathHelper.PI / 180F))
+						val yawCos = functions.cos((yaw * WMathHelper.PI / 180F))
 
 						val player = mc.thePlayer ?: return
 
@@ -916,10 +916,14 @@ class KillAura : Module()
 				val boundingBox = interactEntity.entityBoundingBox.expand(expandSize, expandSize, expandSize)
 
 				val (yaw, pitch) = RotationUtils.targetRotation ?: Rotation((mc.thePlayer ?: return).rotationYaw, (mc.thePlayer ?: return).rotationPitch)
-				val yawCos = cos(-yaw * 0.017453292F - Math.PI.toFloat())
-				val yawSin = sin(-yaw * 0.017453292F - Math.PI.toFloat())
-				val pitchCos = -cos(-pitch * 0.017453292F)
-				val pitchSin = sin(-pitch * 0.017453292F)
+				val yawRadians = WMathHelper.toRadians(yaw)
+				val pitchRadians = WMathHelper.toRadians(pitch)
+
+				val yawCos = functions.cos(-yawRadians - WMathHelper.PI)
+				val yawSin = functions.sin(-yawRadians - WMathHelper.PI)
+				val pitchCos = -functions.cos(-pitchRadians)
+				val pitchSin = functions.sin(-pitchRadians)
+
 				val range = min(maxAttackRange.toDouble(), (mc.thePlayer ?: return).getDistanceToEntityBox(interactEntity)) + 1
 				val lookAt = (positionEye ?: return).addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
 

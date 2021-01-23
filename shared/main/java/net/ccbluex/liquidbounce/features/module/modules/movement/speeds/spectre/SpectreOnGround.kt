@@ -5,11 +5,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre
 
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import kotlin.math.cos
-import kotlin.math.sin
 
 class SpectreOnGround : SpeedMode("Spectre-OnGround")
 {
@@ -39,9 +38,9 @@ class SpectreOnGround : SpeedMode("Spectre-OnGround")
 		}
 		if (thePlayer.onGround && mc.gameSettings.keyBindForward.isKeyDown)
 		{
-			val f = thePlayer.rotationYaw * 0.017453292f
-			thePlayer.motionX -= sin(f) * 0.145f
-			thePlayer.motionZ += cos(f) * 0.145f
+			val yawRadians = WMathHelper.toRadians(thePlayer.rotationYaw)
+			thePlayer.motionX -= functions.sin(yawRadians) * 0.145f
+			thePlayer.motionZ += functions.cos(yawRadians) * 0.145f
 			event.x = thePlayer.motionX
 			event.y = 0.005
 			event.z = thePlayer.motionZ

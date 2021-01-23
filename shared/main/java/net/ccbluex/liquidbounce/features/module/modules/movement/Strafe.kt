@@ -1,14 +1,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 @ModuleInfo(name = "Strafe", description = "Allows you to freely move in mid air without any friction.", category = ModuleCategory.MOVEMENT)
@@ -81,9 +80,9 @@ class Strafe : Module()
 		}
 		if (!thePlayer.onGround || onGroundStrafeValue.get())
 		{
-			val yaw = getMoveYaw(thePlayer)
-			thePlayer.motionX = (((-sin(Math.toRadians(yaw.toDouble())) * speed) + motionX))
-			thePlayer.motionZ = (((cos(Math.toRadians(yaw.toDouble())) * speed) + motionZ))
+			val yaw = WMathHelper.toRadians(getMoveYaw(thePlayer))
+			thePlayer.motionX = -functions.sin(yaw) * speed + motionX
+			thePlayer.motionZ = functions.cos(yaw) * speed + motionZ
 		}
 	}
 

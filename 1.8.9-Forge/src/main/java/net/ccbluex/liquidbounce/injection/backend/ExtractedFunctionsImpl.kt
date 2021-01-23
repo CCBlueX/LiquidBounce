@@ -110,8 +110,9 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 
 	override fun jsonToComponent(toString: String): IIChatComponent = IChatComponent.Serializer.jsonToComponent(toString).wrap()
 	override fun setActiveTextureLightMapTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
-
 	override fun setActiveTextureDefaultTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
-
 	override fun getHorizontalFacing(yaw: Float): IEnumFacing = EnumFacing.getHorizontal(MathHelper.floor_double((yaw * 4.0f / 360.0f).toDouble() + 0.5) and 3).wrap()
+
+	override fun cos(radians: Float): Float = MathHelper.cos(radians)
+	override fun sin(radians: Float): Float = MathHelper.sin(radians)
 }

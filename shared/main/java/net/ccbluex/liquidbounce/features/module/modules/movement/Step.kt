@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.StatType
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -16,8 +17,6 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import java.util.stream.Stream
-import kotlin.math.cos
-import kotlin.math.sin
 
 @ModuleInfo(name = "Step", description = "Allows you to step up blocks.", category = ModuleCategory.MOVEMENT)
 class Step : Module()
@@ -87,9 +86,9 @@ class Step : Module()
 					fakeJump()
 					thePlayer.motionY += 0.620000001490116
 
-					val f = thePlayer.rotationYaw * 0.017453292F
-					thePlayer.motionX -= sin(f) * 0.2
-					thePlayer.motionZ += cos(f) * 0.2
+					val f = WMathHelper.toRadians(thePlayer.rotationYaw)
+					thePlayer.motionX -= functions.sin(f) * 0.2
+					thePlayer.motionZ += functions.cos(f) * 0.2
 					timer.reset()
 				}
 
@@ -153,8 +152,8 @@ class Step : Module()
 						if (motionNCPBoost > 0.0F)
 						{
 
-							event.x = -sin(yaw) * motionNCPBoost
-							event.z = cos(yaw) * motionNCPBoost
+							event.x = (-functions.sin(yaw) * motionNCPBoost).toDouble()
+							event.z = (functions.cos(yaw) * motionNCPBoost).toDouble()
 						}
 
 						ncpNextStep = 0
@@ -341,8 +340,8 @@ class Step : Module()
 	private fun couldStep(): Boolean
 	{
 		val yaw = MovementUtils.direction
-		val x = -sin(yaw) * 0.4
-		val z = cos(yaw) * 0.4
+		val x = -functions.sin(yaw) * 0.4
+		val z = functions.cos(yaw) * 0.4
 
 		return mc.theWorld!!.getCollisionBoxes(mc.thePlayer!!.entityBoundingBox.offset(x, 1.001335979112147, z)).isEmpty()
 	}

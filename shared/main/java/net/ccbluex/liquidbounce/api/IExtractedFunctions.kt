@@ -44,4 +44,8 @@ interface IExtractedFunctions
 	fun setActiveTextureLightMapTexUnit()
 	fun setActiveTextureDefaultTexUnit()
 	fun getHorizontalFacing(yaw: Float): IEnumFacing
+
+	// MathHelper's sin and cos algorithm is faster than StrictMath's (Because MathHelper uses better algorithm and it is compatible with BetterFps mod)
+	fun cos(radians: Float): Float
+	fun sin(radians: Float): Float
 }

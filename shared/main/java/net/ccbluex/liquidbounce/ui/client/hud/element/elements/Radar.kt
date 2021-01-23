@@ -9,6 +9,7 @@ package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexBuffer
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.features.module.modules.render.ESP
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -323,8 +324,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 		worldRenderer.begin(GL_TRIANGLE_FAN, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
 
-		val start = (90.0f - (angle * 0.5f)) / 180.0f * Math.PI.toFloat()
-		val end = (90.0f + (angle * 0.5f)) / 180.0f * Math.PI.toFloat()
+		val start = (90.0f - (angle * 0.5f)) / 180.0f * WMathHelper.PI
+		val end = (90.0f + (angle * 0.5f)) / 180.0f * WMathHelper.PI
 
 		var curr = end
 		val radius = 1.0
@@ -333,7 +334,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 		while (curr >= start)
 		{
-			worldRenderer.pos(cos(curr) * radius, sin(curr) * radius, 0.0).endVertex()
+			worldRenderer.pos(functions.cos(curr) * radius, functions.sin(curr) * radius, 0.0).endVertex()
 
 			curr -= 0.15f
 		}

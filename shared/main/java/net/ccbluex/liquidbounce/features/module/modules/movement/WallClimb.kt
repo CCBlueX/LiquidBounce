@@ -13,8 +13,6 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlockIntersects
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import kotlin.math.cos
-import kotlin.math.sin
 
 @ModuleInfo(name = "WallClimb", description = "Allows you to climb up walls like a spider.", category = ModuleCategory.MOVEMENT)
 class WallClimb : Module()
@@ -101,9 +99,9 @@ class WallClimb : Module()
 
 			if (glitch)
 			{
-				val yaw = MovementUtils.direction.toFloat()
-				packetPlayer.x = packetPlayer.x - sin(yaw) * 0.00000001
-				packetPlayer.z = packetPlayer.z + cos(yaw) * 0.00000001
+				val yaw = MovementUtils.direction
+				packetPlayer.x = packetPlayer.x - functions.sin(yaw) * 0.00000001
+				packetPlayer.z = packetPlayer.z + functions.cos(yaw) * 0.00000001
 				glitch = false
 			}
 		}
