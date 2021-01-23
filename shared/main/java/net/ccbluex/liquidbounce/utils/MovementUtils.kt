@@ -42,15 +42,22 @@ object MovementUtils : MinecraftInstance()
 
 	@JvmStatic
 	val direction: Double
+		get() = Math.toRadians(directionDegrees.toDouble())
+
+	@JvmStatic
+	val directionDegrees: Float
 		get()
 		{
 			val thePlayer = mc.thePlayer!!
 			var rotationYaw = thePlayer.rotationYaw
-			if (thePlayer.moveForward < 0f) rotationYaw += 180f
 			var forward = 1f
-			if (thePlayer.moveForward < 0f) forward = -0.5f else if (thePlayer.moveForward > 0f) forward = 0.5f
+			if (thePlayer.moveForward < 0f)
+			{
+				rotationYaw += 180f
+				forward = -0.5f
+			} else if (thePlayer.moveForward > 0f) forward = 0.5f
 			if (thePlayer.moveStrafing > 0f) rotationYaw -= 90f * forward
 			if (thePlayer.moveStrafing < 0f) rotationYaw += 90f * forward
-			return Math.toRadians(rotationYaw.toDouble())
+			return rotationYaw
 		}
 }

@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
 import net.ccbluex.liquidbounce.api.minecraft.tileentity.ITileEntity
+import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing
 import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 
@@ -42,4 +43,5 @@ interface IExtractedFunctions
 	fun jsonToComponent(toString: String): IIChatComponent
 	fun setActiveTextureLightMapTexUnit()
 	fun setActiveTextureDefaultTexUnit()
+	fun getHorizontalFacing(yaw: Float): IEnumFacing
 }

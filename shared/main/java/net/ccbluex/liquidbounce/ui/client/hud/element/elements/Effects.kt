@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.ui.client.hud.element.*
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
@@ -55,7 +56,7 @@ class Effects(
 	private val spaceValue = FloatValue("Space", 0F, 0F, 5F)
 	private val textHeightValue = FloatValue("TextHeight", 11F, 1F, 20F)
 	private val textYValue = FloatValue("TextY", 1F, 0F, 20F)
-	private val shadow = BoolValue("Shadow", true)
+	private val shadowValue = BoolValue("Shadow", true)
 
 	private val fontValue = FontValue("Font", Fonts.font35)
 
@@ -93,10 +94,12 @@ class Effects(
 
 		val saturation = saturationValue.get()
 		val brightness = brightnessValue.get()
-		val rainbowSpeed = 11 - rainbowSpeedValue.get().coerceAtLeast(1).coerceAtMost(10)
+		val rainbowSpeed = rainbowSpeedValue.get()
 		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
 		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
 		val rainbowShaderOffset = System.currentTimeMillis() % 10000 / 10000F
+
+		val shadow = shadowValue.get()
 
 		val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
 		val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
@@ -106,12 +109,36 @@ class Effects(
 
 		effects.forEachIndexed { index, effect ->
 			val potion = functions.getPotionById(effect.potionID)
-			val potionColor = potion.liquidColor
+			val potionColor = Color(potion.liquidColor).rgb // Add alpha channel with 255
 
 			val string = formatEffect(effect)
 			val stringWidth = fontRenderer.getStringWidth(string).toFloat()
 
 			if (width < stringWidth) width = stringWidth
+
+			val backgroundColor = when
+			{
+				backgroundRainbowShader -> 0
+				backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				backgroundColorMode.equals("PotionColor", ignoreCase = true) -> potionColor
+				else -> backgroundCustomColor
+			}
+
+			val textColor = when
+			{
+				textRainbowShader -> 0
+				colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				colorMode.equals("PotionColor", ignoreCase = true) -> potionColor
+				else -> customColor
+			}
+
+			val rectColor = when
+			{
+				rectRainbowShader -> 0
+				rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				rectColorMode.equals("PotionColor", ignoreCase = true) -> potionColor
+				else -> rectCustomColor
+			}
 
 			when (side.horizontal)
 			{
@@ -124,41 +151,19 @@ class Effects(
 					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, System.currentTimeMillis() % 10000 / 10000F).use {
 						val xPosCorrection = if (rectMode.equals("right", true)) 5 else 2
 						val x2Pos = if (rectMode.equals("right", true)) -3F else 0F
-						val color = when
-						{
-							backgroundRainbowShader -> 0
-							backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-							backgroundColorMode.equals("Custom", ignoreCase = true) -> backgroundCustomColor
-							else -> potionColor
-						}
 
-						RenderUtils.drawRect(xPos - xPosCorrection, yPos, x2Pos, yPos + textHeight, color)
+						RenderUtils.drawRect(xPos - xPosCorrection, yPos, x2Pos, yPos + textHeight, backgroundColor)
 					}
 
 					// Draw String
 					RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 						val xPosCorrection = if (rectMode.equals("right", true)) 3 else 0
-						val color = when
-						{
-							textRainbowShader -> 0
-							colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-							colorMode.equals("Custom", ignoreCase = true) -> customColor
-							else -> potionColor
-						}
 
-						fontRenderer.drawString(string, xPos - xPosCorrection, yPos + textY, color, shadow.get())
+						fontRenderer.drawString(string, xPos - xPosCorrection, yPos + textY, textColor, shadow)
 					}
 
 					// Draw Rect
 					if (!rectMode.equals("none", true)) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val rectColor = when
-						{
-							rectRainbowShader -> 0
-							rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-							rectColorMode.equals("Custom", ignoreCase = true) -> rectCustomColor
-							else -> potionColor
-						}
-
 						when
 						{
 							rectMode.equals("left", true) -> RenderUtils.drawRect(xPos - 5, yPos, xPos - 2, yPos + textHeight, rectColor)
@@ -175,49 +180,23 @@ class Effects(
 					// Draw Background
 					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 						val xPosCorrection = if (rectMode.equals("right", true)) 5 else 2
-						val color = when
-						{
-							backgroundRainbowShader -> 0
-							backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-							backgroundColorMode.equals("Custom", ignoreCase = true) -> backgroundCustomColor
-							else -> potionColor
-						}
 
-						RenderUtils.drawRect(0F, yPos, xPos + width + xPosCorrection, yPos + textHeight, color)
+						RenderUtils.drawRect(0F, yPos, xPos + width + xPosCorrection, yPos + textHeight, backgroundColor)
 					}
 
 					classProvider.getGlStateManager().resetColor()
 
 					// Draw String
 					RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val color = when
-						{
-							textRainbowShader -> 0
-							colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-							colorMode.equals("Custom", ignoreCase = true) -> customColor
-							else -> potionColor
-						}
-
-						fontRenderer.drawString(string, xPos, yPos + textY, color, shadow.get())
+						fontRenderer.drawString(string, xPos, yPos + textY, textColor, shadow)
 					}
 
 					// Draw Rect
-					RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						if (!rectMode.equals("none", true))
+					if (!rectMode.equals("none", true)) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+						when
 						{
-							val rectColor = when
-							{
-								rectRainbowShader -> 0
-								rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-								rectColorMode.equals("Custom", ignoreCase = true) -> rectCustomColor
-								else -> potionColor
-							}
-
-							when
-							{
-								rectMode.equals("left", true) -> RenderUtils.drawRect(0F, yPos - 1, 3F, yPos + textHeight, rectColor)
-								rectMode.equals("right", true) -> RenderUtils.drawRect(xPos + width + 2, yPos, xPos + width + 2 + 3, yPos + textHeight, rectColor)
-							}
+							rectMode.equals("left", true) -> RenderUtils.drawRect(0F, yPos - 1, 3F, yPos + textHeight, rectColor)
+							rectMode.equals("right", true) -> RenderUtils.drawRect(xPos + width + 2, yPos, xPos + width + 2 + 3, yPos + textHeight, rectColor)
 						}
 					}
 				}

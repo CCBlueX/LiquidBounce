@@ -144,7 +144,7 @@ class Notification(private val header: String, private val message: String, priv
 
 		val saturation = Notifications.saturationValue.get()
 		val brightness = Notifications.brightnessValue.get()
-		val rainbowSpeed = 11 - Notifications.rainbowSpeedValue.get().coerceAtLeast(1).coerceAtMost(10)
+		val rainbowSpeed = Notifications.rainbowSpeedValue.get()
 
 		// Draw Background (Body)
 		val bodyRainbowShader = bodyColorMode.equals("RainbowShader", ignoreCase = true)

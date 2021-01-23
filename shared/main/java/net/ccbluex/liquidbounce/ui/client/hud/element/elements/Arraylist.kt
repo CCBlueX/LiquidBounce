@@ -139,7 +139,7 @@ class Arraylist(
 		val customTagColor = Color(tagColorRedValue.get(), tagColorGreenValue.get(), tagColorBlueValue.get(), 1).rgb
 		val saturation = saturationValue.get()
 		val brightness = brightnessValue.get()
-		val rainbowSpeed = 11 - rainbowSpeedValue.get().coerceAtLeast(1).coerceAtMost(10)
+		val rainbowSpeed = rainbowSpeedValue.get()
 		val tagColorMode = tagColorModeValue.get()
 		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
 		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()

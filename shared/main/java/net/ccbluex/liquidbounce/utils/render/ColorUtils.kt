@@ -151,34 +151,34 @@ object ColorUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun rainbow(speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color
+	fun rainbow(speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F): Color
 	{
-		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + 400000L) / 10F.pow(speed) % 1, saturation, brightness))
+		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + 400000L) / 10F.pow(9 + (11 - speed.coerceAtLeast(1).coerceAtMost(10))) % 1, saturation, brightness))
 		return Color(currentColor.red / 255F * 1F, currentColor.green / 255f * 1F, currentColor.blue / 255F * 1F, currentColor.alpha / 255F)
 	}
 
 	@JvmStatic
-	fun rainbow(offset: Long, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color
+	fun rainbow(offset: Long, speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F): Color
 	{
-		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(speed) % 1, saturation, brightness))
+		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(9 + (11 - speed.coerceAtLeast(1).coerceAtMost(10))) % 1, saturation, brightness))
 		return Color(
 			currentColor.red / 255F * 1F, currentColor.green / 255F * 1F, currentColor.blue / 255F * 1F, currentColor.alpha / 255F
 		)
 	}
 
 	@JvmStatic
-	fun rainbow(alpha: Float, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F) = rainbow(400000L, alpha, speed = speed, saturation = saturation, brightness = brightness)
+	fun rainbow(alpha: Float, speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F) = rainbow(400000L, alpha, speed = speed, saturation = saturation, brightness = brightness)
 
 	@JvmStatic
-	fun rainbow(alpha: Int, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F) = rainbow(400000L, alpha / 255, speed = speed, saturation = saturation, brightness = brightness)
+	fun rainbow(alpha: Int, speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F) = rainbow(400000L, alpha / 255, speed = speed, saturation = saturation, brightness = brightness)
 
 	@JvmStatic
-	fun rainbow(offset: Long, alpha: Int, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F) = rainbow(offset, alpha.toFloat() / 255, speed = speed, saturation = saturation, brightness = brightness)
+	fun rainbow(offset: Long, alpha: Int, speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F) = rainbow(offset, alpha.toFloat() / 255, speed = speed, saturation = saturation, brightness = brightness)
 
 	@JvmStatic
-	fun rainbow(offset: Long, alpha: Float, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color
+	fun rainbow(offset: Long, alpha: Float, speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F): Color
 	{
-		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(speed) % 1, saturation, brightness))
+		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(9 + (11 - speed.coerceAtLeast(1).coerceAtMost(10))) % 1, saturation, brightness))
 		return Color(currentColor.red / 255F * 1F, currentColor.green / 255f * 1F, currentColor.blue / 255F * 1F, alpha)
 	}
 

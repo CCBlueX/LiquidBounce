@@ -912,15 +912,16 @@ class Scaffold : Module()
 		val thePlayer = mc.thePlayer ?: return
 		for (i in 0 until if (modeValue.get().equals("Expand", true)) expandLengthValue.get() + 1 else 2)
 		{
+			val horizontalFacing = functions.getHorizontalFacing(MovementUtils.directionDegrees)
 			val blockPos = WBlockPos(
-				thePlayer.posX + when (thePlayer.horizontalFacing)
+				thePlayer.posX + when (horizontalFacing)
 				{
 					classProvider.getEnumFacing(EnumFacingType.WEST) -> -i.toDouble()
 					classProvider.getEnumFacing(
 						EnumFacingType.EAST
 					) -> i.toDouble()
 					else -> 0.0
-				}, if (sameYValue.get() && launchY <= thePlayer.posY) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY >= floor(thePlayer.posY).toInt()) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (thePlayer.horizontalFacing)
+				}, if (sameYValue.get() && launchY <= thePlayer.posY) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY > floor(thePlayer.posY).toInt()) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (horizontalFacing)
 				{
 					classProvider.getEnumFacing(EnumFacingType.NORTH) -> -i.toDouble()
 					classProvider.getEnumFacing(

@@ -30,8 +30,15 @@ class LongJump : Module()
 	private var jumped = false
 	private var canBoost = false
 	private var boosted = false
-	private var teleported = false
 	private var canMineplexBoost = false
+
+	override fun onEnable()
+	{
+		boosted = false
+		jumped = false
+		canBoost = false
+		canMineplexBoost = false
+	}
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
@@ -60,6 +67,7 @@ class LongJump : Module()
 				if (boosted && autoDisable) state = false
 				return
 			}
+
 			run {
 				when (mode.toLowerCase())
 				{
@@ -88,7 +96,7 @@ class LongJump : Module()
 
 					"aac3.1.0" ->
 					{
-						if (thePlayer.fallDistance > 0.5f && !teleported)
+						if (thePlayer.fallDistance > 0.5f && canBoost && !boosted)
 						{
 							val value = 3.0
 							val horizontalFacing = thePlayer.horizontalFacing
@@ -108,7 +116,7 @@ class LongJump : Module()
 							}
 
 							thePlayer.setPosition(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z)
-							teleported = true
+							boosted = true
 						}
 					}
 
@@ -182,7 +190,6 @@ class LongJump : Module()
 	{
 		jumped = true
 		canBoost = true
-		teleported = false
 
 		if (state)
 		{

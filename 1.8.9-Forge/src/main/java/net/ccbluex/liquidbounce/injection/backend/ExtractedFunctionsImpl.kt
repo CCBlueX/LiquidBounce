@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
 import net.ccbluex.liquidbounce.api.minecraft.tileentity.ITileEntity
+import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing
 import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
@@ -33,8 +34,7 @@ import net.minecraft.init.Items
 import net.minecraft.item.Item
 import net.minecraft.potion.Potion
 import net.minecraft.scoreboard.ScorePlayerTeam
-import net.minecraft.util.IChatComponent
-import net.minecraft.util.ResourceLocation
+import net.minecraft.util.*
 import java.lang.reflect.Field
 
 object ExtractedFunctionsImpl : IExtractedFunctions
@@ -113,4 +113,5 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 
 	override fun setActiveTextureDefaultTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
 
+	override fun getHorizontalFacing(yaw: Float): IEnumFacing = EnumFacing.getHorizontal(MathHelper.floor_double((yaw * 4.0f / 360.0f).toDouble() + 0.5) and 3).wrap()
 }

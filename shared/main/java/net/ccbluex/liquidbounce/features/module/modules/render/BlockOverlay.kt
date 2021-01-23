@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -58,7 +57,7 @@ class BlockOverlay : Module()
 		val block = mc.theWorld!!.getBlockState(blockPos).block
 		val partialTicks = event.partialTicks
 		val alpha = colorAlphaValue.get()
-		val rainbowSpeed = rainbowSpeedValue.get().coerceAtLeast(1).coerceAtMost(10)
+		val rainbowSpeed = rainbowSpeedValue.get()
 		val color = if (colorRainbow.get()) rainbow(alpha = alpha / 255.0F, speed = rainbowSpeed, saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
 
 		classProvider.getGlStateManager().enableBlend()
