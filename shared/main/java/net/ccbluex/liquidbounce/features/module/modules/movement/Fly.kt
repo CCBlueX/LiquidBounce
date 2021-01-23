@@ -74,8 +74,15 @@ class Fly : Module()
 	// Damage
 	private val damageOnStartValue = BoolValue("DamageOnStart", false)
 
+	// Vanilla
 	val vanillaSpeedValue = FloatValue("VanillaSpeed", 2f, 0f, 5f)
 	private val vanillaKickBypassValue = BoolValue("VanillaKickBypass", false)
+
+	// Teleport
+	private val teleportDistanceValue = FloatValue("TeleportDistance", 1.0f, 1.0f, 10.0f)
+	private val teleportDelayValue = IntegerValue("TeleportDelay", 100, 0, 1000)
+
+	// NCP
 	private val ncpMotionValue = FloatValue("NCPMotion", 0f, 0f, 1f)
 
 	// AAC
@@ -133,6 +140,7 @@ class Fly : Module()
 	private val acpTickTimer = TickTimer()
 	private val cubecraftTeleportTickTimer = TickTimer()
 	private val freeHypixelTimer = TickTimer()
+	private val teleportTimer = MSTimer()
 
 	private var startY = 0.0
 	private var markStartY = 0.0
@@ -354,6 +362,42 @@ class Fly : Module()
 					handleVanillaKickBypass()
 				}
 
+				"teleport" ->
+				{
+					thePlayer.sprinting = true
+					thePlayer.motionX = 0.0
+					thePlayer.motionY = 0.0
+					thePlayer.motionZ = 0.0
+					if ((isMoving || mc.gameSettings.keyBindJump.isKeyDown || mc.gameSettings.keyBindSneak.isKeyDown) && teleportTimer.hasTimePassed(teleportDelayValue.get().toLong()))
+					{
+						val yaw = direction
+						val speed = teleportDistanceValue.get().toDouble()
+						var x = 0.0
+						var y = 0.0
+						var z = 0.0
+						if (isMoving && !thePlayer.isCollidedHorizontally)
+						{
+							x = -sin(yaw) * speed
+							z = cos(yaw) * speed
+						}
+
+						if (!thePlayer.isCollidedVertically) if (mc.gameSettings.keyBindJump.isKeyDown && !mc.gameSettings.keyBindSneak.isKeyDown) y = speed else if (!mc.gameSettings.keyBindJump.isKeyDown && mc.gameSettings.keyBindSneak.isKeyDown) y =
+							-speed
+
+						if (isMoving && !thePlayer.isCollidedHorizontally)
+						{
+							x = -sin(yaw) * speed
+							z = cos(yaw) * speed
+						}
+
+						if (!thePlayer.isCollidedVertically) if (mc.gameSettings.keyBindJump.isKeyDown && !mc.gameSettings.keyBindSneak.isKeyDown) y = speed else if (!mc.gameSettings.keyBindJump.isKeyDown && mc.gameSettings.keyBindSneak.isKeyDown) y =
+							-speed
+
+						thePlayer.setPosition(x.let { thePlayer.posX += it; thePlayer.posX }, y.let { thePlayer.posY += it; thePlayer.posY }, z.let { thePlayer.posZ += it; thePlayer.posZ })
+						teleportTimer.reset()
+					}
+				}
+
 				"cubecraft" ->
 				{
 					mc.timer.timerSpeed = 0.6f
@@ -428,7 +472,11 @@ class Fly : Module()
 							true
 						)
 					)
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosLook(thePlayer.posX + thePlayer.motionX * 999, thePlayer.posY - 6969, thePlayer.posZ + thePlayer.motionZ * 999, thePlayer.rotationYaw, thePlayer.rotationPitch, true))
+					mc.netHandler.networkManager.sendPacketWithoutEvent(
+						classProvider.createCPacketPlayerPosLook(
+							thePlayer.posX + thePlayer.motionX * 999, thePlayer.posY - 6969, thePlayer.posZ + thePlayer.motionZ * 999, thePlayer.rotationYaw, thePlayer.rotationPitch, true
+						)
+					)
 					thePlayer.setPosition(thePlayer.posX + thePlayer.motionX * 11, thePlayer.posY, thePlayer.posZ + thePlayer.motionZ * 11)
 					thePlayer.motionY = 0.0
 				}

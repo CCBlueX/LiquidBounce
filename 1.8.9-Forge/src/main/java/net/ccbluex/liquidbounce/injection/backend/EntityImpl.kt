@@ -138,16 +138,25 @@ open class EntityImpl<T : Entity>(val wrapped: T) : IEntity
 		{
 			wrapped.entityBoundingBox = value.unwrap()
 		}
-	override val posX: Double
+	override var posX: Double
 		get() = wrapped.posX
+		set(value)
+		{
+			wrapped.posX = value
+		}
+
 	override var posY: Double
 		get() = wrapped.posY
 		set(value)
 		{
 			wrapped.posY = value
 		}
-	override val posZ: Double
+	override var posZ: Double
 		get() = wrapped.posZ
+		set(value)
+		{
+			wrapped.posZ = value
+		}
 	override val lastTickPosX: Double
 		get() = wrapped.lastTickPosX
 	override val lastTickPosY: Double
@@ -230,5 +239,5 @@ open class EntityImpl<T : Entity>(val wrapped: T) : IEntity
 	override fun equals(other: Any?): Boolean = other is EntityImpl<*> && other.wrapped == wrapped
 }
 
- fun IEntity.unwrap(): Entity = (this as EntityImpl<*>).wrapped
- fun Entity.wrap(): IEntity = EntityImpl(this)
+fun IEntity.unwrap(): Entity = (this as EntityImpl<*>).wrapped
+fun Entity.wrap(): IEntity = EntityImpl(this)

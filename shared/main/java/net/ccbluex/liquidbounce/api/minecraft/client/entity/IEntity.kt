@@ -55,9 +55,9 @@ interface IEntity
 
 	val eyeHeight: Float
 	var entityBoundingBox: IAxisAlignedBB
-	val posX: Double
+	var posX: Double
 	var posY: Double
-	val posZ: Double
+	var posZ: Double
 
 	val lastTickPosX: Double
 	val lastTickPosY: Double
