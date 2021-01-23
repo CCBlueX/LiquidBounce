@@ -135,7 +135,7 @@ class Effects(
 						val x2Pos = if (rectMode.equals("right", true)) -3F else 0F
 						val color = when
 						{
-							backgroundRainbowShader -> -16777216
+							backgroundRainbowShader -> 0
 							backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 							backgroundColorMode.equals("Custom", ignoreCase = true) -> backgroundCustomColor
 							else -> potionColor
@@ -164,7 +164,7 @@ class Effects(
 						{
 							rectRainbowShader -> 0
 							rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-							rectColorMode.equals("Custom", ignoreCase = true) -> customColor
+							rectColorMode.equals("Custom", ignoreCase = true) -> rectCustomColor
 							else -> potionColor
 						}
 
@@ -218,7 +218,7 @@ class Effects(
 							{
 								rectRainbowShader -> 0
 								rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-								rectColorMode.equals("Custom", ignoreCase = true) -> customColor
+								rectColorMode.equals("Custom", ignoreCase = true) -> rectCustomColor
 								else -> potionColor
 							}
 

@@ -21,7 +21,7 @@ class BungeeCordSpoof : MinecraftInstance(), Listenable
 		{
 			val handshake = packet.asCPacketHandshake()
 
-			handshake.ip = handshake.ip + "\u0000" + String.format("%d.%d.%d.%d", getRandomIpPart(), getRandomIpPart(), getRandomIpPart(), getRandomIpPart()) + "\u0000" + mc.session.playerId.replace("-", "")
+			handshake.ip = "${handshake.ip}\u0000${String.format("%d.%d.%d.%d", getRandomIpPart(), getRandomIpPart(), getRandomIpPart(), getRandomIpPart())}\u0000${mc.session.playerId.replace("-", "")}"
 		}
 	}
 

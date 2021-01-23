@@ -9,12 +9,19 @@ import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.render.WIImageBuffer
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
+import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.nio.file.Files
 import java.util.*
+import javax.imageio.ImageIO
 import kotlin.collections.HashMap
+import kotlin.concurrent.thread
 
 object CapeAPI : MinecraftInstance()
 {
@@ -26,7 +33,15 @@ object CapeAPI : MinecraftInstance()
 	 * Register cape service
 	 */
 	fun registerCapeService()
-	{ // Read cape infos from web
+	{
+
+		if (GuiDonatorCape.transferCode.startsWith("file:", true))
+		{
+			ClientUtils.getLogger().info("[Donator Cape] Offline cape registered.")
+			return
+		}
+
+		// Read cape infos from web
 		val jsonObject = JsonParser().parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/capes.json")).asJsonObject
 		val serviceType = jsonObject.get("serviceType").asString
 
@@ -66,7 +81,51 @@ object CapeAPI : MinecraftInstance()
 	 * @return cape info
 	 */
 	fun loadCape(uuid: UUID): CapeInfo?
-	{ // Get url of cape from cape service
+	{
+		if (GuiDonatorCape.transferCode.startsWith("file:", true))
+		{
+			if (uuid != mc.session.profile.id) return null
+			val capeInfo = CapeInfo(classProvider.createResourceLocation(RandomUtils.randomNumber(128)))
+			var capeFile = File(LiquidBounce.fileManager.dir, GuiDonatorCape.transferCode.substring(5))
+			ClientUtils.getLogger().info("[Donator Cape] Loading offline cape from file ${capeFile.toPath()}")
+
+			if (!capeFile.exists())
+			{
+				capeFile = File(LiquidBounce.fileManager.dir, GuiDonatorCape.transferCode.substring(5) + ".png")
+				if (capeFile.exists())
+				{
+					thread(name = "Offline Cape Loader") {
+						val byteArrayInputStream = ByteArrayInputStream(Files.readAllBytes(capeFile.toPath()))
+						val bufferedImage = ImageIO.read(byteArrayInputStream)
+						byteArrayInputStream.close()
+
+						mc.textureManager.loadTexture(capeInfo.resourceLocation, classProvider.createDynamicTexture(bufferedImage))
+
+						ClientUtils.getLogger().info("[Donator Cape] Successfully loaded cape from file ${capeFile.toPath()}")
+
+						capeInfo.isCapeAvailable = true
+					}
+
+					return capeInfo
+				}
+
+				ClientUtils.getLogger().info("[Donator Cape] Failed to load offline cape from file. File doesn't exists.")
+				return capeInfo
+			}
+
+			val byteArrayInputStream = ByteArrayInputStream(Files.readAllBytes(capeFile.toPath()))
+			val bufferedImage = ImageIO.read(byteArrayInputStream)
+			byteArrayInputStream.close()
+
+			mc.textureManager.loadTexture(capeInfo.resourceLocation, classProvider.createDynamicTexture(bufferedImage))
+
+			ClientUtils.getLogger().info("[Donator Cape] Successfully loaded cape from file ${capeFile.toPath()}")
+
+			capeInfo.isCapeAvailable = true
+			return capeInfo
+		}
+
+		// Get url of cape from cape service
 		val url = (capeService ?: return null).getCape(uuid) ?: return null
 
 		// Load cape
@@ -94,7 +153,7 @@ object CapeAPI : MinecraftInstance()
 	 *
 	 * @return capeservice status
 	 */
-	fun hasCapeService() = capeService != null
+	fun hasCapeService() = capeService != null || GuiDonatorCape.transferCode.startsWith("file:", true)
 }
 
 data class CapeInfo(val resourceLocation: IResourceLocation, var isCapeAvailable: Boolean = false)

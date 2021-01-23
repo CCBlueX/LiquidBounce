@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
@@ -19,6 +20,7 @@ import org.apache.http.client.methods.HttpPut
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicHeader
 import org.lwjgl.input.Keyboard
+import java.io.File
 import kotlin.concurrent.thread
 
 class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
@@ -76,6 +78,9 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 		// Draw title and status
 		Fonts.font35.drawCenteredString("Donator Cape", representedScreen.width / 2.0f, 36.0f, 0xffffff)
+		Fonts.font35.drawCenteredString("use prefix \"file:\" to load cape file from .minecraft/LiquidBounce directory.", representedScreen.width / 2.0f, representedScreen.height - 50.0f, 0xffffff)
+		Fonts.font35.drawCenteredString("(ex. \"file:cape\" or \"file:cape.png\" will load \"" + LiquidBounce.fileManager.dir.toString() + File.separatorChar + "cape.png\")", representedScreen.width / 2.0f, representedScreen.height - 36.0f, 0xffffff)
+
 		Fonts.font35.drawCenteredString(status, representedScreen.width / 2.0f, representedScreen.height / 4.0f + 80, 0xffffff)
 
 		// Draw fields
@@ -110,7 +115,13 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 			{
 				stateButton.enabled = false
 
-				thread {
+				if (transferCodeField.text.startsWith("file:", ignoreCase = true))
+				{
+					stateButton.enabled = true
+					capeEnabled = !capeEnabled
+					status = if (capeEnabled) "\u00a7aSuccessfully enabled offline cape"
+					else "\u00a7aSuccessfully disabled offline cape"
+				} else thread {
 					val httpClient = HttpClients.createDefault()
 					val headers = arrayOf(
 						BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"), BasicHeader(HttpHeaders.AUTHORIZATION, transferCodeField.text)
@@ -158,9 +169,13 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	 * Handle key typed
 	 */
 	override fun keyTyped(typedChar: Char, keyCode: Int)
-	{ // Check if user want to escape from screen
+	{
+
+		// Check if user want to escape from screen
 		if (Keyboard.KEY_ESCAPE == keyCode)
-		{ // Send back to prev screen
+		{
+
+			// Send back to prev screen
 			mc.displayGuiScreen(prevGui.representedScreen)
 
 			// Quit
@@ -178,7 +193,9 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	 * Handle mouse clicked
 	 */
 	override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
-	{ // Call mouse clicked to field
+	{
+
+		// Call mouse clicked to field
 		transferCodeField.mouseClicked(mouseX, mouseY, mouseButton)
 
 		// Call sub method
