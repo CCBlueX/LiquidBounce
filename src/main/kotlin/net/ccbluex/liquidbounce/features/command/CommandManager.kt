@@ -103,6 +103,7 @@ object CommandManager : Configurable("command"), Iterable<Command> {
 
     fun registerInbuilt() {
         // client commands
+        addCommand(CommandClient.createCommand())
         addCommand(CommandFriend.createCommand())
         addCommand(CommandToggle.createCommand())
         addCommand(CommandBind.createCommand())

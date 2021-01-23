@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.extensions.asText
 import net.ccbluex.liquidbounce.utils.extensions.outputString
 import net.minecraft.client.MinecraftClient
+import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.apache.logging.log4j.Logger
@@ -42,8 +43,8 @@ fun variable(text: String) = text.asText().styled { it.withColor(Formatting.DARK
 
 fun status(text: String) = text.asText().styled { it.withColor(Formatting.DARK_GRAY) }
 
-fun chat(vararg texts: Text) {
-    val literalText = clientPrefix.copy()
+fun chat(vararg texts: Text, prefix: Boolean = true) {
+    val literalText = if (prefix) clientPrefix.copy() else LiteralText("")
     texts.forEach { literalText.append(it) }
 
     if (mc.player == null) {
