@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase;
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging.WAction;
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity;
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos;
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3;
 import net.ccbluex.liquidbounce.event.AttackEvent;
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
@@ -31,7 +32,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.utils.CPSCounter;
 import net.ccbluex.liquidbounce.utils.CPSCounter.MouseButton;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
-import net.ccbluex.liquidbounce.utils.ImmutableVec3;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
 import net.ccbluex.liquidbounce.utils.extensions.PlayerExtensionKt;
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder;
@@ -91,12 +91,12 @@ public class TpAura extends Module
 	private long attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get());
 
 	// Paths
-	private final List<List<ImmutableVec3>> targetPaths = new ArrayList<>();
+	private final List<List<WVec3>> targetPaths = new ArrayList<>();
 
 	// Targets
 	public List<IEntityLivingBase> currentTargets = new CopyOnWriteArrayList<>();
 	public IEntityLivingBase currentTarget;
-	private List<ImmutableVec3> currentPath = new ArrayList<>();
+	private List<WVec3> currentPath = new ArrayList<>();
 
 	// Blocking Status
 	public boolean clientSideBlockingStatus;
@@ -134,8 +134,8 @@ public class TpAura extends Module
 				for (int targetIndex = 0, targetCount = currentTargets.size() > maxTargetsValue.get() ? maxTargetsValue.get() : currentTargets.size(); targetIndex < targetCount; targetIndex++)
 				{
 					currentTarget = currentTargets.get(targetIndex);
-					final ImmutableVec3 from = new ImmutableVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ());
-					final ImmutableVec3 to = new ImmutableVec3(currentTarget.getPosX(), currentTarget.getPosY(), currentTarget.getPosZ());
+					final WVec3 from = new WVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ());
+					final WVec3 to = new WVec3(currentTarget.getPosX(), currentTarget.getPosY(), currentTarget.getPosZ());
 
 					currentPath = computePath(from, to);
 					targetPaths.add(currentPath); // Used for path esp
@@ -148,8 +148,8 @@ public class TpAura extends Module
 					}
 
 					// Travel to the target
-					for (final ImmutableVec3 path : currentPath)
-						mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(path.getX(), path.getY(), path.getZ(), true));
+					for (final WVec3 path : currentPath)
+						mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(path.getXCoord(), path.getYCoord(), path.getZCoord(), true));
 
 					LiquidBounce.eventManager.callEvent(new AttackEvent(currentTarget));
 
@@ -170,8 +170,8 @@ public class TpAura extends Module
 
 					// Travel back to the original position
 					Collections.reverse(currentPath);
-					for (final ImmutableVec3 path : currentPath)
-						mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(path.getX(), path.getY(), path.getZ(), true));
+					for (final WVec3 path : currentPath)
+						mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(path.getXCoord(), path.getYCoord(), path.getZCoord(), true));
 				}
 
 				attackTimer.reset();
@@ -184,12 +184,14 @@ public class TpAura extends Module
 	@EventTarget
 	public final void onRender3D(final Render3DEvent event)
 	{
+		if (mc.getThePlayer() == null) return;
+
 		if (!currentPath.isEmpty() && pathEspValue.get())
 		{
-			for (final List<ImmutableVec3> targetPath : targetPaths)
+			for (final List<WVec3> targetPath : targetPaths)
 				try
 				{
-					for (final ImmutableVec3 pos : targetPath)
+					for (final WVec3 pos : targetPath)
 						if (pos != null)
 							drawPath(pos);
 				}
@@ -211,20 +213,20 @@ public class TpAura extends Module
 		return mc.getThePlayer() != null && mc.getThePlayer().getHeldItem() != null && classProvider.isItemSword(mc.getThePlayer().getHeldItem().getItem());
 	}
 
-	private List<ImmutableVec3> computePath(ImmutableVec3 from, final ImmutableVec3 to)
+	private List<WVec3> computePath(WVec3 from, final WVec3 to)
 	{
-		if (!canPassThrow(new WBlockPos(from.getX(), from.getY(), from.getZ())))
+		if (!canPassThrough(new WBlockPos(from.getXCoord(), from.getYCoord(), from.getZCoord())))
 			from = from.addVector(0, 1, 0);
 
 		final PathFinder pathfinder = new PathFinder(from, to);
 		pathfinder.compute();
 
 		int i = 0;
-		ImmutableVec3 lastPath = null;
-		ImmutableVec3 lastEndPath = null;
-		final List<ImmutableVec3> path = new ArrayList<>();
-		final List<ImmutableVec3> pathFinderPath = pathfinder.getPath();
-		for (final ImmutableVec3 currentPathFinderPath : pathFinderPath)
+		WVec3 lastPath = null;
+		WVec3 lastEndPath = null;
+		final List<WVec3> path = new ArrayList<>();
+		final List<WVec3> pathFinderPath = pathfinder.getPath();
+		for (final WVec3 currentPathFinderPath : pathFinderPath)
 		{
 			if (i == 0 || i == pathFinderPath.size() - 1) // If the current path node is start or end node
 			{
@@ -241,12 +243,12 @@ public class TpAura extends Module
 					canContinueSearching = false;
 				else
 				{
-					final double minX = Math.min(lastEndPath.getX(), currentPathFinderPath.getX());
-					final double minY = Math.min(lastEndPath.getY(), currentPathFinderPath.getY());
-					final double minZ = Math.min(lastEndPath.getZ(), currentPathFinderPath.getZ());
-					final double maxX = Math.max(lastEndPath.getX(), currentPathFinderPath.getX());
-					final double maxY = Math.max(lastEndPath.getY(), currentPathFinderPath.getY());
-					final double maxZ = Math.max(lastEndPath.getZ(), currentPathFinderPath.getZ());
+					final double minX = Math.min(lastEndPath.getXCoord(), currentPathFinderPath.getXCoord());
+					final double minY = Math.min(lastEndPath.getYCoord(), currentPathFinderPath.getYCoord());
+					final double minZ = Math.min(lastEndPath.getZCoord(), currentPathFinderPath.getZCoord());
+					final double maxX = Math.max(lastEndPath.getXCoord(), currentPathFinderPath.getXCoord());
+					final double maxY = Math.max(lastEndPath.getYCoord(), currentPathFinderPath.getYCoord());
+					final double maxZ = Math.max(lastEndPath.getZCoord(), currentPathFinderPath.getZCoord());
 					cordsLoop:
 					for (int x = (int) minX; x <= maxX; x++)
 						for (int y = (int) minY; y <= maxY; y++)
@@ -274,19 +276,18 @@ public class TpAura extends Module
 		return mc.getTheWorld().getLoadedEntityList().stream().filter(classProvider::isEntityLivingBase).map(IEntity::asEntityLivingBase).filter(entity -> PlayerExtensionKt.getDistanceToEntityBox(mc.getThePlayer(), entity) <= rangeValue.get() && EntityUtils.isEnemy(entity, false) && entity.getHurtTime() <= hurtTimeValue.get()).sorted((o1, o2) -> (int) (o1.getDistanceToEntity(mc.getThePlayer()) * 1000 - o2.getDistanceToEntity(mc.getThePlayer()) * 1000)).collect(Collectors.toList());
 	}
 
-	private boolean canPassThrow(final WBlockPos pos)
+	private boolean canPassThrough(final WBlockPos pos)
 	{
 		final IIBlockState state = BlockUtils.getState(new WBlockPos(pos.getX(), pos.getY(), pos.getZ()));
 		final IBlock block = state.getBlock();
 		return classProvider.getMaterialEnum(MaterialType.AIR).equals(block.getMaterial(state)) || classProvider.getMaterialEnum(MaterialType.PLANTS).equals(block.getMaterial(state)) || classProvider.getMaterialEnum(MaterialType.VINE).equals(block.getMaterial(state)) || classProvider.getBlockEnum(BlockType.LADDER).equals(block) || classProvider.getBlockEnum(BlockType.WATER).equals(block) || classProvider.getBlockEnum(BlockType.FLOWING_WATER).equals(block) || classProvider.getBlockEnum(BlockType.WALL_SIGN).equals(block) || classProvider.getBlockEnum(BlockType.STANDING_SIGN).equals(block);
 	}
 
-	public final void drawPath(final ImmutableVec3 vec)
+	public final void drawPath(final WVec3 vec)
 	{
-		final double x = vec.getX() - mc.getRenderManager().getRenderPosX();
-		final double y = vec.getY() - mc.getRenderManager().getRenderPosY();
-		final double z = vec.getZ() - mc.getRenderManager().getRenderPosZ();
-		final double width = 0.3;
+		final double x = vec.getXCoord() - mc.getRenderManager().getRenderPosX();
+		final double y = vec.getYCoord() - mc.getRenderManager().getRenderPosY();
+		final double z = vec.getZCoord() - mc.getRenderManager().getRenderPosZ();
 		final double height = mc.getThePlayer().getEyeHeight();
 
 		// pre3D
@@ -307,10 +308,11 @@ public class TpAura extends Module
 		{
 				Color.black, Color.white
 		};
+		final double width = 0.3;
 		for (int i = 0; i < 2; i++)
 		{
 			RenderUtils.glColor(colors[i]);
-			glLineWidth(3 - i * 2);
+			glLineWidth(3 - (i << 1));
 			glBegin(GL_LINE_STRIP);
 			glVertex3d(x - width, y, z - width);
 			glVertex3d(x - width, y, z - width);

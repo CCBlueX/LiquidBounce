@@ -22,12 +22,12 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayer
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity;
 import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing;
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos;
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
-import net.ccbluex.liquidbounce.utils.ImmutableVec3;
 import net.ccbluex.liquidbounce.utils.RaycastUtils;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder;
@@ -40,7 +40,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue;
 @ModuleInfo(name = "ExtendedReach", description = "Upgraded combat and block reach over 100+ blocks.", category = ModuleCategory.PLAYER)
 public class ExtendedReach extends Module
 {
-	private List<ImmutableVec3> path = new ArrayList<>();
+	private List<WVec3> path = new ArrayList<>();
 	public final FloatValue combatReach = new FloatValue("CombatReach", 100, 6, 128);
 	public final FloatValue buildReach = new FloatValue("BuildReach", 100, 6, 128);
 	private final BoolValue pathEspValue = new BoolValue("PathESP", true);
@@ -63,8 +63,11 @@ public class ExtendedReach extends Module
 	@EventTarget
 	public final void onRender3D(final Render3DEvent event)
 	{
+		if (mc.getThePlayer() == null)
+			return;
+
 		if (!path.isEmpty() && !pathESPTimer.hasTimePassed(pathEspTimeValue.get()) && pathEspValue.get())
-			for (final ImmutableVec3 vec : path)
+			for (final WVec3 vec : path)
 				drawPath(vec);
 	}
 
@@ -84,21 +87,21 @@ public class ExtendedReach extends Module
 			final double dist = Math.sqrt(mc.getThePlayer().getDistanceSq(pos));
 			if (dist > 6 && pos.getY() != -1 && (stack != null || classProvider.isBlockContainer(BlockUtils.getState(pos).getBlock())))
 			{
-				final ImmutableVec3 from = new ImmutableVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ());
-				final ImmutableVec3 to = new ImmutableVec3(pos.getX(), pos.getY(), pos.getZ());
+				final WVec3 from = new WVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ());
+				final WVec3 to = new WVec3(pos.getX(), pos.getY(), pos.getZ());
 				path = computePath(from, to);
 
 				// Travel to the target block.
-				for (final ImmutableVec3 pathElm : path)
-					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getX(), pathElm.getY(), pathElm.getZ(), true));
+				for (final WVec3 pathElm : path)
+					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getXCoord(), pathElm.getYCoord(), pathElm.getZCoord(), true));
 
 				pathESPTimer.reset();
 				mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(p);
 
 				// Go back to the home.
 				Collections.reverse(path);
-				for (final ImmutableVec3 pathElm : path)
-					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getX(), pathElm.getY(), pathElm.getZ(), true));
+				for (final WVec3 pathElm : path)
+					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getXCoord(), pathElm.getYCoord(), pathElm.getZCoord(), true));
 
 				ep.cancelEvent();
 			}
@@ -113,13 +116,13 @@ public class ExtendedReach extends Module
 			final double distance = Math.sqrt(mc.getThePlayer().getDistanceSq(pos));
 			if (distance > 6 && act == WAction.START_DESTROY_BLOCK)
 			{
-				final ImmutableVec3 topFrom = new ImmutableVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ());
-				final ImmutableVec3 to = new ImmutableVec3(pos.getX(), pos.getY(), pos.getZ());
+				final WVec3 topFrom = new WVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ());
+				final WVec3 to = new WVec3(pos.getX(), pos.getY(), pos.getZ());
 				path = computePath(topFrom, to);
 
 				// Travel to the target.
-				for (final ImmutableVec3 pathElm : path)
-					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getX(), pathElm.getY(), pathElm.getZ(), true));
+				for (final WVec3 pathElm : path)
+					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getXCoord(), pathElm.getYCoord(), pathElm.getZCoord(), true));
 
 				pathESPTimer.reset();
 				final IPacket end = classProvider.createCPacketPlayerDigging(WAction.STOP_DESTROY_BLOCK, pos, face);
@@ -128,8 +131,8 @@ public class ExtendedReach extends Module
 
 				// Go back to the home.
 				Collections.reverse(path);
-				for (final ImmutableVec3 pathElm : path)
-					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getX(), pathElm.getY(), pathElm.getZ(), true));
+				for (final WVec3 pathElm : path)
+					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getXCoord(), pathElm.getYCoord(), pathElm.getZCoord(), true));
 				ep.cancelEvent();
 			}
 			else if (act == WAction.ABORT_DESTROY_BLOCK)
@@ -149,13 +152,13 @@ public class ExtendedReach extends Module
 
 			if (targetEntity != null)
 			{
-				final ImmutableVec3 from = new ImmutableVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ());
-				final ImmutableVec3 to = new ImmutableVec3(targetEntity.getPosX(), targetEntity.getPosY(), targetEntity.getPosZ());
+				final WVec3 from = new WVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ());
+				final WVec3 to = new WVec3(targetEntity.getPosX(), targetEntity.getPosY(), targetEntity.getPosZ());
 				path = computePath(from, to);
 
 				// Travel to the target entity.
-				for (final ImmutableVec3 pathElm : path)
-					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getX(), pathElm.getY(), pathElm.getZ(), true));
+				for (final WVec3 pathElm : path)
+					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getXCoord(), pathElm.getYCoord(), pathElm.getZCoord(), true));
 
 				pathESPTimer.reset();
 
@@ -165,26 +168,26 @@ public class ExtendedReach extends Module
 
 				// Go back to the home.
 				Collections.reverse(path);
-				for (final ImmutableVec3 pathElm : path)
-					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getX(), pathElm.getY(), pathElm.getZ(), true));
+				for (final WVec3 pathElm : path)
+					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getXCoord(), pathElm.getYCoord(), pathElm.getZCoord(), true));
 			}
 		}
 	}
 
-	private List<ImmutableVec3> computePath(ImmutableVec3 topFrom, final ImmutableVec3 to)
+	private List<WVec3> computePath(WVec3 topFrom, final WVec3 to)
 	{
-		if (!canPassThrow(new WBlockPos(topFrom.getX(), topFrom.getY(), topFrom.getZ())))
+		if (!canPassThrough(new WBlockPos(topFrom.getXCoord(), topFrom.getYCoord(), topFrom.getZCoord())))
 			topFrom = topFrom.addVector(0, 1, 0);
 
 		final PathFinder pathfinder = new PathFinder(topFrom, to);
 		pathfinder.compute();
 
 		int i = 0;
-		ImmutableVec3 lastLoc = null;
-		ImmutableVec3 lastDashLoc = null;
-		final List<ImmutableVec3> path = new ArrayList<>();
-		final List<ImmutableVec3> pathFinderPath = pathfinder.getPath();
-		for (final ImmutableVec3 pathElm : pathFinderPath)
+		WVec3 lastLoc = null;
+		WVec3 lastDashLoc = null;
+		final List<WVec3> path = new ArrayList<>();
+		final List<WVec3> pathFinderPath = pathfinder.getPath();
+		for (final WVec3 pathElm : pathFinderPath)
 		{
 			if (i == 0 || i == pathFinderPath.size() - 1)
 			{
@@ -201,12 +204,12 @@ public class ExtendedReach extends Module
 					canContinue = false;
 				else
 				{
-					final double minX = Math.min(lastDashLoc.getX(), pathElm.getX());
-					final double minY = Math.min(lastDashLoc.getY(), pathElm.getY());
-					final double minZ = Math.min(lastDashLoc.getZ(), pathElm.getZ());
-					final double maxX = Math.max(lastDashLoc.getX(), pathElm.getX());
-					final double maxY = Math.max(lastDashLoc.getY(), pathElm.getY());
-					final double maxZ = Math.max(lastDashLoc.getZ(), pathElm.getZ());
+					final double minX = Math.min(lastDashLoc.getXCoord(), pathElm.getXCoord());
+					final double minY = Math.min(lastDashLoc.getYCoord(), pathElm.getYCoord());
+					final double minZ = Math.min(lastDashLoc.getZCoord(), pathElm.getZCoord());
+					final double maxX = Math.max(lastDashLoc.getXCoord(), pathElm.getXCoord());
+					final double maxY = Math.max(lastDashLoc.getYCoord(), pathElm.getYCoord());
+					final double maxZ = Math.max(lastDashLoc.getZCoord(), pathElm.getZCoord());
 					cordsLoop:
 					for (int x = (int) minX; x <= maxX; x++)
 						for (int y = (int) minY; y <= maxY; y++)
@@ -229,19 +232,18 @@ public class ExtendedReach extends Module
 		return path;
 	}
 
-	private boolean canPassThrow(final WBlockPos pos)
+	private boolean canPassThrough(final WBlockPos pos)
 	{
 		final IIBlockState state = BlockUtils.getState(new WBlockPos(pos.getX(), pos.getY(), pos.getZ()));
 		final IBlock block = state.getBlock();
 		return classProvider.getMaterialEnum(MaterialType.AIR).equals(block.getMaterial(state)) || classProvider.getMaterialEnum(MaterialType.PLANTS).equals(block.getMaterial(state)) || classProvider.getMaterialEnum(MaterialType.VINE).equals(block.getMaterial(state)) || classProvider.getBlockEnum(BlockType.LADDER).equals(block) || classProvider.getBlockEnum(BlockType.WATER).equals(block) || classProvider.getBlockEnum(BlockType.FLOWING_WATER).equals(block) || classProvider.getBlockEnum(BlockType.WALL_SIGN).equals(block) || classProvider.getBlockEnum(BlockType.STANDING_SIGN).equals(block);
 	}
 
-	public final void drawPath(final ImmutableVec3 vec)
+	private final void drawPath(final WVec3 vec)
 	{
-		final double x = vec.getX() - mc.getRenderManager().getRenderPosX();
-		final double y = vec.getY() - mc.getRenderManager().getRenderPosY();
-		final double z = vec.getZ() - mc.getRenderManager().getRenderPosZ();
-		final double width = 0.3;
+		final double x = vec.getXCoord() - mc.getRenderManager().getRenderPosX();
+		final double y = vec.getYCoord() - mc.getRenderManager().getRenderPosY();
+		final double z = vec.getZCoord() - mc.getRenderManager().getRenderPosZ();
 		final double height = mc.getThePlayer().getEyeHeight();
 
 		// pre3D
@@ -262,10 +264,12 @@ public class ExtendedReach extends Module
 		{
 				Color.black, Color.white
 		};
+
+		final double width = 0.3;
 		for (int i = 0; i < 2; i++)
 		{
 			RenderUtils.glColor(colors[i]);
-			glLineWidth(3 - i * 2);
+			glLineWidth(3 - (i << 1));
 			glBegin(GL_LINE_STRIP);
 			glVertex3d(x - width, y, z - width);
 			glVertex3d(x - width, y, z - width);
