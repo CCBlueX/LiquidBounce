@@ -23,8 +23,6 @@ import kotlin.math.roundToInt
  * CustomHUD effects element
  *
  * Shows a list of active potion effects
- * TODO: Make remaining time space and color customizable
- * TODO: Make user choose the type of the remaining time (Times, Ticks, Both)
  */
 @ElementInfo(name = "Effects")
 class Effects(
