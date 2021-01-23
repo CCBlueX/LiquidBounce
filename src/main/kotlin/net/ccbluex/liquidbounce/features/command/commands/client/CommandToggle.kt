@@ -45,8 +45,9 @@ object CommandToggle {
                 val name = args[0] as String
                 val module = LiquidBounce.moduleManager.find { it.name.equals(name, true) } ?: throw CommandException("Module §b§l${args[1]}§c not found.")
 
-                module.state = !module.state
-                chat("$variableColor${module.name} ${defaultColor}has been $statusColor${if (module.state) "enabled" else "disabled"}$variableColor.")
+                val newState = !module.state
+                module.state = newState
+                chat("$variableColor${module.name} ${defaultColor}has been $statusColor${if (newState) "enabled" else "disabled"}$variableColor.")
             }
             .build()
     }
