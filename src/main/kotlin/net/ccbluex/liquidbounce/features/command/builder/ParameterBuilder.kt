@@ -115,10 +115,6 @@ class ParameterBuilder<T> private constructor(val name: String) {
             throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")
         }
 
-        if (required == true && vararg) {
-            throw IllegalArgumentException("Varargs cannot be required")
-        }
-
         return Parameter(
             this.name,
             this.description,
