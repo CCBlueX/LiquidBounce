@@ -167,19 +167,19 @@ object ColorUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun rainbow(alpha: Float, speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F) = rainbow(400000L, alpha, speed = speed, saturation = saturation, brightness = brightness)
+	fun rainbow(alpha: Float, speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F) = rainbow(400000L, alpha, speed, saturation, brightness)
 
 	@JvmStatic
-	fun rainbow(alpha: Int, speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F) = rainbow(400000L, alpha / 255, speed = speed, saturation = saturation, brightness = brightness)
+	fun rainbow(alpha: Int, speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F) = rainbow(400000L, alpha / 255F, speed, saturation, brightness)
 
 	@JvmStatic
-	fun rainbow(offset: Long, alpha: Int, speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F) = rainbow(offset, alpha.toFloat() / 255, speed = speed, saturation = saturation, brightness = brightness)
+	fun rainbow(offset: Long, alpha: Int, speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F) = rainbow(offset, alpha / 255F, speed, saturation, brightness)
 
 	@JvmStatic
 	fun rainbow(offset: Long, alpha: Float, speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F): Color
 	{
 		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(9 + (11 - speed.coerceAtLeast(1).coerceAtMost(10))) % 1, saturation, brightness))
-		return Color(currentColor.red / 255F * 1F, currentColor.green / 255f * 1F, currentColor.blue / 255F * 1F, alpha)
+		return Color(currentColor.red / 255F, currentColor.green / 255F, currentColor.blue / 255F, alpha)
 	}
 
 	@JvmStatic
@@ -235,4 +235,11 @@ object ColorUtils : MinecraftInstance()
 
 	@JvmStatic
 	fun getHealthColor(health: Float, maxHealth: Float): Color = blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), health / maxHealth)!!.brighter()
+
+	@JvmStatic
+	fun applyAlphaChannel(rgb: Int, alpha: Int): Int
+	{
+		val color = Color(rgb)
+		return Color(color.red, color.green, color.blue, alpha).rgb
+	}
 }

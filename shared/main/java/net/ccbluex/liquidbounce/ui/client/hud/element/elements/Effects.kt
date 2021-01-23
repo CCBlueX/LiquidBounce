@@ -10,16 +10,21 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.*
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.applyAlphaChannel
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import java.awt.Color
+import kotlin.math.roundToInt
 
 /**
  * CustomHUD effects element
  *
  * Shows a list of active potion effects
+ * TODO: Make remaining time space and color customizable
+ * TODO: Make user choose the type of the remaining time (Times, Ticks, Both)
  */
 @ElementInfo(name = "Effects")
 class Effects(
@@ -30,6 +35,14 @@ class Effects(
 	private val redValue = IntegerValue("Red", 255, 0, 255)
 	private val greenValue = IntegerValue("Green", 255, 0, 255)
 	private val blueValue = IntegerValue("Blue", 255, 0, 255)
+
+	private val timeTypeValue = ListValue("TimeType", arrayOf("String", "Ticks", "Both"), "String")
+	private val timeColorModeValue = ListValue("Time-Color", arrayOf("PotionColor", "Custom", "Rainbow", "RainbowShader"), "Custom")
+	private val timeRedValue = IntegerValue("Time-Red", 192, 0, 255)
+	private val timeGreenValue = IntegerValue("Time-Green", 192, 0, 255)
+	private val timeBlueValue = IntegerValue("Time-Blue", 192, 0, 255)
+	private val timeSpaceValue = FloatValue("Time-Space", 2.5F, 1F, 5F)
+	private val timeHighlightValue = BoolValue("HighlightTimeWhenReachesEnd", true)
 
 	private val rectValue = ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
 	private val rectColorModeValue = ListValue("Rect-Color", arrayOf("PotionColor", "Custom", "Rainbow", "RainbowShader"), "PotionColor")
@@ -42,7 +55,7 @@ class Effects(
 	private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0, 255)
 	private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0, 255)
 	private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0, 255)
-	private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 0, 0, 255)
+	private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 255, 0, 255)
 
 	private val rainbowShaderXValue = FloatValue("RainbowShader-X", -1000F, -2000F, 2000F)
 	private val rainbowShaderYValue = FloatValue("RainbowShader-Y", -1000F, -2000F, 2000F)
@@ -74,6 +87,10 @@ class Effects(
 		val colorMode = colorModeValue.get()
 		val customColor = Color(redValue.get(), greenValue.get(), blueValue.get(), 1).rgb
 
+		val timeDistance = timeSpaceValue.get()
+		val timeColorMode = timeColorModeValue.get()
+		val timeCustomColor = Color(timeRedValue.get(), timeGreenValue.get(), timeBlueValue.get(), 1).rgb
+
 		val backgroundColorMode = backgroundColorModeValue.get()
 		val backgroundColorAlpha = backgroundColorAlphaValue.get()
 		val backgroundCustomColor = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha).rgb
@@ -99,6 +116,7 @@ class Effects(
 
 		val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
 		val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
+		val timeRainbowShader = timeColorMode.equals("RainbowShader", ignoreCase = true)
 		val rectRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 
 		assumeNonVolatile = true
@@ -106,32 +124,41 @@ class Effects(
 		effects.forEachIndexed { index, effect ->
 			val potionID = effect.potionID
 			val potion = functions.getPotionById(potionID)
-			val potionColor = Color(potion.liquidColor).rgb // Add alpha channel with 255
+			val potionColor = applyAlphaChannel(potion.liquidColor, 255) // Apply default alpha channel
 
 			val string = formatEffect(effect)
-			val width = fontRenderer.getStringWidth(string).toFloat()
+			val timeString = formatRemainingTime(effect)
+			val width = fontRenderer.getStringWidth(string).toFloat() + timeDistance + fontRenderer.getStringWidth(timeString)
 
 			val backgroundColor = when
 			{
 				backgroundRainbowShader -> 0
-				backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-				backgroundColorMode.equals("PotionColor", ignoreCase = true) -> potionColor
+				backgroundColorMode.equals("Rainbow", ignoreCase = true) -> rainbow(alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				backgroundColorMode.equals("PotionColor", ignoreCase = true) -> applyAlphaChannel(potionColor, backgroundColorAlpha)
 				else -> backgroundCustomColor
 			}
 
 			val textColor = when
 			{
 				textRainbowShader -> 0
-				colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				colorMode.equals("Rainbow", ignoreCase = true) -> rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 				colorMode.equals("PotionColor", ignoreCase = true) -> potionColor
 				else -> customColor
+			}
+
+			val timeColor = if (timeHighlightValue.get() && effect.duration <= 300) Color.red.rgb else when
+			{
+				timeRainbowShader -> 0
+				timeColorMode.equals("Rainbow", ignoreCase = true) -> rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				timeColorMode.equals("PotionColor", ignoreCase = true) -> potionColor
+				else -> timeCustomColor
 			}
 
 			val rectColor = when
 			{
 				rectRainbowShader -> 0
-				rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-				rectColorMode.equals("PotionColor", ignoreCase = true) -> potionColor
+				rectColorMode.equals("Rainbow", ignoreCase = true) -> rainbow(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				rectColorMode.equals("PotionColor", ignoreCase = true) -> applyAlphaChannel(potionColor, rectColorAlpha)
 				else -> rectCustomColor
 			}
 
@@ -155,6 +182,13 @@ class Effects(
 						val xPosCorrection = if (rectMode.equals("right", true)) 3 else 0
 
 						fontRenderer.drawString(string, xPos - xPosCorrection, yPos + textY, textColor, shadow)
+					}
+
+					// Draw remaining time
+					RainbowFontShader.begin(timeRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+						val xPosCorrection = fontRenderer.getStringWidth(string) + timeDistance - if (rectMode.equals("right", true)) 3 else 0
+
+						fontRenderer.drawString(timeString, xPos + xPosCorrection, yPos + textY, timeColor, shadow)
 					}
 
 					// Draw Rect
@@ -186,6 +220,11 @@ class Effects(
 						fontRenderer.drawString(string, xPos, yPos + textY, textColor, shadow)
 					}
 
+					// Draw remaining time
+					RainbowFontShader.begin(timeRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+						fontRenderer.drawString(timeString, xPos + fontRenderer.getStringWidth(string) + timeDistance, yPos + textY, timeColor, shadow)
+					}
+
 					// Draw Rect
 					if (!rectMode.equals("none", true)) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 						when
@@ -209,7 +248,7 @@ class Effects(
 				else Border(0F, -1F, -20F, 20F)
 			}
 
-			effects.map { fontRenderer.getStringWidth(formatEffect(it)) }.forEach {
+			effects.map { (fontRenderer.getStringWidth(formatEffect(it)) + timeDistance + fontRenderer.getStringWidth(formatRemainingTime(it))).roundToInt() }.forEach {
 				when (side.horizontal)
 				{
 					Side.Horizontal.RIGHT, Side.Horizontal.MIDDLE ->
@@ -239,9 +278,10 @@ class Effects(
 	override fun updateElement()
 	{
 		val font = fontValue.get()
+		val timeDistance = timeSpaceValue.get()
 
 		effects = (mc.thePlayer ?: return).activePotionEffects.sortedBy {
-			-font.getStringWidth(formatEffect(it))
+			-font.getStringWidth(formatEffect(it) + timeDistance + formatRemainingTime(it))
 		}
 	}
 
@@ -264,6 +304,16 @@ class Effects(
 			else -> "I"
 		}
 
-		return "${functions.formatI18n(potion.name)} $amplifierString\u00A7f: \u00A77${effect.getDurationString()}"
+		return "${functions.formatI18n(potion.name)} $amplifierString"
+	}
+
+	fun formatRemainingTime(effect: IPotionEffect): String
+	{
+		return when (timeTypeValue.get().toLowerCase())
+		{
+			"ticks" -> "${effect.duration} ticks"
+			"both" -> "${effect.getDurationString()} (${effect.duration} ticks)"
+			else -> effect.getDurationString()
+		}
 	}
 }
