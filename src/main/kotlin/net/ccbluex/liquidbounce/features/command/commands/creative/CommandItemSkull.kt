@@ -26,37 +26,28 @@ import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.extensions.createItem
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
-object CommandItemGive {
+object CommandItemSkull {
 
     fun createCommand(): Command {
         return CommandBuilder
-            .begin("give")
-            .description("Allows you to give yourself items")
+            .begin("skull")
+            .description("Allows you to give yourself player skulls")
             .parameter(
                 ParameterBuilder
-                    .begin<String>("item")
-                    .description("Item")
+                    .begin<String>("name")
+                    .description("Name of the player")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                     .required()
                     .build()
             )
-            .parameter(
-                ParameterBuilder
-                    .begin<Int>("amount")
-                    .description("Item amount")
-                    .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-                    .optional()
-                    .build()
-            )
             .handler { args ->
-                val item = args[0] as String
-                val amount = if (args.size > 2) args[1] as Int else 1 // default one
+                val name = args[0] as String
 
                 if (mc.interactionManager?.hasCreativeInventory() == false) {
                     throw CommandException("You need to be in creative mode.")
                 }
 
-                val itemStack = createItem(item, amount)
+                val itemStack = createItem("minecraft:player_head{SkullOwner:$name}", 1)
                 val emptySlot = mc.player!!.inventory!!.emptySlot
 
                 if (emptySlot == -1) {
@@ -64,8 +55,7 @@ object CommandItemGive {
                 }
 
                 mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(if(emptySlot < 9) emptySlot + 36 else emptySlot, itemStack))
-                chat(regular("Given "), itemStack.toHoverableText().copy(), regular(" * "),
-                    variable(itemStack.count.toString()), dot())
+                chat(regular("Given skull of "), variable(name), dot())
             }
             .build()
     }

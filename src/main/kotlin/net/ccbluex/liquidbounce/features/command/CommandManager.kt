@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.client.*
 import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemGive
 import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemRename
+import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemSkull
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.utils.chat
@@ -116,6 +117,7 @@ object CommandManager : Configurable("command"), Iterable<Command> {
         // creative commands
         addCommand(CommandItemRename.createCommand())
         addCommand(CommandItemGive.createCommand())
+        addCommand(CommandItemSkull.createCommand())
 
         // utility commands
         addCommand(CommandUsername.createCommand())
