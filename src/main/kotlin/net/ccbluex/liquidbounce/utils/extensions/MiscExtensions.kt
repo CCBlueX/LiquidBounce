@@ -18,9 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.minecraft.text.Text
+import net.minecraft.text.LiteralText
 
-fun String.asText() = Text.of(this)!!
+fun text() = LiteralText("")
+
+fun String.asText() = LiteralText(this)
 
 /**
  * Translate alt color codes to minecraft color codes

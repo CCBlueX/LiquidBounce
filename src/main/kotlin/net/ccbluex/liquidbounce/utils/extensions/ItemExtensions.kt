@@ -3,7 +3,6 @@ package net.ccbluex.liquidbounce.utils.extensions
 import com.mojang.brigadier.StringReader
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
-import net.minecraft.item.AirBlockItem
 import net.minecraft.item.ItemStack
 
 /**
@@ -15,4 +14,7 @@ fun createItem(stack: String, amount: Int): ItemStack = ItemStringReader(StringR
     ItemStackArgument(it.item, it.tag).createStack(amount, false)
 }
 
-fun ItemStack?.isNothing() = this?.item is AirBlockItem
+/**
+ * Check if a stack is nothing (means empty slot)
+ */
+fun ItemStack?.isNothing() = this?.isEmpty == true

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.ChatSendEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.client.*
+import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemGive
 import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemRename
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
@@ -113,6 +114,7 @@ object CommandManager : Configurable("command"), Iterable<Command> {
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
+        addCommand(CommandItemGive.createCommand())
 
         // utility commands
         addCommand(CommandUsername.createCommand())
