@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.extensions.asText
 import net.minecraft.client.MinecraftClient
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import org.apache.logging.log4j.Logger
 
 val mc = MinecraftClient.getInstance()!!
@@ -29,19 +31,29 @@ val logger: Logger
     get() = LiquidBounce.logger
 
 // Chat formatting
-const val defaultColor = "§3"
-const val variableColor = "§7"
-const val statusColor = "§5"
-private const val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] $defaultColor"
+private val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] ".asText()
 
-fun chat(message: String) {
+fun dot() = regular(".")
+
+fun regular(text: String) = text.asText().styled { it.withColor(Formatting.GRAY) }
+
+fun variable(text: String) = text.asText().styled { it.withColor(Formatting.DARK_GRAY) }
+
+fun status(text: String) = text.asText().styled { it.withColor(Formatting.DARK_GRAY) }
+
+fun chat(vararg texts: Text) {
+    val literalText = clientPrefix.copy()
+    texts.forEach { literalText.append(it) }
+
     if (mc.player == null) {
-        logger.info("(Chat) $message")
+        logger.info("(Chat) ${literalText.asString()}")
         return
     }
 
-    mc.inGameHud.chatHud.addMessage("$clientPrefix$message".asText())
+    mc.inGameHud.chatHud.addMessage(literalText)
 }
+
+fun chat(text: String) = chat(text.asText())
 
 /**
  * Converts a resource to string
