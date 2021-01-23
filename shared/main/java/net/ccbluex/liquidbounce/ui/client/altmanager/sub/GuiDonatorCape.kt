@@ -119,8 +119,8 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 				{
 					stateButton.enabled = true
 					capeEnabled = !capeEnabled
-					status = if (capeEnabled) "\u00a7aSuccessfully enabled offline cape"
-					else "\u00a7aSuccessfully disabled offline cape"
+					status = if (capeEnabled) "\u00A7aSuccessfully enabled offline cape"
+					else "\u00A7aSuccessfully disabled offline cape"
 				} else thread {
 					val httpClient = HttpClients.createDefault()
 					val headers = arrayOf(

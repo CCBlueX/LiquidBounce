@@ -39,7 +39,7 @@ class HighJump : Module()
 	{
 		mineplexStage = -1
 		jumped = false
-		if (modeValue.get().equals("mineplex", ignoreCase = true)) ClientUtils.displayChatMessage("\u00a78[\u00a7c\u00a7lMineplex Highjump\u00a78] \u00a7cWalk off an island to highjump.")
+		if (modeValue.get().equals("mineplex", ignoreCase = true)) ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cWalk off an island to highjump.")
 	}
 
 	@EventTarget
@@ -163,7 +163,7 @@ class HighJump : Module()
 			thePlayer.motionX *= 0
 			thePlayer.motionZ *= 0
 			thePlayer.jumpMovementFactor = 0.0F
-			ClientUtils.displayChatMessage("\u00a78[\u00a7c\u00a7lMineplex Highjump\u00a78] \u00a7cLagback detected. Disabled highjump.")
+			ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cLagback detected. Disabled highjump.")
 		}
 	}
 

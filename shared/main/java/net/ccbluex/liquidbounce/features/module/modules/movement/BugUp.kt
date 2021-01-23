@@ -195,7 +195,7 @@ class BugUp : Module()
 			{
 
 				// Automatically stop flagging after teleported back.
-				ClientUtils.displayChatMessage("\u00a78[\u00a7c\u00a7lBugUp\u00a78] \u00a7cTeleported.")
+				ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lBugUp\u00A78] \u00A7cTeleported.")
 				tryingFlag = false
 			}
 		}
