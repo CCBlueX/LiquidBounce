@@ -86,7 +86,6 @@ class Arraylist(
 		AWTFontRenderer.assumeNonVolatile = true
 
 		val tagDistance = tagSpaceValue.get()
-		val tagType = tagTypeValue.get().toLowerCase()
 
 		// Slide animation - update every render
 		val delta = RenderUtils.deltaTime
@@ -95,13 +94,7 @@ class Arraylist(
 		{
 			if (!module.array || (!module.state && module.slide == 0F)) continue
 			var displayString = module.name
-			val originalTagString = if (tags.get() && module.tag != null) module.tag!! else ""
-			var tagString = if (originalTagString.isNotEmpty()) when (tagType)
-			{
-				"square-bracket" -> "[$originalTagString]"
-				"round-bracket" -> "($originalTagString)"
-				else -> originalTagString
-			} else originalTagString
+			var tagString = formatTag(module)
 
 			if (upperCaseValue.get())
 			{
@@ -109,7 +102,7 @@ class Arraylist(
 				tagString = tagString.toUpperCase()
 			}
 
-			val width = fontRenderer.getStringWidth(displayString) + if (originalTagString.isEmpty()) 0f else tagDistance + fontRenderer.getStringWidth(tagString)
+			val width = fontRenderer.getStringWidth(displayString) + if (tagString.isEmpty()) 0f else tagDistance + fontRenderer.getStringWidth(tagString)
 
 			if (module.state)
 			{
@@ -158,13 +151,7 @@ class Arraylist(
 			{
 				modules.forEachIndexed { index, module ->
 					var displayString = module.name
-					val originalTagString = if (tags.get() && module.tag != null) module.tag!! else ""
-					var tagString = when (tagType)
-					{
-						"square-bracket" -> "[$originalTagString]"
-						"round-bracket" -> "($originalTagString)"
-						else -> originalTagString
-					}
+					var tagString = formatTag(module)
 
 					if (upperCaseValue.get())
 					{
@@ -212,7 +199,7 @@ class Arraylist(
 					}
 
 					// Draw Tag
-					if (originalTagString.isNotEmpty())
+					if (tagString.isNotBlank())
 					{
 						val tagRainbowShader = tagColorMode.equals("RainbowShader", ignoreCase = true)
 
@@ -258,13 +245,7 @@ class Arraylist(
 			{
 				modules.forEachIndexed { index, module ->
 					var displayString = module.name
-					val originalTagString = if (tags.get() && module.tag != null) module.tag!! else ""
-					var tagString = when (tagType)
-					{
-						"square-bracket" -> "[$originalTagString]"
-						"round-bracket" -> "($originalTagString)"
-						else -> originalTagString
-					}
+					var tagString = formatTag(module)
 
 					if (upperCaseValue.get())
 					{
@@ -272,7 +253,7 @@ class Arraylist(
 						tagString = tagString.toUpperCase()
 					}
 
-					val width = fontRenderer.getStringWidth(displayString) + if (originalTagString.isEmpty()) 0f else tagDistance + fontRenderer.getStringWidth(tagString)
+					val width = fontRenderer.getStringWidth(displayString) + if (tagString.isBlank()) 0f else tagDistance + fontRenderer.getStringWidth(tagString)
 					val xPos = -(width - module.slide) + if (rectMode.equals("left", true)) 5 else 2
 					val yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) * if (side.vertical == Vertical.DOWN) index + 1 else index
 					val moduleRandomColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
@@ -311,7 +292,7 @@ class Arraylist(
 					}
 
 					// Draw Tag
-					if (originalTagString.isNotEmpty())
+					if (tagString.isNotBlank())
 					{
 						val tagRainbow = tagColorMode.equals("RainbowShader", ignoreCase = true)
 
@@ -388,6 +369,17 @@ class Arraylist(
 		AWTFontRenderer.assumeNonVolatile = false
 		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 		return null
+	}
+
+	private fun formatTag(module: Module): String
+	{
+		val originalTagString = if (tags.get() && module.tag != null) module.tag!! else ""
+		return if (originalTagString.isNotBlank()) when (tagTypeValue.get())
+		{
+			"square-bracket" -> "[$originalTagString]"
+			"round-bracket" -> "($originalTagString)"
+			else -> originalTagString
+		} else originalTagString
 	}
 
 	override fun updateElement()

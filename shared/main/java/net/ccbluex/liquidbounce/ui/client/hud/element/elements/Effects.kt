@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
+import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.ui.client.hud.element.*
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
@@ -58,10 +59,15 @@ class Effects(
 
 	private val fontValue = FontValue("Font", Fonts.font35)
 
+	private var effects = emptyList<IPotionEffect>()
+
+	private var x2 = 0
+	private var y2 = 0F
+
 	/**
 	 * Draw element
 	 */
-	override fun drawElement(): Border
+	override fun drawElement(): Border?
 	{
 		var y = 0F
 		var width = 0F
@@ -98,26 +104,11 @@ class Effects(
 
 		assumeNonVolatile = true
 
-		mc.thePlayer!!.activePotionEffects.forEachIndexed { index, effect ->
+		effects.forEachIndexed { index, effect ->
 			val potion = functions.getPotionById(effect.potionID)
 			val potionColor = potion.liquidColor
 
-			val amplifierString = when
-			{
-				effect.amplifier == 1 -> "II"
-				effect.amplifier == 2 -> "III"
-				effect.amplifier == 3 -> "IV"
-				effect.amplifier == 4 -> "V"
-				effect.amplifier == 5 -> "VI"
-				effect.amplifier == 6 -> "VII"
-				effect.amplifier == 7 -> "VIII"
-				effect.amplifier == 8 -> "IX"
-				effect.amplifier == 9 -> "X"
-				effect.amplifier > 10 -> "* ${effect.amplifier + 1}"
-				else -> "I"
-			}
-
-			val string = "${functions.formatI18n(potion.name)} $amplifierString\u00A7f: \u00A77${effect.getDurationString()}"
+			val string = formatEffect(effect)
 			val stringWidth = fontRenderer.getStringWidth(string).toFloat()
 
 			if (width < stringWidth) width = stringWidth
@@ -235,12 +226,73 @@ class Effects(
 			y -= fontRenderer.fontHeight
 		}
 
+		// Draw border
+		if (classProvider.isGuiHudDesigner(mc.currentScreen))
+		{
+			x2 = Int.MIN_VALUE
+
+			if (effects.isEmpty())
+			{
+				return if (side.horizontal == Side.Horizontal.LEFT) Border(0F, -1F, 20F, 20F)
+				else Border(0F, -1F, -20F, 20F)
+			}
+
+			effects.map { fontRenderer.getStringWidth(formatEffect(it)) }.forEach {
+				when (side.horizontal)
+				{
+					Side.Horizontal.RIGHT, Side.Horizontal.MIDDLE ->
+					{
+						val xPos = -it - 2
+						if (x2 == Int.MIN_VALUE || xPos < x2) x2 = xPos
+					}
+
+					Side.Horizontal.LEFT ->
+					{
+						val xPos = it + 14
+						if (x2 == Int.MIN_VALUE || xPos > x2) x2 = xPos
+					}
+				}
+			}
+
+			y2 = (if (side.vertical == Side.Vertical.DOWN) -textSpacer else textSpacer) * effects.size
+
+			return Border(0F, 0F, x2 - 7F, y2 - if (side.vertical == Side.Vertical.DOWN) 1F else 0F)
+		}
+
 		assumeNonVolatile = false
 
-		if (width == 0F) width = 40F
+		//  Border(0F, fontRenderer.fontHeight.toFloat(), -width, y + fontRenderer.fontHeight - 2F)
+		return null
+	}
 
-		if (y == 0F) y = -10F
+	override fun updateElement()
+	{
+		val font = fontValue.get()
 
-		return Border(2F, fontRenderer.fontHeight.toFloat(), -width - 2F, y + fontRenderer.fontHeight - 2F)
+		effects = (mc.thePlayer ?: return).activePotionEffects.sortedBy {
+			-font.getStringWidth(formatEffect(it))
+		}
+	}
+
+	fun formatEffect(effect: IPotionEffect): String
+	{
+		val potion = functions.getPotionById(effect.potionID)
+
+		val amplifierString = when
+		{
+			effect.amplifier == 1 -> "II"
+			effect.amplifier == 2 -> "III"
+			effect.amplifier == 3 -> "IV"
+			effect.amplifier == 4 -> "V"
+			effect.amplifier == 5 -> "VI"
+			effect.amplifier == 6 -> "VII"
+			effect.amplifier == 7 -> "VIII"
+			effect.amplifier == 8 -> "IX"
+			effect.amplifier == 9 -> "X"
+			effect.amplifier > 10 -> "* ${effect.amplifier + 1}"
+			else -> "I"
+		}
+
+		return "${functions.formatI18n(potion.name)} $amplifierString\u00A7f: \u00A77${effect.getDurationString()}"
 	}
 }
