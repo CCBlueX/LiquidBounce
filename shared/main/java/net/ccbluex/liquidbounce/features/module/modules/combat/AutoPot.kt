@@ -246,7 +246,7 @@ class AutoPot : Module()
 					}
 				)
 				{
-					val itemStack = thePlayer.inventory.getStackInSlot(potion)
+					val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack
 
 					if (itemStack != null)
 					{
@@ -293,63 +293,53 @@ class AutoPot : Module()
 		val jumpPot = jumpBoostPotValue.get()
 		val invisPot = invisPotValue.get()
 
+		var playerSpeed = -1
+		var playerJump = -1
+		var playerDigSpeed = -1
+		var playerDamageBoost = -1
+		var playerFireResis = -1
+		var playerResis = -1
+		var playerInvis = false
+		var playerAbsorp = -1
+		var playerHealthBoost = -1
+		var playerNightVision = false
+		var playerWaterBreath = -1
+
+		for (potionEffect in thePlayer.activePotionEffects)
+		{
+			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.MOVE_SPEED).id) playerSpeed = potionEffect.amplifier
+			if (jumpPot && potionEffect.potionID == classProvider.getPotionEnum(PotionType.JUMP).id) playerJump = potionEffect.amplifier
+			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.DIG_SPEED).id) playerDigSpeed = potionEffect.amplifier
+			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.DAMAGE_BOOST).id) playerDamageBoost = potionEffect.amplifier
+			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.FIRE_RESISTANCE).id) playerFireResis = potionEffect.amplifier
+			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.RESISTANCE).id) playerResis = potionEffect.amplifier
+			if (invisPot && potionEffect.potionID == classProvider.getPotionEnum(PotionType.INVISIBILITY).id) playerInvis = true
+			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.ABSORPTION).id) playerAbsorp = potionEffect.amplifier
+			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.HEALTH_BOOST).id) playerHealthBoost = potionEffect.amplifier
+			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.NIGHT_VISION).id) playerNightVision = true
+			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.WATER_BREATHING).id) playerWaterBreath = potionEffect.amplifier
+		}
+
 		val candidates = mutableListOf<Int>()
 		for (i in startSlot until endSlot)
 		{
 			val stack = thePlayer.inventoryContainer.getSlot(i).stack
 
-			if (stack == null || System.currentTimeMillis() - stack.itemDelay < itemDelayValue.get() || !classProvider.isItemPotion(stack.item) || stack.isSplash()) continue
+			if (stack == null || System.currentTimeMillis() - stack.itemDelay < itemDelayValue.get() || !classProvider.isItemPotion(stack.item) || !stack.isSplash()) continue
 
 			val itemPotion = stack.item!!.asItemPotion()
 
-			//<editor-fold desc="Potion effect get">
-			var playerSpeed = -1
 			var potionSpeed = -1
-
-			var playerJump = -1
 			var potionJump = -1
-
-			var playerDigSpeed = -1
 			var potionDigSpeed = -1
-
-			var playerDamageBoost = -1
 			var potionDamageBoost = -1
-
-			var playerFireResis = -1
 			var potionFireResis = -1
-
-			var playerResis = -1
 			var potionResis = -1
-
-			var playerInvis = false
 			var potionInvis = false
-
-			var playerAbsorp = -1
 			var potionAbsorp = -1
-
-			var playerHealthBoost = -1
 			var potionHealthboost = -1
-
-			var playerNightVision = false
 			var potionNightVision = false
-
-			var playerWaterBreath = -1
 			var potionWaterBreath = -1
-
-			for (potionEffect in thePlayer.activePotionEffects)
-			{
-				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.MOVE_SPEED).id) playerSpeed = potionEffect.amplifier
-				if (jumpPot && potionEffect.potionID == classProvider.getPotionEnum(PotionType.JUMP).id && potionEffect.amplifier <= jumpPotAmpLimitValue.get()) playerJump = potionEffect.amplifier
-				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.DIG_SPEED).id) playerDigSpeed = potionEffect.amplifier
-				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.DAMAGE_BOOST).id) playerDamageBoost = potionEffect.amplifier
-				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.FIRE_RESISTANCE).id) playerFireResis = potionEffect.amplifier
-				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.RESISTANCE).id) playerResis = potionEffect.amplifier
-				if (invisPot && potionEffect.potionID == classProvider.getPotionEnum(PotionType.INVISIBILITY).id) playerInvis = true
-				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.ABSORPTION).id) playerAbsorp = potionEffect.amplifier
-				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.HEALTH_BOOST).id) playerHealthBoost = potionEffect.amplifier
-				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.NIGHT_VISION).id) playerNightVision = true
-				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.WATER_BREATHING).id) playerWaterBreath = potionEffect.amplifier
-			}
 
 			for (potionEffect in itemPotion.getEffects(stack))
 			{
@@ -364,9 +354,7 @@ class AutoPot : Module()
 				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.HEALTH_BOOST).id) potionHealthboost = potionEffect.amplifier
 				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.NIGHT_VISION).id) potionNightVision = true
 				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.WATER_BREATHING).id) potionWaterBreath = potionEffect.amplifier
-			}
-
-			//</editor-fold>
+			}			//</editor-fold>
 
 			// Speed Splash Potion
 			if (potionSpeed > -1 && playerSpeed < potionSpeed) candidates.add(i)

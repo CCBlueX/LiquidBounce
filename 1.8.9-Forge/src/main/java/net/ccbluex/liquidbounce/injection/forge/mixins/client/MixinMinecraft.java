@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.*;
@@ -163,7 +164,7 @@ public abstract class MixinMinecraft
 			skipRenderWorld = false;
 		}
 
-		LiquidBounce.eventManager.callEvent(new ScreenEvent(currentScreen == null ? null : GuiScreenImplKt.wrap(currentScreen)));
+		LiquidBounce.eventManager.callEvent(new ScreenEvent(Optional.ofNullable(currentScreen).map(GuiScreenImplKt::wrap).orElse(null)));
 	}
 
 	private long lastFrame = getTime();
