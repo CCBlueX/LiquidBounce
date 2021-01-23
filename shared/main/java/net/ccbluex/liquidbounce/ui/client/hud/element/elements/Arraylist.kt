@@ -72,6 +72,8 @@ class Arraylist(
 	private val textHeightValue = FloatValue("TextHeight", 11F, 1F, 20F)
 	private val textYValue = FloatValue("TextY", 1F, 0F, 20F)
 
+	private val animationSpeedValue = FloatValue("AnimationSpeed", 4F, 0.1F, 20F)
+
 	private val fontValue = FontValue("Font", Fonts.font40)
 
 	private var x2 = 0
@@ -86,6 +88,7 @@ class Arraylist(
 		AWTFontRenderer.assumeNonVolatile = true
 
 		val tagDistance = tagSpaceValue.get()
+		val animationSpeed = 21F - animationSpeedValue.get().coerceAtLeast(0.01F).coerceAtMost(20F)
 
 		// Slide animation - update every render
 		val delta = RenderUtils.deltaTime
@@ -109,12 +112,12 @@ class Arraylist(
 				if (module.slide < width)
 				{
 					module.slide = AnimationUtils.easeOut(module.slideStep, width) * width
-					module.slideStep += delta / 4F
+					module.slideStep += delta / animationSpeed
 				}
 			} else if (module.slide > 0)
 			{
 				module.slide = AnimationUtils.easeOut(module.slideStep, width) * width
-				module.slideStep -= delta / 4F
+				module.slideStep -= delta / animationSpeed
 			}
 
 			module.slide = module.slide.coerceIn(0F, width)
