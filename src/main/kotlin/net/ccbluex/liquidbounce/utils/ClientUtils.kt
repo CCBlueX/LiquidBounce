@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.extensions.asText
+import net.ccbluex.liquidbounce.utils.extensions.outputString
 import net.minecraft.client.MinecraftClient
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -46,7 +47,7 @@ fun chat(vararg texts: Text) {
     texts.forEach { literalText.append(it) }
 
     if (mc.player == null) {
-        logger.info("(Chat) ${literalText.asString()}")
+        logger.info("(Chat) ${literalText.outputString()}")
         return
     }
 

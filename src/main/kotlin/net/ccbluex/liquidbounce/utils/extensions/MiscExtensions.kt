@@ -19,10 +19,13 @@
 package net.ccbluex.liquidbounce.utils.extensions
 
 import net.minecraft.text.LiteralText
+import net.minecraft.text.Text
 
 fun text() = LiteralText("")
 
 fun String.asText() = LiteralText(this)
+
+fun Text.outputString(): String = "${asString()}${siblings.joinToString(separator = "") { it.outputString() }}"
 
 /**
  * Translate alt color codes to minecraft color codes
