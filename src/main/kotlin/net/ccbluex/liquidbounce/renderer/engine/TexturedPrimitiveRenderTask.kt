@@ -224,10 +224,6 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
 
                 this.vboData.bind()
 
-                GL20.glEnableVertexAttribArray(0)
-                GL20.glEnableVertexAttribArray(1)
-                GL20.glEnableVertexAttribArray(2)
-
                 this.texture.bind()
 
                 // Render the entire thing
@@ -252,6 +248,9 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
         GL20.glEnableVertexAttribArray(1)
         GL20.glEnableVertexAttribArray(2)
 
+        vboData.arrayBuffer.bind()
+        vboData.arrayBuffer.putData(this.vertexBuffer)
+
         // Vertex positions at attrib[0]
         GL20.glVertexAttribPointer(0, 3, GL20.GL_FLOAT, false, 20, 0)
 
@@ -261,10 +260,11 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
         // Color info at attrib[2], we want the data to be normalized
         GL20.glVertexAttribPointer(2, 2, GL20.GL_UNSIGNED_SHORT, true, 20, 16)
 
+        // Make every other attempt to put a vertex in those buffers fail :3
         this.vertexBuffer.limit(this.vertexBufferIndex * WORDS_PER_VERTEX * 4)
         this.indexBuffer.limit(this.indexBufferIndex)
 
-        vboData.arrayBuffer.putData(this.vertexBuffer)
+        vboData.elementBuffer.bind()
         vboData.elementBuffer.putData(this.indexBuffer)
 
         vboData.unbind()

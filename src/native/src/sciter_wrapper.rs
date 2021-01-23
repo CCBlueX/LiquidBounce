@@ -7,10 +7,24 @@ use jni::*;
 use jni::objects::{JByteBuffer, JClass, JObject, JString};
 use jni::sys::JNI_GetCreatedJavaVMs;
 use sciter::windowless::{handle_message, KEY_EVENTS, KEYBOARD_STATES, KeyboardEvent, Message, MOUSE_BUTTONS, MOUSE_EVENTS, MouseEvent, PaintLayer, RenderEvent};
+use sciter::{HELEMENT, HostHandler};
+use sciter::types::SCN_INVALIDATE_RECT;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use lazy_static::lazy_static;
 
 #[derive(Debug)]
 struct SciterWrapperError {
     error_text: String
+}
+
+struct SciterHandler {
+}
+
+impl HostHandler for SciterHandler {
+    fn on_invalidate(&mut self, pnm: &SCN_INVALIDATE_RECT) {
+        NEEDS_REDRAW.store(true, Ordering::Relaxed);
+    }
 }
 
 impl Display for SciterWrapperError {
@@ -18,8 +32,8 @@ impl Display for SciterWrapperError {
         f.write_str(&self.error_text)
     }
 }
-impl std::error::Error for SciterWrapperError {
-}
+
+impl std::error::Error for SciterWrapperError {}
 
 fn get_window_handle_from_long(long: u64) -> sciter::types::HWINDOW {
     unsafe { long as *const u8 as sciter::types::HWINDOW }
@@ -48,12 +62,24 @@ fn fix_modifier(mods: u32) -> u32 {
 
 #[no_mangle]
 pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_draw0(env: JNIEnv, _class: JClass, window_handle: u64) {
+    NEEDS_REDRAW.store(false, Ordering::Relaxed);
+
     handle_message(get_window_handle_from_long(window_handle), Message::Paint(PaintLayer { element: get_element_handle_from_long(window_handle), is_foreground: true }));
 }
 
+lazy_static! {
+    static ref NEEDS_REDRAW: Arc<AtomicBool> = {
+        Arc::new(AtomicBool::new(true))
+    };
+}
+
 #[no_mangle]
-pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_heartbit0(env: JNIEnv, _class: JClass, window_handle: u64, time_delta: u32) {
-   handle_message(get_window_handle_from_long(window_handle), Message::Heartbit { milliseconds: time_delta });
+pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_heartbit0(env: JNIEnv, _class: JClass, window_handle: u64, time_delta: u32) -> bool {
+    sciter::Host::attach_with(get_window_handle_from_long(window_handle), SciterHandler {});
+
+    handle_message(get_window_handle_from_long(window_handle), Message::Heartbit { milliseconds: time_delta });
+
+    return NEEDS_REDRAW.load(Ordering::Relaxed);
 }
 
 #[no_mangle]
@@ -102,6 +128,9 @@ fn load_html(env: &JNIEnv, window_handle: u64, html: JString, uri: JString) -> R
 
 #[no_mangle]
 pub extern "system" fn Java_net_ccbluex_liquidbounce_sciter_natives_SciterNative_render0(env: JNIEnv, _class: JClass, window_handle: u64, framebuffer_pointer: u64, framebuffer_size: u32) {
+    NEEDS_REDRAW.store(false, Ordering::Relaxed);
+
+
     let on_render = move |bitmap_area: &sciter::types::RECT, bitmap_data: &[u8]|
         {
             let output: &mut [u8] = unsafe { std::slice::from_raw_parts_mut(framebuffer_pointer as *mut u8, framebuffer_size as usize) };
@@ -212,7 +241,7 @@ fn init(env: &JNIEnv, jni_library_location: JString, window_handle: u64) -> Resu
 
     let scwnd = get_window_handle_from_long(window_handle);
 
-    handle_message(scwnd, Message::Create { backend: sciter::types::GFX_LAYER::SKIA_OPENGL, transparent: true });
+    handle_message(scwnd, Message::Create { backend: sciter::types::GFX_LAYER::AUTO, transparent: true });
 
     return Ok(());
 }

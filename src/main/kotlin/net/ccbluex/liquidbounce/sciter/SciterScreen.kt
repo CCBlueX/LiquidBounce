@@ -108,13 +108,14 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
         try {
             GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
-//            sciter.draw();
-
-//            sciter.draw();
             GL11.glMatrixMode(GL11.GL_PROJECTION)
             GL11.glPushMatrix()
-            sciter.heartBit()
-            sciter.render()
+
+            sciter.tick()
+
+//            sciter.heartBit()
+//            sciter.render()
+
             GL11.glPopMatrix()
 
             GL13.glActiveTexture(GL13.GL_TEXTURE0) // Hey OpenGL, we're about to give commands for texture sampler 0.
@@ -198,6 +199,6 @@ class SciterScreen(name: String, val pausesGame: Boolean = true) : Screen(Litera
         this.scale = mc.options.guiScale
 
         sciter.setSize(width * this.scale, height * this.scale)
-        sciter.setResolution(mc.options.guiScale * 92)
+        sciter.setResolution(mc.options.guiScale * 92 / 2)
     }
 }

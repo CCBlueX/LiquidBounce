@@ -50,8 +50,10 @@ object SciterNative {
     external fun mouseEvent0(windowHandle: Long, x: Int, y: Int, button: Int)
     @JvmStatic
     external fun keyEvent0(windowHandle: Long, scancode: Int, keyboardState: Int, eventType: Int)
+
     @JvmStatic
-    external fun heartbit0(windowHandle: Long, timeDelta: Int)
+    external fun heartbit0(windowHandle: Long, timeDelta: Int): Boolean
+
     @JvmStatic
     external fun setResolution0(windowHandle: Long, ppi: Int)
     @JvmStatic
@@ -67,6 +69,10 @@ class Sciter(private val windowHandle: Long) {
     private var currentHeight = 0
     private var framebuffer: ByteBuffer? = null
 
+    /**
+     * Is the current framebuffer empty?
+     */
+    private var framebufferEmpty = true
 
     init {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID) //Bind texture ID
@@ -94,10 +100,10 @@ class Sciter(private val windowHandle: Long) {
     /**
      * Called on every tick
      */
-    fun heartBit() {
+    fun heartBit(): Boolean {
         checkInitialized()
 
-        SciterNative.heartbit0(windowHandle, (System.currentTimeMillis() - startTime).toInt())
+        return SciterNative.heartbit0(windowHandle, (System.currentTimeMillis() - startTime).toInt())
     }
 
     fun setResolution(resolution: Int) {
@@ -124,6 +130,9 @@ class Sciter(private val windowHandle: Long) {
 
     private fun allocateFramebuffer() {
         framebuffer = BufferUtils.createByteBuffer(currentWidth * currentHeight * 4)
+
+        // Tell the engine to redraw the frame
+        this.framebufferEmpty = true
     }
 
     fun mouseMoved(x: Int, y: Int, button: Int) {
@@ -141,16 +150,30 @@ class Sciter(private val windowHandle: Long) {
         SciterNative.keyEvent0(windowHandle, scancode, keyboardState, eventType)
     }
 
+    /**
+     * Calls [heartBit] and renders the frame into the framebuffer if needed
+     */
+    fun tick() {
+        val needsRedraw = heartBit() || this.framebufferEmpty
+
+        if (needsRedraw) {
+            render()
+        }
+    }
+
     fun render() {
         // causing crashes
-        // draw0(windowHandle)
+//         draw0(windowHandle)
+//
+//        if (true)
+//            return
+
         checkInitialized()
         val framebuffer = framebuffer!!
 
         render0(windowHandle, MemoryUtil.memAddress(framebuffer), currentWidth * currentHeight * 4)
 
 
-        GL11.glPixelStorei(GL11.GL_PACK_SKIP_ROWS, 0)
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
 
 //        GL11.glPixelStorei(GL11.GL_PACK_SWAP_BYTES, 0)
@@ -163,15 +186,15 @@ class Sciter(private val windowHandle: Long) {
 //        GL11.glPixelStorei(GL12.GL_PACK_SKIP_IMAGES, 0)
 //        GL11.glPixelStorei(GL12.GL_PACK_ALIGNMENT, 0)
 
-        GL11.glPixelStorei(GL12.GL_PACK_ALIGNMENT, 4)
-        GL11.glPixelStorei(GL12.GL_UNPACK_SWAP_BYTES, 0)
-        GL11.glPixelStorei(GL12.GL_UNPACK_LSB_FIRST, 0)
-        GL11.glPixelStorei(GL12.GL_UNPACK_ROW_LENGTH, 0)
-        GL11.glPixelStorei(GL12.GL_UNPACK_IMAGE_HEIGHT, 0)
+//        GL11.glPixelStorei(GL12.GL_PACK_ALIGNMENT, 4)
+//        GL11.glPixelStorei(GL12.GL_UNPACK_SWAP_BYTES, 0)
+//        GL11.glPixelStorei(GL12.GL_UNPACK_LSB_FIRST, 0)
+//        GL11.glPixelStorei(GL12.GL_UNPACK_ROW_LENGTH, 0)
+//        GL11.glPixelStorei(GL12.GL_UNPACK_IMAGE_HEIGHT, 0)
+//        GL11.glPixelStorei(GL12.GL_UNPACK_ALIGNMENT, 4)
         GL11.glPixelStorei(GL12.GL_UNPACK_SKIP_ROWS, 0)
         GL11.glPixelStorei(GL12.GL_UNPACK_SKIP_PIXELS, 0)
         GL11.glPixelStorei(GL12.GL_UNPACK_SKIP_IMAGES, 0)
-        GL11.glPixelStorei(GL12.GL_UNPACK_ALIGNMENT, 4)
 
         // TODO For whatever reason, the driver doesn't like this. Fix this
         GL11.glTexImage2D(
@@ -185,6 +208,10 @@ class Sciter(private val windowHandle: Long) {
             GL11.GL_UNSIGNED_BYTE,
             framebuffer
         )
+
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
+
+        this.framebufferEmpty = false
     }
 
     /**

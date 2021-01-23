@@ -18,3 +18,4 @@ features = ["windowless", "dynamic"]
 
 [dependencies]
 jni = "0.17.0"
+lazy_static = "1.4.0"

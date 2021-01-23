@@ -229,9 +229,6 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, private val
 
                 this.vboData.bind()
 
-                GL20.glEnableVertexAttribArray(0)
-                GL20.glEnableVertexAttribArray(1)
-
                 // Render the entire thing
                 GL20.glDrawElements(
                     this.type.mode,
@@ -251,13 +248,18 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, private val
         GL20.glEnableVertexAttribArray(0)
         GL20.glEnableVertexAttribArray(1)
 
+        vboData.arrayBuffer.bind()
+        vboData.arrayBuffer.putData(this.vertexBuffer)
+
+        vboData.arrayBuffer.bind()
         // Vertex positions at attrib[0]
         GL20.glVertexAttribPointer(0, 3, GL20.GL_FLOAT, false, 16, 0)
 
         // Color info at attrib[1], we want the data to be normalized
         GL20.glVertexAttribPointer(1, 4, GL20.GL_UNSIGNED_BYTE, true, 16, 12)
 
-        vboData.arrayBuffer.putData(this.vertexBuffer)
+
+        vboData.elementBuffer.bind()
         vboData.elementBuffer.putData(this.indexBuffer)
 
         vboData.unbind()

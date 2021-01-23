@@ -159,13 +159,9 @@ class UploadedVBOData(storageType: VBOStorageType) {
 
     fun bind() {
         this.vao.bind()
-        this.arrayBuffer.bind()
-        this.elementBuffer.bind()
     }
 
     fun unbind() {
-        this.arrayBuffer.unbind()
-        this.elementBuffer.unbind()
         this.vao.unbind()
     }
 }
