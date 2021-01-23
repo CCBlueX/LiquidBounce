@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.api.enums.MaterialType
 import net.ccbluex.liquidbounce.ui.client.hud.element.*
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.opengl.GL11
 
@@ -23,6 +24,8 @@ class Armor(
 
 	private val modeValue = ListValue("Alignment", arrayOf("Horizontal", "Vertical"), "Horizontal")
 
+	private val preventConflictValue = BoolValue("PreventConflictWithBubbles", true)
+
 	/**
 	 * Draw element
 	 */
@@ -35,10 +38,10 @@ class Armor(
 			val renderItem = mc.renderItem
 
 			// Prevents being conflicted with the bubbles
-			val isInsideWater = mc.thePlayer!!.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.WATER))
+			val preventConflict = preventConflictValue.get() && mc.thePlayer!!.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.WATER))
 
 			var x = 1
-			var y = if (isInsideWater) -10 else 0
+			var y = if (preventConflict) -10 else 0
 
 			val mode = modeValue.get()
 

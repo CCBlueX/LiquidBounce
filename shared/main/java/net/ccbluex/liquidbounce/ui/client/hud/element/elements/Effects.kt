@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.ui.client.hud.element.*
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
@@ -70,9 +69,6 @@ class Effects(
 	 */
 	override fun drawElement(): Border?
 	{
-		var y = 0F
-		var width = 0F
-
 		val fontRenderer = fontValue.get()
 
 		val colorMode = colorModeValue.get()
@@ -108,13 +104,12 @@ class Effects(
 		assumeNonVolatile = true
 
 		effects.forEachIndexed { index, effect ->
-			val potion = functions.getPotionById(effect.potionID)
+			val potionID = effect.potionID
+			val potion = functions.getPotionById(potionID)
 			val potionColor = Color(potion.liquidColor).rgb // Add alpha channel with 255
 
 			val string = formatEffect(effect)
-			val stringWidth = fontRenderer.getStringWidth(string).toFloat()
-
-			if (width < stringWidth) width = stringWidth
+			val width = fontRenderer.getStringWidth(string).toFloat()
 
 			val backgroundColor = when
 			{
@@ -144,7 +139,7 @@ class Effects(
 			{
 				Side.Horizontal.MIDDLE, Side.Horizontal.RIGHT ->
 				{
-					val xPos = -stringWidth - 2
+					val xPos = -width - 2
 					val yPos = (if (side.vertical == Side.Vertical.DOWN) -textSpacer else textSpacer) * if (side.vertical == Side.Vertical.DOWN) index + 1 else index
 
 					// Draw Background
@@ -201,8 +196,6 @@ class Effects(
 					}
 				}
 			}
-
-			y -= fontRenderer.fontHeight
 		}
 
 		// Draw border
@@ -240,7 +233,6 @@ class Effects(
 
 		assumeNonVolatile = false
 
-		//  Border(0F, fontRenderer.fontHeight.toFloat(), -width, y + fontRenderer.fontHeight - 2F)
 		return null
 	}
 
