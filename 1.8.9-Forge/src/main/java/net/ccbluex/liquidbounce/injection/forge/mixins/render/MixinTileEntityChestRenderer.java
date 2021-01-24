@@ -22,7 +22,7 @@ public class MixinTileEntityChestRenderer
 	@Inject(method = "renderTileEntityAt", at = @At("HEAD"))
 	private void injectChamsPre(final CallbackInfo callbackInfo)
 	{
-		final Chams chams = (Chams) LiquidBounce.moduleManager.getModule(Chams.class);
+		final Chams chams = (Chams) LiquidBounce.moduleManager.get(Chams.class);
 
 		if (chams.getState() && chams.getChestsValue().get())
 		{
@@ -34,7 +34,7 @@ public class MixinTileEntityChestRenderer
 	@Inject(method = "renderTileEntityAt", at = @At("RETURN"))
 	private void injectChamsPost(final CallbackInfo callbackInfo)
 	{
-		final Chams chams = (Chams) LiquidBounce.moduleManager.getModule(Chams.class);
+		final Chams chams = (Chams) LiquidBounce.moduleManager.get(Chams.class);
 
 		if (chams.getState() && chams.getChestsValue().get())
 		{

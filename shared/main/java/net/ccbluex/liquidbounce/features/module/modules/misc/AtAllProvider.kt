@@ -46,12 +46,8 @@ class AtAllProvider : Module()
 
 	override fun onDisable()
 	{
-		synchronized(sendQueue) {
-			sendQueue.clear()
-		}
-		synchronized(retryQueue) {
-			retryQueue.clear()
-		}
+		synchronized(sendQueue, sendQueue::clear)
+		synchronized(retryQueue, retryQueue::clear)
 
 		super.onDisable()
 	}
@@ -66,8 +62,9 @@ class AtAllProvider : Module()
 			synchronized(sendQueue) {
 				if (sendQueue.isEmpty())
 				{
-					if (!retryValue.get() || retryQueue.isEmpty()) return
-					else sendQueue.addAll(retryQueue)
+					if (!retryValue.get() || retryQueue.isEmpty()) return@onUpdate
+
+					sendQueue.addAll(retryQueue)
 				}
 
 				mc.thePlayer!!.sendChatMessage(sendQueue.take())

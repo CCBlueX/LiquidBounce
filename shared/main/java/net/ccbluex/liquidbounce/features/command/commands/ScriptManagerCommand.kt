@@ -73,7 +73,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 								if (!entryName.contains("/")) scriptFiles.add(entryFile)
 							}
 
-							scriptFiles.forEach { scriptFile -> LiquidBounce.scriptManager.loadScript(scriptFile) }
+							scriptFiles.forEach(LiquidBounce.scriptManager::loadScript)
 
 							LiquidBounce.clickGui = ClickGui()
 							LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)

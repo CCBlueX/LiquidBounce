@@ -93,7 +93,7 @@ public abstract class MixinItemRenderer
 		}
 		else
 		{
-			final KillAura killAura = (KillAura) LiquidBounce.moduleManager.getModule(KillAura.class);
+			final KillAura killAura = (KillAura) LiquidBounce.moduleManager.get(KillAura.class);
 
 			boolean flag1 = enumhandside == EnumHandSide.RIGHT;
 
@@ -166,7 +166,7 @@ public abstract class MixinItemRenderer
 	@Inject(method = "renderFireInFirstPerson", at = @At("HEAD"), cancellable = true)
 	private void renderFireInFirstPerson(final CallbackInfo callbackInfo)
 	{
-		final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.getModule(AntiBlind.class);
+		final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.get(AntiBlind.class);
 
 		if (antiBlind.getState() && antiBlind.getFireEffect().get())
 			callbackInfo.cancel();

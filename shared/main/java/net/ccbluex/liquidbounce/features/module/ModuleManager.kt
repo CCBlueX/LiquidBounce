@@ -260,11 +260,11 @@ class ModuleManager : Listenable
 	 */
 
 	/**
-	 * Get module by [moduleClass]
+	 * Get module by [clazz]
 	 */
-	fun getModule(moduleClass: Class<*>) = moduleClassMap[moduleClass]!!
+	fun getModule(clazz: Class<*>) = get(clazz)
 
-	operator fun get(clazz: Class<*>) = getModule(clazz)
+	operator fun get(clazz: Class<*>) = moduleClassMap[clazz]!!
 
 	/**
 	 * Get module by [moduleName]
@@ -279,7 +279,7 @@ class ModuleManager : Listenable
 	 * Handle incoming key presses
 	 */
 	@EventTarget
-	private fun onKey(event: KeyEvent) = modules.filter { it.keyBind == event.key }.forEach { it.toggle() }
+	private fun onKey(event: KeyEvent) = modules.filter { it.keyBind == event.key }.forEach(Module::toggle)
 
 	override fun handleEvents() = true
 }

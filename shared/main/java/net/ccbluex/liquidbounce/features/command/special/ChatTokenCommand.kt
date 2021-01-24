@@ -71,7 +71,7 @@ class ChatTokenCommand : Command("chattoken")
 		{
 			1 ->
 			{
-				arrayOf("set", "generate", "copy").map { it.toLowerCase() }.filter { it.startsWith(args[0], true) }
+				arrayOf("set", "generate", "copy").map(String::toLowerCase).filter { it.startsWith(args[0], true) }
 			}
 
 			else -> emptyList()

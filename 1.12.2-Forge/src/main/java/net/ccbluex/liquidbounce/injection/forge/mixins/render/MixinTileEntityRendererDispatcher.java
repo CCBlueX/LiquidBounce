@@ -23,7 +23,7 @@ public class MixinTileEntityRendererDispatcher
 	@Inject(method = "render(Lnet/minecraft/tileentity/TileEntity;FI)V", at = @At("HEAD"), cancellable = true)
 	private void renderTileEntity(TileEntity tileentityIn, float partialTicks, int destroyStage, final CallbackInfo callbackInfo)
 	{
-		final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
+		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
 		if (xray.getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(tileentityIn.getBlockType())))
 			callbackInfo.cancel();

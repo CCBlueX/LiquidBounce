@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTBase
 import net.minecraft.nbt.NBTBase
 
-open class NBTBaseImpl<T : NBTBase>(val wrapped: T) : INBTBase
+open class NBTBaseImpl<out T : NBTBase>(val wrapped: T) : INBTBase
 {
 	override fun equals(other: Any?): Boolean = other is NBTBaseImpl<*> && other.wrapped == wrapped
 }

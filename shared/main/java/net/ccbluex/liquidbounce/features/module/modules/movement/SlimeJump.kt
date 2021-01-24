@@ -37,6 +37,6 @@ class SlimeJump : Module()
 		}
 	}
 
-	override val tag: String?
+	override val tag: String
 		get() = "${if (modeValue.get().equals("Add", ignoreCase = true)) "+" else ""}${motionValue.get()}"
 }

@@ -26,7 +26,7 @@ public class MixinBlockLiquid
 	@Inject(method = "canCollideCheck", at = @At("HEAD"), cancellable = true)
 	private void onCollideCheck(CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
-		if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(Liquids.class)).getState())
+		if (Objects.requireNonNull(LiquidBounce.moduleManager.get(Liquids.class)).getState())
 			callbackInfoReturnable.setReturnValue(true);
 	}
 }

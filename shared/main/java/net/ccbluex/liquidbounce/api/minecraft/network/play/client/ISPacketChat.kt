@@ -1,6 +1,6 @@
-package net.ccbluex.liquidbounce.api.minecraft.network.play.client;
+package net.ccbluex.liquidbounce.api.minecraft.network.play.client
 
-import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent;
+import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 
 interface ISPacketChat
 {

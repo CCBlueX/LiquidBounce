@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.api.util
 
 import java.util.*
 
-open class WrappedMap<OK, OV, WK, WV, M : Map<OK, OV>>(val wrappedMap: M, val keyWrapper: (OK) -> WK, val keyUnwrapper: (WK) -> OK, val valueWrapper: (OV) -> WV, val valueUnwrapper: (WV) -> OV) : Map<WK, WV>
+open class WrappedMap<OK, OV, WK, WV, out M : Map<OK, OV>>(val wrappedMap: M, val keyWrapper: (OK) -> WK, val keyUnwrapper: (WK) -> OK, val valueWrapper: (OV) -> WV, val valueUnwrapper: (WV) -> OV) : Map<WK, WV>
 {
 	override val entries: Set<Map.Entry<WK, WV>>
 		get() = wrappedMap.entries.map { AbstractMap.SimpleImmutableEntry(keyWrapper(it.key), valueWrapper(it.value)) }.toSet()

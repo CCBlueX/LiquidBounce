@@ -19,7 +19,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.world.World
 
-open class WorldImpl<T : World>(val wrapped: T) : IWorld
+open class WorldImpl<out T : World>(val wrapped: T) : IWorld
 {
 	override val isRemote: Boolean
 		get() = wrapped.isRemote

@@ -42,7 +42,7 @@ public class MixinModelBiped
 		if (rightArmPose == ModelBiped.ArmPose.BOW_AND_ARROW)
 			this.bipedRightArm.rotateAngleY = 0F;
 
-		if (LiquidBounce.moduleManager.getModule(Rotations.class).getState() && RotationUtils.serverRotation != null && p_setRotationAngles_7_ instanceof EntityPlayer && p_setRotationAngles_7_.equals(Minecraft.getMinecraft().player))
+		if (LiquidBounce.moduleManager.get(Rotations.class).getState() && RotationUtils.serverRotation != null && p_setRotationAngles_7_ instanceof EntityPlayer && p_setRotationAngles_7_.equals(Minecraft.getMinecraft().player))
 		{
 			this.bipedHead.rotateAngleX = RotationUtils.serverRotation.getPitch() / (180F / (float) Math.PI);
 		}

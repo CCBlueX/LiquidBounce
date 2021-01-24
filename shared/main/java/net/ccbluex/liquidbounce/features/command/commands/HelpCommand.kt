@@ -50,7 +50,7 @@ class HelpCommand : Command("help")
 		chat("\u00A7c\u00A7lHelp")
 		ClientUtils.displayChatMessage("\u00A77> Page: \u00A78$page / $maxPage")
 
-		val commands = LiquidBounce.commandManager.commands.sortedBy { it.command }
+		val commands = LiquidBounce.commandManager.commands.sortedBy(Command::command)
 
 		var i = 8 * (page - 1)
 		while (i < 8 * page && i < commands.size)

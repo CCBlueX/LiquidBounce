@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
-import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 
 interface IEntityLivingBase : IEntity
 {

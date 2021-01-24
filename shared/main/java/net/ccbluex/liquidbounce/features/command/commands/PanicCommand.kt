@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 
 class PanicCommand : Command("panic")
@@ -16,7 +17,7 @@ class PanicCommand : Command("panic")
 	 */
 	override fun execute(args: Array<String>)
 	{
-		var modules = LiquidBounce.moduleManager.modules.filter { it.state }
+		var modules = LiquidBounce.moduleManager.modules.filter(Module::state)
 		val msg: String
 
 		if (args.size > 1 && args[1].isNotEmpty())

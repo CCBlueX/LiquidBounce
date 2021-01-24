@@ -44,7 +44,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	@Inject(method = "doRender", at = @At("HEAD"))
 	private <T extends EntityLivingBase> void injectChamsPre(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo)
 	{
-		final Chams chams = (Chams) LiquidBounce.moduleManager.getModule(Chams.class);
+		final Chams chams = (Chams) LiquidBounce.moduleManager.get(Chams.class);
 
 		if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
 		{
@@ -56,7 +56,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	@Inject(method = "doRender", at = @At("RETURN"))
 	private <T extends EntityLivingBase> void injectChamsPost(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo)
 	{
-		final Chams chams = (Chams) LiquidBounce.moduleManager.getModule(Chams.class);
+		final Chams chams = (Chams) LiquidBounce.moduleManager.get(Chams.class);
 
 		if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
 		{
@@ -68,7 +68,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	@Inject(method = "canRenderName", at = @At("HEAD"), cancellable = true)
 	private <T extends EntityLivingBase> void canRenderName(T entity, CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
-		if (!ESP.renderNameTags || (LiquidBounce.moduleManager.getModule(NameTags.class).getState() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false)))
+		if (!ESP.renderNameTags || (LiquidBounce.moduleManager.get(NameTags.class).getState() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false)))
 			callbackInfoReturnable.setReturnValue(false);
 	}
 
@@ -79,7 +79,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	protected <T extends EntityLivingBase> void renderModel(T entitylivingbaseIn, float p_77036_2_, float p_77036_3_, float p_77036_4_, float p_77036_5_, float p_77036_6_, float scaleFactor)
 	{
 		boolean visible = !entitylivingbaseIn.isInvisible();
-		final TrueSight trueSight = (TrueSight) LiquidBounce.moduleManager.getModule(TrueSight.class);
+		final TrueSight trueSight = (TrueSight) LiquidBounce.moduleManager.get(TrueSight.class);
 		boolean semiVisible = !visible && (!entitylivingbaseIn.isInvisibleToPlayer(Minecraft.getMinecraft().player) || (trueSight.getState() && trueSight.getEntitiesValue().get()));
 
 		if (visible || semiVisible)
@@ -97,7 +97,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 				GlStateManager.alphaFunc(516, 0.003921569F);
 			}
 
-			final ESP esp = (ESP) LiquidBounce.moduleManager.getModule(ESP.class);
+			final ESP esp = (ESP) LiquidBounce.moduleManager.get(ESP.class);
 			if (esp.getState() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entitylivingbaseIn), false))
 			{
 				Minecraft mc = Minecraft.getMinecraft();

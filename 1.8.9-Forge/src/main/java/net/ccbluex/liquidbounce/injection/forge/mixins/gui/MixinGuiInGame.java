@@ -40,14 +40,14 @@ public abstract class MixinGuiInGame
 	@Inject(method = "renderScoreboard", at = @At("HEAD"), cancellable = true)
 	private void renderScoreboard(final CallbackInfo callbackInfo)
 	{
-		if (LiquidBounce.moduleManager.getModule(HUD.class).getState() || NoScoreboard.INSTANCE.getState())
+		if (LiquidBounce.moduleManager.get(HUD.class).getState() || NoScoreboard.INSTANCE.getState())
 			callbackInfo.cancel();
 	}
 
 	@Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
 	private void renderTooltip(final ScaledResolution sr, final float partialTicks, final CallbackInfo callbackInfo)
 	{
-		final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
 
 		if (Minecraft.getMinecraft().getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.getBlackHotbarValue().get())
 		{
@@ -94,7 +94,7 @@ public abstract class MixinGuiInGame
 	@Inject(method = "renderPumpkinOverlay", at = @At("HEAD"), cancellable = true)
 	private void renderPumpkinOverlay(final CallbackInfo callbackInfo)
 	{
-		final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.getModule(AntiBlind.class);
+		final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.get(AntiBlind.class);
 
 		if (antiBlind.getState() && antiBlind.getPumpkinEffect().get())
 			callbackInfo.cancel();

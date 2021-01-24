@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.utils.item;
 
 import static net.ccbluex.liquidbounce.utils.item.ItemUtils.getEnchantmentCount;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
@@ -17,7 +18,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemArmor;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 
-public class ArmorComparator extends MinecraftInstance implements Comparator<ArmorPiece>
+public class ArmorComparator extends MinecraftInstance implements Comparator<ArmorPiece>, Serializable
 {
 	private static final IEnchantment[] DAMAGE_REDUCTION_ENCHANTMENTS =
 	{
@@ -52,11 +53,11 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 	};
 	private static final float[] OTHER_ENCHANTMENT_FACTORS =
 	{
-			3.0f, //FEATHER_FALLING
-			1.0f, //THORNS
-			0.1f, //RESPIRATION
-			0.05f, //AQUA_AFFINITY
-			0.01f //UNBREAKING
+			3.0f, // FEATHER_FALLING
+			1.0f, // THORNS
+			0.1f, // RESPIRATION
+			0.05f, // AQUA_AFFINITY
+			0.01f // UNBREAKING
 	};
 
 	/**

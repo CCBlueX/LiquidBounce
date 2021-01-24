@@ -6,8 +6,6 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.util
 
-import sun.print.DialogOwner
-
 interface IEnumFacing
 {
 	val opposite: IEnumFacing

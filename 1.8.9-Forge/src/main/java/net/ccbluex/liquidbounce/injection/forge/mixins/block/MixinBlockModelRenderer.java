@@ -9,6 +9,7 @@ import java.util.Objects;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
+import net.ccbluex.liquidbounce.injection.backend.BlockImplKt;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.BlockModelRenderer;
 import net.minecraft.client.renderer.WorldRenderer;
@@ -30,7 +31,7 @@ public class MixinBlockModelRenderer
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
 
-		if (Objects.requireNonNull(xray).getState() && !xray.getXrayBlocks().contains(blockIn))
+		if (Objects.requireNonNull(xray).getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(blockIn)))
 			booleanCallbackInfoReturnable.setReturnValue(false);
 	}
 
@@ -39,7 +40,7 @@ public class MixinBlockModelRenderer
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
 
-		if (Objects.requireNonNull(xray).getState() && !xray.getXrayBlocks().contains(blockIn))
+		if (Objects.requireNonNull(xray).getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(blockIn)))
 			booleanCallbackInfoReturnable.setReturnValue(false);
 	}
 }

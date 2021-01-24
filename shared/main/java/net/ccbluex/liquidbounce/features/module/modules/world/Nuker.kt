@@ -24,10 +24,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import java.awt.Color
 import kotlin.math.roundToInt
 
@@ -100,7 +97,7 @@ class Nuker : Module()
 						)
 						val blockVec = WVec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
 						val rayTrace = mc.theWorld!!.rayTraceBlocks(
-							eyesPos, blockVec, false, true, false
+							eyesPos, blockVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false
 						)
 
 						// Check if block is visible

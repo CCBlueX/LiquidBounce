@@ -56,7 +56,7 @@ object Remapper
 					val name = args[1]
 					val srg = args[2]
 
-					val className = name.substring(0, name.lastIndexOf('/')).replace('/', '.')
+					val className = name.take(name.lastIndexOf('/')).replace('/', '.')
 					val fieldName = name.substring(name.lastIndexOf('/') + 1)
 					val fieldSrg = srg.substring(srg.lastIndexOf('/') + 1)
 
@@ -71,7 +71,7 @@ object Remapper
 					val desc = args[2]
 					val srg = args[3]
 
-					val className = name.substring(0, name.lastIndexOf('/')).replace('/', '.')
+					val className = name.take(name.lastIndexOf('/')).replace('/', '.')
 					val methodName = name.substring(name.lastIndexOf('/') + 1)
 					val methodSrg = srg.substring(srg.lastIndexOf('/') + 1)
 

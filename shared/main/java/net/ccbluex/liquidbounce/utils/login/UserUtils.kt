@@ -47,9 +47,8 @@ object UserUtils
 		request.entity = StringEntity("$body")
 
 		val response = client.execute(request)
-		val valid = response.statusLine.statusCode == 204
 
-		return valid
+		return response.statusLine.statusCode == 204
 	}
 
 	fun getUsername(uuid: String): String?
@@ -63,7 +62,7 @@ object UserUtils
 			return null
 		}
 
-		val username = try
+		return try
 		{
 			val names = JSONArray(EntityUtils.toString(response.entity))
 
@@ -73,8 +72,6 @@ object UserUtils
 			e.printStackTrace()
 			return null
 		}
-
-		return username
 	}
 
 	/**
@@ -100,7 +97,7 @@ object UserUtils
 
 				if (jsonElement.isJsonObject)
 				{
-					return jsonElement.asJsonObject.get("id").asString
+					return@getUUID jsonElement.asJsonObject.get("id").asString
 				}
 			}
 		} catch (ignored: Throwable)

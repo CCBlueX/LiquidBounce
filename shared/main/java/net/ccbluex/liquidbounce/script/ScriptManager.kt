@@ -57,7 +57,7 @@ class ScriptManager
 	 */
 	fun enableScripts()
 	{
-		scripts.forEach { it.onEnable() }
+		scripts.forEach(Script::onEnable)
 	}
 
 	/**
@@ -65,7 +65,7 @@ class ScriptManager
 	 */
 	fun disableScripts()
 	{
-		scripts.forEach { it.onDisable() }
+		scripts.forEach(Script::onDisable)
 	}
 
 	/**

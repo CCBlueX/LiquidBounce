@@ -17,7 +17,9 @@ import net.ccbluex.liquidbounce.utils.extensions.getFullName
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.hypot
+import kotlin.math.sqrt
 
 @ModuleInfo(name = "AntiBot", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
 object AntiBot : Module()
@@ -240,7 +242,7 @@ object AntiBot : Module()
 		}
 
 		// Duplicate in the world
-		if (duplicateInWorldValue.get() && mc.theWorld!!.loadedEntityList.filter { classProvider.isEntityPlayer(it) && it.asEntityPlayer().displayNameString == it.asEntityPlayer().displayNameString }.count() > 1) return true
+		if (duplicateInWorldValue.get() && mc.theWorld!!.loadedEntityList.filter { classProvider.isEntityPlayer(it) && it.asEntityPlayer().displayNameString == it.asEntityPlayer().displayNameString }.size > 1) return true
 
 		// Duplicate in the tab
 		if (duplicateInTabValue.get() && mc.netHandler.playerInfoMap.filter {
@@ -268,8 +270,9 @@ object AntiBot : Module()
 		// Spawned Position
 		if (spawnedpositionValue.get() && spawnedposition.contains(entity.entityId)) return true
 
-		if (positionValue.get() && (position_violation.getOrDefault(entity.entityId, 0) >= positionExpectationDeltaCountLimitValue.get() || positionExpectationDeltaConsistencyValue.get() && position_consistency_violation.getOrDefault(entity.entityId,
-				0) >= positionExpectationDeltaConsistencyCountLimitValue.get())
+		if (positionValue.get() && (position_violation.getOrDefault(entity.entityId, 0) >= positionExpectationDeltaCountLimitValue.get() || positionExpectationDeltaConsistencyValue.get() && position_consistency_violation.getOrDefault(
+				entity.entityId, 0
+			) >= positionExpectationDeltaConsistencyCountLimitValue.get())
 		) return true
 
 		if (customNameValue.get() && entity.customNameTag == "") return true
@@ -394,7 +397,7 @@ object AntiBot : Module()
 					val deltaY = abs(entity.posY - thePlayer.posY)
 					val deltaZ = abs(entity.posZ - thePlayer.posZ)
 					val horizontalDistance = sqrt(deltaX * deltaX + deltaZ * deltaZ)
-					if (deltaY < 13 && deltaY > 10 && horizontalDistance < 3 && !checkTabList(entity.asEntityPlayer().gameProfile.name, false, true, true))
+					if (deltaY < 13 && deltaY > 10 && horizontalDistance < 3 && !checkTabList(entity.asEntityPlayer().gameProfile.name, displayName = false, equals = true, stripColors = true))
 					{
 						if (watchdogRemoveValue.get())
 						{
@@ -419,7 +422,7 @@ object AntiBot : Module()
 				}
 
 				// display name isn't red + custom name isn't empty = watchdog bot
-				if (displayName?.contains("\u00A7c") == false && !customName.isEmpty()) watchdogBots.add(entity.entityId)
+				if (displayName?.contains("\u00A7c") == false && customName.isNotEmpty()) watchdogBots.add(entity.entityId)
 			}
 		}
 

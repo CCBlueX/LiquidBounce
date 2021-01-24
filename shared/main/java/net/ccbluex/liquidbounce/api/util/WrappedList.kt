@@ -20,7 +20,7 @@ open class WrappedList<O, T, C : List<O>>(wrapped: C, unwrapper: (T) -> O, wrapp
 
 	override fun subList(fromIndex: Int, toIndex: Int): List<T> = WrappedList(wrapped.subList(fromIndex, toIndex), unwrapper, wrapper)
 
-	class WrappedCollectionIterator<O, T>(val wrapped: ListIterator<O>, val wrapper: (O) -> T) : ListIterator<T>
+	class WrappedCollectionIterator<O, out T>(val wrapped: ListIterator<O>, val wrapper: (O) -> T) : ListIterator<T>
 	{
 		override fun hasNext(): Boolean = wrapped.hasNext()
 

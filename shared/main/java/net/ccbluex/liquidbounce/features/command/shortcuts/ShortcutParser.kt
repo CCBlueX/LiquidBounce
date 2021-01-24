@@ -31,7 +31,7 @@ object ShortcutParser
 			}
 		}
 
-		if (tmpStatement.isNotEmpty()) throw IllegalArgumentException("Unexpected end of statement!")
+		require(tmpStatement.isEmpty()) { "Unexpected end of statement!" }
 
 		return parsed
 	}
@@ -58,7 +58,7 @@ object ShortcutParser
 			}
 		}
 
-		if (tokenBuf.isNotEmpty()) throw IllegalArgumentException("Unexpected end of literal!")
+		require(tokenBuf.isEmpty()) { "Unexpected end of literal!" }
 
 		return tokens
 	}

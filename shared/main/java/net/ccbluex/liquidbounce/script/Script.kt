@@ -148,13 +148,13 @@ class Script(val scriptFile: File) : MinecraftInstance()
 		val magicPrefix = "///"
 
 		scriptText.lines().forEach {
-			if (!it.startsWith(magicPrefix)) return null
+			if (!it.startsWith(magicPrefix)) return@getMagicComment null
 
 			val commentData = it.substring(magicPrefix.length).split("=", limit = 2)
 
 			if (commentData.first().trim() == name)
 			{
-				return commentData.last().trim()
+				return@getMagicComment commentData.last().trim()
 			}
 		}
 
@@ -203,7 +203,7 @@ class Script(val scriptFile: File) : MinecraftInstance()
 	{
 		if (!state) return
 
-		registeredModules.forEach { LiquidBounce.moduleManager.unregisterModule(it) }
+		registeredModules.forEach(LiquidBounce.moduleManager::unregisterModule)
 		registeredCommands.forEach { LiquidBounce.commandManager.unregisterCommand(it) }
 
 		callEvent("disable")

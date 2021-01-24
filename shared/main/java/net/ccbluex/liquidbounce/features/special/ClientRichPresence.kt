@@ -12,6 +12,7 @@ import com.jagrosh.discordipc.IPCListener
 import com.jagrosh.discordipc.entities.RichPresence
 import com.jagrosh.discordipc.entities.pipe.PipeStatus
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
@@ -112,7 +113,7 @@ class ClientRichPresence : MinecraftInstance()
 
 			// Set display infos
 			builder.setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else serverData.serverIP}")
-			builder.setState("Enabled ${LiquidBounce.moduleManager.modules.count { it.state }} of ${LiquidBounce.moduleManager.modules.size} modules")
+			builder.setState("Enabled ${LiquidBounce.moduleManager.modules.count(Module::state)} of ${LiquidBounce.moduleManager.modules.size} modules")
 		}
 
 		// Check ipc client is connected and send rpc

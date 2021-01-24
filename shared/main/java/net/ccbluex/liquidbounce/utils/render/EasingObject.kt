@@ -7,13 +7,7 @@ class EasingObject(var lastTime: Long = 0, var lastValue: Float = -1.0f, var cur
 	{
 		if (currentValue != this.currentValue)
 		{
-			if (currentValue < this.currentValue)
-			{
-				lastValue = currentValue
-			} else
-			{
-				lastValue = this.currentValue
-			}
+			lastValue = if (currentValue < this.currentValue) currentValue else this.currentValue
 
 			this.currentValue = currentValue
 

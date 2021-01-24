@@ -16,7 +16,7 @@ abstract class WrappedGuiSlot(mc: IMinecraft, width: Int, height: Int, top: Int,
 
 	init
 	{
-		classProvider.wrapGuiSlot(this, mc, width, height, top, bottom, slotHeight)
+		@Suppress("LeakingThis") classProvider.wrapGuiSlot(this, mc, width, height, top, bottom, slotHeight)
 	}
 
 	abstract fun drawSlot(id: Int, x: Int, y: Int, var4: Int, mouseXIn: Int, mouseYIn: Int)

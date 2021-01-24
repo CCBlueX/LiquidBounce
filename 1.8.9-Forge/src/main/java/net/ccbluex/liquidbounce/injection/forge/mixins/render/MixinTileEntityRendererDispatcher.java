@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
+import net.ccbluex.liquidbounce.injection.backend.BlockImplKt;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.tileentity.TileEntity;
 
@@ -22,9 +23,9 @@ public class MixinTileEntityRendererDispatcher
 	@Inject(method = "renderTileEntity", at = @At("HEAD"), cancellable = true)
 	private void renderTileEntity(final TileEntity tileentityIn, final float partialTicks, final int destroyStage, final CallbackInfo callbackInfo)
 	{
-		final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
+		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
-		if (xray.getState() && !xray.getXrayBlocks().contains(tileentityIn.getBlockType()))
+		if (xray.getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(tileentityIn.getBlockType())))
 			callbackInfo.cancel();
 	}
 }

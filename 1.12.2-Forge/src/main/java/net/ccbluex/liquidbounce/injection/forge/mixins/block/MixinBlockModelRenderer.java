@@ -29,7 +29,7 @@ public class MixinBlockModelRenderer
 	@Inject(method = "renderModelSmooth", at = @At("HEAD"), cancellable = true)
 	public void renderModelSmooth(IBlockAccess worldIn, IBakedModel modelIn, IBlockState stateIn, BlockPos posIn, BufferBuilder buffer, boolean checkSides, long rand, CallbackInfoReturnable<Boolean> cir)
 	{
-		final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
+		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
 		if (Objects.requireNonNull(xray).getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(stateIn.getBlock())))
 			cir.setReturnValue(false);
@@ -38,7 +38,7 @@ public class MixinBlockModelRenderer
 	@Inject(method = "renderModelFlat", at = @At("HEAD"), cancellable = true)
 	private void renderModelStandard(IBlockAccess worldIn, IBakedModel modelIn, IBlockState stateIn, BlockPos posIn, BufferBuilder buffer, boolean checkSides, long rand, final CallbackInfoReturnable<Boolean> booleanCallbackInfoReturnable)
 	{
-		final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
+		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
 		if (Objects.requireNonNull(xray).getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(stateIn.getBlock())))
 			booleanCallbackInfoReturnable.setReturnValue(false);

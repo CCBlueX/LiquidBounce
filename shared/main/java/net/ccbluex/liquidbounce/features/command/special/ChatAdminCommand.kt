@@ -51,7 +51,7 @@ class ChatAdminCommand : Command("chatadmin")
 		{
 			1 ->
 			{
-				arrayOf("ban", "unban").map { it.toLowerCase() }.filter { it.startsWith(args[0], true) }
+				arrayOf("ban", "unban").map(String::toLowerCase).filter { it.startsWith(args[0], true) }
 			}
 
 			else -> emptyList()

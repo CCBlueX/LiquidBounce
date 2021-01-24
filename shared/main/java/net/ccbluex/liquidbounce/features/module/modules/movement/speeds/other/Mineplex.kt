@@ -42,7 +42,7 @@ class Mineplex : SpeedMode("Mineplex")
 		}
 		var minimum = 0f
 		if (!wfg) minimum = 0.399900111f
-		var strafe = max(min(speed1, 2f), minimum)
+		val strafe = max(min(speed1, 2f), minimum)
 		MovementUtils.strafe(strafe)
 	}
 

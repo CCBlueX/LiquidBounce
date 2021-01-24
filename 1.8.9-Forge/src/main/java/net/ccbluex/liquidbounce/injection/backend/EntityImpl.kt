@@ -18,7 +18,7 @@ import net.minecraft.entity.item.EntityTNTPrimed
 import net.minecraft.entity.player.EntityPlayer
 import java.util.*
 
-open class EntityImpl<T : Entity>(val wrapped: T) : IEntity
+open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 {
 	override var distanceWalkedOnStepModified: Float
 		get() = wrapped.distanceWalkedOnStepModified

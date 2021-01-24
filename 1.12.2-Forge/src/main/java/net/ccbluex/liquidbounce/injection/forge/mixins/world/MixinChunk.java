@@ -43,7 +43,7 @@ public class MixinChunk
 		// noinspection ConstantConditions
 		MiniMapRegister.INSTANCE.updateChunk(ChunkImplKt.wrap((Chunk) ((Object) this)));
 
-		final ProphuntESP prophuntESP = (ProphuntESP) LiquidBounce.moduleManager.getModule(ProphuntESP.class);
+		final ProphuntESP prophuntESP = (ProphuntESP) LiquidBounce.moduleManager.get(ProphuntESP.class);
 
 		if (Objects.requireNonNull(prophuntESP).getState())
 		{

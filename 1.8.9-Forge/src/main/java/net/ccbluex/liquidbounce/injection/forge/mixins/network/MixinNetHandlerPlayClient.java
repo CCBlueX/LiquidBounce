@@ -144,7 +144,7 @@ public abstract class MixinNetHandlerPlayClient
 		double z = packetIn.getZ();
 		float yaw = packetIn.getYaw();
 		float pitch = packetIn.getPitch();
-		final NoRotateSet noRotateSet = (NoRotateSet) LiquidBounce.moduleManager.getModule(NoRotateSet.class);
+		final NoRotateSet noRotateSet = (NoRotateSet) LiquidBounce.moduleManager.get(NoRotateSet.class);
 
 		if (packetIn.func_179834_f().contains(EnumFlags.X))
 			x += entityplayer.posX;

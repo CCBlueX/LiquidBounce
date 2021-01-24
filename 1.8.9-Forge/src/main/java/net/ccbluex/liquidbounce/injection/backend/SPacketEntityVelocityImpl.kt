@@ -34,5 +34,5 @@ class SPacketEntityVelocityImpl<T : S12PacketEntityVelocity>(wrapped: T) : Packe
 
 }
 
- fun ISPacketEntityVelocity.unwrap(): S12PacketEntityVelocity = (this as SPacketEntityVelocityImpl<*>).wrapped
- fun S12PacketEntityVelocity.wrap(): ISPacketEntityVelocity = SPacketEntityVelocityImpl(this)
+fun ISPacketEntityVelocity.unwrap(): S12PacketEntityVelocity = (this as SPacketEntityVelocityImpl<*>).wrapped
+fun S12PacketEntityVelocity.wrap(): ISPacketEntityVelocity = SPacketEntityVelocityImpl(this)

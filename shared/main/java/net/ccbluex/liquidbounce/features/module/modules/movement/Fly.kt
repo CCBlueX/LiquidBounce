@@ -733,15 +733,13 @@ class Fly : Module()
 					{
 						thePlayer.capabilities.isFlying = true
 						return@run
-					} else
-					{
-
-						// Watchdog Disabler Exploit
-						RotationUtils.setTargetRotation(Rotation(freeHypixelYaw, freeHypixelPitch))
-						thePlayer.motionY = 0.0
-						thePlayer.motionZ = thePlayer.motionY
-						thePlayer.motionX = thePlayer.motionZ
 					}
+
+					// Watchdog Disabler Exploit
+					RotationUtils.setTargetRotation(Rotation(freeHypixelYaw, freeHypixelPitch))
+					thePlayer.motionY = 0.0
+					thePlayer.motionZ = thePlayer.motionY
+					thePlayer.motionX = thePlayer.motionZ
 					if (startY == BigDecimal(thePlayer.posY).setScale(3, RoundingMode.HALF_DOWN).toDouble()) freeHypixelTimer.update()
 				}
 

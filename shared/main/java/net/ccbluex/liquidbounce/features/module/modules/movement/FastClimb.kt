@@ -120,10 +120,8 @@ class FastClimb : Module()
 
 						thePlayer.setPosition(thePlayer.posX + x, i.toDouble(), thePlayer.posZ + z)
 						break
-					} else
-					{
-						thePlayer.setPosition(thePlayer.posX, i.toDouble(), thePlayer.posZ)
 					}
+					thePlayer.setPosition(thePlayer.posX, i.toDouble(), thePlayer.posZ)
 				}
 			}
 		}

@@ -196,7 +196,7 @@ public abstract class MixinEntity
 	@Inject(method = "getCollisionBorderSize", at = @At("HEAD"), cancellable = true)
 	private void getCollisionBorderSize(final CallbackInfoReturnable<Float> callbackInfoReturnable)
 	{
-		final HitBox hitBox = (HitBox) LiquidBounce.moduleManager.getModule(HitBox.class);
+		final HitBox hitBox = (HitBox) LiquidBounce.moduleManager.get(HitBox.class);
 
 		if (Objects.requireNonNull(hitBox).getState())
 			callbackInfoReturnable.setReturnValue(0.1F + hitBox.getSizeValue().get());

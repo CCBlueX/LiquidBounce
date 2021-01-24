@@ -36,7 +36,7 @@ class CivBreak : Module()
 	@EventTarget
 	fun onBlockClick(event: ClickBlockEvent)
 	{
-		if (classProvider.isBlockBedrock(event.clickedBlock?.let { BlockUtils.getBlock(it) })) return
+		if (classProvider.isBlockBedrock(event.clickedBlock?.let(BlockUtils::getBlock))) return
 
 		blockPos = event.clickedBlock ?: return
 		enumFacing = event.WEnumFacing ?: return

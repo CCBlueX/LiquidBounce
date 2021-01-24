@@ -637,7 +637,7 @@ class Scaffold : Module()
 		}
 
 		val abCollisionBB = autoblockBlock.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, if (classProvider.isBlockEqualTo(groundBlock, autoblockBlock)) lastGroundBlockState!! else autoblockBlock.defaultState!!)!!
-		var gBB = classProvider.createAxisAlignedBB(
+		val gBB = classProvider.createAxisAlignedBB(
 			groundBlock.getBlockBoundsMinX(), groundBlock.getBlockBoundsMinY(), groundBlock.getBlockBoundsMinZ(), groundBlock.getBlockBoundsMaxX(), groundBlock.getBlockBoundsMaxY(), groundBlock.getBlockBoundsMaxZ()
 		)
 
@@ -1043,7 +1043,7 @@ class Scaffold : Module()
 			if (minTurnSpeedValue.get() < 180)
 			{
 				limitedRotation = RotationUtils.limitAngleChange(
-					RotationUtils.serverRotation, placeRotation.rotation, (Random.nextFloat() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()).toFloat(), 0.0F
+					RotationUtils.serverRotation, placeRotation.rotation, (Random.nextFloat() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()), 0.0F
 				) // TODO: Apply some settings here too
 				setRotation(limitedRotation!!, keepRotationTicks)
 				tower.lockRotation = null // Prevents conflict

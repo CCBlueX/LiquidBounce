@@ -10,8 +10,7 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 
 object WMathHelper
 {
-	@JvmField
-	val PI = 3.141592653F
+	const val PI = 3.141592653F
 
 	@Suppress("FunctionName")
 	@JvmStatic

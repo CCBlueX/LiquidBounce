@@ -88,7 +88,7 @@ class Breadcrumbs : Module()
 
 	override fun onDisable()
 	{
-		synchronized(positions) { positions.clear() }
+		synchronized(positions, positions::clear)
 		super.onDisable()
 	}
 }

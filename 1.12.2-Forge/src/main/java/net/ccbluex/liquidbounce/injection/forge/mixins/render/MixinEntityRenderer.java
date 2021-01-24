@@ -75,14 +75,14 @@ public abstract class MixinEntityRenderer
 	@Inject(method = "hurtCameraEffect", at = @At("HEAD"), cancellable = true)
 	private void injectHurtCameraEffect(CallbackInfo callbackInfo)
 	{
-		if (LiquidBounce.moduleManager.getModule(NoHurtCam.class).getState())
+		if (LiquidBounce.moduleManager.get(NoHurtCam.class).getState())
 			callbackInfo.cancel();
 	}
 
 	@Inject(method = "orientCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;distanceTo(Lnet/minecraft/util/math/Vec3d;)D"), cancellable = true)
 	private void cameraClip(float partialTicks, CallbackInfo callbackInfo)
 	{
-		if (LiquidBounce.moduleManager.getModule(CameraClip.class).getState())
+		if (LiquidBounce.moduleManager.get(CameraClip.class).getState())
 		{
 			callbackInfo.cancel();
 
@@ -163,14 +163,14 @@ public abstract class MixinEntityRenderer
 	@Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;applyBobbing(F)V", shift = At.Shift.BEFORE))
 	private void setupCameraViewBobbingBefore(final CallbackInfo callbackInfo)
 	{
-		if (LiquidBounce.moduleManager.getModule(Tracers.class).getState())
+		if (LiquidBounce.moduleManager.get(Tracers.class).getState())
 			GL11.glPushMatrix();
 	}
 
 	@Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;applyBobbing(F)V", shift = At.Shift.AFTER))
 	private void setupCameraViewBobbingAfter(final CallbackInfo callbackInfo)
 	{
-		if (LiquidBounce.moduleManager.getModule(Tracers.class).getState())
+		if (LiquidBounce.moduleManager.get(Tracers.class).getState())
 			GL11.glPopMatrix();
 	}
 
@@ -189,7 +189,7 @@ public abstract class MixinEntityRenderer
 				this.mc.mcProfiler.startSection("pick");
 				this.mc.pointedEntity = null;
 
-				final Reach reach = (Reach) LiquidBounce.moduleManager.getModule(Reach.class);
+				final Reach reach = (Reach) LiquidBounce.moduleManager.get(Reach.class);
 
 				double d0 = reach.getState() ? reach.getMaxRange() : (double) this.mc.playerController.getBlockReachDistance();
 				this.mc.objectMouseOver = entity.rayTrace(reach.getState() ? reach.getBuildReachValue().get() : d0, partialTicks);

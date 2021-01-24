@@ -51,7 +51,7 @@ object RainbowFontShader : Shader("rainbow_font_shader.frag"), Closeable
 
 	@Suppress("NOTHING_TO_")
 	@JvmStatic
-	 fun begin(enable: Boolean, x: Float, y: Float, offset: Float): RainbowFontShader
+	fun begin(enable: Boolean, x: Float, y: Float, offset: Float): RainbowFontShader
 	{
 		if (enable)
 		{

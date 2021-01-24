@@ -260,7 +260,7 @@ class BufferSpeed : Module()
 		}
 	}
 
-	private  fun boost(boost: Float)
+	private fun boost(boost: Float)
 	{
 		val thePlayer = mc.thePlayer!!
 

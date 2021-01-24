@@ -157,7 +157,7 @@ class CommandManager
 			registerCommand(Shortcut(name, ShortcutParser.parse(script).map {
 				val command = getCommand(it[0]) ?: throw IllegalArgumentException("Command ${it[0]} not found!")
 
-				Pair(command, it.toTypedArray())
+				command to it.toTypedArray()
 			}))
 
 			LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.shortcutsConfig)

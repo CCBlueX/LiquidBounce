@@ -229,7 +229,7 @@ public abstract class MixinMinecraft
 	{
 		CPSCounter.registerClick(MouseButton.LEFT);
 
-		if (LiquidBounce.moduleManager.getModule(AutoClicker.class).getState())
+		if (LiquidBounce.moduleManager.get(AutoClicker.class).getState())
 			leftClickCounter = 0;
 	}
 
@@ -244,7 +244,7 @@ public abstract class MixinMinecraft
 	{
 		CPSCounter.registerClick(MouseButton.RIGHT);
 
-		final FastPlace fastPlace = (FastPlace) LiquidBounce.moduleManager.getModule(FastPlace.class);
+		final FastPlace fastPlace = (FastPlace) LiquidBounce.moduleManager.get(FastPlace.class);
 
 		if (fastPlace.getState())
 			rightClickDelayTimer = fastPlace.getSpeedValue().get();
@@ -269,7 +269,7 @@ public abstract class MixinMinecraft
 		if (!leftClick)
 			leftClickCounter = 0;
 
-		if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || LiquidBounce.moduleManager.getModule(MultiActions.class).getState()))
+		if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || LiquidBounce.moduleManager.get(MultiActions.class).getState()))
 			if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectType.BLOCK) {
 				final BlockPos blockPos = objectMouseOver.getBlockPos();
 
@@ -280,7 +280,7 @@ public abstract class MixinMinecraft
 					effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.sideHit);
 					thePlayer.swingItem();
 				}
-			} else if (!LiquidBounce.moduleManager.getModule(AbortBreaking.class).getState())
+			} else if (!LiquidBounce.moduleManager.get(AbortBreaking.class).getState())
 				playerController.resetBlockRemoving();
 	}
 

@@ -28,7 +28,7 @@ public class MixinNetworkPlayerInfo
 	@Inject(method = "getLocationSkin", cancellable = true, at = @At("HEAD"))
 	private void injectSkinProtect(CallbackInfoReturnable<ResourceLocation> cir)
 	{
-		NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.getModule(NameProtect.class);
+		NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.get(NameProtect.class);
 
 		if (nameProtect.getState() && nameProtect.skinProtectValue.get())
 		{

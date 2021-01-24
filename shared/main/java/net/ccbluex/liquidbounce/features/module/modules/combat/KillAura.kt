@@ -408,7 +408,7 @@ class KillAura : Module()
 			{
 				"strict" ->
 				{
-					val (yaw) = RotationUtils.targetRotation ?: return
+					val (yaw, _) = RotationUtils.targetRotation ?: return
 					var strafe = event.strafe
 					var forward = event.forward
 					val friction = event.friction
@@ -455,7 +455,7 @@ class KillAura : Module()
 		updateTarget()
 
 		// Pre-AutoBlock
-		if (autoBlockTarget != null && !autoBlockValue.get().equals("AfterTick") && canBlock && (!autoBlockHitableCheckValue.get() || hitable)) startBlocking(autoBlockTarget, interactAutoBlockValue.get())
+		if (autoBlockTarget != null && !autoBlockValue.get().equals("AfterTick", ignoreCase = true) && canBlock && (!autoBlockHitableCheckValue.get() || hitable)) startBlocking(autoBlockTarget, interactAutoBlockValue.get())
 		else if (canBlock) stopBlocking()
 
 		target ?: return

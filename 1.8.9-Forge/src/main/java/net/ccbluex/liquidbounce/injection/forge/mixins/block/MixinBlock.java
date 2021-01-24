@@ -83,7 +83,7 @@ public abstract class MixinBlock
 	@Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
 	private void shouldSideBeRendered(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
-		final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
+		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
 		if (Objects.requireNonNull(xray).getState())
 			// noinspection SuspiciousMethodCalls
@@ -93,7 +93,7 @@ public abstract class MixinBlock
 	@Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)
 	private void isCollidable(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
-		final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.getModule(GhostHand.class);
+		final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.get(GhostHand.class);
 
 		if (Objects.requireNonNull(ghostHand).getState() && !(ghostHand.getBlockValue().get() == Block.getIdFromBlock((Block) (Object) this)))
 			callbackInfoReturnable.setReturnValue(false);
@@ -102,7 +102,7 @@ public abstract class MixinBlock
 	@Inject(method = "getAmbientOcclusionLightValue", at = @At("HEAD"), cancellable = true)
 	private void getAmbientOcclusionLightValue(final CallbackInfoReturnable<Float> floatCallbackInfoReturnable)
 	{
-		if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(XRay.class)).getState())
+		if (Objects.requireNonNull(LiquidBounce.moduleManager.get(XRay.class)).getState())
 			floatCallbackInfoReturnable.setReturnValue(1F);
 	}
 
@@ -112,7 +112,7 @@ public abstract class MixinBlock
 		float f = callbackInfo.getReturnValue();
 
 		// NoSlowBreak
-		final NoSlowBreak noSlowBreak = (NoSlowBreak) LiquidBounce.moduleManager.getModule(NoSlowBreak.class);
+		final NoSlowBreak noSlowBreak = (NoSlowBreak) LiquidBounce.moduleManager.get(NoSlowBreak.class);
 		if (Objects.requireNonNull(noSlowBreak).getState())
 		{
 			if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(playerIn))
@@ -123,8 +123,8 @@ public abstract class MixinBlock
 		}
 		else if (playerIn.onGround)
 		{ // NoGround
-			final NoFall noFall = (NoFall) LiquidBounce.moduleManager.getModule(NoFall.class);
-			final Criticals criticals = (Criticals) LiquidBounce.moduleManager.getModule(Criticals.class);
+			final NoFall noFall = (NoFall) LiquidBounce.moduleManager.get(NoFall.class);
+			final Criticals criticals = (Criticals) LiquidBounce.moduleManager.get(Criticals.class);
 
 			if (Objects.requireNonNull(noFall).getState() && noFall.modeValue.get().equalsIgnoreCase("NoGround") || Objects.requireNonNull(criticals).getState() && criticals.getModeValue().get().equalsIgnoreCase("NoGround"))
 				f /= 5F;

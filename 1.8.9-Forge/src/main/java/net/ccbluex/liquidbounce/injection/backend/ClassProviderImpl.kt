@@ -387,60 +387,27 @@ object ClassProviderImpl : IClassProvider
 	override fun isBlockSign(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSign
 
 	override fun isBlockDoor(obj: Any?): Boolean = obj is BlockImpl && (obj.wrapped is BlockDoor || obj.wrapped is BlockTrapDoor)
-	override fun isBlockChest(obj: Any?): Boolean
-	{
-		return obj is BlockImpl && obj.wrapped is BlockChest
-	}
+	override fun isBlockChest(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockChest
 
-	override fun isBlockEnderChest(obj: Any?): Boolean
-	{
-		return obj is BlockImpl && obj.wrapped is BlockEnderChest
-	}
+	override fun isBlockEnderChest(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockEnderChest
 
-	override fun isBlockSkull(obj: Any?): Boolean
-	{
-		return obj is BlockImpl && obj.wrapped is BlockSkull
-	}
+	override fun isBlockSkull(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSkull
 
-	override fun isBlockWall(obj: Any?): Boolean
-	{
-		return obj is BlockImpl && obj.wrapped is BlockWall
-	}
+	override fun isBlockWall(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockWall
 
-	override fun isBlockGlass(obj: Any?): Boolean
-	{
-		return obj is BlockImpl && obj.wrapped is BlockGlass
-	}
+	override fun isBlockGlass(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockGlass
 
-	override fun isBlockPistonBase(obj: Any?): Boolean
-	{
-		return obj is BlockImpl && obj.wrapped is BlockPistonBase
-	}
+	override fun isBlockPistonBase(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockPistonBase
 
-	override fun isBlockPistonExtension(obj: Any?): Boolean
-	{
-		return obj is BlockImpl && obj.wrapped is BlockPistonExtension
-	}
+	override fun isBlockPistonExtension(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockPistonExtension
 
-	override fun isBlockPistonMoving(obj: Any?): Boolean
-	{
-		return obj is BlockImpl && obj.wrapped is BlockPistonMoving
-	}
+	override fun isBlockPistonMoving(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockPistonMoving
 
-	override fun isBlockStainedGlass(obj: Any?): Boolean
-	{
-		return obj is BlockImpl && obj.wrapped is BlockStainedGlass
-	}
+	override fun isBlockStainedGlass(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockStainedGlass
 
-	override fun isBlockTrapDoor(obj: Any?): Boolean
-	{
-		return obj is BlockImpl && obj.wrapped is BlockTrapDoor
-	}
+	override fun isBlockTrapDoor(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockTrapDoor
 
-	override fun isBlockContainer(obj: Any?): Boolean
-	{
-		return obj is BlockImpl && obj.wrapped is BlockContainer
-	}
+	override fun isBlockContainer(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockContainer
 
 	override fun isGuiInventory(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiInventory
 

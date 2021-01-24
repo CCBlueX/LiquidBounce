@@ -48,7 +48,7 @@ class ShortcutsConfig(file: File) : FileConfig(file)
 
 				val command = LiquidBounce.commandManager.getCommand(commandName) ?: continue
 
-				script.add(Pair(command, arguments.map { it.asString }.toTypedArray()))
+				script.add(command to arguments.map { it.asString }.toTypedArray())
 			}
 
 			LiquidBounce.commandManager.registerCommand(Shortcut(name, script))
@@ -73,17 +73,14 @@ class ShortcutsConfig(file: File) : FileConfig(file)
 
 			val scriptArray = JsonArray()
 
-			for (pair in command.script)
+			for ((cmd, args) in command.script)
 			{
 				val pairObject = JsonObject()
 
-				pairObject.addProperty("name", pair.first.command)
+				pairObject.addProperty("name", cmd.command)
 
 				val argumentsObject = JsonArray()
-				for (argument in pair.second)
-				{
-					argumentsObject.add(argument)
-				}
+				for (argument in args) argumentsObject.add(argument)
 
 				pairObject.add("arguments", argumentsObject)
 

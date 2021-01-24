@@ -237,7 +237,7 @@ public class ClickGui extends WrappedGuiScreen
 		// Enable DisplayList optimization
 		AWTFontRenderer.Companion.setAssumeNonVolatile(true);
 
-		final double scale = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).scaleValue.get();
+		final double scale = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.get(ClickGUI.class))).scaleValue.get();
 
 		mouseX /= scale;
 		mouseY /= scale;
@@ -287,7 +287,7 @@ public class ClickGui extends WrappedGuiScreen
 	@Override
 	public void mouseClicked(int mouseX, int mouseY, final int mouseButton) throws IOException
 	{
-		final double scale = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).scaleValue.get();
+		final double scale = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.get(ClickGUI.class))).scaleValue.get();
 
 		mouseX /= scale;
 		mouseY /= scale;
@@ -319,7 +319,7 @@ public class ClickGui extends WrappedGuiScreen
 	@Override
 	public void mouseReleased(int mouseX, int mouseY, final int state)
 	{
-		final double scale = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).scaleValue.get();
+		final double scale = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.get(ClickGUI.class))).scaleValue.get();
 
 		mouseX /= scale;
 		mouseY /= scale;

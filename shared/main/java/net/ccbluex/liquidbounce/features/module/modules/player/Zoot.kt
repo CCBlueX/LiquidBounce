@@ -34,7 +34,7 @@ class Zoot : Module()
 
 		if (badEffectsValue.get())
 		{
-			val effect = thePlayer.activePotionEffects.filter(this::isBadEffect).maxBy(IPotionEffect::duration)
+			val effect = thePlayer.activePotionEffects.filter(::isBadEffect).maxBy(IPotionEffect::duration)
 
 			if (effect != null)
 			{

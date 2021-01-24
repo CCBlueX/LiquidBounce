@@ -44,7 +44,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		failed = false
 
-		thread { loadCredits() }
+		thread(block = this::loadCredits)
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
@@ -248,13 +248,13 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		}
 	}
 
-	internal inner class ContributorInformation(val name: String, val teamMember: Boolean, val contributions: List<String>)
+	internal class ContributorInformation(val name: String, val teamMember: Boolean, val contributions: List<String>)
 
 	internal inner class GitHubContributor(@SerializedName("total") val totalContributions: Int, val weeks: List<GitHubWeek>, val author: GitHubAuthor)
-	internal inner class GitHubWeek(@SerializedName("w") val timestamp: Long, @SerializedName("a") val additions: Int, @SerializedName("d") val deletions: Int, @SerializedName("c") val commits: Int)
-	internal inner class GitHubAuthor(@SerializedName("login") val name: String, val id: Int, @SerializedName("avatar_url") val avatarUrl: String)
+	internal class GitHubWeek(@SerializedName("w") val timestamp: Long, @SerializedName("a") val additions: Int, @SerializedName("d") val deletions: Int, @SerializedName("c") val commits: Int)
+	internal class GitHubAuthor(@SerializedName("login") val name: String, val id: Int, @SerializedName("avatar_url") val avatarUrl: String)
 
-	internal inner class Credit(val name: String, val avatarUrl: String, var avatar: CustomTexture?, val additions: Int, val deletions: Int, val commits: Int, val isTeamMember: Boolean, val contributions: List<String>)
+	internal class Credit(val name: String, val avatarUrl: String, var avatar: CustomTexture?, val additions: Int, val deletions: Int, val commits: Int, val isTeamMember: Boolean, val contributions: List<String>)
 
 	private inner class GuiList(gui: IGuiScreen) : WrappedGuiSlot(mc, gui.width / 4, gui.height, 40, gui.height - 40, 15)
 	{

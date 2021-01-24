@@ -21,7 +21,7 @@ public class MixinVisGraph
 	@Inject(method = "setOpaqueCube", at = @At("HEAD"), cancellable = true)
 	private void func_178606_a(final CallbackInfo callbackInfo)
 	{
-		if (LiquidBounce.moduleManager.getModule(XRay.class).getState())
+		if (LiquidBounce.moduleManager.get(XRay.class).getState())
 			callbackInfo.cancel();
 	}
 }

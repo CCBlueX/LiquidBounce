@@ -176,7 +176,7 @@ class Speed : Module()
 	private val modes: Array<String>
 		get()
 		{
-			val list: MutableList<String> = speedModes.mapTo(ArrayList()) { it.modeName }
+			val list: MutableList<String> = speedModes.mapTo(ArrayList(), SpeedMode::modeName)
 			return list.toTypedArray()
 		}
 }

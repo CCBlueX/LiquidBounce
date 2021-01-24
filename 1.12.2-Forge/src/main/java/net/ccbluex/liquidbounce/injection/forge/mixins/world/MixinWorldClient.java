@@ -20,7 +20,7 @@ public class MixinWorldClient
 	@ModifyVariable(method = "showBarrierParticles", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;randomDisplayTick(Lnet/minecraft/block/state/IBlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Ljava/util/Random;)V", shift = At.Shift.AFTER), ordinal = 0)
 	private boolean handleBarriers(final boolean flag)
 	{
-		final TrueSight trueSight = (TrueSight) LiquidBounce.moduleManager.getModule(TrueSight.class);
+		final TrueSight trueSight = (TrueSight) LiquidBounce.moduleManager.get(TrueSight.class);
 
 		return flag || trueSight.getState() && trueSight.getBarriersValue().get();
 	}

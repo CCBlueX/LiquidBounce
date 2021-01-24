@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import org.lwjgl.input.Keyboard
 
@@ -47,7 +48,7 @@ class BindCommand : Command("bind")
 
 		return when (args.size)
 		{
-			1 -> LiquidBounce.moduleManager.modules.map { it.name }.filter { it.startsWith(moduleName, true) }.toList()
+			1 -> LiquidBounce.moduleManager.modules.map(Module::name).filter { it.startsWith(moduleName, true) }.toList()
 			else -> emptyList()
 		}
 	}

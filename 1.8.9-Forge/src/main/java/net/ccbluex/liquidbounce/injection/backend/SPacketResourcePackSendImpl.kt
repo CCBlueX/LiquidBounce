@@ -17,5 +17,5 @@ class SPacketResourcePackSendImpl<T : S48PacketResourcePackSend>(wrapped: T) : P
 		get() = wrapped.hash
 }
 
- fun ISPacketResourcePackSend.unwrap(): S48PacketResourcePackSend = (this as SPacketResourcePackSendImpl<*>).wrapped
- fun S48PacketResourcePackSend.wrap(): ISPacketResourcePackSend = SPacketResourcePackSendImpl(this)
+fun ISPacketResourcePackSend.unwrap(): S48PacketResourcePackSend = (this as SPacketResourcePackSendImpl<*>).wrapped
+fun S48PacketResourcePackSend.wrap(): ISPacketResourcePackSend = SPacketResourcePackSendImpl(this)

@@ -159,6 +159,6 @@ class Blink : Module()
 			e.printStackTrace()
 			disableLogger = false
 		}
-		synchronized(positions) { positions.clear() }
+		synchronized(positions, positions::clear)
 	}
 }

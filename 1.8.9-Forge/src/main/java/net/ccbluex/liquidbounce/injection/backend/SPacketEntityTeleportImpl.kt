@@ -16,5 +16,5 @@ class SPacketEntityTeleportImpl<T : S18PacketEntityTeleport>(wrapped: T) : Packe
 		get() = wrapped.z
 }
 
- fun ISPacketEntityTeleport.unwrap(): S18PacketEntityTeleport = (this as SPacketEntityTeleportImpl<*>).wrapped
- fun S18PacketEntityTeleport.wrap(): ISPacketEntityTeleport = SPacketEntityTeleportImpl(this)
+fun ISPacketEntityTeleport.unwrap(): S18PacketEntityTeleport = (this as SPacketEntityTeleportImpl<*>).wrapped
+fun S18PacketEntityTeleport.wrap(): ISPacketEntityTeleport = SPacketEntityTeleportImpl(this)

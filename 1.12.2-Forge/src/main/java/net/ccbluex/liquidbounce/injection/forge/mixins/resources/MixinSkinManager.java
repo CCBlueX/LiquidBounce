@@ -27,7 +27,7 @@ public class MixinSkinManager
 		if (gameProfile == null)
 			return;
 
-		NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.getModule(NameProtect.class);
+		NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.get(NameProtect.class);
 
 		if (nameProtect.getState() && nameProtect.skinProtectValue.get())
 		{

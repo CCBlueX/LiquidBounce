@@ -155,7 +155,7 @@ open class Module : MinecraftInstance(), Listenable
 		get() = javaClass.declaredFields.map { valueField ->
 			valueField.isAccessible = true
 			valueField[this]
-		}.filterIsInstance<Value<*>>().filter { it.isSupported }
+		}.filterIsInstance<Value<*>>().filter(Value<*>::isSupported)
 
 	/**
 	 * Events should be handled when module is enabled

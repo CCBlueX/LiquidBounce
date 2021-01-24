@@ -131,8 +131,6 @@ class ChestStealer : Module()
 
 	private var contentReceived = 0
 
-	private var lastContainerWindowId = 0
-
 	// Remaining Misclicks count
 	private var remainingMisclickCount = maxAllowedMisclicksPerChestValue.get()
 
@@ -254,7 +252,7 @@ class ChestStealer : Module()
 		if (classProvider.isSPacketWindowItems(packet)) contentReceived = packet.asSPacketWindowItems().windowId
 	}
 
-	private  fun shouldTake(stack: IItemStack?, inventoryCleaner: InventoryCleaner): Boolean =
+	private fun shouldTake(stack: IItemStack?, inventoryCleaner: InventoryCleaner): Boolean =
 		stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))
 
 	private fun move(screen: IGuiChest, slot: ISlot, misclick: Boolean)

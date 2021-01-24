@@ -40,7 +40,7 @@ public class XRayConfig extends FileConfig
 	@Override
 	protected void loadConfig() throws IOException
 	{
-		final XRay xRay = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
+		final XRay xRay = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
 		if (xRay == null)
 		{
@@ -75,7 +75,7 @@ public class XRayConfig extends FileConfig
 	@Override
 	protected void saveConfig() throws IOException
 	{
-		final XRay xRay = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
+		final XRay xRay = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
 		if (xRay == null)
 		{

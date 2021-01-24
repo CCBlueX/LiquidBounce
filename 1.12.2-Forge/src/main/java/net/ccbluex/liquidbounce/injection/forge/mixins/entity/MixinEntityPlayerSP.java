@@ -161,9 +161,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	{
 		LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE));
 
-		final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.getModule(InventoryMove.class);
-		final Sneak sneak = (Sneak) LiquidBounce.moduleManager.getModule(Sneak.class);
-		final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || LiquidBounce.moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
+		final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.get(InventoryMove.class);
+		final Sneak sneak = (Sneak) LiquidBounce.moduleManager.get(Sneak.class);
+		final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
 
 		boolean clientSprintState = this.isSprinting() && !fakeSprint;
 
@@ -204,7 +204,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			float lastReportedYaw = RotationUtils.serverRotation.getYaw();
 			float lastReportedPitch = RotationUtils.serverRotation.getPitch();
 
-			final Derp derp = (Derp) LiquidBounce.moduleManager.getModule(Derp.class);
+			final Derp derp = (Derp) LiquidBounce.moduleManager.get(Derp.class);
 			if (derp.getState())
 			{
 				float[] rot = derp.getRotation();
@@ -276,7 +276,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	@Inject(method = "swingArm", at = @At("HEAD"), cancellable = true)
 	private void swingItem(EnumHand hand, CallbackInfo callbackInfo)
 	{
-		final NoSwing noSwing = (NoSwing) LiquidBounce.moduleManager.getModule(NoSwing.class);
+		final NoSwing noSwing = (NoSwing) LiquidBounce.moduleManager.get(NoSwing.class);
 
 		if (noSwing.getState())
 		{
@@ -325,7 +325,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		if (this.inPortal)
 		{
-			if (this.mc.currentScreen != null && !this.mc.currentScreen.doesGuiPauseGame() && !LiquidBounce.moduleManager.getModule(PortalMenu.class).getState())
+			if (this.mc.currentScreen != null && !this.mc.currentScreen.doesGuiPauseGame() && !LiquidBounce.moduleManager.get(PortalMenu.class).getState())
 			{
 				if (this.mc.currentScreen instanceof GuiContainer)
 				{

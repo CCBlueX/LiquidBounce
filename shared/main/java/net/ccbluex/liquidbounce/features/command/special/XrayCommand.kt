@@ -122,7 +122,7 @@ class XrayCommand : Command("xray")
 		{
 			1 ->
 			{
-				arrayOf("add", "remove", "list").map { it.toLowerCase() }.filter { it.startsWith(args[0], true) }
+				arrayOf("add", "remove", "list").map(String::toLowerCase).filter { it.startsWith(args[0], true) }
 			}
 
 			2 ->

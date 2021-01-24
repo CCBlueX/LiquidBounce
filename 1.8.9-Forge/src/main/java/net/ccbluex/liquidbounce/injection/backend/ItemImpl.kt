@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.item.*
 import net.minecraft.item.*
 
-open class ItemImpl<T : Item>(val wrapped: T) : IItem
+open class ItemImpl<out T : Item>(val wrapped: T) : IItem
 {
 	override val unlocalizedName: String
 		get() = wrapped.unlocalizedName

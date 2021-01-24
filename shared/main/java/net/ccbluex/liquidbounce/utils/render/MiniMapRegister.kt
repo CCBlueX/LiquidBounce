@@ -33,9 +33,7 @@ object MiniMapRegister : MinecraftInstance()
 		synchronized(queuedChunkUpdates) {
 			if (deleteAllChunks.get())
 			{
-				synchronized(queuedChunkDeletions) {
-					queuedChunkDeletions.clear()
-				}
+				synchronized(queuedChunkDeletions, queuedChunkDeletions::clear)
 				queuedChunkUpdates.clear()
 
 				chunkTextureMap.forEach { it.value.delete() }
@@ -53,11 +51,9 @@ object MiniMapRegister : MinecraftInstance()
 				}
 			}
 
-			queuedChunkUpdates.forEach {
-				chunkTextureMap.computeIfAbsent(ChunkLocation(it.x, it.z)) {
-					MiniMapTexture()
-				}.updateChunkData(it)
-			}
+			queuedChunkUpdates.forEach(chunkTextureMap.computeIfAbsent(ChunkLocation(it.x, it.z)) {
+				MiniMapTexture()
+			}::updateChunkData)
 
 			queuedChunkUpdates.clear()
 		}

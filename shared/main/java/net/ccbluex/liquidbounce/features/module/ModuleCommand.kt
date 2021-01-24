@@ -20,7 +20,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
 
 	init
 	{
-		if (values.isEmpty()) throw IllegalArgumentException("Values are empty!")
+		require(values.isNotEmpty()) { "Values are empty!" }
 	}
 
 	/**
@@ -68,14 +68,13 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
 				{
 					is BlockValue ->
 					{
-						var id: Int
 
-						id = try
+						val id: Int = try
 						{
 							args[2].toInt()
 						} catch (exception: NumberFormatException)
 						{
-							val tmpId = functions.getBlockFromName(args[2])?.let { functions.getIdFromBlock(it) }
+							val tmpId = functions.getBlockFromName(args[2])?.let(functions::getIdFromBlock)
 
 							if (tmpId == null || tmpId <= 0)
 							{
@@ -139,7 +138,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
 					{
 						values.forEach { value ->
 							if (!value.name.equals(args[0], true)) return@forEach
-							if (value is ListValue) return value.values.filter { it.startsWith(args[1], true) }
+							if (value is ListValue) return@tabComplete value.values.filter { it.startsWith(args[1], true) }
 						}
 						return emptyList()
 					}

@@ -26,7 +26,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	{
 		representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 145, "Back"))
 
-		thread { loadInformation() }
+		thread(block = this::loadInformation)
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
@@ -46,10 +46,14 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				val color = status[server]
 				Fonts.font40.drawCenteredString(
 					"$server: ${if (color.equals("red", ignoreCase = true)) "\u00A7c" else if (color.equals("yellow", ignoreCase = true)) "\u00A7e" else "\u00A7a"}${
-						if (color.equals(
+						when
+						{
+							color.equals(
 								"red", ignoreCase = true
-							)
-						) "Offline" else if (color.equals("yellow", ignoreCase = true)) "Slow" else "Online"
+							) -> "Offline"
+							color.equals("yellow", ignoreCase = true) -> "Slow"
+							else -> "Online"
+						}
 					}", representedScreen.width / 2.0f, i.toFloat(), Color.WHITE.rgb
 				)
 				i += Fonts.font40.fontHeight
@@ -71,7 +75,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				HttpUtils.get("https://status.mojang.com/check"), List::class.java
 			) as List<Map<String, String>>
 
-			for (linkedTreeMap in linkedTreeMaps) for (entry in linkedTreeMap) status[entry.key] = entry.value
+			for (linkedTreeMap in linkedTreeMaps) for ((key, value) in linkedTreeMap) status[key] = value
 		} catch (e: IOException)
 		{
 			status["status.mojang.com/check"] = "red"

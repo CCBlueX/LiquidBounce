@@ -15,7 +15,7 @@ import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.client.*
 import net.minecraft.network.play.server.*
 
-open class PacketImpl<T : Packet<*>>(val wrapped: T) : IPacket
+open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 {
 	override fun asSPacketAnimation(): ISPacketAnimation = SPacketAnimationImpl(wrapped as S0BPacketAnimation)
 

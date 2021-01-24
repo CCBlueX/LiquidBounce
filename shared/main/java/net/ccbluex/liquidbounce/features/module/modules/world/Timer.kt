@@ -30,7 +30,7 @@ class Timer : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER")event: UpdateEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		if (MovementUtils.isMoving || !onMoveValue.get())
 		{

@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGui
 import net.minecraft.client.gui.Gui
 
-open class GuiImpl<T : Gui>(val wrapped: T) : IGui
+open class GuiImpl<out T : Gui>(val wrapped: T) : IGui
 
 fun IGui.unwrap(): Gui = (this as GuiImpl<*>).wrapped
 fun Gui.wrap(): IGui = GuiImpl(this)

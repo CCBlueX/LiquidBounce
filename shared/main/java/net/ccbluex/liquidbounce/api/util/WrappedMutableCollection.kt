@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.api.util
 
-open class WrappedMutableCollection<O, T, C : MutableCollection<O>>(wrapped: C, unwrapper: (T) -> O, wrapper: (O) -> T) : WrappedCollection<O, T, C>(wrapped, unwrapper, wrapper), MutableCollection<T>
+open class WrappedMutableCollection<O, T, out C : MutableCollection<O>>(wrapped: C, unwrapper: (T) -> O, wrapper: (O) -> T) : WrappedCollection<O, T, C>(wrapped, unwrapper, wrapper), MutableCollection<T>
 {
 	override fun add(element: T): Boolean = wrapped.add(unwrapper.invoke(element))
 
@@ -21,7 +21,7 @@ open class WrappedMutableCollection<O, T, C : MutableCollection<O>>(wrapped: C, 
 
 	override fun retainAll(elements: Collection<T>): Boolean = wrapped.addAll(elements.map(unwrapper))
 
-	class WrappedCollectionIterator<O, T>(val wrapped: MutableIterator<O>, val unwrapper: (O) -> T) : MutableIterator<T>
+	class WrappedCollectionIterator<O, out T>(val wrapped: MutableIterator<O>, val unwrapper: (O) -> T) : MutableIterator<T>
 	{
 		override fun hasNext(): Boolean = wrapped.hasNext()
 

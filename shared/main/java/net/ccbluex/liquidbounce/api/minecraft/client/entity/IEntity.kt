@@ -17,9 +17,9 @@ interface IEntity
 	var distanceWalkedOnStepModified: Float
 	var distanceWalkedModified: Float
 
-
 	@get:JvmName("isSprinting")
 	var sprinting: Boolean
+
 	@get:JvmName("isSneaking")
 	val sneaking: Boolean
 	var stepHeight: Float

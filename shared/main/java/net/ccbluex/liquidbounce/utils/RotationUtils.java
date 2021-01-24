@@ -128,7 +128,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 		final double posSqrt = sqrt(posX * posX + posZ * posZ);
 
 		// Bow Power Calculation
-		final FastBow fastBow = (FastBow) LiquidBounce.moduleManager.getModule(FastBow.class);
+		final FastBow fastBow = (FastBow) LiquidBounce.moduleManager.get(FastBow.class);
 		float velocity = fastBow.getState() ? fastBow.getPacketsValue().get() / 20.0f : player.getItemInUseDuration() / 20.0F;
 		velocity = (velocity * velocity + velocity * 2) / 3;
 

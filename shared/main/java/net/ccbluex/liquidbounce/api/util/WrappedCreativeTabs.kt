@@ -19,7 +19,7 @@ abstract class WrappedCreativeTabs(val name: String)
 
 	init
 	{
-		LiquidBounce.wrapper.classProvider.wrapCreativeTab(name, this)
+		@Suppress("LeakingThis") LiquidBounce.wrapper.classProvider.wrapCreativeTab(name, this)
 	}
 
 	open fun displayAllReleventItems(itemList: MutableList<IItemStack>)

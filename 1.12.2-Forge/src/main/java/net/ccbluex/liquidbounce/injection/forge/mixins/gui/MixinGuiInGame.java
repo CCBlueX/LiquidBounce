@@ -50,14 +50,14 @@ public abstract class MixinGuiInGame extends MixinGui
 	@Inject(method = "renderScoreboard", at = @At("HEAD"), cancellable = true)
 	private void renderScoreboard(CallbackInfo callbackInfo)
 	{
-		if (LiquidBounce.moduleManager.getModule(HUD.class).getState() || NoScoreboard.INSTANCE.getState())
+		if (LiquidBounce.moduleManager.get(HUD.class).getState() || NoScoreboard.INSTANCE.getState())
 			callbackInfo.cancel();
 	}
 
 	@Inject(method = "renderHotbar", at = @At("HEAD"), cancellable = true)
 	private void renderTooltip(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo)
 	{
-		final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
 
 		if (Minecraft.getMinecraft().getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.getBlackHotbarValue().get())
 		{

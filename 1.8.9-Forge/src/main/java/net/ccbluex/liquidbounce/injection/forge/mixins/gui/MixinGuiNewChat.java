@@ -67,7 +67,7 @@ public abstract class MixinGuiNewChat
 	@Inject(method = "drawChat", at = @At("HEAD"), cancellable = true)
 	private void drawChat(final int p_drawChat_1_, final CallbackInfo callbackInfo)
 	{
-		final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
 
 		if (hud.getState() && hud.getFontChatValue().get())
 		{
@@ -153,7 +153,7 @@ public abstract class MixinGuiNewChat
 	// TODO: Make real fix
 	/*
 	 * @Inject(method = "setChatLine", at = @At("HEAD"), cancellable = true) private void setChatLine(IChatComponent p_setChatLine_1_, int p_setChatLine_2_, int p_setChatLine_3_, boolean p_setChatLine_4_, final CallbackInfo callbackInfo) { final HUD hud =
-	 * (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+	 * (HUD) LiquidBounce.moduleManager.get(HUD.class);
 	 * 
 	 * if(hud.getState() && hud.fontChatValue.asBoolean()) { callbackInfo.cancel();
 	 * 
@@ -175,7 +175,7 @@ public abstract class MixinGuiNewChat
 	@Inject(method = "getChatComponent", at = @At("HEAD"), cancellable = true)
 	private void getChatComponent(final int p_getChatComponent_1_, final int p_getChatComponent_2_, final CallbackInfoReturnable<IChatComponent> callbackInfo)
 	{
-		final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
 
 		if (hud.getState() && hud.getFontChatValue().get())
 		{

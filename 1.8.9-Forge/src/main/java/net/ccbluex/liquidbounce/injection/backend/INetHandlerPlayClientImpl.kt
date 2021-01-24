@@ -31,5 +31,5 @@ class INetHandlerPlayClientImpl(val wrapped: NetHandlerPlayClient) : IINetHandle
 	override fun equals(other: Any?): Boolean = other is INetHandlerPlayClientImpl && other.wrapped == wrapped
 }
 
- fun IINetHandlerPlayClient.unwrap(): INetHandlerPlayClient = (this as INetHandlerPlayClientImpl).wrapped
- fun NetHandlerPlayClient.wrap(): IINetHandlerPlayClient = INetHandlerPlayClientImpl(this)
+fun IINetHandlerPlayClient.unwrap(): INetHandlerPlayClient = (this as INetHandlerPlayClientImpl).wrapped
+fun NetHandlerPlayClient.wrap(): IINetHandlerPlayClient = INetHandlerPlayClientImpl(this)
