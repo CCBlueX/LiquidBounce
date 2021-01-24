@@ -361,11 +361,13 @@ class InventoryCleaner : Module()
 		{
 			"sword", "pickaxe", "axe" ->
 			{
-				val currentTypeChecker: ((IItem?) -> Boolean) = when
+
+				// https://youtrack.jetbrains.com/issue/KT-17018 //
+				@Suppress("ConvertLambdaToReference") val currentTypeChecker: ((IItem?) -> Boolean) = when
 				{
-					type.equals("Sword", ignoreCase = true) -> classProvider::isItemSword
-					type.equals("Pickaxe", ignoreCase = true) -> classProvider::isItemPickaxe
-					type.equals("Axe", ignoreCase = true) -> classProvider::isItemAxe
+					type.equals("Sword", ignoreCase = true) -> { item: IItem? -> classProvider.isItemSword(item) }
+					type.equals("Pickaxe", ignoreCase = true) -> { obj: IItem? -> classProvider.isItemPickaxe(obj) }
+					type.equals("Axe", ignoreCase = true) -> { obj: IItem? -> classProvider.isItemAxe(obj) }
 					else -> return null
 				}
 
