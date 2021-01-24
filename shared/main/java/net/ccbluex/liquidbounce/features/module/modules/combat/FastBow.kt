@@ -32,8 +32,6 @@ class FastBow : Module()
 
 		if (currentItem != null && classProvider.isItemBow(currentItem.item))
 		{
-
-			// TODO Find out what this is suppose to do
 			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(WBlockPos.ORIGIN, 255, currentItem, 0F, 0F, 0F))
 
 			val yaw = if (RotationUtils.targetRotation != null) RotationUtils.targetRotation.yaw
