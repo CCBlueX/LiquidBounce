@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.awt.Color
 import java.text.NumberFormat
-import java.util.*
 import java.util.regex.Pattern
 import kotlin.math.pow
 import kotlin.random.Random
@@ -151,7 +150,7 @@ object ColorUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun rainbow(speed: Int = 8, saturation: Float = 1F, brightness: Float = 1F): Color
+	fun rainbow(speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color
 	{
 		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + 400000L) / 10F.pow(9 + (11 - speed.coerceAtLeast(1).coerceAtMost(10))) % 1, saturation, brightness))
 		return Color(currentColor.red / 255F * 1F, currentColor.green / 255f * 1F, currentColor.blue / 255F * 1F, currentColor.alpha / 255F)
