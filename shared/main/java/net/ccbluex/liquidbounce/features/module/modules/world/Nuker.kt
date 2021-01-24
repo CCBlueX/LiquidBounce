@@ -53,7 +53,7 @@ class Nuker : Module()
 	 */
 
 	private val attackedBlocks = arrayListOf<WBlockPos>()
-	private var currentBlock: WBlockPos? = null
+	var currentBlock: WBlockPos? = null
 	private var blockHitDelay = 0
 
 	private var nukeTimer = TickTimer()

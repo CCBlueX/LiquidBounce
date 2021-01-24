@@ -21,7 +21,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 @ModuleInfo(name = "Rotations", description = "Allows you to see server-sided head and body rotations.", category = ModuleCategory.RENDER)
 class Rotations : Module()
 {
-
 	val bodyValue = BoolValue("Body", true)
 	val interpolateRotationsValue = BoolValue("Interpolate", true)
 
@@ -30,7 +29,8 @@ class Rotations : Module()
 	{
 		mc.thePlayer ?: return
 
-		if (RotationUtils.serverRotation != null && !bodyValue.get()) mc.thePlayer!!.rotationYawHead = if (interpolateRotationsValue.get()) interpolateRotation(RotationUtils.lastServerRotation.yaw, RotationUtils.serverRotation.yaw, event.partialTicks) else RotationUtils.serverRotation.yaw
+		if (RotationUtils.serverRotation != null && !bodyValue.get()) mc.thePlayer!!.rotationYawHead =
+			if (interpolateRotationsValue.get()) interpolateRotation(RotationUtils.lastServerRotation.yaw, RotationUtils.serverRotation.yaw, event.partialTicks) else RotationUtils.serverRotation.yaw
 	}
 
 	private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module].state
@@ -38,9 +38,23 @@ class Rotations : Module()
 	fun isRotating(): Boolean
 	{
 		val killAura = LiquidBounce.moduleManager.getModule(KillAura::class.java) as KillAura
-		return getState(Scaffold::class.java) || getState(Tower::class.java) || (getState(KillAura::class.java) && killAura.target != null) || getState(Derp::class.java) || getState(BowAimbot::class.java) || getState(Fucker::class.java) || getState(
-			CivBreak::class.java
-		) || getState(Nuker::class.java) || getState(ChestAura::class.java)
+		val bowAimbot = LiquidBounce.moduleManager.getModule(BowAimbot::class.java) as BowAimbot
+		val fucker = LiquidBounce.moduleManager[Fucker::class.java] as Fucker
+		val civBreak = LiquidBounce.moduleManager[CivBreak::class.java] as CivBreak
+		val nuker = LiquidBounce.moduleManager[Nuker::class.java] as Nuker
+		val chestAura = LiquidBounce.moduleManager[ChestAura::class.java] as ChestAura
+
+		val scaffoldState = getState(Scaffold::class.java)
+		val towerState = getState(Tower::class.java)
+		val killauraState = killAura.state && killAura.target != null
+		val derpState = getState(Derp::class.java)
+		val bowAimbotState = bowAimbot.state && bowAimbot.hasTarget()
+		val fuckerState = fucker.state && fucker.currentPos != null
+		val civBreakState = civBreak.state && civBreak.blockPos != null
+		val nukerState = nuker.state && nuker.currentBlock != null
+		val chestAuraState = chestAura.state && chestAura.currentBlock != null
+
+		return scaffoldState || towerState || killauraState || derpState || bowAimbotState || fuckerState || civBreakState || nukerState || chestAuraState
 	}
 
 	private fun interpolateRotation(prev: Float, current: Float, partialTicks: Float): Float

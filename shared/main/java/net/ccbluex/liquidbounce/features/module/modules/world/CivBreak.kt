@@ -30,7 +30,7 @@ class CivBreak : Module()
 
 	private val rangeResetValue = BoolValue("Range-Reset", true)
 
-	private var blockPos: WBlockPos? = null
+	var blockPos: WBlockPos? = null
 	private var enumFacing: IEnumFacing? = null
 
 	@EventTarget

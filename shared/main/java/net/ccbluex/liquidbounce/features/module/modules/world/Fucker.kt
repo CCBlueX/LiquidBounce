@@ -51,7 +51,7 @@ object Fucker : Module()
 	 * VALUES
 	 */
 
-	private var pos: WBlockPos? = null
+	var currentPos: WBlockPos? = null
 	private var oldPos: WBlockPos? = null
 	private var blockHitDelay = 0
 	private val switchTimer = MSTimer()
@@ -71,16 +71,16 @@ object Fucker : Module()
 
 		val targetId = blockValue.get()
 
-		if (pos == null || functions.getIdFromBlock(getBlock(pos!!)!!) != targetId || getCenterDistance(pos!!) > rangeValue.get()) pos = find(targetId)
+		if (currentPos == null || functions.getIdFromBlock(getBlock(currentPos!!)!!) != targetId || getCenterDistance(currentPos!!) > rangeValue.get()) currentPos = find(targetId)
 
 		// Reset current breaking when there is no target block
-		if (pos == null)
+		if (currentPos == null)
 		{
 			currentDamage = 0F
 			return
 		}
 
-		var currentPos = pos ?: return
+		var currentPos = currentPos ?: return
 		var rotations = RotationUtils.faceBlock(currentPos) ?: return
 
 		// Surroundings
@@ -97,8 +97,8 @@ object Fucker : Module()
 			{
 				if (currentPos.x != blockPos.x || currentPos.y != blockPos.y || currentPos.z != blockPos.z) surroundings = true
 
-				pos = blockPos
-				currentPos = pos ?: return
+				this.currentPos = blockPos
+				currentPos = this.currentPos ?: return
 				rotations = RotationUtils.faceBlock(currentPos) ?: return
 			}
 		}
@@ -162,13 +162,13 @@ object Fucker : Module()
 						)
 					)
 
-					if (thePlayer.capabilities.isCreativeMode || block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, pos!!) >= 1.0F)
+					if (thePlayer.capabilities.isCreativeMode || block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, this.currentPos!!) >= 1.0F)
 					{
 						if (swingValue.get()) thePlayer.swingItem()
-						mc.playerController.onPlayerDestroyBlock(pos!!, classProvider.getEnumFacing(EnumFacingType.DOWN))
+						mc.playerController.onPlayerDestroyBlock(this.currentPos!!, classProvider.getEnumFacing(EnumFacingType.DOWN))
 
 						currentDamage = 0F
-						pos = null
+						this.currentPos = null
 						return
 					}
 				}
@@ -188,13 +188,13 @@ object Fucker : Module()
 					mc.playerController.onPlayerDestroyBlock(currentPos, classProvider.getEnumFacing(EnumFacingType.DOWN))
 					blockHitDelay = 4
 					currentDamage = 0F
-					pos = null
+					this.currentPos = null
 				}
 			}
 
 			// Use block
 			actionValue.get().equals("use", true) -> if (mc.playerController.onPlayerRightClick(
-					thePlayer, mc.theWorld!!, thePlayer.heldItem!!, pos!!, classProvider.getEnumFacing(EnumFacingType.DOWN), WVec3(currentPos.x.toDouble(), currentPos.y.toDouble(), currentPos.z.toDouble())
+					thePlayer, mc.theWorld!!, thePlayer.heldItem!!, this.currentPos!!, classProvider.getEnumFacing(EnumFacingType.DOWN), WVec3(currentPos.x.toDouble(), currentPos.y.toDouble(), currentPos.z.toDouble())
 				)
 			)
 			{
@@ -202,7 +202,7 @@ object Fucker : Module()
 
 				blockHitDelay = 4
 				currentDamage = 0F
-				pos = null
+				this.currentPos = null
 			}
 		}
 	}
@@ -210,7 +210,7 @@ object Fucker : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		RenderUtils.drawBlockBox(pos ?: return, Color.RED, true)
+		RenderUtils.drawBlockBox(currentPos ?: return, Color.RED, true)
 	}
 
 	/**

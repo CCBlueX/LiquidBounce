@@ -35,7 +35,7 @@ object ChestAura : Module()
 	private val chestValue = BlockValue("Chest", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.CHEST)))
 	private val rotationsValue = BoolValue("Rotations", true)
 
-	private var currentBlock: WBlockPos? = null
+	var currentBlock: WBlockPos? = null
 	private val timer = MSTimer()
 
 	val clickedBlocks = mutableListOf<WBlockPos>()
