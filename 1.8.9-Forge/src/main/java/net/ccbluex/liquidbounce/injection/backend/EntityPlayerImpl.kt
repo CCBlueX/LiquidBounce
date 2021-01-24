@@ -55,9 +55,6 @@ open class EntityPlayerImpl<T : EntityPlayer>(wrapped: T) : EntityLivingBaseImpl
 			wrapped.cameraYaw = value
 		}
 
-	override val absorptionAmount: Float
-		get() = wrapped.absorptionAmount
-
 	override val totalArmorValue: Int
 		get() = wrapped.totalArmorValue
 

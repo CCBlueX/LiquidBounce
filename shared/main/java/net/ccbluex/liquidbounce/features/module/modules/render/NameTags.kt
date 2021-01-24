@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -12,25 +13,30 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.MurderDetector
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.extensions.getPing
+import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.FontValue
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.renderer.GlStateManager.*
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
-import kotlin.math.roundToInt
+import java.text.DecimalFormat
+import kotlin.math.ceil
 
 @ModuleInfo(name = "NameTags", description = "Changes the scale of the nametags so you can always read them.", category = ModuleCategory.RENDER)
 class NameTags : Module()
 {
+	companion object
+	{
+		private val DECIMAL_FORMAT = DecimalFormat("0.00")
+	}
+
 	private val healthValue = BoolValue("Health", true)
 	private val pingValue = BoolValue("Ping", true)
 	private val distanceValue = BoolValue("Distance", false)
@@ -40,6 +46,10 @@ class NameTags : Module()
 	private val borderValue = BoolValue("Border", true)
 	private val scaleValue = FloatValue("Scale", 1F, 1F, 4F)
 	private val botValue = BoolValue("Bots", true)
+	private val healthModeValue = ListValue("PlayerHealthGetMethod", arrayOf("Datawatcher", "Mineplex", "Hive"), "Datawatcher")
+	private val stripColorsValue = BoolValue("StripColors", false)
+	private val opacityValue = IntegerValue("Opacity", 175, 0, 255)
+	private val borderOpacityValue = IntegerValue("BorderOpacity", 80, 0, 255)
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
@@ -81,17 +91,33 @@ class NameTags : Module()
 
 		val fontRenderer = fontValue.get()
 
+		val murderDetector = LiquidBounce.moduleManager[MurderDetector::class.java] as MurderDetector
+
 		// Modify tag
 		val bot = AntiBot.isBot(entity)
 		val nameColor = if (bot) "\u00A73" else if (entity.invisible) "\u00A76" else if (entity.sneaking) "\u00A74" else "\u00A77"
-		val ping = if (classProvider.isEntityPlayer(entity)) entity.asEntityPlayer().getPing() else 0
 
-		val distanceText = if (distanceValue.get()) "\u00A77${thePlayer.getDistanceToEntity(entity).roundToInt()}m " else ""
-		val pingText = if (pingValue.get() && classProvider.isEntityPlayer(entity)) (if (ping > 200) "\u00A7c" else if (ping > 100) "\u00A7e" else "\u00A7a") + ping + "ms \u00A77" else ""
-		val healthText = if (healthValue.get()) "\u00A77\u00A7c " + entity.health.toInt() + " HP" else ""
-		val botText = if (bot) " \u00A7c\u00A7lBot" else ""
+		val ping = if (classProvider.isEntityPlayer(entity)) EntityUtils.getPing(entity) else 0
+		val pingText = if (pingValue.get() && classProvider.isEntityPlayer(entity)) (if (ping > 200) "\u00a7c" else if (ping > 100) "\u00a7e" else if (ping <= 0) "\u00a77" else "\u00a7a") + ping + "ms \u00a77" else ""
 
-		val text = "$distanceText$pingText$nameColor$tag$healthText$botText"
+		val dist: Double = thePlayer.getDistanceToEntityBox(entity)
+		val distanceText = if (distanceValue.get()) "\u00a77${DECIMAL_FORMAT.format(dist)}m " else ""
+
+		val health: Float = if (!classProvider.isEntityPlayer(entity) || healthModeValue.get().equals("Datawatcher", true)) entity.health else EntityUtils.getPlayerHealthFromScoreboard(
+			entity.asEntityPlayer().gameProfile.name, healthModeValue.get().equals("Mineplex", true)
+		).toFloat()
+		val absorption = if (ceil(entity.absorptionAmount.toDouble()) > 0) entity.absorptionAmount else 0f
+		val healthPercentage = (health + absorption) / entity.maxHealth * 100f
+		val healthColor = if (healthPercentage <= 25) "\u00a7c" else if (healthPercentage <= 50) "\u00a7e" else "\u00a7a"
+		val healthText = if (healthValue.get()) "\u00a77 $healthColor${DECIMAL_FORMAT.format(health)}${if (absorption > 0) "\u00a76+${DECIMAL_FORMAT.format(absorption)}$healthColor" else ""} HP \u00a77(${if (absorption > 0) "\u00a76" else healthColor}${
+			DECIMAL_FORMAT.format(healthPercentage)
+		}%\u00a77)" else ""
+
+		val botText = if (bot) " \u00A7c\u00A7l[BOT]" else ""
+		val murderText = if (murderDetector.state && murderDetector.murders.contains(entity)) "\u00a75\u00a7l[MURDER]\u00a7r " else ""
+
+		var text = "$murderText$distanceText$pingText$nameColor$tag$healthText$botText"
+		if (stripColorsValue.get()) text = ColorUtils.stripColor(text)!!
 
 		// Push
 		glPushMatrix()
@@ -127,8 +153,8 @@ class NameTags : Module()
 		glDisable(GL_TEXTURE_2D)
 		glEnable(GL_BLEND)
 
-		if (borderValue.get()) quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.fontHeight + 2F, 2F, Color(255, 255, 255, 90).rgb, Integer.MIN_VALUE)
-		else quickDrawRect(-width - 2F, -2F, width + 4F, fontRenderer.fontHeight + 2F, Integer.MIN_VALUE)
+		if (borderValue.get()) quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.fontHeight + 2F, 2F, Color(255, 255, 255, 90).rgb, Color(0, 0, 0, borderOpacityValue.get()).rgb)
+		else quickDrawRect(-width - 2F, -2F, width + 4F, fontRenderer.fontHeight + 2F, Color(0, 0, 0, opacityValue.get()).rgb)
 
 		glEnable(GL_TEXTURE_2D)
 

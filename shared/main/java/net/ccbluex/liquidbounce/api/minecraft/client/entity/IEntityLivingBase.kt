@@ -31,6 +31,7 @@ interface IEntityLivingBase : IEntity
 	var health: Float
 	var rotationYawHead: Float
 	var customNameTag: String
+	val absorptionAmount: Float
 
 	fun canEntityBeSeen(it: IEntity): Boolean
 	fun isPotionActive(potion: IPotion): Boolean

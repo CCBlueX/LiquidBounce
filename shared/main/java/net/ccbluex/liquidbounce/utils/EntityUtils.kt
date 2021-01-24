@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
+import net.ccbluex.liquidbounce.api.minecraft.client.network.INetworkPlayerInfo
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
 import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
@@ -15,6 +16,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.isAnimal
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.extensions.isMob
+import java.util.*
 
 object EntityUtils : MinecraftInstance()
 {
@@ -112,5 +114,11 @@ object EntityUtils : MinecraftInstance()
 			for (score in objectives.values) if (player.gameProfile.name.equals(playername, ignoreCase = true)) return score.scorePoints * if (mineplex) 2 else 1
 		}
 		return 0
+	}
+
+	fun getPing(entityPlayer: IEntityLivingBase): Int
+	{
+		val networkPlayerInfo: INetworkPlayerInfo? = mc.netHandler.getPlayerInfo(entityPlayer.uniqueID)
+		return Optional.ofNullable(networkPlayerInfo).map(INetworkPlayerInfo::responseTime).orElse(-1)
 	}
 }

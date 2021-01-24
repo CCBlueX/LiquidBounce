@@ -81,6 +81,9 @@ open class EntityLivingBaseImpl<T : EntityLivingBase>(wrapped: T) : EntityImpl<T
 			wrapped.customNameTag = value
 		}
 
+	override val absorptionAmount: Float
+		get() = wrapped.absorptionAmount
+
 	override fun canEntityBeSeen(it: IEntity): Boolean = wrapped.canEntityBeSeen(it.unwrap())
 
 	override fun isPotionActive(potion: IPotion): Boolean = wrapped.isPotionActive(potion.unwrap())
