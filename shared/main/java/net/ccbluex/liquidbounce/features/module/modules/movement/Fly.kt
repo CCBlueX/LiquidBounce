@@ -137,7 +137,7 @@ class Fly : Module()
 	private val hypixelTimer = TickTimer()
 	private val acpTickTimer = TickTimer()
 	private val cubecraftTeleportTickTimer = TickTimer()
-	private val freeHypixelTimer = TickTimer()
+	val freeHypixelTimer = TickTimer()
 	private val teleportTimer = MSTimer()
 
 	private var startY = 0.0
