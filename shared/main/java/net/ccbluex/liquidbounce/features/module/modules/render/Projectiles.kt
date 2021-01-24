@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.opengl.GL11
@@ -34,6 +35,9 @@ class Projectiles : Module()
 	private val colorRedValue = IntegerValue("R", 0, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 160, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+
+	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
+	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
@@ -132,20 +136,11 @@ class Projectiles : Module()
 		GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST)
 		when (colorMode.get().toLowerCase())
 		{
-			"custom" ->
-			{
-				RenderUtils.glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
-			}
+			"custom" -> RenderUtils.glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
 
-			"bowpower" ->
-			{
-				RenderUtils.glColor(interpolateHSB(Color.RED, Color.GREEN, (motionFactor / 30) * 10))
-			}
+			"bowpower" -> RenderUtils.glColor(interpolateHSB(Color.RED, Color.GREEN, (motionFactor / 30) * 10))
 
-			"rainbow" ->
-			{
-				RenderUtils.glColor(ColorUtils.rainbow())
-			}
+			"rainbow" -> RenderUtils.glColor(ColorUtils.rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()))
 		}
 		GL11.glLineWidth(2f)
 

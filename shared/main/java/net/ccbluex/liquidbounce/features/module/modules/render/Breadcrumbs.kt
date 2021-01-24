@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -25,13 +26,17 @@ class Breadcrumbs : Module()
 	val colorRedValue = IntegerValue("R", 255, 0, 255)
 	val colorGreenValue = IntegerValue("G", 179, 0, 255)
 	val colorBlueValue = IntegerValue("B", 72, 0, 255)
+
 	val colorRainbow = BoolValue("Rainbow", false)
+	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
+	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+
 	private val positions = LinkedList<DoubleArray>()
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
-		val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
 		synchronized(positions) {
 			GL11.glPushMatrix()

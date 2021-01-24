@@ -18,10 +18,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
@@ -38,6 +35,9 @@ class Tracers : Module()
 	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
 
 	private val botValue = BoolValue("Bots", true)
+
+	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
+	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
@@ -69,7 +69,7 @@ class Tracers : Module()
 					classProvider.isEntityPlayer(entity) && entity.asEntityPlayer().isClientFriend() -> Color(0, 0, 255, 150)
 					colorMode == "custom" -> Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 150)
 					colorMode == "distancecolor" -> Color(255 - dist, dist, 0, 150)
-					colorMode == "rainbow" -> ColorUtils.rainbow()
+					colorMode == "rainbow" -> ColorUtils.rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get())
 					else -> Color(255, 255, 255, 150)
 				}
 

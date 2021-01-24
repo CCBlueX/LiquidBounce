@@ -8,10 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityOtherPlayerMP
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.Render3DEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -20,6 +17,7 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -29,13 +27,16 @@ import java.util.concurrent.LinkedBlockingQueue
 @ModuleInfo(name = "Blink", description = "Suspends all movement packets.", category = ModuleCategory.PLAYER)
 class Blink : Module()
 {
+	private val pulseValue = BoolValue("Pulse", false)
+	private val pulseDelayValue = IntegerValue("PulseDelay", 1000, 500, 5000)
+	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
+	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+
+	private val pulseTimer = MSTimer()
 	private val packets = LinkedBlockingQueue<IPacket>()
 	private var fakePlayer: IEntityOtherPlayerMP? = null
 	private var disableLogger = false
 	private val positions = LinkedList<DoubleArray>()
-	private val pulseValue = BoolValue("Pulse", false)
-	private val pulseDelayValue = IntegerValue("PulseDelay", 1000, 500, 5000)
-	private val pulseTimer = MSTimer()
 
 	override fun onEnable()
 	{
@@ -114,7 +115,7 @@ class Blink : Module()
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
 		val breadcrumbs = LiquidBounce.moduleManager[Breadcrumbs::class.java] as Breadcrumbs?
-		val color = if (breadcrumbs!!.colorRainbow.get()) rainbow() else Color(breadcrumbs.colorRedValue.get(), breadcrumbs.colorGreenValue.get(), breadcrumbs.colorBlueValue.get())
+		val color = if (breadcrumbs!!.colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(breadcrumbs.colorRedValue.get(), breadcrumbs.colorGreenValue.get(), breadcrumbs.colorBlueValue.get())
 		synchronized(positions) {
 			GL11.glPushMatrix()
 			GL11.glDisable(GL11.GL_TEXTURE_2D)
