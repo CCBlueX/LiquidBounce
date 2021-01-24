@@ -83,6 +83,9 @@ open class Module(val name: String, val category: Category, var description: Str
         var sequence: Sequence<ModuleEvent>? = null
 
         handler<ModuleEvent>(true) { event ->
+            if (event.module != this)
+                return@handler
+
             sequence = if (event.newState) {
                 Sequence(eventHandler, event, loop = true)
             } else {
