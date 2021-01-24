@@ -11,7 +11,7 @@ import java.awt.datatransfer.StringSelection
 class ChatTokenCommand : Command("chattoken")
 {
 
-	private val lChat = LiquidBounce.moduleManager.getModule(LiquidChat::class.java) as LiquidChat
+	private val lChat = LiquidBounce.moduleManager[LiquidChat::class.java] as LiquidChat
 
 	/**
 	 * Execute commands with provided [args]

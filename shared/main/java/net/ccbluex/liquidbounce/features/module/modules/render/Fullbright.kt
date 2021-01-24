@@ -39,7 +39,7 @@ class Fullbright : Module()
 	@EventTarget(ignoreCondition = true)
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
-		if (state || LiquidBounce.moduleManager.getModule(XRay::class.java).state) when (modeValue.get().toLowerCase())
+		if (state || LiquidBounce.moduleManager[XRay::class.java].state) when (modeValue.get().toLowerCase())
 		{
 			"gamma" -> if (mc.gameSettings.gammaSetting <= 100f) mc.gameSettings.gammaSetting++
 			"nightvision" -> mc.thePlayer?.addPotionEffect(classProvider.createPotionEffect(classProvider.getPotionEnum(PotionType.NIGHT_VISION).id, 1337, 1))

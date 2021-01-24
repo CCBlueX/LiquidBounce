@@ -37,8 +37,8 @@ class Rotations : Module()
 
 	fun isRotating(): Boolean
 	{
-		val killAura = LiquidBounce.moduleManager.getModule(KillAura::class.java) as KillAura
-		val bowAimbot = LiquidBounce.moduleManager.getModule(BowAimbot::class.java) as BowAimbot
+		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
+		val bowAimbot = LiquidBounce.moduleManager[BowAimbot::class.java] as BowAimbot
 		val fucker = LiquidBounce.moduleManager[Fucker::class.java] as Fucker
 		val civBreak = LiquidBounce.moduleManager[CivBreak::class.java] as CivBreak
 		val nuker = LiquidBounce.moduleManager[Nuker::class.java] as Nuker

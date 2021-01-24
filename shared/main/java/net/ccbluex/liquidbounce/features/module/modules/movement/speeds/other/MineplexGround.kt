@@ -53,7 +53,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 		val blockPos = WBlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY - 1, thePlayer.posZ)
 		val vec = WVec3(blockPos).addVector(0.4, 0.4, 0.4).add(WVec3(classProvider.getEnumFacing(EnumFacingType.UP).directionVec))
 		mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld ?: return, null, blockPos, classProvider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
-		val targetSpeed = ((LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?) ?: return).mineplexGroundSpeedValue.get()
+		val targetSpeed = ((LiquidBounce.moduleManager[Speed::class.java] as Speed?) ?: return).mineplexGroundSpeedValue.get()
 		if (targetSpeed > speed) speed += targetSpeed / 8
 		if (speed >= targetSpeed) speed = targetSpeed
 		MovementUtils.strafe(speed)

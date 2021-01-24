@@ -15,7 +15,7 @@ abstract class SpeedMode(val modeName: String) : MinecraftInstance()
 	val isActive: Boolean
 		get()
 		{
-			val speed = LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?
+			val speed = LiquidBounce.moduleManager[Speed::class.java] as Speed?
 			return speed != null && !mc.thePlayer!!.sneaking && speed.state && speed.modeValue.get() == modeName
 		}
 

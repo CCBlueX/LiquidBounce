@@ -132,7 +132,7 @@ class AutoPot : Module()
 	{
 		if (mc.playerController.isInCreativeMode) return
 
-		val killAura = LiquidBounce.moduleManager.getModule(KillAura::class.java) as KillAura
+		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
 		if (killauraBypassValue.get().equals("WaitForKillauraEnd", true) && killAura.state && killAura.target != null) return
 
 		val thePlayer = mc.thePlayer ?: return

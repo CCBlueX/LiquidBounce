@@ -16,7 +16,7 @@ class Vanilla : SpeedMode("Vanilla")
 {
 	override fun onMotion()
 	{
-		strafe((LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed).vanillaSpeedValue.get())
+		strafe((LiquidBounce.moduleManager[Speed::class.java] as Speed).vanillaSpeedValue.get())
 	}
 
 	override fun onUpdate()

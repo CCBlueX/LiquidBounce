@@ -29,7 +29,7 @@ class AACPort : SpeedMode("AACPort")
 		val f = WMathHelper.toRadians(thePlayer.rotationYaw)
 		var d = 0.2
 
-		while (d <= (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?)!!.portMax.get())
+		while (d <= (LiquidBounce.moduleManager[Speed::class.java] as Speed?)!!.portMax.get())
 		{
 			val x: Double = thePlayer.posX - functions.sin(f) * d
 			val z: Double = thePlayer.posZ + functions.cos(f) * d

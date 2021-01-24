@@ -22,7 +22,7 @@ class VanillaHop : SpeedMode("VanillaHop")
 		if (isMoving)
 		{
 			if (thePlayer.onGround) thePlayer.jump()
-			strafe((LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed).vanillaSpeedValue.get())
+			strafe((LiquidBounce.moduleManager[Speed::class.java] as Speed).vanillaSpeedValue.get())
 		} else
 		{
 			thePlayer.motionZ = 0.0

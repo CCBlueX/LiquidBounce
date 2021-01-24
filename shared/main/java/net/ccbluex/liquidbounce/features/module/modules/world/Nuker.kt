@@ -145,7 +145,7 @@ class Nuker : Module()
 				attackedBlocks.add(blockPos)
 
 				// Call auto tool
-				val autoTool = LiquidBounce.moduleManager.getModule(AutoTool::class.java) as AutoTool
+				val autoTool = LiquidBounce.moduleManager[AutoTool::class.java] as AutoTool
 				if (autoTool.state) autoTool.switchSlot(blockPos)
 
 				// Start block breaking

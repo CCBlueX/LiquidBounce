@@ -19,7 +19,7 @@ class CustomSpeed : SpeedMode("Custom")
 
 		if (MovementUtils.isMoving)
 		{
-			val speed = LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed? ?: return
+			val speed = LiquidBounce.moduleManager[Speed::class.java] as Speed? ?: return
 			mc.timer.timerSpeed = speed.customTimerValue.get()
 			when
 			{
@@ -43,7 +43,7 @@ class CustomSpeed : SpeedMode("Custom")
 	{
 		val thePlayer = mc.thePlayer ?: return
 		
-		val speed = LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed? ?: return
+		val speed = LiquidBounce.moduleManager[Speed::class.java] as Speed? ?: return
 		if (speed.resetXZValue.get())
 		{
 			thePlayer.motionZ = 0.0

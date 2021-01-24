@@ -60,7 +60,7 @@ class BufferSpeed : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (LiquidBounce.moduleManager.getModule(Speed::class.java).state || noHurtValue.get() && thePlayer.hurtTime > 0)
+		if (LiquidBounce.moduleManager[Speed::class.java].state || noHurtValue.get() && thePlayer.hurtTime > 0)
 		{
 			reset()
 			return

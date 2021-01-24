@@ -54,7 +54,7 @@ object EntityUtils : MinecraftInstance()
 						if (isFriend(entityPlayer)) return false
 
 						if (entityPlayer.spectator) return false
-						val teams = LiquidBounce.moduleManager.getModule(Teams::class.java) as Teams
+						val teams = LiquidBounce.moduleManager[Teams::class.java] as Teams
 						return !teams.state || !teams.isInYourTeam(entityPlayer)
 					}
 					return true
@@ -66,7 +66,7 @@ object EntityUtils : MinecraftInstance()
 		return false
 	}
 
-	fun isFriend(entity: IEntity): Boolean = classProvider.isEntityPlayer(entity) && entity.asEntityPlayer().isClientFriend() && !LiquidBounce.moduleManager.getModule(NoFriends::class.java).state
+	fun isFriend(entity: IEntity): Boolean = classProvider.isEntityPlayer(entity) && entity.asEntityPlayer().isClientFriend() && !LiquidBounce.moduleManager[NoFriends::class.java].state
 
 	/**
 	 * Check if [entity] is alive

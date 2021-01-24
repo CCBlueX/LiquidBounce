@@ -8,7 +8,7 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils
 class PrivateChatCommand : Command("pchat", "privatechat", "lcpm")
 {
 
-	private val lChat = LiquidBounce.moduleManager.getModule(LiquidChat::class.java) as LiquidChat
+	private val lChat = LiquidBounce.moduleManager[LiquidChat::class.java] as LiquidChat
 
 	/**
 	 * Execute commands with provided [args]
