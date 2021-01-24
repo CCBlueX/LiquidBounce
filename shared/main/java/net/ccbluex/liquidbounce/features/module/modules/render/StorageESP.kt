@@ -6,6 +6,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import co.uk.hexeption.utils.OutlineUtils
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.tileentity.ITileEntity
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -14,11 +16,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura.clickedBlocks
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
@@ -26,12 +28,47 @@ import java.awt.Color
 class StorageESP : Module()
 {
 	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Outline", "ShaderOutline", "ShaderGlow", "2D", "WireFrame"), "Outline")
+
 	private val chestValue = BoolValue("Chest", true)
+	private val chestRedValue = IntegerValue("Chest-R", 0, 0, 255)
+	private val chestGreenValue = IntegerValue("Chest-G", 66, 0, 255)
+	private val chestBlueValue = IntegerValue("Chest-B", 255, 0, 255)
+	private val chestRainbowValue = BoolValue("Chest-Rainbow", false)
+
 	private val enderChestValue = BoolValue("EnderChest", true)
+	private val enderChestRedValue = IntegerValue("EnderChest-R", 255, 0, 255)
+	private val enderChestGreenValue = IntegerValue("EnderChest-G", 0, 0, 255)
+	private val enderChestBlueValue = IntegerValue("EnderChest-B", 255, 0, 255)
+	private val enderChestRainbowValue = BoolValue("EnderChest-Rainbow", false)
+
 	private val furnaceValue = BoolValue("Furnace", true)
+	private val furnaceRedValue = IntegerValue("Furnace-R", 0, 0, 255)
+	private val furnaceGreenValue = IntegerValue("Furnace-G", 0, 0, 255)
+	private val furnaceBlueValue = IntegerValue("Furnace-B", 0, 0, 255)
+	private val furnaceRainbowValue = BoolValue("Furnace-Rainbow", false)
+
 	private val dispenserValue = BoolValue("Dispenser", true)
+	private val dispenserRedValue = IntegerValue("Dispenser-R", 0, 0, 255)
+	private val dispenserGreenValue = IntegerValue("Dispenser-G", 0, 0, 255)
+	private val dispenserBlueValue = IntegerValue("Dispenser-B", 0, 0, 255)
+	private val dispenserRainbowValue = BoolValue("Dispenser-Rainbow", false)
+
 	private val hopperValue = BoolValue("Hopper", true)
+	private val hopperRedValue = IntegerValue("Hopper-R", 128, 0, 255)
+	private val hopperGreenValue = IntegerValue("Hopper-G", 128, 0, 255)
+	private val hopperBlueValue = IntegerValue("Hopper-B", 128, 0, 255)
+	private val hopperRainbowValue = BoolValue("Hopper-Rainbow", false)
+
 	private val shulkerBoxValue = BoolValue("ShulkerBox", true)
+	private val shulkerBoxRedValue = IntegerValue("ShulkerBox-R", 110, 0, 255)
+	private val shulkerBoxGreenValue = IntegerValue("ShulkerBox-G", 77, 0, 255)
+	private val shulkerBoxBlueValue = IntegerValue("ShulkerBox-B", 110, 0, 255)
+	private val shulkerBoxRainbowValue = BoolValue("ShulkerBox-Rainbow", false)
+
+	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
+
+	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
+	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
@@ -39,6 +76,17 @@ class StorageESP : Module()
 		try
 		{
 			val mode = modeValue.get()
+			val saturation = saturationValue.get()
+			val brightness = brightnessValue.get()
+			val rainbowSpeed = rainbowSpeedValue.get()
+			val rainbow = ColorUtils.rainbow(alpha = 1.0f, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+
+			val chestColor = if (chestRainbowValue.get()) rainbow else Color(chestRedValue.get(), chestGreenValue.get(), chestBlueValue.get())
+			val enderChestColor = if (enderChestRainbowValue.get()) rainbow else Color(enderChestRedValue.get(), enderChestGreenValue.get(), enderChestBlueValue.get())
+			val furnaceColor = if (furnaceRainbowValue.get()) rainbow else Color(furnaceRedValue.get(), furnaceGreenValue.get(), furnaceBlueValue.get())
+			val dispenserColor = if (dispenserRainbowValue.get()) rainbow else Color(dispenserRedValue.get(), dispenserGreenValue.get(), dispenserBlueValue.get())
+			val hopperColor = if (hopperRainbowValue.get()) rainbow else Color(hopperRedValue.get(), hopperGreenValue.get(), hopperBlueValue.get())
+			val shulkerBoxColor = if (shulkerBoxRainbowValue.get()) rainbow else Color(shulkerBoxRedValue.get(), shulkerBoxGreenValue.get(), shulkerBoxBlueValue.get())
 
 			if (mode.equals("outline", ignoreCase = true))
 			{
@@ -54,23 +102,24 @@ class StorageESP : Module()
 			{
 				val color: Color = when
 				{
-					chestValue.get() && classProvider.isTileEntityChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color(0, 66, 255)
-					enderChestValue.get() && classProvider.isTileEntityEnderChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color.MAGENTA
-					furnaceValue.get() && classProvider.isTileEntityFurnace(tileEntity) -> Color.BLACK
-					dispenserValue.get() && classProvider.isTileEntityDispenser(tileEntity) -> Color.BLACK
-					hopperValue.get() && classProvider.isTileEntityHopper(tileEntity) -> Color.GRAY
-					shulkerBoxValue.get() && classProvider.isTileEntityShulkerBox(tileEntity) -> Color(0x6e, 0x4d, 0x6e).brighter()
+					chestValue.get() && classProvider.isTileEntityChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> chestColor
+					enderChestValue.get() && classProvider.isTileEntityEnderChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> enderChestColor
+					furnaceValue.get() && classProvider.isTileEntityFurnace(tileEntity) -> furnaceColor
+					dispenserValue.get() && classProvider.isTileEntityDispenser(tileEntity) -> dispenserColor
+					hopperValue.get() && classProvider.isTileEntityHopper(tileEntity) -> hopperColor
+					shulkerBoxValue.get() && classProvider.isTileEntityShulkerBox(tileEntity) -> shulkerBoxColor.brighter()
 					else -> null
 				} ?: continue
 
 				if (!(classProvider.isTileEntityChest(tileEntity) || classProvider.isTileEntityEnderChest(tileEntity)))
 				{
-					RenderUtils.drawBlockBox(tileEntity.pos, color, !mode.equals("otherbox", ignoreCase = true))
+					RenderUtils.drawBlockBox(tileEntity.pos, color, mode.equals("Box", ignoreCase = true))
 					continue
 				}
 				when (mode.toLowerCase())
 				{
-					"otherbox", "box" -> RenderUtils.drawBlockBox(tileEntity.pos, color, !mode.equals("otherbox", ignoreCase = true))
+					"otherbox", "box" -> RenderUtils.drawBlockBox(tileEntity.pos, color, mode.equals("Box", ignoreCase = true))
+
 					"2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
 
 					"outline" ->
@@ -108,55 +157,62 @@ class StorageESP : Module()
 					}
 				}
 			}
-			for (entity in mc.theWorld!!.loadedEntityList)
+
+			for (it in mc.theWorld!!.loadedEntityList)
 			{
-				if (classProvider.isEntityMinecartChest(entity))
+				val color = when
 				{
-					when (mode.toLowerCase())
+					classProvider.isEntityMinecartChest(it) -> chestColor
+					classProvider.isEntityMinecartFurnace(it) -> furnaceColor
+					classProvider.isEntityMinecartHopper(it) -> hopperColor
+					else -> null
+				} ?: continue
+
+				when (mode.toLowerCase())
+				{
+					"otherbox", "box" -> RenderUtils.drawEntityBox(it, color, mode.equals("Box", ignoreCase = true))
+
+					"2d" -> RenderUtils.draw2D(it.position, color.rgb, Color.BLACK.rgb)
+
+					"outline" ->
 					{
-						"otherbox", "box" -> RenderUtils.drawEntityBox(entity, Color(0, 66, 255), !mode.equals("otherbox", ignoreCase = true))
-						"2d" -> RenderUtils.draw2D(entity.position, Color(0, 66, 255).rgb, Color.BLACK.rgb)
+						val entityShadow: Boolean = mc.gameSettings.entityShadows
+						mc.gameSettings.entityShadows = false
+						RenderUtils.glColor(color)
+						OutlineUtils.renderOne(3f)
+						mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true)
+						OutlineUtils.renderTwo()
+						mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true)
+						OutlineUtils.renderThree()
+						mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true)
+						OutlineUtils.renderFour(color)
+						mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true)
+						OutlineUtils.renderFive()
+						OutlineUtils.setColor(Color.WHITE)
+						mc.gameSettings.entityShadows = entityShadow
+					}
 
-						"outline" ->
-						{
-							val entityShadow: Boolean = mc.gameSettings.entityShadows
-							mc.gameSettings.entityShadows = false
-							RenderUtils.glColor(Color(0, 66, 255))
-							OutlineUtils.renderOne(3f)
-							mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
-							OutlineUtils.renderTwo()
-							mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
-							OutlineUtils.renderThree()
-							mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
-							OutlineUtils.renderFour(Color(0, 66, 255))
-							mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
-							OutlineUtils.renderFive()
-							OutlineUtils.setColor(Color.WHITE)
-							mc.gameSettings.entityShadows = entityShadow
-						}
-
-						"wireframe" ->
-						{
-							val entityShadow: Boolean = mc.gameSettings.entityShadows
-							mc.gameSettings.entityShadows = false
-							GL11.glPushMatrix()
-							GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
-							GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE)
-							GL11.glDisable(GL11.GL_TEXTURE_2D)
-							GL11.glDisable(GL11.GL_LIGHTING)
-							GL11.glDisable(GL11.GL_DEPTH_TEST)
-							GL11.glEnable(GL11.GL_LINE_SMOOTH)
-							GL11.glEnable(GL11.GL_BLEND)
-							GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-							RenderUtils.glColor(Color(0, 66, 255))
-							mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
-							RenderUtils.glColor(Color(0, 66, 255))
-							GL11.glLineWidth(1.5f)
-							mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
-							GL11.glPopAttrib()
-							GL11.glPopMatrix()
-							mc.gameSettings.entityShadows = entityShadow
-						}
+					"wireframe" ->
+					{
+						val entityShadow: Boolean = mc.gameSettings.entityShadows
+						mc.gameSettings.entityShadows = false
+						GL11.glPushMatrix()
+						GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
+						GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE)
+						GL11.glDisable(GL11.GL_TEXTURE_2D)
+						GL11.glDisable(GL11.GL_LIGHTING)
+						GL11.glDisable(GL11.GL_DEPTH_TEST)
+						GL11.glEnable(GL11.GL_LINE_SMOOTH)
+						GL11.glEnable(GL11.GL_BLEND)
+						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
+						RenderUtils.glColor(color)
+						mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true)
+						RenderUtils.glColor(color)
+						GL11.glLineWidth(1.5f)
+						mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true)
+						GL11.glPopAttrib()
+						GL11.glPopMatrix()
+						mc.gameSettings.entityShadows = entityShadow
 					}
 				}
 			}
@@ -171,32 +227,93 @@ class StorageESP : Module()
 	fun onRender2D(event: Render2DEvent)
 	{
 		val mode = modeValue.get()
+
+		val chest = chestValue.get()
+		val enderChest = enderChestValue.get()
+		val furnace = furnaceValue.get()
+		val dispenser = dispenserValue.get()
+		val hopper = hopperValue.get()
+		val shulkerBox = shulkerBoxValue.get()
+
+		val saturation = saturationValue.get()
+		val brightness = brightnessValue.get()
+		val rainbowSpeed = rainbowSpeedValue.get()
+		val rainbow = ColorUtils.rainbow(alpha = 1.0f, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+		val chestColor = if (chestRainbowValue.get()) rainbow else Color(chestRedValue.get(), chestGreenValue.get(), chestBlueValue.get())
+		val enderChestColor = if (enderChestRainbowValue.get()) rainbow else Color(enderChestRedValue.get(), enderChestGreenValue.get(), enderChestBlueValue.get())
+		val furnaceColor = if (furnaceRainbowValue.get()) rainbow else Color(furnaceRedValue.get(), furnaceGreenValue.get(), furnaceBlueValue.get())
+		val dispenserColor = if (dispenserRainbowValue.get()) rainbow else Color(dispenserRedValue.get(), dispenserGreenValue.get(), dispenserBlueValue.get())
+		val hopperColor = if (hopperRainbowValue.get()) rainbow else Color(hopperRedValue.get(), hopperGreenValue.get(), hopperBlueValue.get())
+		val shulkerBoxColor = if (shulkerBoxRainbowValue.get()) rainbow else Color(shulkerBoxRedValue.get(), shulkerBoxGreenValue.get(), shulkerBoxBlueValue.get())
+
 		val shader = (if (mode.equals("shaderoutline", ignoreCase = true)) OutlineShader.OUTLINE_SHADER else if (mode.equals("shaderglow", ignoreCase = true)) GlowShader.GLOW_SHADER else null) ?: return
-		shader.startDraw(event.partialTicks)
+		val radius = if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f
+
 		try
 		{
 			val renderManager = mc.renderManager
-			for (entity in mc.theWorld!!.loadedTileEntityList)
-			{
-				if (!(classProvider.isTileEntityChest(entity) && chestValue.get() || classProvider.isTileEntityEnderChest(entity) && enderChestValue.get())) continue
-				if (clickedBlocks.contains(entity.pos)) continue
 
-				mc.renderManager.renderEntityAt(
-					entity, entity.pos.x - renderManager.renderPosX, entity.pos.y - renderManager.renderPosY, entity.pos.z - renderManager.renderPosZ, event.partialTicks
-				)
+			val startDraw = { shader.startDraw(event.partialTicks) }
+			val renderTileEntity = { predicate: (ITileEntity) -> Boolean ->
+				mc.theWorld!!.loadedTileEntityList.filter(predicate).forEach {
+					mc.renderManager.renderEntityAt(
+						it, it.pos.x - renderManager.renderPosX, it.pos.y - renderManager.renderPosY, it.pos.z - renderManager.renderPosZ, event.partialTicks
+					)
+				}
 			}
-			for (entity in mc.theWorld!!.loadedEntityList)
-			{
-				if (!classProvider.isEntityMinecartChest(entity)) continue
+			val renderMinecart = { predicate: (IEntity) -> Boolean ->
+				mc.theWorld!!.loadedEntityList.filter(predicate).forEach {
+					renderManager.renderEntityStatic(it, event.partialTicks, true)
+				}
+			}
+			val stopDraw = { color: Color -> shader.stopDraw(color, radius, 1f) }
 
-				renderManager.renderEntityStatic(entity, event.partialTicks, true)
+			val renderTileEntityOnly = { predicate: ((ITileEntity) -> Boolean), color: Color ->
+				startDraw()
+				renderTileEntity(predicate)
+				stopDraw(color)
 			}
+
+			// Draw Chest and MinecartChest
+			if (chest)
+			{
+				startDraw()
+				renderTileEntity(classProvider::isTileEntityChest)
+				renderMinecart(classProvider::isEntityMinecartChest)
+				stopDraw(chestColor)
+			}
+
+			// Draw EnderChest
+			if (enderChest) renderTileEntityOnly(classProvider::isTileEntityEnderChest, enderChestColor)
+
+			// Draw Furnace and MinecartFurnace
+			if (furnace)
+			{
+				startDraw()
+				renderTileEntity(classProvider::isTileEntityFurnace)
+				renderMinecart(classProvider::isEntityMinecartFurnace)
+				stopDraw(furnaceColor)
+			}
+
+			// Draw Dispenser
+			if (dispenser) renderTileEntityOnly(classProvider::isTileEntityDispenser, dispenserColor)
+
+			// Draw Hopper and MinecartHopper
+			if (hopper)
+			{
+				startDraw()
+				renderTileEntity(classProvider::isTileEntityHopper)
+				renderMinecart(classProvider::isEntityMinecartHopper)
+				stopDraw(hopperColor)
+			}
+
+			// Draw Shulker box
+			if (shulkerBox) renderTileEntityOnly(classProvider::isTileEntityShulkerBox, shulkerBoxColor)
+
 		} catch (ex: Exception)
 		{
 			ClientUtils.getLogger().error("An error occurred while rendering all storages for shader esp", ex)
 		}
-
-		shader.stopDraw(Color(0, 66, 255), if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f, 1f)
 	}
 
 	override val tag: String

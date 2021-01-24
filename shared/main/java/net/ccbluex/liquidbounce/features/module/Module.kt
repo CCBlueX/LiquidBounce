@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.value.Value
@@ -74,12 +75,24 @@ open class Module : MinecraftInstance(), Listenable
 			// Call on enabled or disabled
 			if (value)
 			{
-				onEnable()
+				try
+				{
+					onEnable()
+				} catch (e: Exception)
+				{
+					ClientUtils.getLogger().error("Uncaught exception '$e' occurred while onEnable() in module $name", e)
+				}
 
 				if (canEnable) field = true
 			} else
 			{
-				onDisable()
+				try
+				{
+					onDisable()
+				} catch (e: Exception)
+				{
+					ClientUtils.getLogger().error("Uncaught exception '$e' occurred while onDisable() in module $name", e)
+				}
 				field = false
 			}
 

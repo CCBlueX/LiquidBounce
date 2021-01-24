@@ -532,7 +532,6 @@ class KillAura : Module()
 			currentTarget = null
 			hitable = false
 			if (classProvider.isGuiContainer(mc.currentScreen)) containerOpen = System.currentTimeMillis()
-			ClientUtils.displayChatMessage("clicks++ failed because noinv ${System.currentTimeMillis()}")
 			return
 		}
 
@@ -601,8 +600,6 @@ class KillAura : Module()
 		// Check is not hitable or check failrate
 		val fakeAttack = !hitable || failedToHit
 
-		ClientUtils.displayChatMessage("hitable: $hitable  failedToHit: $failedToHit")
-
 		if (fakeAttack)
 		{
 
@@ -621,7 +618,6 @@ class KillAura : Module()
 			if ((thePlayer.isBlocking || (canBlock && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(currentTarget!!, interactAutoBlockValue.get())
 		} else
 		{
-			ClientUtils.displayChatMessage("Attacked ${System.currentTimeMillis()}")
 
 			// Attack
 			if (multi)
@@ -630,9 +626,9 @@ class KillAura : Module()
 
 				for (entity in theWorld.loadedEntityList)
 				{
-					val distance = thePlayer.getDistanceToEntityBox(entity)
+					val dist = thePlayer.getDistanceToEntityBox(entity)
 
-					if (classProvider.isEntityLivingBase(entity) && EntityUtils.isEnemy(entity, aacValue.get()) && distance <= getAttackRange(entity))
+					if (classProvider.isEntityLivingBase(entity) && EntityUtils.isEnemy(entity, aacValue.get()) && dist <= getAttackRange(entity))
 					{
 						attackEntity(entity.asEntityLivingBase())
 
@@ -707,31 +703,41 @@ class KillAura : Module()
 		when (priorityValue.get().toLowerCase())
 		{
 			"distance" ->
-			{                // Sort by distance
+			{
+
+				// Sort by distance
 				targets.sortBy(thePlayer::getDistanceToEntityBox) // Sort by distance
 				abTargets.sortBy(thePlayer::getDistanceToEntityBox)
 			}
 
 			"health" ->
-			{                // Sort by health
+			{
+
+				// Sort by health
 				targets.sortBy(IEntityLivingBase::health)
 				abTargets.sortBy(IEntityLivingBase::health)
 			}
 
 			"serverdirection" ->
-			{                // Sort by server-sided rotation difference
+			{
+
+				// Sort by server-sided rotation difference
 				targets.sortBy { RotationUtils.getServerRotationDifference(it) }
 				abTargets.sortBy { RotationUtils.getServerRotationDifference(it) }
 			}
 
 			"clientdirection" ->
-			{                // Sort by client-sided rotation difference
+			{
+
+				// Sort by client-sided rotation difference
 				targets.sortBy { RotationUtils.getClientRotationDifference(it) }
 				abTargets.sortBy { RotationUtils.getClientRotationDifference(it) }
 			}
 
 			"livingtime" ->
-			{                // Sort by existence
+			{
+
+				// Sort by existence
 				targets.sortBy { -it.ticksExisted }
 				abTargets.sortBy { -it.ticksExisted }
 			}

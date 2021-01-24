@@ -20,16 +20,23 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import java.awt.Color
-import java.util.*
+import java.util.concurrent.*
 
 @ModuleInfo(name = "BlockESP", description = "Allows you to see a selected block through walls.", category = ModuleCategory.RENDER)
 class BlockESP : Module()
 {
+	companion object
+	{
+		private val workerPool: ThreadPoolExecutor = ThreadPoolExecutor(1, 1, 1L, TimeUnit.MINUTES, LinkedBlockingQueue()) // To re-use worker thread
+	}
+
 	private val modeValue = ListValue("Mode", arrayOf("Box", "2D"), "Box")
 
 	private val blockValue = BlockValue("Block", 168)
 	private val radiusValue = IntegerValue("Radius", 40, 5, 120)
 	private val blockLimitValue = IntegerValue("BlockLimit", 256, 0, 2056)
+
+	private val updateDelayValue = IntegerValue("UpdateDelay", 1000, 500, 2000)
 
 	private val colorRedValue = IntegerValue("R", 255, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 179, 0, 255)
@@ -42,20 +49,51 @@ class BlockESP : Module()
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
 	private val searchTimer = MSTimer()
-	private val posList: MutableList<WBlockPos> = ArrayList()
-	private var thread: Thread? = null
+	private val posList: MutableCollection<WBlockPos> = ConcurrentLinkedQueue()
+
+	@Volatile
+	private var task: Runnable? = null
+
+	@Volatile
+	private var moduleState = false
+
+	override fun onEnable()
+	{
+		moduleState = true
+
+		if (workerPool.queue.isEmpty())
+		{
+			workerPool.submit {
+				while (moduleState)
+				{
+					if (task != null)
+					{
+						task!!.run()
+						task = null
+					}
+
+					if (!moduleState) break
+				}
+			}
+		}
+	}
+
+	override fun onDisable()
+	{
+		moduleState = false
+	}
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
-		if (searchTimer.hasTimePassed(1000L) && (thread == null || !thread!!.isAlive))
+		if (task == null && searchTimer.hasTimePassed(updateDelayValue.get().toLong()))
 		{
 			val radius = radiusValue.get()
 			val selectedBlock = functions.getBlockById(blockValue.get())
 
 			if (selectedBlock == null || selectedBlock == classProvider.getBlockEnum(BlockType.AIR)) return
 
-			thread = Thread({
+			task = Runnable {
 				val blockList: MutableList<WBlockPos> = ArrayList()
 
 				for (x in -radius until radius)
@@ -79,13 +117,9 @@ class BlockESP : Module()
 				}
 				searchTimer.reset()
 
-				synchronized(posList) {
-					posList.clear()
-					posList.addAll(blockList)
-				}
-			}, "BlockESP-BlockFinder")
-
-			thread!!.start()
+				posList.clear()
+				posList.addAll(blockList)
+			}
 		}
 	}
 
@@ -93,17 +127,14 @@ class BlockESP : Module()
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
 		val alpha = colorAlphaValue.get()
-		synchronized(posList) {
-			val color =
-				if (colorRainbow.get()) rainbow(alpha = alpha, speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
+		val color = if (colorRainbow.get()) rainbow(alpha = alpha, speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
 
-			for (blockPos in posList)
+		for (blockPos in posList)
+		{
+			when (modeValue.get().toLowerCase())
 			{
-				when (modeValue.get().toLowerCase())
-				{
-					"box" -> RenderUtils.drawBlockBox(blockPos, color, true)
-					"2d" -> RenderUtils.draw2D(blockPos, color.rgb, Color.BLACK.rgb)
-				}
+				"box" -> RenderUtils.drawBlockBox(blockPos, color, true)
+				"2d" -> RenderUtils.draw2D(blockPos, color.rgb, Color.BLACK.rgb)
 			}
 		}
 	}

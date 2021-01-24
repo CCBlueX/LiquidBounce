@@ -232,6 +232,11 @@ object ClassProviderImpl : IClassProvider
 	override fun isEntityFallingBlock(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityFallingBlock
 
 	override fun isEntityMinecartChest(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMinecartChest
+
+	override fun isEntityMinecartFurnace(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMinecartFurnace
+
+	override fun isEntityMinecartHopper(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMinecartHopper
+
 	override fun isEntityShulker(obj: Any?): Boolean = false
 
 	override fun isTileEntityChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityChest

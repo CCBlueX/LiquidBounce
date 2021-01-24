@@ -126,6 +126,8 @@ interface IClassProvider
 	fun isEntityArrow(obj: Any?): Boolean
 	fun isEntityFallingBlock(obj: Any?): Boolean
 	fun isEntityMinecartChest(obj: Any?): Boolean
+	fun isEntityMinecartFurnace(obj: Any?): Boolean
+	fun isEntityMinecartHopper(obj: Any?): Boolean
 	fun isEntityShulker(obj: Any?): Boolean
 
 	fun isTileEntityChest(obj: Any?): Boolean
