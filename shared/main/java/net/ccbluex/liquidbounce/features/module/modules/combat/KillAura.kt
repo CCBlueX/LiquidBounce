@@ -34,9 +34,12 @@ import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import java.awt.Color
-import kotlin.math.*
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sqrt
 import kotlin.random.Random
 
+// TODO: Fix broken target searching algorithm
 @ModuleInfo(
 	name = "KillAura", description = "Automatically attacks targets around you.", category = ModuleCategory.COMBAT, keyBind = Keyboard.KEY_R
 )
@@ -493,6 +496,8 @@ class KillAura : Module()
 			return
 		}
 
+		target ?: return
+
 		if (target != null && currentTarget != null && (Backend.MINECRAFT_VERSION_MINOR == 8 || (mc.thePlayer ?: return).getCooledAttackStrength(0.0F) >= cooldownValue.get()))
 		{
 			while (clicks > 0)
@@ -527,6 +532,7 @@ class KillAura : Module()
 			currentTarget = null
 			hitable = false
 			if (classProvider.isGuiContainer(mc.currentScreen)) containerOpen = System.currentTimeMillis()
+			ClientUtils.displayChatMessage("clicks++ failed because noinv ${System.currentTimeMillis()}")
 			return
 		}
 
@@ -575,10 +581,10 @@ class KillAura : Module()
 	 */
 	private fun runAttack()
 	{
-		target ?: return
-		currentTarget ?: return
 		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return
+
+		val distance = thePlayer.getDistanceToEntityBox(currentTarget!!)
 
 		// Settings
 		val failRate = failRateValue.get()
@@ -593,11 +599,15 @@ class KillAura : Module()
 		if (openInventory) mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
 
 		// Check is not hitable or check failrate
-		if (!hitable || failedToHit)
+		val fakeAttack = !hitable || failedToHit
+
+		ClientUtils.displayChatMessage("hitable: $hitable  failedToHit: $failedToHit")
+
+		if (fakeAttack)
 		{
 
 			// Stop Blocking before FAKE attack
-			if (thePlayer.isBlocking || (serverSideBlockingStatus))
+			if (thePlayer.isBlocking || serverSideBlockingStatus)
 			{
 				mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
 				serverSideBlockingStatus = false
@@ -605,14 +615,16 @@ class KillAura : Module()
 			}
 
 			// FAKE Swing (to bypass hit/miss rate checks)
-			if (swing && ((thePlayer.getDistanceToEntityBox(currentTarget!!) <= swingRange && fakeSwingValue.get()) || failedToHit)) thePlayer.swingItem()
+			if (swing && (failedToHit || (fakeSwingValue.get() && distance <= swingRange))) thePlayer.swingItem()
 
 			// Start blocking after FAKE attack
-			if ((thePlayer.isBlocking || (canBlock && thePlayer.getDistanceToEntityBox(currentTarget!!) <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(currentTarget!!, interactAutoBlockValue.get())
+			if ((thePlayer.isBlocking || (canBlock && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(currentTarget!!, interactAutoBlockValue.get())
 		} else
-		{ // Attack
-			if (!multi) attackEntity(currentTarget ?: return)
-			else
+		{
+			ClientUtils.displayChatMessage("Attacked ${System.currentTimeMillis()}")
+
+			// Attack
+			if (multi)
 			{
 				var targets = 0
 
@@ -629,12 +641,12 @@ class KillAura : Module()
 						if (limitedMultiTargetsValue.get() != 0 && limitedMultiTargetsValue.get() <= targets) break
 					}
 				}
-			}
-
-			previouslySwitchedTargets.add(if (aacValue.get()) (target ?: return).entityId else (currentTarget ?: return).entityId)
-
-			if (target == currentTarget) target = null
+			} else attackEntity(currentTarget!!)
 		}
+
+		previouslySwitchedTargets.add(if (aacValue.get()) (target ?: return).entityId else (currentTarget ?: return).entityId)
+
+		if (!fakeAttack && target == currentTarget) target = null
 
 		// Open inventory
 		if (openInventory) mc.netHandler.addToSendQueue(createOpenInventoryPacket())
@@ -659,11 +671,9 @@ class KillAura : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		// FIXME: Broken target finding algorithm order
-
 		for (entity in theWorld.loadedEntityList)
 		{
-			if (!classProvider.isEntityLivingBase(entity) || !EntityUtils.isEnemy(entity, aacValue.get()) || (switchMode && previouslySwitchedTargets.contains(entity.entityId))) continue
+			if (!classProvider.isEntityLivingBase(entity) || !EntityUtils.isEnemy(entity, aacValue.get()) || switchMode && previouslySwitchedTargets.contains(entity.entityId)) continue
 
 			val distance = thePlayer.getDistanceToEntityBox(entity)
 			val entityFov = when (fovModeValue.get())
@@ -681,10 +691,7 @@ class KillAura : Module()
 
 		if (targets.isEmpty()) for (entity in theWorld.loadedEntityList)  // If there is no attackable entities found, search about pre-aimable entities and pre-swingable entities instead.
 		{
-			if (!classProvider.isEntityLivingBase(entity) || !EntityUtils.isEnemy(
-					entity, aacValue.get()
-				) || (switchMode && previouslySwitchedTargets.contains(entity.entityId))
-			) continue
+			if (!classProvider.isEntityLivingBase(entity) || !EntityUtils.isEnemy(entity, aacValue.get()) || switchMode && previouslySwitchedTargets.contains(entity.entityId)) continue
 
 			val distance = thePlayer.getDistanceToEntityBox(entity)
 			val entityFov = when (fovModeValue.get())
@@ -742,7 +749,7 @@ class KillAura : Module()
 			return
 		}
 
-		// Cleanup last targets when no target found and try again
+		// Cleanup previouslySwitchedTargets when no target found and try again
 		if (previouslySwitchedTargets.isNotEmpty())
 		{
 			previouslySwitchedTargets.clear()
@@ -823,7 +830,7 @@ class KillAura : Module()
 				randomCenterValue.get() -> RotationUtils.SearchCenterMode.RANDOM_GOOD_CENTER
 				else -> RotationUtils.SearchCenterMode.SEARCH_GOOD_CENTER
 			},
-			jitterValue.get() && (mc.thePlayer!!.getDistanceToEntityBox(entity) <= maxAttackRange || (fakeSwingValue.get() && mc.thePlayer!!.getDistanceToEntityBox(entity) <= swingRange)),
+			jitterValue.get() && (mc.thePlayer!!.getDistanceToEntityBox(entity) <= min(maxAttackRange, if (fakeSwingValue.get()) swingRange else Float.MAX_VALUE)),
 			RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get()),
 			playerPredictValue.get(),
 			mc.thePlayer!!.getDistanceToEntityBox(entity) <= throughWallsRangeValue.get(), /* maxAttackRange */
@@ -862,13 +869,14 @@ class KillAura : Module()
 	 */
 	private fun updateHitable()
 	{
-		if (maxTurnSpeed.get() <= 0F) // Disable hitable check if turn speed is zero
+		if (!rotationsValue.get() || maxTurnSpeed.get() <= 0F) // Disable hitable check if turn speed is zero
 		{
 			hitable = true
 			return
 		}
 
-		val reach = min(maxAttackRange.toDouble(), (mc.thePlayer ?: return).getDistanceToEntityBox(target ?: return)) + 1
+		val multi = targetModeValue.get().equals("Multi", ignoreCase = true)
+		val reach = min(maxAttackRange.toDouble(), (mc.thePlayer ?: return).getDistanceToEntityBox(target!!)) + 1
 
 		if (raycastValue.get())
 		{
@@ -888,8 +896,8 @@ class KillAura : Module()
 					.isClientFriend()))
 			) currentTarget = raycastedEntity.asEntityLivingBase()
 
-			hitable = if (maxTurnSpeed.get() > 0F) currentTarget == raycastedEntity else true
-		} else hitable = if (currentTarget != null) if (rotationsValue.get()) RotationUtils.isFaced(currentTarget, reach) else (mc.thePlayer ?: return).getDistanceToEntityBox(currentTarget ?: return) <= reach else false
+			hitable = currentTarget == raycastedEntity
+		} else hitable = if (currentTarget != null) if (multi) (mc.thePlayer ?: return).getDistanceToEntityBox(currentTarget!!) <= (reach - 1) else RotationUtils.isFaced(currentTarget, reach) else false
 	}
 
 	/**
