@@ -235,33 +235,40 @@ class Text(
 		val rectRainbowShader = rectColorMode.equals("RainbowShader", true)
 		val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
 
+		val backgroundColor = when
+		{
+			backgroundRainbowShader -> 0
+			backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+			else -> backgroundCustomColor
+		}
+
+		val rectColor = when
+		{
+			rectRainbowShader -> 0
+			rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+			else -> rectCustomColor
+		}
+
+		val textColor = when
+		{
+			textRainbowShader -> 0
+			colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = colorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+			else -> customColor
+		}
+
 		// Render Background
 		RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-			val color = when
-			{
-				backgroundRainbowShader -> 0
-				backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-				else -> backgroundCustomColor
-			}
-
-			RenderUtils.drawRect(startX + if (!rectMode.equals("left", true)) 0f else 3F, startY, endX + if (rectMode.equals("right", true)) 0f else 3f, endY, color)
+			RenderUtils.drawRect(startX + if (!rectMode.equals("left", true)) 0f else 3F, startY, endX + if (rectMode.equals("right", true)) 0f else 3f, endY, backgroundColor)
 		}
 
 		// Render Rect
 		if (!rectMode.equals("none", true)) RainbowShader.begin(
 			rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset
 		).use {
-			val color = when
-			{
-				rectRainbowShader -> 0
-				rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-				else -> rectCustomColor
-			}
-
 			when
 			{
-				rectMode.equals("left", true) -> RenderUtils.drawRect(-2f, startY, 1f, endY, color)
-				rectMode.equals("right", true) -> RenderUtils.drawRect(endX, startY, endX + 3, endY, color)
+				rectMode.equals("left", true) -> RenderUtils.drawRect(-2f, startY, 1f, endY, rectColor)
+				rectMode.equals("right", true) -> RenderUtils.drawRect(endX, startY, endX + 3, endY, rectColor)
 			}
 		}
 
@@ -269,16 +276,10 @@ class Text(
 		RainbowFontShader.begin(
 			textRainbowShader, if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get(), if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get(), System.currentTimeMillis() % 10000 / 10000F
 		).use {
-			val color = when
-			{
-				textRainbowShader -> 0
-				colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = colorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
-				else -> customColor
-			}
-			fontRenderer.drawString(displayText, if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f, 0F, color, shadow)
+			fontRenderer.drawString(displayText, if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f, 0F, textColor, shadow)
 
 			if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40) fontRenderer.drawString(
-				"_", if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f + fontRenderer.getStringWidth(displayText) + 2F, 0F, color, shadow
+				"_", if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f + fontRenderer.getStringWidth(displayText) + 2F, 0F, textColor, shadow
 			)
 		}
 
@@ -307,10 +308,7 @@ class Text(
 			if (System.currentTimeMillis() - prevClick <= 250L) editMode = true
 
 			prevClick = System.currentTimeMillis()
-		} else
-		{
-			editMode = false
-		}
+		} else editMode = false
 	}
 
 	override fun handleKey(c: Char, keyCode: Int)
@@ -338,5 +336,4 @@ class Text(
 		blueValue.set(c.blue)
 		return this
 	}
-
 }
