@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
 import org.jetbrains.annotations.NotNull;
 
 import static java.lang.Math.*;
-import static java.lang.Math.max;
 
 public final class RotationUtils extends MinecraftInstance implements Listenable
 {

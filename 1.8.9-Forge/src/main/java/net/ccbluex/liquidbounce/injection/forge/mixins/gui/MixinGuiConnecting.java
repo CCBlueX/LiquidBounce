@@ -86,7 +86,7 @@ public abstract class MixinGuiConnecting extends GuiScreen
 	@Overwrite
 	private void connect(final String ip, final int port)
 	{
-		logger.info("Connecting to " + ip + ", " + port);
+		logger.info("Connecting to {}, {}", ip, port);
 
 		new Thread(() ->
 		{

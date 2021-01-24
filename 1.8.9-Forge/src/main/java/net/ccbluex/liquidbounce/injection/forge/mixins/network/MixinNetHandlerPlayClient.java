@@ -9,6 +9,7 @@ import java.awt.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.List;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EntityMovementEvent;
@@ -306,11 +307,11 @@ public abstract class MixinNetHandlerPlayClient
 
 	private boolean isHackerChat(final String text)
 	{
-		return hackerChats.parallelStream().anyMatch(s -> text.contains(s)) && text.contains(Minecraft.getMinecraft().thePlayer.getName().toLowerCase()) && hackerChatWhitelists.parallelStream().noneMatch(s -> text.contains(s));
+		return hackerChats.parallelStream().anyMatch(text::contains) && text.contains(Minecraft.getMinecraft().thePlayer.getName().toLowerCase()) && hackerChatWhitelists.parallelStream().noneMatch(text::contains);
 	}
 
-	private static final ArrayList<String> hackerChats = new ArrayList<>();
-	private static final ArrayList<String> hackerChatWhitelists = new ArrayList<>();
+	private static final List<String> hackerChats = new ArrayList<>();
+	private static final List<String> hackerChatWhitelists = new ArrayList<>();
 
 	static
 	{

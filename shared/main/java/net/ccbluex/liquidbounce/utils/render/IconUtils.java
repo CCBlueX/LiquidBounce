@@ -50,4 +50,7 @@ public final class IconUtils
 		byteBuffer.flip();
 		return byteBuffer;
 	}
+
+	private IconUtils() {
+	}
 }

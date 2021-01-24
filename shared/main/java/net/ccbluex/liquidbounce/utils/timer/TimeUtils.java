@@ -19,4 +19,7 @@ public final class TimeUtils
 	{
 		return (long) (Math.random() * (1000 / minCPS - 1000 / maxCPS + 1) + 1000 / maxCPS);
 	}
+
+	private TimeUtils() {
+	}
 }

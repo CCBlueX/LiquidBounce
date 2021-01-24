@@ -19,7 +19,7 @@ import org.lwjgl.opengl.EXTPackedDepthStencil;
  * @author Hexeption
  */
 @SideOnly(Side.CLIENT)
-public class OutlineUtils
+public final class OutlineUtils
 {
 
 	public static void renderOne(final float lineWidth)
@@ -61,13 +61,13 @@ public class OutlineUtils
 		glDepthMask(false);
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_POLYGON_OFFSET_LINE);
-		glPolygonOffset(1.0F, -2000000F);
+		glPolygonOffset(1.0F, -2000000.0F);
 		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
 	}
 
 	public static void renderFive()
 	{
-		glPolygonOffset(1.0F, 2000000F);
+		glPolygonOffset(1.0F, 2000000.0F);
 		glDisable(GL_POLYGON_OFFSET_LINE);
 		glEnable(GL_DEPTH_TEST);
 		glDepthMask(true);
@@ -83,7 +83,7 @@ public class OutlineUtils
 
 	public static void setColor(final Color color)
 	{
-		glColor4d(color.getRed() / 255F, color.getGreen() / 255F, color.getBlue() / 255F, color.getAlpha() / 255F);
+		glColor4d(color.getRed() / 255.0F, color.getGreen() / 255.0F, color.getBlue() / 255.0F, color.getAlpha() / 255.0F);
 	}
 
 	public static void checkSetupFBO()
@@ -130,5 +130,8 @@ public class OutlineUtils
 		// Args: Target (GL_FRAMEBUFFER_EXT), Attachment
 		// (GL_DEPTH_ATTACHMENT_EXT), Target (GL_RENDERBUFFER_EXT), ID
 		EXTFramebufferObject.glFramebufferRenderbufferEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, EXTFramebufferObject.GL_DEPTH_ATTACHMENT_EXT, EXTFramebufferObject.GL_RENDERBUFFER_EXT, stencil_depth_buffer_ID);
+	}
+
+	private OutlineUtils() {
 	}
 }

@@ -12,7 +12,7 @@ public final class TabUtils
 
 	public static void tab(final IGuiTextField... textFields)
 	{
-		for (int i = 0; i < textFields.length; i++)
+		for (int i = 0, j = textFields.length; i < j; i++)
 		{
 			final IGuiTextField textField = textFields[i];
 
@@ -28,5 +28,8 @@ public final class TabUtils
 				break;
 			}
 		}
+	}
+
+	private TabUtils() {
 	}
 }

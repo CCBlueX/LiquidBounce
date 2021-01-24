@@ -30,14 +30,14 @@ public class TeleportHit extends Module
 		if (event.getEventState() != EventState.PRE)
 			return;
 
-		final IEntity facedEntity = RaycastUtils.raycastEntity(100D, classProvider::isEntityLivingBase);
+		final IEntity facedEntity = RaycastUtils.raycastEntity(100.0D, classProvider::isEntityLivingBase);
 
 		final IEntityPlayerSP thePlayer = mc.getThePlayer();
 
 		if (thePlayer == null)
 			return;
 
-		if (mc.getGameSettings().getKeyBindAttack().isKeyDown() && EntityUtils.isSelected(facedEntity, true) && facedEntity.getDistanceSqToEntity(thePlayer) >= 1D)
+		if (mc.getGameSettings().getKeyBindAttack().isKeyDown() && EntityUtils.isSelected(facedEntity, true) && facedEntity.getDistanceSqToEntity(thePlayer) >= 1.0D)
 			targetEntity = facedEntity.asEntityLivingBase();
 
 		if (targetEntity != null)
@@ -48,14 +48,14 @@ public class TeleportHit extends Module
 				return;
 			}
 
-			if (thePlayer.getFallDistance() > 0F)
+			if (thePlayer.getFallDistance() > 0.0F)
 			{
-				final WVec3 rotationVector = RotationUtils.getVectorForRotation(new Rotation(thePlayer.getRotationYaw(), 0F));
+				final WVec3 rotationVector = RotationUtils.getVectorForRotation(new Rotation(thePlayer.getRotationYaw(), 0.0F));
 				final double x = thePlayer.getPosX() + rotationVector.getXCoord() * (thePlayer.getDistanceToEntity(targetEntity) - 1.0F);
 				final double z = thePlayer.getPosZ() + rotationVector.getZCoord() * (thePlayer.getDistanceToEntity(targetEntity) - 1.0F);
 				final double y = targetEntity.getPosition().getY() + 0.25D;
 
-				PathUtils.findPath(x, y + 1.0D, z, 4D).forEach(pos -> mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
+				PathUtils.findPath(x, y + 1.0D, z, 4.0D).forEach(pos -> mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
 
 				thePlayer.swingItem();
 				mc.getNetHandler().addToSendQueue(classProvider.createCPacketUseEntity(targetEntity, WAction.ATTACK));

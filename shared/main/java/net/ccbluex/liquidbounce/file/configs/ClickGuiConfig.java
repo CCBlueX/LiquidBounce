@@ -81,13 +81,13 @@ public class ClickGuiConfig extends FileConfig
 					}
 					catch (final Exception e)
 					{
-						ClientUtils.getLogger().error("Error while loading clickgui module element with the name '" + moduleElement.getModule().getName() + "' (Panel Name: " + panel.getName() + ").", e);
+						ClientUtils.getLogger().error("Error while loading clickgui module element with the name '{}' (Panel Name: {}).", moduleElement.getModule().getName(), panel.getName(), e);
 					}
 				}
 			}
 			catch (final Exception e)
 			{
-				ClientUtils.getLogger().error("Error while loading clickgui panel with the name '" + panel.getName() + "'.", e);
+				ClientUtils.getLogger().error("Error while loading clickgui panel with the name '{}'.", panel.getName(), e);
 			}
 		}
 	}

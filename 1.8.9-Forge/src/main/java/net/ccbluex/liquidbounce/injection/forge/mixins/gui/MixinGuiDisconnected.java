@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.mojang.authlib.Agent;
+import com.mojang.authlib.UserAuthentication;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
 import com.thealtening.AltService.EnumAltService;
@@ -86,7 +87,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 						final AccountData account = theAltening.getAccountData();
 						GuiAltManager.altService.switchService(EnumAltService.THEALTENING);
 
-						final YggdrasilUserAuthentication yggdrasilUserAuthentication = new YggdrasilUserAuthentication(new YggdrasilAuthenticationService(Proxy.NO_PROXY, ""), Agent.MINECRAFT);
+						final UserAuthentication yggdrasilUserAuthentication = new YggdrasilUserAuthentication(new YggdrasilAuthenticationService(Proxy.NO_PROXY, ""), Agent.MINECRAFT);
 						yggdrasilUserAuthentication.setUsername(account.getToken());
 						yggdrasilUserAuthentication.setPassword(LiquidBounce.CLIENT_NAME);
 						yggdrasilUserAuthentication.logIn();

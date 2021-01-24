@@ -87,7 +87,7 @@ public class FileManager extends MinecraftInstance
 					final FileConfig fileConfig = (FileConfig) field.get(this);
 					loadConfig(fileConfig);
 				} catch (final IllegalAccessException e) {
-					ClientUtils.getLogger().error("Failed to load config file of field " + field.getName() + ".", e);
+					ClientUtils.getLogger().error("Failed to load config file of field {}.", field.getName(), e);
 				}
 	}
 
@@ -97,7 +97,7 @@ public class FileManager extends MinecraftInstance
 	 * @param configs
 	 *                list
 	 */
-	public void loadConfigs(final FileConfig... configs)
+	public static void loadConfigs(final FileConfig... configs)
 	{
 		for (final FileConfig fileConfig : configs)
 			loadConfig(fileConfig);
@@ -109,11 +109,11 @@ public class FileManager extends MinecraftInstance
 	 * @param config
 	 *               to load
 	 */
-	public void loadConfig(final FileConfig config)
+	public static void loadConfig(final FileConfig config)
 	{
 		if (!config.hasConfig())
 		{
-			ClientUtils.getLogger().info("[FileManager] Skipped loading config: " + config.getFile().getName() + ".");
+			ClientUtils.getLogger().info("[FileManager] Skipped loading config: {}.", config.getFile().getName());
 
 			saveConfig(config, true);
 			return;
@@ -122,11 +122,11 @@ public class FileManager extends MinecraftInstance
 		try
 		{
 			config.loadConfig();
-			ClientUtils.getLogger().info("[FileManager] Loaded config: " + config.getFile().getName() + ".");
+			ClientUtils.getLogger().info("[FileManager] Loaded config: {}.", config.getFile().getName());
 		}
 		catch (final Throwable t)
 		{
-			ClientUtils.getLogger().error("[FileManager] Failed to load config file: " + config.getFile().getName() + ".", t);
+			ClientUtils.getLogger().error("[FileManager] Failed to load config file: {}.", config.getFile().getName(), t);
 		}
 	}
 
@@ -144,7 +144,7 @@ public class FileManager extends MinecraftInstance
 					final FileConfig fileConfig = (FileConfig) field.get(this);
 					saveConfig(fileConfig);
 				} catch (final IllegalAccessException e) {
-					ClientUtils.getLogger().error("[FileManager] Failed to save config file of field " + field.getName() + ".", e);
+					ClientUtils.getLogger().error("[FileManager] Failed to save config file of field {}.", field.getName(), e);
 				}
 	}
 
@@ -166,7 +166,7 @@ public class FileManager extends MinecraftInstance
 	 * @param config
 	 *               to save
 	 */
-	public void saveConfig(final FileConfig config)
+	public static void saveConfig(final FileConfig config)
 	{
 		saveConfig(config, false);
 	}
@@ -179,7 +179,7 @@ public class FileManager extends MinecraftInstance
 	 * @param ignoreStarting
 	 *                       check starting
 	 */
-	private void saveConfig(final FileConfig config, final boolean ignoreStarting)
+	private static void saveConfig(final FileConfig config, final boolean ignoreStarting)
 	{
 		if (!ignoreStarting && LiquidBounce.INSTANCE.isStarting())
 			return;
@@ -190,11 +190,11 @@ public class FileManager extends MinecraftInstance
 				config.createConfig();
 
 			config.saveConfig();
-			ClientUtils.getLogger().info("[FileManager] Saved config: " + config.getFile().getName() + ".");
+			ClientUtils.getLogger().info("[FileManager] Saved config: {}.", config.getFile().getName());
 		}
 		catch (final Throwable t)
 		{
-			ClientUtils.getLogger().error("[FileManager] Failed to save config file: " + config.getFile().getName() + ".", t);
+			ClientUtils.getLogger().error("[FileManager] Failed to save config file: {}.", config.getFile().getName(), t);
 		}
 	}
 

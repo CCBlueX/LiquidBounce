@@ -50,7 +50,7 @@ public final class ClientUtils extends MinecraftInstance
 	{
 		if (mc.getThePlayer() == null)
 		{
-			getLogger().info("(MCChat)" + message);
+			logger.info("(MCChat){}", message);
 			return;
 		}
 

@@ -70,7 +70,7 @@ public class Fonts extends MinecraftInstance
 				if (jsonElement instanceof JsonNull)
 					return;
 
-				final JsonArray jsonArray = (JsonArray) jsonElement;
+				final Iterable<JsonElement> jsonArray = (Iterable<JsonElement>) jsonElement;
 
 				for (final JsonElement element : jsonArray)
 				{
@@ -98,7 +98,7 @@ public class Fonts extends MinecraftInstance
 			e.printStackTrace();
 		}
 
-		ClientUtils.getLogger().info("Loaded Fonts. (" + (System.currentTimeMillis() - l) + "ms)");
+		ClientUtils.getLogger().info("Loaded Fonts. ({}ms)", System.currentTimeMillis() - l);
 	}
 
 	private static void downloadFonts()
@@ -159,11 +159,7 @@ public class Fonts extends MinecraftInstance
 				e.printStackTrace();
 			}
 
-		for (final Entry<FontInfo, IFontRenderer> entry : CUSTOM_FONT_RENDERERS.entrySet())
-			if (entry.getValue() == fontRenderer)
-				return entry.getKey();
-
-		return null;
+		return CUSTOM_FONT_RENDERERS.entrySet().stream().filter(entry -> entry.getValue() == fontRenderer).findFirst().map(Entry::getKey).orElse(null);
 	}
 
 	public static List<IFontRenderer> getFonts()

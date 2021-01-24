@@ -1,7 +1,5 @@
 package net.ccbluex.liquidbounce.features.module.modules.render;
 
-import java.util.Random;
-
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.features.module.Module;

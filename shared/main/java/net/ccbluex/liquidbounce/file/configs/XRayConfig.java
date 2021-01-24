@@ -57,7 +57,7 @@ public class XRayConfig extends FileConfig
 				final IBlock block = LiquidBounce.wrapper.getFunctions().getBlockFromName(jsonElement.getAsString());
 
 				if (xRay.getXrayBlocks().contains(block)) {
-					ClientUtils.getLogger().error("[FileManager] Skipped xray block '" + block.getRegistryName() + "' because the block is already added.");
+					ClientUtils.getLogger().error("[FileManager] Skipped xray block '{}' because the block is already added.", block.getRegistryName());
 					continue;
 				}
 

@@ -33,19 +33,19 @@ class Particle
 		size = genRandom();
 	}
 
-	private float lint1(final float f)
+	private static float lint1(final float f)
 	{
-		return (float) 1.02 * (1.0f - f) + (float) 1.0 * f;
+		return 1.02f * (1.0f - f) + f;
 	}
 
-	private float lint2(final float f)
+	private static float lint2(final float f)
 	{
-		return (float) 1.02 + f * ((float) 1.0 - (float) 1.02);
+		return 1.02f + f * (1.0f - 1.02f);
 	}
 
 	void connect(final float x, final float y)
 	{
-		RenderUtils.connectPoints(getX(), getY(), x, y);
+		RenderUtils.connectPoints(this.x, this.y, x, y);
 	}
 
 	public int getHeight()
@@ -108,8 +108,8 @@ class Particle
 	{
 		final Minecraft mc = Minecraft.getMinecraft();
 		final ScaledResolution scaledResolution = new ScaledResolution(mc);
-		y = y + ySpeed;
-		x = x + xSpeed;
+		y += ySpeed;
+		x += xSpeed;
 
 		if (y > mc.displayHeight)
 			y = 1;
@@ -124,8 +124,8 @@ class Particle
 			y = scaledResolution.getScaledHeight();
 	}
 
-	private float genRandom()
+	private static float genRandom()
 	{
-		return (float) (0.3f + Math.random() * (0.6f - 0.3f + 1.0F));
+		return 0.3f + (float) Math.random() * (0.6f - 0.3f + 1.0F);
 	}
 }

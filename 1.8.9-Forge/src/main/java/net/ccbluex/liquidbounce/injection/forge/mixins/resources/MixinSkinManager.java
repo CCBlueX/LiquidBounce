@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.resources;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -32,7 +33,7 @@ public class MixinSkinManager
 
 		if (nameProtect.getState() && nameProtect.skinProtectValue.get())
 			if (nameProtect.allPlayersValue.get() || Objects.equals(gameProfile.getId(), Minecraft.getMinecraft().getSession().getProfile().getId())) {
-				cir.setReturnValue(new HashMap<>());
+				cir.setReturnValue(new EnumMap<>(Type.class));
 				cir.cancel();
 			}
 	}

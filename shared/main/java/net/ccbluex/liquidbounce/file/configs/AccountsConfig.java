@@ -163,7 +163,7 @@ public class AccountsConfig extends FileConfig
 	 */
 	public void addAccount(final MinecraftAccount account)
 	{
-		if (accountExists(account.getName()))
+		if (isAccountExists(account.getName()))
 			return;
 
 		accounts.add(account);
@@ -198,12 +198,9 @@ public class AccountsConfig extends FileConfig
 	 *              of account
 	 * @return      if the account exists
 	 */
-	public boolean accountExists(final String name)
+	public boolean isAccountExists(final String name)
 	{
-		for (final MinecraftAccount minecraftAccount : accounts)
-			if (minecraftAccount.getName().equals(name))
-				return true;
-		return false;
+		return accounts.stream().anyMatch(minecraftAccount -> minecraftAccount.getName().equals(name));
 	}
 
 	/**

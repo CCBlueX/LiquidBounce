@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles;
 
 import java.awt.*;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer;
@@ -45,7 +46,7 @@ public class NullStyle extends Style
 			RenderUtils.drawBorderedRect(panel.getX(), (float) panel.getY() + 19, (float) panel.getX() + panel.getWidth(), panel.getY() + 19 + panel.getFade(), 1, Integer.MIN_VALUE, Integer.MIN_VALUE);
 		GlStateManager.resetColor();
 		final float textWidth = Fonts.font35.getStringWidth("\u00A7f" + StringUtils.stripControlCodes(panel.getName()));
-		Fonts.font35.drawString("\u00A7f" + panel.getName(), (int) (panel.getX() - (textWidth - 100.0F) / 2F), panel.getY() + 7, Integer.MAX_VALUE);
+		Fonts.font35.drawString("\u00A7f" + panel.getName(), (int) (panel.getX() - (textWidth - 100.0F) / 2.0F), panel.getY() + 7, Integer.MAX_VALUE);
 	}
 
 	@Override
@@ -227,7 +228,7 @@ public class NullStyle extends Style
 							final FontInfo objects = Fonts.getFontDetails(fontRenderer);
 
 							if (objects != null)
-								displayString = objects.getName() + (objects.getFontSize() != -1 ? " - " + objects.getFontSize() : "");
+								displayString = objects.getName() + (objects.getFontSize() == -1 ? "" : " - " + objects.getFontSize());
 						}
 
 						Fonts.font35.drawString(displayString, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, Color.WHITE.getRGB());
@@ -298,16 +299,14 @@ public class NullStyle extends Style
 				mouseDown = Mouse.isButtonDown(0);
 				rightMouseDown = Mouse.isButtonDown(1);
 
-				if (moduleElement.getSettingsWidth() > 0F && yPos > moduleElement.getY() + 4)
-					RenderUtils.drawBorderedRect(moduleElement.getX() + moduleElement.getWidth() + 4, moduleElement.getY() + 6, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 2, 1F, Integer.MIN_VALUE, 0);
+				if (moduleElement.getSettingsWidth() > 0.0F && yPos > moduleElement.getY() + 4)
+					RenderUtils.drawBorderedRect(moduleElement.getX() + moduleElement.getWidth() + 4, moduleElement.getY() + 6, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 2, 1.0F, Integer.MIN_VALUE, 0);
 			}
 		}
 	}
 
-	private BigDecimal round(final float f)
+	private static BigDecimal round(final float f)
 	{
-		BigDecimal bd = new BigDecimal(Float.toString(f));
-		bd = bd.setScale(2, 4);
-		return bd;
+		return new BigDecimal(Float.toString(f)).setScale(2, RoundingMode.HALF_UP);
 	}
 }

@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.file.configs;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.gson.*;
 
@@ -61,15 +63,21 @@ public class FriendsConfig extends FileConfig
 
 			final BufferedReader bufferedReader = new BufferedReader(new FileReader(getFile()));
 
+			final String emptyReplacement = Matcher.quoteReplacement("");
 			String line;
 			while ((line = bufferedReader.readLine()) != null)
-				if (!line.contains("{") && !line.contains("}")) {
-					line = line.replace(" ", "").replace("\"", "").replace(",", "");
+				if (!line.contains("{") && !line.contains("}"))
+				{
+					line = BLANK.matcher(line).replaceAll(emptyReplacement);
+					line = QUOTE.matcher(line).replaceAll(emptyReplacement);
+					line = COMMA.matcher(line).replaceAll(emptyReplacement);
 
-					if (line.contains(":")) {
+					if (line.contains(":"))
+					{
 						final String[] data = line.split(":");
 						addFriend(data[0], data[1]);
-					} else
+					}
+					else
 						addFriend(line);
 				}
 			bufferedReader.close();
@@ -91,7 +99,7 @@ public class FriendsConfig extends FileConfig
 	{
 		final JsonArray jsonArray = new JsonArray();
 
-		for (final Friend friend : getFriends())
+		for (final Friend friend : friends)
 		{
 			final JsonObject friendObject = new JsonObject();
 			friendObject.addProperty("playerName", friend.getPlayerName());
@@ -158,10 +166,7 @@ public class FriendsConfig extends FileConfig
 	 */
 	public boolean isFriend(final String playerName)
 	{
-		for (final Friend friend : friends)
-			if (friend.getPlayerName().equals(playerName))
-				return true;
-		return false;
+		return friends.stream().anyMatch(friend -> friend.getPlayerName().equals(playerName));
 	}
 
 	/**
@@ -182,7 +187,7 @@ public class FriendsConfig extends FileConfig
 		return friends;
 	}
 
-	public class Friend
+	public static class Friend
 	{
 
 		private final String playerName;
@@ -216,4 +221,8 @@ public class FriendsConfig extends FileConfig
 			return alias;
 		}
 	}
+
+	private static final Pattern BLANK = Pattern.compile(" ", Pattern.LITERAL);
+	private static final Pattern QUOTE = Pattern.compile("\"", Pattern.LITERAL);
+	private static final Pattern COMMA = Pattern.compile(",", Pattern.LITERAL);
 }

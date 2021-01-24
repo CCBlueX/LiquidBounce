@@ -232,14 +232,14 @@ public class ExtendedReach extends Module
 		return path;
 	}
 
-	private boolean canPassThrough(final WBlockPos pos)
+	private static boolean canPassThrough(final WBlockPos pos)
 	{
 		final IIBlockState state = BlockUtils.getState(new WBlockPos(pos.getX(), pos.getY(), pos.getZ()));
 		final IBlock block = state.getBlock();
 		return classProvider.getMaterialEnum(MaterialType.AIR).equals(block.getMaterial(state)) || classProvider.getMaterialEnum(MaterialType.PLANTS).equals(block.getMaterial(state)) || classProvider.getMaterialEnum(MaterialType.VINE).equals(block.getMaterial(state)) || classProvider.getBlockEnum(BlockType.LADDER).equals(block) || classProvider.getBlockEnum(BlockType.WATER).equals(block) || classProvider.getBlockEnum(BlockType.FLOWING_WATER).equals(block) || classProvider.getBlockEnum(BlockType.WALL_SIGN).equals(block) || classProvider.getBlockEnum(BlockType.STANDING_SIGN).equals(block);
 	}
 
-	private final void drawPath(final WVec3 vec)
+	private static void drawPath(final WVec3 vec)
 	{
 		final double x = vec.getXCoord() - mc.getRenderManager().getRenderPosX();
 		final double y = vec.getYCoord() - mc.getRenderManager().getRenderPosY();

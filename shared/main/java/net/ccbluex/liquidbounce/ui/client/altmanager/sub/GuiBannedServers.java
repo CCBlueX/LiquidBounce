@@ -131,7 +131,7 @@ public class GuiBannedServers extends WrappedGuiScreen
 		serversList.represented.handleMouseInput();
 	}
 
-	private class GuiServersList extends WrappedGuiSlot
+	private static class GuiServersList extends WrappedGuiSlot
 	{
 		private final MinecraftAccount account;
 		int selectedSlot;
@@ -181,14 +181,14 @@ public class GuiBannedServers extends WrappedGuiScreen
 		}
 	}
 
-	private static class GuiAddBanned extends WrappedGuiScreen
+	private static final class GuiAddBanned extends WrappedGuiScreen
 	{
 		private final GuiBannedServers prevGui;
 		private final MinecraftAccount account;
 		private IGuiTextField name;
 		private String status;
 
-		private GuiAddBanned(final GuiBannedServers prevGui, final MinecraftAccount acc)
+		GuiAddBanned(final GuiBannedServers prevGui, final MinecraftAccount acc)
 		{
 			this.prevGui = prevGui;
 			account = acc;

@@ -103,7 +103,7 @@ public abstract class MixinBlock
 	private void getAmbientOcclusionLightValue(final CallbackInfoReturnable<Float> floatCallbackInfoReturnable)
 	{
 		if (Objects.requireNonNull(LiquidBounce.moduleManager.get(XRay.class)).getState())
-			floatCallbackInfoReturnable.setReturnValue(1F);
+			floatCallbackInfoReturnable.setReturnValue(1.0F);
 	}
 
 	@Inject(method = "getPlayerRelativeBlockHardness", at = @At("RETURN"), cancellable = true)
@@ -127,7 +127,7 @@ public abstract class MixinBlock
 			final Criticals criticals = (Criticals) LiquidBounce.moduleManager.get(Criticals.class);
 
 			if (Objects.requireNonNull(noFall).getState() && noFall.modeValue.get().equalsIgnoreCase("NoGround") || Objects.requireNonNull(criticals).getState() && criticals.getModeValue().get().equalsIgnoreCase("NoGround"))
-				f /= 5F;
+				f /= 5.0F;
 		}
 
 		callbackInfo.setReturnValue(f);

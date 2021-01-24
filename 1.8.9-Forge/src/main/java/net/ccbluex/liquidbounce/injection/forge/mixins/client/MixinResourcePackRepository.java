@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -45,19 +44,15 @@ public class MixinResourcePackRepository
 		try
 		{
 			final List<File> lvt_1_1_ = Lists.newArrayList(FileUtils.listFiles(dirServerResourcepacks, TrueFileFilter.TRUE, null));
-			Collections.sort(lvt_1_1_, LastModifiedFileComparator.LASTMODIFIED_REVERSE);
+			lvt_1_1_.sort(LastModifiedFileComparator.LASTMODIFIED_REVERSE);
 			int lvt_2_1_ = 0;
-			final Iterator lvt_3_1_ = lvt_1_1_.iterator();
 
-			while (lvt_3_1_.hasNext())
-			{
-				final File lvt_4_1_ = (File) lvt_3_1_.next();
+			for (final File lvt_4_1_ : lvt_1_1_)
 				if (lvt_2_1_++ >= 10)
 				{
-					logger.info("Deleting old server resource pack " + lvt_4_1_.getName());
+					logger.info("Deleting old server resource pack {}", lvt_4_1_.getName());
 					FileUtils.deleteQuietly(lvt_4_1_);
 				}
-			}
 		}
 		catch (final Throwable e)
 		{

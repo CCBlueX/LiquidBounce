@@ -105,11 +105,8 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 
 				final int durabilityCmp = Integer.compare(o1a.getArmorMaterial().getDurability(o1a.getArmorType()), o2a.getArmorMaterial().getDurability(o2a.getArmorType()));
 
-				if (durabilityCmp != 0)
-					return durabilityCmp;
-
 				// Last comparision: Enchantability
-				return Integer.compare(o1a.getArmorMaterial().getEnchantability(), o2a.getArmorMaterial().getEnchantability());
+				return durabilityCmp != 0 ? durabilityCmp : Integer.compare(o1a.getArmorMaterial().getEnchantability(), o2a.getArmorMaterial().getEnchantability());
 			}
 
 			return otherEnchantmentCmp;
@@ -130,26 +127,25 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 		return 1 - Math.min(20.0f, Math.max(defensePoints / 5.0f, defensePoints - 1 / (2 + toughness / 4.0f))) / 25.0f;
 	}
 
-	private float getThresholdedEnchantmentDamageReduction(final IItemStack itemStack)
+	private static float getThresholdedEnchantmentDamageReduction(final IItemStack itemStack)
 	{
 		float sum = 0.0f;
 
-		for (int i = 0; i < DAMAGE_REDUCTION_ENCHANTMENTS.length; i++)
+		for (int i = 0, j = DAMAGE_REDUCTION_ENCHANTMENTS.length; i < j; i++)
 			sum += ItemUtils.getEnchantment(itemStack, DAMAGE_REDUCTION_ENCHANTMENTS[i]) * ENCHANTMENT_FACTORS[i] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[i];
 
 		return sum;
 
 	}
 
-	private float getEnchantmentThreshold(final IItemStack itemStack)
+	private static float getEnchantmentThreshold(final IItemStack itemStack)
 	{
 		float sum = 0.0f;
 
-		for (int i = 0; i < OTHER_ENCHANTMENTS.length; i++)
+		for (int i = 0, j = OTHER_ENCHANTMENTS.length; i < j; i++)
 			sum += ItemUtils.getEnchantment(itemStack, OTHER_ENCHANTMENTS[i]) * OTHER_ENCHANTMENT_FACTORS[i];
 
 		return sum;
 
 	}
-
 }

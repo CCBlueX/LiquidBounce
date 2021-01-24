@@ -34,7 +34,7 @@ public final class OutlineShader extends FramebufferShader
 	public void updateUniforms()
 	{
 		GL20.glUniform1i(getUniform("texture"), 0);
-		GL20.glUniform2f(getUniform("texelSize"), 1F / mc.getDisplayWidth() * (radius * quality), 1F / mc.getDisplayHeight() * (radius * quality));
+		GL20.glUniform2f(getUniform("texelSize"), 1.0F / mc.getDisplayWidth() * (radius * quality), 1.0F / mc.getDisplayHeight() * (radius * quality));
 		GL20.glUniform4f(getUniform("color"), red, green, blue, alpha);
 		GL20.glUniform1f(getUniform("radius"), radius);
 	}

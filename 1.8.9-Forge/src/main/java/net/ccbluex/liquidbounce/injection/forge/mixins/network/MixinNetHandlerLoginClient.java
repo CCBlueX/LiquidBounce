@@ -14,6 +14,7 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
+import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
 
@@ -79,14 +80,11 @@ public class MixinNetHandlerLoginClient
 				outputStream.close();
 
 				final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-				final StringBuilder outputBuilder = new StringBuilder();
 
-				String line;
-				while ((line = reader.readLine()) != null)
-					outputBuilder.append(line);
+				final String output = reader.lines().collect(Collectors.joining());
 
 				reader.close();
-				final JsonElement jsonElement = new Gson().fromJson(outputBuilder.toString(), JsonElement.class);
+				final JsonElement jsonElement = new Gson().fromJson(output, JsonElement.class);
 
 				if (!jsonElement.isJsonObject() || !jsonElement.getAsJsonObject().has("success"))
 				{

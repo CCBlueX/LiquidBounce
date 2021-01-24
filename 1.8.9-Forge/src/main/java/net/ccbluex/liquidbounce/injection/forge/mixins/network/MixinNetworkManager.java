@@ -109,7 +109,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 			}
 			catch (final InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e)
 			{
-				ClientUtils.getLogger().error("[NetworkManager] InboundHandlerTuplePacketListener reflection failed: " + e, e);
+				ClientUtils.getLogger().error("[NetworkManager] InboundHandlerTuplePacketListener reflection failed: {}", e, e);
 			}
 			finally
 			{

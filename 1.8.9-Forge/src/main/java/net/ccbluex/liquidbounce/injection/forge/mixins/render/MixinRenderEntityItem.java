@@ -63,9 +63,8 @@ public class MixinRenderEntityItem
 			rotation = (double) (System.nanoTime() - itemPhysics.tick) / 2500000 * itemPhysics.itemRotationSpeed.get();
 			if (!mc.inGameHasFocus)
 				rotation = 0;
-			final EntityItem item = entity;
 
-			final ItemStack itemstack = item.getEntityItem();
+			final ItemStack itemstack = entity.getEntityItem();
 			final int i = itemstack.getItem() != null ? Item.getIdFromItem(itemstack.getItem()) + itemstack.getMetadata() : 187;
 
 			random.setSeed(i);
@@ -90,7 +89,7 @@ public class MixinRenderEntityItem
 				GlStateManager.scale(0.5F, 0.5F, 0.5F);
 
 			GL11.glRotatef(90.0F, 1.0F, 0.0F, 0.0F);
-			GL11.glRotatef(item.rotationYaw, 0.0F, 0.0F, 1.0F);
+			GL11.glRotatef(entity.rotationYaw, 0.0F, 0.0F, 1.0F);
 
 			GlStateManager.translate(0, 0, is3D ? -0.08 : -0.04);
 
@@ -99,32 +98,32 @@ public class MixinRenderEntityItem
 			{
 				if (is3D)
 				{
-					if (!item.onGround)
+					if (!entity.onGround)
 					{
 						double _rotation = rotation * 2;
-						Fluid fluid = getFluid(item);
+						Fluid fluid = getFluid(entity);
 						if (fluid == null)
-							fluid = getFluid(item, true);
+							fluid = getFluid(entity, true);
 						if (fluid != null)
 							_rotation /= fluid.getDensity() / 1000.0 * 10;
 
-						item.rotationPitch += _rotation;
+						entity.rotationPitch += _rotation;
 					}
 				}
-				else if (!Double.isNaN(item.posX) && !Double.isNaN(item.posY) && !Double.isNaN(item.posZ) && item.worldObj != null)
-					if (item.onGround)
-						item.rotationPitch = 0;
+				else if (!Double.isNaN(entity.posX) && !Double.isNaN(entity.posY) && !Double.isNaN(entity.posZ) && entity.worldObj != null)
+					if (entity.onGround)
+						entity.rotationPitch = 0;
 					else
 					{
 						double _rotation = rotation * 2;
-						final Fluid fluid = getFluid(item);
+						final Fluid fluid = getFluid(entity);
 						if (fluid != null)
 							_rotation /= fluid.getDensity() / 1000.0 * 10;
 
-						item.rotationPitch += _rotation;
+						entity.rotationPitch += _rotation;
 					}
 
-				GlStateManager.rotate(item.rotationPitch, 1, 0, 0.0F);
+				GlStateManager.rotate(entity.rotationPitch, 1, 0, 0.0F);
 			}
 
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);

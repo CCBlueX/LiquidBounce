@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.value.TextValue;
 public class Spammer extends Module
 {
 
-	private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 1000, 0, 5000)
+	final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 1000, 0, 5000)
 	{
 		@Override
 		protected void onChanged(final Integer oldValue, final Integer newValue)
@@ -37,7 +37,7 @@ public class Spammer extends Module
 		}
 	};
 
-	private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 500, 0, 5000)
+	final IntegerValue minDelayValue = new IntegerValue("MinDelay", 500, 0, 5000)
 	{
 
 		@Override
@@ -55,7 +55,7 @@ public class Spammer extends Module
 	private final BoolValue customValue = new BoolValue("Custom", false);
 
 	private final MSTimer msTimer = new MSTimer();
-	private long delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
+	long delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 
 	@EventTarget
 	public void onUpdate(final UpdateEvent event)
@@ -68,7 +68,7 @@ public class Spammer extends Module
 		}
 	}
 
-	private String replace(String object)
+	private static String replace(String object)
 	{
 		final Random r = new Random();
 

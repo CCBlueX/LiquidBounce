@@ -19,4 +19,7 @@ public final class ParticleUtils
 	{
 		particleGenerator.draw(mouseX, mouseY);
 	}
+
+	private ParticleUtils() {
+	}
 }

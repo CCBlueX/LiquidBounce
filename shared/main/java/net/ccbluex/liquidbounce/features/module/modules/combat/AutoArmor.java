@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat;
 
 import static net.ccbluex.liquidbounce.utils.CrossVersionUtilsKt.createOpenInventoryPacket;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,8 +35,8 @@ import net.ccbluex.liquidbounce.value.IntegerValue;
 public class AutoArmor extends Module
 {
 
-	public static final ArmorComparator ARMOR_COMPARATOR = new ArmorComparator();
-	private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 100, 0, 400)
+	public static final Comparator<ArmorPiece> ARMOR_COMPARATOR = new ArmorComparator();
+	final IntegerValue minDelayValue = new IntegerValue("MinDelay", 100, 0, 400)
 	{
 
 		@Override
@@ -47,7 +48,7 @@ public class AutoArmor extends Module
 				set(maxDelay);
 		}
 	};
-	private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 200, 0, 400)
+	final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 200, 0, 400)
 	{
 		@Override
 		protected void onChanged(final Integer oldValue, final Integer newValue)
@@ -143,7 +144,8 @@ public class AutoArmor extends Module
 
 			return true;
 		}
-		else if (!(noMoveValue.get() && MovementUtils.isMoving()) && (!invOpenValue.get() || classProvider.isGuiInventory(mc.getCurrentScreen())) && item != -1)
+
+		if (!(noMoveValue.get() && MovementUtils.isMoving()) && (!invOpenValue.get() || classProvider.isGuiInventory(mc.getCurrentScreen())) && item != -1)
 		{
 			final boolean openInventory = simulateInventory.get() && !classProvider.isGuiInventory(mc.getCurrentScreen());
 
@@ -154,7 +156,8 @@ public class AutoArmor extends Module
 
 			if (full)
 				for (final IItemStack iItemStack : mc.getThePlayer().getInventory().getMainInventory())
-					if (ItemUtils.isStackEmpty(iItemStack)) {
+					if (ItemUtils.isStackEmpty(iItemStack))
+					{
 						full = false;
 						break;
 					}

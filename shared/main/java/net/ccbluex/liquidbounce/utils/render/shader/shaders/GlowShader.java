@@ -34,10 +34,10 @@ public final class GlowShader extends FramebufferShader
 	public void updateUniforms()
 	{
 		GL20.glUniform1i(getUniform("texture"), 0);
-		GL20.glUniform2f(getUniform("texelSize"), 1F / mc.getDisplayWidth() * (radius * quality), 1F / mc.getDisplayHeight() * (radius * quality));
+		GL20.glUniform2f(getUniform("texelSize"), 1.0F / mc.getDisplayWidth() * (radius * quality), 1.0F / mc.getDisplayHeight() * (radius * quality));
 		GL20.glUniform3f(getUniform("color"), red, green, blue);
-		GL20.glUniform1f(getUniform("divider"), 140F);
+		GL20.glUniform1f(getUniform("divider"), 140.0F);
 		GL20.glUniform1f(getUniform("radius"), radius);
-		GL20.glUniform1f(getUniform("maxSample"), 10F);
+		GL20.glUniform1f(getUniform("maxSample"), 10.0F);
 	}
 }

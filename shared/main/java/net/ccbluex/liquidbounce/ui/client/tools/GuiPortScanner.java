@@ -12,7 +12,9 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import javax.swing.*;
 
@@ -30,7 +32,7 @@ public class GuiPortScanner extends WrappedGuiScreen
 {
 
 	private final IGuiScreen prevGui;
-	private final List<Integer> ports = new ArrayList<>();
+	private final Collection<Integer> ports = new ArrayList<>();
 	private IGuiTextField hostField;
 	private IGuiTextField minPortField;
 	private IGuiTextField maxPortField;
@@ -84,7 +86,7 @@ public class GuiPortScanner extends WrappedGuiScreen
 		representedScreen.drawBackground(0);
 
 		Fonts.font40.drawCenteredString("Port Scanner", representedScreen.getWidth() / 2.0f, 34, 0xffffff);
-		Fonts.font35.drawCenteredString(running ? "\u00A77" + checkedPort + " \u00A78/ \u00A77" + maxPort : status == null ? "" : status, representedScreen.getWidth() / 2.0f, representedScreen.getHeight() / 4.0f + 80, 0xffffff);
+		Fonts.font35.drawCenteredString(running ? "\u00A77" + checkedPort + " \u00A78/ \u00A77" + maxPort : Optional.ofNullable(status).orElse(""), representedScreen.getWidth() / 2.0f, representedScreen.getHeight() / 4.0f + 80, 0xffffff);
 
 		buttonToggle.setDisplayString(running ? "Stop" : "Start");
 

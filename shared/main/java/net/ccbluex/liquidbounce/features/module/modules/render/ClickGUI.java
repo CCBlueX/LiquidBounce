@@ -40,7 +40,7 @@ public class ClickGUI extends Module
 		}
 	};
 
-	public final FloatValue scaleValue = new FloatValue("Scale", 1F, 0.7F, 2F);
+	public final FloatValue scaleValue = new FloatValue("Scale", 1.0F, 0.7F, 2.0F);
 	public final IntegerValue maxElementsValue = new IntegerValue("MaxElements", 15, 1, 20);
 
 	private static final IntegerValue colorRedValue = new IntegerValue("R", 0, 0, 255);
@@ -65,7 +65,7 @@ public class ClickGUI extends Module
 		mc.displayGuiScreen(classProvider.wrapGuiScreen(LiquidBounce.clickGui));
 	}
 
-	private void updateStyle()
+	void updateStyle()
 	{
 		switch (styleValue.get().toLowerCase())
 		{

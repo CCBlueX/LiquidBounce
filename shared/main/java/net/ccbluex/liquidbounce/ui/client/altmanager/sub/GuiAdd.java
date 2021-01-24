@@ -12,15 +12,16 @@ import java.io.IOException;
 import java.net.Proxy;
 
 import com.mojang.authlib.Agent;
+import com.mojang.authlib.UserAuthentication;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
-import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
 import com.thealtening.AltService.EnumAltService;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
+import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
@@ -93,7 +94,7 @@ public class GuiAdd extends WrappedGuiScreen
 				mc.displayGuiScreen(prevGui.representedScreen);
 				break;
 			case 1:
-				if (LiquidBounce.fileManager.accountsConfig.accountExists(username.getText()))
+				if (LiquidBounce.fileManager.accountsConfig.isAccountExists(username.getText()))
 				{
 					status = "\u00A7cThe account has already been added.";
 					break;
@@ -173,7 +174,7 @@ public class GuiAdd extends WrappedGuiScreen
 
 	private void addAccount(final String name, final String password)
 	{
-		if (LiquidBounce.fileManager.accountsConfig.accountExists(name))
+		if (LiquidBounce.fileManager.accountsConfig.isAccountExists(name))
 		{
 			status = "\u00A7cThe account has already been added.";
 			return;
@@ -197,7 +198,7 @@ public class GuiAdd extends WrappedGuiScreen
 					if (oldService != EnumAltService.MOJANG)
 						GuiAltManager.altService.switchService(EnumAltService.MOJANG);
 
-					final YggdrasilUserAuthentication userAuthentication = (YggdrasilUserAuthentication) new YggdrasilAuthenticationService(Proxy.NO_PROXY, "").createUserAuthentication(Agent.MINECRAFT);
+					final UserAuthentication userAuthentication = new YggdrasilAuthenticationService(Proxy.NO_PROXY, "").createUserAuthentication(Agent.MINECRAFT);
 
 					userAuthentication.setUsername(account.getName());
 					userAuthentication.setPassword(account.getPassword());
@@ -218,7 +219,7 @@ public class GuiAdd extends WrappedGuiScreen
 			}
 
 			LiquidBounce.fileManager.accountsConfig.getAccounts().add(account);
-			LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+			FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 
 			status = "\u00A7aThe account has been added.";
 			prevGui.status = status;

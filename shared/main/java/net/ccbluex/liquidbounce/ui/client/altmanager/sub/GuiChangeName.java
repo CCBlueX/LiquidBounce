@@ -59,8 +59,7 @@ public class GuiChangeName extends WrappedGuiScreen
 	}
 
 	@Override
-	public void actionPerformed(final IGuiButton button) throws IOException
-	{
+	public void actionPerformed(final IGuiButton button) {
 		switch (button.getId())
 		{
 			case 0:

@@ -76,8 +76,7 @@ public class GuiDirectLogin extends WrappedGuiScreen
 	}
 
 	@Override
-	public void actionPerformed(final IGuiButton button) throws IOException
-	{
+	public void actionPerformed(final IGuiButton button) {
 		if (!button.getEnabled())
 			return;
 

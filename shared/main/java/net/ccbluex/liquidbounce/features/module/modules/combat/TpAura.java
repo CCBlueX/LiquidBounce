@@ -4,6 +4,7 @@ import static org.lwjgl.opengl.GL11.*;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -88,10 +89,10 @@ public class TpAura extends Module
 
 	// Attack Delay
 	private final MSTimer attackTimer = new MSTimer();
-	private long attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get());
+	long attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get());
 
 	// Paths
-	private final List<List<WVec3>> targetPaths = new ArrayList<>();
+	private final Collection<List<WVec3>> targetPaths = new ArrayList<>();
 
 	// Targets
 	public List<IEntityLivingBase> currentTargets = new CopyOnWriteArrayList<>();
@@ -208,7 +209,7 @@ public class TpAura extends Module
 		}
 	}
 
-	private boolean canBlock()
+	private static boolean canBlock()
 	{
 		return mc.getThePlayer() != null && mc.getThePlayer().getHeldItem() != null && classProvider.isItemSword(mc.getThePlayer().getHeldItem().getItem());
 	}
@@ -276,14 +277,14 @@ public class TpAura extends Module
 		return mc.getTheWorld().getLoadedEntityList().stream().filter(classProvider::isEntityLivingBase).map(IEntity::asEntityLivingBase).filter(entity -> PlayerExtensionKt.getDistanceToEntityBox(mc.getThePlayer(), entity) <= rangeValue.get() && EntityUtils.isEnemy(entity, false) && entity.getHurtTime() <= hurtTimeValue.get()).sorted((o1, o2) -> (int) (o1.getDistanceToEntity(mc.getThePlayer()) * 1000 - o2.getDistanceToEntity(mc.getThePlayer()) * 1000)).collect(Collectors.toList());
 	}
 
-	private boolean canPassThrough(final WBlockPos pos)
+	private static boolean canPassThrough(final WBlockPos pos)
 	{
 		final IIBlockState state = BlockUtils.getState(new WBlockPos(pos.getX(), pos.getY(), pos.getZ()));
 		final IBlock block = state.getBlock();
 		return classProvider.getMaterialEnum(MaterialType.AIR).equals(block.getMaterial(state)) || classProvider.getMaterialEnum(MaterialType.PLANTS).equals(block.getMaterial(state)) || classProvider.getMaterialEnum(MaterialType.VINE).equals(block.getMaterial(state)) || classProvider.getBlockEnum(BlockType.LADDER).equals(block) || classProvider.getBlockEnum(BlockType.WATER).equals(block) || classProvider.getBlockEnum(BlockType.FLOWING_WATER).equals(block) || classProvider.getBlockEnum(BlockType.WALL_SIGN).equals(block) || classProvider.getBlockEnum(BlockType.STANDING_SIGN).equals(block);
 	}
 
-	public final void drawPath(final WVec3 vec)
+	public static void drawPath(final WVec3 vec)
 	{
 		final double x = vec.getXCoord() - mc.getRenderManager().getRenderPosX();
 		final double y = vec.getYCoord() - mc.getRenderManager().getRenderPosY();
@@ -350,7 +351,7 @@ public class TpAura extends Module
 		glColor4f(1, 1, 1, 1);
 	}
 
-	public final boolean isTarget(final IEntityLivingBase entity)
+	public final boolean isTarget(final IEntity entity)
 	{
 		return !currentTargets.isEmpty() && IntStream.range(0, currentTargets.size() > maxTargetsValue.get() ? maxTargetsValue.get() : currentTargets.size()).anyMatch(i -> currentTargets.get(i).isEntityEqual(entity));
 	}

@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils.render.shader;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,11 +30,11 @@ public abstract class Shader extends MinecraftInstance
 		try
 		{
 			final InputStream vertexStream = getClass().getResourceAsStream("/assets/minecraft/liquidbounce/shader/vertex.vert");
-			vertexShaderID = createShader(IOUtils.toString(vertexStream), ARBVertexShader.GL_VERTEX_SHADER_ARB);
+			vertexShaderID = createShader(IOUtils.toString(vertexStream, StandardCharsets.UTF_8), ARBVertexShader.GL_VERTEX_SHADER_ARB);
 			IOUtils.closeQuietly(vertexStream);
 
 			final InputStream fragmentStream = getClass().getResourceAsStream("/assets/minecraft/liquidbounce/shader/fragment/" + fragmentShader);
-			fragmentShaderID = createShader(IOUtils.toString(fragmentStream), ARBFragmentShader.GL_FRAGMENT_SHADER_ARB);
+			fragmentShaderID = createShader(IOUtils.toString(fragmentStream, StandardCharsets.UTF_8), ARBFragmentShader.GL_FRAGMENT_SHADER_ARB);
 			IOUtils.closeQuietly(fragmentStream);
 		}
 		catch (final Exception e)
@@ -56,7 +57,7 @@ public abstract class Shader extends MinecraftInstance
 		ARBShaderObjects.glLinkProgramARB(program);
 		ARBShaderObjects.glValidateProgramARB(program);
 
-		ClientUtils.getLogger().info("[Shader] Successfully loaded: " + fragmentShader);
+		ClientUtils.getLogger().info("[Shader] Successfully loaded: {}", fragmentShader);
 	}
 
 	public void startShader()
@@ -83,7 +84,7 @@ public abstract class Shader extends MinecraftInstance
 
 	public abstract void updateUniforms();
 
-	private int createShader(final String shaderSource, final int shaderType)
+	private static int createShader(final CharSequence shaderSource, final int shaderType)
 	{
 		int shader = 0;
 
@@ -110,7 +111,7 @@ public abstract class Shader extends MinecraftInstance
 		}
 	}
 
-	private String getLogInfo(final int i)
+	private static String getLogInfo(final int i)
 	{
 		return ARBShaderObjects.glGetInfoLogARB(i, ARBShaderObjects.glGetObjectParameteriARB(i, ARBShaderObjects.GL_OBJECT_INFO_LOG_LENGTH_ARB));
 	}

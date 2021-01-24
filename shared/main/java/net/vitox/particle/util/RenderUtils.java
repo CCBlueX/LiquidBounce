@@ -4,7 +4,7 @@ import static org.lwjgl.opengl.GL11.*;
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 
-public class RenderUtils
+public final class RenderUtils
 {
 
 	public static void connectPoints(final float xOne, final float yOne, final float xTwo, final float yTwo)
@@ -41,7 +41,7 @@ public class RenderUtils
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_LINE_SMOOTH);
 		glPushMatrix();
-		glLineWidth(1F);
+		glLineWidth(1.0F);
 		glBegin(GL_POLYGON);
 		for (int i = 0; i <= 360; i++)
 			glVertex2d(x + MinecraftInstance.functions.sin(i * floatPI / 180.0F) * radius, y + MinecraftInstance.functions.cos(i * floatPI / 180.0F) * radius);
@@ -49,6 +49,9 @@ public class RenderUtils
 		glPopMatrix();
 		glEnable(GL_TEXTURE_2D);
 		glDisable(GL_LINE_SMOOTH);
-		glColor4f(1F, 1F, 1F, 1F);
+		glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+	}
+
+	private RenderUtils() {
 	}
 }

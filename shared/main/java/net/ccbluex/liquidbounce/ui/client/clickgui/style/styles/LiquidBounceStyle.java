@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles;
 
 import java.awt.*;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -41,14 +42,14 @@ public class LiquidBounceStyle extends Style
 	@Override
 	public void drawPanel(final int mouseX, final int mouseY, final Panel panel)
 	{
-		RenderUtils.drawBorderedRect((float) panel.getX() - (panel.getScrollbar() ? 4 : 0), panel.getY(), (float) panel.getX() + panel.getWidth(), (float) panel.getY() + 19 + panel.getFade(), 1F, new Color(255, 255, 255, 90).getRGB(), Integer.MIN_VALUE);
+		RenderUtils.drawBorderedRect((float) panel.getX() - (panel.getScrollbar() ? 4 : 0), panel.getY(), (float) panel.getX() + panel.getWidth(), (float) panel.getY() + 19 + panel.getFade(), 1.0F, new Color(255, 255, 255, 90).getRGB(), Integer.MIN_VALUE);
 		final float textWidth = Fonts.font35.getStringWidth("\u00A7f" + StringUtils.stripControlCodes(panel.getName()));
-		Fonts.font35.drawString("\u00A7f" + panel.getName(), (int) (panel.getX() - (textWidth - 100.0F) / 2F), panel.getY() + 7, -16777216);
+		Fonts.font35.drawString("\u00A7f" + panel.getName(), (int) (panel.getX() - (textWidth - 100.0F) / 2.0F), panel.getY() + 7, -16777216);
 
 		if (panel.getScrollbar() && panel.getFade() > 0)
 		{
 			RenderUtils.drawRect(panel.getX() - 2, panel.getY() + 21, panel.getX(), panel.getY() + 16 + panel.getFade(), Integer.MAX_VALUE);
-			RenderUtils.drawRect(panel.getX() - 2, panel.getY() + 30 + (panel.getFade() - 24F) / (panel.getElements().size() - ((ClickGUI) LiquidBounce.moduleManager.getModule(ClickGUI.class)).maxElementsValue.get()) * panel.getDragged() - 10.0f, panel.getX(), panel.getY() + 40 + (panel.getFade() - 24.0f) / (panel.getElements().size() - ((ClickGUI) LiquidBounce.moduleManager.getModule(ClickGUI.class)).maxElementsValue.get()) * panel.getDragged(), Integer.MIN_VALUE);
+			RenderUtils.drawRect(panel.getX() - 2, panel.getY() + 30 + (panel.getFade() - 24.0F) / (panel.getElements().size() - ((ClickGUI) LiquidBounce.moduleManager.getModule(ClickGUI.class)).maxElementsValue.get()) * panel.getDragged() - 10.0f, panel.getX(), panel.getY() + 40 + (panel.getFade() - 24.0f) / (panel.getElements().size() - ((ClickGUI) LiquidBounce.moduleManager.getModule(ClickGUI.class)).maxElementsValue.get()) * panel.getDragged(), Integer.MIN_VALUE);
 		}
 	}
 
@@ -231,7 +232,7 @@ public class LiquidBounceStyle extends Style
 							final FontInfo fontInfo = Fonts.getFontDetails(fontRenderer);
 
 							if (fontInfo != null)
-								displayString = fontInfo.getName() + (fontInfo.getFontSize() != -1 ? " - " + fontInfo.getFontSize() : "");
+								displayString = fontInfo.getName() + (fontInfo.getFontSize() == -1 ? "" : " - " + fontInfo.getFontSize());
 						}
 
 						Fonts.font35.drawString(displayString, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, Color.WHITE.getRGB());
@@ -301,16 +302,14 @@ public class LiquidBounceStyle extends Style
 				mouseDown = Mouse.isButtonDown(0);
 				rightMouseDown = Mouse.isButtonDown(1);
 
-				if (moduleElement.getSettingsWidth() > 0F && yPos > moduleElement.getY() + 4)
-					RenderUtils.drawBorderedRect(moduleElement.getX() + moduleElement.getWidth() + 4, moduleElement.getY() + 6, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 2, 1F, Integer.MIN_VALUE, 0);
+				if (moduleElement.getSettingsWidth() > 0.0F && yPos > moduleElement.getY() + 4)
+					RenderUtils.drawBorderedRect(moduleElement.getX() + moduleElement.getWidth() + 4, moduleElement.getY() + 6, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 2, 1.0F, Integer.MIN_VALUE, 0);
 			}
 		}
 	}
 
-	private BigDecimal round(final float f)
+	private static BigDecimal round(final float f)
 	{
-		BigDecimal bd = new BigDecimal(Float.toString(f));
-		bd = bd.setScale(2, 4);
-		return bd;
+		return new BigDecimal(Float.toString(f)).setScale(2, RoundingMode.HALF_UP);
 	}
 }

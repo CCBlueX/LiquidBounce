@@ -166,7 +166,7 @@ public class GuiAntiModDisable extends WrappedGuiScreen
 	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
 	{
 		representedScreen.drawBackground(0);
-		Fonts.fontBold180.drawCenteredString("AntiModDisable", (int) (representedScreen.getWidth() / 2F), (int) (representedScreen.getHeight() / 10.0F + 5.0F), 4673984, true);
+		Fonts.fontBold180.drawCenteredString("AntiModDisable", (int) (representedScreen.getWidth() / 2.0F), (int) (representedScreen.getHeight() / 10.0F + 5.0F), 4673984, true);
 
 		super.drawScreen(mouseX, mouseY, partialTicks);
 	}

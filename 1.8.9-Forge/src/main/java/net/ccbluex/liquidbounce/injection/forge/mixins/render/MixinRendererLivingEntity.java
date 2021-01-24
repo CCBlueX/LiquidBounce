@@ -293,7 +293,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 				mc.gameSettings.fancyGraphics = false;
 
 				final float gamma = mc.gameSettings.gammaSetting;
-				mc.gameSettings.gammaSetting = 100000F;
+				mc.gameSettings.gammaSetting = 100000.0F;
 
 				switch (esp.modeValue.get().toLowerCase())
 				{

@@ -21,8 +21,7 @@ public class SafeVertexBuffer extends VertexBuffer
 	}
 
 	@Override
-	protected void finalize() throws Throwable
-	{
+	protected void finalize() {
 		deleteGlBuffers();
 	}
 }

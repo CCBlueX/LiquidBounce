@@ -27,7 +27,7 @@ public class MixinTileEntityChestRenderer
 		if (chams.getState() && chams.getChestsValue().get())
 		{
 			GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
-			GL11.glPolygonOffset(1.0F, -1000000F);
+			GL11.glPolygonOffset(1.0F, -1000000.0F);
 		}
 	}
 
@@ -38,7 +38,7 @@ public class MixinTileEntityChestRenderer
 
 		if (chams.getState() && chams.getChestsValue().get())
 		{
-			GL11.glPolygonOffset(1.0F, 1000000F);
+			GL11.glPolygonOffset(1.0F, 1000000.0F);
 			GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
 		}
 	}

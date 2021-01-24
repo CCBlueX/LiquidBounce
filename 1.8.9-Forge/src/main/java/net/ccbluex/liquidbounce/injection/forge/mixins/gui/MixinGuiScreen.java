@@ -172,8 +172,7 @@ public abstract class MixinGuiScreen extends Gui
 	 * @reason Making it possible for other mixins to receive actions
 	 */
 	@Overwrite
-	protected void actionPerformed(final GuiButton button) throws IOException
-	{
+	protected void actionPerformed(final GuiButton button) {
 		injectedActionPerformed(button);
 	}
 

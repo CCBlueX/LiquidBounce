@@ -9,7 +9,7 @@ import static java.lang.Math.pow;
 
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
 
-public class AnimationUtils
+public final class AnimationUtils
 {
 	/**
 	 * In-out-easing function https://github.com/jesusgollonet/processing-penner-easing
@@ -35,5 +35,8 @@ public class AnimationUtils
 		final float c4 = 2 * (float) Math.PI / 3.0f;
 
 		return x == 0 ? 0 : (float) (x == 1 ? 1 : pow(2, -10 * x) * WMathHelper.sin((x * 10 - 0.75f) * c4) + 1);
+	}
+
+	private AnimationUtils() {
 	}
 }

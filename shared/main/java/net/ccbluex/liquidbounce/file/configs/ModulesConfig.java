@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.file.configs;
 
 import java.io.*;
-import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.google.gson.JsonElement;
@@ -46,10 +45,8 @@ public class ModulesConfig extends FileConfig
 		if (jsonElement instanceof JsonNull)
 			return;
 
-		final Iterator<Entry<String, JsonElement>> entryIterator = jsonElement.getAsJsonObject().entrySet().iterator();
-		while (entryIterator.hasNext())
+		for (final Entry<String, JsonElement> entry : jsonElement.getAsJsonObject().entrySet())
 		{
-			final Entry<String, JsonElement> entry = entryIterator.next();
 			final Module module = LiquidBounce.moduleManager.getModule(entry.getKey());
 
 			if (module != null)

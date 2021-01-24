@@ -22,9 +22,9 @@ public abstract class FramebufferShader extends Shader
 
 	private static Framebuffer framebuffer;
 
-	protected float red, green, blue, alpha = 1F;
-	protected float radius = 2F;
-	protected float quality = 1F;
+	protected float red, green, blue, alpha = 1.0F;
+	protected float radius = 2.0F;
+	protected float quality = 1.0F;
 
 	private boolean entityShadows;
 
@@ -55,10 +55,10 @@ public abstract class FramebufferShader extends Shader
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		mc.getFramebuffer().bindFramebuffer(true);
 
-		red = color.getRed() / 255F;
-		green = color.getGreen() / 255F;
-		blue = color.getBlue() / 255F;
-		alpha = color.getAlpha() / 255F;
+		red = color.getRed() / 255.0F;
+		green = color.getGreen() / 255.0F;
+		blue = color.getBlue() / 255.0F;
+		alpha = color.getAlpha() / 255.0F;
 		this.radius = radius;
 		this.quality = quality;
 
@@ -81,7 +81,7 @@ public abstract class FramebufferShader extends Shader
 	 * @return             frameBuffer
 	 * @author             TheSlowly
 	 */
-	public Framebuffer setupFrameBuffer(Framebuffer frameBuffer)
+	public static Framebuffer setupFrameBuffer(Framebuffer frameBuffer)
 	{
 		if (frameBuffer != null)
 			frameBuffer.deleteFramebuffer();
@@ -94,7 +94,7 @@ public abstract class FramebufferShader extends Shader
 	/**
 	 * @author TheSlowly
 	 */
-	public void drawFramebuffer(final Framebuffer framebuffer)
+	public static void drawFramebuffer(final Framebuffer framebuffer)
 	{
 		final IScaledResolution scaledResolution = classProvider.createScaledResolution(mc);
 

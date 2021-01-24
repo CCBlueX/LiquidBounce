@@ -62,7 +62,7 @@ public final class PathFinder extends MinecraftInstance
 		return !classProvider.isBlockFence(block) && !classProvider.isBlockWall(block);
 	}
 
-	public ArrayList<WVec3> getPath()
+	public List<WVec3> getPath()
 	{
 		return path;
 	}

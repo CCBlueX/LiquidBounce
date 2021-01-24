@@ -118,14 +118,11 @@ public class FallingPlayer extends MinecraftInstance
 	}
 
 	@Nullable
-	private WBlockPos rayTrace(final WVec3 start, final WVec3 end)
+	private static WBlockPos rayTrace(final WVec3 start, final WVec3 end)
 	{
 		final IMovingObjectPosition result = mc.getTheWorld().rayTraceBlocks(start, end, true);
 
-		if (result != null && result.getTypeOfHit() == WMovingObjectType.BLOCK && result.getSideHit().isUp())
-			return result.getBlockPos();
-
-		return null;
+		return result != null && result.getTypeOfHit() == WMovingObjectType.BLOCK && result.getSideHit().isUp() ? result.getBlockPos() : null;
 	}
 
 	public static class CollisionResult
@@ -149,5 +146,4 @@ public class FallingPlayer extends MinecraftInstance
 			return tick;
 		}
 	}
-
 }

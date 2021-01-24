@@ -50,9 +50,9 @@ public class MixinGuiEditSign extends GuiScreen
 		buttonList.add(toggleButton = new GuiButton(1, width / 2 - 100, height / 4 + 145, enabled ? "Disable Formatting codes" : "Enable Formatting codes"));
 
 		signCommand1 = new GuiTextField(0, fontRendererObj, width / 2 - 100, height - 15, 200, 10);
-		signCommand2 = new GuiTextField(1, fontRendererObj, width / 2 - 100, height - 15 * 2, 200, 10);
+		signCommand2 = new GuiTextField(1, fontRendererObj, width / 2 - 100, height - (15 << 1), 200, 10);
 		signCommand3 = new GuiTextField(2, fontRendererObj, width / 2 - 100, height - 15 * 3, 200, 10);
-		signCommand4 = new GuiTextField(3, fontRendererObj, width / 2 - 100, height - 15 * 4, 200, 10);
+		signCommand4 = new GuiTextField(3, fontRendererObj, width / 2 - 100, height - (15 << 2), 200, 10);
 
 		signCommand1.setText("");
 		signCommand2.setText("");
@@ -133,7 +133,7 @@ public class MixinGuiEditSign extends GuiScreen
 			s = s.substring(0, s.length() - 1);
 
 		if ((ChatAllowedCharacters.isAllowedCharacter(typedChar) || enabled && typedChar == '\u00A7') && fontRendererObj.getStringWidth(s + typedChar) <= 90)
-			s = s + typedChar;
+			s += typedChar;
 
 		tileSign.signText[editLine] = new ChatComponentText(s);
 		if (keyCode == 1)

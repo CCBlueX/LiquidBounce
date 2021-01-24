@@ -49,9 +49,9 @@ public class GuiAltManager extends WrappedGuiScreen
 	private static final Map<String, Boolean> GENERATORS = new HashMap<>();
 	private final IGuiScreen prevGui;
 	public String status = "\u00A77Idle...";
-	private IGuiButton loginButton;
-	private IGuiButton randomButton;
-	private GuiAltsList altsList;
+	IGuiButton loginButton;
+	IGuiButton randomButton;
+	GuiAltsList altsList;
 	private IGuiTextField searchField;
 
 	public GuiAltManager(final IGuiScreen prevGui)
@@ -372,7 +372,7 @@ public class GuiAltManager extends WrappedGuiScreen
 				{
 					final String[] accountData = line.split(":", 2);
 
-					if (!LiquidBounce.fileManager.accountsConfig.accountExists(accountData[0]))
+					if (!LiquidBounce.fileManager.accountsConfig.isAccountExists(accountData[0]))
 						LiquidBounce.fileManager.accountsConfig.addAccount(accountData.length > 1 ? new MinecraftAccount(AltServiceType.MOJANG, accountData[0], accountData[1]) : new MinecraftAccount(AltServiceType.MOJANG, accountData[0]));
 				}
 
@@ -465,8 +465,7 @@ public class GuiAltManager extends WrappedGuiScreen
 	}
 
 	@Override
-	public void keyTyped(final char typedChar, final int keyCode) throws IOException
-	{
+	public void keyTyped(final char typedChar, final int keyCode) {
 		if (searchField.isFocused())
 		{
 			searchField.textboxKeyTyped(typedChar, keyCode);
@@ -523,8 +522,7 @@ public class GuiAltManager extends WrappedGuiScreen
 	}
 
 	@Override
-	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException
-	{
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
 		searchField.mouseClicked(mouseX, mouseY, mouseButton);
 
 		representedScreen.superMouseClicked(mouseX, mouseY, mouseButton);
@@ -540,7 +538,7 @@ public class GuiAltManager extends WrappedGuiScreen
 	{
 		@SuppressWarnings("WeakerAccess")
 		List<MinecraftAccount> accounts;
-		private int selectedSlot;
+		int selectedSlot;
 
 		GuiAltsList(final IGuiScreen prevGui)
 		{
@@ -549,7 +547,7 @@ public class GuiAltManager extends WrappedGuiScreen
 			updateAccounts(null);
 		}
 
-		private void updateAccounts(String search)
+		void updateAccounts(String search)
 		{
 			if (search == null || search.isEmpty())
 			{
@@ -621,10 +619,10 @@ public class GuiAltManager extends WrappedGuiScreen
 			final int width = getRepresented().getWidth();
 			final MinecraftAccount minecraftAccount = accounts.get(id);
 			final AltServiceType serviceType = minecraftAccount.getServiceType();
-			final boolean invalid = serviceType == AltServiceType.MOJANG_INVALID || serviceType == AltServiceType.MOJANG_MIGRATED || serviceType == AltServiceType.MCLEAKS_INVALID || serviceType == AltServiceType.THEALTENING_INVALID;
+			final boolean isInvalid = serviceType == AltServiceType.MOJANG_INVALID || serviceType == AltServiceType.MOJANG_MIGRATED || serviceType == AltServiceType.MCLEAKS_INVALID || serviceType == AltServiceType.THEALTENING_INVALID;
 
 			Fonts.font40.drawCenteredString(minecraftAccount.getAccountName() == null ? minecraftAccount.getName() : minecraftAccount.getAccountName(), width / 2, y + 2, Color.WHITE.getRGB(), true);
-			Fonts.font40.drawCenteredString(minecraftAccount.isCracked() ? "Cracked" : minecraftAccount.getServiceType().getId(), width / 2, y + 10, minecraftAccount.isCracked() ? Color.GRAY.getRGB() : minecraftAccount.getAccountName() == null ? Color.LIGHT_GRAY.getRGB() : invalid ? Color.RED.getRGB() : Color.GREEN.getRGB(), true);
+			Fonts.font40.drawCenteredString(minecraftAccount.isCracked() ? "Cracked" : minecraftAccount.getServiceType().getId(), width / 2, y + 10, minecraftAccount.isCracked() ? Color.GRAY.getRGB() : minecraftAccount.getAccountName() == null ? Color.LIGHT_GRAY.getRGB() : isInvalid ? Color.RED.getRGB() : Color.GREEN.getRGB(), true);
 			if (!minecraftAccount.getBannedServers().isEmpty())
 				Fonts.font35.drawCenteredString("Banned on " + minecraftAccount.serializeBannedServers(), width / 2, y + 20, Color.RED.getRGB(), true);
 		}

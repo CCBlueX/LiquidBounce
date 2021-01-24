@@ -40,9 +40,9 @@ public class MixinModelBiped
 	private void revertSwordAnimation(final float p_setRotationAngles_1_, final float p_setRotationAngles_2_, final float p_setRotationAngles_3_, final float p_setRotationAngles_4_, final float p_setRotationAngles_5_, final float p_setRotationAngles_6_, final Entity p_setRotationAngles_7_, final CallbackInfo callbackInfo)
 	{
 		if (heldItemRight == 3)
-			bipedRightArm.rotateAngleY = 0F;
+			bipedRightArm.rotateAngleY = 0.0F;
 
 		if (LiquidBounce.moduleManager.getModule(Rotations.class).getState() && RotationUtils.serverRotation != null && p_setRotationAngles_7_ instanceof EntityPlayer && p_setRotationAngles_7_.equals(Minecraft.getMinecraft().thePlayer))
-			bipedHead.rotateAngleX = RotationUtils.serverRotation.getPitch() / (180F / (float) Math.PI);
+			bipedHead.rotateAngleX = RotationUtils.serverRotation.getPitch() / (180.0F / (float) Math.PI);
 	}
 }

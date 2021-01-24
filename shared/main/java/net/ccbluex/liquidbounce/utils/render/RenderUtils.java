@@ -36,42 +36,42 @@ public final class RenderUtils extends MinecraftInstance
 
 	static
 	{
-		for (int i = 0; i < DISPLAY_LISTS_2D.length; i++)
+		for (int i = 0, j = DISPLAY_LISTS_2D.length; i < j; i++)
 			DISPLAY_LISTS_2D[i] = glGenLists(1);
 
 		glNewList(DISPLAY_LISTS_2D[0], GL_COMPILE);
 
-		quickDrawRect(-7F, 2F, -4F, 3F);
-		quickDrawRect(4F, 2F, 7F, 3F);
-		quickDrawRect(-7F, 0.5F, -6F, 3F);
-		quickDrawRect(6F, 0.5F, 7F, 3F);
+		quickDrawRect(-7.00F, 2.00F, -4.00F, 3.00F);
+		quickDrawRect(4.00F, 2.00F, 7.00F, 3.00F);
+		quickDrawRect(-7.00F, 0.5F, -6.00F, 3.00F);
+		quickDrawRect(6.00F, 0.5F, 7.00F, 3.00F);
 
 		glEndList();
 
 		glNewList(DISPLAY_LISTS_2D[1], GL_COMPILE);
 
-		quickDrawRect(-7F, 3F, -4F, 3.3F);
-		quickDrawRect(4F, 3F, 7F, 3.3F);
-		quickDrawRect(-7.3F, 0.5F, -7F, 3.3F);
-		quickDrawRect(7F, 0.5F, 7.3F, 3.3F);
+		quickDrawRect(-7.00F, 3.00F, -4.00F, 3.3F);
+		quickDrawRect(4.00F, 3.00F, 7.00F, 3.3F);
+		quickDrawRect(-7.3F, 0.5F, -7.00F, 3.3F);
+		quickDrawRect(7.00F, 0.5F, 7.3F, 3.3F);
 
 		glEndList();
 
 		glNewList(DISPLAY_LISTS_2D[2], GL_COMPILE);
 
-		quickDrawRect(4F, -20F, 7F, -19F);
-		quickDrawRect(-7F, -20F, -4F, -19F);
-		quickDrawRect(6F, -20F, 7F, -17.5F);
-		quickDrawRect(-7F, -20F, -6F, -17.5F);
+		quickDrawRect(4.00F, -20.00F, 7.00F, -19.00F);
+		quickDrawRect(-7.00F, -20.00F, -4.00F, -19.00F);
+		quickDrawRect(6.00F, -20.00F, 7.00F, -17.5F);
+		quickDrawRect(-7.00F, -20.00F, -6.00F, -17.5F);
 
 		glEndList();
 
 		glNewList(DISPLAY_LISTS_2D[3], GL_COMPILE);
 
-		quickDrawRect(7F, -20F, 7.3F, -17.5F);
-		quickDrawRect(-7.3F, -20F, -7F, -17.5F);
-		quickDrawRect(4F, -20.3F, 7.3F, -20F);
-		quickDrawRect(-7.3F, -20.3F, -4F, -20F);
+		quickDrawRect(7.00F, -20.00F, 7.3F, -17.5F);
+		quickDrawRect(-7.3F, -20.00F, -7.00F, -17.5F);
+		quickDrawRect(4.00F, -20.3F, 7.3F, -20.00F);
+		quickDrawRect(-7.3F, -20.3F, -4.00F, -20.00F);
 
 		glEndList();
 	}
@@ -107,12 +107,12 @@ public final class RenderUtils extends MinecraftInstance
 		disableGlCap(GL_TEXTURE_2D, GL_DEPTH_TEST);
 		glDepthMask(false);
 
-		glColor(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha() != 255 ? color.getAlpha() : outline ? 26 : 35);
+		glColor(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha() == 255 ? outline ? 26 : 35 : color.getAlpha());
 		drawFilledBox(axisAlignedBB);
 
 		if (outline)
 		{
-			glLineWidth(1F);
+			glLineWidth(1.00F);
 			enableGlCap(GL_LINE_SMOOTH);
 			glColor(color);
 
@@ -177,7 +177,7 @@ public final class RenderUtils extends MinecraftInstance
 
 		if (outline)
 		{
-			glLineWidth(1F);
+			glLineWidth(1.00F);
 			enableGlCap(GL_LINE_SMOOTH);
 			glColor(color.getRed(), color.getGreen(), color.getBlue(), 95);
 			drawSelectionBoundingBox(axisAlignedBB);
@@ -194,7 +194,7 @@ public final class RenderUtils extends MinecraftInstance
 	{
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_BLEND);
-		glLineWidth(2F);
+		glLineWidth(2.00F);
 		glDisable(GL_TEXTURE_2D);
 		glDisable(GL_DEPTH_TEST);
 		glDepthMask(false);
@@ -431,7 +431,7 @@ public final class RenderUtils extends MinecraftInstance
 		glColor(Color.WHITE);
 
 		glEnable(GL_LINE_SMOOTH);
-		glLineWidth(2F);
+		glLineWidth(2.00F);
 		glBegin(GL_LINE_STRIP);
 		for (float i = end; i >= start; i -= 360 / 90.0f)
 			glVertex2f((float) (x + cos(i * PI / 180) * (radius * 1.001F)), (float) (y + sin(i * PI / 180) * (radius * 1.001F)));
@@ -461,7 +461,7 @@ public final class RenderUtils extends MinecraftInstance
 			x = (float) (radius * sin(i * dAngle));
 			y = (float) (radius * cos(i * dAngle));
 
-			glColor4f(color.getRed() / 255F, color.getGreen() / 255F, color.getBlue() / 255F, color.getAlpha() / 255F);
+			glColor4f(color.getRed() / 255.00F, color.getGreen() / 255.00F, color.getBlue() / 255.00F, color.getAlpha() / 255.00F);
 			glVertex2f(xx + x, yy + y);
 		}
 
@@ -505,7 +505,7 @@ public final class RenderUtils extends MinecraftInstance
 
 	public static void glColor(final int red, final int green, final int blue, final int alpha)
 	{
-		glColor4f(red / 255F, green / 255F, blue / 255F, alpha / 255F);
+		glColor4f(red / 255.00F, green / 255.00F, blue / 255.00F, alpha / 255.00F);
 	}
 
 	public static void glColor(final Color color)
@@ -518,11 +518,11 @@ public final class RenderUtils extends MinecraftInstance
 		glColor(hex >> 16 & 0xFF, hex >> 8 & 0xFF, hex & 0xFF, hex >> 24 & 0xFF);
 	}
 
-	public static void draw2D(final IEntityLivingBase entity, final double posX, final double posY, final double posZ, final int color, final int backgroundColor)
+	public static void draw2D(final IEntity entity, final double posX, final double posY, final double posZ, final int color, final int backgroundColor)
 	{
 		glPushMatrix();
 		glTranslated(posX, posY, posZ);
-		glRotated(-mc.getRenderManager().getPlayerViewY(), 0F, 1F, 0F);
+		glRotated(-mc.getRenderManager().getPlayerViewY(), 0.00F, 1.00F, 0.00F);
 		glScaled(-0.1D, -0.1D, 0.1D);
 
 		glDisable(GL_DEPTH_TEST);
@@ -566,7 +566,7 @@ public final class RenderUtils extends MinecraftInstance
 
 		glPushMatrix();
 		glTranslated(posX, posY, posZ);
-		glRotated(-mc.getRenderManager().getPlayerViewY(), 0F, 1F, 0F);
+		glRotated(-mc.getRenderManager().getPlayerViewY(), 0.00F, 1.00F, 0.00F);
 		glScaled(-0.1D, -0.1D, 0.1D);
 
 		glDisable(GL_DEPTH_TEST);
@@ -608,9 +608,9 @@ public final class RenderUtils extends MinecraftInstance
 
 		glPushMatrix();
 		glTranslated(x - renderManager.getRenderPosX(), y - renderManager.getRenderPosY(), z - renderManager.getRenderPosZ());
-		glNormal3f(0F, 1F, 0F);
-		glRotatef(-mc.getRenderManager().getPlayerViewY(), 0F, 1F, 0F);
-		glRotatef(mc.getRenderManager().getPlayerViewX(), 1F, 0F, 0F);
+		glNormal3f(0.00F, 1.00F, 0.00F);
+		glRotatef(-mc.getRenderManager().getPlayerViewY(), 0.00F, 1.00F, 0.00F);
+		glRotatef(mc.getRenderManager().getPlayerViewX(), 1.00F, 0.00F, 0.00F);
 		glScalef(-0.05F, -0.05F, 0.05F);
 		setGlCap(GL_LIGHTING, false);
 		setGlCap(GL_DEPTH_TEST, false);
@@ -623,7 +623,7 @@ public final class RenderUtils extends MinecraftInstance
 		Fonts.font35.drawString(string, -width, 1.5F, Color.WHITE.getRGB(), true);
 
 		resetCaps();
-		glColor4f(1F, 1F, 1F, 1F);
+		glColor4f(1.00F, 1.00F, 1.00F, 1.00F);
 		glPopMatrix();
 	}
 

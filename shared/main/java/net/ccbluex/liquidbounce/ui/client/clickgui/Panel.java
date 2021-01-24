@@ -89,8 +89,8 @@ public abstract class Panel extends MinecraftInstance
 		for (final Element element : elements)
 			if (++count > scroll && count < scroll + maxElements + 1 && scroll < elements.size()) {
 				element.setLocation(x, y);
-				element.setWidth(getWidth());
-				if (y <= getY() + fade)
+				element.setWidth(width);
+				if (y <= this.y + fade)
 					element.drawScreen(mouseX, mouseY, button);
 				y += element.getHeight() + 1;
 				element.setVisible(true);
@@ -111,7 +111,7 @@ public abstract class Panel extends MinecraftInstance
 		}
 
 		for (final Element element : elements)
-			if (element.getY() <= getY() + fade)
+			if (element.getY() <= y + fade)
 				element.mouseClicked(mouseX, mouseY, mouseButton);
 	}
 
@@ -133,7 +133,7 @@ public abstract class Panel extends MinecraftInstance
 	{
 		final int maxElements = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).maxElementsValue.get();
 
-		if (mouseX >= getX() && mouseX <= getX() + 100 && mouseY >= getY() && mouseY <= getY() + 19 + elementsHeight)
+		if (mouseX >= x && mouseX <= x + 100 && mouseY >= y && mouseY <= y + 19 + elementsHeight)
 		{
 			if (wheel < 0 && scroll < elements.size() - maxElements)
 			{
@@ -270,7 +270,7 @@ public abstract class Panel extends MinecraftInstance
 
 	boolean isHovering(final int mouseX, final int mouseY)
 	{
-		final float textWidth = mc.getFontRendererObj().getStringWidth(StringUtils.stripControlCodes(name)) - 100F;
-		return mouseX >= x - textWidth / 2F - 19F && mouseX <= x - textWidth / 2F + mc.getFontRendererObj().getStringWidth(StringUtils.stripControlCodes(name)) + 19F && mouseY >= y && mouseY <= y + height - (open ? 2 : 0);
+		final float textWidth = mc.getFontRendererObj().getStringWidth(StringUtils.stripControlCodes(name)) - 100.0F;
+		return mouseX >= x - textWidth / 2.0F - 19.0F && mouseX <= x - textWidth / 2.0F + mc.getFontRendererObj().getStringWidth(StringUtils.stripControlCodes(name)) + 19.0F && mouseY >= y && mouseY <= y + height - (open ? 2 : 0);
 	}
 }

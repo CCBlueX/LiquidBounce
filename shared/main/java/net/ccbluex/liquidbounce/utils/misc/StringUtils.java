@@ -78,4 +78,7 @@ public final class StringUtils
 		};
 		return facings[(int) Math.abs(Math.floor(yaw * facings.length / 360 + 0.5)) & facings.length - 1];
 	}
+
+	private StringUtils() {
+	}
 }

@@ -8,6 +8,7 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -19,7 +20,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
-public class MCLeaks
+public final class MCLeaks
 {
 
 	private static Session session;
@@ -111,14 +112,11 @@ public class MCLeaks
 		try
 		{
 			final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-			final StringBuilder stringBuilder = new StringBuilder();
 
-			String line;
-			while ((line = bufferedReader.readLine()) != null)
-				stringBuilder.append(line);
+			final String readData = bufferedReader.lines().collect(Collectors.joining());
 
 			bufferedReader.close();
-			final JsonElement jsonElement = gson.fromJson(stringBuilder.toString(), JsonElement.class);
+			final JsonElement jsonElement = gson.fromJson(readData, JsonElement.class);
 
 			if (!jsonElement.isJsonObject() || !jsonElement.getAsJsonObject().has("success"))
 				return "An error occurred! [G1]";
@@ -136,5 +134,8 @@ public class MCLeaks
 			e.printStackTrace();
 			return "An error occurred! [G2]";
 		}
+	}
+
+	private MCLeaks() {
 	}
 }
