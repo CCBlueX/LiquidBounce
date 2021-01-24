@@ -232,26 +232,29 @@ class Text(
 		val endY = fontRenderer.fontHeight.toFloat()
 
 		val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
+		val rectRainbowShader = rectColorMode.equals("RainbowShader", true)
+		val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
+
+		// Render Background
 		RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 			val color = when
 			{
-				backgroundRainbowShader -> Color(0, 0, 0, backgroundColorAlpha).rgb
-				backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				backgroundRainbowShader -> 0
+				backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 				else -> backgroundCustomColor
 			}
 
 			RenderUtils.drawRect(startX + if (!rectMode.equals("left", true)) 0f else 3F, startY, endX + if (rectMode.equals("right", true)) 0f else 3f, endY, color)
 		}
 
-		val rectRainbowShader = rectColorMode.equals("Rainbow", true)
-
+		// Render Rect
 		if (!rectMode.equals("none", true)) RainbowShader.begin(
 			rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset
 		).use {
 			val color = when
 			{
-				rectRainbowShader -> Color(0, 0, 0, rectColorAlpha).rgb
-				rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				rectRainbowShader -> 0
+				rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 				else -> rectCustomColor
 			}
 
@@ -262,14 +265,14 @@ class Text(
 			}
 		}
 
-		val textRainbowShader = colorMode.equals("RainbowShader", true)
+		// Render Text
 		RainbowFontShader.begin(
 			textRainbowShader, if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get(), if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get(), System.currentTimeMillis() % 10000 / 10000F
 		).use {
 			val color = when
 			{
 				textRainbowShader -> 0
-				colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(colorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = colorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
 				else -> customColor
 			}
 			fontRenderer.drawString(displayText, if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f, 0F, color, shadow)
@@ -279,6 +282,7 @@ class Text(
 			)
 		}
 
+		// Disable edit mode when current gui is not HUD Designer
 		if (editMode && !classProvider.isGuiHudDesigner(mc.currentScreen))
 		{
 			editMode = false
