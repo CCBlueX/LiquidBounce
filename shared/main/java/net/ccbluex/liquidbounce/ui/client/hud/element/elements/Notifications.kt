@@ -20,6 +20,7 @@ import kotlin.math.max
 
 /**
  * CustomHUD Notification element
+ * TODO: Vertical animation
  */
 @ElementInfo(name = "Notifications", single = true)
 class Notifications(
