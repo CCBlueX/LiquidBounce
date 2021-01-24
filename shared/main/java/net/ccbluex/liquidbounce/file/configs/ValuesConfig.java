@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.ui.client.GuiBackground;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
+import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 import net.ccbluex.liquidbounce.value.Value;
 
 public class ValuesConfig extends FileConfig
@@ -49,7 +50,7 @@ public class ValuesConfig extends FileConfig
 	@Override
 	protected void loadConfig() throws IOException
 	{
-		final JsonElement jsonElement = new JsonParser().parse(new BufferedReader(new FileReader(getFile())));
+		final JsonElement jsonElement = new JsonParser().parse(MiscUtils.createBufferedFileReader(getFile()));
 
 		if (jsonElement instanceof JsonNull)
 			return;
@@ -186,8 +187,8 @@ public class ValuesConfig extends FileConfig
 			jsonObject.add(module.getName(), jsonModule);
 		});
 
-		final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
-		printWriter.println(FileManager.PRETTY_GSON.toJson(jsonObject));
-		printWriter.close();
+		final BufferedWriter writer = MiscUtils.createBufferedFileWriter(getFile());
+		writer.write(FileManager.PRETTY_GSON.toJson(jsonObject) + System.lineSeparator());
+		writer.close();
 	}
 }

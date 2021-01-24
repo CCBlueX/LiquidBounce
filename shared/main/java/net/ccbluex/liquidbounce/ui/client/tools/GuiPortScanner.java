@@ -6,14 +6,13 @@
 package net.ccbluex.liquidbounce.ui.client.tools;
 
 import java.awt.*;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 import javax.swing.*;
@@ -171,22 +170,28 @@ public class GuiPortScanner extends WrappedGuiScreen
 					for (int i = 0; i < threads; i++)
 						new Thread(() ->
 						{
-							try {
-								while (running && currentPort < maxPort) {
+							try
+							{
+								while (running && currentPort < maxPort)
+								{
 									currentPort++;
 
 									final int port = currentPort;
 
-									try {
+									try
+									{
 										final Socket socket = new Socket();
 										socket.connect(new InetSocketAddress(host, port), 500);
 										socket.close();
 
-										synchronized (ports) {
+										synchronized (ports)
+										{
 											if (!ports.contains(port))
 												ports.add(port);
 										}
-									} catch (final Exception ignored) {
+									}
+									catch (final Exception ignored)
+									{
 									}
 
 									if (checkedPort < port)
@@ -195,7 +200,9 @@ public class GuiPortScanner extends WrappedGuiScreen
 
 								running = false;
 								buttonToggle.setDisplayString("Start");
-							} catch (final Exception e) {
+							}
+							catch (final Exception e)
+							{
 								status = "\u00A7a\u00A7l" + e.getClass().getSimpleName() + ": \u00A7c" + e.getMessage();
 							}
 						}).start();
@@ -216,15 +223,16 @@ public class GuiPortScanner extends WrappedGuiScreen
 					if (!selectedFile.exists())
 						selectedFile.createNewFile();
 
-					final FileWriter fileWriter = new FileWriter(selectedFile);
+					final BufferedWriter fileWriter = MiscUtils.createBufferedFileWriter(selectedFile);
 
-					fileWriter.write("Portscan\r\n");
-					fileWriter.write("Host: " + host + "\r\n\r\n");
+					fileWriter.write("Portscan" + System.lineSeparator());
+					fileWriter.write("Host: " + host + System.lineSeparator() + System.lineSeparator());
 
-					fileWriter.write("Ports (" + minPort + " - " + maxPort + "):\r\n");
+					fileWriter.write("Ports (" + minPort + " - " + maxPort + "): " + System.lineSeparator());
 
 					for (final Integer integer : ports)
-						fileWriter.write(integer + "\r\n");
+						fileWriter.write(integer + System.lineSeparator());
+
 					fileWriter.flush();
 					fileWriter.close();
 					JOptionPane.showMessageDialog(null, "Exported successfully!", "Port Scanner", JOptionPane.INFORMATION_MESSAGE);

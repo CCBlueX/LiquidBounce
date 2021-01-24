@@ -20,9 +20,11 @@ import com.google.gson.*;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer;
+import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils;
+import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 
 public class Fonts extends MinecraftInstance
 {
@@ -65,7 +67,7 @@ public class Fonts extends MinecraftInstance
 
 			if (fontsFile.exists())
 			{
-				final JsonElement jsonElement = new JsonParser().parse(new BufferedReader(new FileReader(fontsFile)));
+				final JsonElement jsonElement = new JsonParser().parse(MiscUtils.createBufferedFileReader(fontsFile));
 
 				if (jsonElement instanceof JsonNull)
 					return;
@@ -88,9 +90,9 @@ public class Fonts extends MinecraftInstance
 			{
 				fontsFile.createNewFile();
 
-				final PrintWriter printWriter = new PrintWriter(new FileWriter(fontsFile));
-				printWriter.println(new GsonBuilder().setPrettyPrinting().create().toJson(new JsonArray()));
-				printWriter.close();
+				final BufferedWriter writer = MiscUtils.createBufferedFileWriter(fontsFile);
+				writer.write(new GsonBuilder().setPrettyPrinting().create().toJson(new JsonArray()) + System.lineSeparator());
+				writer.close();
 			}
 		}
 		catch (final Exception e)

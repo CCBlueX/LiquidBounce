@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType;
+import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 
 public class AccountsConfig extends FileConfig
 {
@@ -43,7 +44,7 @@ public class AccountsConfig extends FileConfig
 		clearAccounts();
 		try
 		{
-			final JsonElement jsonElement = new JsonParser().parse(new BufferedReader(new FileReader(getFile())));
+			final JsonElement jsonElement = new JsonParser().parse(MiscUtils.createBufferedFileReader(getFile()));
 
 			if (jsonElement instanceof JsonNull)
 				return;
@@ -81,7 +82,7 @@ public class AccountsConfig extends FileConfig
 		{
 			// When the JSON Parse fail, the client try to load and update the old config
 			ClientUtils.getLogger().info("[FileManager] Try to load old Accounts config...");
-			final List<String> accountList = new Gson().fromJson(new BufferedReader(new FileReader(getFile())), List.class);
+			final Iterable<String> accountList = new Gson().fromJson(MiscUtils.createBufferedFileReader(getFile()), List.class);
 
 			if (accountList == null)
 				return;
@@ -150,9 +151,9 @@ public class AccountsConfig extends FileConfig
 			jsonArray.add(accountObject);
 		}
 
-		final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
-		printWriter.println(FileManager.PRETTY_GSON.toJson(jsonArray));
-		printWriter.close();
+		final BufferedWriter writer = MiscUtils.createBufferedFileWriter(getFile());
+		writer.write(FileManager.PRETTY_GSON.toJson(jsonArray) + System.lineSeparator());
+		writer.close();
 	}
 
 	/**

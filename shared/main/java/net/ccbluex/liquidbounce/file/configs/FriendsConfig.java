@@ -16,6 +16,7 @@ import com.google.gson.*;
 import net.ccbluex.liquidbounce.file.FileConfig;
 import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
+import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 
 public class FriendsConfig extends FileConfig
 {
@@ -44,7 +45,7 @@ public class FriendsConfig extends FileConfig
 		clearFriends();
 		try
 		{
-			final JsonElement jsonElement = new JsonParser().parse(new BufferedReader(new FileReader(getFile())));
+			final JsonElement jsonElement = new JsonParser().parse(MiscUtils.createBufferedFileReader(getFile()));
 
 			if (jsonElement instanceof JsonNull)
 				return;
@@ -61,7 +62,7 @@ public class FriendsConfig extends FileConfig
 			// When the JSON Parse fail, the client try to load and update the old config
 			ClientUtils.getLogger().info("[FileManager] Try to load old Friends config...");
 
-			final BufferedReader bufferedReader = new BufferedReader(new FileReader(getFile()));
+			final BufferedReader bufferedReader = MiscUtils.createBufferedFileReader(getFile());
 
 			final String emptyReplacement = Matcher.quoteReplacement("");
 			String line;
@@ -107,9 +108,9 @@ public class FriendsConfig extends FileConfig
 			jsonArray.add(friendObject);
 		}
 
-		final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
-		printWriter.println(FileManager.PRETTY_GSON.toJson(jsonArray));
-		printWriter.close();
+		final BufferedWriter writer = MiscUtils.createBufferedFileWriter(getFile());
+		writer.write(FileManager.PRETTY_GSON.toJson(jsonArray) + System.lineSeparator());
+		writer.close();
 	}
 
 	/**

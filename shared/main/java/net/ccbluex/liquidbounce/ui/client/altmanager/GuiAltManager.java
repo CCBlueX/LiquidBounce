@@ -365,8 +365,7 @@ public class GuiAltManager extends WrappedGuiScreen
 				if (file == null)
 					return;
 
-				final FileReader fileReader = new FileReader(file);
-				final BufferedReader bufferedReader = new BufferedReader(fileReader);
+				final BufferedReader bufferedReader = MiscUtils.createBufferedFileReader(file);
 
 				String line;
 				while ((line = bufferedReader.readLine()) != null)
@@ -377,7 +376,6 @@ public class GuiAltManager extends WrappedGuiScreen
 						LiquidBounce.fileManager.accountsConfig.addAccount(accountData.length > 1 ? new MinecraftAccount(AltServiceType.MOJANG, accountData[0], accountData[1]) : new MinecraftAccount(AltServiceType.MOJANG, accountData[0]));
 				}
 
-				fileReader.close();
 				bufferedReader.close();
 
 				altsList.updateAccounts(searchField.getText());
@@ -428,13 +426,10 @@ public class GuiAltManager extends WrappedGuiScreen
 					if (!selectedFile.exists())
 						selectedFile.createNewFile();
 
-					final FileWriter fileWriter = new FileWriter(selectedFile);
+					final BufferedWriter fileWriter = MiscUtils.createBufferedFileWriter(selectedFile);
 
 					for (final MinecraftAccount account : LiquidBounce.fileManager.accountsConfig.getAccounts())
-						if (account.isCracked())
-							fileWriter.write(account.getName() + "\r\n");
-						else
-							fileWriter.write(account.getName() + ":" + account.getPassword() + "\r\n");
+						fileWriter.write(account.isCracked() ? account.getName()  + System.lineSeparator() : account.getName() + ":" + account.getPassword()  + System.lineSeparator());
 
 					fileWriter.flush();
 					fileWriter.close();

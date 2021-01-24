@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
 import net.ccbluex.liquidbounce.file.FileConfig;
 import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
+import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 
 public class XRayConfig extends FileConfig
 {
@@ -48,7 +49,7 @@ public class XRayConfig extends FileConfig
 			return;
 		}
 
-		final JsonArray jsonArray = new JsonParser().parse(new BufferedReader(new FileReader(getFile()))).getAsJsonArray();
+		final JsonArray jsonArray = new JsonParser().parse(MiscUtils.createBufferedFileReader(getFile())).getAsJsonArray();
 
 		xRay.getXrayBlocks().clear();
 
@@ -88,8 +89,8 @@ public class XRayConfig extends FileConfig
 		for (final IBlock block : xRay.getXrayBlocks())
 			jsonArray.add(FileManager.PRETTY_GSON.toJsonTree(LiquidBounce.wrapper.getFunctions().getIdFromBlock(block)));
 
-		final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
-		printWriter.println(FileManager.PRETTY_GSON.toJson(jsonArray));
-		printWriter.close();
+		final BufferedWriter writer = MiscUtils.createBufferedFileWriter(getFile());
+		writer.write(FileManager.PRETTY_GSON.toJson(jsonArray) + System.lineSeparator());
+		writer.close();
 	}
 }

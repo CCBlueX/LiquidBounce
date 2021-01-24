@@ -17,6 +17,8 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.file.FileConfig;
 import net.ccbluex.liquidbounce.file.FileManager;
+import net.ccbluex.liquidbounce.ui.client.hud.Config;
+import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 
 public class ModulesConfig extends FileConfig
 {
@@ -40,7 +42,7 @@ public class ModulesConfig extends FileConfig
 	@Override
 	protected void loadConfig() throws IOException
 	{
-		final JsonElement jsonElement = new JsonParser().parse(new BufferedReader(new FileReader(getFile())));
+		final JsonElement jsonElement = new JsonParser().parse(MiscUtils.createBufferedFileReader(getFile()));
 
 		if (jsonElement instanceof JsonNull)
 			return;
@@ -81,8 +83,8 @@ public class ModulesConfig extends FileConfig
 			jsonObject.add(module.getName(), jsonMod);
 		}
 
-		final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
-		printWriter.println(FileManager.PRETTY_GSON.toJson(jsonObject));
-		printWriter.close();
+		final BufferedWriter writer = MiscUtils.createBufferedFileWriter(getFile());
+		writer.write(FileManager.PRETTY_GSON.toJson(jsonObject) + System.lineSeparator());
+		writer.close();
 	}
 }
