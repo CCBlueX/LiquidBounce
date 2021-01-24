@@ -68,17 +68,18 @@ object ConfigSystem {
     fun load() {
         for (configurable in configurables) {
             // Make a new .json file to save our root configurable
-            File(rootFolder, "${configurable.keyName}.json").apply {
+            File(rootFolder, "${configurable.keyName}.json").runCatching {
                 if (!exists()) {
                     store()
-                    return@apply
+                    return@runCatching
                 }
 
                 logger.info("Reading config ${configurable.keyName} from '$name'")
                 configurable.overwrite(gson.fromJson(gson.newJsonReader(reader()), confType))
+            }.onFailure {
+                logger.error("Unable to load config ${configurable.keyName}", it)
             }
         }
-        println()
     }
 
     /**
