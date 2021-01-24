@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/"
-     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" width="995.34" height="289.89" clip-rule="evenodd"
-     fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.4142" version="1.1" viewBox="0 0 995.34 289.89"
-     xml:space="preserve" xmlns="http://www.w3.org/2000/svg"><metadata><rdf:RDF><cc:Work rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
-        rdf:resource="http://purl.org/dc/dcmitype/StillImage"/><dc:title/></cc:Work></rdf:RDF></metadata>
+<svg
+        width="995.34" height="289.89" clip-rule="evenodd"
+        fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.4142" version="1.1" viewBox="0 0 995.34 289.89"
+        xml:space="preserve" xmlns="http://www.w3.org/2000/svg"><metadata>image/svg+xml</metadata>
     <g transform="translate(-83.908 -685.39)">
         <g transform="matrix(.31644 0 0 .31644 21.201 546.28)">
             <path d="m1072.3 910.24c0-241.21-195.84-437.04-437.05-437.04h-437.04v437.04c0 241.22 195.83 437.05 437.04 437.05s437.05-195.83 437.05-437.05z"
