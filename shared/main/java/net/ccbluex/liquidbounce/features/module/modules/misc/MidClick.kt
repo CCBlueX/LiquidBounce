@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import org.lwjgl.input.Mouse
@@ -37,12 +38,12 @@ class MidClick : Module()
 				if (!friendsConfig.isFriend(playerName))
 				{
 					friendsConfig.addFriend(playerName)
-					LiquidBounce.fileManager.saveConfig(friendsConfig)
+					FileManager.saveConfig(friendsConfig)
 					ClientUtils.displayChatMessage("\u00A7a\u00A7l$playerName\u00A7c was added to your friends.")
 				} else
 				{
 					friendsConfig.removeFriend(playerName)
-					LiquidBounce.fileManager.saveConfig(friendsConfig)
+					FileManager.saveConfig(friendsConfig)
 					ClientUtils.displayChatMessage("\u00A7a\u00A7l$playerName\u00A7c was removed from your friends.")
 				}
 

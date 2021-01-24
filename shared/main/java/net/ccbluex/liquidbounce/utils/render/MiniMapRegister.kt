@@ -51,9 +51,11 @@ object MiniMapRegister : MinecraftInstance()
 				}
 			}
 
-			queuedChunkUpdates.forEach(chunkTextureMap.computeIfAbsent(ChunkLocation(it.x, it.z)) {
-				MiniMapTexture()
-			}::updateChunkData)
+			queuedChunkUpdates.forEach {
+				chunkTextureMap.computeIfAbsent(ChunkLocation(it.x, it.z)) {
+					MiniMapTexture()
+				}::updateChunkData
+			}
 
 			queuedChunkUpdates.clear()
 		}

@@ -95,7 +95,7 @@ public abstract class MixinBlock
 	{
 		final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.get(GhostHand.class);
 
-		if (Objects.requireNonNull(ghostHand).getState() && !(ghostHand.getBlockValue().get() == Block.getIdFromBlock((Block) (Object) this)))
+		if (Objects.requireNonNull(ghostHand).getState() && ghostHand.getBlockValue().get() != Block.getIdFromBlock((Block) (Object) this))
 			callbackInfoReturnable.setReturnValue(false);
 	}
 

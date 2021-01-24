@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
+import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
@@ -71,7 +72,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					LiquidBounce.scriptManager.importScript(file)
 
 					LiquidBounce.clickGui = ClickGui()
-					LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
+					FileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
 					return
 				} else if (fileName.endsWith(".zip"))
 				{
@@ -104,8 +105,8 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					scriptFiles.forEach(LiquidBounce.scriptManager::loadScript)
 
 					LiquidBounce.clickGui = ClickGui()
-					LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
-					LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
+					FileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
+					FileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
 					return
 				}
 
@@ -125,8 +126,8 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					LiquidBounce.scriptManager.deleteScript(script)
 
 					LiquidBounce.clickGui = ClickGui()
-					LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
-					LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
+					FileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
+					FileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
 				}
 			} catch (t: Throwable)
 			{

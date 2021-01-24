@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.event.SessionEvent
+import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
@@ -219,7 +220,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 								else
 								{
 									LiquidBounce.fileManager.accountsConfig.accounts.add(account)
-									LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
+									FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
 								}
 
 								"\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c.$moreMessage"

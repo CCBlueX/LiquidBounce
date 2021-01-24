@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.font.Fonts
 
@@ -31,21 +32,21 @@ class ReloadCommand : Command("reload", "configreload")
 		chat("\u00A7c\u00A7lReloading fonts...")
 		Fonts.loadFonts()
 		chat("\u00A7c\u00A7lReloading modules...")
-		LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.modulesConfig)
+		FileManager.loadConfig(LiquidBounce.fileManager.modulesConfig)
 		LiquidBounce.isStarting = false
 		chat("\u00A7c\u00A7lReloading values...")
-		LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.valuesConfig)
+		FileManager.loadConfig(LiquidBounce.fileManager.valuesConfig)
 		chat("\u00A7c\u00A7lReloading accounts...")
-		LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.accountsConfig)
+		FileManager.loadConfig(LiquidBounce.fileManager.accountsConfig)
 		chat("\u00A7c\u00A7lReloading friends...")
-		LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.friendsConfig)
+		FileManager.loadConfig(LiquidBounce.fileManager.friendsConfig)
 		chat("\u00A7c\u00A7lReloading xray...")
-		LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.xrayConfig)
+		FileManager.loadConfig(LiquidBounce.fileManager.xrayConfig)
 		chat("\u00A7c\u00A7lReloading HUD...")
-		LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
+		FileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
 		chat("\u00A7c\u00A7lReloading ClickGUI...")
 		LiquidBounce.clickGui = ClickGui()
-		LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
+		FileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
 		chat("Reloaded.")
 	}
 }

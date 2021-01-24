@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 
 class FriendCommand : Command("friend", "friends")
@@ -36,7 +37,7 @@ class FriendCommand : Command("friend", "friends")
 
 						if (if (args.size > 3) friendsConfig.addFriend(name, StringUtils.toCompleteString(args, 3)) else friendsConfig.addFriend(name))
 						{
-							LiquidBounce.fileManager.saveConfig(friendsConfig)
+							FileManager.saveConfig(friendsConfig)
 							chat("\u00A7a\u00A7l$name\u00A73 was added to your friend list.")
 							playEdit()
 						} else chat("The name is already in the list.")
@@ -54,7 +55,7 @@ class FriendCommand : Command("friend", "friends")
 
 						if (friendsConfig.removeFriend(name))
 						{
-							LiquidBounce.fileManager.saveConfig(friendsConfig)
+							FileManager.saveConfig(friendsConfig)
 							chat("\u00A7a\u00A7l$name\u00A73 was removed from your friend list.")
 							playEdit()
 						} else chat("This name is not in the list.")
@@ -68,7 +69,7 @@ class FriendCommand : Command("friend", "friends")
 				{
 					val friends = friendsConfig.friends.size
 					friendsConfig.clearFriends()
-					LiquidBounce.fileManager.saveConfig(friendsConfig)
+					FileManager.saveConfig(friendsConfig)
 					chat("Removed $friends friend(s).")
 					return
 				}

@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.ClientUtils
@@ -30,14 +31,14 @@ open class Module : MinecraftInstance(), Listenable
 		{
 			field = keyBind
 
-			if (!LiquidBounce.isStarting) LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
+			if (!LiquidBounce.isStarting) FileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
 		}
 	var array = true
 		set(array)
 		{
 			field = array
 
-			if (!LiquidBounce.isStarting) LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
+			if (!LiquidBounce.isStarting) FileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
 		}
 	private val canEnable: Boolean
 
@@ -97,7 +98,7 @@ open class Module : MinecraftInstance(), Listenable
 			}
 
 			// Save module state
-			LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
+			FileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
 		}
 
 	// HUD

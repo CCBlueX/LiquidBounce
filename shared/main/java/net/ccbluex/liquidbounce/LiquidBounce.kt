@@ -10,15 +10,11 @@ import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.api.Wrapper
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.cape.CapeAPI.registerCapeService
-
 import net.ccbluex.liquidbounce.event.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.special.AntiModDisable
-import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
-import net.ccbluex.liquidbounce.features.special.ClientRichPresence
-import net.ccbluex.liquidbounce.features.special.DonatorCape
+import net.ccbluex.liquidbounce.features.special.*
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.script.ScriptManager
@@ -126,13 +122,13 @@ object LiquidBounce
 		commandManager.registerCommands()
 
 		// Load configs
-		fileManager.loadConfigs(
+		FileManager.loadConfigs(
 			fileManager.modulesConfig, fileManager.valuesConfig, fileManager.accountsConfig, fileManager.friendsConfig, fileManager.xrayConfig, fileManager.shortcutsConfig
 		)
 
 		// ClickGUI
 		clickGui = ClickGui()
-		fileManager.loadConfig(fileManager.clickGuiConfig)
+		FileManager.loadConfig(fileManager.clickGuiConfig)
 
 		// Tabs (Only for Forge!)
 		if (hasForge())
@@ -153,7 +149,7 @@ object LiquidBounce
 
 		// Set HUD
 		hud = createDefault()
-		fileManager.loadConfig(fileManager.hudConfig)
+		FileManager.loadConfig(fileManager.hudConfig)
 
 		// Disable optifine fastrender
 		ClientUtils.disableFastRender()

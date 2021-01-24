@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.ui.client.hud.designer
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
+import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
@@ -94,7 +95,7 @@ class GuiHudDesigner : WrappedGuiScreen()
 	override fun onGuiClosed()
 	{
 		Keyboard.enableRepeatEvents(false)
-		LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.hudConfig)
+		FileManager.saveConfig(LiquidBounce.fileManager.hudConfig)
 
 		super.onGuiClosed()
 	}

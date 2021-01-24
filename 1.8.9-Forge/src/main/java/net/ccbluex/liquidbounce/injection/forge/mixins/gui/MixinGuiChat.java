@@ -58,10 +58,10 @@ public abstract class MixinGuiChat extends MixinGuiScreen
 			return;
 		LiquidBounce.commandManager.autoComplete(inputField.getText());
 
-		if (!inputField.getText().startsWith(LiquidBounce.commandManager.getPrefix() + "lc"))
-			inputField.setMaxStringLength(10000);
-		else
+		if (inputField.getText().startsWith(LiquidBounce.commandManager.getPrefix() + "lc"))
 			inputField.setMaxStringLength(100);
+		else
+			inputField.setMaxStringLength(10000);
 	}
 
 	@Inject(method = "updateScreen", at = @At("HEAD"))

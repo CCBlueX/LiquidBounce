@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.features.command.special
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay
+import net.ccbluex.liquidbounce.file.FileManager
 import net.minecraft.block.Block
 
 class XrayCommand : Command("xray")
@@ -46,7 +47,7 @@ class XrayCommand : Command("xray")
 						}
 
 						xRay.xrayBlocks.add(block)
-						LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
+						FileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
 						chat("\u00A77Added block \u00A78${block.localizedName}\u00A77.")
 						playEdit()
 					} catch (exception: NumberFormatException)
@@ -90,7 +91,7 @@ class XrayCommand : Command("xray")
 						}
 
 						xRay.xrayBlocks.remove(block)
-						LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
+						FileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
 						chat("\u00A77Removed block \u00A78${block.localizedName}\u00A77.")
 						playEdit()
 					} catch (exception: NumberFormatException)

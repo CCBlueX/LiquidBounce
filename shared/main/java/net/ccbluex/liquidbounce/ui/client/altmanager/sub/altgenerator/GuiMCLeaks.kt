@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
+import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
@@ -97,7 +98,7 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 						else
 						{
 							LiquidBounce.fileManager.accountsConfig.accounts.add(account)
-							LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
+							FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
 						}
 						status = "\u00A7aYour token was redeemed successfully!\u00A7c$moreMessage"
 					} else status = "\u00A7aYour token was redeemed successfully!"

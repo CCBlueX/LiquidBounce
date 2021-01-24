@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot;
+import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
@@ -78,7 +79,7 @@ public class GuiBannedServers extends WrappedGuiScreen
 				if (serversList.getSelectedSlot() != -1 && serversList.getSelectedSlot() < serversList.getSize())
 				{
 					account.getBannedServers().remove(account.getBannedServers().get(serversList.getSelectedSlot()));
-					LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+					FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 					status = "\u00A7aThe server has been removed.";
 				}
 				else
@@ -253,7 +254,7 @@ public class GuiBannedServers extends WrappedGuiScreen
 					}
 
 					account.getBannedServers().add(server);
-					LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+					FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 
 					prevGui.status = "\u00A7aAdded banned server \u00A7c" + server + " \u00A7aof " + (account.getAccountName() == null ? account.getName() : account.getAccountName()) + "\u00A7c.";
 					mc.displayGuiScreen(prevGui.representedScreen);

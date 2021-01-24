@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI;
+import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement;
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.Element;
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement;
@@ -363,7 +364,7 @@ public class ClickGui extends WrappedGuiScreen
 	@Override
 	public void onGuiClosed()
 	{
-		LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.clickGuiConfig);
+		FileManager.saveConfig(LiquidBounce.fileManager.clickGuiConfig);
 	}
 
 	@Override

@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof;
+import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.injection.backend.GuiScreenImplKt;
 import net.ccbluex.liquidbounce.ui.client.GuiAntiModDisable;
 import net.ccbluex.liquidbounce.ui.client.tools.GuiTools;
@@ -44,7 +45,7 @@ public abstract class MixinGuiMultiplayer extends MixinGuiScreen
 			case 998:
 				BungeeCordSpoof.enabled = !BungeeCordSpoof.enabled;
 				bungeeCordSpoofButton.displayString = "BungeeCord Spoof: " + (BungeeCordSpoof.enabled ? "On" : "Off");
-				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 999:
 				mc.displayGuiScreen(GuiScreenImplKt.unwrap(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiTools(GuiScreenImplKt.wrap((GuiScreen) (Object) this)))));

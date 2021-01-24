@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.SessionEvent;
 import net.ccbluex.liquidbounce.features.special.AntiModDisable;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
+import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
@@ -118,7 +119,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 			case 5:
 				AntiModDisable.enabled = !AntiModDisable.enabled;
 				forgeBypassButton.displayString = "Bypass AntiForge: " + (AntiModDisable.enabled ? "On" : "Off");
-				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 		}
 	}

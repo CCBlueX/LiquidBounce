@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot;
+import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.*;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiMCLeaks;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
@@ -116,7 +117,7 @@ public class GuiAltManager extends WrappedGuiScreen
 
 				final String userName = mc.getSession().getUsername();
 				minecraftAccount.setAccountName(userName);
-				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+				FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 				return "\u00A7aYour name is now \u00A7b\u00A7l" + userName + "\u00A7c.";
 			}
 			case AUTHENTICATION_FAILURE:
@@ -135,12 +136,12 @@ public class GuiAltManager extends WrappedGuiScreen
 						minecraftAccount.setServiceType(AltServiceType.MCLEAKS_INVALID);
 						// noinspection fallthrough
 					case MCLEAKS_INVALID:
-						LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+						FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 						return "\u00A7cThe MCLeaks token has to be 16 characters long!";
 
 					default:
 						minecraftAccount.setServiceType(AltServiceType.MOJANG_INVALID);
-						LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+						FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 
 						return "\u00A7cInvalid username or wrong password or the account is get mojang-banned.";
 				}
@@ -148,20 +149,20 @@ public class GuiAltManager extends WrappedGuiScreen
 			case MIGRATED:
 			{
 				minecraftAccount.setServiceType(AltServiceType.MOJANG_MIGRATED);
-				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+				FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 				return "\u00A7cAccount migrated.";
 			}
 			case MCLEAKS_INVALID:
 			{
 				minecraftAccount.setServiceType(AltServiceType.MCLEAKS_INVALID);
-				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+				FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 
 				return "\u00A7cMCLeaks token invalid or expired.";
 			}
 			case THEALTENING_INVALID:
 			{
 				minecraftAccount.setServiceType(AltServiceType.THEALTENING_INVALID);
-				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+				FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 				return "\u00A7cTheAltening token invalid or expired.";
 			}
 			default:
@@ -187,7 +188,7 @@ public class GuiAltManager extends WrappedGuiScreen
 					acc.getBannedServers().add(serverIp);
 				else
 					acc.getBannedServers().remove(serverIp);
-				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+				FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 				ClientUtils.getLogger().info("Marked account {} {} on {}", acc.getName(), canmarkbanned ? "banned" : "un-banned", serverIp);
 			}
 	}
@@ -288,7 +289,7 @@ public class GuiAltManager extends WrappedGuiScreen
 				if (altsList.getSelectedSlot() != -1 && altsList.getSelectedSlot() < altsList.getSize())
 				{
 					LiquidBounce.fileManager.accountsConfig.removeAccount(altsList.accounts.get(altsList.getSelectedSlot()));
-					LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+					FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 					status = "\u00A7aThe account has been removed.";
 
 					altsList.updateAccounts(searchField.getText());
@@ -380,7 +381,7 @@ public class GuiAltManager extends WrappedGuiScreen
 				bufferedReader.close();
 
 				altsList.updateAccounts(searchField.getText());
-				LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+				FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
 
 				status = "\u00A7aThe accounts were imported successfully.";
 				break;

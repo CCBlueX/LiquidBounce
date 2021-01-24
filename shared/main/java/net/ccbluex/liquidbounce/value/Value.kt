@@ -10,6 +10,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
+import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import java.util.*
@@ -30,7 +31,7 @@ abstract class Value<T>(val name: String, protected var value: T)
 			onChange(oldValue, newValue)
 			changeValue(newValue)
 			onChanged(oldValue, newValue)
-			LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
+			FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
 		} catch (e: Exception)
 		{
 			ClientUtils.getLogger().error("[ValueSystem ($name)]: ${e.javaClass.name} (${e.message}) [$oldValue >> $newValue]")
