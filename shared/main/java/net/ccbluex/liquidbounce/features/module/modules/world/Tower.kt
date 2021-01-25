@@ -202,7 +202,7 @@ class Tower : Module()
 			placeInfo = null
 			timer.update()
 
-			val update = if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), -1.0) != -1 || thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
+			val update = if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), 0.0) != -1 || thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
 			else thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
 
 			if (update)
@@ -366,7 +366,7 @@ class Tower : Module()
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
-			val blockSlot = InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), -1.0)
+			val blockSlot = InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), 0.0)
 			if (blockSlot == -1) return
 
 			when (autoBlockValue.get())

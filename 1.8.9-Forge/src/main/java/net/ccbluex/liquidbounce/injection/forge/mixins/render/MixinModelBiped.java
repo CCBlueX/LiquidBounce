@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
 import net.ccbluex.liquidbounce.features.module.modules.render.Rotations;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.client.Minecraft;
@@ -13,6 +14,7 @@ import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -36,13 +38,21 @@ public class MixinModelBiped
 	@Shadow
 	public ModelRenderer bipedHead;
 
+	/**
+	 * Rotations - Head only, Pitch
+	 * @see Rotations
+	 */
 	@Inject(method = "setRotationAngles", at = @At(value = "FIELD", target = "Lnet/minecraft/client/model/ModelBiped;swingProgress:F"))
-	private void revertSwordAnimation(final float p_setRotationAngles_1_, final float p_setRotationAngles_2_, final float p_setRotationAngles_3_, final float p_setRotationAngles_4_, final float p_setRotationAngles_5_, final float p_setRotationAngles_6_, final Entity p_setRotationAngles_7_, final CallbackInfo callbackInfo)
+	private void revertSwordAnimation(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor, Entity entityIn, final CallbackInfo callbackInfo)
 	{
 		if (heldItemRight == 3)
 			bipedRightArm.rotateAngleY = 0.0F;
 
-		if (LiquidBounce.moduleManager.getModule(Rotations.class).getState() && RotationUtils.serverRotation != null && p_setRotationAngles_7_ instanceof EntityPlayer && p_setRotationAngles_7_.equals(Minecraft.getMinecraft().thePlayer))
-			bipedHead.rotateAngleX = RotationUtils.serverRotation.getPitch() / (180.0F / (float) Math.PI);
+		final Rotations rotations = (Rotations) LiquidBounce.moduleManager.getModule(Rotations.class);
+		if (rotations.getState() && !rotations.getBodyValue().get() && RotationUtils.lastServerRotation != null && RotationUtils.serverRotation != null && entityIn instanceof EntityPlayer && entityIn.equals(Minecraft.getMinecraft().thePlayer))
+		{
+			final float pitch = rotations.getInterpolateRotationsValue().get() ? rotations.interpolateRotation(RotationUtils.lastServerRotation.getPitch(), RotationUtils.serverRotation.getPitch(), Minecraft.getMinecraft().timer.renderPartialTicks) : RotationUtils.serverRotation.getPitch();
+			bipedHead.rotateAngleX = WMathHelper.toRadians(pitch);
+		}
 	}
 }

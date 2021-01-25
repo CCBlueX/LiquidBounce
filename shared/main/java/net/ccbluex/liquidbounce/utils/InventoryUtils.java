@@ -94,7 +94,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 					hotbarSlots.add(i);
 			}
 		}
-		final Optional<Integer> pred = boundingBoxYLimit == -1 ? Optional.ofNullable(hotbarSlots.isEmpty() ? null : hotbarSlots.get(0)) : hotbarSlots.stream().filter(c ->
+		final Optional<Integer> pred = boundingBoxYLimit == 0.0 ? Optional.ofNullable(hotbarSlots.isEmpty() ? null : hotbarSlots.get(0)) : hotbarSlots.stream().filter(c ->
 		{
 			final IBlock b = mc.getThePlayer().getInventoryContainer().getSlot(c).getStack().getItem().asItemBlock().getBlock();
 			final IAxisAlignedBB box = b.getCollisionBoundingBox(theWorld, WBlockPos.Companion.getORIGIN(), Objects.requireNonNull(b.getDefaultState()));
@@ -124,7 +124,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 						hotbarSlots.add(i);
 				}
 			}
-			final Optional<Integer> pred2 = boundingBoxYLimit == -1 ? Optional.ofNullable(hotbarSlots.isEmpty() ? null : hotbarSlots.get(0)) : hotbarSlots.stream().filter(c ->
+			final Optional<Integer> pred2 = boundingBoxYLimit == 0.0 ? Optional.ofNullable(hotbarSlots.isEmpty() ? null : hotbarSlots.get(0)) : hotbarSlots.stream().filter(c ->
 			{
 				final IBlock block = thePlayer.getInventoryContainer().getSlot(c).getStack().getItem().asItemBlock().getBlock();
 				final IAxisAlignedBB box = block.getCollisionBoundingBox(theWorld, WBlockPos.Companion.getORIGIN(), Objects.requireNonNull(block.getDefaultState()));

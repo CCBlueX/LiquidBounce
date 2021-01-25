@@ -25,12 +25,18 @@ class Rotations : Module()
 	val bodyValue = BoolValue("Body", true)
 	val interpolateRotationsValue = BoolValue("Interpolate", true)
 
+	/**
+	 * Rotations - Head only, Yaw
+	 */
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
 	{
 		mc.thePlayer ?: return
 
-		if (RotationUtils.serverRotation != null && !bodyValue.get()) mc.thePlayer!!.rotationYawHead =
+		if (bodyValue.get() || !isRotating()) return
+
+		// Head Rotations
+		if (RotationUtils.serverRotation != null) mc.thePlayer!!.rotationYawHead =
 			if (interpolateRotationsValue.get()) interpolateRotation(RotationUtils.lastServerRotation.yaw, RotationUtils.serverRotation.yaw, event.partialTicks) else RotationUtils.serverRotation.yaw
 	}
 
@@ -38,7 +44,6 @@ class Rotations : Module()
 
 	fun isRotating(): Boolean
 	{
-		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
 		val bowAimbot = LiquidBounce.moduleManager[BowAimbot::class.java] as BowAimbot
 		val fucker = LiquidBounce.moduleManager[Fucker::class.java] as Fucker
 		val civBreak = LiquidBounce.moduleManager[CivBreak::class.java] as CivBreak
@@ -48,7 +53,7 @@ class Rotations : Module()
 
 		val scaffoldState = getState(Scaffold::class.java)
 		val towerState = getState(Tower::class.java)
-		val killauraState = killAura.state && killAura.target != null
+		val killauraState = getState(KillAura::class.java)
 		val derpState = getState(Derp::class.java)
 		val bowAimbotState = bowAimbot.state && bowAimbot.hasTarget()
 		val fuckerState = fucker.state && fucker.currentPos != null
@@ -60,7 +65,7 @@ class Rotations : Module()
 		return scaffoldState || towerState || killauraState || derpState || bowAimbotState || fuckerState || civBreakState || nukerState || chestAuraState || flyState
 	}
 
-	private fun interpolateRotation(prev: Float, current: Float, partialTicks: Float): Float
+	fun interpolateRotation(prev: Float, current: Float, partialTicks: Float): Float
 	{
 		var delta = current - prev
 

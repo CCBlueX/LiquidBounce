@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.utils;
 
+import static java.lang.Math.*;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
@@ -21,11 +23,7 @@ import net.ccbluex.liquidbounce.event.Listenable;
 import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.ccbluex.liquidbounce.event.TickEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow;
-
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
-import org.jetbrains.annotations.NotNull;
-
-import static java.lang.Math.*;
 
 public final class RotationUtils extends MinecraftInstance implements Listenable
 {
@@ -152,10 +150,10 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 	 * Translate vec to rotation
 	 *
 	 * @param  vec
-	 *                 target vec
+	 *                       target vec
 	 * @param  playerPredict
-	 *                 predict new location of your body
-	 * @return         rotation
+	 *                       predict new location of your body
+	 * @return               rotation
 	 */
 	public static Rotation toRotation(final WVec3 vec, final boolean playerPredict)
 	{
@@ -239,14 +237,15 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 		final WVec3 randomVec;
 		final WVec3 eyes = Objects.requireNonNull(mc.getThePlayer()).getPositionEyes(1.0F);
 
-		switch(mode)
+		switch (mode)
 		{
 			case LOCK_CENTER:
 			{
 				randomVec = getCenter(bb);
 				return new VecRotation(randomVec, toRotation(randomVec, playerPrediction));
 			}
-			case OUT_BORDER:{
+			case OUT_BORDER:
+			{
 				randomVec = new WVec3(bb.getMinX() + (bb.getMaxX() - bb.getMinX()) * (x * 0.3 + 1.0), bb.getMinY() + (bb.getMaxY() - bb.getMinY()) * (y * 0.3 + 1.0), bb.getMinZ() + (bb.getMaxZ() - bb.getMinZ()) * (z * 0.3 + 1.0));
 				return new VecRotation(randomVec, toRotation(randomVec, playerPrediction));
 			}
@@ -389,7 +388,6 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 	 *                         your turn speed
 	 * @return                 limited rotation
 	 */
-	@NotNull
 	public static Rotation limitAngleChange(final Rotation currentRotation, final Rotation targetRotation, final float turnSpeed, final float acceleration)
 	{
 		float yawDelta = getAngleDifference(targetRotation.getYaw(), currentRotation.getYaw());
