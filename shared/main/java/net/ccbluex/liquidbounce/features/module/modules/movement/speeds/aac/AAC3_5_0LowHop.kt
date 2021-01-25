@@ -32,7 +32,7 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop")
 				{
 					waitForGround = false
 					if (!firstJump) firstJump = true
-					thePlayer.jump()
+					jump(thePlayer)
 					thePlayer.motionY = 0.41
 				} else
 				{

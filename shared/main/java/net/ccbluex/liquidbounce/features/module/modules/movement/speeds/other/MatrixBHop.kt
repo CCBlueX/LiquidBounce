@@ -22,7 +22,7 @@ class MatrixBHop : SpeedMode("Matrix-BHop")
 		{
 			if (thePlayer.onGround)
 			{
-				thePlayer.jump()
+				jump(thePlayer)
 				thePlayer.speedInAir = 0.02098f
 				mc.timer.timerSpeed = 1.055f
 			} else MovementUtils.strafe(MovementUtils.speed)

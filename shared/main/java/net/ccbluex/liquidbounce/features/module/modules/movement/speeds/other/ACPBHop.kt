@@ -33,7 +33,7 @@ class ACPBHop : SpeedMode("AntiCheatPlus-BHop")
 
 			MovementUtils.strafe(moveSpeed)
 
-			if (thePlayer.onGround) thePlayer.jump()
+			if (thePlayer.onGround) jump(thePlayer)
 
 			MovementUtils.strafe()
 		} else

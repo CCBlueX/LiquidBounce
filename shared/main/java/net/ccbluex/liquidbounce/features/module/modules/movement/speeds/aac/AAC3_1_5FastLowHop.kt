@@ -42,7 +42,7 @@ class AAC3_1_5FastLowHop : SpeedMode("AAC3.1.5-FastLowHop")
 			{
 				if (legitJump)
 				{
-					thePlayer.jump()
+					jump(thePlayer)
 					legitJump = false
 
 					return

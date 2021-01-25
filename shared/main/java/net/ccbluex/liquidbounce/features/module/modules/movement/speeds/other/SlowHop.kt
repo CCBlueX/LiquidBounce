@@ -20,7 +20,7 @@ class SlowHop : SpeedMode("SlowHop")
 		if (thePlayer.isInWater) return
 		if (MovementUtils.isMoving)
 		{
-			if (thePlayer.onGround) thePlayer.jump() else MovementUtils.strafe(MovementUtils.speed * 1.011f)
+			if (thePlayer.onGround) jump(thePlayer) else MovementUtils.strafe(MovementUtils.speed * 1.011f)
 		} else
 		{
 			thePlayer.motionX = 0.0

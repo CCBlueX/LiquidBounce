@@ -33,7 +33,7 @@ class PACBHop : SpeedMode("PhoenixAC-BHop")
 
 			MovementUtils.strafe(moveSpeed)
 
-			if (thePlayer.onGround) thePlayer.jump()
+			if (thePlayer.onGround) jump(thePlayer)
 
 			MovementUtils.strafe()
 		} else

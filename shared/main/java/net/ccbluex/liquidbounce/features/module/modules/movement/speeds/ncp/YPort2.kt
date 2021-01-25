@@ -18,7 +18,7 @@ class YPort2 : SpeedMode("YPort2")
 		if (eventState != EventState.PRE) return
 
 		if (thePlayer.isOnLadder || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb || !MovementUtils.isMoving) return
-		if (thePlayer.onGround) thePlayer.jump() else thePlayer.motionY = -1.0
+		if (thePlayer.onGround) jump(thePlayer) else thePlayer.motionY = -1.0
 		MovementUtils.strafe()
 	}
 

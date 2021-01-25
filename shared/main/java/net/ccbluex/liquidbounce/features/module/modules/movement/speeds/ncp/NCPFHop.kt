@@ -37,7 +37,7 @@ class NCPFHop : SpeedMode("NCPFHop")
 		{
 			if (thePlayer.onGround)
 			{
-				thePlayer.jump()
+				jump(thePlayer)
 				thePlayer.motionX *= 1.01
 				thePlayer.motionZ *= 1.01
 				thePlayer.speedInAir = 0.0223f

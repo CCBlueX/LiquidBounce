@@ -32,7 +32,7 @@ class ACRBHop : SpeedMode("AntiCheatReloaded-BHop")
 				//				val f = direction
 				//				thePlayer.motionX -= (functions.sin(f) * 0.2f).toDouble()
 				//				thePlayer.motionZ += (functions.cos(f) * 0.2f).toDouble()
-				thePlayer.jump()
+				jump(thePlayer)
 			}
 
 			MovementUtils.strafe()

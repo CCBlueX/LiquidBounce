@@ -29,7 +29,7 @@ class AAC4BHop : SpeedMode("AAC4BHop")
 			{
 				if (thePlayer.onGround)
 				{
-					thePlayer.jump()
+					jump(thePlayer)
 					thePlayer.onGround = false
 					legitHop = false
 				}
@@ -39,7 +39,7 @@ class AAC4BHop : SpeedMode("AAC4BHop")
 			{
 				thePlayer.onGround = false
 				MovementUtils.strafe(0.375f)
-				thePlayer.jump()
+				jump(thePlayer)
 				thePlayer.motionY = 0.41
 			} else thePlayer.speedInAir = 0.0211f
 		} else

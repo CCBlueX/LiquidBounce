@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import java.util.*
+import java.util.stream.Stream
 
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
 class Speed : Module()
@@ -58,7 +59,7 @@ class Speed : Module()
 		SpectreLowHop(), SpectreBHop(), SpectreOnGround(), TeleportCubeCraft(),
 
 		// Server
-		HiveHop(), HypixelBHop(), Mineplex(), MineplexGround(), MineplexBHop(),
+		HiveHop(), HypixelBHop(), MineplexGround(), MineplexBHop(), MineplexBHop2(),
 
 		// Other
 		SlowHop(), CustomSpeed()
@@ -119,8 +120,6 @@ class Speed : Module()
 
 		if (thePlayer.sneaking) return
 
-		if (MovementUtils.isMoving) thePlayer.sprinting = true
-
 		mode?.onMotion(event.eventState)
 	}
 
@@ -156,6 +155,8 @@ class Speed : Module()
 
 		mode?.onDisable()
 	}
+
+	fun allowSprintBoost(): Boolean = Stream.of("AAC3.3.11-Ground", "AAC3.3.11-Ground2", "AACPort", "AntiCheatPlus").anyMatch { modeValue.get().equals(it, ignoreCase = true) }
 
 	override val tag: String
 		get() = modeValue.get()

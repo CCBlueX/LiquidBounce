@@ -26,7 +26,7 @@ class Frame : SpeedMode("Frame")
 			val speed = 4.25
 			if (thePlayer.onGround)
 			{
-				thePlayer.jump()
+				jump(thePlayer)
 				if (motionTicks == 1)
 				{
 					tickTimer.reset()

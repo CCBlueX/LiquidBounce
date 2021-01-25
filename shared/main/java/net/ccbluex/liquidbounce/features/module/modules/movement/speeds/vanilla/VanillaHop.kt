@@ -34,7 +34,7 @@ class VanillaHop : SpeedMode("VanillaHop")
 			event.x = (-functions.sin(dir) * moveSpeed).toDouble()
 			event.z = (functions.cos(dir) * moveSpeed).toDouble()
 
-			if (thePlayer.onGround) thePlayer.jump()
+			if (thePlayer.onGround) jump(thePlayer)
 		}
 	}
 }

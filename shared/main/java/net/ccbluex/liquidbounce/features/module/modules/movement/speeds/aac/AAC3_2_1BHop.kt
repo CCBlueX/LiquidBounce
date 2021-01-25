@@ -30,7 +30,7 @@ class AAC3_2_1BHop : SpeedMode("AAC3.2.1-BHop")
 				{
 					if (legitJump)
 					{
-						thePlayer.jump()
+						jump(thePlayer)
 						legitJump = false
 						return
 					}

@@ -36,7 +36,7 @@ class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop"), Listenable
 			{
 				if (thePlayer.onGround)
 				{
-					thePlayer.jump()
+					jump(thePlayer)
 					thePlayer.motionX *= 1.0118f
 					thePlayer.motionZ *= 1.0118f
 				} else

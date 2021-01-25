@@ -22,7 +22,7 @@ class DaedalusAACBHop : SpeedMode("DaedalusAAC-BHop")
 		{
 			strafe(0.3f)
 
-			if (thePlayer.onGround) thePlayer.jump()
+			if (thePlayer.onGround) jump(thePlayer)
 
 			strafe()
 		} else

@@ -22,7 +22,7 @@ class SpartanYPort : SpeedMode("Spartan-YPort")
 		{
 			if (thePlayer.onGround)
 			{
-				thePlayer.jump()
+				jump(thePlayer)
 				airMoves = 0
 			} else
 			{

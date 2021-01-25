@@ -23,7 +23,7 @@ class AAC3_1_7YPort : SpeedMode("AAC3.1.7-YPort")
 			thePlayer.cameraPitch = 0f
 			if (thePlayer.onGround)
 			{
-				thePlayer.jump()
+				jump(thePlayer)
 				thePlayer.motionY = 0.3851
 				thePlayer.motionX *= 1.01
 				thePlayer.motionZ *= 1.01
