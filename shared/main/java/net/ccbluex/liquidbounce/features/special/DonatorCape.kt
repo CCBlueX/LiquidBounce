@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.login.UserUtils
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
@@ -19,7 +20,6 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicHeader
 import org.json.JSONObject
-import kotlin.concurrent.thread
 
 class DonatorCape : Listenable, MinecraftInstance()
 {
@@ -29,7 +29,7 @@ class DonatorCape : Listenable, MinecraftInstance()
 	{
 		if (!GuiDonatorCape.capeEnabled || GuiDonatorCape.transferCode.isEmpty() || !UserUtils.isValidTokenOffline(mc.session.token)) return
 
-		thread {
+		WorkerUtils.workers.submit {
 			val uuid = mc.session.playerId
 			val username = mc.session.username
 

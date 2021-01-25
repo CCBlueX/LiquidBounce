@@ -14,6 +14,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.*;
 
@@ -27,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 
 import org.lwjgl.input.Keyboard;
 
+// TODO: Create own thread pool
 public class GuiPortScanner extends WrappedGuiScreen
 {
 
@@ -167,45 +170,49 @@ public class GuiPortScanner extends WrappedGuiScreen
 					currentPort = minPort - 1;
 					checkedPort = minPort;
 
-					for (int i = 0; i < threads; i++)
-						new Thread(() ->
+					final ExecutorService threadPool = Executors.newWorkStealingPool(threads);
+
+					final Runnable task = () ->
+					{
+						try
 						{
-							try
+							while (running && currentPort < maxPort)
 							{
-								while (running && currentPort < maxPort)
+								currentPort++;
+
+								final int port = currentPort;
+
+								try
 								{
-									currentPort++;
+									final Socket socket = new Socket();
+									socket.connect(new InetSocketAddress(host, port), 500);
+									socket.close();
 
-									final int port = currentPort;
-
-									try
+									synchronized (ports)
 									{
-										final Socket socket = new Socket();
-										socket.connect(new InetSocketAddress(host, port), 500);
-										socket.close();
-
-										synchronized (ports)
-										{
-											if (!ports.contains(port))
-												ports.add(port);
-										}
+										if (!ports.contains(port))
+											ports.add(port);
 									}
-									catch (final Exception ignored)
-									{
-									}
-
-									if (checkedPort < port)
-										checkedPort = port;
+								}
+								catch (final Exception ignored)
+								{
 								}
 
-								running = false;
-								buttonToggle.setDisplayString("Start");
+								if (checkedPort < port)
+									checkedPort = port;
 							}
-							catch (final Exception e)
-							{
-								status = "\u00A7a\u00A7l" + e.getClass().getSimpleName() + ": \u00A7c" + e.getMessage();
-							}
-						}).start();
+
+							running = false;
+							buttonToggle.setDisplayString("Start");
+						}
+						catch (final Exception e)
+						{
+							status = "\u00A7a\u00A7l" + e.getClass().getSimpleName() + ": \u00A7c" + e.getMessage();
+						}
+					};
+
+					for (int i = 0; i < threads; i++)
+						threadPool.submit(task);
 
 					running = true;
 				}

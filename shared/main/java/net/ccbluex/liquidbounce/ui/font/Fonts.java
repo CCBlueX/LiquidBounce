@@ -20,9 +20,9 @@ import com.google.gson.*;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer;
-import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
+import net.ccbluex.liquidbounce.utils.WorkerUtils;
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils;
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 
@@ -105,39 +105,45 @@ public class Fonts extends MinecraftInstance
 
 	private static void downloadFonts()
 	{
-		try
-		{
-			final File outputFile = new File(LiquidBounce.fileManager.fontsDir, "roboto.zip");
+		final File outputFile = new File(LiquidBounce.fileManager.fontsDir, "roboto.zip");
 
-			if (!outputFile.exists())
+		// TEST: Download fonts in a worker thread
+		if (!outputFile.exists())
+			WorkerUtils.getWorkers().submit(() ->
 			{
-				ClientUtils.getLogger().info("Downloading fonts...");
-				HttpUtils.download(LiquidBounce.CLIENT_CLOUD + "/fonts/Roboto.zip", outputFile);
-				ClientUtils.getLogger().info("Extract fonts...");
-				extractZip(outputFile.getPath(), LiquidBounce.fileManager.fontsDir.getPath());
-			}
-		}
-		catch (final IOException e)
-		{
-			e.printStackTrace();
-		}
+				try
+				{
+					ClientUtils.getLogger().info("Downloading fonts...");
+					HttpUtils.download(LiquidBounce.CLIENT_CLOUD + "/fonts/Roboto.zip", outputFile);
+					ClientUtils.getLogger().info("Extract fonts...");
+					extractZip(outputFile.getPath(), LiquidBounce.fileManager.fontsDir.getPath());
+				}
+				catch (final IOException e)
+				{
+					e.printStackTrace();
+				}
+			});
 	}
 
 	public static IFontRenderer getFontRenderer(final String name, final int size)
 	{
 		for (final Field field : Fonts.class.getDeclaredFields())
-			try {
+			try
+			{
 				field.setAccessible(true);
 
 				final Object o = field.get(null);
 
-				if (o instanceof IFontRenderer) {
+				if (o instanceof IFontRenderer)
+				{
 					final FontDetails fontDetails = field.getAnnotation(FontDetails.class);
 
 					if (fontDetails.fontName().equals(name) && fontDetails.fontSize() == size)
 						return (IFontRenderer) o;
 				}
-			} catch (final IllegalAccessException e) {
+			}
+			catch (final IllegalAccessException e)
+			{
 				e.printStackTrace();
 			}
 
@@ -147,17 +153,21 @@ public class Fonts extends MinecraftInstance
 	public static FontInfo getFontDetails(final IFontRenderer fontRenderer)
 	{
 		for (final Field field : Fonts.class.getDeclaredFields())
-			try {
+			try
+			{
 				field.setAccessible(true);
 
 				final Object o = field.get(null);
 
-				if (o.equals(fontRenderer)) {
+				if (o.equals(fontRenderer))
+				{
 					final FontDetails fontDetails = field.getAnnotation(FontDetails.class);
 
 					return new FontInfo(fontDetails.fontName(), fontDetails.fontSize());
 				}
-			} catch (final IllegalAccessException e) {
+			}
+			catch (final IllegalAccessException e)
+			{
 				e.printStackTrace();
 			}
 
@@ -169,14 +179,17 @@ public class Fonts extends MinecraftInstance
 		final List<IFontRenderer> fonts = new ArrayList<>();
 
 		for (final Field fontField : Fonts.class.getDeclaredFields())
-			try {
+			try
+			{
 				fontField.setAccessible(true);
 
 				final Object fontObj = fontField.get(null);
 
 				if (fontObj instanceof IFontRenderer)
 					fonts.add((IFontRenderer) fontObj);
-			} catch (final IllegalAccessException e) {
+			}
+			catch (final IllegalAccessException e)
+			{
 				e.printStackTrace();
 			}
 

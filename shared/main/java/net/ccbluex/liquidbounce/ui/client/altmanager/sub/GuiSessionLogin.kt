@@ -13,11 +13,11 @@ import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.login.LoginUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.mcleaks.MCLeaks
 import org.lwjgl.input.Keyboard
-import kotlin.concurrent.thread
 
 class GuiSessionLogin(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 {
@@ -97,7 +97,7 @@ class GuiSessionLogin(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		loginButton.enabled = false
 		status = "\u00A7aLogging in..."
 
-		thread {
+		WorkerUtils.workers.submit {
 			val loginResult = LoginUtils.loginSessionId(token)
 
 			status = when (loginResult)

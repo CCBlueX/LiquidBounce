@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
+import net.ccbluex.liquidbounce.utils.WorkerUtils;
 import net.ccbluex.liquidbounce.utils.login.UserUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 
@@ -330,11 +331,11 @@ public class GuiSessionInfo extends WrappedGuiScreen
 				if (payloadJson.has("yggt"))
 				{
 					accesstoken = payloadJson.get("yggt").getAsString();
-					new Thread(() ->
+					WorkerUtils.getWorkers().submit(() ->
 					{
 						loginButton.setEnabled(accesstokenValid = UserUtils.INSTANCE.isValidToken(accesstoken));
 						accesstokenChecked = true;
-					}).start();
+					});
 				}
 				else
 				{
@@ -345,11 +346,11 @@ public class GuiSessionInfo extends WrappedGuiScreen
 				if (payloadJson.has("spr"))
 				{
 					uuid = payloadJson.get("spr").getAsString();
-					new Thread(() ->
+					WorkerUtils.getWorkers().submit(() ->
 					{
 						nickname = UserUtils.INSTANCE.getUsername(uuid);
 						nicknameChecked = true;
-					}).start();
+					});
 				}
 				else
 				{

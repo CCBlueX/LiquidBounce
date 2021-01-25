@@ -9,13 +9,13 @@ object WorkerUtils
 	val workers: ThreadPoolExecutor
 
 	@JvmStatic
-	val timeCriticalWorkers: ThreadPoolExecutor
+	val forkJoinWorkers: ForkJoinPool
 
 	init
 	{
 		val availableProcessors = Runtime.getRuntime().availableProcessors()
 		workers = ThreadPoolExecutor(availableProcessors, availableProcessors, 5L, TimeUnit.MINUTES, LinkedBlockingQueue(), LiquidBounceThreadFactory(Thread.NORM_PRIORITY))
-		timeCriticalWorkers = ThreadPoolExecutor(availableProcessors, availableProcessors, 5L, TimeUnit.MINUTES, LinkedBlockingQueue(), LiquidBounceThreadFactory(Thread.MAX_PRIORITY))
+		forkJoinWorkers = ForkJoinPool(availableProcessors)
 	}
 
 	private class LiquidBounceThreadFactory(private val priority: Int) : ThreadFactory

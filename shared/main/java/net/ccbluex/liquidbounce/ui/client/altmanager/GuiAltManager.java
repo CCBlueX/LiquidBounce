@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAlte
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.ServerUtils;
+import net.ccbluex.liquidbounce.utils.WorkerUtils;
 import net.ccbluex.liquidbounce.utils.login.LoginUtils;
 import net.ccbluex.liquidbounce.utils.login.LoginUtils.LoginResult;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
@@ -303,7 +304,7 @@ public class GuiAltManager extends WrappedGuiScreen
 					loginButton.setEnabled(false);
 					randomButton.setEnabled(false);
 
-					final Thread thread = new Thread(() ->
+					WorkerUtils.getWorkers().submit(() ->
 					{
 						try
 						{
@@ -316,8 +317,7 @@ public class GuiAltManager extends WrappedGuiScreen
 							loginButton.setEnabled(true);
 							randomButton.setEnabled(true);
 						}
-					}, "AltLogin");
-					thread.start();
+					});
 				}
 				else
 					status = "\u00A7cSelect an account.";
@@ -337,7 +337,7 @@ public class GuiAltManager extends WrappedGuiScreen
 				loginButton.setEnabled(false);
 				randomButton.setEnabled(false);
 
-				final Thread thread = new Thread(() ->
+				WorkerUtils.getWorkers().submit(() ->
 				{
 					try
 					{
@@ -350,8 +350,7 @@ public class GuiAltManager extends WrappedGuiScreen
 						loginButton.setEnabled(true);
 						randomButton.setEnabled(true);
 					}
-				}, "AltLogin");
-				thread.start();
+				});
 				break;
 			case 5:
 				mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiMCLeaks(this)));
@@ -595,7 +594,7 @@ public class GuiAltManager extends WrappedGuiScreen
 					loginButton.setEnabled(false);
 					randomButton.setEnabled(false);
 
-					new Thread(() ->
+					WorkerUtils.getWorkers().submit(() ->
 					{
 						final MinecraftAccount minecraftAccount = accounts.get(altsList.getSelectedSlot());
 						status = "\u00A7aLogging in...";
@@ -603,7 +602,7 @@ public class GuiAltManager extends WrappedGuiScreen
 
 						loginButton.setEnabled(true);
 						randomButton.setEnabled(true);
-					}, "AltManagerLogin").start();
+					});
 				}
 				else
 					status = "\u00A7cSelect an account.";

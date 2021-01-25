@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.TabUtils;
+import net.ccbluex.liquidbounce.utils.WorkerUtils;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType;
 import net.ccbluex.liquidbounce.utils.render.ColorUtils;
@@ -76,7 +77,8 @@ public class GuiDirectLogin extends WrappedGuiScreen
 	}
 
 	@Override
-	public void actionPerformed(final IGuiButton button) {
+	public void actionPerformed(final IGuiButton button)
+	{
 		if (!button.getEnabled())
 			return;
 
@@ -95,7 +97,7 @@ public class GuiDirectLogin extends WrappedGuiScreen
 				loginButton.setEnabled(false);
 				clipboardLoginButton.setEnabled(false);
 
-				new Thread(() ->
+				WorkerUtils.getWorkers().submit(() ->
 				{
 					status = "\u00A7aLogging in...";
 
@@ -103,7 +105,7 @@ public class GuiDirectLogin extends WrappedGuiScreen
 
 					loginButton.setEnabled(true);
 					clipboardLoginButton.setEnabled(true);
-				}).start();
+				});
 				break;
 			case 2:
 				try
@@ -120,7 +122,7 @@ public class GuiDirectLogin extends WrappedGuiScreen
 					loginButton.setEnabled(false);
 					clipboardLoginButton.setEnabled(false);
 
-					new Thread(() ->
+					WorkerUtils.getWorkers().submit(() ->
 					{
 						status = "\u00A7aLogging in...";
 
@@ -128,7 +130,7 @@ public class GuiDirectLogin extends WrappedGuiScreen
 
 						loginButton.setEnabled(true);
 						clipboardLoginButton.setEnabled(true);
-					}).start();
+					});
 				}
 				catch (final UnsupportedFlavorException e)
 				{

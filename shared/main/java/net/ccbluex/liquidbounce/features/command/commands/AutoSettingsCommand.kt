@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.SettingsUtils
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import kotlin.concurrent.thread
 
@@ -47,7 +48,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
 				chat("Loading settings...")
 
-				thread {
+				WorkerUtils.workers.submit {
 					try
 					{ // Load settings and apply them
 						val settings = HttpUtils.get(url)
@@ -79,7 +80,9 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
 	private fun loadSettings(useCached: Boolean, join: Long? = null, callback: (List<String>) -> Unit)
 	{
-		val thread = thread { // Prevent the settings from being loaded twice
+		val thread = thread {
+
+			// Prevent the settings from being loaded twice
 			synchronized(loadingLock) {
 				if (useCached && autoSettingFiles != null)
 				{
@@ -112,10 +115,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 			}
 		}
 
-		if (join != null)
-		{
-			thread.join(join)
-		}
+		if (join != null) thread.join(join)
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

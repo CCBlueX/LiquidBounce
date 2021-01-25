@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.TabUtils;
+import net.ccbluex.liquidbounce.utils.WorkerUtils;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
@@ -185,7 +186,7 @@ public class GuiAdd extends WrappedGuiScreen
 
 		final MinecraftAccount account = new MinecraftAccount(AltServiceType.MOJANG, name, password);
 
-		new Thread(() ->
+		WorkerUtils.getWorkers().submit(() ->
 		{
 			if (!account.isCracked())
 			{
@@ -224,6 +225,6 @@ public class GuiAdd extends WrappedGuiScreen
 			status = "\u00A7aThe account has been added.";
 			prevGui.status = status;
 			mc.displayGuiScreen(prevGui.representedScreen);
-		}).start();
+		});
 	}
 }

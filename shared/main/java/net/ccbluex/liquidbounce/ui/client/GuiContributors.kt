@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.render.CustomTexture
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -24,7 +25,6 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.*
 import javax.imageio.ImageIO
-import kotlin.concurrent.thread
 
 class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 {
@@ -44,7 +44,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		failed = false
 
-		thread(block = this::loadCredits)
+		WorkerUtils.workers.submit(::loadCredits)
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)

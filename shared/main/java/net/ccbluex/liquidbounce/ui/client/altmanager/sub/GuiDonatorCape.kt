@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import org.apache.http.HttpHeaders
@@ -21,7 +22,6 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicHeader
 import org.lwjgl.input.Keyboard
 import java.io.File
-import kotlin.concurrent.thread
 
 class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 {
@@ -121,7 +121,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					capeEnabled = !capeEnabled
 					status = if (capeEnabled) "\u00A7aSuccessfully enabled offline cape"
 					else "\u00A7aSuccessfully disabled offline cape"
-				} else thread {
+				} else WorkerUtils.workers.submit {
 					val httpClient = HttpClients.createDefault()
 					val headers = arrayOf(
 						BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"), BasicHeader(HttpHeaders.AUTHORIZATION, transferCodeField.text)

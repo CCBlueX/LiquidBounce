@@ -27,12 +27,9 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
-import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
-import kotlin.concurrent.thread
 
 object LiquidBounce
 {
@@ -155,16 +152,17 @@ object LiquidBounce
 		ClientUtils.disableFastRender()
 
 		try
-		{ // Read versions json from cloud
+		{
+
+			// Read versions json from cloud
 			val jsonObj = JsonParser().parse(HttpUtils.get("$CLIENT_CLOUD/versions.json"))
 
 			// Check json is valid object and has current minecraft version
-			if (jsonObj is JsonObject && jsonObj.has(MINECRAFT_VERSION))
-			{ // Get official latest client version
-				latestVersion = jsonObj[MINECRAFT_VERSION].asInt
-			}
+			if (jsonObj is JsonObject && jsonObj.has(MINECRAFT_VERSION)) latestVersion = jsonObj[MINECRAFT_VERSION].asInt // Get official latest client version
 		} catch (exception: Throwable)
-		{ // Print throwable to console
+		{
+
+			// Print throwable to console
 			ClientUtils.getLogger().error("Failed to check for updates.", exception)
 		}
 
@@ -174,7 +172,7 @@ object LiquidBounce
 		// Setup Discord RPC
 		if (clientRichPresence.showRichPresenceValue)
 		{
-			thread {
+			WorkerUtils.workers.submit {
 				try
 				{
 					clientRichPresence.setup()
@@ -202,5 +200,4 @@ object LiquidBounce
 		// Shutdown discord rpc
 		clientRichPresence.shutdown()
 	}
-
 }

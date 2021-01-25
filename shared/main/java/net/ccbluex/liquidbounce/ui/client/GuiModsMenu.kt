@@ -11,8 +11,8 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import org.lwjgl.input.Keyboard
-import kotlin.concurrent.thread
 
 class GuiModsMenu(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 {
@@ -51,7 +51,7 @@ class GuiModsMenu(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					true ->
 					{
 						var value = true
-						thread {
+						WorkerUtils.workers.submit {
 							value = try
 							{
 								rpc.setup()

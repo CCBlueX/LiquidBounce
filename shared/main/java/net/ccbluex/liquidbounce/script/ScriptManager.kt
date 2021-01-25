@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.script
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import java.io.File
 import java.io.FileFilter
 
@@ -25,7 +26,8 @@ class ScriptManager
 	{
 		if (!scriptsFolder.exists()) scriptsFolder.mkdir()
 
-		scriptsFolder.listFiles(FileFilter { it.name.endsWith(scriptFileExtension) })?.forEach(::loadScript)
+		// TEST: Multi-threaded script load
+		scriptsFolder.listFiles(FileFilter { it.name.endsWith(scriptFileExtension) })?.forEach { WorkerUtils.workers.submit { loadScript(it) } }
 	}
 
 	/**

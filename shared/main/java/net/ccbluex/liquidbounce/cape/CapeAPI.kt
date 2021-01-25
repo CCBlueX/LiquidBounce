@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import java.awt.image.BufferedImage
@@ -21,7 +22,6 @@ import java.nio.file.Files
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.collections.HashMap
-import kotlin.concurrent.thread
 
 object CapeAPI : MinecraftInstance()
 {
@@ -94,7 +94,7 @@ object CapeAPI : MinecraftInstance()
 				capeFile = File(LiquidBounce.fileManager.dir, GuiDonatorCape.transferCode.substring(5) + ".png")
 				if (capeFile.exists())
 				{
-					thread(name = "Offline Cape Loader") {
+					WorkerUtils.workers.submit {
 						val byteArrayInputStream = ByteArrayInputStream(Files.readAllBytes(capeFile.toPath()))
 						val bufferedImage = ImageIO.read(byteArrayInputStream)
 						byteArrayInputStream.close()
