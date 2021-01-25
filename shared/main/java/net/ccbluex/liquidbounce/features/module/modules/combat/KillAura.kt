@@ -794,7 +794,9 @@ class KillAura : Module()
 		val criticals = LiquidBounce.moduleManager[Criticals::class.java] as Criticals
 
 		if (particles.get() > 0) for (i in 0..(particles.get()))
-		{ // Critical Effect
+		{
+
+			// Critical Effect
 			if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) && thePlayer.ridingEntity == null || criticals.state && criticals.msTimer.hasTimePassed(
 					criticals.delayValue.get().toLong()
 				) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb
@@ -807,10 +809,7 @@ class KillAura : Module()
 		// Start blocking after attack
 		if ((thePlayer.isBlocking || (canBlock && thePlayer.getDistanceToEntityBox(entity) <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(entity, interactAutoBlockValue.get())
 
-		@Suppress("ConstantConditionIf") if (Backend.MINECRAFT_VERSION_MINOR != 8)
-		{
-			thePlayer.resetCooldown()
-		}
+		@Suppress("ConstantConditionIf") if (Backend.MINECRAFT_VERSION_MINOR != 8) thePlayer.resetCooldown()
 	}
 
 	/**
