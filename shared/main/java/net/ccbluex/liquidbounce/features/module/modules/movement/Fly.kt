@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
@@ -877,7 +878,7 @@ class Fly : Module()
 			if (mode.equals("Hypixel", ignoreCase = true) && canPerformHypixelDamageFly && hypixelFlyStarted)
 			{
 				hypixelDamageBoostFailed = true
-				ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lBoostHypixel-\u00A7a\u00A7lFly\u00A78] \u00A7cSetback detected.")
+				ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lHypixel-\u00A7a\u00A7lFly\u00A78] \u00A7cSetback detected.")
 			}
 		}
 	}
@@ -1086,10 +1087,12 @@ class Fly : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
+		val blockAbove = BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ))
+		val normalJumpY = 0.42 + if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.JUMP))) (thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.JUMP))!!.amplifier + 1) * 0.1f else 0f
+		val jumpY = if (classProvider.isBlockAir(blockAbove)) normalJumpY else min(0.2 + (blockAbove?.getBlockBoundsMinY() ?: 0.0), normalJumpY)
+
 		// Simulate Vanilla Player Jump
-		var y = 0.42
-		if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.JUMP))) y += (thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.JUMP))!!.amplifier + 1) * 0.1f
-		thePlayer.setPosition(thePlayer.posX, thePlayer.posY + y, thePlayer.posZ)
+		thePlayer.setPosition(thePlayer.posX, thePlayer.posY + jumpY, thePlayer.posZ)
 
 		// Jump Boost
 		if (thePlayer.sprinting)
