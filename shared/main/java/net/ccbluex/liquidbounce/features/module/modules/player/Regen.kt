@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -45,8 +46,10 @@ class Regen : Module()
 			{
 				"vanilla" ->
 				{
-					repeat(speedValue.get()) {
-						mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+					WorkerUtils.workers.submit {
+						repeat(speedValue.get()) {
+							mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+						}
 					}
 				}
 
@@ -54,8 +57,10 @@ class Regen : Module()
 				{
 					if (MovementUtils.isMoving || !thePlayer.onGround) return
 
-					repeat(9) {
-						mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+					WorkerUtils.workers.submit {
+						repeat(9) {
+							mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+						}
 					}
 
 					mc.timer.timerSpeed = 0.45F

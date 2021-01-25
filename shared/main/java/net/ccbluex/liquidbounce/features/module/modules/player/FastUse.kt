@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 
@@ -62,8 +63,10 @@ class FastUse : Module()
 			{
 				"instant" ->
 				{
-					repeat(35) {
-						mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+					WorkerUtils.workers.submit {
+						repeat(35) {
+							mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+						}
 					}
 
 					mc.playerController.onStoppedUsingItem(thePlayer)

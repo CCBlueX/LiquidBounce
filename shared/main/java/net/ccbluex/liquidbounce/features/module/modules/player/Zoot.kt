@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import java.util.stream.Stream
 
@@ -38,8 +39,10 @@ class Zoot : Module()
 
 			if (effect != null)
 			{
-				repeat(effect.duration / 20) {
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+				WorkerUtils.workers.submit {
+					repeat(effect.duration / 20) {
+						mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+					}
 				}
 			}
 		}
@@ -47,8 +50,10 @@ class Zoot : Module()
 
 		if (fireValue.get() && !thePlayer.capabilities.isCreativeMode && thePlayer.burning)
 		{
-			repeat(9) {
-				mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+			WorkerUtils.workers.submit {
+				repeat(9) {
+					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+				}
 			}
 		}
 	}

@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.MurderDetector
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import java.awt.Color
 import java.text.NumberFormat
 import java.util.regex.Pattern
@@ -34,14 +35,16 @@ object ColorUtils : MinecraftInstance()
 
 	init
 	{
-		repeat(16) { i ->
-			val baseColor = (i shr 3 and 1) * 85
+		WorkerUtils.workers.submit {
+			repeat(16) { i ->
+				val baseColor = (i shr 3 and 1) * 85
 
-			val red = (i shr 2 and 1) * 170 + baseColor + if (i == 6) 85 else 0
-			val green = (i shr 1 and 1) * 170 + baseColor
-			val blue = (i and 1) * 170 + baseColor
+				val red = (i shr 2 and 1) * 170 + baseColor + if (i == 6) 85 else 0
+				val green = (i shr 1 and 1) * 170 + baseColor
+				val blue = (i and 1) * 170 + baseColor
 
-			hexColors[i] = red and 255 shl 16 or (green and 255 shl 8) or (blue and 255)
+				hexColors[i] = red and 255 shl 16 or (green and 255 shl 8) or (blue and 255)
+			}
 		}
 	}
 
