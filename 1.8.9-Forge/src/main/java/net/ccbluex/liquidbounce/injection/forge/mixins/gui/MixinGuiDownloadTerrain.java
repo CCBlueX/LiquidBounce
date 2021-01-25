@@ -33,15 +33,15 @@ public abstract class MixinGuiDownloadTerrain extends MixinGuiScreen
 	{
 		if (button.id == 0)
 		{
-			final boolean flag = mc.isIntegratedServerRunning();
-			final boolean flag1 = mc.isConnectedToRealms();
+			final boolean integratedServerRunning = mc.isIntegratedServerRunning();
+			final boolean connectedToRealms = mc.isConnectedToRealms();
 			button.enabled = false;
 			mc.theWorld.sendQuittingDisconnectingPacket();
 			mc.loadWorld(null);
 
-			if (flag)
+			if (integratedServerRunning)
 				mc.displayGuiScreen(new GuiMainMenu());
-			else if (flag1)
+			else if (connectedToRealms)
 			{
 				final RealmsBridge realmsbridge = new RealmsBridge();
 				realmsbridge.switchToRealms(new GuiMainMenu());

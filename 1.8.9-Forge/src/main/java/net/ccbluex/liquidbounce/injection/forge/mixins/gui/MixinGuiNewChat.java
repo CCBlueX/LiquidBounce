@@ -42,9 +42,6 @@ public abstract class MixinGuiNewChat
 	private int scrollPos;
 	@Shadow
 	private boolean isScrolled;
-	@Shadow
-	@Final
-	private List<ChatLine> chatLines;
 
 	@Shadow
 	public abstract int getLineCount();
@@ -57,12 +54,6 @@ public abstract class MixinGuiNewChat
 
 	@Shadow
 	public abstract int getChatWidth();
-
-	@Shadow
-	public abstract void deleteChatLine(int p_deleteChatLine_1_);
-
-	@Shadow
-	public abstract void scroll(int p_scroll_1_);
 
 	@Inject(method = "drawChat", at = @At("HEAD"), cancellable = true)
 	private void drawChat(final int p_drawChat_1_, final CallbackInfo callbackInfo)
@@ -201,9 +192,11 @@ public abstract class MixinGuiNewChat
 							int lvt_11_1_ = 0;
 
 							for (final IChatComponent lvt_13_1_ : lvt_10_1_.getChatComponent())
-								if (lvt_13_1_ instanceof ChatComponentText) {
+								if (lvt_13_1_ instanceof ChatComponentText)
+								{
 									lvt_11_1_ += font.getStringWidth(GuiUtilRenderComponents.func_178909_a(((ChatComponentText) lvt_13_1_).getChatComponentText_TextValue(), false));
-									if (lvt_11_1_ > lvt_6_1_) {
+									if (lvt_11_1_ > lvt_6_1_)
+									{
 										callbackInfo.setReturnValue(lvt_13_1_);
 										return;
 									}

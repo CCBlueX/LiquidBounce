@@ -39,6 +39,8 @@
     "gui.MixinGuiSpectator",
     "gui.MixinServerSelectionList",
     "gui.MixinGuiContainer",
+    "gui.MixinServerListEntryNormal",
+    "gui.MixinServerListEntryLanScan",
 
     "item.MixinItemRenderer",
     "item.MixinMixinItemStack",

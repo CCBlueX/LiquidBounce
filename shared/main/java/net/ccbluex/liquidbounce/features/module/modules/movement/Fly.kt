@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.exploit.Damage
 import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
@@ -71,6 +72,11 @@ class Fly : Module()
 
 	// Damage
 	private val damageOnStartValue = BoolValue("DamageOnStart", false)
+	val damageModeValue = ListValue(
+		"DamageMode", arrayOf(
+			"NCP", "Hypixel"
+		), "NCP"
+	)
 
 	// Vanilla
 	val vanillaSpeedValue = FloatValue("VanillaSpeed", 2f, 0f, 5f)
@@ -146,7 +152,7 @@ class Fly : Module()
 	private var aacJump = 0.0
 	private var aac3delay = 0
 	private var aac3glideDelay = 0
-	private var noFlag = false
+	private var aac3_1_6_touchedVoid = false
 	private var minesuchtTP: Long = 0
 	private var wasDead = false
 
@@ -178,25 +184,34 @@ class Fly : Module()
 		{
 			var fallDistance = 3.0125 //add 0.0125 to ensure we get the fall dmg
 
-			Thread {
-				for (i in 0..9)
+			WorkerUtils.workers.submit {
+				when (damageModeValue.get().toLowerCase())
 				{
+					"ncp" -> Damage.ncpDamage(1)
 
-					//Imagine flagging to NCP.
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
+					"hypixel" ->
+					{
+						for (i in 0..9)
+						{
+
+							//Imagine flagging to NCP.
+							mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
+						}
+
+						while (fallDistance > 0)
+						{
+							mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.0624986421, thePlayer.posZ, false))
+							mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.0625, thePlayer.posZ, false))
+							mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.0624986421, thePlayer.posZ, false))
+							mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.0000013579, thePlayer.posZ, false))
+							fallDistance -= 0.0624986421
+						}
+
+						mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
+					}
 				}
+			}
 
-				while (fallDistance > 0)
-				{
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.0624986421, thePlayer.posZ, false))
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.0625, thePlayer.posZ, false))
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.0624986421, thePlayer.posZ, false))
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.0000013579, thePlayer.posZ, false))
-					fallDistance -= 0.0624986421
-				}
-
-				mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
-			}.start()
 		}
 
 		run {
@@ -260,25 +275,22 @@ class Fly : Module()
 					thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)
 				}
 
-				"hypixel" ->
+				"hypixel" -> if ((hypixelDMGBoost.get() && (hypixelDMGBoostAirStartMode.get().equals("WaitForDamage", ignoreCase = true) || thePlayer.onGround)).apply { canPerformHypixelDamageFly = this })
 				{
-					if ((hypixelDMGBoost.get() && (hypixelDMGBoostAirStartMode.get().equals("WaitForDamage", ignoreCase = true) || thePlayer.onGround)).apply { canPerformHypixelDamageFly = this })
+					if (thePlayer.onGround) // If player is on ground, try to damage.
 					{
-						if (thePlayer.onGround) // If player is on ground, try to damage.
+						if (!hypixelFlyStarted) if (hypixelDMGBoostStartTiming.get().equals("Immediately", ignoreCase = true))
 						{
-							if (!hypixelFlyStarted) if (hypixelDMGBoostStartTiming.get().equals("Immediately", ignoreCase = true))
-							{
-								if (hypixelJump.get()) jump()
-								hypixelBoostStep = 1
-								hypixelBoostSpeed = 0.1
-								lastDistance = 0.0
-								hypixelDamageBoostFailed = false
-								hypixelFlyStarted = true
-								hypixelFlyTimer.reset()
-							} else waitForDamage = true
+							if (hypixelJump.get()) jump()
+							hypixelBoostStep = 1
+							hypixelBoostSpeed = 0.1
+							lastDistance = 0.0
+							hypixelDamageBoostFailed = false
+							hypixelFlyStarted = true
+							hypixelFlyTimer.reset()
 						} else waitForDamage = true
-					} else if (hypixelJump.get() && thePlayer.onGround) jump()
-				}
+					} else waitForDamage = true
+				} else if (hypixelJump.get() && thePlayer.onGround) jump()
 
 				"redesky" -> if (thePlayer.onGround) redeskyVClip(redeskyVClipHeight.get())
 
@@ -311,7 +323,7 @@ class Fly : Module()
 
 		val thePlayer = mc.thePlayer ?: return
 
-		noFlag = false
+		aac3_1_6_touchedVoid = false
 
 		waitForDamage = false
 		hypixelFlyStarted = false
@@ -445,17 +457,14 @@ class Fly : Module()
 				"aac3.1.6-gomme" ->
 				{
 					thePlayer.capabilities.isFlying = true
-					if (aac3delay == 2)
-					{
-						thePlayer.motionY += 0.05
-					} else if (aac3delay > 2)
+					if (aac3delay == 2) thePlayer.motionY += 0.05 else if (aac3delay > 2)
 					{
 						thePlayer.motionY -= 0.05
 						aac3delay = 0
 					}
 					aac3delay++
-					if (!noFlag) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.onGround))
-					if (thePlayer.posY <= 0.0) noFlag = true
+					if (!aac3_1_6_touchedVoid) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.onGround))
+					if (thePlayer.posY <= 0.0) aac3_1_6_touchedVoid = true
 				}
 
 				"flag" ->

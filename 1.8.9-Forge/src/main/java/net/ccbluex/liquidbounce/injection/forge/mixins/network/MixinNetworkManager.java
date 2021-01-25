@@ -20,7 +20,9 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
+import net.minecraft.util.LazyLoadBase;
 
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,12 +31,26 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 
 @Mixin(NetworkManager.class)
 public abstract class MixinNetworkManager implements IMixinNetworkManager
 {
+	@Shadow
+	@Final
+	private static Logger logger;
+
+	@Shadow
+	@Final
+	public static LazyLoadBase<NioEventLoopGroup> CLIENT_NIO_EVENTLOOP;
+
+	@Shadow
+	@Final
+	public static LazyLoadBase<EpollEventLoopGroup> CLIENT_EPOLL_EVENTLOOP;
+
 	@Shadow
 	@Final
 	protected ReentrantReadWriteLock readWriteLock;
@@ -85,6 +101,58 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 				PPSCounter.registerPacket(BoundType.OUTBOUND);
 		}
 	}
+
+	// FIXME: It doesn't work correctly
+	//	@Overwrite
+	//	public static NetworkManager createNetworkManagerAndConnect(final InetAddress address, final int serverPort, final boolean useNativeTransport)
+	//	{
+	//		final NetworkManager networkmanager = new NetworkManager(EnumPacketDirection.CLIENTBOUND);
+	//
+	//		final Class<? extends Channel> channelClass;
+	//		final LazyLoadBase<? extends EventLoopGroup> eventLoopGroupLazy;
+	//		if (Epoll.isAvailable() && useNativeTransport)
+	//		{
+	//			channelClass = EpollSocketChannel.class;
+	//			eventLoopGroupLazy = CLIENT_EPOLL_EVENTLOOP;
+	//		}
+	//		else
+	//		{
+	//			channelClass = NioSocketChannel.class;
+	//			eventLoopGroupLazy = CLIENT_NIO_EVENTLOOP;
+	//		}
+	//
+	//		final EventLoopGroup eventLoopGroup = eventLoopGroupLazy.getValue();
+	//		if (eventLoopGroup != null)
+	//			logger.info("using EventLoopGroup " + eventLoopGroup.getClass().getSimpleName() + " to connect " + address);
+	//		else
+	//			logger.warn("eventLoopGroup is null!!! This can't be happened!");
+	//
+	//		// Connect to the server
+	//		new Bootstrap().group(eventLoopGroup).handler(new ChannelInitializer<Channel>()
+	//		{
+	//			protected void initChannel(final Channel channel)
+	//			{
+	//				// Enable TCPNoDelay
+	//				try
+	//				{
+	//					channel.config().setOption(ChannelOption.TCP_NODELAY, true);
+	//				}
+	//				catch (final ChannelException var3)
+	//				{
+	//				}
+	//
+	//				channel.pipeline() // Build pipeline
+	//						.addLast("timeout", new ReadTimeoutHandler(30)) // Timeout
+	//						.addLast("splitter", new MessageDeserializer2()) // Splitter
+	//						.addLast("decoder", new MessageDeserializer(EnumPacketDirection.CLIENTBOUND)) // Decoder
+	//						.addLast("prepender", new MessageSerializer2()) // Prepender
+	//						.addLast("encoder", new MessageSerializer(EnumPacketDirection.SERVERBOUND)) // Encoder
+	//						.addLast("packet_handler", networkmanager); // PacketHandler (NetworkManager)
+	//			}
+	//		}).channel(channelClass).connect(address, serverPort).syncUninterruptibly();
+	//
+	//		return networkmanager;
+	//	}
 
 	@Override
 	public void sendPacketWithoutEvent(final Packet<?> packetIn)

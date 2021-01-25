@@ -30,7 +30,7 @@ class HurtCommand : Command("hurt")
 		}
 
 		// Latest NoCheatPlus damage exploit
-		Damage.damage(damage)
+		Damage.ncpDamage(damage)
 
 		// Output message
 		chat("You were damaged.")

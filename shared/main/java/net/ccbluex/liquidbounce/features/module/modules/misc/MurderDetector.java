@@ -7,7 +7,7 @@ import java.util.Objects;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem;
 import net.ccbluex.liquidbounce.event.EventTarget;
-import net.ccbluex.liquidbounce.event.TickEvent;
+import net.ccbluex.liquidbounce.event.UpdateEvent;
 import net.ccbluex.liquidbounce.event.WorldEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
@@ -34,7 +34,7 @@ public class MurderDetector extends Module
 	}
 
 	@EventTarget
-	public final void onTick(final TickEvent event)
+	public final void onUpdate(final UpdateEvent event)
 	{
 		for (final Object o : Objects.requireNonNull(mc.getTheWorld()).getLoadedEntityList())
 			if (o instanceof IEntityPlayer)

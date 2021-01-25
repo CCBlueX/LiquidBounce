@@ -44,7 +44,7 @@ public abstract class MixinGuiMultiplayer extends MixinGuiScreen
 				break;
 			case 998:
 				BungeeCordSpoof.enabled = !BungeeCordSpoof.enabled;
-				bungeeCordSpoofButton.displayString = "BungeeCord Spoof: " + (BungeeCordSpoof.enabled ? "On" : "Off");
+				bungeeCordSpoofButton.displayString = "BungeeCord Spoof: " + (BungeeCordSpoof.enabled ? "\u00A7a(On)" : "\u00A7c(Off)");
 				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 999:

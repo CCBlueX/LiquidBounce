@@ -18,6 +18,9 @@ class NetworkManagerImpl(val wrapped: NetworkManager) : INetworkManager
 	override val lastPacket: Long
 		get() = (wrapped as IMixinNetworkManager).lastPacket()
 
+	override val channelOpen: Boolean
+		get() = wrapped.isChannelOpen
+
 	override fun sendPacket(packet: IPacket) = wrapped.sendPacket(packet.unwrap())
 	override fun sendPacket(packet: IPacket, listener: () -> Unit) = wrapped.sendPacket(packet.unwrap(), GenericFutureListener { listener() })
 
