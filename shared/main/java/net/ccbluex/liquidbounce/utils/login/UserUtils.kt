@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.utils.login
 
 import com.google.gson.JsonParser
 import org.apache.http.HttpHeaders
+import org.apache.http.StatusLine
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.StringEntity
@@ -34,6 +35,11 @@ object UserUtils
 
 	fun isValidToken(token: String): Boolean
 	{
+		return isValidTokenStatus(token).statusCode == 204
+	}
+
+	fun isValidTokenStatus(token: String): StatusLine
+	{
 		val client = HttpClients.createDefault()
 		val headers = arrayOf(
 			BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json")
@@ -48,7 +54,7 @@ object UserUtils
 
 		val response = client.execute(request)
 
-		return response.statusLine.statusCode == 204
+		return response.statusLine
 	}
 
 	fun getUsername(uuid: String): String?

@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
 import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 import net.ccbluex.liquidbounce.api.minecraft.util.WEnumChatFormatting
@@ -14,17 +13,13 @@ import net.ccbluex.liquidbounce.chat.packet.packets.*
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
-import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.login.UserUtils
-import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
-import java.awt.Toolkit
-import java.awt.datatransfer.StringSelection
 import java.net.URI
 import java.net.URISyntaxException
 import java.util.regex.Pattern

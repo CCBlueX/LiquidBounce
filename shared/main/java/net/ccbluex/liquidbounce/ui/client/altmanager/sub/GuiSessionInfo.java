@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Optional;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -26,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.WorkerUtils;
 import net.ccbluex.liquidbounce.utils.login.UserUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 
+import org.apache.http.StatusLine;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.input.Keyboard;
 
@@ -50,7 +52,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 	private String subject;
 	@Nullable
 	private String accesstoken;
-	private boolean accesstokenValid;
+	private String accesstokenInvalidMessage;
 	private boolean accesstokenChecked;
 	@Nullable
 	private String uuid;
@@ -118,7 +120,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 
 		if (accesstoken != null)
 			if (accesstokenChecked)
-				Fonts.font35.drawCenteredString((accesstokenValid ? "\u00A7a" : "\u00A7c") + "Access Token: " + accesstoken + " \u00A78(" + (accesstokenValid ? "\u00A7aValid" : "\u00A7cInvalid") + "\u00A78)", width / 2, 175, Color.GREEN.getRGB());
+				Fonts.font35.drawCenteredString((accesstokenInvalidMessage == null ? "\u00A7a" : "\u00A7c") + "Access Token: " + accesstoken + " \u00A78(" + Optional.ofNullable(accesstokenInvalidMessage).map(invalidMessage -> "\u00A7c" + invalidMessage).orElse("\u00A7aValid") + "\u00A78)", width / 2, 175, Color.GREEN.getRGB());
 			else
 				Fonts.font35.drawCenteredString("\u00A78Access Token: " + accesstoken + " \u00A78(Checking...)", width / 2, 175, Color.GREEN.getRGB());
 
@@ -299,7 +301,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 		{
 			subject = null;
 			accesstoken = null;
-			accesstokenValid = false;
+			accesstokenInvalidMessage = null;
 			accesstokenChecked = false;
 			uuid = null;
 			nickname = null;
@@ -324,16 +326,23 @@ public class GuiSessionInfo extends WrappedGuiScreen
 					subject = payloadJson.get("sub").getAsString();
 				else
 				{
-					status = "\u00A7cFailed to parse subject member from payload! This cannot be happened!";
+					status = "\u00A7cFailed to parse subject member from payload!";
 					trouble = true;
 				}
 
+				// Validate Token
 				if (payloadJson.has("yggt"))
 				{
 					accesstoken = payloadJson.get("yggt").getAsString();
 					WorkerUtils.getWorkers().submit(() ->
 					{
-						loginButton.setEnabled(accesstokenValid = UserUtils.INSTANCE.isValidToken(accesstoken));
+						final StatusLine status = UserUtils.INSTANCE.isValidTokenStatus(accesstoken);
+						final boolean tokenValid = status.getStatusCode() == 204;
+
+						if (!tokenValid)
+							accesstokenInvalidMessage = "Invalid token; HTTP " + status.getStatusCode() + Optional.ofNullable(status.getReasonPhrase()).map(reasonPhrase -> " :: " + reasonPhrase).orElse("");
+
+						loginButton.setEnabled(tokenValid);
 						accesstokenChecked = true;
 					});
 				}
@@ -343,6 +352,7 @@ public class GuiSessionInfo extends WrappedGuiScreen
 					trouble = true;
 				}
 
+				// Validate UUID
 				if (payloadJson.has("spr"))
 				{
 					uuid = payloadJson.get("spr").getAsString();
