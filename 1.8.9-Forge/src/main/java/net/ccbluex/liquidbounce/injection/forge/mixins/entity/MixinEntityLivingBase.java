@@ -86,10 +86,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 		if (isPotionActive(Potion.jump))
 			motionY += (getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F;
 
-		// Sprint-jump with Speed module enabled will boost you too fast as get caught by anticheats.
-		final Speed speed = (Speed) LiquidBounce.moduleManager.get(Speed.class);
-
-		if (isSprinting() && (!speed.getState() || speed.allowSprintBoost()))
+		if (isSprinting())
 		{
 			// Boost
 			final float dir = MovementUtils.getDirection(); // Compatibility with Sprint AllDirection mode

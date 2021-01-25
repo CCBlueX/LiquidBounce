@@ -157,8 +157,6 @@ class Speed : Module()
 		mode?.onDisable()
 	}
 
-	fun allowSprintBoost(): Boolean = modeValue.get().equals("AntiCheatPlus", ignoreCase = true)
-
 	override val tag: String
 		get() = modeValue.get()
 

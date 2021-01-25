@@ -33,14 +33,7 @@ class PACBHop : SpeedMode("PhoenixAC-BHop")
 
 			MovementUtils.strafe(moveSpeed)
 
-			if (thePlayer.onGround)
-			{
-				val dir = MovementUtils.direction
-
-				thePlayer.motionX -= functions.sin(dir) * 0.2f
-				thePlayer.motionZ += functions.cos(dir) * 0.2f
-				thePlayer.jump()
-			}
+			if (thePlayer.onGround) thePlayer.jump()
 
 			MovementUtils.strafe()
 		} else

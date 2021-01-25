@@ -3,7 +3,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
@@ -23,14 +22,7 @@ class DaedalusAACBHop : SpeedMode("DaedalusAAC-BHop")
 		{
 			strafe(0.3f)
 
-			if (thePlayer.onGround)
-			{
-				val dir = MovementUtils.direction
-
-				thePlayer.motionX -= functions.sin(dir) * 0.2f
-				thePlayer.motionZ += functions.cos(dir) * 0.2f
-				thePlayer.jump()
-			}
+			if (thePlayer.onGround) thePlayer.jump()
 
 			strafe()
 		} else

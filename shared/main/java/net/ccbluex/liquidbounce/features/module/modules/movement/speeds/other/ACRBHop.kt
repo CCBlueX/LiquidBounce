@@ -4,7 +4,6 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
 /**
@@ -29,9 +28,10 @@ class ACRBHop : SpeedMode("AntiCheatReloaded-BHop")
 
 			if (thePlayer.onGround)
 			{
-				val f = direction
-				thePlayer.motionX -= (functions.sin(f) * 0.2f).toDouble()
-				thePlayer.motionZ += (functions.cos(f) * 0.2f).toDouble()
+
+				//				val f = direction
+				//				thePlayer.motionX -= (functions.sin(f) * 0.2f).toDouble()
+				//				thePlayer.motionZ += (functions.cos(f) * 0.2f).toDouble()
 				thePlayer.jump()
 			}
 
