@@ -174,7 +174,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 					if (nwmanInnerClasses.getSimpleName().equalsIgnoreCase("InboundHandlerTuplePacketListener"))
 						outboundPacketsQueue.add(nwmanInnerClasses.getConstructor(Packet.class, GenericFutureListener[].class).newInstance(packetIn, null));
 
-				PPSCounter.registerPacket(BoundType.OUTBOUND);
+
 			}
 			catch (final InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e)
 			{
@@ -185,6 +185,8 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 				readWriteLock.writeLock().unlock();
 			}
 		}
+
+		PPSCounter.registerPacket(BoundType.OUTBOUND);
 	}
 
 	@Override

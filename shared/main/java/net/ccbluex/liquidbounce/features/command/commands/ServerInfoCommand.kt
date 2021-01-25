@@ -32,7 +32,7 @@ class ServerInfoCommand : Command("serverinfo"), Listenable
 			return
 		}
 
-		val data = mc.currentServerData ?: return
+		val data = mc.currentServerData!!
 
 		chat("Server infos:")
 		chat("\u00A77Name: \u00A78${data.serverName}")
