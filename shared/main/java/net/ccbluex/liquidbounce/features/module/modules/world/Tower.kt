@@ -158,6 +158,7 @@ class Tower : Module()
 
 		mc.timer.timerSpeed = 1.0F
 		lockRotation = null
+		active = false
 
 		// Restore to original slot
 		if (slot != thePlayer.inventory.currentItem) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))

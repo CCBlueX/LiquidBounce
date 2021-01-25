@@ -5,10 +5,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
@@ -24,6 +27,7 @@ class LongJump : Module()
 	private val teleportDistanceValue = FloatValue("TeleportDistance", 2.5f, 1.0f, 10.0f)
 	private val autoJumpValue = BoolValue("AutoJump", false)
 	private val autoDisableValue = BoolValue("AutoDisable", true)
+	private val autoDisableScaffoldValue = BoolValue("DisableScaffoldAndTower", true)
 
 	private var jumped = false
 	private var canBoost = false
@@ -36,6 +40,15 @@ class LongJump : Module()
 		jumped = false
 		canBoost = false
 		canMineplexBoost = false
+
+		if (autoDisableScaffoldValue.get())
+		{
+			val scaffold = LiquidBounce.moduleManager[Scaffold::class.java]
+			val tower = LiquidBounce.moduleManager[Tower::class.java]
+
+			if (scaffold.state) scaffold.state = false
+			if (tower.state) tower.state = false
+		}
 	}
 
 	@EventTarget

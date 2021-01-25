@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
@@ -13,6 +14,8 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
@@ -30,6 +33,7 @@ class HighJump : Module()
 	private val mineplexHeightValue = FloatValue("MineplexHeight", 0.1f, 5.0f, 10.0f)
 	private val glassValue = BoolValue("OnlyGlassPane", false)
 	private val autodisable = BoolValue("AutoDisable", true)
+	private val autoDisableScaffoldValue = BoolValue("DisableScaffoldAndTower", true)
 
 	private var jumped = false
 	private var mineplexStage = 0
@@ -38,6 +42,16 @@ class HighJump : Module()
 	{
 		mineplexStage = -1
 		jumped = false
+
+		if (autoDisableScaffoldValue.get())
+		{
+			val scaffold = LiquidBounce.moduleManager[Scaffold::class.java]
+			val tower = LiquidBounce.moduleManager[Tower::class.java]
+
+			if (scaffold.state) scaffold.state = false
+			if (tower.state) tower.state = false
+		}
+
 		if (modeValue.get().equals("mineplex", ignoreCase = true)) ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cWalk off an island to highjump.")
 	}
 
@@ -162,7 +176,7 @@ class HighJump : Module()
 			thePlayer.motionX *= 0
 			thePlayer.motionZ *= 0
 			thePlayer.jumpMovementFactor = 0.0F
-			ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cLagback detected. Disabled highjump.")
+			ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cSetback detected. Disabled highjump.")
 		}
 	}
 
