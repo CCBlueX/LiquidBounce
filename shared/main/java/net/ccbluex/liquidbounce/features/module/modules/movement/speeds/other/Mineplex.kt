@@ -5,10 +5,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import kotlin.math.*
+import kotlin.math.hypot
+import kotlin.math.max
+import kotlin.math.min
 
 class Mineplex : SpeedMode("Mineplex")
 {
@@ -46,7 +49,7 @@ class Mineplex : SpeedMode("Mineplex")
 		MovementUtils.strafe(strafe)
 	}
 
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 	}
 

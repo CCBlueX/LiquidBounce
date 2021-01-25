@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import kotlin.math.hypot
-import kotlin.math.sqrt
 
 object MovementUtils : MinecraftInstance()
 {

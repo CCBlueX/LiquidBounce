@@ -5,15 +5,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class AAC3_1_0YPort : SpeedMode("AAC3.1.0-YPort")
 {
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		if (eventState != EventState.PRE) return
 
 		if (MovementUtils.isMoving && !thePlayer.sneaking)
 		{

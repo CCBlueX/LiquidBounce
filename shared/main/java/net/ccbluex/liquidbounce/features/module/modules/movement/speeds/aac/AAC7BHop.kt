@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -34,7 +35,7 @@ class AAC7BHop : SpeedMode("AAC7BHop")
 		thePlayer.motionZ = functions.cos(yaw) * speed
 	}
 
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 	}
 

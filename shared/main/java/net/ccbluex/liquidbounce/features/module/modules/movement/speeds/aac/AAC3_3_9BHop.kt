@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -53,7 +54,7 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop")
 		}
 	}
 
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 	}
 

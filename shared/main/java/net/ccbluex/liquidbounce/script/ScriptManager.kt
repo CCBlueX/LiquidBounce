@@ -7,13 +7,11 @@ package net.ccbluex.liquidbounce.script
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.WorkerUtils
 import java.io.File
 import java.io.FileFilter
 
 class ScriptManager
 {
-
 	val scripts = mutableListOf<Script>()
 
 	val scriptsFolder = File(LiquidBounce.fileManager.dir, "scripts")
@@ -26,8 +24,7 @@ class ScriptManager
 	{
 		if (!scriptsFolder.exists()) scriptsFolder.mkdir()
 
-		// TEST: Multi-threaded script load
-		scriptsFolder.listFiles(FileFilter { it.name.endsWith(scriptFileExtension) })?.forEach { WorkerUtils.workers.submit { loadScript(it) } }
+		scriptsFolder.listFiles(FileFilter { it.name.endsWith(scriptFileExtension) })?.forEach(::loadScript)
 	}
 
 	/**

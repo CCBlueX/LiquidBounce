@@ -6,16 +6,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class HypixelBHop : SpeedMode("HypixelHop")
 {
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 		val thePlayer = mc.thePlayer ?: return
-		
+		if (eventState != EventState.PRE) return
+
 		if (MovementUtils.isMoving)
 		{
 			if (thePlayer.onGround)

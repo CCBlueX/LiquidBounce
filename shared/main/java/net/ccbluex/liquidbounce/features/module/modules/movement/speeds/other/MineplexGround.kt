@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -20,9 +21,10 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 	private var spoofSlot = false
 	private var speed = 0f
 
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		if (eventState != EventState.PRE) return
 
 		if (!MovementUtils.isMoving || !thePlayer.onGround || thePlayer.inventory.getCurrentItemInHand() == null || thePlayer.isUsingItem) return
 		spoofSlot = false

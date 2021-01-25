@@ -1,10 +1,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils.direction
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
@@ -14,8 +14,40 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
  */
 class PACBHop : SpeedMode("PhoenixAC-BHop")
 {
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
+		val thePlayer = mc.thePlayer ?: return
+
+		if (MovementUtils.isMoving)
+		{
+			val moveSpeed = when (if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier else -1)
+			{
+				0 -> 0.40F // 0.31 +6 +6 +
+				1 -> 0.48F // 0.37 - previous value
+				2 -> 0.56F // 0.41
+				3 -> 0.63F // 0.45
+				4 -> 0.71F // 0.49
+				5 -> 0.80F // 0.53
+				else -> 0.33F
+			}
+
+			MovementUtils.strafe(moveSpeed)
+
+			if (thePlayer.onGround)
+			{
+				val dir = MovementUtils.direction
+
+				thePlayer.motionX -= functions.sin(dir) * 0.2f
+				thePlayer.motionZ += functions.cos(dir) * 0.2f
+				thePlayer.jump()
+			}
+
+			MovementUtils.strafe()
+		} else
+		{
+			thePlayer.motionX = 0.0
+			thePlayer.motionZ = 0.0
+		}
 	}
 
 	override fun onUpdate()
@@ -24,34 +56,5 @@ class PACBHop : SpeedMode("PhoenixAC-BHop")
 
 	override fun onMove(event: MoveEvent)
 	{
-		val thePlayer = mc.thePlayer ?: return
-
-		if (isMoving)
-		{
-			val dir = direction
-			val amplifier = if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier else -1
-			thePlayer.motionX *= 0.8
-			thePlayer.motionZ *= 0.8
-			var moveSpeed = 0.55
-			when (amplifier)
-			{
-				0 -> moveSpeed = 0.40 // 0.31 +6 +6 +
-				1 -> moveSpeed = 0.48 // 0.37 - previous value
-				2 -> moveSpeed = 0.56 // 0.41
-				3 -> moveSpeed = 0.63 // 0.45
-				4 -> moveSpeed = 0.71 // 0.49
-				5 -> moveSpeed = 0.80 // 0.53
-				else ->
-				{
-				}
-			}
-			if (thePlayer.onGround)
-			{
-				event.y = 0.42
-				thePlayer.jump()
-			}
-			event.x = -functions.sin(dir) * moveSpeed
-			event.z = functions.cos(dir) * moveSpeed
-		}
 	}
 }

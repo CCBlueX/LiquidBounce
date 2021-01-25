@@ -5,16 +5,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spartan
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 
 class SpartanYPort : SpeedMode("Spartan-YPort")
 {
 	private var airMoves = 0
-	override fun onMotion()
+
+	override fun onMotion(eventState: EventState)
 	{
 		val thePlayer = mc.thePlayer ?: return
-		
+		if (eventState != EventState.PRE) return
+
 		if (mc.gameSettings.keyBindForward.isKeyDown && !mc.gameSettings.keyBindJump.isKeyDown)
 		{
 			if (thePlayer.onGround)

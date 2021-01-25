@@ -7,12 +7,15 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import java.math.BigDecimal
 import java.math.RoundingMode
-import kotlin.math.*
+import kotlin.math.max
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 class OldNCPBHop : SpeedMode("OldNCPBHop")
 {
@@ -35,9 +38,10 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		level = 0
 	}
 
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		if (eventState != EventState.PRE) return
 
 		val xDist = thePlayer.posX - thePlayer.prevPosX
 		val zDist = thePlayer.posZ - thePlayer.prevPosZ

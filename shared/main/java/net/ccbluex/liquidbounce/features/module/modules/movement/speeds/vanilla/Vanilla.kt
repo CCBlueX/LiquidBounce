@@ -1,10 +1,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.vanilla
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.MovementUtils
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
@@ -14,9 +15,8 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
  */
 class Vanilla : SpeedMode("Vanilla")
 {
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
-		strafe((LiquidBounce.moduleManager[Speed::class.java] as Speed).vanillaSpeedValue.get())
 	}
 
 	override fun onUpdate()
@@ -25,5 +25,12 @@ class Vanilla : SpeedMode("Vanilla")
 
 	override fun onMove(event: MoveEvent)
 	{
+		if (MovementUtils.isMoving)
+		{
+			val moveSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).vanillaSpeedValue.get()
+			val dir = MovementUtils.direction
+			event.x = (-functions.sin(dir) * moveSpeed).toDouble()
+			event.z = (functions.cos(dir) * moveSpeed).toDouble()
+		}
 	}
 }

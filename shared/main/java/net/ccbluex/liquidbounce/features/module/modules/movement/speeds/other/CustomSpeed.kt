@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -13,9 +14,10 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class CustomSpeed : SpeedMode("Custom")
 {
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		if (eventState != EventState.PRE) return
 
 		if (MovementUtils.isMoving)
 		{
@@ -42,7 +44,7 @@ class CustomSpeed : SpeedMode("Custom")
 	override fun onEnable()
 	{
 		val thePlayer = mc.thePlayer ?: return
-		
+
 		val speed = LiquidBounce.moduleManager[Speed::class.java] as Speed? ?: return
 		if (speed.resetXZValue.get())
 		{

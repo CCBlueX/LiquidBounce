@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -16,7 +17,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 
 class AACPort : SpeedMode("AACPort")
 {
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 	}
 

@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.JumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.AirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.LiquidWalk;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay;
+import net.ccbluex.liquidbounce.features.module.modules.movement.Speed;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.minecraft.block.Block;
@@ -85,12 +86,15 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 		if (isPotionActive(Potion.jump))
 			motionY += (getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F;
 
-		if (isSprinting())
+		// Sprint-jump with Speed module enabled will boost you too fast as get caught by anticheats.
+		final Speed speed = (Speed) LiquidBounce.moduleManager.get(Speed.class);
+
+		if (isSprinting() && (!speed.getState() || speed.allowSprintBoost()))
 		{
-			// final float f = rotationYaw * 0.017453292F;
-			final float f = MovementUtils.getDirection(); // Compatibility with Sprint AllDirection mode
-			motionX -= MathHelper.sin(f) * 0.2F;
-			motionZ += MathHelper.cos(f) * 0.2F;
+			// Boost
+			final float dir = MovementUtils.getDirection(); // Compatibility with Sprint AllDirection mode
+			motionX -= MathHelper.sin(dir) * 0.2F;
+			motionZ += MathHelper.cos(dir) * 0.2F;
 		}
 
 		isAirBorne = true;

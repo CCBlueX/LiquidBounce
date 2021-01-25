@@ -1,7 +1,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
+import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
@@ -13,14 +15,28 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
  */
 class DaedalusAACBHop : SpeedMode("DaedalusAAC-BHop")
 {
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 		val thePlayer = mc.thePlayer ?: return
 
 		if (isMoving)
 		{
-			if (thePlayer.onGround) thePlayer.jump()
 			strafe(0.3f)
+
+			if (thePlayer.onGround)
+			{
+				val dir = MovementUtils.direction
+
+				thePlayer.motionX -= functions.sin(dir) * 0.2f
+				thePlayer.motionZ += functions.cos(dir) * 0.2f
+				thePlayer.jump()
+			}
+
+			strafe()
+		} else
+		{
+			thePlayer.motionX = 0.0
+			thePlayer.motionZ = 0.0
 		}
 	}
 

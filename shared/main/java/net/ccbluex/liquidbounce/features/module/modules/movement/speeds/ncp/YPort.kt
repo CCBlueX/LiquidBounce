@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -26,9 +27,11 @@ class YPort : SpeedMode("YPort")
 	private var lastDist = 0.0
 	private var timerDelay = 0
 	private var safeJump = false
-	override fun onMotion()
+
+	override fun onMotion(eventState: EventState)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		if (eventState != EventState.PRE) return
 
 		if (!safeJump && !mc.gameSettings.keyBindJump.isKeyDown && !thePlayer.isOnLadder && !thePlayer.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.WATER)) && !thePlayer.isInsideOfMaterial(
 				classProvider.getMaterialEnum(

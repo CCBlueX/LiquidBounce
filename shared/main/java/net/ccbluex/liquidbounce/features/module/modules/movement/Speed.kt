@@ -107,10 +107,7 @@ class Speed : Module()
 
 		if (thePlayer.sneaking) return
 
-		if (MovementUtils.isMoving)
-		{
-			thePlayer.sprinting = true
-		}
+		if (MovementUtils.isMoving) thePlayer.sprinting = true
 
 		mode?.onUpdate()
 	}
@@ -120,11 +117,11 @@ class Speed : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer.sneaking || event.eventState != EventState.PRE) return
+		if (thePlayer.sneaking) return
 
 		if (MovementUtils.isMoving) thePlayer.sprinting = true
 
-		mode?.onMotion()
+		mode?.onMotion(event.eventState)
 	}
 
 	@EventTarget
@@ -159,6 +156,8 @@ class Speed : Module()
 
 		mode?.onDisable()
 	}
+
+	fun allowSprintBoost(): Boolean = modeValue.get().equals("AntiCheatPlus", ignoreCase = true)
 
 	override val tag: String
 		get() = modeValue.get()

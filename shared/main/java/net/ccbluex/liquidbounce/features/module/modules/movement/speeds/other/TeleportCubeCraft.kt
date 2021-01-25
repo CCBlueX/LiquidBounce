@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -15,7 +16,8 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 class TeleportCubeCraft : SpeedMode("TeleportCubeCraft")
 {
 	private val timer = MSTimer()
-	override fun onMotion()
+
+	override fun onMotion(eventState: EventState)
 	{
 	}
 

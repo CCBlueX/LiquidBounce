@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -15,9 +16,10 @@ class Frame : SpeedMode("Frame")
 	private var motionTicks = 0
 	private var move = false
 	private val tickTimer = TickTimer()
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		if (eventState != EventState.PRE) return
 
 		if (thePlayer.movementInput.moveForward > 0.0f || thePlayer.movementInput.moveStrafe > 0.0f)
 		{

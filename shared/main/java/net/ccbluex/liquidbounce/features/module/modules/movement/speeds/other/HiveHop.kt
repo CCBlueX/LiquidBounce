@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -23,7 +24,7 @@ class HiveHop : SpeedMode("HiveHop")
 		mc.timer.timerSpeed = 1f
 	}
 
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 	}
 

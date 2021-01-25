@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop"), Listenable
 {
-	override fun onMotion()
+	override fun onMotion(eventState: EventState)
 	{
 	}
 

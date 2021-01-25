@@ -361,7 +361,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 		if (!isSprinting() && movementInput.moveForward >= f && foodCheck && (noSlow.getState() || !isUsingItem()) && !isPotionActive(Potion.blindness) && mc.gameSettings.keyBindSprint.isKeyDown())
 			setSprinting(true);
 
-		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.getModule(Scaffold.class);
+		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.get(Scaffold.class);
+
 		if (scaffold.getState() && !scaffold.sprintValue.get() || sprint.getState() && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)
 			setSprinting(false);
 

@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -17,7 +18,8 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
 {
 	var mineplex = 0
 	var stage = 0
-	override fun onMotion()
+
+	override fun onMotion(eventState: EventState)
 	{
 	}
 
@@ -40,6 +42,7 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
 			speed = 0.62f - stage / 300.0f + mineplex / 5.0f
 			stage++
 		}
+
 		strafe(speed)
 	}
 

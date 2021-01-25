@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre
 
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -13,7 +14,8 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 class SpectreOnGround : SpeedMode("Spectre-OnGround")
 {
 	private var speedUp = 0
-	override fun onMotion()
+
+	override fun onMotion(eventState: EventState)
 	{
 	}
 
@@ -24,7 +26,7 @@ class SpectreOnGround : SpeedMode("Spectre-OnGround")
 	override fun onMove(event: MoveEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
-		
+
 		if (!MovementUtils.isMoving || thePlayer.movementInput.jump) return
 		if (speedUp >= 10)
 		{
