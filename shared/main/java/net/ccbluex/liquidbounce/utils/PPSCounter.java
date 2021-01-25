@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.utils;
 
 public final class PPSCounter
 {
-	private static final int MAX_PPS = 32767;
+	private static final int MAX_PPS = 1000;
 	private static final RollingArrayLongBuffer[] TIMESTAMP_BUFFERS = new RollingArrayLongBuffer[BoundType.values().length];
 
 	static
