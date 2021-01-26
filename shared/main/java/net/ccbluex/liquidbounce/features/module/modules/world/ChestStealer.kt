@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import kotlin.math.max
 import kotlin.random.Random
 
 @ModuleInfo(name = "ChestStealer", description = "Automatically steals all items from a chest.", category = ModuleCategory.WORLD)
@@ -114,6 +115,7 @@ class ChestStealer : Module()
 
 	// Bypass
 	private val chestTitleValue = BoolValue("ChestTitle", false)
+	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
 	// Visible
 	private val indicateClick = BoolValue("ClickIndication", true)
@@ -141,10 +143,10 @@ class ChestStealer : Module()
 
 		if (!classProvider.isGuiChest(mc.currentScreen) || mc.currentScreen == null)
 		{
-			if (delayOnFirstValue.get())
+			if (delayOnFirstValue.get() || itemDelayValue.get() > 0)
 			{
 				delayTimer.reset()
-				if (nextDelay < minStartDelay.get()) nextDelay = TimeUtils.randomDelay(minStartDelay.get(), maxStartDelay.get())
+				if (nextDelay < minStartDelay.get()) nextDelay = max(TimeUtils.randomDelay(minStartDelay.get(), maxStartDelay.get()), itemDelayValue.get().toLong())
 			}
 			autoCloseTimer.reset()
 			return
@@ -187,9 +189,7 @@ class ChestStealer : Module()
 			{
 				do
 				{
-					val items = (0 until screen.inventoryRows * 9).map(screen.inventorySlots!!::getSlot).filter {
-						it.stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(it.stack!!.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(it.stack!!, -1))
-					}
+					val items = (0 until screen.inventoryRows * 9).map(screen.inventorySlots!!::getSlot).filter { shouldTake(it.stack, inventoryCleaner) }
 
 					val randomSlot = Random.nextInt(items.size)
 					var slot = items[randomSlot]
@@ -252,8 +252,9 @@ class ChestStealer : Module()
 		if (classProvider.isSPacketWindowItems(packet)) contentReceived = packet.asSPacketWindowItems().windowId
 	}
 
-	private fun shouldTake(stack: IItemStack?, inventoryCleaner: InventoryCleaner): Boolean =
-		stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))
+	private fun shouldTake(stack: IItemStack?, inventoryCleaner: InventoryCleaner): Boolean = stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(
+		stack, -1
+	)) && (System.currentTimeMillis() - stack.itemDelay >= itemDelayValue.get())
 
 	private fun move(screen: IGuiChest, slot: ISlot, misclick: Boolean)
 	{
