@@ -19,14 +19,12 @@ import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState;
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase;
+import net.ccbluex.liquidbounce.api.minecraft.network.IPacket;
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging.WAction;
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity;
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos;
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3;
-import net.ccbluex.liquidbounce.event.AttackEvent;
-import net.ccbluex.liquidbounce.event.EventTarget;
-import net.ccbluex.liquidbounce.event.Render3DEvent;
-import net.ccbluex.liquidbounce.event.UpdateEvent;
+import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
@@ -48,8 +46,7 @@ import net.ccbluex.liquidbounce.value.ListValue;
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
  *
  * @author LeakedPvP
- * @game   Minecraft
- * // TODO: Maximum packets per ticks limit
+ * @game   Minecraft // TODO: Maximum packets per ticks limit
  */
 @ModuleInfo(name = "TpAura", description = "InfiniteAura from Sigma 4.1.", category = ModuleCategory.COMBAT)
 public class TpAura extends Module
@@ -160,8 +157,22 @@ public class TpAura extends Module
 					if (swingValue.get())
 						mc.getThePlayer().swingItem();
 
-					// Attack target
-					mc.getNetHandler().addToSendQueue(classProvider.createCPacketUseEntity(currentTarget, ICPacketUseEntity.WAction.ATTACK));
+					// Make AutoWeapon compatible
+					boolean sendAttack = true;
+					final IPacket attackPacket = classProvider.createCPacketUseEntity(currentTarget, ICPacketUseEntity.WAction.ATTACK);
+					final AutoWeapon autoWeapon = (AutoWeapon) LiquidBounce.moduleManager.get(AutoWeapon.class);
+
+					if (autoWeapon.getState())
+					{
+						final PacketEvent packetEvent = new PacketEvent(attackPacket);
+						autoWeapon.onPacket(packetEvent);
+
+						if (packetEvent.isCancelled())
+							sendAttack = false;
+					}
+
+					if (sendAttack)
+						mc.getNetHandler().addToSendQueue(attackPacket);
 
 					// Block after attack
 					if (canBlock() && !serverSideBlockingStatus && (mc.getThePlayer().isBlocking() || "Packet".equalsIgnoreCase(autoBlockValue.get())))
@@ -186,7 +197,8 @@ public class TpAura extends Module
 	@EventTarget
 	public final void onRender3D(final Render3DEvent event)
 	{
-		if (mc.getThePlayer() == null) return;
+		if (mc.getThePlayer() == null)
+			return;
 
 		if (!currentPath.isEmpty() && pathEspValue.get())
 		{

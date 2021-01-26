@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.enums.BlockType;
 import net.ccbluex.liquidbounce.api.enums.MaterialType;
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState;
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
+import net.ccbluex.liquidbounce.features.module.modules.combat.AutoWeapon;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.RaycastUtils;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
@@ -173,7 +175,24 @@ public class ExtendedReach extends Module
 				pathESPTimer.reset();
 
 				mc.getThePlayer().swingItem();
-				mc.getThePlayer().getSendQueue().addToSendQueue(classProvider.createCPacketUseEntity(targetEntity, ICPacketUseEntity.WAction.ATTACK));
+
+				// Make AutoWeapon compatible
+				boolean sendAttack = true;
+				final IPacket attackPacket = classProvider.createCPacketUseEntity(targetEntity, ICPacketUseEntity.WAction.ATTACK);
+				final AutoWeapon autoWeapon = (AutoWeapon) LiquidBounce.moduleManager.get(AutoWeapon.class);
+
+				if (autoWeapon.getState())
+				{
+					final PacketEvent packetEvent = new PacketEvent(attackPacket);
+					autoWeapon.onPacket(packetEvent);
+
+					if (packetEvent.isCancelled())
+						sendAttack = false;
+				}
+
+				if (sendAttack)
+					mc.getNetHandler().addToSendQueue(attackPacket);
+
 				mc.getThePlayer().onCriticalHit(targetEntity);
 
 				// Go back to the home.
