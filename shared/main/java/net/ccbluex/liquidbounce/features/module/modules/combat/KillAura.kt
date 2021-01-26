@@ -448,7 +448,9 @@ class KillAura : Module()
 	}
 
 	fun update()
-	{        // NoInventory
+	{
+
+		// NoInventory
 		if (cancelRun || (noInventoryAttackValue.get() && (classProvider.isGuiContainer(mc.currentScreen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))) return
 
 		// Update target
@@ -910,7 +912,8 @@ class KillAura : Module()
 	 */
 	private fun startBlocking(interactEntity: IEntity?, interact: Boolean)
 	{
-
+		val thePlayer = mc.thePlayer ?: return
+		
 		// BlockRate check
 		if (!(blockRate.get() > 0 && Random.nextInt(100) <= blockRate.get())) return
 
@@ -919,7 +922,7 @@ class KillAura : Module()
 
 		if (packet && !serverSideBlockingStatus)
 		{
-
+			
 			// Interact block
 			if (interact && interactEntity != null)
 			{
@@ -928,7 +931,7 @@ class KillAura : Module()
 				val expandSize = interactEntity.collisionBorderSize.toDouble()
 				val boundingBox = interactEntity.entityBoundingBox.expand(expandSize, expandSize, expandSize)
 
-				val (yaw, pitch) = RotationUtils.targetRotation ?: Rotation((mc.thePlayer ?: return).rotationYaw, (mc.thePlayer ?: return).rotationPitch)
+				val (yaw, pitch) = RotationUtils.targetRotation ?: Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch)
 				val yawRadians = WMathHelper.toRadians(yaw)
 				val pitchRadians = WMathHelper.toRadians(pitch)
 
@@ -937,20 +940,23 @@ class KillAura : Module()
 				val pitchCos = -functions.cos(-pitchRadians)
 				val pitchSin = functions.sin(-pitchRadians)
 
-				val range = min(maxAttackRange.toDouble(), (mc.thePlayer ?: return).getDistanceToEntityBox(interactEntity)) + 1
-				val lookAt = (positionEye ?: return).addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
+				val range = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(interactEntity)) + 1
+				val lookAt = positionEye!!.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
 
-				val movingObject = boundingBox.calculateIntercept(positionEye, lookAt) ?: return
-				val hitVec = movingObject.hitVec
+				val movingObject = boundingBox.calculateIntercept(positionEye, lookAt)
+				if (movingObject != null)
+				{
+					val hitVec = movingObject!!.hitVec
 
-				mc.netHandler.addToSendQueue(
-					classProvider.createCPacketUseEntity(
-						interactEntity, WVec3(
-							hitVec.xCoord - interactEntity.posX, hitVec.yCoord - interactEntity.posY, hitVec.zCoord - interactEntity.posZ
+					mc.netHandler.addToSendQueue(
+						classProvider.createCPacketUseEntity(
+							interactEntity, WVec3(
+								hitVec.xCoord - interactEntity.posX, hitVec.yCoord - interactEntity.posY, hitVec.zCoord - interactEntity.posZ
+							)
 						)
 					)
-				)
-				mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(interactEntity, ICPacketUseEntity.WAction.INTERACT))
+					mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(interactEntity, ICPacketUseEntity.WAction.INTERACT))
+				}
 			}
 
 			mc.netHandler.addToSendQueue(
