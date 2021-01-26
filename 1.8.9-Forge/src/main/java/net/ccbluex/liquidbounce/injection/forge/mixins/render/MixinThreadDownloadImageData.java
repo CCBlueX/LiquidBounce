@@ -6,9 +6,12 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.imageio.ImageIO;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IImageBuffer;
@@ -25,13 +28,10 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(ThreadDownloadImageData.class)
 public abstract class MixinThreadDownloadImageData
 {
+	private static ExecutorService downloaders = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("Texture Downloader #%d").setDaemon(true).build());
 	@Shadow
 	@Final
 	private static Logger logger;
-
-	@Shadow
-	@Final
-	private static AtomicInteger threadDownloadCounter;
 
 	@Shadow
 	@Final
@@ -45,6 +45,7 @@ public abstract class MixinThreadDownloadImageData
 	@Final
 	private IImageBuffer imageBuffer;
 
+	@SuppressWarnings("unused")
 	@Shadow
 	private Thread imageThread;
 
@@ -53,12 +54,12 @@ public abstract class MixinThreadDownloadImageData
 
 	/**
 	 * @author eric0210
-	 * @reason Upgrade thread performance & Make able to load offline cape files
+	 * @reason Use ExecutorService instead of manual thread creation & Make able to load offline cape files
 	 */
 	@Overwrite
 	protected void loadTextureFromServer()
 	{
-		imageThread = new Thread(() ->
+		downloaders.submit(() ->
 		{
 			logger.debug("Downloading http texture from {} to {}", imageUrl, cacheFile);
 
@@ -105,8 +106,9 @@ public abstract class MixinThreadDownloadImageData
 				if (urlconnection instanceof HttpURLConnection)
 					((HttpURLConnection) urlconnection).disconnect();
 			}
-		}, "Texture Downloader #" + threadDownloadCounter.incrementAndGet());
-		imageThread.setDaemon(true);
-		imageThread.start();
+		});
+
+		// Create a dummy thread and save imageThread to prevent false operation in default code
+		imageThread = new Thread();
 	}
 }

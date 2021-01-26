@@ -49,6 +49,7 @@ import net.ccbluex.liquidbounce.value.ListValue;
  *
  * @author LeakedPvP
  * @game   Minecraft
+ * // TODO: Maximum packets per ticks limit
  */
 @ModuleInfo(name = "TpAura", description = "InfiniteAura from Sigma 4.1.", category = ModuleCategory.COMBAT)
 public class TpAura extends Module

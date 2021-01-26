@@ -192,6 +192,7 @@ class Fly : Module()
 
 					"hypixel" ->
 					{
+						// TODO: Maximum packets per ticks limit
 						for (i in 0..9)
 						{
 
