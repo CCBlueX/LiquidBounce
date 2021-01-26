@@ -58,7 +58,7 @@ object ModuleHud : Module("HUD", Category.RENDER, defaultState = true, hide = tr
 
 
     val realRenderHandler = handler<LiquidBounceRenderEvent> {
-        RenderEngine.enqueueForRendering(0, liquidBounceFont)
+        RenderEngine.enqueueForRendering(RenderEngine.HUD_LAYER, liquidBounceFont)
     }
 
 }

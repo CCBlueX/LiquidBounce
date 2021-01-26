@@ -26,7 +26,7 @@ import java.nio.ByteBuffer
 
 enum class OpenGLLevel(val minor: Int, val major: Int, val backendInfo: String) {
     OpenGL4_3(4, 3, "OpenGL 4.3+ (Multi rendering)"),
-    OpenGL3_1(3, 1, "OpenGL 3.1+ (VAOs, VBOs, Shaders)"),
+    OpenGL3_3(3, 3, "OpenGL 3.3+ (VAOs, VBOs, Instancing, Shaders)"),
     OpenGL1_2(1, 2, "OpenGL 1.2+ (Immediate mode, Display Lists)");
 
     /**
@@ -117,6 +117,8 @@ data class Point2f(val x: Float, val y: Float) {
 }
 
 data class Point3f(val x: Float, val y: Float, val z: Float) {
+    constructor(x: Double, y: Double, z: Double) : this(x.toFloat(), y.toFloat(), z.toFloat())
+
     fun writeToBuffer(idx: Int, buffer: ByteBuffer) {
         buffer.putFloat(idx, x)
         buffer.putFloat(idx + 4, y)
@@ -142,6 +144,10 @@ data class UV2s(val u: Short, val v: Short) {
 }
 
 data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
+    companion object {
+        val WHITE = Color4b(255, 255, 255, 255)
+    }
+
     constructor(color: Color) : this(color.red, color.green, color.blue, color.alpha)
 
     fun writeToBuffer(idx: Int, buffer: ByteBuffer) {
@@ -152,7 +158,7 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     }
 }
 
-class UploadedVBOData(storageType: VBOStorageType) {
+class VAOData(storageType: VBOStorageType) {
     val arrayBuffer = VertexBufferObject(VBOTarget.ArrayBuffer, storageType)
     val elementBuffer = VertexBufferObject(VBOTarget.ElementArrayBuffer, storageType)
     val vao = VertexAttributeObject()
@@ -163,6 +169,19 @@ class UploadedVBOData(storageType: VBOStorageType) {
 
     fun unbind() {
         this.vao.unbind()
+    }
+}
+
+class InstancedVAOData(storageType: VBOStorageType) {
+    val baseUploader = VAOData(storageType)
+    val instanceData = VertexBufferObject(VBOTarget.ArrayBuffer, storageType)
+
+    fun bind() {
+        this.baseUploader.bind()
+    }
+
+    fun unbind() {
+        this.baseUploader.unbind()
     }
 }
 

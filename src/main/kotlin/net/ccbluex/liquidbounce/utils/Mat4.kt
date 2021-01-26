@@ -18,11 +18,16 @@
  */
 package net.ccbluex.liquidbounce.utils
 
+import net.minecraft.util.math.Matrix4f
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL20
 import java.nio.FloatBuffer
 
-class Mat4 {
+inline fun Matrix4f.toMat4(): Mat4 {
+    return Mat4(this)
+}
+
+class Mat4() {
     var a00 = 0f
     var a01 = 0f
     var a02 = 0f
@@ -40,8 +45,27 @@ class Mat4 {
     var a32 = 0f
     var a33 = 0f
 
+    constructor(matrix4f: Matrix4f) : this() {
+        this.a00 = matrix4f.a00
+        this.a01 = matrix4f.a01
+        this.a02 = matrix4f.a02
+        this.a03 = matrix4f.a03
+        this.a10 = matrix4f.a10
+        this.a11 = matrix4f.a11
+        this.a12 = matrix4f.a12
+        this.a13 = matrix4f.a13
+        this.a20 = matrix4f.a20
+        this.a21 = matrix4f.a21
+        this.a22 = matrix4f.a22
+        this.a23 = matrix4f.a23
+        this.a30 = matrix4f.a30
+        this.a31 = matrix4f.a31
+        this.a32 = matrix4f.a32
+        this.a33 = matrix4f.a33
+    }
+
     override fun toString(): String {
-        return """Matrix4f:
+        return """Mat4:
 $a00 $a01 $a02 $a03
 $a10 $a11 $a12 $a13
 $a20 $a21 $a22 $a23

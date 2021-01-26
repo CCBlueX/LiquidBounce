@@ -21,14 +21,17 @@ package net.ccbluex.liquidbounce.renderer.engine
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer
 import net.ccbluex.liquidbounce.renderer.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.utils.Mat4
+import net.ccbluex.liquidbounce.utils.toMat4
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.opengl.GL11
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.regex.Pattern
 
 class Layer(val renderTasks: ArrayList<RenderTask> = ArrayList(200))
+class LayerSettings(val mvpMatrix: Mat4, val culling: Boolean)
 
 /**
  * Handles all rendering tasks.
@@ -37,14 +40,29 @@ class Layer(val renderTasks: ArrayList<RenderTask> = ArrayList(200))
  */
 object RenderEngine : Listenable {
     /**
+     * Uses the perspective of the minecraft camera; Coordinates match minecraft coordinates, culling enabled
+     */
+    const val CAMERA_VIEW_LAYER = 0
+
+    /**
+     * Similar to [CAMERA_VIEW_LAYER], but doesn't apply the yaw rotation. Useful for 2D-ESP, Nametags, etc., backface culling enabled
+     */
+    const val WORLD_LAYER = 1
+
+    /**
+     * Projects the vertices on the screen. 1 unit = 1 px, backface culling enabled
+     */
+    const val HUD_LAYER = 2
+
+    /**
      * How many layers is the render engine supposed to render?
      */
-    const val layerCount = 5
+    private const val LAYER_CONT = 5
 
     /**
      * The table the tasks are stored it, grouped by layers
      */
-    val renderTaskTable: Array<Layer> = Array(layerCount) { Layer() }
+    val renderTaskTable: Array<Layer> = Array(LAYER_CONT) { Layer() }
 
     /**
      * Contains runnables with tasks to run when the render engine ticks the next time
@@ -64,7 +82,7 @@ object RenderEngine : Listenable {
     val renderHandler = handler<RenderHudEvent> {
         EventManager.callEvent(LiquidBounceRenderEvent())
 
-        render()
+        render(it.tickDelta)
 
         // Run the deferred tasks
         while (true) {
@@ -135,29 +153,55 @@ object RenderEngine : Listenable {
     /**
      * Draws all enqueued render tasks.
      */
-    fun render() {
+    fun render(tickDelta: Float) {
         val lvl = this.openglLevel
 
         GL11.glEnable(GL11.GL_ALPHA_TEST)
         GL11.glEnable(GL11.GL_BLEND)
 
-        val matrix = Mat4.projectionMatrix(
-            0.0f,
-            0.0f,
-            MinecraftClient.getInstance().window.framebufferWidth.toFloat(),
-            MinecraftClient.getInstance().window.framebufferHeight.toFloat(),
-            -1.0f,
-            1.0f
-        )
+        for ((idx, layer) in renderTaskTable.withIndex()) {
+            // Don't calculate mvp matrices for empty layers
+            if (layer.renderTasks.isEmpty())
+                continue
 
-        for (layer in renderTaskTable) {
+            val settings = getSettingsForLayer(idx, tickDelta)
+//
             for (renderTask in layer.renderTasks) {
-                renderTask.initRendering(lvl, matrix)
+                renderTask.initRendering(lvl, settings.mvpMatrix)
                 renderTask.draw(lvl)
                 renderTask.cleanupRendering(lvl)
             }
 
             layer.renderTasks.clear()
+        }
+    }
+
+    fun getSettingsForLayer(layer: Int, tickDelta: Float): LayerSettings {
+        return when (layer) {
+            CAMERA_VIEW_LAYER -> LayerSettings(
+                (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
+                    true,
+                    tickDelta
+                ).toMat4(), true
+            )
+            WORLD_LAYER -> LayerSettings(
+                (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
+                    false,
+                    tickDelta
+                ).toMat4(), true
+            )
+            HUD_LAYER -> LayerSettings(
+                Mat4.projectionMatrix(
+                    0.0f,
+                    0.0f,
+                    MinecraftClient.getInstance().window.framebufferWidth.toFloat(),
+                    MinecraftClient.getInstance().window.framebufferHeight.toFloat(),
+                    -1.0f,
+                    1.0f
+                ),
+                true
+            )
+            else -> throw UnsupportedOperationException("Unknown layer")
         }
     }
 

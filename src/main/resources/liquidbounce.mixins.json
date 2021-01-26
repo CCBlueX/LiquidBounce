@@ -3,14 +3,16 @@
   "minVersion": "0.8",
   "package": "net.ccbluex.liquidbounce.injection.mixins",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [],
+  "mixins": [
+  ],
   "client": [
-    "client.MixinMinecraftClient",
-    "gui.MixinInGameHud",
     "client.MixinClientConnection",
-    "gui.MixinScreen",
     "client.MixinKeyboard",
-    "entity.MixinClientPlayerEntity"
+    "client.MixinMinecraftClient",
+    "entity.MixinClientPlayerEntity",
+    "gui.MixinInGameHud",
+    "gui.MixinScreen",
+    "render.MixinGameRenderer"
   ],
   "server": [],
   "injectors": {

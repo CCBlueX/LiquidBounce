@@ -19,11 +19,16 @@
 
 package net.ccbluex.liquidbounce.renderer.engine
 
+import net.ccbluex.liquidbounce.renderer.engine.utils.imSetColorFromBuffer
+import net.ccbluex.liquidbounce.renderer.engine.utils.imVertexPositionFromBuffer
+import net.ccbluex.liquidbounce.renderer.engine.utils.popMVP
+import net.ccbluex.liquidbounce.renderer.engine.utils.pushMVP
 import net.ccbluex.liquidbounce.utils.Mat4
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL20
+import org.lwjgl.opengl.GL33
 import java.nio.ByteBuffer
 import java.nio.ShortBuffer
 
@@ -63,7 +68,7 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
      */
     private var indexBufferIndex: Int = 0
 
-    private lateinit var vboData: UploadedVBOData
+    private lateinit var VAOData: VAOData
 
     init {
         if (maxPrimitiveCount * type.verticesPerPrimitive > 65535)
@@ -152,22 +157,14 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
 
     override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
         when (level) {
-            OpenGLLevel.OpenGL3_1, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
                 val mc = MinecraftClient.getInstance()
 
                 // Create an orthographic projection matrix
                 TexturedPrimitiveShader.bind(mvpMatrix)
             }
             OpenGLLevel.OpenGL1_2 -> {
-                // Reset model view matrix
-                GL11.glMatrixMode(GL11.GL_MODELVIEW)
-                GL11.glPushMatrix()
-                GL11.glLoadIdentity()
-
-                // Load the MVP matrix
-                GL11.glMatrixMode(GL11.GL_PROJECTION)
-                GL11.glPushMatrix()
-                GL11.glLoadMatrixf(mvpMatrix.toArray())
+                pushMVP(mvpMatrix)
             }
         }
     }
@@ -192,12 +189,7 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
                     val idx = vertexIndex * WORDS_PER_VERTEX
 
                     // Set the vertex color
-                    GL11.glColor4f(
-                        (vertexBuffer.get((idx + 3) * 4).toInt() and 255) / 255.0f,
-                        (vertexBuffer.get((idx + 3) * 4 + 1).toInt() and 255) / 255.0f,
-                        (vertexBuffer.get((idx + 3) * 4 + 2).toInt() and 255) / 255.0f,
-                        (vertexBuffer.get((idx + 3) * 4 + 3).toInt() and 255) / 255.0f
-                    )
+                    imSetColorFromBuffer(vertexBuffer, idx + 3)
 
                     // Set UV
                     GL11.glTexCoord2f(
@@ -206,11 +198,7 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
                     )
 
                     // Set the vertex position
-                    GL11.glVertex3f(
-                        vertexBuffer.getFloat(idx * 4),
-                        vertexBuffer.getFloat((idx + 1) * 4),
-                        vertexBuffer.getFloat((idx + 2) * 4)
-                    )
+                    imVertexPositionFromBuffer(vertexBuffer, idx)
 
                 }
 
@@ -218,11 +206,11 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
                 GL11.glEnd()
             }
             // Use VBOs for later OpenGL versions.
-            OpenGLLevel.OpenGL3_1, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
                 // Upload if not done yet
                 this.uploadIfNotUploaded()
 
-                this.vboData.bind()
+                this.VAOData.bind()
 
                 this.texture.bind()
 
@@ -240,7 +228,7 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
     }
 
     override fun upload() {
-        val vboData = UploadedVBOData(this.storageType)
+        val vboData = VAOData(this.storageType)
 
         vboData.bind()
 
@@ -269,24 +257,19 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
 
         vboData.unbind()
 
-        this.vboData = vboData
+        this.VAOData = vboData
     }
 
     override fun cleanupRendering(level: OpenGLLevel) {
         when (level) {
-            OpenGLLevel.OpenGL3_1, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
                 // Disable all shader programs
                 GL20.glUseProgram(0)
                 // Unbind VBOs, only needs to be done once during rendering
-                this.vboData.unbind()
+                GL33.glBindVertexArray(0)
             }
             OpenGLLevel.OpenGL1_2 -> {
-                // Pop model view matrix
-                GL11.glMatrixMode(GL11.GL_MODELVIEW)
-                GL11.glPopMatrix()
-                // Pop projection matrix
-                GL11.glMatrixMode(GL11.GL_PROJECTION)
-                GL11.glPopMatrix()
+                popMVP()
             }
         }
     }

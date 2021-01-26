@@ -34,7 +34,8 @@ object Shaders {
      */
     fun init() {
         try {
-            ColoredPrimitive2DShader
+            InstancedColoredPrimitiveShader
+            ColoredPrimitiveShader
             TexturedPrimitiveShader
         } catch (e: Exception) {
             throw IllegalStateException("Failed to initialize common shader programs", e)
@@ -45,14 +46,14 @@ object Shaders {
 /**
  * Used for [ColoredPrimitiveRenderTask]
  */
-object ColoredPrimitive2DShader {
+object ColoredPrimitiveShader {
     private var shaderProgram: ShaderProgram
     private val mvpMatrixUniformLocation: Int
 
     init {
         val shaderProgram = ShaderProgram(
-            resourceToString("/assets/liquidbounce/shaders/primitive2d.vert"),
-            resourceToString("/assets/liquidbounce/shaders/primitive2d.frag")
+            resourceToString("/assets/liquidbounce/shaders/primitive3d.vert"),
+            resourceToString("/assets/liquidbounce/shaders/primitive3d.frag")
         )
 
         shaderProgram.bindAttribLocation("in_pos", 0)
@@ -92,6 +93,42 @@ object TexturedPrimitiveShader {
         shaderProgram.bindAttribLocation("in_pos", 0)
         shaderProgram.bindAttribLocation("in_color", 1)
         shaderProgram.bindAttribLocation("in_uv", 2)
+
+        mvpMatrixUniformLocation = shaderProgram.getUniformLocation("mvp_matrix")
+
+        this.shaderProgram = shaderProgram
+    }
+
+    /**
+     * Binds the shader
+     *
+     * @param mvpMatrix The model-view-projection matrix to use
+     */
+    fun bind(mvpMatrix: Mat4) {
+        this.shaderProgram.use()
+
+        mvpMatrix.putToUniform(this.mvpMatrixUniformLocation)
+    }
+}
+
+
+/**
+ * Used for [InstancedColoredPrimitiveRenderTask]
+ */
+object InstancedColoredPrimitiveShader {
+    private var shaderProgram: ShaderProgram
+    private val mvpMatrixUniformLocation: Int
+
+    init {
+        val shaderProgram = ShaderProgram(
+            resourceToString("/assets/liquidbounce/shaders/instanced_primitive3d.vert"),
+            resourceToString("/assets/liquidbounce/shaders/primitive3d.frag")
+        )
+
+        shaderProgram.bindAttribLocation("in_pos", 0)
+        shaderProgram.bindAttribLocation("in_color", 1)
+        shaderProgram.bindAttribLocation("instance_pos", 2)
+        shaderProgram.bindAttribLocation("instance_color", 3)
 
         mvpMatrixUniformLocation = shaderProgram.getUniformLocation("mvp_matrix")
 

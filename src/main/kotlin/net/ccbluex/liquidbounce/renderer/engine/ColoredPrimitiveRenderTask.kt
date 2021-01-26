@@ -19,11 +19,15 @@
 
 package net.ccbluex.liquidbounce.renderer.engine
 
+import net.ccbluex.liquidbounce.renderer.engine.utils.imSetColorFromBuffer
+import net.ccbluex.liquidbounce.renderer.engine.utils.imVertexPositionFromBuffer
+import net.ccbluex.liquidbounce.renderer.engine.utils.popMVP
+import net.ccbluex.liquidbounce.renderer.engine.utils.pushMVP
 import net.ccbluex.liquidbounce.utils.Mat4
-import net.minecraft.client.MinecraftClient
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL20
+import org.lwjgl.opengl.GL33
 import java.nio.ByteBuffer
 import java.nio.ShortBuffer
 
@@ -36,7 +40,7 @@ import java.nio.ShortBuffer
  *
  * @throws IllegalArgumentException If [maxPrimitiveCount] there can be more vertices than 65535
  */
-class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, private val type: PrimitiveType) : RenderTask() {
+class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal val type: PrimitiveType) : RenderTask() {
     companion object {
         const val WORDS_PER_VERTEX = 4
     }
@@ -44,12 +48,12 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, private val
     /**
      * The buffer, the vertices are stored in.
      */
-    private val vertexBuffer: ByteBuffer = BufferUtils.createByteBuffer(vertexIndex(maxPrimitiveCount) * 4)
+    internal val vertexBuffer: ByteBuffer = BufferUtils.createByteBuffer(vertexIndex(maxPrimitiveCount) * 4)
 
     /**
      * The buffer, the vertex indices are stored in.
      */
-    private val indexBuffer: ShortBuffer = BufferUtils.createShortBuffer(maxPrimitiveCount * type.verticesPerPrimitive)
+    internal val indexBuffer: ShortBuffer = BufferUtils.createShortBuffer(maxPrimitiveCount * type.verticesPerPrimitive)
 
     /**
      * This field keeps track of how many vertices are in [vertexBuffer]
@@ -59,9 +63,9 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, private val
     /**
      * The count of indices in [indexBuffer]
      */
-    private var indexBufferIndex: Int = 0
+    internal var indexBufferIndex: Int = 0
 
-    private lateinit var vboData: UploadedVBOData
+    private lateinit var vaoData: VAOData
 
     init {
         if (maxPrimitiveCount * type.verticesPerPrimitive > 65535)
@@ -167,22 +171,11 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, private val
 
     override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
         when (level) {
-            OpenGLLevel.OpenGL3_1, OpenGLLevel.OpenGL4_3 -> {
-                val mc = MinecraftClient.getInstance()
-
-                // Create an orthographic projection matrix
-                ColoredPrimitive2DShader.bind(
-                    Mat4.projectionMatrix(
-                        0.0f,
-                        0.0f,
-                        mc.window.framebufferWidth.toFloat(),
-                        mc.window.framebufferHeight.toFloat(),
-                        -1.0f,
-                        1.0f
-                    )
-                )
+            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+                InstancedColoredPrimitiveShader.bind(mvpMatrix)
             }
             else -> {
+                pushMVP(mvpMatrix)
             }
         }
     }
@@ -194,9 +187,6 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, private val
                 // Begin rendering with the type's mode
                 GL11.glBegin(this.type.mode)
 
-                val floatBuffer = this.vertexBuffer.asFloatBuffer()
-                val intBuffer = this.vertexBuffer.asIntBuffer()
-
                 // Iterate through the indices
                 for (i in 0 until this.indexBufferIndex) {
                     // Get the current index from the index buffer
@@ -205,29 +195,22 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, private val
                     // Where does the vertex start?
                     val idx = vertexIndex * WORDS_PER_VERTEX
 
-                    val color = intBuffer[idx + 3]
-
                     // Set the vertex color
-                    GL11.glColor4f(
-                        ((color shr 16) and 255) / 255.0f,
-                        ((color shr 8) and 255) / 255.0f,
-                        (color and 255) / 255.0f,
-                        ((color shr 24) and 255) / 255.0f
-                    )
-                    // Set the vertex position
-                    GL11.glVertex3f(floatBuffer[idx], floatBuffer[idx + 1], floatBuffer[idx + 2])
+                    imSetColorFromBuffer(vertexBuffer, (idx + 3))
 
+                    // Set the vertex position
+                    imVertexPositionFromBuffer(vertexBuffer, idx)
                 }
 
                 // Finish drawing
                 GL11.glEnd()
             }
             // Use VBOs for later OpenGL versions.
-            OpenGLLevel.OpenGL3_1, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
                 // Upload if not done yet
                 this.uploadIfNotUploaded()
 
-                this.vboData.bind()
+                this.vaoData.bind()
 
                 // Render the entire thing
                 GL20.glDrawElements(
@@ -241,17 +224,26 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, private val
     }
 
     override fun upload() {
-        val vboData = UploadedVBOData(this.storageType)
+        val vboData = VAOData(this.storageType)
 
         vboData.bind()
 
+        uploadVAO(vboData)
+
+        GL20.glBindBuffer(GL20.GL_ARRAY_BUFFER, 0)
+
+        vboData.unbind()
+
+        this.vaoData = vboData
+    }
+
+    internal fun uploadVAO(vaoData: VAOData) {
         GL20.glEnableVertexAttribArray(0)
         GL20.glEnableVertexAttribArray(1)
 
-        vboData.arrayBuffer.bind()
-        vboData.arrayBuffer.putData(this.vertexBuffer)
+        vaoData.arrayBuffer.bind()
+        vaoData.arrayBuffer.putData(this.vertexBuffer)
 
-        vboData.arrayBuffer.bind()
         // Vertex positions at attrib[0]
         GL20.glVertexAttribPointer(0, 3, GL20.GL_FLOAT, false, 16, 0)
 
@@ -259,23 +251,24 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, private val
         GL20.glVertexAttribPointer(1, 4, GL20.GL_UNSIGNED_BYTE, true, 16, 12)
 
 
-        vboData.elementBuffer.bind()
-        vboData.elementBuffer.putData(this.indexBuffer)
+        vaoData.elementBuffer.bind()
+        vaoData.elementBuffer.putData(this.indexBuffer)
 
-        vboData.unbind()
-
-        this.vboData = vboData
+        // Make every other attempt to put a vertex in those buffers fail :3
+        this.vertexBuffer.limit(this.vertexBufferIndex * WORDS_PER_VERTEX * 4)
+        this.indexBuffer.limit(this.indexBufferIndex)
     }
 
     override fun cleanupRendering(level: OpenGLLevel) {
         when (level) {
-            OpenGLLevel.OpenGL3_1, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
                 // Disable all shader programs
                 GL20.glUseProgram(0)
                 // Unbind VBOs, only needs to be done once during rendering
-                this.vboData.unbind()
+                GL33.glBindVertexArray(0)
             }
             else -> {
+                popMVP()
             }
         }
     }
@@ -285,3 +278,4 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, private val
      */
     override fun typeId(): Int = 0
 }
+
