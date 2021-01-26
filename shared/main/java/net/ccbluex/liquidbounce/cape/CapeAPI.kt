@@ -91,6 +91,8 @@ object CapeAPI : MinecraftInstance()
 
 			if (!capeFile.exists())
 			{
+
+				// Fallback strategy
 				capeFile = File(LiquidBounce.fileManager.dir, GuiDonatorCape.transferCode.substring(5) + ".png")
 				if (capeFile.exists())
 				{
@@ -101,7 +103,7 @@ object CapeAPI : MinecraftInstance()
 
 						mc.textureManager.loadTexture(capeInfo.resourceLocation, classProvider.createDynamicTexture(bufferedImage))
 
-						ClientUtils.getLogger().info("[Donator Cape] Successfully loaded cape from file ${capeFile.toPath()}")
+						ClientUtils.getLogger().info("[Donator Cape] Successfully loaded cape from file (used fallback strategy) ${capeFile.toPath()}")
 
 						capeInfo.isCapeAvailable = true
 					}
@@ -113,15 +115,18 @@ object CapeAPI : MinecraftInstance()
 				return capeInfo
 			}
 
-			val byteArrayInputStream = ByteArrayInputStream(Files.readAllBytes(capeFile.toPath()))
-			val bufferedImage = ImageIO.read(byteArrayInputStream)
-			byteArrayInputStream.close()
+			WorkerUtils.workers.submit {
+				val byteArrayInputStream = ByteArrayInputStream(Files.readAllBytes(capeFile.toPath()))
+				val bufferedImage = ImageIO.read(byteArrayInputStream)
+				byteArrayInputStream.close()
 
-			mc.textureManager.loadTexture(capeInfo.resourceLocation, classProvider.createDynamicTexture(bufferedImage))
+				mc.textureManager.loadTexture(capeInfo.resourceLocation, classProvider.createDynamicTexture(bufferedImage))
 
-			ClientUtils.getLogger().info("[Donator Cape] Successfully loaded cape from file ${capeFile.toPath()}")
+				ClientUtils.getLogger().info("[Donator Cape] Successfully loaded cape from file ${capeFile.toPath()}")
 
-			capeInfo.isCapeAvailable = true
+				capeInfo.isCapeAvailable = true
+			}
+
 			return capeInfo
 		}
 
