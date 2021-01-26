@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 
 import org.lwjgl.input.Keyboard;
 
-// TODO: Create own thread pool
 public class GuiPortScanner extends WrappedGuiScreen
 {
 
