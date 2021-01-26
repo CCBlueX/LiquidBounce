@@ -60,6 +60,7 @@ object Fucker : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (noHitValue.get())
@@ -89,7 +90,7 @@ object Fucker : Module()
 		if (surroundingsValue.get())
 		{
 			val eyes = thePlayer.getPositionEyes(1F)
-			val blockPos = mc.theWorld!!.rayTraceBlocks(
+			val blockPos = theWorld.rayTraceBlocks(
 				eyes, rotations.vec, false, false, true
 			)?.blockPos
 
@@ -162,7 +163,7 @@ object Fucker : Module()
 						)
 					)
 
-					if (thePlayer.capabilities.isCreativeMode || block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, this.currentPos!!) >= 1.0F)
+					if (thePlayer.capabilities.isCreativeMode || block.getPlayerRelativeBlockHardness(thePlayer, theWorld, this.currentPos!!) >= 1.0F)
 					{
 						if (swingValue.get()) thePlayer.swingItem()
 						mc.playerController.onPlayerDestroyBlock(this.currentPos!!, classProvider.getEnumFacing(EnumFacingType.DOWN))
@@ -175,8 +176,8 @@ object Fucker : Module()
 
 				if (swingValue.get()) thePlayer.swingItem()
 
-				currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, currentPos)
-				mc.theWorld!!.sendBlockBreakProgress(thePlayer.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
+				currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, theWorld, currentPos)
+				theWorld.sendBlockBreakProgress(thePlayer.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
 
 				if (currentDamage >= 1F)
 				{
@@ -194,7 +195,7 @@ object Fucker : Module()
 
 			// Use block
 			actionValue.get().equals("use", true) -> if (mc.playerController.onPlayerRightClick(
-					thePlayer, mc.theWorld!!, thePlayer.heldItem!!, this.currentPos!!, classProvider.getEnumFacing(EnumFacingType.DOWN), WVec3(currentPos.x.toDouble(), currentPos.y.toDouble(), currentPos.z.toDouble())
+					thePlayer, theWorld, thePlayer.heldItem!!, this.currentPos!!, classProvider.getEnumFacing(EnumFacingType.DOWN), WVec3(currentPos.x.toDouble(), currentPos.y.toDouble(), currentPos.z.toDouble())
 				)
 			)
 			{
@@ -213,15 +214,16 @@ object Fucker : Module()
 		RenderUtils.drawBlockBox(currentPos ?: return, Color.RED, true)
 	}
 
-	/**
+	/*/**
 	 * Find new target block by [targetID]
-	 *//*private fun find(targetID: Int) =
+	 */private fun find(targetID: Int) =
         searchBlocks(rangeValue.get().toInt() + 1).filter {
                     Block.getIdFromBlock(it.value) == targetID && getCenterDistance(it.key) <= rangeValue.get()
                             && (isHitable(it.key) || surroundingsValue.get())
                 }.minBy { getCenterDistance(it.key) }?.key*/
 
 	//Removed triple iteration of blocks to improve speed
+
 	/**
 	 * Find new target block by [targetID]
 	 */

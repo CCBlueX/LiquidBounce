@@ -572,4 +572,7 @@ class InventoryCleaner : Module()
 		8 -> sortSlot9Value.get()
 		else -> ""
 	}
+
+	override val tag: String
+		get() = "${minDelayValue.get()} ~ ${maxDelayValue.get()}"
 }

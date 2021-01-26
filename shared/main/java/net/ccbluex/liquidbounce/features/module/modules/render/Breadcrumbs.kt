@@ -28,8 +28,8 @@ class Breadcrumbs : Module()
 	val colorBlueValue = IntegerValue("B", 72, 0, 255)
 
 	val colorRainbow = BoolValue("Rainbow", false)
-	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
-	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+	val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
+	val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
 	private val positions = LinkedList<DoubleArray>()
 

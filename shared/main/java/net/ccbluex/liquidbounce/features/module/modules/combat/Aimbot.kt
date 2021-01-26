@@ -160,4 +160,7 @@ class Aimbot : Module()
 	{
 		if (fovValue.get() < 180) RenderUtils.drawFoVCircle(fovValue.get())
 	}
+
+	override val tag: String
+		get() = "${fovValue.get()}${if (onClickValue.get()) ", OnClick" else ""}"
 }

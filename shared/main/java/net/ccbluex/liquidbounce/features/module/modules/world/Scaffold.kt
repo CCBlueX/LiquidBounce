@@ -177,7 +177,6 @@ class Scaffold : Module()
 	}
 
 	private val checkVisibleValue = BoolValue("CheckVisible", true)
-	private val searchDistanceValue = IntegerValue("SearchDistance", 1, 1, 3)
 	private val ySearchValue = BoolValue("YSearch", false)
 
 	// Turn Speed

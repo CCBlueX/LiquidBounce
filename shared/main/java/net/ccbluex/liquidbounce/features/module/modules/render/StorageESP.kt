@@ -73,6 +73,8 @@ class StorageESP : Module()
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
 	{
+		val theWorld = mc.theWorld ?: return
+
 		try
 		{
 			val mode = modeValue.get()
@@ -98,7 +100,7 @@ class StorageESP : Module()
 
 			mc.gameSettings.gammaSetting = 100000.0f
 
-			for (tileEntity in mc.theWorld!!.loadedTileEntityList)
+			for (tileEntity in theWorld.loadedTileEntityList)
 			{
 				val color: Color = when
 				{
@@ -158,7 +160,7 @@ class StorageESP : Module()
 				}
 			}
 
-			for (it in mc.theWorld!!.loadedEntityList)
+			for (it in theWorld.loadedEntityList)
 			{
 				val color = when
 				{

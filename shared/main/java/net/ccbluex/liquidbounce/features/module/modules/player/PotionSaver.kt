@@ -19,11 +19,11 @@ class PotionSaver : Module()
 	@EventTarget
 	fun onPacket(e: PacketEvent)
 	{
-		mc.thePlayer ?: return
+		val thePlayer = mc.thePlayer ?: return
 
 		val packet = e.packet
-		val packetInstanceCheck = classProvider.isCPacketPlayer(packet) && !classProvider.isCPacketPlayerPosition(packet) && !classProvider.isCPacketPlayerPosLook(packet) && !classProvider.isCPacketPlayerPosLook(packet)
+		val isMovePacket = classProvider.isCPacketPlayer(packet) && !classProvider.isCPacketPlayerPosition(packet) && !classProvider.isCPacketPlayerPosLook(packet) && !classProvider.isCPacketPlayerPosLook(packet)
 
-		if (!MovementUtils.isMoving && packetInstanceCheck && !mc.thePlayer!!.isUsingItem) e.cancelEvent()
+		if (!MovementUtils.isMoving && isMovePacket && !thePlayer.isUsingItem) e.cancelEvent()
 	}
 }

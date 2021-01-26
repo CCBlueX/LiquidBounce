@@ -42,6 +42,7 @@ class Tracers : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
@@ -54,7 +55,7 @@ class Tracers : Module()
 
 		GL11.glBegin(GL11.GL_LINES)
 
-		for (entity in mc.theWorld!!.loadedEntityList)
+		for (entity in theWorld.loadedEntityList)
 		{
 			if (!classProvider.isEntityLivingBase(entity) || !botValue.get() && AntiBot.isBot(entity.asEntityLivingBase())) continue
 			if (entity != thePlayer && EntityUtils.isSelected(entity, false))

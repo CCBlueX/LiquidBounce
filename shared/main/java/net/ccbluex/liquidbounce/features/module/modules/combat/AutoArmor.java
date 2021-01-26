@@ -178,4 +178,9 @@ public class AutoArmor extends Module
 		return false;
 	}
 
+	@Override
+	public String getTag()
+	{
+		return minDelayValue.get() + "~" + maxDelayValue.get();
+	}
 }

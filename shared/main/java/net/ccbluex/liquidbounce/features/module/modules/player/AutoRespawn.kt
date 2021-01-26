@@ -33,4 +33,7 @@ class AutoRespawn : Module()
 			mc.displayGuiScreen(null)
 		}
 	}
+
+	override val tag: String?
+		get() = if (instantValue.get()) "Instant" else null
 }

@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.value.*
 import java.awt.Color
 import java.util.concurrent.*
 
+// TODO: Improve performance
 @ModuleInfo(name = "BlockESP", description = "Allows you to see a selected block through walls.", category = ModuleCategory.RENDER)
 class BlockESP : Module()
 {

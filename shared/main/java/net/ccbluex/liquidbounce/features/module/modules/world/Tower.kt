@@ -169,7 +169,7 @@ class Tower : Module()
 	{
 
 		// Lock Rotation
-		if (rotationsValue.get() && keepRotationValue.get() && lockRotation != null) RotationUtils.setTargetRotation(lockRotation)
+		if (rotationsValue.get() && keepRotationValue.get() && lockRotationValue.get() && lockRotation != null) RotationUtils.setTargetRotation(lockRotation)
 
 		active = false
 

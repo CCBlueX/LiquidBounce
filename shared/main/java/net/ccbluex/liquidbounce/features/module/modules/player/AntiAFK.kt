@@ -13,10 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 
 @ModuleInfo(name = "AntiAFK", description = "Prevents you from getting kicked for being AFK.", category = ModuleCategory.PLAYER)
 class AntiAFK : Module()
@@ -66,45 +63,35 @@ class AntiAFK : Module()
 				randomTimerDelay = 500L
 				when (RandomUtils.nextInt(0, 6))
 				{
-					0 ->
-					{
-						if (thePlayer.onGround) thePlayer.jump()
-						delayTimer.reset()
-					}
+					0 -> if (thePlayer.onGround) thePlayer.jump()
 
-					1 ->
-					{
-						if (!thePlayer.isSwingInProgress) thePlayer.swingItem()
-						delayTimer.reset()
-					}
+					1 -> if (!thePlayer.isSwingInProgress) thePlayer.swingItem()
 
 					2 ->
 					{
 						randomTimerDelay = RandomUtils.nextInt(0, 1000).toLong()
 						shouldMove = true
-						delayTimer.reset()
 					}
 
 					3 ->
 					{
 						thePlayer.inventory.currentItem = RandomUtils.nextInt(0, 9)
 						mc.playerController.updateController()
-						delayTimer.reset()
 					}
 
 					4 ->
 					{
 						thePlayer.rotationYaw += RandomUtils.nextFloat(-180.0F, 180.0F)
-						delayTimer.reset()
 					}
 
 					5 ->
 					{
 						if (thePlayer.rotationPitch <= -90 || thePlayer.rotationPitch >= 90) thePlayer.rotationPitch = 0F
 						thePlayer.rotationPitch += RandomUtils.nextFloat(-10.0F, 10.0F)
-						delayTimer.reset()
+
 					}
 				}
+				delayTimer.reset()
 			}
 
 			"custom" ->
@@ -130,35 +117,13 @@ class AntiAFK : Module()
 		}
 	}
 
-	private fun getRandomMoveKeyBind(): IKeyBinding?
+	private fun getRandomMoveKeyBind(): IKeyBinding? = when (RandomUtils.nextInt(0, 4))
 	{
-		when (RandomUtils.nextInt(0, 4))
-		{
-			0 ->
-			{
-				return mc.gameSettings.keyBindRight
-			}
-
-			1 ->
-			{
-				return mc.gameSettings.keyBindLeft
-			}
-
-			2 ->
-			{
-				return mc.gameSettings.keyBindBack
-			}
-
-			3 ->
-			{
-				return mc.gameSettings.keyBindForward
-			}
-
-			else ->
-			{
-				return null
-			}
-		}
+		0 -> mc.gameSettings.keyBindRight
+		1 -> mc.gameSettings.keyBindLeft
+		2 -> mc.gameSettings.keyBindBack
+		3 -> mc.gameSettings.keyBindForward
+		else -> null
 	}
 
 	override fun onDisable()

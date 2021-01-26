@@ -24,8 +24,9 @@ import java.util.*
 @ModuleInfo(name = "ProphuntESP", description = "Allows you to see disguised players in PropHunt.", category = ModuleCategory.RENDER)
 class ProphuntESP : Module()
 {
-	val blocks: MutableMap<WBlockPos, Long> = HashMap()
-
+	/**
+	 * Options
+	 */
 	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "ShaderOutline", "ShaderGlow"), "OtherBox")
 
 	private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
@@ -38,6 +39,11 @@ class ProphuntESP : Module()
 	private val colorRainbow = BoolValue("Rainbow", false)
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+
+	/**
+	 * Variables
+	 */
+	val blocks: MutableMap<WBlockPos, Long> = HashMap()
 
 	override fun onDisable()
 	{
@@ -77,6 +83,8 @@ class ProphuntESP : Module()
 	@EventTarget
 	fun onRender2D(event: Render2DEvent)
 	{
+		val theWorld = mc.theWorld ?: return
+
 		val mode = modeValue.get()
 		val shader = when (mode)
 		{
@@ -88,11 +96,7 @@ class ProphuntESP : Module()
 		shader.startDraw(event.partialTicks)
 		try
 		{
-			for (entity in mc.theWorld!!.loadedEntityList)
-			{
-				if (!classProvider.isEntityFallingBlock(entity)) continue
-				mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
-			}
+			theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true) }
 		} catch (ex: Exception)
 		{
 			ClientUtils.getLogger().error("An error occurred while rendering all entities for shader esp", ex)

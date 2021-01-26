@@ -56,7 +56,7 @@ class FreeCam : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (fakePlayer == null) return
+		fakePlayer ?: return
 
 		thePlayer.setPositionAndRotation(oldX, oldY, oldZ, thePlayer.rotationYaw, thePlayer.rotationPitch)
 
@@ -71,7 +71,7 @@ class FreeCam : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
-		val thePlayer = mc.thePlayer!!
+		val thePlayer = mc.thePlayer ?: return
 
 		if (noClipValue.get()) thePlayer.noClip = true
 

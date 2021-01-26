@@ -52,9 +52,11 @@ class BlockOverlay : Module()
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
 	{
+		val theWorld = mc.theWorld ?: return
+
 		val blockPos = currentBlock ?: return
 
-		val block = mc.theWorld!!.getBlockState(blockPos).block
+		val block = theWorld.getBlockState(blockPos).block
 		val partialTicks = event.partialTicks
 		val alpha = colorAlphaValue.get()
 		val rainbowSpeed = rainbowSpeedValue.get()
@@ -67,10 +69,7 @@ class BlockOverlay : Module()
 		classProvider.getGlStateManager().disableTexture2D()
 		GL11.glDepthMask(false)
 
-		@Suppress("ConstantConditionIf") if (Backend.MINECRAFT_VERSION_MINOR < 12)
-		{
-			block.setBlockBoundsBasedOnState(mc.theWorld!!, blockPos)
-		}
+		@Suppress("ConstantConditionIf") if (Backend.MINECRAFT_VERSION_MINOR < 12) block.setBlockBoundsBasedOnState(theWorld, blockPos)
 
 		val thePlayer = mc.thePlayer ?: return
 
@@ -78,7 +77,7 @@ class BlockOverlay : Module()
 		val y = thePlayer.lastTickPosY + (thePlayer.posY - thePlayer.lastTickPosY) * partialTicks
 		val z = thePlayer.lastTickPosZ + (thePlayer.posZ - thePlayer.lastTickPosZ) * partialTicks
 
-		val axisAlignedBB = block.getSelectedBoundingBox(mc.theWorld!!, mc.theWorld!!.getBlockState(blockPos), blockPos).expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026).offset(-x, -y, -z)
+		val axisAlignedBB = block.getSelectedBoundingBox(theWorld, theWorld.getBlockState(blockPos), blockPos).expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026).offset(-x, -y, -z)
 
 		RenderUtils.drawSelectionBoundingBox(axisAlignedBB)
 		RenderUtils.drawFilledBox(axisAlignedBB)

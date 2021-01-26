@@ -40,13 +40,21 @@ import net.ccbluex.liquidbounce.value.IntegerValue;
 @ModuleInfo(name = "ExtendedReach", description = "Upgraded combat and block reach over 100+ blocks.", category = ModuleCategory.PLAYER)
 public class ExtendedReach extends Module
 {
-	private List<WVec3> path = new ArrayList<>();
-	public final FloatValue combatReach = new FloatValue("CombatReach", 100, 6, 128);
+	/**
+	 * Options
+	 */
+	private final FloatValue combatReach = new FloatValue("CombatReach", 100, 6, 128);
 	public final FloatValue buildReach = new FloatValue("BuildReach", 100, 6, 128);
 	private final BoolValue pathEspValue = new BoolValue("PathESP", true);
 	private final IntegerValue pathEspTimeValue = new IntegerValue("PathESPTime", 1000, 100, 3000);
 	private final IntegerValue maxDashDistanceValue = new IntegerValue("DashDistance", 5, 1, 10);
+
+	/**
+	 * Variables
+	 */
 	private final MSTimer pathESPTimer = new MSTimer();
+
+	private List<WVec3> path = new ArrayList<>();
 
 	@Override
 	public final void onEnable()
@@ -66,26 +74,27 @@ public class ExtendedReach extends Module
 		if (mc.getThePlayer() == null)
 			return;
 
-		if (!path.isEmpty() && !pathESPTimer.hasTimePassed(pathEspTimeValue.get()) && pathEspValue.get())
-			for (final WVec3 vec : path)
-				drawPath(vec);
+		if (pathEspValue.get() && !path.isEmpty() && !pathESPTimer.hasTimePassed(pathEspTimeValue.get()))
+			for (final WVec3 pos : path)
+				drawPath(pos);
 	}
 
 	@EventTarget
-	public final void onPacket(final PacketEvent ep)
+	public final void onPacket(final PacketEvent event)
 	{
 		if (mc.getThePlayer() == null)
 			return;
 
-		final IPacket p = ep.getPacket();
+		final IPacket p = event.getPacket();
 
 		if (classProvider.isCPacketPlayerBlockPlacement(p))
 		{
-			final ICPacketPlayerBlockPlacement packet = p.asCPacketPlayerBlockPlacement();
-			final WBlockPos pos = packet.getPosition();
-			final IItemStack stack = packet.getStack();
-			final double dist = Math.sqrt(mc.getThePlayer().getDistanceSq(pos));
-			if (dist > 6 && pos.getY() != -1 && (stack != null || classProvider.isBlockContainer(BlockUtils.getState(pos).getBlock())))
+			final ICPacketPlayerBlockPlacement blockPlacement = p.asCPacketPlayerBlockPlacement();
+			final WBlockPos pos = blockPlacement.getPosition();
+			final IItemStack stack = blockPlacement.getStack();
+			final double distance = Math.sqrt(mc.getThePlayer().getDistanceSq(pos));
+
+			if (distance > 6.0 && pos.getY() != -1 && (stack != null || classProvider.isBlockContainer(BlockUtils.getState(pos).getBlock())))
 			{
 				final WVec3 from = new WVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ());
 				final WVec3 to = new WVec3(pos.getX(), pos.getY(), pos.getZ());
@@ -103,18 +112,19 @@ public class ExtendedReach extends Module
 				for (final WVec3 pathElm : path)
 					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getXCoord(), pathElm.getYCoord(), pathElm.getZCoord(), true));
 
-				ep.cancelEvent();
+				event.cancelEvent();
 			}
 		}
 
 		if (classProvider.isCPacketPlayerDigging(p))
 		{
-			final ICPacketPlayerDigging packet = p.asCPacketPlayerDigging();
-			final WAction act = packet.getStatus();
-			final WBlockPos pos = packet.getPosition();
-			final IEnumFacing face = packet.getFacing();
+			final ICPacketPlayerDigging digging = p.asCPacketPlayerDigging();
+			final WAction action = digging.getStatus();
+			final WBlockPos pos = digging.getPosition();
+			final IEnumFacing face = digging.getFacing();
 			final double distance = Math.sqrt(mc.getThePlayer().getDistanceSq(pos));
-			if (distance > 6 && act == WAction.START_DESTROY_BLOCK)
+
+			if (distance > 6 && action == WAction.START_DESTROY_BLOCK)
 			{
 				final WVec3 topFrom = new WVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ());
 				final WVec3 to = new WVec3(pos.getX(), pos.getY(), pos.getZ());
@@ -133,10 +143,10 @@ public class ExtendedReach extends Module
 				Collections.reverse(path);
 				for (final WVec3 pathElm : path)
 					mc.getNetHandler().getNetworkManager().sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.getXCoord(), pathElm.getYCoord(), pathElm.getZCoord(), true));
-				ep.cancelEvent();
+				event.cancelEvent();
 			}
-			else if (act == WAction.ABORT_DESTROY_BLOCK)
-				ep.cancelEvent();
+			else if (action == WAction.ABORT_DESTROY_BLOCK)
+				event.cancelEvent();
 		}
 	}
 
@@ -198,10 +208,10 @@ public class ExtendedReach extends Module
 			}
 			else
 			{
-				boolean canContinue = true;
+				boolean stop = false;
 				final float maxDashDistance = maxDashDistanceValue.get();
 				if (pathElm.squareDistanceTo(lastDashLoc) > maxDashDistance * maxDashDistance)
-					canContinue = false;
+					stop = true;
 				else
 				{
 					final double minX = Math.min(lastDashLoc.getXCoord(), pathElm.getXCoord());
@@ -210,17 +220,19 @@ public class ExtendedReach extends Module
 					final double maxX = Math.max(lastDashLoc.getXCoord(), pathElm.getXCoord());
 					final double maxY = Math.max(lastDashLoc.getYCoord(), pathElm.getYCoord());
 					final double maxZ = Math.max(lastDashLoc.getZCoord(), pathElm.getZCoord());
-					cordsLoop:
+
+					coordsLoop:
 					for (int x = (int) minX; x <= maxX; x++)
 						for (int y = (int) minY; y <= maxY; y++)
 							for (int z = (int) minZ; z <= maxZ; z++)
 								if (!PathFinder.checkPositionValidity(x, y, z, false))
 								{
-									canContinue = false;
-									break cordsLoop;
+									stop = true;
+									break coordsLoop;
 								}
 				}
-				if (!canContinue)
+
+				if (stop)
 				{
 					path.add(lastLoc.addVector(0.5, 0, 0.5));
 					lastDashLoc = lastLoc;
@@ -246,7 +258,7 @@ public class ExtendedReach extends Module
 		final double z = vec.getZCoord() - mc.getRenderManager().getRenderPosZ();
 		final double height = mc.getThePlayer().getEyeHeight();
 
-		// pre3D
+		// RenderUtils.pre3D()
 		glPushMatrix();
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -297,7 +309,7 @@ public class ExtendedReach extends Module
 			glEnd();
 		}
 
-		// post3D
+		// RenderUtils.post3D()
 		glDepthMask(true);
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_LINE_SMOOTH);

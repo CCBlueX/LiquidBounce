@@ -24,26 +24,12 @@ class AutoTool : Module()
 
 	fun switchSlot(blockPos: WBlockPos)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		var bestSpeed = 1F
-		var bestSlot = -1
+		val blockState = theWorld.getBlockState(blockPos)
 
-		val blockState = mc.theWorld!!.getBlockState(blockPos)
-
-		for (i in 0..8)
-		{
-			val item = thePlayer.inventory.getStackInSlot(i) ?: continue
-			val speed = item.getStrVsBlock(blockState)
-
-			if (speed > bestSpeed)
-			{
-				bestSpeed = speed
-				bestSlot = i
-			}
-		}
-
-		if (bestSlot != -1) thePlayer.inventory.currentItem = bestSlot
+		// Find the best tool in hotbar
+		thePlayer.inventory.currentItem = (0..8).filterNot { thePlayer.inventory.getStackInSlot(it) == null }.maxBy { thePlayer.inventory.getStackInSlot(it)!!.getStrVsBlock(blockState) } ?: return
 	}
-
 }

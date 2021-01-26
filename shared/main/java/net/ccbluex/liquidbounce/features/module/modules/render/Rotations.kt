@@ -31,12 +31,12 @@ class Rotations : Module()
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
 	{
-		mc.thePlayer ?: return
+		val thePlayer = mc.thePlayer ?: return
 
 		if (bodyValue.get() || !isRotating()) return
 
 		// Head Rotations
-		if (RotationUtils.serverRotation != null) mc.thePlayer!!.rotationYawHead =
+		if (RotationUtils.serverRotation != null) thePlayer.rotationYawHead =
 			if (interpolateRotationsValue.get()) interpolateRotation(RotationUtils.lastServerRotation.yaw, RotationUtils.serverRotation.yaw, event.partialTicks) else RotationUtils.serverRotation.yaw
 	}
 

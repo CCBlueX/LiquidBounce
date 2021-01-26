@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import java.util.stream.Stream
 
+// TODO: Max packets per tick limit
 @ModuleInfo(name = "Zoot", description = "Removes all bad potion effects/fire.", category = ModuleCategory.PLAYER)
 class Zoot : Module()
 {

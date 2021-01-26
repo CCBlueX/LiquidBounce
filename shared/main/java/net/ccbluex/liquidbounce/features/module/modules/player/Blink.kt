@@ -17,41 +17,47 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
-@ModuleInfo(name = "Blink", description = "Suspends all movement packets.", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "Blink", description = "Suspends all movement packets. (If you enable Pulse option, you can use this module as FakeLag)", category = ModuleCategory.PLAYER)
 class Blink : Module()
 {
+	/**
+	 * Options
+	 */
 	private val pulseValue = BoolValue("Pulse", false)
 	private val pulseDelayValue = IntegerValue("PulseDelay", 1000, 500, 5000)
-	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
-	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+
+	/**
+	 * Variables
+	 */
+	private val packets = LinkedBlockingQueue<IPacket>()
+	private val positions = LinkedList<DoubleArray>()
 
 	private val pulseTimer = MSTimer()
-	private val packets = LinkedBlockingQueue<IPacket>()
+
 	private var fakePlayer: IEntityOtherPlayerMP? = null
 	private var disableLogger = false
-	private val positions = LinkedList<DoubleArray>()
 
 	override fun onEnable()
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (!pulseValue.get())
 		{
-			val faker: IEntityOtherPlayerMP = classProvider.createEntityOtherPlayerMP(mc.theWorld!!, thePlayer.gameProfile)
+			val faker: IEntityOtherPlayerMP = classProvider.createEntityOtherPlayerMP(theWorld, thePlayer.gameProfile)
 
 
 			faker.rotationYawHead = thePlayer.rotationYawHead
 			faker.renderYawOffset = thePlayer.renderYawOffset
 			faker.copyLocationAndAnglesFrom(thePlayer)
 			faker.rotationYawHead = thePlayer.rotationYawHead
-			mc.theWorld!!.addEntityToWorld(-1337, faker)
+			theWorld.addEntityToWorld(-1337, faker)
 
 
 			fakePlayer = faker
@@ -114,8 +120,14 @@ class Blink : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
-		val breadcrumbs = LiquidBounce.moduleManager[Breadcrumbs::class.java] as Breadcrumbs?
-		val color = if (breadcrumbs!!.colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(breadcrumbs.colorRedValue.get(), breadcrumbs.colorGreenValue.get(), breadcrumbs.colorBlueValue.get())
+
+		// The color settings are depended on BreadCrumb's
+		val breadcrumbs = LiquidBounce.moduleManager[Breadcrumbs::class.java] as Breadcrumbs
+		val color = if (breadcrumbs.colorRainbow.get()) rainbow(saturation = breadcrumbs.saturationValue.get(), brightness = breadcrumbs.brightnessValue.get()) else Color(
+			breadcrumbs.colorRedValue.get(), breadcrumbs.colorGreenValue.get(), breadcrumbs.colorBlueValue.get()
+		)
+
+		// Draw the positions
 		synchronized(positions) {
 			GL11.glPushMatrix()
 			GL11.glDisable(GL11.GL_TEXTURE_2D)
@@ -124,14 +136,18 @@ class Blink : Module()
 			GL11.glEnable(GL11.GL_BLEND)
 			GL11.glDisable(GL11.GL_DEPTH_TEST)
 			mc.entityRenderer.disableLightmap()
+
 			GL11.glBegin(GL11.GL_LINE_STRIP)
 			RenderUtils.glColor(color)
+
 			val renderPosX: Double = mc.renderManager.viewerPosX
 			val renderPosY: Double = mc.renderManager.viewerPosY
 			val renderPosZ: Double = mc.renderManager.viewerPosZ
 			for (pos in positions) GL11.glVertex3d(pos[0] - renderPosX, pos[1] - renderPosY, pos[2] - renderPosZ)
+
 			GL11.glColor4d(1.0, 1.0, 1.0, 1.0)
 			GL11.glEnd()
+
 			GL11.glEnable(GL11.GL_DEPTH_TEST)
 			GL11.glDisable(GL11.GL_LINE_SMOOTH)
 			GL11.glDisable(GL11.GL_BLEND)
@@ -149,10 +165,7 @@ class Blink : Module()
 		{
 			disableLogger = true
 
-			while (!packets.isEmpty())
-			{
-				mc.netHandler.networkManager.sendPacket(packets.take())
-			}
+			while (!packets.isEmpty()) mc.netHandler.networkManager.sendPacket(packets.take())
 
 			disableLogger = false
 		} catch (e: Exception)
@@ -160,6 +173,7 @@ class Blink : Module()
 			e.printStackTrace()
 			disableLogger = false
 		}
+
 		synchronized(positions, positions::clear)
 	}
 }

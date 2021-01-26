@@ -140,5 +140,5 @@ class FastUse : Module()
 	}
 
 	override val tag: String
-		get() = modeValue.get()
+		get() = "${modeValue.get()}${if (modeValue.get().equals("NCP", ignoreCase = true)) "-${ncpModeValue.get()}" else ""}"
 }

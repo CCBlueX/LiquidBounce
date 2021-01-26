@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.FloatValue
+import kotlin.math.max
 
 @ModuleInfo(name = "Reach", description = "Increases your reach.", category = ModuleCategory.PLAYER)
 class Reach : Module()
@@ -23,7 +24,7 @@ class Reach : Module()
 			val combatRange = combatReachValue.get()
 			val buildRange = buildReachValue.get()
 
-			return if (combatRange > buildRange) combatRange else buildRange
+			return max(combatRange, buildRange)
 		}
 
 	override val tag: String

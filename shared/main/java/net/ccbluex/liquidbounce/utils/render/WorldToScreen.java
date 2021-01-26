@@ -21,10 +21,10 @@ public final class WorldToScreen
 		return (Matrix4f) new Matrix4f().load(floatBuffer);
 	}
 
-	public static Vector2f worldToScreen(final Vector3f pointInWorld, final int screenWidth, final int screenHeight)
-	{
-		return worldToScreen(pointInWorld, getMatrix(GL11.GL_MODELVIEW_MATRIX), getMatrix(GL11.GL_PROJECTION_MATRIX), screenWidth, screenHeight);
-	}
+//	public static Vector2f worldToScreen(final Vector3f pointInWorld, final int screenWidth, final int screenHeight)
+//	{
+//		return worldToScreen(pointInWorld, getMatrix(GL11.GL_MODELVIEW_MATRIX), getMatrix(GL11.GL_PROJECTION_MATRIX), screenWidth, screenHeight);
+//	}
 
 	public static Vector2f worldToScreen(final Vector3f pointInWorld, final Matrix4f view, final Matrix4f projection, final int screenWidth, final int screenHeight)
 	{
@@ -44,11 +44,12 @@ public final class WorldToScreen
 		return new Vector2f(screenX, screenY);
 	}
 
-	public static Vector4f multiply(final Vector4f vec, final Matrix4f mat)
+	private static Vector4f multiply(final Vector4f vec, final Matrix4f mat)
 	{
 		return new Vector4f(vec.x * mat.m00 + vec.y * mat.m10 + vec.z * mat.m20 + vec.w * mat.m30, vec.x * mat.m01 + vec.y * mat.m11 + vec.z * mat.m21 + vec.w * mat.m31, vec.x * mat.m02 + vec.y * mat.m12 + vec.z * mat.m22 + vec.w * mat.m32, vec.x * mat.m03 + vec.y * mat.m13 + vec.z * mat.m23 + vec.w * mat.m33);
 	}
 
-	private WorldToScreen() {
+	private WorldToScreen()
+	{
 	}
 }
