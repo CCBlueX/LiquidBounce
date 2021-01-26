@@ -361,138 +361,138 @@ class Scaffold : Module()
 					mc.gameSettings.keyBindLeft.pressed = true
 				}
 			}
-		}
 
-		// Eagle
-		if (!eagleValue.get().equals("Off", true) && !shouldGoDown)
-		{
-			var dif = 0.5
-			if (eagleValue.get().equals("EdgeDistance", true) && !shouldGoDown)
+			// Eagle
+			if (!eagleValue.get().equals("Off", true) && !shouldGoDown)
 			{
-				for (i in 0..3) when (i)
+				var dif = 0.5
+				if (eagleValue.get().equals("EdgeDistance", true) && !shouldGoDown)
 				{
-					0 ->
+					for (i in 0..3) when (i)
 					{
-						val blockPos = WBlockPos(
-							thePlayer.posX - 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ
-						)
-						val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
-						if (isReplaceable(blockPos) && placeInfo != null)
+						0 ->
 						{
-							var calcDif: Double = thePlayer.posX - blockPos.x
-							calcDif -= 0.5
-
-							if (calcDif < 0)
-							{
-								calcDif *= -1.0
-								calcDif -= 0.5
-							}
-							if (calcDif < dif)
-							{
-								dif = calcDif
-							}
-						}
-					}
-
-					1 ->
-					{
-						val blockPos = WBlockPos(
-							thePlayer.posX + 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ
-						)
-						val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
-
-						if (isReplaceable(blockPos) && placeInfo != null)
-						{
-							var calcDif: Double = thePlayer.posX - blockPos.x
-							calcDif -= 0.5
-
-							if (calcDif < 0)
-							{
-								calcDif *= -1.0
-								calcDif -= 0.5
-							}
-							if (calcDif < dif)
-							{
-								dif = calcDif
-							}
-						}
-					}
-
-					2 ->
-					{
-						val blockPos = WBlockPos(
-							thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ - 1.0
-						)
-						val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
-
-						if (isReplaceable(blockPos) && placeInfo != null)
-						{
-							var calcDif: Double = thePlayer.posZ - blockPos.z
-							calcDif -= 0.5
-
-							if (calcDif < 0)
-							{
-								calcDif *= -1.0
-								calcDif -= 0.5
-							}
-							if (calcDif < dif)
-							{
-								dif = calcDif
-							}
-						}
-					}
-
-					3 ->
-					{
-						val blockPos = WBlockPos(
-							thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ + 1.0
-						)
-						val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
-
-						if (isReplaceable(blockPos) && placeInfo != null)
-						{
-							var calcDif: Double = thePlayer.posZ - blockPos.z
-							calcDif -= 0.5
-
-							if (calcDif < 0)
-							{
-								calcDif *= -1
-								calcDif -= 0.5
-							}
-							if (calcDif < dif)
-							{
-								dif = calcDif
-							}
-						}
-					}
-				}
-			}
-
-			if (placedBlocksWithoutEagle >= blocksToEagleValue.get())
-			{
-				val shouldEagle: Boolean = (mc.theWorld ?: return).getBlockState(
-					WBlockPos(
-						thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ
-					)
-				).block == (classProvider.getBlockEnum(BlockType.AIR)) || (dif < edgeDistanceValue.get() && eagleValue.get().equals("EdgeDistance", true))
-				if (eagleValue.get().equals("Silent", true) && !shouldGoDown)
-				{
-					if (eagleSneaking != shouldEagle)
-					{
-						mc.netHandler.addToSendQueue(
-							classProvider.createCPacketEntityAction(
-								thePlayer, if (shouldEagle) ICPacketEntityAction.WAction.START_SNEAKING
-								else ICPacketEntityAction.WAction.STOP_SNEAKING
+							val blockPos = WBlockPos(
+								thePlayer.posX - 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ
 							)
-						)
+							val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
+							if (isReplaceable(blockPos) && placeInfo != null)
+							{
+								var calcDif: Double = thePlayer.posX - blockPos.x
+								calcDif -= 0.5
+
+								if (calcDif < 0)
+								{
+									calcDif *= -1.0
+									calcDif -= 0.5
+								}
+								if (calcDif < dif)
+								{
+									dif = calcDif
+								}
+							}
+						}
+
+						1 ->
+						{
+							val blockPos = WBlockPos(
+								thePlayer.posX + 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ
+							)
+							val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
+
+							if (isReplaceable(blockPos) && placeInfo != null)
+							{
+								var calcDif: Double = thePlayer.posX - blockPos.x
+								calcDif -= 0.5
+
+								if (calcDif < 0)
+								{
+									calcDif *= -1.0
+									calcDif -= 0.5
+								}
+								if (calcDif < dif)
+								{
+									dif = calcDif
+								}
+							}
+						}
+
+						2 ->
+						{
+							val blockPos = WBlockPos(
+								thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ - 1.0
+							)
+							val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
+
+							if (isReplaceable(blockPos) && placeInfo != null)
+							{
+								var calcDif: Double = thePlayer.posZ - blockPos.z
+								calcDif -= 0.5
+
+								if (calcDif < 0)
+								{
+									calcDif *= -1.0
+									calcDif -= 0.5
+								}
+								if (calcDif < dif)
+								{
+									dif = calcDif
+								}
+							}
+						}
+
+						3 ->
+						{
+							val blockPos = WBlockPos(
+								thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ + 1.0
+							)
+							val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
+
+							if (isReplaceable(blockPos) && placeInfo != null)
+							{
+								var calcDif: Double = thePlayer.posZ - blockPos.z
+								calcDif -= 0.5
+
+								if (calcDif < 0)
+								{
+									calcDif *= -1
+									calcDif -= 0.5
+								}
+								if (calcDif < dif)
+								{
+									dif = calcDif
+								}
+							}
+						}
 					}
-					eagleSneaking = shouldEagle
-				} else
-				{
-					mc.gameSettings.keyBindSneak.pressed = shouldEagle
-					placedBlocksWithoutEagle = 0
 				}
-			} else placedBlocksWithoutEagle++
+
+				if (placedBlocksWithoutEagle >= blocksToEagleValue.get())
+				{
+					val shouldEagle: Boolean = (mc.theWorld ?: return).getBlockState(
+						WBlockPos(
+							thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ
+						)
+					).block == (classProvider.getBlockEnum(BlockType.AIR)) || (dif < edgeDistanceValue.get() && eagleValue.get().equals("EdgeDistance", true))
+					if (eagleValue.get().equals("Silent", true) && !shouldGoDown)
+					{
+						if (eagleSneaking != shouldEagle)
+						{
+							mc.netHandler.addToSendQueue(
+								classProvider.createCPacketEntityAction(
+									thePlayer, if (shouldEagle) ICPacketEntityAction.WAction.START_SNEAKING
+									else ICPacketEntityAction.WAction.STOP_SNEAKING
+								)
+							)
+						}
+						eagleSneaking = shouldEagle
+					} else
+					{
+						mc.gameSettings.keyBindSneak.pressed = shouldEagle
+						placedBlocksWithoutEagle = 0
+					}
+				} else placedBlocksWithoutEagle++
+			}
 
 			// Teleport Zitter
 			if (zitterValue.get() && zitterModeValue.get().equals("teleport", true))
