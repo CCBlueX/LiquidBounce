@@ -24,6 +24,7 @@ interface IPacket
 	fun asSPacketCustomPayload(): ISPacketCustomPayload
 	fun asSPacketSpawnPlayer(): ISPacketPlayerSpawn
 	fun asSPacketEntityTeleport(): ISPacketEntityTeleport
+	fun asSPacketTitle(): ISPacketTitle
 
 	fun asCPacketPlayer(): ICPacketPlayer
 	fun asCPacketUseEntity(): ICPacketUseEntity

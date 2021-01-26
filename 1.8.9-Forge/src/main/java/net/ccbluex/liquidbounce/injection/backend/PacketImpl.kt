@@ -41,6 +41,8 @@ open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun asSPacketEntityTeleport(): ISPacketEntityTeleport = SPacketEntityTeleportImpl(wrapped as S18PacketEntityTeleport)
 
+	override fun asSPacketTitle(): ISPacketTitle = SPacketTitleImpl(wrapped as S45PacketTitle)
+
 	override fun asCPacketChatMessage(): ICPacketChatMessage = CPacketChatMessageImpl(wrapped as C01PacketChatMessage)
 
 	override fun asCPacketHeldItemChange(): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(wrapped as C09PacketHeldItemChange)
