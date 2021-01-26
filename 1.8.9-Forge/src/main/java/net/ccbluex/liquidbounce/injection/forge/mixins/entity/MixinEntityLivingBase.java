@@ -14,16 +14,20 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.LiquidWalk;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.SwingAnimation;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.server.S0BPacketAnimation;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.WorldServer;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -51,6 +55,12 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 
 	@Shadow
 	protected boolean isJumping;
+
+	@Shadow
+	public boolean isSwingInProgress;
+
+	@Shadow
+	public int swingProgressInt;
 
 	@Shadow
 	public void onLivingUpdate()
@@ -137,5 +147,44 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 
 		if ((p_isPotionActive_1_ == Potion.confusion || p_isPotionActive_1_ == Potion.blindness) && Objects.requireNonNull(antiBlind).getState() && antiBlind.getConfusionEffect().get())
 			callbackInfoReturnable.setReturnValue(false);
+	}
+
+	/**
+	 * @author eric0210
+	 * @reason SwingAnimation customSwingSpeed
+	 * @see    SwingAnimation
+	 */
+	@Overwrite
+	public int getArmSwingAnimationEnd()
+	{
+		final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.getModule(SwingAnimation.class);
+		int swingAnimationEnd = isPotionActive(Potion.digSpeed) ? 6 - (1 + getActivePotionEffect(Potion.digSpeed).getAmplifier()) : isPotionActive(Potion.digSlowdown) ? 6 + (1 + getActivePotionEffect(Potion.digSlowdown).getAmplifier() << 1) : 6;
+
+		if (sa.getState() && sa.getCustomSwingSpeed().get())
+			swingAnimationEnd += sa.getSwingSpeed().get();
+
+		return swingAnimationEnd;
+	}
+
+	/**
+	 * @author eric0210
+	 * @reason SwingAnimation swingProgressLimit
+	 * @see    SwingAnimation
+	 */
+	@Overwrite
+	public void swingItem()
+	{
+		final ItemStack stack = getHeldItem();
+		if (stack == null || stack.getItem() == null || !stack.getItem().onEntitySwing((EntityLivingBase) (Object) this, stack))
+		{
+			final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.getModule(SwingAnimation.class);
+			if (!isSwingInProgress || swingProgressInt >= (sa.getState() ? sa.getSwingProgressLimit().get() : getArmSwingAnimationEnd() / 2) || swingProgressInt < 0)
+			{
+				swingProgressInt = -1;
+				isSwingInProgress = true;
+				if (worldObj instanceof WorldServer)
+					((WorldServer) worldObj).getEntityTracker().sendToAllTrackingEntity((Entity) (Object) this, new S0BPacketAnimation((Entity) (Object) this, 0));
+			}
+		}
 	}
 }
