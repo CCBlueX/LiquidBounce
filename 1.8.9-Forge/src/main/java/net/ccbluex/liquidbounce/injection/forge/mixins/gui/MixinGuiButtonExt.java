@@ -30,14 +30,14 @@ public abstract class MixinGuiButtonExt extends GuiButton
 	private float cut;
 	private float alpha;
 
-	public MixinGuiButtonExt(final int p_i1020_1_, final int p_i1020_2_, final int p_i1020_3_, final String p_i1020_4_)
+	public MixinGuiButtonExt(int id, int xPos, int yPos, String displayString)
 	{
-		super(p_i1020_1_, p_i1020_2_, p_i1020_3_, p_i1020_4_);
+		super(id, xPos, yPos, displayString);
 	}
 
-	public MixinGuiButtonExt(final int p_i46323_1_, final int p_i46323_2_, final int p_i46323_3_, final int p_i46323_4_, final int p_i46323_5_, final String p_i46323_6_)
+	public MixinGuiButtonExt(int id, int xPos, int yPos, int width, int height, String displayString)
 	{
-		super(p_i46323_1_, p_i46323_2_, p_i46323_3_, p_i46323_4_, p_i46323_5_, p_i46323_6_);
+		super(id, xPos, yPos, width, height, displayString);
 	}
 
 	/**

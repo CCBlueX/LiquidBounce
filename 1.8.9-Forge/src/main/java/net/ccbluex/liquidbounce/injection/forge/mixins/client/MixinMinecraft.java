@@ -126,10 +126,14 @@ public abstract class MixinMinecraft
 		final long end = System.currentTimeMillis() + 20000;
 
 		while (end < System.currentTimeMillis() && SplashProgressLock.INSTANCE.isAnimationRunning())
-			synchronized (SplashProgressLock.INSTANCE) {
-				try {
+			synchronized (SplashProgressLock.INSTANCE)
+			{
+				try
+				{
 					SplashProgressLock.INSTANCE.wait(10000);
-				} catch (final InterruptedException e) {
+				}
+				catch (final InterruptedException e)
+				{
 					e.printStackTrace();
 				}
 			}
@@ -138,10 +142,11 @@ public abstract class MixinMinecraft
 	@Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;displayGuiScreen(Lnet/minecraft/client/gui/GuiScreen;)V", shift = Shift.AFTER))
 	private void afterMainScreen(final CallbackInfo callbackInfo)
 	{
-//        if (!LiquidBounce.scriptManager.getLateInitScripts().isEmpty())
-//            LiquidBounce.wrapper.getMinecraft().displayGuiScreen(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiUnsignedScripts()));
+		// Display welcome screen
 		if (LiquidBounce.fileManager.firstStart)
 			LiquidBounce.wrapper.getMinecraft().displayGuiScreen(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiWelcome()));
+
+		// Display update screen
 		else if (LiquidBounce.INSTANCE.getLatestVersion() > LiquidBounce.CLIENT_VERSION - (LiquidBounce.IN_DEV ? 1 : 0))
 			LiquidBounce.wrapper.getMinecraft().displayGuiScreen(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiUpdate()));
 	}
@@ -149,13 +154,15 @@ public abstract class MixinMinecraft
 	@Inject(method = "createDisplay", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/Display;setTitle(Ljava/lang/String;)V", shift = Shift.AFTER))
 	private void createDisplay(final CallbackInfo callbackInfo)
 	{
+		// Set the window title
 		Display.setTitle(LiquidBounce.CLIENT_NAME + " b" + LiquidBounce.CLIENT_VERSION + " | " + LiquidBounce.MINECRAFT_VERSION + (LiquidBounce.IN_DEV ? " | DEVELOPMENT BUILD" : ""));
 	}
 
 	@Inject(method = "displayGuiScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;currentScreen:Lnet/minecraft/client/gui/GuiScreen;", shift = Shift.AFTER))
 	private void displayGuiScreen(final CallbackInfo callbackInfo)
 	{
-		if (currentScreen instanceof net.minecraft.client.gui.GuiMainMenu || currentScreen != null && currentScreen.getClass().getName().startsWith("net.labymod") && currentScreen.getClass().getSimpleName().equals("ModGuiMainMenu"))
+		// Replace Main Menu screen
+		if (currentScreen instanceof net.minecraft.client.gui.GuiMainMenu || currentScreen != null && currentScreen.getClass().getName().startsWith("net.labymod") && "ModGuiMainMenu".equals(currentScreen.getClass().getSimpleName()))
 		{
 			currentScreen = GuiScreenImplKt.unwrap(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiMainMenu()));
 
@@ -207,6 +214,7 @@ public abstract class MixinMinecraft
 	@Inject(method = "setWindowIcon", at = @At("HEAD"), cancellable = true)
 	private void setWindowIcon(final CallbackInfo callbackInfo)
 	{
+		// Replace window icon
 		if (Util.getOSType() != EnumOS.OSX)
 		{
 			final ByteBuffer[] liquidBounceFavicon = IconUtils.getFavicon();
@@ -251,12 +259,13 @@ public abstract class MixinMinecraft
 	}
 
 	@Inject(method = "loadWorld(Lnet/minecraft/client/multiplayer/WorldClient;Ljava/lang/String;)V", at = @At("HEAD"))
-	private void loadWorld(final WorldClient p_loadWorld_1_, final String p_loadWorld_2_, final CallbackInfo callbackInfo)
+	private void loadWorld(final WorldClient world, final String loadingMessage, final CallbackInfo callbackInfo)
 	{
 		if (theWorld != null)
 			MiniMapRegister.INSTANCE.unloadAllChunks();
 
-		LiquidBounce.eventManager.callEvent(new WorldEvent(p_loadWorld_1_ == null ? null : WorldClientImplKt.wrap(p_loadWorld_1_)));
+		// Trigger WorldEvent
+		LiquidBounce.eventManager.callEvent(new WorldEvent(Optional.ofNullable(world).map(WorldClientImplKt::wrap).orElse(null)));
 	}
 
 	/**
@@ -270,23 +279,26 @@ public abstract class MixinMinecraft
 			leftClickCounter = 0;
 
 		if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || LiquidBounce.moduleManager.get(MultiActions.class).getState()))
-			if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectType.BLOCK) {
+			if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectType.BLOCK)
+			{
 				final BlockPos blockPos = objectMouseOver.getBlockPos();
 
 				if (leftClickCounter == 0)
 					LiquidBounce.eventManager.callEvent(new ClickBlockEvent(BackendExtentionsKt.wrap(blockPos), EnumFacingImplKt.wrap(objectMouseOver.sideHit)));
 
-				if (theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && playerController.onPlayerDamageBlock(blockPos, objectMouseOver.sideHit)) {
+				if (theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && playerController.onPlayerDamageBlock(blockPos, objectMouseOver.sideHit))
+				{
 					effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.sideHit);
 					thePlayer.swingItem();
 				}
-			} else if (!LiquidBounce.moduleManager.get(AbortBreaking.class).getState())
+			}
+			else if (!LiquidBounce.moduleManager.get(AbortBreaking.class).getState())
 				playerController.resetBlockRemoving();
 	}
 
 	/**
 	 * @author CCBlueX
-	 * @reason Limit framerate when ClickGui is open
+	 * @reason Limit framerate if any kind of gui is open
 	 */
 	@Overwrite
 	public int getLimitFramerate()

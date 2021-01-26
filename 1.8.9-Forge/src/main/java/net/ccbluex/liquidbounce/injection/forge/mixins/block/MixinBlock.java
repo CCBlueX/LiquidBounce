@@ -122,11 +122,13 @@ public abstract class MixinBlock
 				f *= 5.0F;
 		}
 		else if (playerIn.onGround)
-		{ // NoGround
+		{
+
+			// NoFall, Criticals NoGround mode
 			final NoFall noFall = (NoFall) LiquidBounce.moduleManager.get(NoFall.class);
 			final Criticals criticals = (Criticals) LiquidBounce.moduleManager.get(Criticals.class);
 
-			if (Objects.requireNonNull(noFall).getState() && noFall.modeValue.get().equalsIgnoreCase("NoGround") || Objects.requireNonNull(criticals).getState() && criticals.getModeValue().get().equalsIgnoreCase("NoGround"))
+			if (Objects.requireNonNull(noFall).getState() && "NoGround".equalsIgnoreCase(noFall.modeValue.get()) || Objects.requireNonNull(criticals).getState() && "NoGround".equalsIgnoreCase(criticals.getModeValue().get()))
 				f /= 5.0F;
 		}
 

@@ -205,7 +205,8 @@ public abstract class MixinEntity
 	@Inject(method = "setAngles", at = @At("HEAD"), cancellable = true)
 	private void setAngles(final float yaw, final float pitch, final CallbackInfo callbackInfo)
 	{
-		if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(NoPitchLimit.class)).getState())
+		// NoPitchLimit
+		if (LiquidBounce.moduleManager.getModule(NoPitchLimit.class).getState())
 		{
 			callbackInfo.cancel();
 
@@ -221,6 +222,8 @@ public abstract class MixinEntity
 	@Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
 	private void handleRotations(final float strafe, final float forward, final float friction, final CallbackInfo callbackInfo)
 	{
+		// Trigger StrafeEvent
+
 		// noinspection ConstantConditions
 		if ((Object) this != Minecraft.getMinecraft().thePlayer)
 			return;
@@ -236,7 +239,10 @@ public abstract class MixinEntity
 	@Inject(method = "setPositionAndRotation2", at = @At("HEAD"), cancellable = true)
 	public void setPositionAndRotation2(final double x, final double y, final double z, final float yaw, final float pitch, final int posRotationIncrements, final boolean p_180426_10_, final CallbackInfo callbackInfo)
 	{
+		// ItemPhysics
 		final ItemPhysics itemPhysics = (ItemPhysics) LiquidBounce.moduleManager.get(ItemPhysics.class);
+
+		//noinspection ConstantConditions
 		if ((Object) this instanceof EntityItem && itemPhysics.getState())
 		{
 			setPosition(x, y, z);

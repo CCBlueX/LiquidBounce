@@ -43,15 +43,15 @@ public class MixinResourcePackRepository
 	{
 		try
 		{
-			final List<File> lvt_1_1_ = Lists.newArrayList(FileUtils.listFiles(dirServerResourcepacks, TrueFileFilter.TRUE, null));
-			lvt_1_1_.sort(LastModifiedFileComparator.LASTMODIFIED_REVERSE);
-			int lvt_2_1_ = 0;
+			final List<File> resourcePacks = Lists.newArrayList(FileUtils.listFiles(dirServerResourcepacks, TrueFileFilter.TRUE, null));
+			resourcePacks.sort(LastModifiedFileComparator.LASTMODIFIED_REVERSE);
+			int index = 0;
 
-			for (final File lvt_4_1_ : lvt_1_1_)
-				if (lvt_2_1_++ >= 10)
+			for (final File resourcePackFile : resourcePacks)
+				if (index++ >= 10)
 				{
-					logger.info("Deleting old server resource pack {}", lvt_4_1_.getName());
-					FileUtils.deleteQuietly(lvt_4_1_);
+					logger.info("Deleting old server resource pack {}", resourcePackFile.getName());
+					FileUtils.deleteQuietly(resourcePackFile);
 				}
 		}
 		catch (final Throwable e)
