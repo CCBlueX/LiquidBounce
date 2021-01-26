@@ -59,7 +59,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 - 100, representedScreen.height / 4 + 120, "Back"))
 
 		// Add fields to screen
-		transferCodeField = classProvider.createGuiPasswordField(666, Fonts.font40, representedScreen.width / 2 - 100, 80, 200, 20)
+		transferCodeField = classProvider.createGuiTextField(666, Fonts.font40, representedScreen.width / 2 - 100, 80, 200, 20)
 		transferCodeField.isFocused = true
 		transferCodeField.maxStringLength = Integer.MAX_VALUE
 		transferCodeField.text = transferCode

@@ -65,6 +65,7 @@
     "render.MixinTileEntityMobSpawnerRenderer",
     "render.MixinTileEntityRendererDispatcher",
     "render.MixinVisGraph",
+    "render.MixinThreadDownloadImageData",
 
     "resources.MixinSkinManager",
 

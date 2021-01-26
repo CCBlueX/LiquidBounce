@@ -12,15 +12,10 @@ import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
-import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
 import java.io.File
-import java.nio.file.Files
 import java.util.*
-import javax.imageio.ImageIO
 import kotlin.collections.HashMap
 
 object CapeAPI : MinecraftInstance()
@@ -82,70 +77,50 @@ object CapeAPI : MinecraftInstance()
 	 */
 	fun loadCape(uuid: UUID): CapeInfo?
 	{
+		var url: String? = null
+		var resourceLocation: IResourceLocation? = null
+
 		if (GuiDonatorCape.transferCode.startsWith("file:", true))
 		{
 			if (uuid != mc.session.profile.id) return null
-			val capeInfo = CapeInfo(classProvider.createResourceLocation(RandomUtils.randomNumber(128)))
+
 			var capeFile = File(LiquidBounce.fileManager.dir, GuiDonatorCape.transferCode.substring(5))
 			ClientUtils.getLogger().info("[Donator Cape] Loading offline cape from file ${capeFile.toPath()}")
+
+			resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation("offline-capes/%s".format("$capeFile"))
 
 			if (!capeFile.exists())
 			{
 
 				// Fallback strategy
 				capeFile = File(LiquidBounce.fileManager.dir, GuiDonatorCape.transferCode.substring(5) + ".png")
-				if (capeFile.exists())
+
+				ClientUtils.getLogger().info("[Donator Cape] Loaded offline cape from file (using fallback strategy) ${capeFile.toPath()}")
+				if (!capeFile.exists())
 				{
-					WorkerUtils.workers.submit {
-						val byteArrayInputStream = ByteArrayInputStream(Files.readAllBytes(capeFile.toPath()))
-						val bufferedImage = ImageIO.read(byteArrayInputStream)
-						byteArrayInputStream.close()
-
-						mc.textureManager.loadTexture(capeInfo.resourceLocation, classProvider.createDynamicTexture(bufferedImage))
-
-						ClientUtils.getLogger().info("[Donator Cape] Successfully loaded cape from file (used fallback strategy) ${capeFile.toPath()}")
-
-						capeInfo.isCapeAvailable = true
-					}
-
-					return capeInfo
+					ClientUtils.getLogger().info("[Donator Cape] Failed to load offline cape from file. File doesn't exists.")
+					return null
 				}
-
-				ClientUtils.getLogger().info("[Donator Cape] Failed to load offline cape from file. File doesn't exists.")
-				return capeInfo
 			}
 
-			WorkerUtils.workers.submit {
-				val byteArrayInputStream = ByteArrayInputStream(Files.readAllBytes(capeFile.toPath()))
-				val bufferedImage = ImageIO.read(byteArrayInputStream)
-				byteArrayInputStream.close()
-
-				mc.textureManager.loadTexture(capeInfo.resourceLocation, classProvider.createDynamicTexture(bufferedImage))
-
-				ClientUtils.getLogger().info("[Donator Cape] Successfully loaded cape from file ${capeFile.toPath()}")
-
-				capeInfo.isCapeAvailable = true
-			}
-
-			return capeInfo
+			url = capeFile.toURI().toURL().toString() // Convert file path to URL-string
 		}
 
 		// Get url of cape from cape service
-		val url = (capeService ?: return null).getCape(uuid) ?: return null
+		if (url == null) url = (capeService ?: return null).getCape(uuid) ?: return null
 
 		// Load cape
-		val resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation("capes/%s.png".format("$uuid"))
+		if (resourceLocation == null) resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation("capes/%s.png".format("$uuid"))
+
 		val capeInfo = CapeInfo(resourceLocation)
 		val threadDownloadImageData = LiquidBounce.wrapper.classProvider.createThreadDownloadImageData(null, url, null, object : WIImageBuffer
 		{
-
 			override fun parseUserSkin(image: BufferedImage?): BufferedImage? = image
 
 			override fun skinAvailable()
 			{
 				capeInfo.isCapeAvailable = true
 			}
-
 		})
 
 		mc.textureManager.loadTexture(resourceLocation, threadDownloadImageData)
