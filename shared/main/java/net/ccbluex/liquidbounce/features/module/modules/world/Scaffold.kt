@@ -714,18 +714,19 @@ class Scaffold : Module()
 		val ySearch = ySearchValue.get() || clutching
 		if (expand)
 		{
+			val horizontalFacing = functions.getHorizontalFacing(MovementUtils.directionDegrees)
 			for (i in 0 until expandLengthValue.get())
 			{
 				if (search(
 						searchPosition.add(
-							when (thePlayer.horizontalFacing)
+							when (horizontalFacing)
 							{
 								classProvider.getEnumFacing(
 									EnumFacingType.WEST
 								) -> -i
 								classProvider.getEnumFacing(EnumFacingType.EAST) -> i
 								else -> 0
-							}, 0, when (thePlayer.horizontalFacing)
+							}, 0, when (horizontalFacing)
 							{
 								classProvider.getEnumFacing(EnumFacingType.NORTH) -> -i
 								classProvider.getEnumFacing(
