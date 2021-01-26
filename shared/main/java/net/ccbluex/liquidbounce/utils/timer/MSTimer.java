@@ -10,14 +10,14 @@ public final class MSTimer
 
 	private long time = -1L;
 
-	public boolean hasTimePassed(final long MS)
+	public boolean hasTimePassed(final long millis)
 	{
-		return System.currentTimeMillis() >= time + MS;
+		return System.currentTimeMillis() >= time + millis;
 	}
 
-	public long hasTimeLeft(final long MS)
+	public long hasTimeLeft(final long millis)
 	{
-		return MS + time - System.currentTimeMillis();
+		return millis + time - System.currentTimeMillis();
 	}
 
 	public long getTime()

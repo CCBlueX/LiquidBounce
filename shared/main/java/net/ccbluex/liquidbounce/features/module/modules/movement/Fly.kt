@@ -694,15 +694,16 @@ class Fly : Module()
 
 				"hypixel" ->
 				{
-					val boostDelay = hypixelTimerBoostDelay.get()
+					val boostDelay = hypixelTimerBoostDelay.get().toLong()
+					val boostTimer = hypixelTimerBoostTimer.get()
 					if (hypixelFlyStarted)
 					{
 
 						// TimerBoost
 						if (hypixelTimerBoost.get())
 						{
-							if (!hypixelFlyTimer.hasTimePassed(boostDelay.toLong())) mc.timer.timerSpeed = 1.0F + hypixelTimerBoostTimer.get() * (hypixelFlyTimer.hasTimeLeft(boostDelay.toLong()) / boostDelay)
-							else mc.timer.timerSpeed = 1.0F
+							if (hypixelFlyTimer.hasTimePassed(boostDelay)) mc.timer.timerSpeed = 1.0F
+							else mc.timer.timerSpeed = 1.0F + boostTimer * (hypixelFlyTimer.hasTimeLeft(boostDelay).toFloat() / boostDelay.toFloat())
 						}
 
 						// ychinc
