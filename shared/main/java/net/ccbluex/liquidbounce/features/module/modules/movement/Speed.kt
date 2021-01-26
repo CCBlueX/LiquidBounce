@@ -18,7 +18,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreOnGround
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.vanilla.Vanilla
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.vanilla.VanillaHop
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -32,7 +31,7 @@ class Speed : Module()
 	private val speedModes = arrayOf(
 
 		// Vanilla
-		Vanilla(), VanillaHop(),
+		Vanilla(),
 
 		// NCP
 		OldNCPBHop(), NCPFHop(), NCPTimerBHop(), NCPBHop(), YPort(), YPort2(), NCPYPort(), Boost(), Frame(), MiJump(), OnGround(),
@@ -166,9 +165,7 @@ class Speed : Module()
 		{
 			val mode = modeValue.get()
 
-			for (speedMode in speedModes) if (speedMode.modeName.equals(mode, ignoreCase = true)) return speedMode
-
-			return null
+			return speedModes.firstOrNull { it.modeName.equals(mode, ignoreCase = true) }
 		}
 
 	private val modes: Array<String>
