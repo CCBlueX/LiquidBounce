@@ -28,7 +28,7 @@ class NetGraph(
 ) : Element(x, y, scale, side)
 {
 	private val widthValue = IntegerValue("Width", 150, 100, 300)
-	private val heightValue = IntegerValue("Height", 50, 30, 150)
+	private val heightValue = IntegerValue("Height", 50, 30, 300)
 
 	private val pingUpdatePeriodValue = IntegerValue("PingUpdatePeriod", 500, 100, 2000)
 

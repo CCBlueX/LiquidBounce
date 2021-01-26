@@ -27,7 +27,7 @@ class SpeedGraph(
 ) : Element(x, y, scale, side)
 {
 	private val widthValue = IntegerValue("Width", 150, 100, 300)
-	private val heightValue = IntegerValue("Height", 50, 30, 150)
+	private val heightValue = IntegerValue("Height", 50, 30, 300)
 
 	private val speedyMultiplier = FloatValue("Speed-yMultiplier", 7F, 1F, 20F)
 	private val speedThicknessValue = FloatValue("Speed-Thickness", 2F, 1F, 3F)
@@ -164,8 +164,8 @@ class SpeedGraph(
 				val yspeedNextY = yspeedList[i + 1] * 10 * yspeedYMul
 
 				RenderUtils.glColor(yspeedColor)
-				GL11.glVertex2d(i.toDouble() - yspeedListStart, height + 1 - ypos - yspeedY.coerceAtLeast(-ypos).coerceAtMost(height.toDouble()))
-				GL11.glVertex2d(i + 1.0 - yspeedListStart, height + 1 - ypos - yspeedNextY.coerceAtLeast(-ypos).coerceAtMost(height.toDouble()))
+				GL11.glVertex2d(i.toDouble() - yspeedListStart, height + 1 - ypos - yspeedY.coerceAtLeast(-ypos).coerceAtMost(height.toDouble() - ypos))
+				GL11.glVertex2d(i + 1.0 - yspeedListStart, height + 1 - ypos - yspeedNextY.coerceAtLeast(-ypos).coerceAtMost(height.toDouble() - ypos))
 			}
 		}
 
@@ -236,8 +236,8 @@ class SpeedGraph(
 					val ymotionNextY = ymotionList[i + 1] * 10 * ymotionYMul
 
 					RenderUtils.glColor(ymotionColor)
-					GL11.glVertex2d(i.toDouble() - ymotionListStart, height + 1 - ypos - ymotionY.coerceAtLeast(-ypos).coerceAtMost(height.toDouble()))
-					GL11.glVertex2d(i + 1.0 - ymotionListStart, height + 1 - ypos - ymotionNextY.coerceAtLeast(-ypos).coerceAtMost(height.toDouble()))
+					GL11.glVertex2d(i.toDouble() - ymotionListStart, height + 1 - ypos - ymotionY.coerceAtLeast(-ypos).coerceAtMost(height.toDouble() - ypos))
+					GL11.glVertex2d(i + 1.0 - ymotionListStart, height + 1 - ypos - ymotionNextY.coerceAtLeast(-ypos).coerceAtMost(height.toDouble() - ypos))
 				}
 			}
 
