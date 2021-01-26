@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
@@ -27,17 +26,19 @@ class AACPort : SpeedMode("AACPort")
 
 		if (!MovementUtils.isMoving) return
 
-		val f = WMathHelper.toRadians(thePlayer.rotationYaw)
-		var d = 0.2
+		val dir = MovementUtils.direction
+		var speed = 0.2
+		val maxSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed?)!!.portMax.get()
 
-		while (d <= (LiquidBounce.moduleManager[Speed::class.java] as Speed?)!!.portMax.get())
+		while (speed <= maxSpeed)
 		{
-			val x: Double = thePlayer.posX - functions.sin(f) * d
-			val z: Double = thePlayer.posZ + functions.cos(f) * d
+			val x = thePlayer.posX - functions.sin(dir) * speed
+			val z = thePlayer.posZ + functions.cos(dir) * speed
 
 			if (thePlayer.posY < thePlayer.posY.toInt() + 0.5 && !classProvider.isBlockAir(getBlock(WBlockPos(x, thePlayer.posY, z)))) break
+
 			thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketPlayerPosition(x, thePlayer.posY, z, true))
-			d += 0.2
+			speed += 0.2
 		}
 	}
 

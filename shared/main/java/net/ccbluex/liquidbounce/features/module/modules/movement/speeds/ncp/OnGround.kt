@@ -5,7 +5,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -24,7 +26,9 @@ class OnGround : SpeedMode("OnGround")
 
 		thePlayer.posY -= 0.3993000090122223
 		thePlayer.motionY = -1000.0
-		thePlayer.cameraPitch = 0.3f
+
+		//		thePlayer.cameraPitch = 0.3f
+
 		thePlayer.distanceWalkedModified = 44.0f
 		mc.timer.timerSpeed = 1f
 
@@ -35,7 +39,11 @@ class OnGround : SpeedMode("OnGround")
 			thePlayer.distanceWalkedOnStepModified = 44.0f
 			thePlayer.motionX *= 1.590000033378601
 			thePlayer.motionZ *= 1.590000033378601
-			thePlayer.cameraPitch = 0.0f
+
+			//			thePlayer.cameraPitch = 0.0f
+
+			LiquidBounce.eventManager.callEvent(JumpEvent(0.3993000090122223f))
+
 			mc.timer.timerSpeed = 1.199f
 		}
 	}

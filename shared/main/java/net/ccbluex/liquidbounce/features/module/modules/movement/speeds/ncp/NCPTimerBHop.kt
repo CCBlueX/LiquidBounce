@@ -17,7 +17,7 @@ import kotlin.math.sqrt
 
 class NCPTimerBHop : SpeedMode("SNCPBHop")
 {
-	private var level = 1
+	private var step = 1
 	private var moveSpeed = 0.2873
 	private var lastDist = 0.0
 	private var timerDelay = 0
@@ -27,14 +27,14 @@ class NCPTimerBHop : SpeedMode("SNCPBHop")
 		mc.timer.timerSpeed = 1f
 		lastDist = 0.0
 		moveSpeed = 0.0
-		level = 4
+		step = 4
 	}
 
 	override fun onDisable()
 	{
 		mc.timer.timerSpeed = 1f
 		moveSpeed = baseMoveSpeed
-		level = 0
+		step = 0
 	}
 
 	override fun onMotion(eventState: EventState)
@@ -71,36 +71,36 @@ class NCPTimerBHop : SpeedMode("SNCPBHop")
 				thePlayer.motionZ *= 1.0199999809265137
 			}
 		}
-		if (thePlayer.onGround && MovementUtils.isMoving) level = 2
+		if (thePlayer.onGround && MovementUtils.isMoving) step = 2
 		if (round(thePlayer.posY - thePlayer.posY.toInt().toDouble()) == round(0.138))
 		{
 			thePlayer.motionY -= 0.08
 			event.y = event.y - 0.09316090325960147
 			thePlayer.posY -= 0.09316090325960147
 		}
-		if (level == 1 && (thePlayer.moveForward != 0.0f || thePlayer.moveStrafing != 0.0f))
+		if (step == 1 && (thePlayer.moveForward != 0.0f || thePlayer.moveStrafing != 0.0f))
 		{
-			level = 2
+			step = 2
 			moveSpeed = 1.35 * baseMoveSpeed - 0.01
-		} else if (level == 2)
+		} else if (step == 2)
 		{
-			level = 3
+			step = 3
 			thePlayer.motionY = 0.399399995803833
 			event.y = 0.399399995803833
 			moveSpeed *= 2.149
-		} else if (level == 3)
+		} else if (step == 3)
 		{
-			level = 4
+			step = 4
 			val difference = 0.66 * (lastDist - baseMoveSpeed)
 			moveSpeed = lastDist - difference
-		} else if (level == 88)
+		} else if (step == 88)
 		{
 			moveSpeed = baseMoveSpeed
 			lastDist = 0.0
-			level = 89
-		} else if (level == 89)
+			step = 89
+		} else if (step == 89)
 		{
-			if (theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(0.0, thePlayer.motionY, 0.0)).isNotEmpty() || thePlayer.isCollidedVertically) level = 1
+			if (theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(0.0, thePlayer.motionY, 0.0)).isNotEmpty() || thePlayer.isCollidedVertically) step = 1
 			lastDist = 0.0
 			moveSpeed = baseMoveSpeed
 			return
@@ -110,7 +110,7 @@ class NCPTimerBHop : SpeedMode("SNCPBHop")
 			{
 				moveSpeed = baseMoveSpeed
 				lastDist = 0.0
-				level = 88
+				step = 88
 				return
 			}
 			moveSpeed = lastDist - lastDist / 159.0
@@ -121,11 +121,7 @@ class NCPTimerBHop : SpeedMode("SNCPBHop")
 		var forward: Float = movementInput.moveForward
 		var strafe: Float = movementInput.moveStrafe
 		var yaw = thePlayer.rotationYaw
-		if (forward == 0.0f && strafe == 0.0f)
-		{
-			event.x = 0.0
-			event.z = 0.0
-		} else if (forward != 0.0f)
+		if (forward == 0.0f && strafe == 0.0f) event.zeroXZ() else if (forward != 0.0f)
 		{
 			if (strafe >= 1.0f)
 			{
@@ -151,11 +147,7 @@ class NCPTimerBHop : SpeedMode("SNCPBHop")
 		event.x = forward.toDouble() * moveSpeed * mx2 + strafe.toDouble() * moveSpeed * mz2
 		event.z = forward.toDouble() * moveSpeed * mz2 - strafe.toDouble() * moveSpeed * mx2
 		thePlayer.stepHeight = 0.5f
-		if (forward == 0.0f && strafe == 0.0f)
-		{
-			event.x = 0.0
-			event.z = 0.0
-		}
+		if (forward == 0.0f && strafe == 0.0f) event.zeroXZ()
 	}
 
 	private val baseMoveSpeed: Double

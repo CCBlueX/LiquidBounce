@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMod
 
 class SpartanYPort : SpeedMode("Spartan-YPort")
 {
-	private var airMoves = 0
+	private var airTicks = 0
 
 	override fun onMotion(eventState: EventState)
 	{
@@ -23,17 +23,20 @@ class SpartanYPort : SpeedMode("Spartan-YPort")
 			if (thePlayer.onGround)
 			{
 				jump(thePlayer)
-				airMoves = 0
+				airTicks = 0
 			} else
 			{
 				mc.timer.timerSpeed = 1.08f
-				if (airMoves >= 3) thePlayer.jumpMovementFactor = 0.0275f
-				if (airMoves >= 4 && airMoves % 2.0 == 0.0)
+
+				if (airTicks >= 3) thePlayer.jumpMovementFactor = 0.0275f
+
+				if (airTicks >= 4 && airTicks % 2.0 == 0.0)
 				{
 					thePlayer.motionY = -0.32f - 0.009 * Math.random()
 					thePlayer.jumpMovementFactor = 0.0238f
 				}
-				airMoves++
+
+				airTicks++
 			}
 		}
 	}

@@ -5,8 +5,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -24,10 +25,14 @@ class NCPYPort : SpeedMode("NCPYPort")
 		if (jumps >= 4 && thePlayer.onGround) jumps = 0
 		if (thePlayer.onGround)
 		{
-			thePlayer.motionY = if (jumps <= 1) 0.42 else 0.4
-			val f = WMathHelper.toRadians(thePlayer.rotationYaw)
-			thePlayer.motionX -= functions.sin(f) * 0.2f
-			thePlayer.motionZ += functions.cos(f) * 0.2f
+			val motion = if (jumps <= 1) 0.42f else 0.4f
+			val dir = MovementUtils.direction
+
+			thePlayer.motionY = motion.toDouble()
+			thePlayer.motionX -= functions.sin(dir) * 0.2f
+			thePlayer.motionZ += functions.cos(dir) * 0.2f
+			LiquidBounce.eventManager.callEvent(JumpEvent(motion))
+
 			jumps++
 		} else if (jumps <= 1) thePlayer.motionY = -5.0
 		MovementUtils.strafe()

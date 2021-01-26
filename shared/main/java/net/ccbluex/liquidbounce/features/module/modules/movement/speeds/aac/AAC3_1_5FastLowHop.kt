@@ -5,18 +5,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class AAC3_1_5FastLowHop : SpeedMode("AAC3.1.5-FastLowHop")
 {
-	private var legitJump = false
+	private var firstLegitJump = false
 
 	override fun onEnable()
 	{
-		legitJump = true
+		firstLegitJump = true
 		mc.timer.timerSpeed = 1f
 	}
 
@@ -40,20 +42,22 @@ class AAC3_1_5FastLowHop : SpeedMode("AAC3.1.5-FastLowHop")
 
 			if (thePlayer.onGround)
 			{
-				if (legitJump)
+				if (firstLegitJump)
 				{
 					jump(thePlayer)
-					legitJump = false
-
+					firstLegitJump = false
 					return
 				}
 
-				thePlayer.motionY = 0.343
 				MovementUtils.strafe(0.534f)
+
+				thePlayer.motionY = 0.343
+				LiquidBounce.eventManager.callEvent(JumpEvent(0.343f))
 			}
 		} else
 		{
-			legitJump = true
+			firstLegitJump = true
+
 			thePlayer.motionX = 0.0
 			thePlayer.motionZ = 0.0
 		}

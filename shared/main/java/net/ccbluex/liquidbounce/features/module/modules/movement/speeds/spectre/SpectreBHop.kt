@@ -18,12 +18,14 @@ class SpectreBHop : SpeedMode("Spectre-BHop")
 		if (eventState != EventState.PRE) return
 
 		if (!MovementUtils.isMoving || thePlayer.movementInput.jump) return
+
 		if (thePlayer.onGround)
 		{
 			MovementUtils.strafe(1.1f)
 			thePlayer.motionY = 0.44
 			return
 		}
+
 		MovementUtils.strafe()
 	}
 

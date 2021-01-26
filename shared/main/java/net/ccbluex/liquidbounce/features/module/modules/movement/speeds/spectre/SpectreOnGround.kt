@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre
 
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -38,11 +37,11 @@ class SpectreOnGround : SpeedMode("Spectre-OnGround")
 			}
 			return
 		}
-		if (thePlayer.onGround && mc.gameSettings.keyBindForward.isKeyDown)
+		if (thePlayer.onGround && MovementUtils.isMoving)
 		{
-			val yawRadians = WMathHelper.toRadians(thePlayer.rotationYaw)
-			thePlayer.motionX -= functions.sin(yawRadians) * 0.145f
-			thePlayer.motionZ += functions.cos(yawRadians) * 0.145f
+			val dir = MovementUtils.direction
+			thePlayer.motionX -= functions.sin(dir) * 0.145f
+			thePlayer.motionZ += functions.cos(dir) * 0.145f
 			event.x = thePlayer.motionX
 			event.y = 0.005
 			event.z = thePlayer.motionZ

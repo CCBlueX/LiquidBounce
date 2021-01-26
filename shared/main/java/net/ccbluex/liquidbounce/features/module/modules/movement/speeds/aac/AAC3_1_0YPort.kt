@@ -5,7 +5,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -19,13 +21,16 @@ class AAC3_1_0YPort : SpeedMode("AAC3.1.0-YPort")
 
 		if (MovementUtils.isMoving && !thePlayer.sneaking)
 		{
-			thePlayer.cameraPitch = 0f
+
+			//			thePlayer.cameraPitch = 0f
 
 			if (thePlayer.onGround)
 			{
-				thePlayer.motionY = 0.3425
 				thePlayer.motionX *= 1.5893
 				thePlayer.motionZ *= 1.5893
+
+				thePlayer.motionY = 0.3425
+				LiquidBounce.eventManager.callEvent(JumpEvent(0.3425f))
 			} else thePlayer.motionY = -0.19
 		}
 	}

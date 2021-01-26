@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class AAC3_0_5BHop : SpeedMode("AAC3.0.5-BHop")
 {
-
 	override fun onMotion(eventState: EventState)
 	{
 		val thePlayer = mc.thePlayer ?: return

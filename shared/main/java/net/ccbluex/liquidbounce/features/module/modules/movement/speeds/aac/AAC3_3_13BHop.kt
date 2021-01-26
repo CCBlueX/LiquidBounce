@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
@@ -26,12 +25,16 @@ class AAC3_3_13BHop : SpeedMode("AAC3.3.13-BHop")
 
 		if (!MovementUtils.isMoving || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isRiding || thePlayer.hurtTime > 0) return
 		if (thePlayer.onGround && thePlayer.isCollidedVertically)
-		{ // MotionXYZ
-			val yawRad = WMathHelper.toRadians(thePlayer.rotationYaw)
-			thePlayer.motionX -= functions.sin(yawRad) * 0.202f
-			thePlayer.motionZ += functions.cos(yawRad) * 0.202f
+		{
+
+			// Jump with y 0.405F, boost 0.202F
+			val dir = MovementUtils.direction
+			thePlayer.motionX -= functions.sin(dir) * 0.202f
+			thePlayer.motionZ += functions.cos(dir) * 0.202f
+
 			thePlayer.motionY = 0.405
 			LiquidBounce.eventManager.callEvent(JumpEvent(0.405f))
+
 			MovementUtils.strafe()
 		} else if (thePlayer.fallDistance < 0.31f)
 		{

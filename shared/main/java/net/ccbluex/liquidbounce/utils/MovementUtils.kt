@@ -29,10 +29,10 @@ object MovementUtils : MinecraftInstance()
 	fun strafe(speed: Float = this.speed)
 	{
 		if (!isMoving) return
-		val yaw = direction
+		val dir = direction
 		val thePlayer = mc.thePlayer!!
-		thePlayer.motionX = (-functions.sin(yaw) * speed).toDouble()
-		thePlayer.motionZ = (functions.cos(yaw) * speed).toDouble()
+		thePlayer.motionX = (-functions.sin(dir) * speed).toDouble()
+		thePlayer.motionZ = (functions.cos(dir) * speed).toDouble()
 	}
 
 	@JvmStatic

@@ -14,6 +14,7 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop")
 {
 	private var firstJump = false
 	private var waitForGround = false
+
 	override fun onEnable()
 	{
 		firstJump = true
@@ -32,12 +33,14 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop")
 				{
 					waitForGround = false
 					if (!firstJump) firstJump = true
+
 					jump(thePlayer)
 					thePlayer.motionY = 0.41
 				} else
 				{
 					if (waitForGround) return
 					if (thePlayer.isCollidedHorizontally) return
+
 					firstJump = false
 					thePlayer.motionY -= 0.0149
 				}
@@ -52,9 +55,8 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop")
 			thePlayer.motionZ = 0.0
 			thePlayer.motionX = 0.0
 		}
-		val speed = MovementUtils.speed.toDouble()
-		thePlayer.motionX = -(functions.sin(MovementUtils.direction) * speed)
-		thePlayer.motionZ = functions.cos(MovementUtils.direction) * speed
+
+		MovementUtils.strafe()
 	}
 
 	override fun onUpdate()

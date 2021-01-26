@@ -5,31 +5,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop"), Listenable
+class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop")
 {
 	override fun onMotion(eventState: EventState)
 	{
-	}
-
-	override fun onUpdate()
-	{
-	}
-
-	override fun onMove(event: MoveEvent)
-	{
-	}
-
-	@EventTarget
-	fun onMotion(event: MotionEvent)
-	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (event.eventState == EventState.POST && MovementUtils.isMoving && !thePlayer.isInWater && !thePlayer.isInLava)
+		if (eventState == EventState.POST && MovementUtils.isMoving && !thePlayer.isInWater && !thePlayer.isInLava)
 		{
 			thePlayer.jumpMovementFactor += 0.00208f
 			if (thePlayer.fallDistance <= 1f)
@@ -49,6 +36,14 @@ class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop"), Listenable
 		}
 	}
 
+	override fun onUpdate()
+	{
+	}
+
+	override fun onMove(event: MoveEvent)
+	{
+	}
+
 	override fun onEnable()
 	{
 		val thePlayer = mc.thePlayer ?: return
@@ -62,13 +57,6 @@ class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop"), Listenable
 
 	override fun onDisable()
 	{
-		mc.thePlayer?.jumpMovementFactor = 0.02f
-	}
-
-	override fun handleEvents(): Boolean = isActive
-
-	init
-	{
-		LiquidBounce.eventManager.registerListener(this)
+		(mc.thePlayer ?: return).jumpMovementFactor = 0.02f
 	}
 }

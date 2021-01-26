@@ -5,14 +5,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop")
 {
-	private var legitJump = false
+	private var firstLegitJump = false
+
 	override fun onTick()
 	{
 		val thePlayer = mc.thePlayer ?: return
@@ -25,19 +28,28 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop")
 		{
 			when
 			{
+
+				// Jump
 				thePlayer.onGround ->
 				{
-					if (legitJump)
+
+					// Legit jump on the first
+					if (firstLegitJump)
 					{
 						jump(thePlayer)
-						legitJump = false
+						firstLegitJump = false
 						return
 					}
-					thePlayer.motionY = 0.41
-					thePlayer.onGround = false
+
 					MovementUtils.strafe(0.374f)
+
+					thePlayer.motionY = 0.41
+					LiquidBounce.eventManager.callEvent(JumpEvent(0.41f))
+
+					thePlayer.onGround = false
 				}
 
+				// Going down
 				thePlayer.motionY < 0.0 ->
 				{
 					thePlayer.speedInAir = 0.0201f
@@ -48,7 +60,8 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop")
 			}
 		} else
 		{
-			legitJump = true
+			firstLegitJump = true
+
 			thePlayer.motionX = 0.0
 			thePlayer.motionZ = 0.0
 		}

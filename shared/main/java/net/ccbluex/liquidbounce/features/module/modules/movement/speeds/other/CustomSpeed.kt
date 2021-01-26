@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -27,8 +28,11 @@ class CustomSpeed : SpeedMode("Custom")
 			{
 				thePlayer.onGround ->
 				{
+					val customY = speed.customYValue.get()
+
 					MovementUtils.strafe(speed.customSpeedValue.get())
-					thePlayer.motionY = speed.customYValue.get().toDouble()
+					thePlayer.motionY = customY.toDouble()
+					LiquidBounce.eventManager.callEvent(JumpEvent(customY))
 				}
 
 				speed.customStrafeValue.get() -> MovementUtils.strafe(speed.customSpeedValue.get())

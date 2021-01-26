@@ -99,11 +99,7 @@ class YPort : SpeedMode("YPort")
 		var forward: Float = thePlayer.movementInput.moveForward
 		var strafe: Float = thePlayer.movementInput.moveStrafe
 		var yaw = thePlayer.rotationYaw
-		if (forward == 0f && strafe == 0f)
-		{
-			event.x = 0.0
-			event.z = 0.0
-		} else if (forward != 0f)
+		if (forward == 0f && strafe == 0f) event.zeroXZ() else if (forward != 0f)
 		{
 			if (strafe >= 1f)
 			{
@@ -124,11 +120,7 @@ class YPort : SpeedMode("YPort")
 		event.z = forward * moveSpeed * mz - strafe * moveSpeed * mx
 
 		thePlayer.stepHeight = 0.5f
-		if (forward == 0f && strafe == 0f)
-		{
-			event.x = 0.0
-			event.z = 0.0
-		}
+		if (forward == 0f && strafe == 0f) event.zeroXZ()
 	}
 
 	private val baseMoveSpeed: Double

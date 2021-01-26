@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class AAC4BHop : SpeedMode("AAC4BHop")
 {
-	private var legitHop = false
+	private var firstLegitJump = false
 
 	override fun onDisable()
 	{
@@ -25,13 +25,13 @@ class AAC4BHop : SpeedMode("AAC4BHop")
 
 		if (MovementUtils.isMoving)
 		{
-			if (legitHop)
+			if (firstLegitJump)
 			{
 				if (thePlayer.onGround)
 				{
 					jump(thePlayer)
 					thePlayer.onGround = false
-					legitHop = false
+					firstLegitJump = false
 				}
 				return
 			}
@@ -44,9 +44,10 @@ class AAC4BHop : SpeedMode("AAC4BHop")
 			} else thePlayer.speedInAir = 0.0211f
 		} else
 		{
+			firstLegitJump = true
+
 			thePlayer.motionX = 0.0
 			thePlayer.motionZ = 0.0
-			legitHop = true
 		}
 	}
 
@@ -64,6 +65,6 @@ class AAC4BHop : SpeedMode("AAC4BHop")
 
 	override fun onEnable()
 	{
-		legitHop = true
+		firstLegitJump = true
 	}
 }

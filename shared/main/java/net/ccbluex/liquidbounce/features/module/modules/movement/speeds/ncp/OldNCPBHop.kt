@@ -103,11 +103,7 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		var forward: Float = movementInput.moveForward
 		var strafe: Float = movementInput.moveStrafe
 		var yaw = thePlayer.rotationYaw
-		if (forward == 0.0f && strafe == 0.0f)
-		{
-			event.x = 0.0
-			event.z = 0.0
-		} else if (forward != 0.0f)
+		if (forward == 0.0f && strafe == 0.0f) event.zeroXZ() else if (forward != 0.0f)
 		{
 			if (strafe >= 1.0f)
 			{
@@ -133,11 +129,7 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		event.x = forward * moveSpeed * mx2 + strafe * moveSpeed * mz2
 		event.z = forward * moveSpeed * mz2 - strafe * moveSpeed * mx2
 		thePlayer.stepHeight = 0.5f
-		if (forward == 0.0f && strafe == 0.0f)
-		{
-			event.x = 0.0
-			event.z = 0.0
-		}
+		if (forward == 0.0f && strafe == 0.0f) event.zeroXZ()
 	}
 
 	private val baseMoveSpeed: Double
