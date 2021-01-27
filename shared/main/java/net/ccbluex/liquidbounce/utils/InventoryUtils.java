@@ -30,6 +30,12 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 
 public final class InventoryUtils extends MinecraftInstance implements Listenable
 {
+	// !! ---------------------------------------------------------------------------------------------------------------------------- !!
+	// inventoryContainer.getSlot(i).stack is using different Slot ID system unlike inventory.getStackInSlot()
+	// ID system can be found on
+	// mc.thePlayer.inventoryContainer.getSlot(i).stack - https://wiki.vg/File:Inventory-slots.png
+	// mc.thePlayer.inventory.getStackInSlot() (same as mc.thePlayer.inventory.mainInventory) - https://minecraft.gamepedia.com/File:Items_slot_number.png
+	// !! ---------------------------------------------------------------------------------------------------------------------------- !!
 
 	// @formatter:off
 	public static final List<IBlock> AUTOBLOCK_BLACKLIST = Collections.unmodifiableList(Arrays.asList(

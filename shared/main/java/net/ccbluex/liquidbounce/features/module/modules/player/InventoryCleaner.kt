@@ -96,22 +96,22 @@ class InventoryCleaner : Module()
 	private val items = arrayOf("None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water", "Gapple", "Pearl")
 
 	private val sortValue = BoolValue("Sort", true)
-	private val sortSlot1Value = ListValue("SortSlot-1", items, "Sword")
-	private val sortSlot2Value = ListValue("SortSlot-2", items, "Bow")
-	private val sortSlot3Value = ListValue("SortSlot-3", items, "Pickaxe")
-	private val sortSlot4Value = ListValue("SortSlot-4", items, "Axe")
-	private val sortSlot5Value = ListValue("SortSlot-5", items, "None")
-	private val sortSlot6Value = ListValue("SortSlot-6", items, "None")
-	private val sortSlot7Value = ListValue("SortSlot-7", items, "Food")
-	private val sortSlot8Value = ListValue("SortSlot-8", items, "Block")
-	private val sortSlot9Value = ListValue("SortSlot-9", items, "Block")
+
+	private val slot1Value = ListValue("Slot-1", items, "Sword")
+	private val slot2Value = ListValue("Slot-2", items, "Bow")
+	private val slot3Value = ListValue("Slot-3", items, "Pickaxe")
+	private val slot4Value = ListValue("Slot-4", items, "Axe")
+	private val slot5Value = ListValue("Slot-5", items, "None")
+	private val slot6Value = ListValue("Slot-6", items, "None")
+	private val slot7Value = ListValue("Slot-7", items, "Food")
+	private val slot8Value = ListValue("Slot-8", items, "Block")
+	private val slot9Value = ListValue("Slot-9", items, "Block")
 
 	// Item Filter Options
 	private val keepOldSwordValue = BoolValue("KeepOldSword", false)
 	private val keepOldToolsValue = BoolValue("KeepOldTools", false)
 
-	private val bowValue = BoolValue("Bow", true)
-	private val arrowValue = BoolValue("Arrow", true)
+	private val bowAndArrowValue = BoolValue("BowAndArrow", true)
 	private val bucketValue = BoolValue("Bucket", true)
 	private val compassValue = BoolValue("Compass", true)
 	private val enderPearlValue = BoolValue("EnderPearl", true)
@@ -182,11 +182,13 @@ class InventoryCleaner : Module()
 		// NoMove, AutoArmorLock Check
 		if (noMoveValue.get() && MovementUtils.isMoving || (LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) return
 
+		if (!classProvider.isGuiInventory(mc.currentScreen) && invOpenValue.get()) return
+
 		// Sort hotbar
 		if (sortValue.get()) sortHotbar()
 
 		// Clean inventory
-		if (classProvider.isGuiInventory(mc.currentScreen) || !invOpenValue.get()) cleanInventory(end = if (hotbarValue.get()) 45 else 36)
+		cleanInventory(end = if (hotbarValue.get()) 45 else 36)
 	}
 
 	fun cleanInventory(
@@ -280,7 +282,7 @@ class InventoryCleaner : Module()
 						stack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS)
 					)
 				}
-			} else if (bowValue.get() && classProvider.isItemBow(item))
+			} else if (bowAndArrowValue.get() && classProvider.isItemBow(item))
 			{
 				val currPower = ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER))
 
@@ -303,7 +305,7 @@ class InventoryCleaner : Module()
 			} else if (compassValue.get() && itemStack.unlocalizedName == "item.compass")
 			{
 				items(0, 45).none { (_, stack) -> itemStack != stack && stack.unlocalizedName == "item.compass" }
-			} else foodValue.get() && classProvider.isItemFood(item) || arrowValue.get() && itemStack.unlocalizedName == "item.arrow" || classProvider.isItemBlock(item) && !classProvider.isBlockBush(item?.asItemBlock()?.block) || bedValue.get() && classProvider.isItemBed(
+			} else foodValue.get() && classProvider.isItemFood(item) || bowAndArrowValue.get() && itemStack.unlocalizedName == "item.arrow" || classProvider.isItemBlock(item) && !classProvider.isBlockBush(item?.asItemBlock()?.block) || bedValue.get() && classProvider.isItemBed(
 				item
 			) || diamondValue.get() && itemStack.unlocalizedName == "item.diamond" || ironIngotValue.get() && itemStack.unlocalizedName == "item.ingotIron" || potionValue.get() && classProvider.isItemPotion(
 				item
@@ -398,44 +400,47 @@ class InventoryCleaner : Module()
 
 			"bow" ->
 			{
-				var bestBow = if (classProvider.isItemBow(slotStack?.item)) targetSlot else -1
-				var bestPower = if (bestBow != -1) ItemUtils.getEnchantment(slotStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER))
-				else 0
+				if (bowAndArrowValue.get())
+				{
+					var bestBow = if (classProvider.isItemBow(slotStack?.item)) targetSlot else -1
+					var bestPower = if (bestBow != -1) ItemUtils.getEnchantment(slotStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER))
+					else 0
 
-				thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
-					if (classProvider.isItemBow(itemStack?.item) && !type(index).equals(type, ignoreCase = true))
-					{
-						if (bestBow == -1)
+					thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
+						if (classProvider.isItemBow(itemStack?.item) && !type(index).equals(type, ignoreCase = true))
 						{
-							bestBow = index
-						} else
-						{
-							val power = ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER))
-
-							if (ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER)) > bestPower)
+							if (bestBow == -1) bestBow = index else
 							{
-								bestBow = index
-								bestPower = power
+								val power = ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER))
+
+								if (ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER)) > bestPower)
+								{
+									bestBow = index
+									bestPower = power
+								}
 							}
 						}
 					}
-				}
 
-				return if (bestBow != -1) bestBow else null
+					return if (bestBow != -1) bestBow else null
+				}
 			}
 
 			"food" ->
 			{
-				thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-					if (stack != null)
-					{
-						val item = stack.item
-
-						if (classProvider.isItemFood(item) && !classProvider.isItemAppleGold(item) && !type(index).equals("Food", ignoreCase = true))
+				if (foodValue.get())
+				{
+					thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
+						if (stack != null)
 						{
-							val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemFood(item)
+							val item = stack.item
 
-							return@findBetterItem if (replaceCurr) index else null
+							if (classProvider.isItemFood(item) && !classProvider.isItemAppleGold(item) && !type(index).equals("Food", ignoreCase = true))
+							{
+								val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemFood(item)
+
+								return@findBetterItem if (replaceCurr) index else null
+							}
 						}
 					}
 				}
@@ -460,16 +465,19 @@ class InventoryCleaner : Module()
 
 			"water" ->
 			{
-				thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-					if (stack != null)
-					{
-						val item = stack.item!!
-
-						if (classProvider.isItemBucket(item) && item.asItemBucket().isFull == classProvider.getBlockEnum(BlockType.FLOWING_WATER) && !type(index).equals("Water", ignoreCase = true))
+				if (bucketValue.get())
+				{
+					thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
+						if (stack != null)
 						{
-							val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemBucket(item) || (item.asItemBucket()).isFull != classProvider.getBlockEnum(BlockType.FLOWING_WATER)
+							val item = stack.item!!
 
-							return@findBetterItem if (replaceCurr) index else null
+							if (classProvider.isItemBucket(item) && item.asItemBucket().isFull == classProvider.getBlockEnum(BlockType.FLOWING_WATER) && !type(index).equals("Water", ignoreCase = true))
+							{
+								val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemBucket(item) || (item.asItemBucket()).isFull != classProvider.getBlockEnum(BlockType.FLOWING_WATER)
+
+								return@findBetterItem if (replaceCurr) index else null
+							}
 						}
 					}
 				}
@@ -477,16 +485,19 @@ class InventoryCleaner : Module()
 
 			"gapple" ->
 			{
-				thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-					if (stack != null)
-					{
-						val item = stack.item!!
-
-						if (classProvider.isItemAppleGold(item) && !type(index).equals("Gapple", ignoreCase = true))
+				if (foodValue.get())
+				{
+					thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
+						if (stack != null)
 						{
-							val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemAppleGold(slotStack?.item)
+							val item = stack.item!!
 
-							return@findBetterItem if (replaceCurr) index else null
+							if (classProvider.isItemAppleGold(item) && !type(index).equals("Gapple", ignoreCase = true))
+							{
+								val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemAppleGold(slotStack?.item)
+
+								return@findBetterItem if (replaceCurr) index else null
+							}
 						}
 					}
 				}
@@ -494,16 +505,19 @@ class InventoryCleaner : Module()
 
 			"pearl" ->
 			{
-				thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
-					if (stack != null)
-					{
-						val item = stack.item
-
-						if (classProvider.isItemEnderPearl(item) && !type(index).equals("Pearl", ignoreCase = true))
+				if (enderPearlValue.get())
+				{
+					thePlayer.inventory.mainInventory.forEachIndexed { index, stack ->
+						if (stack != null)
 						{
-							val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemEnderPearl(slotStack?.item)
+							val item = stack.item
 
-							return@findBetterItem if (replaceCurr) index else null
+							if (classProvider.isItemEnderPearl(item) && !type(index).equals("Pearl", ignoreCase = true))
+							{
+								val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemEnderPearl(slotStack?.item)
+
+								return@findBetterItem if (replaceCurr) index else null
+							}
 						}
 					}
 				}
@@ -561,15 +575,15 @@ class InventoryCleaner : Module()
 	 */
 	private fun type(targetSlot: Int) = when (targetSlot)
 	{
-		0 -> sortSlot1Value.get()
-		1 -> sortSlot2Value.get()
-		2 -> sortSlot3Value.get()
-		3 -> sortSlot4Value.get()
-		4 -> sortSlot5Value.get()
-		5 -> sortSlot6Value.get()
-		6 -> sortSlot7Value.get()
-		7 -> sortSlot8Value.get()
-		8 -> sortSlot9Value.get()
+		0 -> slot1Value.get()
+		1 -> slot2Value.get()
+		2 -> slot3Value.get()
+		3 -> slot4Value.get()
+		4 -> slot5Value.get()
+		5 -> slot6Value.get()
+		6 -> slot7Value.get()
+		7 -> slot8Value.get()
+		8 -> slot9Value.get()
 		else -> ""
 	}
 

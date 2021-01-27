@@ -29,7 +29,7 @@
     "gui.MixinGuiDisconnected",
     "gui.MixinGuiDownloadTerrain",
     "gui.MixinGuiEditSign",
-    "gui.MixinGuiInGame",
+    "gui.MixinGuiIngame",
     "gui.MixinGuiIngameMenu",
     "gui.MixinGuiKeyBindingList",
     "gui.MixinGuiMultiplayer",
