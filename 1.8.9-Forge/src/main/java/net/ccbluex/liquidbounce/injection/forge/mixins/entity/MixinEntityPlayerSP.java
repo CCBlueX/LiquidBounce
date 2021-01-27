@@ -347,7 +347,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		final Sprint sprint = (Sprint) LiquidBounce.moduleManager.getModule(Sprint.class);
 
-		final boolean foodCheck = !sprint.foodValue.get() || getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
+		final boolean foodCheck = !sprint.getFoodValue().get() || getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
 
 		if (onGround && !sneak && !forward && movementInput.moveForward >= f && !isSprinting() && foodCheck && !isUsingItem() && !isPotionActive(Potion.blindness))
 			if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown())
@@ -360,10 +360,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.get(Scaffold.class);
 
-		if (scaffold.getState() && !scaffold.sprintValue.get() || sprint.getState() && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)
+		if (scaffold.getState() && !scaffold.sprintValue.get() || sprint.getState() && sprint.getCheckServerSide().get() && (onGround || !sprint.getCheckServerSideGround().get()) && !sprint.getAllDirectionsValue().get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)
 			setSprinting(false);
 
-		final boolean allDirection = sprint.getState() && sprint.allDirectionsValue.get();
+		final boolean allDirection = sprint.getState() && sprint.getAllDirectionsValue().get();
 		if (isSprinting() && (!allDirection && movementInput.moveForward < f || isCollidedHorizontally || !foodCheck))
 			setSprinting(false);
 

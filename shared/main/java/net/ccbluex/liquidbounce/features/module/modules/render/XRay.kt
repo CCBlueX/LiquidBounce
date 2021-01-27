@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -15,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 class XRay : Module()
 {
 	val xrayBlocks = mutableListOf(
+
 		classProvider.getBlockEnum(BlockType.COAL_ORE),
 		classProvider.getBlockEnum(BlockType.IRON_ORE),
 		classProvider.getBlockEnum(BlockType.GOLD_ORE),
@@ -49,6 +49,7 @@ class XRay : Module()
 		classProvider.getBlockEnum(BlockType.FLOWING_WATER),
 		classProvider.getBlockEnum(BlockType.FURNACE),
 		classProvider.getBlockEnum(BlockType.LIT_FURNACE)
+
 	)
 
 	override fun onToggle(state: Boolean)

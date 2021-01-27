@@ -61,14 +61,7 @@ class BugUp : Module()
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer.onGround && !classProvider.isBlockAir(
-				BlockUtils.getBlock(
-					WBlockPos(
-						thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ
-					)
-				)
-			)
-		)
+		if (thePlayer.onGround && !classProvider.isBlockAir(BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ))))
 		{
 			prevX = thePlayer.prevPosX
 			prevY = thePlayer.prevPosY
@@ -77,9 +70,7 @@ class BugUp : Module()
 
 		if (!thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater)
 		{
-			val fallingPlayer = FallingPlayer(
-				thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward
-			)
+			val fallingPlayer = FallingPlayer(thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
 
 			detectedLocation = fallingPlayer.findCollision(60)?.pos
 

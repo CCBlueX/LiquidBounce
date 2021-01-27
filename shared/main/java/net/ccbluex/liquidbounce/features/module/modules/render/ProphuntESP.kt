@@ -62,6 +62,7 @@ class ProphuntESP : Module()
 
 			RenderUtils.drawEntityBox(entity, color, mode.equals("Box", true))
 		}
+
 		synchronized(blocks) {
 			val iterator: MutableIterator<Map.Entry<WBlockPos, Long>> = blocks.entries.iterator()
 

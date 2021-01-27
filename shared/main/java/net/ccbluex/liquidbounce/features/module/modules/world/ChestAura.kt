@@ -56,9 +56,7 @@ object ChestAura : Module()
 
 				val radius = rangeValue.get() + 1
 
-				val eyesPos = WVec3(
-					thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ
-				)
+				val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
 
 				currentBlock = BlockUtils.searchBlocks(radius.toInt()).asSequence().filter {
 					functions.getIdFromBlock(it.value) == chestValue.get() && !clickedBlocks.contains(it.key) && BlockUtils.getCenterDistance(it.key) < rangeValue.get()
@@ -66,24 +64,17 @@ object ChestAura : Module()
 					if (throughWallsValue.get()) return@filter true
 
 					val blockPos = it.key
-					val movingObjectPosition = theWorld.rayTraceBlocks(
-						eyesPos, blockPos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false
-					)
+					val movingObjectPosition = theWorld.rayTraceBlocks(eyesPos, blockPos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
 
 					movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
 				}.minBy { BlockUtils.getCenterDistance(it.key) }?.key
 
-				if (rotationsValue.get()) RotationUtils.setTargetRotation(
-					(RotationUtils.faceBlock(currentBlock ?: return) ?: return).rotation
-				)
+				if (rotationsValue.get()) RotationUtils.setTargetRotation((RotationUtils.faceBlock(currentBlock ?: return) ?: return).rotation)
 			}
 
 			EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get().toLong()))
 			{
-				if (mc.playerController.onPlayerRightClick(
-						thePlayer, theWorld, thePlayer.heldItem, currentBlock!!, classProvider.getEnumFacing(EnumFacingType.DOWN), currentBlock!!.getVec()
-					)
-				)
+				if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentBlock!!, classProvider.getEnumFacing(EnumFacingType.DOWN), currentBlock!!.getVec()))
 				{
 					if (visualSwing.get()) thePlayer.swingItem()
 					else mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())

@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getMaterial
 import net.ccbluex.liquidbounce.value.ListValue
 
@@ -49,9 +49,9 @@ class IceSpeed : Module()
 
 		if (thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.sneaking && thePlayer.sprinting && thePlayer.movementInput.moveForward > 0.0)
 		{
-			if (mode.equals("AAC3.2.0", ignoreCase = true))
+			when (mode.toLowerCase())
 			{
-				getMaterial(thePlayer.position.down()).let {
+				"aac3.2.0" -> getMaterial(thePlayer.position.down()).let {
 					if (it == classProvider.getBlockEnum(BlockType.ICE) || it == classProvider.getBlockEnum(BlockType.ICE_PACKED))
 					{
 						thePlayer.motionX *= 1.342
@@ -60,13 +60,11 @@ class IceSpeed : Module()
 						classProvider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.6f
 					}
 				}
-			}
-			if (mode.equals("Spartan", ignoreCase = true))
-			{
-				getMaterial(thePlayer.position.down()).let {
+
+				"spartan" -> getMaterial(thePlayer.position.down()).let {
 					if (it == classProvider.getBlockEnum(BlockType.ICE) || it == classProvider.getBlockEnum(BlockType.ICE_PACKED))
 					{
-						val upBlock: IBlock? = getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))
+						val upBlock: IBlock? = BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))
 
 						if (!classProvider.isBlockAir(upBlock))
 						{

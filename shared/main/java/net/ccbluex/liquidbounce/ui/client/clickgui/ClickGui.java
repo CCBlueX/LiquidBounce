@@ -6,7 +6,8 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Collection;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation;
@@ -69,13 +70,16 @@ public class ClickGui extends WrappedGuiScreen
 			@Override
 			public void setupItems()
 			{
+				final int clickGuiColor = ClickGUI.generateColor().getRGB();
+				final int i = Integer.MAX_VALUE;
+
 				getElements().add(new ButtonElement("Players")
 				{
 
 					@Override
 					public void createButton(final String displayName)
 					{
-						color = EntityUtils.targetPlayer ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+						color = EntityUtils.targetPlayer ? clickGuiColor : i;
 						super.createButton(displayName);
 					}
 
@@ -83,7 +87,7 @@ public class ClickGui extends WrappedGuiScreen
 					public String getDisplayName()
 					{
 						displayName = "Players";
-						color = EntityUtils.targetPlayer ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+						color = EntityUtils.targetPlayer ? clickGuiColor : i;
 						return super.getDisplayName();
 					}
 
@@ -94,7 +98,7 @@ public class ClickGui extends WrappedGuiScreen
 						{
 							EntityUtils.targetPlayer = !EntityUtils.targetPlayer;
 							displayName = "Players";
-							color = EntityUtils.targetPlayer ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+							color = EntityUtils.targetPlayer ? clickGuiColor : i;
 							mc.getSoundHandler().playSound("gui.button.press", 1.0F);
 						}
 					}
@@ -106,7 +110,7 @@ public class ClickGui extends WrappedGuiScreen
 					@Override
 					public void createButton(final String displayName)
 					{
-						color = EntityUtils.targetMobs ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+						color = EntityUtils.targetMobs ? clickGuiColor : i;
 						super.createButton(displayName);
 					}
 
@@ -114,7 +118,7 @@ public class ClickGui extends WrappedGuiScreen
 					public String getDisplayName()
 					{
 						displayName = "Mobs";
-						color = EntityUtils.targetMobs ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+						color = EntityUtils.targetMobs ? clickGuiColor : i;
 						return super.getDisplayName();
 					}
 
@@ -125,7 +129,7 @@ public class ClickGui extends WrappedGuiScreen
 						{
 							EntityUtils.targetMobs = !EntityUtils.targetMobs;
 							displayName = "Mobs";
-							color = EntityUtils.targetMobs ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+							color = EntityUtils.targetMobs ? clickGuiColor : i;
 							mc.getSoundHandler().playSound("gui.button.press", 1.0F);
 						}
 					}
@@ -137,7 +141,7 @@ public class ClickGui extends WrappedGuiScreen
 					@Override
 					public void createButton(final String displayName)
 					{
-						color = EntityUtils.targetAnimals ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+						color = EntityUtils.targetAnimals ? clickGuiColor : i;
 						super.createButton(displayName);
 					}
 
@@ -145,7 +149,7 @@ public class ClickGui extends WrappedGuiScreen
 					public String getDisplayName()
 					{
 						displayName = "Animals";
-						color = EntityUtils.targetAnimals ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+						color = EntityUtils.targetAnimals ? clickGuiColor : i;
 						return super.getDisplayName();
 					}
 
@@ -156,7 +160,7 @@ public class ClickGui extends WrappedGuiScreen
 						{
 							EntityUtils.targetAnimals = !EntityUtils.targetAnimals;
 							displayName = "Animals";
-							color = EntityUtils.targetAnimals ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+							color = EntityUtils.targetAnimals ? clickGuiColor : i;
 							mc.getSoundHandler().playSound("gui.button.press", 1.0F);
 						}
 					}
@@ -168,7 +172,7 @@ public class ClickGui extends WrappedGuiScreen
 					@Override
 					public void createButton(final String displayName)
 					{
-						color = EntityUtils.targetInvisible ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+						color = EntityUtils.targetInvisible ? clickGuiColor : i;
 						super.createButton(displayName);
 					}
 
@@ -176,7 +180,7 @@ public class ClickGui extends WrappedGuiScreen
 					public String getDisplayName()
 					{
 						displayName = "Invisible";
-						color = EntityUtils.targetInvisible ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+						color = EntityUtils.targetInvisible ? clickGuiColor : i;
 						return super.getDisplayName();
 					}
 
@@ -187,7 +191,7 @@ public class ClickGui extends WrappedGuiScreen
 						{
 							EntityUtils.targetInvisible = !EntityUtils.targetInvisible;
 							displayName = "Invisible";
-							color = EntityUtils.targetInvisible ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+							color = EntityUtils.targetInvisible ? clickGuiColor : i;
 							mc.getSoundHandler().playSound("gui.button.press", 1.0F);
 						}
 					}
@@ -199,7 +203,7 @@ public class ClickGui extends WrappedGuiScreen
 					@Override
 					public void createButton(final String displayName)
 					{
-						color = EntityUtils.targetDead ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+						color = EntityUtils.targetDead ? clickGuiColor : i;
 						super.createButton(displayName);
 					}
 
@@ -207,7 +211,7 @@ public class ClickGui extends WrappedGuiScreen
 					public String getDisplayName()
 					{
 						displayName = "Dead";
-						color = EntityUtils.targetDead ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+						color = EntityUtils.targetDead ? clickGuiColor : i;
 						return super.getDisplayName();
 					}
 
@@ -218,7 +222,7 @@ public class ClickGui extends WrappedGuiScreen
 						{
 							EntityUtils.targetDead = !EntityUtils.targetDead;
 							displayName = "Dead";
-							color = EntityUtils.targetDead ? ClickGUI.generateColor().getRGB() : Integer.MAX_VALUE;
+							color = EntityUtils.targetDead ? clickGuiColor : i;
 							mc.getSoundHandler().playSound("gui.button.press", 1.0F);
 						}
 					}
@@ -236,7 +240,7 @@ public class ClickGui extends WrappedGuiScreen
 		// Enable DisplayList optimization
 		AWTFontRenderer.Companion.setAssumeNonVolatile(true);
 
-		final double scale = ((ClickGUI) LiquidBounce.moduleManager.get(ClickGUI.class)).scaleValue.get();
+		final double scale = ((ClickGUI) LiquidBounce.moduleManager.get(ClickGUI.class)).getScaleValue().get();
 
 		mouseX /= scale;
 		mouseY /= scale;
@@ -258,7 +262,8 @@ public class ClickGui extends WrappedGuiScreen
 
 		for (final Panel panel : panels)
 			for (final Element element : panel.getElements())
-				if (element instanceof ModuleElement) {
+				if (element instanceof ModuleElement)
+				{
 					final ModuleElement moduleElement = (ModuleElement) element;
 
 					if (mouseX != 0 && mouseY != 0 && moduleElement.isHovering(mouseX, mouseY) && moduleElement.isVisible() && element.getY() <= panel.getY() + panel.getFade())
@@ -276,7 +281,7 @@ public class ClickGui extends WrappedGuiScreen
 
 		classProvider.getGlStateManager().disableLighting();
 		functions.disableStandardItemLighting();
-		GL11.glScaled(1, 1, 1);
+		GL11.glScalef(1.0F, 1.0F, 1.0F);
 
 		AWTFontRenderer.Companion.setAssumeNonVolatile(false);
 
@@ -286,7 +291,7 @@ public class ClickGui extends WrappedGuiScreen
 	@Override
 	public void mouseClicked(int mouseX, int mouseY, final int mouseButton) throws IOException
 	{
-		final double scale = ((ClickGUI) LiquidBounce.moduleManager.get(ClickGUI.class)).scaleValue.get();
+		final double scale = ((ClickGUI) LiquidBounce.moduleManager.get(ClickGUI.class)).getScaleValue().get();
 
 		mouseX /= scale;
 		mouseY /= scale;
@@ -318,7 +323,7 @@ public class ClickGui extends WrappedGuiScreen
 	@Override
 	public void mouseReleased(int mouseX, int mouseY, final int state)
 	{
-		final double scale = ((ClickGUI) LiquidBounce.moduleManager.get(ClickGUI.class)).scaleValue.get();
+		final double scale = ((ClickGUI) LiquidBounce.moduleManager.get(ClickGUI.class)).getScaleValue().get();
 
 		mouseX /= scale;
 		mouseY /= scale;
@@ -331,29 +336,38 @@ public class ClickGui extends WrappedGuiScreen
 	public void updateScreen()
 	{
 		for (final Panel panel : panels)
-			for (final Element element : panel.getElements()) {
-				if (element instanceof ButtonElement) {
+			for (final Element element : panel.getElements())
+			{
+				if (element instanceof ButtonElement)
+				{
 					final ButtonElement buttonElement = (ButtonElement) element;
 
-					if (buttonElement.isHovering(mouseX, mouseY)) {
+					if (buttonElement.isHovering(mouseX, mouseY))
+					{
 						if (buttonElement.hoverTime < 7)
 							buttonElement.hoverTime++;
-					} else if (buttonElement.hoverTime > 0)
+					}
+					else if (buttonElement.hoverTime > 0)
 						buttonElement.hoverTime--;
 				}
 
-				if (element instanceof ModuleElement) {
-					if (((ModuleElement) element).getModule().getState()) {
-						if (((ModuleElement) element).slowlyFade < 255)
-							((ModuleElement) element).slowlyFade += 20;
-					} else if (((ModuleElement) element).slowlyFade > 0)
-						((ModuleElement) element).slowlyFade -= 20;
+				if (element instanceof ModuleElement)
+				{
+					final ModuleElement moduleElement = (ModuleElement) element;
 
-					if (((ModuleElement) element).slowlyFade > 255)
-						((ModuleElement) element).slowlyFade = 255;
+					if (moduleElement.getModule().getState())
+					{
+						if (moduleElement.slowlyFade < 255)
+							moduleElement.slowlyFade += 20;
+					}
+					else if (moduleElement.slowlyFade > 0)
+						moduleElement.slowlyFade -= 20;
 
-					if (((ModuleElement) element).slowlyFade < 0)
-						((ModuleElement) element).slowlyFade = 0;
+					if (moduleElement.slowlyFade > 255)
+						moduleElement.slowlyFade = 255;
+
+					if (moduleElement.slowlyFade < 0)
+						moduleElement.slowlyFade = 0;
 				}
 			}
 		super.updateScreen();

@@ -38,7 +38,7 @@ class FastStairs : Module()
 		if (thePlayer.fallDistance > 0 && !walkingDown) walkingDown = true
 		else if (thePlayer.posY > thePlayer.prevChasingPosY) walkingDown = false
 
-		val mode = modeValue.get()
+		val mode = modeValue.get().toLowerCase()
 
 		if (!thePlayer.onGround) return
 
@@ -48,11 +48,11 @@ class FastStairs : Module()
 		{
 			thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
 
-			val motion = when
+			val motion = when (mode)
 			{
-				mode.equals("NCP", ignoreCase = true) -> 1.4
-				mode.equals("AAC3.1.0", ignoreCase = true) -> 1.5
-				mode.equals("AAC3.3.13", ignoreCase = true) -> 1.2
+				"ncp" -> 1.4
+				"aac3.1.0" -> 1.5
+				"aac3.3.13" -> 1.2
 				else -> 1.0
 			}
 
@@ -64,28 +64,28 @@ class FastStairs : Module()
 		{
 			if (walkingDown)
 			{
-				when
+				when (mode)
 				{
-					mode.equals("NCP", ignoreCase = true) -> thePlayer.motionY = -1.0
-					mode.equals("AAC3.3.13", ignoreCase = true) -> thePlayer.motionY -= 0.014
+					"ncp" -> thePlayer.motionY = -1.0
+					"aac3.3.13" -> thePlayer.motionY -= 0.014
 				}
 
 				return
 			}
 
-			val motion = when
+			val motion = when (mode)
 			{
-				mode.equals("NCP", ignoreCase = true) -> 1.3
-				mode.equals("AAC3.1.0", ignoreCase = true) -> 1.3
-				mode.equals("AAC3.3.6", ignoreCase = true) -> 1.48
-				mode.equals("AAC3.3.13", ignoreCase = true) -> 1.52
+				"ncp" -> 1.3
+				"aac3.1.0" -> 1.3
+				"aac3.3.6" -> 1.48
+				"aac3.3.13" -> 1.52
 				else -> 1.3
 			}
 
 			thePlayer.motionX *= motion
 			thePlayer.motionZ *= motion
 			canJump = true
-		} else if (mode.startsWith("AAC", ignoreCase = true) && canJump)
+		} else if (mode.startsWith("aac", ignoreCase = true) && canJump)
 		{
 			if (longJumpValue.get())
 			{

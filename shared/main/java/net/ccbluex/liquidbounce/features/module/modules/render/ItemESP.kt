@@ -27,6 +27,7 @@ class ItemESP : Module()
 	private val colorBlueValue = IntegerValue("B", 0, 0, 255)
 
 	private val colorRainbow = BoolValue("Rainbow", true)
+
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 

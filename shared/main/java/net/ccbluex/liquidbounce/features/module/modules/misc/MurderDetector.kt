@@ -42,7 +42,7 @@ class MurderDetector : Module()
 	}
 
 	@EventTarget
-	fun onWorldChange(event: WorldEvent?)
+	fun onWorldChange(@Suppress("UNUSED_PARAMETER") event: WorldEvent?)
 	{
 		murders.clear()
 	}

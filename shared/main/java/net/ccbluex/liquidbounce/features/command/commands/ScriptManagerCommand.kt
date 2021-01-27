@@ -28,9 +28,9 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 	{
 		if (args.size > 1)
 		{
-			when
+			when (args[1].toLowerCase())
 			{
-				args[1].equals("import", true) ->
+				"import" ->
 				{
 					try
 					{
@@ -92,7 +92,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 					}
 				}
 
-				args[1].equals("delete", true) ->
+				"delete" ->
 				{
 					try
 					{
@@ -129,7 +129,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 					}
 				}
 
-				args[1].equals("reload", true) ->
+				"reload" ->
 				{
 					try
 					{
@@ -151,7 +151,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 					}
 				}
 
-				args[1].equals("folder", true) ->
+				"folder" ->
 				{
 					try
 					{

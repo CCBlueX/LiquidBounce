@@ -20,33 +20,32 @@ import net.ccbluex.liquidbounce.value.ListValue
 @ModuleInfo(name = "FastClimb", description = "Allows you to climb up ladders and vines faster.", category = ModuleCategory.MOVEMENT)
 class FastClimb : Module()
 {
-
-	val modeValue = ListValue(
-		"Mode", arrayOf("Vanilla", "Clip", "AAC3.0.0", "AAC3.0.5", "SAAC3.1.2", "AAC3.1.2"), "Vanilla"
-	)
+	val modeValue = ListValue("Mode", arrayOf("Vanilla", "Clip", "AAC3.0.0", "AAC3.0.5", "SAAC3.1.2", "AAC3.1.2"), "Vanilla")
 	private val speedValue = FloatValue("Speed", 0.2872F, 0.01F, 5F)
 
 	@EventTarget
 	fun onMove(event: MoveEvent)
 	{
-		val mode = modeValue.get()
+		val mode = modeValue.get().toLowerCase()
 
 		val thePlayer = mc.thePlayer ?: return
 
-		when
+		val speed = speedValue.get().toDouble()
+
+		val horizontalFacing = thePlayer.horizontalFacing
+
+		when (mode)
 		{
-			mode.equals("Vanilla", ignoreCase = true) && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder ->
+			"vanilla" -> if (thePlayer.isCollidedHorizontally && thePlayer.isOnLadder)
 			{
-				event.y = speedValue.get().toDouble()
+				event.y = speed
 				thePlayer.motionY = 0.0
 			}
 
-			mode.equals("AAC3.0.0", ignoreCase = true) && thePlayer.isCollidedHorizontally ->
+			"aac3.0.0" -> if (thePlayer.isCollidedHorizontally)
 			{
 				var x = 0.0
 				var z = 0.0
-
-				val horizontalFacing = thePlayer.horizontalFacing
 
 				when
 				{
@@ -69,9 +68,9 @@ class FastClimb : Module()
 				}
 			}
 
-			mode.equals("AAC3.0.5", ignoreCase = true) && mc.gameSettings.keyBindForward.isKeyDown && collideBlockIntersects(thePlayer.entityBoundingBox) {
-				classProvider.isBlockLadder(it) || classProvider.isBlockVine(it)
-			} ->
+			"aac3.0.5" -> if (mc.gameSettings.keyBindForward.isKeyDown && collideBlockIntersects(thePlayer.entityBoundingBox) {
+					classProvider.isBlockLadder(it) || classProvider.isBlockVine(it)
+				})
 			{
 				event.x = 0.0
 				event.y = 0.5
@@ -82,19 +81,19 @@ class FastClimb : Module()
 				thePlayer.motionZ = 0.0
 			}
 
-			mode.equals("SAAC3.1.2", ignoreCase = true) && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder ->
+			"saac3.1.2" -> if (thePlayer.isCollidedHorizontally && thePlayer.isOnLadder)
 			{
 				event.y = 0.1649
 				thePlayer.motionY = 0.0
 			}
 
-			mode.equals("AAC3.1.2", ignoreCase = true) && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder ->
+			"aac3.1.2" -> if (thePlayer.isCollidedHorizontally && thePlayer.isOnLadder)
 			{
 				event.y = 0.1699
 				thePlayer.motionY = 0.0
 			}
 
-			mode.equals("Clip", ignoreCase = true) && thePlayer.isOnLadder && mc.gameSettings.keyBindForward.isKeyDown ->
+			"clip" -> if (thePlayer.isOnLadder && mc.gameSettings.keyBindForward.isKeyDown)
 			{
 				for (i in thePlayer.posY.toInt()..thePlayer.posY.toInt() + 8)
 				{
@@ -104,7 +103,6 @@ class FastClimb : Module()
 					{
 						var x = 0.0
 						var z = 0.0
-						val horizontalFacing = thePlayer.horizontalFacing
 
 						when
 						{
@@ -121,6 +119,7 @@ class FastClimb : Module()
 						thePlayer.setPosition(thePlayer.posX + x, i.toDouble(), thePlayer.posZ + z)
 						break
 					}
+
 					thePlayer.setPosition(thePlayer.posX, i.toDouble(), thePlayer.posZ)
 				}
 			}
