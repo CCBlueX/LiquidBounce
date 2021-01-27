@@ -130,7 +130,7 @@ class CommandManager
 					}
 
 					prefix + alias
-				}.toTypedArray()
+				}.toList().toTypedArray()
 			}
 		}
 		return null
