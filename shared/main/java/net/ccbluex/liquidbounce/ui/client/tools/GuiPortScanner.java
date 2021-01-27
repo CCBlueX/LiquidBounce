@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
+import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.TabUtils;
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 
@@ -33,7 +34,7 @@ public class GuiPortScanner extends WrappedGuiScreen
 {
 
 	private final IGuiScreen prevGui;
-	private final Collection<Integer> ports = new ArrayList<>();
+	private final Collection<Integer> ports = new ArrayList<>(65536);
 	private IGuiTextField hostField;
 	private IGuiTextField minPortField;
 	private IGuiTextField maxPortField;
@@ -121,100 +122,7 @@ public class GuiPortScanner extends WrappedGuiScreen
 				mc.displayGuiScreen(prevGui);
 				break;
 			case 1:
-				if (running)
-					running = false;
-				else
-				{
-					host = hostField.getText();
-
-					if (host.isEmpty())
-					{
-						status = "\u00A7cInvalid host";
-						return;
-					}
-
-					try
-					{
-						minPort = Integer.parseInt(minPortField.getText());
-					}
-					catch (final NumberFormatException e)
-					{
-						status = "\u00A7cInvalid min port";
-						return;
-					}
-
-					try
-					{
-						maxPort = Integer.parseInt(maxPortField.getText());
-					}
-					catch (final NumberFormatException e)
-					{
-						status = "\u00A7cInvalid max port";
-						return;
-					}
-
-					final int threads;
-					try
-					{
-						threads = Integer.parseInt(threadsField.getText());
-					}
-					catch (final NumberFormatException e)
-					{
-						status = "\u00A7cInvalid threads";
-						return;
-					}
-
-					ports.clear();
-
-					currentPort = minPort - 1;
-					checkedPort = minPort;
-
-					final ExecutorService threadPool = Executors.newWorkStealingPool(threads);
-
-					final Runnable task = () ->
-					{
-						try
-						{
-							while (running && currentPort < maxPort)
-							{
-								currentPort++;
-
-								final int port = currentPort;
-
-								try
-								{
-									final Socket socket = new Socket();
-									socket.connect(new InetSocketAddress(host, port), 500);
-									socket.close();
-
-									synchronized (ports)
-									{
-										if (!ports.contains(port))
-											ports.add(port);
-									}
-								}
-								catch (final Exception ignored)
-								{
-								}
-
-								if (checkedPort < port)
-									checkedPort = port;
-							}
-
-							running = false;
-							buttonToggle.setDisplayString("Start");
-						}
-						catch (final Exception e)
-						{
-							status = "\u00A7a\u00A7l" + e.getClass().getSimpleName() + ": \u00A7c" + e.getMessage();
-						}
-					};
-
-					for (int i = 0; i < threads; i++)
-						threadPool.submit(task);
-
-					running = true;
-				}
+				toggle();
 
 				buttonToggle.setDisplayString(running ? "Stop" : "Start");
 				break;
@@ -245,7 +153,7 @@ public class GuiPortScanner extends WrappedGuiScreen
 				}
 				catch (final Exception e)
 				{
-					e.printStackTrace();
+					ClientUtils.getLogger().error("Can't export the port-scan result", e);
 					MiscUtils.showErrorPopup("Error", "Exception class: " + e.getClass().getName() + "\nMessage: " + e.getMessage());
 				}
 				break;
@@ -256,13 +164,13 @@ public class GuiPortScanner extends WrappedGuiScreen
 	@Override
 	public void keyTyped(final char typedChar, final int keyCode) throws IOException
 	{
-		if (Keyboard.KEY_ESCAPE == keyCode)
+		if (keyCode == Keyboard.KEY_ESCAPE)
 		{
 			mc.displayGuiScreen(prevGui);
 			return;
 		}
 
-		if (Keyboard.KEY_TAB == keyCode)
+		if (keyCode == Keyboard.KEY_TAB)
 			TabUtils.tab(hostField, minPortField, maxPortField);
 
 		if (running)
@@ -308,5 +216,103 @@ public class GuiPortScanner extends WrappedGuiScreen
 		Keyboard.enableRepeatEvents(false);
 		running = false;
 		super.onGuiClosed();
+	}
+
+	private void toggle()
+	{
+		if (running)
+			running = false;
+		else
+		{
+			host = hostField.getText();
+
+			if (host.isEmpty())
+			{
+				status = "\u00A7cInvalid host";
+				return;
+			}
+
+			try
+			{
+				minPort = Integer.parseInt(minPortField.getText());
+			}
+			catch (final NumberFormatException e)
+			{
+				status = "\u00A7cInvalid min port";
+				return;
+			}
+
+			try
+			{
+				maxPort = Integer.parseInt(maxPortField.getText());
+			}
+			catch (final NumberFormatException e)
+			{
+				status = "\u00A7cInvalid max port";
+				return;
+			}
+
+			final int threads;
+			try
+			{
+				threads = Integer.parseInt(threadsField.getText());
+			}
+			catch (final NumberFormatException e)
+			{
+				status = "\u00A7cInvalid threads";
+				return;
+			}
+
+			ports.clear();
+
+			currentPort = minPort - 1;
+			checkedPort = minPort;
+
+			final ExecutorService threadPool = Executors.newWorkStealingPool(threads);
+
+			final Runnable task = () ->
+			{
+				try
+				{
+					while (running && currentPort < maxPort)
+					{
+						currentPort++;
+
+						final int port = currentPort;
+
+						try
+						{
+							final Socket socket = new Socket();
+							socket.connect(new InetSocketAddress(host, port), 500);
+							socket.close();
+
+							synchronized (ports)
+							{
+								if (!ports.contains(port))
+									ports.add(port);
+							}
+						}
+						catch (final Exception ignored)
+						{
+						}
+
+						if (checkedPort < port)
+							checkedPort = port;
+					}
+
+					running = false;
+					buttonToggle.setDisplayString("Start");
+				}
+				catch (final Exception e)
+				{
+					status = "\u00A7a\u00A7l" + e.getClass().getSimpleName() + ": \u00A7c" + e.getMessage();
+				}
+			};
+
+			for (int i = 0; i < threads; i++)
+				threadPool.submit(task);
+
+			running = true;
+		}
 	}
 }

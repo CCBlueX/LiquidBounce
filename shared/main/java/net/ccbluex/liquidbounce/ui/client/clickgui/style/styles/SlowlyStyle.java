@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles;
 
 import java.awt.*;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer;
@@ -41,18 +42,19 @@ public class SlowlyStyle extends Style
 	{
 		final float displayValue = Math.max(min, Math.min(value, max));
 
+		RenderUtils.drawRect(x, y, x + width, y + 2, Integer.MAX_VALUE);
+
 		final float sliderValue = x + width * (displayValue - min) / (max - min);
 
-		RenderUtils.drawRect(x, y, x + width, y + 2, Integer.MAX_VALUE);
 		RenderUtils.drawRect(x, y, sliderValue, y + 2, color);
 		RenderUtils.drawFilledCircle((int) sliderValue, y + 1, 3, color);
 
 		if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
 		{
-			final double i = WMathHelper.clamp_double(((double) mouseX - x) / ((double) width - 3), 0, 1);
+			final double d = WMathHelper.clamp_double(((double) mouseX - x) / ((double) width - 3), 0, 1);
 
-			BigDecimal bigDecimal = new BigDecimal(Double.toString(min + (max - min) * i));
-			bigDecimal = bigDecimal.setScale(2, 4);
+			BigDecimal bigDecimal = new BigDecimal(Double.toString(min + (max - min) * d));
+			bigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_UP);
 			return bigDecimal.floatValue();
 		}
 
@@ -262,10 +264,12 @@ public class SlowlyStyle extends Style
 							final List<IFontRenderer> fonts = Fonts.getFonts();
 
 							if (Mouse.isButtonDown(0))
-								for (int i = 0; i < fonts.size(); i++) {
+								for (int i = 0, j = fonts.size(); i < j; i++)
+								{
 									final IFontRenderer font = fonts.get(i);
 
-									if (font.equals(fontRenderer)) {
+									if (font.equals(fontRenderer))
+									{
 										i++;
 
 										if (i >= fonts.size())
@@ -276,10 +280,12 @@ public class SlowlyStyle extends Style
 									}
 								}
 							else
-								for (int i = fonts.size() - 1; i >= 0; i--) {
+								for (int i = fonts.size() - 1; i >= 0; i--)
+								{
 									final IFontRenderer font = fonts.get(i);
 
-									if (font.equals(fontRenderer)) {
+									if (font.equals(fontRenderer))
+									{
 										i--;
 
 										if (i >= fonts.size())
@@ -323,16 +329,16 @@ public class SlowlyStyle extends Style
 	private static BigDecimal round(final float v)
 	{
 		BigDecimal bigDecimal = new BigDecimal(Float.toString(v));
-		bigDecimal = bigDecimal.setScale(2, 4);
+		bigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_UP);
 		return bigDecimal;
 	}
 
 	private static Color hoverColor(final Color color, final int hover)
 	{
-		final int r = color.getRed() - (hover << 1);
-		final int g = color.getGreen() - (hover << 1);
-		final int b = color.getBlue() - (hover << 1);
+		final int red = color.getRed() - (hover << 1);
+		final int green = color.getGreen() - (hover << 1);
+		final int blue = color.getBlue() - (hover << 1);
 
-		return new Color(Math.max(r, 0), Math.max(g, 0), Math.max(b, 0), color.getAlpha());
+		return new Color(Math.max(red, 0), Math.max(green, 0), Math.max(blue, 0), color.getAlpha());
 	}
 }

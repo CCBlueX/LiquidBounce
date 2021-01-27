@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack;
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation;
+import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 
 import org.jetbrains.annotations.Contract;
@@ -39,10 +40,8 @@ public final class ItemUtils extends MinecraftInstance
 			IItem item = classProvider.createItem();
 			final IItem itemInstance = item;
 			String[] args = null;
-			int i = 1;
-			int j = 0;
 
-			for (int mode = 0; mode <= Math.min(12, itemArguments.length() - 2); ++mode)
+			for (int mode = 0, modeSize = Math.min(12, itemArguments.length() - 2); mode <= modeSize; ++mode)
 			{
 				args = itemArguments.substring(mode).split(Pattern.quote(" "));
 				final IResourceLocation resourcelocation = classProvider.createResourceLocation(args[0]);
@@ -55,9 +54,11 @@ public final class ItemUtils extends MinecraftInstance
 			if (item == null)
 				return null;
 
+			int i = 1;
 			if (Objects.requireNonNull(args).length >= 2 && PATTERN.matcher(args[1]).matches())
 				i = Integer.parseInt(args[1]);
 
+			int j = 0;
 			if (args.length >= 3 && PATTERN.matcher(args[2]).matches())
 				j = Integer.parseInt(args[2]);
 
@@ -74,9 +75,9 @@ public final class ItemUtils extends MinecraftInstance
 
 			return itemstack;
 		}
-		catch (final Exception exception)
+		catch (final Exception e)
 		{
-			exception.printStackTrace();
+			ClientUtils.getLogger().error("Can't create the item with arguments \"" + itemArguments + "\"", e);
 			return null;
 		}
 	}

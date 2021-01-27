@@ -11,6 +11,5 @@ public interface IMixinGuiSlot
 
 	void setListWidth(int listWidth);
 
-	void setEnableScissor(boolean b);
-
+	void setEnableScissor(boolean value);
 }

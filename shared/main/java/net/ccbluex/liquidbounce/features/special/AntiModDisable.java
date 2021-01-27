@@ -42,7 +42,7 @@ public class AntiModDisable extends MinecraftInstance implements Listenable
 	public static boolean blockCrackedVapeSabotages = true;
 	public static boolean blockSchematicaPayloads = true;
 
-	public static boolean debug = false;
+	public static boolean debug;
 
 	@EventTarget
 	public void onPacket(final PacketEvent event)
@@ -59,7 +59,6 @@ public class AntiModDisable extends MinecraftInstance implements Listenable
 				{
 					final ICPacketCustomPayload customPayload = packet.asCPacketCustomPayload();
 					final String channelName = customPayload.getChannelName();
-					final String upperChannelName = channelName.toUpperCase(Locale.ROOT);
 
 					// Block ClientBrandRetriever packets
 					if (blockClientBrandRetrieverPackets && "MC|Brand".equalsIgnoreCase(customPayload.getChannelName()))
@@ -78,6 +77,7 @@ public class AntiModDisable extends MinecraftInstance implements Listenable
 							action(event, String.format("FML packet (%s)", fmlChannelName), "BLOCKED");
 					}
 
+					final String upperChannelName = channelName.toUpperCase(Locale.ROOT);
 					if (blockWDLPayloads && upperChannelName.contains("WDL"))
 						action(event, String.format("World Downloader (%s)", channelName), "BLOCKED");
 

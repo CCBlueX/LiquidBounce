@@ -10,6 +10,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.net.Proxy;
+import java.util.Optional;
 
 import com.mojang.authlib.Agent;
 import com.mojang.authlib.UserAuthentication;
@@ -70,7 +71,7 @@ public class GuiAdd extends WrappedGuiScreen
 		RenderUtils.drawRect(30, 30, representedScreen.getWidth() - 30, representedScreen.getHeight() - 30, Integer.MIN_VALUE);
 
 		Fonts.font40.drawCenteredString("Add Account", representedScreen.getWidth() / 2.0f, 34, 0xffffff);
-		Fonts.font35.drawCenteredString(status == null ? "" : status, representedScreen.getWidth() / 2.0f, representedScreen.getHeight() / 4.0f + 60, 0xffffff);
+		Fonts.font35.drawCenteredString(Optional.ofNullable(status).orElse(""), representedScreen.getWidth() / 2.0f, representedScreen.getHeight() / 4.0f + 60, 0xffffff);
 
 		username.drawTextBox();
 		password.drawTextBox();

@@ -38,10 +38,8 @@ public final class WorldToScreen
 		final float screenY = (1.0f - ndcSpacePos.y) / 2.0f * screenHeight;
 
 		// nPlane = -1, fPlane = 1
-		if (ndcSpacePos.z < -1.0 || ndcSpacePos.z > 1.0)
-			return null;
+		return ndcSpacePos.z < -1.0 || ndcSpacePos.z > 1.0 ? null : new Vector2f(screenX, screenY);
 
-		return new Vector2f(screenX, screenY);
 	}
 
 	private static Vector4f multiply(final Vector4f vec, final Matrix4f mat)

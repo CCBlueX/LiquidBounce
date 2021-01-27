@@ -69,7 +69,7 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 	 *                Decimal places
 	 * @return        The rounded value
 	 */
-	public static double round(final double value, final int places)
+	private static double round(final double value, final int places)
 	{
 		if (places < 0)
 			throw new IllegalArgumentException("places");

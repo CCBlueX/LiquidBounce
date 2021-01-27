@@ -58,11 +58,11 @@ public class ValuesConfig extends FileConfig
 		final JsonObject jsonObject = (JsonObject) jsonElement;
 
 		for (final Entry<String, JsonElement> entry : jsonObject.entrySet())
-			if (entry.getKey().equalsIgnoreCase("CommandPrefix"))
+			if ("CommandPrefix".equalsIgnoreCase(entry.getKey()))
 				LiquidBounce.commandManager.setPrefix(entry.getValue().getAsCharacter());
-			else if (entry.getKey().equalsIgnoreCase("ShowRichPresence"))
+			else if ("ShowRichPresence".equalsIgnoreCase(entry.getKey()))
 				LiquidBounce.clientRichPresence.setShowRichPresenceValue(entry.getValue().getAsBoolean());
-			else if (entry.getKey().equalsIgnoreCase("targets")) {
+			else if ("targets".equalsIgnoreCase(entry.getKey())) {
 				final JsonObject jsonValue = (JsonObject) entry.getValue();
 
 				if (jsonValue.has("TargetPlayer"))
@@ -75,7 +75,7 @@ public class ValuesConfig extends FileConfig
 					EntityUtils.targetInvisible = jsonValue.get("TargetInvisible").getAsBoolean();
 				if (jsonValue.has("TargetDead"))
 					EntityUtils.targetDead = jsonValue.get("TargetDead").getAsBoolean();
-			} else if (entry.getKey().equalsIgnoreCase("features")) {
+			} else if ("features".equalsIgnoreCase(entry.getKey())) {
 				final JsonObject jsonValue = (JsonObject) entry.getValue();
 
 				if (jsonValue.has("AntiForge"))
@@ -90,17 +90,17 @@ public class ValuesConfig extends FileConfig
 					BungeeCordSpoof.enabled = jsonValue.get("BungeeSpoof").getAsBoolean();
 				if (jsonValue.has("AutoReconnectDelay"))
 					AutoReconnect.INSTANCE.setDelay(jsonValue.get("AutoReconnectDelay").getAsInt());
-			} else if (entry.getKey().equalsIgnoreCase("thealtening")) {
+			} else if ("thealtening".equalsIgnoreCase(entry.getKey())) {
 				final JsonObject jsonValue = (JsonObject) entry.getValue();
 
 				if (jsonValue.has("API-Key"))
 					GuiTheAltening.Companion.setApiKey(jsonValue.get("API-Key").getAsString());
-			} else if (entry.getKey().equalsIgnoreCase("liquidchat")) {
+			} else if ("liquidchat".equalsIgnoreCase(entry.getKey())) {
 				final JsonObject jsonValue = (JsonObject) entry.getValue();
 
 				if (jsonValue.has("token"))
 					LiquidChat.Companion.setJwtToken(jsonValue.get("token").getAsString());
-			} else if (entry.getKey().equalsIgnoreCase("DonatorCape")) {
+			} else if ("DonatorCape".equalsIgnoreCase(entry.getKey())) {
 				final JsonObject jsonValue = (JsonObject) entry.getValue();
 
 				if (jsonValue.has("TransferCode"))
@@ -108,7 +108,7 @@ public class ValuesConfig extends FileConfig
 
 				if (jsonValue.has("CapeEnabled"))
 					GuiDonatorCape.Companion.setCapeEnabled(jsonValue.get("CapeEnabled").getAsBoolean());
-			} else if (entry.getKey().equalsIgnoreCase("Background")) {
+			} else if ("Background".equalsIgnoreCase(entry.getKey())) {
 				final JsonObject jsonValue = (JsonObject) entry.getValue();
 
 				if (jsonValue.has("Enabled"))

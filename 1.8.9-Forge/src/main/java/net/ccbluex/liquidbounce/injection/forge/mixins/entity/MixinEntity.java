@@ -150,7 +150,7 @@ public abstract class MixinEntity
 	protected abstract void playStepSound(BlockPos pos, Block blockIn);
 
 	@Shadow
-	public abstract void setEntityBoundingBox(AxisAlignedBB bb);
+	public abstract void setEntityBoundingBox(AxisAlignedBB box);
 
 	@Shadow
 	private int nextStepDistance;

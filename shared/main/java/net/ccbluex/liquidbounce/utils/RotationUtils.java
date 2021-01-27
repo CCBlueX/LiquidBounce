@@ -122,17 +122,17 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 		final double posX = target.getPosX() + (enemyPrediction ? xPrediction : 0) - (player.getPosX() + (playerPrediction ? player.getPosX() - player.getPrevPosX() : 0));
 		final double posY = target.getEntityBoundingBox().getMinY() + (enemyPrediction ? yPrediction : 0) + target.getEyeHeight() - 0.15 - (player.getEntityBoundingBox().getMinY() + (enemyPrediction ? player.getPosY() - player.getPrevPosY() : 0)) - player.getEyeHeight();
 		final double posZ = target.getPosZ() + (enemyPrediction ? zPrediction : 0) - (player.getPosZ() + (playerPrediction ? player.getPosZ() - player.getPrevPosZ() : 0));
-		final double posSqrt = sqrt(posX * posX + posZ * posZ);
 
 		// Bow Power Calculation
 		final FastBow fastBow = (FastBow) LiquidBounce.moduleManager.get(FastBow.class);
-		float velocity = fastBow.getState() ? fastBow.getPacketsValue().get() / 20.0f : player.getItemInUseDuration() / 20.0F;
+		float velocity = (fastBow.getState() ? fastBow.getPacketsValue().get() : player.getItemInUseDuration()) / 20.0f;
 		velocity = (velocity * velocity + velocity * 2) / 3;
 
 		if (velocity > 1)
 			velocity = 1;
 
 		// Calculate Rotation
+		final double posSqrt = sqrt(posX * posX + posZ * posZ);
 		final Rotation rotation = new Rotation((float) (StrictMath.atan2(posZ, posX) * 180 / PI) - 90, (float) -toDegrees(StrictMath.atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006F * (0.006F * (posSqrt * posSqrt) + 2 * posY * (velocity * velocity)))) / (0.006F * posSqrt))));
 		final Rotation limitedRotation = limitAngleChange(new Rotation(player.getRotationYaw(), player.getRotationPitch()), rotation, RandomUtils.nextFloat(min(minTurnSpeed, maxTurnSpeed), max(minTurnSpeed, maxTurnSpeed)), RandomUtils.nextFloat(min(minSmoothingRatio, maxSmoothingRatio), max(minSmoothingRatio, maxSmoothingRatio)));
 
@@ -172,13 +172,13 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 	/**
 	 * Get the center of a box
 	 *
-	 * @param  bb
+	 * @param  box
 	 *            your box
 	 * @return    center of box
 	 */
-	public static WVec3 getCenter(final IAxisAlignedBB bb)
+	public static WVec3 getCenter(final IAxisAlignedBB box)
 	{
-		return new WVec3(bb.getMinX() + (bb.getMaxX() - bb.getMinX()) * 0.5, bb.getMinY() + (bb.getMaxY() - bb.getMinY()) * 0.5, bb.getMinZ() + (bb.getMaxZ() - bb.getMinZ()) * 0.5);
+		return new WVec3(box.getMinX() + (box.getMaxX() - box.getMinX()) * 0.5, box.getMinY() + (box.getMaxY() - box.getMinY()) * 0.5, box.getMinZ() + (box.getMaxZ() - box.getMinZ()) * 0.5);
 	}
 
 	public enum SearchCenterMode
@@ -212,7 +212,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 	/**
 	 * Search good center
 	 *
-	 * @param  bb
+	 * @param  box
 	 *                           enemy box
 	 * @param  mode
 	 *                           search center mode
@@ -232,7 +232,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 	 *                           count of step to search the good center. (*Warning If you set this value too low, it will make your minecraft SO SLOW AND SLOW.*) default is 0.2D
 	 * @return                   center
 	 */
-	public static VecRotation searchCenter(final IAxisAlignedBB bb, final SearchCenterMode mode, final boolean jitter, final JitterData jitterData, final boolean playerPrediction, final boolean throughWalls, final float distance, final double hitboxDecrement, final double searchSensitivity)
+	public static VecRotation searchCenter(final IAxisAlignedBB box, final SearchCenterMode mode, final boolean jitter, final JitterData jitterData, final boolean playerPrediction, final boolean throughWalls, final float distance, final double hitboxDecrement, final double searchSensitivity)
 	{
 		final WVec3 randomVec;
 		final WVec3 eyes = Objects.requireNonNull(mc.getThePlayer()).getPositionEyes(1.0F);
@@ -241,20 +241,19 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 		{
 			case LOCK_CENTER:
 			{
-				randomVec = getCenter(bb);
+				randomVec = getCenter(box);
 				return new VecRotation(randomVec, toRotation(randomVec, playerPrediction));
 			}
 			case OUT_BORDER:
 			{
-				randomVec = new WVec3(bb.getMinX() + (bb.getMaxX() - bb.getMinX()) * (x * 0.3 + 1.0), bb.getMinY() + (bb.getMaxY() - bb.getMinY()) * (y * 0.3 + 1.0), bb.getMinZ() + (bb.getMaxZ() - bb.getMinZ()) * (z * 0.3 + 1.0));
+				randomVec = new WVec3(box.getMinX() + (box.getMaxX() - box.getMinX()) * (x * 0.3 + 1.0), box.getMinY() + (box.getMaxY() - box.getMinY()) * (y * 0.3 + 1.0), box.getMinZ() + (box.getMaxZ() - box.getMinZ()) * (z * 0.3 + 1.0));
 				return new VecRotation(randomVec, toRotation(randomVec, playerPrediction));
 			}
 			default:
 		}
 
-		randomVec = new WVec3(bb.getMinX() + (bb.getMaxX() - bb.getMinX()) * x * 0.8, bb.getMinY() + (bb.getMaxY() - bb.getMinY()) * y * 0.8, bb.getMinZ() + (bb.getMaxZ() - bb.getMinZ()) * z * 0.8);
+		randomVec = new WVec3(box.getMinX() + (box.getMaxX() - box.getMinX()) * x * 0.8, box.getMinY() + (box.getMaxY() - box.getMinY()) * y * 0.8, box.getMinZ() + (box.getMaxZ() - box.getMinZ()) * z * 0.8);
 		final Rotation randomRotation = toRotation(randomVec, playerPrediction);
-		VecRotation vecRotation = null;
 		float yawJitterAmount = 0, pitchJitterAmount = 0;
 
 		// Calculate jitter amount
@@ -273,11 +272,13 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 		}
 
 		// Search boundingbox center
+		VecRotation vecRotation = null;
+
 		for (double xSearch = hitboxDecrement; xSearch < 1 - hitboxDecrement; xSearch += searchSensitivity)
 			for (double ySearch = hitboxDecrement; ySearch < 1 - hitboxDecrement; ySearch += searchSensitivity)
 				for (double zSearch = hitboxDecrement; zSearch < 1 - hitboxDecrement; zSearch += searchSensitivity)
 				{
-					final WVec3 vec3 = new WVec3(bb.getMinX() + (bb.getMaxX() - bb.getMinX()) * xSearch, bb.getMinY() + (bb.getMaxY() - bb.getMinY()) * ySearch, bb.getMinZ() + (bb.getMaxZ() - bb.getMinZ()) * zSearch);
+					final WVec3 vec3 = new WVec3(box.getMinX() + (box.getMaxX() - box.getMinX()) * xSearch, box.getMinY() + (box.getMaxY() - box.getMinY()) * ySearch, box.getMinZ() + (box.getMaxZ() - box.getMinZ()) * zSearch);
 
 					final double vecDist = eyes.distanceTo(vec3);
 

@@ -16,10 +16,8 @@ public final class StringUtils
 
 	public static String toCompleteString(final String[] args, final int start)
 	{
-		if (args.length <= start)
-			return "";
+		return args.length <= start ? "" : String.join(" ", Arrays.copyOfRange(args, start, args.length));
 
-		return String.join(" ", Arrays.copyOfRange(args, start, args.length));
 	}
 
 	public static String replace(final String string, final String searchChars, String replaceChars)
@@ -40,10 +38,8 @@ public final class StringUtils
 
 			if (start == -1)
 			{
-				if (i == 0)
-					return string;
+				return i == 0 ? string : stringBuilder.toString();
 
-				return stringBuilder.toString();
 			}
 
 			stringBuilder.replace(start, start + searchCharsLength, replaceChars);

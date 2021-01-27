@@ -111,7 +111,7 @@ public final class MCLeaks
 	{
 		try
 		{
-			final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+			final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(), StandardCharsets.UTF_8));
 
 			final String readData = bufferedReader.lines().collect(Collectors.joining());
 

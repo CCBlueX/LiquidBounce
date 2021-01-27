@@ -5,7 +5,9 @@
  */
 package net.ccbluex.liquidbounce.file.configs;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,6 +41,7 @@ public class AccountsConfig extends FileConfig
 	 *
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void loadConfig() throws IOException
 	{
@@ -50,7 +53,9 @@ public class AccountsConfig extends FileConfig
 			if (jsonElement instanceof JsonNull)
 				return;
 
-			for (final JsonElement accountElement : jsonElement.getAsJsonArray())
+			final JsonArray jsonArray = jsonElement.getAsJsonArray();
+
+			for (final JsonElement accountElement : jsonArray)
 			{
 				final JsonObject accountObject = accountElement.getAsJsonObject();
 				final JsonElement type = accountObject.get("type");
@@ -97,23 +102,27 @@ public class AccountsConfig extends FileConfig
 				{
 					final String[] information = info[0].split(":");
 
-					MinecraftAccount acc = null;
+					final MinecraftAccount acc;
 
-					if (information.length == 1)
-						acc = new MinecraftAccount(AltServiceType.MOJANG, information[0]);
-					else if (information.length == 2)
-						acc = new MinecraftAccount(AltServiceType.getById(information[0]), information[1]);
-					else if (information.length == 3)
-						acc = new MinecraftAccount(AltServiceType.getById(information[0]), information[1], information[2]);
-					else if (information.length >= 4)
-						acc = new MinecraftAccount(AltServiceType.getById(information[0]), information[1], information[2], information[3]);
-
-					if (acc != null)
+					switch (information.length)
 					{
-						if (info.length > 1)
-							acc.setBannedServers(deserializeOldBannedServers(info[1]));
-						accounts.add(acc);
+						case 1:
+							acc = new MinecraftAccount(AltServiceType.MOJANG, information[0]);
+							break;
+						case 2:
+							acc = new MinecraftAccount(AltServiceType.getById(information[0]), information[1]);
+							break;
+						case 3:
+							acc = new MinecraftAccount(AltServiceType.getById(information[0]), information[1], information[2]);
+							break;
+						default:
+							acc = new MinecraftAccount(AltServiceType.getById(information[0]), information[1], information[2], information[3]);
 					}
+
+					if (info.length > 1)
+						acc.setBannedServers(deserializeOldBannedServers(info[1]));
+
+					accounts.add(acc);
 				}
 			}
 			ClientUtils.getLogger().info("[FileManager] Loaded old Accounts config...");
@@ -167,7 +176,7 @@ public class AccountsConfig extends FileConfig
 	 * Add cracked account to config
 	 *
 	 * @param account
-	 *             The account
+	 *                The account
 	 */
 	public void addAccount(final MinecraftAccount account)
 	{

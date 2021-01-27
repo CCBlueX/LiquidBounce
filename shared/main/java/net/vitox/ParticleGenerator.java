@@ -2,7 +2,6 @@ package net.vitox;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Random;
 
 import net.minecraft.client.Minecraft;
@@ -20,7 +19,7 @@ import net.vitox.particle.util.RenderUtils;
 public class ParticleGenerator
 {
 
-	private final Collection<Particle> particles = new ArrayList<>();
+	private final Collection<Particle> particles;
 	private final int amount;
 
 	private int prevWidth;
@@ -28,6 +27,7 @@ public class ParticleGenerator
 
 	public ParticleGenerator(final int amount)
 	{
+		particles = new ArrayList<>(amount);
 		this.amount = amount;
 	}
 

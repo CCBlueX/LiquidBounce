@@ -9,6 +9,7 @@ import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
+import java.util.Optional;
 
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen;
@@ -63,7 +64,7 @@ public class GuiDirectLogin extends WrappedGuiScreen
 		RenderUtils.drawRect(30, 30, getRepresentedScreen().getWidth() - 30, getRepresentedScreen().getHeight() - 30, Integer.MIN_VALUE);
 
 		Fonts.font40.drawCenteredString("Direct Login", getRepresentedScreen().getWidth() / 2.0f, 34, 0xffffff);
-		Fonts.font35.drawCenteredString(status == null ? "" : status, getRepresentedScreen().getWidth() / 2.0f, getRepresentedScreen().getHeight() / 4.0f + 60, 0xffffff);
+		Fonts.font35.drawCenteredString(Optional.ofNullable(status).orElse(""), getRepresentedScreen().getWidth() / 2.0f, getRepresentedScreen().getHeight() / 4.0f + 60, 0xffffff);
 
 		username.drawTextBox();
 		password.drawTextBox();

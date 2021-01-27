@@ -276,10 +276,10 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 	 */
 	fun getStringWidth(text: String): Int
 	{
-		val width = text.toCharArray().mapNotNull {
+		val width = text.toCharArray().map {
 			charLocations[if (it.toInt() < charLocations.size) it.toInt()
 			else '\u0003'.toInt()]
-		}.sumBy { it.width - 8 }
+		}.sumBy { it!!.width - 8 }
 
 		return width / 2
 	}

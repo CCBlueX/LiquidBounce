@@ -83,9 +83,10 @@ public final class PathFinder extends MinecraftInstance
 		for (int i = 0; i < loops; i++)
 		{
 			hubsToWork.sort(new HubComparator());
-			int j = 0;
 			if (hubsToWork.isEmpty())
 				break;
+
+			int j = 0;
 			for (final Hub hub : new ArrayList<>(hubsToWork))
 			{
 				j++;

@@ -150,7 +150,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 			final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.get(InventoryMove.class);
 			final Sneak sneak = (Sneak) LiquidBounce.moduleManager.get(Sneak.class);
-			final boolean fakeSprint = inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure");
+			final boolean fakeSprint = inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && "MineSecure".equalsIgnoreCase(sneak.modeValue.get());
 
 			final boolean sprinting = isSprinting() && !fakeSprint;
 
@@ -166,7 +166,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 			final boolean sneaking = isSneaking();
 
-			if (sneaking != serverSneakState && (!sneak.getState() || sneak.modeValue.get().equalsIgnoreCase("Legit")))
+			if (sneaking != serverSneakState && (!sneak.getState() || "Legit".equalsIgnoreCase(sneak.modeValue.get())))
 			{
 				if (sneaking)
 					sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, Action.START_SNEAKING));
@@ -485,28 +485,31 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				final double d6;
 
 				// noinspection ConstantConditions
-				for (d6 = 0.05D; x != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, 0.0D)).isEmpty(); d3 = x)
+				d6 = 0.05D;
+				while (x != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, 0.0D)).isEmpty()) {
 					if (x < d6 && x >= -d6)
 						x = 0.0D;
 					else
 						x -= x > 0.0D ? d6 : -d6;
 
+					d3 = x;
+				}
+
 				// noinspection ConstantConditions
-				for (; z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0.0D, -1.0D, z)).isEmpty(); d5 = z)
+				while (z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0.0D, -1.0D, z)).isEmpty()) {
 					if (z < d6 && z >= -d6)
 						z = 0.0D;
 					else
 						z -= z > 0.0D ? d6 : -d6;
 
+					d5 = z;
+				}
+
 				// noinspection ConstantConditions
-				for (; x != 0.0D && z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, z)).isEmpty(); d5 = z)
-				{
+				while (x != 0.0D && z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, z)).isEmpty()) {
 					if (x < d6 && x >= -d6)
 						x = 0.0D;
-					else if (x > 0.0D)
-						x -= d6;
-					else
-						x += d6;
+					else x -= x > 0.0D ? d6 : -d6;
 
 					d3 = x;
 
@@ -514,6 +517,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 						z = 0.0D;
 					else
 						z -= z > 0.0D ? d6 : -d6;
+
+					d5 = z;
 				}
 			}
 

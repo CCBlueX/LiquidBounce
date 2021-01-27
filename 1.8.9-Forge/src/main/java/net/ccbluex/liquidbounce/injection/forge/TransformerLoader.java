@@ -51,10 +51,10 @@ public class TransformerLoader implements IFMLLoadingPlugin
 	/**
 	 * Inject coremod data into this coremod This data includes: "mcLocation" : the location of the minecraft directory, "coremodList" : the list of coremods "coremodLocation" : the file this coremod loaded from,
 	 *
-	 * @param data
+	 * @param map
 	 */
 	@Override
-	public void injectData(final Map<String, Object> data)
+	public void injectData(final Map<String, Object> map)
 	{
 
 	}

@@ -99,6 +99,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	 * @author CCBlueX
 	 * @reason Chams, Rotations - Body
 	 */
+	@SuppressWarnings("unchecked")
 	@Overwrite
 	public void doRender(final EntityLivingBase entity, final double x, final double y, final double z, final float entityYaw, final float partialTicks)
 	{

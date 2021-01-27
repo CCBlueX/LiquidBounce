@@ -35,7 +35,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@SuppressWarnings({"WeakerAccess", "MethodMayBeStatic", "DesignForExtension", "NumericCastThatLosesPrecision"})
+@SuppressWarnings(
+{
+		"WeakerAccess", "MethodMayBeStatic", "DesignForExtension", "NumericCastThatLosesPrecision"
+})
 @Mixin(ItemRenderer.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinItemRenderer
@@ -113,19 +116,22 @@ public abstract class MixinItemRenderer
 		GlStateManager.rotate(sq * -20.0f, 0.0F, 1.0F, 0.0F);
 		GlStateManager.rotate(sqrt * -20.0f, 0.0F, 0.0F, 1.0F);
 		GlStateManager.rotate(sqrt * -80.0f, 1.0F, 0.0F, 0.0F);
+
 		final float scale = sa.getState() ? sa.getScale().get() : 0.4f;
+
 		GlStateManager.scale(scale, scale, scale);
 	}
 
-	private float getAnimationProgress(final float swingProgress, final boolean sq, final boolean isswing)
+	private float getAnimationProgress(final float swingProgress, final boolean sq, final boolean isSwing)
 	{
-		final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
+		final SwingAnimation swingAnimation = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
+
 		if (sq)
 		{
-			if (sa.getState())
+			if (swingAnimation.getState())
 			{
 				final float f;
-				switch ((isswing ? sa.getSwingSqSmoothingMethod() : sa.getBlockSqSwingSmoothingMethod()).get().toLowerCase())
+				switch ((isSwing ? swingAnimation.getSwingSqSmoothingMethod() : swingAnimation.getBlockSqSwingSmoothingMethod()).get().toLowerCase())
 				{
 					case "sqrt":
 						f = MathHelper.sqrt_float(swingProgress);
@@ -142,14 +148,15 @@ public abstract class MixinItemRenderer
 					default:
 						f = swingProgress;
 				}
-				return (isswing ? sa.getSwingSqSmoothingSin() : sa.getBlockSqSmoothingSin()).get() ? MathHelper.sin(f * (float) Math.PI) : f;
+				return (isSwing ? swingAnimation.getSwingSqSmoothingSin() : swingAnimation.getBlockSqSmoothingSin()).get() ? MathHelper.sin(f * (float) Math.PI) : f;
 			}
 			return MathHelper.sin(swingProgress * swingProgress * (float) Math.PI);
 		}
-		if (sa.getState())
+
+		if (swingAnimation.getState())
 		{
 			final float f;
-			switch ((isswing ? sa.getSwingSqrtSmoothingMethod() : sa.getBlockSqrtSwingSmoothingMethod()).get().toLowerCase())
+			switch ((isSwing ? swingAnimation.getSwingSqrtSmoothingMethod() : swingAnimation.getBlockSqrtSwingSmoothingMethod()).get().toLowerCase())
 			{
 				case "sqrt":
 					f = MathHelper.sqrt_float(swingProgress);
@@ -166,8 +173,9 @@ public abstract class MixinItemRenderer
 				default:
 					f = swingProgress;
 			}
-			return (isswing ? sa.getSwingSqrtSmoothingSin() : sa.getBlockSqrtSmoothingSin()).get() ? MathHelper.sin(f * (float) Math.PI) : f;
+			return (isSwing ? swingAnimation.getSwingSqrtSmoothingSin() : swingAnimation.getBlockSqrtSmoothingSin()).get() ? MathHelper.sin(f * (float) Math.PI) : f;
 		}
+
 		return MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
 	}
 
@@ -182,16 +190,21 @@ public abstract class MixinItemRenderer
 		final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
 		final float sq = getAnimationProgress(swingProgress, true, false);
 		final float sqrt = getAnimationProgress(swingProgress, false, false);
+
 		translateBlock(sa, swingProgress);
+
 		final double tX = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessX().get() : 0.0f);
 		final double tY = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessY().get() : -0.6f);
 		final double tZ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessZ().get() : 0.0f);
+
 		GlStateManager.translate(tX, tY, tZ);
 		GlStateManager.rotate(45.0F, 0.0F, 1.0F, 0.0F);
 		GlStateManager.rotate(equipProgressAffect * sq * -20.0f, 0.0F, 1.0F, 0.0F);
 		GlStateManager.rotate(equipProgressAffect * sqrt * -20.0f, 0.0F, 0.0F, 1.0F);
 		GlStateManager.rotate(equipProgressAffect * sqrt * -80.0f, 1.0F, 0.0F, 0.0F);
+
 		final float scale = sa.getState() ? sa.getBlockScale().get() : 0.4f;
+
 		GlStateManager.scale(scale, scale, scale);
 	}
 
@@ -209,6 +222,7 @@ public abstract class MixinItemRenderer
 		float swingProgress = abstractclientplayer.getSwingProgress(partialTicks);
 		final float smoothPitchRotation = abstractclientplayer.prevRotationPitch + (abstractclientplayer.rotationPitch - abstractclientplayer.prevRotationPitch) * partialTicks;
 		final float smoothYawRotation = abstractclientplayer.prevRotationYaw + (abstractclientplayer.rotationYaw - abstractclientplayer.prevRotationYaw) * partialTicks;
+
 		rotateArroundXAndY(smoothPitchRotation, smoothYawRotation);
 		setLightMapFromPlayer(abstractclientplayer);
 		rotateWithPlayerRotations(abstractclientplayer, partialTicks);
@@ -220,14 +234,14 @@ public abstract class MixinItemRenderer
 		{
 			final KillAura killAura = (KillAura) LiquidBounce.moduleManager.get(KillAura.class);
 			final TpAura tpaura = (TpAura) LiquidBounce.moduleManager.get(TpAura.class);
-			final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
-			if (sa.getState())
-				equipProgress *= sa.getEquipProgressAffectMultiplier().get();
+			final SwingAnimation swingAnimation = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
+
+			if (swingAnimation.getState())
+				equipProgress *= swingAnimation.getEquipProgressAffectMultiplier().get();
 
 			if (itemToRender.getItem() instanceof ItemMap)
 				renderItemMap(abstractclientplayer, smoothPitchRotation, equipProgress, swingProgress);
-			else // Swing
-			if (abstractclientplayer.getItemInUseCount() > 0 || itemToRender.getItem() instanceof ItemSword && (killAura.getClientSideBlockingStatus() || tpaura.clientSideBlockingStatus))
+			else if (abstractclientplayer.getItemInUseCount() > 0 || itemToRender.getItem() instanceof ItemSword && (killAura.getClientSideBlockingStatus() || tpaura.clientSideBlockingStatus)) // Using something (eating, drinking, blocking, etc.)
 			{
 				final EnumAction enumaction = killAura.getClientSideBlockingStatus()/* || tpaura.blockingRenderStatus */ ? EnumAction.BLOCK : itemToRender.getItemUseAction();
 
@@ -243,115 +257,9 @@ public abstract class MixinItemRenderer
 						break;
 					case BLOCK:
 						// Sword Blocking
-						if (sa.getState())
-						{
-							if (sa.getBlockStaticSwingProgress().get())
-								swingProgress = sa.getBlockStaticSwingProgressValue().get();
 
-							final float sq = getAnimationProgress(swingProgress, true, false);
-							final float sqrt = getAnimationProgress(swingProgress, false, false);
-							final float equipProgressAffectness = sa.getEquipProgressAnimationAffectness().get() / 100.0F;
-							final float equipProgressAffect = sa.getEquipProgressAffectsAnimation().get() ? 1 - equipProgressAffectness + interpolatedEquipProgress * equipProgressAffectness : 1;
-
-							switch (sa.getAnimationMode().get().toLowerCase())
-							{
-								case "liquidbounce":
-									transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
-									doBlockTransformations();
-									GlStateManager.translate(-0.5f, 0.2F, 0.0F);
-									break;
-								case "1.8":
-									transformFirstPersonItemBlock(equipProgress, 0, 1);
-									doBlockTransformations();
-									break;
-								case "1.7":
-									transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
-									doBlockTransformations();
-									break;
-								case "avatar":
-									translateBlock(sa, swingProgress);
-									final double tX = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessX().get() : 0.0f);
-									final double tY = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessY().get() : -0.6f);
-									final double tZ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessZ().get() : 0.0f);
-									GlStateManager.translate(tX, tY, tZ);
-
-									GlStateManager.rotate(45.0F, 0.0F, 1.0F, 0.0F);
-									GlStateManager.rotate(equipProgressAffect * sq * -20.0f, 0.0F, 1.0F, 0.0F);
-									GlStateManager.rotate(equipProgressAffect * sqrt * -20.0f, 0.0F, 0.0F, 1.0F);
-									GlStateManager.rotate(equipProgressAffect * sqrt * -40.0f, 1.0F, 0.0F, 0.0F);
-									GlStateManager.scale(sa.getBlockScale().get(), sa.getBlockScale().get(), sa.getBlockScale().get());
-									doBlockTransformations();
-									break;
-								case "sigma":
-									transformFirstPersonItemBlock(equipProgress, 0, 1);
-									GlStateManager.rotate(equipProgressAffect * -sqrt * 55 / 2.0F, -8.0f, -0.0f, 9.0F);
-									GlStateManager.rotate(equipProgressAffect * -sqrt * 45, 1.0F, sqrt / 2, -0.0f);
-									doBlockTransformations();
-									GL11.glTranslated(1.2, 0.3, 0.5);
-									GL11.glTranslatef(-1, mc.thePlayer.isSneaking() ? -0.1f : -0.2f, 0.2F);
-									break;
-								case "push":
-									transformFirstPersonItemBlock(equipProgress, 0.0F, 1);
-									doBlockTransformations();
-									GlStateManager.translate(-0.3f, 0.1f, 0.0f);
-									GlStateManager.rotate(equipProgressAffect * sqrt * -25.0f, -8.0f, 0.0F, 9.0f);
-									break;
-								case "tap":
-									translateBlock(sa, swingProgress);
-									final double tX_ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessX().get() : 0.0f);
-									final double tY_ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessY().get() : -0.6f);
-									final double tZ_ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessZ().get() : 0.0f);
-									GlStateManager.translate(tX_, tY_, tZ_);
-
-									GlStateManager.rotate(30, 0.0F, 1.0F, 0.0F);
-									GlStateManager.rotate(equipProgressAffect * sqrt * -30.0f, 0.0F, 1.0F, 0.0F);
-									GlStateManager.scale(sa.getBlockScale().get(), sa.getBlockScale().get(), sa.getBlockScale().get());
-									doBlockTransformations();
-									break;
-								case "tap2":
-									final float smooth = swingProgress * 0.8f - swingProgress * swingProgress * 0.8f;
-									translateBlock(sa, swingProgress);
-									final double tX__ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessX().get() : 0.0f);
-									final double tY__ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessY().get() : -0.6f);
-									final double tZ__ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessZ().get() : 0.0f);
-									GlStateManager.translate(tX__, tY__, tZ__);
-
-									GlStateManager.rotate(45.0f, 0.0F, 1.0F, 0.0F);
-									GlStateManager.rotate(equipProgressAffect * smooth * -90.0f, 0.0F, 1.0F, 0.0F);
-									GlStateManager.scale(sa.getBlockScale().get(), sa.getBlockScale().get(), sa.getBlockScale().get());
-									doBlockTransformations();
-									break;
-								case "slide":
-									translateBlock(sa, swingProgress);
-									final double tX___ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessX().get() : 0.0f) + equipProgressAffect * sqrt * (sa.getSlideXPos().get() * 0.001);
-									final double tY___ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessY().get() : -0.4f) + equipProgressAffect * sqrt * (sa.getSlideYPos().get() * 0.01);
-									final double tZ___ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessZ().get() : 0.0f);
-									GlStateManager.translate(tX___, tY___, tZ___);
-
-									GlStateManager.rotate(45.0f, 0.0f, 1.0f, 0.0f);
-									GlStateManager.rotate(equipProgressAffect * sqrt * sa.getSlideAngleY().get(), 0.0f, 1.0f, 0.0f);
-									GlStateManager.rotate(equipProgressAffect * sqrt * sa.getSlideAngleZ().get(), 0.0f, 0.0f, 1.0f);
-									GlStateManager.rotate(equipProgressAffect * -sqrt * sa.getSlideAngleX().get(), 1.0f, 0.0f, 0.0f);
-									GlStateManager.scale(sa.getBlockScale().get(), sa.getBlockScale().get(), sa.getBlockScale().get());
-									doBlockTransformations();
-									break;
-								case "exhibobo":
-									translateBlock(sa, swingProgress);
-									final double tX____ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessX().get() : 0.0f);
-									final double tY____ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessY().get() : -0.2f) + equipProgressAffect * sqrt * (sa.getExhiYPushPos().get() * 0.001) + equipProgressAffect * -sq * (sa.getExhiSmooth().get() * 0.005);
-									final double tZ____ = equipProgress * (sa.getEquipProgressAffectsAnimationTranslation().get() ? -sa.getEquipProgressAnimationTranslationAffectnessZ().get() : 0.0f) + equipProgressAffect * sqrt * (sa.getExhiZPushPos().get() * 0.001);
-									GlStateManager.translate(tX____, tY____, tZ____);
-
-									GlStateManager.rotate(45.0f, 0.0f, 1.0f, 0.0f);
-									GlStateManager.rotate(-equipProgressAffect * sqrt * (10 + sa.getExhiAngleY().get()), 0.0f, 1.0f, 0.0f);
-									GlStateManager.rotate(-equipProgressAffect * sqrt * (10 + sa.getExhiAngleZ().get()), 0.0f, 0.0f, 1.0f);
-									GlStateManager.rotate(-equipProgressAffect * sqrt * (20 + sa.getExhiAngleX().get()), 1.0f, 0.0f, 0.0f);
-
-									GlStateManager.scale(sa.getBlockScale().get(), sa.getBlockScale().get(), sa.getBlockScale().get());
-									doBlockTransformations();
-									break;
-							}
-						}
+						if (swingAnimation.getState())
+							applyCustomBlockAnimation(swingAnimation, swingProgress, equipProgress, interpolatedEquipProgress);
 						else
 						{
 							transformFirstPersonItem(equipProgress, swingProgress);
@@ -363,7 +271,7 @@ public abstract class MixinItemRenderer
 						doBowTransformations(partialTicks, abstractclientplayer);
 				}
 			}
-			else if (sa.getState() && sa.getSmoothSwing().get())
+			else if (swingAnimation.getState() && swingAnimation.getSmoothSwing().get()) // Smooth swing
 				transformFirstPersonItem(equipProgress, swingProgress);
 			else
 			{
@@ -373,7 +281,7 @@ public abstract class MixinItemRenderer
 
 			renderItem(abstractclientplayer, itemToRender, TransformType.FIRST_PERSON);
 		}
-		else if (!abstractclientplayer.isInvisible())
+		else if (!abstractclientplayer.isInvisible()) // Render player arm if player is hold nothing and not invisible
 			renderPlayerArm(abstractclientplayer, equipProgress, swingProgress);
 
 		GlStateManager.popMatrix();
@@ -381,15 +289,126 @@ public abstract class MixinItemRenderer
 		RenderHelper.disableStandardItemLighting();
 	}
 
-	private void translate(final SwingAnimation sa, final float swingProgress)
+	private void applyCustomBlockAnimation(final SwingAnimation swingAnimation, float swingProgress, final float equipProgress, final float interpolatedEquipProgress)
 	{
-		if (!sa.getState())
+		if (swingAnimation.getBlockStaticSwingProgress().get())
+			swingProgress = swingAnimation.getBlockStaticSwingProgressValue().get();
+
+		final float sq = getAnimationProgress(swingProgress, true, false);
+		final float sqrt = getAnimationProgress(swingProgress, false, false);
+		final float equipProgressAffectness = swingAnimation.getEquipProgressAnimationAffectness().get() / 100.0F;
+		final float equipProgressAffect = swingAnimation.getEquipProgressAffectsAnimation().get() ? 1 - equipProgressAffectness + interpolatedEquipProgress * equipProgressAffectness : 1;
+
+		switch (swingAnimation.getAnimationMode().get().toLowerCase())
+		{
+			case "liquidbounce":
+				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
+				doBlockTransformations();
+				GlStateManager.translate(-0.5f, 0.2F, 0.0F);
+				break;
+			case "1.8":
+				transformFirstPersonItemBlock(equipProgress, 0, 1);
+				doBlockTransformations();
+				break;
+			case "1.7":
+				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
+				doBlockTransformations();
+				break;
+			case "avatar":
+				translateBlock(swingAnimation, swingProgress);
+				final double tX = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessX().get() : 0.0f);
+				final double tY = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessY().get() : -0.6f);
+				final double tZ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessZ().get() : 0.0f);
+				GlStateManager.translate(tX, tY, tZ);
+
+				GlStateManager.rotate(45.0F, 0.0F, 1.0F, 0.0F);
+				GlStateManager.rotate(equipProgressAffect * sq * -20.0f, 0.0F, 1.0F, 0.0F);
+				GlStateManager.rotate(equipProgressAffect * sqrt * -20.0f, 0.0F, 0.0F, 1.0F);
+				GlStateManager.rotate(equipProgressAffect * sqrt * -40.0f, 1.0F, 0.0F, 0.0F);
+				GlStateManager.scale(swingAnimation.getBlockScale().get(), swingAnimation.getBlockScale().get(), swingAnimation.getBlockScale().get());
+				doBlockTransformations();
+				break;
+			case "sigma":
+				transformFirstPersonItemBlock(equipProgress, 0, 1);
+				GlStateManager.rotate(equipProgressAffect * -sqrt * 55 / 2.0F, -8.0f, -0.0f, 9.0F);
+				GlStateManager.rotate(equipProgressAffect * -sqrt * 45, 1.0F, sqrt / 2, -0.0f);
+				doBlockTransformations();
+				GL11.glTranslated(1.2, 0.3, 0.5);
+				GL11.glTranslatef(-1, mc.thePlayer.isSneaking() ? -0.1f : -0.2f, 0.2F);
+				break;
+			case "push":
+				transformFirstPersonItemBlock(equipProgress, 0.0F, 1);
+				doBlockTransformations();
+				GlStateManager.translate(-0.3f, 0.1f, 0.0f);
+				GlStateManager.rotate(equipProgressAffect * sqrt * -25.0f, -8.0f, 0.0F, 9.0f);
+				break;
+			case "tap":
+				translateBlock(swingAnimation, swingProgress);
+				final double tX_ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessX().get() : 0.0f);
+				final double tY_ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessY().get() : -0.6f);
+				final double tZ_ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessZ().get() : 0.0f);
+				GlStateManager.translate(tX_, tY_, tZ_);
+
+				GlStateManager.rotate(30, 0.0F, 1.0F, 0.0F);
+				GlStateManager.rotate(equipProgressAffect * sqrt * -30.0f, 0.0F, 1.0F, 0.0F);
+				GlStateManager.scale(swingAnimation.getBlockScale().get(), swingAnimation.getBlockScale().get(), swingAnimation.getBlockScale().get());
+				doBlockTransformations();
+				break;
+			case "tap2":
+				final float smooth = swingProgress * 0.8f - swingProgress * swingProgress * 0.8f;
+				translateBlock(swingAnimation, swingProgress);
+				final double tX__ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessX().get() : 0.0f);
+				final double tY__ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessY().get() : -0.6f);
+				final double tZ__ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessZ().get() : 0.0f);
+				GlStateManager.translate(tX__, tY__, tZ__);
+
+				GlStateManager.rotate(45.0f, 0.0F, 1.0F, 0.0F);
+				GlStateManager.rotate(equipProgressAffect * smooth * -90.0f, 0.0F, 1.0F, 0.0F);
+				GlStateManager.scale(swingAnimation.getBlockScale().get(), swingAnimation.getBlockScale().get(), swingAnimation.getBlockScale().get());
+				doBlockTransformations();
+				break;
+			case "slide":
+				translateBlock(swingAnimation, swingProgress);
+				final double tX___ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessX().get() : 0.0f) + equipProgressAffect * sqrt * (swingAnimation.getSlideXPos().get() * 0.001);
+				final double tY___ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessY().get() : -0.4f) + equipProgressAffect * sqrt * (swingAnimation.getSlideYPos().get() * 0.01);
+				final double tZ___ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessZ().get() : 0.0f);
+				GlStateManager.translate(tX___, tY___, tZ___);
+
+				GlStateManager.rotate(45.0f, 0.0f, 1.0f, 0.0f);
+				GlStateManager.rotate(equipProgressAffect * sqrt * swingAnimation.getSlideAngleY().get(), 0.0f, 1.0f, 0.0f);
+				GlStateManager.rotate(equipProgressAffect * sqrt * swingAnimation.getSlideAngleZ().get(), 0.0f, 0.0f, 1.0f);
+				GlStateManager.rotate(equipProgressAffect * -sqrt * swingAnimation.getSlideAngleX().get(), 1.0f, 0.0f, 0.0f);
+				GlStateManager.scale(swingAnimation.getBlockScale().get(), swingAnimation.getBlockScale().get(), swingAnimation.getBlockScale().get());
+				doBlockTransformations();
+				break;
+			case "exhibobo":
+				translateBlock(swingAnimation, swingProgress);
+				final double tX____ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessX().get() : 0.0f);
+				final double tY____ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessY().get() : -0.2f) + equipProgressAffect * sqrt * (swingAnimation.getExhiYPushPos().get() * 0.001) + equipProgressAffect * -sq * (swingAnimation.getExhiSmooth().get() * 0.005);
+				final double tZ____ = equipProgress * (swingAnimation.getEquipProgressAffectsAnimationTranslation().get() ? -swingAnimation.getEquipProgressAnimationTranslationAffectnessZ().get() : 0.0f) + equipProgressAffect * sqrt * (swingAnimation.getExhiZPushPos().get() * 0.001);
+				GlStateManager.translate(tX____, tY____, tZ____);
+
+				GlStateManager.rotate(45.0f, 0.0f, 1.0f, 0.0f);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * (10 + swingAnimation.getExhiAngleY().get()), 0.0f, 1.0f, 0.0f);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * (10 + swingAnimation.getExhiAngleZ().get()), 0.0f, 0.0f, 1.0f);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * (20 + swingAnimation.getExhiAngleX().get()), 1.0f, 0.0f, 0.0f);
+
+				GlStateManager.scale(swingAnimation.getBlockScale().get(), swingAnimation.getBlockScale().get(), swingAnimation.getBlockScale().get());
+				doBlockTransformations();
+				break;
+		}
+	}
+
+	private void translate(final SwingAnimation swingAnimation, final float swingProgress)
+	{
+		if (!swingAnimation.getState())
 		{
 			GlStateManager.translate(0.56, -0.52, -0.72);
 			return;
 		}
+
 		double smooth;
-		switch (sa.getXRTranslationSmoothingMethod().get().toLowerCase())
+		switch (swingAnimation.getXRTranslationSmoothingMethod().get().toLowerCase())
 		{
 			case "sqrt":
 				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
@@ -412,8 +431,9 @@ public abstract class MixinItemRenderer
 			default:
 				smooth = MathHelper.sin(swingProgress * (float) Math.PI);
 		}
-		final double x = 0.56 + sa.getXTranslation().get() + smooth * sa.getXRTranslation().get();
-		switch (sa.getYRTranslationSmoothingMethod().get().toLowerCase())
+
+		final double x = 0.56 + swingAnimation.getXTranslation().get() + smooth * swingAnimation.getXRTranslation().get();
+		switch (swingAnimation.getYRTranslationSmoothingMethod().get().toLowerCase())
 		{
 			case "sqrt":
 				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
@@ -436,8 +456,9 @@ public abstract class MixinItemRenderer
 			default:
 				smooth = MathHelper.sin(swingProgress * (float) Math.PI);
 		}
-		final double y = -0.52 + sa.getYTranslation().get() + smooth * sa.getYRTranslation().get();
-		switch (sa.getZRTranslationSmoothingMethod().get().toLowerCase())
+
+		final double y = -0.52 + swingAnimation.getYTranslation().get() + smooth * swingAnimation.getYRTranslation().get();
+		switch (swingAnimation.getZRTranslationSmoothingMethod().get().toLowerCase())
 		{
 			case "sqrt":
 				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
@@ -460,19 +481,22 @@ public abstract class MixinItemRenderer
 			default:
 				smooth = MathHelper.sin(swingProgress * (float) Math.PI);
 		}
-		final double z = -0.72 + sa.getZTranslation().get() + smooth * sa.getZRTranslation().get();
+
+		final double z = -0.72 + swingAnimation.getZTranslation().get() + smooth * swingAnimation.getZRTranslation().get();
+
 		GlStateManager.translate(x, y, z);
 	}
 
-	private void translateBlock(final SwingAnimation sa, final float swingProgress)
+	private void translateBlock(final SwingAnimation swingAnimation, final float swingProgress)
 	{
-		if (!sa.getState())
+		if (!swingAnimation.getState())
 		{
 			GlStateManager.translate(0.56, -0.52, -0.72);
 			return;
 		}
+
 		double smooth;
-		switch (sa.getBlockXRTranslationSmoothingMethod().get().toLowerCase())
+		switch (swingAnimation.getBlockXRTranslationSmoothingMethod().get().toLowerCase())
 		{
 			case "sqrt":
 				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
@@ -495,8 +519,9 @@ public abstract class MixinItemRenderer
 			default:
 				smooth = MathHelper.sin(swingProgress * (float) Math.PI);
 		}
-		final double x = 0.56 + sa.getBlockXTranslation().get() + smooth * sa.getBlockXRTranslation().get();
-		switch (sa.getBlockYRTranslationSmoothingMethod().get().toLowerCase())
+
+		final double x = 0.56 + swingAnimation.getBlockXTranslation().get() + smooth * swingAnimation.getBlockXRTranslation().get();
+		switch (swingAnimation.getBlockYRTranslationSmoothingMethod().get().toLowerCase())
 		{
 			case "sqrt":
 				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
@@ -519,8 +544,9 @@ public abstract class MixinItemRenderer
 			default:
 				smooth = MathHelper.sin(swingProgress * (float) Math.PI);
 		}
-		final double y = -0.52 + sa.getBlockYTranslation().get() + smooth * sa.getBlockYRTranslation().get();
-		switch (sa.getBlockZRTranslationSmoothingMethod().get().toLowerCase())
+
+		final double y = -0.52 + swingAnimation.getBlockYTranslation().get() + smooth * swingAnimation.getBlockYRTranslation().get();
+		switch (swingAnimation.getBlockZRTranslationSmoothingMethod().get().toLowerCase())
 		{
 			case "sqrt":
 				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
@@ -543,7 +569,9 @@ public abstract class MixinItemRenderer
 			default:
 				smooth = MathHelper.sin(swingProgress * (float) Math.PI);
 		}
-		final double z = -0.72 + sa.getBlockZTranslation().get() + smooth * sa.getBlockZRTranslation().get();
+
+		final double z = -0.72 + swingAnimation.getBlockZTranslation().get() + smooth * swingAnimation.getBlockZRTranslation().get();
+
 		GlStateManager.translate(x, y, z);
 	}
 
@@ -551,6 +579,7 @@ public abstract class MixinItemRenderer
 	private void renderFireInFirstPerson(final CallbackInfo callbackInfo)
 	{
 		final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.get(AntiBlind.class);
+
 		if (antiBlind.getState() && antiBlind.getFireEffect().get())
 			callbackInfo.cancel();
 	}

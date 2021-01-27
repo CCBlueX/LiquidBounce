@@ -14,15 +14,15 @@ public final class AnimationUtils
 	/**
 	 * In-out-easing function https://github.com/jesusgollonet/processing-penner-easing
 	 *
-	 * @param  t
+	 * @param  current
 	 *           Current iteration
-	 * @param  d
+	 * @param  total
 	 *           Total iterations
 	 * @return   Eased value
 	 */
-	public static float easeOut(float t, final float d)
+	public static float easeOut(float current, final float total)
 	{
-		return (t = t / d - 1) * t * t + 1;
+		return (current = current / total - 1) * current * current + 1;
 	}
 
 	/**

@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 
 import javax.swing.*;
 
+import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 
 public final class MiscUtils extends MinecraftInstance
@@ -31,7 +32,7 @@ public final class MiscUtils extends MinecraftInstance
 		}
 		catch (final IOException | URISyntaxException e)
 		{
-			e.printStackTrace();
+			ClientUtils.getLogger().error("Can't show URL \"" + url + "\"", e);
 		}
 	}
 
@@ -92,8 +93,10 @@ public final class MiscUtils extends MinecraftInstance
 
 	/**
 	 * Create specified file if it doesn't exists andcreate a BufferedWriter which writes bytes with UTF-8 from it
-	 * @param  file The file
-	 * @return Created BufferedWriter
+	 * 
+	 * @param  file
+	 *                               The file
+	 * @return                       Created BufferedWriter
 	 * @throws FileNotFoundException
 	 *                               if the file exists but is a directory rather than a regular file, does not exist but cannot be created, or cannot be opened for any other reason
 	 */

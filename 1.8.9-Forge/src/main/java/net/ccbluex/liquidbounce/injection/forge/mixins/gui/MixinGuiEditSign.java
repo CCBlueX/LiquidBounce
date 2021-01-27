@@ -129,7 +129,7 @@ public class MixinGuiEditSign extends GuiScreen
 			editLine = editLine + 1 & 3;
 
 		String s = tileSign.signText[editLine].getUnformattedText();
-		if (keyCode == 14 && s.length() > 0)
+		if (keyCode == 14 && !s.isEmpty())
 			s = s.substring(0, s.length() - 1);
 
 		if ((ChatAllowedCharacters.isAllowedCharacter(typedChar) || enabled && typedChar == '\u00A7') && fontRendererObj.getStringWidth(s + typedChar) <= 90)

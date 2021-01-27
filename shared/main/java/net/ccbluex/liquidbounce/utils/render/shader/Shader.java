@@ -39,7 +39,7 @@ public abstract class Shader extends MinecraftInstance
 		}
 		catch (final Exception e)
 		{
-			e.printStackTrace();
+			ClientUtils.getLogger().error("Can't load shaders from assets", e);
 			return;
 		}
 
@@ -107,7 +107,6 @@ public abstract class Shader extends MinecraftInstance
 		{
 			ARBShaderObjects.glDeleteObjectARB(shader);
 			throw e;
-
 		}
 	}
 

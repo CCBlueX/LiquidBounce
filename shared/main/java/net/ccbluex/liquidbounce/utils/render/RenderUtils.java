@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils.render;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
 import static org.lwjgl.opengl.GL11.*;
 
 import java.awt.*;
@@ -15,7 +15,6 @@ import java.util.Map;
 import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats;
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity;
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer;
 import net.ccbluex.liquidbounce.api.minecraft.client.render.ITessellator;
 import net.ccbluex.liquidbounce.api.minecraft.client.render.IWorldRenderer;
@@ -433,8 +432,8 @@ public final class RenderUtils extends MinecraftInstance
 		glEnable(GL_LINE_SMOOTH);
 		glLineWidth(2.00F);
 		glBegin(GL_LINE_STRIP);
-		for (float i = end; i >= start; i -= 360 / 90.0f)
-			glVertex2f((float) (x + StrictMath.cos(i * PI / 180) * (radius * 1.001F)), (float) (y + StrictMath.sin(i * PI / 180) * (radius * 1.001F)));
+		for (float current = end; current >= start; current -= 360 / 90.0f)
+			glVertex2f((float) (x + StrictMath.cos(current * PI / 180) * (radius * 1.001F)), (float) (y + StrictMath.sin(current * PI / 180) * (radius * 1.001F)));
 		glEnd();
 		glDisable(GL_LINE_SMOOTH);
 
@@ -444,9 +443,6 @@ public final class RenderUtils extends MinecraftInstance
 
 	public static void drawFilledCircle(final int xx, final int yy, final float radius, final Color color)
 	{
-		final int sections = 50;
-		final double dAngle = 2 * PI / sections;
-		float x, y;
 
 		glPushAttrib(GL_ENABLE_BIT);
 
@@ -456,10 +452,13 @@ public final class RenderUtils extends MinecraftInstance
 		glEnable(GL_LINE_SMOOTH);
 		glBegin(GL_TRIANGLE_FAN);
 
+		final int sections = 50;
+		final float dAngle = 2.0f * WMathHelper.PI / sections;
+
 		for (int i = 0; i < sections; i++)
 		{
-			x = (float) (radius * StrictMath.sin(i * dAngle));
-			y = (float) (radius * StrictMath.cos(i * dAngle));
+			final float x = radius * WMathHelper.sin(i * dAngle);
+			final float y = radius * WMathHelper.cos(i * dAngle);
 
 			glColor4f(color.getRed() / 255.00F, color.getGreen() / 255.00F, color.getBlue() / 255.00F, color.getAlpha() / 255.00F);
 			glVertex2f(xx + x, yy + y);
@@ -491,11 +490,13 @@ public final class RenderUtils extends MinecraftInstance
 	 */
 	public static void drawModalRectWithCustomSizedTexture(final float x, final float y, final float u, final float v, final float width, final float height, final float textureWidth, final float textureHeight)
 	{
-		final float f = 1.0F / textureWidth;
-		final float f1 = 1.0F / textureHeight;
 		final ITessellator tessellator = classProvider.getTessellatorInstance();
 		final IWorldRenderer worldrenderer = tessellator.getWorldRenderer();
+
 		worldrenderer.begin(7, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX));
+
+		final float f = 1.0F / textureWidth;
+		final float f1 = 1.0F / textureHeight;
 		worldrenderer.pos(x, y + height, 0.0D).tex(u * f, (v + height) * f1).endVertex();
 		worldrenderer.pos(x + width, y + height, 0.0D).tex((u + width) * f, (v + height) * f1).endVertex();
 		worldrenderer.pos(x + width, y, 0.0D).tex((u + width) * f, v * f1).endVertex();
@@ -602,7 +603,7 @@ public final class RenderUtils extends MinecraftInstance
 		glPopMatrix();
 	}
 
-	public static void renderNameTag(final String string, final double x, final double y, final double z)
+	public static void renderNameTag(final String nameTag, final double x, final double y, final double z)
 	{
 		final IRenderManager renderManager = mc.getRenderManager();
 
@@ -617,10 +618,10 @@ public final class RenderUtils extends MinecraftInstance
 		setGlCap(GL_BLEND, true);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		final int width = Fonts.font35.getStringWidth(string) / 2;
+		final int width = Fonts.font35.getStringWidth(nameTag) / 2;
 
 		drawRect(-width - 1, -1, width + 1, Fonts.font35.getFontHeight(), Integer.MIN_VALUE);
-		Fonts.font35.drawString(string, -width, 1.5F, Color.WHITE.getRGB(), true);
+		Fonts.font35.drawString(nameTag, -width, 1.5F, Color.WHITE.getRGB(), true);
 
 		resetCaps();
 		glColor4f(1.00F, 1.00F, 1.00F, 1.00F);
@@ -694,11 +695,14 @@ public final class RenderUtils extends MinecraftInstance
 
 	public static void drawScaledCustomSizeModalRect(final int x, final int y, final float u, final float v, final int uWidth, final int vHeight, final int width, final int height, final float tileWidth, final float tileHeight)
 	{
-		final float f = 1.0F / tileWidth;
-		final float f1 = 1.0F / tileHeight;
 		final ITessellator tessellator = classProvider.getTessellatorInstance();
 		final IWorldRenderer worldrenderer = tessellator.getWorldRenderer();
+
 		worldrenderer.begin(7, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX));
+
+		final float f = 1.0F / tileWidth;
+		final float f1 = 1.0F / tileHeight;
+
 		worldrenderer.pos(x, y + height, 0.0D).tex(u * f, (v + vHeight) * f1).endVertex();
 		worldrenderer.pos(x + width, y + height, 0.0D).tex((u + uWidth) * f, (v + vHeight) * f1).endVertex();
 		worldrenderer.pos(x + width, y, 0.0D).tex((u + uWidth) * f, v * f1).endVertex();

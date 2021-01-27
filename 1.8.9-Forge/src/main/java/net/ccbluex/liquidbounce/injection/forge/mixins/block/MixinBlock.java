@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.BlockBBEvent;
@@ -71,7 +72,7 @@ public abstract class MixinBlock
 	public void addCollisionBoxesToList(final World worldIn, final BlockPos pos, final IBlockState state, final AxisAlignedBB mask, final List<AxisAlignedBB> list, final Entity collidingEntity)
 	{
 		AxisAlignedBB axisalignedbb = getCollisionBoundingBox(worldIn, pos, state);
-		final BlockBBEvent blockBBEvent = new BlockBBEvent(BackendExtentionsKt.wrap(pos), BlockImplKt.wrap(blockState.getBlock()), axisalignedbb == null ? null : AxisAlignedBBImplKt.wrap(axisalignedbb));
+		final BlockBBEvent blockBBEvent = new BlockBBEvent(BackendExtentionsKt.wrap(pos), BlockImplKt.wrap(blockState.getBlock()), Optional.ofNullable(axisalignedbb).map(AxisAlignedBBImplKt::wrap).orElse(null));
 		LiquidBounce.eventManager.callEvent(blockBBEvent);
 
 		axisalignedbb = blockBBEvent.getBoundingBox() == null ? null : AxisAlignedBBImplKt.unwrap(blockBBEvent.getBoundingBox());

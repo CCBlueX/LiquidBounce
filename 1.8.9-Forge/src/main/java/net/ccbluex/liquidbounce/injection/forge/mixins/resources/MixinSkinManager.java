@@ -1,7 +1,6 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.resources;
 
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 

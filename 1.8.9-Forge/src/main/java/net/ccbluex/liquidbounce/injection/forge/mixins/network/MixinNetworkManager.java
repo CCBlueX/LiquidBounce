@@ -155,13 +155,14 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 	// callback.setReturnValue(networkmanager);
 	// }
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void sendPacketWithoutEvent(final Packet<?> packetIn)
+	public void sendPacketWithoutEvent(final Packet<?> packet)
 	{
 		if (isChannelOpen())
 		{
 			flushOutboundQueue();
-			dispatchPacket(packetIn, null);
+			dispatchPacket(packet, null);
 		}
 		else
 		{
@@ -171,8 +172,8 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 			{
 				// I used java reflection api because of InboundHandlerTuplePacketListener is private inner class inside NetworkManager class.
 				for (final Class nwmanInnerClasses : NetworkManager.class.getDeclaredClasses())
-					if (nwmanInnerClasses.getSimpleName().equalsIgnoreCase("InboundHandlerTuplePacketListener"))
-						outboundPacketsQueue.add(nwmanInnerClasses.getConstructor(Packet.class, GenericFutureListener[].class).newInstance(packetIn, null));
+					if ("InboundHandlerTuplePacketListener".equalsIgnoreCase(nwmanInnerClasses.getSimpleName()))
+						outboundPacketsQueue.add(nwmanInnerClasses.getConstructor(Packet.class, GenericFutureListener[].class).newInstance(packet, null));
 
 
 			}

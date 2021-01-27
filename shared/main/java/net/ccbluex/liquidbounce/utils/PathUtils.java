@@ -24,7 +24,7 @@ public final class PathUtils extends MinecraftInstance
 		double distance = Math.abs(curX - tpX) + Math.abs(curY - tpY) + Math.abs(curZ - tpZ);
 
 		final Collection<Vector3d> positions = new ArrayDeque<>();
-		for (int count = 0; distance > 0.0D; count++)
+		while (distance > 0.0D)
 		{
 			distance = Math.abs(curX - tpX) + Math.abs(curY - tpY) + Math.abs(curZ - tpZ);
 
@@ -63,7 +63,7 @@ public final class PathUtils extends MinecraftInstance
 		final double dY = tpY - mc.getThePlayer().getPosY();
 		final double dZ = tpZ - mc.getThePlayer().getPosZ();
 
-		final Collection<Vector3d> positions = new ArrayDeque<>();
+		final Collection<Vector3d> positions = new ArrayDeque<>((int) steps);
 		for (double d = 1.0D; d <= steps; ++d)
 			positions.add(new Vector3d(mc.getThePlayer().getPosX() + dX * d / steps, mc.getThePlayer().getPosY() + dY * d / steps, mc.getThePlayer().getPosZ() + dZ * d / steps));
 

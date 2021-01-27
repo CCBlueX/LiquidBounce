@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(ThreadDownloadImageData.class)
 public abstract class MixinThreadDownloadImageData
 {
-	private static ExecutorService downloaders = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("Texture Downloader #%d").setDaemon(true).build());
+	private static final ExecutorService downloaders = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("Texture Downloader #%d").setDaemon(true).build());
 	@Shadow
 	@Final
 	private static Logger logger;

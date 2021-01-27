@@ -27,17 +27,15 @@ public final class ServerUtils extends MinecraftInstance
 
 	public static String getRemoteIp()
 	{
-		String serverIp = "Singleplayer";
-
 		if (mc.getTheWorld().isRemote())
 		{
 			final IServerData serverData = mc.getCurrentServerData();
 
 			if (serverData != null)
-				serverIp = serverData.getServerIP();
+				return serverData.getServerIP();
 		}
 
-		return serverIp;
+		return "Singleplayer";
 	}
 
 	@Nullable

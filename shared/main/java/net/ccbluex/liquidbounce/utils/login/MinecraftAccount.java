@@ -92,7 +92,7 @@ public final class MinecraftAccount
 		return serviceType;
 	}
 
-	public void setServiceType(AltServiceType serviceType)
+	public void setServiceType(final AltServiceType serviceType)
 	{
 		this.serviceType = serviceType;
 	}

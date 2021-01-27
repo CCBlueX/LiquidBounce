@@ -109,7 +109,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 			GlStateManager.disableFog();
 			final Tessellator tessellator = Tessellator.getInstance();
 			final WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-			//noinspection CallToSimpleGetterFromWithinClass
+			// noinspection CallToSimpleGetterFromWithinClass
 			final int k = left + width / 2 - getListWidth() / 2 + 2;
 			final int l = top + 4 - (int) amountScrolled;
 			if (hasListHeader)
@@ -196,9 +196,9 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 	}
 
 	@Override
-	public void setEnableScissor(final boolean enableScissor)
+	public void setEnableScissor(final boolean value)
 	{
-		this.enableScissor = enableScissor;
+		this.enableScissor = value;
 	}
 
 	/**

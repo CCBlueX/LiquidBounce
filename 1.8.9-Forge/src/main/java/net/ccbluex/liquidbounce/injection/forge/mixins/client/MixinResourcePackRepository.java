@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;

@@ -2,6 +2,7 @@ package net.vitox.particle.util;
 
 import static org.lwjgl.opengl.GL11.*;
 
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 
 public final class RenderUtils
@@ -33,8 +34,6 @@ public final class RenderUtils
 		final float green = (color >> 8 & 0xFF) / 255.0F;
 		final float blue = (color & 0xFF) / 255.0F;
 
-		final float floatPI = (float)Math.PI;
-
 		glColor4f(red, green, blue, alpha);
 		glEnable(GL_BLEND);
 		glDisable(GL_TEXTURE_2D);
@@ -43,8 +42,12 @@ public final class RenderUtils
 		glPushMatrix();
 		glLineWidth(1.0F);
 		glBegin(GL_POLYGON);
+
+		final float floatPI = WMathHelper.PI;
+
 		for (int i = 0; i <= 360; i++)
 			glVertex2d(x + MinecraftInstance.functions.sin(i * floatPI / 180.0F) * radius, y + MinecraftInstance.functions.cos(i * floatPI / 180.0F) * radius);
+
 		glEnd();
 		glPopMatrix();
 		glEnable(GL_TEXTURE_2D);
@@ -52,6 +55,7 @@ public final class RenderUtils
 		glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 	}
 
-	private RenderUtils() {
+	private RenderUtils()
+	{
 	}
 }

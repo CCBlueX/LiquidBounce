@@ -8,11 +8,9 @@ package net.ccbluex.liquidbounce.ui.font;
 import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -46,6 +44,7 @@ public class Fonts extends MinecraftInstance
 	@FontDetails(fontName = "Roboto Bold", fontSize = 180)
 	public static IFontRenderer fontBold180;
 
+	@SuppressWarnings("unchecked")
 	public static void loadFonts()
 	{
 		final long l = System.currentTimeMillis();
@@ -291,24 +290,22 @@ public class Fonts extends MinecraftInstance
 		}
 
 		@Override
-		public boolean equals(final Object o)
+		public boolean equals(final Object obj)
 		{
-			if (this == o)
+			if (this == obj)
 				return true;
-			if (o == null || getClass() != o.getClass())
+			if (obj == null || getClass() != obj.getClass())
 				return false;
 
-			final FontInfo fontInfo = (FontInfo) o;
+			final FontInfo fontInfo = (FontInfo) obj;
 
-			if (fontSize != fontInfo.fontSize)
-				return false;
-			return Objects.equals(name, fontInfo.name);
+			return fontSize == fontInfo.fontSize && Objects.equals(name, fontInfo.name);
 		}
 
 		@Override
 		public int hashCode()
 		{
-			int result = name != null ? name.hashCode() : 0;
+			int result = Optional.ofNullable(name).map(String::hashCode).orElse(0);
 			result = 31 * result + fontSize;
 			return result;
 		}

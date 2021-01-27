@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
@@ -49,7 +50,7 @@ public class GuiChangeName extends WrappedGuiScreen
 		RenderUtils.drawRect(30, 30, representedScreen.getWidth() - 30, representedScreen.getHeight() - 30, Integer.MIN_VALUE);
 
 		Fonts.font40.drawCenteredString("Change Name", representedScreen.getWidth() / 2.0f, 34, 0xffffff);
-		Fonts.font40.drawCenteredString(status == null ? "" : status, representedScreen.getWidth() / 2.0f, representedScreen.getHeight() / 4.0f + 84, 0xffffff);
+		Fonts.font40.drawCenteredString(Optional.ofNullable(status).orElse(""), representedScreen.getWidth() / 2.0f, representedScreen.getHeight() / 4.0f + 84, 0xffffff);
 		name.drawTextBox();
 
 		if (name.getText().isEmpty() && !name.isFocused())
@@ -90,7 +91,7 @@ public class GuiChangeName extends WrappedGuiScreen
 	@Override
 	public void keyTyped(final char typedChar, final int keyCode) throws IOException
 	{
-		if (Keyboard.KEY_ESCAPE == keyCode)
+		if (keyCode == Keyboard.KEY_ESCAPE)
 		{
 			mc.displayGuiScreen(prevGui.getRepresentedScreen());
 			return;

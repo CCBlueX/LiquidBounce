@@ -71,7 +71,7 @@ public class MixinTileEntityItemStackRenderer
 				{
 					if (nbttagcompound.hasKey("SkullOwner", 10))
 						gameprofile = NBTUtil.readGameProfileFromNBT(nbttagcompound.getCompoundTag("SkullOwner"));
-					else if (nbttagcompound.hasKey("SkullOwner", 8) && nbttagcompound.getString("SkullOwner").length() > 0)
+					else if (nbttagcompound.hasKey("SkullOwner", 8) && !nbttagcompound.getString("SkullOwner").isEmpty())
 					{
 						final GameProfile lvt_2_2_ = new GameProfile(null, nbttagcompound.getString("SkullOwner"));
 						gameprofile = TileEntitySkull.updateGameprofile(lvt_2_2_);
@@ -103,10 +103,10 @@ public class MixinTileEntityItemStackRenderer
 				TileEntityRendererDispatcher.instance.renderTileEntityAt(enderChest, 0.0D, 0.0D, 0.0D, 0.0F);
 			else if (block == Blocks.trapped_chest)
 				TileEntityRendererDispatcher.instance.renderTileEntityAt(field_147718_c, 0.0D, 0.0D, 0.0D, 0.0F);
-			else if (block != Blocks.chest)
-				ForgeHooksClient.renderTileItem(itemStackIn.getItem(), itemStackIn.getMetadata());
-			else
+			else if (block == Blocks.chest)
 				TileEntityRendererDispatcher.instance.renderTileEntityAt(field_147717_b, 0.0D, 0.0D, 0.0D, 0.0F);
+			else
+				ForgeHooksClient.renderTileItem(itemStackIn.getItem(), itemStackIn.getMetadata());
 		}
 	}
 }

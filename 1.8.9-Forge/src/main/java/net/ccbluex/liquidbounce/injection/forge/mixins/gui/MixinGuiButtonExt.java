@@ -30,14 +30,14 @@ public abstract class MixinGuiButtonExt extends GuiButton
 	private float cut;
 	private float alpha;
 
-	public MixinGuiButtonExt(int id, int xPos, int yPos, String displayString)
+	public MixinGuiButtonExt(int buttonId, int x, int y, String buttonText)
 	{
-		super(id, xPos, yPos, displayString);
+		super(buttonId, x, y, buttonText);
 	}
 
-	public MixinGuiButtonExt(int id, int xPos, int yPos, int width, int height, String displayString)
+	public MixinGuiButtonExt(int buttonId, int x, int y, int widthIn, int heightIn, String buttonText)
 	{
-		super(id, xPos, yPos, width, height, displayString);
+		super(buttonId, x, y, widthIn, heightIn, buttonText);
 	}
 
 	/**
@@ -79,7 +79,7 @@ public abstract class MixinGuiButtonExt extends GuiButton
 					alpha = 120;
 			}
 
-			Gui.drawRect(xPosition + (int) cut, yPosition, xPosition + width - (int) cut, yPosition + height, enabled ? new Color(0.0F, 0.0F, 0.0F, alpha / 255.0F).getRGB() : new Color(0.5F, 0.5F, 0.5F, 0.5F).getRGB());
+			Gui.drawRect(xPosition + (int) cut, yPosition, xPosition + width - (int) cut, yPosition + height, (enabled ? new Color(0.0F, 0.0F, 0.0F, alpha / 255.0F) : new Color(0.5F, 0.5F, 0.5F, 0.5F)).getRGB());
 
 			mc.getTextureManager().bindTexture(buttonTextures);
 			mouseDragged(mc, mouseX, mouseY);

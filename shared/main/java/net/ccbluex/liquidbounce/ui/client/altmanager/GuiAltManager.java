@@ -48,7 +48,7 @@ public class GuiAltManager extends WrappedGuiScreen
 {
 
 	public static final AltService altService = new AltService();
-	private static final Map<String, Boolean> GENERATORS = new HashMap<>();
+	private static final Map<String, Boolean> GENERATORS = new HashMap<>(2);
 	private final IGuiScreen prevGui;
 	public String status = "\u00A77Idle...";
 	IGuiButton loginButton;
@@ -173,10 +173,7 @@ public class GuiAltManager extends WrappedGuiScreen
 
 	public static boolean canMarkBannedCurrent(final String serverIp)
 	{
-		if (serverIp == null)
-			return true;
-
-		return LiquidBounce.fileManager.accountsConfig.getAccounts().stream().filter(acc -> mc.getSession().getProfile().getName().equalsIgnoreCase(acc.getName()) || mc.getSession().getProfile().getName().equalsIgnoreCase(acc.getAccountName())).findFirst().map(acc -> !acc.getBannedServers().contains(serverIp)).orElse(true);
+		return serverIp == null || LiquidBounce.fileManager.accountsConfig.getAccounts().stream().filter(acc -> mc.getSession().getProfile().getName().equalsIgnoreCase(acc.getName()) || mc.getSession().getProfile().getName().equalsIgnoreCase(acc.getAccountName())).findFirst().map(acc -> !acc.getBannedServers().contains(serverIp)).orElse(true);
 	}
 
 	public static void toggleMarkBanned(final String serverIp)
@@ -436,8 +433,7 @@ public class GuiAltManager extends WrappedGuiScreen
 				}
 				catch (final Exception e)
 				{
-					ClientUtils.getLogger().error("Can't load export accounts in AltManager", e);
-					e.printStackTrace();
+					ClientUtils.getLogger().error("Can't export accounts in AltManager", e);
 					MiscUtils.showErrorPopup("Error", "Exception class: " + e.getClass().getName() + "\nMessage: " + e.getMessage());
 				}
 				break;
@@ -545,15 +541,16 @@ public class GuiAltManager extends WrappedGuiScreen
 
 		void updateAccounts(String search)
 		{
+			final List<MinecraftAccount> defaultValue = LiquidBounce.fileManager.accountsConfig.getAccounts();
 			if (search == null || search.isEmpty())
 			{
-				accounts = LiquidBounce.fileManager.accountsConfig.getAccounts();
+				accounts = defaultValue;
 				return;
 			}
 
 			search = search.toLowerCase();
 
-			accounts = new ArrayList<>();
+			accounts = new ArrayList<>(defaultValue.size());
 
 			for (final MinecraftAccount account : LiquidBounce.fileManager.accountsConfig.getAccounts())
 				if (account.getName() != null && account.getName().toLowerCase().contains(search) || account.getAccountName() != null && account.getAccountName().toLowerCase().contains(search))
@@ -615,10 +612,12 @@ public class GuiAltManager extends WrappedGuiScreen
 			final int width = getRepresented().getWidth();
 			final MinecraftAccount minecraftAccount = accounts.get(id);
 			final AltServiceType serviceType = minecraftAccount.getServiceType();
+
+			//noinspection NegativelyNamedBooleanVariable
 			final boolean isInvalid = serviceType == AltServiceType.MOJANG_INVALID || serviceType == AltServiceType.MOJANG_MIGRATED || serviceType == AltServiceType.MCLEAKS_INVALID || serviceType == AltServiceType.THEALTENING_INVALID;
 
 			Fonts.font40.drawCenteredString(minecraftAccount.getAccountName() == null ? minecraftAccount.getName() : minecraftAccount.getAccountName(), width / 2, y + 2, Color.WHITE.getRGB(), true);
-			Fonts.font40.drawCenteredString(minecraftAccount.isCracked() ? "Cracked" : minecraftAccount.getServiceType().getId(), width / 2, y + 10, minecraftAccount.isCracked() ? Color.GRAY.getRGB() : minecraftAccount.getAccountName() == null ? Color.LIGHT_GRAY.getRGB() : isInvalid ? Color.RED.getRGB() : Color.GREEN.getRGB(), true);
+			Fonts.font40.drawCenteredString(minecraftAccount.isCracked() ? "Cracked" : minecraftAccount.getServiceType().getId(), width / 2, y + 10, minecraftAccount.isCracked() ? Color.GRAY.getRGB() : minecraftAccount.getAccountName() == null ? Color.LIGHT_GRAY.getRGB() : (isInvalid ? Color.RED : Color.GREEN).getRGB(), true);
 			if (!minecraftAccount.getBannedServers().isEmpty())
 				Fonts.font35.drawCenteredString("Banned on " + minecraftAccount.serializeBannedServers(), width / 2, y + 20, Color.RED.getRGB(), true);
 		}

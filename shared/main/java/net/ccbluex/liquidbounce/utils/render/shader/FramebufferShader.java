@@ -86,9 +86,7 @@ public abstract class FramebufferShader extends Shader
 		if (frameBuffer != null)
 			frameBuffer.deleteFramebuffer();
 
-		frameBuffer = new Framebuffer(mc.getDisplayWidth(), mc.getDisplayHeight(), true);
-
-		return frameBuffer;
+		return new Framebuffer(mc.getDisplayWidth(), mc.getDisplayHeight(), true);
 	}
 
 	/**

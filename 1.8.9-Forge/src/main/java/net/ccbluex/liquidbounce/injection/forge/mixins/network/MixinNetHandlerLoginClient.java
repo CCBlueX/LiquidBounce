@@ -79,7 +79,7 @@ public class MixinNetHandlerLoginClient
 				outputStream.flush();
 				outputStream.close();
 
-				final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+				final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
 
 				final String output = reader.lines().collect(Collectors.joining());
 

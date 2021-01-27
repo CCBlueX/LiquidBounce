@@ -6,9 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation;
@@ -33,7 +31,7 @@ import org.lwjgl.opengl.GL11;
 public class ClickGui extends WrappedGuiScreen
 {
 
-	public final List<Panel> panels = new ArrayList<>();
+	public final Collection<Panel> panels = new ArrayDeque<>(9);
 	private final IResourceLocation hudIcon = classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/custom_hud_icon.png");
 	public Style style = new SlowlyStyle();
 	private Panel clickedPanel;
@@ -271,8 +269,8 @@ public class ClickGui extends WrappedGuiScreen
 		{
 			final int wheel = Mouse.getDWheel();
 
-			for (int i = panels.size() - 1; i >= 0; i--)
-				if (panels.get(i).handleScroll(mouseX, mouseY, wheel))
+			for (final Panel panel : panels)
+				if (panel.handleScroll(mouseX, mouseY, wheel))
 					break;
 		}
 
