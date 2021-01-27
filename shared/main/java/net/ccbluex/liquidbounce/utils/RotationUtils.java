@@ -56,12 +56,12 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 			return null;
 
 		VecRotation vecRotation = null;
+		final WVec3 eyesPos = new WVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getEntityBoundingBox().getMinY() + mc.getThePlayer().getEyeHeight(), mc.getThePlayer().getPosZ());
 
 		for (double xSearch = 0.1D; xSearch < 0.9D; xSearch += 0.1D)
 			for (double ySearch = 0.1D; ySearch < 0.9D; ySearch += 0.1D)
 				for (double zSearch = 0.1D; zSearch < 0.9D; zSearch += 0.1D)
 				{
-					final WVec3 eyesPos = new WVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getEntityBoundingBox().getMinY() + mc.getThePlayer().getEyeHeight(), mc.getThePlayer().getPosZ());
 					final WVec3 posVec = new WVec3(blockPos).addVector(xSearch, ySearch, zSearch);
 					final double dist = eyesPos.distanceTo(posVec);
 

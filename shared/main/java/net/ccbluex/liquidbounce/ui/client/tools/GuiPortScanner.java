@@ -145,7 +145,10 @@ public class GuiPortScanner extends WrappedGuiScreen
 					fileWriter.write("Ports (" + minPort + " - " + maxPort + "): " + System.lineSeparator());
 
 					for (final Integer integer : ports)
-						fileWriter.write(integer + System.lineSeparator());
+					{
+						fileWriter.write(String.valueOf(integer));
+						fileWriter.write(System.lineSeparator());
+					}
 
 					fileWriter.flush();
 					fileWriter.close();

@@ -74,10 +74,10 @@ public class AccountsConfig extends FileConfig
 
 				if (!bannedServers.isJsonNull())
 				{
-					final List<String> servers = new ArrayList<>();
+					final List<String> _bannedServers = new ArrayList<>();
 					for (final JsonElement element : bannedServers.getAsJsonArray())
-						servers.add(element.getAsString());
-					account.setBannedServers(servers);
+						_bannedServers.add(element.getAsString());
+					account.setBannedServers(_bannedServers);
 				}
 
 				addAccount(account);

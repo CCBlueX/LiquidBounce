@@ -125,6 +125,9 @@ public class SlowlyStyle extends Style
 					RenderUtils.drawBorderedRect(moduleElement.getX() + moduleElement.getWidth() + 4, moduleElement.getY() + 6, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), moduleElement.slowlySettingsYPos + 2, 3.0F, new Color(54, 71, 96).getRGB(), new Color(54, 71, 96).getRGB());
 
 				moduleElement.slowlySettingsYPos = moduleElement.getY() + 6;
+
+				final Color sliderColor = new Color(7, 152, 252);
+
 				for (final Value value : moduleValues)
 				{
 					final boolean isNumber = value.get() instanceof Number;
@@ -205,7 +208,7 @@ public class SlowlyStyle extends Style
 						if (moduleElement.getSettingsWidth() < textWidth + 8)
 							moduleElement.setSettingsWidth(textWidth + 8);
 
-						final float valueOfSlide = drawSlider(floatValue.get(), floatValue.getMinimum(), floatValue.getMaximum(), moduleElement.getX() + moduleElement.getWidth() + 8, moduleElement.slowlySettingsYPos + 14, (int) moduleElement.getSettingsWidth() - 12, mouseX, mouseY, new Color(7, 152, 252));
+						final float valueOfSlide = drawSlider(floatValue.get(), floatValue.getMinimum(), floatValue.getMaximum(), moduleElement.getX() + moduleElement.getWidth() + 8, moduleElement.slowlySettingsYPos + 14, (int) moduleElement.getSettingsWidth() - 12, mouseX, mouseY, sliderColor);
 
 						if (valueOfSlide != floatValue.get())
 							floatValue.set(valueOfSlide);
@@ -222,7 +225,7 @@ public class SlowlyStyle extends Style
 						if (moduleElement.getSettingsWidth() < textWidth + 8)
 							moduleElement.setSettingsWidth(textWidth + 8);
 
-						final float valueOfSlide = drawSlider(integerValue.get(), integerValue.getMinimum(), integerValue.getMaximum(), moduleElement.getX() + moduleElement.getWidth() + 8, moduleElement.slowlySettingsYPos + 14, (int) moduleElement.getSettingsWidth() - 12, mouseX, mouseY, new Color(7, 152, 252));
+						final float valueOfSlide = drawSlider(integerValue.get(), integerValue.getMinimum(), integerValue.getMaximum(), moduleElement.getX() + moduleElement.getWidth() + 8, moduleElement.slowlySettingsYPos + 14, (int) moduleElement.getSettingsWidth() - 12, mouseX, mouseY, sliderColor);
 
 						if (valueOfSlide != integerValue.get())
 							integerValue.set((int) valueOfSlide);

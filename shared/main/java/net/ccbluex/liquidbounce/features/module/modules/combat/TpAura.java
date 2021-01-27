@@ -130,10 +130,11 @@ public class TpAura extends Module
 				if (canBlock() && (mc.getThePlayer().isBlocking() || !"Off".equalsIgnoreCase(autoBlockValue.get())))
 					clientSideBlockingStatus = true;
 
+				final WVec3 from = new WVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ());
+
 				for (int targetIndex = 0, targetCount = currentTargets.size() > maxTargetsValue.get() ? maxTargetsValue.get() : currentTargets.size(); targetIndex < targetCount; targetIndex++)
 				{
 					currentTarget = currentTargets.get(targetIndex);
-					final WVec3 from = new WVec3(mc.getThePlayer().getPosX(), mc.getThePlayer().getPosY(), mc.getThePlayer().getPosZ());
 					final WVec3 to = new WVec3(currentTarget.getPosX(), currentTarget.getPosY(), currentTarget.getPosZ());
 
 					currentPath = computePath(from, to);

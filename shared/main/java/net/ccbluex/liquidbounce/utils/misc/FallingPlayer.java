@@ -79,16 +79,14 @@ public class FallingPlayer extends MinecraftInstance
 
 	public CollisionResult findCollision(final int ticks)
 	{
+		final WVec3 start = new WVec3(x, y, z);
+		final WVec3 end = new WVec3(x, y, z);
+
 		for (int i = 0; i < ticks; i++)
 		{
-			final WVec3 start = new WVec3(x, y, z);
-
 			calculateForTick();
 
-			final WVec3 end = new WVec3(x, y, z);
-
 			WBlockPos raytracedBlock;
-
 			final float w = mc.getThePlayer().getWidth() / 2.0F;
 
 			if ((raytracedBlock = rayTrace(start, end)) != null)
@@ -111,7 +109,6 @@ public class FallingPlayer extends MinecraftInstance
 				return new CollisionResult(raytracedBlock, i);
 			if ((raytracedBlock = rayTrace(start.addVector(w / 2.0f, 0, -w), end)) != null)
 				return new CollisionResult(raytracedBlock, i);
-
 		}
 
 		return null;
