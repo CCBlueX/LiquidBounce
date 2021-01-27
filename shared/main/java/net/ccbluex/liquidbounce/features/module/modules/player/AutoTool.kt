@@ -28,8 +28,13 @@ class AutoTool : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val blockState = theWorld.getBlockState(blockPos)
+		val getStrVsBlock: (Int) -> Float = {
+			thePlayer.inventory.getStackInSlot(it)!!.getStrVsBlock(blockState)
+		}
+		val currentItemStrVsBlock = thePlayer.inventory.getCurrentItemInHand()?.getStrVsBlock(blockState) ?: 1.0F
 
 		// Find the best tool in hotbar
-		thePlayer.inventory.currentItem = (0..8).filterNot { thePlayer.inventory.getStackInSlot(it) == null }.maxBy { thePlayer.inventory.getStackInSlot(it)!!.getStrVsBlock(blockState) } ?: return
+		val found = (0..8).filter { thePlayer.inventory.getStackInSlot(it) != null && getStrVsBlock(it) > currentItemStrVsBlock }.maxBy { getStrVsBlock(it) } ?: return
+		thePlayer.inventory.currentItem = found
 	}
 }
