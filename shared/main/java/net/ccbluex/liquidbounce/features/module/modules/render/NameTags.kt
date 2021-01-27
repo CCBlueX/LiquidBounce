@@ -98,23 +98,23 @@ class NameTags : Module()
 		val nameColor = if (bot) "\u00A73" else if (entity.invisible) "\u00A76" else if (entity.sneaking) "\u00A74" else "\u00A77"
 
 		val ping = if (classProvider.isEntityPlayer(entity)) EntityUtils.getPing(entity) else 0
-		val pingText = if (pingValue.get() && classProvider.isEntityPlayer(entity)) (if (ping > 200) "\u00a7c" else if (ping > 100) "\u00a7e" else if (ping <= 0) "\u00a77" else "\u00a7a") + ping + "ms \u00a77" else ""
+		val pingText = if (pingValue.get() && classProvider.isEntityPlayer(entity)) (if (ping > 200) "\u00A7c" else if (ping > 100) "\u00A7e" else if (ping <= 0) "\u00A77" else "\u00A7a") + ping + "ms \u00A77" else ""
 
 		val dist: Double = thePlayer.getDistanceToEntityBox(entity)
-		val distanceText = if (distanceValue.get()) "\u00a77${DECIMAL_FORMAT.format(dist)}m " else ""
+		val distanceText = if (distanceValue.get()) "\u00A77${DECIMAL_FORMAT.format(dist)}m " else ""
 
 		val health: Float = if (!classProvider.isEntityPlayer(entity) || healthModeValue.get().equals("Datawatcher", true)) entity.health else EntityUtils.getPlayerHealthFromScoreboard(
 			entity.asEntityPlayer().gameProfile.name, healthModeValue.get().equals("Mineplex", true)
 		).toFloat()
 		val absorption = if (ceil(entity.absorptionAmount.toDouble()) > 0) entity.absorptionAmount else 0f
 		val healthPercentage = (health + absorption) / entity.maxHealth * 100f
-		val healthColor = if (healthPercentage <= 25) "\u00a7c" else if (healthPercentage <= 50) "\u00a7e" else "\u00a7a"
-		val healthText = if (healthValue.get()) "\u00a77 $healthColor${DECIMAL_FORMAT.format(health)}${if (absorption > 0) "\u00a76+${DECIMAL_FORMAT.format(absorption)}$healthColor" else ""} HP \u00a77(${if (absorption > 0) "\u00a76" else healthColor}${
+		val healthColor = if (healthPercentage <= 25) "\u00A7c" else if (healthPercentage <= 50) "\u00A7e" else "\u00A7a"
+		val healthText = if (healthValue.get()) "\u00A77 $healthColor${DECIMAL_FORMAT.format(health)}${if (absorption > 0) "\u00A76+${DECIMAL_FORMAT.format(absorption)}$healthColor" else ""} HP \u00A77(${if (absorption > 0) "\u00A76" else healthColor}${
 			DECIMAL_FORMAT.format(healthPercentage)
-		}%\u00a77)" else ""
+		}%\u00A77)" else ""
 
 		val botText = if (bot) " \u00A7c\u00A7l[BOT]" else ""
-		val murderText = if (murderDetector.state && murderDetector.murders.contains(entity)) "\u00a75\u00a7l[MURDER]\u00a7r " else ""
+		val murderText = if (murderDetector.state && murderDetector.murders.contains(entity)) "\u00A75\u00A7l[MURDER]\u00A7r " else ""
 
 		var text = "$murderText$distanceText$pingText$nameColor$tag$healthText$botText"
 		if (stripColorsValue.get()) text = ColorUtils.stripColor(text)!!

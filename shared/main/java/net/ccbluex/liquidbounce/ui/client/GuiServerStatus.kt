@@ -48,9 +48,9 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					"$server: ${
 						when
 						{
-							color.equals("green", ignoreCase = true) -> "\u00a7aOnline and Stable"
-							color.equals("yellow", ignoreCase = true) -> "\u00a7eSlow or Unstable"
-							color.equals("red", ignoreCase = true) -> "\u00a7cOffline or Down"
+							color.equals("green", ignoreCase = true) -> "\u00A7aOnline and Stable"
+							color.equals("yellow", ignoreCase = true) -> "\u00A7eSlow or Unstable"
+							color.equals("red", ignoreCase = true) -> "\u00A7cOffline or Down"
 							else -> color
 						}
 					}", representedScreen.width / 2.0f, i.toFloat(), Color.WHITE.rgb

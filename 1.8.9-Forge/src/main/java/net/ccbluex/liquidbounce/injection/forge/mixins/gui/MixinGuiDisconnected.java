@@ -19,10 +19,12 @@ import com.thealtening.api.TheAltening;
 import com.thealtening.api.data.AccountData;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
 import net.ccbluex.liquidbounce.event.SessionEvent;
 import net.ccbluex.liquidbounce.features.special.AntiModDisable;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
 import net.ccbluex.liquidbounce.file.FileManager;
+import net.ccbluex.liquidbounce.injection.backend.ClassProviderImpl;
 import net.ccbluex.liquidbounce.injection.backend.GuiScreenImplKt;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
@@ -71,11 +73,11 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 		buttonList.add(new GuiButton(3, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
 		buttonList.add(new GuiButton(4, width / 2 + 2, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 44, 98, 20, "Random username"));
 		buttonList.add(new GuiButton(5, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 88, "AltManager"));
-		buttonList.add(markBanned = new GuiButton(6, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 110, "Mark this account " + (canMarkBannedOnThisServer ? "BANNED" : "UN-BANNED") + " from this server"));
-		buttonList.add(forgeBypassButton = new GuiButton(7, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 66, "AntiModDisable: " + (AntiModDisable.enabled ? "On" : "Off")));
+		buttonList.add(markBanned = new GuiButton(6, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 110, "Mark this account " + (canMarkBannedOnThisServer ? "\u00A7cBANNED" : "\u00A7aUN-BANNED") + "\u00A7r from this server"));
+		buttonList.add(forgeBypassButton = new GuiButton(7, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 66, "AntiModDisable: " + (AntiModDisable.enabled ? "\u00A7a(On)" : "\u00A7c(Off)")));
 
 		if (lastServerIp != null)
-			markBanned.enabled = GuiAltManager.canMarkBannedCurrent(lastServerIp);
+			markBanned.enabled = GuiAltManager.canEnableMarkBannedButton();
 
 		updateSliderText();
 	}
@@ -128,7 +130,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 				ServerUtils.connectToLastServer();
 				break;
 			case 5:
-				mc.displayGuiScreen(GuiScreenImplKt.unwrap(new GuiAltManager(null).getRepresentedScreen()));
+				mc.displayGuiScreen(GuiScreenImplKt.unwrap(ClassProviderImpl.INSTANCE.wrapGuiScreen(new GuiAltManager(null))));
 				break;
 			case 6:
 				final String lastServerIp = ServerUtils.getLastServerIp();

@@ -7,7 +7,10 @@ package net.ccbluex.liquidbounce.ui.client.altmanager;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -171,9 +174,16 @@ public class GuiAltManager extends WrappedGuiScreen
 		}
 	}
 
+	public static boolean canEnableMarkBannedButton()
+	{
+		final String profileName = mc.getSession().getProfile().getName();
+		return LiquidBounce.fileManager.accountsConfig.getAccounts().stream().anyMatch(acc -> profileName.equalsIgnoreCase(acc.getName()) || profileName.equalsIgnoreCase(acc.getAccountName()));
+	}
+
 	public static boolean canMarkBannedCurrent(final String serverIp)
 	{
-		return serverIp == null || LiquidBounce.fileManager.accountsConfig.getAccounts().stream().filter(acc -> mc.getSession().getProfile().getName().equalsIgnoreCase(acc.getName()) || mc.getSession().getProfile().getName().equalsIgnoreCase(acc.getAccountName())).findFirst().map(acc -> !acc.getBannedServers().contains(serverIp)).orElse(true);
+		final String profileName = mc.getSession().getProfile().getName();
+		return serverIp == null || LiquidBounce.fileManager.accountsConfig.getAccounts().stream().filter(acc -> profileName.equalsIgnoreCase(acc.getName()) || profileName.equalsIgnoreCase(acc.getAccountName())).findFirst().map(acc -> !acc.getBannedServers().contains(serverIp)).orElse(true);
 	}
 
 	public static void toggleMarkBanned(final String serverIp)
@@ -425,7 +435,7 @@ public class GuiAltManager extends WrappedGuiScreen
 					final BufferedWriter fileWriter = MiscUtils.createBufferedFileWriter(selectedFile);
 
 					for (final MinecraftAccount account : LiquidBounce.fileManager.accountsConfig.getAccounts())
-						fileWriter.write(account.isCracked() ? account.getName()  + System.lineSeparator() : account.getName() + ":" + account.getPassword()  + System.lineSeparator());
+						fileWriter.write(account.isCracked() ? account.getName() + System.lineSeparator() : account.getName() + ":" + account.getPassword() + System.lineSeparator());
 
 					fileWriter.flush();
 					fileWriter.close();
@@ -457,7 +467,8 @@ public class GuiAltManager extends WrappedGuiScreen
 	}
 
 	@Override
-	public void keyTyped(final char typedChar, final int keyCode) {
+	public void keyTyped(final char typedChar, final int keyCode)
+	{
 		if (searchField.isFocused())
 		{
 			searchField.textboxKeyTyped(typedChar, keyCode);
@@ -514,7 +525,8 @@ public class GuiAltManager extends WrappedGuiScreen
 	}
 
 	@Override
-	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
+	public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton)
+	{
 		searchField.mouseClicked(mouseX, mouseY, mouseButton);
 
 		representedScreen.superMouseClicked(mouseX, mouseY, mouseButton);
@@ -613,7 +625,7 @@ public class GuiAltManager extends WrappedGuiScreen
 			final MinecraftAccount minecraftAccount = accounts.get(id);
 			final AltServiceType serviceType = minecraftAccount.getServiceType();
 
-			//noinspection NegativelyNamedBooleanVariable
+			// noinspection NegativelyNamedBooleanVariable
 			final boolean isInvalid = serviceType == AltServiceType.MOJANG_INVALID || serviceType == AltServiceType.MOJANG_MIGRATED || serviceType == AltServiceType.MCLEAKS_INVALID || serviceType == AltServiceType.THEALTENING_INVALID;
 
 			Fonts.font40.drawCenteredString(minecraftAccount.getAccountName() == null ? minecraftAccount.getName() : minecraftAccount.getAccountName(), width / 2, y + 2, Color.WHITE.getRGB(), true);
