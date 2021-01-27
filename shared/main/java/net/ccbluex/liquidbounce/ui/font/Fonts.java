@@ -209,6 +209,7 @@ public class Fonts extends MinecraftInstance
 		}
 		catch (final Exception e)
 		{
+			// noinspection StringConcatenationArgumentToLogCall
 			ClientUtils.getLogger().warn("Can't load font named " + fontName + " with size " + size, e);
 
 			return new Font("default", Font.PLAIN, size);
@@ -223,7 +224,7 @@ public class Fonts extends MinecraftInstance
 		{
 			buffer = new byte[1024];
 		}
-		catch(final OutOfMemoryError err)
+		catch (final OutOfMemoryError err)
 		{
 			ClientUtils.getLogger().error("Failed to extract the fonts: Buffer allocation failed", err);
 			throw err;
@@ -259,6 +260,7 @@ public class Fonts extends MinecraftInstance
 		}
 		catch (final IOException e)
 		{
+			// noinspection StringConcatenationArgumentToLogCall
 			ClientUtils.getLogger().error("Failed to extract the fonts: " + e, e);
 		}
 	}

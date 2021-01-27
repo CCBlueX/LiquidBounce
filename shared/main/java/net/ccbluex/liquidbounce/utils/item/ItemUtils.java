@@ -77,6 +77,7 @@ public final class ItemUtils extends MinecraftInstance
 		}
 		catch (final Exception e)
 		{
+			// noinspection StringConcatenationArgumentToLogCall
 			ClientUtils.getLogger().error("Can't create the item with arguments \"" + itemArguments + "\"", e);
 			return null;
 		}

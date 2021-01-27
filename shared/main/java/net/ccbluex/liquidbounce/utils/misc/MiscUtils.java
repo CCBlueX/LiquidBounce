@@ -32,6 +32,7 @@ public final class MiscUtils extends MinecraftInstance
 		}
 		catch (final IOException | URISyntaxException e)
 		{
+			// noinspection StringConcatenationArgumentToLogCall
 			ClientUtils.getLogger().error("Can't show URL \"" + url + "\"", e);
 		}
 	}

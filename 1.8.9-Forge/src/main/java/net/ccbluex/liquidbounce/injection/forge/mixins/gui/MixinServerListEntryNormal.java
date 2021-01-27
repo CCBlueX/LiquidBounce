@@ -104,6 +104,7 @@ public abstract class MixinServerListEntryNormal
 				{
 					server.pingToServer = -1L;
 					server.serverMOTD = EnumChatFormatting.DARK_RED + e.toString();
+
 					// noinspection StringConcatenationArgumentToLogCall
 					logger.warn("Can't connect to the server " + server.serverIP + " (" + server.serverName + ")", e);
 				}

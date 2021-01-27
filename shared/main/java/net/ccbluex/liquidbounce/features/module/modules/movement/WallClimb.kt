@@ -20,6 +20,7 @@ class WallClimb : Module()
 	private val modeValue = ListValue("Mode", arrayOf("Simple", "CheckerClimb", "Clip", "AAC3.3.12", "AACGlide"), "Simple")
 	private val clipMode = ListValue("ClipMode", arrayOf("Jump", "Fast"), "Fast")
 	private val checkerClimbMotionValue = FloatValue("CheckerClimbMotion", 0f, 0f, 1f)
+	private val simpleSpeedValue = FloatValue("Simple-Speed", 0.2F, 0.01F, 1F)
 
 	private var glitch = false
 	private var waited = 0
@@ -31,9 +32,9 @@ class WallClimb : Module()
 
 		if (!thePlayer.isCollidedHorizontally || thePlayer.isOnLadder || thePlayer.isInWater || thePlayer.isInLava) return
 
-		if ("simple".equals(modeValue.get(), ignoreCase = true))
+		if (modeValue.get().equals("Simple", ignoreCase = true))
 		{
-			event.y = 0.2
+			event.y = simpleSpeedValue.get().toDouble()
 			thePlayer.motionY = 0.0
 		}
 	}
