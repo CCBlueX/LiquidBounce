@@ -213,11 +213,10 @@ class TpAura : Module()
 		val path = mutableListOf<WVec3>()
 		val pathFinderPath = pathfinder.path
 
-		for ((i, currentPathFinderPath) in pathFinderPath.withIndex())
-		{
+		pathFinderPath.forEachIndexed { i, currentPathFinderPath ->
 			if (i == 0 || i == pathFinderPath.size - 1) // If the current path node is start or end node
 			{
-				if (lastPath != null) path.add(lastPath.addVector(0.5, 0.0, 0.5))
+				if (lastPath != null) path.add(lastPath!!.addVector(0.5, 0.0, 0.5))
 				path.add(currentPathFinderPath.addVector(0.5, 0.0, 0.5))
 				lastEndPath = currentPathFinderPath
 			} else
@@ -226,12 +225,12 @@ class TpAura : Module()
 				val maxDashDistance = maxDashDistanceValue.get().toFloat()
 				if (currentPathFinderPath.squareDistanceTo(lastEndPath!!) > maxDashDistance * maxDashDistance) canContinueSearching = false else
 				{
-					val minX = min(lastEndPath.xCoord, currentPathFinderPath.xCoord)
-					val minY = min(lastEndPath.yCoord, currentPathFinderPath.yCoord)
-					val minZ = min(lastEndPath.zCoord, currentPathFinderPath.zCoord)
-					val maxX = max(lastEndPath.xCoord, currentPathFinderPath.xCoord)
-					val maxY = max(lastEndPath.yCoord, currentPathFinderPath.yCoord)
-					val maxZ = max(lastEndPath.zCoord, currentPathFinderPath.zCoord)
+					val minX = min(lastEndPath!!.xCoord, currentPathFinderPath.xCoord)
+					val minY = min(lastEndPath!!.yCoord, currentPathFinderPath.yCoord)
+					val minZ = min(lastEndPath!!.zCoord, currentPathFinderPath.zCoord)
+					val maxX = max(lastEndPath!!.xCoord, currentPathFinderPath.xCoord)
+					val maxY = max(lastEndPath!!.yCoord, currentPathFinderPath.yCoord)
+					val maxZ = max(lastEndPath!!.zCoord, currentPathFinderPath.zCoord)
 					var x = minX.toInt()
 					cordsLoop@ while (x <= maxX)
 					{
@@ -282,6 +281,7 @@ class TpAura : Module()
 		{
 			val state = getState(WBlockPos(pos.x, pos.y, pos.z))
 			val block = state!!.block
+
 			return classProvider.getMaterialEnum(MaterialType.AIR) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.PLANTS) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.VINE) == block.getMaterial(
 				state
 			) || classProvider.getBlockEnum(BlockType.LADDER) == block || classProvider.getBlockEnum(BlockType.WATER) == block || classProvider.getBlockEnum(BlockType.FLOWING_WATER) == block || classProvider.getBlockEnum(BlockType.WALL_SIGN) == block || classProvider.getBlockEnum(

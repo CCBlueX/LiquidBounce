@@ -186,11 +186,10 @@ class ExtendedReach : Module()
 		val path = mutableListOf<WVec3>()
 		val pathFinderPath = pathfinder.path
 
-		for ((i, pathElm) in pathFinderPath.withIndex())
-		{
+		pathFinderPath.forEachIndexed { i, pathElm ->
 			if (i == 0 || i == pathFinderPath.size - 1)
 			{
-				if (lastLoc != null) path.add(lastLoc.addVector(0.5, 0.0, 0.5))
+				if (lastLoc != null) path.add(lastLoc!!.addVector(0.5, 0.0, 0.5))
 				path.add(pathElm.addVector(0.5, 0.0, 0.5))
 				lastDashLoc = pathElm
 			} else
@@ -199,12 +198,12 @@ class ExtendedReach : Module()
 				val maxDashDistance = maxDashDistanceValue.get().toFloat()
 				if (pathElm.squareDistanceTo(lastDashLoc!!) > maxDashDistance * maxDashDistance) stop = true else
 				{
-					val minX = min(lastDashLoc.xCoord, pathElm.xCoord)
-					val minY = min(lastDashLoc.yCoord, pathElm.yCoord)
-					val minZ = min(lastDashLoc.zCoord, pathElm.zCoord)
-					val maxX = max(lastDashLoc.xCoord, pathElm.xCoord)
-					val maxY = max(lastDashLoc.yCoord, pathElm.yCoord)
-					val maxZ = max(lastDashLoc.zCoord, pathElm.zCoord)
+					val minX = min(lastDashLoc!!.xCoord, pathElm.xCoord)
+					val minY = min(lastDashLoc!!.yCoord, pathElm.yCoord)
+					val minZ = min(lastDashLoc!!.zCoord, pathElm.zCoord)
+					val maxX = max(lastDashLoc!!.xCoord, pathElm.xCoord)
+					val maxY = max(lastDashLoc!!.yCoord, pathElm.yCoord)
+					val maxZ = max(lastDashLoc!!.zCoord, pathElm.zCoord)
 					var x = minX.toInt()
 					coordsLoop@ while (x <= maxX)
 					{
