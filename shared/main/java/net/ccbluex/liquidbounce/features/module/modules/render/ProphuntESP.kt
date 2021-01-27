@@ -96,7 +96,7 @@ class ProphuntESP : Module()
 		shader.startDraw(event.partialTicks)
 		try
 		{
-			theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true) }
+			theWorld.loadedEntityList.asSequence().filter(classProvider::isEntityFallingBlock).forEach { mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true) }
 		} catch (ex: Exception)
 		{
 			ClientUtils.getLogger().error("An error occurred while rendering all entities for shader esp", ex)

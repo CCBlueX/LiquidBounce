@@ -46,7 +46,7 @@ class RemoteViewCommand : Command("remoteview", "rv")
 
 		return when (args.size)
 		{
-			1 -> return mc.theWorld!!.playerEntities.filter { it.name != null && it.name!!.startsWith(args[0], true) }.map { it.name!! }
+			1 -> return mc.theWorld!!.playerEntities.asSequence().filter { it.name != null && it.name!!.startsWith(args[0], true) }.map { it.name!! }.toList()
 			else -> emptyList()
 		}
 	}

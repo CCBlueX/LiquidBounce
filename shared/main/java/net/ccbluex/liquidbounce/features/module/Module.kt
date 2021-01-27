@@ -153,10 +153,10 @@ open class Module : MinecraftInstance(), Listenable
 	 * Get all values of module
 	 */
 	open val values: List<Value<*>>
-		get() = javaClass.declaredFields.map { valueField ->
+		get() = javaClass.declaredFields.asSequence().map { valueField ->
 			valueField.isAccessible = true
 			valueField[this]
-		}.filterIsInstance<Value<*>>().filter(Value<*>::isSupported)
+		}.filterIsInstance<Value<*>>().filter(Value<*>::isSupported).toList()
 
 	/**
 	 * Events should be handled when module is enabled

@@ -45,7 +45,7 @@ class AutoWeapon : Module()
 			attackEnemy = false
 
 			// Find best weapon in hotbar (#Kotlin Style)
-			val (slot, _) = (0..8).map { it to thePlayer.inventory.getStackInSlot(it) }.filter { it.second != null && (classProvider.isItemSword(it.second?.item) || classProvider.isItemTool(it.second?.item)) }.maxBy {
+			val (slot, _) = (0..8).asSequence().map { it to thePlayer.inventory.getStackInSlot(it) }.filter { it.second != null && (classProvider.isItemSword(it.second?.item) || classProvider.isItemTool(it.second?.item)) }.maxBy {
 				it.second!!.getAttributeModifier("generic.attackDamage").first().amount + 1.25 * ItemUtils.getEnchantment(it.second, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 			} ?: return
 

@@ -30,7 +30,7 @@ object SettingsUtils
 	 */
 	fun executeScript(script: String)
 	{
-		script.lines().filter { it.isNotEmpty() && !it.startsWith('#') }.forEachIndexed { index, s ->
+		script.lines().asSequence().filter { it.isNotEmpty() && !it.startsWith('#') }.forEachIndexed { index, s ->
 			val args = s.split(" ").toTypedArray()
 
 			if (args.size <= 1)
@@ -161,7 +161,7 @@ object SettingsUtils
 	{
 		val stringBuilder = StringBuilder()
 
-		LiquidBounce.moduleManager.modules.filter {
+		LiquidBounce.moduleManager.modules.asSequence().filter {
 			it.category != ModuleCategory.RENDER && it !is NameProtect && it !is Spammer
 		}.forEach {
 			if (values) it.values.forEach { value -> stringBuilder.append(it.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n") }

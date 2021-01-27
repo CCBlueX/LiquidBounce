@@ -189,7 +189,7 @@ class ChestStealer : Module()
 			{
 				do
 				{
-					val items = (0 until screen.inventoryRows * 9).map(screen.inventorySlots!!::getSlot).filter { shouldTake(it.stack, inventoryCleaner) }
+					val items = (0 until screen.inventoryRows * 9).asSequence().map(screen.inventorySlots!!::getSlot).filter { shouldTake(it.stack, inventoryCleaner) }.toList()
 
 					val randomSlot = Random.nextInt(items.size)
 					var slot = items[randomSlot]

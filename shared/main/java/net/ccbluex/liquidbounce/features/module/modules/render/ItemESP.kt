@@ -37,7 +37,7 @@ class ItemESP : Module()
 		{
 			val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
-			(mc.theWorld ?: return).loadedEntityList.filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, true) }
+			(mc.theWorld ?: return).loadedEntityList.asSequence().filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, true) }
 		}
 	}
 
@@ -51,7 +51,7 @@ class ItemESP : Module()
 			OutlineShader.OUTLINE_SHADER.startDraw(event.partialTicks)
 			try
 			{
-				theWorld.loadedEntityList.filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { mc.renderManager.renderEntityStatic(it, event.partialTicks, true) }
+				theWorld.loadedEntityList.asSequence().filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { mc.renderManager.renderEntityStatic(it, event.partialTicks, true) }
 			} catch (ex: Exception)
 			{
 				ClientUtils.getLogger().error("An error occurred while rendering all item entities for shader esp", ex)

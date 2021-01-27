@@ -120,7 +120,7 @@ class CommandManager
 			} else
 			{
 				val rawInput = input.substring(1)
-				commands.filter {
+				commands.asSequence().filter {
 					it.command.startsWith(rawInput, true) || it.alias.any { alias -> alias.startsWith(rawInput, true) }
 				}.map {
 					val alias: String = if (it.command.startsWith(rawInput, true)) it.command

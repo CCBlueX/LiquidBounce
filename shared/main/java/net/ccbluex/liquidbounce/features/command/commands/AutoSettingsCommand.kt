@@ -119,22 +119,13 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
 		return when (args.size)
 		{
-			1 -> listOf("list", "load").filter { it.startsWith(args[0], true) }
+			1 -> listOf("list", "load").filter { it.startsWith(args[0], ignoreCase = true) }
 
 			2 ->
 			{
-				if (args[0].equals("load", true))
-				{
-					if (autoSettingFiles == null)
-					{
-						loadSettings(true, 500) {}
-					}
+				if (args[0].equals("load", ignoreCase = true)) if (autoSettingFiles == null) loadSettings(true, 500) {}
+				else return autoSettingFiles!!.asSequence().filter { it.startsWith(args[1], true) }.toList()
 
-					if (autoSettingFiles != null)
-					{
-						return autoSettingFiles!!.filter { it.startsWith(args[1], true) }
-					}
-				}
 				return emptyList()
 			}
 

@@ -95,7 +95,7 @@ class BowAimbot : Module()
 
 	private fun getTarget(throughWalls: Boolean, priorityMode: String): IEntity?
 	{
-		val targets = (mc.theWorld ?: return null).loadedEntityList.filter {
+		val targets = (mc.theWorld ?: return null).loadedEntityList.asSequence().filter {
 			classProvider.isEntityLivingBase(it) && EntityUtils.isSelected(it, true) && (throughWalls || mc.thePlayer!!.canEntityBeSeen(it))
 		}
 

@@ -257,14 +257,14 @@ class StorageESP : Module()
 
 			val startDraw = { shader.startDraw(event.partialTicks) }
 			val renderTileEntity = { predicate: (ITileEntity) -> Boolean ->
-				mc.theWorld!!.loadedTileEntityList.filter(predicate).forEach {
+				mc.theWorld!!.loadedTileEntityList.asSequence().filter(predicate).forEach {
 					mc.renderManager.renderEntityAt(
 						it, it.pos.x - renderManager.renderPosX, it.pos.y - renderManager.renderPosY, it.pos.z - renderManager.renderPosZ, event.partialTicks
 					)
 				}
 			}
 			val renderMinecart = { predicate: (IEntity) -> Boolean ->
-				mc.theWorld!!.loadedEntityList.filter(predicate).forEach {
+				mc.theWorld!!.loadedEntityList.asSequence().filter(predicate).forEach {
 					renderManager.renderEntityStatic(it, event.partialTicks, true)
 				}
 			}

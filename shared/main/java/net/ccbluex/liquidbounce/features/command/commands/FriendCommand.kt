@@ -101,15 +101,8 @@ class FriendCommand : Command("friend", "friends")
 			{
 				when (args[0].toLowerCase())
 				{
-					"add" ->
-					{
-						return mc.theWorld!!.playerEntities.filter { (it.name?.startsWith(args[1], true) ?: false) }.map { it.name!! }
-					}
-
-					"remove" ->
-					{
-						return LiquidBounce.fileManager.friendsConfig.friends.map { it.playerName }.filter { it.startsWith(args[1], true) }
-					}
+					"add" -> return mc.theWorld!!.playerEntities.asSequence().filter { (it.name?.startsWith(args[1], true) ?: false) }.map { it.name!! }.toList()
+					"remove" -> return LiquidBounce.fileManager.friendsConfig.friends.asSequence().map { it.playerName }.filter { it.startsWith(args[1], true) }.toList()
 				}
 				return emptyList()
 			}

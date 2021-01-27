@@ -29,7 +29,7 @@ class BindsCommand : Command("binds")
 		}
 
 		chat("\u00A7c\u00A7lBinds")
-		LiquidBounce.moduleManager.modules.filter { it.keyBind != Keyboard.KEY_NONE }.forEach {
+		LiquidBounce.moduleManager.modules.asSequence().filter { it.keyBind != Keyboard.KEY_NONE }.forEach {
 			ClientUtils.displayChatMessage("\u00A76> \u00A7c${it.name}: \u00A7a\u00A7l${Keyboard.getKeyName(it.keyBind)}")
 		}
 		chatSyntax("binds clear")

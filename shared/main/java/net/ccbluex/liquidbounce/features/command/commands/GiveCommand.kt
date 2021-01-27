@@ -65,11 +65,7 @@ class GiveCommand : Command("give", "item", "i", "get")
 
 		return when (args.size)
 		{
-			1 ->
-			{
-				return functions.getItemRegistryKeys().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[0], true) }
-			}
-
+			1 -> return functions.getItemRegistryKeys().asSequence().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[0], true) }.toList()
 			else -> emptyList()
 		}
 	}

@@ -58,7 +58,7 @@ class ToggleCommand : Command("toggle", "t")
 
 		return when (args.size)
 		{
-			1 -> LiquidBounce.moduleManager.modules.map(Module::name).filter { it.startsWith(moduleName, true) }.toList()
+			1 -> LiquidBounce.moduleManager.modules.asSequence().map(Module::name).filter { it.startsWith(moduleName, true) }.toList()
 			else -> emptyList()
 		}
 	}

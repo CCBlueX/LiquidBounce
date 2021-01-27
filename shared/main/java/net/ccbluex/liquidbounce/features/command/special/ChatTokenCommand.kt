@@ -69,11 +69,7 @@ class ChatTokenCommand : Command("chattoken")
 
 		return when (args.size)
 		{
-			1 ->
-			{
-				arrayOf("set", "generate", "copy").map(String::toLowerCase).filter { it.startsWith(args[0], true) }
-			}
-
+			1 -> arrayOf("set", "generate", "copy").filter { it.startsWith(args[0], ignoreCase = true) }
 			else -> emptyList()
 		}
 	}

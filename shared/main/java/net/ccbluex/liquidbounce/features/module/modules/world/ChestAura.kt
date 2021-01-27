@@ -60,7 +60,7 @@ object ChestAura : Module()
 					thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ
 				)
 
-				currentBlock = BlockUtils.searchBlocks(radius.toInt()).filter {
+				currentBlock = BlockUtils.searchBlocks(radius.toInt()).asSequence().filter {
 					functions.getIdFromBlock(it.value) == chestValue.get() && !clickedBlocks.contains(it.key) && BlockUtils.getCenterDistance(it.key) < rangeValue.get()
 				}.filter {
 					if (throughWallsValue.get()) return@filter true

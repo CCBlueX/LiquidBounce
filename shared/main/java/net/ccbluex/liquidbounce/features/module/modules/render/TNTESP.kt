@@ -20,6 +20,6 @@ class TNTESP : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		(mc.theWorld ?: return).loadedEntityList.filter(classProvider::isEntityTNTPrimed).forEach { RenderUtils.drawEntityBox(it, Color.RED, false) }
+		(mc.theWorld ?: return).loadedEntityList.asSequence().filter(classProvider::isEntityTNTPrimed).forEach { RenderUtils.drawEntityBox(it, Color.RED, false) }
 	}
 }

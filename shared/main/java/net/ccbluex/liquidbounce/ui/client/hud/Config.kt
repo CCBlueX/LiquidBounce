@@ -74,7 +74,7 @@ class Config
 								Side.Horizontal.getByName(jsonObject["HorizontalFacing"].asString)!!, Side.Vertical.getByName(jsonObject["VerticalFacing"].asString)!!
 							)
 
-							element.values.filter { jsonObject.has(it.name) }.forEach { it.fromJson(jsonObject[it.name]) }
+							element.values.asSequence().filter { jsonObject.has(it.name) }.forEach { it.fromJson(jsonObject[it.name]) }
 
 							// Support for old HUD files
 							if (jsonObject.has("font")) element.values.find { it is FontValue }?.fromJson(jsonObject["font"])

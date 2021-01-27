@@ -180,7 +180,8 @@ class ESP : Module()
 		renderNameTags = false
 		try
 		{
-			(mc.theWorld ?: return).loadedEntityList.filter { !(!botValue.get() && AntiBot.isBot(it.asEntityLivingBase())) && EntityUtils.isSelected(it, false) }.forEach { mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true) }
+			(mc.theWorld ?: return).loadedEntityList.asSequence().filter { !(!botValue.get() && AntiBot.isBot(it.asEntityLivingBase())) && EntityUtils.isSelected(it, false) }
+				.forEach { mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true) }
 		} catch (ex: Exception)
 		{
 			ClientUtils.getLogger().error("An error occurred while rendering all entities for shader esp", ex)

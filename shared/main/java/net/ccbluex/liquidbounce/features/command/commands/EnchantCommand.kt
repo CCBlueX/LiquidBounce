@@ -77,10 +77,7 @@ class EnchantCommand : Command("enchant")
 
 		return when (args.size)
 		{
-			1 ->
-			{
-				return functions.getEnchantments().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[0], true) }
-			}
+			1 -> return functions.getEnchantments().asSequence().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[0], true) }.toList()
 
 			else -> emptyList()
 		}

@@ -127,7 +127,7 @@ class Aimbot : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val range = rangeValue.get()
-		target = (mc.theWorld ?: return).loadedEntityList.filter {
+		target = (mc.theWorld ?: return).loadedEntityList.asSequence().filter {
 			EntityUtils.isSelected(it, true) && thePlayer.canEntityBeSeen(it) && thePlayer.getDistanceToEntityBox(it) <= range && RotationUtils.getServerRotationDifference(it) <= fovValue.get()
 		}.minBy { RotationUtils.getServerRotationDifference(it) }
 

@@ -28,7 +28,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
 	 */
 	override fun execute(args: Array<String>)
 	{
-		val valueNames = values.filter { it !is FontValue }.joinToString(separator = "/") { it.name.toLowerCase() }
+		val valueNames = values.asSequence().filter { it !is FontValue }.joinToString(separator = "/") { it.name.toLowerCase() }
 
 		val moduleName = module.name.toLowerCase()
 
@@ -123,16 +123,13 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
 
 		return when (args.size)
 		{
-			1 -> values.filter { it !is FontValue && it.name.startsWith(args[0], true) }.map { it.name.toLowerCase() }
+			1 -> values.asSequence().filter { it !is FontValue && it.name.startsWith(args[0], true) }.map { it.name.toLowerCase() }.toList()
 
 			2 ->
 			{
 				when (module.getValue(args[0]))
 				{
-					is BlockValue ->
-					{
-						return functions.getItemRegistryKeys().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[1], true) }
-					}
+					is BlockValue -> return functions.getItemRegistryKeys().asSequence().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[1], true) }.toList()
 
 					is ListValue ->
 					{
