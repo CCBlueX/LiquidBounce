@@ -49,6 +49,7 @@
     "network.MixinNetHandlerPlayClient",
     "network.MixinNetworkManager",
     "network.MixinNetworkPlayerInfo",
+    "network.MixinFMLEventChannel",
 
     "packets.MixinC00Handshake",
 

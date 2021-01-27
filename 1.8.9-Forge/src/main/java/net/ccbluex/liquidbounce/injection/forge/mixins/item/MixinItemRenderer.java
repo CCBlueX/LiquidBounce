@@ -85,7 +85,7 @@ public abstract class MixinItemRenderer
 	 * @reason SwingAnimation
 	 */
 	@Overwrite
-	protected void doBlockTransformations()
+	private void doBlockTransformations()
 	{
 		final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
 
@@ -103,7 +103,7 @@ public abstract class MixinItemRenderer
 	 * @see    SwingAnimation
 	 */
 	@Overwrite
-	protected void transformFirstPersonItem(final float equipProgress, final float swingProgress)
+	private void transformFirstPersonItem(final float equipProgress, final float swingProgress)
 	{
 		final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
 		final float fixedSwingProgress = sa.getState() && sa.getStaticSwingProgress().get() ? sa.getStaticSwingProgressValue().get() : swingProgress;

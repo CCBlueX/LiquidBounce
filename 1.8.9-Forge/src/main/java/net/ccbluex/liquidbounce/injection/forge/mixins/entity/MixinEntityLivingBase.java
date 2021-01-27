@@ -156,7 +156,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	 * @see    SwingAnimation
 	 */
 	@Overwrite
-	public int getArmSwingAnimationEnd()
+	private int getArmSwingAnimationEnd()
 	{
 		final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.getModule(SwingAnimation.class);
 		int swingAnimationEnd = isPotionActive(Potion.digSpeed) ? 6 - (1 + getActivePotionEffect(Potion.digSpeed).getAmplifier()) : isPotionActive(Potion.digSlowdown) ? 6 + (1 + getActivePotionEffect(Potion.digSlowdown).getAmplifier() << 1) : 6;

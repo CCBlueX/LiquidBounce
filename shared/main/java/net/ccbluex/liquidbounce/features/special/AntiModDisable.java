@@ -154,7 +154,6 @@ public class AntiModDisable extends MinecraftInstance implements Listenable
 			}
 	}
 
-	// TODO: Implement the call
 	public static boolean canBlockForgeChannelPacket(final String channelName)
 	{
 		if (enabled && !mc.isIntegratedServerRunning())
