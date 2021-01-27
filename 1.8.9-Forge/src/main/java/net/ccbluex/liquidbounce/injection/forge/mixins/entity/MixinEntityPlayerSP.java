@@ -527,41 +527,36 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			final List<AxisAlignedBB> collidedBoxList = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(x, y, z));
 			final AxisAlignedBB entityBox = getEntityBoundingBox();
 
-			for (final AxisAlignedBB box : collidedBoxList)
-				y = box.calculateYOffset(entityBox, y);
+			for (final AxisAlignedBB axisalignedbb1 : collidedBoxList)
+				y = axisalignedbb1.calculateYOffset(getEntityBoundingBox(), y);
 
-			setEntityBoundingBox(entityBox.offset(0.0D, y, 0.0D));
-
+			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
 			final Step step = (Step) LiquidBounce.moduleManager.getModule(Step.class);
 			final boolean airStep = step.getState() && step.getAirStepValue().get() && step.canAirStep();
 			final boolean steppable = onGround || airStep || d4 != y && d4 < 0.0D;
 
-			for (final AxisAlignedBB box : collidedBoxList)
-				x = box.calculateXOffset(entityBox, x);
+			for (final AxisAlignedBB axisalignedbb2 : collidedBoxList)
+				x = axisalignedbb2.calculateXOffset(getEntityBoundingBox(), x);
 
-			setEntityBoundingBox(entityBox.offset(x, 0.0D, 0.0D));
+			setEntityBoundingBox(getEntityBoundingBox().offset(x, 0.0D, 0.0D));
 
-			for (final AxisAlignedBB box : collidedBoxList)
-				z = box.calculateZOffset(entityBox, z);
+			for (final AxisAlignedBB axisalignedbb13 : collidedBoxList)
+				z = axisalignedbb13.calculateZOffset(getEntityBoundingBox(), z);
 
-			setEntityBoundingBox(entityBox.offset(0.0D, 0.0D, z));
+			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, 0.0D, z));
 
 			if (stepHeight > 0.0F && steppable && (d3 != x || d5 != z))
 			{
 				final StepEvent stepEvent = new StepEvent(stepHeight);
 				LiquidBounce.eventManager.callEvent(stepEvent);
-
 				final double d11 = x;
 				final double d7 = y;
 				final double d8 = z;
-
+				final AxisAlignedBB axisalignedbb3 = getEntityBoundingBox();
 				setEntityBoundingBox(entityBox);
-
 				y = stepEvent.getStepHeight();
-
 				// noinspection ConstantConditions
 				final List<AxisAlignedBB> list = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(d3, y, d5));
-
 				AxisAlignedBB axisalignedbb4 = getEntityBoundingBox();
 				final AxisAlignedBB axisalignedbb5 = axisalignedbb4.addCoord(d3, 0.0D, d5);
 				double d9 = y;
@@ -620,16 +615,16 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 
 				for (final AxisAlignedBB axisalignedbb12 : list)
-					y = axisalignedbb12.calculateYOffset(entityBox, y);
+					y = axisalignedbb12.calculateYOffset(getEntityBoundingBox(), y);
 
-				setEntityBoundingBox(entityBox.offset(0.0D, y, 0.0D));
+				setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
 
 				if (d11 * d11 + d8 * d8 >= x * x + z * z)
 				{
 					x = d11;
 					y = d7;
 					z = d8;
-					setEntityBoundingBox(entityBox);
+					setEntityBoundingBox(axisalignedbb3);
 				}
 				else
 					LiquidBounce.eventManager.callEvent(new StepConfirmEvent());
@@ -637,9 +632,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 			worldObj.theProfiler.endSection();
 			worldObj.theProfiler.startSection("rest");
-			posX = (entityBox.minX + entityBox.maxX) / 2.0D;
-			posY = entityBox.minY;
-			posZ = (entityBox.minZ + entityBox.maxZ) / 2.0D;
+			posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2.0D;
+			posY = getEntityBoundingBox().minY;
+			posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2.0D;
 			isCollidedHorizontally = d3 != x || d5 != z;
 			isCollidedVertically = d4 != y;
 			onGround = isCollidedVertically && d4 < 0.0D;
@@ -720,7 +715,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 			final boolean flag2 = isWet();
 
-			if (worldObj.isFlammableWithin(entityBox.contract(0.001D, 0.001D, 0.001D)))
+			if (worldObj.isFlammableWithin(getEntityBoundingBox().contract(0.001D, 0.001D, 0.001D)))
 			{
 				dealFireDamage(1);
 
