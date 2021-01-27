@@ -31,7 +31,7 @@ public class MixinBlockModelRenderer
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
-		if (Objects.requireNonNull(xray).getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(stateIn.getBlock())))
+		if ((xray).getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(stateIn.getBlock())))
 			cir.setReturnValue(false);
 	}
 
@@ -40,7 +40,7 @@ public class MixinBlockModelRenderer
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
-		if (Objects.requireNonNull(xray).getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(stateIn.getBlock())))
+		if ((xray).getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(stateIn.getBlock())))
 			booleanCallbackInfoReturnable.setReturnValue(false);
 	}
 }

@@ -21,9 +21,9 @@ public class MixinGuiSpectator
 {
 
 	@Inject(method = "renderTooltip", at = @At("RETURN"))
-	private void renderTooltipPost(final ScaledResolution p_175264_1_, final float p_175264_2_, final CallbackInfo callbackInfo)
+	private void renderTooltipPost(final ScaledResolution scaledResolution, final float partialTicks, final CallbackInfo callbackInfo)
 	{
-		LiquidBounce.eventManager.callEvent(new Render2DEvent(p_175264_2_));
+		LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
 		AWTFontRenderer.Companion.garbageCollectionTick();
 	}
 }

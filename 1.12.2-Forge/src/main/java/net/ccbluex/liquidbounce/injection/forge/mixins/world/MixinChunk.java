@@ -45,7 +45,7 @@ public class MixinChunk
 
 		final ProphuntESP prophuntESP = (ProphuntESP) LiquidBounce.moduleManager.get(ProphuntESP.class);
 
-		if (Objects.requireNonNull(prophuntESP).getState())
+		if ((prophuntESP).getState())
 		{
 			synchronized (prophuntESP.getBlocks())
 			{

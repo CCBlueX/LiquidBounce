@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
-import java.util.Objects;
-
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.FastClimb;
 import net.minecraft.block.BlockLadder;
@@ -38,28 +36,28 @@ public abstract class MixinBlockLadder extends MixinBlock
 	@Overwrite
 	public void setBlockBoundsBasedOnState(final IBlockAccess worldIn, final BlockPos pos)
 	{
-		final IBlockState iblockstate = worldIn.getBlockState(pos);
+		final IBlockState state = worldIn.getBlockState(pos);
 
 		// AAC 3.0.0 FastClimb
-		if (iblockstate.getBlock() instanceof BlockLadder)
+		if (state.getBlock() instanceof BlockLadder)
 		{
 			final FastClimb fastClimb = (FastClimb) LiquidBounce.moduleManager.get(FastClimb.class);
-			final float f = Objects.requireNonNull(fastClimb).getState() && "AAC3.0.0".equalsIgnoreCase(fastClimb.getModeValue().get()) ? 0.99f : 0.125f;
+			final float boxSize = fastClimb.getState() && "AAC3.0.0".equalsIgnoreCase(fastClimb.getModeValue().get()) ? 0.99f : 0.125f;
 
-			switch (iblockstate.getValue(FACING))
+			switch (state.getValue(FACING))
 			{
 				case NORTH:
-					setBlockBounds(0.0F, 0.0F, 1.0F - f, 1.0F, 1.0F, 1.0F);
+					setBlockBounds(0.0F, 0.0F, 1.0F - boxSize, 1.0F, 1.0F, 1.0F);
 					break;
 				case SOUTH:
-					setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, f);
+					setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, boxSize);
 					break;
 				case WEST:
-					setBlockBounds(1.0F - f, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
+					setBlockBounds(1.0F - boxSize, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
 					break;
 				case EAST:
 				default:
-					setBlockBounds(0.0F, 0.0F, 0.0F, f, 1.0F, 1.0F);
+					setBlockBounds(0.0F, 0.0F, 0.0F, boxSize, 1.0F, 1.0F);
 			}
 		}
 	}

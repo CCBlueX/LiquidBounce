@@ -95,7 +95,7 @@ public abstract class MixinBlock
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
 
-		if (Objects.requireNonNull(xray).getState())
+		if ((xray).getState())
 			// noinspection SuspiciousMethodCalls
 			callbackInfoReturnable.setReturnValue(xray.getXrayBlocks().contains(BlockImplKt.wrap((Block) (Object) this)));
 	}
@@ -105,14 +105,14 @@ public abstract class MixinBlock
 	{
 		final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.getModule(GhostHand.class);
 
-		if (Objects.requireNonNull(ghostHand).getState() && !(ghostHand.getBlockValue().get() == Block.getIdFromBlock((Block) (Object) this)))
+		if ((ghostHand).getState() && !(ghostHand.getBlockValue().get() == Block.getIdFromBlock((Block) (Object) this)))
 			callbackInfoReturnable.setReturnValue(false);
 	}
 
 	@Inject(method = "getAmbientOcclusionLightValue", at = @At("HEAD"), cancellable = true)
 	private void getAmbientOcclusionLightValue(final CallbackInfoReturnable<Float> floatCallbackInfoReturnable)
 	{
-		if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(XRay.class)).getState())
+		if ((LiquidBounce.moduleManager.getModule(XRay.class)).getState())
 			floatCallbackInfoReturnable.setReturnValue(1F);
 	}
 
@@ -123,7 +123,7 @@ public abstract class MixinBlock
 
 		// NoSlowBreak
 		final NoSlowBreak noSlowBreak = (NoSlowBreak) LiquidBounce.moduleManager.getModule(NoSlowBreak.class);
-		if (Objects.requireNonNull(noSlowBreak).getState())
+		if ((noSlowBreak).getState())
 		{
 			if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.WATER) && !EnchantmentHelper.getAquaAffinityModifier(playerIn))
 			{
@@ -140,7 +140,7 @@ public abstract class MixinBlock
 			final NoFall noFall = (NoFall) LiquidBounce.moduleManager.getModule(NoFall.class);
 			final Criticals criticals = (Criticals) LiquidBounce.moduleManager.getModule(Criticals.class);
 
-			if (Objects.requireNonNull(noFall).getState() && noFall.modeValue.get().equalsIgnoreCase("NoGround") || Objects.requireNonNull(criticals).getState() && criticals.getModeValue().get().equalsIgnoreCase("NoGround"))
+			if ((noFall).getState() && noFall.modeValue.get().equalsIgnoreCase("NoGround") || (criticals).getState() && criticals.getModeValue().get().equalsIgnoreCase("NoGround"))
 			{
 				f /= 5F;
 			}

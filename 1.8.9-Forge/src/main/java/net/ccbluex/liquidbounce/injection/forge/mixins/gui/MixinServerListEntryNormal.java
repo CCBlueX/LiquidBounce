@@ -7,6 +7,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.ServerListEntryNormal;
@@ -113,56 +114,66 @@ public abstract class MixinServerListEntryNormal
 
 		final boolean outdatedClient = server.version > 47;
 		final boolean outdatedServer = server.version < 47;
-		mc.fontRendererObj.drawString(server.serverName, x + 32 + 3, y + 1, 16777215);
-		final List<String> list = mc.fontRendererObj.listFormattedStringToWidth(FMLClientHandler.instance().fixDescription(server.serverMOTD), listWidth - 48 - 2);
+		final FontRenderer defaultFontRenderer = mc.fontRendererObj;
 
-		for (int i = 0, j = Math.min(list.size(), 2); i < j; ++i)
-			mc.fontRendererObj.drawString(list.get(i), x + 32 + 3, y + 12 + mc.fontRendererObj.FONT_HEIGHT * i, 8421504);
+		defaultFontRenderer.drawString(server.serverName, x + 32 + 3, y + 1, 16777215);
+
+		final List<String> formattedStringWidthList = defaultFontRenderer.listFormattedStringToWidth(FMLClientHandler.instance().fixDescription(server.serverMOTD), listWidth - 48 - 2);
+
+		for (int i = 0, j = Math.min(formattedStringWidthList.size(), 2); i < j; ++i)
+			defaultFontRenderer.drawString(formattedStringWidthList.get(i), x + 32 + 3, y + 12 + defaultFontRenderer.FONT_HEIGHT * i, 8421504);
 
 		final boolean incompatibleVersion = outdatedClient || outdatedServer;
 		final String populationInfo = incompatibleVersion ? EnumChatFormatting.DARK_RED + server.gameVersion : server.populationInfo;
-		final int j = mc.fontRendererObj.getStringWidth(populationInfo);
-		mc.fontRendererObj.drawString(populationInfo, x + listWidth - j - 15 - 2, y + 1, 8421504);
+		final int populationInfoWidth = defaultFontRenderer.getStringWidth(populationInfo);
+
+		defaultFontRenderer.drawString(populationInfo, x + listWidth - populationInfoWidth - 15 - 2, y + 1, 8421504);
 
 		int pinging = 0;
 		String playerList = null;
 		int pingLevelImageID;
 		final String pingHoverText;
+
 		if (incompatibleVersion)
 		{
 			pingLevelImageID = 5;
 			pingHoverText = outdatedClient ? "Client out of date!" : "Server out of date!";
 			playerList = server.playerList;
 		}
-		else if (server.field_78841_f && server.pingToServer != -2L)
-		{
-			if (server.pingToServer < 0L)
-				pingLevelImageID = 5;
-			else if (server.pingToServer < 150L)
-				pingLevelImageID = 0;
-			else if (server.pingToServer < 300L)
-				pingLevelImageID = 1;
-			else if (server.pingToServer < 600L)
-				pingLevelImageID = 2;
-			else
-				pingLevelImageID = server.pingToServer < 1000L ? 3 : 4;
-
-			if (server.pingToServer < 0L)
-				pingHoverText = "(no connection)";
-			else
-			{
-				pingHoverText = server.pingToServer + "ms";
-				playerList = server.playerList;
-			}
-		}
 		else
 		{
-			pinging = 1;
-			pingLevelImageID = (int) (Minecraft.getSystemTime() / 100L + (slotIndex << 1) & 7L);
-			if (pingLevelImageID > 4)
-				pingLevelImageID = 8 - pingLevelImageID;
+			final long ping = server.pingToServer;
 
-			pingHoverText = "Pinging...";
+			if (server.field_78841_f && ping != -2L)
+			{
+				if (ping < 0L)
+					pingLevelImageID = 5;
+				else if (ping < 150L)
+					pingLevelImageID = 0;
+				else if (ping < 300L)
+					pingLevelImageID = 1;
+				else if (ping < 600L)
+					pingLevelImageID = 2;
+				else
+					pingLevelImageID = ping < 1000L ? 3 : 4;
+
+				if (ping < 0L)
+					pingHoverText = "(no connection)";
+				else
+				{
+					pingHoverText = ping + "ms";
+					playerList = server.playerList;
+				}
+			}
+			else
+			{
+				pinging = 1;
+				pingLevelImageID = (int) (Minecraft.getSystemTime() / 100L + (slotIndex << 1) & 7L);
+				if (pingLevelImageID > 4)
+					pingLevelImageID = 8 - pingLevelImageID;
+
+				pingHoverText = "Pinging...";
+			}
 		}
 
 		// Draw Ping level
@@ -190,7 +201,7 @@ public abstract class MixinServerListEntryNormal
 			owner.setHoveringText(tooltip);
 		else if (i1 >= listWidth - 15 && i1 <= listWidth - 5 && j1 >= 0 && j1 <= 8)
 			owner.setHoveringText(pingHoverText);
-		else if (i1 >= listWidth - j - 15 - 2 && i1 <= listWidth - 15 - 2 && j1 >= 0 && j1 <= 8)
+		else if (i1 >= listWidth - populationInfoWidth - 15 - 2 && i1 <= listWidth - 15 - 2 && j1 >= 0 && j1 <= 8)
 			owner.setHoveringText(playerList);
 
 		if (mc.gameSettings.touchscreen || isSelected)
@@ -211,6 +222,5 @@ public abstract class MixinServerListEntryNormal
 			if (owner.func_175394_b((ServerListEntryNormal) (Object) this, slotIndex))
 				Gui.drawModalRectWithCustomSizedTexture(x, y, 64.0F, k1 < 16 && l1 > 16 ? 32.0F : 0.0F, 32, 32, 256.0F, 256.0F);
 		}
-
 	}
 }

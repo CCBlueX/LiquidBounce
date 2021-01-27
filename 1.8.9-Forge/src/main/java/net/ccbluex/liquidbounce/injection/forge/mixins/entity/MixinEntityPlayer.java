@@ -18,7 +18,6 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(EntityPlayer.class)
 public abstract class MixinEntityPlayer extends MixinEntityLivingBase
 {
-
 	@Shadow
 	public abstract ItemStack getHeldItem();
 
@@ -48,5 +47,4 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase
 
 	@Shadow
 	public abstract boolean isUsingItem();
-
 }

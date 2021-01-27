@@ -101,17 +101,23 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 		{
 			mouseX = mouseXIn;
 			mouseY = mouseYIn;
+
 			drawBackground();
+
 			final int i = getScrollBarX();
 			final int j = i + 6;
+
 			bindAmountScrolled();
 			GlStateManager.disableLighting();
 			GlStateManager.disableFog();
+
 			final Tessellator tessellator = Tessellator.getInstance();
 			final WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+
 			// noinspection CallToSimpleGetterFromWithinClass
 			final int k = left + width / 2 - getListWidth() / 2 + 2;
 			final int l = top + 4 - (int) amountScrolled;
+
 			if (hasListHeader)
 				drawListHeader(k, l, tessellator);
 
@@ -124,31 +130,37 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 			GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
 			GlStateManager.disableDepth();
+
 			final int i1 = 4;
 
 			// ClientCode
 			final ScaledResolution scaledResolution = new ScaledResolution(mc);
+
 			Gui.drawRect(0, 0, scaledResolution.getScaledWidth(), top, Integer.MIN_VALUE);
 			Gui.drawRect(0, bottom, scaledResolution.getScaledWidth(), height, Integer.MIN_VALUE);
 
 			GL11.glEnable(GL11.GL_BLEND);
-			GlStateManager.tryBlendFuncSeparate(770, 771, 0, 1);
+			GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 0, 1);
 			GlStateManager.disableAlpha();
-			GlStateManager.shadeModel(7425);
+			GlStateManager.shadeModel(GL11.GL_SMOOTH);
 			GlStateManager.disableTexture2D();
+
 			worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
 			worldrenderer.pos(left, top + i1, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 0).endVertex();
 			worldrenderer.pos(right, top + i1, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 0).endVertex();
 			worldrenderer.pos(right, top, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 255).endVertex();
 			worldrenderer.pos(left, top, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 255).endVertex();
 			tessellator.draw();
+
 			worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
 			worldrenderer.pos(left, bottom, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 255).endVertex();
 			worldrenderer.pos(right, bottom, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 255).endVertex();
 			worldrenderer.pos(right, bottom - i1, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 0).endVertex();
 			worldrenderer.pos(left, bottom - i1, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 0).endVertex();
 			tessellator.draw();
+
 			final int j1 = func_148135_f();
+
 			if (j1 > 0)
 			{
 				int k1 = (bottom - top) * (bottom - top) / getContentHeight();
@@ -163,12 +175,14 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 				worldrenderer.pos(j, top, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 255).endVertex();
 				worldrenderer.pos(i, top, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 255).endVertex();
 				tessellator.draw();
+
 				worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
 				worldrenderer.pos(i, l1 + k1, 0.0D).tex(0.0D, 1.0D).color(128, 128, 128, 255).endVertex();
 				worldrenderer.pos(j, l1 + k1, 0.0D).tex(1.0D, 1.0D).color(128, 128, 128, 255).endVertex();
 				worldrenderer.pos(j, l1, 0.0D).tex(1.0D, 0.0D).color(128, 128, 128, 255).endVertex();
 				worldrenderer.pos(i, l1, 0.0D).tex(0.0D, 0.0D).color(128, 128, 128, 255).endVertex();
 				tessellator.draw();
+
 				worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
 				worldrenderer.pos(i, l1 + k1 - 1, 0.0D).tex(0.0D, 1.0D).color(192, 192, 192, 255).endVertex();
 				worldrenderer.pos(j - 1, l1 + k1 - 1, 0.0D).tex(1.0D, 1.0D).color(192, 192, 192, 255).endVertex();
@@ -179,7 +193,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 
 			func_148142_b(mouseXIn, mouseYIn);
 			GlStateManager.enableTexture2D();
-			GlStateManager.shadeModel(7424);
+			GlStateManager.shadeModel(GL11.GL_FLAT);
 			GlStateManager.enableAlpha();
 			GlStateManager.disableBlend();
 		}
@@ -198,7 +212,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 	@Override
 	public void setEnableScissor(final boolean value)
 	{
-		this.enableScissor = value;
+		enableScissor = value;
 	}
 
 	/**

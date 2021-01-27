@@ -28,6 +28,7 @@ public abstract class MixinGuiIngameMenu extends MixinGuiScreen
 	@Inject(method = "actionPerformed", at = @At("HEAD"))
 	private void actionPerformed(final GuiButton button, final CallbackInfo callbackInfo)
 	{
+		// Reconnect button
 		if (button.id == 1337)
 		{
 			mc.theWorld.sendQuittingDisconnectingPacket();

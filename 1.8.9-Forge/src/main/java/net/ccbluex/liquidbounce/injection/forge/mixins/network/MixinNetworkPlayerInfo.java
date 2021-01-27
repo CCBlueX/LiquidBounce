@@ -35,6 +35,5 @@ public class MixinNetworkPlayerInfo
 				cir.setReturnValue(DefaultPlayerSkin.getDefaultSkin(gameProfile.getId()));
 				cir.cancel();
 			}
-
 	}
 }

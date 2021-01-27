@@ -51,14 +51,14 @@ public final class PathFinder extends MinecraftInstance
 
 	private static boolean isBlockSolid(final WBlockPos blockpos)
 	{
-		final IIBlockState state = Objects.requireNonNull(BlockUtils.getState(blockpos));
+		final IIBlockState state = BlockUtils.getState(blockpos);
 		final IBlock block = state.getBlock();
-		return Objects.requireNonNull(block.getMaterial(state)).blocksMovement() && block.isFullCube(state) || classProvider.isBlockSlab(block) || classProvider.isBlockStairs(block) || classProvider.isBlockCactus(block) || classProvider.isBlockChest(block) || classProvider.isBlockEnderChest(block) || classProvider.isBlockSkull(block) || classProvider.isBlockPane(block) || classProvider.isBlockFence(block) || classProvider.isBlockWall(block) || classProvider.isBlockGlass(block) || classProvider.isBlockPistonBase(block) || classProvider.isBlockPistonExtension(block) || classProvider.isBlockPistonMoving(block) || classProvider.isBlockStainedGlass(block) || classProvider.isBlockTrapDoor(block);
+		return block.getMaterial(state).blocksMovement() && block.isFullCube(state) || classProvider.isBlockSlab(block) || classProvider.isBlockStairs(block) || classProvider.isBlockCactus(block) || classProvider.isBlockChest(block) || classProvider.isBlockEnderChest(block) || classProvider.isBlockSkull(block) || classProvider.isBlockPane(block) || classProvider.isBlockFence(block) || classProvider.isBlockWall(block) || classProvider.isBlockGlass(block) || classProvider.isBlockPistonBase(block) || classProvider.isBlockPistonExtension(block) || classProvider.isBlockPistonMoving(block) || classProvider.isBlockStainedGlass(block) || classProvider.isBlockTrapDoor(block);
 	}
 
 	private static boolean isSafeToWalkOn(final WBlockPos blockpos)
 	{
-		final IBlock block = Objects.requireNonNull(BlockUtils.getState(blockpos)).getBlock();
+		final IBlock block = BlockUtils.getState(blockpos).getBlock();
 		return !classProvider.isBlockFence(block) && !classProvider.isBlockWall(block);
 	}
 

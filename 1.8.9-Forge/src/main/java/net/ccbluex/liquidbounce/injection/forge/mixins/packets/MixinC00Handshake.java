@@ -40,11 +40,11 @@ public class MixinC00Handshake
 	 * @see AntiModDisable
 	 */
 	@Overwrite
-	public void writePacketData(final PacketBuffer buf)
+	public void writePacketData(final PacketBuffer buffer)
 	{
-		buf.writeVarIntToBuffer(protocolVersion);
-		buf.writeString(ip + (AntiModDisable.enabled && AntiModDisable.blockFMLPackets && !Minecraft.getMinecraft().isIntegratedServerRunning() ? "" : "\0FML\0"));
-		buf.writeShort(port);
-		buf.writeVarIntToBuffer(requestedState.getId());
+		buffer.writeVarIntToBuffer(protocolVersion);
+		buffer.writeString(ip + (AntiModDisable.enabled && AntiModDisable.blockFMLPackets && !Minecraft.getMinecraft().isIntegratedServerRunning() ? "" : "\0FML\0"));
+		buffer.writeShort(port);
+		buffer.writeVarIntToBuffer(requestedState.getId());
 	}
 }

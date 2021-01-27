@@ -216,14 +216,14 @@ public abstract class MixinEntity
 	{
 		final HitBox hitBox = (HitBox) LiquidBounce.moduleManager.get(HitBox.class);
 
-		if (Objects.requireNonNull(hitBox).getState())
+		if ((hitBox).getState())
 			callbackInfoReturnable.setReturnValue(0.1F + hitBox.getSizeValue().get());
 	}
 
 	@Inject(method = "turn", at = @At("HEAD"), cancellable = true)
 	private void setAngles(final float yaw, final float pitch, final CallbackInfo callbackInfo)
 	{
-		if (Objects.requireNonNull(LiquidBounce.moduleManager.get(NoPitchLimit.class)).getState())
+		if ((LiquidBounce.moduleManager.get(NoPitchLimit.class)).getState())
 		{
 			callbackInfo.cancel();
 

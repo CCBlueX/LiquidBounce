@@ -99,6 +99,7 @@ public class MixinFontRenderer
 	{
 		if (string == null)
 			return null;
+
 		if (LiquidBounce.eventManager == null)
 			return string;
 

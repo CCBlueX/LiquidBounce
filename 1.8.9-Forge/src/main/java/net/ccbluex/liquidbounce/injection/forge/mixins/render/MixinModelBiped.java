@@ -39,6 +39,7 @@ public class MixinModelBiped
 
 	/**
 	 * Rotations - Head only, Pitch
+	 * 
 	 * @see Rotations
 	 */
 	@Inject(method = "setRotationAngles", at = @At(value = "FIELD", target = "Lnet/minecraft/client/model/ModelBiped;swingProgress:F"))
@@ -48,6 +49,7 @@ public class MixinModelBiped
 			bipedRightArm.rotateAngleY = 0.0F;
 
 		final Rotations rotations = (Rotations) LiquidBounce.moduleManager.getModule(Rotations.class);
+
 		if (rotations.getState() && !rotations.getBodyValue().get() && RotationUtils.lastServerRotation != null && RotationUtils.serverRotation != null && entityIn instanceof EntityPlayer && entityIn.equals(Minecraft.getMinecraft().thePlayer))
 		{
 			final float pitch = rotations.getInterpolateRotationsValue().get() ? rotations.interpolateRotation(RotationUtils.lastServerRotation.getPitch(), RotationUtils.serverRotation.getPitch(), Minecraft.getMinecraft().timer.renderPartialTicks) : RotationUtils.serverRotation.getPitch();

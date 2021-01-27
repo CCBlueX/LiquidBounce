@@ -64,7 +64,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 
 		for (int i = startSlot; i < endSlot; i++)
 		{
-			final IItemStack stack = Objects.requireNonNull(mc.getThePlayer()).getInventoryContainer().getSlot(i).getStack();
+			final IItemStack stack = mc.getThePlayer().getInventoryContainer().getSlot(i).getStack();
 
 			if (stack != null && Objects.equals(stack.getItem(), item) && stack.getItemDelay() >= itemDelay)
 				candidates.add(i);
@@ -78,13 +78,13 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 
 	public static boolean hasSpaceHotbar()
 	{
-		return IntStream.range(36, 45).mapToObj(i -> Objects.requireNonNull(mc.getThePlayer()).getInventory().getStackInSlot(i)).anyMatch(Objects::isNull);
+		return IntStream.range(36, 45).mapToObj(i -> mc.getThePlayer().getInventory().getStackInSlot(i)).anyMatch(Objects::isNull);
 	}
 
 	public static int findAutoBlockBlock(final boolean autoblockFullcubeOnly, final double boundingBoxYLimit)
 	{
-		final IWorld theWorld = Objects.requireNonNull(mc.getTheWorld());
-		final IEntityPlayerSP thePlayer = Objects.requireNonNull(mc.getThePlayer());
+		final IWorld theWorld = mc.getTheWorld();
+		final IEntityPlayerSP thePlayer = mc.getThePlayer();
 
 		final List<Integer> hotbarSlots = new ArrayList<>(9);
 		for (int i = 36; i < 45; i++)
@@ -93,17 +93,17 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 
 			if (itemStack != null && classProvider.isItemBlock(itemStack.getItem()) && itemStack.getStackSize() > 0)
 			{
-				final IItemBlock itemBlock = Objects.requireNonNull(itemStack.getItem()).asItemBlock();
+				final IItemBlock itemBlock = itemStack.getItem().asItemBlock();
 				final IBlock block = itemBlock.getBlock();
 
-				if (canAutoBlock(block) && block.isFullCube(Objects.requireNonNull(block.getDefaultState())))
+				if (canAutoBlock(block) && block.isFullCube(block.getDefaultState()))
 					hotbarSlots.add(i);
 			}
 		}
 		final Optional<Integer> pred = boundingBoxYLimit == 0.0 ? Optional.ofNullable(hotbarSlots.isEmpty() ? null : hotbarSlots.get(0)) : hotbarSlots.stream().filter(hotbarSlot ->
 		{
 			final IBlock block = mc.getThePlayer().getInventoryContainer().getSlot(hotbarSlot).getStack().getItem().asItemBlock().getBlock();
-			final IAxisAlignedBB box = block.getCollisionBoundingBox(theWorld, WBlockPos.Companion.getORIGIN(), Objects.requireNonNull(block.getDefaultState()));
+			final IAxisAlignedBB box = block.getCollisionBoundingBox(theWorld, WBlockPos.Companion.getORIGIN(), block.getDefaultState());
 			return box != null && box.getMaxY() - box.getMinY() <= boundingBoxYLimit;
 		}).max(Comparator.comparingDouble(hotbarSlot ->
 		{
@@ -123,7 +123,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 
 				if (itemStack != null && classProvider.isItemBlock(itemStack.getItem()) && itemStack.getStackSize() > 0)
 				{
-					final IItemBlock itemBlock = Objects.requireNonNull(itemStack.getItem()).asItemBlock();
+					final IItemBlock itemBlock = itemStack.getItem().asItemBlock();
 					final IBlock block = itemBlock.getBlock();
 
 					if (canAutoBlock(block))
@@ -133,7 +133,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 			final Optional<Integer> pred2 = boundingBoxYLimit == 0.0 ? Optional.ofNullable(hotbarSlots.isEmpty() ? null : hotbarSlots.get(0)) : hotbarSlots.stream().filter(hotbarSlot ->
 			{
 				final IBlock block = thePlayer.getInventoryContainer().getSlot(hotbarSlot).getStack().getItem().asItemBlock().getBlock();
-				final IAxisAlignedBB box = block.getCollisionBoundingBox(theWorld, WBlockPos.Companion.getORIGIN(), Objects.requireNonNull(block.getDefaultState()));
+				final IAxisAlignedBB box = block.getCollisionBoundingBox(theWorld, WBlockPos.Companion.getORIGIN(), block.getDefaultState());
 				return box != null && box.getMaxY() - box.getMinY() <= boundingBoxYLimit;
 			}).max(Comparator.comparingDouble(hotbarSlot ->
 			{

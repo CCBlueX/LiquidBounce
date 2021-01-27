@@ -67,7 +67,9 @@ public abstract class MixinGuiScreen extends Gui
 
 	@SuppressWarnings("NoopMethodInAbstractClass")
 	@Shadow
-	public void drawScreen(int mouseX, int mouseY, float partialTicks) {}
+	public void drawScreen(int mouseX, int mouseY, float partialTicks)
+	{
+	}
 
 	@Shadow
 	protected abstract void renderToolTip(ItemStack stack, int x, int y);
@@ -86,9 +88,8 @@ public abstract class MixinGuiScreen extends Gui
 		if (hud.getInventoryParticle().get() && mc.thePlayer != null)
 		{
 			final ScaledResolution scaledResolution = new ScaledResolution(mc);
-			final int width = scaledResolution.getScaledWidth();
-			final int height = scaledResolution.getScaledHeight();
-			ParticleUtils.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
+
+			ParticleUtils.drawParticles(Mouse.getX() * scaledResolution.getScaledWidth() / mc.displayWidth, height - Mouse.getY() * scaledResolution.getScaledHeight() / mc.displayHeight - 1);
 		}
 	}
 
@@ -105,6 +106,7 @@ public abstract class MixinGuiScreen extends Gui
 		{
 			if (LiquidBounce.INSTANCE.getBackground() == null)
 			{
+				// Use Shader background
 				BackgroundShader.BACKGROUND_SHADER.startShader();
 
 				final Tessellator instance = Tessellator.getInstance();
@@ -120,6 +122,7 @@ public abstract class MixinGuiScreen extends Gui
 			}
 			else
 			{
+				// Use custom background picture
 				final ScaledResolution scaledResolution = new ScaledResolution(mc);
 				final int width = scaledResolution.getScaledWidth();
 				final int height = scaledResolution.getScaledHeight();
@@ -131,6 +134,7 @@ public abstract class MixinGuiScreen extends Gui
 
 			if (GuiBackground.Companion.getParticles())
 				ParticleUtils.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
+
 			callbackInfo.cancel();
 		}
 	}
@@ -173,7 +177,8 @@ public abstract class MixinGuiScreen extends Gui
 	 * @reason Making it possible for other mixins to receive actions
 	 */
 	@Overwrite
-	protected void actionPerformed(final GuiButton button) {
+	protected void actionPerformed(final GuiButton button)
+	{
 		injectedActionPerformed(button);
 	}
 

@@ -52,22 +52,28 @@ public class MixinLayerHeldItem
 
 			if (livingEntityRenderer.getMainModel().isChild)
 			{
-				final float f = 0.5F;
 				GlStateManager.translate(0.0F, 0.625F, 0.0F);
 				GlStateManager.rotate(-20.0F, -1.0F, 0.0F, 0.0F);
-				GlStateManager.scale(f, f, f);
+
+				final float childModelScale = 0.5F;
+				GlStateManager.scale(childModelScale, childModelScale, childModelScale);
 			}
 
 			final UUID uuid = entitylivingbaseIn.getUniqueID();
 			final EntityPlayer entityplayer = Minecraft.getMinecraft().theWorld.getPlayerEntityByUUID(uuid);
 
 			if (entityplayer != null && entityplayer.isBlocking())
-				if (entitylivingbaseIn.isSneaking()) {
+				if (entitylivingbaseIn.isSneaking())
+				{
 					((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
+
 					GlStateManager.translate(-0.58F, 0.3F, -0.2F);
 					GlStateManager.rotate(-24390.0F, 137290.0F, -2009900.0F, -2054900.0F);
-				} else {
+				}
+				else
+				{
 					((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
+
 					GlStateManager.translate(-0.48F, 0.2F, -0.2F);
 					GlStateManager.rotate(-24390.0F, 137290.0F, -2009900.0F, -2054900.0F);
 				}

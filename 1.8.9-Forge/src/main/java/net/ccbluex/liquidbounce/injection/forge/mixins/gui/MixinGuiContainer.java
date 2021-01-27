@@ -118,6 +118,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 		if ((Object) this instanceof GuiInventory)
 			return;
 
+		// Disable Killaura button
 		if (button.id == 996)
 		{
 			final KillAura killAura = (KillAura) LiquidBounce.moduleManager.get(KillAura.class);
@@ -125,6 +126,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 				killAura.setState(false);
 		}
 
+		// Disable ChestStealer button
 		if (button.id == 997)
 		{
 			final ChestStealer chestStealer = (ChestStealer) LiquidBounce.moduleManager.get(ChestStealer.class);
@@ -132,6 +134,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 				chestStealer.setState(false);
 		}
 
+		// Disable InventoryCleaner button
 		if (button.id == 998)
 		{
 			final InventoryCleaner inventoryCleaner = (InventoryCleaner) LiquidBounce.moduleManager.get(InventoryCleaner.class);
@@ -139,6 +142,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 				inventoryCleaner.setState(false);
 		}
 
+		// Disable AutoArmor button
 		if (button.id == 999)
 		{
 			final AutoArmor autoArmor = (AutoArmor) LiquidBounce.moduleManager.get(AutoArmor.class);

@@ -86,7 +86,7 @@ public abstract class MixinBlock
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
-		if (Objects.requireNonNull(xray).getState())
+		if (xray.getState())
 			// noinspection SuspiciousMethodCalls
 			callbackInfoReturnable.setReturnValue(xray.getXrayBlocks().contains(this));
 	}
@@ -96,43 +96,44 @@ public abstract class MixinBlock
 	{
 		final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.get(GhostHand.class);
 
-		if (Objects.requireNonNull(ghostHand).getState() && ghostHand.getBlockValue().get() != Block.getIdFromBlock((Block) (Object) this))
+		if (ghostHand.getState() && ghostHand.getBlockValue().get() != Block.getIdFromBlock((Block) (Object) this))
 			callbackInfoReturnable.setReturnValue(false);
 	}
 
 	@Inject(method = "getAmbientOcclusionLightValue", at = @At("HEAD"), cancellable = true)
 	private void getAmbientOcclusionLightValue(final CallbackInfoReturnable<Float> floatCallbackInfoReturnable)
 	{
-		if (Objects.requireNonNull(LiquidBounce.moduleManager.get(XRay.class)).getState())
+		if (LiquidBounce.moduleManager.get(XRay.class).getState())
 			floatCallbackInfoReturnable.setReturnValue(1.0F);
 	}
 
 	@Inject(method = "getPlayerRelativeBlockHardness", at = @At("RETURN"), cancellable = true)
 	public void modifyBreakSpeed(final EntityPlayer playerIn, final World worldIn, final BlockPos pos, final CallbackInfoReturnable<Float> callbackInfo)
 	{
-		float f = callbackInfo.getReturnValue();
+		float returnValue = callbackInfo.getReturnValue();
 
 		// NoSlowBreak
 		final NoSlowBreak noSlowBreak = (NoSlowBreak) LiquidBounce.moduleManager.get(NoSlowBreak.class);
-		if (Objects.requireNonNull(noSlowBreak).getState())
+		if (noSlowBreak.getState())
 		{
+			// Water
 			if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(playerIn))
-				f *= 5.0F;
+				returnValue *= 5.0F;
 
+			// Air
 			if (noSlowBreak.getAirValue().get() && !playerIn.onGround)
-				f *= 5.0F;
+				returnValue *= 5.0F;
 		}
 		else if (playerIn.onGround)
 		{
-
-			// NoFall, Criticals NoGround mode
+			// NoFall, Criticals NoGround mode NoSlowBreak
 			final NoFall noFall = (NoFall) LiquidBounce.moduleManager.get(NoFall.class);
 			final Criticals criticals = (Criticals) LiquidBounce.moduleManager.get(Criticals.class);
 
-			if (Objects.requireNonNull(noFall).getState() && "NoGround".equalsIgnoreCase(noFall.modeValue.get()) || Objects.requireNonNull(criticals).getState() && "NoGround".equalsIgnoreCase(criticals.getModeValue().get()))
-				f /= 5.0F;
+			if (noFall.getState() && "NoGround".equalsIgnoreCase(noFall.modeValue.get()) || criticals.getState() && "NoGround".equalsIgnoreCase(criticals.getModeValue().get()))
+				returnValue /= 5.0F;
 		}
 
-		callbackInfo.setReturnValue(f);
+		callbackInfo.setReturnValue(returnValue);
 	}
 }

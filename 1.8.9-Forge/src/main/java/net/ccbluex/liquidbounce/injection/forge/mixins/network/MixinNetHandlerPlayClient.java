@@ -58,7 +58,6 @@ import io.netty.buffer.Unpooled;
 @Mixin(NetHandlerPlayClient.class)
 public abstract class MixinNetHandlerPlayClient
 {
-
 	@Shadow
 	@Final
 	private NetworkManager netManager;

@@ -235,7 +235,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 	public static VecRotation searchCenter(final IAxisAlignedBB box, final SearchCenterMode mode, final boolean jitter, final JitterData jitterData, final boolean playerPrediction, final boolean throughWalls, final float distance, final double hitboxDecrement, final double searchSensitivity)
 	{
 		final WVec3 randomVec;
-		final WVec3 eyes = Objects.requireNonNull(mc.getThePlayer()).getPositionEyes(1.0F);
+		final WVec3 eyes = mc.getThePlayer().getPositionEyes(1.0F);
 
 		switch (mode)
 		{

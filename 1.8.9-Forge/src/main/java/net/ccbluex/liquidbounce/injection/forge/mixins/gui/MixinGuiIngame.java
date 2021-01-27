@@ -56,19 +56,19 @@ public abstract class MixinGuiIngame
 
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 			Gui.drawRect(middleScreen - 91, sr.getScaledHeight() - 24, middleScreen + 90, sr.getScaledHeight(), Integer.MIN_VALUE);
-
 			Gui.drawRect(middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
-
 			GlStateManager.enableRescaleNormal();
 			GL11.glEnable(GL11.GL_BLEND);
-			GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+			GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
 			RenderHelper.enableGUIStandardItemLighting();
+
+			final int hotbarItemXPos = sr.getScaledWidth() / 2 - 90 + 2;
+			final int hotbarItemYPos = sr.getScaledHeight() - 16 - 3;
 
 			for (int j = 0; j < 9; ++j)
 			{
-				final int k = sr.getScaledWidth() / 2 - 90 + j * 20 + 2;
-				final int l = sr.getScaledHeight() - 16 - 3;
-				renderHotbarItem(j, k, l, partialTicks, entityPlayer);
+				final int k = hotbarItemXPos + j * 20;
+				renderHotbarItem(j, k, hotbarItemYPos, partialTicks, entityPlayer);
 			}
 
 			RenderHelper.disableStandardItemLighting();

@@ -42,7 +42,9 @@ public abstract class MixinEffectRenderer
 			for (int i = 0; i < 4; ++i)
 				updateEffectLayer(i);
 
-			for (final Iterator<EntityParticleEmitter> it = particleEmitters.iterator(); it.hasNext();)
+			final Iterator<EntityParticleEmitter> it = particleEmitters.iterator();
+
+			while (it.hasNext())
 			{
 				final EntityParticleEmitter entityParticleEmitter = it.next();
 

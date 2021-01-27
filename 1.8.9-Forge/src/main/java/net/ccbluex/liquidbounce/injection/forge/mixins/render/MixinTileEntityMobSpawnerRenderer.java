@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(TileEntityMobSpawnerRenderer.class)
 public class MixinTileEntityMobSpawnerRenderer
 {
-
 	@Inject(method = "renderMob", cancellable = true, at = @At("HEAD"))
 	private static void injectPaintingSpawnerFix(final MobSpawnerBaseLogic mobSpawnerLogic, final double posX, final double posY, final double posZ, final float partialTicks, final CallbackInfo ci)
 	{
@@ -22,5 +21,4 @@ public class MixinTileEntityMobSpawnerRenderer
 		if (entity == null || entity instanceof EntityPainting)
 			ci.cancel();
 	}
-
 }

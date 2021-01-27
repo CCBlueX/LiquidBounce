@@ -102,7 +102,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 
 		if (isSprinting() && (!speed.getState() || speed.allowSprintBoost()))
 		{
-			// Boost
+			// Sprint-Jump Boost
 			final float dir = MovementUtils.getDirection(); // Compatibility with Sprint AllDirection mode
 			motionX -= MathHelper.sin(dir) * 0.2F;
 			motionZ += MathHelper.cos(dir) * 0.2F;
@@ -114,14 +114,14 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	@Inject(method = "onLivingUpdate", at = @At("HEAD"))
 	private void headLiving(final CallbackInfo callbackInfo)
 	{
-		if (Objects.requireNonNull(LiquidBounce.moduleManager.get(NoJumpDelay.class)).getState())
+		if (LiquidBounce.moduleManager.get(NoJumpDelay.class).getState())
 			jumpTicks = 0;
 	}
 
 	@Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;isJumping:Z", ordinal = 1))
 	private void onJumpSection(final CallbackInfo callbackInfo)
 	{
-		if (Objects.requireNonNull(LiquidBounce.moduleManager.get(AirJump.class)).getState() && isJumping && jumpTicks == 0)
+		if (LiquidBounce.moduleManager.get(AirJump.class).getState() && isJumping && jumpTicks == 0)
 		{
 			jump();
 			jumpTicks = 10;
@@ -129,7 +129,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 
 		final LiquidWalk liquidWalk = (LiquidWalk) LiquidBounce.moduleManager.get(LiquidWalk.class);
 
-		if (Objects.requireNonNull(liquidWalk).getState() && !isJumping && !isSneaking() && isInWater() && "Swim".equalsIgnoreCase(liquidWalk.getModeValue().get()))
+		if (liquidWalk.getState() && !isJumping && !isSneaking() && isInWater() && "Swim".equalsIgnoreCase(liquidWalk.getModeValue().get()))
 			updateAITick();
 	}
 
@@ -142,11 +142,11 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	}
 
 	@Inject(method = "isPotionActive(Lnet/minecraft/potion/Potion;)Z", at = @At("HEAD"), cancellable = true)
-	private void isPotionActive(final Potion p_isPotionActive_1_, final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	private void isPotionActive(final Potion potion, final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
 		final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.get(AntiBlind.class);
 
-		if ((p_isPotionActive_1_ == Potion.confusion || p_isPotionActive_1_ == Potion.blindness) && Objects.requireNonNull(antiBlind).getState() && antiBlind.getConfusionEffect().get())
+		if ((potion == Potion.confusion || potion == Potion.blindness) && antiBlind.getState() && antiBlind.getConfusionEffect().get())
 			callbackInfoReturnable.setReturnValue(false);
 	}
 
@@ -183,8 +183,12 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 			{
 				swingProgressInt = -1;
 				isSwingInProgress = true;
+
+				final Entity entity = (Entity) (Object) this;
+				final S0BPacketAnimation packetAnimation = new S0BPacketAnimation(entity, 0);
+
 				if (worldObj instanceof WorldServer)
-					((WorldServer) worldObj).getEntityTracker().sendToAllTrackingEntity((Entity) (Object) this, new S0BPacketAnimation((Entity) (Object) this, 0));
+					((WorldServer) worldObj).getEntityTracker().sendToAllTrackingEntity(entity, packetAnimation);
 			}
 		}
 	}

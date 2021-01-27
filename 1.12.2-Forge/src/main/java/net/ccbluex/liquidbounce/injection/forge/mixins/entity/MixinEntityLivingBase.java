@@ -116,14 +116,14 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	@Inject(method = "onLivingUpdate", at = @At("HEAD"))
 	private void headLiving(CallbackInfo callbackInfo)
 	{
-		if (Objects.requireNonNull(LiquidBounce.moduleManager.get(NoJumpDelay.class)).getState())
+		if ((LiquidBounce.moduleManager.get(NoJumpDelay.class)).getState())
 			jumpTicks = 0;
 	}
 
 	@Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;isJumping:Z", ordinal = 1))
 	private void onJumpSection(CallbackInfo callbackInfo)
 	{
-		if (Objects.requireNonNull(LiquidBounce.moduleManager.get(AirJump.class)).getState() && isJumping && this.jumpTicks == 0)
+		if ((LiquidBounce.moduleManager.get(AirJump.class)).getState() && isJumping && this.jumpTicks == 0)
 		{
 			this.jump();
 			this.jumpTicks = 10;
@@ -131,7 +131,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 
 		final LiquidWalk liquidWalk = (LiquidWalk) LiquidBounce.moduleManager.get(LiquidWalk.class);
 
-		if (Objects.requireNonNull(liquidWalk).getState() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getModeValue().get().equalsIgnoreCase("Swim"))
+		if ((liquidWalk).getState() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getModeValue().get().equalsIgnoreCase("Swim"))
 		{
 			this.handleJumpWater();
 		}
@@ -150,7 +150,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	{
 		final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.get(AntiBlind.class);
 
-		if ((p_isPotionActive_1_ == MobEffects.NAUSEA || p_isPotionActive_1_ == MobEffects.BLINDNESS) && Objects.requireNonNull(antiBlind).getState() && antiBlind.getConfusionEffect().get())
+		if ((p_isPotionActive_1_ == MobEffects.NAUSEA || p_isPotionActive_1_ == MobEffects.BLINDNESS) && (antiBlind).getState() && antiBlind.getConfusionEffect().get())
 			callbackInfoReturnable.setReturnValue(false);
 	}
 

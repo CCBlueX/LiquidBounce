@@ -29,7 +29,7 @@ public class MixinBlockLiquid
 	private void onCollideCheck(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
 		// Liquids
-		if (Objects.requireNonNull(LiquidBounce.moduleManager.get(Liquids.class)).getState())
+		if (LiquidBounce.moduleManager.get(Liquids.class).getState())
 			callbackInfoReturnable.setReturnValue(true);
 	}
 

@@ -28,7 +28,7 @@ public class MixinBlockSoulSand
 	{
 		final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.get(NoSlow.class);
 
-		if (Objects.requireNonNull(noSlow).getState() && noSlow.getSoulsandValue().get())
+		if ((noSlow).getState() && noSlow.getSoulsandValue().get())
 			callbackInfo.cancel();
 	}
 }

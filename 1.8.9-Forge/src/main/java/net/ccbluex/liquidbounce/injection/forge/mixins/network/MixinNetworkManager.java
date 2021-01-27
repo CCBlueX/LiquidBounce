@@ -174,8 +174,6 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 				for (final Class nwmanInnerClasses : NetworkManager.class.getDeclaredClasses())
 					if ("InboundHandlerTuplePacketListener".equalsIgnoreCase(nwmanInnerClasses.getSimpleName()))
 						outboundPacketsQueue.add(nwmanInnerClasses.getConstructor(Packet.class, GenericFutureListener[].class).newInstance(packet, null));
-
-
 			}
 			catch (final InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e)
 			{

@@ -59,7 +59,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @SideOnly(Side.CLIENT)
 public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 {
-
 	@Shadow
 	public boolean serverSprintState;
 
@@ -156,10 +155,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 			if (sprinting != serverSprintState)
 			{
-				if (sprinting)
-					sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, Action.START_SPRINTING));
-				else
-					sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, Action.STOP_SPRINTING));
+				final Action action = sprinting ? Action.START_SPRINTING : Action.STOP_SPRINTING;
+
+				sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, action));
 
 				serverSprintState = sprinting;
 			}
@@ -168,10 +166,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 			if (sneaking != serverSneakState && (!sneak.getState() || "Legit".equalsIgnoreCase(sneak.modeValue.get())))
 			{
-				if (sneaking)
-					sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, Action.START_SNEAKING));
-				else
-					sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, Action.STOP_SNEAKING));
+				final Action action = sneaking ? Action.START_SNEAKING : Action.STOP_SNEAKING;
+
+				sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, action));
 
 				serverSneakState = sneaking;
 			}
@@ -486,7 +483,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 				// noinspection ConstantConditions
 				d6 = 0.05D;
-				while (x != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, 0.0D)).isEmpty()) {
+				while (x != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, 0.0D)).isEmpty())
+				{
 					if (x < d6 && x >= -d6)
 						x = 0.0D;
 					else
@@ -496,7 +494,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 
 				// noinspection ConstantConditions
-				while (z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0.0D, -1.0D, z)).isEmpty()) {
+				while (z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0.0D, -1.0D, z)).isEmpty())
+				{
 					if (z < d6 && z >= -d6)
 						z = 0.0D;
 					else
@@ -506,10 +505,12 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 
 				// noinspection ConstantConditions
-				while (x != 0.0D && z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, z)).isEmpty()) {
+				while (x != 0.0D && z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, z)).isEmpty())
+				{
 					if (x < d6 && x >= -d6)
 						x = 0.0D;
-					else x -= x > 0.0D ? d6 : -d6;
+					else
+						x -= x > 0.0D ? d6 : -d6;
 
 					d3 = x;
 
@@ -523,39 +524,44 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			}
 
 			// noinspection ConstantConditions
-			final List<AxisAlignedBB> list1 = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(x, y, z));
-			final AxisAlignedBB axisalignedbb = getEntityBoundingBox();
+			final List<AxisAlignedBB> collidedBoxList = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(x, y, z));
+			final AxisAlignedBB entityBox = getEntityBoundingBox();
 
-			for (final AxisAlignedBB axisalignedbb1 : list1)
-				y = axisalignedbb1.calculateYOffset(getEntityBoundingBox(), y);
+			for (final AxisAlignedBB box : collidedBoxList)
+				y = box.calculateYOffset(entityBox, y);
 
-			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
+			setEntityBoundingBox(entityBox.offset(0.0D, y, 0.0D));
+
 			final Step step = (Step) LiquidBounce.moduleManager.getModule(Step.class);
 			final boolean airStep = step.getState() && step.getAirStepValue().get() && step.canAirStep();
 			final boolean steppable = onGround || airStep || d4 != y && d4 < 0.0D;
 
-			for (final AxisAlignedBB axisalignedbb2 : list1)
-				x = axisalignedbb2.calculateXOffset(getEntityBoundingBox(), x);
+			for (final AxisAlignedBB box : collidedBoxList)
+				x = box.calculateXOffset(entityBox, x);
 
-			setEntityBoundingBox(getEntityBoundingBox().offset(x, 0.0D, 0.0D));
+			setEntityBoundingBox(entityBox.offset(x, 0.0D, 0.0D));
 
-			for (final AxisAlignedBB axisalignedbb13 : list1)
-				z = axisalignedbb13.calculateZOffset(getEntityBoundingBox(), z);
+			for (final AxisAlignedBB box : collidedBoxList)
+				z = box.calculateZOffset(entityBox, z);
 
-			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, 0.0D, z));
+			setEntityBoundingBox(entityBox.offset(0.0D, 0.0D, z));
 
 			if (stepHeight > 0.0F && steppable && (d3 != x || d5 != z))
 			{
 				final StepEvent stepEvent = new StepEvent(stepHeight);
 				LiquidBounce.eventManager.callEvent(stepEvent);
+
 				final double d11 = x;
 				final double d7 = y;
 				final double d8 = z;
-				final AxisAlignedBB axisalignedbb3 = getEntityBoundingBox();
-				setEntityBoundingBox(axisalignedbb);
+
+				setEntityBoundingBox(entityBox);
+
 				y = stepEvent.getStepHeight();
+
 				// noinspection ConstantConditions
 				final List<AxisAlignedBB> list = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(d3, y, d5));
+
 				AxisAlignedBB axisalignedbb4 = getEntityBoundingBox();
 				final AxisAlignedBB axisalignedbb5 = axisalignedbb4.addCoord(d3, 0.0D, d5);
 				double d9 = y;
@@ -614,16 +620,16 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 
 				for (final AxisAlignedBB axisalignedbb12 : list)
-					y = axisalignedbb12.calculateYOffset(getEntityBoundingBox(), y);
+					y = axisalignedbb12.calculateYOffset(entityBox, y);
 
-				setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
+				setEntityBoundingBox(entityBox.offset(0.0D, y, 0.0D));
 
 				if (d11 * d11 + d8 * d8 >= x * x + z * z)
 				{
 					x = d11;
 					y = d7;
 					z = d8;
-					setEntityBoundingBox(axisalignedbb3);
+					setEntityBoundingBox(entityBox);
 				}
 				else
 					LiquidBounce.eventManager.callEvent(new StepConfirmEvent());
@@ -631,9 +637,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 			worldObj.theProfiler.endSection();
 			worldObj.theProfiler.startSection("rest");
-			posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2.0D;
-			posY = getEntityBoundingBox().minY;
-			posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2.0D;
+			posX = (entityBox.minX + entityBox.maxX) / 2.0D;
+			posY = entityBox.minY;
+			posZ = (entityBox.minZ + entityBox.maxZ) / 2.0D;
 			isCollidedHorizontally = d3 != x || d5 != z;
 			isCollidedVertically = d4 != y;
 			onGround = isCollidedVertically && d4 < 0.0D;
@@ -714,7 +720,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 			final boolean flag2 = isWet();
 
-			if (worldObj.isFlammableWithin(getEntityBoundingBox().contract(0.001D, 0.001D, 0.001D)))
+			if (worldObj.isFlammableWithin(entityBox.contract(0.001D, 0.001D, 0.001D)))
 			{
 				dealFireDamage(1);
 

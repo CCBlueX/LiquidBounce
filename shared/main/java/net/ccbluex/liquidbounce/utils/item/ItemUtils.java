@@ -55,7 +55,7 @@ public final class ItemUtils extends MinecraftInstance
 				return null;
 
 			int i = 1;
-			if (Objects.requireNonNull(args).length >= 2 && PATTERN.matcher(args[1]).matches())
+			if (args.length >= 2 && PATTERN.matcher(args[1]).matches())
 				i = Integer.parseInt(args[1]);
 
 			int j = 0;

@@ -199,7 +199,7 @@ public abstract class MixinEntity
 	{
 		final HitBox hitBox = (HitBox) LiquidBounce.moduleManager.get(HitBox.class);
 
-		if (Objects.requireNonNull(hitBox).getState())
+		if (hitBox.getState())
 			callbackInfoReturnable.setReturnValue(0.1F + hitBox.getSizeValue().get());
 	}
 
@@ -211,12 +211,13 @@ public abstract class MixinEntity
 		{
 			callbackInfo.cancel();
 
-			final float f = rotationPitch;
-			final float f1 = rotationYaw;
+			final float rotYaw = rotationYaw;
+			final float rotPitch = rotationPitch;
+
 			rotationYaw += yaw * 0.15D;
 			rotationPitch -= pitch * 0.15D;
-			prevRotationPitch += rotationPitch - f;
-			prevRotationYaw += rotationYaw - f1;
+			prevRotationPitch += rotationPitch - rotPitch;
+			prevRotationYaw += rotationYaw - rotYaw;
 		}
 	}
 

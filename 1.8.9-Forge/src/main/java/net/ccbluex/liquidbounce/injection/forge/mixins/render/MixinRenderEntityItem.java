@@ -79,7 +79,6 @@ public class MixinRenderEntityItem
 			GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
 			GlStateManager.pushMatrix();
 			IBakedModel ibakedmodel = mc.getRenderItem().getItemModelMesher().getItemModel(itemstack);
-			final boolean flag1 = ibakedmodel.isGui3d();
 			final boolean is3D = ibakedmodel.isGui3d();
 			final int j = getModelCount(itemstack);
 
@@ -129,7 +128,7 @@ public class MixinRenderEntityItem
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 
 			for (int k = 0; k < j; ++k)
-				if (flag1)
+				if (is3D)
 				{
 					GlStateManager.pushMatrix();
 
@@ -138,8 +137,12 @@ public class MixinRenderEntityItem
 
 						final float f7 = (random.nextFloat() * 2.0F - 1.0F) * 0.15F;
 						final float f9 = (random.nextFloat() * 2.0F - 1.0F) * 0.15F;
-						final float f6 = (random.nextFloat() * 2.0F - 1.0F) * 0.15F;
-						GlStateManager.translate(renderer.shouldSpreadItems() ? f7 : 0, renderer.shouldSpreadItems() ? f9 : 0, f6);
+
+						final float xTranslate = renderer.shouldSpreadItems() ? f7 : 0;
+						final float yTranslate = renderer.shouldSpreadItems() ? f9 : 0;
+						final float zTranslate = (random.nextFloat() * 2.0F - 1.0F) * 0.15F;
+
+						GlStateManager.translate(xTranslate, yTranslate, zTranslate);
 					}
 
 					ibakedmodel = ForgeHooksClient.handleCameraTransforms(ibakedmodel, TransformType.GROUND);

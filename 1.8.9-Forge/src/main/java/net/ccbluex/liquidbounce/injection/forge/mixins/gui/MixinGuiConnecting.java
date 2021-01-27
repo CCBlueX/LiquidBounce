@@ -140,8 +140,8 @@ public abstract class MixinGuiConnecting extends GuiScreen
 	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
 	{
 		final ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
-		final float middleWidth = scaledResolution.getScaledWidth() / 2;
-		final float quarterHeight = scaledResolution.getScaledHeight() / 4;
+		final float middleWidth = scaledResolution.getScaledWidth() / 2.0f;
+		final float quarterHeight = scaledResolution.getScaledHeight() / 4.0f;
 
 		drawDefaultBackground();
 
@@ -156,7 +156,7 @@ public abstract class MixinGuiConnecting extends GuiScreen
 		if (serverData != null)
 		{
 			ip = serverData.serverIP + (serverData.serverName.isEmpty() ? "" : "(" + serverData.serverName + ")");
-			gameVersion = serverData.gameVersion;
+			gameVersion = "Minecraft " + serverData.gameVersion;
 			protocolVersion = "NetworkManager v" + serverData.version;
 			color = Color.cyan;
 		}

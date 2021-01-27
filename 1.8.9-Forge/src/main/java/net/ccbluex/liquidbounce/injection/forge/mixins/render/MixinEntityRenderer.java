@@ -182,7 +182,7 @@ public abstract class MixinEntityRenderer
 	 * @reason
 	 */
 	@Overwrite
-	public void getMouseOver(final float p_getMouseOver_1_)
+	public void getMouseOver(final float partialTicks)
 	{
 		final Entity entity = mc.getRenderViewEntity();
 		if (entity != null && mc.theWorld != null)
@@ -194,79 +194,89 @@ public abstract class MixinEntityRenderer
 			final ExtendedReach extendedReach = (ExtendedReach) LiquidBounce.moduleManager.get(ExtendedReach.class);
 
 			double blockReach = extendedReach.getState() ? extendedReach.buildReach.get() : reach.getState() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();
-			mc.objectMouseOver = entity.rayTrace(reach.getState() && !extendedReach.getState() ? reach.getBuildReachValue().get() : blockReach, p_getMouseOver_1_);
+
+			mc.objectMouseOver = entity.rayTrace(reach.getState() && !extendedReach.getState() ? reach.getBuildReachValue().get() : blockReach, partialTicks);
+
 			double hitvecDistance = blockReach;
-			final Vec3 vec3 = entity.getPositionEyes(p_getMouseOver_1_);
-			boolean flag = false;
+			final Vec3 eyePos = entity.getPositionEyes(partialTicks);
+			boolean creativeReach = false;
+
 			if (mc.playerController.extendedReach())
 			{
 				blockReach = 6.0D;
 				hitvecDistance = 6.0D;
 			}
 			else if (blockReach > 3.0D)
-				flag = true;
+				creativeReach = true;
 
 			if (mc.objectMouseOver != null)
-				hitvecDistance = mc.objectMouseOver.hitVec.distanceTo(vec3);
+				hitvecDistance = mc.objectMouseOver.hitVec.distanceTo(eyePos);
 
 			if (reach.getState())
 			{
 				hitvecDistance = reach.getCombatReachValue().get();
 
-				final MovingObjectPosition movingObjectPosition = entity.rayTrace(hitvecDistance, p_getMouseOver_1_);
+				final MovingObjectPosition movingObjectPosition = entity.rayTrace(hitvecDistance, partialTicks);
 
 				if (movingObjectPosition != null)
-					hitvecDistance = movingObjectPosition.hitVec.distanceTo(vec3);
+					hitvecDistance = movingObjectPosition.hitVec.distanceTo(eyePos);
 			}
 
-			final Vec3 vec31 = entity.getLook(p_getMouseOver_1_);
-			final Vec3 vec32 = vec3.addVector(vec31.xCoord * blockReach, vec31.yCoord * blockReach, vec31.zCoord * blockReach);
-			pointedEntity = null;
-			Vec3 vec33 = null;
-			final float f = 1.0F;
-			final List<Entity> list = mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(vec31.xCoord * blockReach, vec31.yCoord * blockReach, vec31.zCoord * blockReach).expand(f, f, f), Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith()));
-			double d2 = hitvecDistance;
+			final Vec3 look = entity.getLook(partialTicks);
+			final Vec3 blockReachPos = eyePos.addVector(look.xCoord * blockReach, look.yCoord * blockReach, look.zCoord * blockReach);
 
-			for (final Entity entity1 : list)
+			pointedEntity = null;
+			Vec3 interceptPos = null;
+
+			final float expandSize = 1.0F;
+			final List<Entity> entitiesInRay = mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(look.xCoord * blockReach, look.yCoord * blockReach, look.zCoord * blockReach).expand(expandSize, expandSize, expandSize), Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith()));
+			double interceptPosDistance = hitvecDistance;
+
+			for (final Entity entityInRay : entitiesInRay)
 			{
-				final float f1 = entity1.getCollisionBorderSize();
-				final AxisAlignedBB axisalignedbb = entity1.getEntityBoundingBox().expand(f1, f1, f1);
-				final MovingObjectPosition movingobjectposition = axisalignedbb.calculateIntercept(vec3, vec32);
-				if (axisalignedbb.isVecInside(vec3))
+				final float borderSize = entityInRay.getCollisionBorderSize();
+				final AxisAlignedBB expandedBB = entityInRay.getEntityBoundingBox().expand(borderSize, borderSize, borderSize);
+				final MovingObjectPosition intercept = expandedBB.calculateIntercept(eyePos, blockReachPos);
+
+				if (expandedBB.isVecInside(eyePos))
 				{
-					if (d2 >= 0.0D)
+					if (interceptPosDistance >= 0.0D)
 					{
-						pointedEntity = entity1;
-						vec33 = movingobjectposition == null ? vec3 : movingobjectposition.hitVec;
-						d2 = 0.0D;
+						pointedEntity = entityInRay;
+						interceptPos = intercept == null ? eyePos : intercept.hitVec;
+						interceptPosDistance = 0.0D;
 					}
 				}
-				else if (movingobjectposition != null)
+				else if (intercept != null)
 				{
-					final double d3 = vec3.distanceTo(movingobjectposition.hitVec);
-					if (d3 < d2 || d2 == 0.0D)
-						if (entity1 == entity.ridingEntity && !entity.canRiderInteract()) {
-							if (d2 == 0.0D) {
-								pointedEntity = entity1;
-								vec33 = movingobjectposition.hitVec;
+					final double _interceptPosDistance = eyePos.distanceTo(intercept.hitVec);
+					if (_interceptPosDistance < interceptPosDistance || interceptPosDistance == 0.0D)
+						if (entityInRay == entity.ridingEntity && !entity.canRiderInteract())
+						{
+							if (interceptPosDistance == 0.0D)
+							{
+								pointedEntity = entityInRay;
+								interceptPos = intercept.hitVec;
 							}
-						} else {
-							pointedEntity = entity1;
-							vec33 = movingobjectposition.hitVec;
-							d2 = d3;
+						}
+						else
+						{
+							pointedEntity = entityInRay;
+							interceptPos = intercept.hitVec;
+							interceptPosDistance = _interceptPosDistance;
 						}
 				}
 			}
 
-			if (pointedEntity != null && flag && vec3.distanceTo(vec33) > (reach.getState() ? reach.getCombatReachValue().get() : 3.0D))
+			if (pointedEntity != null && creativeReach && eyePos.distanceTo(interceptPos) > (reach.getState() ? reach.getCombatReachValue().get() : 3.0D))
 			{
 				pointedEntity = null;
-				mc.objectMouseOver = new MovingObjectPosition(MovingObjectType.MISS, Objects.requireNonNull(vec33), null, new BlockPos(vec33));
+				mc.objectMouseOver = new MovingObjectPosition(MovingObjectType.MISS, interceptPos, null, new BlockPos(interceptPos));
 			}
 
-			if (pointedEntity != null && (d2 < hitvecDistance || mc.objectMouseOver == null))
+			if (pointedEntity != null && (interceptPosDistance < hitvecDistance || mc.objectMouseOver == null))
 			{
-				mc.objectMouseOver = new MovingObjectPosition(pointedEntity, vec33);
+				mc.objectMouseOver = new MovingObjectPosition(pointedEntity, interceptPos);
 				if (pointedEntity instanceof EntityLivingBase || pointedEntity instanceof EntityItemFrame)
 					mc.pointedEntity = pointedEntity;
 			}

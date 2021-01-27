@@ -45,7 +45,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @SideOnly(Side.CLIENT)
 public class MixinNetHandlerLoginClient
 {
-
 	@Shadow
 	@Final
 	private NetworkManager networkManager;
