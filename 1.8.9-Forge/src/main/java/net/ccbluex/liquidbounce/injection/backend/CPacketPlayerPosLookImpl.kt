@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerPosLook
 import net.minecraft.network.play.client.C03PacketPlayer
 
-class CPacketPlayerPosLookImpl<T : C03PacketPlayer.C06PacketPlayerPosLook>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketPlayerPosLook
+class CPacketPlayerPosLookImpl<out T : C03PacketPlayer.C06PacketPlayerPosLook>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketPlayerPosLook
 
 fun ICPacketPlayerPosLook.unwrap(): C03PacketPlayer.C06PacketPlayerPosLook = (this as CPacketPlayerPosLookImpl<*>).wrapped
 fun C03PacketPlayer.C06PacketPlayerPosLook.wrap(): ICPacketPlayerPosLook = CPacketPlayerPosLookImpl(this)

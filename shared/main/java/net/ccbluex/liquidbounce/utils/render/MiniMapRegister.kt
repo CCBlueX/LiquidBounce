@@ -78,7 +78,7 @@ object MiniMapRegister : MinecraftInstance()
 	class MiniMapTexture
 	{
 		val texture = DynamicTexture(16, 16)
-		var deleted = false
+		private var deleted = false
 
 		fun updateChunkData(chunk: IChunk)
 		{

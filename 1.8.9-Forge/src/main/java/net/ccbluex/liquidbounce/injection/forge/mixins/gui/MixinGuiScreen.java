@@ -57,6 +57,7 @@ public abstract class MixinGuiScreen extends Gui
 	@Shadow
 	protected FontRenderer fontRendererObj;
 
+	@SuppressWarnings("NoopMethodInAbstractClass")
 	@Shadow
 	public void updateScreen()
 	{
@@ -65,6 +66,7 @@ public abstract class MixinGuiScreen extends Gui
 	@Shadow
 	public abstract void drawDefaultBackground();
 
+	@SuppressWarnings("NoopMethodInAbstractClass")
 	@Shadow
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {}
 
@@ -176,6 +178,7 @@ public abstract class MixinGuiScreen extends Gui
 		injectedActionPerformed(button);
 	}
 
+	@SuppressWarnings("NoopMethodInAbstractClass")
 	protected void injectedActionPerformed(final GuiButton button)
 	{
 

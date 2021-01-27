@@ -13,7 +13,7 @@ import net.minecraft.world.border.WorldBorder
 
 class WorldBorderImpl(val wrapped: WorldBorder) : IWorldBorder
 {
-	override fun contains(blockPos: WBlockPos): Boolean = wrapped.contains(blockPos.unwrap())
+	override operator fun contains(blockPos: WBlockPos): Boolean = wrapped.contains(blockPos.unwrap())
 
 	override fun equals(other: Any?): Boolean = other is WorldBorderImpl && other.wrapped == wrapped
 }

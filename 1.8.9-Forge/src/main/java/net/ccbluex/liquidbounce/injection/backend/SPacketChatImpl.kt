@@ -4,7 +4,7 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ISPacketChat
 import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 import net.minecraft.network.play.server.S02PacketChat
 
-class SPacketChatImpl<T : S02PacketChat>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketChat
+class SPacketChatImpl<out T : S02PacketChat>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketChat
 {
 	override val chatComponent: IIChatComponent
 		get() = wrapped.chatComponent.wrap()

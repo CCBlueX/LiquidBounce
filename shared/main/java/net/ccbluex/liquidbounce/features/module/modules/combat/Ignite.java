@@ -82,8 +82,8 @@ public class Ignite extends Module
 					final double diffY = blockPos.getY() + 0.5D - (thePlayer.getEntityBoundingBox().getMinY() + thePlayer.getEyeHeight());
 					final double diffZ = blockPos.getZ() + 0.5D - thePlayer.getPosZ();
 					final double sqrt = Math.sqrt(diffX * diffX + diffZ * diffZ);
-					final float yaw = (float) (Math.atan2(diffZ, diffX) * 180.0D / Math.PI) - 90.0F;
-					final float pitch = (float) -(Math.atan2(diffY, sqrt) * 180.0D / Math.PI);
+					final float yaw = (float) (StrictMath.atan2(diffZ, diffX) * 180.0D / Math.PI) - 90.0F;
+					final float pitch = (float) -(StrictMath.atan2(diffY, sqrt) * 180.0D / Math.PI);
 
 					mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerLook(thePlayer.getRotationYaw() + WMathHelper.wrapAngleTo180_float(yaw - thePlayer.getRotationYaw()), thePlayer.getRotationPitch() + WMathHelper.wrapAngleTo180_float(pitch - thePlayer.getRotationPitch()), thePlayer.getOnGround()));
 
@@ -103,8 +103,8 @@ public class Ignite extends Module
 						final double diffY = neighbor.getY() + 0.5D - (thePlayer.getEntityBoundingBox().getMinY() + thePlayer.getEyeHeight());
 						final double diffZ = neighbor.getZ() + 0.5D - thePlayer.getPosZ();
 						final double sqrt = Math.sqrt(diffX * diffX + diffZ * diffZ);
-						final float yaw = (float) (Math.atan2(diffZ, diffX) * 180.0D / Math.PI) - 90.0F;
-						final float pitch = (float) -(Math.atan2(diffY, sqrt) * 180.0D / Math.PI);
+						final float yaw = (float) (StrictMath.atan2(diffZ, diffX) * 180.0D / Math.PI) - 90.0F;
+						final float pitch = (float) -(StrictMath.atan2(diffY, sqrt) * 180.0D / Math.PI);
 
 						mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerLook(thePlayer.getRotationYaw() + WMathHelper.wrapAngleTo180_float(yaw - thePlayer.getRotationYaw()), thePlayer.getRotationPitch() + WMathHelper.wrapAngleTo180_float(pitch - thePlayer.getRotationPitch()), thePlayer.getOnGround()));
 

@@ -10,10 +10,11 @@ import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import org.jetbrains.annotations.Nullable;
+
 @SideOnly(Side.CLIENT)
 public final class ServerUtils extends MinecraftInstance
 {
-
 	public static IServerData serverData;
 
 	public static void connectToLastServer()
@@ -37,5 +38,11 @@ public final class ServerUtils extends MinecraftInstance
 		}
 
 		return serverIp;
+	}
+
+	@Nullable
+	public static String getLastServerIp()
+	{
+		return serverData != null && !mc.isIntegratedServerRunning() ? serverData.getServerIP() : null;
 	}
 }

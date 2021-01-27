@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.api.util.WrappedCollection
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.potion.PotionEffect
 
-open class EntityLivingBaseImpl<T : EntityLivingBase>(wrapped: T) : EntityImpl<T>(wrapped), IEntityLivingBase
+open class EntityLivingBaseImpl<out T : EntityLivingBase>(wrapped: T) : EntityImpl<T>(wrapped), IEntityLivingBase
 {
 	override val maxHealth: Float
 		get() = wrapped.maxHealth

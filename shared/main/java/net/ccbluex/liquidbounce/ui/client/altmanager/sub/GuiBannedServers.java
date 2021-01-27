@@ -196,7 +196,7 @@ public class GuiBannedServers extends WrappedGuiScreen
 		}
 
 		@Override
-		public final void initGui()
+		public void initGui()
 		{
 			final int width = representedScreen.getWidth();
 			final int height = representedScreen.getHeight();
@@ -212,7 +212,7 @@ public class GuiBannedServers extends WrappedGuiScreen
 		}
 
 		@Override
-		public final void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
+		public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
 		{
 			final int width = representedScreen.getWidth();
 			final int height = representedScreen.getHeight();
@@ -232,7 +232,7 @@ public class GuiBannedServers extends WrappedGuiScreen
 		}
 
 		@Override
-		public final void actionPerformed(final IGuiButton button) throws IOException
+		public void actionPerformed(final IGuiButton button) throws IOException
 		{
 			switch (button.getId())
 			{
@@ -264,7 +264,7 @@ public class GuiBannedServers extends WrappedGuiScreen
 		}
 
 		@Override
-		public final void keyTyped(final char typedChar, final int keyCode) throws IOException
+		public void keyTyped(final char typedChar, final int keyCode) throws IOException
 		{
 			if (keyCode == Keyboard.KEY_ESCAPE)
 			{
@@ -278,21 +278,21 @@ public class GuiBannedServers extends WrappedGuiScreen
 		}
 
 		@Override
-		public final void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException
+		public void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException
 		{
 			name.mouseClicked(mouseX, mouseY, mouseButton);
 			super.mouseClicked(mouseX, mouseY, mouseButton);
 		}
 
 		@Override
-		public final void updateScreen()
+		public void updateScreen()
 		{
 			name.updateCursorCounter();
 			super.updateScreen();
 		}
 
 		@Override
-		public final void onGuiClosed()
+		public void onGuiClosed()
 		{
 			Keyboard.enableRepeatEvents(false);
 			super.onGuiClosed();

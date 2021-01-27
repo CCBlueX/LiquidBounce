@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagString
 import net.minecraft.nbt.NBTTagString
 
-class NBTTagStringImpl<T : NBTTagString>(wrapped: T) : NBTBaseImpl<T>(wrapped), INBTTagString
+class NBTTagStringImpl<out T : NBTTagString>(wrapped: T) : NBTBaseImpl<T>(wrapped), INBTTagString
 
 fun INBTTagString.unwrap(): NBTTagString = (this as NBTTagStringImpl<*>).wrapped
 fun NBTTagString.wrap(): INBTTagString = NBTTagStringImpl(this)

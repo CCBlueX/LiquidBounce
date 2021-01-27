@@ -71,7 +71,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		try
 		{
 			@Suppress("UNCHECKED_CAST") val linkedTreeMaps = Gson().fromJson(
-				HttpUtils.get("https://status.mojang.com/check"), List::class.java
+				HttpUtils["https://status.mojang.com/check"], List::class.java
 			) as List<Map<String, String>>
 
 			for (linkedTreeMap in linkedTreeMaps) for ((key, value) in linkedTreeMap) status[key] = value

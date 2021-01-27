@@ -434,7 +434,7 @@ public final class RenderUtils extends MinecraftInstance
 		glLineWidth(2.00F);
 		glBegin(GL_LINE_STRIP);
 		for (float i = end; i >= start; i -= 360 / 90.0f)
-			glVertex2f((float) (x + cos(i * PI / 180) * (radius * 1.001F)), (float) (y + sin(i * PI / 180) * (radius * 1.001F)));
+			glVertex2f((float) (x + StrictMath.cos(i * PI / 180) * (radius * 1.001F)), (float) (y + StrictMath.sin(i * PI / 180) * (radius * 1.001F)));
 		glEnd();
 		glDisable(GL_LINE_SMOOTH);
 
@@ -458,8 +458,8 @@ public final class RenderUtils extends MinecraftInstance
 
 		for (int i = 0; i < sections; i++)
 		{
-			x = (float) (radius * sin(i * dAngle));
-			y = (float) (radius * cos(i * dAngle));
+			x = (float) (radius * StrictMath.sin(i * dAngle));
+			y = (float) (radius * StrictMath.cos(i * dAngle));
 
 			glColor4f(color.getRed() / 255.00F, color.getGreen() / 255.00F, color.getBlue() / 255.00F, color.getAlpha() / 255.00F);
 			glVertex2f(xx + x, yy + y);

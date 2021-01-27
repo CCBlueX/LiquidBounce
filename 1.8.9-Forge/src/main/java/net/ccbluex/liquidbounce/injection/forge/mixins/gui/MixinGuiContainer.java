@@ -74,6 +74,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 
 	private final Map<Integer, Entry<Long, Entry<Long, Integer>>> highlightingMap = new HashMap<>();
 
+	@SuppressWarnings("NoopMethodInAbstractClass")
 	@Shadow
 	private void drawItemStack(final ItemStack stack, final int x, final int y, final String altText)
 	{
@@ -85,6 +86,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 	@Shadow
 	protected abstract void drawGuiContainerBackgroundLayer(float var1, int var2, int var3);
 
+	@SuppressWarnings("NoopMethodInAbstractClass")
 	@Shadow
 	private void drawSlot(final Slot slotIn)
 	{

@@ -409,7 +409,7 @@ public class GuiAltManager extends WrappedGuiScreen
 				mc.displayGuiScreen(classProvider.wrapGuiScreen(new GuiDonatorCape(this)));
 				break;
 			case 12:
-				if (LiquidBounce.fileManager.accountsConfig.getAccounts().size() == 0)
+				if (LiquidBounce.fileManager.accountsConfig.getAccounts().isEmpty())
 				{
 					status = "\u00A7cThe list is empty.";
 					return;
@@ -436,6 +436,7 @@ public class GuiAltManager extends WrappedGuiScreen
 				}
 				catch (final Exception e)
 				{
+					ClientUtils.getLogger().error("Can't load export accounts in AltManager", e);
 					e.printStackTrace();
 					MiscUtils.showErrorPopup("Error", "Exception class: " + e.getClass().getName() + "\nMessage: " + e.getMessage());
 				}

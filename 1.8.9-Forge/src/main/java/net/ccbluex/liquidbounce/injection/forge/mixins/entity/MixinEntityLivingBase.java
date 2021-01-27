@@ -62,6 +62,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	@Shadow
 	public int swingProgressInt;
 
+	@SuppressWarnings("NoopMethodInAbstractClass")
 	@Shadow
 	public void onLivingUpdate()
 	{

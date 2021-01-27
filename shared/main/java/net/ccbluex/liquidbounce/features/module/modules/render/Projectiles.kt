@@ -257,7 +257,7 @@ class Projectiles : Module()
 		GL11.glColor4f(1F, 1F, 1F, 1F)
 	}
 
-	fun interpolateHSB(startColor: Color, endColor: Color, process: Float): Color?
+	private fun interpolateHSB(startColor: Color, endColor: Color, process: Float): Color?
 	{
 		val startHSB = Color.RGBtoHSB(startColor.red, startColor.green, startColor.blue, null)
 		val endHSB = Color.RGBtoHSB(endColor.red, endColor.green, endColor.blue, null)

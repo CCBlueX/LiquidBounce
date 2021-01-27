@@ -34,7 +34,7 @@ public final class AnimationUtils
 	{
 		final float c4 = 2 * (float) Math.PI / 3.0f;
 
-		return x == 0 ? 0 : (float) (x == 1 ? 1 : pow(2, -10 * x) * WMathHelper.sin((x * 10 - 0.75f) * c4) + 1);
+		return x == 0 ? 0 : (float) (x == 1 ? 1 : StrictMath.pow(2, -10 * x) * WMathHelper.sin((x * 10 - 0.75f) * c4) + 1);
 	}
 
 	private AnimationUtils() {

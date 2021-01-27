@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketPosLook
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
-class SPacketPosLookImpl<T : S08PacketPlayerPosLook>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketPosLook
+class SPacketPosLookImpl<out T : S08PacketPlayerPosLook>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketPosLook
 {
 	override var yaw: Float
 		get() = wrapped.yaw

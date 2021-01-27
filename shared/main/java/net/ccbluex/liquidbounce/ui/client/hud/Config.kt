@@ -74,10 +74,7 @@ class Config
 								Side.Horizontal.getByName(jsonObject["HorizontalFacing"].asString)!!, Side.Vertical.getByName(jsonObject["VerticalFacing"].asString)!!
 							)
 
-							for (value in element.values)
-							{
-								if (jsonObject.has(value.name)) value.fromJson(jsonObject[value.name])
-							}
+							element.values.filter { jsonObject.has(it.name) }.forEach { it.fromJson(jsonObject[it.name]) }
 
 							// Support for old HUD files
 							if (jsonObject.has("font")) element.values.find { it is FontValue }?.fromJson(jsonObject["font"])
@@ -93,13 +90,7 @@ class Config
 			}
 
 			// Add forced elements when missing
-			for (elementClass in elements)
-			{
-				if (elementClass.getAnnotation(ElementInfo::class.java).force && hud.elements.none { it.javaClass == elementClass })
-				{
-					hud.addElement(elementClass.newInstance())
-				}
-			}
+			elements.filter { elementClass -> elementClass.getAnnotation(ElementInfo::class.java).force && hud.elements.none { it.javaClass == elementClass } }.forEach { hud.addElement(it.newInstance()) }
 		} catch (e: Exception)
 		{
 			ClientUtils.getLogger().error("Error while loading custom hud config.", e)

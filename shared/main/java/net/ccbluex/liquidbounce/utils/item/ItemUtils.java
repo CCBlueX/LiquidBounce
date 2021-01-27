@@ -83,7 +83,7 @@ public final class ItemUtils extends MinecraftInstance
 
 	public static int getEnchantment(final IItemStack itemStack, final IEnchantment enchantment)
 	{
-		return itemStack == null || itemStack.getEnchantmentTagList() == null || itemStack.getEnchantmentTagList().hasNoTags() ? 0 : IntStream.range(0, itemStack.getEnchantmentTagList().tagCount()).mapToObj(i -> itemStack.getEnchantmentTagList().getCompoundTagAt(i)).filter(tagCompound -> tagCompound.hasKey("ench") && tagCompound.getShort("ench") == enchantment.getEffectId() || tagCompound.hasKey("id") && tagCompound.getShort("id") == enchantment.getEffectId()).findFirst().map(tagCompound -> tagCompound.getShort("lvl")).orElse((short) 0);
+		return itemStack == null || itemStack.getEnchantmentTagList() == null || itemStack.getEnchantmentTagList().hasNoTags() ? 0 : IntStream.range(0, itemStack.getEnchantmentTagList().tagCount()).mapToObj(i -> itemStack.getEnchantmentTagList().getCompoundTagAt(i)).filter(tagCompound -> tagCompound.hasKey("ench") && tagCompound.getShort("ench") == enchantment.getEffectId() || tagCompound.hasKey("id") && tagCompound.getShort("id") == enchantment.getEffectId()).findFirst().map(tagCompound -> tagCompound.getShort("lvl")).orElseGet(() -> (short) 0);
 	}
 
 	public static int getEnchantmentCount(final IItemStack itemStack)

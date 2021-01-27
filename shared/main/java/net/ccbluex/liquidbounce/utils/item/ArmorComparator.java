@@ -79,7 +79,7 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 	}
 
 	@Override
-	public int compare(final ArmorPiece o1, final ArmorPiece o2)
+	public final int compare(final ArmorPiece o1, final ArmorPiece o2)
 	{
 		// For damage reduction it is better if it is smaller, so it has to be inverted
 		// The decimal values have to be rounded since in double math equals is inaccurate
@@ -115,14 +115,14 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 		return compare;
 	}
 
-	private float getThresholdedDamageReduction(final IItemStack itemStack)
+	private static float getThresholdedDamageReduction(final IItemStack itemStack)
 	{
 		final IItemArmor item = itemStack.getItem().asItemArmor();
 
 		return getDamageReduction(item.getArmorMaterial().getDamageReductionAmount(item.getArmorType()), 0) * (1 - getThresholdedEnchantmentDamageReduction(itemStack));
 	}
 
-	private float getDamageReduction(final int defensePoints, final int toughness)
+	private static float getDamageReduction(final int defensePoints, final int toughness)
 	{
 		return 1 - Math.min(20.0f, Math.max(defensePoints / 5.0f, defensePoints - 1 / (2 + toughness / 4.0f))) / 25.0f;
 	}
@@ -148,4 +148,6 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
 		return sum;
 
 	}
+
+	private static final long serialVersionUID = 5242270904486038484L;
 }

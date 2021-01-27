@@ -51,7 +51,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 				WorkerUtils.workers.submit {
 					try
 					{ // Load settings and apply them
-						val settings = HttpUtils.get(url)
+						val settings = HttpUtils[url]
 
 						chat("Applying settings...")
 						SettingsUtils.executeScript(settings)
@@ -93,17 +93,12 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 				try
 				{
 					val json = JsonParser().parse(
-						HttpUtils.get( // TODO: Add another way to get all settings
-							"https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
-						)
+						HttpUtils["https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"]
 					)
 
 					val autoSettings: MutableList<String> = mutableListOf()
 
-					if (json is JsonArray)
-					{
-						for (setting in json) autoSettings.add(setting.asJsonObject["name"].asString)
-					}
+					if (json is JsonArray) json.mapTo(autoSettings) { it.asJsonObject["name"].asString }
 
 					callback(autoSettings)
 

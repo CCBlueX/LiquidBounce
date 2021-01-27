@@ -37,7 +37,7 @@ object CapeAPI : MinecraftInstance()
 		}
 
 		// Read cape infos from web
-		val jsonObject = JsonParser().parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/capes.json")).asJsonObject
+		val jsonObject = JsonParser().parse(HttpUtils["${LiquidBounce.CLIENT_CLOUD}/capes.json"]).asJsonObject
 		val serviceType = jsonObject.get("serviceType").asString
 
 		// Setup service type

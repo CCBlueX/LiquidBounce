@@ -268,16 +268,7 @@ class ChestStealer : Module()
 	{
 		val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 
-		for (i in 0 until chest.inventoryRows * 9)
-		{
-			val slot = chest.inventorySlots!!.getSlot(i)
-
-			val stack = slot.stack
-
-			if (shouldTake(stack, inventoryCleaner)) return false
-		}
-
-		return true
+		return (0 until chest.inventoryRows * 9).map(chest.inventorySlots!!::getSlot).map(ISlot::stack).none { shouldTake(it, inventoryCleaner) }
 	}
 
 	private fun firstEmpty(slots: List<ISlot>?, length: Int, random: Boolean): ISlot?

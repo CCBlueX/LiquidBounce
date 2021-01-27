@@ -91,7 +91,7 @@ object Fucker : Module()
 		{
 			val eyes = thePlayer.getPositionEyes(1F)
 			val blockPos = theWorld.rayTraceBlocks(
-				eyes, rotations.vec, false, false, true
+				eyes, rotations.vec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true
 			)?.blockPos
 
 			if (blockPos != null && !classProvider.isBlockAir(blockPos))

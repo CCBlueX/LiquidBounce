@@ -68,6 +68,7 @@ public abstract class MixinServerListEntryNormal
 	@Shadow
 	protected abstract void drawTextureAt(int x, int y, ResourceLocation resource);
 
+	@SuppressWarnings("NoopMethodInAbstractClass")
 	@Shadow
 	private void prepareServerIcon()
 	{

@@ -21,20 +21,19 @@ public class MixinServerListEntryLanScan
 	 * @reason Advertisement
 	 */
 	@Overwrite
-	public void drawEntry(int slotIndex, int x, int y, int listWidth, int slotHeight, int mouseX, int mouseY, boolean isSelected)
+	public void drawEntry(final int slotIndex, final int x, final int y, final int listWidth, final int slotHeight, final int mouseX, final int mouseY, final boolean isSelected)
 	{
 		final int ypos = y + slotHeight / 2 - mc.fontRendererObj.FONT_HEIGHT / 2;
-		mc.fontRendererObj.drawString(I18n.format("lanServer.scanning", new Object[0]), mc.currentScreen.width / 2 - mc.fontRendererObj.getStringWidth(I18n.format("lanServer.scanning", new Object[0])) / 2, ypos, 16777215);
+		mc.fontRendererObj.drawString(I18n.format("lanServer.scanning"), mc.currentScreen.width / 2 - mc.fontRendererObj.getStringWidth(I18n.format("lanServer.scanning")) / 2, ypos, 16777215);
 
 		final String text;
-		switch ((int) (Minecraft.getSystemTime() / 300L % 4L))
+		switch ((int) (Minecraft.getSystemTime() / 300L % 3L))
 		{
 			case 0:
 			default:
 				text = "LiquidBounce";
 				break;
 			case 1:
-			case 3:
 				text = "the";
 				break;
 			case 2:

@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer
 
-class CPacketPlayerImpl<T : C03PacketPlayer>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketPlayer
+class CPacketPlayerImpl<out T : C03PacketPlayer>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketPlayer
 {
 	override var x: Double
 		get() = wrapped.x

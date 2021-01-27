@@ -109,6 +109,8 @@ public abstract class MixinThreadDownloadImageData
 		});
 
 		// Create a dummy thread and save imageThread to prevent false operation in default code
+
+		// noinspection InstantiatingAThreadWithDefaultRunMethod
 		imageThread = new Thread();
 	}
 }

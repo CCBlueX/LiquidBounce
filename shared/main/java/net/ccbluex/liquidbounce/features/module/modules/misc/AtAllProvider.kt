@@ -81,6 +81,8 @@ class AtAllProvider : Module()
 	@EventTarget
 	fun onPacket(event: PacketEvent)
 	{
+		val thePlayer = mc.thePlayer ?: return
+
 		if (classProvider.isCPacketChatMessage(event.packet))
 		{
 			val packetChatMessage = event.packet.asCPacketChatMessage()
@@ -89,14 +91,8 @@ class AtAllProvider : Module()
 			if (message.contains("@a"))
 			{
 				synchronized(sendQueue) {
-					for (playerInfo in mc.netHandler.playerInfoMap)
-					{
-						val playerName = playerInfo.gameProfile.name
+					mc.netHandler.playerInfoMap.map { it.gameProfile.name }.filter { it != thePlayer.name }.mapTo(sendQueue) { message.replace("@a", it) }
 
-						if (playerName == mc.thePlayer!!.name) continue
-
-						sendQueue.add(message.replace("@a", playerName))
-					}
 					if (retryValue.get())
 					{
 						synchronized(retryQueue) {

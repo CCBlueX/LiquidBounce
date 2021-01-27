@@ -28,6 +28,7 @@ import javax.imageio.ImageIO
 
 class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 {
+	@Suppress("PrivatePropertyName")
 	private val DECIMAL_FORMAT = NumberFormat.getInstance(Locale.US) as DecimalFormat
 	private lateinit var list: GuiList
 
@@ -177,8 +178,8 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			val gson = Gson()
 			val jsonParser = JsonParser()
 
-			val gitHubContributors = gson.fromJson(HttpUtils.get("https://api.github.com/repos/CCBlueX/LiquidBounce/stats/contributors"), Array<GitHubContributor>::class.java)
-			val additionalInformation = jsonParser.parse(HttpUtils.get("https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/contributors.json")).asJsonObject
+			val gitHubContributors = gson.fromJson(HttpUtils["https://api.github.com/repos/CCBlueX/LiquidBounce/stats/contributors"], Array<GitHubContributor>::class.java)
+			val additionalInformation = jsonParser.parse(HttpUtils["https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/contributors.json"]).asJsonObject
 
 			val credits = ArrayList<Credit>(gitHubContributors.size)
 

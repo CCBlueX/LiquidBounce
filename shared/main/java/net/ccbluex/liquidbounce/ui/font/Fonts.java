@@ -97,7 +97,7 @@ public class Fonts extends MinecraftInstance
 		}
 		catch (final Exception e)
 		{
-			e.printStackTrace();
+			ClientUtils.getLogger().error("Can't parse fonts.json", e);
 		}
 
 		ClientUtils.getLogger().info("Loaded Fonts. ({}ms)", System.currentTimeMillis() - l);
@@ -120,7 +120,7 @@ public class Fonts extends MinecraftInstance
 				}
 				catch (final IOException e)
 				{
-					e.printStackTrace();
+					ClientUtils.getLogger().error("Can't download fonts fron cloud", e);
 				}
 			});
 	}
@@ -144,7 +144,7 @@ public class Fonts extends MinecraftInstance
 			}
 			catch (final IllegalAccessException e)
 			{
-				e.printStackTrace();
+				ClientUtils.getLogger().error("Unexpected exception occurred while reading details about default fonts declared in Fonts.class", e);
 			}
 
 		return CUSTOM_FONT_RENDERERS.getOrDefault(new FontInfo(name, size), minecraftFont);
@@ -168,7 +168,7 @@ public class Fonts extends MinecraftInstance
 			}
 			catch (final IllegalAccessException e)
 			{
-				e.printStackTrace();
+				ClientUtils.getLogger().error("Unexpected exception occurred while reading details about default fonts declared in Fonts.class", e);
 			}
 
 		return CUSTOM_FONT_RENDERERS.entrySet().stream().filter(entry -> entry.getValue() == fontRenderer).findFirst().map(Entry::getKey).orElse(null);
@@ -190,7 +190,7 @@ public class Fonts extends MinecraftInstance
 			}
 			catch (final IllegalAccessException e)
 			{
-				e.printStackTrace();
+				ClientUtils.getLogger().error("Unexpected exception occurred while reading details about default fonts declared in Fonts.class", e);
 			}
 
 		fonts.addAll(CUSTOM_FONT_RENDERERS.values());
@@ -210,7 +210,7 @@ public class Fonts extends MinecraftInstance
 		}
 		catch (final Exception e)
 		{
-			e.printStackTrace();
+			ClientUtils.getLogger().warn("Can't load font named " + fontName + " with size " + size, e);
 
 			return new Font("default", Font.PLAIN, size);
 		}
@@ -218,7 +218,17 @@ public class Fonts extends MinecraftInstance
 
 	private static void extractZip(final String zipFile, final String outputFolder)
 	{
-		final byte[] buffer = new byte[1024];
+		final byte[] buffer;
+
+		try
+		{
+			buffer = new byte[1024];
+		}
+		catch(final OutOfMemoryError err)
+		{
+			ClientUtils.getLogger().error("Failed to extract the fonts: Buffer allocation failed", err);
+			throw err;
+		}
 
 		try
 		{
@@ -250,7 +260,7 @@ public class Fonts extends MinecraftInstance
 		}
 		catch (final IOException e)
 		{
-			e.printStackTrace();
+			ClientUtils.getLogger().error("Failed to extract the fonts: " + e, e);
 		}
 	}
 

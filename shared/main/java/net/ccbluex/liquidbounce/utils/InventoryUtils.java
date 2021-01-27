@@ -32,7 +32,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 {
 
 	// @formatter:off
-	public static final List<IBlock> AUTOBLOCK_BLACKLIST = Arrays.asList(
+	public static final List<IBlock> AUTOBLOCK_BLACKLIST = Collections.unmodifiableList(Arrays.asList(
 			// Interactible blocks
 			classProvider.getBlockEnum(BlockType.CHEST), classProvider.getBlockEnum(BlockType.ENDER_CHEST), classProvider.getBlockEnum(BlockType.TRAPPED_CHEST), classProvider.getBlockEnum(BlockType.ANVIL), classProvider.getBlockEnum(BlockType.DISPENSER), classProvider.getBlockEnum(BlockType.DROPPER), classProvider.getBlockEnum(BlockType.FURNACE), classProvider.getBlockEnum(BlockType.LIT_FURNACE), classProvider.getBlockEnum(BlockType.CRAFTING_TABLE), classProvider.getBlockEnum(BlockType.ENCHANTING_TABLE), classProvider.getBlockEnum(BlockType.JUKEBOX), classProvider.getBlockEnum(BlockType.BED), classProvider.getBlockEnum(BlockType.NOTEBLOCK),
 
@@ -47,7 +47,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 			// Falling blocks
 			classProvider.getBlockEnum(BlockType.SAND), classProvider.getBlockEnum(BlockType.GRAVEL),
 
-			classProvider.getBlockEnum(BlockType.TNT), classProvider.getBlockEnum(BlockType.STANDING_BANNER), classProvider.getBlockEnum(BlockType.WALL_BANNER));
+			classProvider.getBlockEnum(BlockType.TNT), classProvider.getBlockEnum(BlockType.STANDING_BANNER), classProvider.getBlockEnum(BlockType.WALL_BANNER)));
 	// @formatter:on
 
 	public static final MSTimer CLICK_TIMER = new MSTimer();

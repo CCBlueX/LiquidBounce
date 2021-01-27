@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.file.configs;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.gson.*;
@@ -110,7 +111,7 @@ public class AccountsConfig extends FileConfig
 					if (acc != null)
 					{
 						if (info.length > 1)
-							acc.setBannedServers(MinecraftAccount.deserializeBannedServers(info[1]));
+							acc.setBannedServers(deserializeOldBannedServers(info[1]));
 						accounts.add(acc);
 					}
 				}
@@ -154,6 +155,12 @@ public class AccountsConfig extends FileConfig
 		final BufferedWriter writer = MiscUtils.createBufferedFileWriter(getFile());
 		writer.write(FileManager.PRETTY_GSON.toJson(jsonArray) + System.lineSeparator());
 		writer.close();
+	}
+
+	public static List<String> deserializeOldBannedServers(final String str)
+	{
+		final String[] split = str.split(";");
+		return new ArrayList<>(Arrays.asList(split));
 	}
 
 	/**

@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.api.IClassProvider;
 import net.ccbluex.liquidbounce.api.IExtractedFunctions;
 import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft;
 
+@SuppressWarnings("NonFinalUtilityClass")
 public class MinecraftInstance
 {
 	public static final IMinecraft mc = LiquidBounce.INSTANCE.getWrapper().getMinecraft();

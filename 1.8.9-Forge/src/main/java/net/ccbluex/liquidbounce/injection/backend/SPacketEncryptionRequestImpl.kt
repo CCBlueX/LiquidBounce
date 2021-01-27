@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.login.server.ISPacketEncryptionRequest
 import net.minecraft.network.login.server.S01PacketEncryptionRequest
 
-class SPacketEncryptionRequestImpl<T : S01PacketEncryptionRequest>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketEncryptionRequest
+class SPacketEncryptionRequestImpl<out T : S01PacketEncryptionRequest>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketEncryptionRequest
 {
 	override val verifyToken: ByteArray
 		get() = wrapped.verifyToken

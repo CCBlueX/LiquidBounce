@@ -83,6 +83,7 @@ public abstract class MixinEntity
 	@Shadow
 	public World worldObj;
 
+	@SuppressWarnings("NoopMethodInAbstractClass")
 	@Shadow
 	public void moveEntity(final double x, final double y, final double z)
 	{

@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketAnimation
 import net.minecraft.network.play.server.S0BPacketAnimation
 
-class SPacketAnimationImpl<T : S0BPacketAnimation>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketAnimation
+class SPacketAnimationImpl<out T : S0BPacketAnimation>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketAnimation
 {
 	override val animationType: Int
 		get() = wrapped.animationType

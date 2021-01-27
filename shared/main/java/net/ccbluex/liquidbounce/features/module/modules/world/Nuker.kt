@@ -205,7 +205,7 @@ class Nuker : Module()
 						)
 						val blockVec = WVec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
 						val rayTrace = mc.theWorld!!.rayTraceBlocks(
-							eyesPos, blockVec, false, true, false
+							eyesPos, blockVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false
 						)
 
 						// Check if block is visible

@@ -10,5 +10,6 @@ object Backend
 	const val MINECRAFT_VERSION_PATCH = 9
 	val REPRESENTED_BACKEND_VERSION = MinecraftVersion.MC_1_8
 
+	@Suppress("FunctionName")
 	fun BACKEND_UNSUPPORTED(): Nothing = throw NotImplementedError("$MINECRAFT_VERSION doesn't support this feature'")
 }

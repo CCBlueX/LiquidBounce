@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.SessionEvent;
 import net.ccbluex.liquidbounce.features.special.AntiModDisable;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
 import net.ccbluex.liquidbounce.file.FileManager;
+import net.ccbluex.liquidbounce.injection.backend.GuiScreenImplKt;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
@@ -44,7 +45,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GuiDisconnected.class)
 public abstract class MixinGuiDisconnected extends MixinGuiScreen
 {
-	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#0");
+	private static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#0"));
 
 	@Shadow
 	private int field_175353_i;
@@ -52,19 +53,29 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 	private GuiButton reconnectButton;
 	private GuiSlider autoReconnectDelaySlider;
 	private GuiButton forgeBypassButton;
+	private GuiButton markBanned;
 	private int reconnectTimer;
 
 	@Inject(method = "initGui", at = @At("RETURN"))
 	private void initGui(final CallbackInfo callbackInfo)
 	{
 		reconnectTimer = 0;
+
+		final String lastServerIp = ServerUtils.getLastServerIp();
+		final boolean canMarkBannedOnThisServer = GuiAltManager.canMarkBannedCurrent(lastServerIp);
+
 		buttonList.add(reconnectButton = new GuiButton(1, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 22, 98, 20, "Reconnect"));
 
 		drawReconnectDelaySlider();
 
 		buttonList.add(new GuiButton(3, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
 		buttonList.add(new GuiButton(4, width / 2 + 2, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 44, 98, 20, "Random username"));
-		buttonList.add(forgeBypassButton = new GuiButton(5, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 66, "Bypass AntiForge: " + (AntiModDisable.enabled ? "On" : "Off")));
+		buttonList.add(new GuiButton(5, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 88, "AltManager"));
+		buttonList.add(markBanned = new GuiButton(6, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 110, "Mark this account " + (canMarkBannedOnThisServer ? "BANNED" : "UN-BANNED") + " from this server"));
+		buttonList.add(forgeBypassButton = new GuiButton(7, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 66, "AntiModDisable: " + (AntiModDisable.enabled ? "On" : "Off")));
+
+		if (lastServerIp != null)
+			markBanned.enabled = GuiAltManager.canMarkBannedCurrent(lastServerIp);
 
 		updateSliderText();
 	}
@@ -117,8 +128,19 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 				ServerUtils.connectToLastServer();
 				break;
 			case 5:
+				mc.displayGuiScreen(GuiScreenImplKt.unwrap(new GuiAltManager(null).getRepresentedScreen()));
+				break;
+			case 6:
+				final String lastServerIp = ServerUtils.getLastServerIp();
+				if (lastServerIp != null)
+				{
+					GuiAltManager.toggleMarkBanned(lastServerIp);
+					markBanned.displayString = "Mark this account " + (GuiAltManager.canMarkBannedCurrent(lastServerIp) ? "\u00A7cBANNED" : "\u00A7aUN-BANNED") + "\u00A7r from this server";
+				}
+				break;
+			case 7:
 				AntiModDisable.enabled = !AntiModDisable.enabled;
-				forgeBypassButton.displayString = "Bypass AntiForge: " + (AntiModDisable.enabled ? "On" : "Off");
+				forgeBypassButton.displayString = "AntiModDisable: " + (AntiModDisable.enabled ? "\u00A7a(On)" : "\u00A7c(Off)");
 				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 		}
@@ -159,7 +181,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 		if (autoReconnectDelaySlider == null)
 			return;
 
-		autoReconnectDelaySlider.displayString = !AutoReconnect.INSTANCE.isEnabled() ? "AutoReconnect: Off" : "AutoReconnect: " + DECIMAL_FORMAT.format(AutoReconnect.INSTANCE.getDelay() / 1000.0) + "s";
+		autoReconnectDelaySlider.displayString = AutoReconnect.INSTANCE.isEnabled() ? "AutoReconnect: " + DECIMAL_FORMAT.get().format(AutoReconnect.INSTANCE.getDelay() / 1000.0) + "s" : "AutoReconnect: Off";
 	}
 
 	private void updateReconnectButton()

@@ -354,7 +354,7 @@ class AutoPot : Module()
 				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.HEALTH_BOOST).id) potionHealthboost = potionEffect.amplifier
 				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.NIGHT_VISION).id) potionNightVision = true
 				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.WATER_BREATHING).id) potionWaterBreath = potionEffect.amplifier
-			}			//</editor-fold>
+			}            //</editor-fold>
 
 			// Speed Splash Potion
 			if (potionSpeed > -1 && playerSpeed < potionSpeed) candidates.add(i)

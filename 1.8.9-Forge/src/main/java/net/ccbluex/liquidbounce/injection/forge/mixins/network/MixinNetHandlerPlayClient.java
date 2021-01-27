@@ -8,7 +8,9 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.network;
 import java.awt.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -310,8 +312,8 @@ public abstract class MixinNetHandlerPlayClient
 		return hackerChats.parallelStream().anyMatch(text::contains) && text.contains(Minecraft.getMinecraft().thePlayer.getName().toLowerCase()) && hackerChatWhitelists.parallelStream().noneMatch(text::contains);
 	}
 
-	private static final List<String> hackerChats = new ArrayList<>();
-	private static final List<String> hackerChatWhitelists = new ArrayList<>();
+	private static final Collection<String> hackerChats = new ArrayDeque<>(20);
+	private static final Collection<String> hackerChatWhitelists = new ArrayDeque<>(3);
 
 	static
 	{

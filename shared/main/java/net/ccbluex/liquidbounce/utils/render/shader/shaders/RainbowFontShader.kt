@@ -14,8 +14,8 @@ object RainbowFontShader : Shader("rainbow_font_shader.frag"), Closeable
 	var isInUse = false
 		private set
 
-	var strengthX = 0f
-	var strengthY = 0f
+	private var strengthX = 0f
+	private var strengthY = 0f
 	var offset = 0f
 
 	override fun setupUniforms()

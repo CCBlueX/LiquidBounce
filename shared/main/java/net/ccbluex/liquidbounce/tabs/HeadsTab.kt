@@ -42,7 +42,7 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 		{
 			ClientUtils.getLogger().info("Loading heads...")
 
-			val headsConfiguration = JsonParser().parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/heads.json"))
+			val headsConfiguration = JsonParser().parse(HttpUtils["${LiquidBounce.CLIENT_CLOUD}/heads.json"])
 
 			if (!headsConfiguration.isJsonObject) return
 
@@ -54,7 +54,7 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 
 				ClientUtils.getLogger().info("Loading heads from $url...")
 
-				val headsElement = JsonParser().parse(HttpUtils.get(url))
+				val headsElement = JsonParser().parse(HttpUtils[url])
 
 				if (!headsElement.isJsonObject)
 				{

@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 
-class CPacketPlayerBlockPlacementImpl<T : C08PacketPlayerBlockPlacement>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketPlayerBlockPlacement
+class CPacketPlayerBlockPlacementImpl<out T : C08PacketPlayerBlockPlacement>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketPlayerBlockPlacement
 {
 	override val position: WBlockPos
 		get() = wrapped.position.wrap()

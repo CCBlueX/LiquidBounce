@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus
 
-class CPacketClientStatusImpl<T : C16PacketClientStatus>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketClientStatus
+class CPacketClientStatusImpl<out T : C16PacketClientStatus>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketClientStatus
 
 fun ICPacketClientStatus.unwrap(): C16PacketClientStatus = (this as CPacketClientStatusImpl<*>).wrapped
 fun C16PacketClientStatus.wrap(): ICPacketClientStatus = CPacketClientStatusImpl(this)

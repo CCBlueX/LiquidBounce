@@ -374,7 +374,7 @@ class Scaffold : Module()
 							val blockPos = WBlockPos(
 								thePlayer.posX - 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ
 							)
-							val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
+							val placeInfo: PlaceInfo? = PlaceInfo[blockPos]
 							if (isReplaceable(blockPos) && placeInfo != null)
 							{
 								var calcDif: Double = thePlayer.posX - blockPos.x
@@ -397,7 +397,7 @@ class Scaffold : Module()
 							val blockPos = WBlockPos(
 								thePlayer.posX + 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ
 							)
-							val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
+							val placeInfo: PlaceInfo? = PlaceInfo[blockPos]
 
 							if (isReplaceable(blockPos) && placeInfo != null)
 							{
@@ -421,7 +421,7 @@ class Scaffold : Module()
 							val blockPos = WBlockPos(
 								thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ - 1.0
 							)
-							val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
+							val placeInfo: PlaceInfo? = PlaceInfo[blockPos]
 
 							if (isReplaceable(blockPos) && placeInfo != null)
 							{
@@ -445,7 +445,7 @@ class Scaffold : Module()
 							val blockPos = WBlockPos(
 								thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ + 1.0
 							)
-							val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
+							val placeInfo: PlaceInfo? = PlaceInfo[blockPos]
 
 							if (isReplaceable(blockPos) && placeInfo != null)
 							{
@@ -917,7 +917,7 @@ class Scaffold : Module()
 					else -> 0.0
 				}
 			)
-			val placeInfo: PlaceInfo? = PlaceInfo.get(blockPos)
+			val placeInfo: PlaceInfo? = PlaceInfo[blockPos]
 			if (isReplaceable(blockPos) && placeInfo != null)
 			{
 				RenderUtils.drawBlockBox(blockPos, Color(68, 117, 255, 100), false)
@@ -1026,7 +1026,7 @@ class Scaffold : Module()
 					}
 					ySearch += data.ySteps
 				}
-				xSearch += data.zSteps
+				xSearch += data.xSteps
 			}
 		}
 
@@ -1122,8 +1122,6 @@ class Scaffold : Module()
 		val xSteps = xsteps
 		val ySteps = ysteps
 		val zSteps = zsteps
-
-		fun asAABB(): IAxisAlignedBB = classProvider.createAxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ)
 
 		override fun toString(): String = String.format("SearchBounds[X: %.2f~%.2f (%.3f), Y: %.2f~%.2f (%.3f), Z: %.2f~%.2f (%.3f)]", minX, maxX, xSteps, minY, maxY, ySteps, minZ, maxZ, zSteps)
 	}

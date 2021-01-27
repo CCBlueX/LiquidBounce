@@ -71,7 +71,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 
 					final double diffXZ = sqrt(diffX * diffX + diffZ * diffZ);
 
-					final Rotation rotation = new Rotation(WMathHelper.wrapAngleTo180_float((float) toDegrees(atan2(diffZ, diffX)) - 90.0F), WMathHelper.wrapAngleTo180_float((float) -toDegrees(atan2(diffY, diffXZ))));
+					final Rotation rotation = new Rotation(WMathHelper.wrapAngleTo180_float((float) toDegrees(StrictMath.atan2(diffZ, diffX)) - 90.0F), WMathHelper.wrapAngleTo180_float((float) -toDegrees(StrictMath.atan2(diffY, diffXZ))));
 
 					final WVec3 rotationVector = getVectorForRotation(rotation);
 					final WVec3 vector = eyesPos.addVector(rotationVector.getXCoord() * dist, rotationVector.getYCoord() * dist, rotationVector.getZCoord() * dist);
@@ -133,7 +133,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 			velocity = 1;
 
 		// Calculate Rotation
-		final Rotation rotation = new Rotation((float) (atan2(posZ, posX) * 180 / PI) - 90, (float) -toDegrees(atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006F * (0.006F * (posSqrt * posSqrt) + 2 * posY * (velocity * velocity)))) / (0.006F * posSqrt))));
+		final Rotation rotation = new Rotation((float) (StrictMath.atan2(posZ, posX) * 180 / PI) - 90, (float) -toDegrees(StrictMath.atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006F * (0.006F * (posSqrt * posSqrt) + 2 * posY * (velocity * velocity)))) / (0.006F * posSqrt))));
 		final Rotation limitedRotation = limitAngleChange(new Rotation(player.getRotationYaw(), player.getRotationPitch()), rotation, RandomUtils.nextFloat(min(minTurnSpeed, maxTurnSpeed), max(minTurnSpeed, maxTurnSpeed)), RandomUtils.nextFloat(min(minSmoothingRatio, maxSmoothingRatio), max(minSmoothingRatio, maxSmoothingRatio)));
 
 		// Apply Rotation
@@ -166,7 +166,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 		final double diffY = vec.getYCoord() - eyesPos.getYCoord();
 		final double diffZ = vec.getZCoord() - eyesPos.getZCoord();
 
-		return new Rotation(WMathHelper.wrapAngleTo180_float((float) toDegrees(atan2(diffZ, diffX)) - 90.0F), WMathHelper.wrapAngleTo180_float((float) -toDegrees(atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ)))));
+		return new Rotation(WMathHelper.wrapAngleTo180_float((float) toDegrees(StrictMath.atan2(diffZ, diffX)) - 90.0F), WMathHelper.wrapAngleTo180_float((float) -toDegrees(StrictMath.atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ)))));
 	}
 
 	/**
@@ -403,7 +403,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 
 	private static double getAngleDifference(final Rotation rot1, final Rotation rot2)
 	{
-		return hypot(getAngleDifference(rot1.getYaw(), rot2.getYaw()), getAngleDifference(rot1.getPitch(), rot2.getPitch()));
+		return StrictMath.hypot(getAngleDifference(rot1.getYaw(), rot2.getYaw()), getAngleDifference(rot1.getPitch(), rot2.getPitch()));
 	}
 
 	/**

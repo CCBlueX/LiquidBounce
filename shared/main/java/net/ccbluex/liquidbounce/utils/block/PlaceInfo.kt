@@ -18,12 +18,11 @@ class PlaceInfo(
 
 	companion object
 	{
-
 		/**
 		 * Allows you to find a specific place info for your [blockPos]
 		 */
 		@JvmStatic
-		fun get(blockPos: WBlockPos): PlaceInfo?
+		operator fun get(blockPos: WBlockPos): PlaceInfo?
 		{
 			return when
 			{
@@ -35,6 +34,5 @@ class PlaceInfo(
 				else -> null
 			}
 		}
-
 	}
 }

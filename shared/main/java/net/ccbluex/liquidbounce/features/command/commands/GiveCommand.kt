@@ -34,16 +34,7 @@ class GiveCommand : Command("give", "item", "i", "get")
 				return
 			}
 
-			var emptySlot = -1
-
-			for (i in 36..44)
-			{
-				if (thePlayer.inventoryContainer.getSlot(i).stack == null)
-				{
-					emptySlot = i
-					break
-				}
-			}
+			var emptySlot = (36..44).firstOrNull { thePlayer.inventoryContainer.getSlot(it).stack == null } ?: -1
 
 			if (emptySlot == -1)
 			{

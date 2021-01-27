@@ -6,7 +6,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 
-class CPacketPlayerDiggingImpl<T : C07PacketPlayerDigging>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketPlayerDigging
+class CPacketPlayerDiggingImpl<out T : C07PacketPlayerDigging>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketPlayerDigging
 {
 	override val status: ICPacketPlayerDigging.WAction
 		get() = wrapped.status.wrap()

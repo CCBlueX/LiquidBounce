@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketPlayerSpawn
 import net.minecraft.network.play.server.S0CPacketSpawnPlayer
 
-class SPacketPlayerSpawnImpl<T : S0CPacketSpawnPlayer>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketPlayerSpawn
+class SPacketPlayerSpawnImpl<out T : S0CPacketSpawnPlayer>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketPlayerSpawn
 {
 	override val entityID: Int
 		get() = wrapped.entityID

@@ -155,7 +155,7 @@ object LiquidBounce
 		{
 
 			// Read versions json from cloud
-			val jsonObj = JsonParser().parse(HttpUtils.get("$CLIENT_CLOUD/versions.json"))
+			val jsonObj = JsonParser().parse(HttpUtils["$CLIENT_CLOUD/versions.json"])
 
 			// Check json is valid object and has current minecraft version
 			if (jsonObj is JsonObject && jsonObj.has(MINECRAFT_VERSION)) latestVersion = jsonObj[MINECRAFT_VERSION].asInt // Get official latest client version

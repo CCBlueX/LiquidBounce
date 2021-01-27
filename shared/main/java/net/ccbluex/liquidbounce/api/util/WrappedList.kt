@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.api.util
 
-open class WrappedList<O, T, C : List<O>>(wrapped: C, unwrapper: (T) -> O, wrapper: (O) -> T) : WrappedCollection<O, T, C>(wrapped, unwrapper, wrapper), List<T>
+open class WrappedList<O, T, out C : List<O>>(wrapped: C, unwrapper: (T) -> O, wrapper: (O) -> T) : WrappedCollection<O, T, C>(wrapped, unwrapper, wrapper), List<T>
 {
 	override fun get(index: Int): T = wrapper(wrapped[index])
 

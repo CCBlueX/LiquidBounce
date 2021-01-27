@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.utils.render
 
-class EasingObject(var lastTime: Long = 0, var lastValue: Float = -1.0f, var currentValue: Float = -1.0f)
+class EasingObject(private var lastTime: Long = 0, var lastValue: Float = -1.0f, private var currentValue: Float = -1.0f)
 {
 
 	fun update(currentValue: Float): Float

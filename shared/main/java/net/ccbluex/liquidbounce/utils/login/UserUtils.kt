@@ -33,10 +33,7 @@ object UserUtils
 	 */
 	fun isValidTokenOffline(token: String) = token.length >= 32
 
-	fun isValidToken(token: String): Boolean
-	{
-		return isValidTokenStatus(token).statusCode == 204
-	}
+	fun isValidToken(token: String): Boolean = isValidTokenStatus(token).statusCode == 204
 
 	fun isValidTokenStatus(token: String): StatusLine
 	{

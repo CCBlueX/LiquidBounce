@@ -46,7 +46,7 @@ class WBlockPos(x: Int, y: Int, z: Int) : WVec3i(x, y, z)
 
 	fun west(): WBlockPos = this.west(1)
 
-	fun west(n: Int): WBlockPos = offset(classProvider.getEnumFacing(EnumFacingType.WEST), n)
+	private fun west(n: Int): WBlockPos = offset(classProvider.getEnumFacing(EnumFacingType.WEST), n)
 
 	fun east(): WBlockPos = this.east(1)
 
@@ -54,11 +54,11 @@ class WBlockPos(x: Int, y: Int, z: Int) : WVec3i(x, y, z)
 
 	fun north(): WBlockPos = this.north(1)
 
-	fun north(n: Int): WBlockPos = offset(classProvider.getEnumFacing(EnumFacingType.NORTH), n)
+	private fun north(n: Int): WBlockPos = offset(classProvider.getEnumFacing(EnumFacingType.NORTH), n)
 
 	fun south(): WBlockPos = this.south(1)
 
-	fun south(n: Int): WBlockPos = offset(classProvider.getEnumFacing(EnumFacingType.SOUTH), n)
+	private fun south(n: Int): WBlockPos = offset(classProvider.getEnumFacing(EnumFacingType.SOUTH), n)
 
 	fun getBlock() = BlockUtils.getBlock(this)
 }

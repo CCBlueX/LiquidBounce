@@ -27,8 +27,8 @@ public final class PathFinder extends MinecraftInstance
 	private final WVec3 startVec;
 	private final WVec3 endVec;
 	private final List<Hub> hubs = new ArrayList<>();
-	private final ArrayList<Hub> hubsToWork = new ArrayList<>();
-	private ArrayList<WVec3> path = new ArrayList<>();
+	private final List<Hub> hubsToWork = new ArrayList<>();
+	private List<WVec3> path = new ArrayList<>();
 
 	public PathFinder(final WVec3 startVec, final WVec3 endVec)
 	{

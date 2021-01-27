@@ -10,5 +10,5 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 
 interface IWorldBorder
 {
-	fun contains(blockPos: WBlockPos): Boolean
+	operator fun contains(blockPos: WBlockPos): Boolean
 }

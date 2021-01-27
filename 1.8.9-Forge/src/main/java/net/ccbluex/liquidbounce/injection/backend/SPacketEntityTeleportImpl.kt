@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketEntityTeleport
 import net.minecraft.network.play.server.S18PacketEntityTeleport
 
-class SPacketEntityTeleportImpl<T : S18PacketEntityTeleport>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketEntityTeleport
+class SPacketEntityTeleportImpl<out T : S18PacketEntityTeleport>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketEntityTeleport
 {
 	override val entityId: Int
 		get() = wrapped.entityId

@@ -73,7 +73,7 @@ class Fly : Module()
 
 	// Damage
 	private val damageOnStartValue = BoolValue("DamageOnStart", false)
-	val damageModeValue = ListValue(
+	private val damageModeValue = ListValue(
 		"DamageMode", arrayOf(
 			"NCP", "Hypixel"
 		), "NCP"
@@ -147,15 +147,17 @@ class Fly : Module()
 	val freeHypixelTimer = TickTimer()
 	private val teleportTimer = MSTimer()
 
-	private var startY = 0.0
-	private var markStartY = 0.0
-	private var noPacketModify = false
-	private var aacJump = 0.0
-	private var aac3delay = 0
-	private var aac3glideDelay = 0
+	@Suppress("PrivatePropertyName")
 	private var aac3_1_6_touchedVoid = false
 	private var minesuchtTP: Long = 0
 	private var wasDead = false
+	private var aacJump = 0.0
+	private var aac3delay = 0
+	private var aac3glideDelay = 0
+
+	private var startY = 0.0
+	private var markStartY = 0.0
+	private var noPacketModify = false
 
 	private var hypixelFlyStarted = false
 	private var hypixelDamageBoostFailed = false
@@ -191,8 +193,7 @@ class Fly : Module()
 					"ncp" -> Damage.ncpDamage(1)
 
 					"hypixel" ->
-					{
-						// TODO: Maximum packets per ticks limit
+					{						// TODO: Maximum packets per ticks limit
 						for (i in 0..9)
 						{
 

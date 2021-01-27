@@ -17,7 +17,7 @@ import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.inventory.GuiChest
 import net.minecraft.client.gui.inventory.GuiContainer
 
-open class GuiScreenImpl<T : GuiScreen>(wrapped: T) : GuiImpl<T>(wrapped), IGuiScreen
+open class GuiScreenImpl<out T : GuiScreen>(wrapped: T) : GuiImpl<T>(wrapped), IGuiScreen
 {
 	override val fontRendererObj: IFontRenderer
 		get() = wrapped.fontRendererObj.wrap()

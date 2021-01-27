@@ -946,7 +946,7 @@ class KillAura : Module()
 				val movingObject = boundingBox.calculateIntercept(positionEye, lookAt)
 				if (movingObject != null)
 				{
-					val hitVec = movingObject!!.hitVec
+					val hitVec = movingObject.hitVec
 
 					mc.netHandler.addToSendQueue(
 						classProvider.createCPacketUseEntity(

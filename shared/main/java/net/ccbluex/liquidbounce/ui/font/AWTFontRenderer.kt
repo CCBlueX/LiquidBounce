@@ -17,7 +17,7 @@ import java.awt.image.BufferedImage
  * Generate new bitmap based font renderer
  */
 @SideOnly(Side.CLIENT)
-class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, var loadingScreen: Boolean = false) : MinecraftInstance()
+class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, private var loadingScreen: Boolean = false) : MinecraftInstance()
 {
 	companion object
 	{
@@ -232,7 +232,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 		graphics2D.fillRect(0, 0, textureWidth, textureHeight)
 		graphics2D.color = Color.white
 
-		for (targetChar in startChar until stopChar) if (fontImages[targetChar] != null && charLocations[targetChar] != null) graphics2D.drawImage(fontImages[targetChar], charLocations[targetChar]!!.x, charLocations[targetChar]!!.y, null)
+		(startChar until stopChar).filter { fontImages[it] != null && charLocations[it] != null }.forEach { graphics2D.drawImage(fontImages[it], charLocations[it]!!.x, charLocations[it]!!.y, null) }
 
 		textureID = TextureUtil.uploadTextureImageAllocate(TextureUtil.glGenTextures(), bufferedImage, true, true)
 	}
@@ -276,15 +276,10 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 	 */
 	fun getStringWidth(text: String): Int
 	{
-		var width = 0
-
-		for (c in text.toCharArray())
-		{
-			val fontChar = charLocations[if (c.toInt() < charLocations.size) c.toInt()
-			else '\u0003'.toInt()] ?: continue
-
-			width += fontChar.width - 8
-		}
+		val width = text.toCharArray().mapNotNull {
+			charLocations[if (it.toInt() < charLocations.size) it.toInt()
+			else '\u0003'.toInt()]
+		}.sumBy { it.width - 8 }
 
 		return width / 2
 	}

@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketChatMessage
 import net.minecraft.network.play.client.C01PacketChatMessage
 
-class CPacketChatMessageImpl<T : C01PacketChatMessage>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketChatMessage
+class CPacketChatMessageImpl<out T : C01PacketChatMessage>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketChatMessage
 {
 	override var message: String
 		get() = wrapped.message

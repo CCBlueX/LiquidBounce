@@ -117,12 +117,6 @@ public final class MinecraftAccount
 		return bannedServers.isEmpty() ? "" : Joiner.on(", ").join(bannedServers);
 	}
 
-	public static List<String> deserializeBannedServers(final String str)
-	{
-		final String[] split = str.split(";");
-		return new ArrayList<>(Arrays.asList(split));
-	}
-
 	public enum AltServiceType
 	{
 		MOJANG("Mojang", null),

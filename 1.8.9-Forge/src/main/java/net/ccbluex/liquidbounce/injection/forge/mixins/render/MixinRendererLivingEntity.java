@@ -49,10 +49,13 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	@Shadow
 	@Final
 	private static DynamicTexture textureBrightness;
+
 	@Shadow
 	protected final boolean renderOutlines = false;
+
 	@Shadow
 	protected ModelBase mainModel;
+
 	@Shadow
 	protected FloatBuffer brightnessBuffer;
 

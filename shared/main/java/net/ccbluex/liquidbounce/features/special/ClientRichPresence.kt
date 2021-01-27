@@ -146,7 +146,7 @@ class ClientRichPresence : MinecraftInstance()
 	 */
 	private fun loadConfiguration()
 	{ // Read from web and convert to json object
-		val json = JsonParser().parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/discord.json"))
+		val json = JsonParser().parse(HttpUtils["${LiquidBounce.CLIENT_CLOUD}/discord.json"])
 
 		if (json !is JsonObject) return
 

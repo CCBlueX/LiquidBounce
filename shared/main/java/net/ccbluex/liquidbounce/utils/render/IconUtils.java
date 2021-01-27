@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 import javax.imageio.ImageIO;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -32,7 +33,7 @@ public final class IconUtils
 		}
 		catch (final IOException e)
 		{
-			e.printStackTrace();
+			ClientUtils.getLogger().error("Can't load the favicon from assets", e);
 		}
 		return null;
 	}

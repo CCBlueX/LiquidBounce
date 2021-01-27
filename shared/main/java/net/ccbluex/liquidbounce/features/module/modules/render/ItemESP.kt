@@ -44,17 +44,14 @@ class ItemESP : Module()
 	@EventTarget
 	fun onRender2D(event: Render2DEvent)
 	{
+		val theWorld = mc.theWorld ?: return
+
 		if (modeValue.get().equals("ShaderOutline", ignoreCase = true))
 		{
 			OutlineShader.OUTLINE_SHADER.startDraw(event.partialTicks)
 			try
 			{
-				for (entity in mc.theWorld!!.loadedEntityList)
-				{
-					if (!(classProvider.isEntityItem(entity) || classProvider.isEntityArrow(entity))) continue
-
-					mc.renderManager.renderEntityStatic(entity, event.partialTicks, true)
-				}
+				theWorld.loadedEntityList.filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { mc.renderManager.renderEntityStatic(it, event.partialTicks, true) }
 			} catch (ex: Exception)
 			{
 				ClientUtils.getLogger().error("An error occurred while rendering all item entities for shader esp", ex)

@@ -299,7 +299,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 		{
 			var maxWidth = 0
 
-			for (module in modules) if (fontRenderer.getStringWidth(if (upperCase) module.name.toUpperCase() else module.name) + 4 > maxWidth) maxWidth = (fontRenderer.getStringWidth(if (upperCase) module.name.toUpperCase() else module.name) + 7F).toInt()
+			modules.filter { fontRenderer.getStringWidth(if (upperCase) it.name.toUpperCase() else it.name) + 4 > maxWidth }.forEach { maxWidth = (fontRenderer.getStringWidth(if (upperCase) it.name.toUpperCase() else it.name) + 7F).toInt() }
 
 			menuWidth = maxWidth
 

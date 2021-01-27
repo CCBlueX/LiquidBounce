@@ -52,7 +52,7 @@ public class AntiModDisable extends MinecraftInstance implements Listenable
 		if (enabled && !mc.isIntegratedServerRunning())
 			try
 			{
-				if (blockFMLProxyPackets && packet.getClass().getName().equals("net.minecraftforge.fml.common.network.internal.FMLProxyPacket"))
+				if (blockFMLProxyPackets && "net.minecraftforge.fml.common.network.internal.FMLProxyPacket".equals(packet.getClass().getName()))
 					action(event, "FMLProxyPacket", "BLOCKED");
 
 				if (classProvider.isCPacketCustomPayload(packet))
@@ -150,7 +150,7 @@ public class AntiModDisable extends MinecraftInstance implements Listenable
 			}
 			catch (final Exception e)
 			{
-				e.printStackTrace();
+				ClientUtils.getLogger().error("[AntiModDisable] Unexpected exception while filtering packets", e);
 			}
 	}
 
@@ -207,7 +207,7 @@ public class AntiModDisable extends MinecraftInstance implements Listenable
 
 	private static void action(final PacketEvent event, final String type, final String action)
 	{
-		if (action.equalsIgnoreCase("BLOCKED") && event != null)
+		if ("BLOCKED".equalsIgnoreCase(action) && event != null)
 			event.cancelEvent();
 
 		if (debug)

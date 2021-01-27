@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.ui.client.hud.element.*
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.applyAlphaChannel
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -283,7 +282,7 @@ class Effects(
 		}
 	}
 
-	fun formatEffect(effect: IPotionEffect): String
+	private fun formatEffect(effect: IPotionEffect): String
 	{
 		val potion = functions.getPotionById(effect.potionID)
 
@@ -305,7 +304,7 @@ class Effects(
 		return "${functions.formatI18n(potion.name)} $amplifierString"
 	}
 
-	fun formatRemainingTime(effect: IPotionEffect): String
+	private fun formatRemainingTime(effect: IPotionEffect): String
 	{
 		return when (timeTypeValue.get().toLowerCase())
 		{

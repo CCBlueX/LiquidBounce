@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.util
 
-enum class WEnumChatFormatting(val formattingName: String, val formattingCodeIn: Char, val fancyStylingIn: Boolean, val colorIndex: Int)
+enum class WEnumChatFormatting(val formattingName: String, private val formattingCodeIn: Char, val fancyStylingIn: Boolean, val colorIndex: Int)
 {
 	BLACK("BLACK", '0', 0), DARK_BLUE("DARK_BLUE", '1', 1), DARK_GREEN("DARK_GREEN", '2', 2), DARK_AQUA("DARK_AQUA", '3', 3), DARK_RED("DARK_RED", '4', 4), DARK_PURPLE("DARK_PURPLE", '5', 5), GOLD("GOLD", '6', 6), GRAY(
 	"GRAY", '7', 7

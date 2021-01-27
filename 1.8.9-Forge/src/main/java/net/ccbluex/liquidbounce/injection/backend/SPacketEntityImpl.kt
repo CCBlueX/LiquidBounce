@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketEntity
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.minecraft.network.play.server.S14PacketEntity
 
-class SPacketEntityImpl<T : S14PacketEntity>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketEntity
+class SPacketEntityImpl<out T : S14PacketEntity>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketEntity
 {
 	override val onGround: Boolean
 		get() = wrapped.onGround
