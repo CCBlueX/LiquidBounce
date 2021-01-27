@@ -5,8 +5,10 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
+import java.awt.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.mojang.authlib.GameProfile;
@@ -66,7 +68,7 @@ public abstract class MixinGuiConnecting extends GuiScreen
 	@Inject(method = "connect", at = @At("HEAD"))
 	private void headConnect(final String ip, final int port, final CallbackInfo callbackInfo)
 	{
-		ServerUtils.serverData = ServerDataImplKt.wrap(new ServerData("", ip + ":" + port, false));
+		ServerUtils.lastServerData = ServerDataImplKt.wrap(new ServerData("", ip + ":" + port, false));
 	}
 
 	@Inject(method = "connect", at = @At(value = "NEW", target = "net/minecraft/network/login/client/C00PacketLoginStart"), cancellable = true)
@@ -138,19 +140,31 @@ public abstract class MixinGuiConnecting extends GuiScreen
 	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
 	{
 		final ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
+		final float middleWidth = scaledResolution.getScaledWidth() / 2;
+		final float quarterHeight = scaledResolution.getScaledHeight() / 4;
 
 		drawDefaultBackground();
 
-		RenderUtils.drawLoadingCircle(scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 70);
+		RenderUtils.drawLoadingCircle(middleWidth, quarterHeight + 70);
 
-		String ip = "Unknown";
+		String ip = "Unknown IP";
+		String gameVersion = "Unknown Version";
+		String protocolVersion = "Unknown Protocol Version";
+		Color color = Color.gray;
 
 		final ServerData serverData = mc.getCurrentServerData();
 		if (serverData != null)
-			ip = serverData.serverIP;
+		{
+			ip = serverData.serverIP + (serverData.serverName.isEmpty() ? "" : "(" + serverData.serverName + ")");
+			gameVersion = serverData.gameVersion;
+			protocolVersion = "NetworkManager v" + serverData.version;
+			color = Color.cyan;
+		}
 
-		Fonts.font40.drawCenteredString("Connecting to", scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 110, 0xFFFFFF, true);
-		Fonts.font35.drawCenteredString(ip, scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 120, 0x5281FB, true);
+		Fonts.font40.drawCenteredString("Connecting to", middleWidth, quarterHeight + 110, 0xFFFFFF, true);
+		Fonts.font40.drawCenteredString(ip, middleWidth, quarterHeight + 120, color.getRGB(), true);
+		Fonts.font35.drawCenteredString(gameVersion, middleWidth, quarterHeight + 160, color.getRGB(), true);
+		Fonts.font35.drawCenteredString(protocolVersion, middleWidth, quarterHeight + 170, color.getRGB(), true);
 
 		super.drawScreen(mouseX, mouseY, partialTicks);
 	}

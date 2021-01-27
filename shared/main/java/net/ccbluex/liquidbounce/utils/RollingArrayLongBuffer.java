@@ -12,20 +12,28 @@ package net.ccbluex.liquidbounce.utils;
  */
 public class RollingArrayLongBuffer
 {
-	private final long[] contents;
-	private int currentIndex;
+	private final long[] buffer;
+	private int bufferOffset;
 
 	public RollingArrayLongBuffer(final int length)
 	{
-		contents = new long[length];
+		try
+		{
+			buffer = new long[length];
+		}
+		catch (final OutOfMemoryError e)
+		{
+			ClientUtils.getLogger().error("Can't allocate the buffer", e);
+			throw e;
+		}
 	}
 
 	/**
 	 * @return The contents of the buffer
 	 */
-	public long[] getContents()
+	public long[] getBuffer()
 	{
-		return contents;
+		return buffer;
 	}
 
 	/**
@@ -34,10 +42,10 @@ public class RollingArrayLongBuffer
 	 * @param l
 	 *          The element to be added
 	 */
-	public void add(final long l)
+	public final void add(final long l)
 	{
-		currentIndex = (currentIndex + 1) % contents.length;
-		contents[currentIndex] = l;
+		bufferOffset = (bufferOffset + 1) % buffer.length;
+		buffer[bufferOffset] = l;
 	}
 
 	/**
@@ -47,13 +55,13 @@ public class RollingArrayLongBuffer
 	 *           The threshold timestamp
 	 * @return   The count
 	 */
-	public int getTimestampsSince(final long l)
+	public final int getTimestampsSince(final long l)
 	{
-		for (int i = 0, j = contents.length; i < j; i++)
-			if (contents[currentIndex < i ? contents.length - i + currentIndex : currentIndex - i] < l)
+		for (int i = 0, j = buffer.length; i < j; i++)
+			if (buffer[bufferOffset < i ? buffer.length - i + bufferOffset : bufferOffset - i] < l)
 				return i;
 
 		// If every element is lower than l, return the array length
-		return contents.length;
+		return buffer.length;
 	}
 }

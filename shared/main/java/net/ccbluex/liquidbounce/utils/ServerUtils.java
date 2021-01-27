@@ -15,18 +15,21 @@ import org.jetbrains.annotations.Nullable;
 @SideOnly(Side.CLIENT)
 public final class ServerUtils extends MinecraftInstance
 {
-	public static IServerData serverData;
+	public static IServerData lastServerData;
 
 	public static void connectToLastServer()
 	{
-		if (serverData == null)
+		if (lastServerData == null)
 			return;
 
-		mc.displayGuiScreen(classProvider.createGuiConnecting(classProvider.createGuiMultiplayer(classProvider.wrapGuiScreen(new GuiMainMenu())), mc, serverData));
+		mc.displayGuiScreen(classProvider.createGuiConnecting(classProvider.createGuiMultiplayer(classProvider.wrapGuiScreen(new GuiMainMenu())), mc, lastServerData));
 	}
 
 	public static String getRemoteIp()
 	{
+		if (mc.getTheWorld() == null)
+			return "World is null";
+
 		if (mc.getTheWorld().isRemote())
 		{
 			final IServerData serverData = mc.getCurrentServerData();
@@ -41,6 +44,6 @@ public final class ServerUtils extends MinecraftInstance
 	@Nullable
 	public static String getLastServerIp()
 	{
-		return serverData != null && !mc.isIntegratedServerRunning() ? serverData.getServerIP() : null;
+		return lastServerData != null && !mc.isIntegratedServerRunning() ? lastServerData.getServerIP() : null;
 	}
 }
