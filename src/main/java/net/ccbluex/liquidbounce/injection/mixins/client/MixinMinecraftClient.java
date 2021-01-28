@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.injection.mixins.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.GameTickEvent;
+import net.ccbluex.liquidbounce.event.InputHandleEvent;
 import net.ccbluex.liquidbounce.event.ScreenEvent;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
@@ -155,6 +157,22 @@ public abstract class MixinMinecraftClient {
     @Inject(method = "openScreen", at = @At("HEAD"))
     private void onScreen(final Screen screen, final CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new ScreenEvent(screen));
+    }
+
+    /**
+     * Hook game tick event at HEAD
+     */
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void hookTickEvent(final CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new GameTickEvent());
+    }
+
+    /**
+     * Hook game tick event at HEAD
+     */
+    @Inject(method = "tick", at = @At("RETURN"))
+    private void hookHandleInputEvent(final CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new InputHandleEvent());
     }
 
 }

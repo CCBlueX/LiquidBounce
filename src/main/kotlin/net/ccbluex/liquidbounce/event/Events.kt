@@ -26,6 +26,10 @@ import net.minecraft.network.Packet
 
 class ModuleEvent(val module: Module, val newState: Boolean) : Event()
 
+class GameTickEvent : Event()
+
+class InputHandleEvent : Event()
+
 class EntityTickEvent : Event()
 
 class ChatSendEvent(val message: String) : CancellableEvent()
