@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.extensions.shouldBeAttacked
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.EntityHitResult
-import kotlin.math.roundToInt
 
 /**
  * Trigger module
@@ -39,14 +38,12 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
     val cooldown by boolean("Cooldown", true)
 
     val tickRepeatable = repeatableSequence {
+        waitUntil { player.getAttackCooldownProgress(0.0f) >= 1.0f }
+
         val crosshair = mc.crosshairTarget
         if (crosshair is EntityHitResult && crosshair.entity.shouldBeAttacked()) {
             mc.interactionManager?.attackEntity(player, crosshair.entity)
-            player.swingHand(Hand.MAIN_HAND);
-
-            // todo: add cps and cooldown option
-            //   just testing right now
-            wait(player.attackCooldownProgressPerTick.roundToInt())
+            player.swingHand(Hand.MAIN_HAND)
         }
     }
 

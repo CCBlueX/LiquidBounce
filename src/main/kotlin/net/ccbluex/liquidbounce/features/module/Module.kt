@@ -58,6 +58,9 @@ open class Module(val name: String, val category: Category, var description: Str
         }
         get() = enabled
 
+    open val tag: String?
+        get() = null
+
     protected val mc: MinecraftClient
         get() = net.ccbluex.liquidbounce.utils.mc
     protected val player: ClientPlayerEntity
@@ -81,7 +84,6 @@ open class Module(val name: String, val category: Category, var description: Str
      */
     inline fun repeatableSequence(noinline eventHandler: SuspendableHandler<ModuleEvent>) {
         var sequence: Sequence<ModuleEvent>? = null
-
         handler<ModuleEvent>(true) { event ->
             if (event.module != this)
                 return@handler
@@ -89,7 +91,6 @@ open class Module(val name: String, val category: Category, var description: Str
             sequence = if (event.newState) {
                 Sequence(eventHandler, event, loop = true)
             } else {
-                // TODO: fix sequence not being cancelled
                 sequence?.cancel()
                 null
             }

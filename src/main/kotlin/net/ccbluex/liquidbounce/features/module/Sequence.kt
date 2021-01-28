@@ -32,12 +32,15 @@ typealias SuspendableHandler<T> = suspend Sequence<T>.(T) -> Unit
 
 class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T, var loop: Boolean = false) {
 
-    private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
+    internal var coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
         sequences += this@Sequence
         handler(event)
-        while (loop) {
+        if (loop) {
             wait(0) // sync
-            handler(event)
+            while (loop) {
+                handler(event)
+                wait(0) // sync
+            }
         }
         sequences -= this@Sequence
     }
@@ -56,6 +59,12 @@ class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T, var 
     suspend fun wait(ticks: Int) {
         remainingTicks = ticks
         suspendCoroutine<Unit> { continuation = it }
+    }
+
+    suspend fun waitUntil(case: () -> Boolean) {
+        while (!case()) {
+            wait(0)
+        }
     }
 
     fun cancel() {
