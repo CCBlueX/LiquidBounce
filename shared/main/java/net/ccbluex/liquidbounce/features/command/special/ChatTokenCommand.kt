@@ -20,9 +20,9 @@ class ChatTokenCommand : Command("chattoken")
 	{
 		if (args.size > 1)
 		{
-			when
+			when (args[1].toLowerCase())
 			{
-				args[1].equals("set", true) ->
+				"set" ->
 				{
 					if (args.size > 2)
 					{
@@ -37,7 +37,7 @@ class ChatTokenCommand : Command("chattoken")
 					} else chatSyntax("chattoken set <token>")
 				}
 
-				args[1].equals("generate", true) ->
+				"generate" ->
 				{
 					if (!lChat.state)
 					{
@@ -48,7 +48,7 @@ class ChatTokenCommand : Command("chattoken")
 					lChat.client.sendPacket(ServerRequestJWTPacket())
 				}
 
-				args[1].equals("copy", true) ->
+				"copy" ->
 				{
 					if (LiquidChat.jwtToken.isEmpty())
 					{

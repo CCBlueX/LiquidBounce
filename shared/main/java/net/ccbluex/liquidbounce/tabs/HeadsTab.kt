@@ -40,7 +40,7 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 	{
 		try
 		{
-			ClientUtils.getLogger().info("Loading heads...")
+			ClientUtils.logger.info("Loading heads...")
 
 			val headsConfiguration = JsonParser().parse(HttpUtils["${LiquidBounce.CLIENT_CLOUD}/heads.json"])
 
@@ -52,13 +52,13 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 			{
 				val url = headsConf.get("url").asString
 
-				ClientUtils.getLogger().info("Loading heads from $url...")
+				ClientUtils.logger.info("Loading heads from $url...")
 
 				val headsElement = JsonParser().parse(HttpUtils[url])
 
 				if (!headsElement.isJsonObject)
 				{
-					ClientUtils.getLogger().error("Something is wrong, the heads json is not a JsonObject!")
+					ClientUtils.logger.error("Something is wrong, the heads json is not a JsonObject!")
 					return
 				}
 
@@ -71,11 +71,11 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 					heads.add(ItemUtils.createItem("skull 1 3 {display:{Name:\"${headElement.get("name").asString}\"},SkullOwner:{Id:\"${headElement.get("uuid").asString}\",Properties:{textures:[{Value:\"${headElement.get("value").asString}\"}]}}}"))
 				}
 
-				ClientUtils.getLogger().info("Loaded " + heads.size + " heads from HeadDB.")
-			} else ClientUtils.getLogger().info("Heads are disabled.")
+				ClientUtils.logger.info("Loaded " + heads.size + " heads from HeadDB.")
+			} else ClientUtils.logger.info("Heads are disabled.")
 		} catch (e: Exception)
 		{
-			ClientUtils.getLogger().error("Error while reading heads.", e)
+			ClientUtils.logger.error("Error while reading heads.", e)
 		}
 	}
 

@@ -58,7 +58,7 @@ class GuiModsMenu(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 								true
 							} catch (throwable: Throwable)
 							{
-								ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
+								ClientUtils.logger.error("Failed to setup Discord RPC.", throwable)
 								false
 							}
 						}

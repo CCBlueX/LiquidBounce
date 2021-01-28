@@ -21,9 +21,9 @@ class HideCommand : Command("hide")
 	{
 		if (args.size > 1)
 		{
-			when
+			when (args[1].toLowerCase())
 			{
-				args[1].equals("list", true) ->
+				"list" ->
 				{
 					chat("\u00A7c\u00A7lHidden")
 					LiquidBounce.moduleManager.modules.asSequence().filter { !it.array }.forEach {
@@ -32,7 +32,7 @@ class HideCommand : Command("hide")
 					return
 				}
 
-				args[1].equals("clear", true) ->
+				"clear" ->
 				{
 					for (module in LiquidBounce.moduleManager.modules) module.array = true
 
@@ -40,7 +40,7 @@ class HideCommand : Command("hide")
 					return
 				}
 
-				args[1].equals("reset", true) ->
+				"reset" ->
 				{
 					for (module in LiquidBounce.moduleManager.modules) module.array = module::class.java.getAnnotation(ModuleInfo::class.java).array
 
@@ -49,7 +49,9 @@ class HideCommand : Command("hide")
 				}
 
 				else ->
-				{ // Get module by name
+				{
+
+					// Get module by name
 					val module = LiquidBounce.moduleManager.getModule(args[1])
 
 					if (module == null)

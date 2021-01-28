@@ -85,7 +85,7 @@ class Config
 					}
 				} catch (e: Exception)
 				{
-					ClientUtils.getLogger().error("Error while loading custom hud element from config.", e)
+					ClientUtils.logger.error("Error while loading custom hud element from config.", e)
 				}
 			}
 
@@ -93,7 +93,7 @@ class Config
 			elements.filter { elementClass -> elementClass.getAnnotation(ElementInfo::class.java).force && hud.elements.none { it.javaClass == elementClass } }.forEach { hud.addElement(it.newInstance()) }
 		} catch (e: Exception)
 		{
-			ClientUtils.getLogger().error("Error while loading custom hud config.", e)
+			ClientUtils.logger.error("Error while loading custom hud config.", e)
 			return createDefault()
 		}
 

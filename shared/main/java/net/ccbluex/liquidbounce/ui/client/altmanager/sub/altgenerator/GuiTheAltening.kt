@@ -158,20 +158,20 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 						{
 							GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 
-							ClientUtils.getLogger().error("Failed to login.", e)
+							ClientUtils.logger.error("Failed to login.", e)
 							"\u00A7cFailed to login: ${e.message}"
 						}
 					} catch (throwable: Throwable)
 					{
 						status = "\u00A7cFailed to login. Unknown error."
-						ClientUtils.getLogger().error("Failed to login.", throwable)
+						ClientUtils.logger.error("Failed to login.", throwable)
 					}
 
 					loginButton.enabled = true
 					generateButton.enabled = true
 				}.handle { _, err ->
 					status = "\u00A7cFailed to generate account."
-					ClientUtils.getLogger().error("Failed to generate account.", err)
+					ClientUtils.logger.error("Failed to generate account.", err)
 				}.whenComplete { _, _ ->
 					loginButton.enabled = true
 					generateButton.enabled = true
@@ -230,12 +230,12 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 						{
 							GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 
-							ClientUtils.getLogger().error("Failed to login.", e)
+							ClientUtils.logger.error("Failed to login.", e)
 							"\u00A7cFailed to login: ${e.message}"
 						}
 					} catch (throwable: Throwable)
 					{
-						ClientUtils.getLogger().error("Failed to login.", throwable)
+						ClientUtils.logger.error("Failed to login.", throwable)
 						status = "\u00A7cFailed to login. Unknown error."
 					}
 

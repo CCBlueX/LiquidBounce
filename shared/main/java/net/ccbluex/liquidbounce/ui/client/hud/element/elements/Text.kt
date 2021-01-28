@@ -152,7 +152,7 @@ class Text(
 			"fps" -> mc.debugFPS.toString()
 			"date" -> DATE_FORMAT.format(System.currentTimeMillis())
 			"time" -> HOUR_FORMAT.format(System.currentTimeMillis())
-			"serverip" -> ServerUtils.getRemoteIp()
+			"serverip" -> ServerUtils.remoteIp
 			"cps", "lcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.LEFT).toString()
 			"mcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.MIDDLE).toString()
 			"rcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.RIGHT).toString()

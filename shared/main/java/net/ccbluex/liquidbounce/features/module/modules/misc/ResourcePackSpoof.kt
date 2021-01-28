@@ -50,7 +50,7 @@ class ResourcePackSpoof : Module()
 				)
 			} catch (e: URISyntaxException)
 			{
-				ClientUtils.getLogger().error("Failed to handle resource pack", e)
+				ClientUtils.logger.error("Failed to handle resource pack", e)
 				mc.netHandler.addToSendQueue(classProvider.createICPacketResourcePackStatus(hash, ICPacketResourcePackStatus.WAction.FAILED_DOWNLOAD))
 			}
 		}

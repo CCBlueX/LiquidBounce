@@ -111,10 +111,10 @@ class GuiSessionLogin(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 							GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 						} catch (e: NoSuchFieldException)
 						{
-							ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+							ClientUtils.logger.error("Something went wrong while trying to switch alt service.", e)
 						} catch (e: IllegalAccessException)
 						{
-							ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+							ClientUtils.logger.error("Something went wrong while trying to switch alt service.", e)
 						}
 					}
 

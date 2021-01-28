@@ -76,7 +76,7 @@ class Script(val scriptFile: File) : MinecraftInstance()
 
 		callEvent("load")
 
-		ClientUtils.getLogger().info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
+		ClientUtils.logger.info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
 	}
 
 	@Suppress("UNCHECKED_CAST")
@@ -168,7 +168,7 @@ class Script(val scriptFile: File) : MinecraftInstance()
 	{
 		if (getMagicComment("api_version") != "2")
 		{
-			ClientUtils.getLogger().info("[ScriptAPI] Running script '${scriptFile.name}' with legacy support.")
+			ClientUtils.logger.info("[ScriptAPI] Running script '${scriptFile.name}' with legacy support.")
 			val legacyScript = LiquidBounce::class.java.getResource("/assets/minecraft/liquidbounce/scriptapi/legacy.js").readText()
 			scriptEngine.eval(legacyScript)
 		}
@@ -232,7 +232,7 @@ class Script(val scriptFile: File) : MinecraftInstance()
 			events[eventName]?.call(null)
 		} catch (throwable: Throwable)
 		{
-			ClientUtils.getLogger().error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
+			ClientUtils.logger.error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
 		}
 	}
 }

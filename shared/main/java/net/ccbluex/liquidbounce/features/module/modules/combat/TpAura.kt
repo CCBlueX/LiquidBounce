@@ -69,7 +69,7 @@ class TpAura : Module()
 	private val pathEspTime = IntegerValue("PathESPTime", 1000, 100, 3000)
 	private val rangeValue = FloatValue("Range", 30.0f, 6.1f, 1000.0f)
 	private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
-	private val maxTargetsValue = IntegerValue("MaxTargets", 4, 1, 50)
+	val maxTargetsValue = IntegerValue("MaxTargets", 4, 1, 50)
 	private val maxDashDistanceValue = IntegerValue("DashDistance", 5, 1, 10)
 	private val autoBlockValue = ListValue(
 		"AutoBlock", arrayOf(
@@ -91,7 +91,7 @@ class TpAura : Module()
 
 	// Targets
 	private var currentTargets: MutableList<IEntityLivingBase> = CopyOnWriteArrayList()
-	private var currentTarget: IEntityLivingBase? = null
+	var currentTarget: IEntityLivingBase? = null
 	private var currentPath = mutableListOf<WVec3>()
 
 	// Blocking Status
@@ -123,6 +123,7 @@ class TpAura : Module()
 
 			val from = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 			var targetIndex = 0
+
 			val targetCount = if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size
 
 			while (targetIndex < targetCount)
@@ -172,9 +173,14 @@ class TpAura : Module()
 				for (path in currentPath) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
 				targetIndex++
 			}
+
 			attackTimer.reset()
 			attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
-		} else clientSideBlockingStatus = false
+		} else
+		{
+			clientSideBlockingStatus = false
+			currentTarget = null
+		}
 	}
 
 	@EventTarget

@@ -113,7 +113,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				MiscUtils.showErrorPopup("Wrong file extension.", "The file extension has to be .js or .zip")
 			} catch (t: Throwable)
 			{
-				ClientUtils.getLogger().error("Something went wrong while importing a script.", t)
+				ClientUtils.logger.error("Something went wrong while importing a script.", t)
 				MiscUtils.showErrorPopup(t.javaClass.name, t.message)
 			}
 
@@ -131,7 +131,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				}
 			} catch (t: Throwable)
 			{
-				ClientUtils.getLogger().error("Something went wrong while deleting a script.", t)
+				ClientUtils.logger.error("Something went wrong while deleting a script.", t)
 				MiscUtils.showErrorPopup(t.javaClass.name, t.message)
 			}
 			3 -> try
@@ -139,7 +139,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				LiquidBounce.scriptManager.reloadScripts()
 			} catch (t: Throwable)
 			{
-				ClientUtils.getLogger().error("Something went wrong while reloading all scripts.", t)
+				ClientUtils.logger.error("Something went wrong while reloading all scripts.", t)
 				MiscUtils.showErrorPopup(t.javaClass.name, t.message)
 			}
 			4 -> try
@@ -147,7 +147,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				Desktop.getDesktop().open(LiquidBounce.scriptManager.scriptsFolder)
 			} catch (t: Throwable)
 			{
-				ClientUtils.getLogger().error("Something went wrong while trying to open your scripts folder.", t)
+				ClientUtils.logger.error("Something went wrong while trying to open your scripts folder.", t)
 				MiscUtils.showErrorPopup(t.javaClass.name, t.message)
 			}
 			5 -> try

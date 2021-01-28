@@ -50,7 +50,7 @@ object LoginUtils : MinecraftInstance()
 						GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 					} catch (e: Exception)
 					{
-						ClientUtils.getLogger().error("Failed to switch back alt service to Mojang.", e)
+						ClientUtils.logger.error("Failed to switch back alt service to Mojang.", e)
 					}
 					result = LoginResult.LOGGED_IN
 				}
@@ -86,7 +86,7 @@ object LoginUtils : MinecraftInstance()
 				GuiAltManager.altService.switchService(savedAltService)
 			} catch (e: Exception)
 			{
-				ClientUtils.getLogger().error("Failed to switch back alt service.", e)
+				ClientUtils.logger.error("Failed to switch back alt service.", e)
 			}
 
 			LoginResult.AUTHENTICATION_UNAVAILABLE
@@ -97,7 +97,7 @@ object LoginUtils : MinecraftInstance()
 				GuiAltManager.altService.switchService(savedAltService)
 			} catch (e: Exception)
 			{
-				ClientUtils.getLogger().error("Failed to switch back alt service.", e)
+				ClientUtils.logger.error("Failed to switch back alt service.", e)
 			}
 
 			val message = exception.message!!

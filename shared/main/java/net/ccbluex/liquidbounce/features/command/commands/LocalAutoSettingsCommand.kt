@@ -23,9 +23,9 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 	{
 		if (args.size > 1)
 		{
-			when
+			when(args[1].toLowerCase())
 			{
-				args[1].equals("load", ignoreCase = true) ->
+				"load" ->
 				{
 					if (args.size > 2)
 					{
@@ -58,7 +58,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 					return
 				}
 
-				args[1].equals("save", ignoreCase = true) ->
+				"save" ->
 				{
 					if (args.size > 2)
 					{
@@ -87,7 +87,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 						} catch (throwable: Throwable)
 						{
 							chat("\u00A7cFailed to create local config: \u00A73${throwable.message}")
-							ClientUtils.getLogger().error("Failed to create local config.", throwable)
+							ClientUtils.logger.error("Failed to create local config.", throwable)
 						}
 						return
 					}
@@ -96,7 +96,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 					return
 				}
 
-				args[1].equals("delete", ignoreCase = true) ->
+				"delete" ->
 				{
 					if (args.size > 2)
 					{
@@ -117,7 +117,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 					return
 				}
 
-				args[1].equals("list", ignoreCase = true) ->
+				"list" ->
 				{
 					chat("\u00A7cSettings:")
 

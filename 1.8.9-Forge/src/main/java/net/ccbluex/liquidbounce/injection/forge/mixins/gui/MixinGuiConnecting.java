@@ -68,7 +68,7 @@ public abstract class MixinGuiConnecting extends GuiScreen
 	@Inject(method = "connect", at = @At("HEAD"))
 	private void headConnect(final String ip, final int port, final CallbackInfo callbackInfo)
 	{
-		ServerUtils.lastServerData = ServerDataImplKt.wrap(new ServerData("", ip + ":" + port, false));
+		ServerUtils.setLastServerData(ServerDataImplKt.wrap(new ServerData("", ip + ":" + port, false)));
 	}
 
 	@Inject(method = "connect", at = @At(value = "NEW", target = "net/minecraft/network/login/client/C00PacketLoginStart"), cancellable = true)

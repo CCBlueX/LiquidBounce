@@ -244,7 +244,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			}
 		} catch (e: Exception)
 		{
-			ClientUtils.getLogger().error("Failed to load credits.", e)
+			ClientUtils.logger.error("Failed to load credits.", e)
 			failed = true
 		}
 	}

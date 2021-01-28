@@ -107,7 +107,7 @@ class LiquidChat : Module()
 
 					if (thePlayer == null)
 					{
-						ClientUtils.getLogger().info("[LiquidChat] ${packet.user.name}: ${packet.content}")
+						ClientUtils.logger.info("[LiquidChat] ${packet.user.name}: ${packet.content}")
 						return
 					}
 
@@ -240,7 +240,7 @@ class LiquidChat : Module()
 				else if (UserUtils.isValidToken(mc.session.token)) client.loginMojang()
 			} catch (cause: Exception)
 			{
-				ClientUtils.getLogger().error("LiquidChat error", cause)
+				ClientUtils.logger.error("LiquidChat error", cause)
 				ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cError: \u00A77${cause.javaClass.name}: ${cause.message}")
 			}
 

@@ -86,7 +86,7 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 						GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 					} catch (e: Exception)
 					{
-						ClientUtils.getLogger().error("Failed to change alt service to Mojang.", e)
+						ClientUtils.logger.error("Failed to change alt service to Mojang.", e)
 					}
 
 					if (button.id == 4)

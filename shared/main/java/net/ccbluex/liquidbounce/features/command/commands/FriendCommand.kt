@@ -21,9 +21,9 @@ class FriendCommand : Command("friend", "friends")
 		{
 			val friendsConfig = LiquidBounce.fileManager.friendsConfig
 
-			when
+			when (args[1].toLowerCase())
 			{
-				args[1].equals("add", ignoreCase = true) ->
+				"add" ->
 				{
 					if (args.size > 2)
 					{
@@ -47,7 +47,7 @@ class FriendCommand : Command("friend", "friends")
 					return
 				}
 
-				args[1].equals("remove", ignoreCase = true) ->
+				"remove" ->
 				{
 					if (args.size > 2)
 					{
@@ -65,7 +65,7 @@ class FriendCommand : Command("friend", "friends")
 					return
 				}
 
-				args[1].equals("clear", ignoreCase = true) ->
+				"clear" ->
 				{
 					val friends = friendsConfig.friends.size
 					friendsConfig.clearFriends()
@@ -74,7 +74,7 @@ class FriendCommand : Command("friend", "friends")
 					return
 				}
 
-				args[1].equals("list", ignoreCase = true) ->
+				"list" ->
 				{
 					chat("Your Friends:")
 

@@ -33,15 +33,15 @@ object Remapper
 		{ // Download srg file
 			srgFile.createNewFile()
 
-			ClientUtils.getLogger().info("[Remapper] Downloading $srgName srg...")
+			ClientUtils.logger.info("[Remapper] Downloading $srgName srg...")
 			HttpUtils.download("${LiquidBounce.CLIENT_CLOUD}/srgs/mcp-$srgName.srg", srgFile)
-			ClientUtils.getLogger().info("[Remapper] Downloaded $srgName.")
+			ClientUtils.logger.info("[Remapper] Downloaded $srgName.")
 		}
 
 		// Load srg
-		ClientUtils.getLogger().info("[Remapper] Loading srg...")
+		ClientUtils.logger.info("[Remapper] Loading srg...")
 		parseSrg()
-		ClientUtils.getLogger().info("[Remapper] Loaded srg.")
+		ClientUtils.logger.info("[Remapper] Loaded srg.")
 	}
 
 	private fun parseSrg()

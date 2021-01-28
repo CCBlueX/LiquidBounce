@@ -316,7 +316,7 @@ class InventoryCleaner : Module()
 			))
 		} catch (ex: Exception)
 		{
-			ClientUtils.getLogger().error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
+			ClientUtils.logger.error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
 
 			true
 		}

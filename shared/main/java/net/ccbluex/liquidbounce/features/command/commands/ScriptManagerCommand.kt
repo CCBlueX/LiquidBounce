@@ -87,7 +87,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 						chat("The file extension has to be .js or .zip")
 					} catch (t: Throwable)
 					{
-						ClientUtils.getLogger().error("Something went wrong while importing a script.", t)
+						ClientUtils.logger.error("Something went wrong while importing a script.", t)
 						chat("${t.javaClass.name}: ${t.message}")
 					}
 				}
@@ -124,7 +124,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 						chatSyntaxError()
 					} catch (t: Throwable)
 					{
-						ClientUtils.getLogger().error("Something went wrong while deleting a script.", t)
+						ClientUtils.logger.error("Something went wrong while deleting a script.", t)
 						chat("${t.javaClass.name}: ${t.message}")
 					}
 				}
@@ -146,7 +146,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 						chat("Successfully reloaded all scripts.")
 					} catch (t: Throwable)
 					{
-						ClientUtils.getLogger().error("Something went wrong while reloading all scripts.", t)
+						ClientUtils.logger.error("Something went wrong while reloading all scripts.", t)
 						chat("${t.javaClass.name}: ${t.message}")
 					}
 				}
@@ -159,7 +159,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 						chat("Successfully opened scripts folder.")
 					} catch (t: Throwable)
 					{
-						ClientUtils.getLogger().error("Something went wrong while trying to open your scripts folder.", t)
+						ClientUtils.logger.error("Something went wrong while trying to open your scripts folder.", t)
 						chat("${t.javaClass.name}: ${t.message}")
 					}
 				}

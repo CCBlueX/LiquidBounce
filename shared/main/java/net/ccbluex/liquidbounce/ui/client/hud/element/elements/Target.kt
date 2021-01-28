@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WDefaultPlayerSkin
 import net.ccbluex.liquidbounce.features.module.modules.combat.Aimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.TpAura
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -69,7 +70,8 @@ class Target : Element()
 
 	override fun drawElement(): Border
 	{
-		val targetEntity = (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target ?: (LiquidBounce.moduleManager[Aimbot::class.java] as Aimbot).target
+		val tpAura = LiquidBounce.moduleManager[TpAura::class.java] as TpAura
+		val targetEntity = if (tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null) tpAura.currentTarget else ((LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target ?: (LiquidBounce.moduleManager[Aimbot::class.java] as Aimbot).target)
 
 		if (classProvider.isEntityPlayer(targetEntity) && targetEntity!!.asEntityPlayer().entityAlive)
 		{

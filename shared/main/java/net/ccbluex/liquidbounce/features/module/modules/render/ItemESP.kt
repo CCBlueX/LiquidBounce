@@ -55,7 +55,7 @@ class ItemESP : Module()
 				theWorld.loadedEntityList.asSequence().filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { mc.renderManager.renderEntityStatic(it, event.partialTicks, true) }
 			} catch (ex: Exception)
 			{
-				ClientUtils.getLogger().error("An error occurred while rendering all item entities for shader esp", ex)
+				ClientUtils.logger.error("An error occurred while rendering all item entities for shader esp", ex)
 			}
 
 			OutlineShader.OUTLINE_SHADER.stopDraw(if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), 1f, 1f)

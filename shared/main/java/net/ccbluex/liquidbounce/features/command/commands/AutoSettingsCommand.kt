@@ -32,9 +32,11 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 			return
 		}
 
-		when
-		{ // Load subcommand
-			args[1].equals("load", ignoreCase = true) ->
+		when(args[1].toLowerCase())
+		{
+
+			// Load subcommand
+			"load" ->
 			{
 				if (args.size < 3)
 				{
@@ -67,7 +69,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 			}
 
 			// List subcommand
-			args[1].equals("list", ignoreCase = true) ->
+			"list" ->
 			{
 				chat("Loading settings...")
 

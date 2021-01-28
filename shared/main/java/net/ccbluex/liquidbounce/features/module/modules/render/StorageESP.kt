@@ -366,7 +366,7 @@ class StorageESP : Module()
 			if (shulkerBox) renderTileEntityOnly(classProvider::isTileEntityShulkerBox, shulkerBoxColor)
 		} catch (ex: Exception)
 		{
-			ClientUtils.getLogger().error("An error occurred while rendering all storages for shader esp", ex)
+			ClientUtils.logger.error("An error occurred while rendering all storages for shader esp", ex)
 		}
 	}
 

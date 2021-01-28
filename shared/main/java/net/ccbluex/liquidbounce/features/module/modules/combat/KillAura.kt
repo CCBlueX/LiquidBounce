@@ -371,8 +371,6 @@ class KillAura : Module()
 	@EventTarget
 	fun onMotion(event: MotionEvent)
 	{
-		if (suspended) return
-
 		if (event.eventState == EventState.POST)
 		{
 			target ?: return
@@ -396,8 +394,6 @@ class KillAura : Module()
 	@EventTarget
 	fun onStrafe(event: StrafeEvent)
 	{
-		if (suspended) return
-
 		if (rotationStrafeValue.get().equals("Off", true)) return
 
 		update()
@@ -450,7 +446,7 @@ class KillAura : Module()
 	fun update()
 	{
 
-		// NoInventory
+		// CancelRun & NoInventory
 		if (cancelRun || (noInventoryAttackValue.get() && (classProvider.isGuiContainer(mc.currentScreen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))) return
 
 		// Update target
@@ -481,8 +477,6 @@ class KillAura : Module()
 			stopBlocking()
 			return
 		}
-
-		if (suspended) return
 
 		attackRange = attackRangeValue.get()
 		aimRange = aimRangeValue.get()
@@ -525,8 +519,6 @@ class KillAura : Module()
 			return
 		}
 
-		if (suspended) return
-
 		// NoInventory
 		if (noInventoryAttackValue.get() && (classProvider.isGuiContainer(mc.currentScreen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))
 		{
@@ -559,8 +551,6 @@ class KillAura : Module()
 	@EventTarget
 	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
-		if (suspended) return
-
 		if (fovValue.get() < 180) RenderUtils.drawFoVCircle(fovValue.get())
 	}
 
@@ -570,8 +560,6 @@ class KillAura : Module()
 	@EventTarget
 	fun onEntityMove(event: EntityMovementEvent)
 	{
-		if (suspended) return
-
 		val movedEntity = event.movedEntity
 		if (target == null || movedEntity != currentTarget) return
 		updateHitable()
@@ -987,7 +975,11 @@ class KillAura : Module()
 	 * Check if run should be cancelled
 	 */
 	private val cancelRun: Boolean
-		get() = mc.thePlayer!!.spectator || !EntityUtils.isAlive(mc.thePlayer!!, aacValue.get()) || LiquidBounce.moduleManager[Blink::class.java].state || LiquidBounce.moduleManager[FreeCam::class.java].state
+		get()
+		{
+			val blink = LiquidBounce.moduleManager[Blink::class.java] as Blink
+			return mc.thePlayer!!.spectator || !EntityUtils.isAlive(mc.thePlayer!!, aacValue.get()) || blink.state || LiquidBounce.moduleManager[FreeCam::class.java].state || !suspendTimer.hasTimePassed(suspend)
+		}
 
 	/**
 	 * Check if player is able to block
@@ -1020,7 +1012,4 @@ class KillAura : Module()
 		suspend = time
 		suspendTimer.reset()
 	}
-
-	private val suspended: Boolean
-		get() = !suspendTimer.hasTimePassed(suspend)
 }

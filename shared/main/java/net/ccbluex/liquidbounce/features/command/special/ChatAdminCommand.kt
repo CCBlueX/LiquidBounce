@@ -22,9 +22,9 @@ class ChatAdminCommand : Command("chatadmin")
 
 		if (args.size > 1)
 		{
-			when
+			when(args[1].toLowerCase())
 			{
-				args[1].equals("ban", true) ->
+				"ban" ->
 				{
 					if (args.size > 2)
 					{
@@ -32,7 +32,7 @@ class ChatAdminCommand : Command("chatadmin")
 					} else chatSyntax("chatadmin ban <username>")
 				}
 
-				args[1].equals("unban", true) ->
+				"unban" ->
 				{
 					if (args.size > 2)
 					{

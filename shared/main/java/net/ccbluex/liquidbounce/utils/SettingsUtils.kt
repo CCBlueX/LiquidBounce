@@ -39,7 +39,7 @@ object SettingsUtils
 				return@forEachIndexed
 			}
 
-			when (args[0])
+			when (args[0].toLowerCase())
 			{
 				"chat" -> ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7e${translateAlternateColorCodes(StringUtils.toCompleteString(args, 1))}")
 				"unchat" -> ClientUtils.displayChatMessage(translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
@@ -61,31 +61,31 @@ object SettingsUtils
 					}
 				}
 
-				"targetPlayer", "targetPlayers" ->
+				"targetplayer", "targetplayers" ->
 				{
 					EntityUtils.targetPlayer = args[1].equals("true", ignoreCase = true)
 					ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetPlayer}\u00A77.")
 				}
 
-				"targetMobs" ->
+				"targetmobs" ->
 				{
 					EntityUtils.targetMobs = args[1].equals("true", ignoreCase = true)
 					ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetMobs}\u00A77.")
 				}
 
-				"targetAnimals" ->
+				"targetanimals" ->
 				{
 					EntityUtils.targetAnimals = args[1].equals("true", ignoreCase = true)
 					ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetAnimals}\u00A77.")
 				}
 
-				"targetInvisible" ->
+				"targetinvisible" ->
 				{
 					EntityUtils.targetInvisible = args[1].equals("true", ignoreCase = true)
 					ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetInvisible}\u00A77.")
 				}
 
-				"targetDead" ->
+				"targetdead" ->
 				{
 					EntityUtils.targetDead = args[1].equals("true", ignoreCase = true)
 					ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetDead}\u00A77.")

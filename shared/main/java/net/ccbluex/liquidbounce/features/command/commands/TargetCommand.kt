@@ -17,9 +17,9 @@ class TargetCommand : Command("target")
 	{
 		if (args.size > 1)
 		{
-			when
+			when(args[1].toLowerCase())
 			{
-				args[1].equals("players", ignoreCase = true) ->
+				"players" ->
 				{
 					EntityUtils.targetPlayer = !EntityUtils.targetPlayer
 					chat("\u00A77Target player toggled ${if (EntityUtils.targetPlayer) "on" else "off"}.")
@@ -27,7 +27,7 @@ class TargetCommand : Command("target")
 					return
 				}
 
-				args[1].equals("mobs", ignoreCase = true) ->
+				"mobs" ->
 				{
 					EntityUtils.targetMobs = !EntityUtils.targetMobs
 					chat("\u00A77Target mobs toggled ${if (EntityUtils.targetMobs) "on" else "off"}.")
@@ -35,7 +35,7 @@ class TargetCommand : Command("target")
 					return
 				}
 
-				args[1].equals("animals", ignoreCase = true) ->
+				"animals" ->
 				{
 					EntityUtils.targetAnimals = !EntityUtils.targetAnimals
 					chat("\u00A77Target animals toggled ${if (EntityUtils.targetAnimals) "on" else "off"}.")
@@ -43,7 +43,7 @@ class TargetCommand : Command("target")
 					return
 				}
 
-				args[1].equals("invisible", ignoreCase = true) ->
+				"invisible" ->
 				{
 					EntityUtils.targetInvisible = !EntityUtils.targetInvisible
 					chat("\u00A77Target Invisible toggled ${if (EntityUtils.targetInvisible) "on" else "off"}.")

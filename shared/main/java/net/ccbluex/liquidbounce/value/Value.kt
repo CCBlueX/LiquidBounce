@@ -34,7 +34,7 @@ abstract class Value<T>(val name: String, protected var value: T)
 			FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
 		} catch (e: Exception)
 		{
-			ClientUtils.getLogger().error("[ValueSystem ($name)]: ${e.javaClass.name} (${e.message}) [$oldValue >> $newValue]")
+			ClientUtils.logger.error("[ValueSystem ($name)]: ${e.javaClass.name} (${e.message}) [$oldValue >> $newValue]")
 		}
 	}
 

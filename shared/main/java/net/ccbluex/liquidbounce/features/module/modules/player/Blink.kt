@@ -29,7 +29,7 @@ class Blink : Module()
 	/**
 	 * Options
 	 */
-	private val pulseValue = BoolValue("Pulse", false)
+	val pulseValue = BoolValue("Pulse", false)
 	private val pulseDelayValue = IntegerValue("PulseDelay", 1000, 500, 5000)
 
 	/**

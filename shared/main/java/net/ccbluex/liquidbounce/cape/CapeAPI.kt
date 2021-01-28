@@ -32,7 +32,7 @@ object CapeAPI : MinecraftInstance()
 
 		if (GuiDonatorCape.transferCode.startsWith("file:", true))
 		{
-			ClientUtils.getLogger().info("[Donator Cape] Offline cape registered.")
+			ClientUtils.logger.info("[Donator Cape] Offline cape registered.")
 			return
 		}
 
@@ -48,7 +48,7 @@ object CapeAPI : MinecraftInstance()
 				val url = jsonObject.get("api").asJsonObject.get("url").asString
 
 				capeService = ServiceAPI(url)
-				ClientUtils.getLogger().info("Registered $url as '$serviceType' service type.")
+				ClientUtils.logger.info("Registered $url as '$serviceType' service type.")
 			}
 
 			"list" ->
@@ -58,15 +58,15 @@ object CapeAPI : MinecraftInstance()
 				for ((key, value) in jsonObject.get("users").asJsonObject.entrySet())
 				{
 					users[key] = value.asString
-					ClientUtils.getLogger().info("Loaded user cape for '$key'.")
+					ClientUtils.logger.info("Loaded user cape for '$key'.")
 				}
 
 				capeService = ServiceList(users)
-				ClientUtils.getLogger().info("Registered '$serviceType' service type.")
+				ClientUtils.logger.info("Registered '$serviceType' service type.")
 			}
 		}
 
-		ClientUtils.getLogger().info("Loaded.")
+		ClientUtils.logger.info("Loaded.")
 	}
 
 	/**
@@ -85,7 +85,7 @@ object CapeAPI : MinecraftInstance()
 			if (uuid != mc.session.profile.id) return null
 
 			var capeFile = File(LiquidBounce.fileManager.dir, GuiDonatorCape.transferCode.substring(5))
-			ClientUtils.getLogger().info("[Donator Cape] Loading offline cape from file ${capeFile.toPath()}")
+			ClientUtils.logger.info("[Donator Cape] Loading offline cape from file ${capeFile.toPath()}")
 
 			resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation("offline-capes/%s".format("$capeFile"))
 
@@ -95,10 +95,10 @@ object CapeAPI : MinecraftInstance()
 				// Fallback strategy
 				capeFile = File(LiquidBounce.fileManager.dir, GuiDonatorCape.transferCode.substring(5) + ".png")
 
-				ClientUtils.getLogger().info("[Donator Cape] Loaded offline cape from file (using fallback strategy) ${capeFile.toPath()}")
+				ClientUtils.logger.info("[Donator Cape] Loaded offline cape from file (using fallback strategy) ${capeFile.toPath()}")
 				if (!capeFile.exists())
 				{
-					ClientUtils.getLogger().info("[Donator Cape] Failed to load offline cape from file. File doesn't exists.")
+					ClientUtils.logger.info("[Donator Cape] Failed to load offline cape from file. File doesn't exists.")
 					return null
 				}
 			}

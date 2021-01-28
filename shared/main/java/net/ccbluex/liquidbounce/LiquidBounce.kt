@@ -74,7 +74,7 @@ object LiquidBounce
 	{
 		isStarting = true
 
-		ClientUtils.getLogger().info("Starting $CLIENT_NAME b$CLIENT_VERSION, by $CLIENT_CREATOR")
+		ClientUtils.logger.info("Starting $CLIENT_NAME b$CLIENT_VERSION, by $CLIENT_CREATOR")
 
 		// Create file manager
 		fileManager = FileManager()
@@ -112,7 +112,7 @@ object LiquidBounce
 			scriptManager.enableScripts()
 		} catch (throwable: Throwable)
 		{
-			ClientUtils.getLogger().error("Failed to load scripts.", throwable)
+			ClientUtils.logger.error("Failed to load scripts.", throwable)
 		}
 
 		// Register commands
@@ -141,7 +141,7 @@ object LiquidBounce
 			registerCapeService()
 		} catch (throwable: Throwable)
 		{
-			ClientUtils.getLogger().error("Failed to register cape service", throwable)
+			ClientUtils.logger.error("Failed to register cape service", throwable)
 		}
 
 		// Set HUD
@@ -163,7 +163,7 @@ object LiquidBounce
 		{
 
 			// Print throwable to console
-			ClientUtils.getLogger().error("Failed to check for updates.", exception)
+			ClientUtils.logger.error("Failed to check for updates.", exception)
 		}
 
 		// Load generators
@@ -178,7 +178,7 @@ object LiquidBounce
 					clientRichPresence.setup()
 				} catch (throwable: Throwable)
 				{
-					ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
+					ClientUtils.logger.error("Failed to setup Discord RPC.", throwable)
 				}
 			}
 		}

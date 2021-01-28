@@ -47,7 +47,7 @@ class ScriptManager
 			scripts.add(script)
 		} catch (t: Throwable)
 		{
-			ClientUtils.getLogger().error("[ScriptAPI] Failed to load script '${scriptFile.name}'.", t)
+			ClientUtils.logger.error("[ScriptAPI] Failed to load script '${scriptFile.name}'.", t)
 		}
 	}
 
@@ -77,7 +77,7 @@ class ScriptManager
 		file.copyTo(scriptFile)
 
 		loadScript(scriptFile)
-		ClientUtils.getLogger().info("[ScriptAPI] Successfully imported script '${scriptFile.name}'.")
+		ClientUtils.logger.info("[ScriptAPI] Successfully imported script '${scriptFile.name}'.")
 	}
 
 	/**
@@ -90,7 +90,7 @@ class ScriptManager
 		scripts.remove(script)
 		script.scriptFile.delete()
 
-		ClientUtils.getLogger().info("[ScriptAPI]  Successfully deleted script '${script.scriptFile.name}'.")
+		ClientUtils.logger.info("[ScriptAPI]  Successfully deleted script '${script.scriptFile.name}'.")
 	}
 
 	/**
@@ -103,6 +103,6 @@ class ScriptManager
 		loadScripts()
 		enableScripts()
 
-		ClientUtils.getLogger().info("[ScriptAPI]  Successfully reloaded scripts.")
+		ClientUtils.logger.info("[ScriptAPI]  Successfully reloaded scripts.")
 	}
 }

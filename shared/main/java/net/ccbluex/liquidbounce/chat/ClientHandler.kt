@@ -61,7 +61,7 @@ class ClientHandler(val client: Client, private val handshaker: WebSocketClientH
 	 */
 	override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable)
 	{
-		ClientUtils.getLogger().error("LiquidChat error", cause)
+		ClientUtils.logger.error("LiquidChat error", cause)
 		client.onError(cause)
 		if (!handshakeFuture.isDone) handshakeFuture.setFailure(cause)
 		ctx.close()

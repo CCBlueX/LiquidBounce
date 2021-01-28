@@ -38,7 +38,7 @@ class ModuleManager : Listenable
 	 */
 	fun registerModules()
 	{
-		ClientUtils.getLogger().info("[ModuleManager] Loading modules...")
+		ClientUtils.logger.info("[ModuleManager] Loading modules...")
 
 		registerModules(
 			AutoArmor::class.java,
@@ -191,7 +191,7 @@ class ModuleManager : Listenable
 		registerModule(ChestAura)
 		registerModule(AntiBot)
 
-		ClientUtils.getLogger().info("[ModuleManager] Loaded ${modules.size} modules.")
+		ClientUtils.logger.info("[ModuleManager] Loaded ${modules.size} modules.")
 	}
 
 	/**
@@ -218,7 +218,7 @@ class ModuleManager : Listenable
 			registerModule(moduleClass.newInstance())
 		} catch (e: Throwable)
 		{
-			ClientUtils.getLogger().error("Failed to load module: ${moduleClass.name} (${e.javaClass.name}: ${e.message})")
+			ClientUtils.logger.error("Failed to load module: ${moduleClass.name} (${e.javaClass.name}: ${e.message})")
 		}
 	}
 

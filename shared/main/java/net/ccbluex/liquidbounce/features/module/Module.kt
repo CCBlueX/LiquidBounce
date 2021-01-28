@@ -81,7 +81,7 @@ open class Module : MinecraftInstance(), Listenable
 					onEnable()
 				} catch (e: Exception)
 				{
-					ClientUtils.getLogger().error("Uncaught exception '$e' occurred while onEnable() in module $name", e)
+					ClientUtils.logger.error("Uncaught exception '$e' occurred while onEnable() in module $name", e)
 				}
 
 				if (canEnable) field = true
@@ -92,7 +92,7 @@ open class Module : MinecraftInstance(), Listenable
 					onDisable()
 				} catch (e: Exception)
 				{
-					ClientUtils.getLogger().error("Uncaught exception '$e' occurred while onDisable() in module $name", e)
+					ClientUtils.logger.error("Uncaught exception '$e' occurred while onDisable() in module $name", e)
 				}
 				field = false
 			}

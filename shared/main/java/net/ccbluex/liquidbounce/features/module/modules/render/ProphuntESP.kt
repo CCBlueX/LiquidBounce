@@ -100,7 +100,7 @@ class ProphuntESP : Module()
 			theWorld.loadedEntityList.asSequence().filter(classProvider::isEntityFallingBlock).forEach { mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true) }
 		} catch (ex: Exception)
 		{
-			ClientUtils.getLogger().error("An error occurred while rendering all entities for shader esp", ex)
+			ClientUtils.logger.error("An error occurred while rendering all entities for shader esp", ex)
 		}
 
 		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())

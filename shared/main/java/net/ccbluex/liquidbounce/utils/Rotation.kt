@@ -38,8 +38,8 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
 	 */
 	fun fixedSensitivity(sensitivity: Float)
 	{
-		val f = sensitivity * 0.6F + 0.2F
-		val gcd = f * f * f * 1.2F
+		val sensitivityModifier = sensitivity * 0.6F + 0.2F
+		val gcd = sensitivityModifier * sensitivityModifier * sensitivityModifier * 1.2F
 
 		// get previous rotation
 		val rotation = RotationUtils.serverRotation
@@ -62,10 +62,10 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
 	 */
 	fun applyStrafeToPlayer(event: StrafeEvent)
 	{
-		val player = mc.thePlayer!!
+		val thePlayer = mc.thePlayer ?: return
 
-		val dif = ((WMathHelper.wrapAngleTo180_float(
-			player.rotationYaw - yaw - 23.5f - 135
+		val facing = ((WMathHelper.wrapAngleTo180_float(
+			thePlayer.rotationYaw - yaw - 23.5f - 135
 		) + 180) / 45).toInt()
 
 		val yaw = yaw
@@ -77,7 +77,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
 		var calcForward = 0f
 		var calcStrafe = 0f
 
-		when (dif)
+		when (facing)
 		{
 			0 ->
 			{
@@ -146,19 +146,23 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
 			calcStrafe *= 0.5f
 		}
 
-		var d = calcStrafe * calcStrafe + calcForward * calcForward
+		var speed = calcStrafe * calcStrafe + calcForward * calcForward
 
-		if (d >= 1.0E-4f)
+		if (speed >= 1.0E-4f)
 		{
-			d = sqrt(d)
-			if (d < 1.0f) d = 1.0f
-			d = friction / d
-			calcStrafe *= d
-			calcForward *= d
+			speed = sqrt(speed)
+
+			if (speed < 1.0f) speed = 1.0f
+
+			speed = friction / speed
+			calcStrafe *= speed
+			calcForward *= speed
+
 			val yawSin = WMathHelper.sin((yaw * WMathHelper.PI / 180f))
 			val yawCos = WMathHelper.cos((yaw * WMathHelper.PI / 180f))
-			player.motionX += calcStrafe * yawCos - calcForward * yawSin.toDouble()
-			player.motionZ += calcForward * yawCos + calcStrafe * yawSin.toDouble()
+
+			thePlayer.motionX += calcStrafe * yawCos - calcForward * yawSin.toDouble()
+			thePlayer.motionZ += calcForward * yawCos + calcStrafe * yawSin.toDouble()
 		}
 	}
 }

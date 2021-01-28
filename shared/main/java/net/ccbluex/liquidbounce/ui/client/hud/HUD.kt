@@ -66,7 +66,7 @@ open class HUD : MinecraftInstance()
 				if (designer) it.border?.draw()
 			} catch (ex: Exception)
 			{
-				ClientUtils.getLogger().error("Something went wrong while drawing ${it.name} element in HUD.", ex)
+				ClientUtils.logger.error("Something went wrong while drawing ${it.name} element in HUD.", ex)
 			}
 
 			GL11.glPopMatrix()
