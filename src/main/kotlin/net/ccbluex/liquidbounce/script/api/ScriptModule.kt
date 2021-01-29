@@ -35,8 +35,10 @@ class ScriptModule(private val moduleObject: JSObject) : Module(
     private val events = HashMap<String, JSObject>()
     private val _values = LinkedHashMap<String, Value<*>>()
 
-    // todo: add tags back to modules
     private var _tag: String? = null
+
+    override val tag: String?
+        get() = _tag
 
     /**
      * Allows the user to access values by typing module.settings.<valuename>
