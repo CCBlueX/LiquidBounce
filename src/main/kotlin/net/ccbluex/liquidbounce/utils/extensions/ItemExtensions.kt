@@ -10,7 +10,7 @@ import net.minecraft.item.ItemStack
  *
  * @docs https://minecraft.gamepedia.com/Commands/give
  */
-fun createItem(stack: String, amount: Int): ItemStack = ItemStringReader(StringReader(stack), true).consume().let {
+fun createItem(stack: String, amount: Int = 1): ItemStack = ItemStringReader(StringReader(stack), true).consume().let {
     ItemStackArgument(it.item, it.tag).createStack(amount, false)
 }
 

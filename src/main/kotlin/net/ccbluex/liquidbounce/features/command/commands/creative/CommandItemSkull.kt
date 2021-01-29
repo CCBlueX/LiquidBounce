@@ -47,7 +47,7 @@ object CommandItemSkull {
                     throw CommandException("You need to be in creative mode.")
                 }
 
-                val itemStack = createItem("minecraft:player_head{SkullOwner:$name}", 1)
+                val itemStack = createItem("minecraft:player_head{SkullOwner:$name}")
                 val emptySlot = mc.player!!.inventory!!.emptySlot
 
                 if (emptySlot == -1) {

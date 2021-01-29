@@ -18,9 +18,18 @@
  */
 package net.ccbluex.liquidbounce.script.api.global
 
+import net.ccbluex.liquidbounce.utils.extensions.createItem
+import net.minecraft.item.ItemStack
+
 /**
  * Object used by the script API to provide an easier way of creating items.
  */
 object Item {
-    // todo: add item create back
+
+    /**
+     * Create [ItemStack] from [arguments]
+     */
+    @JvmStatic
+    fun create(arguments: String, amount: Int): ItemStack = createItem(arguments, amount)
+
 }

@@ -105,7 +105,7 @@ object Tabs {
         },
         items = {
             it += headsCollection.map { head ->
-                createItem("skull{display:{Name:\\\"${head.name}\\\"},SkullOwner:{Id:\\\"${head.uuid}\\\",Properties:{textures:[{Value:\\\"${head.value}\\\"}]}}}", 1)
+                createItem("skull{display:{Name:\\\"${head.name}\\\"},SkullOwner:{Id:\\\"${head.uuid}\\\",Properties:{textures:[{Value:\\\"${head.value}\\\"}]}}}")
             }
         }
     ).create()
