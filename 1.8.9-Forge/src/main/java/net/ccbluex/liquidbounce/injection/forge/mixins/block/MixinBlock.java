@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -87,8 +86,8 @@ public abstract class MixinBlock
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
 		if (xray.getState())
-			// noinspection SuspiciousMethodCalls
-			callbackInfoReturnable.setReturnValue(xray.getXrayBlocks().contains(this));
+			// noinspection ConstantConditions
+			callbackInfoReturnable.setReturnValue(xray.getXrayBlocks().contains(BlockImplKt.wrap((Block) (Object) this)));
 	}
 
 	@Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)
@@ -96,6 +95,7 @@ public abstract class MixinBlock
 	{
 		final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.get(GhostHand.class);
 
+		// noinspection ConstantConditions
 		if (ghostHand.getState() && ghostHand.getBlockValue().get() != Block.getIdFromBlock((Block) (Object) this))
 			callbackInfoReturnable.setReturnValue(false);
 	}
