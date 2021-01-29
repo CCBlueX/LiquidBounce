@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.boolean
 import net.ccbluex.liquidbounce.config.intRange
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.repeatableSequence
 import net.ccbluex.liquidbounce.utils.extensions.shouldBeAttacked
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.EntityHitResult

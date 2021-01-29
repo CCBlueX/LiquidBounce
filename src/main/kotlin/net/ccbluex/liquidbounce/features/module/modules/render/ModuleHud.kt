@@ -44,7 +44,7 @@ object ModuleHud : Module("HUD", Category.RENDER, defaultState = true, hide = tr
     val renderHandler = handler<RenderHudEvent> {
 //        mc.textRenderer.drawWithShadow(it.matrixStack, "LiquidBounce", 2F, 2F, 0xfffff)
 
-        LiquidBounce.moduleManager.filter { module -> module.state && !module.hidden }.forEachIndexed { index, module ->
+        LiquidBounce.moduleManager.filter { module -> module.enabled && !module.hidden }.forEachIndexed { index, module ->
             val width = mc.textRenderer.getWidth(module.name)
             mc.textRenderer.drawWithShadow(
                 it.matrixStack,

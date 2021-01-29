@@ -27,39 +27,74 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.util.InputUtil
 import net.minecraft.world.World
 
+/**
+ * A module also called 'hack' is able to be enabled and handle events
+ */
 open class Module(val name: String, val category: Category, var description: String = "", var bind: InputUtil.Key = InputUtil.UNKNOWN_KEY,
                   defaultState: Boolean = false, val disableActivation: Boolean = false, hide: Boolean = false) : Listenable, Configurable(name) {
 
-    private var enabled by boolean("enabled", defaultState)
+    // Module options
+    var enabled by boolean("enabled", defaultState, change = { old, new ->
+        runCatching {
+            // Call enable or disable function
+            if (new) {
+                enable()
+            }else{
+                disable()
+            }
+        }.onSuccess {
+            // Save new module state when module activation is enabled
+            if (disableActivation) {
+                error("module disabled activation")
+            }
+            // Call out module event
+            EventManager.callEvent(ModuleEvent(this, new))
+        }.onFailure {
+            // Log error
+            logger.error("Module toggle failed (old: $old, new: $new)", it)
+            // In case of an error module should stay disabled
+            throw it
+        }
+    })
     var hidden by boolean("hidden", hide)
 
-    var state
-        set(value) {
-            runCatching {
-                // Call enable or disable function
-                if (value) {
-                    enable()
-                }else{
-                    disable()
-                }
-            }.onSuccess {
-                // Save new module state when module activation is enabled
-                if (!disableActivation) {
-                    enabled = value
-                }
-                // Call out module event
-                EventManager.callEvent(ModuleEvent(this, enabled))
-            }.onFailure {
-                // Log error
-                logger.error("Module toggle failed (old: $enabled, new: $value)", it)
-                // In case of an error module should stay disabled
-                enabled = false
-            }
-        }
-        get() = enabled
-
+    // Tag to be displayed on the HUD
     open val tag: String?
         get() = null
+
+    /**
+     * Quick access
+     */
+    protected val mc: MinecraftClient
+        get() = net.ccbluex.liquidbounce.utils.mc
+    protected val player: ClientPlayerEntity
+        get() = mc.player!!
+    protected val world: World
+        get() = mc.world!!
+
+    /**
+     * Execute when module is turned on
+     */
+    open fun enable() { }
+
+    /**
+     * Execute when module is turned off
+     */
+    open fun disable() { }
+
+    /**
+     * Events should be handled when module is enabled
+     */
+    override fun handleEvents() = enabled
+
+}
+
+/**
+ * A mode is sub-module to separate different bypasses into extra classes
+ */
+open class Mode(val name: String, val module: Module) : Listenable, Configurable(name) {
+
+    var state = false
 
     protected val mc: MinecraftClient
         get() = net.ccbluex.liquidbounce.utils.mc
@@ -68,38 +103,34 @@ open class Module(val name: String, val category: Category, var description: Str
     protected val world: World
         get() = mc.world!!
 
-    open fun enable() { }
-
-    open fun disable() { }
-
     /**
-     * Registers an event hook for events of type [T]
+     * Events should be handled when mode is enabled
      */
-    inline fun <reified T : Event> sequenceHandler(ignoreCondition: Boolean = false, noinline eventHandler: SuspendableHandler<T>) {
-        handler<T>(ignoreCondition) { event -> Sequence(eventHandler, event) }
-    }
+    override fun handleEvents() = module.enabled && state
 
-    /**
-     * Registers an event hook for events of type [T]
-     */
-    inline fun repeatableSequence(noinline eventHandler: SuspendableHandler<ModuleEvent>) {
-        var sequence: Sequence<ModuleEvent>? = null
-        handler<ModuleEvent>(true) { event ->
-            if (event.module != this)
-                return@handler
+}
 
-            sequence = if (event.newState) {
-                Sequence(eventHandler, event, loop = true)
-            } else {
-                sequence?.cancel()
-                null
-            }
+/**
+ * Registers an event hook for events of type [T] and launches a sequence
+ */
+inline fun <reified T : Event> Listenable.sequenceHandler(ignoreCondition: Boolean = false, noinline eventHandler: SuspendableHandler<T>) {
+    handler<T>(ignoreCondition) { event -> Sequence(eventHandler, event) }
+}
+
+/**
+ * Registers a repeatable sequence which continues to execute until the module is turned off
+ */
+inline fun Listenable.repeatableSequence(noinline eventHandler: SuspendableHandler<ModuleEvent>) {
+    var sequence: Sequence<ModuleEvent>? = null
+    handler<ModuleEvent>(true) { event ->
+        if (event.module != this)
+            return@handler
+
+        sequence = if (event.newState) {
+            Sequence(eventHandler, event, loop = true)
+        } else {
+            sequence?.cancel()
+            null
         }
     }
-
-    /**
-     * Events should be handled when module is enabled
-     */
-    override fun handleEvents() = state
-
 }

@@ -18,10 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.boolean
+import net.ccbluex.liquidbounce.config.mode
 import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Mode
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.sequenceHandler
 import net.ccbluex.liquidbounce.utils.extensions.moving
 import java.lang.Math.toRadians
 import kotlin.math.cos
@@ -29,7 +31,13 @@ import kotlin.math.sin
 
 object ModuleSpeed : Module("Speed", Category.COMBAT) {
 
-    private var port by boolean("yPort", true)
+    val mode by mode("Mode", "YPort", mutableListOf(
+        ModeSpeedYPort(this)
+    ))
+
+}
+
+private class ModeSpeedYPort(module: Module) : Mode("YPort", module) {
 
     val tickHandler = sequenceHandler<EntityTickEvent> {
         if (player.isOnGround && player.moving) {
@@ -38,11 +46,10 @@ object ModuleSpeed : Module("Speed", Category.COMBAT) {
             val z = cos(angle) * 0.4
 
             player.setVelocity(x, 0.42, z)
-            if (port) {
-                wait(1)
-                player.setVelocity(x, -1.0, z)
-            }
+            wait(1)
+            player.setVelocity(x, -1.0, z)
         }
+
     }
 
 }

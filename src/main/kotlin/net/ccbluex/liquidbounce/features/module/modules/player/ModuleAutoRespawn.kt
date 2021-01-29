@@ -18,14 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.boolean
 import net.ccbluex.liquidbounce.config.int
-import net.ccbluex.liquidbounce.config.intRange
-import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.event.ScreenEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.sequenceHandler
 import net.minecraft.client.gui.screen.DeathScreen
 
 /**

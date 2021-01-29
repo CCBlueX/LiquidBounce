@@ -41,7 +41,7 @@ object CommandPanic {
                     .build()
             )
             .handler { args ->
-                var modules = ModuleManager.filter { it.state }
+                var modules = ModuleManager.filter { it.enabled }
                 val msg: String
 
                 val type = if (args.isNotEmpty()) {
@@ -64,7 +64,7 @@ object CommandPanic {
                     }
                 }
 
-                modules.forEach { it.state = false }
+                modules.forEach { it.enabled = false }
                 chat("Disabled $msg modules.")
             }
             .build()
