@@ -32,20 +32,20 @@ class FreeCam : Module()
 	override fun onEnable()
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val theWorld = mc.theWorld ?: return
 
 		oldX = thePlayer.posX
 		oldY = thePlayer.posY
 		oldZ = thePlayer.posZ
 
-		val playerMP = classProvider.createEntityOtherPlayerMP(mc.theWorld!!, thePlayer.gameProfile)
-
+		val playerMP = classProvider.createEntityOtherPlayerMP(theWorld, thePlayer.gameProfile)
 
 		playerMP.rotationYawHead = thePlayer.rotationYawHead
 		playerMP.renderYawOffset = thePlayer.renderYawOffset
 		playerMP.rotationYawHead = thePlayer.rotationYawHead
 		playerMP.copyLocationAndAnglesFrom(thePlayer)
 
-		(mc.theWorld ?: return).addEntityToWorld(-1000, playerMP)
+		theWorld.addEntityToWorld(-1000, playerMP)
 
 		if (noClipValue.get()) thePlayer.noClip = true
 
@@ -54,14 +54,15 @@ class FreeCam : Module()
 
 	override fun onDisable()
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		fakePlayer ?: return
+		val fakePlayer = fakePlayer ?: return
 
 		thePlayer.setPositionAndRotation(oldX, oldY, oldZ, thePlayer.rotationYaw, thePlayer.rotationPitch)
 
-		(mc.theWorld ?: return).removeEntityFromWorld(fakePlayer!!.entityId)
-		fakePlayer = null
+		theWorld.removeEntityFromWorld(fakePlayer.entityId)
+		this.fakePlayer = null
 
 		thePlayer.motionX = 0.0
 		thePlayer.motionY = 0.0
@@ -85,9 +86,9 @@ class FreeCam : Module()
 			thePlayer.motionX = 0.0
 			thePlayer.motionZ = 0.0
 
-			if (mc.gameSettings.keyBindJump.isKeyDown) thePlayer.motionY += value
-
-			if (mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY -= value
+			val gameSettings = mc.gameSettings
+			if (gameSettings.keyBindJump.isKeyDown) thePlayer.motionY += value
+			if (gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY -= value
 
 			MovementUtils.strafe(value)
 		}

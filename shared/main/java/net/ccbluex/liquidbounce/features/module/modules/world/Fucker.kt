@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
@@ -72,7 +73,7 @@ object Fucker : Module()
 
 		val targetId = blockValue.get()
 
-		if (currentPos == null || functions.getIdFromBlock(getBlock(currentPos!!)!!) != targetId || getCenterDistance(currentPos!!) > rangeValue.get()) currentPos = find(targetId)
+		if (currentPos == null || functions.getIdFromBlock(getBlock(currentPos!!)!!) != targetId || getCenterDistance(currentPos!!) > rangeValue.get()) currentPos = find(thePlayer, targetId)
 
 		// Reset current breaking when there is no target block
 		if (currentPos == null)
@@ -126,16 +127,22 @@ object Fucker : Module()
 		if (rotationsValue.get()) RotationUtils.setTargetRotation(rotations.rotation)
 
 		when
-		{ // Destory block
+		{
+
+			// Destory block
 			actionValue.get().equals("destroy", true) || surroundings ->
-			{ // Auto Tool
+			{
+
+				// Auto Tool
 				val autoTool = LiquidBounce.moduleManager[AutoTool::class.java] as AutoTool
+				val netHandler = mc.netHandler
+
 				if (autoTool.state) autoTool.switchSlot(currentPos)
 
 				// Break block
 				if (instantValue.get())
 				{ // CivBreak style block breaking
-					mc.netHandler.addToSendQueue(
+					netHandler.addToSendQueue(
 						classProvider.createCPacketPlayerDigging(
 							ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, currentPos, classProvider.getEnumFacing(EnumFacingType.DOWN)
 						)
@@ -143,7 +150,7 @@ object Fucker : Module()
 
 					if (swingValue.get()) thePlayer.swingItem()
 
-					mc.netHandler.addToSendQueue(
+					netHandler.addToSendQueue(
 						classProvider.createCPacketPlayerDigging(
 							ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, currentPos, classProvider.getEnumFacing(EnumFacingType.DOWN)
 						)
@@ -157,7 +164,7 @@ object Fucker : Module()
 
 				if (currentDamage == 0F)
 				{
-					mc.netHandler.addToSendQueue(
+					netHandler.addToSendQueue(
 						classProvider.createCPacketPlayerDigging(
 							ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, currentPos, classProvider.getEnumFacing(EnumFacingType.DOWN)
 						)
@@ -181,7 +188,7 @@ object Fucker : Module()
 
 				if (currentDamage >= 1F)
 				{
-					mc.netHandler.addToSendQueue(
+					netHandler.addToSendQueue(
 						classProvider.createCPacketPlayerDigging(
 							ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, currentPos, classProvider.getEnumFacing(EnumFacingType.DOWN)
 						)
@@ -227,10 +234,8 @@ object Fucker : Module()
 	/**
 	 * Find new target block by [targetID]
 	 */
-	private fun find(targetID: Int): WBlockPos?
+	private fun find(thePlayer: IEntityPlayerSP, targetID: Int): WBlockPos?
 	{
-		val thePlayer = mc.thePlayer ?: return null
-
 		val radius = rangeValue.get().toInt() + 1
 
 		var nearestBlockDistance = Double.MAX_VALUE
@@ -252,7 +257,7 @@ object Fucker : Module()
 					val distance = getCenterDistance(blockPos)
 					if (distance > rangeValue.get()) continue
 					if (nearestBlockDistance < distance) continue
-					if (!isHitable(blockPos) && !surroundingsValue.get()) continue
+					if (!isHitable(thePlayer, blockPos) && !surroundingsValue.get()) continue
 
 					nearestBlockDistance = distance
 					nearestBlock = blockPos
@@ -266,10 +271,8 @@ object Fucker : Module()
 	/**
 	 * Check if block is hitable (or allowed to hit through walls)
 	 */
-	private fun isHitable(blockPos: WBlockPos): Boolean
+	private fun isHitable(thePlayer: IEntityPlayerSP, blockPos: WBlockPos): Boolean
 	{
-		val thePlayer = mc.thePlayer ?: return false
-
 		return when (throughWallsValue.get().toLowerCase())
 		{
 			"raycast" ->

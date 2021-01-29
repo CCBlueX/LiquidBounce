@@ -27,6 +27,7 @@ class SpectreOnGround : SpeedMode("Spectre-OnGround")
 		val thePlayer = mc.thePlayer ?: return
 
 		if (!MovementUtils.isMoving || thePlayer.movementInput.jump) return
+
 		if (speedUp >= 10)
 		{
 			if (thePlayer.onGround)
@@ -37,11 +38,14 @@ class SpectreOnGround : SpeedMode("Spectre-OnGround")
 			}
 			return
 		}
+
 		if (thePlayer.onGround && MovementUtils.isMoving)
 		{
 			val dir = MovementUtils.direction
+
 			thePlayer.motionX -= functions.sin(dir) * 0.145f
 			thePlayer.motionZ += functions.cos(dir) * 0.145f
+
 			event.x = thePlayer.motionX
 			event.y = 0.005
 			event.z = thePlayer.motionZ

@@ -37,8 +37,10 @@ class Regen : Module()
 		resetTimer = false
 
 		val thePlayer = mc.thePlayer ?: return
+		val netHandler = mc.netHandler
+		val onGround = thePlayer.onGround
 
-		if ((!noAirValue.get() || thePlayer.onGround) && !thePlayer.capabilities.isCreativeMode && thePlayer.foodStats.foodLevel > foodValue.get() && thePlayer.entityAlive && thePlayer.health < healthValue.get())
+		if ((!noAirValue.get() || onGround) && !thePlayer.capabilities.isCreativeMode && thePlayer.foodStats.foodLevel > foodValue.get() && thePlayer.entityAlive && thePlayer.health < healthValue.get())
 		{
 			if (potionEffectValue.get() && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.REGENERATION))) return
 
@@ -48,18 +50,18 @@ class Regen : Module()
 				{
 					WorkerUtils.workers.submit {
 						repeat(speedValue.get()) {
-							mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 						}
 					}
 				}
 
 				"spartan" ->
 				{
-					if (MovementUtils.isMoving || !thePlayer.onGround) return
+					if (MovementUtils.isMoving || !onGround) return
 
 					WorkerUtils.workers.submit {
 						repeat(9) {
-							mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 						}
 					}
 

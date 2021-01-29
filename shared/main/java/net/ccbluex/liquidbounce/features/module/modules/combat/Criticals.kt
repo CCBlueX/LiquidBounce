@@ -29,7 +29,7 @@ class Criticals : Module()
 
 	override fun onEnable()
 	{
-		if (modeValue.get().equals("NoGround", ignoreCase = true)) mc.thePlayer!!.jump()
+		if (modeValue.get().equals("NoGround", ignoreCase = true)) (mc.thePlayer ?: return).jump()
 	}
 
 	@EventTarget
@@ -38,12 +38,10 @@ class Criticals : Module()
 		if (classProvider.isEntityLivingBase(event.targetEntity))
 		{
 			val thePlayer = mc.thePlayer ?: return
-			val entity = event.targetEntity!!.asEntityLivingBase()
+			val entity = (event.targetEntity ?: return).asEntityLivingBase()
+			val networkManager = mc.netHandler.networkManager
 
-			if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.isInWeb || thePlayer.isInWater || thePlayer.isInLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTimeValue.get() || LiquidBounce.moduleManager[Fly::class.java].state || !msTimer.hasTimePassed(
-					delayValue.get().toLong()
-				)
-			) return
+			if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.isInWeb || thePlayer.isInWater || thePlayer.isInLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTimeValue.get() || LiquidBounce.moduleManager[Fly::class.java].state || !msTimer.hasTimePassed(delayValue.get().toLong())) return
 
 			val x = thePlayer.posX
 			val y = thePlayer.posY
@@ -53,18 +51,18 @@ class Criticals : Module()
 			{
 				"packet" ->
 				{
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.0625, z, true))
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y, z, false))
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 1.1E-5, z, false))
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y, z, false))
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.0625, z, true))
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y, z, false))
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 1.1E-5, z, false))
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y, z, false))
 					thePlayer.onCriticalHit(entity)
 				}
 
 				"ncppacket" ->
 				{
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.11, z, false))
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.1100013579, z, false))
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.0000013579, z, false))
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.11, z, false))
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.1100013579, z, false))
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.0000013579, z, false))
 					thePlayer.onCriticalHit(entity)
 				}
 
@@ -77,8 +75,8 @@ class Criticals : Module()
 
 				"tphop" ->
 				{
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.02, z, false))
-					mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.01, z, false))
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.02, z, false))
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.01, z, false))
 					thePlayer.setPosition(x, y + 0.01, z)
 				}
 

@@ -17,7 +17,7 @@ class Freeze : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
-		val thePlayer = mc.thePlayer!!
+		val thePlayer = mc.thePlayer ?: return
 
 		thePlayer.isDead = true
 		thePlayer.rotationYaw = thePlayer.cameraYaw

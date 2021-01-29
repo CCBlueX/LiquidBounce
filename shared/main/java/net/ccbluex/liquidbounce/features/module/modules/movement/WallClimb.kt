@@ -23,7 +23,7 @@ class WallClimb : Module()
 	private val simpleSpeedValue = FloatValue("Simple-Speed", 0.2F, 0.01F, 1F)
 
 	private var glitch = false
-	private var waited = 0
+	private var aac3_3_12_steps = 0
 
 	@EventTarget
 	fun onMove(event: MoveEvent)
@@ -46,18 +46,21 @@ class WallClimb : Module()
 
 		if (event.eventState != EventState.POST || thePlayer == null) return
 
+		val onGround = thePlayer.onGround
 
 		when (modeValue.get().toLowerCase())
 		{
 			"clip" ->
 			{
 				if (thePlayer.motionY < 0) glitch = true
+
 				if (thePlayer.isCollidedHorizontally)
 				{
 					when (clipMode.get().toLowerCase())
 					{
-						"jump" -> if (thePlayer.onGround) thePlayer.jump()
-						"fast" -> if (thePlayer.onGround) thePlayer.motionY = 0.42
+						"jump" -> if (onGround) thePlayer.jump()
+
+						"fast" -> if (onGround) thePlayer.motionY = 0.42
 						else if (thePlayer.motionY < 0) thePlayer.motionY = -0.3
 					}
 				}
@@ -75,17 +78,20 @@ class WallClimb : Module()
 
 			"aac3.3.12" -> if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder)
 			{
-				waited++
-				if (waited == 1) thePlayer.motionY = 0.43
-				if (waited == 12) thePlayer.motionY = 0.43
-				if (waited == 23) thePlayer.motionY = 0.43
-				if (waited == 29) thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
-				if (waited >= 30) waited = 0
-			} else if (thePlayer.onGround) waited = 0
+				aac3_3_12_steps++
+
+				if (aac3_3_12_steps == 1) thePlayer.motionY = 0.43
+				if (aac3_3_12_steps == 12) thePlayer.motionY = 0.43
+				if (aac3_3_12_steps == 23) thePlayer.motionY = 0.43
+				if (aac3_3_12_steps == 29) thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
+				if (aac3_3_12_steps >= 30) aac3_3_12_steps = 0
+
+			} else if (onGround) aac3_3_12_steps = 0
 
 			"aacglide" ->
 			{
 				if (!thePlayer.isCollidedHorizontally || thePlayer.isOnLadder) return
+
 				thePlayer.motionY = -0.19
 			}
 		}
@@ -100,9 +106,10 @@ class WallClimb : Module()
 
 			if (glitch)
 			{
-				val yaw = MovementUtils.direction
-				packetPlayer.x = packetPlayer.x - functions.sin(yaw) * 0.00000001
-				packetPlayer.z = packetPlayer.z + functions.cos(yaw) * 0.00000001
+				val dir = MovementUtils.direction
+				packetPlayer.x = packetPlayer.x - functions.sin(dir) * 0.00000001
+				packetPlayer.z = packetPlayer.z + functions.cos(dir) * 0.00000001
+
 				glitch = false
 			}
 		}

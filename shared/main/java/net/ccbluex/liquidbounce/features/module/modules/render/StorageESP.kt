@@ -105,9 +105,10 @@ class StorageESP : Module()
 				OutlineUtils.checkSetupFBO()
 			}
 
-			val gamma = mc.gameSettings.gammaSetting
+			val gameSettings = mc.gameSettings
+			val gamma = gameSettings.gammaSetting
 
-			mc.gameSettings.gammaSetting = 100000.0f
+			gameSettings.gammaSetting = 100000.0f
 
 
 			for (tileEntity in theWorld.loadedTileEntityList)
@@ -204,8 +205,8 @@ class StorageESP : Module()
 
 					"outline" ->
 					{
-						val entityShadow: Boolean = mc.gameSettings.entityShadows
-						mc.gameSettings.entityShadows = false
+						val entityShadow: Boolean = gameSettings.entityShadows
+						gameSettings.entityShadows = false
 
 						RenderUtils.glColor(color)
 
@@ -228,13 +229,13 @@ class StorageESP : Module()
 						OutlineUtils.renderFive()
 						OutlineUtils.setColor(Color.WHITE)
 
-						mc.gameSettings.entityShadows = entityShadow
+						gameSettings.entityShadows = entityShadow
 					}
 
 					"wireframe" ->
 					{
-						val entityShadow: Boolean = mc.gameSettings.entityShadows
-						mc.gameSettings.entityShadows = false
+						val entityShadow: Boolean = gameSettings.entityShadows
+						gameSettings.entityShadows = false
 
 						GL11.glPushMatrix()
 						GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
@@ -259,14 +260,14 @@ class StorageESP : Module()
 						GL11.glPopAttrib()
 						GL11.glPopMatrix()
 
-						mc.gameSettings.entityShadows = entityShadow
+						gameSettings.entityShadows = entityShadow
 					}
 				}
 			}
 
 			RenderUtils.glColor(Color(255, 255, 255, 255))
 
-			mc.gameSettings.gammaSetting = gamma
+			gameSettings.gammaSetting = gamma
 		} catch (ignored: Exception)
 		{
 		}

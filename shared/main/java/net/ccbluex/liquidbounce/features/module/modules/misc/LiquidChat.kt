@@ -99,18 +99,12 @@ class LiquidChat : Module()
 		 */
 		override fun onPacket(packet: Packet)
 		{
+			val thePlayer = mc.thePlayer ?: return
+
 			when (packet)
 			{
 				is ClientMessagePacket ->
 				{
-					val thePlayer = mc.thePlayer
-
-					if (thePlayer == null)
-					{
-						ClientUtils.logger.info("[LiquidChat] ${packet.user.name}: ${packet.content}")
-						return
-					}
-
 					val chatComponent = classProvider.createChatComponentText("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79${packet.user.name}: ")
 					val messageComponent = toChatComponent(packet.content)
 					chatComponent.appendSibling(messageComponent)
@@ -122,23 +116,23 @@ class LiquidChat : Module()
 
 				is ClientErrorPacket ->
 				{
-					val message = when (packet.message)
+					val message = when (packet.message.toLowerCase())
 					{
-						"NotSupported" -> "This method is not supported!"
-						"LoginFailed" -> "Login Failed!"
-						"NotLoggedIn" -> "You must be logged in to use the chat! Enable LiquidChat."
-						"AlreadyLoggedIn" -> "You are already logged in!"
-						"MojangRequestMissing" -> "Mojang request missing!"
-						"NotPermitted" -> "You are missing the required permissions!"
-						"NotBanned" -> "You are not banned!"
-						"Banned" -> "You are banned!"
-						"RateLimited" -> "You have been rate limited. Please try again later."
-						"PrivateMessageNotAccepted" -> "Private message not accepted!"
-						"EmptyMessage" -> "You are trying to send an empty message!"
-						"MessageTooLong" -> "Message is too long!"
-						"InvalidCharacter" -> "Message contains a non-ASCII character!"
-						"InvalidId" -> "The given ID is invalid!"
-						"Internal" -> "An internal server error occurred!"
+						"notsupported" -> "This method is not supported!"
+						"loginfailed" -> "Login Failed!"
+						"notloggedin" -> "You must be logged in to use the chat! Enable LiquidChat."
+						"alreadyloggedin" -> "You are already logged in!"
+						"mojangrequestmissing" -> "Mojang request missing!"
+						"notpermitted" -> "You are missing the required permissions!"
+						"notbanned" -> "You are not banned!"
+						"banned" -> "You are banned!"
+						"ratelimited" -> "You have been rate limited. Please try again later."
+						"privatemessagenotaccepted" -> "Private message not accepted!"
+						"emptymessage" -> "You are trying to send an empty message!"
+						"messagetoolong" -> "Message is too long!"
+						"invalidcharacter" -> "Message contains a non-ASCII character!"
+						"invalidid" -> "The given ID is invalid!"
+						"internal" -> "An internal server error occurred!"
 						else -> packet.message
 					}
 
@@ -147,9 +141,9 @@ class LiquidChat : Module()
 
 				is ClientSuccessPacket ->
 				{
-					when (packet.reason)
+					when (packet.reason.toLowerCase())
 					{
-						"Login" ->
+						"login" ->
 						{
 							ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Logged in!")
 
@@ -162,8 +156,8 @@ class LiquidChat : Module()
 							loggedIn = true
 						}
 
-						"Ban" -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Successfully banned user!")
-						"Unban" -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Successfully unbanned user!")
+						"ban" -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Successfully banned user!")
+						"unban" -> ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A79Successfully unbanned user!")
 					}
 				}
 

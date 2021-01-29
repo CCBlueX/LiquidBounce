@@ -15,7 +15,6 @@ import kotlin.random.Random
 @ModuleInfo(name = "Derp", description = "Makes it look like you were derping around.", category = ModuleCategory.FUN)
 class Derp : Module()
 {
-
 	private val headlessValue = BoolValue("Headless", false)
 	private val spinnyValue = BoolValue("Spinny", false)
 	private val incrementValue = FloatValue("Increment", 1F, 0F, 50F)
@@ -37,5 +36,4 @@ class Derp : Module()
 
 			return derpRotations
 		}
-
 }

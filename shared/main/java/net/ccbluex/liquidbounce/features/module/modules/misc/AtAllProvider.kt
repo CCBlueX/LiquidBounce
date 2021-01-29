@@ -56,6 +56,7 @@ class AtAllProvider : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
 		if (!msTimer.hasTimePassed(delay)) return
+		val thePlayer = mc.thePlayer ?: return
 
 		try
 		{
@@ -67,7 +68,7 @@ class AtAllProvider : Module()
 					sendQueue.addAll(retryQueue)
 				}
 
-				mc.thePlayer!!.sendChatMessage(sendQueue.take())
+				thePlayer.sendChatMessage(sendQueue.take())
 				msTimer.reset()
 
 				delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())

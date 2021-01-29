@@ -19,7 +19,6 @@ import kotlin.random.Random
 @ModuleInfo(name = "SkinDerp", description = "Makes your skin blink (Requires multi-layer skin).", category = ModuleCategory.FUN)
 class SkinDerp : Module()
 {
-
 	private val delayValue = IntegerValue("Delay", 0, 0, 1000)
 	private val hatValue = BoolValue("Hat", true)
 	private val jacketValue = BoolValue("Jacket", true)
@@ -40,8 +39,9 @@ class SkinDerp : Module()
 	}
 
 	override fun onDisable()
-	{ // Disable all current model parts
+	{
 
+		// Disable all current model parts
 		for (modelPart in mc.gameSettings.modelParts) mc.gameSettings.setModelPartEnabled(modelPart, false)
 
 		// Enable all old model parts
@@ -55,14 +55,15 @@ class SkinDerp : Module()
 	{
 		if (timer.hasTimePassed(delayValue.get().toLong()))
 		{
-			if (hatValue.get()) mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.HAT, Random.nextBoolean())
-			if (jacketValue.get()) mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.JACKET, Random.nextBoolean())
-			if (leftPantsValue.get()) mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.LEFT_PANTS_LEG, Random.nextBoolean())
-			if (rightPantsValue.get()) mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.RIGHT_PANTS_LEG, Random.nextBoolean())
-			if (leftSleeveValue.get()) mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.LEFT_SLEEVE, Random.nextBoolean())
-			if (rightSleeveValue.get()) mc.gameSettings.setModelPartEnabled(WEnumPlayerModelParts.RIGHT_SLEEVE, Random.nextBoolean())
+			val gameSettings = mc.gameSettings
+
+			if (hatValue.get()) gameSettings.setModelPartEnabled(WEnumPlayerModelParts.HAT, Random.nextBoolean())
+			if (jacketValue.get()) gameSettings.setModelPartEnabled(WEnumPlayerModelParts.JACKET, Random.nextBoolean())
+			if (leftPantsValue.get()) gameSettings.setModelPartEnabled(WEnumPlayerModelParts.LEFT_PANTS_LEG, Random.nextBoolean())
+			if (rightPantsValue.get()) gameSettings.setModelPartEnabled(WEnumPlayerModelParts.RIGHT_PANTS_LEG, Random.nextBoolean())
+			if (leftSleeveValue.get()) gameSettings.setModelPartEnabled(WEnumPlayerModelParts.LEFT_SLEEVE, Random.nextBoolean())
+			if (rightSleeveValue.get()) gameSettings.setModelPartEnabled(WEnumPlayerModelParts.RIGHT_SLEEVE, Random.nextBoolean())
 			timer.reset()
 		}
 	}
-
 }

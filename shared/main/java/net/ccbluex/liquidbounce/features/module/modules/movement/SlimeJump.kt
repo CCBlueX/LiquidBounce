@@ -25,7 +25,7 @@ class SlimeJump : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (mc.thePlayer != null && mc.theWorld != null && classProvider.isBlockSlime(getBlock(thePlayer.position.down())))
+		if (classProvider.isBlockSlime(getBlock(thePlayer.position.down())))
 		{
 			event.cancelEvent()
 

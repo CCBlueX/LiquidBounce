@@ -22,9 +22,9 @@ class AutoFish : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
-		val thePlayer = mc.thePlayer
+		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer?.heldItem == null || !classProvider.isItemFishingRod(thePlayer.heldItem!!.item)) return
+		if (thePlayer.heldItem == null || !classProvider.isItemFishingRod(thePlayer.heldItem?.item)) return
 
 		val fishEntity = thePlayer.fishEntity
 

@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
 import net.ccbluex.liquidbounce.api.minecraft.inventory.ISlot
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
@@ -180,7 +181,7 @@ class ChestStealer : Module()
 				delayResetFunc = Runnable { nextDelay = TimeUtils.randomDelay(inventoryCleaner.minDelayValue.get(), inventoryCleaner.maxDelayValue.get()) })
 		) return
 
-		if (notEmpty && (!closeOnFullValue.get() || !fullInventory))
+		if (notEmpty && (!closeOnFullValue.get() || !getFullInventory(thePlayer)))
 		{
 			autoCloseTimer.reset()
 
@@ -281,8 +282,7 @@ class ChestStealer : Module()
 		return if (random) emptySlots[Random.nextInt(emptySlots.size)] else emptySlots.first()
 	}
 
-	private val fullInventory: Boolean
-		get() = mc.thePlayer?.inventory?.mainInventory?.none(ItemUtils::isStackEmpty) ?: false
+	private fun getFullInventory(thePlayer: IEntityPlayerSP): Boolean = thePlayer.inventory.mainInventory.none(ItemUtils::isStackEmpty)
 
 	override val tag: String
 		get() = "${minDelayValue.get()} ~ ${maxDelayValue.get()}"

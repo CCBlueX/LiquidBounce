@@ -25,9 +25,8 @@ class AutoBow : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
+		val thePlayer = mc.thePlayer ?: return
 		val bowAimbot = LiquidBounce.moduleManager[BowAimbot::class.java] as BowAimbot
-
-		val thePlayer = mc.thePlayer!!
 
 		if (thePlayer.isUsingItem && classProvider.isItemBow(thePlayer.heldItem?.item) && thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot.get() || !bowAimbot.state || bowAimbot.hasTarget()))
 		{

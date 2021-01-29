@@ -65,10 +65,14 @@ class Strafe : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		val shotSpeed = sqrt((thePlayer.motionX * thePlayer.motionX) + (thePlayer.motionZ * thePlayer.motionZ))
-		val speed = (shotSpeed * strengthValue.get())
-		val motionX = (thePlayer.motionX * (1 - strengthValue.get()))
-		val motionZ = (thePlayer.motionZ * (1 - strengthValue.get()))
+		val shotSpeed = sqrt(thePlayer.motionX * thePlayer.motionX + thePlayer.motionZ * thePlayer.motionZ)
+
+		val strength = strengthValue.get()
+
+		val speed = (shotSpeed * strength)
+		val motionX = (thePlayer.motionX * (1 - strength))
+		val motionZ = (thePlayer.motionZ * (1 - strength))
+
 		if (!(thePlayer.movementInput.moveForward != 0F || thePlayer.movementInput.moveStrafe != 0F))
 		{
 			if (noMoveStopValue.get())
@@ -76,11 +80,14 @@ class Strafe : Module()
 				thePlayer.motionX = 0.0
 				thePlayer.motionZ = 0.0
 			}
+
 			return
 		}
+
 		if (!thePlayer.onGround || onGroundStrafeValue.get())
 		{
 			val yaw = WMathHelper.toRadians(getMoveYaw(thePlayer))
+
 			thePlayer.motionX = -functions.sin(yaw) * speed + motionX
 			thePlayer.motionZ = functions.cos(yaw) * speed + motionZ
 		}
@@ -89,23 +96,16 @@ class Strafe : Module()
 	private fun getMoveYaw(thePlayer: IEntityPlayerSP): Float
 	{
 		var moveYaw = thePlayer.rotationYaw
-		if (thePlayer.moveForward != 0F && thePlayer.moveStrafing == 0F)
+
+		val moveForward = thePlayer.moveForward
+		val moveStrafing = thePlayer.moveStrafing
+
+		if (moveForward != 0F && moveStrafing == 0F) moveYaw += if (moveForward > 0) 0 else 180 else if (moveForward != 0F && moveStrafing != 0F)
 		{
-			moveYaw += if (thePlayer.moveForward > 0) 0 else 180
-		} else if (thePlayer.moveForward != 0F && thePlayer.moveStrafing != 0F)
-		{
-			if (thePlayer.moveForward > 0)
-			{
-				moveYaw += if (thePlayer.moveStrafing > 0) -45 else 45
-			} else
-			{
-				moveYaw -= if (thePlayer.moveStrafing > 0) -45 else 45
-			}
-			moveYaw += if (thePlayer.moveForward > 0) 0 else 180
-		} else if (thePlayer.moveStrafing != 0F && thePlayer.moveForward == 0F)
-		{
-			moveYaw += if (thePlayer.moveStrafing > 0) -90 else 90
-		}
+			if (moveForward > 0) moveYaw += if (moveStrafing > 0) -45 else 45 else moveYaw -= if (moveStrafing > 0) -45 else 45
+			moveYaw += if (moveForward > 0) 0 else 180
+		} else if (moveStrafing != 0F && moveForward == 0F) moveYaw += if (moveStrafing > 0) -90 else 90
+
 		return moveYaw
 	}
 }

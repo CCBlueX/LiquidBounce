@@ -29,6 +29,8 @@ class ResourcePackSpoof : Module()
 			val url = packet.url
 			val hash = packet.hash
 
+			val netHandler = mc.netHandler
+
 			try
 			{
 				val scheme = URI(url).scheme
@@ -38,12 +40,12 @@ class ResourcePackSpoof : Module()
 
 				if (isLevelProtocol && (url.contains("..") || !url.endsWith("/resources.zip"))) throw URISyntaxException(url, "Invalid levelstorage resourcepack path")
 
-				mc.netHandler.addToSendQueue(
+				netHandler.addToSendQueue(
 					classProvider.createICPacketResourcePackStatus(
 						packet.hash, ICPacketResourcePackStatus.WAction.ACCEPTED
 					)
 				)
-				mc.netHandler.addToSendQueue(
+				netHandler.addToSendQueue(
 					classProvider.createICPacketResourcePackStatus(
 						packet.hash, ICPacketResourcePackStatus.WAction.SUCCESSFULLY_LOADED
 					)
@@ -51,7 +53,7 @@ class ResourcePackSpoof : Module()
 			} catch (e: URISyntaxException)
 			{
 				ClientUtils.logger.error("Failed to handle resource pack", e)
-				mc.netHandler.addToSendQueue(classProvider.createICPacketResourcePackStatus(hash, ICPacketResourcePackStatus.WAction.FAILED_DOWNLOAD))
+				netHandler.addToSendQueue(classProvider.createICPacketResourcePackStatus(hash, ICPacketResourcePackStatus.WAction.FAILED_DOWNLOAD))
 			}
 		}
 	}

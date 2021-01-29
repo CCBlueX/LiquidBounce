@@ -50,6 +50,7 @@ class ItemESP : Module()
 		if (modeValue.get().equals("ShaderOutline", ignoreCase = true))
 		{
 			OutlineShader.OUTLINE_SHADER.startDraw(event.partialTicks)
+
 			try
 			{
 				theWorld.loadedEntityList.asSequence().filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { mc.renderManager.renderEntityStatic(it, event.partialTicks, true) }

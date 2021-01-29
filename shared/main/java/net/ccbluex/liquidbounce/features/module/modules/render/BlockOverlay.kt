@@ -62,11 +62,13 @@ class BlockOverlay : Module()
 		val rainbowSpeed = rainbowSpeedValue.get()
 		val color = if (colorRainbow.get()) rainbow(alpha = alpha / 255.0F, speed = rainbowSpeed, saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
 
-		classProvider.getGlStateManager().enableBlend()
-		classProvider.getGlStateManager().tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+		val glStateManager = classProvider.getGlStateManager()
+
+		glStateManager.enableBlend()
+		glStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
 		RenderUtils.glColor(color)
 		GL11.glLineWidth(2F)
-		classProvider.getGlStateManager().disableTexture2D()
+		glStateManager.disableTexture2D()
 		GL11.glDepthMask(false)
 
 		@Suppress("ConstantConditionIf") if (Backend.MINECRAFT_VERSION_MINOR < 12) block.setBlockBoundsBasedOnState(theWorld, blockPos)
@@ -77,14 +79,15 @@ class BlockOverlay : Module()
 		val y = thePlayer.lastTickPosY + (thePlayer.posY - thePlayer.lastTickPosY) * partialTicks
 		val z = thePlayer.lastTickPosZ + (thePlayer.posZ - thePlayer.lastTickPosZ) * partialTicks
 
-		val axisAlignedBB = block.getSelectedBoundingBox(theWorld, theWorld.getBlockState(blockPos), blockPos).expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026).offset(-x, -y, -z)
+		val boxExxpandSize = 0.0020000000949949026
+		val axisAlignedBB = block.getSelectedBoundingBox(theWorld, theWorld.getBlockState(blockPos), blockPos).expand(boxExxpandSize, boxExxpandSize, boxExxpandSize).offset(-x, -y, -z)
 
 		RenderUtils.drawSelectionBoundingBox(axisAlignedBB)
 		RenderUtils.drawFilledBox(axisAlignedBB)
 		GL11.glDepthMask(true)
-		classProvider.getGlStateManager().enableTexture2D()
-		classProvider.getGlStateManager().disableBlend()
-		classProvider.getGlStateManager().resetColor()
+		glStateManager.enableTexture2D()
+		glStateManager.disableBlend()
+		glStateManager.resetColor()
 	}
 
 	@EventTarget

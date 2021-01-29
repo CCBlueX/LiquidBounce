@@ -59,22 +59,16 @@ class NoSlow : Module()
 		val aura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
 		if (!thePlayer.isBlocking && !aura.serverSideBlockingStatus) return
 
+		val netHandler = mc.netHandler
+
 		if (ncpValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8 && ++ncpDelay > ncpPacketsDelayValue.get())
 		{
 			when (event.eventState)
 			{
-				EventState.PRE ->
-				{
-					val unblock = classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), classProvider.getEnumFacing(EnumFacingType.DOWN))
-					mc.netHandler.addToSendQueue(unblock)
-				}
-
-				EventState.POST ->
-				{
-					val block = classProvider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F)
-					mc.netHandler.addToSendQueue(block)
-				}
+				EventState.PRE -> netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), classProvider.getEnumFacing(EnumFacingType.DOWN)))
+				EventState.POST -> netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F))
 			}
+
 			ncpDelay = 0
 		}
 	}
@@ -82,7 +76,7 @@ class NoSlow : Module()
 	@EventTarget
 	fun onSlowDown(event: SlowDownEvent)
 	{
-		val heldItem = mc.thePlayer!!.heldItem?.item
+		val heldItem = (mc.thePlayer ?: return).heldItem?.item
 
 		event.forward = getMultiplier(heldItem, true)
 		event.strafe = getMultiplier(heldItem, false)
@@ -92,23 +86,10 @@ class NoSlow : Module()
 	{
 		return when
 		{
-			classProvider.isItemFood(item) || classProvider.isItemPotion(item) || classProvider.isItemBucketMilk(item) ->
-			{
-				if (isForward) consumeForwardMultiplier.get() else consumeStrafeMultiplier.get()
-			}
-
-			classProvider.isItemSword(item) ->
-			{
-				if (isForward) blockForwardMultiplier.get() else blockStrafeMultiplier.get()
-			}
-
-			classProvider.isItemBow(item) ->
-			{
-				if (isForward) bowForwardMultiplier.get() else bowStrafeMultiplier.get()
-			}
-
+			classProvider.isItemFood(item) || classProvider.isItemPotion(item) || classProvider.isItemBucketMilk(item) -> if (isForward) consumeForwardMultiplier.get() else consumeStrafeMultiplier.get()
+			classProvider.isItemSword(item) -> if (isForward) blockForwardMultiplier.get() else blockStrafeMultiplier.get()
+			classProvider.isItemBow(item) -> if (isForward) bowForwardMultiplier.get() else bowStrafeMultiplier.get()
 			else -> 0.2F
 		}
 	}
-
 }

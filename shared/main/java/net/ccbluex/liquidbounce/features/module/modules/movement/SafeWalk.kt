@@ -20,7 +20,9 @@ class SafeWalk : Module()
 	@EventTarget
 	fun onMove(event: MoveEvent)
 	{
-		if (airSafeValue.get() || mc.thePlayer!!.onGround) event.isSafeWalk = true
+		val thePlayer = mc.thePlayer ?: return
+
+		if (airSafeValue.get() || thePlayer.onGround) event.isSafeWalk = true
 	}
 
 	override val tag: String?

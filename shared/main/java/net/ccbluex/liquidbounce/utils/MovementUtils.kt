@@ -28,9 +28,11 @@ object MovementUtils : MinecraftInstance()
 	@JvmOverloads
 	fun strafe(speed: Float = this.speed)
 	{
+		val thePlayer = mc.thePlayer ?: return
+
 		if (!isMoving) return
+
 		val dir = direction
-		val thePlayer = mc.thePlayer!!
 		thePlayer.motionX = (-functions.sin(dir) * speed).toDouble()
 		thePlayer.motionZ = (functions.cos(dir) * speed).toDouble()
 	}

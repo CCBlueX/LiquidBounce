@@ -68,6 +68,8 @@ class BugUp : Module()
 			prevZ = thePlayer.prevPosZ
 		}
 
+		val networkManager = mc.netHandler.networkManager
+
 		if (!thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater)
 		{
 			val fallingPlayer = FallingPlayer(thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
@@ -93,16 +95,18 @@ class BugUp : Module()
 
 					"flyflag" ->
 					{
-						tryingFlag = true //						thePlayer.motionY += 0.1
+						tryingFlag = true
+
+						//						thePlayer.motionY += 0.1
 						//						thePlayer.fallDistance = 0F
 					}
 
-					"ongroundspoof" -> mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
+					"ongroundspoof" -> networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
 
 					"motionteleport-flag" ->
 					{
 						thePlayer.setPositionAndUpdate(thePlayer.posX, thePlayer.posY + 1f, thePlayer.posZ)
-						mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
+						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
 						thePlayer.motionY = 0.1
 
 						MovementUtils.strafe()
@@ -124,7 +128,7 @@ class BugUp : Module()
 						thePlayer.fallDistance = 0F
 					}
 
-					"packet" -> mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + flagYPacket.get(), thePlayer.posZ, false))
+					"packet" -> networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + flagYPacket.get(), thePlayer.posZ, false))
 				}
 			} else
 			{
@@ -140,13 +144,17 @@ class BugUp : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (detectedLocation == null || !indicator.get() || thePlayer.fallDistance + (thePlayer.posY - (detectedLocation!!.y + 1)) < 3) return
+		val detectedLocation = detectedLocation ?: return
+		if (!indicator.get() || thePlayer.fallDistance + (thePlayer.posY - (detectedLocation.y + 1)) < 3) return
 
-		val x = detectedLocation!!.x
-		val y = detectedLocation!!.y
-		val z = detectedLocation!!.z
+		val x = detectedLocation.x
+		val y = detectedLocation.y
+		val z = detectedLocation.z
 
 		val renderManager = mc.renderManager
+		val renderPosX = renderManager.renderPosX
+		val renderPosY = renderManager.renderPosY
+		val renderPosZ = renderManager.renderPosZ
 
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 		GL11.glEnable(GL11.GL_BLEND)
@@ -156,11 +164,8 @@ class BugUp : Module()
 		GL11.glDepthMask(false)
 
 		RenderUtils.glColor(Color(255, 0, 0, 90))
-		RenderUtils.drawFilledBox(
-			classProvider.createAxisAlignedBB(
-				x - renderManager.renderPosX, y + 1 - renderManager.renderPosY, z - renderManager.renderPosZ, x - renderManager.renderPosX + 1.0, y + 1.2 - renderManager.renderPosY, z - renderManager.renderPosZ + 1.0
-			)
-		)
+
+		RenderUtils.drawFilledBox(classProvider.createAxisAlignedBB(x - renderPosX, y + 1 - renderPosY, z - renderPosZ, x - renderPosX + 1.0, y + 1.2 - renderPosY, z - renderPosZ + 1.0))
 
 		GL11.glEnable(GL11.GL_TEXTURE_2D)
 		GL11.glEnable(GL11.GL_DEPTH_TEST)

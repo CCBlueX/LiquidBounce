@@ -65,14 +65,17 @@ class Rotations : Module()
 		return scaffoldState || towerState || killauraState || derpState || bowAimbotState || fuckerState || civBreakState || nukerState || chestAuraState || flyState
 	}
 
-	fun interpolateRotation(prev: Float, current: Float, partialTicks: Float): Float
+	companion object
 	{
-		var delta = current - prev
+		fun interpolateRotation(prev: Float, current: Float, partialTicks: Float): Float
+		{
+			var delta = current - prev
 
-		while (delta < -180.0f) delta += 360.0f
-		while (delta >= 180.0f) delta -= 360.0f
+			while (delta < -180.0f) delta += 360.0f
+			while (delta >= 180.0f) delta -= 360.0f
 
-		return prev + delta * partialTicks
+			return prev + delta * partialTicks
+		}
 	}
 
 	override val tag: String

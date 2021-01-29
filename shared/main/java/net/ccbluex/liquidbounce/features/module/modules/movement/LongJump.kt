@@ -101,7 +101,9 @@ class LongJump : Module()
 						thePlayer.jumpMovementFactor = 0.09f
 						thePlayer.motionY += 0.0132099999999999999999999999999
 						thePlayer.jumpMovementFactor = 0.08f
+
 						MovementUtils.strafe()
+
 						boosted = true
 					}
 
@@ -144,11 +146,13 @@ class LongJump : Module()
 						if (!canMineplexBoost) return@run
 
 						thePlayer.jumpMovementFactor = 0.1f
+
 						if (thePlayer.fallDistance > 1.5f)
 						{
 							thePlayer.jumpMovementFactor = 0f
 							thePlayer.motionY = -10.0
 						}
+
 						boosted = true
 						MovementUtils.strafe()
 					}
@@ -157,6 +161,7 @@ class LongJump : Module()
 					{
 						thePlayer.jumpMovementFactor = 0.15f
 						thePlayer.motionY += 0.05f
+
 						boosted = true
 					}
 				}
@@ -183,8 +188,11 @@ class LongJump : Module()
 			if (mode.equals("Teleport", ignoreCase = true) && isMoving && canBoost)
 			{
 				val dir = direction
-				event.x = (-functions.sin(dir) * teleportDistanceValue.get()).toDouble()
-				event.z = (functions.cos(dir) * teleportDistanceValue.get()).toDouble()
+				val teleportDistance = teleportDistanceValue.get()
+
+				event.x = (-functions.sin(dir) * teleportDistance).toDouble()
+				event.z = (functions.cos(dir) * teleportDistance).toDouble()
+
 				canBoost = false
 				boosted = true
 				if (autoDisableValue.get()) state = false
@@ -199,6 +207,8 @@ class LongJump : Module()
 	@EventTarget(ignoreCondition = true)
 	fun onJump(event: JumpEvent)
 	{
+		val thePlayer = mc.thePlayer ?: return
+
 		jumped = true
 		canBoost = true
 
@@ -210,11 +220,11 @@ class LongJump : Module()
 
 				"mineplex2" ->
 				{
-					if (mc.thePlayer!!.isCollidedHorizontally)
+					if (thePlayer.isCollidedHorizontally)
 					{
 						event.motion = 2.31f
 						canMineplexBoost = true
-						mc.thePlayer!!.onGround = false
+						thePlayer.onGround = false
 					}
 				}
 			}

@@ -55,7 +55,7 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 	override fun onMove(event: MoveEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
-		
+
 		++timerDelay
 		timerDelay %= 5
 		if (timerDelay != 0)
@@ -135,8 +135,11 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 	private val baseMoveSpeed: Double
 		get()
 		{
+			val thePlayer = mc.thePlayer!!
+
 			var baseSpeed = 0.2873
-			if (mc.thePlayer!!.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) baseSpeed *= 1.0 + 0.2 * (mc.thePlayer!!.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED)))!!.amplifier + 1
+			if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) baseSpeed *= 1.0 + 0.2 * (thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED)))!!.amplifier + 1
+
 			return baseSpeed
 		}
 

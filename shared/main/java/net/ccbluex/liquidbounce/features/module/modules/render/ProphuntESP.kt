@@ -53,9 +53,12 @@ class ProphuntESP : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
+		val theWorld = mc.theWorld ?: return
+
 		val mode = modeValue.get()
 		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
-		for (entity in (mc.theWorld ?: return).loadedEntityList)
+
+		for (entity in theWorld.loadedEntityList)
 		{
 			if (!mode.equals("Box", true) || !mode.equals("OtherBox", true)) break
 			if (!classProvider.isEntityFallingBlock(entity)) continue
@@ -105,6 +108,7 @@ class ProphuntESP : Module()
 
 		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 		val radius = if (mode.equals("ShaderOutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("ShaderGlow", ignoreCase = true)) shaderGlowRadius.get() else 1f
+
 		shader.stopDraw(color, radius, 1f)
 	}
 

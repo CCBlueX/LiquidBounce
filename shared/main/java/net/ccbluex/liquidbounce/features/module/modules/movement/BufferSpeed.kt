@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.BlockType
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -112,7 +113,7 @@ class BufferSpeed : Module()
 				{
 					"old" ->
 					{
-						boost(slabsBoostValue.get())
+						boost(thePlayer, slabsBoostValue.get())
 						return
 					}
 
@@ -142,7 +143,7 @@ class BufferSpeed : Module()
 				{
 					"old" ->
 					{
-						boost(stairsBoostValue.get())
+						boost(thePlayer, stairsBoostValue.get())
 						return
 					}
 
@@ -170,22 +171,19 @@ class BufferSpeed : Module()
 
 			if (headBlockValue.get() && getBlock(blockPos.up(2)) == classProvider.getBlockEnum(BlockType.AIR))
 			{
-				boost(headBlockBoostValue.get())
+				boost(thePlayer, headBlockBoostValue.get())
 				return
 			}
 
 			if (iceValue.get() && (getBlock(blockPos.down()) == classProvider.getBlockEnum(BlockType.ICE) || getBlock(blockPos.down()) == classProvider.getBlockEnum(BlockType.ICE_PACKED)))
 			{
-				boost(iceBoostValue.get())
+				boost(thePlayer, iceBoostValue.get())
 				return
 			}
 
 			if (snowValue.get() && getBlock(blockPos) == classProvider.getBlockEnum(BlockType.SNOW_LAYER) && (snowPortValue.get() || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500))
 			{
-				if (thePlayer.posY - thePlayer.posY.toInt() >= 0.12500)
-				{
-					boost(snowBoostValue.get())
-				} else
+				if (thePlayer.posY - thePlayer.posY.toInt() >= 0.12500) boost(thePlayer, snowBoostValue.get()) else
 				{
 					thePlayer.jump()
 					forceDown = true
@@ -199,7 +197,7 @@ class BufferSpeed : Module()
 				{
 					"old" -> if (thePlayer.isCollidedVertically && isNearBlock || !classProvider.isBlockAir(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))))
 					{
-						boost(wallBoostValue.get())
+						boost(thePlayer, wallBoostValue.get())
 						return
 					}
 					"new" -> if (isNearBlock && !thePlayer.movementInput.jump)
@@ -260,31 +258,32 @@ class BufferSpeed : Module()
 		}
 	}
 
-	private fun boost(boost: Float)
+	private fun boost(thePlayer: IEntityPlayerSP, boost: Float)
 	{
-		val thePlayer = mc.thePlayer!!
-
 		thePlayer.motionX = thePlayer.motionX * boost
 		thePlayer.motionZ = thePlayer.motionX * boost
 
 		speed = MovementUtils.speed
 
-		if (speedLimitValue.get() && speed > maxSpeedValue.get()) speed = maxSpeedValue.get()
+		val maxSpeed = maxSpeedValue.get()
+		if (speedLimitValue.get() && speed > maxSpeed) speed = maxSpeed
 	}
 
 	private val isNearBlock: Boolean
 		get()
 		{
-			val thePlayer = mc.thePlayer
-			val theWorld = mc.theWorld
+			val thePlayer = mc.thePlayer!!
+			val theWorld = mc.theWorld!!
 			val blocks: MutableList<WBlockPos> = ArrayList()
-			blocks.add(WBlockPos(thePlayer!!.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7))
+
+			blocks.add(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7))
 			blocks.add(WBlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ))
 			blocks.add(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ + 0.7))
 			blocks.add(WBlockPos(thePlayer.posX - 0.7, thePlayer.posY + 1, thePlayer.posZ))
+
 			for (blockPos in blocks)
 			{
-				val blockState = theWorld!!.getBlockState(blockPos)
+				val blockState = theWorld.getBlockState(blockPos)
 
 				val collisionBoundingBox = blockState.block.getCollisionBoundingBox(theWorld, blockPos, blockState)
 

@@ -28,7 +28,7 @@ class MidClick : Module()
 
 		if (!wasDown && Mouse.isButtonDown(2))
 		{
-			val entity = mc.objectMouseOver!!.entityHit
+			val entity = (mc.objectMouseOver ?: return).entityHit
 
 			if (classProvider.isEntityPlayer(entity))
 			{
@@ -49,6 +49,7 @@ class MidClick : Module()
 
 			} else ClientUtils.displayChatMessage("\u00A7c\u00A7lError: \u00A7aYou need to select a player.")
 		}
+
 		wasDown = Mouse.isButtonDown(2)
 	}
 }

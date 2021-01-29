@@ -5,6 +5,7 @@ import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.MaterialType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
@@ -65,62 +66,65 @@ class ExtendedReach : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
-		if (mc.thePlayer == null) return
-		if (pathEspValue.get() && path.isNotEmpty() && !pathESPTimer.hasTimePassed(pathEspTimeValue.get().toLong())) for (pos in path) drawPath(pos)
+		val thePlayer = mc.thePlayer ?: return
+		if (pathEspValue.get() && path.isNotEmpty() && !pathESPTimer.hasTimePassed(pathEspTimeValue.get().toLong())) for (pos in path) drawPath(thePlayer, pos)
 	}
 
 	@EventTarget
 	fun onPacket(event: PacketEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
-		val p = event.packet
+		val playerPosVec = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 
-		if (classProvider.isCPacketPlayerBlockPlacement(p))
+		val packet = event.packet
+		val networkManager = mc.netHandler.networkManager
+
+		if (classProvider.isCPacketPlayerBlockPlacement(packet))
 		{
-			val blockPlacement = p.asCPacketPlayerBlockPlacement()
+			val blockPlacement = packet.asCPacketPlayerBlockPlacement()
 			val pos = blockPlacement.position
 			val stack = blockPlacement.stack
 			val distance = sqrt(thePlayer.getDistanceSq(pos))
+
 			if (distance > 6.0 && pos.y != -1 && (stack != null || classProvider.isBlockContainer(getState(pos)!!.block)))
 			{
-				val from = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 				val to = WVec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-				path = computePath(from, to)
+				path = computePath(playerPosVec, to)
 
 				// Travel to the target block.
-				for (pathElm in path) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 				pathESPTimer.reset()
-				mc.netHandler.networkManager.sendPacketWithoutEvent(p)
+				networkManager.sendPacketWithoutEvent(packet)
 
 				// Go back to the home.
 				path.reverse()
-				for (pathElm in path) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 				event.cancelEvent()
 			}
 		}
-		if (classProvider.isCPacketPlayerDigging(p))
+		if (classProvider.isCPacketPlayerDigging(packet))
 		{
-			val digging = p.asCPacketPlayerDigging()
+			val digging = packet.asCPacketPlayerDigging()
 			val action = digging.status
 			val pos = digging.position
 			val face = digging.facing
 			val distance = sqrt(thePlayer.getDistanceSq(pos))
+
 			if (distance > 6 && action == ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK)
 			{
-				val topFrom = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 				val to = WVec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-				path = computePath(topFrom, to)
+				path = computePath(playerPosVec, to)
 
 				// Travel to the target.
-				for (pathElm in path) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 				pathESPTimer.reset()
 				val end = classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, pos, face)
-				mc.netHandler.networkManager.sendPacketWithoutEvent(p)
-				mc.netHandler.networkManager.sendPacketWithoutEvent(end)
+				networkManager.sendPacketWithoutEvent(packet)
+				networkManager.sendPacketWithoutEvent(end)
 
 				// Go back to the home.
 				path.reverse()
-				for (pathElm in path) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 				event.cancelEvent()
 			} else if (action == ICPacketPlayerDigging.WAction.ABORT_DESTROY_BLOCK) event.cancelEvent()
 		}
@@ -130,6 +134,9 @@ class ExtendedReach : Module()
 	fun onMotion(event: MotionEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+
+		val netHandler = mc.netHandler
+		val networkManager = netHandler.networkManager
 
 		if (event.eventState == EventState.PRE)
 		{
@@ -148,7 +155,8 @@ class ExtendedReach : Module()
 				path = computePath(from, to)
 
 				// Travel to the target entity.
-				for (pathElm in path) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+
+				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 				pathESPTimer.reset()
 				thePlayer.swingItem()
 
@@ -162,12 +170,12 @@ class ExtendedReach : Module()
 					autoWeapon.onPacket(packetEvent)
 					if (packetEvent.isCancelled) sendAttack = false
 				}
-				if (sendAttack) mc.netHandler.addToSendQueue(attackPacket)
+				if (sendAttack) netHandler.addToSendQueue(attackPacket)
 				thePlayer.onCriticalHit(targetEntity)
 
 				// Go back to the home.
 				path.reverse()
-				for (pathElm in path) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 			}
 		}
 	}
@@ -196,14 +204,17 @@ class ExtendedReach : Module()
 			{
 				var stop = false
 				val maxDashDistance = maxDashDistanceValue.get().toFloat()
-				if (pathElm.squareDistanceTo(lastDashLoc!!) > maxDashDistance * maxDashDistance) stop = true else
+				val lastDashLocChecked = lastDashLoc!!
+
+				if (pathElm.squareDistanceTo(lastDashLocChecked) > maxDashDistance * maxDashDistance) stop = true else
 				{
-					val minX = min(lastDashLoc!!.xCoord, pathElm.xCoord)
-					val minY = min(lastDashLoc!!.yCoord, pathElm.yCoord)
-					val minZ = min(lastDashLoc!!.zCoord, pathElm.zCoord)
-					val maxX = max(lastDashLoc!!.xCoord, pathElm.xCoord)
-					val maxY = max(lastDashLoc!!.yCoord, pathElm.yCoord)
-					val maxZ = max(lastDashLoc!!.zCoord, pathElm.zCoord)
+					val minX = min(lastDashLocChecked.xCoord, pathElm.xCoord)
+					val minY = min(lastDashLocChecked.yCoord, pathElm.yCoord)
+					val minZ = min(lastDashLocChecked.zCoord, pathElm.zCoord)
+					val maxX = max(lastDashLocChecked.xCoord, pathElm.xCoord)
+					val maxY = max(lastDashLocChecked.yCoord, pathElm.yCoord)
+					val maxZ = max(lastDashLocChecked.zCoord, pathElm.zCoord)
+
 					var x = minX.toInt()
 					coordsLoop@ while (x <= maxX)
 					{
@@ -225,12 +236,14 @@ class ExtendedReach : Module()
 						x++
 					}
 				}
+
 				if (stop)
 				{
 					path.add(lastLoc!!.addVector(0.5, 0.0, 0.5))
 					lastDashLoc = lastLoc
 				}
 			}
+
 			lastLoc = pathElm
 		}
 		return path
@@ -252,12 +265,14 @@ class ExtendedReach : Module()
 			) == block
 		}
 
-		private fun drawPath(vec: WVec3)
+		private fun drawPath(thePlayer: IEntityPlayerSP, vec: WVec3)
 		{
-			val height = (mc.thePlayer ?: return).eyeHeight.toDouble()
-			val x = vec.xCoord - mc.renderManager.renderPosX
-			val y = vec.yCoord - mc.renderManager.renderPosY
-			val z = vec.zCoord - mc.renderManager.renderPosZ
+			val height = thePlayer.eyeHeight.toDouble()
+
+			val renderManager = mc.renderManager
+			val x = vec.xCoord - renderManager.renderPosX
+			val y = vec.yCoord - renderManager.renderPosY
+			val z = vec.zCoord - renderManager.renderPosZ
 
 			// RenderUtils.pre3D()
 			GL11.glPushMatrix()

@@ -31,9 +31,11 @@ class ReverseStep : Module()
 
 		if (!state) return
 
-		if (collideBlock(thePlayer.entityBoundingBox, classProvider::isBlockLiquid) || collideBlock(
+		val entityBoundingBox = thePlayer.entityBoundingBox
+
+		if (collideBlock(entityBoundingBox, classProvider::isBlockLiquid) || collideBlock(
 				classProvider.createAxisAlignedBB(
-					thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ
+					entityBoundingBox.maxX, entityBoundingBox.maxY, entityBoundingBox.maxZ, entityBoundingBox.minX, entityBoundingBox.minY - 0.01, entityBoundingBox.minZ
 				), classProvider::isBlockLiquid
 			)
 		) return

@@ -71,11 +71,9 @@ class NameTags : Module()
 		{
 			if (!EntityUtils.isSelected(entity, false)) continue
 			if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
+			val displayName = entity.displayName ?: continue
 
-			renderNameTag(
-				entity.asEntityLivingBase(), if (clearNamesValue.get()) ColorUtils.stripColor(entity.displayName?.unformattedText) ?: continue
-				else (entity.displayName ?: continue).unformattedText
-			)
+			renderNameTag(entity.asEntityLivingBase(), if (clearNamesValue.get()) ColorUtils.stripColor(displayName.unformattedText) ?: continue else displayName.unformattedText)
 		}
 
 		glPopMatrix()
@@ -123,18 +121,20 @@ class NameTags : Module()
 		glPushMatrix()
 
 		// Translate to player position
-		val timer = mc.timer
+		val renderPartialTicks = mc.timer.renderPartialTicks
 		val renderManager = mc.renderManager
 
+		glTranslated(
 
-		glTranslated( // Translate to player position with render pos and interpolate it
-			entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX,
-			entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + 0.55,
-			entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
+			// Translate to player position with render pos and interpolate it
+			entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * renderPartialTicks - renderManager.renderPosX,
+			entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * renderPartialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + 0.55,
+			entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * renderPartialTicks - renderManager.renderPosZ
+
 		)
 
-		glRotatef(-mc.renderManager.playerViewY, 0F, 1F, 0F)
-		glRotatef(mc.renderManager.playerViewX, 1F, 0F, 0F)
+		glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
+		glRotatef(renderManager.playerViewX, 1F, 0F, 0F)
 
 		// Scale
 		var distance = thePlayer.getDistanceToEntity(entity) * 0.25f
@@ -153,14 +153,14 @@ class NameTags : Module()
 		glDisable(GL_TEXTURE_2D)
 		glEnable(GL_BLEND)
 
-		if (borderValue.get()) quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.fontHeight + 2F, 2F, Color(255, 255, 255, 90).rgb, Color(0, 0, 0, borderOpacityValue.get()).rgb)
-		else quickDrawRect(-width - 2F, -2F, width + 4F, fontRenderer.fontHeight + 2F, Color(0, 0, 0, opacityValue.get()).rgb)
+		val fontHeight = fontRenderer.fontHeight
+
+		if (borderValue.get()) quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontHeight + 2F, 2F, Color(255, 255, 255, 90).rgb, Color(0, 0, 0, borderOpacityValue.get()).rgb)
+		else quickDrawRect(-width - 2F, -2F, width + 4F, fontHeight + 2F, Color(0, 0, 0, opacityValue.get()).rgb)
 
 		glEnable(GL_TEXTURE_2D)
 
-		fontRenderer.drawString(
-			text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, 0xFFFFFF, true
-		)
+		fontRenderer.drawString(text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, 0xFFFFFF, true)
 
 		AWTFontRenderer.assumeNonVolatile = false
 

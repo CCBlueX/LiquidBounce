@@ -33,6 +33,7 @@ class KeepAlive : Module()
 	fun onMotion(@Suppress("UNUSED_PARAMETER") event: MotionEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val netHandler = mc.netHandler
 
 		if (thePlayer.isDead || thePlayer.health <= 0)
 		{
@@ -48,9 +49,10 @@ class KeepAlive : Module()
 
 					if (soupInHotbar != -1)
 					{
-						mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(soupInHotbar - 36))
-						mc.netHandler.addToSendQueue(createUseItemPacket(thePlayer.inventory.getStackInSlot(soupInHotbar), WEnumHand.MAIN_HAND))
-						mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+
+						netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(soupInHotbar - 36))
+						netHandler.addToSendQueue(createUseItemPacket(thePlayer.inventory.getStackInSlot(soupInHotbar), WEnumHand.MAIN_HAND))
+						netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 					}
 				}
 			}

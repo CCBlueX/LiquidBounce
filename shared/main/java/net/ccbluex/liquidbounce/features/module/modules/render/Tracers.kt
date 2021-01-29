@@ -75,6 +75,9 @@ class Tracers : Module()
 
 		val eyeHeight = thePlayer.eyeHeight.toDouble()
 		val eyeVector = WVec3(0.0, 0.0, 1.0).rotatePitch(-rotationPitch).rotateYaw(-rotationYaw).addVector(0.0, eyeHeight, 0.0)
+		val eyeX = eyeVector.xCoord
+		val eyeY = eyeVector.yCoord
+		val eyeZ = eyeVector.zCoord
 
 		val color = when
 		{
@@ -95,14 +98,17 @@ class Tracers : Module()
 				val y = (entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks - renderPosY)
 				val z = (entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks - renderPosZ)
 
-				RenderUtils.glColor(when
-				{
-					classProvider.isEntityPlayer(entity) && entity.asEntityPlayer().isClientFriend() -> Color(0, 0, 255, 150)
-					colorMode.equals("DistanceColor", ignoreCase = true) -> Color(255 - dist, dist, 0, 150)
-					else -> color
-				})
+				RenderUtils.glColor(
+					when
+					{
+						classProvider.isEntityPlayer(entity) && entity.asEntityPlayer().isClientFriend() -> Color(0, 0, 255, 150)
+						colorMode.equals("DistanceColor", ignoreCase = true) -> Color(255 - dist, dist, 0, 150)
+						else -> color
+					}
+				)
 
-				GL11.glVertex3d(eyeVector.xCoord, eyeVector.yCoord, eyeVector.zCoord)
+
+				GL11.glVertex3d(eyeX, eyeY, eyeZ)
 				GL11.glVertex3d(x, y, z)
 				GL11.glVertex3d(x, y, z)
 				GL11.glVertex3d(x, y + entity.height, z)

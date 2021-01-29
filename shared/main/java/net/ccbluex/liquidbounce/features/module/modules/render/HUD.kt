@@ -47,7 +47,9 @@ class HUD : Module()
 	@EventTarget(ignoreCondition = true)
 	fun onScreen(event: ScreenEvent)
 	{
-		if (mc.theWorld == null || mc.thePlayer == null) return
+		mc.theWorld ?: return
+		mc.thePlayer ?: return
+
 		if (state && blurValue.get() && !mc.entityRenderer.isShaderActive() && event.guiScreen != null && !(classProvider.isGuiChat(event.guiScreen) || classProvider.isGuiHudDesigner(event.guiScreen))) mc.entityRenderer.loadShader(
 			classProvider.createResourceLocation(
 				LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json"

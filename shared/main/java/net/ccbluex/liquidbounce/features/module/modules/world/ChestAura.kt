@@ -74,13 +74,14 @@ object ChestAura : Module()
 
 			EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get().toLong()))
 			{
-				if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentBlock!!, classProvider.getEnumFacing(EnumFacingType.DOWN), currentBlock!!.getVec()))
+				val currentBlock = currentBlock!!
+				if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentBlock, classProvider.getEnumFacing(EnumFacingType.DOWN), currentBlock.getVec()))
 				{
 					if (visualSwing.get()) thePlayer.swingItem()
 					else mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
 
-					clickedBlocks.add(currentBlock!!)
-					currentBlock = null
+					clickedBlocks.add(currentBlock)
+					this.currentBlock = null
 					timer.reset()
 				}
 			}

@@ -22,8 +22,13 @@ class BlockWalk : Module()
 	@EventTarget
 	fun onBlockBB(event: BlockBBEvent)
 	{
-		if (cobwebValue.get() && event.block == classProvider.getBlockEnum(BlockType.WEB) || snowValue.get() && event.block == classProvider.getBlockEnum(BlockType.SNOW_LAYER)) event.boundingBox = classProvider.createAxisAlignedBB(
-			event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.0, event.y + 1.0, event.z + 1.0
-		)
+		if (cobwebValue.get() && event.block == classProvider.getBlockEnum(BlockType.WEB) || snowValue.get() && event.block == classProvider.getBlockEnum(BlockType.SNOW_LAYER))
+		{
+			val x = event.x
+			val y = event.y
+			val z = event.z
+
+			event.boundingBox = classProvider.createAxisAlignedBB(x.toDouble(), y.toDouble(), z.toDouble(), x + 1.0, y + 1.0, z + 1.0)
+		}
 	}
 }

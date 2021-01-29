@@ -51,9 +51,10 @@ class Breadcrumbs : Module()
 			GL11.glBegin(GL11.GL_LINE_STRIP)
 			RenderUtils.glColor(color)
 
-			val renderPosX = mc.renderManager.viewerPosX
-			val renderPosY = mc.renderManager.viewerPosY
-			val renderPosZ = mc.renderManager.viewerPosZ
+			val renderManager = mc.renderManager
+			val renderPosX = renderManager.viewerPosX
+			val renderPosY = renderManager.viewerPosY
+			val renderPosZ = renderManager.viewerPosZ
 
 			for (pos in positions) GL11.glVertex3d(pos[0] - renderPosX, pos[1] - renderPosY, pos[2] - renderPosZ)
 
@@ -70,8 +71,10 @@ class Breadcrumbs : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
+		val thePlayer = mc.thePlayer ?: return
+
 		synchronized(positions) {
-			positions.add(doubleArrayOf(mc.thePlayer!!.posX, mc.thePlayer!!.entityBoundingBox.minY, mc.thePlayer!!.posZ))
+			positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ))
 		}
 	}
 

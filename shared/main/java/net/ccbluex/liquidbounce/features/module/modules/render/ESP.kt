@@ -104,9 +104,9 @@ class ESP : Module()
 
 				"2d" ->
 				{
-					val posX: Double = entityLiving.lastTickPosX + (entityLiving.posX - entityLiving.lastTickPosX) * renderPartialTicks - renderPosX
-					val posY: Double = entityLiving.lastTickPosY + (entityLiving.posY - entityLiving.lastTickPosY) * renderPartialTicks - renderPosY
-					val posZ: Double = entityLiving.lastTickPosZ + (entityLiving.posZ - entityLiving.lastTickPosZ) * renderPartialTicks - renderPosZ
+					val posX = entityLiving.lastTickPosX + (entityLiving.posX - entityLiving.lastTickPosX) * renderPartialTicks - renderPosX
+					val posY = entityLiving.lastTickPosY + (entityLiving.posY - entityLiving.lastTickPosY) * renderPartialTicks - renderPosY
+					val posZ = entityLiving.lastTickPosZ + (entityLiving.posZ - entityLiving.lastTickPosZ) * renderPartialTicks - renderPosZ
 
 					RenderUtils.draw2D(entityLiving, posX, posY, posZ, color.rgb, Color.BLACK.rgb)
 				}

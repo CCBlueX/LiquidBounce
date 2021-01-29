@@ -20,10 +20,11 @@ class AutoBreak : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val theWorld = mc.theWorld ?: return
+		val mouseOver = mc.objectMouseOver ?: return
 
-		if (mc.objectMouseOver == null || mc.objectMouseOver!!.blockPos == null || mc.theWorld == null) return
+		if (mouseOver.blockPos == null || mc.theWorld == null) return
 
-		mc.gameSettings.keyBindAttack.pressed = theWorld.getBlockState(mc.objectMouseOver!!.blockPos!!).block != classProvider.getBlockEnum(BlockType.AIR)
+		mc.gameSettings.keyBindAttack.pressed = theWorld.getBlockState(mouseOver.blockPos!!).block != classProvider.getBlockEnum(BlockType.AIR)
 	}
 
 	override fun onDisable()

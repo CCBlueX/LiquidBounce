@@ -59,17 +59,21 @@ class FastUse : Module()
 
 		if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem))
 		{
+			val netHandler = mc.netHandler
+			val playerController = mc.playerController
+			val onGround = thePlayer.onGround
+
 			when (modeValue.get().toLowerCase())
 			{
 				"instant" ->
 				{
 					WorkerUtils.workers.submit {
 						repeat(35) {
-							mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 						}
 					}
 
-					mc.playerController.onStoppedUsingItem(thePlayer)
+					playerController.onStoppedUsingItem(thePlayer)
 				}
 
 				"ncp" ->
@@ -80,14 +84,14 @@ class FastUse : Module()
 						"atonce" -> if (thePlayer.itemInUseDuration > ncpWaitTicksValue.get())
 						{
 							repeat(ncpPacketsValue.get()) {
-								mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+								netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 							}
 
-							mc.playerController.onStoppedUsingItem(thePlayer)
+							playerController.onStoppedUsingItem(thePlayer)
 						}
 
 						"constant" -> repeat(ncpConstantPacketsValue.get()) {
-							mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 						}
 					}
 
@@ -108,7 +112,7 @@ class FastUse : Module()
 					if (!msTimer.hasTimePassed(delayValue.get().toLong())) return
 
 					repeat(customSpeedValue.get()) {
-						mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+						netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 					}
 
 					msTimer.reset()
@@ -120,12 +124,12 @@ class FastUse : Module()
 	@EventTarget
 	fun onMove(event: MoveEvent?)
 	{
-		val thePlayer = mc.thePlayer
+		event ?: return
+		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer == null || event == null) return
 		if (!state || !thePlayer.isUsingItem || !noMoveValue.get()) return
 
-		val usingItem = thePlayer.itemInUse!!.item
+		val usingItem = (thePlayer.itemInUse ?: return).item
 
 		if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem)) event.zero()
 	}

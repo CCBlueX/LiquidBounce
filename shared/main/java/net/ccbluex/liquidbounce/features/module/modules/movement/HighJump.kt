@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
@@ -58,6 +59,7 @@ class HighJump : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (thePlayer.onGround && jumped)
@@ -88,17 +90,18 @@ class HighJump : Module()
 				jumped = true
 			}
 
-			"mineplex" -> mineplexHighJump(thePlayer)
+			"mineplex" -> mineplexHighJump(theWorld, thePlayer)
 
 			"oldmineplex" -> if (!thePlayer.onGround) strafe(0.35f)
 		}
 	}
 
-	private fun mineplexHighJump(thePlayer: IEntityPlayerSP)
+	private fun mineplexHighJump(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
-		val x = thePlayer.posX
-		val z = thePlayer.posZ
-		val y = thePlayer.posY
+		val posX = thePlayer.posX
+		val posY = thePlayer.posZ
+		val posZ = thePlayer.posY
+
 		val forward = thePlayer.movementInput.moveForward.toDouble()
 		val strafe = thePlayer.movementInput.moveStrafe.toDouble()
 		val dist = 1.0 // .1
@@ -106,11 +109,11 @@ class HighJump : Module()
 		val yawRadians = WMathHelper.toRadians((thePlayer.rotationYaw + 90.0f))
 		val cos = functions.cos(yawRadians)
 		val sin = functions.sin(yawRadians)
-		val nextX = x + (forward * 0.45 * cos + strafe * 0.45 * sin) * dist
-		val nextZ = z + (forward * 0.45 * sin - strafe * 0.45 * cos) * dist
+		val nextX = posX + (forward * 0.45 * cos + strafe * 0.45 * sin) * dist
+		val nextZ = posY + (forward * 0.45 * sin - strafe * 0.45 * cos) * dist
 
-		val bb = classProvider.createAxisAlignedBB(nextX - 0.3, y, nextZ - 0.3, nextX + 0.3, y + 2, nextZ + 0.3)
-		val should = (mc.theWorld ?: return).getCollidingBoundingBoxes(thePlayer, bb.offset(0.0, -1.0, 0.0)).isEmpty()
+		val bb = classProvider.createAxisAlignedBB(nextX - 0.3, posZ, nextZ - 0.3, nextX + 0.3, posZ + 2, nextZ + 0.3)
+		val should = theWorld.getCollidingBoundingBoxes(thePlayer, bb.offset(0.0, -1.0, 0.0)).isEmpty()
 
 		if (jumped) if (!thePlayer.onGround)
 		{
@@ -122,14 +125,14 @@ class HighJump : Module()
 		}
 		if (should && thePlayer.onGround)
 		{
-			val a: Double = getBestMineplexExploit(nextX, y, nextZ)
+			val a: Double = getBestMineplexExploit(theWorld, thePlayer, nextX, posZ, nextZ)
 			if (a != 11.0)
 			{
 				mineplexStage = 1
 				jumped = true
-				mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(nextX, y, nextZ, true))
-				mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(nextX, y + a, nextZ, true))
-				thePlayer.setPosition(nextX, y, nextZ)
+				mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(nextX, posZ, nextZ, true))
+				mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(nextX, posZ + a, nextZ, true))
+				thePlayer.setPosition(nextX, posZ, nextZ)
 
 				// em.setX(nextX);
 				// em.setZ(nextZ);
@@ -180,7 +183,7 @@ class HighJump : Module()
 		}
 	}
 
-	private fun getBestMineplexExploit(x: Double, y: Double, z: Double): Double
+	private fun getBestMineplexExploit(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, x: Double, y: Double, z: Double): Double
 	{
 		var yOff = -1.5
 		var bb: IAxisAlignedBB
@@ -188,12 +191,12 @@ class HighJump : Module()
 		do
 		{
 			bb = classProvider.createAxisAlignedBB(x - 0.3, y + yOff, z - 0.3, x + 0.3, y + 2 + yOff, z + 0.3)
-			if (!mc.theWorld!!.getCollidingBoundingBoxes(mc.thePlayer!!, bb.offset(0.0, -1.0, 0.0)).isEmpty() && mc.theWorld!!.getCollidingBoundingBoxes(mc.thePlayer!!, bb).isEmpty() && mc.theWorld!!.getCollidingBoundingBoxes(
-					mc.thePlayer!!, bb.offset(0.0, -0.5, 0.0)
+			if (!theWorld.getCollidingBoundingBoxes(thePlayer, bb.offset(0.0, -1.0, 0.0)).isEmpty() && theWorld.getCollidingBoundingBoxes(thePlayer, bb).isEmpty() && theWorld.getCollidingBoundingBoxes(
+					thePlayer, bb.offset(0.0, -0.5, 0.0)
 				).isEmpty() && yOff <= -4.5 || yOff <= -9
 			) return yOff
 			yOff -= 0.5
-		} while (mc.theWorld!!.getCollidingBoundingBoxes(mc.thePlayer!!, bb).isEmpty())
+		} while (theWorld.getCollidingBoundingBoxes(thePlayer, bb).isEmpty())
 
 		return 11.0
 	}

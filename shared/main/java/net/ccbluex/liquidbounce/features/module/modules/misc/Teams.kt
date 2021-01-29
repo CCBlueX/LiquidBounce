@@ -11,10 +11,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 
-@ModuleInfo(name = "Teams", description = "Prevents Killaura from attacking team mates.", category = ModuleCategory.MISC)
+@ModuleInfo(name = "Teams", description = "Prevents KillAura from attacking team mates.", category = ModuleCategory.MISC)
 class Teams : Module()
 {
-
 	private val scoreboardValue = BoolValue("ScoreboardTeam", true)
 	private val colorValue = BoolValue("Color", true)
 	private val gommeSWValue = BoolValue("GommeSW", false)
@@ -26,25 +25,28 @@ class Teams : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return false
 
+		// Scoreboard Team
 		if (scoreboardValue.get() && thePlayer.team != null && entity.team != null && thePlayer.team!!.isSameTeam(entity.team!!)) return true
 
-		val displayName = thePlayer.displayName
+		val displayName = thePlayer.displayName!!.formattedText
+		val entityDisplayName = entity.displayName!!.formattedText
 
-		if (gommeSWValue.get() && displayName != null && entity.displayName != null)
+		// GommeSkywars
+		if (gommeSWValue.get() && entity.displayName != null)
 		{
-			val targetName = entity.displayName!!.formattedText.replace("\u00A7r", "")
-			val clientName = displayName.formattedText.replace("\u00A7r", "")
+			val targetName = entityDisplayName.replace("\u00A7r", "")
+			val clientName = displayName.replace("\u00A7r", "")
 			if (targetName.startsWith("T") && clientName.startsWith("T")) if (targetName[1].isDigit() && clientName[1].isDigit()) return targetName[1] == clientName[1]
 		}
 
-		if (colorValue.get() && displayName != null && entity.displayName != null)
+		// Color
+		if (colorValue.get() && entity.displayName != null)
 		{
-			val targetName = entity.displayName!!.formattedText.replace("\u00A7r", "")
-			val clientName = displayName.formattedText.replace("\u00A7r", "")
+			val targetName = entityDisplayName.replace("\u00A7r", "")
+			val clientName = displayName.replace("\u00A7r", "")
 			return targetName.startsWith("\u00A7${clientName[1]}")
 		}
 
 		return false
 	}
-
 }

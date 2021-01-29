@@ -29,10 +29,14 @@ class Zoot : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
-		val thePlayer = mc.thePlayer ?: return
-
 		if (noMoveValue.get() && MovementUtils.isMoving) return
-		if (noAirValue.get() && !thePlayer.onGround) return
+
+		val thePlayer = mc.thePlayer ?: return
+		val onGround = thePlayer.onGround
+
+		if (noAirValue.get() && !onGround) return
+
+		val netHandler = mc.netHandler
 
 		if (badEffectsValue.get())
 		{
@@ -42,7 +46,7 @@ class Zoot : Module()
 			{
 				WorkerUtils.workers.submit {
 					repeat(effect.duration / 20) {
-						mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+						netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 					}
 				}
 			}
@@ -53,7 +57,7 @@ class Zoot : Module()
 		{
 			WorkerUtils.workers.submit {
 				repeat(9) {
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+					netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 				}
 			}
 		}

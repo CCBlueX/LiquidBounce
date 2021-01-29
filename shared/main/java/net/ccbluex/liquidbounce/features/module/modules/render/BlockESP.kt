@@ -87,6 +87,8 @@ class BlockESP : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
+		val thePlayer = mc.thePlayer ?: return
+
 		if (task == null && searchTimer.hasTimePassed(updateDelayValue.get().toLong()))
 		{
 			val radius = radiusValue.get()
@@ -103,7 +105,6 @@ class BlockESP : Module()
 					{
 						for (z in -radius until radius)
 						{
-							val thePlayer = mc.thePlayer!!
 
 							val xPos = thePlayer.posX.toInt() + x
 							val yPos = thePlayer.posY.toInt() + y

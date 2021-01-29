@@ -38,12 +38,15 @@ class CivBreak : Module()
 	{
 		if (classProvider.isBlockBedrock(event.clickedBlock?.let(BlockUtils::getBlock))) return
 
+		val netHandler = mc.netHandler
+
 		blockPos = event.clickedBlock ?: return
 		enumFacing = event.WEnumFacing ?: return
 
 		// Break
-		mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, blockPos!!, enumFacing!!))
-		mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos!!, enumFacing!!))
+
+		netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, blockPos!!, enumFacing!!))
+		netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos!!, enumFacing!!))
 	}
 
 	@EventTarget
@@ -57,6 +60,9 @@ class CivBreak : Module()
 			return
 		}
 
+		val thePlayer = mc.thePlayer ?: return
+		val netHandler = mc.netHandler
+
 		if (classProvider.isBlockAir(BlockUtils.getBlock(pos)) || BlockUtils.getCenterDistance(pos) > range.get()) return
 
 		when (event.eventState)
@@ -65,21 +71,24 @@ class CivBreak : Module()
 
 			EventState.POST ->
 			{
-				if (visualSwingValue.get()) mc.thePlayer!!.swingItem()
-				else mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
+				val facing = enumFacing!!
+
+				if (visualSwingValue.get()) thePlayer.swingItem()
+				else netHandler.addToSendQueue(classProvider.createCPacketAnimation())
 
 				// Break
-				mc.netHandler.addToSendQueue(
+
+				netHandler.addToSendQueue(
 					classProvider.createCPacketPlayerDigging(
-						ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, blockPos!!, enumFacing!!
+						ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, pos, facing
 					)
 				)
-				mc.netHandler.addToSendQueue(
+				netHandler.addToSendQueue(
 					classProvider.createCPacketPlayerDigging(
-						ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos!!, enumFacing!!
+						ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, pos, facing
 					)
 				)
-				mc.playerController.clickBlock(blockPos!!, enumFacing!!)
+				mc.playerController.clickBlock(pos, facing)
 			}
 		}
 	}

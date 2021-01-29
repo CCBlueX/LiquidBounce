@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.WEnumHand
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.event.EventState.POST
@@ -136,6 +137,7 @@ class AutoPot : Module()
 		if (killauraBypassValue.get().equals("WaitForKillauraEnd", true) && killAura.state && killAura.target != null) return
 
 		val thePlayer = mc.thePlayer ?: return
+
 		val randomSlot = randomSlotValue.get()
 
 		when (motionEvent.eventState)
@@ -146,8 +148,8 @@ class AutoPot : Module()
 				{
 
 					// Hotbar Potion
-					val healPotionInHotbar = findHealPotion(36, 45, randomSlot)
-					val buffPotionInHotbar = findBuffPotion(36, 45, randomSlot)
+					val healPotionInHotbar = findHealPotion(thePlayer, 36, 45, randomSlot)
+					val buffPotionInHotbar = findBuffPotion(thePlayer, 36, 45, randomSlot)
 
 					if (thePlayer.health <= healthValue.get() && healPotionInHotbar != -1 || buffPotionInHotbar != -1)
 					{
@@ -207,8 +209,8 @@ class AutoPot : Module()
 				{
 
 					// Move Potion Inventory -> Hotbar
-					val healPotionInInventory = findHealPotion(9, 36, randomSlot)
-					val buffPotionInInventory = findBuffPotion(9, 36, randomSlot)
+					val healPotionInInventory = findHealPotion(thePlayer, 9, 36, randomSlot)
+					val buffPotionInInventory = findBuffPotion(thePlayer, 9, 36, randomSlot)
 
 					if ((healPotionInInventory != -1 || buffPotionInInventory != -1) && InventoryUtils.hasSpaceHotbar())
 					{
@@ -263,9 +265,8 @@ class AutoPot : Module()
 		}
 	}
 
-	private fun findHealPotion(startSlot: Int, endSlot: Int, random: Boolean): Int
+	private fun findHealPotion(thePlayer: IEntityPlayerSP, startSlot: Int, endSlot: Int, random: Boolean): Int
 	{
-		val thePlayer = mc.thePlayer ?: return -1
 		val candidates = mutableListOf<Int>()
 
 		for (i in startSlot until endSlot)
@@ -286,10 +287,8 @@ class AutoPot : Module()
 		return if (random) candidates.random() else candidates.first()
 	}
 
-	private fun findBuffPotion(startSlot: Int, endSlot: Int, random: Boolean): Int
+	private fun findBuffPotion(thePlayer: IEntityPlayerSP, startSlot: Int, endSlot: Int, random: Boolean): Int
 	{
-		val thePlayer = mc.thePlayer ?: return -1
-
 		val jumpPot = jumpBoostPotValue.get()
 		val invisPot = invisPotValue.get()
 

@@ -129,7 +129,11 @@ class FastClimb : Module()
 	@EventTarget
 	fun onBlockBB(event: BlockBBEvent)
 	{
-		if (mc.thePlayer != null && (classProvider.isBlockLadder(event.block) || classProvider.isBlockVine(event.block)) && modeValue.get().equals("AAC3.0.5", ignoreCase = true) && mc.thePlayer!!.isOnLadder) event.boundingBox = null
+		val thePlayer = mc.thePlayer ?: return
+
+		val eventBlock = event.block
+
+		if ((classProvider.isBlockLadder(eventBlock) || classProvider.isBlockVine(eventBlock)) && modeValue.get().equals("AAC3.0.5", ignoreCase = true) && thePlayer.isOnLadder) event.boundingBox = null
 	}
 
 	override val tag: String

@@ -60,7 +60,10 @@ class Spammer : Module()
 
 		if (msTimer.hasTimePassed(delay))
 		{
-			thePlayer.sendChatMessage(if (customValue.get()) replace(messageValue.get()) else messageValue.get() + " >" + randomString(5 + Random.nextInt(5)) + "<")
+			val message = messageValue.get()
+
+			thePlayer.sendChatMessage(if (customValue.get()) replace(message) else message + " >" + randomString(5 + Random.nextInt(5)) + "<")
+
 			msTimer.reset()
 			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 		}

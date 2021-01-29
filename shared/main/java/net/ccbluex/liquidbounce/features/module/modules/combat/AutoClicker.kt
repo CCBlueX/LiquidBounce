@@ -53,7 +53,10 @@ class AutoClicker : Module()
 
 	@EventTarget
 	fun onRender(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
-	{ // Left click
+	{
+		val thePlayer = mc.thePlayer ?: return
+
+		// Left click
 		if (mc.gameSettings.keyBindAttack.isKeyDown && leftValue.get() && System.currentTimeMillis() - leftLastSwing >= leftDelay && mc.playerController.curBlockDamageMP == 0F)
 		{
 			mc.gameSettings.keyBindAttack.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
@@ -63,7 +66,7 @@ class AutoClicker : Module()
 		}
 
 		// Right click
-		if (mc.gameSettings.keyBindUseItem.isKeyDown && !mc.thePlayer!!.isUsingItem && rightValue.get() && System.currentTimeMillis() - rightLastSwing >= rightDelay)
+		if (mc.gameSettings.keyBindUseItem.isKeyDown && !thePlayer.isUsingItem && rightValue.get() && System.currentTimeMillis() - rightLastSwing >= rightDelay)
 		{
 			mc.gameSettings.keyBindAttack.onTick(mc.gameSettings.keyBindUseItem.keyCode) // Minecraft Click Handling
 
