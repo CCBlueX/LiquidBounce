@@ -61,7 +61,11 @@ class BugUp : Module()
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer.onGround && !classProvider.isBlockAir(BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ))))
+		val posX = thePlayer.posX
+		val posY = thePlayer.posY
+		val posZ = thePlayer.posZ
+
+		if (thePlayer.onGround && !classProvider.isBlockAir(BlockUtils.getBlock(WBlockPos(posX, posY - 1.0, posZ))))
 		{
 			prevX = thePlayer.prevPosX
 			prevY = thePlayer.prevPosY
@@ -72,11 +76,11 @@ class BugUp : Module()
 
 		if (!thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater)
 		{
-			val fallingPlayer = FallingPlayer(thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
+			val fallingPlayer = FallingPlayer(posX, posY, posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
 
 			detectedLocation = fallingPlayer.findCollision(60)?.pos
 
-			if (detectedLocation != null && (onlyCatchVoid.get() || abs(thePlayer.posY - detectedLocation!!.y) + thePlayer.fallDistance <= maxFallDistance.get())) lastFound = thePlayer.fallDistance
+			if (detectedLocation != null && (onlyCatchVoid.get() || abs(posY - detectedLocation!!.y) + thePlayer.fallDistance <= maxFallDistance.get())) lastFound = thePlayer.fallDistance
 
 			if (detectedLocation == null && thePlayer.fallDistance <= maxVoidFallDistance.get()) lastFound = thePlayer.fallDistance
 
@@ -105,8 +109,8 @@ class BugUp : Module()
 
 					"motionteleport-flag" ->
 					{
-						thePlayer.setPositionAndUpdate(thePlayer.posX, thePlayer.posY + 1f, thePlayer.posZ)
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
+						thePlayer.setPositionAndUpdate(posX, posY + 1f, posZ)
+						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, true))
 						thePlayer.motionY = 0.1
 
 						MovementUtils.strafe()
@@ -128,7 +132,7 @@ class BugUp : Module()
 						thePlayer.fallDistance = 0F
 					}
 
-					"packet" -> networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + flagYPacket.get(), thePlayer.posZ, false))
+					"packet" -> networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + flagYPacket.get(), posZ, false))
 				}
 			} else
 			{
