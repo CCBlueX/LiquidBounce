@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -77,10 +78,11 @@ class BowAimbot : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		target = null
+		val thePlayer = mc.thePlayer ?: return
 
-		if (classProvider.isItemBow(mc.thePlayer?.itemInUse?.item))
+		if (classProvider.isItemBow(thePlayer.itemInUse?.item))
 		{
-			val entity = getTarget(throughWallsValue.get(), priorityValue.get()) ?: return
+			val entity = getTarget(thePlayer, throughWallsValue.get(), priorityValue.get()) ?: return
 
 			target = entity
 			RotationUtils.faceBow(target, silentValue.get(), predictValue.get(), playerPredictValue.get(), minTurnSpeed.get(), maxTurnSpeed.get(), minAccelerationRatio.get(), maxAccelerationRatio.get())
@@ -93,15 +95,13 @@ class BowAimbot : Module()
 		if (target != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get()) RenderUtils.drawPlatform(target, Color(37, 126, 255, 70))
 	}
 
-	private fun getTarget(throughWalls: Boolean, priorityMode: String): IEntity?
+	private fun getTarget(thePlayer: IEntityPlayerSP, throughWalls: Boolean, priorityMode: String): IEntity?
 	{
-		val targets = (mc.theWorld ?: return null).loadedEntityList.asSequence().filter {
-			classProvider.isEntityLivingBase(it) && EntityUtils.isSelected(it, true) && (throughWalls || mc.thePlayer!!.canEntityBeSeen(it))
-		}
+		val targets = (mc.theWorld ?: return null).loadedEntityList.asSequence().filter { classProvider.isEntityLivingBase(it) && EntityUtils.isSelected(it, true) && (throughWalls || thePlayer.canEntityBeSeen(it)) }
 
 		return when
 		{
-			priorityMode.equals("distance", true) -> targets.minBy((mc.thePlayer ?: return null)::getDistanceToEntity)
+			priorityMode.equals("distance", true) -> targets.minBy(thePlayer::getDistanceToEntity)
 			priorityMode.equals("direction", true) -> targets.minBy { RotationUtils.getRotationDifference(it) }
 			priorityMode.equals("health", true) -> targets.minBy { it.asEntityLivingBase().health }
 			else -> null

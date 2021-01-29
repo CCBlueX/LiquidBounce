@@ -36,6 +36,8 @@ class Projectiles : Module()
 	private val colorGreenValue = IntegerValue("G", 160, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
 
+	private val lineWidthValue = FloatValue("LineWidth", 2.0f, 1.0f, 3.0f)
+
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
@@ -49,9 +51,14 @@ class Projectiles : Module()
 
 		val item = heldItem.item
 		val renderManager = mc.renderManager
+		val renderPosX = renderManager.renderPosX
+		val renderPosY = renderManager.renderPosY
+		val renderPosZ = renderManager.renderPosZ
+
 		var isBow = false
 		var motionFactor = 1.5F
 		var motionSlowdown = 0.99F
+
 		val gravity: Float
 		val size: Float
 
@@ -67,6 +74,7 @@ class Projectiles : Module()
 			// Calculate power of bow
 			var power = thePlayer.itemInUseDuration / 20f
 			power = (power * power + power * 2F) / 3F
+
 			if (power < 0.1F) return
 
 			if (power > 1F) power = 1F
@@ -100,22 +108,26 @@ class Projectiles : Module()
 		val yawRadians = yaw / 180f * WMathHelper.PI
 		val pitchRadians = pitch / 180f * WMathHelper.PI
 
+		val yawSin = functions.sin(yawRadians)
+		val yawCos = functions.cos(yawRadians)
+		val pitchCos = functions.cos(pitchRadians)
+
 		// Positions
-		var posX = renderManager.renderPosX - functions.cos(yawRadians) * 0.16F
-		var posY = renderManager.renderPosY + thePlayer.eyeHeight - 0.10000000149011612
-		var posZ = renderManager.renderPosZ - functions.sin(yawRadians) * 0.16F
+		var posX = renderPosX - yawCos * 0.16F
+		var posY = renderPosY + thePlayer.eyeHeight - 0.10000000149011612
+		var posZ = renderPosZ - yawSin * 0.16F
 
 		// Motions
-		var motionX = (-functions.sin(yawRadians) * functions.cos(pitchRadians) * if (isBow) 1.0 else 0.4)
-		var motionY = -functions.sin(
-			(pitch + if (classProvider.isItemPotion(item) && heldItem.isSplash()) -20 else 0) / 180f * WMathHelper.PI
-		) * if (isBow) 1.0 else 0.4
-		var motionZ = (functions.cos(yawRadians) * functions.cos(pitchRadians) * if (isBow) 1.0 else 0.4)
+		var motionX = (-yawSin * pitchCos * if (isBow) 1.0 else 0.4)
+		var motionY = -functions.sin(WMathHelper.toRadians(pitch + if (classProvider.isItemPotion(item) && heldItem.isSplash()) -20 else 0)) * if (isBow) 1.0 else 0.4
+		var motionZ = (yawCos * pitchCos * if (isBow) 1.0 else 0.4)
+
 		val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
 
 		motionX /= distance
 		motionY /= distance
 		motionZ /= distance
+
 		motionX *= motionFactor
 		motionY *= motionFactor
 		motionZ *= motionFactor
@@ -134,27 +146,27 @@ class Projectiles : Module()
 		RenderUtils.disableGlCap(GL11.GL_DEPTH_TEST, GL11.GL_ALPHA_TEST, GL11.GL_TEXTURE_2D)
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 		GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST)
+
 		when (colorMode.get().toLowerCase())
 		{
 			"custom" -> RenderUtils.glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
-
 			"bowpower" -> RenderUtils.glColor(interpolateHSB(Color.RED, Color.GREEN, (motionFactor / 30) * 10))
-
 			"rainbow" -> RenderUtils.glColor(ColorUtils.rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()))
 		}
-		GL11.glLineWidth(2f)
+
+		GL11.glLineWidth(lineWidthValue.get())
 
 		worldRenderer.begin(GL11.GL_LINE_STRIP, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
 
 		while (!hasLanded && posY > 0.0)
-		{ // Set pos before and after
+		{
+
+			// Set pos before and after
 			var posBefore = WVec3(posX, posY, posZ)
 			var posAfter = WVec3(posX + motionX, posY + motionY, posZ + motionZ)
 
 			// Get landing position
-			landingPosition = theWorld.rayTraceBlocks(
-				posBefore, posAfter, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false
-			)
+			landingPosition = theWorld.rayTraceBlocks(posBefore, posAfter, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
 
 			// Set pos before and after
 			posBefore = WVec3(posX, posY, posZ)
@@ -168,12 +180,11 @@ class Projectiles : Module()
 			}
 
 			// Set arrow box
-			val arrowBox = classProvider.createAxisAlignedBB(
-				posX - size, posY - size, posZ - size, posX + size, posY + size, posZ + size
-			).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
+			val arrowBox = classProvider.createAxisAlignedBB(posX - size, posY - size, posZ - size, posX + size, posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
 
 			val chunkMinX = floor((arrowBox.minX - 2.0) / 16.0).toInt()
 			val chunkMaxX = floor((arrowBox.maxX + 2.0) / 16.0).toInt()
+
 			val chunkMinZ = floor((arrowBox.minZ - 2.0) / 16.0).toInt()
 			val chunkMaxZ = floor((arrowBox.maxZ + 2.0) / 16.0).toInt()
 
@@ -187,7 +198,8 @@ class Projectiles : Module()
 			{
 				if (possibleEntity.canBeCollidedWith() && possibleEntity != thePlayer)
 				{
-					val possibleEntityBoundingBox = possibleEntity.entityBoundingBox.expand(size.toDouble(), size.toDouble(), size.toDouble())
+					val sizeDouble = size.toDouble()
+					val possibleEntityBoundingBox = possibleEntity.entityBoundingBox.expand(sizeDouble, sizeDouble, sizeDouble)
 
 					val possibleEntityLanding = possibleEntityBoundingBox.calculateIntercept(posBefore, posAfter) ?: continue
 
@@ -206,34 +218,38 @@ class Projectiles : Module()
 
 			// Check is next position water
 			if (blockState.block.getMaterial(blockState) == classProvider.getMaterialEnum(MaterialType.WATER))
-			{ // Update motion
+			{
+
+				// Update motion
 				motionX *= 0.6
 				motionY *= 0.6
 				motionZ *= 0.6
 			} else
-			{ // Update motion
-				motionX *= motionSlowdown.toDouble()
-				motionY *= motionSlowdown.toDouble()
-				motionZ *= motionSlowdown.toDouble()
+			{
+
+				// Update motion
+				val motionSlowdownDouble = motionSlowdown.toDouble()
+
+				motionX *= motionSlowdownDouble
+				motionY *= motionSlowdownDouble
+				motionZ *= motionSlowdownDouble
 			}
 
 			motionY -= gravity.toDouble()
 
 			// Draw path
-			worldRenderer.pos(
-				posX - renderManager.renderPosX, posY - renderManager.renderPosY, posZ - renderManager.renderPosZ
-			).endVertex()
+			worldRenderer.pos(posX - renderPosX, posY - renderPosY, posZ - renderPosZ).endVertex()
 		}
 
 		// End the rendering of the path
 		tessellator.draw()
 		GL11.glPushMatrix()
-		GL11.glTranslated(
-			posX - renderManager.renderPosX, posY - renderManager.renderPosY, posZ - renderManager.renderPosZ
-		)
+		GL11.glTranslated(posX - renderPosX, posY - renderPosY, posZ - renderPosZ)
 
 		if (landingPosition != null)
-		{ // Switch rotation of hit cylinder of the hit axis
+		{
+
+			// Switch rotation of hit cylinder of the hit axis
 			when (landingPosition.sideHit!!.axisOrdinal)
 			{
 				0 -> GL11.glRotatef(90F, 0F, 0F, 1F)
