@@ -36,7 +36,7 @@ open class Value<T>(@SerializedName("name")
                     @SerializedName("value")
                     var value: T,
                     @Exclude
-                    val change: (T, T) -> Unit,
+                    val change: (T, T) -> Unit = { _, _ -> },
 ) {
 
     /**
@@ -74,7 +74,7 @@ class RangedValue<T>(name: String, description: String = "", value: T, val range
  * Ranged value adds support for closed ranges
  */
 class ModeValue(name: String, description: String = "", @Exclude val module: Module, mode: String,
-                @Exclude val modes: MutableList<Mode>, change: (String, String) -> Unit = { _, _ -> })
+                @Exclude val modes: Array<Mode>, change: (String, String) -> Unit = { _, _ -> })
     : Value<String>(name, description, mode, { old, new ->
         change(old, new)
 
@@ -93,6 +93,13 @@ class ModeValue(name: String, description: String = "", @Exclude val module: Mod
             }
         }
     }
+
+/**
+ *
+ */
+class ListValue(name: String, description: String = "", selected: String,
+                @Exclude val selectables: Array<String>, change: (String, String) -> Unit = { _, _ -> })
+    : Value<String>(name, description, selected, change)
 
 /**
  * Extensions
@@ -116,8 +123,11 @@ fun Configurable.intRange(name: String, default: IntRange = 0..1, range: IntRang
 fun Configurable.text(name: String, default: String = "", change: (String, String) -> Unit = { _, _ -> })
     = Value(name, value = default, change = change).apply { values.add(this) }
 
-fun Module.mode(name: String, default: String, modes: MutableList<Mode>, change: (String, String) -> Unit = { _, _ -> })
+fun Module.mode(name: String, default: String, modes: Array<Mode>, change: (String, String) -> Unit = { _, _ -> })
     = ModeValue(name, mode = default, module = this, modes = modes, change = change).apply { values.add(this) }
+
+fun Configurable.list(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
+    = ListValue(name, selected = default, selectables = array, change = change).apply { values.add(this) }
 
 fun Configurable.color(name: String, color: Color = Color.WHITE, change: (Color, Color) -> Unit = { _, _ -> })
     = Value(name, value = color, change = change).apply { values.add(this) }

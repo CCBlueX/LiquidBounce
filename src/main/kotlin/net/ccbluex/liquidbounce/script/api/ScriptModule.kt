@@ -33,24 +33,22 @@ class ScriptModule(private val moduleObject: JSObject) : Module(
 ) {
 
     private val events = HashMap<String, JSObject>()
-    private val _values = LinkedHashMap<String, Value<*>>()
 
     private var _tag: String? = null
-
     override val tag: String?
         get() = _tag
 
     /**
      * Allows the user to access values by typing module.settings.<valuename>
      */
-    val settings by lazy { _values }
+    val settings by lazy { values }
 
     init {
         if (moduleObject.hasMember("settings")) {
             val settings = moduleObject.getMember("settings") as JSObject
 
             for (settingName in settings.keySet())
-                _values[settingName] = settings.getMember(settingName) as Value<*>
+                values += settings.getMember(settingName) as Value<*>
         }
 
         if (moduleObject.hasMember("tag"))

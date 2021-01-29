@@ -18,9 +18,100 @@
  */
 package net.ccbluex.liquidbounce.script.api.global
 
+import jdk.nashorn.api.scripting.JSObject
+import jdk.nashorn.api.scripting.ScriptUtils
+import net.ccbluex.liquidbounce.config.ListValue
+import net.ccbluex.liquidbounce.config.RangedValue
+import net.ccbluex.liquidbounce.config.Value
+import net.minecraft.block.Block
+
 /**
  * Object used by the script API to provide an idiomatic way of creating module values.
  */
 object Setting {
-    // TODO: add settings back
+
+    /**
+     * Creates a boolean value.
+     * @param settingInfo JavaScript object containing information about the value.
+     * @return An instance of [Value]
+     */
+    @JvmStatic
+    fun boolean(settingInfo: JSObject): Value<Boolean> {
+        val name = settingInfo.getMember("name") as String
+        val default = settingInfo.getMember("default") as Boolean
+
+        return Value(name, value = default)
+    }
+
+    /**
+     * Creates an integer value.
+     * @param settingInfo JavaScript object containing information about the value.
+     * @return An instance of [RangedValue]
+     */
+    @JvmStatic
+    fun integer(settingInfo: JSObject): RangedValue<Int> {
+        val name = settingInfo.getMember("name") as String
+        val default = (settingInfo.getMember("default") as Number).toInt()
+        val min = (settingInfo.getMember("min") as Number).toInt()
+        val max = (settingInfo.getMember("max") as Number).toInt()
+
+        return RangedValue(name, value = default, range = min..max)
+    }
+
+    /**
+     * Creates a float value.
+     * @param settingInfo JavaScript object containing information about the value.
+     * @return An instance of [RangedValue]
+     */
+    @JvmStatic
+    fun float(settingInfo: JSObject): RangedValue<Float> {
+        val name = settingInfo.getMember("name") as String
+        val default = (settingInfo.getMember("default") as Number).toFloat()
+        val min = (settingInfo.getMember("min") as Number).toFloat()
+        val max = (settingInfo.getMember("max") as Number).toFloat()
+
+        return RangedValue(name, value = default, range = min..max)
+    }
+
+    /**
+     * Creates a text value.
+     * @param settingInfo JavaScript object containing information about the value.
+     * @return An instance of [TextValue]
+     */
+    @JvmStatic
+    fun text(settingInfo: JSObject): Value<String> {
+        val name = settingInfo.getMember("name") as String
+        val default = settingInfo.getMember("default") as String
+
+        return Value(name, value = default)
+    }
+
+    /**
+     * Creates a block value.
+     * @param settingInfo JavaScript object containing information about the value.
+     * @return An instance of [Value]
+     */
+    @JvmStatic
+    fun block(settingInfo: JSObject): Value<Block> {
+        val name = settingInfo.getMember("name") as String
+        val default = settingInfo.getMember("default") as Block
+
+        return Value(name, value = default)
+    }
+
+    /**
+     * Creates a list value.
+     * @param settingInfo JavaScript object containing information about the value.
+     * @return An instance of [Value]
+     */
+    @JvmStatic
+    @Suppress("UNCHECKED_CAST")
+    fun list(settingInfo: JSObject): ListValue {
+        val name = settingInfo.getMember("name") as String
+        val values = ScriptUtils.convert(settingInfo.getMember("values"), Array<String>::class.java) as Array<String>
+        val default = settingInfo.getMember("default") as String
+
+        return ListValue(name, selected = default, selectables = values)
+    }
+
 }

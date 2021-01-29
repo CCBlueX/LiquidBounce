@@ -31,7 +31,7 @@ import kotlin.math.sin
 
 object ModuleSpeed : Module("Speed", Category.COMBAT) {
 
-    val mode by mode("Mode", "YPort", mutableListOf(
+    val mode by mode("Mode", "YPort", arrayOf(
         ModeSpeedYPort(this)
     ))
 
