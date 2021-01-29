@@ -8,7 +8,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
-import kotlin.math.sqrt
+import kotlin.math.hypot
 
 @ModuleInfo(name = "Strafe", description = "Allows you to freely move in mid air without any friction.", category = ModuleCategory.MOVEMENT)
 class Strafe : Module()
@@ -65,13 +65,13 @@ class Strafe : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		val shotSpeed = sqrt(thePlayer.motionX * thePlayer.motionX + thePlayer.motionZ * thePlayer.motionZ)
+		val shotSpeed = hypot(thePlayer.motionX, thePlayer.motionZ)
 
 		val strength = strengthValue.get()
 
-		val speed = (shotSpeed * strength)
-		val motionX = (thePlayer.motionX * (1 - strength))
-		val motionZ = (thePlayer.motionZ * (1 - strength))
+		val speed = shotSpeed * strength
+		val motionX = thePlayer.motionX * (1 - strength)
+		val motionZ = thePlayer.motionZ * (1 - strength)
 
 		if (!(thePlayer.movementInput.moveForward != 0F || thePlayer.movementInput.moveStrafe != 0F))
 		{

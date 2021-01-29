@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.floor
-import kotlin.math.sqrt
+import kotlin.math.hypot
 
 class YPort : SpeedMode("YPort")
 {
@@ -39,9 +39,11 @@ class YPort : SpeedMode("YPort")
 				)
 			) && !thePlayer.isInWater && (!classProvider.isBlockAir(this.getBlock(-1.1)) && !classProvider.isBlockAir(this.getBlock(-1.1)) || !classProvider.isBlockAir(this.getBlock(-0.1)) && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && level == 3
 		) thePlayer.motionY = -0.3994
+
 		val xDist = thePlayer.posX - thePlayer.prevPosX
 		val zDist = thePlayer.posZ - thePlayer.prevPosZ
-		lastDist = sqrt(xDist * xDist + zDist * zDist)
+		lastDist = hypot(xDist, zDist)
+
 		if (!MovementUtils.isMoving) safeJump = true else if (thePlayer.onGround) safeJump = false
 	}
 

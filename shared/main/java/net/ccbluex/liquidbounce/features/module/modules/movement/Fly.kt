@@ -830,7 +830,7 @@ class Fly : Module()
 				{
 					val xDist = posX - thePlayer.prevPosX
 					val zDist = posZ - thePlayer.prevPosZ
-					lastDistance = sqrt(xDist * xDist + zDist * zDist)
+					lastDistance = hypot(xDist, zDist)
 				}
 			}
 		} else if (modeValue.get().equals("AntiCheatPlus", ignoreCase = true))

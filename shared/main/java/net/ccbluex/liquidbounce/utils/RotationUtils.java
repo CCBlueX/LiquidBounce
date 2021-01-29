@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.utils;
 
 import static java.lang.Math.*;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 
@@ -69,7 +68,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 					final double diffY = posVec.getYCoord() - eyesPos.getYCoord();
 					final double diffZ = posVec.getZCoord() - eyesPos.getZCoord();
 
-					final double diffXZ = sqrt(diffX * diffX + diffZ * diffZ);
+					final double diffXZ = StrictMath.hypot(diffX, diffZ);
 
 					final Rotation rotation = new Rotation(WMathHelper.wrapAngleTo180_float((float) toDegrees(StrictMath.atan2(diffZ, diffX)) - 90.0F), WMathHelper.wrapAngleTo180_float((float) -toDegrees(StrictMath.atan2(diffY, diffXZ))));
 
@@ -132,7 +131,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 			velocity = 1;
 
 		// Calculate Rotation
-		final double posSqrt = sqrt(posX * posX + posZ * posZ);
+		final double posSqrt = StrictMath.hypot(posX, posZ);
 		final Rotation rotation = new Rotation((float) (StrictMath.atan2(posZ, posX) * 180 / PI) - 90, (float) -toDegrees(StrictMath.atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006F * (0.006F * (posSqrt * posSqrt) + 2 * posY * (velocity * velocity)))) / (0.006F * posSqrt))));
 		final Rotation limitedRotation = limitAngleChange(new Rotation(player.getRotationYaw(), player.getRotationPitch()), rotation, RandomUtils.nextFloat(min(minTurnSpeed, maxTurnSpeed), max(minTurnSpeed, maxTurnSpeed)), RandomUtils.nextFloat(min(minSmoothingRatio, maxSmoothingRatio), max(minSmoothingRatio, maxSmoothingRatio)));
 
@@ -166,15 +165,15 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 		final double diffY = vec.getYCoord() - eyesPos.getYCoord();
 		final double diffZ = vec.getZCoord() - eyesPos.getZCoord();
 
-		return new Rotation(WMathHelper.wrapAngleTo180_float((float) toDegrees(StrictMath.atan2(diffZ, diffX)) - 90.0F), WMathHelper.wrapAngleTo180_float((float) -toDegrees(StrictMath.atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ)))));
+		return new Rotation(WMathHelper.wrapAngleTo180_float((float) toDegrees(StrictMath.atan2(diffZ, diffX)) - 90.0F), WMathHelper.wrapAngleTo180_float((float) -toDegrees(StrictMath.atan2(diffY, StrictMath.hypot(diffX, diffZ)))));
 	}
 
 	/**
 	 * Get the center of a box
 	 *
 	 * @param  box
-	 *            your box
-	 * @return    center of box
+	 *             your box
+	 * @return     center of box
 	 */
 	public static WVec3 getCenter(final IAxisAlignedBB box)
 	{

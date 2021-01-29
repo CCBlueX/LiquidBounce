@@ -975,37 +975,24 @@ class Scaffold : Module()
 							val diffX: Double = if (staticYaw && i == 0) 0.0 else hitVec.xCoord - eyesPos.xCoord
 							val diffY = hitVec.yCoord - eyesPos.yCoord
 							val diffZ: Double = if (staticYaw && i == 1) 0.0 else hitVec.zCoord - eyesPos.zCoord
-							val diffXZ = sqrt(diffX * diffX + diffZ * diffZ)
+							val diffXZ = hypot(diffX, diffZ)
+
 							if (!side.isUp() && minDiffValue.get() > 0)
 							{
 								val diff: Double = abs(if (side.isNorth() || side.isSouth()) diffZ else diffX)
 								if (diff < minDiffValue.get() || diff > 0.3f) continue
 							}
-							val pitch = if (staticPitch) staticPitchOffset else wrapAngleTo180_float(
-								(-Math.toDegrees(
-									atan2(
-										diffY, diffXZ
-									)
-								)).toFloat()
-							)
-							val rotation = Rotation(
-								wrapAngleTo180_float(
-									Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f + if (staticYaw) staticYawOffset else 0f
-								), pitch
-							)
+							val pitch = if (staticPitch) staticPitchOffset else wrapAngleTo180_float((-Math.toDegrees(atan2(diffY, diffXZ))).toFloat())
+							val rotation = Rotation(wrapAngleTo180_float(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f + if (staticYaw) staticYawOffset else 0f), pitch)
 							val rotationVector = RotationUtils.getVectorForRotation(rotation)
 							val vector = eyesPos.addVector(
 								rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4
 							)
-							val obj = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false, false, true)
-							if (obj!!.typeOfHit !== IMovingObjectPosition.WMovingObjectType.BLOCK || obj!!.blockPos!! != neighbor) continue
-							if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(
-									placeRotation.rotation
-								)
-							)
-							{
-								placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
-							}
+							val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false, false, true)
+
+							if (rayTrace!!.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace!!.blockPos!! != neighbor) continue
+							if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation.rotation)) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
+
 							xSearchFace = xSearch
 							ySearchFace = ySearch
 							zSearchFace = zSearch

@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import kotlin.math.sqrt
+import kotlin.math.hypot
 
 @ModuleInfo(name = "Ignite", description = "Automatically sets targets around you on fire.", category = ModuleCategory.COMBAT)
 class Ignite : Module()
@@ -74,7 +74,7 @@ class Ignite : Module()
 				val diffX = blockPos.x + 0.5 - thePlayer.posX
 				val diffY = blockPos.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)
 				val diffZ = blockPos.z + 0.5 - thePlayer.posZ
-				val sqrt = sqrt(diffX * diffX + diffZ * diffZ)
+				val sqrt = hypot(diffX, diffZ)
 
 				val yaw = (StrictMath.atan2(diffZ, diffX) * 180.0 / Math.PI).toFloat() - 90.0f
 				val pitch = (-(StrictMath.atan2(diffY, sqrt) * 180.0 / Math.PI)).toFloat()
@@ -96,7 +96,7 @@ class Ignite : Module()
 				val diffX = neighbor.x + 0.5 - thePlayer.posX
 				val diffY = neighbor.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)
 				val diffZ = neighbor.z + 0.5 - thePlayer.posZ
-				val sqrt = sqrt(diffX * diffX + diffZ * diffZ)
+				val sqrt = hypot(diffX, diffZ)
 
 				val yaw = (StrictMath.atan2(diffZ, diffX) * 180.0 / Math.PI).toFloat() - 90.0f
 				val pitch = (-(StrictMath.atan2(diffY, sqrt) * 180.0 / Math.PI)).toFloat()

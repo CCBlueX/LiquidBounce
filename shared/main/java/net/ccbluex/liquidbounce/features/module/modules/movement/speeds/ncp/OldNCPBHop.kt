@@ -13,9 +13,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMod
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.roundToInt
-import kotlin.math.sqrt
 
 class OldNCPBHop : SpeedMode("OldNCPBHop")
 {
@@ -45,7 +45,7 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 
 		val xDist = thePlayer.posX - thePlayer.prevPosX
 		val zDist = thePlayer.posZ - thePlayer.prevPosZ
-		lastDist = sqrt(xDist * xDist + zDist * zDist)
+		lastDist = hypot(xDist, zDist)
 	}
 
 	override fun onUpdate()

@@ -22,7 +22,7 @@ import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
-import kotlin.math.sqrt
+import kotlin.math.hypot
 
 /**
  * CustomHUD text element
@@ -129,8 +129,8 @@ class Text(
 				"mydp" -> return thePlayer.motionY.toString()
 				"mzdp" -> return thePlayer.motionZ.toString()
 
-				"velocity" -> return DECIMAL_FORMAT.format(sqrt(thePlayer.motionX * thePlayer.motionX + thePlayer.motionZ * thePlayer.motionZ))
-				"velocitydp" -> return "${sqrt(thePlayer.motionX * thePlayer.motionX + thePlayer.motionZ * thePlayer.motionZ)}"
+				"velocity" -> return DECIMAL_FORMAT.format(hypot(thePlayer.motionX, thePlayer.motionZ))
+				"velocitydp" -> return "${hypot(thePlayer.motionX, thePlayer.motionZ)}"
 
 				"ping" -> return thePlayer.getPing().toString()
 				"health" -> return DECIMAL_FORMAT.format(thePlayer.health)

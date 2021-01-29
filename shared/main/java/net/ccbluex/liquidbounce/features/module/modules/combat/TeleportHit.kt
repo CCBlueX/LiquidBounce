@@ -31,7 +31,7 @@ class TeleportHit : Module()
 	@EventTarget
 	fun onMotion(event: MotionEvent)
 	{
-		if (event.eventState !== EventState.PRE) return
+		if (event.eventState != EventState.PRE) return
 		val thePlayer = mc.thePlayer ?: return
 
 		val facedEntity = raycastEntity(100.0, object : EntityFilter

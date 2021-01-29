@@ -396,7 +396,7 @@ object AntiBot : Module()
 					val deltaX = abs(entity.posX - thePlayer.posX)
 					val deltaY = abs(entity.posY - thePlayer.posY)
 					val deltaZ = abs(entity.posZ - thePlayer.posZ)
-					val horizontalDistance = sqrt(deltaX * deltaX + deltaZ * deltaZ)
+					val horizontalDistance = hypot(deltaX, deltaZ)
 					if (deltaY < 13 && deltaY > 10 && horizontalDistance < 3 && !checkTabList(entity.asEntityPlayer().gameProfile.name, displayName = false, equals = true, stripColors = true))
 					{
 						if (watchdogRemoveValue.get())
