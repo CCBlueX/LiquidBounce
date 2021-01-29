@@ -33,11 +33,6 @@ import kotlin.math.*
 @ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F)
 class Fly : Module()
 {
-	companion object
-	{
-		var waitForDamage: Boolean = false
-	}
-
 	val modeValue = ListValue(
 		"Mode", arrayOf(
 			"Vanilla", "SmoothVanilla", "Teleport",
@@ -80,14 +75,14 @@ class Fly : Module()
 	private val vanillaKickBypassValue = BoolValue("VanillaKickBypass", false)
 
 	// Teleport
-	private val teleportDistanceValue = FloatValue("TeleportDistance", 1.0f, 1.0f, 10.0f)
+	private val teleportDistanceValue = FloatValue("TeleportDistance", 1.0f, 1.0f, 5.0f)
 	private val teleportDelayValue = IntegerValue("TeleportDelay", 100, 0, 1000)
 
 	// NCP
 	private val ncpMotionValue = FloatValue("NCPMotion", 0f, 0f, 1f)
 
 	// AAC
-	private val aacSpeedValue = FloatValue("AAC1.9.10-Speed", 0.3f, 0f, 1f)
+	private val aacSpeedValue = FloatValue("AAC1.9.10-Speed", 0.3f, 0f, 5f)
 	private val aacFast = BoolValue("AAC3.0.5-Fast", true)
 	private val aac3_3_12_motion = FloatValue("AAC3.3.12-Motion", 10f, 0.1f, 10f)
 	private val aac3_3_13_motion = FloatValue("AAC3.3.13-Motion", 10f, 0.1f, 10f)
@@ -156,6 +151,8 @@ class Fly : Module()
 
 	private var freeHypixelYaw = 0f
 	private var freeHypixelPitch = 0f
+
+	private var waitForDamage: Boolean = false
 
 	override fun onEnable()
 	{
@@ -1069,6 +1066,7 @@ class Fly : Module()
 		thePlayer.motionX = (speed * -functions.sin(playerYaw)).toDouble()
 		thePlayer.motionZ = (speed * functions.cos(playerYaw)).toDouble()
 	}
+
 	//</editor-fold>
 
 	// TODO: Make better and faster calculation lol
@@ -1119,4 +1117,7 @@ class Fly : Module()
 
 	override val tag: String
 		get() = modeValue.get()
+
+	val disableNoFall: Boolean
+		get() = waitForDamage || modeValue.get().equals("AAC1.9.10", ignoreCase = true)
 }

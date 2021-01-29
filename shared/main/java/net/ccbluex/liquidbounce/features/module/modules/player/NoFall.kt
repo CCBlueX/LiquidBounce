@@ -66,7 +66,8 @@ class NoFall : Module()
 			jumped = true
 		}
 
-		if (!state || LiquidBounce.moduleManager[FreeCam::class.java].state || Fly.waitForDamage) return
+		val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
+		if (!state || LiquidBounce.moduleManager[FreeCam::class.java].state || fly.state && fly.disableNoFall) return
 
 		val entityBoundingBox = thePlayer.entityBoundingBox
 
@@ -177,7 +178,9 @@ class NoFall : Module()
 
 		val packet = event.packet
 		val mode = modeValue.get()
-		if (classProvider.isCPacketPlayer(packet) && !Fly.waitForDamage)
+
+		val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
+		if (classProvider.isCPacketPlayer(packet) && !(fly.state && fly.disableNoFall))
 		{
 			val playerPacket = packet.asCPacketPlayer()
 
@@ -216,7 +219,8 @@ class NoFall : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val playerBB = thePlayer.entityBoundingBox
 
-		if (Fly.waitForDamage || collideBlock(playerBB, classProvider::isBlockLiquid) || collideBlock(
+		val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
+		if (fly.state && fly.disableNoFall || collideBlock(playerBB, classProvider::isBlockLiquid) || collideBlock(
 				classProvider.createAxisAlignedBB(playerBB.maxX, playerBB.maxY, playerBB.maxZ, playerBB.minX, playerBB.minY - 0.01, playerBB.minZ), classProvider::isBlockLiquid
 			)
 		) return
