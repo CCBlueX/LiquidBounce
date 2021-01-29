@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.StatType
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.event.*
@@ -273,7 +274,7 @@ class Fly : Module()
 					} else if (hypixelJump && onGround) jump()
 				}
 
-				"redesky" -> if (onGround) redeskyVClip(redeskyVClipHeight.get())
+				"redesky" -> if (onGround) redeskyVClip(thePlayer, redeskyVClipHeight.get())
 
 				"mccentral" -> mc.timer.timerSpeed = mccTimerSpeedValue.get()
 
@@ -281,8 +282,8 @@ class Fly : Module()
 			}
 		}
 
-		startY = posY
-		markStartY = posY
+		startY = thePlayer.posY.also { markStartY = it } // apply y change caused by jump() and redeskyVClip()
+
 		aacJump = -3.8
 		noPacketModify = false
 
@@ -299,10 +300,10 @@ class Fly : Module()
 	{
 		wasDead = false
 
-		val isRedeSkyMode = modeValue.get().equals("Redesky", ignoreCase = true)
-		if (isRedeSkyMode) redeskySpeed(0)
-
 		val thePlayer = mc.thePlayer ?: return
+
+		val isRedeSkyMode = modeValue.get().equals("Redesky", ignoreCase = true)
+		if (isRedeSkyMode) redeskySpeed(thePlayer, 0)
 
 		aac3_1_6_touchedVoid = false
 
@@ -318,7 +319,7 @@ class Fly : Module()
 			thePlayer.motionZ = 0.0
 		}
 
-		if (isRedeSkyMode) redeskyPacketHClip(0.0)
+		if (isRedeSkyMode) redeskyPacketHClip(thePlayer, 0.0)
 
 		thePlayer.capabilities.isFlying = false
 		mc.timer.timerSpeed = 1f
@@ -730,7 +731,7 @@ class Fly : Module()
 						hypixelFlyStarted = true
 						hypixelFlyTimer.reset()
 						waitForDamage = false
-						markStartY = posY
+						markStartY = thePlayer.posY // apply y change caused by jump()
 					}
 				}
 
@@ -768,11 +769,11 @@ class Fly : Module()
 				"redesky" ->
 				{
 					mc.timer.timerSpeed = 0.3f
-					redeskyPacketHClip(7.0)
-					redeskyPacketVClip(10.0)
-					redeskyVClip(-0.5f)
-					redeskyHClip(2.0)
-					redeskySpeed(1)
+					redeskyPacketHClip(thePlayer, 7.0)
+					redeskyPacketVClip(thePlayer, 10.0)
+					redeskyVClip(thePlayer, -0.5f)
+					redeskyHClip(thePlayer, 2.0)
+					redeskySpeed(thePlayer, 1)
 					thePlayer.motionY = -0.01
 				}
 
@@ -1028,40 +1029,32 @@ class Fly : Module()
 	}
 
 	//<editor-fold desc="Redesky Fly">
-	private fun redeskyHClip(horizontal: Double)
+	private fun redeskyHClip(thePlayer: IEntityPlayerSP, horizontal: Double)
 	{
-		val thePlayer = mc.thePlayer ?: return
-
 		val playerYaw = WMathHelper.toRadians(thePlayer.rotationYaw)
+
 		thePlayer.setPosition(thePlayer.posX + horizontal * -functions.sin(playerYaw), thePlayer.posY, thePlayer.posZ + horizontal * functions.cos(playerYaw))
 	}
 
-	private fun redeskyPacketHClip(horizontal: Double)
+	private fun redeskyPacketHClip(thePlayer: IEntityPlayerSP, horizontal: Double)
 	{
-		val thePlayer = mc.thePlayer ?: return
-
 		val playerYaw = WMathHelper.toRadians(thePlayer.rotationYaw)
+
 		mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX + horizontal * -functions.sin(playerYaw), thePlayer.posY, thePlayer.posZ + horizontal * functions.cos(playerYaw), false))
 	}
 
-	private fun redeskyVClip(vertical: Float)
+	private fun redeskyVClip(thePlayer: IEntityPlayerSP, vertical: Float)
 	{
-		val thePlayer = mc.thePlayer ?: return
-
 		thePlayer.setPosition(thePlayer.posX, thePlayer.posY + vertical, thePlayer.posZ)
 	}
 
-	private fun redeskyPacketVClip(vertical: Double)
+	private fun redeskyPacketVClip(thePlayer: IEntityPlayerSP, vertical: Double)
 	{
-		val thePlayer = mc.thePlayer ?: return
-
 		mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + vertical, thePlayer.posZ, false))
 	}
 
-	private fun redeskySpeed(speed: Int)
+	private fun redeskySpeed(thePlayer: IEntityPlayerSP, speed: Int)
 	{
-		val thePlayer = mc.thePlayer ?: return
-
 		val playerYaw = WMathHelper.toRadians(thePlayer.rotationYaw)
 		thePlayer.motionX = (speed * -functions.sin(playerYaw)).toDouble()
 		thePlayer.motionZ = (speed * functions.cos(playerYaw)).toDouble()

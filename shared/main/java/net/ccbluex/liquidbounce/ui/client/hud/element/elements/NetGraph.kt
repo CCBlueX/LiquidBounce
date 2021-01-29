@@ -91,9 +91,9 @@ class NetGraph(
 			packetUpdateTimer.reset()
 		}
 
-		val pingYMul = pingyMultiplier.get()
-		val inPacketYMul = inPacketYMultiplier.get()
-		val outPacketYMul = outPacketYMultiplier.get()
+		val pingYMul = pingyMultiplier.get() * 0.1f
+		val inPacketYMul = inPacketYMultiplier.get() * 0.1f
+		val outPacketYMul = outPacketYMultiplier.get() * 0.1f
 
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 		GL11.glEnable(GL11.GL_BLEND)
