@@ -6,7 +6,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityOtherPlayerMP
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
@@ -29,8 +31,9 @@ class Blink : Module()
 	/**
 	 * Options
 	 */
-	val pulseValue = BoolValue("Pulse", false)
+	private val pulseValue = BoolValue("Pulse", false)
 	private val pulseDelayValue = IntegerValue("PulseDelay", 1000, 500, 5000)
+	private val displayPreviousPos = BoolValue("DisplayPreviousPos", false)
 
 	/**
 	 * Variables
@@ -41,14 +44,13 @@ class Blink : Module()
 	private val pulseTimer = MSTimer()
 
 	private var fakePlayer: IEntityOtherPlayerMP? = null
-	private var disableLogger = false
 
 	override fun onEnable()
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!pulseValue.get())
+		if (displayPreviousPos.get())
 		{
 			val faker: IEntityOtherPlayerMP = classProvider.createEntityOtherPlayerMP(theWorld, thePlayer.gameProfile)
 
@@ -62,26 +64,21 @@ class Blink : Module()
 
 			fakePlayer = faker
 		}
+
 		synchronized(positions) {
 			positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight / 2, thePlayer.posZ))
 			positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ))
 		}
+
 		pulseTimer.reset()
 	}
 
 	override fun onDisable()
 	{
-		if (mc.thePlayer == null) return
+		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
 
-		blink()
-
-		val faker = fakePlayer
-
-		if (faker != null)
-		{
-			mc.theWorld?.removeEntityFromWorld(faker.entityId)
-			fakePlayer = null
-		}
+		blink(theWorld, thePlayer, displayPreviousPos.get(), false)
 	}
 
 	@EventTarget
@@ -89,14 +86,14 @@ class Blink : Module()
 	{
 		val packet: IPacket = event.packet
 
-		if (mc.thePlayer == null || disableLogger) return
+		mc.thePlayer ?: return
 
-		if (classProvider.isCPacketPlayer(packet)) // Cancel all movement stuff
-			event.cancelEvent()
+		//		if (classProvider.isCPacketPlayer(packet)) // Cancel all movement stuff
+		//			event.cancelEvent()
 
-		if (classProvider.isCPacketPlayerPosition(packet) || classProvider.isCPacketPlayerPosLook(packet) || classProvider.isCPacketPlayerBlockPlacement(packet) || classProvider.isCPacketAnimation(packet) || classProvider.isCPacketEntityAction(packet) || classProvider.isCPacketUseEntity(
+		if (classProvider.isCPacketPlayer(packet) || classProvider.isCPacketPlayerPosition(packet) || classProvider.isCPacketPlayerPosLook(packet) || classProvider.isCPacketPlayerBlockPlacement(packet) || classProvider.isCPacketAnimation(packet) || classProvider.isCPacketEntityAction(
 				packet
-			)
+			) || classProvider.isCPacketUseEntity(packet)
 		)
 		{
 			event.cancelEvent()
@@ -107,12 +104,14 @@ class Blink : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		synchronized(positions) { positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)) }
+
 		if (pulseValue.get() && pulseTimer.hasTimePassed(pulseDelayValue.get().toLong()))
 		{
-			blink()
+			blink(theWorld, thePlayer, displayPreviousPos.get(), true)
 			pulseTimer.reset()
 		}
 	}
@@ -128,6 +127,11 @@ class Blink : Module()
 		)
 
 		// Draw the positions
+		val renderManager = mc.renderManager
+		val viewerPosX = renderManager.viewerPosX
+		val viewerPosY = renderManager.viewerPosY
+		val viewerPosZ = renderManager.viewerPosZ
+
 		synchronized(positions) {
 			GL11.glPushMatrix()
 			GL11.glDisable(GL11.GL_TEXTURE_2D)
@@ -140,10 +144,7 @@ class Blink : Module()
 			GL11.glBegin(GL11.GL_LINE_STRIP)
 			RenderUtils.glColor(color)
 
-			val renderPosX: Double = mc.renderManager.viewerPosX
-			val renderPosY: Double = mc.renderManager.viewerPosY
-			val renderPosZ: Double = mc.renderManager.viewerPosZ
-			for (pos in positions) GL11.glVertex3d(pos[0] - renderPosX, pos[1] - renderPosY, pos[2] - renderPosZ)
+			for (pos in positions) GL11.glVertex3d(pos[0] - viewerPosX, pos[1] - viewerPosY, pos[2] - viewerPosZ)
 
 			GL11.glColor4d(1.0, 1.0, 1.0, 1.0)
 			GL11.glEnd()
@@ -159,19 +160,37 @@ class Blink : Module()
 	override val tag: String
 		get() = packets.size.toString()
 
-	private fun blink()
+	private fun blink(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, displayPrevPos: Boolean, canCreateFaker: Boolean)
 	{
+		if (displayPrevPos || !canCreateFaker)
+		{
+			var faker = fakePlayer
+			if (faker != null)
+			{
+				theWorld.removeEntityFromWorld(faker.entityId)
+				fakePlayer = null
+			}
+
+			if (canCreateFaker)
+			{
+				faker = classProvider.createEntityOtherPlayerMP(theWorld, thePlayer.gameProfile)
+
+				faker.rotationYawHead = thePlayer.rotationYawHead
+				faker.renderYawOffset = thePlayer.renderYawOffset
+				faker.copyLocationAndAnglesFrom(thePlayer)
+				faker.rotationYawHead = thePlayer.rotationYawHead
+				theWorld.addEntityToWorld(-1337, faker)
+
+				fakePlayer = faker
+			}
+		}
+
 		try
 		{
-			disableLogger = true
-
-			while (!packets.isEmpty()) mc.netHandler.networkManager.sendPacket(packets.take())
-
-			disableLogger = false
+			while (!packets.isEmpty()) mc.netHandler.networkManager.sendPacketWithoutEvent(packets.take())
 		} catch (e: Exception)
 		{
 			e.printStackTrace()
-			disableLogger = false
 		}
 
 		synchronized(positions, positions::clear)
