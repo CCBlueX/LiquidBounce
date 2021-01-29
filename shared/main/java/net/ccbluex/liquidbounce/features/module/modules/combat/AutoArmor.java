@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import net.ccbluex.liquidbounce.api.enums.WEnumHand;
+import net.ccbluex.liquidbounce.api.minecraft.client.network.IINetHandlerPlayClient;
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack;
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
@@ -134,11 +135,13 @@ public class AutoArmor extends Module
 	 */
 	private boolean move(final int item, final boolean isArmorSlot)
 	{
+		final IINetHandlerPlayClient netHandler = mc.getNetHandler();
+
 		if (!isArmorSlot && item < 9 && hotbarValue.get() && !classProvider.isGuiInventory(mc.getCurrentScreen()))
 		{
-			mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(item));
-			mc.getNetHandler().addToSendQueue(CrossVersionUtilsKt.createUseItemPacket(mc.getThePlayer().getInventoryContainer().getSlot(item).getStack(), WEnumHand.MAIN_HAND));
-			mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(mc.getThePlayer().getInventory().getCurrentItem()));
+			netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(item));
+			netHandler.addToSendQueue(CrossVersionUtilsKt.createUseItemPacket(mc.getThePlayer().getInventoryContainer().getSlot(item).getStack(), WEnumHand.MAIN_HAND));
+			netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(mc.getThePlayer().getInventory().getCurrentItem()));
 
 			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 
@@ -150,7 +153,7 @@ public class AutoArmor extends Module
 			final boolean openInventory = simulateInventory.get() && !classProvider.isGuiInventory(mc.getCurrentScreen());
 
 			if (openInventory)
-				mc.getNetHandler().addToSendQueue(createOpenInventoryPacket());
+				netHandler.addToSendQueue(createOpenInventoryPacket());
 
 			boolean full = isArmorSlot;
 
@@ -170,7 +173,7 @@ public class AutoArmor extends Module
 			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 
 			if (openInventory)
-				mc.getNetHandler().addToSendQueue(classProvider.createCPacketCloseWindow());
+				netHandler.addToSendQueue(classProvider.createCPacketCloseWindow());
 
 			return true;
 		}

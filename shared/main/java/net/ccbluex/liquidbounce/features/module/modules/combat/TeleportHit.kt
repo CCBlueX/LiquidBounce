@@ -43,6 +43,7 @@ class TeleportHit : Module()
 		if (targetEntity != null)
 		{
 			val currentTarget = targetEntity!!
+			val netHandler = mc.netHandler
 
 			if (!shouldHit)
 			{
@@ -58,10 +59,10 @@ class TeleportHit : Module()
 				val y = currentTarget.position.y + 0.25
 				val z = thePlayer.posZ + rotationVector.zCoord * (thePlayer.getDistanceToEntity(currentTarget) - 1.0f)
 
-				findPath(thePlayer, x, y + 1.0, z, 4.0).forEach { pos: Vector3d -> mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)) }
+				findPath(thePlayer, x, y + 1.0, z, 4.0).forEach { pos: Vector3d -> netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)) }
 
 				thePlayer.swingItem()
-				mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(currentTarget, ICPacketUseEntity.WAction.ATTACK))
+				netHandler.addToSendQueue(classProvider.createCPacketUseEntity(currentTarget, ICPacketUseEntity.WAction.ATTACK))
 				thePlayer.onCriticalHit(currentTarget)
 
 				shouldHit = false
