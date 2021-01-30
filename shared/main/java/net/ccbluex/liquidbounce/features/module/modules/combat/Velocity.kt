@@ -29,11 +29,11 @@ class Velocity : Module()
 	val verticalValue = FloatValue("Vertical", 0F, 0F, 1F)
 	val modeValue = ListValue(
 		"Mode", arrayOf(
-			"Simple", "AAC", "AACPush", "AACZero", "Reverse", "SmoothReverse", "Jump", "Glitch"
+			"Simple", "AAC3.1.2", "AACPush", "AAC3.3.4-Reverse", "AAC3.3.4-SmoothReverse", "AAC3.5.0-Zero", "Jump", "Glitch"
 		), "Simple"
 	)
 
-	// Reverse
+	// AAC Reverse
 	private val reverseStrengthValue = FloatValue("ReverseStrength", 1F, 0.1F, 1F)
 	private val reverse2StrengthValue = FloatValue("SmoothReverseStrength", 0.05F, 0.02F, 0.1F)
 
@@ -89,7 +89,7 @@ class Velocity : Module()
 				velocityInput = false
 			}
 
-			"reverse" ->
+			"aac3.3.4-reverse" ->
 			{
 				if (!velocityInput) return
 
@@ -99,7 +99,14 @@ class Velocity : Module()
 				} else if (velocityTimer.hasTimePassed(80L)) velocityInput = false
 			}
 
-			"smoothreverse" ->
+			"aac3.1.2" -> if (velocityInput && velocityTimer.hasTimePassed(80L))
+			{
+				thePlayer.motionX *= horizontalValue.get()
+				thePlayer.motionZ *= horizontalValue.get() //mc.thePlayer.motionY *= verticalValue.get() ?
+				velocityInput = false
+			}
+
+			"aac3.3.4-smoothreverse" ->
 			{
 				if (!velocityInput)
 				{
@@ -117,13 +124,6 @@ class Velocity : Module()
 					velocityInput = false
 					reverseHurt = false
 				}
-			}
-
-			"aac" -> if (velocityInput && velocityTimer.hasTimePassed(80L))
-			{
-				thePlayer.motionX *= horizontalValue.get()
-				thePlayer.motionZ *= horizontalValue.get() //mc.thePlayer.motionY *= verticalValue.get() ?
-				velocityInput = false
 			}
 
 			"aacpush" ->
@@ -151,7 +151,7 @@ class Velocity : Module()
 				}
 			}
 
-			"aaczero" -> if (thePlayer.hurtTime > 0)
+			"aac3.5.0-zero" -> if (thePlayer.hurtTime > 0)
 			{
 				if (!velocityInput || thePlayer.onGround || thePlayer.fallDistance > 2F) return
 
@@ -192,7 +192,7 @@ class Velocity : Module()
 					packetEntityVelocity.motionZ = (packetEntityVelocity.motionZ * horizontal).toInt()
 				}
 
-				"aac", "reverse", "smoothreverse", "aaczero" -> velocityInput = true
+				"aac3.1.2", "aac3.3.4-reverse", "aac3.3.4-smoothreverse", "aac3.5.0-zero" -> velocityInput = true
 
 				"glitch" ->
 				{
@@ -223,7 +223,7 @@ class Velocity : Module()
 				if (!thePlayer.isCollidedVertically) event.cancelEvent()
 			}
 
-			"aaczero" -> if (thePlayer.hurtTime > 0) event.cancelEvent()
+			"aac3.5.0-zero" -> if (thePlayer.hurtTime > 0) event.cancelEvent()
 		}
 	}
 }
