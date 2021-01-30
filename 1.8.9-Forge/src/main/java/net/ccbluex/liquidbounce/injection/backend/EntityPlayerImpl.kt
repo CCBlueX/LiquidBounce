@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.IFoodStats
 import net.minecraft.entity.player.EntityPlayer
 
-open class EntityPlayerImpl<T : EntityPlayer>(wrapped: T) : EntityLivingBaseImpl<T>(wrapped), IEntityPlayer
+open class EntityPlayerImpl<out T : EntityPlayer>(wrapped: T) : EntityLivingBaseImpl<T>(wrapped), IEntityPlayer
 {
 	override val gameProfile: GameProfile
 		get() = wrapped.gameProfile

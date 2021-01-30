@@ -35,7 +35,8 @@ class ACP : SpeedMode("AntiCheatPlus")
 				4 -> 1.05F // 0.49
 				5 -> 1.15F // 0.53
 				else -> 0.5F
-			} else when (amplifier)
+			}
+			else when (amplifier)
 			{
 				0 -> 0.85F // 0.31 +6 +6 +
 				1 -> 0.91F // 0.37 - previous value
@@ -47,7 +48,8 @@ class ACP : SpeedMode("AntiCheatPlus")
 			}
 
 			strafe(moveSpeed)
-		} else
+		}
+		else
 		{
 			thePlayer.motionX = 0.0
 			thePlayer.motionZ = 0.0

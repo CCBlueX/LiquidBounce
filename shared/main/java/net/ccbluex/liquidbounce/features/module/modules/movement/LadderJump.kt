@@ -26,8 +26,10 @@ class LadderJump : Module()
 			{
 				thePlayer.motionY = 1.5
 				jumped = true
-			} else jumped = false
-		} else if (!thePlayer.isOnLadder && jumped) thePlayer.motionY += 0.059
+			}
+			else jumped = false
+		}
+		else if (!thePlayer.isOnLadder && jumped) thePlayer.motionY += 0.059
 	}
 
 	companion object

@@ -54,7 +54,8 @@ class ItemESP : Module()
 			try
 			{
 				theWorld.loadedEntityList.asSequence().filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { mc.renderManager.renderEntityStatic(it, event.partialTicks, true) }
-			} catch (ex: Exception)
+			}
+			catch (ex: Exception)
 			{
 				ClientUtils.logger.error("An error occurred while rendering all item entities for shader esp", ex)
 			}

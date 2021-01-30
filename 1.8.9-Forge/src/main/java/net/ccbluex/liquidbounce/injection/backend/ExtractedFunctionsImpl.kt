@@ -50,7 +50,8 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 			fastRenderField = declaredField
 
 			if (!declaredField.isAccessible) declaredField.isAccessible = true
-		} catch (ignored: NoSuchFieldException)
+		}
+		catch (ignored: NoSuchFieldException)
 		{
 		}
 	}
@@ -103,7 +104,8 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 
 				fastRenderer.setBoolean(Minecraft.getMinecraft().gameSettings, false)
 			}
-		} catch (ignored: IllegalAccessException)
+		}
+		catch (ignored: IllegalAccessException)
 		{
 		}
 	}

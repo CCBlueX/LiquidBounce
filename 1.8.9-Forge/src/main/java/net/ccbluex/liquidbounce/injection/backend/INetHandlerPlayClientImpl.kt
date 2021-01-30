@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.api.minecraft.client.network.IINetHandlerPlayCli
 import net.ccbluex.liquidbounce.api.minecraft.client.network.INetworkPlayerInfo
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
-import net.ccbluex.liquidbounce.injection.implementations.IMixinNetworkManager
 import net.minecraft.client.network.NetHandlerPlayClient
 import net.minecraft.client.network.NetworkPlayerInfo
 import net.minecraft.network.play.INetHandlerPlayClient

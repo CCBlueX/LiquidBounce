@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.inventory.ISlot
 import net.minecraft.client.gui.inventory.GuiChest
 
-class GuiChestImpl<T : GuiChest>(wrapped: T) : GuiScreenImpl<T>(wrapped), IGuiChest
+class GuiChestImpl<out T : GuiChest>(wrapped: T) : GuiScreenImpl<T>(wrapped), IGuiChest
 {
 	override val inventoryRows: Int
 		get() = wrapped.inventoryRows

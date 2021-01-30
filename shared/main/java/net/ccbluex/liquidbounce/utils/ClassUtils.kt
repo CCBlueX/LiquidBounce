@@ -23,7 +23,8 @@ object ClassUtils
 			cachedClasses[className] = true
 
 			true
-		} catch (e: ClassNotFoundException)
+		}
+		catch (e: ClassNotFoundException)
 		{
 			cachedClasses[className] = false
 

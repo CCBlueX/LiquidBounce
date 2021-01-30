@@ -27,8 +27,10 @@ class AAC1_9_10BHop : SpeedMode("AAC1.9.10-BHop")
 
 				thePlayer.motionY = 0.41999998688697815
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.42F))
-			} else MovementUtils.strafe(MovementUtils.speed * if (thePlayer.fallDistance > 0.4f) 1.0f else 1.01f)
-		} else
+			}
+			else MovementUtils.strafe(MovementUtils.speed * if (thePlayer.fallDistance > 0.4f) 1.0f else 1.01f)
+		}
+		else
 		{
 			thePlayer.motionX = 0.0
 			thePlayer.motionZ = 0.0

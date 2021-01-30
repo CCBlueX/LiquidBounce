@@ -27,9 +27,11 @@ class HypixelBHop : SpeedMode("HypixelHop")
 				if (thePlayer.onGround && thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) speed *= 1f + 0.13f * (1 + thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier)
 				MovementUtils.strafe(speed)
 				return
-			} else if (thePlayer.motionY < 0.2) thePlayer.motionY -= 0.02
+			}
+			else if (thePlayer.motionY < 0.2) thePlayer.motionY -= 0.02
 			MovementUtils.strafe(MovementUtils.speed * 1.01889f)
-		} else
+		}
+		else
 		{
 			thePlayer.motionZ = 0.0
 			thePlayer.motionX = thePlayer.motionZ

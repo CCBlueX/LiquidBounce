@@ -85,7 +85,8 @@ class FastStairs : Module()
 			thePlayer.motionX *= motion
 			thePlayer.motionZ *= motion
 			canJump = true
-		} else if (mode.startsWith("aac", ignoreCase = true) && canJump)
+		}
+		else if (mode.startsWith("aac", ignoreCase = true) && canJump)
 		{
 			if (longJumpValue.get())
 			{

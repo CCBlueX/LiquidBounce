@@ -52,17 +52,20 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
 					if (rotate <= 70F)
 					{
 						rotate += 0.12F * delta
-					} else
+					}
+					else
 					{
 						rotateDirection = false
 						rotate = 70F
 					}
-				} else
+				}
+				else
 				{
 					if (rotate >= -70F)
 					{
 						rotate -= 0.12F * delta
-					} else
+					}
+					else
 					{
 						rotateDirection = true
 						rotate = -70F

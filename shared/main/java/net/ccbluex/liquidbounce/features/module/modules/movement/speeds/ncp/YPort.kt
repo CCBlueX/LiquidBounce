@@ -37,8 +37,7 @@ class YPort : SpeedMode("YPort")
 				classProvider.getMaterialEnum(
 					MaterialType.LAVA
 				)
-			) && !thePlayer.isInWater && (!classProvider.isBlockAir(this.getBlock(-1.1)) && !classProvider.isBlockAir(this.getBlock(-1.1)) || !classProvider.isBlockAir(this.getBlock(-0.1)) && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && level == 3
-		) thePlayer.motionY = -0.3994
+			) && !thePlayer.isInWater && (!classProvider.isBlockAir(this.getBlock(-1.1)) && !classProvider.isBlockAir(this.getBlock(-1.1)) || !classProvider.isBlockAir(this.getBlock(-0.1)) && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && level == 3) thePlayer.motionY = -0.3994
 
 		val xDist = thePlayer.posX - thePlayer.prevPosX
 		val zDist = thePlayer.posZ - thePlayer.prevPosZ
@@ -60,7 +59,8 @@ class YPort : SpeedMode("YPort")
 		if (timerDelay != 0)
 		{
 			mc.timer.timerSpeed = 1f
-		} else
+		}
+		else
 		{
 			if (MovementUtils.hasMotion()) mc.timer.timerSpeed = 32767f
 			if (MovementUtils.hasMotion())
@@ -81,18 +81,21 @@ class YPort : SpeedMode("YPort")
 		{
 			level = 2
 			moveSpeed = 1.38 * baseMoveSpeed - 0.01
-		} else if (level == 2)
+		}
+		else if (level == 2)
 		{
 			level = 3
 			thePlayer.motionY = 0.399399995803833
 			event.y = 0.399399995803833
 			moveSpeed *= 2.149
-		} else if (level == 3)
+		}
+		else if (level == 3)
 		{
 			level = 4
 			val difference = 0.66 * (lastDist - baseMoveSpeed)
 			moveSpeed = lastDist - difference
-		} else
+		}
+		else
 		{
 			if ((mc.theWorld ?: return).getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(0.0, thePlayer.motionY, 0.0)).isNotEmpty() || thePlayer.isCollidedVertically) level = 1
 			moveSpeed = lastDist - lastDist / 159.0
@@ -101,13 +104,15 @@ class YPort : SpeedMode("YPort")
 		var forward: Float = thePlayer.movementInput.moveForward
 		var strafe: Float = thePlayer.movementInput.moveStrafe
 		var yaw = thePlayer.rotationYaw
-		if (forward == 0f && strafe == 0f) event.zeroXZ() else if (forward != 0f)
+		if (forward == 0f && strafe == 0f) event.zeroXZ()
+		else if (forward != 0f)
 		{
 			if (strafe >= 1f)
 			{
 				yaw += if (forward > 0f) -45 else 45
 				strafe = 0f
-			} else if (strafe <= -1.0f)
+			}
+			else if (strafe <= -1.0f)
 			{
 				yaw += if (forward > 0f) 45 else -45
 				strafe = 0f

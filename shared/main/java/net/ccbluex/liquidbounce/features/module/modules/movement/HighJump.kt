@@ -193,8 +193,7 @@ class HighJump : Module()
 			bb = classProvider.createAxisAlignedBB(x - 0.3, y + yOff, z - 0.3, x + 0.3, y + 2 + yOff, z + 0.3)
 			if (!theWorld.getCollidingBoundingBoxes(thePlayer, bb.offset(0.0, -1.0, 0.0)).isEmpty() && theWorld.getCollidingBoundingBoxes(thePlayer, bb).isEmpty() && theWorld.getCollidingBoundingBoxes(
 					thePlayer, bb.offset(0.0, -0.5, 0.0)
-				).isEmpty() && yOff <= -4.5 || yOff <= -9
-			) return yOff
+				).isEmpty() && yOff <= -4.5 || yOff <= -9) return yOff
 			yOff -= 0.5
 		} while (theWorld.getCollidingBoundingBoxes(thePlayer, bb).isEmpty())
 

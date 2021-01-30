@@ -176,7 +176,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		if (triangleMode)
 		{
 			playerSize *= 2
-		} else
+		}
+		else
 		{
 			worldRenderer.begin(GL_POINTS, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
 			glPointSize(playerSize)
@@ -235,7 +236,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 						val color = (LiquidBounce.moduleManager[ESP::class.java] as ESP).getColor(entity)
 
 						glColor4f(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f)
-					} else
+					}
+					else
 					{
 						glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 					}
@@ -247,7 +249,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 					glVertex2f(0f, -playerSize * 0.5f)
 
 					glEnd()
-				} else
+				}
+				else
 				{
 					val color = (LiquidBounce.moduleManager[ESP::class.java] as ESP).getColor(entity)
 

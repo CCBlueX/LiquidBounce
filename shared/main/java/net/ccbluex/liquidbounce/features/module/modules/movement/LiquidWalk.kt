@@ -56,7 +56,8 @@ class LiquidWalk : Module()
 						thePlayer.motionY *= 0.0
 						thePlayer.motionZ *= 0.99999
 						if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((posY - (posY - 1).toInt()).toInt() / 8.0)
-					} else
+					}
+					else
 					{
 						thePlayer.motionX *= 0.99999
 						thePlayer.motionY *= 0.0
@@ -143,8 +144,7 @@ class LiquidWalk : Module()
 					classProvider.createAxisAlignedBB(
 						thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ
 					), classProvider::isBlockLiquid
-				)
-			)
+				))
 			{
 				nextTick = !nextTick
 

@@ -288,14 +288,16 @@ class InventoryCleaner : Module()
 						stack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS)
 					)
 				}
-			} else if (bowAndArrowValue.get() && classProvider.isItemBow(item))
+			}
+			else if (bowAndArrowValue.get() && classProvider.isItemBow(item))
 			{
 				val currPower = ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER))
 
 				items().none { (_, stack) ->
 					itemStack != stack && classProvider.isItemBow(stack.item) && currPower < ItemUtils.getEnchantment(stack, classProvider.getEnchantmentEnum(EnchantmentType.POWER))
 				}
-			} else if (classProvider.isItemArmor(item))
+			}
+			else if (classProvider.isItemArmor(item))
 			{
 				val currArmor = ArmorPiece(itemStack, slot)
 
@@ -306,12 +308,15 @@ class InventoryCleaner : Module()
 
 						if (armor.armorType != currArmor.armorType) false
 						else AutoArmor.ARMOR_COMPARATOR.compare(currArmor, armor) <= 0
-					} else false
+					}
+					else false
 				}
-			} else if (compassValue.get() && itemStack.unlocalizedName == "item.compass")
+			}
+			else if (compassValue.get() && itemStack.unlocalizedName == "item.compass")
 			{
 				items(0, 45).none { (_, stack) -> itemStack != stack && stack.unlocalizedName == "item.compass" }
-			} else foodValue.get() && classProvider.isItemFood(item) || bowAndArrowValue.get() && itemStack.unlocalizedName == "item.arrow" || classProvider.isItemBlock(item) && !classProvider.isBlockBush(item?.asItemBlock()?.block) || bedValue.get() && classProvider.isItemBed(
+			}
+			else foodValue.get() && classProvider.isItemFood(item) || bowAndArrowValue.get() && itemStack.unlocalizedName == "item.arrow" || classProvider.isItemBlock(item) && !classProvider.isBlockBush(item?.asItemBlock()?.block) || bedValue.get() && classProvider.isItemBed(
 				item
 			) || diamondValue.get() && itemStack.unlocalizedName == "item.diamond" || ironIngotValue.get() && itemStack.unlocalizedName == "item.ingotIron" || potionValue.get() && classProvider.isItemPotion(
 				item
@@ -320,7 +325,8 @@ class InventoryCleaner : Module()
 			) || classProvider.isItemMinecart(
 				item
 			))
-		} catch (ex: Exception)
+		}
+		catch (ex: Exception)
 		{
 			ClientUtils.logger.error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
 
@@ -372,7 +378,8 @@ class InventoryCleaner : Module()
 
 				// https://youtrack.jetbrains.com/issue/KT-17018
 				// https://youtrack.jetbrains.com/issue/KT-38704
-				@Suppress("ConvertLambdaToReference") val currentTypeChecker: ((IItem?) -> Boolean) = when
+				@Suppress("ConvertLambdaToReference")
+				val currentTypeChecker: ((IItem?) -> Boolean) = when
 				{
 					type.equals("Sword", ignoreCase = true) -> { item: IItem? -> classProvider.isItemSword(item) }
 					type.equals("Pickaxe", ignoreCase = true) -> { obj: IItem? -> classProvider.isItemPickaxe(obj) }
@@ -389,7 +396,8 @@ class InventoryCleaner : Module()
 						if (bestWeapon == -1)
 						{
 							bestWeapon = index
-						} else
+						}
+						else
 						{
 							val currDamage = (itemStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 
@@ -415,7 +423,8 @@ class InventoryCleaner : Module()
 					thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
 						if (classProvider.isItemBow(itemStack?.item) && !type(index).equals(type, ignoreCase = true))
 						{
-							if (bestBow == -1) bestBow = index else
+							if (bestBow == -1) bestBow = index
+							else
 							{
 								val power = ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER))
 

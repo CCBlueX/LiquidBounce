@@ -24,7 +24,8 @@ class SpartanYPort : SpeedMode("Spartan-YPort")
 			{
 				jump(thePlayer)
 				airTicks = 0
-			} else
+			}
+			else
 			{
 				mc.timer.timerSpeed = 1.08f
 

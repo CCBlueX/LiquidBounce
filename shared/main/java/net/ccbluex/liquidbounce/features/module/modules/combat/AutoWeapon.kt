@@ -57,7 +57,8 @@ class AutoWeapon : Module()
 			{
 				mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(slot))
 				spoofedSlot = ticksValue.get()
-			} else
+			}
+			else
 			{
 				thePlayer.inventory.currentItem = slot
 				mc.playerController.updateController()

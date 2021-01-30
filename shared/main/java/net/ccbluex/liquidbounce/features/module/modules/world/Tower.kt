@@ -182,10 +182,10 @@ class Tower : Module()
 			// Skip if jump key isn't pressed
 			if (onJumpDelayValue.get() > 0) onJumpTimer.reset()
 			return
-		} else if (onJumpValue.get() && onJumpDelayValue.get() > 0 && (!onJumpTimer.hasTimePassed(
+		}
+		else if (onJumpValue.get() && onJumpDelayValue.get() > 0 && (!onJumpTimer.hasTimePassed(
 				onJumpDelayValue.get().toLong()
-			) || disableOnJumpWhileMoving.get()) && (isMoving || !onJumpNoDelayIfNotMovingValue.get())
-		) // Skip if onjump delay aren't over yet.
+			) || disableOnJumpWhileMoving.get()) && (isMoving || !onJumpNoDelayIfNotMovingValue.get())) // Skip if onjump delay aren't over yet.
 			return
 
 		active = true
@@ -264,13 +264,15 @@ class Tower : Module()
 			{
 				fakeJump()
 				thePlayer.motionY = 0.42
-			} else if (thePlayer.motionY < 0.1) thePlayer.motionY = -0.3
+			}
+			else if (thePlayer.motionY < 0.1) thePlayer.motionY = -0.3
 
 			"motiontp" -> if (onGround)
 			{
 				fakeJump()
 				thePlayer.motionY = 0.42
-			} else if (thePlayer.motionY < 0.23) thePlayer.setPosition(posX, truncate(posY), posZ)
+			}
+			else if (thePlayer.motionY < 0.23) thePlayer.setPosition(posX, truncate(posY), posZ)
 
 			"packet" -> if (onGround && timer.hasTimePassed(2))
 			{
@@ -340,7 +342,8 @@ class Tower : Module()
 			{
 				thePlayer.motionY = 0.4195464
 				thePlayer.setPosition(posX - 0.035, posY, posZ)
-			} else if (thePlayer.ticksExisted % 4 == 0)
+			}
+			else if (thePlayer.ticksExisted % 4 == 0)
 			{
 				thePlayer.motionY = -0.5
 				thePlayer.setPosition(posX + 0.035, posY, posZ)
@@ -390,8 +393,7 @@ class Tower : Module()
 		// Place block
 		if (mc.playerController.onPlayerRightClick(
 				thePlayer, theWorld, itemStack!!, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3
-			)
-		) if (swingValue.get()) thePlayer.swingItem()
+			)) if (swingValue.get()) thePlayer.swingItem()
 		else netHandler.addToSendQueue(classProvider.createCPacketAnimation())
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
@@ -436,8 +438,7 @@ class Tower : Module()
 						val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
 						if (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || theWorld.rayTraceBlocks(
 								eyesPos, hitVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false
-							) != null
-						)
+							) != null)
 						{
 							zSearch += 0.1
 							continue

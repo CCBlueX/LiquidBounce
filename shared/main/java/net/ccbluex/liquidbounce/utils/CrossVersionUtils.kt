@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.injection.backend.WrapperImpl.classProvider
 
 fun createUseItemPacket(itemStack: IItemStack?, hand: WEnumHand): IPacket = if (Backend.MINECRAFT_VERSION_MINOR == 8) classProvider.createCPacketPlayerBlockPlacement(itemStack) else classProvider.createCPacketTryUseItem(hand)
 
-fun createOpenInventoryPacket(): IPacket = if (Backend.MINECRAFT_VERSION_MINOR == 8) classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT) else classProvider.createCPacketEntityAction(
+fun createOpenInventoryPacket(): IPacket = if (Backend.MINECRAFT_VERSION_MINOR == 8) classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT)
+else classProvider.createCPacketEntityAction(
 	LiquidBounce.wrapper.minecraft.thePlayer!!, ICPacketEntityAction.WAction.OPEN_INVENTORY
 )

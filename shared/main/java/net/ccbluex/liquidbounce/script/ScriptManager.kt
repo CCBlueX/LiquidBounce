@@ -45,7 +45,8 @@ class ScriptManager
 			val script = Script(scriptFile)
 			script.initScript()
 			scripts.add(script)
-		} catch (t: Throwable)
+		}
+		catch (t: Throwable)
 		{
 			ClientUtils.logger.error("[ScriptAPI] Failed to load script '${scriptFile.name}'.", t)
 		}

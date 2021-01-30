@@ -44,7 +44,8 @@ class NCPFHop : SpeedMode("NCPFHop")
 			}
 			thePlayer.motionY -= 0.00099999
 			MovementUtils.strafe()
-		} else
+		}
+		else
 		{
 			thePlayer.motionX = 0.0
 			thePlayer.motionZ = 0.0

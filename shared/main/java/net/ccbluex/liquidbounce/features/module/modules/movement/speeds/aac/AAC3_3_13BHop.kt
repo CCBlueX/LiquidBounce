@@ -36,7 +36,8 @@ class AAC3_3_13BHop : SpeedMode("AAC3.3.13-BHop")
 			LiquidBounce.eventManager.callEvent(JumpEvent(0.405f))
 
 			MovementUtils.strafe()
-		} else if (thePlayer.fallDistance < 0.31f)
+		}
+		else if (thePlayer.fallDistance < 0.31f)
 		{
 			if (classProvider.isBlockCarpet(getBlock(thePlayer.position))) // why?
 				return
@@ -48,7 +49,8 @@ class AAC3_3_13BHop : SpeedMode("AAC3.3.13-BHop")
 
 			// Motion Y
 			if (!thePlayer.isCollidedHorizontally) thePlayer.motionY -= 0.014999993f
-		} else thePlayer.jumpMovementFactor = 0.02f
+		}
+		else thePlayer.jumpMovementFactor = 0.02f
 	}
 
 	override fun onMove(event: MoveEvent)

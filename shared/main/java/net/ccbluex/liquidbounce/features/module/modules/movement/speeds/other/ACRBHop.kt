@@ -36,7 +36,8 @@ class ACRBHop : SpeedMode("AntiCheatReloaded-BHop")
 			}
 
 			MovementUtils.strafe()
-		} else
+		}
+		else
 		{
 			thePlayer.jumpMovementFactor = 0.02F
 			thePlayer.motionX = 0.0

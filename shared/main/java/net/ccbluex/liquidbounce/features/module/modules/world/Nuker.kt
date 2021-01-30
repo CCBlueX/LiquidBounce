@@ -115,8 +115,10 @@ class Nuker : Module()
 
 						// Check if block is visible
 						rayTrace != null && rayTrace.blockPos == pos
-					} else true // Done
-				} else false // Bad block
+					}
+					else true // Done
+				}
+				else false // Bad block
 			}.toMutableMap()
 
 			do
@@ -199,7 +201,8 @@ class Nuker : Module()
 				}
 				return // Break out
 			} while (nuke < nukeValue.get())
-		} else
+		}
+		else
 		{
 
 			// Fast creative mode nuker (CreativeStorm option)
@@ -229,8 +232,10 @@ class Nuker : Module()
 
 						// Check if block is visible
 						rayTrace != null && rayTrace.blockPos == pos
-					} else true // Done
-				} else false // Bad block
+					}
+					else true // Done
+				}
+				else false // Bad block
 			}.forEach { (pos, _) -> // Instant break block
 				netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, pos, classProvider.getEnumFacing(EnumFacingType.DOWN)))
 				thePlayer.swingItem()

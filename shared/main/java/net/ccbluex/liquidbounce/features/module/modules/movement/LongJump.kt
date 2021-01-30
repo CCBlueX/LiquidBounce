@@ -183,7 +183,8 @@ class LongJump : Module()
 		if (mode.equals("mineplex3", ignoreCase = true))
 		{
 			if (thePlayer.fallDistance != 0.0f) thePlayer.motionY += 0.037
-		} else if (jumped)
+		}
+		else if (jumped)
 
 			if (mode.equals("Teleport", ignoreCase = true) && isMoving && canBoost)
 			{
@@ -196,7 +197,8 @@ class LongJump : Module()
 				canBoost = false
 				boosted = true
 				if (autoDisableValue.get()) state = false
-			} else if (mode.equals("NCP", ignoreCase = true) && !isMoving)
+			}
+			else if (mode.equals("NCP", ignoreCase = true) && !isMoving)
 			{
 				thePlayer.motionX = 0.0
 				thePlayer.motionZ = 0.0

@@ -58,7 +58,8 @@ object RaycastUtils : MinecraftInstance()
 						pointedEntity = entity
 						blockReachDistance = 0.0
 					}
-				} else if (movingObjectPosition != null)
+				}
+				else if (movingObjectPosition != null)
 				{
 					val eyeDistance = eyePosition.distanceTo(movingObjectPosition.hitVec)
 
@@ -67,7 +68,8 @@ object RaycastUtils : MinecraftInstance()
 						if (entity == renderViewEntity.ridingEntity && !renderViewEntity.canRiderInteract())
 						{
 							if (blockReachDistance == 0.0) pointedEntity = entity
-						} else
+						}
+						else
 						{
 							pointedEntity = entity
 							blockReachDistance = eyeDistance

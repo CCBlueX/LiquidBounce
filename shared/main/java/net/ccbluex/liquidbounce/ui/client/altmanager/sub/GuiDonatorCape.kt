@@ -91,7 +91,8 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		stateButton.displayString = if (capeEnabled)
 		{
 			"Disable Cape"
-		} else
+		}
+		else
 		{
 			"Enable Cape"
 		}
@@ -121,7 +122,8 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					capeEnabled = !capeEnabled
 					status = if (capeEnabled) "\u00A7aSuccessfully enabled offline cape"
 					else "\u00A7aSuccessfully disabled offline cape"
-				} else WorkerUtils.workers.submit {
+				}
+				else WorkerUtils.workers.submit {
 					val httpClient = HttpClients.createDefault()
 					val headers = arrayOf(
 						BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"), BasicHeader(HttpHeaders.AUTHORIZATION, transferCodeField.text)
@@ -129,7 +131,8 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					val request = if (capeEnabled)
 					{
 						HttpDelete("http://capes.liquidbounce.net/api/v1/cape/self")
-					} else
+					}
+					else
 					{
 						HttpPut("http://capes.liquidbounce.net/api/v1/cape/self")
 					}
@@ -143,11 +146,13 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 						if (capeEnabled)
 						{
 							"\u00A7aSuccessfully enabled cape"
-						} else
+						}
+						else
 						{
 							"\u00A7aSuccessfully disabled cape"
 						}
-					} else
+					}
+					else
 					{
 						"\u00A7cFailed to toggle cape ($statusCode)"
 					}

@@ -158,8 +158,7 @@ object ClassProviderImpl : IClassProvider
 
 	override fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(C08PacketPlayerBlockPlacement(stack?.unwrap()))
 
-	override fun createCPacketPlayerBlockPlacement(positionIn: WBlockPos, placedBlockDirectionIn: Int, stackIn: IItemStack?, facingXIn: Float, facingYIn: Float, facingZIn: Float): ICPacketPlayerBlockPlacement =
-		CPacketPlayerBlockPlacementImpl(C08PacketPlayerBlockPlacement(positionIn.unwrap(), placedBlockDirectionIn, stackIn?.unwrap(), facingXIn, facingYIn, facingZIn))
+	override fun createCPacketPlayerBlockPlacement(positionIn: WBlockPos, placedBlockDirectionIn: Int, stackIn: IItemStack?, facingXIn: Float, facingYIn: Float, facingZIn: Float): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(C08PacketPlayerBlockPlacement(positionIn.unwrap(), placedBlockDirectionIn, stackIn?.unwrap(), facingXIn, facingYIn, facingZIn))
 
 	override fun createCPacketPlayerPosLook(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayerPosLook = CPacketPlayerPosLookImpl(C03PacketPlayer.C06PacketPlayerPosLook(x, y, z, yaw, pitch, onGround))
 

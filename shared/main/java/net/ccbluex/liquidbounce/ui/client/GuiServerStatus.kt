@@ -39,7 +39,8 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		if (status.isEmpty())
 		{
 			Fonts.font40.drawCenteredString("Loading...", representedScreen.width / 2.0f, representedScreen.height / 4.0f + 40, Color.WHITE.rgb)
-		} else
+		}
+		else
 		{
 			for (server in status.keys)
 			{
@@ -70,12 +71,14 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		try
 		{
-			@Suppress("UNCHECKED_CAST") val linkedTreeMaps = Gson().fromJson(
+			@Suppress("UNCHECKED_CAST")
+			val linkedTreeMaps = Gson().fromJson(
 				HttpUtils["https://status.mojang.com/check"], List::class.java
 			) as List<Map<String, String>>
 
 			for (linkedTreeMap in linkedTreeMaps) for ((key, value) in linkedTreeMap) status[key] = value
-		} catch (e: IOException)
+		}
+		catch (e: IOException)
 		{
 			status["status.mojang.com/check"] = "red"
 		}

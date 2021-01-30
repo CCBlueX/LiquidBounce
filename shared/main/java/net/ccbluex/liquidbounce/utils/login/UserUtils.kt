@@ -70,7 +70,8 @@ object UserUtils
 			val names = JSONArray(EntityUtils.toString(response.entity))
 
 			JSONObject(names.get(names.length() - 1).toString()).getString("name")
-		} catch (e: Exception)
+		}
+		catch (e: Exception)
 		{
 			e.printStackTrace()
 			return null
@@ -103,7 +104,8 @@ object UserUtils
 					return@getUUID jsonElement.asJsonObject.get("id").asString
 				}
 			}
-		} catch (ignored: Throwable)
+		}
+		catch (ignored: Throwable)
 		{
 		}
 

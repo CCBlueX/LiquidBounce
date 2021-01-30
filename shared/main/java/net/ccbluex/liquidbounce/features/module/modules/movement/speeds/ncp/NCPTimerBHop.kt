@@ -61,7 +61,8 @@ class NCPTimerBHop : SpeedMode("SNCPBHop")
 		if (timerDelay != 0)
 		{
 			mc.timer.timerSpeed = 1f
-		} else
+		}
+		else
 		{
 			if (MovementUtils.isMoving) mc.timer.timerSpeed = 32767f
 			if (MovementUtils.isMoving)
@@ -82,29 +83,34 @@ class NCPTimerBHop : SpeedMode("SNCPBHop")
 		{
 			step = 2
 			moveSpeed = 1.35 * baseMoveSpeed - 0.01
-		} else if (step == 2)
+		}
+		else if (step == 2)
 		{
 			step = 3
 			thePlayer.motionY = 0.399399995803833
 			event.y = 0.399399995803833
 			moveSpeed *= 2.149
-		} else if (step == 3)
+		}
+		else if (step == 3)
 		{
 			step = 4
 			val difference = 0.66 * (lastDist - baseMoveSpeed)
 			moveSpeed = lastDist - difference
-		} else if (step == 88)
+		}
+		else if (step == 88)
 		{
 			moveSpeed = baseMoveSpeed
 			lastDist = 0.0
 			step = 89
-		} else if (step == 89)
+		}
+		else if (step == 89)
 		{
 			if (theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(0.0, thePlayer.motionY, 0.0)).isNotEmpty() || thePlayer.isCollidedVertically) step = 1
 			lastDist = 0.0
 			moveSpeed = baseMoveSpeed
 			return
-		} else
+		}
+		else
 		{
 			if (theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(0.0, thePlayer.motionY, 0.0)).isNotEmpty() || thePlayer.isCollidedVertically)
 			{
@@ -121,13 +127,15 @@ class NCPTimerBHop : SpeedMode("SNCPBHop")
 		var forward: Float = movementInput.moveForward
 		var strafe: Float = movementInput.moveStrafe
 		var yaw = thePlayer.rotationYaw
-		if (forward == 0.0f && strafe == 0.0f) event.zeroXZ() else if (forward != 0.0f)
+		if (forward == 0.0f && strafe == 0.0f) event.zeroXZ()
+		else if (forward != 0.0f)
 		{
 			if (strafe >= 1.0f)
 			{
 				yaw += if (forward > 0.0f) -45 else 45
 				strafe = 0.0f
-			} else if (strafe <= -1.0f)
+			}
+			else if (strafe <= -1.0f)
 			{
 				yaw += if (forward > 0.0f) 45 else -45
 				strafe = 0.0f
@@ -135,7 +143,8 @@ class NCPTimerBHop : SpeedMode("SNCPBHop")
 			if (forward > 0.0f)
 			{
 				forward = 1.0f
-			} else if (forward < 0.0f)
+			}
+			else if (forward < 0.0f)
 			{
 				forward = -1.0f
 			}

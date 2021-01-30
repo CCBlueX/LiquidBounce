@@ -61,7 +61,8 @@ object MovementUtils : MinecraftInstance()
 			{
 				rotationYaw += 180f
 				forward = -0.5f
-			} else if (thePlayer.moveForward > 0f) forward = 0.5f
+			}
+			else if (thePlayer.moveForward > 0f) forward = 0.5f
 			if (thePlayer.moveStrafing > 0f) rotationYaw -= 90f * forward
 			if (thePlayer.moveStrafing < 0f) rotationYaw += 90f * forward
 			return rotationYaw

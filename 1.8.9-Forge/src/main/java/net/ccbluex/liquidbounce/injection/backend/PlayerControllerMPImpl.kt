@@ -52,8 +52,7 @@ class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControlle
 
 	override fun sendUseItem(playerSP: IEntityPlayer, theWorld: IWorld, itemStack: IItemStack) = wrapped.sendUseItem(playerSP.unwrap(), theWorld.unwrap(), itemStack.unwrap())
 
-	override fun onPlayerRightClick(playerSP: IEntityPlayerSP, theWorld: IWorldClient, itemStack: IItemStack?, position: WBlockPos, sideOpposite: IEnumFacing, hitVec: WVec3) =
-		wrapped.onPlayerRightClick(playerSP.unwrap(), theWorld.unwrap(), itemStack?.unwrap(), position.unwrap(), sideOpposite.unwrap(), hitVec.unwrap())
+	override fun onPlayerRightClick(playerSP: IEntityPlayerSP, theWorld: IWorldClient, itemStack: IItemStack?, position: WBlockPos, sideOpposite: IEnumFacing, hitVec: WVec3) = wrapped.onPlayerRightClick(playerSP.unwrap(), theWorld.unwrap(), itemStack?.unwrap(), position.unwrap(), sideOpposite.unwrap(), hitVec.unwrap())
 
 	override fun onStoppedUsingItem(thePlayer: IEntityPlayerSP) = wrapped.onStoppedUsingItem(thePlayer.unwrap())
 

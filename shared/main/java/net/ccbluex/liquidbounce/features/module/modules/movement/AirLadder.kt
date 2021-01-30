@@ -27,8 +27,7 @@ class AirLadder : Module()
 						thePlayer.posX, thePlayer.posY, thePlayer.posZ
 					)
 				)
-			) || classProvider.isBlockVine(BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ)))
-		)
+			) || classProvider.isBlockVine(BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))))
 		{
 			thePlayer.motionY = 0.15
 			thePlayer.motionX = 0.0

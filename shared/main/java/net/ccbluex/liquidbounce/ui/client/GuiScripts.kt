@@ -74,7 +74,8 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					LiquidBounce.clickGui = ClickGui()
 					FileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
 					return
-				} else if (fileName.endsWith(".zip"))
+				}
+				else if (fileName.endsWith(".zip"))
 				{
 					val zipFile = ZipFile(file)
 					val entries = zipFile.entries()
@@ -111,7 +112,8 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				}
 
 				MiscUtils.showErrorPopup("Wrong file extension.", "The file extension has to be .js or .zip")
-			} catch (t: Throwable)
+			}
+			catch (t: Throwable)
 			{
 				ClientUtils.logger.error("Something went wrong while importing a script.", t)
 				MiscUtils.showErrorPopup(t.javaClass.name, t.message)
@@ -129,7 +131,8 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					FileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
 					FileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
 				}
-			} catch (t: Throwable)
+			}
+			catch (t: Throwable)
 			{
 				ClientUtils.logger.error("Something went wrong while deleting a script.", t)
 				MiscUtils.showErrorPopup(t.javaClass.name, t.message)
@@ -137,7 +140,8 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			3 -> try
 			{
 				LiquidBounce.scriptManager.reloadScripts()
-			} catch (t: Throwable)
+			}
+			catch (t: Throwable)
 			{
 				ClientUtils.logger.error("Something went wrong while reloading all scripts.", t)
 				MiscUtils.showErrorPopup(t.javaClass.name, t.message)
@@ -145,7 +149,8 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			4 -> try
 			{
 				Desktop.getDesktop().open(LiquidBounce.scriptManager.scriptsFolder)
-			} catch (t: Throwable)
+			}
+			catch (t: Throwable)
 			{
 				ClientUtils.logger.error("Something went wrong while trying to open your scripts folder.", t)
 				MiscUtils.showErrorPopup(t.javaClass.name, t.message)
@@ -153,14 +158,16 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			5 -> try
 			{
 				Desktop.getDesktop().browse(URL("https://liquidbounce.net/docs/ScriptAPI/Getting%20Started").toURI())
-			} catch (ignored: Exception)
+			}
+			catch (ignored: Exception)
 			{
 			}
 
 			6 -> try
 			{
 				Desktop.getDesktop().browse(URL("https://forum.ccbluex.net/viewforum.php?id=16").toURI())
-			} catch (ignored: Exception)
+			}
+			catch (ignored: Exception)
 			{
 			}
 		}

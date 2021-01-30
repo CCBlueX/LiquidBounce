@@ -61,7 +61,8 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		if (timerDelay != 0)
 		{
 			mc.timer.timerSpeed = 1f
-		} else
+		}
+		else
 		{
 			if (MovementUtils.isMoving) mc.timer.timerSpeed = 32767f
 			if (MovementUtils.isMoving)
@@ -82,18 +83,21 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		{
 			level = 2
 			moveSpeed = 1.35 * baseMoveSpeed - 0.01
-		} else if (level == 2)
+		}
+		else if (level == 2)
 		{
 			level = 3
 			thePlayer.motionY = 0.399399995803833
 			event.y = 0.399399995803833
 			moveSpeed *= 2.149
-		} else if (level == 3)
+		}
+		else if (level == 3)
 		{
 			level = 4
 			val difference = 0.66 * (lastDist - baseMoveSpeed)
 			moveSpeed = lastDist - difference
-		} else
+		}
+		else
 		{
 			if (mc.theWorld!!.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(0.0, thePlayer.motionY, 0.0)).isNotEmpty() || thePlayer.isCollidedVertically) level = 1
 			moveSpeed = lastDist - lastDist / 159.0
@@ -103,13 +107,15 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		var forward: Float = movementInput.moveForward
 		var strafe: Float = movementInput.moveStrafe
 		var yaw = thePlayer.rotationYaw
-		if (forward == 0.0f && strafe == 0.0f) event.zeroXZ() else if (forward != 0.0f)
+		if (forward == 0.0f && strafe == 0.0f) event.zeroXZ()
+		else if (forward != 0.0f)
 		{
 			if (strafe >= 1.0f)
 			{
 				yaw += if (forward > 0.0f) -45 else 45
 				strafe = 0.0f
-			} else if (strafe <= -1.0f)
+			}
+			else if (strafe <= -1.0f)
 			{
 				yaw += if (forward > 0.0f) 45 else -45
 				strafe = 0.0f
@@ -117,7 +123,8 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 			if (forward > 0.0f)
 			{
 				forward = 1.0f
-			} else if (forward < 0.0f)
+			}
+			else if (forward < 0.0f)
 			{
 				forward = -1.0f
 			}

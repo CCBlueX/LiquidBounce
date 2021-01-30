@@ -74,7 +74,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 				if (wheel < 0 && -scroll + 205 <= realHeight)
 				{
 					scroll -= 12
-				} else if (wheel > 0)
+				}
+				else if (wheel > 0)
 				{
 					scroll += 12
 					if (scroll > 0) scroll = 0
@@ -140,10 +141,12 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 					val newElement = element.newInstance()
 
 					if (newElement.createElement()) LiquidBounce.hud.addElement(newElement)
-				} catch (e: InstantiationException)
+				}
+				catch (e: InstantiationException)
 				{
 					e.printStackTrace()
-				} catch (e: IllegalAccessException)
+				}
+				catch (e: IllegalAccessException)
 				{
 					e.printStackTrace()
 				}
@@ -462,7 +465,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		{
 			x = mouseX - dragX
 			y = mouseY - dragY
-		} else drag = false
+		}
+		else drag = false
 	}
 
 }

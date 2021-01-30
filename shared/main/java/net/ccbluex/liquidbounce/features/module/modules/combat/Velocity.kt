@@ -96,7 +96,8 @@ class Velocity : Module()
 				if (!thePlayer.onGround)
 				{
 					MovementUtils.strafe(MovementUtils.speed * reverseStrengthValue.get())
-				} else if (velocityTimer.hasTimePassed(80L)) velocityInput = false
+				}
+				else if (velocityTimer.hasTimePassed(80L)) velocityInput = false
 			}
 
 			"aac3.1.2" -> if (velocityInput && velocityTimer.hasTimePassed(80L))
@@ -119,7 +120,8 @@ class Velocity : Module()
 				if (!thePlayer.onGround)
 				{
 					if (reverseHurt) thePlayer.speedInAir = reverse2StrengthValue.get()
-				} else if (velocityTimer.hasTimePassed(80L))
+				}
+				else if (velocityTimer.hasTimePassed(80L))
 				{
 					velocityInput = false
 					reverseHurt = false
@@ -131,7 +133,8 @@ class Velocity : Module()
 				if (jump)
 				{
 					if (thePlayer.onGround) jump = false
-				} else
+				}
+				else
 				{
 
 					// Strafe
@@ -158,7 +161,8 @@ class Velocity : Module()
 				thePlayer.motionY -= 1.0
 				thePlayer.isAirBorne = true
 				thePlayer.onGround = true
-			} else velocityInput = false
+			}
+			else velocityInput = false
 		}
 	}
 

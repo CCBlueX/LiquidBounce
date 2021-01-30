@@ -93,8 +93,7 @@ class Blink : Module()
 
 		if (classProvider.isCPacketPlayer(packet) || classProvider.isCPacketPlayerPosition(packet) || classProvider.isCPacketPlayerPosLook(packet) || classProvider.isCPacketPlayerBlockPlacement(packet) || classProvider.isCPacketAnimation(packet) || classProvider.isCPacketEntityAction(
 				packet
-			) || classProvider.isCPacketUseEntity(packet)
-		)
+			) || classProvider.isCPacketUseEntity(packet))
 		{
 			event.cancelEvent()
 			packets.add(packet)
@@ -122,7 +121,8 @@ class Blink : Module()
 
 		// The color settings are depended on BreadCrumb's
 		val breadcrumbs = LiquidBounce.moduleManager[Breadcrumbs::class.java] as Breadcrumbs
-		val color = if (breadcrumbs.colorRainbow.get()) rainbow(saturation = breadcrumbs.saturationValue.get(), brightness = breadcrumbs.brightnessValue.get()) else Color(
+		val color = if (breadcrumbs.colorRainbow.get()) rainbow(saturation = breadcrumbs.saturationValue.get(), brightness = breadcrumbs.brightnessValue.get())
+		else Color(
 			breadcrumbs.colorRedValue.get(), breadcrumbs.colorGreenValue.get(), breadcrumbs.colorBlueValue.get()
 		)
 
@@ -188,7 +188,8 @@ class Blink : Module()
 		try
 		{
 			while (!packets.isEmpty()) mc.netHandler.networkManager.sendPacketWithoutEvent(packets.take())
-		} catch (e: Exception)
+		}
+		catch (e: Exception)
 		{
 			e.printStackTrace()
 		}

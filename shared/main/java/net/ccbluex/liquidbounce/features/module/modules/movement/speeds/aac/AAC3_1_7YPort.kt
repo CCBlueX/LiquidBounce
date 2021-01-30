@@ -32,7 +32,8 @@ class AAC3_1_7YPort : SpeedMode("AAC3.1.7-YPort")
 
 				thePlayer.motionY = 0.3851
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.3851f))
-			} else thePlayer.motionY = -0.21
+			}
+			else thePlayer.motionY = -0.21
 		}
 	}
 

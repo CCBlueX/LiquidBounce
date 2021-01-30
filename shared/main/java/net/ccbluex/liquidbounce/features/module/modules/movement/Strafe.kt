@@ -54,7 +54,8 @@ class Strafe : Module()
 				mc.gameSettings.keyBindJump.pressed = true
 				wasDown = false
 			}
-		} else
+		}
+		else
 		{
 			jump = false
 		}
@@ -100,11 +101,13 @@ class Strafe : Module()
 		val moveForward = thePlayer.moveForward
 		val moveStrafing = thePlayer.moveStrafing
 
-		if (moveForward != 0F && moveStrafing == 0F) moveYaw += if (moveForward > 0) 0 else 180 else if (moveForward != 0F && moveStrafing != 0F)
+		if (moveForward != 0F && moveStrafing == 0F) moveYaw += if (moveForward > 0) 0 else 180
+		else if (moveForward != 0F && moveStrafing != 0F)
 		{
 			if (moveForward > 0) moveYaw += if (moveStrafing > 0) -45 else 45 else moveYaw -= if (moveStrafing > 0) -45 else 45
 			moveYaw += if (moveForward > 0) 0 else 180
-		} else if (moveStrafing != 0F && moveForward == 0F) moveYaw += if (moveStrafing > 0) -90 else 90
+		}
+		else if (moveStrafing != 0F && moveForward == 0F) moveYaw += if (moveStrafing > 0) -90 else 90
 
 		return moveYaw
 	}

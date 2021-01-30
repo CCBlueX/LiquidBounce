@@ -126,7 +126,8 @@ class ExtendedReach : Module()
 				path.reverse()
 				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 				event.cancelEvent()
-			} else if (action == ICPacketPlayerDigging.WAction.ABORT_DESTROY_BLOCK) event.cancelEvent()
+			}
+			else if (action == ICPacketPlayerDigging.WAction.ABORT_DESTROY_BLOCK) event.cancelEvent()
 		}
 	}
 
@@ -200,13 +201,15 @@ class ExtendedReach : Module()
 				if (lastLoc != null) path.add(lastLoc!!.addVector(0.5, 0.0, 0.5))
 				path.add(pathElm.addVector(0.5, 0.0, 0.5))
 				lastDashLoc = pathElm
-			} else
+			}
+			else
 			{
 				var stop = false
 				val maxDashDistance = maxDashDistanceValue.get().toFloat()
 				val lastDashLocChecked = lastDashLoc!!
 
-				if (pathElm.squareDistanceTo(lastDashLocChecked) > maxDashDistance * maxDashDistance) stop = true else
+				if (pathElm.squareDistanceTo(lastDashLocChecked) > maxDashDistance * maxDashDistance) stop = true
+				else
 				{
 					val minX = min(lastDashLocChecked.xCoord, pathElm.xCoord)
 					val minY = min(lastDashLocChecked.yCoord, pathElm.yCoord)

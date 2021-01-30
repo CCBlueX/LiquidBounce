@@ -41,8 +41,10 @@ class AAC4BHop : SpeedMode("AAC4BHop")
 				MovementUtils.strafe(0.375f)
 				jump(thePlayer)
 				thePlayer.motionY = 0.41
-			} else thePlayer.speedInAir = 0.0211f
-		} else
+			}
+			else thePlayer.speedInAir = 0.0211f
+		}
+		else
 		{
 			firstLegitJump = true
 

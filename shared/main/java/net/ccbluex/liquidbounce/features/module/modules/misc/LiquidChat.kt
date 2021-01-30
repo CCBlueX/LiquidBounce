@@ -232,7 +232,8 @@ class LiquidChat : Module()
 
 				if (jwtValue.get()) client.loginJWT(jwtToken)
 				else if (UserUtils.isValidToken(mc.session.token)) client.loginMojang()
-			} catch (cause: Exception)
+			}
+			catch (cause: Exception)
 			{
 				ClientUtils.logger.error("LiquidChat error", cause)
 				ClientUtils.displayChatMessage("\u00A77[\u00A7a\u00A7lChat\u00A77] \u00A7cError: \u00A77${cause.javaClass.name}: ${cause.message}")
@@ -269,7 +270,8 @@ class LiquidChat : Module()
 				{
 					component = classProvider.createChatComponentText(part)
 					component.chatStyle.color = WEnumChatFormatting.GRAY
-				} else component.appendText(part)
+				}
+				else component.appendText(part)
 			}
 
 			lastEnd = end
@@ -290,7 +292,8 @@ class LiquidChat : Module()
 					else component.appendSibling(link)
 					continue
 				}
-			} catch (e: URISyntaxException)
+			}
+			catch (e: URISyntaxException)
 			{
 			}
 
@@ -298,7 +301,8 @@ class LiquidChat : Module()
 			{
 				component = classProvider.createChatComponentText(url)
 				component.chatStyle.color = WEnumChatFormatting.GRAY
-			} else component.appendText(url)
+			}
+			else component.appendText(url)
 		}
 
 		// Append the rest of the message.
@@ -308,7 +312,8 @@ class LiquidChat : Module()
 		{
 			component = classProvider.createChatComponentText(end)
 			component.chatStyle.color = WEnumChatFormatting.GRAY
-		} else if (end.isNotEmpty()) component.appendText(string.substring(lastEnd))
+		}
+		else if (end.isNotEmpty()) component.appendText(string.substring(lastEnd))
 
 		return component
 	}

@@ -24,7 +24,6 @@ class Parkour : Module()
 
 		if (MovementUtils.isMoving && thePlayer.onGround && !thePlayer.sneaking && !gameSettings.keyBindSneak.isKeyDown && !gameSettings.keyBindJump.isKeyDown && mc.theWorld!!.getCollidingBoundingBoxes(
 				thePlayer, thePlayer.entityBoundingBox.offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)
-			).isEmpty()
-		) thePlayer.jump()
+			).isEmpty()) thePlayer.jump()
 	}
 }

@@ -44,8 +44,7 @@ class GuiHudDesigner : WrappedGuiScreen()
 			{
 				if (element.isInBorder(
 						mouseX / element.scale - element.renderX, mouseY / element.scale - element.renderY
-					)
-				)
+					))
 				{
 					element.scale = element.scale + if (wheel > 0) 0.05f else -0.05f
 					break

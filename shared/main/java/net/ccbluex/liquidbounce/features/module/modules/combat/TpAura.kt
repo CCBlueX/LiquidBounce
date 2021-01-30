@@ -176,7 +176,8 @@ class TpAura : Module()
 
 			attackTimer.reset()
 			attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
-		} else
+		}
+		else
 		{
 			clientSideBlockingStatus = false
 			currentTarget = null
@@ -191,7 +192,8 @@ class TpAura : Module()
 			for (targetPath in targetPaths) try
 			{
 				targetPath.asSequence().filterNotNull().forEach(::drawPath)
-			} catch (e: Exception)
+			}
+			catch (e: Exception)
 			{
 
 				// it seems sometime there is unknown interruption on these codes.
@@ -225,11 +227,13 @@ class TpAura : Module()
 				if (lastPath != null) path.add(lastPath!!.addVector(0.5, 0.0, 0.5))
 				path.add(currentPathFinderPath.addVector(0.5, 0.0, 0.5))
 				lastEndPath = currentPathFinderPath
-			} else
+			}
+			else
 			{
 				var canContinueSearching = true
 				val maxDashDistance = maxDashDistanceValue.get().toFloat()
-				if (currentPathFinderPath.squareDistanceTo(lastEndPath!!) > maxDashDistance * maxDashDistance) canContinueSearching = false else
+				if (currentPathFinderPath.squareDistanceTo(lastEndPath!!) > maxDashDistance * maxDashDistance) canContinueSearching = false
+				else
 				{
 					val minX = min(lastEndPath!!.xCoord, currentPathFinderPath.xCoord)
 					val minY = min(lastEndPath!!.yCoord, currentPathFinderPath.yCoord)
@@ -270,9 +274,7 @@ class TpAura : Module()
 	}
 
 	private val targets: MutableList<IEntityLivingBase>
-		get() = mc.theWorld!!.loadedEntityList.asSequence().filter(classProvider::isEntityLivingBase).map(IEntity::asEntityLivingBase)
-			.filter { entity: IEntityLivingBase -> mc.thePlayer!!.getDistanceToEntityBox(entity) <= rangeValue.get() && isEnemy(entity, false) && entity.hurtTime <= hurtTimeValue.get() }.sortedBy { it.getDistanceToEntity(mc.thePlayer!!) * 1000 }
-			.toMutableList()
+		get() = mc.theWorld!!.loadedEntityList.asSequence().filter(classProvider::isEntityLivingBase).map(IEntity::asEntityLivingBase).filter { entity: IEntityLivingBase -> mc.thePlayer!!.getDistanceToEntityBox(entity) <= rangeValue.get() && isEnemy(entity, false) && entity.hurtTime <= hurtTimeValue.get() }.sortedBy { it.getDistanceToEntity(mc.thePlayer!!) * 1000 }.toMutableList()
 
 	fun isTarget(entity: IEntity?): Boolean = currentTargets.isNotEmpty() && IntStream.range(0, if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size).anyMatch { i: Int -> currentTargets[i].isEntityEqual(entity) }
 

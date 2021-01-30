@@ -34,7 +34,8 @@ class NCPYPort : SpeedMode("NCPYPort")
 			LiquidBounce.eventManager.callEvent(JumpEvent(motion))
 
 			jumps++
-		} else if (jumps <= 1) thePlayer.motionY = -5.0
+		}
+		else if (jumps <= 1) thePlayer.motionY = -5.0
 		MovementUtils.strafe()
 	}
 

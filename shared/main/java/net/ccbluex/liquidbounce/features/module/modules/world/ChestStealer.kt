@@ -174,12 +174,7 @@ class ChestStealer : Module()
 		val notEmpty = !this.isEmpty(screen)
 
 		// Perform the InventoryCleaner before start stealing if option is present and InventoryCleaner is enabled. This will be helpful if player's inventory is nearly fucked up with tons of garbage. The settings of InventoryCleaner is depends on InventoryCleaner's official settings.
-		if (notEmpty && invCleanBeforeSteal.get() && inventoryCleaner.state && !inventoryCleaner.cleanInventory(start = screen.inventoryRows * 9,
-				end = screen.inventoryRows * 9 + if (inventoryCleaner.hotbarValue.get()) 36 else 27,
-				timer = CLICK_TIMER,
-				container = screen.inventorySlots!!,
-				delayResetFunc = Runnable { nextDelay = TimeUtils.randomDelay(inventoryCleaner.minDelayValue.get(), inventoryCleaner.maxDelayValue.get()) })
-		) return
+		if (notEmpty && invCleanBeforeSteal.get() && inventoryCleaner.state && !inventoryCleaner.cleanInventory(start = screen.inventoryRows * 9, end = screen.inventoryRows * 9 + if (inventoryCleaner.hotbarValue.get()) 36 else 27, timer = CLICK_TIMER, container = screen.inventorySlots!!, delayResetFunc = Runnable { nextDelay = TimeUtils.randomDelay(inventoryCleaner.minDelayValue.get(), inventoryCleaner.maxDelayValue.get()) })) return
 
 		if (notEmpty && (!closeOnFullValue.get() || !getFullInventory(thePlayer)))
 		{
@@ -238,7 +233,8 @@ class ChestStealer : Module()
 					move(screen, slot, misclick)
 				}
 			}
-		} else if (autoCloseValue.get() && screen.inventorySlots!!.windowId == contentReceived && autoCloseTimer.hasTimePassed(nextCloseDelay))
+		}
+		else if (autoCloseValue.get() && screen.inventorySlots!!.windowId == contentReceived && autoCloseTimer.hasTimePassed(nextCloseDelay))
 		{
 			thePlayer.closeScreen()
 			nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())

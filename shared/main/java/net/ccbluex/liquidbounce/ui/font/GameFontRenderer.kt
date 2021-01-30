@@ -112,7 +112,8 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 				{
 					currentFont.drawString(part, width, 0.0, currentColor)
 					width += currentFont.getStringWidth(part)
-				} else
+				}
+				else
 				{
 					val words = part.substring(1)
 					val type = part[0]
@@ -175,7 +176,8 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 					width += currentFont.getStringWidth(words)
 				}
 			}
-		} else
+		}
+		else
 		{ // Color code states
 			defaultFont.drawString(text, 0.0, 0.0, currentColor)
 		}
@@ -212,7 +214,8 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 				if (index == 0)
 				{
 					width += currentFont.getStringWidth(part)
-				} else
+				}
+				else
 				{
 					val words = part.substring(1)
 					val type = part[0]
@@ -245,7 +248,8 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 			}
 
 			width / 2
-		} else defaultFont.getStringWidth(currentText) / 2
+		}
+		else defaultFont.getStringWidth(currentText) / 2
 	}
 
 	override fun getCharWidth(character: Char) = getStringWidth("$character")

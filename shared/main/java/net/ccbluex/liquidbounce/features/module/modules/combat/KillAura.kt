@@ -446,7 +446,7 @@ class KillAura : Module()
 		}
 	}
 
-	fun update(theWorld : IWorldClient, thePlayer: IEntityPlayerSP)
+	fun update(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
 
 		// CancelRun & NoInventory
@@ -540,7 +540,8 @@ class KillAura : Module()
 				{
 					if (failedToHit) Color(0, 0, 255, 70)
 					else Color(0, 255, 0, 70)
-				} else Color(255, 0, 0, 70)
+				}
+				else Color(255, 0, 0, 70)
 			)
 
 		if (currentTarget != null && attackTimer.hasTimePassed(attackDelay) && (currentTarget ?: return).hurtTime <= hurtTimeValue.get())
@@ -611,7 +612,8 @@ class KillAura : Module()
 
 			// Start blocking after FAKE attack
 			if ((thePlayer.isBlocking || (canBlock && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(currentTarget!!, interactAutoBlockValue.get())
-		} else
+		}
+		else
 		{
 
 			// Attack
@@ -632,7 +634,8 @@ class KillAura : Module()
 						if (limitedMultiTargetsValue.get() != 0 && limitedMultiTargetsValue.get() <= targets) break
 					}
 				}
-			} else attackEntity(currentTarget!!)
+			}
+			else attackEntity(currentTarget!!)
 		}
 
 		previouslySwitchedTargets.add(if (aacValue.get()) (target ?: return).entityId else (currentTarget ?: return).entityId)
@@ -793,8 +796,7 @@ class KillAura : Module()
 			// Critical Effect
 			if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) && thePlayer.ridingEntity == null || criticals.state && criticals.msTimer.hasTimePassed(
 					criticals.delayValue.get().toLong()
-				) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb
-			) thePlayer.onCriticalHit(target ?: return)
+				) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb) thePlayer.onCriticalHit(target ?: return)
 
 			// Enchant Effect
 			if (functions.getModifierForCreature(thePlayer.heldItem, (target ?: return).creatureAttribute) > 0.0f || fakeSharpValue.get()) thePlayer.onEnchantmentCritical(target ?: return)
@@ -815,27 +817,18 @@ class KillAura : Module()
 
 		// Entity movement predict
 		if (predictValue.get()) boundingBox = boundingBox.offset(
-			(entity.posX - entity.prevPosX - (thePlayer.posX - thePlayer.prevPosX)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()),
-			(entity.posY - entity.prevPosY - (thePlayer.posY - thePlayer.prevPosY)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()),
-			(entity.posZ - entity.prevPosZ - (thePlayer.posZ - thePlayer.prevPosZ)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get())
+			(entity.posX - entity.prevPosX - (thePlayer.posX - thePlayer.prevPosX)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()), (entity.posY - entity.prevPosY - (thePlayer.posY - thePlayer.prevPosY)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()), (entity.posZ - entity.prevPosZ - (thePlayer.posZ - thePlayer.prevPosZ)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get())
 		)
 
 		val (_, rotation) = RotationUtils.searchCenter(
-			boundingBox,
-			when
+			boundingBox, when
 			{
 				lockCenterValue.get() -> RotationUtils.SearchCenterMode.LOCK_CENTER
 				outborderValue.get() && !attackTimer.hasTimePassed(attackDelay / 2) -> RotationUtils.SearchCenterMode.OUT_BORDER
 				randomCenterValue.get() -> RotationUtils.SearchCenterMode.RANDOM_GOOD_CENTER
 				else -> RotationUtils.SearchCenterMode.SEARCH_GOOD_CENTER
-			},
-			jitterValue.get() && (thePlayer.getDistanceToEntityBox(entity) <= min(maxAttackRange, if (fakeSwingValue.get()) swingRange else Float.MAX_VALUE)),
-			RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get()),
-			playerPredictValue.get(),
-			thePlayer.getDistanceToEntityBox(entity) <= throughWallsRangeValue.get(), /* maxAttackRange */
-			aimRange,
-			hitboxDecrementValue.get().toDouble(),
-			centerSearchSensitivityValue.get().toDouble()
+			}, jitterValue.get() && (thePlayer.getDistanceToEntityBox(entity) <= min(maxAttackRange, if (fakeSwingValue.get()) swingRange else Float.MAX_VALUE)), RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get()), playerPredictValue.get(), thePlayer.getDistanceToEntityBox(entity) <= throughWallsRangeValue.get(), /* maxAttackRange */
+			aimRange, hitboxDecrementValue.get().toDouble(), centerSearchSensitivityValue.get().toDouble()
 		) ?: return false
 
 		fakeYaw = rotation.yaw
@@ -891,12 +884,11 @@ class KillAura : Module()
 				}
 			})
 
-			if (raycastedEntity != null && classProvider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !(classProvider.isEntityPlayer(raycastedEntity) && raycastedEntity.asEntityPlayer()
-					.isClientFriend()))
-			) currentTarget = raycastedEntity.asEntityLivingBase()
+			if (raycastedEntity != null && classProvider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !(classProvider.isEntityPlayer(raycastedEntity) && raycastedEntity.asEntityPlayer().isClientFriend()))) currentTarget = raycastedEntity.asEntityLivingBase()
 
 			hitable = currentTarget == raycastedEntity
-		} else hitable = if (currentTarget != null) if (multi) (mc.thePlayer ?: return).getDistanceToEntityBox(currentTarget!!) <= (reach - 1) else RotationUtils.isFaced(currentTarget, reach) else false
+		}
+		else hitable = if (currentTarget != null) if (multi) (mc.thePlayer ?: return).getDistanceToEntityBox(currentTarget!!) <= (reach - 1) else RotationUtils.isFaced(currentTarget, reach) else false
 	}
 
 	/**
@@ -1000,8 +992,7 @@ class KillAura : Module()
 	private val maxTargetRange: Float
 		get() = max(aimRange, max(maxAttackRange, if (fakeSwingValue.get()) swingRange else 0f))
 
-	private fun getAttackRange(thePlayer: IEntityPlayerSP, entity: IEntity) =
-		(if (thePlayer.getDistanceToEntityBox(entity) >= throughWallsRangeValue.get()) attackRange else throughWallsRangeValue.get()) - if (thePlayer.sprinting) rangeSprintReducementValue.get() else 0F
+	private fun getAttackRange(thePlayer: IEntityPlayerSP, entity: IEntity) = (if (thePlayer.getDistanceToEntityBox(entity) >= throughWallsRangeValue.get()) attackRange else throughWallsRangeValue.get()) - if (thePlayer.sprinting) rangeSprintReducementValue.get() else 0F
 
 	/**
 	 * HUD Tag

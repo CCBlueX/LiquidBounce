@@ -140,7 +140,8 @@ class Target : Element()
 
 				// Draw head
 				drawHead(playerInfo.locationSkin, 60, 60)
-			} else
+			}
+			else
 			{
 				Fonts.font35.drawString("0ms", 80, 20, 0x808080)
 				drawHead(WDefaultPlayerSkin.getDefaultSkin(targetPlayer.uniqueID), 60, 60)

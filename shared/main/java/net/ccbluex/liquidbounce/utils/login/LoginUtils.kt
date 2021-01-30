@@ -37,18 +37,16 @@ object LoginUtils : MinecraftInstance()
 
 			var result: LoginResult = LoginResult.AUTHENTICATION_FAILURE
 			MCLeaks.redeem(username) {
-				if (it is String)
-				{
-					result = if (it.startsWith("An error occurred!", true)) LoginResult.AUTHENTICATION_FAILURE
-					else LoginResult.MCLEAKS_INVALID
-				} else if (it is RedeemResponse)
+				if (it is String) result = if (it.startsWith("An error occurred!", true)) LoginResult.AUTHENTICATION_FAILURE else LoginResult.MCLEAKS_INVALID
+				else if (it is RedeemResponse)
 				{
 					MCLeaks.refresh(net.mcleaks.Session(it.username, it.token))
 
 					try
 					{
 						GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
-					} catch (e: Exception)
+					}
+					catch (e: Exception)
 					{
 						ClientUtils.logger.error("Failed to switch back alt service to Mojang.", e)
 					}
@@ -79,23 +77,27 @@ object LoginUtils : MinecraftInstance()
 			LiquidBounce.eventManager.callEvent(SessionEvent())
 			MCLeaks.remove()
 			LoginResult.LOGGED_IN
-		} catch (exception: AuthenticationUnavailableException)
+		}
+		catch (exception: AuthenticationUnavailableException)
 		{
 			try
 			{
 				GuiAltManager.altService.switchService(savedAltService)
-			} catch (e: Exception)
+			}
+			catch (e: Exception)
 			{
 				ClientUtils.logger.error("Failed to switch back alt service.", e)
 			}
 
 			LoginResult.AUTHENTICATION_UNAVAILABLE
-		} catch (exception: AuthenticationException)
+		}
+		catch (exception: AuthenticationException)
 		{
 			try
 			{
 				GuiAltManager.altService.switchService(savedAltService)
-			} catch (e: Exception)
+			}
+			catch (e: Exception)
 			{
 				ClientUtils.logger.error("Failed to switch back alt service.", e)
 			}
@@ -108,7 +110,8 @@ object LoginUtils : MinecraftInstance()
 				message.contains("account migrated", ignoreCase = true) -> LoginResult.MIGRATED
 				else -> LoginResult.AUTHENTICATION_FAILURE
 			}
-		} catch (exception: NullPointerException)
+		}
+		catch (exception: NullPointerException)
 		{
 			LoginResult.AUTHENTICATION_FAILURE
 		}
@@ -117,7 +120,7 @@ object LoginUtils : MinecraftInstance()
 	@JvmStatic
 	fun loginCracked(username: String?)
 	{
-		mc.session = classProvider.createSession(username!!, getUUID(username), "-", "legacy")
+		mc.session = classProvider.createSession(username ?: return, getUUID(username), "-", "legacy")
 		LiquidBounce.eventManager.callEvent(SessionEvent())
 	}
 
@@ -127,7 +130,8 @@ object LoginUtils : MinecraftInstance()
 		val decodedSessionData = try
 		{
 			String(Base64.getDecoder().decode(sessionId.split(".")[1]), Charsets.UTF_8)
-		} catch (e: Exception)
+		}
+		catch (e: Exception)
 		{
 			return LoginResult.FAILED_PARSE_SESSION
 		}
@@ -135,7 +139,8 @@ object LoginUtils : MinecraftInstance()
 		val sessionObject = try
 		{
 			JsonParser().parse(decodedSessionData).asJsonObject
-		} catch (e: java.lang.Exception)
+		}
+		catch (e: java.lang.Exception)
 		{
 			return LoginResult.FAILED_PARSE_SESSION
 		}

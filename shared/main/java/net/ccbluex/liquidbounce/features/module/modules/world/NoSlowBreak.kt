@@ -17,7 +17,8 @@ class NoSlowBreak : Module()
 	val waterValue = BoolValue("Water", false)
 
 	override val tag: String
-		get() = if (airValue.get() && waterValue.get()) "Both" else when
+		get() = if (airValue.get() && waterValue.get()) "Both"
+		else when
 		{
 			airValue.get() -> "Air"
 			waterValue.get() -> "Water"

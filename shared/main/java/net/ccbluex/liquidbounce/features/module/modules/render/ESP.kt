@@ -113,20 +113,13 @@ class ESP : Module()
 
 				"real2d" ->
 				{
-					val bb = entityLiving.entityBoundingBox.offset(-entityLiving.posX, -entityLiving.posY, -entityLiving.posZ).offset(entityLiving.lastTickPosX + (entityLiving.posX - entityLiving.lastTickPosX) * renderPartialTicks,
-						entityLiving.lastTickPosY + (entityLiving.posY - entityLiving.lastTickPosY) * renderPartialTicks,
-						entityLiving.lastTickPosZ + (entityLiving.posZ - entityLiving.lastTickPosZ) * renderPartialTicks).offset(-renderPosX, -renderPosY, -renderPosZ)
+					val bb = entityLiving.entityBoundingBox.offset(-entityLiving.posX, -entityLiving.posY, -entityLiving.posZ).offset(
+						entityLiving.lastTickPosX + (entityLiving.posX - entityLiving.lastTickPosX) * renderPartialTicks, entityLiving.lastTickPosY + (entityLiving.posY - entityLiving.lastTickPosY) * renderPartialTicks, entityLiving.lastTickPosZ + (entityLiving.posZ - entityLiving.lastTickPosZ) * renderPartialTicks
+					).offset(-renderPosX, -renderPosY, -renderPosZ)
 
 					val boxVertices = arrayOf(
 
-						doubleArrayOf(bb.minX, bb.minY, bb.minZ),
-						doubleArrayOf(bb.minX, bb.maxY, bb.minZ),
-						doubleArrayOf(bb.maxX, bb.maxY, bb.minZ),
-						doubleArrayOf(bb.maxX, bb.minY, bb.minZ),
-						doubleArrayOf(bb.minX, bb.minY, bb.maxZ),
-						doubleArrayOf(bb.minX, bb.maxY, bb.maxZ),
-						doubleArrayOf(bb.maxX, bb.maxY, bb.maxZ),
-						doubleArrayOf(bb.maxX, bb.minY, bb.maxZ)
+						doubleArrayOf(bb.minX, bb.minY, bb.minZ), doubleArrayOf(bb.minX, bb.maxY, bb.minZ), doubleArrayOf(bb.maxX, bb.maxY, bb.minZ), doubleArrayOf(bb.maxX, bb.minY, bb.minZ), doubleArrayOf(bb.minX, bb.minY, bb.maxZ), doubleArrayOf(bb.minX, bb.maxY, bb.maxZ), doubleArrayOf(bb.maxX, bb.maxY, bb.maxZ), doubleArrayOf(bb.maxX, bb.minY, bb.maxZ)
 
 					)
 
@@ -160,8 +153,7 @@ class ESP : Module()
 			}
 		}
 
-		(mc.theWorld ?: return).loadedEntityList.asSequence().filter { classProvider.isEntityLivingBase(it) && !(!botValue.get() && AntiBot.isBot(it.asEntityLivingBase())) && it != mc.thePlayer && EntityUtils.isSelected(it, false) }
-			.forEach { draw(it.asEntityLivingBase(), getColor(it.asEntityLivingBase())) }
+		(mc.theWorld ?: return).loadedEntityList.asSequence().filter { classProvider.isEntityLivingBase(it) && !(!botValue.get() && AntiBot.isBot(it.asEntityLivingBase())) && it != mc.thePlayer && EntityUtils.isSelected(it, false) }.forEach { draw(it.asEntityLivingBase(), getColor(it.asEntityLivingBase())) }
 
 		if (real2d)
 		{
@@ -186,9 +178,9 @@ class ESP : Module()
 
 		try
 		{
-			(mc.theWorld ?: return).loadedEntityList.asSequence().filter { !(!botValue.get() && AntiBot.isBot(it.asEntityLivingBase())) && EntityUtils.isSelected(it, false) }
-				.forEach { mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true) }
-		} catch (ex: Exception)
+			(mc.theWorld ?: return).loadedEntityList.asSequence().filter { !(!botValue.get() && AntiBot.isBot(it.asEntityLivingBase())) && EntityUtils.isSelected(it, false) }.forEach { mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true) }
+		}
+		catch (ex: Exception)
 		{
 			ClientUtils.logger.error("An error occurred while rendering all entities for shader esp", ex)
 		}
@@ -204,15 +196,7 @@ class ESP : Module()
 	{
 		return ColorUtils.getESPColor(
 
-			entity = entity,
-			colorMode = colorValue.get(),
-			customStaticColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()),
-			healthMode = healthModeValue.get(),
-			indicateHurt = hurtValue.get(),
-			indicateTarget = targetValue.get(),
-			indicateFriend = friendValue.get(),
-			rainbowSaturation = saturationValue.get(),
-			rainbowBrightness = brightnessValue.get()
+			entity = entity, colorMode = colorValue.get(), customStaticColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), healthMode = healthModeValue.get(), indicateHurt = hurtValue.get(), indicateTarget = targetValue.get(), indicateFriend = friendValue.get(), rainbowSaturation = saturationValue.get(), rainbowBrightness = brightnessValue.get()
 
 		)
 	}

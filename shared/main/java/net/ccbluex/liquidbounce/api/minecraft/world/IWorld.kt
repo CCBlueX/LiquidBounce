@@ -9,10 +9,7 @@ package net.ccbluex.liquidbounce.api.minecraft.world
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
-import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
-import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.minecraft.world.border.IWorldBorder
 
 interface IWorld

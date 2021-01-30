@@ -24,7 +24,8 @@ class AutoLogin : Module()
 			if (loginPattern.matcher(chat).find()) thePlayer.sendChatMessage("/login " + password.get())
 			if (registerPattern.matcher(chat).find()) thePlayer.sendChatMessage("/register " + password.get())
 			if (registerPattern2.matcher(chat).find()) thePlayer.sendChatMessage("/register " + password.get() + " " + password.get())
-		} else if (classProvider.isSPacketTitle(event.packet))
+		}
+		else if (classProvider.isSPacketTitle(event.packet))
 		{
 			val title = event.packet.asSPacketTitle().message.unformattedText
 			if (loginPattern.matcher(title).find()) thePlayer.sendChatMessage("/login " + password.get())

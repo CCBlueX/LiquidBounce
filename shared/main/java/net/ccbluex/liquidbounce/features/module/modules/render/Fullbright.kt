@@ -44,7 +44,8 @@ class Fullbright : Module()
 		{
 			"gamma" -> if (gameSettings.gammaSetting <= 100f) gameSettings.gammaSetting++
 			"nightvision" -> mc.thePlayer?.addPotionEffect(classProvider.createPotionEffect(classProvider.getPotionEnum(PotionType.NIGHT_VISION).id, 1337, 1))
-		} else if (prevGamma != -1f)
+		}
+		else if (prevGamma != -1f)
 		{
 			gameSettings.gammaSetting = prevGamma
 			prevGamma = -1f

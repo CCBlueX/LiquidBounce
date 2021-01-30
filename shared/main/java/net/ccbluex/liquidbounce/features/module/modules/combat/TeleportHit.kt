@@ -67,7 +67,9 @@ class TeleportHit : Module()
 
 				shouldHit = false
 				targetEntity = null
-			} else if (thePlayer.onGround) thePlayer.jump()
-		} else shouldHit = false
+			}
+			else if (thePlayer.onGround) thePlayer.jump()
+		}
+		else shouldHit = false
 	}
 }

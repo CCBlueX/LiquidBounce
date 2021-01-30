@@ -72,7 +72,8 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen()
 					LiquidBounce.background = location
 
 					mc.textureManager.loadTexture(location, classProvider.createDynamicTexture(image))
-				} catch (e: Exception)
+				}
+				catch (e: Exception)
 				{
 					e.printStackTrace()
 					MiscUtils.showErrorPopup("Error", "Exception class: " + e.javaClass.name + "\nMessage: " + e.message)

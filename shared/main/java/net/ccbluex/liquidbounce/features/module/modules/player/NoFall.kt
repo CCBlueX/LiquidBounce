@@ -75,8 +75,7 @@ class NoFall : Module()
 				classProvider.createAxisAlignedBB(
 					entityBoundingBox.maxX, entityBoundingBox.maxY, entityBoundingBox.maxZ, entityBoundingBox.minX, entityBoundingBox.minY - 0.01, entityBoundingBox.minZ
 				), classProvider::isBlockLiquid
-			)
-		)
+			))
 		{
 			noSpoof = 0
 			return
@@ -113,7 +112,8 @@ class NoFall : Module()
 				{
 					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
 					currentState = 2
-				} else if (currentState == 2 && fallDistance < 2)
+				}
+				else if (currentState == 2 && fallDistance < 2)
 				{
 					thePlayer.motionY = 0.1
 					currentState = 3
@@ -222,8 +222,7 @@ class NoFall : Module()
 		val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
 		if (fly.state && fly.disableNoFall || collideBlock(playerBB, classProvider::isBlockLiquid) || collideBlock(
 				classProvider.createAxisAlignedBB(playerBB.maxX, playerBB.maxY, playerBB.maxZ, playerBB.minX, playerBB.minY - 0.01, playerBB.minZ), classProvider::isBlockLiquid
-			)
-		) return
+			)) return
 
 		if (modeValue.get().equals("AAC3.3.4", ignoreCase = true))
 		{
@@ -294,11 +293,13 @@ class NoFall : Module()
 				if (silentRotation) RotationUtils.setTargetRotation(currentMlgRotation!!.rotation, if (keepRotationValue.get()) keepRotationLengthValue.get() else 0)
 				else currentMlgRotation!!.rotation.applyRotationToPlayer(thePlayer)
 			}
-		} else if (currentMlgRotation != null)
+		}
+		else if (currentMlgRotation != null)
 		{
 			val stack = thePlayer.inventory.getStackInSlot(currentMlgItemIndex + 36)
 
-			if (classProvider.isItemBucket(stack!!.item)) mc.playerController.sendUseItem(thePlayer, theWorld, stack) else
+			if (classProvider.isItemBucket(stack!!.item)) mc.playerController.sendUseItem(thePlayer, theWorld, stack)
+			else
 			{
 
 				//				val dirVec: WVec3i = classProvider.getEnumFacing(EnumFacingType.UP).directionVec

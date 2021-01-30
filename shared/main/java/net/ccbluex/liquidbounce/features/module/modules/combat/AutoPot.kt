@@ -182,8 +182,7 @@ class AutoPot : Module()
 							{
 								"up" -> thePlayer.rotationPitch > -80F
 								else -> thePlayer.rotationPitch < 80F
-							}
-						)
+							})
 						{
 							RotationUtils.setTargetRotation(
 								Rotation(
@@ -245,8 +244,7 @@ class AutoPot : Module()
 					{
 						"up" -> RotationUtils.serverRotation?.pitch ?: return <= -75F
 						else -> RotationUtils.serverRotation?.pitch ?: return >= 75F
-					}
-				)
+					})
 				{
 					val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack
 

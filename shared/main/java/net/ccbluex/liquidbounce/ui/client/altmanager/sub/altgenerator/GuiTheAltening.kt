@@ -154,14 +154,16 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 							prevGui.status = "\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c."
 							mc.displayGuiScreen(prevGui.representedScreen)
 							""
-						} catch (e: AuthenticationException)
+						}
+						catch (e: AuthenticationException)
 						{
 							GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 
 							ClientUtils.logger.error("Failed to login.", e)
 							"\u00A7cFailed to login: ${e.message}"
 						}
-					} catch (throwable: Throwable)
+					}
+					catch (throwable: Throwable)
 					{
 						status = "\u00A7cFailed to login. Unknown error."
 						ClientUtils.logger.error("Failed to login.", throwable)
@@ -225,15 +227,18 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 								}
 
 								"\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c.$moreMessage"
-							} else "\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c."
-						} catch (e: AuthenticationException)
+							}
+							else "\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c."
+						}
+						catch (e: AuthenticationException)
 						{
 							GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 
 							ClientUtils.logger.error("Failed to login.", e)
 							"\u00A7cFailed to login: ${e.message}"
 						}
-					} catch (throwable: Throwable)
+					}
+					catch (throwable: Throwable)
 					{
 						ClientUtils.logger.error("Failed to login.", throwable)
 						status = "\u00A7cFailed to login. Unknown error."

@@ -54,7 +54,8 @@ class AAC3_1_5FastLowHop : SpeedMode("AAC3.1.5-FastLowHop")
 				thePlayer.motionY = 0.343
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.343f))
 			}
-		} else
+		}
+		else
 		{
 			firstLegitJump = true
 

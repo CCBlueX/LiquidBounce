@@ -20,8 +20,6 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import kotlin.math.pow
-import kotlin.math.roundToLong
 
 /**
  * CustomHUD Arraylist element
@@ -117,7 +115,8 @@ class Arraylist(
 					module.slide = AnimationUtils.easeOut(module.slideStep, width) * width
 					module.slideStep += delta / animationSpeed
 				}
-			} else if (module.slide > 0)
+			}
+			else if (module.slide > 0)
 			{
 				module.slide = AnimationUtils.easeOut(module.slideStep, width) * width
 				module.slideStep -= delta / animationSpeed
@@ -389,7 +388,8 @@ class Arraylist(
 			"square-bracket" -> "[$originalTagString]"
 			"round-bracket" -> "($originalTagString)"
 			else -> originalTagString
-		} else originalTagString
+		}
+		else originalTagString
 	}
 
 	override fun updateElement()
@@ -404,7 +404,8 @@ class Arraylist(
 				"square-bracket" -> "[${it.tag!!}]"
 				"round-bracket" -> "(${it.tag!!})"
 				else -> it.tag!!
-			} else ""
+			}
+			else ""
 
 			if (upperCaseValue.get())
 			{

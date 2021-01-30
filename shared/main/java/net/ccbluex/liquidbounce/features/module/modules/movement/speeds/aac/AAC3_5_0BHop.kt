@@ -26,7 +26,8 @@ class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop")
 					jump(thePlayer)
 					thePlayer.motionX *= 1.0118f
 					thePlayer.motionZ *= 1.0118f
-				} else
+				}
+				else
 				{
 					thePlayer.motionY -= 0.0147f
 					thePlayer.motionX *= 1.00138f

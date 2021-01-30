@@ -34,13 +34,15 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
 			wfg = true
 			speed2 = speed1
 			speed1 = 0f
-		} else
+		}
+		else
 		{
 			if (wfg)
 			{
 				speed1 = (speed2 + (0.46532f * min(fallDistance, 1f)))
 				wfg = false
-			} else speed1 = distance * 0.936f
+			}
+			else speed1 = distance * 0.936f
 			fallDistance = thePlayer.fallDistance
 		}
 		var minimum = 0f

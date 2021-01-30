@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiGameOver
 import net.minecraft.client.gui.GuiGameOver
 
-class GuiGameOverImpl<T : GuiGameOver>(wrapped: T) : GuiScreenImpl<T>(wrapped), IGuiGameOver
+class GuiGameOverImpl<out T : GuiGameOver>(wrapped: T) : GuiScreenImpl<T>(wrapped), IGuiGameOver
 {
 	override val enableButtonsTimer: Int
 		get() = wrapped.enableButtonsTimer

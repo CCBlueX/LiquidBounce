@@ -9,10 +9,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.http.FullHttpResponse
-import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
-import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker
-import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
+import io.netty.handler.codec.http.websocketx.*
 import net.ccbluex.liquidbounce.utils.ClientUtils
 
 class ClientHandler(val client: Client, private val handshaker: WebSocketClientHandshaker) : SimpleChannelInboundHandler<Any>()
@@ -89,7 +86,8 @@ class ClientHandler(val client: Client, private val handshaker: WebSocketClientH
 				handshaker.finishHandshake(channel, msg as FullHttpResponse)
 				handshakeFuture.setSuccess()
 
-			} catch (exception: WebSocketHandshakeException)
+			}
+			catch (exception: WebSocketHandshakeException)
 			{
 				handshakeFuture.setFailure(exception)
 			}

@@ -36,7 +36,8 @@ class MineplexBHop2 : SpeedMode("Mineplex-BHop2")
 			if (mineplex < 0) mineplex++
 			if (thePlayer.posY != round(thePlayer.posY)) mineplex = -1
 			mc.timer.timerSpeed = 2.001f
-		} else
+		}
+		else
 		{
 			if (mc.timer.timerSpeed == 2.001f) mc.timer.timerSpeed = 1.0F
 			speed = 0.62f - stage / 300.0f + mineplex / 5.0f

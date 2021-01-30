@@ -272,8 +272,7 @@ object AntiBot : Module()
 
 		if (positionValue.get() && (position_violation.getOrDefault(entity.entityId, 0) >= positionExpectationDeltaCountLimitValue.get() || positionExpectationDeltaConsistencyValue.get() && position_consistency_violation.getOrDefault(
 				entity.entityId, 0
-			) >= positionExpectationDeltaConsistencyCountLimitValue.get())
-		) return true
+			) >= positionExpectationDeltaConsistencyCountLimitValue.get())) return true
 
 		if (customNameValue.get() && entity.customNameTag == "") return true
 
@@ -322,7 +321,8 @@ object AntiBot : Module()
 				if (packetEntity.onGround)
 				{
 					if (entity.prevPosY != entity.posY) invalidGround[entity.entityId] = invalidGround.getOrDefault(entity.entityId, 0) + 1
-				} else
+				}
+				else
 				{
 					val currentVL = invalidGround.getOrDefault(entity.entityId, 0) / 2
 					if (currentVL <= 0) invalidGround.remove(entity.entityId)
@@ -335,13 +335,15 @@ object AntiBot : Module()
 				// Always in radius
 				if (!notAlwaysInRadius.contains(entity.entityId) && thePlayer.getDistanceToEntity(entity) > alwaysRadiusValue.get()) notAlwaysInRadius.add(entity.entityId)
 
-				if (hypot(abs(entity.prevPosX - entity.posX), abs(entity.prevPosZ - entity.posZ)) > speedLimitValue.get()) xzspeed[entity.entityId] = xzspeed.getOrDefault(entity.entityId, 0) + 1 else if (speedCountDecremSysValue.get())
+				if (hypot(abs(entity.prevPosX - entity.posX), abs(entity.prevPosZ - entity.posZ)) > speedLimitValue.get()) xzspeed[entity.entityId] = xzspeed.getOrDefault(entity.entityId, 0) + 1
+				else if (speedCountDecremSysValue.get())
 				{
 					val currentVL: Int = xzspeed.getOrDefault(entity.entityId, 0) / 2
 					if (currentVL <= 0) xzspeed.remove(entity.entityId) else xzspeed[entity.entityId] = currentVL
 				}
 
-				if (abs(entity.prevPosY - entity.posY) > ySpeedLimitValue.get()) yspeed[entity.entityId] = yspeed.getOrDefault(entity.entityId, 0) + 1 else if (ySpeedCountDecremSysValue.get())
+				if (abs(entity.prevPosY - entity.posY) > ySpeedLimitValue.get()) yspeed[entity.entityId] = yspeed.getOrDefault(entity.entityId, 0) + 1
+				else if (ySpeedCountDecremSysValue.get())
 				{
 					val currentVL = yspeed.getOrDefault(entity.entityId, 0) / 2
 					if (currentVL <= 0) yspeed.remove(entity.entityId) else yspeed[entity.entityId] = currentVL
@@ -362,7 +364,8 @@ object AntiBot : Module()
 				{
 
 					// Position Delta
-					if (distance <= positionExpectationDeltaLimitValue.get()) position_violation[entity.entityId] = position_violation.getOrDefault(entity.entityId, 0) + 1 else if (positionExpectationDeltaCountSysValue.get())
+					if (distance <= positionExpectationDeltaLimitValue.get()) position_violation[entity.entityId] = position_violation.getOrDefault(entity.entityId, 0) + 1
+					else if (positionExpectationDeltaCountSysValue.get())
 					{
 						val currentVL = position_violation.getOrDefault(entity.entityId, 0) / 2
 						if (currentVL <= 0) position_violation.remove(entity.entityId) else position_violation[entity.entityId] = currentVL
@@ -373,14 +376,15 @@ object AntiBot : Module()
 					{
 						val lastdistance = position_consistency_lastdistancedelta.getOrDefault(entity.entityId, Double.MAX_VALUE)
 						val consistency = abs(lastdistance - distance)
-						if (consistency <= positionExpectationDeltaConsistencyDeltaLimitValue.get()) position_consistency_violation[entity.entityId] =
-							position_consistency_violation.getOrDefault(entity.entityId, 0) + 1 else if (positionExpectationDeltaConsistencyCountSysValue.get())
+						if (consistency <= positionExpectationDeltaConsistencyDeltaLimitValue.get()) position_consistency_violation[entity.entityId] = position_consistency_violation.getOrDefault(entity.entityId, 0) + 1
+						else if (positionExpectationDeltaConsistencyCountSysValue.get())
 						{
 							val currentVL = position_consistency_violation.getOrDefault(entity.entityId, 0) / 2
 							if (currentVL <= 0) position_consistency_violation.remove(entity.entityId) else position_consistency_violation[entity.entityId] = currentVL
 						}
 						position_consistency_lastdistancedelta[entity.entityId] = distance
-					} else
+					}
+					else
 					{
 						val currentVL = position_consistency_violation.getOrDefault(entity.entityId, 0) / 2
 						if (currentVL <= 0) position_consistency_violation.remove(entity.entityId) else position_consistency_violation[entity.entityId] = currentVL
@@ -436,8 +440,8 @@ object AntiBot : Module()
 				val dX: Double = packetEntityTeleport.x / 32.0
 				val dY: Double = packetEntityTeleport.y / 32.0
 				val dZ: Double = packetEntityTeleport.z / 32.0
-				if (entity.asEntityPlayer().getDistanceSq(dX, dY, dZ) <= teleportThresholdDistance.get() * teleportThresholdDistance.get()) teleportpacket_violation[entity.entityId] =
-					teleportpacket_violation.getOrDefault(entity.entityId, 0) + 1 else if (teleportPacketCountDecremSysValue.get())
+				if (entity.asEntityPlayer().getDistanceSq(dX, dY, dZ) <= teleportThresholdDistance.get() * teleportThresholdDistance.get()) teleportpacket_violation[entity.entityId] = teleportpacket_violation.getOrDefault(entity.entityId, 0) + 1
+				else if (teleportPacketCountDecremSysValue.get())
 				{
 					val currentVL = teleportpacket_violation.getOrDefault(entity.entityId, 0) / 2
 					if (currentVL <= 0) teleportpacket_violation.remove(entity.entityId) else teleportpacket_violation[entity.entityId] = currentVL

@@ -188,7 +188,8 @@ class Text(
 					result.append(str, lastPercent, i)
 				}
 				lastPercent = i
-			} else if (lastPercent == -1)
+			}
+			else if (lastPercent == -1)
 			{
 				result.append(str[i])
 			}
@@ -308,7 +309,8 @@ class Text(
 			if (System.currentTimeMillis() - prevClick <= 250L) editMode = true
 
 			prevClick = System.currentTimeMillis()
-		} else editMode = false
+		}
+		else editMode = false
 	}
 
 	override fun handleKey(c: Char, keyCode: Int)

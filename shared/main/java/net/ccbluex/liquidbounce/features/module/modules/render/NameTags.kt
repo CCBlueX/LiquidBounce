@@ -101,7 +101,8 @@ class NameTags : Module()
 		val dist: Double = thePlayer.getDistanceToEntityBox(entity)
 		val distanceText = if (distanceValue.get()) "\u00A77${DECIMAL_FORMAT.format(dist)}m " else ""
 
-		val health: Float = if (!classProvider.isEntityPlayer(entity) || healthModeValue.get().equals("Datawatcher", true)) entity.health else EntityUtils.getPlayerHealthFromScoreboard(
+		val health: Float = if (!classProvider.isEntityPlayer(entity) || healthModeValue.get().equals("Datawatcher", true)) entity.health
+		else EntityUtils.getPlayerHealthFromScoreboard(
 			entity.asEntityPlayer().gameProfile.name, healthModeValue.get().equals("Mineplex", true)
 		).toFloat()
 		val absorption = if (ceil(entity.absorptionAmount.toDouble()) > 0) entity.absorptionAmount else 0f
@@ -109,7 +110,8 @@ class NameTags : Module()
 		val healthColor = if (healthPercentage <= 25) "\u00A7c" else if (healthPercentage <= 50) "\u00A7e" else "\u00A7a"
 		val healthText = if (healthValue.get()) "\u00A77 $healthColor${DECIMAL_FORMAT.format(health)}${if (absorption > 0) "\u00A76+${DECIMAL_FORMAT.format(absorption)}$healthColor" else ""} HP \u00A77(${if (absorption > 0) "\u00A76" else healthColor}${
 			DECIMAL_FORMAT.format(healthPercentage)
-		}%\u00A77)" else ""
+		}%\u00A77)"
+		else ""
 
 		val botText = if (bot) " \u00A7c\u00A7l[BOT]" else ""
 		val murderText = if (murderDetector.state && murderDetector.murders.contains(entity)) "\u00A75\u00A7l[MURDER]\u00A7r " else ""
@@ -127,9 +129,7 @@ class NameTags : Module()
 		glTranslated(
 
 			// Translate to player position with render pos and interpolate it
-			entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * renderPartialTicks - renderManager.renderPosX,
-			entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * renderPartialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + 0.55,
-			entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * renderPartialTicks - renderManager.renderPosZ
+			entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * renderPartialTicks - renderManager.renderPosX, entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * renderPartialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + 0.55, entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * renderPartialTicks - renderManager.renderPosZ
 
 		)
 

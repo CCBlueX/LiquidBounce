@@ -37,8 +37,10 @@ class Frame : SpeedMode("Frame")
 						move = false
 					}
 					motionTicks = 0
-				} else motionTicks = 1
-			} else if (!move && motionTicks == 1 && tickTimer.hasTimePassed(5))
+				}
+				else motionTicks = 1
+			}
+			else if (!move && motionTicks == 1 && tickTimer.hasTimePassed(5))
 			{
 				thePlayer.motionX *= speed
 				thePlayer.motionZ *= speed

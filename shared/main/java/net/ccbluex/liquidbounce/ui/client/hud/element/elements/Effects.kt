@@ -143,7 +143,8 @@ class Effects(
 				else -> customColor
 			}
 
-			val timeColor = if (timeHighlightValue.get() && effect.duration <= 300) Color.red.rgb else when
+			val timeColor = if (timeHighlightValue.get() && effect.duration <= 300) Color.red.rgb
+			else when
 			{
 				timeRainbowShader -> 0
 				timeColorMode.equals("Rainbow", ignoreCase = true) -> rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb

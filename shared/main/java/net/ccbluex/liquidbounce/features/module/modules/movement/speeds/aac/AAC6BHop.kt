@@ -44,7 +44,8 @@ class AAC6BHop : SpeedMode("AAC6BHop")
 			if (thePlayer.motionY < 0 && thePlayer.motionY > -0.2) mc.timer.timerSpeed = (1.2f + thePlayer.motionY).toFloat()
 
 			thePlayer.speedInAir = 0.022151f
-		} else
+		}
+		else
 		{
 			firstLegitJump = true
 

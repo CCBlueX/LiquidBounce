@@ -55,7 +55,8 @@ object SettingsUtils
 						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Loading settings from \u00A7a\u00A7l$url\u00A77...")
 						executeScript(get(url))
 						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Loaded settings from \u00A7a\u00A7l$url\u00A77.")
-					} catch (e: Exception)
+					}
+					catch (e: Exception)
 					{
 						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Failed to load settings from \u00A7a\u00A7l$url\u00A77.")
 					}
@@ -143,7 +144,8 @@ object SettingsUtils
 						}
 
 						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name}\u00A77 value \u00A78\u00A7l${moduleValue.name}\u00A77 set to \u00A7c\u00A7l$value\u00A77.")
-					} catch (e: Exception)
+					}
+					catch (e: Exception)
 					{
 						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${e.javaClass.name}\u00A77(${e.message}) \u00A7cAn Exception occurred while setting \u00A7a\u00A7l$value\u00A7c to \u00A7a\u00A7l${moduleValue.name}\u00A7c in \u00A7a\u00A7l${module.name}\u00A7c.")
 					}

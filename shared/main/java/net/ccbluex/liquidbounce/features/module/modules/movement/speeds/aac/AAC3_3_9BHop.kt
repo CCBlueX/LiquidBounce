@@ -58,7 +58,8 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop")
 
 				else -> mc.timer.timerSpeed = 1.01f
 			}
-		} else
+		}
+		else
 		{
 			firstLegitJump = true
 

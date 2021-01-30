@@ -80,17 +80,20 @@ class Projectiles : Module()
 			if (power > 1F) power = 1F
 
 			motionFactor = power * 3F
-		} else if (classProvider.isItemFishingRod(item))
+		}
+		else if (classProvider.isItemFishingRod(item))
 		{
 			gravity = 0.04F
 			size = 0.25F
 			motionSlowdown = 0.92F
-		} else if (classProvider.isItemPotion(item) && heldItem.isSplash())
+		}
+		else if (classProvider.isItemPotion(item) && heldItem.isSplash())
 		{
 			gravity = 0.05F
 			size = 0.25F
 			motionFactor = 0.5F
-		} else
+		}
+		else
 		{
 			if (!classProvider.isItemSnowball(item) && !classProvider.isItemEnderPearl(item) && !classProvider.isItemEgg(item)) return
 
@@ -224,7 +227,8 @@ class Projectiles : Module()
 				motionX *= 0.6
 				motionY *= 0.6
 				motionZ *= 0.6
-			} else
+			}
+			else
 			{
 
 				// Update motion

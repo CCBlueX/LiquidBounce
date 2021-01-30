@@ -203,8 +203,7 @@ object Fucker : Module()
 			// Use block
 			actionValue.get().equals("use", true) -> if (mc.playerController.onPlayerRightClick(
 					thePlayer, theWorld, thePlayer.heldItem!!, this.currentPos!!, classProvider.getEnumFacing(EnumFacingType.DOWN), WVec3(currentPos.x.toDouble(), currentPos.y.toDouble(), currentPos.z.toDouble())
-				)
-			)
+				))
 			{
 				if (swingValue.get()) thePlayer.swingItem()
 

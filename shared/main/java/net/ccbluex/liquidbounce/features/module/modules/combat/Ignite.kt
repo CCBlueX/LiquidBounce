@@ -86,7 +86,8 @@ class Ignite : Module()
 				)
 
 				mc.playerController.sendUseItem(thePlayer, theWorld, itemStack)
-			} else for (enumFacingType in EnumFacingType.values())
+			}
+			else for (enumFacingType in EnumFacingType.values())
 			{
 				val side = classProvider.getEnumFacing(enumFacingType)
 				val neighbor = blockPos.offset(side)
@@ -124,7 +125,8 @@ class Ignite : Module()
 	override val tag: String
 		get()
 		{
-			return if (lighterValue.get() && lavaBucketValue.get()) "Both" else when
+			return if (lighterValue.get() && lavaBucketValue.get()) "Both"
+			else when
 			{
 				lighterValue.get() -> "Lighter"
 				lavaBucketValue.get() -> "Lava"

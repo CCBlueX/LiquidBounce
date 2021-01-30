@@ -7,10 +7,7 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing
-import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.util.MovingObjectPosition
 

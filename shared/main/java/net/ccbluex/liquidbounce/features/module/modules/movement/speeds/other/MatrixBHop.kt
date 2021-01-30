@@ -25,8 +25,10 @@ class MatrixBHop : SpeedMode("Matrix-BHop")
 				jump(thePlayer)
 				thePlayer.speedInAir = 0.02098f
 				mc.timer.timerSpeed = 1.055f
-			} else MovementUtils.strafe(MovementUtils.speed)
-		} else mc.timer.timerSpeed = 1f
+			}
+			else MovementUtils.strafe(MovementUtils.speed)
+		}
+		else mc.timer.timerSpeed = 1f
 	}
 
 	override fun onMotion(eventState: EventState)

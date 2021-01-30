@@ -6,8 +6,8 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.util
 
-import kotlin.math.sqrt
 import kotlin.math.floor
+import kotlin.math.sqrt
 
 class WVec3(
 	val xCoord: Double, val yCoord: Double, val zCoord: Double

@@ -230,7 +230,8 @@ class Script(val scriptFile: File) : MinecraftInstance()
 		try
 		{
 			events[eventName]?.call(null)
-		} catch (throwable: Throwable)
+		}
+		catch (throwable: Throwable)
 		{
 			ClientUtils.logger.error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
 		}

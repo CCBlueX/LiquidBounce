@@ -41,7 +41,8 @@ object MiniMapRegister : MinecraftInstance()
 				chunkTextureMap.clear()
 
 				deleteAllChunks.set(false)
-			} else
+			}
+			else
 			{
 				synchronized(queuedChunkDeletions) {
 					queuedChunkDeletions.forEach {

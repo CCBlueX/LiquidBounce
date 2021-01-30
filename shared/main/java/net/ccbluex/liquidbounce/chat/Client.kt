@@ -157,7 +157,8 @@ abstract class Client : ClientListener, MinecraftInstance()
 				jwt = false
 
 				sendPacket(ServerLoginMojangPacket(mc.session.username, mc.session.profile.id, allowMessages = true))
-			} catch (throwable: Throwable)
+			}
+			catch (throwable: Throwable)
 			{
 				onError(throwable)
 			}
@@ -207,7 +208,8 @@ abstract class Client : ClientListener, MinecraftInstance()
 			UUID.fromString(target)
 
 			target
-		} catch (_: IllegalArgumentException)
+		}
+		catch (_: IllegalArgumentException)
 		{
 			val incomingUUID = UserUtils.getUUID(target)
 

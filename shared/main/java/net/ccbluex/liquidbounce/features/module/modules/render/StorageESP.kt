@@ -268,7 +268,8 @@ class StorageESP : Module()
 			RenderUtils.glColor(Color(255, 255, 255, 255))
 
 			gameSettings.gammaSetting = gamma
-		} catch (ignored: Exception)
+		}
+		catch (ignored: Exception)
 		{
 		}
 	}
@@ -365,7 +366,8 @@ class StorageESP : Module()
 
 			// Draw Shulker box
 			if (shulkerBox) renderTileEntityOnly(classProvider::isTileEntityShulkerBox, shulkerBoxColor)
-		} catch (ex: Exception)
+		}
+		catch (ex: Exception)
 		{
 			ClientUtils.logger.error("An error occurred while rendering all storages for shader esp", ex)
 		}

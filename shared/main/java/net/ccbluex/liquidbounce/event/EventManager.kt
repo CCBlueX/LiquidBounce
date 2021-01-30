@@ -23,7 +23,8 @@ class EventManager
 			{
 				if (!method.isAccessible) method.isAccessible = true
 
-				@Suppress("UNCHECKED_CAST") val eventClass = method.parameterTypes[0] as Class<out Event>
+				@Suppress("UNCHECKED_CAST")
+				val eventClass = method.parameterTypes[0] as Class<out Event>
 				val eventTarget = method.getAnnotation(EventTarget::class.java)
 
 				val invokableEventTargets = registry.getOrDefault(eventClass, ArrayList())
@@ -64,7 +65,8 @@ class EventManager
 				if (!invokableEventTarget.eventClass.handleEvents() && !invokableEventTarget.isIgnoreCondition) continue
 
 				invokableEventTarget.method.invoke(invokableEventTarget.eventClass, event)
-			} catch (throwable: Throwable)
+			}
+			catch (throwable: Throwable)
 			{
 				throwable.printStackTrace()
 			}

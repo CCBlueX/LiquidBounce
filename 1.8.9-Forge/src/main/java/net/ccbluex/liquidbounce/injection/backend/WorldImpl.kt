@@ -35,8 +35,7 @@ open class WorldImpl<out T : World>(val wrapped: T) : IWorld
 
 	override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid)?.wrap()
 
-	override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean, ignoreBlockWithoutBoundingBox: Boolean, returnLastUncollidableBlock: Boolean): IMovingObjectPosition? =
-		wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock)?.wrap()
+	override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean, ignoreBlockWithoutBoundingBox: Boolean, returnLastUncollidableBlock: Boolean): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock)?.wrap()
 
 	override fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: (IEntity?) -> Boolean): Collection<IEntity>
 	{

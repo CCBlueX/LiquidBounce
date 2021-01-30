@@ -143,7 +143,8 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 				GL11.glColor4f(red, green, blue, alpha)
 
 				GL11.glBegin(GL11.GL_QUADS)
-			} else
+			}
+			else
 			{
 				val fontChar = charLocations[char.toInt()] ?: continue
 

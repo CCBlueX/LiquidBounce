@@ -269,9 +269,12 @@ class Fly : Module()
 								hypixelDamageBoostFailed = false
 								hypixelFlyStarted = true
 								hypixelFlyTimer.reset()
-							} else waitForDamage = true
-						} else waitForDamage = true
-					} else if (hypixelJump && onGround) jump()
+							}
+							else waitForDamage = true
+						}
+						else waitForDamage = true
+					}
+					else if (hypixelJump && onGround) jump()
 				}
 
 				"redesky" -> if (onGround) redeskyVClip(thePlayer, redeskyVClipHeight.get())
@@ -451,7 +454,8 @@ class Fly : Module()
 				{
 					thePlayer.capabilities.isFlying = true
 
-					if (aac3delay == 2) thePlayer.motionY += 0.05 else if (aac3delay > 2)
+					if (aac3delay == 2) thePlayer.motionY += 0.05
+					else if (aac3delay > 2)
 					{
 						thePlayer.motionY -= 0.05
 						aac3delay = 0
@@ -558,7 +562,8 @@ class Fly : Module()
 						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(vec32.xCoord, posY, vec32.zCoord, true))
 						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, false))
 						minesuchtTP = System.currentTimeMillis()
-					} else
+					}
+					else
 					{
 						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, false))
 						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, true))
@@ -588,7 +593,8 @@ class Fly : Module()
 					mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.inventory.getCurrentItemInHand()!!, blockPos, classProvider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
 					MovementUtils.strafe(0.27f)
 					mc.timer.timerSpeed = 1 + mineplexSpeedValue.get()
-				} else
+				}
+				else
 				{
 					mc.timer.timerSpeed = 1.0f
 					state = false
@@ -712,13 +718,15 @@ class Fly : Module()
 								hypixelTimer.reset()
 							}
 						}
-					} else if (!canPerformHypixelDamageFly)
+					}
+					else if (!canPerformHypixelDamageFly)
 					{
 
 						// Start without boost
 						hypixelFlyStarted = true
 						hypixelFlyTimer.reset()
-					} else if (waitForDamage && thePlayer.hurtTime > 0)
+					}
+					else if (waitForDamage && thePlayer.hurtTime > 0)
 					{
 
 						// Start boost when the player takes damage
@@ -834,7 +842,8 @@ class Fly : Module()
 					lastDistance = hypot(xDist, zDist)
 				}
 			}
-		} else if (modeValue.get().equals("AntiCheatPlus", ignoreCase = true))
+		}
+		else if (modeValue.get().equals("AntiCheatPlus", ignoreCase = true))
 		{
 			acpTickTimer.update()
 			if (acpTickTimer.hasTimePassed(4))
@@ -877,7 +886,8 @@ class Fly : Module()
 
 			if (mode.equals("NCP", ignoreCase = true) || mode.equals("Rewinside", ignoreCase = true) || mode.equals("Mineplex", ignoreCase = true) && (mc.thePlayer ?: return).inventory.getCurrentItemInHand() == null) packetPlayer.onGround = true
 			if (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted) packetPlayer.onGround = hypixelOnGroundValue.get()
-		} else if (classProvider.isSPacketPlayerPosLook(event.packet))
+		}
+		else if (classProvider.isSPacketPlayerPosLook(event.packet))
 		{
 			if (mode.equals("Hypixel", ignoreCase = true) && canPerformHypixelDamageFly && hypixelFlyStarted)
 			{
@@ -902,7 +912,8 @@ class Fly : Module()
 					event.x = -functions.sin(yaw) * 2.4
 					event.z = functions.cos(yaw) * 2.4
 					cubecraftTeleportTickTimer.reset()
-				} else
+				}
+				else
 				{
 					event.x = -functions.sin(yaw) * 0.2
 					event.z = functions.cos(yaw) * 0.2
@@ -973,8 +984,7 @@ class Fly : Module()
 		val mode = modeValue.get()
 		if (classProvider.isBlockAir(event.block) && (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted || mode.equals("Rewinside", ignoreCase = true) || mode.equals("MCCentral", ignoreCase = true) || mode.equals(
 				"Mineplex", ignoreCase = true
-			) && thePlayer.inventory.getCurrentItemInHand() == null) && event.y < thePlayer.posY
-		) event.boundingBox = classProvider.createAxisAlignedBB(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.0, thePlayer.posY, event.z + 1.0)
+			) && thePlayer.inventory.getCurrentItemInHand() == null) && event.y < thePlayer.posY) event.boundingBox = classProvider.createAxisAlignedBB(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.0, thePlayer.posY, event.z + 1.0)
 	}
 
 	@EventTarget
@@ -985,8 +995,7 @@ class Fly : Module()
 		val mode = modeValue.get()
 		if (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted || mode.equals("Rewinside", ignoreCase = true) || mode.equals("MCCentral", ignoreCase = true) || mode.equals(
 				"Mineplex", ignoreCase = true
-			) && thePlayer.inventory.getCurrentItemInHand() == null
-		) e.cancelEvent()
+			) && thePlayer.inventory.getCurrentItemInHand() == null) e.cancelEvent()
 	}
 
 	@EventTarget
@@ -997,8 +1006,7 @@ class Fly : Module()
 		val mode = modeValue.get()
 		if (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted || mode.equals("Rewinside", ignoreCase = true) || mode.equals("MCCentral", ignoreCase = true) || mode.equals(
 				"Mineplex", ignoreCase = true
-			) && thePlayer.inventory.getCurrentItemInHand() == null
-		) e.stepHeight = 0f
+			) && thePlayer.inventory.getCurrentItemInHand() == null) e.stepHeight = 0f
 	}
 
 	private fun handleVanillaKickBypass()

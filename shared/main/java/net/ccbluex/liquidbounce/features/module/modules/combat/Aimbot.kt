@@ -137,15 +137,7 @@ class Aimbot : Module()
 
 		RotationUtils.limitAngleChange(
 			Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch), RotationUtils.searchCenter(
-				(target ?: return).entityBoundingBox,
-				if (centerValue.get()) RotationUtils.SearchCenterMode.LOCK_CENTER else RotationUtils.SearchCenterMode.SEARCH_GOOD_CENTER,
-				jitterValue.get(),
-				RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get()),
-				false,
-				false,
-				range,
-				hitboxDecrementValue.get().toDouble(),
-				centerSearchSensitivityValue.get().toDouble()
+				(target ?: return).entityBoundingBox, if (centerValue.get()) RotationUtils.SearchCenterMode.LOCK_CENTER else RotationUtils.SearchCenterMode.SEARCH_GOOD_CENTER, jitterValue.get(), RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get()), false, false, range, hitboxDecrementValue.get().toDouble(), centerSearchSensitivityValue.get().toDouble()
 			).rotation, Random.nextFloat() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get(), Random.nextFloat() * (maxAccelerationRatio.get() - minAccelerationRatio.get()) + minAccelerationRatio.get()
 		).applyRotationToPlayer(thePlayer)
 	}

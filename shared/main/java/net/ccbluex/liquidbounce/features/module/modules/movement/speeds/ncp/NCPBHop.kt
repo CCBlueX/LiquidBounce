@@ -41,7 +41,8 @@ class NCPBHop : SpeedMode("NCPBHop")
 				thePlayer.speedInAir = 0.0223f
 			}
 			MovementUtils.strafe()
-		} else
+		}
+		else
 		{
 			thePlayer.motionX = 0.0
 			thePlayer.motionZ = 0.0

@@ -35,13 +35,15 @@ class AAC3_0_3BHop : SpeedMode("AAC3.0.3-BHop")
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.399f))
 
 				mc.timer.timerSpeed = 2f
-			} else
+			}
+			else
 			{
 				thePlayer.motionY *= 0.97
 				thePlayer.motionX *= 1.008
 				thePlayer.motionZ *= 1.008
 			}
-		} else
+		}
+		else
 		{
 			thePlayer.motionX = 0.0
 			thePlayer.motionZ = 0.0

@@ -39,7 +39,8 @@ class IceSpeed : Module()
 		{
 			classProvider.getBlockEnum(BlockType.ICE).slipperiness = 0.39f
 			classProvider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.39f
-		} else
+		}
+		else
 		{
 			classProvider.getBlockEnum(BlockType.ICE).slipperiness = 0.98f
 			classProvider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.98f
@@ -70,7 +71,8 @@ class IceSpeed : Module()
 						{
 							thePlayer.motionX *= 1.342
 							thePlayer.motionZ *= 1.342
-						} else
+						}
+						else
 						{
 							thePlayer.motionX *= 1.18
 							thePlayer.motionZ *= 1.18

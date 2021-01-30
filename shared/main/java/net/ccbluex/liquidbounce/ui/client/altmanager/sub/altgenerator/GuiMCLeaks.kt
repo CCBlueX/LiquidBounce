@@ -84,7 +84,8 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					try
 					{
 						GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
-					} catch (e: Exception)
+					}
+					catch (e: Exception)
 					{
 						ClientUtils.logger.error("Failed to change alt service to Mojang.", e)
 					}
@@ -101,7 +102,8 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 							FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
 						}
 						status = "\u00A7aYour token was redeemed successfully!\u00A7c$moreMessage"
-					} else status = "\u00A7aYour token was redeemed successfully!"
+					}
+					else status = "\u00A7aYour token was redeemed successfully!"
 
 					button.enabled = true
 					button.displayString = "Login"

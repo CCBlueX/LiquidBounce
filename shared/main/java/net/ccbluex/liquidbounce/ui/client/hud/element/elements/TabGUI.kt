@@ -180,14 +180,16 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 		{
 			if (xPos > tabY) tabY += 0.1F * delta
 			else tabY -= 0.1F * delta
-		} else tabY = xPos
+		}
+		else tabY = xPos
 		val xPos2 = tabHeight.get() * selectedModule
 
 		if (itemY.toInt() != xPos2.toInt())
 		{
 			if (xPos2 > itemY) itemY += 0.1F * delta
 			else itemY -= 0.1F * delta
-		} else itemY = xPos2
+		}
+		else itemY = xPos2
 
 		if (categoryMenu) itemY = 0F
 
@@ -199,14 +201,16 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 					if (tab.textFade < 4) tab.textFade += 0.05F * delta
 
 					if (tab.textFade > 4) tab.textFade = 4F
-				} else
+				}
+				else
 				{
 					if (tab.textFade > 0) tab.textFade -= 0.05F * delta
 
 					if (tab.textFade < 0) tab.textFade = 0F
 				}
 			}
-		} else
+		}
+		else
 		{
 			for (tab in tabs)
 			{
@@ -231,7 +235,8 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 					selectedCategory = tabs.size - 1
 					tabY = tabHeight.get() * selectedCategory.toFloat()
 				}
-			} else
+			}
+			else
 			{
 				--selectedModule
 				if (selectedModule < 0)
@@ -249,7 +254,8 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 					selectedCategory = 0
 					tabY = tabHeight.get() * selectedCategory.toFloat()
 				}
-			} else
+			}
+			else
 			{
 				++selectedModule
 				if (selectedModule > tabs[selectedCategory].modules.size - 1)
@@ -267,7 +273,8 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 			Action.RIGHT -> if (!categoryMenu)
 			{
 				toggle = true
-			} else
+			}
+			else
 			{
 				categoryMenu = false
 				selectedModule = 0

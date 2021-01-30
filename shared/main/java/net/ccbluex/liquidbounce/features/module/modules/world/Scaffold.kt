@@ -171,7 +171,8 @@ class Scaffold : Module()
 			if (maximum < newValue)
 			{
 				set(maximum)
-			} else if (minimum > newValue)
+			}
+			else if (minimum > newValue)
 			{
 				set(minimum)
 			}
@@ -191,7 +192,8 @@ class Scaffold : Module()
 			if (maximum < newValue)
 			{
 				set(maximum)
-			} else if (minimum > newValue)
+			}
+			else if (minimum > newValue)
 			{
 				set(minimum)
 			}
@@ -206,7 +208,8 @@ class Scaffold : Module()
 			if (maximum < newValue)
 			{
 				set(maximum)
-			} else if (minimum > newValue)
+			}
+			else if (minimum > newValue)
 			{
 				set(minimum)
 			}
@@ -360,7 +363,8 @@ class Scaffold : Module()
 				{
 					gameSettings.keyBindRight.pressed = true
 					gameSettings.keyBindLeft.pressed = false
-				} else
+				}
+				else
 				{
 					gameSettings.keyBindRight.pressed = false
 					gameSettings.keyBindLeft.pressed = true
@@ -481,12 +485,14 @@ class Scaffold : Module()
 					{
 						if (eagleSneaking != shouldEagle) mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, if (shouldEagle) ICPacketEntityAction.WAction.START_SNEAKING else ICPacketEntityAction.WAction.STOP_SNEAKING))
 						eagleSneaking = shouldEagle
-					} else
+					}
+					else
 					{
 						gameSettings.keyBindSneak.pressed = shouldEagle
 						placedBlocksWithoutEagle = 0
 					}
-				} else placedBlocksWithoutEagle++
+				}
+				else placedBlocksWithoutEagle++
 			}
 
 			// Teleport Zitter
@@ -563,7 +569,8 @@ class Scaffold : Module()
 		if (!thePlayer.onGround && thePlayer.motionY < 0)
 		{
 			if (fallStartY < thePlayer.posY) fallStartY = thePlayer.posY
-		} else fallStartY = 0.0
+		}
+		else fallStartY = 0.0
 
 		findBlock(theWorld, thePlayer, modeValue.get().equals("expand", true))
 	}
@@ -574,7 +581,8 @@ class Scaffold : Module()
 		{
 			RotationUtils.setTargetRotation(rotation, keepRotation)
 			RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
-		} else
+		}
+		else
 		{
 			thePlayer.rotationYaw = rotation.yaw
 			thePlayer.rotationPitch = rotation.pitch
@@ -664,7 +672,8 @@ class Scaffold : Module()
 			searchPosition = WBlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY - 1.5, thePlayer.posZ)
 			state = "Clutch"
 			clutching = true
-		} else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundBlockBB.maxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY < groundBlockBB.maxY - groundBlockBB.minY)
+		}
+		else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundBlockBB.maxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY < groundBlockBB.maxY - groundBlockBB.minY)
 		{
 			searchPosition = pos
 
@@ -675,15 +684,18 @@ class Scaffold : Module()
 				searchBounds.maxY = 0.125 + (yRange / 4)
 			}
 			state = "Non-Fullblock-SlabCorrection"
-		} else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundBlockBB.maxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY == groundBlockBB.maxY - groundBlockBB.minY)
+		}
+		else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundBlockBB.maxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY == groundBlockBB.maxY - groundBlockBB.minY)
 		{
 			searchPosition = pos
 			state = "Non-Fullblock"
-		} else if (shouldGoDown)
+		}
+		else if (shouldGoDown)
 		{
 			searchPosition = pos.add(0.0, -0.6, 0.0).down() // Default full-block only scaffold
 			state = "Down"
-		} else
+		}
+		else
 		{
 			searchPosition = pos.down() // Default full-block only scaffold
 			state = "Default"
@@ -725,10 +737,10 @@ class Scaffold : Module()
 								else -> 0
 							}
 						), false, searchBounds
-					)
-				) return
+					)) return
 			}
-		} else if (searchValue.get()) for (x in -1..1) for (y in (if (ySearch) -1..1 else 0..0)) for (z in -1..1) if (search(thePlayer, searchPosition.add(x, 0, z), !shouldGoDown, searchBounds)) return
+		}
+		else if (searchValue.get()) for (x in -1..1) for (y in (if (ySearch) -1..1 else 0..0)) for (z in -1..1) if (search(thePlayer, searchPosition.add(x, 0, z), !shouldGoDown, searchBounds)) return
 	}
 
 	fun place(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
@@ -962,8 +974,7 @@ class Scaffold : Module()
 						val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
 						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(
 								posVec.add(dirVec)
-							) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)
-						)
+							) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null))
 						{
 							zSearch += data.zSteps
 							continue
@@ -990,7 +1001,7 @@ class Scaffold : Module()
 							)
 							val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false, false, true)
 
-							if (rayTrace!!.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace!!.blockPos!! != neighbor) continue
+							if (rayTrace!!.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos!! != neighbor) continue
 							if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation.rotation)) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
 
 							xSearchFace = xSearch
@@ -1035,8 +1046,7 @@ class Scaffold : Module()
 					val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
 					if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(
 							posVec.add(dirVec)
-						) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)
-					) continue
+						) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) continue
 					val rotationVector = RotationUtils.getVectorForRotation(limitedRotation)
 					val vector = eyesPos.addVector(
 						rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4
@@ -1046,7 +1056,8 @@ class Scaffold : Module()
 					facesBlock = true
 					break
 				}
-			} else
+			}
+			else
 			{
 				setRotation(thePlayer, placeRotation.rotation, keepRotationTicks)
 				tower.lockRotation = null // Prevents conflict

@@ -54,7 +54,8 @@ class HUD : Module()
 			classProvider.createResourceLocation(
 				LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json"
 			)
-		) else if (mc.entityRenderer.shaderGroup != null && mc.entityRenderer.shaderGroup!!.shaderGroupName.contains("liquidbounce/blur.json")) mc.entityRenderer.stopUseShader()
+		)
+		else if (mc.entityRenderer.shaderGroup != null && mc.entityRenderer.shaderGroup!!.shaderGroupName.contains("liquidbounce/blur.json")) mc.entityRenderer.stopUseShader()
 	}
 
 	init

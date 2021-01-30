@@ -72,8 +72,10 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 				}
 
 				ClientUtils.logger.info("Loaded " + heads.size + " heads from HeadDB.")
-			} else ClientUtils.logger.info("Heads are disabled.")
-		} catch (e: Exception)
+			}
+			else ClientUtils.logger.info("Heads are disabled.")
+		}
+		catch (e: Exception)
 		{
 			ClientUtils.logger.error("Error while reading heads.", e)
 		}

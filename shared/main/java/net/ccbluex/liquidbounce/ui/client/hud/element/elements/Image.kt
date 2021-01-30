@@ -115,7 +115,8 @@ class Image : Element()
 			height = bufferedImage.height
 
 			mc.textureManager.loadTexture(resourceLocation, classProvider.createDynamicTexture(bufferedImage))
-		} catch (e: Exception)
+		}
+		catch (e: Exception)
 		{
 			e.printStackTrace()
 		}
@@ -127,7 +128,8 @@ class Image : Element()
 		try
 		{
 			setImage(Base64.getEncoder().encodeToString(Files.readAllBytes(image.toPath())))
-		} catch (e: Exception)
+		}
+		catch (e: Exception)
 		{
 			e.printStackTrace()
 		}

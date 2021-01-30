@@ -58,6 +58,7 @@ class KeepAlive : Module()
 			}
 
 			runOnce = true
-		} else runOnce = false
+		}
+		else runOnce = false
 	}
 }

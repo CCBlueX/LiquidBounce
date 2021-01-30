@@ -86,7 +86,8 @@ class WallClimb : Module()
 				if (aac3_3_12_steps == 29) thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
 				if (aac3_3_12_steps >= 30) aac3_3_12_steps = 0
 
-			} else if (onGround) aac3_3_12_steps = 0
+			}
+			else if (onGround) aac3_3_12_steps = 0
 
 			"aacglide" ->
 			{
@@ -125,8 +126,7 @@ class WallClimb : Module()
 		when (mode.toLowerCase())
 		{
 			"checkerclimb" -> if (event.y > thePlayer.posY) event.boundingBox = null
-			"clip" -> if (mc.thePlayer != null && classProvider.isBlockAir(event.block) && event.y < thePlayer.posY && thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava) event.boundingBox =
-				classProvider.createAxisAlignedBB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0).offset(thePlayer.posX, thePlayer.posY.toInt() - 1.0, thePlayer.posZ)
+			"clip" -> if (mc.thePlayer != null && classProvider.isBlockAir(event.block) && event.y < thePlayer.posY && thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava) event.boundingBox = classProvider.createAxisAlignedBB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0).offset(thePlayer.posX, thePlayer.posY.toInt() - 1.0, thePlayer.posZ)
 		}
 	}
 

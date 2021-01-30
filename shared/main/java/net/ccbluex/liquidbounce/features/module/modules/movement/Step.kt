@@ -90,7 +90,8 @@ class Step : Module()
 				}
 
 				thePlayer.onGround = true
-			} else isStep = false
+			}
+			else isStep = false
 
 			"aac3.3.4" -> if (thePlayer.isCollidedHorizontally && MovementUtils.isMoving)
 			{
@@ -108,7 +109,8 @@ class Step : Module()
 
 					if (!thePlayer.isUsingItem && thePlayer.movementInput.moveStrafe == 0F) thePlayer.jumpMovementFactor = 0.3F
 				}
-			} else isAACStep = false
+			}
+			else isAACStep = false
 		}
 	}
 
@@ -247,7 +249,8 @@ class Step : Module()
 						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false))
 						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false))
 						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false))
-					} else // Force step
+					}
+					else // Force step
 						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.6, stepZ, false))
 
 					// Spartan allows one unlegit step so just swap between legit and unlegit

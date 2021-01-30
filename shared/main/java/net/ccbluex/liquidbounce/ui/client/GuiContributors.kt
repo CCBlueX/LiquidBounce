@@ -136,7 +136,8 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			{
 				val gb = ((functions.sin(System.currentTimeMillis() * (1 / 333.0F)) + 1) * (0.5 * 255)).toInt()
 				Fonts.font40.drawCenteredString("Failed to load", representedScreen.width / 8.0f, representedScreen.height / 2.0f, Color(255, gb, gb).rgb)
-			} else
+			}
+			else
 			{
 				Fonts.font40.drawCenteredString("Loading...", representedScreen.width / 8.0f, representedScreen.height / 2.0f, Color.WHITE.rgb)
 				RenderUtils.drawLoadingCircle((representedScreen.width / 8).toFloat(), representedScreen.height / 2 - 40.0f)
@@ -237,12 +238,14 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					HttpUtils.requestStream("${credit.avatarUrl}?s=${representedScreen.fontRendererObj.fontHeight * 4}", "GET")?.use {
 						credit.avatar = CustomTexture(ImageIO.read(it)!!)
 					}
-				} catch (e: Exception)
+				}
+				catch (e: Exception)
 				{
 
 				}
 			}
-		} catch (e: Exception)
+		}
+		catch (e: Exception)
 		{
 			ClientUtils.logger.error("Failed to load credits.", e)
 			failed = true

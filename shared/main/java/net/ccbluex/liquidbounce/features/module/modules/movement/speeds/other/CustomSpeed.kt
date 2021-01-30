@@ -38,7 +38,8 @@ class CustomSpeed : SpeedMode("Custom")
 				speed.customStrafeValue.get() -> MovementUtils.strafe(speed.customSpeedValue.get())
 				else -> MovementUtils.strafe()
 			}
-		} else
+		}
+		else
 		{
 			thePlayer.motionZ = 0.0
 			thePlayer.motionX = thePlayer.motionZ

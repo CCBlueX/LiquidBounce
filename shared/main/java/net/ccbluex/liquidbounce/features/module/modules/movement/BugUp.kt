@@ -134,13 +134,15 @@ class BugUp : Module()
 
 					"packet" -> networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + flagYPacket.get(), posZ, false))
 				}
-			} else
+			}
+			else
 			{
 				tryingFlag = false
 				flagTimer.reset()
 			}
 			flagTimer.update()
-		} else flagTimer.reset()
+		}
+		else flagTimer.reset()
 	}
 
 	@EventTarget

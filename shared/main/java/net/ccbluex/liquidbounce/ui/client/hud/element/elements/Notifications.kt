@@ -219,7 +219,8 @@ class Notification(private val header: String, private val message: String, priv
 			{
 				x = AnimationUtils.easeOut(fadeStep, width) * width
 				fadeStep -= delta / 4F
-			} else fadeState = FadeState.END
+			}
+			else fadeState = FadeState.END
 
 			// FadeState.END -> LiquidBounce.hud.removeNotification(this) // Raises ConcurrentModificationException
 		}

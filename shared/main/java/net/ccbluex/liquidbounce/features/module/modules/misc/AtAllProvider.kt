@@ -73,7 +73,8 @@ class AtAllProvider : Module()
 
 				delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 			}
-		} catch (e: InterruptedException)
+		}
+		catch (e: InterruptedException)
 		{
 			e.printStackTrace()
 		}

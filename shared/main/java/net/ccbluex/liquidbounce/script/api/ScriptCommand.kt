@@ -33,7 +33,8 @@ class ScriptCommand(private val commandObject: JSObject) : Command(
 		try
 		{
 			events["execute"]?.call(commandObject, args)
-		} catch (throwable: Throwable)
+		}
+		catch (throwable: Throwable)
 		{
 			ClientUtils.logger.error("[ScriptAPI] Exception in command '$command'!", throwable)
 		}

@@ -36,7 +36,8 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop")
 
 					jump(thePlayer)
 					thePlayer.motionY = 0.41
-				} else
+				}
+				else
 				{
 					if (waitForGround) return
 					if (thePlayer.isCollidedHorizontally) return
@@ -45,12 +46,14 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop")
 					thePlayer.motionY -= 0.0149
 				}
 				if (!thePlayer.isCollidedHorizontally) MovementUtils.forward(if (firstJump) 0.0016 else 0.001799)
-			} else
+			}
+			else
 			{
 				firstJump = true
 				waitForGround = true
 			}
-		} else
+		}
+		else
 		{
 			thePlayer.motionZ = 0.0
 			thePlayer.motionX = 0.0

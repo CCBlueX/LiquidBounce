@@ -132,7 +132,8 @@ class AutoSoup : Module()
 					{
 						bowlMovable = true
 						break
-					} else if (itemStack.item == classProvider.getItemEnum(ItemType.BOWL) && itemStack.stackSize < 64)
+					}
+					else if (itemStack.item == classProvider.getItemEnum(ItemType.BOWL) && itemStack.stackSize < 64)
 					{
 						bowlMovable = true
 						break
