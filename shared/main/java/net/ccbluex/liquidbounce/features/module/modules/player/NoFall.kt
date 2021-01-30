@@ -32,6 +32,8 @@ class NoFall : Module()
 	val modeValue = ListValue("Mode", arrayOf("SpoofGround", "NoGround", "Packet", "MLG", "AAC3.1.0", "AAC3.3.4", "AAC3.3.11", "AAC3.3.15", "Spartan", "CubeCraft", "Hypixel", "AntiCheatPlus"), "SpoofGround")
 
 	private val noSpoofTicks = IntegerValue("NoSpoofTicks", 0, 0, 5)
+	private val thresholdFallDistanceValue = FloatValue("ThresholdFallDistance", 1.5f, 0f, 2.9f)
+
 	private val minFallDistance = FloatValue("MinMLGHeight", 5f, 2f, 50f)
 
 	private val silentRotationValue = BoolValue("SilentRotation", true)
@@ -87,9 +89,11 @@ class NoFall : Module()
 		val posY = thePlayer.posY
 		val posZ = thePlayer.posZ
 
+		val thresholdFallDistance = thresholdFallDistanceValue.get()
+
 		when (modeValue.get().toLowerCase())
 		{
-			"packet" -> if (fallDistance > 2f)
+			"packet" -> if (fallDistance > thresholdFallDistance)
 			{
 				val nospoofticks: Int = noSpoofTicks.get()
 				if (noSpoof >= nospoofticks)
@@ -100,7 +104,7 @@ class NoFall : Module()
 				noSpoof++
 			}
 
-			"cubecraft" -> if (fallDistance > 2f)
+			"cubecraft" -> if (fallDistance > thresholdFallDistance)
 			{
 				thePlayer.onGround = false
 				networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
@@ -108,7 +112,7 @@ class NoFall : Module()
 
 			"aac3.1.0" ->
 			{
-				if (fallDistance > 2f)
+				if (fallDistance > thresholdFallDistance)
 				{
 					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
 					currentState = 2
@@ -143,7 +147,7 @@ class NoFall : Module()
 
 			"aac3.3.4" -> if (!jumped && thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInWeb) thePlayer.motionY = -6.0
 
-			"aac3.3.11" -> if (fallDistance > 2)
+			"aac3.3.11" -> if (fallDistance > thresholdFallDistance)
 			{
 				thePlayer.motionZ = 0.0
 				thePlayer.motionX = thePlayer.motionZ
@@ -151,7 +155,7 @@ class NoFall : Module()
 				networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
 			}
 
-			"aac3.3.15" -> if (fallDistance > 2)
+			"aac3.3.15" -> if (fallDistance > thresholdFallDistance)
 			{
 				if (!mc.isIntegratedServerRunning) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, Double.NaN, posZ, false))
 				thePlayer.fallDistance = -9999.0F
@@ -160,7 +164,7 @@ class NoFall : Module()
 			"spartan" ->
 			{
 				spartanTimer.update()
-				if (fallDistance > 1.5 && spartanTimer.hasTimePassed(10))
+				if (fallDistance > thresholdFallDistance && spartanTimer.hasTimePassed(10))
 				{
 					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 10, posZ, true))
 					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY - 10, posZ, true))
@@ -184,32 +188,35 @@ class NoFall : Module()
 		{
 			val playerPacket = packet.asCPacketPlayer()
 
-			// SpoofGround
-			if (mode.equals("SpoofGround", ignoreCase = true))
+			if (fallDistance > thresholdFallDistanceValue.get())
 			{
-				val nospoofticks: Int = noSpoofTicks.get()
-				if (noSpoof >= nospoofticks)
+				// SpoofGround
+				if (mode.equals("SpoofGround", ignoreCase = true))
+				{
+					val nospoofticks: Int = noSpoofTicks.get()
+					if (noSpoof >= nospoofticks)
+					{
+						playerPacket.onGround = true
+						noSpoof = 0
+					}
+					noSpoof++
+				}
+
+				// AntiCheatPlus
+				else if (mode.equals("AntiCheatPlus", ignoreCase = true) /* && fallDistance > 2 */)
 				{
 					playerPacket.onGround = true
-					noSpoof = 0
+
+					thePlayer.motionZ = 0.0
+					thePlayer.motionX = thePlayer.motionZ
 				}
-				noSpoof++
+
+				// Hypixel
+				if (mode.equals("Hypixel", ignoreCase = true) /* && fallDistance > 1.5 */) playerPacket.onGround = thePlayer.ticksExisted % 2 == 0
 			}
 
 			// NoGround
 			if (mode.equals("NoGround", ignoreCase = true)) playerPacket.onGround = false
-
-			// Hypixel
-			if (mode.equals("Hypixel", ignoreCase = true) && fallDistance > 1.5) playerPacket.onGround = thePlayer.ticksExisted % 2 == 0
-
-			// AntiCheatPlus
-			if (fallDistance > 2 && mode.equals("AntiCheatPlus", ignoreCase = true))
-			{
-				playerPacket.onGround = true
-
-				thePlayer.motionZ = 0.0
-				thePlayer.motionX = thePlayer.motionZ
-			}
 		}
 	}
 
