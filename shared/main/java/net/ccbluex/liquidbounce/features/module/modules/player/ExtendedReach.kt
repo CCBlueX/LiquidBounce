@@ -294,7 +294,7 @@ class ExtendedReach : Module()
 	}
 
 	override val tag: String
-		get() = java.lang.String.valueOf(maxDashDistanceValue.get())
+		get() = "${maxDashDistanceValue.get()}"
 
 	companion object
 	{

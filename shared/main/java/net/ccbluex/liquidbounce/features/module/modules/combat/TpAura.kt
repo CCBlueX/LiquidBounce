@@ -321,7 +321,7 @@ class TpAura : Module()
 	fun isTarget(entity: IEntity?): Boolean = currentTargets.isNotEmpty() && IntStream.range(0, if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size).anyMatch { i: Int -> currentTargets[i].isEntityEqual(entity) }
 
 	override val tag: String
-		get() = java.lang.String.valueOf(maxDashDistanceValue.get())
+		get() = "${maxDashDistanceValue.get()}"
 
 	companion object
 	{
