@@ -29,13 +29,13 @@ class Velocity : Module()
 	val verticalValue = FloatValue("Vertical", 0F, 0F, 1F)
 	val modeValue = ListValue(
 		"Mode", arrayOf(
-			"Simple", "AAC3.1.2", "AACPush", "AAC3.3.4-Reverse", "AAC3.3.4-SmoothReverse", "AAC3.5.0-Zero", "Jump", "Glitch"
+			"Simple", "AAC3.1.2", "AACPush", "AAC3.2.0-Reverse", "AAC3.3.4-Reverse", "AAC3.5.0-Zero", "Jump", "Glitch"
 		), "Simple"
 	)
 
 	// AAC Reverse
-	private val reverseStrengthValue = FloatValue("ReverseStrength", 1F, 0.1F, 1F)
-	private val reverse2StrengthValue = FloatValue("SmoothReverseStrength", 0.05F, 0.02F, 0.1F)
+	private val reverseStrengthValue = FloatValue("AAC3.2.0-Reverse-Strength", 1F, 0.1F, 1F)
+	private val reverse2StrengthValue = FloatValue("AAC3.3.4-Reverse-Strength", 0.05F, 0.02F, 0.1F)
 
 	// AAC Push
 	private val aacPushXZReducerValue = FloatValue("AACPushXZReducer", 2F, 1F, 3F)
@@ -89,7 +89,7 @@ class Velocity : Module()
 				velocityInput = false
 			}
 
-			"aac3.3.4-reverse" ->
+			"aac3.2.0-reverse" ->
 			{
 				if (!velocityInput) return
 
@@ -107,7 +107,7 @@ class Velocity : Module()
 				velocityInput = false
 			}
 
-			"aac3.3.4-smoothreverse" ->
+			"aac3.3.4-reverse" ->
 			{
 				if (!velocityInput)
 				{
@@ -196,7 +196,7 @@ class Velocity : Module()
 					packetEntityVelocity.motionZ = (packetEntityVelocity.motionZ * horizontal).toInt()
 				}
 
-				"aac3.1.2", "aac3.3.4-reverse", "aac3.3.4-smoothreverse", "aac3.5.0-zero" -> velocityInput = true
+				"aac3.1.2", "aac3.2.0-reverse", "aac3.3.4-reverse", "aac3.5.0-zero" -> velocityInput = true
 
 				"glitch" ->
 				{

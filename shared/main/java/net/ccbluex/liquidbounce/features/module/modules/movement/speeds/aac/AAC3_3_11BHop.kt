@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AAC6BHop : SpeedMode("AAC6BHop")
+class AAC3_3_11BHop : SpeedMode("AAC3.3.11-BHop")
 {
 	private var firstLegitJump = false
 	override fun onUpdate()

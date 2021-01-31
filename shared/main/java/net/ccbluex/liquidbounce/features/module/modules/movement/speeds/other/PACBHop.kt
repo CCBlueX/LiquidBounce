@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
  * @author CCBlueX
  * @game   Minecraft
  */
-class PACBHop : SpeedMode("PhoenixAC-BHop")
+class PACBHop : SpeedMode("PAC-BHop")
 {
 	override fun onMotion(eventState: EventState)
 	{

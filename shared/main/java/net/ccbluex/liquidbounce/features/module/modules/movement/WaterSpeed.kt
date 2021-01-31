@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.FloatValue
 
-@ModuleInfo(name = "WaterSpeed", description = "Allows you to swim faster.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "WaterSpeed", description = "Allows you to swim faster. (AAC3.2.2)", category = ModuleCategory.MOVEMENT)
 class WaterSpeed : Module()
 {
 	private val speedValue = FloatValue("Speed", 1.2f, 1.1f, 1.5f)

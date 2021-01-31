@@ -28,7 +28,7 @@ class Step : Module()
 	 * OPTIONS
 	 */
 
-	private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Jump", "NCP", "MotionNCP", "OldNCP", "AAC3.1.5", "AAC3.2.0", "AAC3.3.4", "Spartan", "Rewinside"), "NCP")
+	private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Jump", "NCP", "MotionNCP", "OldNCP", "AAC3.1.5", "AAC3.2.0", "AAC3.3.4", "Spartan127", "Rewinside"), "NCP")
 
 	val airStepValue = BoolValue("AirStep", false)
 	private val heightValue = FloatValue("Height", 1F, 0.6F, 10F)
@@ -238,7 +238,7 @@ class Step : Module()
 					timer.reset()
 				}
 
-				"spartan" ->
+				"spartan127" ->
 				{
 					fakeJump(thePlayer)
 
@@ -309,7 +309,7 @@ class Step : Module()
 		return theWorld.getCollisionBoxes(thePlayer.entityBoundingBox.offset(x, 1.001335979112147, z)).isEmpty()
 	}
 
-	fun canAirStep(): Boolean = Stream.of("Vanilla", "NCP", "OldNCP", "AAC3.1.5", "Spartan", "Rewinside").anyMatch { modeValue.get().equals(it, ignoreCase = true) }
+	fun canAirStep(): Boolean = Stream.of("Vanilla", "NCP", "OldNCP", "AAC3.1.5", "Spartan127", "Rewinside").anyMatch { modeValue.get().equals(it, ignoreCase = true) }
 
 	override val tag: String
 		get() = modeValue.get()

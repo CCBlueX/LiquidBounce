@@ -37,7 +37,7 @@ class Speed : Module()
 		OldNCPBHop(), NCPFHop(), NCPTimerBHop(), NCPBHop(), YPort(), YPort2(), NCPYPort(), Boost(), Frame(), MiJump(), OnGround(),
 
 		// AAC BHop
-		AAC1_9_10BHop(), AAC3_0_3BHop(), AAC3_0_5BHop(), AAC3_2_1BHop(), AAC4BHop(), AAC3_3_9BHop(), AAC6BHop(), AAC7BHop(), AAC3_3_13BHop(), AAC3_5_0BHop(),
+		AAC1_9_10BHop(), AAC3_0_3BHop(), AAC3_0_5BHop(), AAC3_2_1BHop(), AAC4BHop(), AAC3_3_9BHop(), AAC3_3_11BHop(), AAC3_3_11FastBHop(), AAC3_3_13BHop(), AAC3_5_0BHop(),
 
 		// AAC LowHop
 		AAC3_1_5LowHop(), AAC3_1_5FastLowHop(), AAC3_5_0LowHop(),
@@ -155,7 +155,7 @@ class Speed : Module()
 		mode?.onDisable()
 	}
 
-	fun allowSprintBoost(): Boolean = Stream.of("AAC3.3.11-Ground", "AAC3.3.11-Ground2", "AACPort", "AntiCheatPlus").anyMatch { modeValue.get().equals(it, ignoreCase = true) }
+	fun allowSprintBoost(): Boolean = Stream.of("AAC3.3.11-Ground", "AAC3.3.11-Ground2", "AACPort", "ACP").anyMatch { modeValue.get().equals(it, ignoreCase = true) }
 
 	override val tag: String
 		get() = modeValue.get()

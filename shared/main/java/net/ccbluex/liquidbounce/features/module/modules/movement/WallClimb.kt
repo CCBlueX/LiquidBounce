@@ -17,8 +17,9 @@ import net.ccbluex.liquidbounce.value.ListValue
 @ModuleInfo(name = "WallClimb", description = "Allows you to climb up walls like a spider.", category = ModuleCategory.MOVEMENT)
 class WallClimb : Module()
 {
-	private val modeValue = ListValue("Mode", arrayOf("Simple", "CheckerClimb", "Clip", "AAC3.3.12", "AACGlide"), "Simple")
+	private val modeValue = ListValue("Mode", arrayOf("Simple", "CheckerClimb", "Clip", "AAC3.3.8-Glide", "AAC3.3.12"), "Simple")
 	private val clipMode = ListValue("ClipMode", arrayOf("Jump", "Fast"), "Fast")
+
 	private val checkerClimbMotionValue = FloatValue("CheckerClimbMotion", 0f, 0f, 1f)
 	private val simpleSpeedValue = FloatValue("Simple-Speed", 0.2F, 0.01F, 1F)
 
@@ -42,9 +43,9 @@ class WallClimb : Module()
 	@EventTarget
 	fun onUpdate(event: MotionEvent)
 	{
-		val thePlayer = mc.thePlayer
+		val thePlayer = mc.thePlayer ?: return
 
-		if (event.eventState != EventState.POST || thePlayer == null) return
+		if (event.eventState != EventState.POST) return
 
 		val onGround = thePlayer.onGround
 
@@ -89,7 +90,7 @@ class WallClimb : Module()
 			}
 			else if (onGround) aac3_3_12_steps = 0
 
-			"aacglide" ->
+			"aac3.3.8-glide" ->
 			{
 				if (!thePlayer.isCollidedHorizontally || thePlayer.isOnLadder) return
 

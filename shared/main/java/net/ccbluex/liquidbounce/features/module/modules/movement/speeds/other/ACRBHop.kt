@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
  * @author CCBlueX
  * @game   Minecraft
  */
-class ACRBHop : SpeedMode("AntiCheatReloaded-BHop")
+class ACRBHop : SpeedMode("ACR-BHop")
 {
 	override fun onMotion(eventState: EventState)
 	{

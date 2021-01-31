@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 @ModuleInfo(name = "IceSpeed", description = "Allows you to walk faster on ice.", category = ModuleCategory.MOVEMENT)
 class IceSpeed : Module()
 {
-	private val modeValue = ListValue("Mode", arrayOf("NCP", "AAC3.2.0", "Spartan"), "NCP")
+	private val modeValue = ListValue("Mode", arrayOf("NCP", "AAC3.2.0", "Spartan146"), "NCP")
 	override fun onEnable()
 	{
 		if (modeValue.get().equals("NCP", ignoreCase = true))
@@ -57,25 +57,26 @@ class IceSpeed : Module()
 					{
 						thePlayer.motionX *= 1.342
 						thePlayer.motionZ *= 1.342
+
 						classProvider.getBlockEnum(BlockType.ICE).slipperiness = 0.6f
 						classProvider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.6f
 					}
 				}
 
-				"spartan" -> getMaterial(thePlayer.position.down()).let {
+				"spartan146" -> getMaterial(thePlayer.position.down()).let {
 					if (it == classProvider.getBlockEnum(BlockType.ICE) || it == classProvider.getBlockEnum(BlockType.ICE_PACKED))
 					{
-						val upBlock: IBlock? = BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))
+						val blockAbove: IBlock? = BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))
 
-						if (!classProvider.isBlockAir(upBlock))
-						{
-							thePlayer.motionX *= 1.342
-							thePlayer.motionZ *= 1.342
-						}
-						else
+						if (classProvider.isBlockAir(blockAbove))
 						{
 							thePlayer.motionX *= 1.18
 							thePlayer.motionZ *= 1.18
+						}
+						else
+						{
+							thePlayer.motionX *= 1.342
+							thePlayer.motionZ *= 1.342
 						}
 
 						classProvider.getBlockEnum(BlockType.ICE).slipperiness = 0.6f

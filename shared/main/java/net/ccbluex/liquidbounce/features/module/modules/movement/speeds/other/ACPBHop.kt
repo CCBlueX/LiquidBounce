@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
  * @author CCBlueX
  * @game   Minecraft
  */
-class ACPBHop : SpeedMode("AntiCheatPlus-BHop")
+class ACPBHop : SpeedMode("ACP-BHop")
 {
 	override fun onMotion(eventState: EventState)
 	{

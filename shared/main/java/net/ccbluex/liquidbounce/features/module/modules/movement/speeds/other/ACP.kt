@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
  * @author CCBlueX
  * @game   Minecraft
  */
-class ACP : SpeedMode("AntiCheatPlus")
+class ACP : SpeedMode("ACP")
 {
 	override fun onMotion(eventState: EventState)
 	{

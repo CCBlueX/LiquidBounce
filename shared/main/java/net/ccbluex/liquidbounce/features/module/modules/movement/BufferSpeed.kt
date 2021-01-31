@@ -29,23 +29,36 @@ class BufferSpeed : Module()
 	private val maxSpeedValue = FloatValue("MaxSpeed", 2.0f, 1.0f, 5f)
 	private val bufferValue = BoolValue("Buffer", true)
 
+	// Stairs boost
 	private val stairsValue = BoolValue("Stairs", true)
 	private val stairsBoostValue = FloatValue("StairsBoost", 1.87f, 1f, 2f)
 	private val stairsModeValue = ListValue("StairsMode", arrayOf("Old", "New"), "New")
+
+	// Slabs boost
 	private val slabsValue = BoolValue("Slabs", true)
 	private val slabsBoostValue = FloatValue("SlabsBoost", 1.87f, 1f, 2f)
 	private val slabsModeValue = ListValue("SlabsMode", arrayOf("Old", "New"), "New")
+
+	// Ice boost (AAC3.3.6)
 	private val iceValue = BoolValue("Ice", false)
 	private val iceBoostValue = FloatValue("IceBoost", 1.342f, 1f, 2f)
+
+	// Snow boost
 	private val snowValue = BoolValue("Snow", true)
 	private val snowBoostValue = FloatValue("SnowBoost", 1.87f, 1f, 2f)
 	private val snowPortValue = BoolValue("SnowPort", true)
+
+	// Wall boost
 	private val wallValue = BoolValue("Wall", true)
 	private val wallBoostValue = FloatValue("WallBoost", 1.87f, 1f, 2f)
-	private val wallModeValue = ListValue("WallMode", arrayOf("Old", "New"), "New")
+	private val wallModeValue = ListValue("WallMode", arrayOf("AAC3.2.1", "AAC3.3.8"), "AAC3.3.8")
+
+	// HeadBlock(BlockAbove) boost
 	private val headBlockValue = BoolValue("HeadBlock", true)
 	private val headBlockBoostValue = FloatValue("HeadBlockBoost", 1.87f, 1f, 2f)
+
 	private val slimeValue = BoolValue("Slime", true)
+
 	private val airStrafeValue = BoolValue("AirStrafe", false)
 	private val noHurtValue = BoolValue("NoHurt", true)
 
@@ -80,7 +93,8 @@ class BufferSpeed : Module()
 		{
 			thePlayer.speedInAir = 0.0211f
 			hadFastHop = true
-		} else if (hadFastHop)
+		}
+		else if (hadFastHop)
 		{
 			thePlayer.speedInAir = 0.02f
 			hadFastHop = false
@@ -100,13 +114,14 @@ class BufferSpeed : Module()
 			{
 				thePlayer.jump()
 
-				thePlayer.motionX = thePlayer.motionY * 1.132
+				thePlayer.motionX *= 1.132
 				thePlayer.motionY = 0.08
-				thePlayer.motionZ = thePlayer.motionY * 1.132
+				thePlayer.motionZ *= 1.132
 
 				down = true
 				return
 			}
+
 			if (slabsValue.get() && classProvider.isBlockSlab(getBlock(blockPos)))
 			{
 				when (slabsModeValue.get().toLowerCase())
@@ -137,6 +152,7 @@ class BufferSpeed : Module()
 					}
 				}
 			}
+
 			if (stairsValue.get() && (classProvider.isBlockStairs(getBlock(blockPos.down())) || classProvider.isBlockStairs(getBlock(blockPos))))
 			{
 				when (stairsModeValue.get().toLowerCase())
@@ -169,7 +185,7 @@ class BufferSpeed : Module()
 			}
 			legitHop = true
 
-			if (headBlockValue.get() && getBlock(blockPos.up(2)) == classProvider.getBlockEnum(BlockType.AIR))
+			if (headBlockValue.get() && getBlock(blockPos.up(2)) != classProvider.getBlockEnum(BlockType.AIR))
 			{
 				boost(thePlayer, headBlockBoostValue.get())
 				return
@@ -183,7 +199,8 @@ class BufferSpeed : Module()
 
 			if (snowValue.get() && getBlock(blockPos) == classProvider.getBlockEnum(BlockType.SNOW_LAYER) && (snowPortValue.get() || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500))
 			{
-				if (thePlayer.posY - thePlayer.posY.toInt() >= 0.12500) boost(thePlayer, snowBoostValue.get()) else
+				if (thePlayer.posY - thePlayer.posY.toInt() >= 0.12500) boost(thePlayer, snowBoostValue.get())
+				else
 				{
 					thePlayer.jump()
 					forceDown = true
@@ -195,22 +212,24 @@ class BufferSpeed : Module()
 			{
 				when (wallModeValue.get().toLowerCase())
 				{
-					"old" -> if (thePlayer.isCollidedVertically && isNearBlock || !classProvider.isBlockAir(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))))
+					"aac3.2.1" -> if (thePlayer.isCollidedVertically && isNearBlock || !classProvider.isBlockAir(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))))
 					{
 						boost(thePlayer, wallBoostValue.get())
 						return
 					}
-					"new" -> if (isNearBlock && !thePlayer.movementInput.jump)
+
+					"aac3.3.8" -> if (isNearBlock && !thePlayer.movementInput.jump)
 					{
 						thePlayer.jump()
 						thePlayer.motionY = 0.08
-						thePlayer.motionX = thePlayer.motionX * 0.99
-						thePlayer.motionZ = thePlayer.motionX * 0.99
+						thePlayer.motionX *= 0.99
+						thePlayer.motionZ *= 0.99
 						down = true
 						return
 					}
 				}
 			}
+
 			val currentSpeed = MovementUtils.speed
 
 			if (speed < currentSpeed) speed = currentSpeed
@@ -220,7 +239,8 @@ class BufferSpeed : Module()
 				speed /= 1.0199999809265137F
 				MovementUtils.strafe(speed)
 			}
-		} else
+		}
+		else
 		{
 			speed = 0.0F
 
@@ -260,9 +280,8 @@ class BufferSpeed : Module()
 
 	private fun boost(thePlayer: IEntityPlayerSP, boost: Float)
 	{
-		thePlayer.motionX = thePlayer.motionX * boost
-		thePlayer.motionZ = thePlayer.motionX * boost
-
+		thePlayer.motionX *= boost
+		thePlayer.motionZ *= boost
 		speed = MovementUtils.speed
 
 		val maxSpeed = maxSpeedValue.get()
@@ -274,7 +293,7 @@ class BufferSpeed : Module()
 		{
 			val thePlayer = mc.thePlayer!!
 			val theWorld = mc.theWorld!!
-			val blocks: MutableList<WBlockPos> = ArrayList()
+			val blocks = ArrayDeque<WBlockPos>(4)
 
 			blocks.add(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7))
 			blocks.add(WBlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ))
@@ -287,10 +306,7 @@ class BufferSpeed : Module()
 
 				val collisionBoundingBox = blockState.block.getCollisionBoundingBox(theWorld, blockPos, blockState)
 
-				if ((collisionBoundingBox == null || collisionBoundingBox.maxX == collisionBoundingBox.minY + 1) && !blockState.block.isTranslucent(blockState) && blockState.block == classProvider.getBlockEnum(BlockType.WATER) && !classProvider.isBlockSlab(
-						blockState.block
-					) || blockState.block == classProvider.getBlockEnum(BlockType.BARRIER)
-				) return true
+				if ((collisionBoundingBox == null || collisionBoundingBox.maxX == collisionBoundingBox.minY + 1) && !blockState.block.isTranslucent(blockState) && blockState.block == classProvider.getBlockEnum(BlockType.WATER) && !classProvider.isBlockSlab(blockState.block) || blockState.block == classProvider.getBlockEnum(BlockType.BARRIER)) return true
 			}
 			return false
 		}

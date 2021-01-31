@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AAC3_1_7YPort : SpeedMode("AAC3.1.7-YPort")
+class AAC3_1_7YPort : SpeedMode("AAC3.2.2-YPort")
 {
 	override fun onMotion(eventState: EventState)
 	{

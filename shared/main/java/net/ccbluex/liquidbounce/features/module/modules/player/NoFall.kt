@@ -29,7 +29,7 @@ import kotlin.math.sqrt
 class NoFall : Module()
 {
 	@JvmField
-	val modeValue = ListValue("Mode", arrayOf("SpoofGround", "NoGround", "Packet", "MLG", "AAC3.1.0", "AAC3.3.4", "AAC3.3.11", "AAC3.3.15", "Spartan", "CubeCraft", "Hypixel", "AntiCheatPlus"), "SpoofGround")
+	val modeValue = ListValue("Mode", arrayOf("SpoofGround", "NoGround", "Packet", "MLG", "AAC3.1.0", "AAC3.3.4", "AAC3.3.11", "AAC3.3.15", "Spartan194", "CubeCraft", "Hypixel", "ACP"), "SpoofGround")
 
 	private val noSpoofTicks = IntegerValue("NoSpoofTicks", 0, 0, 5)
 	private val thresholdFallDistanceValue = FloatValue("ThresholdFallDistance", 1.5f, 0f, 2.9f)
@@ -161,7 +161,7 @@ class NoFall : Module()
 				thePlayer.fallDistance = -9999.0F
 			}
 
-			"spartan" ->
+			"spartan194" ->
 			{
 				spartanTimer.update()
 				if (fallDistance > thresholdFallDistance && spartanTimer.hasTimePassed(10))
@@ -202,8 +202,8 @@ class NoFall : Module()
 					noSpoof++
 				}
 
-				// AntiCheatPlus
-				else if (mode.equals("AntiCheatPlus", ignoreCase = true) /* && fallDistance > 2 */)
+				// ACP
+				else if (mode.equals("ACP", ignoreCase = true) /* && fallDistance > 2 */)
 				{
 					playerPacket.onGround = true
 

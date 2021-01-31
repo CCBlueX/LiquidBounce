@@ -22,9 +22,9 @@ import org.lwjgl.input.Keyboard
 @ModuleInfo(name = "LiquidWalk", description = "Allows you to walk on water.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_J)
 class LiquidWalk : Module()
 {
-	val modeValue = ListValue("Mode", arrayOf("Vanilla", "NCP", "AAC3.1.0", "AAC3.3.11", "AACFly", "Spartan-b146", "Dolphin"), "NCP")
+	val modeValue = ListValue("Mode", arrayOf("Vanilla", "NCP", "AAC3.1.0", "AAC3.3.5", "AAC3.3.11", "Spartan146", "Dolphin"), "NCP")
 	private val noJumpValue = BoolValue("NoJump", false)
-	private val aacFlyValue = FloatValue("AACFlyMotion", 0.5f, 0.1f, 1f)
+	private val aacFlyValue = FloatValue("AAC3.3.5-Motion", 0.5f, 0.1f, 1f)
 
 	private var nextTick = false
 
@@ -69,7 +69,7 @@ class LiquidWalk : Module()
 				if (thePlayer.hurtTime != 0) thePlayer.onGround = false
 			}
 
-			"spartan-b146" -> if (isInWater)
+			"spartan146" -> if (isInWater)
 			{
 				if (thePlayer.isCollidedHorizontally)
 				{
@@ -102,7 +102,7 @@ class LiquidWalk : Module()
 	fun onMove(event: MoveEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
-		if ("aacfly" == modeValue.get().toLowerCase() && thePlayer.isInWater)
+		if ("aac3.3.5" == modeValue.get().toLowerCase() && thePlayer.isInWater)
 		{
 			val aacFlyMotion = aacFlyValue.get().toDouble()
 

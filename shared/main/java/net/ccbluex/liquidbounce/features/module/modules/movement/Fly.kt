@@ -57,10 +57,10 @@ class Fly : Module()
 			"Mineplex", "NeruxVace", "Minesucht", "RedeSky", "MCCentral",
 
 			// Spartan
-			"Spartan", "SpartanGlide", "BugSpartan",
+			"Spartan185", "Spartan194", "BugSpartan",
 
 			// Other anticheats
-			"MineSecure", "HawkEye", "HAC", "WatchCat", "AntiCheatPlus",
+			"MineSecure", "HawkEye", "HAC", "WatchCat", "ACP",
 
 			// Other
 			"Jetpack", "KeepAlive", "Flag"
@@ -281,7 +281,7 @@ class Fly : Module()
 
 				"mccentral" -> mc.timer.timerSpeed = mccTimerSpeedValue.get()
 
-				"anticheatplus" -> networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 0.4, posZ, onGround))
+				"acp" -> networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 0.4, posZ, onGround))
 			}
 		}
 
@@ -662,7 +662,7 @@ class Fly : Module()
 					if (startY > posY) MovementUtils.strafe(0f)
 				}
 
-				"spartan" ->
+				"spartan185" ->
 				{
 					thePlayer.motionY = 0.0
 
@@ -675,7 +675,7 @@ class Fly : Module()
 					}
 				}
 
-				"spartanglide" ->
+				"spartan185glide" ->
 				{
 					MovementUtils.strafe(0.264f)
 
@@ -785,7 +785,7 @@ class Fly : Module()
 					thePlayer.motionY = -0.01
 				}
 
-				"anticheatplus" ->
+				"acp" ->
 				{
 					thePlayer.motionY = 0.0
 
@@ -843,7 +843,7 @@ class Fly : Module()
 				}
 			}
 		}
-		else if (modeValue.get().equals("AntiCheatPlus", ignoreCase = true))
+		else if (modeValue.get().equals("ACP", ignoreCase = true))
 		{
 			acpTickTimer.update()
 			if (acpTickTimer.hasTimePassed(4))

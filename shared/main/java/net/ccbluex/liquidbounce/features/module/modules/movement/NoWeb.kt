@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 class NoWeb : Module()
 {
 
-	private val modeValue = ListValue("Mode", arrayOf("None", "AAC", "AAC3.3.6-WebWalk", "Rewinside"), "None")
+	private val modeValue = ListValue("Mode", arrayOf("None", "AAC3.1.5", "AAC3.3.6-WebWalk", "Rewinside"), "None")
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
@@ -29,7 +29,7 @@ class NoWeb : Module()
 		{
 			"none" -> thePlayer.isInWeb = false
 
-			"aac" ->
+			"aac3.1.5" ->
 			{
 				thePlayer.jumpMovementFactor = 0.59f
 

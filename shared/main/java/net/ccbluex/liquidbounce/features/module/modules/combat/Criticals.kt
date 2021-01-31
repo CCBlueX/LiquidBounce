@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 class Criticals : Module()
 {
 
-	val modeValue = ListValue("Mode", arrayOf("Packet", "NcpPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"), "Packet")
+	val modeValue = ListValue("Mode", arrayOf("Packet", "NCPPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"), "Packet")
 	val delayValue = IntegerValue("Delay", 0, 0, 500)
 	private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
 
