@@ -108,7 +108,7 @@ class TpAura : Module()
 
 	// Blocking Status
 	var clientSideBlockingStatus = false
-	private var serverSideBlockingStatus = false
+	var serverSideBlockingStatus = false
 
 	override fun onEnable()
 	{

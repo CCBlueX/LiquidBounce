@@ -15,8 +15,10 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.TpAura
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -28,7 +30,6 @@ class NoSlow : Module()
 {
 
 	// Highly customizable values
-
 	private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1.0F, 0.2F, 1.0F)
 	private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1.0F, 0.2F, 1.0F)
 
@@ -40,13 +41,13 @@ class NoSlow : Module()
 
 	// NCP mode
 	private val ncpValue = BoolValue("Packet", true)
-	private val ncpPacketsDelayValue = IntegerValue("Packet-PacketsDelay", 0, 0, 2)
+	private val ncpPacketsDelayValue = IntegerValue("Packet-PacketsDelay", 0, 0, 3)
 
 	// Blocks
 	val soulsandValue = BoolValue("Soulsand", true)
 	val liquidPushValue = BoolValue("LiquidPush", true)
 
-	private var ncpDelay = ncpPacketsDelayValue.get()
+	private var ncpDelay = TickTimer()
 
 	@EventTarget
 	fun onMotion(event: MotionEvent)
@@ -57,20 +58,23 @@ class NoSlow : Module()
 		if (!classProvider.isItemSword(heldItem.item) || !MovementUtils.isMoving) return
 
 		val aura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-		if (!thePlayer.isBlocking && !aura.serverSideBlockingStatus) return
+		val tpaura = LiquidBounce.moduleManager[TpAura::class.java] as TpAura
+
+		if (!thePlayer.isBlocking && !aura.serverSideBlockingStatus && !tpaura.serverSideBlockingStatus) return
 
 		val netHandler = mc.netHandler
 
-		if (ncpValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8 && ++ncpDelay > ncpPacketsDelayValue.get())
+		if (ncpValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8 && ncpDelay.hasTimePassed(ncpPacketsDelayValue.get()))
 		{
 			when (event.eventState)
 			{
 				EventState.PRE -> netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), classProvider.getEnumFacing(EnumFacingType.DOWN)))
-				EventState.POST -> netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F))
+				EventState.POST -> netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, thePlayer.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F))
 			}
 
-			ncpDelay = 0
+			ncpDelay.reset()
 		}
+		ncpDelay.update()
 	}
 
 	@EventTarget
