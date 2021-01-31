@@ -161,9 +161,7 @@ object ColorUtils : MinecraftInstance()
 	fun rainbow(offset: Long, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color
 	{
 		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(9 + (11 - speed.coerceAtLeast(1).coerceAtMost(10))) % 1, saturation, brightness))
-		return Color(
-			currentColor.red / 255F * 1F, currentColor.green / 255F * 1F, currentColor.blue / 255F * 1F, currentColor.alpha / 255F
-		)
+		return Color(currentColor.red / 255F * 1F, currentColor.green / 255F * 1F, currentColor.blue / 255F * 1F, currentColor.alpha / 255F)
 	}
 
 	@JvmStatic

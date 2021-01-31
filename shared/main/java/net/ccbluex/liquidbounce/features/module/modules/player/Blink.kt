@@ -91,9 +91,7 @@ class Blink : Module()
 		//		if (classProvider.isCPacketPlayer(packet)) // Cancel all movement stuff
 		//			event.cancelEvent()
 
-		if (classProvider.isCPacketPlayer(packet) || classProvider.isCPacketPlayerPosition(packet) || classProvider.isCPacketPlayerPosLook(packet) || classProvider.isCPacketPlayerBlockPlacement(packet) || classProvider.isCPacketAnimation(packet) || classProvider.isCPacketEntityAction(
-				packet
-			) || classProvider.isCPacketUseEntity(packet))
+		if (classProvider.isCPacketPlayer(packet) || classProvider.isCPacketPlayerPosition(packet) || classProvider.isCPacketPlayerPosLook(packet) || classProvider.isCPacketPlayerBlockPlacement(packet) || classProvider.isCPacketAnimation(packet) || classProvider.isCPacketEntityAction(packet) || classProvider.isCPacketUseEntity(packet))
 		{
 			event.cancelEvent()
 			packets.add(packet)
