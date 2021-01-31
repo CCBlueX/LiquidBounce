@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.isEnemy
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
@@ -65,8 +66,6 @@ class TpAura : Module()
 		}
 	}
 
-	private val pathEspValue = BoolValue("PathESP", true)
-	private val pathEspTime = IntegerValue("PathESPTime", 1000, 100, 3000)
 	private val rangeValue = FloatValue("Range", 30.0f, 6.1f, 1000.0f)
 	private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
 	val maxTargetsValue = IntegerValue("MaxTargets", 4, 1, 50)
@@ -77,6 +76,19 @@ class TpAura : Module()
 		), "Packet"
 	)
 	private val swingValue = BoolValue("Swing", true)
+
+	private val pathEspValue = BoolValue("PathESP", true)
+	private val pathEspTime = IntegerValue("PathESPTime", 1000, 100, 3000)
+
+	private val colorRedValue = IntegerValue("PathESP-Red", 255, 0, 255)
+	private val colorGreenValue = IntegerValue("PathESP-Green", 179, 0, 255)
+	private val colorBlueValue = IntegerValue("PathESP-Blue", 72, 0, 255)
+
+	private val colorRainbow = BoolValue("PathESP-Rainbow", false)
+	private val rainbowSpeedValue = IntegerValue("PathESP-RainbowSpeed", 10, 1, 10)
+	private val rainbowOffsetValue = IntegerValue("PathESP-RainbowIndexOffset", 0, -100, 100)
+	private val saturationValue = FloatValue("PathESP-RainbowHSB-Saturation", 1.0f, 0.0f, 1.0f)
+	private val brightnessValue = FloatValue("PathESP-RainbowHSB-Brightness", 1.0f, 0.0f, 1.0f)
 
 	/**
 	 * Variables
@@ -187,16 +199,46 @@ class TpAura : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
+		val renderManager = mc.renderManager
+		val viewerPosX = renderManager.viewerPosX
+		val viewerPosY = renderManager.viewerPosY
+		val viewerPosZ = renderManager.viewerPosZ
+
 		if (currentPath.isNotEmpty() && pathEspValue.get())
 		{
-			for (targetPath in targetPaths) try
-			{
-				targetPath.asSequence().filterNotNull().forEach(::drawPath)
-			}
-			catch (e: Exception)
-			{
+			val rainbow = colorRainbow.get()
+			val saturation = saturationValue.get()
+			val brightness = brightnessValue.get()
+			val rainbowOffsetVal = 400000000L + 40000000L * rainbowOffsetValue.get()
+			val rainbowSpeed = rainbowSpeedValue.get()
+			val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
-				// it seems sometime there is unknown interruption on these codes.
+			val entityRenderer = mc.entityRenderer
+
+			targetPaths.forEachIndexed { index, targetPath ->
+				val color = if (rainbow) ColorUtils.rainbow(offset = index * rainbowOffsetVal, speed = rainbowSpeed, saturation = saturation, brightness = brightness) else customColor
+
+				GL11.glPushMatrix()
+				GL11.glDisable(GL11.GL_TEXTURE_2D)
+				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
+				GL11.glEnable(GL11.GL_LINE_SMOOTH)
+				GL11.glEnable(GL11.GL_BLEND)
+				GL11.glDisable(GL11.GL_DEPTH_TEST)
+				entityRenderer.disableLightmap()
+
+				GL11.glBegin(GL11.GL_LINE_STRIP)
+				RenderUtils.glColor(color)
+
+				targetPath.asSequence().filterNotNull().forEach { GL11.glVertex3d(it.xCoord - viewerPosX, it.yCoord - viewerPosY, it.zCoord - viewerPosZ) }
+
+				GL11.glColor4d(1.0, 1.0, 1.0, 1.0)
+				GL11.glEnd()
+
+				GL11.glEnable(GL11.GL_DEPTH_TEST)
+				GL11.glDisable(GL11.GL_LINE_SMOOTH)
+				GL11.glDisable(GL11.GL_BLEND)
+				GL11.glEnable(GL11.GL_TEXTURE_2D)
+				GL11.glPopMatrix()
 			}
 
 			if (attackTimer.hasTimePassed(pathEspTime.get().toLong()))
@@ -295,73 +337,6 @@ class TpAura : Module()
 			) || classProvider.getBlockEnum(BlockType.LADDER) == block || classProvider.getBlockEnum(BlockType.WATER) == block || classProvider.getBlockEnum(BlockType.FLOWING_WATER) == block || classProvider.getBlockEnum(BlockType.WALL_SIGN) == block || classProvider.getBlockEnum(
 				BlockType.STANDING_SIGN
 			) == block
-		}
-
-		fun drawPath(vec: WVec3)
-		{
-			val thePlayer = mc.thePlayer ?: return
-
-			val x = vec.xCoord - mc.renderManager.renderPosX
-			val y = vec.yCoord - mc.renderManager.renderPosY
-			val z = vec.zCoord - mc.renderManager.renderPosZ
-			val height = thePlayer.eyeHeight.toDouble()
-
-			// pre3D
-			GL11.glPushMatrix()
-			GL11.glEnable(GL11.GL_BLEND)
-			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-			GL11.glShadeModel(GL11.GL_SMOOTH)
-			GL11.glDisable(GL11.GL_TEXTURE_2D)
-			GL11.glEnable(GL11.GL_LINE_SMOOTH)
-			GL11.glDisable(GL11.GL_DEPTH_TEST)
-			GL11.glDisable(GL11.GL_LIGHTING)
-			GL11.glDepthMask(false)
-			GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST)
-			GL11.glLoadIdentity()
-			mc.entityRenderer.setupCameraTransform(mc.timer.renderPartialTicks, 2)
-			val colors = arrayOf(
-				Color.black, Color.white
-			)
-			val width = 0.3
-			for (i in 0..1)
-			{
-				RenderUtils.glColor(colors[i])
-				GL11.glLineWidth((3 - (i shl 1)).toFloat())
-				GL11.glBegin(GL11.GL_LINE_STRIP)
-				GL11.glVertex3d(x - width, y, z - width)
-				GL11.glVertex3d(x - width, y, z - width)
-				GL11.glVertex3d(x - width, y + height, z - width)
-				GL11.glVertex3d(x + width, y + height, z - width)
-				GL11.glVertex3d(x + width, y, z - width)
-				GL11.glVertex3d(x - width, y, z - width)
-				GL11.glVertex3d(x - width, y, z + width)
-				GL11.glEnd()
-				GL11.glBegin(GL11.GL_LINE_STRIP)
-				GL11.glVertex3d(x + width, y, z + width)
-				GL11.glVertex3d(x + width, y + height, z + width)
-				GL11.glVertex3d(x - width, y + height, z + width)
-				GL11.glVertex3d(x - width, y, z + width)
-				GL11.glVertex3d(x + width, y, z + width)
-				GL11.glVertex3d(x + width, y, z - width)
-				GL11.glEnd()
-				GL11.glBegin(GL11.GL_LINE_STRIP)
-				GL11.glVertex3d(x + width, y + height, z + width)
-				GL11.glVertex3d(x + width, y + height, z - width)
-				GL11.glEnd()
-				GL11.glBegin(GL11.GL_LINE_STRIP)
-				GL11.glVertex3d(x - width, y + height, z + width)
-				GL11.glVertex3d(x - width, y + height, z - width)
-				GL11.glEnd()
-			}
-
-			// post3D
-			GL11.glDepthMask(true)
-			GL11.glEnable(GL11.GL_DEPTH_TEST)
-			GL11.glDisable(GL11.GL_LINE_SMOOTH)
-			GL11.glEnable(GL11.GL_TEXTURE_2D)
-			GL11.glDisable(GL11.GL_BLEND)
-			GL11.glPopMatrix()
-			GL11.glColor4f(1f, 1f, 1f, 1f)
 		}
 	}
 }

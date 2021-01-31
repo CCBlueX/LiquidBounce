@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.utils.RaycastUtils.EntityFilter
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -43,9 +44,19 @@ class ExtendedReach : Module()
 
 	@JvmField
 	val buildReach = FloatValue("BuildReach", 100F, 6F, 128F)
-	private val pathEspValue = BoolValue("PathESP", true)
-	private val pathEspTimeValue = IntegerValue("PathESPTime", 1000, 100, 3000)
 	private val maxDashDistanceValue = IntegerValue("DashDistance", 5, 1, 10)
+
+	private val pathEspValue = BoolValue("PathESP", true)
+	private val pathEspTime = IntegerValue("PathESPTime", 1000, 100, 3000)
+
+	private val colorRedValue = IntegerValue("PathESP-Red", 255, 0, 255)
+	private val colorGreenValue = IntegerValue("PathESP-Green", 179, 0, 255)
+	private val colorBlueValue = IntegerValue("PathESP-Blue", 72, 0, 255)
+
+	private val colorRainbow = BoolValue("PathESP-Rainbow", false)
+	private val rainbowSpeedValue = IntegerValue("PathESP-RainbowSpeed", 10, 1, 10)
+	private val saturationValue = FloatValue("PathESP-RainbowHSB-Saturation", 1.0f, 0.0f, 1.0f)
+	private val brightnessValue = FloatValue("PathESP-RainbowHSB-Brightness", 1.0f, 0.0f, 1.0f)
 
 	/**
 	 * Variables
@@ -66,8 +77,38 @@ class ExtendedReach : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
-		val thePlayer = mc.thePlayer ?: return
-		if (pathEspValue.get() && path.isNotEmpty() && !pathESPTimer.hasTimePassed(pathEspTimeValue.get().toLong())) for (pos in path) drawPath(thePlayer, pos)
+		val renderManager = mc.renderManager
+		val viewerPosX = renderManager.viewerPosX
+		val viewerPosY = renderManager.viewerPosY
+		val viewerPosZ = renderManager.viewerPosZ
+
+		if (pathEspValue.get() && path.isNotEmpty() && !pathESPTimer.hasTimePassed(pathEspTime.get().toLong()))
+		{
+			val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+			val color = if (colorRainbow.get()) ColorUtils.rainbow(speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else customColor
+
+			GL11.glPushMatrix()
+			GL11.glDisable(GL11.GL_TEXTURE_2D)
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
+			GL11.glEnable(GL11.GL_LINE_SMOOTH)
+			GL11.glEnable(GL11.GL_BLEND)
+			GL11.glDisable(GL11.GL_DEPTH_TEST)
+			mc.entityRenderer.disableLightmap()
+
+			GL11.glBegin(GL11.GL_LINE_STRIP)
+			RenderUtils.glColor(color)
+
+			path.asSequence().filterNotNull().forEach { GL11.glVertex3d(it.xCoord - viewerPosX, it.yCoord - viewerPosY, it.zCoord - viewerPosZ) }
+
+			GL11.glColor4d(1.0, 1.0, 1.0, 1.0)
+			GL11.glEnd()
+
+			GL11.glEnable(GL11.GL_DEPTH_TEST)
+			GL11.glDisable(GL11.GL_LINE_SMOOTH)
+			GL11.glDisable(GL11.GL_BLEND)
+			GL11.glEnable(GL11.GL_TEXTURE_2D)
+			GL11.glPopMatrix()
+		}
 	}
 
 	@EventTarget

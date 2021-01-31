@@ -118,19 +118,17 @@ class Blink : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
-
 		// The color settings are depended on BreadCrumb's
 		val breadcrumbs = LiquidBounce.moduleManager[Breadcrumbs::class.java] as Breadcrumbs
-		val color = if (breadcrumbs.colorRainbow.get()) rainbow(saturation = breadcrumbs.saturationValue.get(), brightness = breadcrumbs.brightnessValue.get())
-		else Color(
-			breadcrumbs.colorRedValue.get(), breadcrumbs.colorGreenValue.get(), breadcrumbs.colorBlueValue.get()
-		)
+		val color = if (breadcrumbs.colorRainbow.get()) rainbow(saturation = breadcrumbs.saturationValue.get(), brightness = breadcrumbs.brightnessValue.get()) else Color(breadcrumbs.colorRedValue.get(), breadcrumbs.colorGreenValue.get(), breadcrumbs.colorBlueValue.get())
 
 		// Draw the positions
 		val renderManager = mc.renderManager
 		val viewerPosX = renderManager.viewerPosX
 		val viewerPosY = renderManager.viewerPosY
 		val viewerPosZ = renderManager.viewerPosZ
+
+		val entityRenderer = mc.entityRenderer
 
 		synchronized(positions) {
 			GL11.glPushMatrix()
@@ -139,7 +137,7 @@ class Blink : Module()
 			GL11.glEnable(GL11.GL_LINE_SMOOTH)
 			GL11.glEnable(GL11.GL_BLEND)
 			GL11.glDisable(GL11.GL_DEPTH_TEST)
-			mc.entityRenderer.disableLightmap()
+			entityRenderer.disableLightmap()
 
 			GL11.glBegin(GL11.GL_LINE_STRIP)
 			RenderUtils.glColor(color)

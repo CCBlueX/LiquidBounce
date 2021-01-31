@@ -38,6 +38,13 @@ class Breadcrumbs : Module()
 	{
 		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
+		val renderManager = mc.renderManager
+		val renderPosX = renderManager.viewerPosX
+		val renderPosY = renderManager.viewerPosY
+		val renderPosZ = renderManager.viewerPosZ
+
+		val entityRenderer = mc.entityRenderer
+
 		synchronized(positions) {
 			GL11.glPushMatrix()
 			GL11.glDisable(GL11.GL_TEXTURE_2D)
@@ -46,15 +53,10 @@ class Breadcrumbs : Module()
 			GL11.glEnable(GL11.GL_BLEND)
 			GL11.glDisable(GL11.GL_DEPTH_TEST)
 
-			mc.entityRenderer.disableLightmap()
+			entityRenderer.disableLightmap()
 
 			GL11.glBegin(GL11.GL_LINE_STRIP)
 			RenderUtils.glColor(color)
-
-			val renderManager = mc.renderManager
-			val renderPosX = renderManager.viewerPosX
-			val renderPosY = renderManager.viewerPosY
-			val renderPosZ = renderManager.viewerPosZ
 
 			for (pos in positions) GL11.glVertex3d(pos[0] - renderPosX, pos[1] - renderPosY, pos[2] - renderPosZ)
 
