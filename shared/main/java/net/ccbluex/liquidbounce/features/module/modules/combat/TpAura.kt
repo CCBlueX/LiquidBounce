@@ -274,15 +274,17 @@ class TpAura : Module()
 			{
 				var canContinueSearching = true
 				val maxDashDistance = maxDashDistanceValue.get().toFloat()
-				if (currentPathFinderPath.squareDistanceTo(lastEndPath!!) > maxDashDistance * maxDashDistance) canContinueSearching = false
+				val lastEndPathChecked = lastEndPath!!
+
+				if (currentPathFinderPath.squareDistanceTo(lastEndPathChecked) > maxDashDistance * maxDashDistance) canContinueSearching = false
 				else
 				{
-					val minX = min(lastEndPath!!.xCoord, currentPathFinderPath.xCoord)
-					val minY = min(lastEndPath!!.yCoord, currentPathFinderPath.yCoord)
-					val minZ = min(lastEndPath!!.zCoord, currentPathFinderPath.zCoord)
-					val maxX = max(lastEndPath!!.xCoord, currentPathFinderPath.xCoord)
-					val maxY = max(lastEndPath!!.yCoord, currentPathFinderPath.yCoord)
-					val maxZ = max(lastEndPath!!.zCoord, currentPathFinderPath.zCoord)
+					val minX = min(lastEndPathChecked.xCoord, currentPathFinderPath.xCoord)
+					val minY = min(lastEndPathChecked.yCoord, currentPathFinderPath.yCoord)
+					val minZ = min(lastEndPathChecked.zCoord, currentPathFinderPath.zCoord)
+					val maxX = max(lastEndPathChecked.xCoord, currentPathFinderPath.xCoord)
+					val maxY = max(lastEndPathChecked.yCoord, currentPathFinderPath.yCoord)
+					val maxZ = max(lastEndPathChecked.zCoord, currentPathFinderPath.zCoord)
 					var x = minX.toInt()
 					cordsLoop@ while (x <= maxX)
 					{
@@ -304,6 +306,7 @@ class TpAura : Module()
 						x++
 					}
 				}
+
 				if (!canContinueSearching)
 				{
 					path.add(lastPath!!.addVector(0.5, 0.0, 0.5))
@@ -332,11 +335,7 @@ class TpAura : Module()
 			val state = getState(WBlockPos(pos.x, pos.y, pos.z))
 			val block = state!!.block
 
-			return classProvider.getMaterialEnum(MaterialType.AIR) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.PLANTS) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.VINE) == block.getMaterial(
-				state
-			) || classProvider.getBlockEnum(BlockType.LADDER) == block || classProvider.getBlockEnum(BlockType.WATER) == block || classProvider.getBlockEnum(BlockType.FLOWING_WATER) == block || classProvider.getBlockEnum(BlockType.WALL_SIGN) == block || classProvider.getBlockEnum(
-				BlockType.STANDING_SIGN
-			) == block
+			return classProvider.getMaterialEnum(MaterialType.AIR) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.PLANTS) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.VINE) == block.getMaterial(state) || classProvider.getBlockEnum(BlockType.LADDER) == block || classProvider.getBlockEnum(BlockType.WATER) == block || classProvider.getBlockEnum(BlockType.FLOWING_WATER) == block || classProvider.getBlockEnum(BlockType.WALL_SIGN) == block || classProvider.getBlockEnum(BlockType.STANDING_SIGN) == block
 		}
 	}
 }

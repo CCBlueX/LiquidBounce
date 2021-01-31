@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.MaterialType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
@@ -188,31 +187,38 @@ class ExtendedReach : Module()
 			})
 
 			var targetEntity: IEntityLivingBase? = null
+			val from = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 
 			if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true) && thePlayer.getDistanceSqToEntity(facedEntity!!) >= 1) targetEntity = facedEntity.asEntityLivingBase()
+
 			if (targetEntity != null)
 			{
-				val from = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 				val to = WVec3(targetEntity.posX, targetEntity.posY, targetEntity.posZ)
+
+				// Compute the path
 				path = computePath(from, to)
 
 				// Travel to the target entity.
-
 				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+
 				pathESPTimer.reset()
 				thePlayer.swingItem()
 
 				// Make AutoWeapon compatible
 				var sendAttack = true
 				val attackPacket: IPacket = classProvider.createCPacketUseEntity(targetEntity, ICPacketUseEntity.WAction.ATTACK)
+
 				val autoWeapon = LiquidBounce.moduleManager[AutoWeapon::class.java] as AutoWeapon
 				if (autoWeapon.state)
 				{
 					val packetEvent = PacketEvent(attackPacket)
 					autoWeapon.onPacket(packetEvent)
+
 					if (packetEvent.isCancelled) sendAttack = false
 				}
+
 				if (sendAttack) netHandler.addToSendQueue(attackPacket)
+
 				thePlayer.onCriticalHit(targetEntity)
 
 				// Go back to the home.
@@ -231,33 +237,34 @@ class ExtendedReach : Module()
 		val pathfinder = PathFinder(topFromPos, to)
 		pathfinder.compute()
 
-		var lastLoc: WVec3? = null
-		var lastDashLoc: WVec3? = null
+		var lastPos: WVec3? = null
+		var lastDashPos: WVec3? = null
 		val path = mutableListOf<WVec3>()
 		val pathFinderPath = pathfinder.path
 
 		pathFinderPath.forEachIndexed { i, pathElm ->
 			if (i == 0 || i == pathFinderPath.size - 1)
 			{
-				if (lastLoc != null) path.add(lastLoc!!.addVector(0.5, 0.0, 0.5))
+				if (lastPos != null) path.add(lastPos!!.addVector(0.5, 0.0, 0.5))
+
 				path.add(pathElm.addVector(0.5, 0.0, 0.5))
-				lastDashLoc = pathElm
+				lastDashPos = pathElm
 			}
 			else
 			{
 				var stop = false
 				val maxDashDistance = maxDashDistanceValue.get().toFloat()
-				val lastDashLocChecked = lastDashLoc!!
+				val lastDashPosChecked = lastDashPos!!
 
-				if (pathElm.squareDistanceTo(lastDashLocChecked) > maxDashDistance * maxDashDistance) stop = true
+				if (pathElm.squareDistanceTo(lastDashPosChecked) > maxDashDistance * maxDashDistance) stop = true
 				else
 				{
-					val minX = min(lastDashLocChecked.xCoord, pathElm.xCoord)
-					val minY = min(lastDashLocChecked.yCoord, pathElm.yCoord)
-					val minZ = min(lastDashLocChecked.zCoord, pathElm.zCoord)
-					val maxX = max(lastDashLocChecked.xCoord, pathElm.xCoord)
-					val maxY = max(lastDashLocChecked.yCoord, pathElm.yCoord)
-					val maxZ = max(lastDashLocChecked.zCoord, pathElm.zCoord)
+					val minX = min(lastDashPosChecked.xCoord, pathElm.xCoord)
+					val minY = min(lastDashPosChecked.yCoord, pathElm.yCoord)
+					val minZ = min(lastDashPosChecked.zCoord, pathElm.zCoord)
+					val maxX = max(lastDashPosChecked.xCoord, pathElm.xCoord)
+					val maxY = max(lastDashPosChecked.yCoord, pathElm.yCoord)
+					val maxZ = max(lastDashPosChecked.zCoord, pathElm.zCoord)
 
 					var x = minX.toInt()
 					coordsLoop@ while (x <= maxX)
@@ -283,12 +290,12 @@ class ExtendedReach : Module()
 
 				if (stop)
 				{
-					path.add(lastLoc!!.addVector(0.5, 0.0, 0.5))
-					lastDashLoc = lastLoc
+					path.add(lastPos!!.addVector(0.5, 0.0, 0.5))
+					lastDashPos = lastPos
 				}
 			}
 
-			lastLoc = pathElm
+			lastPos = pathElm
 		}
 		return path
 	}
@@ -302,81 +309,7 @@ class ExtendedReach : Module()
 		{
 			val state = getState(WBlockPos(pos.x, pos.y, pos.z))
 			val block = state!!.block
-			return classProvider.getMaterialEnum(MaterialType.AIR) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.PLANTS) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.VINE) == block.getMaterial(
-				state
-			) || classProvider.getBlockEnum(BlockType.LADDER) == block || classProvider.getBlockEnum(BlockType.WATER) == block || classProvider.getBlockEnum(BlockType.FLOWING_WATER) == block || classProvider.getBlockEnum(BlockType.WALL_SIGN) == block || classProvider.getBlockEnum(
-				BlockType.STANDING_SIGN
-			) == block
-		}
-
-		private fun drawPath(thePlayer: IEntityPlayerSP, vec: WVec3)
-		{
-			val height = thePlayer.eyeHeight.toDouble()
-
-			val renderManager = mc.renderManager
-			val x = vec.xCoord - renderManager.renderPosX
-			val y = vec.yCoord - renderManager.renderPosY
-			val z = vec.zCoord - renderManager.renderPosZ
-
-			// RenderUtils.pre3D()
-			GL11.glPushMatrix()
-			GL11.glEnable(GL11.GL_BLEND)
-			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-			GL11.glShadeModel(GL11.GL_SMOOTH)
-			GL11.glDisable(GL11.GL_TEXTURE_2D)
-			GL11.glEnable(GL11.GL_LINE_SMOOTH)
-			GL11.glDisable(GL11.GL_DEPTH_TEST)
-			GL11.glDisable(GL11.GL_LIGHTING)
-			GL11.glDepthMask(false)
-			GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST)
-			GL11.glLoadIdentity()
-
-			mc.entityRenderer.setupCameraTransform(mc.timer.renderPartialTicks, 2)
-
-			val colors = arrayOf(
-				Color.black, Color.white
-			)
-			val width = 0.3
-
-			for (i in 0..1)
-			{
-				RenderUtils.glColor(colors[i])
-				GL11.glLineWidth((3 - (i shl 1)).toFloat())
-				GL11.glBegin(GL11.GL_LINE_STRIP)
-				GL11.glVertex3d(x - width, y, z - width)
-				GL11.glVertex3d(x - width, y, z - width)
-				GL11.glVertex3d(x - width, y + height, z - width)
-				GL11.glVertex3d(x + width, y + height, z - width)
-				GL11.glVertex3d(x + width, y, z - width)
-				GL11.glVertex3d(x - width, y, z - width)
-				GL11.glVertex3d(x - width, y, z + width)
-				GL11.glEnd()
-				GL11.glBegin(GL11.GL_LINE_STRIP)
-				GL11.glVertex3d(x + width, y, z + width)
-				GL11.glVertex3d(x + width, y + height, z + width)
-				GL11.glVertex3d(x - width, y + height, z + width)
-				GL11.glVertex3d(x - width, y, z + width)
-				GL11.glVertex3d(x + width, y, z + width)
-				GL11.glVertex3d(x + width, y, z - width)
-				GL11.glEnd()
-				GL11.glBegin(GL11.GL_LINE_STRIP)
-				GL11.glVertex3d(x + width, y + height, z + width)
-				GL11.glVertex3d(x + width, y + height, z - width)
-				GL11.glEnd()
-				GL11.glBegin(GL11.GL_LINE_STRIP)
-				GL11.glVertex3d(x - width, y + height, z + width)
-				GL11.glVertex3d(x - width, y + height, z - width)
-				GL11.glEnd()
-			}
-
-			// RenderUtils.post3D()
-			GL11.glDepthMask(true)
-			GL11.glEnable(GL11.GL_DEPTH_TEST)
-			GL11.glDisable(GL11.GL_LINE_SMOOTH)
-			GL11.glEnable(GL11.GL_TEXTURE_2D)
-			GL11.glDisable(GL11.GL_BLEND)
-			GL11.glPopMatrix()
-			GL11.glColor4f(1f, 1f, 1f, 1f)
+			return classProvider.getMaterialEnum(MaterialType.AIR) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.PLANTS) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.VINE) == block.getMaterial(state) || classProvider.getBlockEnum(BlockType.LADDER) == block || classProvider.getBlockEnum(BlockType.WATER) == block || classProvider.getBlockEnum(BlockType.FLOWING_WATER) == block || classProvider.getBlockEnum(BlockType.WALL_SIGN) == block || classProvider.getBlockEnum(BlockType.STANDING_SIGN) == block
 		}
 	}
 }
