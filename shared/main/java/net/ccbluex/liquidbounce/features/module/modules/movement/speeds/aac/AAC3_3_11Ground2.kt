@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AAC3_3_11Ground2 : SpeedMode("AAC3.3.11-Ground2")
+class AAC3_3_11Ground2 : SpeedMode("AAC3.3.11-Ground2") // Was AACGround2
 {
 	override fun onMotion(eventState: EventState)
 	{

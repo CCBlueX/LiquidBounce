@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class HypixelBHop : SpeedMode("HypixelHop")
+class HypixelHop : SpeedMode("HypixelHop")
 {
 	override fun onMotion(eventState: EventState)
 	{

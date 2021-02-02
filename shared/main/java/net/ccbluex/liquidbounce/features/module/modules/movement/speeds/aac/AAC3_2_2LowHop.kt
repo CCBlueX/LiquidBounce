@@ -12,25 +12,13 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AAC3_1_5FastLowHop : SpeedMode("AAC3.1.5-FastLowHop") // Was AACLowHop2
+class AAC3_2_2LowHop : SpeedMode("AAC3.2.2-LowHop") // Was AAC3BHop
 {
 	private var firstLegitJump = false
 
-	override fun onEnable()
-	{
-		firstLegitJump = true
-		mc.timer.timerSpeed = 1f
-	}
-
-	override fun onDisable()
-	{
-		mc.timer.timerSpeed = 1f
-	}
-
-	override fun onMotion(eventState: EventState)
+	override fun onTick()
 	{
 		val thePlayer = mc.thePlayer ?: return
-		if (eventState != EventState.PRE) return
 
 		mc.timer.timerSpeed = 1f
 
@@ -38,21 +26,35 @@ class AAC3_1_5FastLowHop : SpeedMode("AAC3.1.5-FastLowHop") // Was AACLowHop2
 
 		if (MovementUtils.isMoving)
 		{
-			mc.timer.timerSpeed = 1.09f
-
-			if (thePlayer.onGround)
+			when
 			{
-				if (firstLegitJump)
+				// Jump
+				thePlayer.onGround ->
 				{
-					jump(thePlayer)
-					firstLegitJump = false
-					return
+					// Legit jump on the first
+					if (firstLegitJump)
+					{
+						jump(thePlayer)
+						firstLegitJump = false
+						return
+					}
+
+					MovementUtils.strafe(0.374f)
+
+					thePlayer.motionY = 0.3852
+					LiquidBounce.eventManager.callEvent(JumpEvent(0.3852f))
+
+					thePlayer.onGround = false
 				}
 
-				MovementUtils.strafe(0.534f)
+				// Going down
+				thePlayer.motionY < 0.0 ->
+				{
+					thePlayer.speedInAir = 0.0201f
+					mc.timer.timerSpeed = 1.02f
+				}
 
-				thePlayer.motionY = 0.343
-				LiquidBounce.eventManager.callEvent(JumpEvent(0.343f))
+				else -> mc.timer.timerSpeed = 1.01f
 			}
 		}
 		else
@@ -64,11 +66,21 @@ class AAC3_1_5FastLowHop : SpeedMode("AAC3.1.5-FastLowHop") // Was AACLowHop2
 		}
 	}
 
+	override fun onMotion(eventState: EventState)
+	{
+	}
+
 	override fun onUpdate()
 	{
 	}
 
 	override fun onMove(event: MoveEvent)
 	{
+	}
+
+	override fun onDisable()
+	{
+		(mc.thePlayer ?: return).speedInAir = 0.02f
+		mc.timer.timerSpeed = 1f
 	}
 }

@@ -12,46 +12,49 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AAC3_0_3BHop : SpeedMode("AAC3.0.3-BHop")
+class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 {
-	override fun onMotion(eventState: EventState)
+	private var firstLegitJump = false
+	override fun onUpdate()
 	{
 		val thePlayer = mc.thePlayer ?: return
-		if (eventState != EventState.PRE) return
+
+		mc.timer.timerSpeed = 1f
 
 		if (thePlayer.isInWater) return
-
 		if (MovementUtils.isMoving)
 		{
-			mc.timer.timerSpeed = 1.08f
-
 			if (thePlayer.onGround)
 			{
-				val dir = MovementUtils.direction
-				thePlayer.motionX -= functions.sin(dir) * 0.2f
-				thePlayer.motionZ += functions.cos(dir) * 0.2f
+				if (firstLegitJump)
+				{
+					thePlayer.motionY = 0.4
+					MovementUtils.strafe(0.15f)
+					thePlayer.onGround = false
+					LiquidBounce.eventManager.callEvent(JumpEvent(0.4f))
+					firstLegitJump = false
+					return
+				}
 
-				thePlayer.motionY = 0.399
-				LiquidBounce.eventManager.callEvent(JumpEvent(0.399f))
+				thePlayer.motionY = 0.41
+				MovementUtils.strafe(0.47458485f)
+				LiquidBounce.eventManager.callEvent(JumpEvent(0.41f))
+			}
 
-				mc.timer.timerSpeed = 2f
-			}
-			else
-			{
-				thePlayer.motionY *= 0.97
-				thePlayer.motionX *= 1.008
-				thePlayer.motionZ *= 1.008
-			}
+			if (thePlayer.motionY < 0 && thePlayer.motionY > -0.2) mc.timer.timerSpeed = (1.2f + thePlayer.motionY).toFloat()
+
+			thePlayer.speedInAir = 0.022151f
 		}
 		else
 		{
+			firstLegitJump = true
+
 			thePlayer.motionX = 0.0
 			thePlayer.motionZ = 0.0
-			mc.timer.timerSpeed = 1f
 		}
 	}
 
-	override fun onUpdate()
+	override fun onMotion(eventState: EventState)
 	{
 	}
 
@@ -59,8 +62,14 @@ class AAC3_0_3BHop : SpeedMode("AAC3.0.3-BHop")
 	{
 	}
 
+	override fun onEnable()
+	{
+		firstLegitJump = true
+	}
+
 	override fun onDisable()
 	{
 		mc.timer.timerSpeed = 1f
+		mc.thePlayer?.speedInAir = 0.02f
 	}
 }

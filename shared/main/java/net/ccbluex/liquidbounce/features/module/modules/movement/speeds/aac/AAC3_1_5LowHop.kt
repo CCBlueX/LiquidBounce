@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AAC3_1_5LowHop : SpeedMode("AAC3.1.5-LowHop")
+class AAC3_1_5LowHop : SpeedMode("AAC3.1.5-LowHop") // Was AACLowHop
 {
 	private var firstLegitJump = false
 	override fun onEnable()

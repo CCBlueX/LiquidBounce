@@ -34,10 +34,10 @@ class Speed : Module()
 		Vanilla(),
 
 		// NCP
-		OldNCPBHop(), NCPFHop(), NCPTimerBHop(), NCPBHop(), YPort(), YPort2(), NCPYPort(), Boost(), Frame(), MiJump(), OnGround(),
+		OldNCPBHop(), NCPFHop(), SNCPBHop(), NCPBHop(), YPort(), YPort2(), NCPYPort(), Boost(), Frame(), MiJump(), OnGround(),
 
 		// AAC BHop, LowHop, (Y)Port, Ground speeds
-		AAC1_9_10BHop(), AAC3_0_3BHop(), AAC3_0_5BHop(), AAC3_1_0YPort(), AAC3_1_5LowHop(), AAC3_1_5FastLowHop(), AAC3_2_2BHop(), AAC3_2_2YPort(), AAC3_3_7FlagBHop(), AAC3_3_9BHop(), AAC3_3_11BHop(), AAC3_3_11FastBHop(), AAC3_3_11Ground(), AAC3_3_11Ground2(), AAC3_3_13BHop(), AAC3_5_0BHop(), AAC3_5_0LowHop(),
+		AAC1_9_10BHop(), AAC3_0_3LowHop(), AAC3_0_5BHop(), AAC3_1_0YPort(), AAC3_1_5LowHop(), AAC3_1_5FastLowHop(), AAC3_2_2LowHop(), AAC3_2_2YPort(), AAC3_3_7FlagBHop(), AAC3_3_9BHop(), AAC3_3_11LowHop(), AAC3_3_11BHop(), AAC3_3_11Ground(), AAC3_3_11Ground2(), AAC3_3_13LowHop(), AAC3_5_0BHop(), AAC3_5_0LowHop(),
 
 		// AAC
 		AACPort(),
@@ -52,7 +52,7 @@ class Speed : Module()
 		SpectreLowHop(), SpectreBHop(), SpectreOnGround(), TeleportCubeCraft(),
 
 		// Server
-		HiveHop(), HypixelBHop(), MineplexGround(), MineplexBHop(), MineplexBHop2(),
+		HiveHop(), HypixelHop(), MineplexGround(), MineplexBHop(), MineplexBHop2(),
 
 		// Other
 		SlowHop(), CustomSpeed()

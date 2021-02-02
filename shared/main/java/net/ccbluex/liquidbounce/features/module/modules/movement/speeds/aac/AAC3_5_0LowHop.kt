@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop")
+class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 {
 	private var firstJump = false
 	private var waitForGround = false
@@ -45,6 +45,7 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop")
 					firstJump = false
 					thePlayer.motionY -= 0.0149
 				}
+
 				if (!thePlayer.isCollidedHorizontally) MovementUtils.forward(if (firstJump) 0.0016 else 0.001799)
 			}
 			else

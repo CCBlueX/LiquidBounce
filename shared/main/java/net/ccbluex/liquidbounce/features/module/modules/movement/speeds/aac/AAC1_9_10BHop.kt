@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AAC1_9_10BHop : SpeedMode("AAC1.9.10-BHop")
+class AAC1_9_10BHop : SpeedMode("AAC1.9.10-BHop") // Was OldAACBHop
 {
 	override fun onMotion(eventState: EventState)
 	{

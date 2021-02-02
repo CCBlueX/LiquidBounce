@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMod
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 
-class AAC3_3_13BHop : SpeedMode("AAC3.3.13-BHop")
+class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 {
 	override fun onMotion(eventState: EventState)
 	{
@@ -26,7 +26,6 @@ class AAC3_3_13BHop : SpeedMode("AAC3.3.13-BHop")
 		if (!MovementUtils.isMoving || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isRiding || thePlayer.hurtTime > 0) return
 		if (thePlayer.onGround && thePlayer.isCollidedVertically)
 		{
-
 			// Jump with y 0.405F, boost 0.202F
 			val dir = MovementUtils.direction
 			thePlayer.motionX -= functions.sin(dir) * 0.202f

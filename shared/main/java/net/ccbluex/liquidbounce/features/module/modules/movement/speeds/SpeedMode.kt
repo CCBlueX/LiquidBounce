@@ -25,6 +25,7 @@ abstract class SpeedMode(val modeName: String) : MinecraftInstance()
 	abstract fun onMotion(eventState: EventState)
 	abstract fun onUpdate()
 	abstract fun onMove(event: MoveEvent)
+
 	open fun onTick()
 	{
 	}

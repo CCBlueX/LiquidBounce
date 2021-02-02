@@ -15,7 +15,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.hypot
 
-class NCPTimerBHop : SpeedMode("SNCPBHop")
+class SNCPBHop : SpeedMode("SNCPBHop")
 {
 	private var step = 1
 	private var moveSpeed = 0.2873
