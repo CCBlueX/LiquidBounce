@@ -28,11 +28,9 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop")
 		{
 			when
 			{
-
 				// Jump
 				thePlayer.onGround ->
 				{
-
 					// Legit jump on the first
 					if (firstLegitJump)
 					{
@@ -82,7 +80,7 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop")
 
 	override fun onDisable()
 	{
-		mc.thePlayer!!.speedInAir = 0.02f
+		(mc.thePlayer ?: return).speedInAir = 0.02f
 		mc.timer.timerSpeed = 1f
 	}
 }

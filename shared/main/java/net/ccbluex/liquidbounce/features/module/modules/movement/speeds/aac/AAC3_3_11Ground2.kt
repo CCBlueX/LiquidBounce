@@ -22,7 +22,7 @@ class AAC3_3_11Ground2 : SpeedMode("AAC3.3.11-Ground2")
 	{
 		if (!MovementUtils.isMoving) return
 
-		mc.timer.timerSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed?)!!.aacGroundTimerValue.get()
+		mc.timer.timerSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).aacGroundTimerValue.get()
 		MovementUtils.strafe(0.02f)
 	}
 

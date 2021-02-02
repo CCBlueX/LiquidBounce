@@ -145,7 +145,7 @@ public class AntiModDisable extends MinecraftInstance implements Listenable
 						action(event, String.format("CrackedVape Type H(type: Custom payload channel \"%s\")", channelName), "BLOCKED");
 
 					if (blockSchematicaPayloads && "schematica".equalsIgnoreCase(channelName))
-						action(event, String.format("(?) (%s)", channelName), "BLOCKED");
+						action(event, String.format("Schematica mod (%s)", channelName), "BLOCKED");
 				}
 			}
 			catch (final Exception e)
@@ -197,7 +197,7 @@ public class AntiModDisable extends MinecraftInstance implements Listenable
 
 			if (blockSchematicaPayloads && "schematica".equalsIgnoreCase(channelName))
 			{
-				action(null, String.format("ForgeChannelPacket - (?) (%s)", channelName), "BLOCKED");
+				action(null, String.format("ForgeChannelPacket - Schematica mod (%s)", channelName), "BLOCKED");
 				return true;
 			}
 		}

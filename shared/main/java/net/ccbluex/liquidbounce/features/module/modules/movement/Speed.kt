@@ -36,17 +36,11 @@ class Speed : Module()
 		// NCP
 		OldNCPBHop(), NCPFHop(), NCPTimerBHop(), NCPBHop(), YPort(), YPort2(), NCPYPort(), Boost(), Frame(), MiJump(), OnGround(),
 
-		// AAC BHop
-		AAC1_9_10BHop(), AAC3_0_3BHop(), AAC3_0_5BHop(), AAC3_2_1BHop(), AAC4BHop(), AAC3_3_9BHop(), AAC3_3_11BHop(), AAC3_3_11FastBHop(), AAC3_3_13BHop(), AAC3_5_0BHop(),
+		// AAC BHop, LowHop, (Y)Port, Ground speeds
+		AAC1_9_10BHop(), AAC3_0_3BHop(), AAC3_0_5BHop(), AAC3_1_0YPort(), AAC3_1_5LowHop(), AAC3_1_5FastLowHop(), AAC3_2_2BHop(), AAC3_2_2YPort(), AAC3_3_7FlagBHop(), AAC3_3_9BHop(), AAC3_3_11BHop(), AAC3_3_11FastBHop(), AAC3_3_11Ground(), AAC3_3_11Ground2(), AAC3_3_13BHop(), AAC3_5_0BHop(), AAC3_5_0LowHop(),
 
-		// AAC LowHop
-		AAC3_1_5LowHop(), AAC3_1_5FastLowHop(), AAC3_5_0LowHop(),
-
-		// AAC Ground
-		AAC3_3_11Ground(), AAC3_3_11Ground2(),
-
-		// AAC Port, YPort
-		AACPort(), AAC3_1_0YPort(), AAC3_1_7YPort(),
+		// AAC
+		AACPort(),
 
 		// Spartan
 		SpartanYPort(),

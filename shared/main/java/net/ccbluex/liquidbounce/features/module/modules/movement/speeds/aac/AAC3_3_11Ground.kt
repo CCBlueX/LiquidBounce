@@ -16,10 +16,12 @@ class AAC3_3_11Ground : SpeedMode("AAC3.3.11-Ground")
 {
 	override fun onUpdate()
 	{
+		val thePlayer = mc.thePlayer ?: return
+
 		if (!MovementUtils.isMoving) return
 
-		mc.timer.timerSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed?)!!.aacGroundTimerValue.get()
-		mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(mc.thePlayer!!.posX, mc.thePlayer!!.posY, mc.thePlayer!!.posZ, true))
+		mc.timer.timerSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).aacGroundTimerValue.get()
+		mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
 	}
 
 	override fun onMotion(eventState: EventState)

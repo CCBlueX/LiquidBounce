@@ -59,6 +59,6 @@ class AAC3_3_13BHop : SpeedMode("AAC3.3.13-BHop")
 
 	override fun onDisable()
 	{
-		mc.thePlayer!!.jumpMovementFactor = 0.02f
+		(mc.thePlayer ?: return).jumpMovementFactor = 0.02f
 	}
 }

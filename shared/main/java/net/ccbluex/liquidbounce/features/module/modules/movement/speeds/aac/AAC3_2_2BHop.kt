@@ -5,44 +5,57 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
-class AAC4BHop : SpeedMode("AAC4BHop")
+class AAC3_2_2BHop : SpeedMode("AAC3.2.2-BHop")
 {
 	private var firstLegitJump = false
-
-	override fun onDisable()
-	{
-		mc.thePlayer!!.speedInAir = 0.02f
-	}
 
 	override fun onTick()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
+		mc.timer.timerSpeed = 1f
+
+		if (thePlayer.isInWater) return
+
 		if (MovementUtils.isMoving)
 		{
-			if (firstLegitJump)
+			when
 			{
-				if (thePlayer.onGround)
+				// Jump
+				thePlayer.onGround ->
 				{
-					jump(thePlayer)
+					// Legit jump on the first
+					if (firstLegitJump)
+					{
+						jump(thePlayer)
+						firstLegitJump = false
+						return
+					}
+
+					MovementUtils.strafe(0.374f)
+
+					thePlayer.motionY = 0.3852
+					LiquidBounce.eventManager.callEvent(JumpEvent(0.3852f))
+
 					thePlayer.onGround = false
-					firstLegitJump = false
 				}
-				return
+
+				// Going down
+				thePlayer.motionY < 0.0 ->
+				{
+					thePlayer.speedInAir = 0.0201f
+					mc.timer.timerSpeed = 1.02f
+				}
+
+				else -> mc.timer.timerSpeed = 1.01f
 			}
-			if (thePlayer.onGround)
-			{
-				thePlayer.onGround = false
-				MovementUtils.strafe(0.375f)
-				jump(thePlayer)
-				thePlayer.motionY = 0.41
-			}
-			else thePlayer.speedInAir = 0.0211f
 		}
 		else
 		{
@@ -65,8 +78,9 @@ class AAC4BHop : SpeedMode("AAC4BHop")
 	{
 	}
 
-	override fun onEnable()
+	override fun onDisable()
 	{
-		firstLegitJump = true
+		(mc.thePlayer ?: return).speedInAir = 0.02f
+		mc.timer.timerSpeed = 1f
 	}
 }

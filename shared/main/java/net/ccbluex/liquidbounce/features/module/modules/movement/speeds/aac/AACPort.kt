@@ -28,7 +28,7 @@ class AACPort : SpeedMode("AACPort")
 
 		val dir = MovementUtils.direction
 		var speed = 0.2
-		val maxSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed?)!!.portMax.get()
+		val maxSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).portMax.get()
 
 		while (speed <= maxSpeed)
 		{
