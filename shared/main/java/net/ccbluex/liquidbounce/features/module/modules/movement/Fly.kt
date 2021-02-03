@@ -174,33 +174,11 @@ class Fly : Module()
 
 		if (damageOnStart && onGround)
 		{
-			var goalFallDistance = 3.0125 //add 0.0125 to ensure we get the fall dmg
-
 			WorkerUtils.workers.submit {
 				when (damageModeValue.get().toLowerCase())
 				{
-					"ncp" -> Damage.ncpDamage(1)
-
-					"hypixel" ->
-					{                        // TODO: Maximum packets per ticks limit
-						for (i in 0..9)
-						{
-
-							//Imagine flagging to NCP.
-							networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, true))
-						}
-
-						while (goalFallDistance > 0)
-						{
-							networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 0.0624986421, posZ, false))
-							networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 0.0625, posZ, false))
-							networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 0.0624986421, posZ, false))
-							networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 0.0000013579, posZ, false))
-							goalFallDistance -= 0.0624986421
-						}
-
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, true))
-					}
+					"ncp" -> Damage.ncpDamage()
+					"hypixel" -> Damage.hypixelDamage()
 				}
 			}
 
@@ -213,10 +191,11 @@ class Fly : Module()
 				{
 					if (!onGround) return@run
 
-					if (!damageOnStart) Damage.ncpDamage(1)
+					if (!damageOnStart) Damage.ncpDamage()
 
 					thePlayer.motionX *= 0.1
 					thePlayer.motionZ *= 0.1
+
 					thePlayer.swingItem()
 				}
 
@@ -224,11 +203,13 @@ class Fly : Module()
 				{
 					if (!onGround) return@run
 
-					if (!damageOnStart) for (i in 0..3)
-					{
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 1.01, posZ, false))
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, false))
-					}
+					if (!damageOnStart) Damage.ncpDamage(motionSize = 1.01)
+
+					// for (i in 0..3)
+					// {
+					// 	networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 1.01, posZ, false))
+					// 	networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, false))
+					// }
 
 					thePlayer.jump()
 					thePlayer.swingItem()
@@ -236,7 +217,7 @@ class Fly : Module()
 
 				"bugspartan" ->
 				{
-					if (!damageOnStart) Damage.ncpDamage(1)
+					if (!damageOnStart) Damage.ncpDamage()
 
 					thePlayer.motionX *= 0.1
 					thePlayer.motionZ *= 0.1

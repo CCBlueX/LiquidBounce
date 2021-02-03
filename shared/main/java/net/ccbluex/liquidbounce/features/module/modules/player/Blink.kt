@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
@@ -32,8 +33,13 @@ class Blink : Module()
 	 * Options
 	 */
 	private val pulseValue = BoolValue("Pulse", false)
-	private val pulseDelayValue = IntegerValue("PulseDelay", 1000, 500, 5000)
+	private val minPulseDelayValue = IntegerValue("MaxPulseDelay", 1000, 500, 5000)
+	private val maxPulseDelayValue = IntegerValue("MinPulseDelay", 500, 500, 5000)
 	private val displayPreviousPos = BoolValue("DisplayPreviousPos", false)
+	private val blockPlacePackets = BoolValue("BlockPlace-Packets", true)
+	private val swingPackets = BoolValue("Swing-Packets", true)
+	private val entityActionPackets = BoolValue("EntityAction-Packets", true)
+	private val useEntityPackets = BoolValue("UseEntity-Packets", true)
 
 	/**
 	 * Variables
@@ -42,6 +48,7 @@ class Blink : Module()
 	private val positions = LinkedList<DoubleArray>()
 
 	private val pulseTimer = MSTimer()
+	private var pulseDelay = TimeUtils.randomDelay(minPulseDelayValue.get(), maxPulseDelayValue.get())
 
 	private var fakePlayer: IEntityOtherPlayerMP? = null
 
@@ -91,7 +98,7 @@ class Blink : Module()
 		//		if (classProvider.isCPacketPlayer(packet)) // Cancel all movement stuff
 		//			event.cancelEvent()
 
-		if (classProvider.isCPacketPlayer(packet) || classProvider.isCPacketPlayerPosition(packet) || classProvider.isCPacketPlayerPosLook(packet) || classProvider.isCPacketPlayerBlockPlacement(packet) || classProvider.isCPacketAnimation(packet) || classProvider.isCPacketEntityAction(packet) || classProvider.isCPacketUseEntity(packet))
+		if (classProvider.isCPacketPlayer(packet) || classProvider.isCPacketPlayerPosition(packet) || classProvider.isCPacketPlayerPosLook(packet) || blockPlacePackets.get() && classProvider.isCPacketPlayerBlockPlacement(packet) || swingPackets.get() && classProvider.isCPacketAnimation(packet) || entityActionPackets.get() && classProvider.isCPacketEntityAction(packet) || useEntityPackets.get() && classProvider.isCPacketUseEntity(packet))
 		{
 			event.cancelEvent()
 			packets.add(packet)
@@ -106,10 +113,11 @@ class Blink : Module()
 
 		synchronized(positions) { positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)) }
 
-		if (pulseValue.get() && pulseTimer.hasTimePassed(pulseDelayValue.get().toLong()))
+		if (pulseValue.get() && pulseTimer.hasTimePassed(pulseDelay))
 		{
 			blink(theWorld, thePlayer, displayPreviousPos.get(), true)
 			pulseTimer.reset()
+			pulseDelay = TimeUtils.randomDelay(minPulseDelayValue.get(), maxPulseDelayValue.get())
 		}
 	}
 
