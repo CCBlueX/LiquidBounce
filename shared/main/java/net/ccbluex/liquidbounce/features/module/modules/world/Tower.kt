@@ -331,7 +331,6 @@ class Tower : Module()
 
 				if (thePlayer.motionY < 0)
 				{
-
 					// Fast down
 					thePlayer.motionY -= 0.00000945
 					mc.timer.timerSpeed = 1.6f

@@ -123,6 +123,7 @@ class HighJump : Module()
 			strafe(speed)
 			mineplexStage++
 		}
+
 		if (should && thePlayer.onGround)
 		{
 			val a: Double = getBestMineplexExploit(theWorld, thePlayer, nextX, posZ, nextZ)

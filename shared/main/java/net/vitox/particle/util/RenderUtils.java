@@ -2,12 +2,12 @@ package net.vitox.particle.util;
 
 import static org.lwjgl.opengl.GL11.*;
 
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 
-public final class RenderUtils
+public final class RenderUtils extends MinecraftInstance
 {
-
 	public static void connectPoints(final float xOne, final float yOne, final float xTwo, final float yTwo)
 	{
 		glPushMatrix();
@@ -46,7 +46,7 @@ public final class RenderUtils
 		final float floatPI = WMathHelper.PI;
 
 		for (int i = 0; i <= 360; i++)
-			glVertex2d(x + MinecraftInstance.functions.sin(i * floatPI / 180.0F) * radius, y + MinecraftInstance.functions.cos(i * floatPI / 180.0F) * radius);
+			glVertex2d(x + functions.sin(i * floatPI / 180.0F) * radius, y + functions.cos(i * floatPI / 180.0F) * radius);
 
 		glEnd();
 		glPopMatrix();

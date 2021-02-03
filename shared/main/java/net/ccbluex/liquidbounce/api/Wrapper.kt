@@ -13,5 +13,4 @@ interface Wrapper
 	val classProvider: IClassProvider
 	val minecraft: IMinecraft
 	val functions: IExtractedFunctions
-
 }

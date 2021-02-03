@@ -81,7 +81,7 @@ class SwingAnimation : Module()
 	val blockSqrtSmoothingSin = BoolValue("BlockAnimationSqrtSmoothingBack", true)
 
 	// Sword Block Animation
-	val animationMode = ListValue("BlockSwingAnimation", arrayOf("LiquidBounce", "1.8", "1.7", "Translate", "Push", "Tap", "Tap2", "Avatar", "Sigma", "Slide", "Exhibobo"), "LiquidBounce")
+	val animationMode = ListValue("BlockSwingAnimation", arrayOf("LiquidBounce", "1.8", "1.7", "Push", "Tap", "Tap2", "Avatar", "Sigma", "Slide", "Exhibobo"), "LiquidBounce")
 
 	// Sword Block Animation Options
 	val slideAngleX = FloatValue("Slide-AngleX", 40f, -30f, 80f)
@@ -107,5 +107,5 @@ class SwingAnimation : Module()
 	val blockStaticSwingProgressValue = FloatValue("Block-StaticSwingProgress", .64f, .11f, .99f)
 
 	override val tag: String
-		get() = if (staticSwingProgress.get()) animationMode.get() + " " + staticSwingProgressValue.get() else animationMode.get()
+		get() = "${animationMode.get()}${if (staticSwingProgress.get()) " static-" + staticSwingProgressValue.get() else ""}${if (blockStaticSwingProgress.get()) " blockstatic-" + blockStaticSwingProgressValue.get() else ""}"
 }
