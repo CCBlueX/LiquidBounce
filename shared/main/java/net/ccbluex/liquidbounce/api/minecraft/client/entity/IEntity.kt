@@ -74,6 +74,8 @@ interface IEntity
 	val uniqueID: UUID
 	val name: String?
 
+	val prevRotationYaw: Float
+
 	val ticksExisted: Int
 
 	@get:JvmName("isEntityAlive")

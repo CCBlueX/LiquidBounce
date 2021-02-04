@@ -37,6 +37,12 @@ object AntiBot : Module()
 	private val entityIDValue = BoolValue("EntityID", true)
 	private val entityIDLimitValue = IntegerValue("EntityIDLimit", 1000000000, 100000, 1000000000)
 
+	// Static EntityID
+	private val staticEntityIDValue = IntegerValue("StaticEntityIDs", 0, 0, 3)
+	private val staticEntityID1 = IntegerValue("STaticEntityID-1", 99999999, 0, 1000000000)
+	private val staticEntityID2 = IntegerValue("STaticEntityID-2", 0, 0, 1000000000)
+	private val staticEntityID3 = IntegerValue("STaticEntityID-3", 0, 0, 1000000000)
+
 	// NoColor
 	private val colorValue = BoolValue("Color", false)
 
@@ -210,6 +216,13 @@ object AntiBot : Module()
 
 		// EntityID
 		if (entityIDValue.get() && (entity.entityId >= entityIDLimitValue.get() || entity.entityId <= -1)) return true
+
+		// StaticEntityID
+		if (staticEntityIDValue.get() > 0)
+		{
+			val ids = arrayOf(staticEntityID1.get(), staticEntityID2.get(), staticEntityID3.get())
+			if ((0 until staticEntityIDValue.get()).map { ids[it] }.any { entity.entityId == it }) return true
+		}
 
 		// Invalid pitch (Derp)
 		if (invalidPitchValue.get() && (entity.rotationPitch > 90F || entity.rotationPitch < -90F)) return true
@@ -476,13 +489,32 @@ object AntiBot : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(e: Render3DEvent)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") e: Render3DEvent)
 	{
 		if (positionValue.get() && drawExpectedPosValue.get())
 		{
 			val thePlayer = mc.thePlayer ?: return
 
-			val yaw = if (RotationUtils.serverRotation != null) RotationUtils.serverRotation.yaw else thePlayer.rotationYaw
+			val partialTicks = e.partialTicks
+
+			val yaw = if (RotationUtils.serverRotation != null)
+			{
+				val serverYaw = RotationUtils.serverRotation.yaw
+				if (RotationUtils.lastServerRotation != null)
+				{
+					val lastServerYaw = RotationUtils.lastServerRotation.yaw
+					lastServerYaw + (serverYaw - lastServerYaw) * partialTicks
+				}
+				else RotationUtils.serverRotation.yaw
+			}
+			else
+			{
+				val rotYaw = thePlayer.rotationYaw
+				val lastRotYaw = thePlayer.prevRotationYaw
+
+				lastRotYaw + (rotYaw - lastRotYaw) * partialTicks
+			}
+
 			val dir = WMathHelper.toRadians(yaw - 180.0F)
 
 			val back1 = positionBackValue.get()
@@ -491,21 +523,32 @@ object AntiBot : Module()
 			val y2 = positionY2Value.get()
 			val back2 = positionBack2Value.get()
 
-			val sin = functions.sin(dir)
+			val sin = -functions.sin(dir)
 			val cos = functions.cos(dir)
 
-			val expectedX = thePlayer.posX - sin * back1
-			val expectedY = thePlayer.posY + y1
-			val expectedZ = thePlayer.posZ + cos * back1
+			val posX = thePlayer.lastTickPosX + (thePlayer.posX - thePlayer.lastTickPosX) * partialTicks
+			val posY = thePlayer.lastTickPosY + (thePlayer.posY - thePlayer.lastTickPosY) * partialTicks
+			val posZ = thePlayer.lastTickPosZ + (thePlayer.posZ - thePlayer.lastTickPosZ) * partialTicks
 
-			val expectedX2 = thePlayer.posX - sin * back2
-			val expectedY2 = thePlayer.posY + y2
-			val expectedZ2 = thePlayer.posZ + cos * back2
+			val expectedX = posX + sin * back1
+			val expectedY = posY + y1
+			val expectedZ = posZ + cos * back1
+
+			val expectedX2 = posX + sin * back2
+			val expectedY2 = posY + y2
+			val expectedZ2 = posZ + cos * back2
 
 			val renderManager = mc.renderManager
+			val renderPosX = renderManager.renderPosX
+			val renderPosY = renderManager.renderPosY
+			val renderPosZ = renderManager.renderPosZ
 
-			RenderUtils.drawAxisAlignedBB(classProvider.createAxisAlignedBB(expectedX - 0.3, expectedY, expectedZ - 0.3, expectedX + 0.3, expectedY + 1.65, expectedZ + 0.3).offset(-renderManager.renderPosX, -renderManager.renderPosY, -renderManager.renderPosZ), Color.red)
-			RenderUtils.drawAxisAlignedBB(classProvider.createAxisAlignedBB(expectedX2 - 0.3, expectedY2, expectedZ2 - 0.3, expectedX2 + 0.3, expectedY2 + 1.65, expectedZ2 + 0.3).offset(-renderManager.renderPosX, -renderManager.renderPosY, -renderManager.renderPosZ), Color.green)
+			val deltaLimit = positionExpectationDeltaLimitValue.get()
+
+			val width = 0.3 + deltaLimit
+			val height = 1.62 + deltaLimit
+			RenderUtils.drawAxisAlignedBB(classProvider.createAxisAlignedBB(expectedX - width - renderPosX, expectedY - renderPosY, expectedZ - width - renderPosZ, expectedX + width - renderPosX, expectedY + height - renderPosY, expectedZ + width - renderPosZ), Color(255, 0, 0, 60))
+			RenderUtils.drawAxisAlignedBB(classProvider.createAxisAlignedBB(expectedX2 - width - renderPosX, expectedY2 - deltaLimit - renderPosY, expectedZ2 - width - renderPosZ, expectedX2 + width - renderPosX, expectedY2 + height - renderPosY, expectedZ2 + width - renderPosZ), Color(0, 255, 0, 60))
 		}
 	}
 

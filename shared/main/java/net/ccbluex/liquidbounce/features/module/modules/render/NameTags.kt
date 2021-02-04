@@ -46,6 +46,7 @@ class NameTags : Module()
 	private val borderValue = BoolValue("Border", true)
 	private val scaleValue = FloatValue("Scale", 1F, 1F, 4F)
 	private val botValue = BoolValue("Bots", true)
+	private val entityIDValue = BoolValue("EntityID", true)
 	private val healthModeValue = ListValue("PlayerHealthGetMethod", arrayOf("Datawatcher", "Mineplex", "Hive"), "Datawatcher")
 	private val stripColorsValue = BoolValue("StripColors", false)
 	private val opacityValue = IntegerValue("Opacity", 175, 0, 255)
@@ -92,6 +93,9 @@ class NameTags : Module()
 		val murderDetector = LiquidBounce.moduleManager[MurderDetector::class.java] as MurderDetector
 
 		// Modify tag
+		val entityID = entity.entityId
+		val entityIDText = if (entityIDValue.get()) "\u00A78#\u00A7r$entityID " else ""
+
 		val bot = AntiBot.isBot(entity)
 		val nameColor = if (bot) "\u00A73" else if (entity.invisible) "\u00A76" else if (entity.sneaking) "\u00A74" else "\u00A77"
 
@@ -116,7 +120,7 @@ class NameTags : Module()
 		val botText = if (bot) " \u00A7c\u00A7l[BOT]" else ""
 		val murderText = if (murderDetector.state && murderDetector.murders.contains(entity)) "\u00A75\u00A7l[MURDER]\u00A7r " else ""
 
-		var text = "$murderText$distanceText$pingText$nameColor$tag$healthText$botText"
+		var text = "$murderText$entityIDText$distanceText$pingText$nameColor$tag$healthText$botText"
 		if (stripColorsValue.get()) text = ColorUtils.stripColor(text)!!
 
 		// Push

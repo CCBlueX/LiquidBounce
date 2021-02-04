@@ -196,6 +196,9 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 	override val invisible: Boolean
 		get() = wrapped.isInvisible
 
+	override val prevRotationYaw: Float
+		get() = wrapped.prevRotationYaw
+
 	override fun getPositionEyes(partialTicks: Float): WVec3 = wrapped.getPositionEyes(partialTicks).wrap()
 
 	override fun canBeCollidedWith(): Boolean = wrapped.canBeCollidedWith()
