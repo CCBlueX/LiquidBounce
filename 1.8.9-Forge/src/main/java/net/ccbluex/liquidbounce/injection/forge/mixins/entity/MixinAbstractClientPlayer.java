@@ -83,9 +83,9 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
 		// NameProtect SkinProtect
 		final NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.get(NameProtect.class);
 
-		if (nameProtect.getState() && nameProtect.skinProtectValue.get())
+		if (nameProtect.getState() && nameProtect.getSkinProtectValue().get())
 		{
-			if (!nameProtect.allPlayersValue.get() && !Objects.equals(getGameProfile().getName(), Minecraft.getMinecraft().thePlayer.getGameProfile().getName()))
+			if (!nameProtect.getAllPlayersValue().get() && !Objects.equals(getGameProfile().getName(), Minecraft.getMinecraft().thePlayer.getGameProfile().getName()))
 				return;
 
 			callbackInfoReturnable.setReturnValue(DefaultPlayerSkin.getDefaultSkin(getUniqueID()));

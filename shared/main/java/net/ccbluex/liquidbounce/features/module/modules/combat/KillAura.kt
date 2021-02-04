@@ -794,9 +794,7 @@ class KillAura : Module()
 		{
 
 			// Critical Effect
-			if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) && thePlayer.ridingEntity == null || criticals.state && criticals.msTimer.hasTimePassed(
-					criticals.delayValue.get().toLong()
-				) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb) thePlayer.onCriticalHit(target ?: return)
+			if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) && thePlayer.ridingEntity == null || criticals.state && criticals.canCritical) thePlayer.onCriticalHit(target ?: return)
 
 			// Enchant Effect
 			if (functions.getModifierForCreature(thePlayer.heldItem, (target ?: return).creatureAttribute) > 0.0f || fakeSharpValue.get()) thePlayer.onEnchantmentCritical(target ?: return)

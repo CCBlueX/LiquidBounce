@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
 import java.util.stream.Stream
 
@@ -33,8 +34,8 @@ class Step : Module()
 	val airStepValue = BoolValue("AirStep", false)
 	private val heightValue = FloatValue("Height", 1F, 0.6F, 10F)
 	private val jumpHeightValue = FloatValue("JumpHeight", 0.42F, 0.37F, 0.42F)
-	private val delayValue = IntegerValue("Delay", 0, 0, 500)
-
+	private val maxDelayValue = IntegerValue("MaxDelay", 0, 0, 500)
+	private val minDelayValue = IntegerValue("MinDelay", 0, 0, 500)
 	private val motionNCPBoostValue = FloatValue("MotionNCP-Boost", 0.7F, 0F, 0.7F)
 
 	/**
@@ -42,15 +43,17 @@ class Step : Module()
 	 */
 
 	private var isStep = false
+	private var isAAC3_3_4Step = false
+
 	private var stepX = 0.0
 	private var stepY = 0.0
 	private var stepZ = 0.0
 
 	private var motionNCPNextStep = 0
 	private var spartanSwitch = false
-	private var isAACStep = false
 
 	private val timer = MSTimer()
+	private var delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 
 	override fun onDisable()
 	{
@@ -76,7 +79,7 @@ class Step : Module()
 
 			"aac3.2.0" -> if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb)
 			{
-				if (thePlayer.onGround && timer.hasTimePassed(delayValue.get().toLong()))
+				if (thePlayer.onGround && timer.hasTimePassed(delay))
 				{
 					isStep = true
 
@@ -86,7 +89,7 @@ class Step : Module()
 					val f = WMathHelper.toRadians(thePlayer.rotationYaw)
 					thePlayer.motionX -= functions.sin(f) * 0.2
 					thePlayer.motionZ += functions.cos(f) * 0.2
-					timer.reset()
+					resetTimer()
 				}
 
 				thePlayer.onGround = true
@@ -100,17 +103,17 @@ class Step : Module()
 					thePlayer.motionX *= 1.26
 					thePlayer.motionZ *= 1.26
 					thePlayer.jump()
-					isAACStep = true
+					isAAC3_3_4Step = true
 				}
 
-				if (isAACStep)
+				if (isAAC3_3_4Step)
 				{
 					thePlayer.motionY -= 0.015
 
 					if (!thePlayer.isUsingItem && thePlayer.movementInput.moveStrafe == 0F) thePlayer.jumpMovementFactor = 0.3F
 				}
 			}
-			else isAACStep = false
+			else isAAC3_3_4Step = false
 		}
 	}
 
@@ -123,20 +126,20 @@ class Step : Module()
 		val mode = modeValue.get()
 		val motionNCPBoost = motionNCPBoostValue.get()
 
-		// Motion steps
+		// NCP Motion steps
 		if (mode.equals("MotionNCP", ignoreCase = true) && thePlayer.isCollidedHorizontally && !mc.gameSettings.keyBindJump.isKeyDown) when
 		{
 			thePlayer.onGround && couldStep(theWorld, thePlayer) ->
 			{
 				fakeJump(thePlayer)
 				thePlayer.motionY = 0.0
-				event.y = 0.41999998688698 // Jump step 1
+				event.y = 0.41999998688698 // Jump step 1 (0.42)
 				motionNCPNextStep++
 			}
 
 			motionNCPNextStep == 1 ->
 			{
-				event.y = 0.33319999363422 // Jump step 2
+				event.y = 0.33319999363422 // Jump step 2 (0.333)
 				motionNCPNextStep++
 			}
 
@@ -144,11 +147,10 @@ class Step : Module()
 			{
 				val yaw = MovementUtils.direction
 
-				event.y = 0.248135998590947 // Jump step 3
+				event.y = 0.248135998590947 // Jump step 3 (0.248)
 
 				if (motionNCPBoost > 0.0F)
 				{
-
 					event.x = (-functions.sin(yaw) * motionNCPBoost).toDouble()
 					event.z = (functions.cos(yaw) * motionNCPBoost).toDouble()
 				}
@@ -161,8 +163,7 @@ class Step : Module()
 	@EventTarget
 	fun onStep(event: StepEvent)
 	{
-
-		// Phase should disable step
+		// Phase  should disable step
 		if (LiquidBounce.moduleManager[Phase::class.java].state)
 		{
 			event.stepHeight = 0F
@@ -188,7 +189,7 @@ class Step : Module()
 		val mode = modeValue.get()
 
 		// Set step to default in some cases
-		if ((!thePlayer.onGround && !airStepValue.get()) || !timer.hasTimePassed(delayValue.get().toLong()) || Stream.of("Jump", "MotionNCP", "AAC3.2.0", "AAC3.3.4").anyMatch { mode.equals(it, ignoreCase = true) })
+		if ((!thePlayer.onGround && !airStepValue.get()) || !timer.hasTimePassed(delay) || Stream.of("Jump", "MotionNCP", "AAC3.2.0", "AAC3.3.4").anyMatch { mode.equals(it, ignoreCase = true) })
 		{
 			thePlayer.stepHeight = 0.5F
 			event.stepHeight = 0.5F
@@ -233,9 +234,9 @@ class Step : Module()
 					fakeJump(thePlayer)
 
 					// Half legit step (1 packet missing) [COULD TRIGGER TOO MANY PACKETS]
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false))
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false))
-					timer.reset()
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
+					resetTimer()
 				}
 
 				"spartan127" ->
@@ -244,20 +245,19 @@ class Step : Module()
 
 					if (spartanSwitch)
 					{
-
 						// Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false))
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false))
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false))
+						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
+						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
+						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)) // 0.248
 					}
 					else // Force step
 						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.6, stepZ, false))
 
-					// Spartan allows one unlegit step so just swap between legit and unlegit
+					// Spartan b127 allows one unlegit step so just swap between legit and unlegit
 					spartanSwitch = !spartanSwitch
 
 					// Reset timer
-					timer.reset()
+					resetTimer()
 				}
 
 				"rewinside" ->
@@ -265,12 +265,12 @@ class Step : Module()
 					fakeJump(thePlayer)
 
 					// Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false))
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false))
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false))
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)) // 0.248
 
 					// Reset timer
-					timer.reset()
+					resetTimer()
 				}
 			}
 		}
@@ -279,6 +279,12 @@ class Step : Module()
 		stepX = 0.0
 		stepY = 0.0
 		stepZ = 0.0
+	}
+
+	private fun resetTimer()
+	{
+		timer.reset()
+		delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 	}
 
 	@EventTarget(ignoreCondition = true)

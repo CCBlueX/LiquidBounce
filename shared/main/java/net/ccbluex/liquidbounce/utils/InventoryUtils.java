@@ -58,6 +58,8 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 
 	public static final MSTimer CLICK_TIMER = new MSTimer();
 
+	private static final Random RANDOM = new Random();
+
 	public static int findItem(final int startSlot, final int endSlot, final IItem item, final long itemDelay, final boolean random)
 	{
 		final List<Integer> candidates = new ArrayList<>(endSlot - startSlot);
@@ -73,7 +75,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 		if (candidates.isEmpty())
 			return -1;
 
-		return random ? candidates.get(new Random().nextInt(candidates.size())) : candidates.get(0);
+		return random ? candidates.get(RANDOM.nextInt(candidates.size())) : candidates.get(0);
 	}
 
 	public static boolean hasSpaceHotbar()
@@ -160,7 +162,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 		if (emptySlots.isEmpty())
 			return -1;
 
-		return randomSlot ? emptySlots.get(new Random().nextInt(emptySlots.size())) : emptySlots.get(0);
+		return randomSlot ? emptySlots.get(RANDOM.nextInt(emptySlots.size())) : emptySlots.get(0);
 	}
 
 	@EventTarget

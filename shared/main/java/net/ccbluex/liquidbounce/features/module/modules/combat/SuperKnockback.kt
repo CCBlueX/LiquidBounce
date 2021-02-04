@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 @ModuleInfo(name = "SuperKnockback", description = "Increases knockback dealt to other entities.", category = ModuleCategory.COMBAT)
 class SuperKnockback : Module()
 {
-
 	private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
 
 	@EventTarget
@@ -26,16 +25,16 @@ class SuperKnockback : Module()
 		{
 			if (event.targetEntity!!.asEntityLivingBase().hurtTime > hurtTimeValue.get()) return
 
-			val player = mc.thePlayer ?: return
+			val thePlayer = mc.thePlayer ?: return
+			val netHandler = mc.netHandler
 
-			if (player.sprinting) mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.STOP_SPRINTING))
+			if (thePlayer.sprinting) netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
 
-			mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.START_SPRINTING))
-			mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.STOP_SPRINTING))
-			mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.START_SPRINTING))
-			player.sprinting = true
-			player.serverSprintState = true
+			netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+			netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
+			netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+			thePlayer.sprinting = true
+			thePlayer.serverSprintState = true
 		}
 	}
-
 }

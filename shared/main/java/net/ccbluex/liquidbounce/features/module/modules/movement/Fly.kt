@@ -31,9 +31,13 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.*
 
+// TODO: Display remaining vanilla fly time (max is 80 ticks)
 @ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F)
 class Fly : Module()
 {
+	/**
+	 * Mode
+	 */
 	val modeValue = ListValue(
 		"Mode", arrayOf(
 			"Vanilla", "SmoothVanilla", "Teleport",
@@ -67,28 +71,40 @@ class Fly : Module()
 		), "Vanilla"
 	)
 
-	// Damage
+	/**
+	 * Damage on start
+	 */
 	private val damageOnStartValue = BoolValue("DamageOnStart", false)
 	private val damageModeValue = ListValue("DamageMode", arrayOf("NCP", "Hypixel"), "NCP")
 
-	// Vanilla
+	/**
+	 * Vanilla
+	 */
 	val vanillaSpeedValue = FloatValue("VanillaSpeed", 2f, 0f, 5f)
 	private val vanillaKickBypassValue = BoolValue("VanillaKickBypass", false)
 
-	// Teleport
+	/**
+	 * Teleport
+	 */
 	private val teleportDistanceValue = FloatValue("TeleportDistance", 1.0f, 1.0f, 5.0f)
 	private val teleportDelayValue = IntegerValue("TeleportDelay", 100, 0, 1000)
 
-	// NCP
+	/**
+	 * NCP
+	 */
 	private val ncpMotionValue = FloatValue("NCPMotion", 0f, 0f, 1f)
 
-	// AAC
+	/**
+	 * AAC
+	 */
 	private val aacSpeedValue = FloatValue("AAC1.9.10-Speed", 0.3f, 0f, 5f)
 	private val aacFast = BoolValue("AAC3.0.5-Fast", true)
 	private val aac3_3_12_motion = FloatValue("AAC3.3.12-Motion", 10f, 0.1f, 10f)
 	private val aac3_3_13_motion = FloatValue("AAC3.3.13-Motion", 10f, 0.1f, 10f)
 
-	// Hypixel
+	/**
+	 * Hypixel
+	 */
 	private val hypixelDMGBoost: BoolValue = object : BoolValue("Hypixel-DamageBoost", false)
 	{
 		override fun onChanged(oldValue: Boolean, newValue: Boolean)
@@ -106,20 +122,28 @@ class Fly : Module()
 	private val hypixelTimerBoostDelay = IntegerValue("Hypixel-TimerBoost-BoostDelay", 1200, 0, 2000)
 	private val hypixelTimerBoostTimer = FloatValue("Hypixel-TimerBoost-BoostTimer", 1f, 0f, 5f)
 
+	/**
+	 * Mineplex
+	 */
 	private val mineplexSpeedValue = FloatValue("MineplexSpeed", 1f, 0.5f, 10f)
 	private val neruxVaceTicks = IntegerValue("NeruxVace-Ticks", 6, 0, 20)
 	private val redeskyVClipHeight = FloatValue("RedeSky-Height", 4f, 1f, 7f)
 	private val mccTimerSpeedValue = FloatValue("MCCentral-Timer", 2.0f, 1.0f, 5.0f)
 
-	// Reset Motions On Disable
+	/**
+	 * Reset Motions On Disable
+	 */
 	private val resetMotionOnDisable = BoolValue("ResetMotionOnDisable", false)
 
-	// Visuals
+	/**
+	 * Visuals
+	 */
 	private val bobValue = BoolValue("Bob", true)
 	private val markValue = BoolValue("Mark", true)
 
-	// MODULE
-
+	/**
+	 * Timers
+	 */
 	private val hypixelFlyTimer = MSTimer()
 	private val groundTimer = MSTimer()
 	private val mineSecureVClipTimer = MSTimer()
@@ -130,30 +154,41 @@ class Fly : Module()
 	private val cubecraftTeleportTickTimer = TickTimer()
 	val freeHypixelTimer = TickTimer()
 	private val teleportTimer = MSTimer()
+	private var minesuchtTP = MSTimer()
 
-	@Suppress("PrivatePropertyName")
+	/**
+	 * AAC mode related variables
+	 */
 	private var aac3_1_6_touchedVoid = false
-	private var minesuchtTP: Long = 0
 	private var wasDead = false
 	private var aacJump = 0.0
 	private var aac3delay = 0
 	private var aac3glideDelay = 0
 
+	/**
+	 * Visual variables
+	 */
 	private var startY = 0.0
 	private var markStartY = 0.0
+
 	private var noPacketModify = false
 
+	/**
+	 * Hypixel
+	 */
 	private var hypixelFlyStarted = false
 	private var hypixelDamageBoostFailed = false
 	private var canPerformHypixelDamageFly = false
 	private var hypixelBoostStep = 1
 	private var hypixelBoostSpeed = 0.0
 	private var lastDistance = 0.0
+	private var waitForDamage: Boolean = false
 
+	/**
+	 * FreeHypixel
+	 */
 	private var freeHypixelYaw = 0f
 	private var freeHypixelPitch = 0f
-
-	private var waitForDamage: Boolean = false
 
 	override fun onEnable()
 	{
@@ -526,7 +561,7 @@ class Fly : Module()
 				{
 					if (!gameSettings.keyBindForward.isKeyDown) return@run
 
-					if (System.currentTimeMillis() - minesuchtTP > 99)
+					if (minesuchtTP.hasTimePassed(99))
 					{
 						val vec3: WVec3 = thePlayer.getPositionEyes(0.0f)
 						val vec31: WVec3 = thePlayer.getLook(0.0f)
@@ -542,7 +577,7 @@ class Fly : Module()
 						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, false))
 						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(vec32.xCoord, posY, vec32.zCoord, true))
 						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, false))
-						minesuchtTP = System.currentTimeMillis()
+						minesuchtTP.reset()
 					}
 					else
 					{

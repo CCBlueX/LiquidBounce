@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import kotlin.random.Random
@@ -19,7 +20,9 @@ import kotlin.random.Random
 @ModuleInfo(name = "SkinDerp", description = "Makes your skin blink (Requires multi-layer skin).", category = ModuleCategory.FUN)
 class SkinDerp : Module()
 {
-	private val delayValue = IntegerValue("Delay", 0, 0, 1000)
+	private val maxDelayValue = IntegerValue("MaxDelay", 0, 0, 10000)
+	private val minDelayValue = IntegerValue("MinDelay", 0, 0, 10000)
+
 	private val hatValue = BoolValue("Hat", true)
 	private val jacketValue = BoolValue("Jacket", true)
 	private val leftPantsValue = BoolValue("LeftPants", true)
@@ -30,6 +33,7 @@ class SkinDerp : Module()
 	private var prevModelParts = emptySet<WEnumPlayerModelParts>()
 
 	private val timer = MSTimer()
+	private var delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 
 	override fun onEnable()
 	{
@@ -40,7 +44,6 @@ class SkinDerp : Module()
 
 	override fun onDisable()
 	{
-
 		// Disable all current model parts
 		for (modelPart in mc.gameSettings.modelParts) mc.gameSettings.setModelPartEnabled(modelPart, false)
 
@@ -53,7 +56,7 @@ class SkinDerp : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
-		if (timer.hasTimePassed(delayValue.get().toLong()))
+		if (timer.hasTimePassed(delay))
 		{
 			val gameSettings = mc.gameSettings
 
@@ -63,7 +66,9 @@ class SkinDerp : Module()
 			if (rightPantsValue.get()) gameSettings.setModelPartEnabled(WEnumPlayerModelParts.RIGHT_PANTS_LEG, Random.nextBoolean())
 			if (leftSleeveValue.get()) gameSettings.setModelPartEnabled(WEnumPlayerModelParts.LEFT_SLEEVE, Random.nextBoolean())
 			if (rightSleeveValue.get()) gameSettings.setModelPartEnabled(WEnumPlayerModelParts.RIGHT_SLEEVE, Random.nextBoolean())
+
 			timer.reset()
+			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 		}
 	}
 }

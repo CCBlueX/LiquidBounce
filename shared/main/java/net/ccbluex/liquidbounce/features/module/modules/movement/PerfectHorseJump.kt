@@ -11,10 +11,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
-@ModuleInfo(name = "PerfectHorseJump", description = "Automatically jumps when the jump bar of a horse is filled up completely.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "PerfectHorseJump", description = "Make the jump bar of a horse always fully filled.", category = ModuleCategory.MOVEMENT)
 class PerfectHorseJump : Module()
 {
-
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{

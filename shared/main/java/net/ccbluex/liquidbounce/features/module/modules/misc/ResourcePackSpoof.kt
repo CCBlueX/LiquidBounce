@@ -33,23 +33,15 @@ class ResourcePackSpoof : Module()
 
 			try
 			{
-				val scheme = URI(url).scheme
-				val isLevelProtocol = "level" == scheme
+				val scheme = URI(url).scheme.toLowerCase()
+				val isLevelProtocol = scheme == "level"
 
-				if ("http" != scheme && "https" != scheme && !isLevelProtocol) throw URISyntaxException(url, "Wrong protocol")
+				if ("http" != scheme && "https" != scheme && !isLevelProtocol) throw URISyntaxException(url, "Wrong protocol (only HTTP and HTTPS, LEVEL protocols are accepted)")
 
 				if (isLevelProtocol && (url.contains("..") || !url.endsWith("/resources.zip"))) throw URISyntaxException(url, "Invalid levelstorage resourcepack path")
 
-				netHandler.addToSendQueue(
-					classProvider.createICPacketResourcePackStatus(
-						packet.hash, ICPacketResourcePackStatus.WAction.ACCEPTED
-					)
-				)
-				netHandler.addToSendQueue(
-					classProvider.createICPacketResourcePackStatus(
-						packet.hash, ICPacketResourcePackStatus.WAction.SUCCESSFULLY_LOADED
-					)
-				)
+				netHandler.addToSendQueue(classProvider.createICPacketResourcePackStatus(packet.hash, ICPacketResourcePackStatus.WAction.ACCEPTED))
+				netHandler.addToSendQueue(classProvider.createICPacketResourcePackStatus(packet.hash, ICPacketResourcePackStatus.WAction.SUCCESSFULLY_LOADED))
 			}
 			catch (e: URISyntaxException)
 			{

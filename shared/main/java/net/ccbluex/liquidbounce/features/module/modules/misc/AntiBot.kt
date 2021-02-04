@@ -351,6 +351,7 @@ object AntiBot : Module()
 
 				val yaw = if (RotationUtils.serverRotation != null) RotationUtils.serverRotation.yaw else thePlayer.rotationYaw
 				val dir = WMathHelper.toRadians(yaw - 180.0F)
+
 				val expectedX = thePlayer.posX - functions.sin(dir) * positionBackValue.get()
 				val expectedY = thePlayer.posY + positionYValue.get()
 				val expectedZ = thePlayer.posZ + functions.cos(dir) * positionBackValue.get()
@@ -362,6 +363,8 @@ object AntiBot : Module()
 				val distances = doubleArrayOf(entity.getDistance(expectedX, expectedY, expectedZ), entity.getDistance(expectedX2, expectedY2, expectedZ2))
 				for (distance in distances)
 				{
+
+					// TODO: Draw ExpectedPos with RenderUtils.drawAxisAlignedBB
 
 					// Position Delta
 					if (distance <= positionExpectationDeltaLimitValue.get()) position_violation[entity.entityId] = position_violation.getOrDefault(entity.entityId, 0) + 1

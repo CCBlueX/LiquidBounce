@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.value.Value
 import org.lwjgl.input.Keyboard
 import kotlin.random.Random
@@ -57,7 +56,9 @@ open class Module : MinecraftInstance(), Listenable
 		isSupported = Backend.REPRESENTED_BACKEND_VERSION in moduleInfo.supportedVersions
 	}
 
-	// Current state of module
+	/**
+	 * Current state of module
+	 */
 	var state = false
 		set(value)
 		{
@@ -79,18 +80,21 @@ open class Module : MinecraftInstance(), Listenable
 				try
 				{
 					onEnable()
-				} catch (e: Exception)
+				}
+				catch (e: Exception)
 				{
 					ClientUtils.logger.error("Uncaught exception '$e' occurred while onEnable() in module $name", e)
 				}
 
 				if (canEnable) field = true
-			} else
+			}
+			else
 			{
 				try
 				{
 					onDisable()
-				} catch (e: Exception)
+				}
+				catch (e: Exception)
 				{
 					ClientUtils.logger.error("Uncaught exception '$e' occurred while onDisable() in module $name", e)
 				}
@@ -101,19 +105,17 @@ open class Module : MinecraftInstance(), Listenable
 			FileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
 		}
 
-	// HUD
+	/**
+	 * HUD
+	 */
 	val hue = Random.nextFloat()
 	var slide = 0F
 
-	// Tag
+	/**
+	 * Tag
+	 */
 	open val tag: String?
 		get() = null
-
-	val tagName: String
-		get() = "$name${if (tag == null) "" else " \u00A77$tag"}"
-
-	val colorlessTagName: String
-		get() = "$name${if (tag == null) "" else " " + stripColor(tag)}"
 
 	/**
 	 * Toggle module

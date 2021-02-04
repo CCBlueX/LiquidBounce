@@ -31,6 +31,7 @@ class LiquidWalk : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (thePlayer.sneaking) return
@@ -91,7 +92,7 @@ class LiquidWalk : Module()
 			{
 				thePlayer.motionX *= 1.17
 				thePlayer.motionZ *= 1.17
-				if (thePlayer.isCollidedHorizontally) thePlayer.motionY = 0.24 else if (mc.theWorld!!.getBlockState(WBlockPos(posX, posY + 1.0, posZ)).block != classProvider.getBlockEnum(BlockType.AIR)) thePlayer.motionY += 0.04
+				if (thePlayer.isCollidedHorizontally) thePlayer.motionY = 0.24 else if (theWorld.getBlockState(WBlockPos(posX, posY + 1.0, posZ)).block != classProvider.getBlockEnum(BlockType.AIR)) thePlayer.motionY += 0.04
 			}
 
 			"dolphin" -> if (isInWater) thePlayer.motionY += 0.03999999910593033
@@ -102,7 +103,7 @@ class LiquidWalk : Module()
 	fun onMove(event: MoveEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
-		if ("aac3.3.5" == modeValue.get().toLowerCase() && thePlayer.isInWater)
+		if (modeValue.get().equals("AAC3.3.5", ignoreCase = true) && thePlayer.isInWater)
 		{
 			val aacFlyMotion = aacFlyValue.get().toDouble()
 
@@ -140,14 +141,9 @@ class LiquidWalk : Module()
 		{
 			val packetPlayer = event.packet.asCPacketPlayer()
 
-			if (collideBlock(
-					classProvider.createAxisAlignedBB(
-						thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ
-					), classProvider::isBlockLiquid
-				))
+			if (collideBlock(classProvider.createAxisAlignedBB(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ), classProvider::isBlockLiquid))
 			{
 				nextTick = !nextTick
-
 				if (nextTick) packetPlayer.y -= 0.001
 			}
 		}

@@ -14,24 +14,24 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorCodes
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.TextValue
 
 @ModuleInfo(name = "NameProtect", description = "Changes playernames clientside.", category = ModuleCategory.MISC)
 class NameProtect : Module()
 {
-	@JvmField
 	val allPlayersValue = BoolValue("AllPlayers", false)
-
-	@JvmField
 	val skinProtectValue = BoolValue("SkinProtect", true)
 	private val fakeNameValue = TextValue("FakeName", "&cMe")
+	private val allPlayersModeValue = ListValue("AllPlayers-Mode", arrayOf("Custom", "Obfuscate", "Empty"), "Custom")
+	private val allPlayersCustomFakeNameValue = TextValue("AllPlayers-CustomName", "Protected User")
 
 	@EventTarget(ignoreCondition = true)
 	fun onText(event: TextEvent)
 	{
-		val thePlayer = mc.thePlayer
+		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer == null || event.text!!.contains("\u00A78[\u00A79\u00A7l" + LiquidBounce.CLIENT_NAME + "\u00A78] \u00A73")) return
+		if ((event.text ?: return).contains("\u00A78[\u00A79\u00A7l" + LiquidBounce.CLIENT_NAME + "\u00A78] \u00A73")) return
 
 		for (friend in LiquidBounce.fileManager.friendsConfig.friends) event.text = StringUtils.replace(event.text, friend.playerName, translateAlternateColorCodes(friend.alias) + "\u00A7f")
 
@@ -40,7 +40,18 @@ class NameProtect : Module()
 
 		if (allPlayersValue.get())
 		{
-			for (playerInfo in mc.netHandler.playerInfoMap) event.text = StringUtils.replace(event.text, playerInfo.gameProfile.name, "Protected User")
+			val customFakeName = allPlayersCustomFakeNameValue.get()
+
+			mc.netHandler.playerInfoMap.asSequence().map { it.gameProfile.name }.forEach {
+				event.text = StringUtils.replace(
+					event.text, it, when (allPlayersModeValue.get().toLowerCase())
+					{
+						"obfuscate" -> "\u00A7k$it"
+						"empty" -> ""
+						else -> customFakeName
+					}
+				)
+			}
 		}
 	}
 }

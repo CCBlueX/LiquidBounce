@@ -17,6 +17,7 @@ class Teams : Module()
 	private val scoreboardValue = BoolValue("ScoreboardTeam", true)
 	private val colorValue = BoolValue("Color", true)
 	private val gommeSWValue = BoolValue("GommeSW", false)
+	// TODO: private val armorColorValue = BoolValue("ArmorColor", false)
 
 	/**
 	 * Check if [entity] is in your own team using scoreboard, name color or team prefix
