@@ -92,35 +92,67 @@ class NameTags : Module()
 
 		val murderDetector = LiquidBounce.moduleManager[MurderDetector::class.java] as MurderDetector
 
-		// Modify tag
-		val entityID = entity.entityId
-		val entityIDText = if (entityIDValue.get()) "\u00A78#\u00A7r$entityID " else ""
+		val entityIDText = if (entityIDValue.get())
+		{
+			val entityID = entity.entityId
+
+			"#$entityID "
+		}
+		else ""
 
 		val bot = AntiBot.isBot(entity)
-		val nameColor = if (bot) "\u00A73" else if (entity.invisible) "\u00A76" else if (entity.sneaking) "\u00A74" else "\u00A77"
+		val nameColor = when
+		{
+			bot -> "\u00A74\u00A7m" // DARK_RED + BOLD
+			entity.invisible -> "\u00A78\u00A7o" // DARK_GRAY + ITALIC
+			entity.sneaking -> "\u00A7o" // ITALIC
+			else -> ""
+		}
 
-		val ping = if (classProvider.isEntityPlayer(entity)) EntityUtils.getPing(entity) else 0
-		val pingText = if (pingValue.get() && classProvider.isEntityPlayer(entity)) (if (ping > 200) "\u00A7c" else if (ping > 100) "\u00A7e" else if (ping <= 0) "\u00A77" else "\u00A7a") + ping + "ms \u00A77" else ""
+		val pingText = if (pingValue.get() && classProvider.isEntityPlayer(entity))
+		{
+			val ping = if (classProvider.isEntityPlayer(entity)) EntityUtils.getPing(entity) else 0
 
-		val dist: Double = thePlayer.getDistanceToEntityBox(entity)
-		val distanceText = if (distanceValue.get()) "\u00A77${DECIMAL_FORMAT.format(dist)}m " else ""
+			(when
+			{
+				ping > 200 -> "\u00A7c" // ping higher than 200 -> RED
+				ping > 100 -> "\u00A7e" // ping higher than 100 -> YELLOW
+				ping <= 0 -> "\u00A77" // ping is lower than zero (unknown) -> GRAY
+				else -> "\u00A7a" // ping is 0 ~ 100 -> GREEN
+			}) + ping + "ms "
+		}
+		else ""
 
-		val health: Float = if (!classProvider.isEntityPlayer(entity) || healthModeValue.get().equals("Datawatcher", true)) entity.health
-		else EntityUtils.getPlayerHealthFromScoreboard(
-			entity.asEntityPlayer().gameProfile.name, healthModeValue.get().equals("Mineplex", true)
-		).toFloat()
-		val absorption = if (ceil(entity.absorptionAmount.toDouble()) > 0) entity.absorptionAmount else 0f
-		val healthPercentage = (health + absorption) / entity.maxHealth * 100f
-		val healthColor = if (healthPercentage <= 25) "\u00A7c" else if (healthPercentage <= 50) "\u00A7e" else "\u00A7a"
-		val healthText = if (healthValue.get()) "\u00A77 $healthColor${DECIMAL_FORMAT.format(health)}${if (absorption > 0) "\u00A76+${DECIMAL_FORMAT.format(absorption)}$healthColor" else ""} HP \u00A77(${if (absorption > 0) "\u00A76" else healthColor}${
-			DECIMAL_FORMAT.format(healthPercentage)
-		}%\u00A77)"
+		val distanceText = if (distanceValue.get())
+		{
+			val dist: Double = thePlayer.getDistanceToEntityBox(entity)
+
+			"\u00A77${DECIMAL_FORMAT.format(dist)}m "
+		}
+		else ""
+
+		val healthText = if (healthValue.get())
+		{
+			val health: Float = if (!classProvider.isEntityPlayer(entity) || healthModeValue.get().equals("Datawatcher", true)) entity.health
+			else EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, healthModeValue.get().equals("Mineplex", true)).toFloat()
+
+			val absorption = if (ceil(entity.absorptionAmount.toDouble()) > 0) entity.absorptionAmount else 0f
+			val healthPercentage = (health + absorption) / entity.maxHealth * 100f
+			val healthColor = when
+			{
+				healthPercentage <= 25 -> "\u00A7c" // under 25% -> RED
+				healthPercentage <= 50 -> "\u00A7e" // under 50% -> YELLOW
+				else -> "\u00A7a"
+			}
+
+			"\u00A77 $healthColor${DECIMAL_FORMAT.format(health)}${if (absorption > 0) "\u00A76+${DECIMAL_FORMAT.format(absorption)}$healthColor" else ""} HP \u00A77(${if (absorption > 0) "\u00A76" else healthColor}${DECIMAL_FORMAT.format(healthPercentage)}%\u00A77)"
+		}
 		else ""
 
 		val botText = if (bot) " \u00A7c\u00A7l[BOT]" else ""
 		val murderText = if (murderDetector.state && murderDetector.murders.contains(entity)) "\u00A75\u00A7l[MURDER]\u00A7r " else ""
 
-		var text = "$murderText$entityIDText$distanceText$pingText$nameColor$tag$healthText$botText"
+		var text = "$murderText$entityIDText$distanceText$pingText\u00A77$nameColor$tag$healthText$botText"
 		if (stripColorsValue.get()) text = ColorUtils.stripColor(text)!!
 
 		// Push

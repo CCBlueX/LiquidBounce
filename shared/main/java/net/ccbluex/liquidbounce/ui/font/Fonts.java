@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.utils.WorkerUtils;
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils;
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 
+// TODO: Customizable main font (make can choose between roboto-medium and others)
 public class Fonts extends MinecraftInstance
 {
-
 	@FontDetails(fontName = "Minecraft Font")
 	public static final IFontRenderer minecraftFont = mc.getFontRendererObj();
 

@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.Timer
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import java.util.*
 
+// TODO: Add AutoGApple (or AutoEat)
 class ModuleManager : Listenable
 {
 

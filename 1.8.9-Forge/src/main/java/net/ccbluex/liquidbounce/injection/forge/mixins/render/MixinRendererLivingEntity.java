@@ -285,8 +285,8 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 				GlStateManager.color(1.0F, 1.0F, 1.0F, 0.15F);
 				GlStateManager.depthMask(false);
 				GL11.glEnable(GL11.GL_BLEND);
-				GlStateManager.blendFunc(770, 771);
-				GlStateManager.alphaFunc(516, 0.003921569F);
+				GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+				GlStateManager.alphaFunc(GL11.GL_GREATER, 0.003921569F);
 			}
 
 			final ESP esp = (ESP) LiquidBounce.moduleManager.getModule(ESP.class);
@@ -347,7 +347,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 			if (semiVisible)
 			{
 				GlStateManager.disableBlend();
-				GlStateManager.alphaFunc(516, 0.1F);
+				GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
 				GlStateManager.popMatrix();
 				GlStateManager.depthMask(true);
 			}

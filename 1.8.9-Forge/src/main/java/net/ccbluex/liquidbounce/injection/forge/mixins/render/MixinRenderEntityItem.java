@@ -33,6 +33,7 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.IFluidBlock;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL45;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -73,10 +74,10 @@ public class MixinRenderEntityItem
 			renderer.getRenderManager().renderEngine.getTexture(TextureMap.locationBlocksTexture).setBlurMipmap(false, false);
 
 			GlStateManager.enableRescaleNormal();
-			GlStateManager.alphaFunc(516, 0.1F);
+			GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
 			GlStateManager.enableBlend();
 			RenderHelper.enableStandardItemLighting();
-			GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+			GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
 			GlStateManager.pushMatrix();
 			IBakedModel ibakedmodel = mc.getRenderItem().getItemModelMesher().getItemModel(itemstack);
 			final boolean is3D = ibakedmodel.isGui3d();
@@ -205,7 +206,6 @@ public class MixinRenderEntityItem
 
 	public final int getModelCount(final ItemStack stack)
 	{
-
 		if (stack.stackSize > 48)
 			return 5;
 		if (stack.stackSize > 32)
@@ -248,7 +248,7 @@ public class MixinRenderEntityItem
 		if (filled < 0)
 		{
 			filled *= -1;
-			// filled -= 0.11111111F; //Why this is needed.. not sure...
+			// filled -= 0.11111111F; // Why this is needed.. not sure...
 			if (d0 > j + (1 - filled))
 				return fluid;
 		}

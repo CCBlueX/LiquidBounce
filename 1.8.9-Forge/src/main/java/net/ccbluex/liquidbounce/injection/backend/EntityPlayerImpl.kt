@@ -85,7 +85,7 @@ open class EntityPlayerImpl<out T : EntityPlayer>(wrapped: T) : EntityLivingBase
 	override val displayNameString: String
 		get() = wrapped.displayNameString
 	override val currentEquippedItem: IItemStack?
-		get() = wrapped.currentEquippedItem.wrap()
+		get() = wrapped.currentEquippedItem?.wrap()
 	override val spectator: Boolean
 		get() = wrapped.isSpectator
 

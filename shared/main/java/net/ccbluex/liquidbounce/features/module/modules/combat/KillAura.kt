@@ -42,6 +42,7 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 // TODO: Fix broken target searching algorithm
+// TODO: Visually start-stop blocking like as Xave
 @ModuleInfo(
 	name = "KillAura", description = "Automatically attacks targets around you.", category = ModuleCategory.COMBAT, keyBind = Keyboard.KEY_R
 )

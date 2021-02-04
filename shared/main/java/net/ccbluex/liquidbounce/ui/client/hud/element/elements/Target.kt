@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WDefaultPlayerSkin
 import net.ccbluex.liquidbounce.features.module.modules.combat.Aimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
@@ -96,78 +95,103 @@ class Target : Element()
 
 			val healthColor = ColorUtils.getHealthColor(easingHealth, targetMaxHealth)
 
-			val width = (98.0F + Fonts.font60.getStringWidth(targetPlayer.name!!)).coerceAtLeast(200.0F)
+			val width = (100.0F + Fonts.font60.getStringWidth(targetPlayer.name!!)).coerceAtLeast(250.0F)
 
 			// Draw rect box
-			RenderUtils.drawBorderedRect(0F, 0F, width, 80F, borderWidth.get(), Color(borderColorRed.get(), borderColorGreen.get(), borderColorBlue.get()).rgb, Color.BLACK.rgb)
+			RenderUtils.drawBorderedRect(0F, 0F, width, 110F, borderWidth.get(), Color(borderColorRed.get(), borderColorGreen.get(), borderColorBlue.get()).rgb, Color.black.rgb)
 
 			// Head Box
-			RenderUtils.drawRect(2F, 2F, 62F, 62F, 0x333333)
+			RenderUtils.drawRect(2F, 2F, 96F, 96F, Color.darkGray.rgb)
 
 			// Absorption
-			RenderUtils.drawRect(((easingHealth / targetMaxHealth) * width) - ((/* ptargetAbsorption */ easingAbsorption / targetMaxHealth) * width) + 1, 73F, (easingHealth / targetMaxHealth) * width, 74F, Color.YELLOW.rgb)
+			RenderUtils.drawRect(((easingHealth / targetMaxHealth) * width) - ((/* ptargetAbsorption */ easingAbsorption / targetMaxHealth) * width) + 1, 103F, (easingHealth / targetMaxHealth) * width, 104F, Color.yellow.rgb)
 
 			// Damage animation
-			if (easingHealth > targetHealth) RenderUtils.drawRect(0F, 75F, (easingHealth / targetMaxHealth) * width, 77F, damageColor.rgb)
+			if (easingHealth > targetHealth) RenderUtils.drawRect(0F, 105F, (easingHealth / targetMaxHealth) * width, 107F, damageColor.rgb)
 
 			// Health bar
-			RenderUtils.drawRect(0F, 75F, (targetHealth / targetMaxHealth) * width, 77F, healthColor.rgb)
+			RenderUtils.drawRect(0F, 105F, (targetHealth / targetMaxHealth) * width, 107F, healthColor.rgb)
 
 			// Heal animation
-			if (easingHealth < targetHealth) RenderUtils.drawRect((easingHealth / targetMaxHealth) * width, 75F, (targetHealth / targetMaxHealth) * width, 77F, healColor.rgb)
+			if (easingHealth < targetHealth) RenderUtils.drawRect((easingHealth / targetMaxHealth) * width, 105F, (targetHealth / targetMaxHealth) * width, 107F, healColor.rgb)
 
-			for (index in 1..targetMaxHealthInt) RenderUtils.drawRect(width / targetMaxHealthInt * index, 73F, width / targetMaxHealthInt * index + 1, 77F, Color.BLACK.rgb)
+			for (index in 1..targetMaxHealthInt) RenderUtils.drawRect(width / targetMaxHealthInt * index, 103F, width / targetMaxHealthInt * index + 1, 107F, Color.black.rgb)
 
 			// Indicate total armor value
-			RenderUtils.drawRect(0F, 79F, (easingArmor / 20) * width, 80F, Color.CYAN.rgb)
+			RenderUtils.drawRect(0F, 109F, (easingArmor / 20) * width, 110F, Color.cyan.rgb)
 
-			for (index in 1..20) RenderUtils.drawRect(width / 20 * index, 79F, width / 20 * index + 1, 80F, Color.BLACK.rgb)
-
+			for (index in 1..20) RenderUtils.drawRect(width / 20 * index, 109F, width / 20 * index + 1, 110F, Color.black.rgb)
 
 			easingHealth += ((targetHealth - easingHealth) / 2.0F.pow(10.0F - healthFadeSpeed.get())) * RenderUtils.deltaTime
 			easingAbsorption += ((targetPlayer.absorptionAmount - easingAbsorption) / 2.0F.pow(10.0F - absorptionFadeSpeed.get())) * RenderUtils.deltaTime
 			easingArmor += ((targetArmor - easingArmor) / 2.0F.pow(10.0F - armorFadeSpeed.get())) * RenderUtils.deltaTime
 
-			Fonts.font60.drawString(targetPlayer.displayNameString, 78, 3, 0xffffff)
+			// Draw Name
+			Fonts.font60.drawString(targetPlayer.displayNameString, 100, 3, 0xffffff)
 
 			// Draw informations
 			val playerInfo = mc.netHandler.getPlayerInfo(targetPlayer.uniqueID)
+
+			val skinResource: IResourceLocation
+			val ping: Int
+			val pingTextColor: Int
+
 			if (playerInfo != null)
 			{
-				val ping = playerInfo.responseTime.coerceAtLeast(0)
-				val pingColor = if (ping > 300) Color.RED else ColorUtils.blendColors(floatArrayOf(0.0F, 0.5F, 1.0F), arrayOf(Color.GREEN, Color.YELLOW, Color.RED), ping / 300.0F)
-				Fonts.font35.drawString("${ping}ms", 80, 20, pingColor!!.rgb)
-
-				// Draw head
-				drawHead(playerInfo.locationSkin, 60, 60)
+				ping = playerInfo.responseTime.coerceAtLeast(0)
+				pingTextColor = if (ping > 300) 0xff0000 else ColorUtils.blendColors(floatArrayOf(0.0F, 0.5F, 1.0F), arrayOf(Color.GREEN, Color.YELLOW, Color.RED), ping / 300.0F)!!.rgb
+				skinResource = playerInfo.locationSkin
 			}
 			else
 			{
-				Fonts.font35.drawString("0ms", 80, 20, 0x808080)
-				drawHead(WDefaultPlayerSkin.getDefaultSkin(targetPlayer.uniqueID), 60, 60)
-				WBlockPos
+				ping = -1
+				pingTextColor = 0x808080
+				skinResource = WDefaultPlayerSkin.getDefaultSkin(targetPlayer.uniqueID)
 			}
 
-			Fonts.font35.drawString("${if (targetPlayer.onGround) "On" else "Off"} Ground", 75, 30, 0xffffff)
-			Fonts.font35.drawString("${if (!targetPlayer.sprinting) "Not " else ""}Sprinting | ${if (!targetPlayer.sneaking) "Not " else ""}Sneaking", 75, 40, 0xffffff)
-			Fonts.font35.drawString("Distance > ${decimalFormat.format(mc.thePlayer!!.getDistanceToEntityBox(targetPlayer))}m", 75, 50, 0xffffff)
-			Fonts.font35.drawString("Hurt > ${targetPlayer.hurtTime}", 75, 60, if (targetPlayer.hurtTime > 0) 0xff0000 /* RED */ else 0x00ff00 /* GREEN */)
+			// Draw head
+			drawHead(skinResource, 90, 90)
+
+			val pingLevelImageID: Int = if (ping < 0L) 5 else if (ping < 150L) 0 else if (ping < 300L) 1 else if (ping < 600L) 2 else if (ping < 1000L) 3 else 4
+
+			// Draw Ping level
+			RenderUtils.glColor(Color.white) // Reset Color
+			mc.textureManager.bindTexture(RenderUtils.ICONS)
+			RenderUtils.drawModalRectWithCustomSizedTexture(100f, 20f, 0f, (176 + (pingLevelImageID shl 3)).toFloat(), 10f, 8f, 256f, 256f)
+
+			Fonts.font35.drawString("${ping}ms", 112, 22, pingTextColor)
 
 			// Render equipments
 			if (armor.get())
 			{
 				for (index in 0..4)
 				{
-					if (targetPlayer.getEquipmentInSlot(index) == null) continue
+					val isHeldItem = index == 0
 
-					mc.renderItem.zLevel = -147F
-					mc.renderItem.renderItemAndEffectIntoGUI(targetPlayer.getEquipmentInSlot(index)!!, width.toInt() - 20, 2 + (4 - index) * 12)
+					val equipmentX = 100 + (4 - index) * 20 + if (isHeldItem) 5 else 0
+					val equipmentY = 35
+
+					RenderUtils.drawRect(equipmentX, equipmentY, equipmentX + 16, equipmentY + 16, Color.darkGray.rgb)
+
+					if (targetPlayer.getEquipmentInSlot(index) != null)
+					{
+						mc.renderItem.zLevel = -147F
+						mc.renderItem.renderItemAndEffectIntoGUI(targetPlayer.getEquipmentInSlot(index)!!, equipmentX, equipmentY)
+					}
 				}
 			}
+
+			RenderUtils.glColor(Color.white) // Reset Color
+
+			// Render Target Stats
+			Fonts.font35.drawString("${if (targetPlayer.onGround) "On" else "Off"} Ground", 100, 60, 0xffffff)
+			Fonts.font35.drawString("${if (!targetPlayer.sprinting) "Not " else ""}Sprinting | ${if (!targetPlayer.sneaking) "Not " else ""}Sneaking", 100, 70, 0xffffff)
+			Fonts.font35.drawString("Distance > ${decimalFormat.format(mc.thePlayer!!.getDistanceToEntityBox(targetPlayer))}m", 100, 80, 0xffffff)
+			Fonts.font35.drawString("Hurt > ${targetPlayer.hurtTime}", 100, 90, if (targetPlayer.hurtTime > 0) 0xff0000 /* RED */ else 0x00ff00 /* GREEN */)
 		}
 
 		lastTarget = targetEntity
-		return Border(0F, 0F, 200F, 80F)
+		return Border(0F, 0F, 250F, 110F)
 	}
 
 	private fun drawHead(skin: IResourceLocation, width: Int, height: Int)

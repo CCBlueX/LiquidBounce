@@ -30,11 +30,14 @@ import org.lwjgl.opengl.GL14;
 public final class RenderUtils extends MinecraftInstance
 {
 	private static final Map<Integer, Boolean> glCapMap = new HashMap<>();
+	public static final IResourceLocation ICONS;
 	private static final int[] DISPLAY_LISTS_2D = new int[4];
 	public static int deltaTime;
 
 	static
 	{
+		ICONS = classProvider.createResourceLocation("textures/gui/icons.png");
+
 		for (int i = 0, j = DISPLAY_LISTS_2D.length; i < j; i++)
 			DISPLAY_LISTS_2D[i] = glGenLists(1);
 
