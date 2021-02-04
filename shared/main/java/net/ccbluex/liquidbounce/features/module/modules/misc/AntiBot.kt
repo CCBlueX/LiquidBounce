@@ -15,8 +15,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.getFullName
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
+import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.sqrt
@@ -135,6 +137,8 @@ object AntiBot : Module()
 	private val gwenValue = BoolValue("GWEN", false)
 	private val watchdogValue = BoolValue("Watchdog", false)
 	private val watchdogRemoveValue = BoolValue("RemoveWatchdogBot", false)
+
+	private val drawExpectedPosValue = BoolValue("MarkExpectedPosition", false)
 
 	private val ground = mutableListOf<Int>()
 	private val air = mutableListOf<Int>()
@@ -363,9 +367,6 @@ object AntiBot : Module()
 				val distances = doubleArrayOf(entity.getDistance(expectedX, expectedY, expectedZ), entity.getDistance(expectedX2, expectedY2, expectedZ2))
 				for (distance in distances)
 				{
-
-					// TODO: Draw ExpectedPos with RenderUtils.drawAxisAlignedBB
-
 					// Position Delta
 					if (distance <= positionExpectationDeltaLimitValue.get()) position_violation[entity.entityId] = position_violation.getOrDefault(entity.entityId, 0) + 1
 					else if (positionExpectationDeltaCountSysValue.get())
@@ -471,6 +472,40 @@ object AntiBot : Module()
 			val deltaZ = thePlayer.posZ - entityZ
 			val distance = sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ)
 			if (distance <= 18 && entityY > thePlayer.posY + 1.0 && thePlayer.posX != entityX && thePlayer.posY != entityY && thePlayer.posZ != entityZ) spawnedposition.add(packetPlayerSpawn.entityID)
+		}
+	}
+
+	@EventTarget
+	fun onRender3D(e: Render3DEvent)
+	{
+		if (positionValue.get() && drawExpectedPosValue.get())
+		{
+			val thePlayer = mc.thePlayer ?: return
+
+			val yaw = if (RotationUtils.serverRotation != null) RotationUtils.serverRotation.yaw else thePlayer.rotationYaw
+			val dir = WMathHelper.toRadians(yaw - 180.0F)
+
+			val back1 = positionBackValue.get()
+			val y1 = positionYValue.get()
+
+			val y2 = positionY2Value.get()
+			val back2 = positionBack2Value.get()
+
+			val sin = functions.sin(dir)
+			val cos = functions.cos(dir)
+
+			val expectedX = thePlayer.posX - sin * back1
+			val expectedY = thePlayer.posY + y1
+			val expectedZ = thePlayer.posZ + cos * back1
+
+			val expectedX2 = thePlayer.posX - sin * back2
+			val expectedY2 = thePlayer.posY + y2
+			val expectedZ2 = thePlayer.posZ + cos * back2
+
+			val renderManager = mc.renderManager
+
+			RenderUtils.drawAxisAlignedBB(classProvider.createAxisAlignedBB(expectedX - 0.3, expectedY, expectedZ - 0.3, expectedX + 0.3, expectedY + 1.65, expectedZ + 0.3).offset(-renderManager.renderPosX, -renderManager.renderPosY, -renderManager.renderPosZ), Color.red)
+			RenderUtils.drawAxisAlignedBB(classProvider.createAxisAlignedBB(expectedX2 - 0.3, expectedY2, expectedZ2 - 0.3, expectedX2 + 0.3, expectedY2 + 1.65, expectedZ2 + 0.3).offset(-renderManager.renderPosX, -renderManager.renderPosY, -renderManager.renderPosZ), Color.green)
 		}
 	}
 
