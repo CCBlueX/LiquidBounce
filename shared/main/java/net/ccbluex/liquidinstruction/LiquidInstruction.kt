@@ -15,9 +15,7 @@ fun main()
 	frame.isAlwaysOnTop = true
 
 	// Add instruction as label
-	@Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS") val label = JLabel(
-		LiquidBounce::class.java.getResourceAsStream("/instructions.html").reader().readText().replace("{assets}", LiquidBounce.javaClass.classLoader.getResource("assets").toString())
-	)
+	val label = JLabel(LiquidBounce::class.java.getResourceAsStream("/instructions.html").reader().readText().replace("{assets}", "${LiquidBounce.javaClass.classLoader.getResource("assets")}"))
 	frame.add(label, BorderLayout.CENTER)
 
 	// Pack frame
