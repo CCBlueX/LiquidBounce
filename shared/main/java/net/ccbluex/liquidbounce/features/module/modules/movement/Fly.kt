@@ -16,7 +16,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Damage
+import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing
+import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
@@ -26,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
+import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -140,6 +143,7 @@ class Fly : Module()
 	 */
 	private val bobValue = BoolValue("Bob", true)
 	private val markValue = BoolValue("Mark", true)
+	private val vanillaFlightRemainingTimeValue = BoolValue("VanillaFlightRemainingTimeCounter", false)
 
 	/**
 	 * Timers
@@ -154,7 +158,9 @@ class Fly : Module()
 	private val cubecraftTeleportTickTimer = TickTimer()
 	val freeHypixelTimer = TickTimer()
 	private val teleportTimer = MSTimer()
-	private var minesuchtTP = MSTimer()
+	private val minesuchtTP = MSTimer()
+
+	private val vanillaRemainingTime = TickTimer()
 
 	/**
 	 * AAC mode related variables
@@ -196,6 +202,7 @@ class Fly : Module()
 
 		hypixelFlyTimer.reset()
 		noPacketModify = true
+		vanillaRemainingTime.reset()
 
 		val posX = thePlayer.posX
 		val posY = thePlayer.posY
@@ -216,7 +223,6 @@ class Fly : Module()
 					"hypixel" -> Damage.hypixelDamage()
 				}
 			}
-
 		}
 
 		run {
@@ -330,7 +336,6 @@ class Fly : Module()
 		hypixelFlyStarted = false
 		canPerformHypixelDamageFly = false
 
-
 		if (resetMotionOnDisable.get())
 		{
 			thePlayer.motionX = 0.0
@@ -364,6 +369,8 @@ class Fly : Module()
 		val sneakKeyDown = gameSettings.keyBindSneak.isKeyDown
 
 		val vanillaSpeed = vanillaSpeedValue.get()
+
+		vanillaRemainingTime.update()
 
 		run {
 			when (modeValue.get().toLowerCase())
@@ -886,6 +893,28 @@ class Fly : Module()
 		{
 			"aac1.9.10" -> RenderUtils.drawPlatform(startY + aacJump, Color(0, 0, 255, 90), 1.0)
 			"aac3.3.12" -> RenderUtils.drawPlatform(-70.0, Color(0, 0, 255, 90), 1.0)
+		}
+	}
+
+	@EventTarget
+	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
+	{
+		if (vanillaFlightRemainingTimeValue.get())
+		{
+			GL11.glPushMatrix()
+			val blockOverlay = LiquidBounce.moduleManager[BlockOverlay::class.java] as BlockOverlay
+			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) GL11.glTranslatef(0f, 15f, 0f)
+
+			val remainingTicks = 80 - vanillaRemainingTime.tick.coerceAtMost(80)
+			val info = "You can fly ${if (remainingTicks <= 10) "\u00A7c" else ""}${remainingTicks}\u00A7r more ticks"
+			val scaledResolution = classProvider.createScaledResolution(mc)
+
+			RenderUtils.drawBorderedRect(scaledResolution.scaledWidth / 2 - 2.0f, scaledResolution.scaledHeight / 2 + 5.0f, scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2.0f, scaledResolution.scaledHeight / 2 + 16.0f, 3f, Color.BLACK.rgb, Color.BLACK.rgb)
+
+			classProvider.getGlStateManager().resetColor()
+
+			Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2.0f, scaledResolution.scaledHeight / 2 + 7.0f, 0xffffff)
+			GL11.glPopMatrix()
 		}
 	}
 

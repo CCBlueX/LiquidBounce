@@ -8,7 +8,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.TextValue
 import java.util.regex.Pattern
 
-// TODO: Add Delay option
 @ModuleInfo(name = "AutoLogin", description = "Automatically log-in or register with specified password.", category = ModuleCategory.MISC)
 class AutoLogin : Module()
 {
@@ -18,19 +17,21 @@ class AutoLogin : Module()
 	fun onPacket(event: PacketEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val pw = password.get()
+
 		if (classProvider.isSPacketChat(event.packet))
 		{
 			val chat = event.packet.asSPacketChat().chatComponent.unformattedText
-			if (loginPattern.matcher(chat).find()) thePlayer.sendChatMessage("/login " + password.get())
-			if (registerPattern.matcher(chat).find()) thePlayer.sendChatMessage("/register " + password.get())
-			if (registerPattern2.matcher(chat).find()) thePlayer.sendChatMessage("/register " + password.get() + " " + password.get())
+			if (loginPattern.matcher(chat).find()) thePlayer.sendChatMessage("/login $pw")
+			if (registerPattern.matcher(chat).find()) thePlayer.sendChatMessage("/register $pw")
+			if (registerPattern2.matcher(chat).find()) thePlayer.sendChatMessage("/register $pw $pw")
 		}
 		else if (classProvider.isSPacketTitle(event.packet))
 		{
 			val title = event.packet.asSPacketTitle().message.unformattedText
-			if (loginPattern.matcher(title).find()) thePlayer.sendChatMessage("/login " + password.get())
-			if (registerPattern.matcher(title).find()) thePlayer.sendChatMessage("/register " + password.get())
-			if (registerPattern2.matcher(title).find()) thePlayer.sendChatMessage("/register " + password.get() + " " + password.get())
+			if (loginPattern.matcher(title).find()) thePlayer.sendChatMessage("/login $pw")
+			if (registerPattern.matcher(title).find()) thePlayer.sendChatMessage("/register $pw")
+			if (registerPattern2.matcher(title).find()) thePlayer.sendChatMessage("/register $pw $pw")
 		}
 	}
 

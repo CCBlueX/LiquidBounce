@@ -106,7 +106,7 @@ class BlockOverlay : Module()
 			)
 
 			classProvider.getGlStateManager().resetColor()
-			Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2f, scaledResolution.scaledHeight / 2f + 7f, Color.WHITE.rgb, false)
+			Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2f, scaledResolution.scaledHeight / 2f + 7f, 0xffffff, false)
 		}
 	}
 }
