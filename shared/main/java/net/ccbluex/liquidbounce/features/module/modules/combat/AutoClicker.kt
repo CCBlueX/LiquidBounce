@@ -94,4 +94,7 @@ class AutoClicker : Module()
 			}
 		}
 	}
+
+	override val tag: String?
+		get() = "${minCPSValue.get()} ~ ${maxCPSValue.get()}"
 }

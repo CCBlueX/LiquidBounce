@@ -91,6 +91,5 @@ class IceSpeed : Module()
 	{
 		classProvider.getBlockEnum(BlockType.ICE).slipperiness = 0.98f
 		classProvider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.98f
-		super.onDisable()
 	}
 }

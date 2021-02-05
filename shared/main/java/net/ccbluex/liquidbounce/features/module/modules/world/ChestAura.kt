@@ -28,14 +28,13 @@ import net.ccbluex.liquidbounce.value.*
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
 object ChestAura : Module()
 {
-
+	private val chestValue = BlockValue("Chest", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.CHEST)))
 	private val rangeValue = FloatValue("Range", 5F, 1F, 6F)
 	private val maxDelayValue = IntegerValue("MaxDelay", 100, 50, 200)
 	private val minDelayValue = IntegerValue("MinDelay", 100, 50, 200)
+	private val rotationsValue = BoolValue("Rotations", true)
 	private val throughWallsValue = BoolValue("ThroughWalls", true)
 	private val visualSwing = BoolValue("VisualSwing", true)
-	private val chestValue = BlockValue("Chest", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.CHEST)))
-	private val rotationsValue = BoolValue("Rotations", true)
 
 	var currentBlock: WBlockPos? = null
 

@@ -94,7 +94,6 @@ class Scaffold : Module()
 	}
 
 	// Basic stuff
-	@JvmField
 	val sprintValue: BoolValue = BoolValue("Sprint", false)
 	private val swingValue = BoolValue("Swing", true)
 	private val downValue = BoolValue("Down", true)
@@ -995,11 +994,8 @@ class Scaffold : Module()
 							val pitch = if (staticPitch) staticPitchOffset else wrapAngleTo180_float((-Math.toDegrees(atan2(diffY, diffXZ))).toFloat())
 							val rotation = Rotation(wrapAngleTo180_float(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f + if (staticYaw) staticYawOffset else 0f), pitch)
 							val rotationVector = RotationUtils.getVectorForRotation(rotation)
-							val vector = eyesPos.addVector(
-								rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4
-							)
+							val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
 							val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false, false, true)
-
 							if (rayTrace!!.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos!! != neighbor) continue
 							if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation.rotation)) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
 

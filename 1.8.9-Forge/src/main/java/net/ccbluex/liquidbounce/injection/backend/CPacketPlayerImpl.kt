@@ -47,13 +47,18 @@ class CPacketPlayerImpl<out T : C03PacketPlayer>(wrapped: T) : PacketImpl<T>(wra
 		{
 			wrapped.onGround = value
 		}
+	override var moving: Boolean
+		get() = wrapped.isMoving
+		set(value)
+		{
+			wrapped.isMoving = value
+		}
 	override var rotating: Boolean
 		get() = wrapped.rotating
 		set(value)
 		{
 			wrapped.rotating = value
 		}
-
 }
 
 fun ICPacketPlayer.unwrap(): C03PacketPlayer = (this as CPacketPlayerImpl<*>).wrapped

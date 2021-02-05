@@ -28,6 +28,9 @@ class FreeCam : Module()
 	private var oldX = 0.0
 	private var oldY = 0.0
 	private var oldZ = 0.0
+	private var oldYaw = 0.0f
+	private var oldPitch = 0.0f
+	private var oldGround = false
 
 	override fun onEnable()
 	{
@@ -37,6 +40,9 @@ class FreeCam : Module()
 		oldX = thePlayer.posX
 		oldY = thePlayer.posY
 		oldZ = thePlayer.posZ
+		oldYaw = thePlayer.rotationYaw
+		oldPitch = thePlayer.rotationPitch
+		oldGround = thePlayer.onGround
 
 		val playerMP = classProvider.createEntityOtherPlayerMP(theWorld, thePlayer.gameProfile)
 
@@ -59,7 +65,7 @@ class FreeCam : Module()
 
 		val fakePlayer = fakePlayer ?: return
 
-		thePlayer.setPositionAndRotation(oldX, oldY, oldZ, thePlayer.rotationYaw, thePlayer.rotationPitch)
+		thePlayer.setPositionAndRotation(oldX, oldY, oldZ, oldYaw, oldPitch)
 
 		theWorld.removeEntityFromWorld(fakePlayer.entityId)
 		this.fakePlayer = null
@@ -99,6 +105,29 @@ class FreeCam : Module()
 	{
 		val packet = event.packet
 
-		if (classProvider.isCPacketPlayer(packet) || classProvider.isCPacketEntityAction(packet)) event.cancelEvent()
+		if (classProvider.isCPacketPlayer(packet)) // To bypass FreeCam checks, we need to keep send normal packets.
+		{
+			val movePacket = packet.asCPacketPlayer()
+
+			if (movePacket.moving)
+			{
+				movePacket.x = oldX
+				movePacket.y = oldY
+				movePacket.z = oldZ
+			}
+
+			movePacket.onGround = oldGround
+
+			if (movePacket.rotating)
+			{
+				movePacket.yaw = oldYaw
+				movePacket.pitch = oldPitch
+			}
+		}
+
+		if (classProvider.isCPacketEntityAction(packet)) event.cancelEvent()
 	}
+
+	override val tag: String
+		get() = "$oldX, $oldY, $oldZ, $oldGround, $oldYaw, $oldPitch"
 }

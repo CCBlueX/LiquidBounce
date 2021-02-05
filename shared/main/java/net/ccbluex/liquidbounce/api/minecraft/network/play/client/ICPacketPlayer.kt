@@ -21,4 +21,7 @@ interface ICPacketPlayer : IPacket
 
 	@get:JvmName("isRotating")
 	var rotating: Boolean
+
+	@get:JvmName("isMoving")
+	var moving: Boolean
 }

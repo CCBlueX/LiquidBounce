@@ -14,7 +14,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 @ModuleInfo(name = "AntiCactus", description = "Prevents cactuses from damaging you.", category = ModuleCategory.PLAYER)
 class AntiCactus : Module()
 {
-
 	@EventTarget
 	fun onBlockBB(event: BlockBBEvent)
 	{

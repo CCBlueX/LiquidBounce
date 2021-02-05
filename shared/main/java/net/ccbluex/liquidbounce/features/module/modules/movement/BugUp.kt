@@ -97,13 +97,7 @@ class BugUp : Module()
 						thePlayer.motionY = 0.0
 					}
 
-					"flyflag" ->
-					{
-						tryingFlag = true
-
-						//						thePlayer.motionY += 0.1
-						//						thePlayer.fallDistance = 0F
-					}
+					"flyflag" -> tryingFlag = true
 
 					"ongroundspoof" -> networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
 
@@ -193,7 +187,7 @@ class BugUp : Module()
 		{
 			val mode = modeValue.get()
 
-			if (mode.equals("FlyFlag", true) && tryingFlag)
+			if (!mode.equals("TeleportBack", true) && tryingFlag)
 			{
 
 				// Automatically stop flagging after teleported back.

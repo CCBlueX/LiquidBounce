@@ -20,6 +20,7 @@ class TNTBlock : Module()
 	private val fuseValue = IntegerValue("Fuse", 10, 0, 80)
 	private val rangeValue = FloatValue("Range", 9F, 1F, 20F)
 	private val autoSwordValue = BoolValue("AutoSword", true)
+
 	private var blocked = false
 
 	@EventTarget
@@ -80,4 +81,7 @@ class TNTBlock : Module()
 			blocked = false
 		}
 	}
+
+	override val tag: String
+		get() = "${fuseValue.get()}"
 }

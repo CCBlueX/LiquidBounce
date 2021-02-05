@@ -67,9 +67,15 @@ class Zoot : Module()
 	private fun isBadEffect(effect: IPotionEffect): Boolean
 	{
 		return Stream.of(
-
-			classProvider.getPotionEnum(PotionType.HUNGER), classProvider.getPotionEnum(PotionType.MOVE_SLOWDOWN), classProvider.getPotionEnum(PotionType.DIG_SLOWDOWN), classProvider.getPotionEnum(PotionType.HARM), classProvider.getPotionEnum(PotionType.CONFUSION), classProvider.getPotionEnum(PotionType.BLINDNESS), classProvider.getPotionEnum(PotionType.WEAKNESS), classProvider.getPotionEnum(PotionType.WITHER), classProvider.getPotionEnum(PotionType.POISON)
-
+			classProvider.getPotionEnum(PotionType.HUNGER), //
+			classProvider.getPotionEnum(PotionType.MOVE_SLOWDOWN), //
+			classProvider.getPotionEnum(PotionType.DIG_SLOWDOWN), //
+			classProvider.getPotionEnum(PotionType.HARM), //
+			classProvider.getPotionEnum(PotionType.CONFUSION), //
+			classProvider.getPotionEnum(PotionType.BLINDNESS),  //
+			classProvider.getPotionEnum(PotionType.WEAKNESS), //
+			classProvider.getPotionEnum(PotionType.WITHER), //
+			classProvider.getPotionEnum(PotionType.POISON) //
 		).anyMatch { effect.potionID == it.id }
 	}
 }

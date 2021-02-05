@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
-@ModuleInfo(name = "Eagle", description = "Makes you eagle (aka. FastBridge).", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "Eagle", description = "Makes you eagle (a.k.a. FastBridge).", category = ModuleCategory.PLAYER)
 class Eagle : Module()
 {
 	@EventTarget

@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import java.awt.Color
 
-@ModuleInfo(name = "Fucker", description = "Destroys selected blocks around you. (aka.  IDNuker)", category = ModuleCategory.WORLD)
+@ModuleInfo(name = "Fucker", description = "Destroys selected blocks around you. (a.k.a.  IDNuker, BedNuker, EggNuker, BedDestroyer, etc.)", category = ModuleCategory.WORLD)
 object Fucker : Module()
 {
 
@@ -246,9 +246,7 @@ object Fucker : Module()
 			{
 				for (z in radius downTo -radius + 1)
 				{
-					val blockPos = WBlockPos(
-						thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z
-					)
+					val blockPos = WBlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z)
 					val block = getBlock(blockPos) ?: continue
 
 					if (functions.getIdFromBlock(block) != targetID) continue
@@ -276,12 +274,8 @@ object Fucker : Module()
 		{
 			"raycast" ->
 			{
-				val eyesPos = WVec3(
-					thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ
-				)
-				val movingObjectPosition = mc.theWorld!!.rayTraceBlocks(
-					eyesPos, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false
-				)
+				val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
+				val movingObjectPosition = mc.theWorld!!.rayTraceBlocks(eyesPos, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
 
 				movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
 			}

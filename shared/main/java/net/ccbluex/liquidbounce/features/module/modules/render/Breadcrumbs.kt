@@ -96,4 +96,7 @@ class Breadcrumbs : Module()
 		synchronized(positions, positions::clear)
 		super.onDisable()
 	}
+
+	override val tag: String
+		get() = "${positions.size}"
 }

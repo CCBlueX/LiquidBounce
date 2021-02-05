@@ -136,15 +136,9 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
 			}
 		}
 
-		if (calcForward > 1f || calcForward < 0.9f && calcForward > 0.3f || calcForward < -1f || calcForward > -0.9f && calcForward < -0.3f)
-		{
-			calcForward *= 0.5f
-		}
+		if (calcForward > 1f || calcForward < 0.9f && calcForward > 0.3f || calcForward < -1f || calcForward > -0.9f && calcForward < -0.3f) calcForward *= 0.5f
 
-		if (calcStrafe > 1f || calcStrafe < 0.9f && calcStrafe > 0.3f || calcStrafe < -1f || calcStrafe > -0.9f && calcStrafe < -0.3f)
-		{
-			calcStrafe *= 0.5f
-		}
+		if (calcStrafe > 1f || calcStrafe < 0.9f && calcStrafe > 0.3f || calcStrafe < -1f || calcStrafe > -0.9f && calcStrafe < -0.3f) calcStrafe *= 0.5f
 
 		var speed = calcStrafe * calcStrafe + calcForward * calcForward
 

@@ -393,5 +393,5 @@ class AutoPot : Module()
 	}
 
 	override val tag: String
-		get() = healthValue.get().toString()
+		get() = "${healthValue.get()}"
 }

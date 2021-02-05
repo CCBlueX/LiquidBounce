@@ -55,10 +55,7 @@ class Strafe : Module()
 				wasDown = false
 			}
 		}
-		else
-		{
-			jump = false
-		}
+		else jump = false
 	}
 
 	@EventTarget

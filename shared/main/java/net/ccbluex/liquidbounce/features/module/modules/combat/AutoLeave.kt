@@ -40,4 +40,7 @@ class AutoLeave : Module()
 			state = false
 		}
 	}
+
+	override val tag: String
+		get() = "${modeValue.get()}, ${healthValue.get()}"
 }

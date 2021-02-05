@@ -72,11 +72,7 @@ abstract class Client : ClientListener, MinecraftInstance()
 		val sslContext = if (ssl) SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE) else null
 
 		val group = NioEventLoopGroup()
-		val handler = ClientHandler(
-			this, WebSocketClientHandshakerFactory.newHandshaker(
-				uri, WebSocketVersion.V13, null, true, DefaultHttpHeaders()
-			)
-		)
+		val handler = ClientHandler(this, WebSocketClientHandshakerFactory.newHandshaker(uri, WebSocketVersion.V13, null, true, DefaultHttpHeaders()))
 
 		val bootstrap = Bootstrap()
 

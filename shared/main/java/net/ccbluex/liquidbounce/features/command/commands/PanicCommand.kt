@@ -47,7 +47,8 @@ class PanicCommand : Command("panic")
 					msg = "all ${category.displayName}"
 				}
 			}
-		} else
+		}
+		else
 		{
 			chatSyntax("panic <all/nonrender/combat/player/movement/render/world/misc/exploit/fun>")
 			return

@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import org.lwjgl.input.Mouse
 
-@ModuleInfo(name = "MidClick", description = "Allows you to add a player as a friend by right clicking him.", category = ModuleCategory.MISC)
+@ModuleInfo(name = "MidClick", description = "Allows you to add a player as a friend by right clicking him. (a.k.a. MiddleClickFriend)", category = ModuleCategory.MISC)
 class MidClick : Module()
 {
 	private var wasDown = false

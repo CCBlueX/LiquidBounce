@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
-import java.util.Objects;
-
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.JumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.AirJump;
@@ -126,11 +124,6 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 			jump();
 			jumpTicks = 10;
 		}
-
-		final LiquidWalk liquidWalk = (LiquidWalk) LiquidBounce.moduleManager.get(LiquidWalk.class);
-
-		if (liquidWalk.getState() && !isJumping && !isSneaking() && isInWater() && "Swim".equalsIgnoreCase(liquidWalk.getModeValue().get()))
-			updateAITick();
 	}
 
 	@Inject(method = "getLook", at = @At("HEAD"), cancellable = true)

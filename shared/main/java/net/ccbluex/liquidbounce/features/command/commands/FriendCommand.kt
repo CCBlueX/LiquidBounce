@@ -40,7 +40,8 @@ class FriendCommand : Command("friend", "friends")
 							FileManager.saveConfig(friendsConfig)
 							chat("\u00A7a\u00A7l$name\u00A73 was added to your friend list.")
 							playEdit()
-						} else chat("The name is already in the list.")
+						}
+						else chat("The name is already in the list.")
 						return
 					}
 					chatSyntax("friend add <name> [alias]")
@@ -58,7 +59,8 @@ class FriendCommand : Command("friend", "friends")
 							FileManager.saveConfig(friendsConfig)
 							chat("\u00A7a\u00A7l$name\u00A73 was removed from your friend list.")
 							playEdit()
-						} else chat("This name is not in the list.")
+						}
+						else chat("This name is not in the list.")
 						return
 					}
 					chatSyntax("friend remove <name>")

@@ -34,7 +34,6 @@ class LadderJump : Module()
 
 	companion object
 	{
-		@JvmField
 		var jumped = false
 	}
 }
