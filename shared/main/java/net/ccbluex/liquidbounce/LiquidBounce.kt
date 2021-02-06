@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 
 object LiquidBounce
 {
-
 	// Client information
 	const val CLIENT_NAME = "LiquidBounce"
 	const val CLIENT_VERSION = 73
@@ -74,7 +73,7 @@ object LiquidBounce
 	{
 		isStarting = true
 
-		ClientUtils.logger.info("Starting $CLIENT_NAME b$CLIENT_VERSION, by $CLIENT_CREATOR")
+		ClientUtils.logger.info("Starting $CLIENT_NAME for $MINECRAFT_VERSION b$CLIENT_VERSION, by $CLIENT_CREATOR")
 
 		// Create file manager
 		fileManager = FileManager()
@@ -110,7 +109,8 @@ object LiquidBounce
 			scriptManager = ScriptManager()
 			scriptManager.loadScripts()
 			scriptManager.enableScripts()
-		} catch (throwable: Throwable)
+		}
+		catch (throwable: Throwable)
 		{
 			ClientUtils.logger.error("Failed to load scripts.", throwable)
 		}
@@ -139,7 +139,8 @@ object LiquidBounce
 		try
 		{
 			registerCapeService()
-		} catch (throwable: Throwable)
+		}
+		catch (throwable: Throwable)
 		{
 			ClientUtils.logger.error("Failed to register cape service", throwable)
 		}
@@ -159,7 +160,8 @@ object LiquidBounce
 
 			// Check json is valid object and has current minecraft version
 			if (jsonObj is JsonObject && jsonObj.has(MINECRAFT_VERSION)) latestVersion = jsonObj[MINECRAFT_VERSION].asInt // Get official latest client version
-		} catch (exception: Throwable)
+		}
+		catch (exception: Throwable)
 		{
 
 			// Print throwable to console
@@ -176,7 +178,8 @@ object LiquidBounce
 				try
 				{
 					clientRichPresence.setup()
-				} catch (throwable: Throwable)
+				}
+				catch (throwable: Throwable)
 				{
 					ClientUtils.logger.error("Failed to setup Discord RPC.", throwable)
 				}
@@ -191,7 +194,8 @@ object LiquidBounce
 	 * Execute if client will be stopped
 	 */
 	fun stopClient()
-	{ // Call client shutdown
+	{
+		// Call client shutdown
 		eventManager.callEvent(ClientShutdownEvent())
 
 		// Save all available configs
@@ -200,4 +204,7 @@ object LiquidBounce
 		// Shutdown discord rpc
 		clientRichPresence.shutdown()
 	}
+
+	@JvmStatic
+	val title: String = "$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR | Backend version $MINECRAFT_VERSION${if (IN_DEV) " | DEVELOPMENT BUILD" else ""}"
 }

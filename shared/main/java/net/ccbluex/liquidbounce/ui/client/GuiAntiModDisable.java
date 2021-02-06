@@ -89,7 +89,7 @@ public class GuiAntiModDisable extends WrappedGuiScreen
 				break;
 			case 2:
 				AntiModDisable.blockFMLPackets = !AntiModDisable.blockFMLPackets;
-				fmlButton.setDisplayString("Block FML (" + (AntiModDisable.blockFMLPackets ? "On" : "Off") + ")");
+				fmlButton.setDisplayString("Block FML Packets (" + (AntiModDisable.blockFMLPackets ? "On" : "Off") + ")");
 				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 3:

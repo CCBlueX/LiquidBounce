@@ -20,7 +20,7 @@ import javax.crypto.SecretKey
 object ClientUtils : MinecraftInstance()
 {
 	@JvmStatic
-	val logger: Logger = LogManager.getLogger("LiquidBounce")
+	val logger: Logger = LogManager.getLogger(LiquidBounce.CLIENT_NAME)
 
 	@JvmStatic
 	fun disableFastRender()

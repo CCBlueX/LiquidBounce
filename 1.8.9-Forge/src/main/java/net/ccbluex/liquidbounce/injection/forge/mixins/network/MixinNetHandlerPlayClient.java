@@ -9,9 +9,7 @@ import java.awt.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EntityMovementEvent;
@@ -99,12 +97,14 @@ public abstract class MixinNetHandlerPlayClient
 		}
 	}
 
+	@SuppressWarnings("ConstantConditions")
 	@Inject(method = "handleJoinGame", at = @At("HEAD"), cancellable = true)
 	private void handleJoinGameWithAntiForge(final S01PacketJoinGame packetIn, final CallbackInfo callbackInfo)
 	{
 		if (!AntiModDisable.enabled || !AntiModDisable.blockFMLPackets || Minecraft.getMinecraft().isIntegratedServerRunning())
 			return;
 
+		// noinspection OverlyStrongTypeCast
 		PacketThreadUtil.checkThreadAndEnqueue(packetIn, (NetHandlerPlayClient) (Object) this, gameController);
 		gameController.playerController = new PlayerControllerMP(gameController, (NetHandlerPlayClient) (Object) this);
 		clientWorldController = new WorldClient((NetHandlerPlayClient) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);

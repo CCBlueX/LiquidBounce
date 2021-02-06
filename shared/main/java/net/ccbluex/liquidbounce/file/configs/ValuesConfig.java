@@ -78,14 +78,31 @@ public class ValuesConfig extends FileConfig
 			} else if ("features".equalsIgnoreCase(entry.getKey())) {
 				final JsonObject jsonValue = (JsonObject) entry.getValue();
 
-				if (jsonValue.has("AntiForge"))
-					AntiModDisable.enabled = jsonValue.get("AntiForge").getAsBoolean();
-				if (jsonValue.has("AntiForgeFML"))
-					AntiModDisable.blockFMLPackets = jsonValue.get("AntiForgeFML").getAsBoolean();
-				if (jsonValue.has("AntiForgeProxy"))
-					AntiModDisable.blockFMLProxyPackets = jsonValue.get("AntiForgeProxy").getAsBoolean();
-				if (jsonValue.has("AntiForgePayloads"))
-					AntiModDisable.blockClientBrandRetrieverPackets = jsonValue.get("AntiForgePayloads").getAsBoolean();
+				if (jsonValue.has("AntiModDisable"))
+					AntiModDisable.enabled = jsonValue.get("AntiModDisable").getAsBoolean();
+				if (jsonValue.has("AntiModDisableBlockFML"))
+					AntiModDisable.blockFMLPackets = jsonValue.get("AntiModDisableBlockFMLPackets").getAsBoolean();
+				if (jsonValue.has("AntiModDisableBlockFMLProxyPackets"))
+					AntiModDisable.blockFMLProxyPackets = jsonValue.get("AntiModDisableBlockFMLProxyPackets").getAsBoolean();
+				if (jsonValue.has("AntiModDisableSpoofBrandPayloadPackets"))
+					AntiModDisable.blockClientBrandRetrieverPackets = jsonValue.get("AntiModDisableSpoofBrandPayloadPackets").getAsBoolean();
+				if (jsonValue.has("AntiModDisableBlockWDLPayloads"))
+					AntiModDisable.blockWDLPayloads = jsonValue.get("AntiModDisableBlockWDLPayloads").getAsBoolean();
+				if (jsonValue.has("AntiModDisableBlockBetterSprintingPayloads"))
+					AntiModDisable.blockBetterSprintingPayloads = jsonValue.get("AntiModDisableBlockBetterSprintingPayloads").getAsBoolean();
+				if (jsonValue.has("AntiModDisableBlock5zigPayloads"))
+					AntiModDisable.block5zigsmodPayloads = jsonValue.get("AntiModDisableBlock5zigPayloads").getAsBoolean();
+				if (jsonValue.has("AntiModDisableBlockPermsReplPayloads"))
+					AntiModDisable.blockPermissionsReplPayloads = jsonValue.get("AntiModDisableBlockPermsReplPayloads").getAsBoolean();
+				if (jsonValue.has("AntiModDisableBlockDIPermsPayloads"))
+					AntiModDisable.blockDIPermissionsPayloads = jsonValue.get("AntiModDisableBlockDIPermsPayloads").getAsBoolean();
+				if (jsonValue.has("AntiModDisableBlockCrackedVapeSabotages"))
+					AntiModDisable.blockCrackedVapeSabotages = jsonValue.get("AntiModDisableBlockCrackedVapeSabotages").getAsBoolean();
+				if (jsonValue.has("AntiModDisableBlockSchematicaPayloads"))
+					AntiModDisable.blockSchematicaPayloads = jsonValue.get("AntiModDisableBlockSchematicaPayloads").getAsBoolean();
+				if (jsonValue.has("AntiModDisableDebug"))
+					AntiModDisable.debug = jsonValue.get("AntiModDisableDebug").getAsBoolean();
+
 				if (jsonValue.has("BungeeSpoof"))
 					BungeeCordSpoof.enabled = jsonValue.get("BungeeSpoof").getAsBoolean();
 				if (jsonValue.has("AutoReconnectDelay"))
@@ -154,10 +171,19 @@ public class ValuesConfig extends FileConfig
 		jsonObject.add("targets", jsonTargets);
 
 		final JsonObject jsonFeatures = new JsonObject();
-		jsonFeatures.addProperty("AntiForge", AntiModDisable.enabled);
-		jsonFeatures.addProperty("AntiForgeFML", AntiModDisable.blockFMLPackets);
-		jsonFeatures.addProperty("AntiForgeProxy", AntiModDisable.blockFMLProxyPackets);
-		jsonFeatures.addProperty("AntiForgePayloads", AntiModDisable.blockClientBrandRetrieverPackets);
+		jsonFeatures.addProperty("AntiModDisable", AntiModDisable.enabled);
+		jsonFeatures.addProperty("AntiModDisableBlockFMLPackets", AntiModDisable.blockFMLPackets);
+		jsonFeatures.addProperty("AntiModDisableBlockFMLProxyPackets", AntiModDisable.blockFMLProxyPackets);
+		jsonFeatures.addProperty("AntiModDisableSpoofBrandPayloadPackets", AntiModDisable.blockClientBrandRetrieverPackets);
+		jsonFeatures.addProperty("AntiModDisableBlockWDLPayloads", AntiModDisable.blockWDLPayloads);
+		jsonFeatures.addProperty("AntiModDisableBlockBetterSprintingPayloads", AntiModDisable.blockBetterSprintingPayloads);
+		jsonFeatures.addProperty("AntiModDisableBlock5zigPayloads", AntiModDisable.block5zigsmodPayloads);
+		jsonFeatures.addProperty("AntiModDisableBlockPermsReplPayloads", AntiModDisable.blockPermissionsReplPayloads);
+		jsonFeatures.addProperty("AntiModDisableBlockDIPermsPayloads", AntiModDisable.blockDIPermissionsPayloads);
+		jsonFeatures.addProperty("AntiModDisableBlockCrackedVapeSabotages", AntiModDisable.blockCrackedVapeSabotages);
+		jsonFeatures.addProperty("AntiModDisableBlockSchematicaPayloads", AntiModDisable.blockSchematicaPayloads);
+		jsonFeatures.addProperty("AntiModDisableDebug", AntiModDisable.debug);
+
 		jsonFeatures.addProperty("BungeeSpoof", BungeeCordSpoof.enabled);
 		jsonFeatures.addProperty("AutoReconnectDelay", AutoReconnect.INSTANCE.getDelay());
 		jsonObject.add("features", jsonFeatures);
