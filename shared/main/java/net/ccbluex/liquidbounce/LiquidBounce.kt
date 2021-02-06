@@ -206,5 +206,5 @@ object LiquidBounce
 	}
 
 	@JvmStatic
-	val title: String = "$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR | Backend version $MINECRAFT_VERSION${if (IN_DEV) " | DEVELOPMENT BUILD" else ""}"
+	val title: String = "$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR | Backend version $MINECRAFT_VERSION${if (IN_DEV) " | DEVELOPMENT BUILD" else ""}" // TODO: Add more details
 }

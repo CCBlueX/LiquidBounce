@@ -144,7 +144,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 			case 7:
 				AntiModDisable.enabled = !AntiModDisable.enabled;
 				forgeBypassButton.displayString = "AntiModDisable: " + (AntiModDisable.enabled ? "\u00A7a(On)" : "\u00A7c(Off)");
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 		}
 	}

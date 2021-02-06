@@ -79,7 +79,7 @@ public class GuiBannedServers extends WrappedGuiScreen
 				if (serversList.getSelectedSlot() != -1 && serversList.getSelectedSlot() < serversList.getSize())
 				{
 					account.getBannedServers().remove(account.getBannedServers().get(serversList.getSelectedSlot()));
-					FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+					FileManager.Companion.saveConfig(LiquidBounce.fileManager.accountsConfig);
 					status = "\u00A7aThe server has been removed.";
 				}
 				else
@@ -254,7 +254,7 @@ public class GuiBannedServers extends WrappedGuiScreen
 					}
 
 					account.getBannedServers().add(server);
-					FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+					FileManager.Companion.saveConfig(LiquidBounce.fileManager.accountsConfig);
 
 					prevGui.status = "\u00A7aAdded banned server \u00A7c" + server + " \u00A7aof " + (account.getAccountName() == null ? account.getName() : account.getAccountName()) + "\u00A7c.";
 					mc.displayGuiScreen(prevGui.representedScreen);

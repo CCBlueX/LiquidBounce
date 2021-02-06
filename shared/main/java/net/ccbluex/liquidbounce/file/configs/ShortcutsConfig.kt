@@ -18,7 +18,6 @@ import java.io.IOException
 
 class ShortcutsConfig(file: File) : FileConfig(file)
 {
-
 	/**
 	 * Load config from file
 	 *

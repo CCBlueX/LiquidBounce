@@ -84,63 +84,63 @@ public class GuiAntiModDisable extends WrappedGuiScreen
 			case 1:
 				AntiModDisable.enabled = !AntiModDisable.enabled;
 				enabledButton.setDisplayString("Enabled (" + (AntiModDisable.enabled ? "On" : "Off") + ")");
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				updateAll();
 				break;
 			case 2:
 				AntiModDisable.blockFMLPackets = !AntiModDisable.blockFMLPackets;
 				fmlButton.setDisplayString("Block FML Packets (" + (AntiModDisable.blockFMLPackets ? "On" : "Off") + ")");
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 3:
 				AntiModDisable.blockFMLProxyPackets = !AntiModDisable.blockFMLProxyPackets;
 				fmlProxyPacket.setDisplayString("Block FMLProxyPackets (" + (AntiModDisable.blockFMLProxyPackets ? "On" : "Off") + ")");
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 4:
 				AntiModDisable.blockClientBrandRetrieverPackets = !AntiModDisable.blockClientBrandRetrieverPackets;
 				clientBrandPayloadPacket.setDisplayString("Block FML ClientBrandRetriever Packets (" + (AntiModDisable.blockClientBrandRetrieverPackets ? "On" : "Off") + ")");
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 5:
 				AntiModDisable.blockWDLPayloads = !AntiModDisable.blockWDLPayloads;
 				wdlPayloadButton.setDisplayString(BLOCK_WORLD_DOWNLOADER_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockWDLPayloads ? "\u00A7a(On)" : "\u00A7c(Off)"));
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 6:
 				AntiModDisable.block5zigsmodPayloads = !AntiModDisable.block5zigsmodPayloads;
 				_5zigPayloadButton.setDisplayString(BLOCK_THE_5_ZIG_S_MOD_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.block5zigsmodPayloads ? "\u00A7a(On)" : "\u00A7c(Off)"));
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 7:
 				AntiModDisable.blockBetterSprintingPayloads = !AntiModDisable.blockBetterSprintingPayloads;
 				betterSprintingButton.setDisplayString(BLOCK_BETTER_SPRINTING_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockBetterSprintingPayloads ? "\u00A7a(On)" : "\u00A7c(Off)"));
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 8:
 				AntiModDisable.blockCrackedVapeSabotages = !AntiModDisable.blockCrackedVapeSabotages;
 				vapeButton.setDisplayString(BLOCK_CRACKED_VAPE_SABOTAGES + (AntiModDisable.enabled && AntiModDisable.blockCrackedVapeSabotages ? "\u00A7a(On)" : "\u00A7c(Off)"));
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 9:
 				AntiModDisable.blockDIPermissionsPayloads = !AntiModDisable.blockDIPermissionsPayloads;
 				dipermsButton.setDisplayString(BLOCK_DIPERMISSIONS_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockDIPermissionsPayloads ? "\u00A7a(On)" : "\u00A7c(Off)"));
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 10:
 				AntiModDisable.blockPermissionsReplPayloads = !AntiModDisable.blockPermissionsReplPayloads;
 				permsreplButton.setDisplayString(BLOCK_PERMISSIONS_REPL_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockPermissionsReplPayloads ? "\u00A7a(On)" : "\u00A7c(Off)"));
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 11:
 				AntiModDisable.blockSchematicaPayloads = !AntiModDisable.blockSchematicaPayloads;
 				schematicaButton.setDisplayString(BLOCK_SCHEMATICA_PAYLOAD_PACKETS + (AntiModDisable.enabled && AntiModDisable.blockSchematicaPayloads ? "\u00A7a(On)" : "\u00A7c(Off)"));
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 999:
 				AntiModDisable.debug = !AntiModDisable.debug;
 				debugmode.setDisplayString(PRINT_BLOCKED_SPOOFED_PACKETS + (AntiModDisable.enabled && AntiModDisable.debug ? "\u00A7a(On)" : "\u00A7c(Off)"));
-				FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 			case 0:
 				mc.displayGuiScreen(prevGui);

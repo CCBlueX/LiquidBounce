@@ -66,7 +66,8 @@ class ClientRichPresence : MinecraftInstance()
 							try
 							{
 								Thread.sleep(1000L)
-							} catch (ignored: InterruptedException)
+							}
+							catch (ignored: InterruptedException)
 							{
 							}
 						}
@@ -86,7 +87,8 @@ class ClientRichPresence : MinecraftInstance()
 
 			})
 			ipcClient?.connect()
-		} catch (e: Throwable)
+		}
+		catch (e: Throwable)
 		{
 			ClientUtils.logger.error("Failed to setup Discord RPC.", e)
 		}
@@ -133,7 +135,8 @@ class ClientRichPresence : MinecraftInstance()
 		try
 		{
 			ipcClient?.close()
-		} catch (e: Throwable)
+		}
+		catch (e: Throwable)
 		{
 			ClientUtils.logger.error("Failed to close Discord RPC.", e)
 		}

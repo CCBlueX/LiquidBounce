@@ -63,5 +63,5 @@ fun IEntityPlayer.isClientFriend(): Boolean
 {
 	val entityName = name ?: return false
 
-	return LiquidBounce.fileManager.friendsConfig.isFriend(stripColor(entityName))
+	return LiquidBounce.fileManager.friendsConfig.isFriend(stripColor(entityName)!!)
 }

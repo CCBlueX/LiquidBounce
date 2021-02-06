@@ -376,7 +376,7 @@ public class ClickGui extends WrappedGuiScreen
 	@Override
 	public void onGuiClosed()
 	{
-		FileManager.saveConfig(LiquidBounce.fileManager.clickGuiConfig);
+		FileManager.Companion.saveConfig(LiquidBounce.fileManager.clickGuiConfig);
 	}
 
 	@Override

@@ -221,7 +221,7 @@ public class GuiAdd extends WrappedGuiScreen
 			}
 
 			LiquidBounce.fileManager.accountsConfig.getAccounts().add(account);
-			FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig);
+			FileManager.Companion.saveConfig(LiquidBounce.fileManager.accountsConfig);
 
 			status = "\u00A7aThe account has been added.";
 			prevGui.status = status;
