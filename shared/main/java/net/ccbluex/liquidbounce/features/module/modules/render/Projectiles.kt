@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.MaterialType
 import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
@@ -14,6 +15,8 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
+import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -41,8 +44,10 @@ class Projectiles : Module()
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
+	private var lastBowChargeDuration: Int = 0
+
 	@EventTarget
-	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
+	fun onRender3D(event: Render3DEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return
@@ -62,51 +67,70 @@ class Projectiles : Module()
 		val gravity: Float
 		val size: Float
 
+		val partialTicks = event.partialTicks
+
 		// Check items
-		if (classProvider.isItemBow(item))
+		when
 		{
-			if (!thePlayer.isUsingItem) return
+			classProvider.isItemBow(item) -> // Bow
+			{
+				val fastBow = LiquidBounce.moduleManager[FastBow::class.java] as FastBow
+				val fastBowEnabled = fastBow.state
 
-			isBow = true
-			gravity = 0.05F
-			size = 0.3F
+				if (!fastBowEnabled && !thePlayer.isUsingItem)
+				{
+					lastBowChargeDuration = 0 // Reset bow charge duration
+					return
+				}
 
-			// Calculate power of bow
-			var power = thePlayer.itemInUseDuration / 20f
-			power = (power * power + power * 2F) / 3F
+				isBow = true
+				gravity = 0.05F
+				size = 0.3F
 
-			if (power < 0.1F) return
+				// Interpolate and calculate power of bow
+				val bowChargeDuration = if (fastBowEnabled) fastBow.packetsValue.get() else thePlayer.itemInUseDuration
+				var power = (lastBowChargeDuration + (bowChargeDuration - lastBowChargeDuration) * partialTicks) / 20f
+				lastBowChargeDuration = bowChargeDuration
 
-			if (power > 1F) power = 1F
+				power = (power * power + power * 2F) / 3F
 
-			motionFactor = power * 3F
+				if (power < 0.1F) return
+
+				if (power > 1F) power = 1F
+
+				motionFactor = power * 3F
+			}
+
+			classProvider.isItemFishingRod(item) -> // Fishing Rod
+			{
+				gravity = 0.04F
+				size = 0.25F
+				motionSlowdown = 0.92F
+			}
+
+			classProvider.isItemPotion(item) && heldItem.isSplash() -> // Splash potion
+			{
+				gravity = 0.05F
+				size = 0.25F
+				motionFactor = 0.5F
+			}
+
+			else -> // Snowball, Ender Pearl, Egg
+			{
+				if (!classProvider.isItemSnowball(item) && !classProvider.isItemEnderPearl(item) && !classProvider.isItemEgg(item)) return
+
+				gravity = 0.03F
+				size = 0.25F
+			}
 		}
-		else if (classProvider.isItemFishingRod(item))
+
+		// Interpolated yaw and pitch of player
+		val (yaw, pitch) = when
 		{
-			gravity = 0.04F
-			size = 0.25F
-			motionSlowdown = 0.92F
+			RotationUtils.targetRotation != null -> RotationUtils.targetRotation
+			RotationUtils.serverRotation != null -> RotationUtils.serverRotation
+			else -> Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch)
 		}
-		else if (classProvider.isItemPotion(item) && heldItem.isSplash())
-		{
-			gravity = 0.05F
-			size = 0.25F
-			motionFactor = 0.5F
-		}
-		else
-		{
-			if (!classProvider.isItemSnowball(item) && !classProvider.isItemEnderPearl(item) && !classProvider.isItemEgg(item)) return
-
-			gravity = 0.03F
-			size = 0.25F
-		}
-
-		// Yaw and pitch of player
-		val yaw = if (RotationUtils.targetRotation != null) RotationUtils.targetRotation.yaw
-		else thePlayer.rotationYaw
-
-		val pitch = if (RotationUtils.targetRotation != null) RotationUtils.targetRotation.pitch
-		else thePlayer.rotationPitch
 
 		val yawRadians = yaw / 180f * WMathHelper.PI
 		val pitchRadians = pitch / 180f * WMathHelper.PI
