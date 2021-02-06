@@ -34,7 +34,6 @@ import org.spongepowered.asm.mixin.Shadow;
 @SideOnly(Side.CLIENT)
 public class MixinTileEntityItemStackRenderer
 {
-
 	@Shadow
 	private TileEntityBanner banner;
 

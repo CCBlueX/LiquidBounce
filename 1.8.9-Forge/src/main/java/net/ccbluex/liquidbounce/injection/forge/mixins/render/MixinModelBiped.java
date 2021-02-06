@@ -43,7 +43,7 @@ public class MixinModelBiped
 	 * @see Rotations
 	 */
 	@Inject(method = "setRotationAngles", at = @At(value = "FIELD", target = "Lnet/minecraft/client/model/ModelBiped;swingProgress:F"))
-	private void revertSwordAnimation(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor, Entity entityIn, final CallbackInfo callbackInfo)
+	private void headRotationsPitch(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor, Entity entityIn, final CallbackInfo callbackInfo)
 	{
 		if (heldItemRight == 3)
 			bipedRightArm.rotateAngleY = 0.0F;

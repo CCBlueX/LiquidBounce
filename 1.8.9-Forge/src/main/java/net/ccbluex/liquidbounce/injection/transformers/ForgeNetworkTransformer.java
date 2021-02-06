@@ -20,7 +20,6 @@ import org.objectweb.asm.tree.*;
  */
 public class ForgeNetworkTransformer implements IClassTransformer
 {
-
 	/**
 	 * Transform a class
 	 *
@@ -43,7 +42,7 @@ public class ForgeNetworkTransformer implements IClassTransformer
 				{
 					final LabelNode labelNode = new LabelNode();
 
-					methodNode.instructions.insertBefore(methodNode.instructions.getFirst(), NodeUtils.INSTANCE.toNodes(new MethodInsnNode(INVOKESTATIC, "net/ccbluex/liquidbounce/injection/transformers/ForgeNetworkTransformer", "returnMethod", "()Z", false), new JumpInsnNode(IFEQ, labelNode), new InsnNode(ICONST_0), new InsnNode(IRETURN), labelNode));
+					methodNode.instructions.insertBefore(methodNode.instructions.getFirst(), NodeUtils.INSTANCE.toNodes(new MethodInsnNode(INVOKESTATIC, "net/ccbluex/liquidbounce/injection/transformers/ForgeNetworkTransformer", "blockFMLPackets", "()Z", false), new JumpInsnNode(IFEQ, labelNode), new InsnNode(ICONST_0), new InsnNode(IRETURN), labelNode));
 				});
 
 				return ClassUtils.INSTANCE.toBytes(classNode);
@@ -59,7 +58,7 @@ public class ForgeNetworkTransformer implements IClassTransformer
 				{
 					final LabelNode labelNode = new LabelNode();
 
-					methodNode.instructions.insertBefore(methodNode.instructions.getFirst(), NodeUtils.INSTANCE.toNodes(new MethodInsnNode(INVOKESTATIC, "net/ccbluex/liquidbounce/injection/transformers/ForgeNetworkTransformer", "returnMethod", "()Z", false), new JumpInsnNode(IFEQ, labelNode), new InsnNode(RETURN), labelNode));
+					methodNode.instructions.insertBefore(methodNode.instructions.getFirst(), NodeUtils.INSTANCE.toNodes(new MethodInsnNode(INVOKESTATIC, "net/ccbluex/liquidbounce/injection/transformers/ForgeNetworkTransformer", "blockFMLPackets", "()Z", false), new JumpInsnNode(IFEQ, labelNode), new InsnNode(RETURN), labelNode));
 				});
 
 				return ClassUtils.INSTANCE.toBytes(classNode);
@@ -70,7 +69,8 @@ public class ForgeNetworkTransformer implements IClassTransformer
 		return basicClass;
 	}
 
-	public static boolean returnMethod()
+	// Block FML Packets
+	public static boolean blockFMLPackets()
 	{
 		return AntiModDisable.enabled && AntiModDisable.blockFMLPackets && !Minecraft.getMinecraft().isIntegratedServerRunning();
 	}

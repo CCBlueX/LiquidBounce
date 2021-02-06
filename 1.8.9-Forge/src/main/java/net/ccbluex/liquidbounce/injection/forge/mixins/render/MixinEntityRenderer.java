@@ -71,13 +71,13 @@ public abstract class MixinEntityRenderer
 	private boolean cloudFog;
 
 	@Inject(method = "renderWorldPass", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/EntityRenderer;renderHand:Z", shift = Shift.BEFORE))
-	private void renderWorldPass(final int pass, final float partialTicks, final long finishTimeNano, final CallbackInfo callbackInfo)
+	private void callRender3DEvent(final int pass, final float partialTicks, final long finishTimeNano, final CallbackInfo callbackInfo)
 	{
 		LiquidBounce.eventManager.callEvent(new Render3DEvent(partialTicks));
 	}
 
 	@Inject(method = "hurtCameraEffect", at = @At("HEAD"), cancellable = true)
-	private void injectHurtCameraEffect(final CallbackInfo callbackInfo)
+	private void noHurtCam(final CallbackInfo callbackInfo)
 	{
 		final HurtCam hurtCam = (HurtCam) LiquidBounce.moduleManager.getModule(HurtCam.class);
 		if (hurtCam.getState() && hurtCam.getNoHurtCam().get())
@@ -164,14 +164,14 @@ public abstract class MixinEntityRenderer
 	}
 
 	@Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = Shift.BEFORE))
-	private void setupCameraViewBobbingBefore(final CallbackInfo callbackInfo)
+	private void setupCameraViewBobbingPre(final CallbackInfo callbackInfo)
 	{
 		if (LiquidBounce.moduleManager.getModule(Tracers.class).getState())
 			GL11.glPushMatrix();
 	}
 
 	@Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = Shift.AFTER))
-	private void setupCameraViewBobbingAfter(final CallbackInfo callbackInfo)
+	private void setupCameraViewBobbingPost(final CallbackInfo callbackInfo)
 	{
 		if (LiquidBounce.moduleManager.getModule(Tracers.class).getState())
 			GL11.glPopMatrix();
@@ -179,7 +179,7 @@ public abstract class MixinEntityRenderer
 
 	/**
 	 * @author CCBlueX
-	 * @reason
+	 * @reason Reach, ExtendedReach
 	 */
 	@Overwrite
 	public void getMouseOver(final float partialTicks)

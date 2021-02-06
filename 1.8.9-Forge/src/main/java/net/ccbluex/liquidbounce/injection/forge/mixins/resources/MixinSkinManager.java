@@ -21,7 +21,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(SkinManager.class)
 public class MixinSkinManager
 {
-
 	@Inject(method = "loadSkinFromCache", cancellable = true, at = @At("HEAD"))
 	private void injectSkinProtect(final GameProfile gameProfile, final CallbackInfoReturnable<Map<Type, MinecraftProfileTexture>> cir)
 	{
@@ -36,5 +35,4 @@ public class MixinSkinManager
 				cir.cancel();
 			}
 	}
-
 }

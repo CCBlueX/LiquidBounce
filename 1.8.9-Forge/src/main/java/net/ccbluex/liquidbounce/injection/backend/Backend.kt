@@ -8,6 +8,7 @@ object Backend
 	const val MINECRAFT_VERSION_MAJOR = 1
 	const val MINECRAFT_VERSION_MINOR = 8
 	const val MINECRAFT_VERSION_PATCH = 9
+
 	val REPRESENTED_BACKEND_VERSION = MinecraftVersion.MC_1_8
 
 	@Suppress("FunctionName")

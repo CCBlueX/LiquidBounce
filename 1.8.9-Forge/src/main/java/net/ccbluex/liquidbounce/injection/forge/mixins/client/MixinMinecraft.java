@@ -14,10 +14,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.MultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.world.FastPlace;
-import net.ccbluex.liquidbounce.injection.backend.EnumFacingImplKt;
-import net.ccbluex.liquidbounce.injection.backend.GuiScreenImplKt;
-import net.ccbluex.liquidbounce.injection.backend.WorldClientImplKt;
-import net.ccbluex.liquidbounce.injection.backend.WrapperImpl;
+import net.ccbluex.liquidbounce.injection.backend.*;
 import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtentionsKt;
 import net.ccbluex.liquidbounce.injection.forge.SplashProgressLock;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
@@ -155,7 +152,7 @@ public abstract class MixinMinecraft
 	private void createDisplay(final CallbackInfo callbackInfo)
 	{
 		// Set the window title
-		Display.setTitle(LiquidBounce.CLIENT_NAME + " b" + LiquidBounce.CLIENT_VERSION + " | " + LiquidBounce.MINECRAFT_VERSION + (LiquidBounce.IN_DEV ? " | DEVELOPMENT BUILD" : ""));
+		Display.setTitle(String.format("%s %d.%d.%d b%d | %s%s", LiquidBounce.CLIENT_NAME, Backend.MINECRAFT_VERSION_MAJOR, Backend.MINECRAFT_VERSION_MINOR, Backend.MINECRAFT_VERSION_PATCH, LiquidBounce.CLIENT_VERSION, LiquidBounce.MINECRAFT_VERSION, LiquidBounce.IN_DEV ? " | DEVELOPMENT BUILD" : ""));
 	}
 
 	@Inject(method = "displayGuiScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;currentScreen:Lnet/minecraft/client/gui/GuiScreen;", shift = Shift.AFTER))

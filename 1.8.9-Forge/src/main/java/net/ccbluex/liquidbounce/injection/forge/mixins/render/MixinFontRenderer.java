@@ -26,14 +26,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @SideOnly(Side.CLIENT)
 public class MixinFontRenderer
 {
-	// Local Variable
 	private boolean rainbowEnabled0;
-	// Local Variable
 	private boolean rainbowEnabled1;
 
 	@Debug(print = true)
 	@Inject(method = "drawString(Ljava/lang/String;FFIZ)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;renderString(Ljava/lang/String;FFIZ)I", ordinal = 0), require = 1, allow = 1)
-	private void injectShadow1(final String text, final float x, final float y, final int color, final boolean dropShadow, final CallbackInfoReturnable<Integer> cir)
+	private void drawString_RainbowFontShaderPre(final String text, final float x, final float y, final int color, final boolean dropShadow, final CallbackInfoReturnable<Integer> cir)
 	{
 		rainbowEnabled0 = RainbowFontShader.INSTANCE.isInUse();
 
@@ -43,7 +41,7 @@ public class MixinFontRenderer
 
 	@Debug(print = true)
 	@Inject(method = "drawString(Ljava/lang/String;FFIZ)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;renderString(Ljava/lang/String;FFIZ)I", ordinal = 1), require = 1, allow = 1)
-	private void injectShadow2(final String text, final float x, final float y, final int color, final boolean dropShadow, final CallbackInfoReturnable<Integer> cir)
+	private void drawString_RainbowFontShaderPost(final String text, final float x, final float y, final int color, final boolean dropShadow, final CallbackInfoReturnable<Integer> cir)
 	{
 		if (rainbowEnabled0)
 			GL20.glUseProgram(RainbowFontShader.INSTANCE.getProgramId());
@@ -51,14 +49,14 @@ public class MixinFontRenderer
 
 	@Debug(print = true)
 	@Inject(method = "renderStringAtPos", at = @At("HEAD"), require = 1, allow = 1)
-	private void injectRainbow5(final String text, final boolean shadow, final CallbackInfo ci)
+	private void renderStringAtPos_RainbowFontShaderPre(final String text, final boolean shadow, final CallbackInfo ci)
 	{
 		rainbowEnabled1 = RainbowFontShader.INSTANCE.isInUse();
 	}
 
 	@Debug(print = true)
 	@Inject(method = "renderStringAtPos", at = @At("RETURN"), require = 1, allow = 1)
-	private void injectRainbow6(final String text, final boolean shadow, final CallbackInfo ci)
+	private void renderStringAtPos_RainbowFontShaderPost(final String text, final boolean shadow, final CallbackInfo ci)
 	{
 		if (rainbowEnabled1)
 			GL20.glUseProgram(RainbowFontShader.INSTANCE.getProgramId());
@@ -66,7 +64,7 @@ public class MixinFontRenderer
 
 	@Debug(print = true)
 	@Inject(method = "renderStringAtPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;setColor(FFFF)V", ordinal = 0), require = 1, allow = 1)
-	private void injectRainbow3(final String text, final boolean shadow, final CallbackInfo ci)
+	private void renderStringAtPos_RainbowFontShader0(final String text, final boolean shadow, final CallbackInfo ci)
 	{
 		if (rainbowEnabled1)
 			GL20.glUseProgram(0);
@@ -74,7 +72,7 @@ public class MixinFontRenderer
 
 	@Debug(print = true)
 	@Inject(method = "renderStringAtPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;setColor(FFFF)V", ordinal = 1), require = 1, allow = 1)
-	private void injectRainbow4(final String text, final boolean shadow, final CallbackInfo ci)
+	private void renderStringAtPos_RainbowFontShader1(final String text, final boolean shadow, final CallbackInfo ci)
 	{
 		if (rainbowEnabled1)
 			GL20.glUseProgram(RainbowFontShader.INSTANCE.getProgramId());

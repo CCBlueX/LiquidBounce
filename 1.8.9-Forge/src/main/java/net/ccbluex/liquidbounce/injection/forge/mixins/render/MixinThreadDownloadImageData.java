@@ -61,11 +61,10 @@ public abstract class MixinThreadDownloadImageData
 	{
 		downloaders.submit(() ->
 		{
-			logger.debug("Downloading http texture from {} to {}", imageUrl, cacheFile);
+			logger.debug("Downloading http texture from url \"{}\" to cache file \"{}\"", imageUrl, cacheFile);
 
 			URLConnection urlconnection = null;
 
-			// noinspection OverlyBroadCatchBlock
 			try
 			{
 				// Establish the URL connection
