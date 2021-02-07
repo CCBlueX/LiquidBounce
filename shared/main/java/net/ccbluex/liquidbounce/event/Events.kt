@@ -95,6 +95,9 @@ class MoveEvent(var x: Double, var y: Double, var z: Double) : CancellableEvent(
 {
 	var isSafeWalk = false
 
+	/**
+	 * Zero X, Y, Z
+	 */
 	fun zero()
 	{
 		x = 0.0
@@ -102,6 +105,9 @@ class MoveEvent(var x: Double, var y: Double, var z: Double) : CancellableEvent(
 		z = 0.0
 	}
 
+	/**
+	 * Zero X, Z
+	 */
 	fun zeroXZ()
 	{
 		x = 0.0
@@ -132,9 +138,7 @@ class Render3DEvent(val partialTicks: Float) : Event()
 /**
  * Called when entity is going to be rendered
  */
-class RenderEntityEvent(
-	val entity: IEntity, val x: Double, val y: Double, val z: Double, val entityYaw: Float, val partialTicks: Float
-) : Event()
+class RenderEntityEvent(val entity: IEntity, val x: Double, val y: Double, val z: Double, val entityYaw: Float, val partialTicks: Float) : Event()
 
 /**
  * Called when the screen changes

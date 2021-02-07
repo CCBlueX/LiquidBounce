@@ -31,7 +31,7 @@ class BlockESP : Module()
 		private val workerPool: ThreadPoolExecutor = ThreadPoolExecutor(1, 1, 1L, TimeUnit.MINUTES, LinkedBlockingQueue()) // To re-use worker thread
 	}
 
-	private val modeValue = ListValue("Mode", arrayOf("Box", "2D"), "Box")
+	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "2D"), "Box")
 
 	private val blockValue = BlockValue("Block", 168)
 	private val radiusValue = IntegerValue("Radius", 40, 5, 120)
@@ -96,27 +96,15 @@ class BlockESP : Module()
 
 			if (selectedBlock == null || selectedBlock == classProvider.getBlockEnum(BlockType.AIR)) return
 
+			val playerX = thePlayer.posX.toInt()
+			val playerY = thePlayer.posY.toInt()
+			val playerZ = thePlayer.posZ.toInt()
+
 			task = Runnable {
 				val blockList: MutableList<WBlockPos> = ArrayList()
 
-				for (x in -radius until radius)
-				{
-					for (y in radius downTo -radius + 1)
-					{
-						for (z in -radius until radius)
-						{
+				(-radius until radius).asSequence().forEach { x -> (-radius until radius).asSequence().forEach { y -> (-radius until radius).asSequence().map { z -> WBlockPos(playerX + x, playerY + y, playerZ + z) }.filter { getBlock(it) == selectedBlock && blockList.size < blockLimitValue.get() }.forEach { blockList.add(it) } } }
 
-							val xPos = thePlayer.posX.toInt() + x
-							val yPos = thePlayer.posY.toInt() + y
-							val zPos = thePlayer.posZ.toInt() + z
-
-							val blockPos = WBlockPos(xPos, yPos, zPos)
-							val block = getBlock(blockPos)
-
-							if (block == selectedBlock && blockList.size < blockLimitValue.get()) blockList.add(blockPos)
-						}
-					}
-				}
 				searchTimer.reset()
 
 				posList.clear()
@@ -133,9 +121,9 @@ class BlockESP : Module()
 
 		for (blockPos in posList)
 		{
-			when (modeValue.get().toLowerCase())
+			when (val mode = modeValue.get().toLowerCase())
 			{
-				"box" -> RenderUtils.drawBlockBox(blockPos, color, true)
+				"box", "otherbox" -> RenderUtils.drawBlockBox(blockPos, color, mode == "box")
 				"2d" -> RenderUtils.draw2D(blockPos, color.rgb, Color.BLACK.rgb)
 			}
 		}

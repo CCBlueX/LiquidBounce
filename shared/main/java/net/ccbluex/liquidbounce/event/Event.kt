@@ -9,7 +9,6 @@ open class Event
 
 open class CancellableEvent : Event()
 {
-
 	/**
 	 * Let you know if the event is cancelled
 	 *
@@ -25,7 +24,6 @@ open class CancellableEvent : Event()
 	{
 		isCancelled = true
 	}
-
 }
 
 enum class EventState(val stateName: String)
