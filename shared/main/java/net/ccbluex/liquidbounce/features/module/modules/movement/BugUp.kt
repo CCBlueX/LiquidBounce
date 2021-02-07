@@ -31,9 +31,10 @@ class BugUp : Module()
 	private val maxVoidFallDistance = IntegerValue("MaxVoidFallDistance", 3, 1, 255)
 	private val maxDistanceWithoutGround = FloatValue("MaxDistanceToSetback", 2.5f, 1f, 30f)
 
-	private val flagMethodValue = ListValue("FlyFlag-Method", arrayOf("Packet", "Motion"), "Packet")
-	private val flagYPacket = FloatValue("FlyFlag-PacketY", 5f, -10f, 10f)
-	private val flagYMotion = FloatValue("FlyFlag-MotionY", 1f, -10f, 10f)
+	private val flagYMotion = FloatValue("YMotion", 1f, -10f, 10f)
+	private val motionTPYMotion = FloatValue("YTeleportMotion", 1f, -10f, 10f)
+
+	private val flagTryTicks = IntegerValue("FlagTryTicks", 10, 5, 20)
 
 	private val onlyCatchVoid = BoolValue("OnlyVoid", true)
 	private val indicator = BoolValue("Indicator", true)
@@ -46,6 +47,7 @@ class BugUp : Module()
 
 	private val flagTimer = TickTimer()
 	private var tryingFlag = false
+	private var alreadyTriedFlag = false
 
 	override fun onDisable()
 	{
@@ -86,9 +88,7 @@ class BugUp : Module()
 
 			if (thePlayer.fallDistance - lastFound > maxDistanceWithoutGround.get())
 			{
-				val mode = modeValue.get()
-
-				when (mode.toLowerCase())
+				when (modeValue.get().toLowerCase())
 				{
 					"teleportback" ->
 					{
@@ -97,36 +97,39 @@ class BugUp : Module()
 						thePlayer.motionY = 0.0
 					}
 
-					"flyflag" -> tryingFlag = true
-
-					"ongroundspoof" -> networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
-
-					"motionteleport-flag" ->
+					else -> if (!alreadyTriedFlag)
 					{
-						thePlayer.setPositionAndUpdate(posX, posY + 1f, posZ)
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, true))
-						thePlayer.motionY = 0.1
-
-						MovementUtils.strafe()
-						thePlayer.fallDistance = 0f
+						tryingFlag = true
+						alreadyTriedFlag = true
 					}
 				}
 			}
 		}
+		else alreadyTriedFlag = false
 
 		if (tryingFlag)
 		{
-			if (!flagTimer.hasTimePassed(10))
+			if (!flagTimer.hasTimePassed(flagTryTicks.get()))
 			{
-				when (flagMethodValue.get().toLowerCase())
+				when (modeValue.get().toLowerCase())
 				{
-					"motion" ->
+					"flyflag" ->
 					{
 						thePlayer.motionY = flagYMotion.get().toDouble()
 						thePlayer.fallDistance = 0F
 					}
 
-					"packet" -> networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + flagYPacket.get(), posZ, false))
+					"ongroundspoof" -> networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
+
+					"motionteleport-flag" ->
+					{
+						thePlayer.setPositionAndUpdate(posX, posY + motionTPYMotion.get(), posZ)
+						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, true))
+						thePlayer.motionY = flagYMotion.get().toDouble()
+
+						MovementUtils.strafe()
+						thePlayer.fallDistance = 0f
+					}
 				}
 			}
 			else
@@ -172,9 +175,9 @@ class BugUp : Module()
 		GL11.glDepthMask(true)
 		GL11.glDisable(GL11.GL_BLEND)
 
-		val fallDist = floor(thePlayer.fallDistance + (thePlayer.posY - (y + 0.5))).toInt()
+		val fallDistance = floor(thePlayer.fallDistance + (thePlayer.posY - (y + 0.5))).toInt()
 
-		RenderUtils.renderNameTag("${fallDist}m (~${max(0, fallDist - 3)} damage)", x + 0.5, y + 1.7, z + 0.5)
+		RenderUtils.renderNameTag("${fallDistance}m (~${max(0, fallDistance - 3)} damage)", x + 0.5, y + 1.7, z + 0.5)
 
 		classProvider.getGlStateManager().resetColor()
 	}
@@ -189,8 +192,7 @@ class BugUp : Module()
 
 			if (!mode.equals("TeleportBack", true) && tryingFlag)
 			{
-
-				// Automatically stop flagging after teleported back.
+				// Automatically stop to try flag after teleported back.
 				ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lBugUp\u00A78] \u00A7cTeleported.")
 				tryingFlag = false
 			}

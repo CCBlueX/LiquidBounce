@@ -60,7 +60,9 @@ class Projectiles : Module()
 		val renderPosY = renderManager.renderPosY
 		val renderPosZ = renderManager.renderPosZ
 
-		var isBow = false
+		var isSplash = false
+
+		var motionMultiplier = 0.4
 		var motionFactor = 1.5F
 		var motionSlowdown = 0.99F
 
@@ -83,7 +85,7 @@ class Projectiles : Module()
 					return
 				}
 
-				isBow = true
+				motionMultiplier = 1.0
 				gravity = 0.05F
 				size = 0.3F
 
@@ -110,6 +112,7 @@ class Projectiles : Module()
 
 			classProvider.isItemPotion(item) && heldItem.isSplash() -> // Splash potion
 			{
+				isSplash = true
 				gravity = 0.05F
 				size = 0.25F
 				motionFactor = 0.5F
@@ -145,9 +148,9 @@ class Projectiles : Module()
 		var posZ = renderPosZ - yawSin * 0.16F
 
 		// Motions
-		var motionX = (-yawSin * pitchCos * if (isBow) 1.0 else 0.4)
-		var motionY = -functions.sin(WMathHelper.toRadians(pitch + if (classProvider.isItemPotion(item) && heldItem.isSplash()) -20 else 0)) * if (isBow) 1.0 else 0.4
-		var motionZ = (yawCos * pitchCos * if (isBow) 1.0 else 0.4)
+		var motionX = -yawSin * pitchCos * motionMultiplier
+		var motionY = -functions.sin(WMathHelper.toRadians(pitch + if (isSplash) -20 else 0)) * motionMultiplier
+		var motionZ = yawCos * pitchCos * motionMultiplier
 
 		val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
 
@@ -177,7 +180,7 @@ class Projectiles : Module()
 		when (colorMode.get().toLowerCase())
 		{
 			"custom" -> RenderUtils.glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
-			"bowpower" -> RenderUtils.glColor(interpolateHSB(Color.RED, Color.GREEN, (motionFactor / 30) * 10))
+			"bowpower" -> RenderUtils.glColor(ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), (motionFactor / 30) * 10))
 			"rainbow" -> RenderUtils.glColor(ColorUtils.rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()))
 		}
 
@@ -187,7 +190,6 @@ class Projectiles : Module()
 
 		while (!hasLanded && posY > 0.0)
 		{
-
 			// Set pos before and after
 			var posBefore = WVec3(posX, posY, posZ)
 			var posAfter = WVec3(posX + motionX, posY + motionY, posZ + motionZ)
@@ -246,15 +248,13 @@ class Projectiles : Module()
 			// Check is next position water
 			if (blockState.block.getMaterial(blockState) == classProvider.getMaterialEnum(MaterialType.WATER))
 			{
-
-				// Update motion
+				// Update motion in water
 				motionX *= 0.6
 				motionY *= 0.6
 				motionZ *= 0.6
 			}
 			else
 			{
-
 				// Update motion
 				val motionSlowdownDouble = motionSlowdown.toDouble()
 
@@ -291,7 +291,11 @@ class Projectiles : Module()
 		// Rendering hit cylinder
 		GL11.glRotatef(-90F, 1F, 0F, 0F)
 
-		val cylinder = Cylinder()
+		val cylinder = object : Cylinder()
+		{
+			override fun sin(r: Float): Float = functions.sin(r)
+			override fun cos(r: Float): Float = functions.cos(r)
+		}
 		cylinder.drawStyle = GLU.GLU_LINE
 		cylinder.draw(0.2F, 0F, 0F, 60, 1)
 
@@ -299,20 +303,5 @@ class Projectiles : Module()
 		GL11.glDepthMask(true)
 		RenderUtils.resetCaps()
 		GL11.glColor4f(1F, 1F, 1F, 1F)
-	}
-
-	private fun interpolateHSB(startColor: Color, endColor: Color, process: Float): Color?
-	{
-		val startHSB = Color.RGBtoHSB(startColor.red, startColor.green, startColor.blue, null)
-		val endHSB = Color.RGBtoHSB(endColor.red, endColor.green, endColor.blue, null)
-
-		val brightness = (startHSB[2] + endHSB[2]) / 2
-		val saturation = (startHSB[1] + endHSB[1]) / 2
-
-		val hueMax = if (startHSB[0] > endHSB[0]) startHSB[0] else endHSB[0]
-		val hueMin = if (startHSB[0] > endHSB[0]) endHSB[0] else startHSB[0]
-
-		val hue = (hueMax - hueMin) * process + hueMin
-		return Color.getHSBColor(hue, saturation, brightness)
 	}
 }

@@ -10,9 +10,7 @@ import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
