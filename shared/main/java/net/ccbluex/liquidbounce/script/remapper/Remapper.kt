@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.script.remapper
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import java.io.File
 
 /**
@@ -28,20 +29,28 @@ object Remapper
 	 * Load srg
 	 */
 	fun loadSrg()
-	{ // Check if srg file is already downloaded
+	{
+		// Check if srg file is already downloaded
 		if (!srgFile.exists())
-		{ // Download srg file
+		{
+			val nanoTime = System.nanoTime()
+
+			// Download srg file
 			srgFile.createNewFile()
 
 			ClientUtils.logger.info("[Remapper] Downloading $srgName srg...")
 			HttpUtils.download("${LiquidBounce.CLIENT_CLOUD}/srgs/mcp-$srgName.srg", srgFile)
-			ClientUtils.logger.info("[Remapper] Downloaded $srgName.")
+			ClientUtils.logger.info("[Remapper] Downloaded $srgName. Took ${TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime)}.")
 		}
+
+		val nanoTime = System.nanoTime()
 
 		// Load srg
 		ClientUtils.logger.info("[Remapper] Loading srg...")
+
 		parseSrg()
-		ClientUtils.logger.info("[Remapper] Loaded srg.")
+
+		ClientUtils.logger.info("[Remapper] Loaded srg. Took ${TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime)}.")
 	}
 
 	private fun parseSrg()
@@ -51,7 +60,7 @@ object Remapper
 
 			when
 			{
-				it.startsWith("FD:") ->
+				it.startsWith("FD:") -> // Field mapping
 				{
 					val name = args[1]
 					val srg = args[2]
@@ -65,7 +74,7 @@ object Remapper
 					fields[className]!![fieldSrg] = fieldName
 				}
 
-				it.startsWith("MD:") ->
+				it.startsWith("MD:") -> // Method mapping
 				{
 					val name = args[1]
 					val desc = args[2]

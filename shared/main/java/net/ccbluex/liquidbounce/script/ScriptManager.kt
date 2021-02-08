@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.script
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import java.io.File
 import java.io.FileFilter
 
@@ -99,11 +100,13 @@ class ScriptManager
 	 */
 	fun reloadScripts()
 	{
+		val nanoTime = System.nanoTime()
+
 		disableScripts()
 		unloadScripts()
 		loadScripts()
 		enableScripts()
 
-		ClientUtils.logger.info("[ScriptAPI]  Successfully reloaded scripts.")
+		ClientUtils.logger.info("[ScriptAPI]  Successfully reloaded scripts. Took ${TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime)}.")
 	}
 }

@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 import net.ccbluex.liquidbounce.utils.WorkerUtils;
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils;
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils;
 
 // TODO: Customizable main font (make can choose between roboto-medium and others)
 public class Fonts extends MinecraftInstance
@@ -47,7 +48,7 @@ public class Fonts extends MinecraftInstance
 	@SuppressWarnings("unchecked")
 	public static void loadFonts()
 	{
-		final long l = System.currentTimeMillis();
+		final long nanoTime = System.nanoTime();
 
 		ClientUtils.getLogger().info("Loading Fonts.");
 
@@ -99,7 +100,7 @@ public class Fonts extends MinecraftInstance
 			ClientUtils.getLogger().error("Can't parse fonts.json", e);
 		}
 
-		ClientUtils.getLogger().info("Loaded Fonts. ({}ms)", System.currentTimeMillis() - l);
+		ClientUtils.getLogger().info("Loaded Fonts. Took {}.", TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime));
 	}
 
 	private static void downloadFonts()

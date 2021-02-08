@@ -133,7 +133,7 @@ class ScriptModule(private val moduleObject: JSObject) : Module()
 		}
 		catch (throwable: Throwable)
 		{
-			ClientUtils.logger.error("[ScriptAPI] Exception in module '$name'!", throwable)
+			ClientUtils.logger.error("[ScriptAPI] Exception in script '$name'!: Exception occurred while calling event named '${eventName}'", throwable)
 		}
 	}
 }

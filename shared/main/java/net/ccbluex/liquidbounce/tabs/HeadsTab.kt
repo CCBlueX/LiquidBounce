@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.injection.backend.WrapperImpl.classProvider
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import java.util.*
 
 class HeadsTab : WrappedCreativeTabs("Heads")
@@ -50,6 +51,8 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 
 			if (headsConf.get("enabled").asBoolean)
 			{
+				val nanoTime = System.nanoTime()
+
 				val url = headsConf.get("url").asString
 
 				ClientUtils.logger.info("Loading heads from $url...")
@@ -71,7 +74,7 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 					heads.add(ItemUtils.createItem("skull 1 3 {display:{Name:\"${headElement.get("name").asString}\"},SkullOwner:{Id:\"${headElement.get("uuid").asString}\",Properties:{textures:[{Value:\"${headElement.get("value").asString}\"}]}}}"))
 				}
 
-				ClientUtils.logger.info("Loaded " + heads.size + " heads from HeadDB.")
+				ClientUtils.logger.info("Loaded " + heads.size + " heads from HeadDB. Took ${TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime)}.")
 			}
 			else ClientUtils.logger.info("Heads are disabled.")
 		}

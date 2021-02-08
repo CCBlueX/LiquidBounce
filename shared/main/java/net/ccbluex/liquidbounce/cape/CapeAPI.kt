@@ -91,7 +91,6 @@ object CapeAPI : MinecraftInstance()
 
 			if (!capeFile.exists())
 			{
-
 				// Fallback strategy
 				capeFile = File(LiquidBounce.fileManager.dir, GuiDonatorCape.transferCode.substring(5) + ".png")
 

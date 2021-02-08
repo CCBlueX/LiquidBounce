@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.script.api.global.Item
 import net.ccbluex.liquidbounce.script.api.global.Setting
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import java.io.File
 import java.util.function.Function
 import javax.script.ScriptEngine
@@ -72,11 +73,12 @@ class Script(val scriptFile: File) : MinecraftInstance()
 
 	fun initScript()
 	{
-		scriptEngine.eval(scriptText)
+		val nanoTime = System.nanoTime()
 
+		scriptEngine.eval(scriptText)
 		callEvent("load")
 
-		ClientUtils.logger.info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
+		ClientUtils.logger.info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'. Took ${TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime)}.")
 	}
 
 	@Suppress("UNCHECKED_CAST")
@@ -152,10 +154,7 @@ class Script(val scriptFile: File) : MinecraftInstance()
 
 			val commentData = it.substring(magicPrefix.length).split("=", limit = 2)
 
-			if (commentData.first().trim() == name)
-			{
-				return@getMagicComment commentData.last().trim()
-			}
+			if (commentData.first().trim() == name) return@getMagicComment commentData.last().trim()
 		}
 
 		return null
@@ -169,8 +168,9 @@ class Script(val scriptFile: File) : MinecraftInstance()
 		if (getMagicComment("api_version") != "2")
 		{
 			ClientUtils.logger.info("[ScriptAPI] Running script '${scriptFile.name}' with legacy support.")
-			val legacyScript = LiquidBounce::class.java.getResource("/assets/minecraft/liquidbounce/scriptapi/legacy.js").readText()
-			scriptEngine.eval(legacyScript)
+
+			val legacyScriptSupport = LiquidBounce::class.java.getResource("/assets/minecraft/liquidbounce/scriptapi/legacy.js").readText()
+			scriptEngine.eval(legacyScriptSupport)
 		}
 	}
 
@@ -233,7 +233,7 @@ class Script(val scriptFile: File) : MinecraftInstance()
 		}
 		catch (throwable: Throwable)
 		{
-			ClientUtils.logger.error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
+			ClientUtils.logger.error("[ScriptAPI] Exception in script '$scriptName'!: Exception occurred while calling event named '${eventName}'", throwable)
 		}
 	}
 }
