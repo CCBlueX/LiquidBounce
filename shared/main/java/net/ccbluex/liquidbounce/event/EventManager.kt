@@ -17,20 +17,17 @@ class EventManager
 	 */
 	fun registerListener(listener: Listenable)
 	{
-		for (method in listener.javaClass.declaredMethods)
-		{
-			if (method.isAnnotationPresent(EventTarget::class.java) && method.parameterTypes.size == 1)
-			{
-				if (!method.isAccessible) method.isAccessible = true
+		listener.javaClass.declaredMethods.asSequence().filter { it.isAnnotationPresent(EventTarget::class.java) && it.parameterTypes.size == 1 }.forEach { method ->
+			if (!method.isAccessible) method.isAccessible = true
 
-				@Suppress("UNCHECKED_CAST")
-				val eventClass = method.parameterTypes[0] as? Class<out Event> ?: continue
-				val eventTarget = method.getAnnotation(EventTarget::class.java)
+			@Suppress("UNCHECKED_CAST")
+			val eventClass = method.parameterTypes[0] as? Class<out Event> ?: return@forEach
+			val eventTarget = method.getAnnotation(EventTarget::class.java)
 
-				val invokableEventTargets = registry.getOrDefault(eventClass, ArrayList())
-				invokableEventTargets.add(EventHook(listener, method, eventTarget))
-				registry[eventClass] = invokableEventTargets
-			}
+			val invokableEventTargets = registry.getOrDefault(eventClass, ArrayList())
+
+			invokableEventTargets.add(EventHook(listener, method, eventTarget))
+			registry[eventClass] = invokableEventTargets
 		}
 	}
 
@@ -41,12 +38,7 @@ class EventManager
 	 */
 	fun unregisterListener(listenable: Listenable)
 	{
-		for ((key, targets) in registry)
-		{
-			targets.removeIf { it.eventClass == listenable }
-
-			registry[key] = targets
-		}
+		for ((key, targets) in registry) if (targets.removeIf { it.eventClass == listenable }) registry[key] = targets
 	}
 
 	/**
@@ -58,13 +50,10 @@ class EventManager
 	{
 		val targets = registry[event.javaClass] ?: return
 
-		for (invokableEventTarget in targets)
-		{
+		targets.asSequence().filterNot { !it.eventClass.handleEvents() && !it.isIgnoreCondition }.forEach {
 			try
 			{
-				if (!invokableEventTarget.eventClass.handleEvents() && !invokableEventTarget.isIgnoreCondition) continue
-
-				invokableEventTarget.method.invoke(invokableEventTarget.eventClass, event)
+				it.method.invoke(it.eventClass, event)
 			}
 			catch (throwable: Throwable)
 			{

@@ -10,6 +10,7 @@ import com.google.common.io.ByteStreams
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLConnection
 
 /**
  * LiquidBounce Hacked Client
@@ -20,51 +21,37 @@ import java.net.URL
  */
 object HttpUtils
 {
-
-	private const val DEFAULT_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0"
+	private const val DEFAULT_USERAGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36"
 
 	init
 	{
 		HttpURLConnection.setFollowRedirects(true)
 	}
 
-	private fun make(
-		url: String, method: String, agent: String = DEFAULT_AGENT
-	): HttpURLConnection
+	private fun openURLConnection(url: String, method: String, agent: String = DEFAULT_USERAGENT): URLConnection
 	{
-		val httpConnection = URL(url).openConnection() as HttpURLConnection
+		val connection = URL(url).openConnection()
 
-		httpConnection.requestMethod = method
-		httpConnection.connectTimeout = 2000
-		httpConnection.readTimeout = 10000
+		connection.readTimeout = 10000
+		connection.connectTimeout = 2000
+		connection.doInput = true
+		connection.doOutput = true
+		connection.setRequestProperty("User-Agent", agent)
 
-		httpConnection.setRequestProperty("User-Agent", agent)
+		if (connection is HttpURLConnection)
+		{
+			connection.requestMethod = method
+			connection.instanceFollowRedirects = true
+		}
 
-		httpConnection.instanceFollowRedirects = true
-		httpConnection.doOutput = true
-
-		return httpConnection
+		return connection
 	}
 
 	@Throws(IOException::class)
-	fun request(
-		url: String, method: String, agent: String = DEFAULT_AGENT
-	): String
-	{
-		val connection = make(url, method, agent)
-
-		return connection.inputStream.reader().readText()
-	}
+	fun requestStream(url: String, method: String, useragent: String = DEFAULT_USERAGENT): InputStream = openURLConnection(url, method, useragent).inputStream
 
 	@Throws(IOException::class)
-	fun requestStream(
-		url: String, method: String, agent: String = DEFAULT_AGENT
-	): InputStream?
-	{
-		val connection = make(url, method, agent)
-
-		return connection.inputStream
-	}
+	fun request(url: String, method: String, useragent: String = DEFAULT_USERAGENT): String = requestStream(url, method, useragent).reader().readText()
 
 	@Throws(IOException::class)
 	@JvmStatic
@@ -73,6 +60,6 @@ object HttpUtils
 	@Throws(IOException::class)
 	@JvmStatic
 	fun download(url: String, file: File) = FileOutputStream(file).use {
-		@Suppress("UnstableApiUsage") ByteStreams.copy(make(url, "GET").inputStream, it)
+		@Suppress("UnstableApiUsage") ByteStreams.copy(openURLConnection(url, "GET").inputStream, it)
 	}
 }
