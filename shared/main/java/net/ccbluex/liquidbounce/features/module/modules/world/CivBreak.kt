@@ -44,7 +44,6 @@ class CivBreak : Module()
 		enumFacing = event.WEnumFacing ?: return
 
 		// Break
-
 		netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, blockPos!!, enumFacing!!))
 		netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos!!, enumFacing!!))
 	}
@@ -77,17 +76,8 @@ class CivBreak : Module()
 				else netHandler.addToSendQueue(classProvider.createCPacketAnimation())
 
 				// Break
-
-				netHandler.addToSendQueue(
-					classProvider.createCPacketPlayerDigging(
-						ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, pos, facing
-					)
-				)
-				netHandler.addToSendQueue(
-					classProvider.createCPacketPlayerDigging(
-						ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, pos, facing
-					)
-				)
+				netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, pos, facing))
+				netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, pos, facing))
 				mc.playerController.clickBlock(pos, facing)
 			}
 		}

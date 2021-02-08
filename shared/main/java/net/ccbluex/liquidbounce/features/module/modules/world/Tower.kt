@@ -500,11 +500,12 @@ class Tower : Module()
 	{
 		if (counterDisplayValue.get())
 		{
+			val theWorld = mc.theWorld ?: return
 			val thePlayer = mc.thePlayer ?: return
 
 			GL11.glPushMatrix()
 			val blockOverlay = LiquidBounce.moduleManager[BlockOverlay::class.java] as BlockOverlay
-			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) GL11.glTranslatef(0f, 15f, 0f)
+			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
 
 			val blocksAmount = getBlocksAmount(thePlayer)
 			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}$blocksAmount"

@@ -123,13 +123,7 @@ class NameTags : Module()
 		}
 		else ""
 
-		val distanceText = if (distanceValue.get())
-		{
-			val dist: Double = thePlayer.getDistanceToEntityBox(entity)
-
-			"\u00A77${DECIMAL_FORMAT.format(dist)}m "
-		}
-		else ""
+		val distanceText = if (distanceValue.get()) "\u00A77${DECIMAL_FORMAT.format(thePlayer.getDistanceToEntityBox(entity))}m " else ""
 
 		val healthText = if (healthValue.get())
 		{
@@ -162,12 +156,8 @@ class NameTags : Module()
 		val renderPartialTicks = mc.timer.renderPartialTicks
 		val renderManager = mc.renderManager
 
-		glTranslated(
-
-			// Translate to player position with render pos and interpolate it
-			entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * renderPartialTicks - renderManager.renderPosX, entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * renderPartialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + 0.55, entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * renderPartialTicks - renderManager.renderPosZ
-
-		)
+		// Translate to player position with render pos and interpolate it
+		glTranslated(entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * renderPartialTicks - renderManager.renderPosX, entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * renderPartialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + 0.55, entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * renderPartialTicks - renderManager.renderPosZ)
 
 		glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
 		glRotatef(renderManager.playerViewX, 1F, 0F, 0F)

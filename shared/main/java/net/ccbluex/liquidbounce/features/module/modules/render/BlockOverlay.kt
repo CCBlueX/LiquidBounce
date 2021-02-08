@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
@@ -39,25 +40,31 @@ class BlockOverlay : Module()
 
 	val infoValue = BoolValue("Info", false)
 
-	val currentBlock: WBlockPos?
-		get()
-		{
-			val blockPos = mc.objectMouseOver?.blockPos ?: return null
+	fun getCurrentBlock(theWorld: IWorldClient): WBlockPos?
+	{
+		val blockPos = mc.objectMouseOver?.blockPos ?: return null
 
-			if (canBeClicked(blockPos) && blockPos in mc.theWorld!!.worldBorder) return blockPos
+		if (canBeClicked(blockPos) && blockPos in theWorld.worldBorder) return blockPos
 
-			return null
-		}
+		return null
+	}
 
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
 	{
 		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
 
-		val blockPos = currentBlock ?: return
+		val blockPos = getCurrentBlock(theWorld) ?: return
+
+		val lastTickPosX = thePlayer.lastTickPosX
+		val lastTickPosY = thePlayer.lastTickPosY
+		val lastTickPosZ = thePlayer.lastTickPosZ
 
 		val block = theWorld.getBlockState(blockPos).block
+
 		val partialTicks = event.partialTicks
+
 		val alpha = colorAlphaValue.get()
 		val rainbowSpeed = rainbowSpeedValue.get()
 		val color = if (colorRainbow.get()) rainbow(alpha = alpha / 255.0F, speed = rainbowSpeed, saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
@@ -73,18 +80,17 @@ class BlockOverlay : Module()
 
 		@Suppress("ConstantConditionIf") if (Backend.MINECRAFT_VERSION_MINOR < 12) block.setBlockBoundsBasedOnState(theWorld, blockPos)
 
-		val thePlayer = mc.thePlayer ?: return
+		val x = lastTickPosX + (thePlayer.posX - lastTickPosX) * partialTicks
+		val y = lastTickPosY + (thePlayer.posY - lastTickPosY) * partialTicks
+		val z = lastTickPosZ + (thePlayer.posZ - lastTickPosZ) * partialTicks
 
-		val x = thePlayer.lastTickPosX + (thePlayer.posX - thePlayer.lastTickPosX) * partialTicks
-		val y = thePlayer.lastTickPosY + (thePlayer.posY - thePlayer.lastTickPosY) * partialTicks
-		val z = thePlayer.lastTickPosZ + (thePlayer.posZ - thePlayer.lastTickPosZ) * partialTicks
-
-		val boxExxpandSize = 0.0020000000949949026
-		val axisAlignedBB = block.getSelectedBoundingBox(theWorld, theWorld.getBlockState(blockPos), blockPos).expand(boxExxpandSize, boxExxpandSize, boxExxpandSize).offset(-x, -y, -z)
+		val boxExpandSize = 0.002
+		val axisAlignedBB = block.getSelectedBoundingBox(theWorld, theWorld.getBlockState(blockPos), blockPos).expand(boxExpandSize, boxExpandSize, boxExpandSize).offset(-x, -y, -z)
 
 		RenderUtils.drawSelectionBoundingBox(axisAlignedBB)
 		RenderUtils.drawFilledBox(axisAlignedBB)
 		GL11.glDepthMask(true)
+
 		glStateManager.enableTexture2D()
 		glStateManager.disableBlend()
 		glStateManager.resetColor()
@@ -95,15 +101,15 @@ class BlockOverlay : Module()
 	{
 		if (infoValue.get())
 		{
-			val blockPos = currentBlock ?: return
+			val theWorld = mc.theWorld ?: return
+
+			val blockPos = getCurrentBlock(theWorld) ?: return
 			val block = getBlock(blockPos) ?: return
 
 			val info = "${block.localizedName} \u00A77ID: ${functions.getIdFromBlock(block)}"
 			val scaledResolution = classProvider.createScaledResolution(mc)
 
-			RenderUtils.drawBorderedRect(
-				scaledResolution.scaledWidth / 2 - 2F, scaledResolution.scaledHeight / 2 + 5F, scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2F, scaledResolution.scaledHeight / 2 + 16F, 3F, Color.BLACK.rgb, Color.BLACK.rgb
-			)
+			RenderUtils.drawBorderedRect(scaledResolution.scaledWidth / 2 - 2F, scaledResolution.scaledHeight / 2 + 5F, scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2F, scaledResolution.scaledHeight / 2 + 16F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
 
 			classProvider.getGlStateManager().resetColor()
 			Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2f, scaledResolution.scaledHeight / 2f + 7f, 0xffffff, false)

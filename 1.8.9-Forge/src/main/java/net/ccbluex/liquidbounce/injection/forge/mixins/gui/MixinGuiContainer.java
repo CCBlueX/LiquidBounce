@@ -104,11 +104,16 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 		// noinspection ConstantConditions,InstanceofThis
 		if ((Object) this instanceof GuiInventory)
 			return;
-		buttonList.add(new GuiButton(996, width / 2 - 100, height / 4 - 52, "Disable KillAura"));
 
-		buttonList.add(new GuiButton(997, width / 2 - 155, height / 4 - 30, 100, 20, "Disable ChestStealer"));
-		buttonList.add(new GuiButton(998, width / 2 - 50, height / 4 - 30, 100, 20, "Disable InventoryCleaner"));
-		buttonList.add(new GuiButton(999, width / 2 + 55, height / 4 - 30, 100, 20, "Disable AutoArmor"));
+		final int screenCenterX = width / 2;
+		final int screenQuarterY = height / 4;
+
+		buttonList.add(new GuiButton(996, screenCenterX - 100, screenQuarterY - 52, "Disable KillAura"));
+
+		final int disableModuleButtonsY = screenQuarterY - 30;
+		buttonList.add(new GuiButton(997, screenCenterX - 155, disableModuleButtonsY, 100, 20, "Disable ChestStealer"));
+		buttonList.add(new GuiButton(998, screenCenterX - 50, disableModuleButtonsY, 100, 20, "Disable InventoryCleaner"));
+		buttonList.add(new GuiButton(999, screenCenterX + 55, disableModuleButtonsY, 100, 20, "Disable AutoArmor"));
 	}
 
 	@Override

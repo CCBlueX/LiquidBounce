@@ -31,15 +31,16 @@ import kotlin.math.min
 @ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
 class ESP : Module()
 {
-	@JvmField
 	val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow", "Fill", "CSGO"), "Box")
 
-	@JvmField
+	private val real2DWidth = FloatValue("Real2D-Width", 1f, 0.5f, 5f)
+
 	val outlineWidth = FloatValue("Outline-Width", 3f, 0.5f, 5f)
 
-	@JvmField
 	val wireframeWidth = FloatValue("WireFrame-Width", 2f, 0.5f, 5f)
+
 	private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
+
 	private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
 
 	private val colorValue = ListValue("Color", arrayOf("Static", "Rainbow", "Team", "Health"), "Static")
@@ -60,7 +61,7 @@ class ESP : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
-		val mode = modeValue.get()
+		val mode = modeValue.get().toLowerCase()
 		val mvMatrix = WorldToScreen.getMatrix(GL11.GL_MODELVIEW_MATRIX)
 		val projectionMatrix = WorldToScreen.getMatrix(GL11.GL_PROJECTION_MATRIX)
 		val real2d = mode.equals("Real2D", ignoreCase = true)
@@ -94,34 +95,35 @@ class ESP : Module()
 			classProvider.getGlStateManager().enableTexture2D()
 
 			GL11.glDepthMask(true)
-			GL11.glLineWidth(1.0f)
+			GL11.glLineWidth(real2DWidth.get())
 		}
 
 		val draw: (entity: IEntityLivingBase, color: Color) -> Unit = { entityLiving, color ->
-			when (mode.toLowerCase())
+			val lastTickPosX = entityLiving.lastTickPosX
+			val lastTickPosY = entityLiving.lastTickPosY
+			val lastTickPosZ = entityLiving.lastTickPosZ
+
+			val posX = entityLiving.posX
+			val posY = entityLiving.posY
+			val posZ = entityLiving.posZ
+
+			when (mode)
 			{
-				"box", "otherbox" -> RenderUtils.drawEntityBox(entityLiving, color, !mode.equals("otherbox", ignoreCase = true))
+				"box", "otherbox" -> RenderUtils.drawEntityBox(entityLiving, color, mode == "box")
 
 				"2d" ->
 				{
-					val posX = entityLiving.lastTickPosX + (entityLiving.posX - entityLiving.lastTickPosX) * renderPartialTicks - renderPosX
-					val posY = entityLiving.lastTickPosY + (entityLiving.posY - entityLiving.lastTickPosY) * renderPartialTicks - renderPosY
-					val posZ = entityLiving.lastTickPosZ + (entityLiving.posZ - entityLiving.lastTickPosZ) * renderPartialTicks - renderPosZ
+					val x = lastTickPosX + (posX - lastTickPosX) * renderPartialTicks - renderPosX
+					val y = lastTickPosY + (posY - lastTickPosY) * renderPartialTicks - renderPosY
+					val z = lastTickPosZ + (posZ - lastTickPosZ) * renderPartialTicks - renderPosZ
 
-					RenderUtils.draw2D(entityLiving, posX, posY, posZ, color.rgb, Color.BLACK.rgb)
+					RenderUtils.draw2D(entityLiving, x, y, z, color.rgb, Color.BLACK.rgb)
 				}
 
 				"real2d" ->
 				{
-					val bb = entityLiving.entityBoundingBox.offset(-entityLiving.posX, -entityLiving.posY, -entityLiving.posZ).offset(
-						entityLiving.lastTickPosX + (entityLiving.posX - entityLiving.lastTickPosX) * renderPartialTicks, entityLiving.lastTickPosY + (entityLiving.posY - entityLiving.lastTickPosY) * renderPartialTicks, entityLiving.lastTickPosZ + (entityLiving.posZ - entityLiving.lastTickPosZ) * renderPartialTicks
-					).offset(-renderPosX, -renderPosY, -renderPosZ)
-
-					val boxVertices = arrayOf(
-
-						doubleArrayOf(bb.minX, bb.minY, bb.minZ), doubleArrayOf(bb.minX, bb.maxY, bb.minZ), doubleArrayOf(bb.maxX, bb.maxY, bb.minZ), doubleArrayOf(bb.maxX, bb.minY, bb.minZ), doubleArrayOf(bb.minX, bb.minY, bb.maxZ), doubleArrayOf(bb.minX, bb.maxY, bb.maxZ), doubleArrayOf(bb.maxX, bb.maxY, bb.maxZ), doubleArrayOf(bb.maxX, bb.minY, bb.maxZ)
-
-					)
+					val bb = entityLiving.entityBoundingBox.offset(-posX, -posY, -posZ).offset(lastTickPosX + (posX - lastTickPosX) * renderPartialTicks, lastTickPosY + (posY - lastTickPosY) * renderPartialTicks, lastTickPosZ + (posZ - lastTickPosZ) * renderPartialTicks).offset(-renderPosX, -renderPosY, -renderPosZ)
+					val boxVertices = arrayOf(doubleArrayOf(bb.minX, bb.minY, bb.minZ), doubleArrayOf(bb.minX, bb.maxY, bb.minZ), doubleArrayOf(bb.maxX, bb.maxY, bb.minZ), doubleArrayOf(bb.maxX, bb.minY, bb.minZ), doubleArrayOf(bb.minX, bb.minY, bb.maxZ), doubleArrayOf(bb.minX, bb.maxY, bb.maxZ), doubleArrayOf(bb.maxX, bb.maxY, bb.maxZ), doubleArrayOf(bb.maxX, bb.minY, bb.maxZ))
 
 					var minX = Float.MAX_VALUE
 					var minY = Float.MAX_VALUE
@@ -187,19 +189,10 @@ class ESP : Module()
 
 		renderNameTags = true
 
-		val radius = if (mode.equals("ShaderOutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("ShaderGlow", ignoreCase = true)) shaderGlowRadius.get() else 1f
-
-		shader.stopDraw(getColor(null), radius, 1f)
+		shader.stopDraw(getColor(null), if (mode.equals("ShaderOutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("ShaderGlow", ignoreCase = true)) shaderGlowRadius.get() else 1f, 1f)
 	}
 
-	fun getColor(entity: IEntity?): Color
-	{
-		return ColorUtils.getESPColor(
-
-			entity = entity, colorMode = colorValue.get(), customStaticColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), healthMode = healthModeValue.get(), indicateHurt = hurtValue.get(), indicateTarget = targetValue.get(), indicateFriend = friendValue.get(), rainbowSaturation = saturationValue.get(), rainbowBrightness = brightnessValue.get()
-
-		)
-	}
+	fun getColor(entity: IEntity?): Color = ColorUtils.getESPColor(entity = entity, colorMode = colorValue.get(), customStaticColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), healthMode = healthModeValue.get(), indicateHurt = hurtValue.get(), indicateTarget = targetValue.get(), indicateFriend = friendValue.get(), rainbowSaturation = saturationValue.get(), rainbowBrightness = brightnessValue.get())
 
 	override val tag: String
 		get() = modeValue.get()

@@ -66,16 +66,16 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 		final boolean canMarkBannedOnThisServer = GuiAltManager.canMarkBannedCurrent(lastServerIp);
 
 		final int middleWidth = width / 2;
-		final int height = this.height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT;
-		buttonList.add(reconnectButton = new GuiButton(1, middleWidth - 100, height + 22, 98, 20, "Reconnect"));
+		final int buttonY = height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT;
+		buttonList.add(reconnectButton = new GuiButton(1, middleWidth - 100, buttonY + 22, 98, 20, "Reconnect"));
 
 		drawReconnectDelaySlider();
 
-		buttonList.add(new GuiButton(3, middleWidth - 100, height + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
-		buttonList.add(new GuiButton(4, middleWidth + 2, height + 44, 98, 20, "Random username"));
-		buttonList.add(new GuiButton(5, middleWidth - 100, height + 88, "AltManager"));
-		buttonList.add(markBanned = new GuiButton(6, middleWidth - 100, height + 110, "Mark this account " + (canMarkBannedOnThisServer ? "\u00A7cBANNED" : "\u00A7aUN-BANNED") + "\u00A7r from this server"));
-		buttonList.add(forgeBypassButton = new GuiButton(7, middleWidth - 100, height + 66, "AntiModDisable: " + (AntiModDisable.enabled ? "\u00A7a(On)" : "\u00A7c(Off)")));
+		buttonList.add(new GuiButton(3, middleWidth - 100, buttonY + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
+		buttonList.add(new GuiButton(4, middleWidth + 2, buttonY + 44, 98, 20, "Random username"));
+		buttonList.add(new GuiButton(5, middleWidth - 100, buttonY + 88, "AltManager"));
+		buttonList.add(markBanned = new GuiButton(6, middleWidth - 100, buttonY + 110, "Mark this account " + (canMarkBannedOnThisServer ? "\u00A7cBANNED" : "\u00A7aUN-BANNED") + "\u00A7r from this server"));
+		buttonList.add(forgeBypassButton = new GuiButton(7, middleWidth - 100, buttonY + 66, "AntiModDisable: " + (AntiModDisable.enabled ? "\u00A7a(On)" : "\u00A7c(Off)")));
 
 		if (lastServerIp != null)
 			markBanned.enabled = GuiAltManager.canEnableMarkBannedButton();

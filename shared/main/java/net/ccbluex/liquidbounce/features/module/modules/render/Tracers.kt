@@ -94,9 +94,13 @@ class Tracers : Module()
 			{
 				val dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt().coerceAtMost(255)
 
-				val x = (entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks - renderPosX)
-				val y = (entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks - renderPosY)
-				val z = (entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks - renderPosZ)
+				val lastTickPosX = entity.lastTickPosX
+				val lastTickPosY = entity.lastTickPosY
+				val lastTickPosZ = entity.lastTickPosZ
+
+				val x = (lastTickPosX + (entity.posX - lastTickPosX) * partialTicks - renderPosX)
+				val y = (lastTickPosY + (entity.posY - lastTickPosY) * partialTicks - renderPosY)
+				val z = (lastTickPosZ + (entity.posZ - lastTickPosZ) * partialTicks - renderPosZ)
 
 				RenderUtils.glColor(
 					when

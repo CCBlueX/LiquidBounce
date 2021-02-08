@@ -99,14 +99,12 @@ class Nuker : Module()
 				{
 					if (layerValue.get() && pos.y < thePlayer.posY)
 					{
-
 						// Layer: Break all blocks above you
 						return@filter false
 					}
 
 					if (!throughWalls)
 					{
-
 						// ThroughWalls: Just break blocks in your sight
 						// Raytrace player eyes to block position (through walls check)
 						val eyesPos = WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ)
@@ -216,14 +214,12 @@ class Nuker : Module()
 				{
 					if (layerValue.get() && pos.y < thePlayer.posY)
 					{
-
 						// Layer: Break all blocks above you
 						return@filter false
 					}
 
 					if (!throughWalls)
 					{
-
 						// ThroughWalls: Just break blocks in your sight
 						// Raytrace player eyes to block position (through walls check)
 						val eyesPos = WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ)

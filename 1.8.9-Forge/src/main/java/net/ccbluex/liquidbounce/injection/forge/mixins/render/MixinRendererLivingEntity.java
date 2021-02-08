@@ -192,7 +192,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 				renderModel(entity, reverseinterpolatedLimbSwingDelta, interpolatedLimbSwingAmount, f8, yawDelta, interpolatedPitch, 0.0625F);
 
 				final ESP esp = (ESP) LiquidBounce.moduleManager.getModule(ESP.class);
-				final String mode = esp.modeValue.get();
+				final String mode = esp.getModeValue().get();
 				if (esp.getState() && ("Fill".equalsIgnoreCase(mode) || "CSGO".equalsIgnoreCase(mode)) && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
 				{
 					final Minecraft mc = Minecraft.getMinecraft();
@@ -299,7 +299,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 				final float gamma = mc.gameSettings.gammaSetting;
 				mc.gameSettings.gammaSetting = 100000.0F;
 
-				switch (esp.modeValue.get().toLowerCase())
+				switch (esp.getModeValue().get().toLowerCase())
 				{
 					case "wireframe":
 						GL11.glPushMatrix();
@@ -312,7 +312,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 						GL11.glEnable(GL11.GL_BLEND);
 						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 						RenderUtils.glColor(esp.getColor(EntityLivingBaseImplKt.wrap(entitylivingbaseIn)));
-						GL11.glLineWidth(esp.wireframeWidth.get());
+						GL11.glLineWidth(esp.getWireframeWidth().get());
 						mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
 						GL11.glPopAttrib();
 						GL11.glPopMatrix();
@@ -323,7 +323,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 
 						final Color color = esp.getColor(EntityLivingBaseImplKt.wrap(entitylivingbaseIn));
 						OutlineUtils.setColor(color);
-						OutlineUtils.renderOne(esp.outlineWidth.get());
+						OutlineUtils.renderOne(esp.getOutlineWidth().get());
 						mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
 						OutlineUtils.setColor(color);
 						OutlineUtils.renderTwo();

@@ -901,9 +901,11 @@ class Fly : Module()
 	{
 		if (vanillaFlightRemainingTimeValue.get())
 		{
+			val theWorld = mc.theWorld ?: return
+
 			GL11.glPushMatrix()
 			val blockOverlay = LiquidBounce.moduleManager[BlockOverlay::class.java] as BlockOverlay
-			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) GL11.glTranslatef(0f, 15f, 0f)
+			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
 
 			val remainingTicks = 80 - vanillaRemainingTime.tick.coerceAtMost(80)
 			val info = "You can fly ${if (remainingTicks <= 10) "\u00A7c" else ""}${remainingTicks}\u00A7r more ticks"
