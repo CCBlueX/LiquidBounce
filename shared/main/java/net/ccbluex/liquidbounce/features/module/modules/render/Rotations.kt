@@ -24,6 +24,7 @@ class Rotations : Module()
 {
 	val bodyValue = BoolValue("Body", true)
 	val interpolateRotationsValue = BoolValue("Interpolate", true)
+	private val onlyWhileRotatingValue = BoolValue("OnlyWhileRotating", true)
 
 	/**
 	 * Rotations - Head only, Yaw
@@ -43,6 +44,8 @@ class Rotations : Module()
 
 	fun isRotating(): Boolean
 	{
+		if (!onlyWhileRotatingValue.get()) return true
+
 		val bowAimbot = LiquidBounce.moduleManager[BowAimbot::class.java] as BowAimbot
 		val fucker = LiquidBounce.moduleManager[Fucker::class.java] as Fucker
 		val civBreak = LiquidBounce.moduleManager[CivBreak::class.java] as CivBreak

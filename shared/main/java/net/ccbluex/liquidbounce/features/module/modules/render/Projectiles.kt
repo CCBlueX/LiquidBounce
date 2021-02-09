@@ -127,11 +127,11 @@ class Projectiles : Module()
 		}
 
 		// Interpolated yaw and pitch of player
-		val (yaw, pitch) = when
-		{
-			RotationUtils.targetRotation != null -> RotationUtils.targetRotation!!
-			else -> RotationUtils.serverRotation
-		}
+		val (serverYaw, serverPitch) = RotationUtils.serverRotation
+		val (lastServerYaw, lastServerPitch) = RotationUtils.lastServerRotation
+
+		val yaw = lastServerYaw + (serverYaw - lastServerYaw) * partialTicks
+		val pitch = lastServerPitch + (serverPitch - lastServerPitch) * partialTicks
 
 		val yawRadians = WMathHelper.toRadians(yaw)
 		val pitchRadians = WMathHelper.toRadians(pitch)
