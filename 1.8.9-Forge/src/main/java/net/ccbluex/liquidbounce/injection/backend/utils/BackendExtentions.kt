@@ -4,8 +4,6 @@
  * https://github.com/CCBlueX/LiquidBounce/
  */
 
-@file:Suppress("NOTHING_TO_")
-
 package net.ccbluex.liquidbounce.injection.backend.utils
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.WEnumPlayerModelParts

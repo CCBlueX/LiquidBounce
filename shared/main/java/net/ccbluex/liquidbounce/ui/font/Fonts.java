@@ -100,7 +100,7 @@ public class Fonts extends MinecraftInstance
 			ClientUtils.getLogger().error("Can't parse fonts.json", e);
 		}
 
-		ClientUtils.getLogger().info("Loaded Fonts. Took {}.", TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime));
+		ClientUtils.getLogger().info("Loaded Fonts. Took {}.", TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime));
 	}
 
 	private static void downloadFonts()

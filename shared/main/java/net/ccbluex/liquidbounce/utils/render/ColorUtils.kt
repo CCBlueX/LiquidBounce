@@ -181,7 +181,7 @@ object ColorUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun blendColors(fractions: FloatArray, colors: Array<Color>, progress: Float): Color?
+	fun blendColors(fractions: FloatArray, colors: Array<Color>, progress: Float): Color
 	{
 		return if (fractions.size == colors.size)
 		{
@@ -207,7 +207,7 @@ object ColorUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun blend(color1: Color, color2: Color, ratio: Double): Color?
+	fun blend(color1: Color, color2: Color, ratio: Double): Color
 	{
 		val r = ratio.toFloat()
 		val ir = 1.0F - r
@@ -219,22 +219,22 @@ object ColorUtils : MinecraftInstance()
 		val green = (rgb1[1] * r + rgb2[1] * ir).coerceAtLeast(0F).coerceAtMost(1F)
 		val blue = (rgb1[2] * r + rgb2[2] * ir).coerceAtLeast(0F).coerceAtMost(1F)
 
-		var color: Color? = null
-		try
+		return try
 		{
-			color = Color(red, green, blue)
+			Color(red, green, blue)
 		}
 		catch (exp: IllegalArgumentException)
 		{
 			val nf = NumberFormat.getNumberInstance()
 			println(nf.format(red) + "; " + nf.format(green) + "; " + nf.format(blue))
 			exp.printStackTrace()
+
+			Color.white
 		}
-		return color
 	}
 
 	@JvmStatic
-	fun getHealthColor(health: Float, maxHealth: Float): Color = blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), health / maxHealth)!!.brighter()
+	fun getHealthColor(health: Float, maxHealth: Float): Color = blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), health / maxHealth).brighter()
 
 	@JvmStatic
 	fun applyAlphaChannel(rgb: Int, alpha: Int): Int

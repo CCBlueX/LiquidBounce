@@ -53,7 +53,6 @@ class RainbowShader : Shader("rainbow_shader.frag"), Closeable
 		@JvmField
 		val INSTANCE = RainbowShader()
 
-		@Suppress("NOTHING_TO_")
 		fun begin(enable: Boolean, x: Float, y: Float, offset: Float): RainbowShader
 		{
 			val instance = INSTANCE

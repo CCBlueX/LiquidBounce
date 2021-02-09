@@ -78,7 +78,7 @@ class Script(val scriptFile: File) : MinecraftInstance()
 		scriptEngine.eval(scriptText)
 		callEvent("load")
 
-		ClientUtils.logger.info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'. Took ${TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime)}.")
+		ClientUtils.logger.info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'. Took ${TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime)}.")
 	}
 
 	@Suppress("UNCHECKED_CAST")

@@ -107,6 +107,6 @@ class ScriptManager
 		loadScripts()
 		enableScripts()
 
-		ClientUtils.logger.info("[ScriptAPI]  Successfully reloaded scripts. Took ${TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime)}.")
+		ClientUtils.logger.info("[ScriptAPI]  Successfully reloaded scripts. Took ${TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime)}.")
 	}
 }

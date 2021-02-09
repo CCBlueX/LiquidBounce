@@ -107,7 +107,7 @@ public abstract class MixinGuiScreen extends Gui
 			if (LiquidBounce.INSTANCE.getBackground() == null)
 			{
 				// Use Shader background
-				BackgroundShader.BACKGROUND_SHADER.startShader();
+				BackgroundShader.INSTANCE.startShader();
 
 				final Tessellator instance = Tessellator.getInstance();
 				final WorldRenderer worldRenderer = instance.getWorldRenderer();
@@ -118,7 +118,7 @@ public abstract class MixinGuiScreen extends Gui
 				worldRenderer.pos(0, 0, 0.0D).endVertex();
 				instance.draw();
 
-				BackgroundShader.BACKGROUND_SHADER.stopShader();
+				BackgroundShader.INSTANCE.stopShader();
 			}
 			else
 			{

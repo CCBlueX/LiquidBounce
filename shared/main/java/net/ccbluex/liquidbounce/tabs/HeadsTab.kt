@@ -74,7 +74,7 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 					ItemUtils.createItem("skull 1 3 {display:{Name:\"${headElement.get("name").asString}\"},SkullOwner:{Id:\"${headElement.get("uuid").asString}\",Properties:{textures:[{Value:\"${headElement.get("value").asString}\"}]}}}")?.let(heads::add)
 				}
 
-				ClientUtils.logger.info("Loaded " + heads.size + " heads from HeadDB. Took ${TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime)}.")
+				ClientUtils.logger.info("Loaded " + heads.size + " heads from HeadDB. Took ${TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime)}.")
 			}
 			else ClientUtils.logger.info("Heads are disabled.")
 		}

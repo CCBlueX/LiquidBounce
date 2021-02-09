@@ -92,8 +92,8 @@ class ProphuntESP : Module()
 		val mode = modeValue.get()
 		val shader = when (mode)
 		{
-			"ShaderOutline" -> OutlineShader.OUTLINE_SHADER
-			"ShaderGlow" -> GlowShader.GLOW_SHADER
+			"ShaderOutline" -> OutlineShader.INSTANCE
+			"ShaderGlow" -> GlowShader.INSTANCE
 			else -> null
 		} ?: return
 

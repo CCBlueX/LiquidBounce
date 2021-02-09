@@ -172,7 +172,7 @@ class ESP : Module()
 	fun onRender2D(event: Render2DEvent)
 	{
 		val mode = modeValue.get().toLowerCase()
-		val shader = (if (mode.equals("ShaderOutline", ignoreCase = true)) OutlineShader.OUTLINE_SHADER else if (mode.equals("ShaderGlow", ignoreCase = true)) GlowShader.GLOW_SHADER else null) ?: return
+		val shader = (if (mode.equals("ShaderOutline", ignoreCase = true)) OutlineShader.INSTANCE else if (mode.equals("ShaderGlow", ignoreCase = true)) GlowShader.INSTANCE else null) ?: return
 
 		shader.startDraw(event.partialTicks)
 

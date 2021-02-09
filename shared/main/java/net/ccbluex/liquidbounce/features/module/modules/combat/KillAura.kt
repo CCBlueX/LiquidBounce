@@ -538,7 +538,7 @@ class KillAura : Module()
 
 		if (markValue.get() && !targetModeValue.get().equals("Multi", ignoreCase = true)) // Draw Mark
 			RenderUtils.drawPlatform(
-				target, if (hitable)
+				target!!, if (hitable)
 				{
 					if (failedToHit) Color(0, 0, 255, 70)
 					else Color(0, 255, 0, 70)

@@ -52,7 +52,7 @@ class ModuleManager : Listenable
 		registerModule(ChestAura)
 		registerModule(AntiBot)
 
-		ClientUtils.logger.info("[ModuleManager] Loaded ${modules.size} modules. Took ${TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime)}.")
+		ClientUtils.logger.info("[ModuleManager] Loaded ${modules.size} modules. Took ${TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime)}.")
 	}
 
 	/**

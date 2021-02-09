@@ -139,7 +139,7 @@ class Target : Element()
 			if (playerInfo != null)
 			{
 				ping = playerInfo.responseTime.coerceAtLeast(0)
-				pingTextColor = if (ping > 300) 0xff0000 else ColorUtils.blendColors(floatArrayOf(0.0F, 0.5F, 1.0F), arrayOf(Color.GREEN, Color.YELLOW, Color.RED), ping / 300.0F)!!.rgb
+				pingTextColor = if (ping > 300) 0xff0000 else ColorUtils.blendColors(floatArrayOf(0.0F, 0.5F, 1.0F), arrayOf(Color.GREEN, Color.YELLOW, Color.RED), ping / 300.0F).rgb
 				skinResource = playerInfo.locationSkin
 			}
 			else

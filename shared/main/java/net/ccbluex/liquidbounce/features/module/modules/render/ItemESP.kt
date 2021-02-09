@@ -49,7 +49,7 @@ class ItemESP : Module()
 
 		if (modeValue.get().equals("ShaderOutline", ignoreCase = true))
 		{
-			OutlineShader.OUTLINE_SHADER.startDraw(event.partialTicks)
+			OutlineShader.INSTANCE.startDraw(event.partialTicks)
 
 			try
 			{
@@ -60,7 +60,7 @@ class ItemESP : Module()
 				ClientUtils.logger.error("An error occurred while rendering all item entities for shader esp", ex)
 			}
 
-			OutlineShader.OUTLINE_SHADER.stopDraw(if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), 1f, 1f)
+			OutlineShader.INSTANCE.stopDraw(if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), 1f, 1f)
 		}
 	}
 }

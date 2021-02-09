@@ -256,7 +256,7 @@ public class ClickGui extends WrappedGuiScreen
 
 		for (final Panel panel : panels)
 		{
-			panel.updateFade(RenderUtils.deltaTime);
+			panel.updateFade(RenderUtils.getDeltaTime());
 			panel.drawScreen(mouseX, mouseY, partialTicks);
 		}
 

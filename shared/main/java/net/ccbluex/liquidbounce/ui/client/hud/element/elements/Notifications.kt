@@ -163,7 +163,7 @@ class Notification(private val header: String, private val message: String, priv
 
 		// Draw remaining time line
 		val remainingTimePercentage = stayTimer.hasTimeLeft(stayTime).coerceAtLeast(0).toFloat() / stayTime.toFloat()
-		val color = (ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), remainingTimePercentage)!!).brighter()
+		val color = (ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), remainingTimePercentage)).brighter()
 		RenderUtils.drawRect(-x + 8 + textLength, -28F, -x - 2 + (10 + textLength) * (1 - remainingTimePercentage), -30F, color)
 
 

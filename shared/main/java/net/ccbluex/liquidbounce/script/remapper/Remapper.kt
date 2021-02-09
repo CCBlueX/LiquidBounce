@@ -40,7 +40,7 @@ object Remapper
 
 			ClientUtils.logger.info("[Remapper] Downloading $srgName srg...")
 			HttpUtils.download("${LiquidBounce.CLIENT_CLOUD}/srgs/mcp-$srgName.srg", srgFile)
-			ClientUtils.logger.info("[Remapper] Downloaded $srgName. Took ${TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime)}.")
+			ClientUtils.logger.info("[Remapper] Downloaded $srgName. Took ${TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime)}.")
 		}
 
 		val nanoTime = System.nanoTime()
@@ -50,7 +50,7 @@ object Remapper
 
 		parseSrg()
 
-		ClientUtils.logger.info("[Remapper] Loaded srg. Took ${TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime)}.")
+		ClientUtils.logger.info("[Remapper] Loaded srg. Took ${TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime)}.")
 	}
 
 	private fun parseSrg()

@@ -92,7 +92,7 @@ class BowAimbot : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		if (target != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get()) RenderUtils.drawPlatform(target, Color(37, 126, 255, 70))
+		if (target != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get()) RenderUtils.drawPlatform(target!!, Color(37, 126, 255, 70))
 	}
 
 	private fun getTarget(thePlayer: IEntityPlayerSP, throughWalls: Boolean, priorityMode: String): IEntity?

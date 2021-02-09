@@ -297,7 +297,7 @@ class StorageESP : Module()
 		val hopperColor = if (hopperRainbowValue.get()) rainbow else Color(hopperRedValue.get(), hopperGreenValue.get(), hopperBlueValue.get())
 		val shulkerBoxColor = if (shulkerBoxRainbowValue.get()) rainbow else Color(shulkerBoxRedValue.get(), shulkerBoxGreenValue.get(), shulkerBoxBlueValue.get())
 
-		val shader = (if (mode.equals("shaderoutline", ignoreCase = true)) OutlineShader.OUTLINE_SHADER else if (mode.equals("shaderglow", ignoreCase = true)) GlowShader.GLOW_SHADER else null) ?: return
+		val shader = (if (mode.equals("shaderoutline", ignoreCase = true)) OutlineShader.INSTANCE else if (mode.equals("shaderglow", ignoreCase = true)) GlowShader.INSTANCE else null) ?: return
 		val radius = if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f
 
 		val renderManager = mc.renderManager
