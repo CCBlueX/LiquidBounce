@@ -25,7 +25,7 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
 
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.hurtTime <= 0)
 			{
@@ -46,7 +46,7 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 					thePlayer.motionY -= 0.0149
 				}
 
-				if (!thePlayer.isCollidedHorizontally) MovementUtils.forward(if (firstJump) 0.0016 else 0.001799)
+				if (!thePlayer.isCollidedHorizontally) MovementUtils.forward(thePlayer, if (firstJump) 0.0016 else 0.001799)
 			}
 			else
 			{
@@ -60,7 +60,7 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 			thePlayer.motionX = 0.0
 		}
 
-		MovementUtils.strafe()
+		MovementUtils.strafe(thePlayer)
 	}
 
 	override fun onUpdate()

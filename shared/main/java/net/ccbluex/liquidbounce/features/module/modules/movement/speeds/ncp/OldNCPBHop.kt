@@ -64,15 +64,15 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		}
 		else
 		{
-			if (MovementUtils.isMoving) mc.timer.timerSpeed = 32767f
-			if (MovementUtils.isMoving)
+			if (MovementUtils.isMoving(thePlayer)) mc.timer.timerSpeed = 32767f
+			if (MovementUtils.isMoving(thePlayer))
 			{
 				mc.timer.timerSpeed = 1.3f
 				thePlayer.motionX *= 1.0199999809265137
 				thePlayer.motionZ *= 1.0199999809265137
 			}
 		}
-		if (thePlayer.onGround && MovementUtils.isMoving) level = 2
+		if (thePlayer.onGround && MovementUtils.isMoving(thePlayer)) level = 2
 		if (round(thePlayer.posY - thePlayer.posY.roundToInt().toDouble()) == round(0.138))
 		{
 			thePlayer.motionY -= 0.08

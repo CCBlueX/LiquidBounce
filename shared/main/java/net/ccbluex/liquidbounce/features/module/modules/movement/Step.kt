@@ -96,7 +96,7 @@ class Step : Module()
 			}
 			else isStep = false
 
-			"aac3.3.4" -> if (thePlayer.isCollidedHorizontally && MovementUtils.isMoving)
+			"aac3.3.4" -> if (thePlayer.isCollidedHorizontally && MovementUtils.isMoving(thePlayer))
 			{
 				if (thePlayer.onGround && couldStep(theWorld, thePlayer))
 				{
@@ -145,7 +145,7 @@ class Step : Module()
 
 			motionNCPNextStep == 2 ->
 			{
-				val yaw = MovementUtils.direction
+				val yaw = MovementUtils.getDirection(thePlayer)
 
 				event.y = 0.248135998590947 // Jump step 3 (0.248)
 
@@ -308,7 +308,7 @@ class Step : Module()
 
 	private fun couldStep(theWorld: IWorldClient, thePlayer: IEntityPlayerSP): Boolean
 	{
-		val yaw = MovementUtils.direction
+		val yaw = MovementUtils.getDirection(thePlayer)
 		val x = -functions.sin(yaw) * 0.4
 		val z = functions.cos(yaw) * 0.4
 

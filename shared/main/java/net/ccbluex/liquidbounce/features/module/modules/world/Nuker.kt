@@ -148,7 +148,7 @@ class Nuker : Module()
 				// Change head rotations to next block
 				if (rotationsValue.get())
 				{
-					val rotation = RotationUtils.faceBlock(blockPos) ?: return // In case of a mistake. Prevent flag.
+					val rotation = RotationUtils.faceBlock(theWorld, thePlayer, blockPos) ?: return // In case of a mistake. Prevent flag.
 					RotationUtils.setTargetRotation(rotation.rotation)
 				}
 

@@ -327,8 +327,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 		worldRenderer.begin(GL_TRIANGLE_FAN, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
 
-		val start = (90.0f - (angle * 0.5f)) / 180.0f * WMathHelper.PI
-		val end = (90.0f + (angle * 0.5f)) / 180.0f * WMathHelper.PI
+		val start = WMathHelper.toRadians(90.0f - angle * 0.5f)
+		val end = WMathHelper.toRadians(90.0f + angle * 0.5f)
 
 		var curr = end
 		val radius = 1.0

@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
-import net.ccbluex.liquidbounce.utils.MovementUtils.direction
+import net.ccbluex.liquidbounce.utils.MovementUtils.getDirection
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -383,7 +383,7 @@ class Fly : Module()
 					thePlayer.motionZ = 0.0
 					if (jumpKeyDown) thePlayer.motionY += vanillaSpeed
 					if (sneakKeyDown) thePlayer.motionY -= vanillaSpeed
-					MovementUtils.strafe(vanillaSpeed)
+					MovementUtils.strafe(thePlayer, vanillaSpeed)
 					handleVanillaKickBypass()
 				}
 
@@ -399,9 +399,10 @@ class Fly : Module()
 					thePlayer.motionX = 0.0
 					thePlayer.motionY = 0.0
 					thePlayer.motionZ = 0.0
+					val isMoving = isMoving(thePlayer)
 					if ((isMoving || jumpKeyDown || sneakKeyDown) && teleportTimer.hasTimePassed(teleportDelayValue.get().toLong()))
 					{
-						val yaw = direction
+						val yaw = getDirection(thePlayer)
 						val speed = teleportDistanceValue.get().toDouble()
 						var x = 0.0
 						var y = 0.0
@@ -437,7 +438,7 @@ class Fly : Module()
 				{
 					thePlayer.motionY = (-ncpMotionValue.get()).toDouble()
 					if (sneakKeyDown) thePlayer.motionY = -0.5
-					MovementUtils.strafe()
+					MovementUtils.strafe(thePlayer)
 				}
 
 				"oldncp" ->
@@ -445,7 +446,7 @@ class Fly : Module()
 					if (startY > posY) thePlayer.motionY = -0.000000000000000000000000000000001
 					if (sneakKeyDown) thePlayer.motionY = -0.2
 					if (jumpKeyDown && posY < startY - 0.1) thePlayer.motionY = 0.2
-					MovementUtils.strafe()
+					MovementUtils.strafe(thePlayer)
 				}
 
 				"aac1.9.10" ->
@@ -457,9 +458,10 @@ class Fly : Module()
 					{
 						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
 						thePlayer.motionY = 0.8
-						MovementUtils.strafe(aacSpeedValue.get())
+						MovementUtils.strafe(thePlayer, aacSpeedValue.get())
 					}
-					MovementUtils.strafe()
+
+					MovementUtils.strafe(thePlayer)
 				}
 
 				"aac3.0.5" ->
@@ -492,16 +494,9 @@ class Fly : Module()
 
 				"flag" ->
 				{
-					networkManager.sendPacketWithoutEvent(
-						classProvider.createCPacketPlayerPosLook(
-							posX + thePlayer.motionX * 999, posY + (if (jumpKeyDown) 1.5624 else 0.00000001) - if (sneakKeyDown) 0.0624 else 0.00000002, posZ + thePlayer.motionZ * 999, rotationYaw, rotationPitch, true
-						)
-					)
-					networkManager.sendPacketWithoutEvent(
-						classProvider.createCPacketPlayerPosLook(
-							posX + thePlayer.motionX * 999, posY - 6969, posZ + thePlayer.motionZ * 999, rotationYaw, rotationPitch, true
-						)
-					)
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosLook(posX + thePlayer.motionX * 999, posY + (if (jumpKeyDown) 1.5624 else 0.00000001) - if (sneakKeyDown) 0.0624 else 0.00000002, posZ + thePlayer.motionZ * 999, rotationYaw, rotationPitch, true))
+					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosLook(posX + thePlayer.motionX * 999, posY - 6969, posZ + thePlayer.motionZ * 999, rotationYaw, rotationPitch, true))
+
 					thePlayer.setPosition(posX + thePlayer.motionX * 11, posY, posZ + thePlayer.motionZ * 11)
 					thePlayer.motionY = 0.0
 				}
@@ -515,7 +510,7 @@ class Fly : Module()
 					thePlayer.motionZ = 0.0
 					if (jumpKeyDown) thePlayer.motionY += vanillaSpeed
 					if (sneakKeyDown) thePlayer.motionY -= vanillaSpeed
-					MovementUtils.strafe(vanillaSpeed)
+					MovementUtils.strafe(thePlayer, vanillaSpeed)
 				}
 
 				"minesecure" ->
@@ -525,7 +520,7 @@ class Fly : Module()
 
 					thePlayer.motionX = 0.0
 					thePlayer.motionZ = 0.0
-					MovementUtils.strafe(vanillaSpeed)
+					MovementUtils.strafe(thePlayer, vanillaSpeed)
 					if (mineSecureVClipTimer.hasTimePassed(150) && jumpKeyDown)
 					{
 						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 5, posZ, false))
@@ -594,7 +589,8 @@ class Fly : Module()
 				}
 
 				"jetpack" -> if (jumpKeyDown)
-				{ //                    mc.effectRenderer.spawnEffectParticle(EnumParticleTypes.FLAME.getParticleID(), thePlayer.posX, thePlayer.posY + 0.2, thePlayer.posZ, -thePlayer.motionX, -0.5, -thePlayer.motionZ)
+				{
+					//                    mc.effectRenderer.spawnEffectParticle(EnumParticleTypes.FLAME.getParticleID(), thePlayer.posX, thePlayer.posY + 0.2, thePlayer.posZ, -thePlayer.motionX, -0.5, -thePlayer.motionZ)
 					thePlayer.motionY += 0.15
 					thePlayer.motionX *= 1.1
 					thePlayer.motionZ *= 1.1
@@ -614,7 +610,7 @@ class Fly : Module()
 					val blockPos = WBlockPos(posX, thePlayer.entityBoundingBox.minY - 1, posZ)
 					val vec: WVec3 = WVec3(blockPos).addVector(0.4, 0.4, 0.4).add(WVec3(classProvider.getEnumFacing(EnumFacingType.UP).directionVec))
 					mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.inventory.getCurrentItemInHand()!!, blockPos, classProvider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
-					MovementUtils.strafe(0.27f)
+					MovementUtils.strafe(thePlayer, 0.27f)
 					mc.timer.timerSpeed = 1 + mineplexSpeedValue.get()
 				}
 				else
@@ -673,7 +669,7 @@ class Fly : Module()
 
 				"watchcat" ->
 				{
-					MovementUtils.strafe(0.15f)
+					MovementUtils.strafe(thePlayer,0.15f)
 					thePlayer.sprinting = true
 
 					if (posY < startY + 2)
@@ -682,7 +678,7 @@ class Fly : Module()
 						return@run
 					}
 
-					if (startY > posY) MovementUtils.strafe(0f)
+					if (startY > posY) MovementUtils.strafe(thePlayer,0f)
 				}
 
 				"spartan185" ->
@@ -700,7 +696,7 @@ class Fly : Module()
 
 				"spartan185glide" ->
 				{
-					MovementUtils.strafe(0.264f)
+					MovementUtils.strafe(thePlayer,0.264f)
 
 					if (thePlayer.ticksExisted % 8 == 0) thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 10, posZ, true))
 				}
@@ -794,7 +790,7 @@ class Fly : Module()
 					if (jumpKeyDown) thePlayer.motionY += vanillaSpeed
 					if (sneakKeyDown) thePlayer.motionY -= vanillaSpeed
 
-					MovementUtils.strafe(vanillaSpeed)
+					MovementUtils.strafe(thePlayer,vanillaSpeed)
 				}
 
 				"redesky" ->
@@ -876,7 +872,7 @@ class Fly : Module()
 			}
 		}
 
-		if (LiquidBounce.moduleManager[Bobbing::class.java].state && bobValue.get() && isMoving) thePlayer.cameraYaw = 0.1f
+		if (LiquidBounce.moduleManager[Bobbing::class.java].state && bobValue.get() && isMoving(thePlayer)) thePlayer.cameraYaw = 0.1f
 	}
 
 	@EventTarget
@@ -971,7 +967,7 @@ class Fly : Module()
 			{
 				if (!canPerformHypixelDamageFly || !hypixelFlyStarted) return
 
-				if (!isMoving)
+				if (!isMoving(thePlayer))
 				{
 					event.x = 0.0
 					event.z = 0.0
@@ -1010,7 +1006,7 @@ class Fly : Module()
 
 				hypixelBoostSpeed = max(hypixelBoostSpeed, 0.3)
 
-				val dir = direction
+				val dir = getDirection(thePlayer)
 
 				event.x = -functions.sin(dir) * hypixelBoostSpeed
 				event.z = functions.cos(dir) * hypixelBoostSpeed
@@ -1151,7 +1147,7 @@ class Fly : Module()
 		// Jump Boost
 		if (thePlayer.sprinting)
 		{
-			val f = direction
+			val f = getDirection(thePlayer)
 			thePlayer.motionX -= functions.sin(f) * 0.2f
 			thePlayer.motionZ += functions.cos(f) * 0.2f
 		}

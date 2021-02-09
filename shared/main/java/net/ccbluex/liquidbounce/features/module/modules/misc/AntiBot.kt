@@ -366,7 +366,7 @@ object AntiBot : Module()
 					if (currentVL <= 0) yspeed.remove(entity.entityId) else yspeed[entity.entityId] = currentVL
 				}
 
-				val yaw = if (RotationUtils.serverRotation != null) RotationUtils.serverRotation.yaw else thePlayer.rotationYaw
+				val yaw = RotationUtils.serverRotation.yaw
 				val dir = WMathHelper.toRadians(yaw - 180.0F)
 
 				val expectedX = thePlayer.posX - functions.sin(dir) * positionBackValue.get()
@@ -497,22 +497,11 @@ object AntiBot : Module()
 
 			val partialTicks = e.partialTicks
 
-			val yaw = if (RotationUtils.serverRotation != null)
-			{
+			val yaw = run {
 				val serverYaw = RotationUtils.serverRotation.yaw
-				if (RotationUtils.lastServerRotation != null)
-				{
-					val lastServerYaw = RotationUtils.lastServerRotation.yaw
-					lastServerYaw + (serverYaw - lastServerYaw) * partialTicks
-				}
-				else RotationUtils.serverRotation.yaw
-			}
-			else
-			{
-				val rotYaw = thePlayer.rotationYaw
-				val lastRotYaw = thePlayer.prevRotationYaw
+				val lastServerYaw = RotationUtils.lastServerRotation.yaw
 
-				lastRotYaw + (rotYaw - lastRotYaw) * partialTicks
+				lastServerYaw + (serverYaw - lastServerYaw) * partialTicks
 			}
 
 			val dir = WMathHelper.toRadians(yaw - 180.0F)

@@ -20,10 +20,12 @@ class AAC3_3_11Ground2 : SpeedMode("AAC3.3.11-Ground2") // Was AACGround2
 
 	override fun onUpdate()
 	{
-		if (!MovementUtils.isMoving) return
+		val thePlayer = mc.thePlayer ?: return
+
+		if (!MovementUtils.isMoving(thePlayer)) return
 
 		mc.timer.timerSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).aacGroundTimerValue.get()
-		MovementUtils.strafe(0.02f)
+		MovementUtils.strafe(thePlayer, 0.02f)
 	}
 
 	override fun onMove(event: MoveEvent)

@@ -36,7 +36,7 @@ class AAC3_1_5FastLowHop : SpeedMode("AAC3.1.5-FastLowHop") // Was AACLowHop2
 
 		if (thePlayer.isInWater) return
 
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			mc.timer.timerSpeed = 1.09f
 
@@ -49,7 +49,7 @@ class AAC3_1_5FastLowHop : SpeedMode("AAC3.1.5-FastLowHop") // Was AACLowHop2
 					return
 				}
 
-				MovementUtils.strafe(0.534f)
+				MovementUtils.strafe(thePlayer, 0.534f)
 
 				thePlayer.motionY = 0.343
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.343f))

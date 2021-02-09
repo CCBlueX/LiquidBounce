@@ -18,13 +18,13 @@ class DaedalusAACBHop : SpeedMode("DaedalusAAC-BHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (isMoving)
+		if (isMoving(thePlayer))
 		{
-			strafe(0.3f)
+			strafe(thePlayer, 0.3f)
 
 			if (thePlayer.onGround) jump(thePlayer)
 
-			strafe()
+			strafe(thePlayer)
 		}
 		else
 		{

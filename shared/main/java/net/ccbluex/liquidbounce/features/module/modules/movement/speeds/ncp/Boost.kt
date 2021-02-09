@@ -72,5 +72,9 @@ class Boost : SpeedMode("Boost")
 	{
 	}
 
-	private fun shouldSpeedUp(): Boolean = !mc.thePlayer!!.isInLava && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.sneaking && MovementUtils.isMoving
+	private fun shouldSpeedUp(): Boolean
+	{
+		val thePlayer = mc.thePlayer ?: return false
+		return !thePlayer.isInLava && !thePlayer.isOnLadder && !thePlayer.sneaking && MovementUtils.isMoving(thePlayer)
+	}
 }

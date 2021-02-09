@@ -124,21 +124,22 @@ class Aimbot : Module()
 			return
 		}
 
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		val range = rangeValue.get()
 		target = (mc.theWorld ?: return).loadedEntityList.asSequence().filter {
-			EntityUtils.isSelected(it, true) && thePlayer.canEntityBeSeen(it) && thePlayer.getDistanceToEntityBox(it) <= range && RotationUtils.getServerRotationDifference(it) <= fovValue.get()
-		}.minBy { RotationUtils.getServerRotationDifference(it) }
+			EntityUtils.isSelected(it, true) && thePlayer.canEntityBeSeen(it) && thePlayer.getDistanceToEntityBox(it) <= range && RotationUtils.getServerRotationDifference(thePlayer, it) <= fovValue.get()
+		}.minBy { RotationUtils.getServerRotationDifference(thePlayer, it) }
 
 		target ?: return
 
 		if (!lockValue.get() && RotationUtils.isFaced(target, range.toDouble())) return
 
 		RotationUtils.limitAngleChange(
-			Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch), RotationUtils.searchCenter(
-				(target ?: return).entityBoundingBox, if (centerValue.get()) RotationUtils.SearchCenterMode.LOCK_CENTER else RotationUtils.SearchCenterMode.SEARCH_GOOD_CENTER, jitterValue.get(), RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get()), false, false, range, hitboxDecrementValue.get().toDouble(), centerSearchSensitivityValue.get().toDouble()
-			).rotation, Random.nextFloat() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get(), Random.nextFloat() * (maxAccelerationRatio.get() - minAccelerationRatio.get()) + minAccelerationRatio.get()
+			Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch), targetRotation = RotationUtils.searchCenter(
+				theWorld, thePlayer, (target ?: return).entityBoundingBox, if (centerValue.get()) RotationUtils.SearchCenterMode.LOCK_CENTER else RotationUtils.SearchCenterMode.SEARCH_GOOD_CENTER, jitterValue.get(), RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get()), playerPrediction = false, throughWalls = false, distance = range, hitboxDecrement = hitboxDecrementValue.get().toDouble(), searchSensitivity = centerSearchSensitivityValue.get().toDouble()
+			)!!.rotation, turnSpeed = Random.nextFloat() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get(), acceleration = Random.nextFloat() * (maxAccelerationRatio.get() - minAccelerationRatio.get()) + minAccelerationRatio.get()
 		).applyRotationToPlayer(thePlayer)
 	}
 

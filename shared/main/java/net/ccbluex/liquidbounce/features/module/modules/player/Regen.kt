@@ -57,7 +57,7 @@ class Regen : Module()
 
 				"spartan" ->
 				{
-					if (MovementUtils.isMoving || !onGround) return
+					if (MovementUtils.isMoving(thePlayer) || !onGround) return
 
 					WorkerUtils.workers.submit {
 						repeat(9) {

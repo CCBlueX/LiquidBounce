@@ -33,7 +33,7 @@ class NCPFHop : SpeedMode("NCPFHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)
 			{
@@ -43,7 +43,7 @@ class NCPFHop : SpeedMode("NCPFHop")
 				thePlayer.speedInAir = 0.0223f
 			}
 			thePlayer.motionY -= 0.00099999
-			MovementUtils.strafe()
+			MovementUtils.strafe(thePlayer)
 		}
 		else
 		{

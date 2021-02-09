@@ -23,18 +23,18 @@ class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isRiding || thePlayer.hurtTime > 0) return
+		if (!MovementUtils.isMoving(thePlayer) || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isRiding || thePlayer.hurtTime > 0) return
 		if (thePlayer.onGround && thePlayer.isCollidedVertically)
 		{
 			// Jump with y 0.405F, boost 0.202F
-			val dir = MovementUtils.direction
+			val dir = MovementUtils.getDirection(thePlayer)
 			thePlayer.motionX -= functions.sin(dir) * 0.202f
 			thePlayer.motionZ += functions.cos(dir) * 0.202f
 
 			thePlayer.motionY = 0.405
 			LiquidBounce.eventManager.callEvent(JumpEvent(0.405f))
 
-			MovementUtils.strafe()
+			MovementUtils.strafe(thePlayer)
 		}
 		else if (thePlayer.fallDistance < 0.31f)
 		{

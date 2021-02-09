@@ -36,7 +36,7 @@ class Rotations : Module()
 		if (bodyValue.get() || !isRotating()) return
 
 		// Head Rotations
-		if (RotationUtils.serverRotation != null) thePlayer.rotationYawHead = if (interpolateRotationsValue.get()) interpolateRotation(RotationUtils.lastServerRotation.yaw, RotationUtils.serverRotation.yaw, event.partialTicks) else RotationUtils.serverRotation.yaw
+		thePlayer.rotationYawHead = if (interpolateRotationsValue.get()) interpolateRotation(RotationUtils.lastServerRotation.yaw, RotationUtils.serverRotation.yaw, event.partialTicks) else RotationUtils.serverRotation.yaw
 	}
 
 	private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module].state

@@ -69,7 +69,7 @@ object ChestAura : Module()
 					movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
 				}.minBy { BlockUtils.getCenterDistance(it.key) }?.key
 
-				if (rotationsValue.get()) RotationUtils.setTargetRotation((RotationUtils.faceBlock(currentBlock ?: return) ?: return).rotation)
+				if (rotationsValue.get()) RotationUtils.setTargetRotation((RotationUtils.faceBlock(theWorld, thePlayer, currentBlock ?: return) ?: return).rotation)
 			}
 
 			EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delay))

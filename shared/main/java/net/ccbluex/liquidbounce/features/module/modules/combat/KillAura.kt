@@ -441,7 +441,7 @@ class KillAura : Module()
 				{
 					update(theWorld, thePlayer)
 
-					RotationUtils.targetRotation.applyStrafeToPlayer(event)
+					RotationUtils.targetRotation?.applyStrafeToPlayer(event)
 					event.cancelEvent()
 				}
 			}
@@ -673,8 +673,8 @@ class KillAura : Module()
 			val distance = thePlayer.getDistanceToEntityBox(entity)
 			val entityFov = when (fovModeValue.get())
 			{
-				"ServerRotation" -> RotationUtils.getServerRotationDifference(entity)
-				else -> RotationUtils.getClientRotationDifference(entity)
+				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity)
+				else -> RotationUtils.getClientRotationDifference(thePlayer, entity)
 			}
 
 			if (fov == 180F || entityFov <= fov)
@@ -691,8 +691,8 @@ class KillAura : Module()
 			val distance = thePlayer.getDistanceToEntityBox(entity)
 			val entityFov = when (fovModeValue.get())
 			{
-				"ServerRotation" -> RotationUtils.getServerRotationDifference(entity)
-				else -> RotationUtils.getClientRotationDifference(entity)
+				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity)
+				else -> RotationUtils.getClientRotationDifference(thePlayer, entity)
 			}
 
 			if ((fov == 180F || entityFov <= fov) && distance <= maxTargetRange && entity.asEntityLivingBase().hurtTime <= hurtTime) targets.add(entity.asEntityLivingBase())
@@ -721,16 +721,16 @@ class KillAura : Module()
 			{
 
 				// Sort by server-sided rotation difference
-				targets.sortBy { RotationUtils.getServerRotationDifference(it) }
-				abTargets.sortBy { RotationUtils.getServerRotationDifference(it) }
+				targets.sortBy { RotationUtils.getServerRotationDifference(thePlayer, it) }
+				abTargets.sortBy { RotationUtils.getServerRotationDifference(thePlayer, it) }
 			}
 
 			"clientdirection" ->
 			{
 
 				// Sort by client-sided rotation difference
-				targets.sortBy { RotationUtils.getClientRotationDifference(it) }
-				abTargets.sortBy { RotationUtils.getClientRotationDifference(it) }
+				targets.sortBy { RotationUtils.getClientRotationDifference(thePlayer, it) }
+				abTargets.sortBy { RotationUtils.getClientRotationDifference(thePlayer, it) }
 			}
 
 			"livingtime" ->
@@ -747,7 +747,7 @@ class KillAura : Module()
 		// Find best target
 		for (entity in targets)
 		{ // Update rotations to current target
-			if (thePlayer.getDistanceToEntityBox(entity) <= aimRange && !updateRotations(thePlayer, entity)) continue
+			if (thePlayer.getDistanceToEntityBox(entity) <= aimRange && !updateRotations(theWorld, thePlayer, entity)) continue
 
 			// Set target to current entity
 			target = entity
@@ -811,7 +811,7 @@ class KillAura : Module()
 	/**
 	 * Update killaura rotations to enemy
 	 */
-	private fun updateRotations(thePlayer: IEntityPlayerSP, entity: IEntity): Boolean
+	private fun updateRotations(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, entity: IEntity): Boolean
 	{
 		var boundingBox = entity.entityBoundingBox
 
@@ -821,7 +821,7 @@ class KillAura : Module()
 		)
 
 		val (_, rotation) = RotationUtils.searchCenter(
-			boundingBox, when
+			theWorld, thePlayer, boundingBox, when
 			{
 				lockCenterValue.get() -> RotationUtils.SearchCenterMode.LOCK_CENTER
 				outborderValue.get() && !attackTimer.hasTimePassed(attackDelay / 2) -> RotationUtils.SearchCenterMode.OUT_BORDER

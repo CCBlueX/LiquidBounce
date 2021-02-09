@@ -24,9 +24,9 @@ class AACPort : SpeedMode("AACPort")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving) return
+		if (!MovementUtils.isMoving(thePlayer)) return
 
-		val dir = MovementUtils.direction
+		val dir = MovementUtils.getDirection(thePlayer)
 		var speed = 0.2
 		val maxSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).portMax.get()
 

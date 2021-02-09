@@ -96,7 +96,7 @@ class FreeCam : Module()
 			if (gameSettings.keyBindJump.isKeyDown) thePlayer.motionY += value
 			if (gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY -= value
 
-			MovementUtils.strafe(value)
+			MovementUtils.strafe(thePlayer, value)
 		}
 	}
 

@@ -40,7 +40,7 @@ class InventoryMove : Module()
 	@EventTarget
 	fun onClick(event: ClickWindowEvent)
 	{
-		if (noMoveClicksValue.get() && MovementUtils.isMoving) event.cancelEvent()
+		if (noMoveClicksValue.get() && MovementUtils.isMoving(mc.thePlayer ?: return)) event.cancelEvent()
 	}
 
 	override fun onDisable()

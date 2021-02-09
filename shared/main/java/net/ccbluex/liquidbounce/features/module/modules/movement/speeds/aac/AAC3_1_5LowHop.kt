@@ -26,7 +26,7 @@ class AAC3_1_5LowHop : SpeedMode("AAC3.1.5-LowHop") // Was AACLowHop
 		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
 
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)
 			{
@@ -37,7 +37,7 @@ class AAC3_1_5LowHop : SpeedMode("AAC3.1.5-LowHop") // Was AACLowHop
 					return
 				}
 
-				MovementUtils.strafe(0.534f)
+				MovementUtils.strafe(thePlayer, 0.534f)
 
 				thePlayer.motionY = 0.343
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.343f))

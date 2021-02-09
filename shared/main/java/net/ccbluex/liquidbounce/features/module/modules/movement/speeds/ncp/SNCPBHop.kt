@@ -64,15 +64,15 @@ class SNCPBHop : SpeedMode("SNCPBHop")
 		}
 		else
 		{
-			if (MovementUtils.isMoving) mc.timer.timerSpeed = 32767f
-			if (MovementUtils.isMoving)
+			if (MovementUtils.isMoving(thePlayer)) mc.timer.timerSpeed = 32767f
+			if (MovementUtils.isMoving(thePlayer))
 			{
 				mc.timer.timerSpeed = 1.3f
 				thePlayer.motionX *= 1.0199999809265137
 				thePlayer.motionZ *= 1.0199999809265137
 			}
 		}
-		if (thePlayer.onGround && MovementUtils.isMoving) step = 2
+		if (thePlayer.onGround && MovementUtils.isMoving(thePlayer)) step = 2
 		if (round(thePlayer.posY - thePlayer.posY.toInt().toDouble()) == round(0.138))
 		{
 			thePlayer.motionY -= 0.08

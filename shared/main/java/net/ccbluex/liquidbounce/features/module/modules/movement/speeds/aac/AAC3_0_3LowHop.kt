@@ -21,13 +21,13 @@ class AAC3_0_3LowHop : SpeedMode("AAC3.0.3-LowHop") // Was AACBHop
 
 		if (thePlayer.isInWater) return
 
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			mc.timer.timerSpeed = 1.08f
 
 			if (thePlayer.onGround)
 			{
-				val dir = MovementUtils.direction
+				val dir = MovementUtils.getDirection(thePlayer)
 				thePlayer.motionX -= functions.sin(dir) * 0.2f
 				thePlayer.motionZ += functions.cos(dir) * 0.2f
 

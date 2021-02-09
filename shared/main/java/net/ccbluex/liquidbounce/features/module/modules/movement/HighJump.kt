@@ -92,7 +92,7 @@ class HighJump : Module()
 
 			"mineplex" -> mineplexHighJump(theWorld, thePlayer)
 
-			"oldmineplex" -> if (!thePlayer.onGround) strafe(0.35f)
+			"oldmineplex" -> if (!thePlayer.onGround) strafe(thePlayer, 0.35f)
 		}
 	}
 
@@ -117,10 +117,10 @@ class HighJump : Module()
 
 		if (jumped) if (!thePlayer.onGround)
 		{
-			if (!isMoving) strafe(0.05f)
+			if (!isMoving(thePlayer)) strafe(thePlayer, 0.05f)
 			var speed = 0.55f - mineplexStage / 650.0f
-			if (speed < MovementUtils.speed) speed = MovementUtils.speed
-			strafe(speed)
+			if (speed < MovementUtils.getSpeed(thePlayer)) speed = MovementUtils.getSpeed(thePlayer)
+			strafe(thePlayer, speed)
 			mineplexStage++
 		}
 
@@ -144,7 +144,7 @@ class HighJump : Module()
 
 	override fun onDisable()
 	{
-		strafe(0.2f)
+		strafe(mc.thePlayer ?: return, 0.2f)
 		mc.timer.timerSpeed = 1.0f
 	}
 

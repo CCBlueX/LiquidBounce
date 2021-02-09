@@ -22,14 +22,14 @@ class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 		mc.timer.timerSpeed = 1f
 
 		if (thePlayer.isInWater) return
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)
 			{
 				if (firstLegitJump)
 				{
 					thePlayer.motionY = 0.4
-					MovementUtils.strafe(0.15f)
+					MovementUtils.strafe(thePlayer, 0.15f)
 					thePlayer.onGround = false
 					LiquidBounce.eventManager.callEvent(JumpEvent(0.4f))
 					firstLegitJump = false
@@ -37,7 +37,7 @@ class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 				}
 
 				thePlayer.motionY = 0.41
-				MovementUtils.strafe(0.47458485f)
+				MovementUtils.strafe(thePlayer, 0.47458485f)
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.41f))
 			}
 

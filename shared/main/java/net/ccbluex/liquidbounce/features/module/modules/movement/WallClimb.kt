@@ -108,7 +108,8 @@ class WallClimb : Module()
 
 			if (glitch)
 			{
-				val dir = MovementUtils.direction
+				val thePlayer = mc.thePlayer ?: return
+				val dir = MovementUtils.getDirection(thePlayer)
 				packetPlayer.x = packetPlayer.x - functions.sin(dir) * 0.00000001
 				packetPlayer.z = packetPlayer.z + functions.cos(dir) * 0.00000001
 

@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
-import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -130,13 +129,12 @@ class Projectiles : Module()
 		// Interpolated yaw and pitch of player
 		val (yaw, pitch) = when
 		{
-			RotationUtils.targetRotation != null -> RotationUtils.targetRotation
-			RotationUtils.serverRotation != null -> RotationUtils.serverRotation
-			else -> Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch)
+			RotationUtils.targetRotation != null -> RotationUtils.targetRotation!!
+			else -> RotationUtils.serverRotation
 		}
 
-		val yawRadians = yaw / 180f * WMathHelper.PI
-		val pitchRadians = pitch / 180f * WMathHelper.PI
+		val yawRadians = WMathHelper.toRadians(yaw)
+		val pitchRadians = WMathHelper.toRadians(pitch)
 
 		val yawSin = functions.sin(yawRadians)
 		val yawCos = functions.cos(yawRadians)

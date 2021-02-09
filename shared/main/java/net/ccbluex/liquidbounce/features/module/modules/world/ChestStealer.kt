@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
-import net.ccbluex.liquidbounce.utils.InventoryUtils.CLICK_TIMER
+import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
@@ -174,7 +174,7 @@ class ChestStealer : Module()
 		val notEmpty = !this.isEmpty(screen)
 
 		// Perform the InventoryCleaner before start stealing if option is present and InventoryCleaner is enabled. This will be helpful if player's inventory is nearly fucked up with tons of garbage. The settings of InventoryCleaner is depends on InventoryCleaner's official settings.
-		if (notEmpty && invCleanBeforeSteal.get() && inventoryCleaner.state && !inventoryCleaner.cleanInventory(start = screen.inventoryRows * 9, end = screen.inventoryRows * 9 + if (inventoryCleaner.hotbarValue.get()) 36 else 27, timer = CLICK_TIMER, container = screen.inventorySlots!!, delayResetFunc = Runnable { nextDelay = TimeUtils.randomDelay(inventoryCleaner.minDelayValue.get(), inventoryCleaner.maxDelayValue.get()) })) return
+		if (notEmpty && invCleanBeforeSteal.get() && inventoryCleaner.state && !inventoryCleaner.cleanInventory(start = screen.inventoryRows * 9, end = screen.inventoryRows * 9 + if (inventoryCleaner.hotbarValue.get()) 36 else 27, timer = InventoryUtils.CLICK_TIMER, container = screen.inventorySlots!!, delayResetFunc = Runnable { nextDelay = TimeUtils.randomDelay(inventoryCleaner.minDelayValue.get(), inventoryCleaner.maxDelayValue.get()) })) return
 
 		if (notEmpty && (!closeOnFullValue.get() || !getFullInventory(thePlayer)))
 		{

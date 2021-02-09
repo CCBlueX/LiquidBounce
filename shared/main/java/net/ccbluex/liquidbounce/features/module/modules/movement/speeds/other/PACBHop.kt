@@ -18,7 +18,7 @@ class PACBHop : SpeedMode("PAC-BHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			val moveSpeed = when (if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier else -1)
 			{
@@ -31,11 +31,11 @@ class PACBHop : SpeedMode("PAC-BHop")
 				else -> 0.33F
 			}
 
-			MovementUtils.strafe(moveSpeed)
+			MovementUtils.strafe(thePlayer, moveSpeed)
 
 			if (thePlayer.onGround) jump(thePlayer)
 
-			MovementUtils.strafe()
+			MovementUtils.strafe(thePlayer)
 		}
 		else
 		{

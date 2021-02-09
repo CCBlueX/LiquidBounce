@@ -204,14 +204,14 @@ class AutoPot : Module()
 					}
 				}
 
-				if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving) && !(thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0))
+				if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0))
 				{
 
 					// Move Potion Inventory -> Hotbar
 					val healPotionInInventory = findHealPotion(thePlayer, 9, 36, randomSlot)
 					val buffPotionInInventory = findBuffPotion(thePlayer, 9, 36, randomSlot)
 
-					if ((healPotionInInventory != -1 || buffPotionInInventory != -1) && InventoryUtils.hasSpaceHotbar())
+					if ((healPotionInInventory != -1 || buffPotionInInventory != -1) && InventoryUtils.hasSpaceHotbar(thePlayer))
 					{
 						if (openInventoryValue.get() && !classProvider.isGuiInventory(mc.currentScreen)) return
 
@@ -220,7 +220,7 @@ class AutoPot : Module()
 						// Simulate Click Mistakes to bypass some (geek) anti-cheat's click accuracy checks
 						if (misClickValue.get() && misClickRateValue.get() > 0 && Random.nextInt(100) <= misClickRateValue.get())
 						{
-							val firstEmpty = InventoryUtils.firstEmpty(9, 36, randomSlot)
+							val firstEmpty = InventoryUtils.firstEmpty(thePlayer, 9, 36, randomSlot)
 							if (firstEmpty != -1) slot = firstEmpty
 						}
 
@@ -242,8 +242,8 @@ class AutoPot : Module()
 			{
 				if ((ignoreScreen.get() || !classProvider.isGuiContainer(mc.currentScreen)) && potion >= 0 && when (throwDirValue.get().toLowerCase())
 					{
-						"up" -> RotationUtils.serverRotation?.pitch ?: return <= -75F
-						else -> RotationUtils.serverRotation?.pitch ?: return >= 75F
+						"up" -> RotationUtils.serverRotation.pitch <= -75F
+						else -> RotationUtils.serverRotation.pitch >= 75F
 					})
 				{
 					val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack

@@ -46,7 +46,7 @@ class Frame : SpeedMode("Frame")
 				thePlayer.motionZ *= speed
 				move = true
 			}
-			if (!thePlayer.onGround) MovementUtils.strafe()
+			if (!thePlayer.onGround) MovementUtils.strafe(thePlayer)
 			tickTimer.update()
 		}
 	}

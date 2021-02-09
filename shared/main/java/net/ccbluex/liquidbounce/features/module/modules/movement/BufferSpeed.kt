@@ -100,7 +100,7 @@ class BufferSpeed : Module()
 			hadFastHop = false
 		}
 
-		if (!MovementUtils.isMoving || thePlayer.sneaking || thePlayer.isInWater || mc.gameSettings.keyBindJump.isKeyDown)
+		if (!MovementUtils.isMoving(thePlayer) || thePlayer.sneaking || thePlayer.isInWater || mc.gameSettings.keyBindJump.isKeyDown)
 		{
 			reset()
 			return
@@ -144,7 +144,7 @@ class BufferSpeed : Module()
 						}
 						thePlayer.onGround = false
 
-						MovementUtils.strafe(0.375f)
+						MovementUtils.strafe(thePlayer, 0.375f)
 
 						thePlayer.jump()
 						thePlayer.motionY = 0.41
@@ -176,7 +176,7 @@ class BufferSpeed : Module()
 						}
 
 						thePlayer.onGround = false
-						MovementUtils.strafe(0.375f)
+						MovementUtils.strafe(thePlayer, 0.375f)
 						thePlayer.jump()
 						thePlayer.motionY = 0.41
 						return
@@ -230,21 +230,21 @@ class BufferSpeed : Module()
 				}
 			}
 
-			val currentSpeed = MovementUtils.speed
+			val currentSpeed = MovementUtils.getSpeed(thePlayer)
 
 			if (speed < currentSpeed) speed = currentSpeed
 
 			if (bufferValue.get() && speed > 0.2f)
 			{
 				speed /= 1.0199999809265137F
-				MovementUtils.strafe(speed)
+				MovementUtils.strafe(thePlayer, speed)
 			}
 		}
 		else
 		{
 			speed = 0.0F
 
-			if (airStrafeValue.get()) MovementUtils.strafe()
+			if (airStrafeValue.get()) MovementUtils.strafe(thePlayer)
 		}
 	}
 
@@ -282,7 +282,7 @@ class BufferSpeed : Module()
 	{
 		thePlayer.motionX *= boost
 		thePlayer.motionZ *= boost
-		speed = MovementUtils.speed
+		speed = MovementUtils.getSpeed(thePlayer)
 
 		val maxSpeed = maxSpeedValue.get()
 		if (speedLimitValue.get() && speed > maxSpeed) speed = maxSpeed

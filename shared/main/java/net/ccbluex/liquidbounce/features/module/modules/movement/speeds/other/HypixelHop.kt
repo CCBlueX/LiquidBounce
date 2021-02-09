@@ -18,18 +18,18 @@ class HypixelHop : SpeedMode("HypixelHop")
 		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
 
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)
 			{
 				jump(thePlayer)
-				var speed = if (MovementUtils.speed < 0.56f) MovementUtils.speed * 1.045f else 0.56f
+				var speed = if (MovementUtils.getSpeed(thePlayer) < 0.56f) MovementUtils.getSpeed(thePlayer) * 1.045f else 0.56f
 				if (thePlayer.onGround && thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) speed *= 1f + 0.13f * (1 + thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier)
-				MovementUtils.strafe(speed)
+				MovementUtils.strafe(thePlayer, speed)
 				return
 			}
 			else if (thePlayer.motionY < 0.2) thePlayer.motionY -= 0.02
-			MovementUtils.strafe(MovementUtils.speed * 1.01889f)
+			MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * 1.01889f)
 		}
 		else
 		{

@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 import java.util.List;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AntiHunger;
@@ -145,11 +146,14 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	{
 		try
 		{
+			final IEntityPlayerSP thePlayer = LiquidBounce.wrapper.getMinecraft().getThePlayer();
+			if (thePlayer == null) return;
+
 			LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE));
 
 			final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.get(InventoryMove.class);
 			final Sneak sneak = (Sneak) LiquidBounce.moduleManager.get(Sneak.class);
-			final boolean fakeSprint = inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && "MineSecure".equalsIgnoreCase(sneak.modeValue.get());
+			final boolean fakeSprint = inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || sneak.getState() && (!MovementUtils.isMoving(thePlayer) || !sneak.stopMoveValue.get()) && "MineSecure".equalsIgnoreCase(sneak.modeValue.get());
 
 			final boolean sprinting = isSprinting() && !fakeSprint;
 
@@ -360,7 +364,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.get(Scaffold.class);
 
-		if (scaffold.getState() && !scaffold.getSprintValue().get() || sprint.getState() && sprint.getCheckServerSide().get() && (onGround || !sprint.getCheckServerSideGround().get()) && !sprint.getAllDirectionsValue().get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)
+		if (scaffold.getState() && !scaffold.getSprintValue().get() || sprint.getState() && sprint.getCheckServerSide().get() && (onGround || !sprint.getCheckServerSideGround().get()) && !sprint.getAllDirectionsValue().get() && RotationUtils.targetRotation != null && RotationUtils.Companion.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)
 			setSprinting(false);
 
 		final boolean allDirection = sprint.getState() && sprint.getAllDirectionsValue().get();

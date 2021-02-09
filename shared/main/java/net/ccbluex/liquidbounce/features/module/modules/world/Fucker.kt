@@ -83,7 +83,7 @@ object Fucker : Module()
 		}
 
 		var currentPos = currentPos ?: return
-		var rotations = RotationUtils.faceBlock(currentPos) ?: return
+		var rotations = RotationUtils.faceBlock(theWorld, thePlayer, currentPos) ?: return
 
 		// Surroundings
 		var surroundings = false
@@ -99,7 +99,7 @@ object Fucker : Module()
 
 				this.currentPos = blockPos
 				currentPos = this.currentPos ?: return
-				rotations = RotationUtils.faceBlock(currentPos) ?: return
+				rotations = RotationUtils.faceBlock(theWorld, thePlayer, currentPos) ?: return
 			}
 		}
 

@@ -101,7 +101,7 @@ class Speed : Module()
 
 		if (thePlayer.sneaking) return
 
-		if (MovementUtils.isMoving) thePlayer.sprinting = true
+		if (MovementUtils.isMoving(thePlayer)) thePlayer.sprinting = true
 
 		mode?.onUpdate()
 	}

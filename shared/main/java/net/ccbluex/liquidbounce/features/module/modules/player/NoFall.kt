@@ -295,7 +295,7 @@ class NoFall : Module()
 
 				if (thePlayer.inventory.currentItem != index) thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketHeldItemChange(index))
 
-				currentMlgRotation = RotationUtils.faceBlock(collision.pos)
+				currentMlgRotation = RotationUtils.faceBlock(theWorld, thePlayer, collision.pos)
 
 				if (silentRotation) RotationUtils.setTargetRotation(currentMlgRotation!!.rotation, if (keepRotationValue.get()) keepRotationLengthValue.get() else 0)
 				else currentMlgRotation!!.rotation.applyRotationToPlayer(thePlayer)

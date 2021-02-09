@@ -25,10 +25,12 @@ class Vanilla : SpeedMode("Vanilla")
 
 	override fun onMove(event: MoveEvent)
 	{
-		if (MovementUtils.isMoving)
+		val thePlayer = mc.thePlayer ?: return
+
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			val moveSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).vanillaSpeedValue.get()
-			val dir = MovementUtils.direction
+			val dir = MovementUtils.getDirection(thePlayer)
 			event.x = (-functions.sin(dir) * moveSpeed).toDouble()
 			event.z = (functions.cos(dir) * moveSpeed).toDouble()
 		}

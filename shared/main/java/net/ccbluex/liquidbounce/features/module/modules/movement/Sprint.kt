@@ -42,7 +42,7 @@ class Sprint : Module()
 			)
 		) > 30
 
-		if (!isMoving || thePlayer.sneaking || blindCheck || foodCheck || serversideCheck)
+		if (!isMoving(thePlayer) || thePlayer.sneaking || blindCheck || foodCheck || serversideCheck)
 		{
 			thePlayer.sprinting = false
 			return

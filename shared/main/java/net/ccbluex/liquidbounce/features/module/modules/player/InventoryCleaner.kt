@@ -186,7 +186,7 @@ class InventoryCleaner : Module()
 		}
 
 		// NoMove, AutoArmorLock Check
-		if (noMoveValue.get() && MovementUtils.isMoving || (LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) return
+		if (noMoveValue.get() && MovementUtils.isMoving(thePlayer) || (LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) return
 
 		if (!classProvider.isGuiInventory(mc.currentScreen) && invOpenValue.get()) return
 

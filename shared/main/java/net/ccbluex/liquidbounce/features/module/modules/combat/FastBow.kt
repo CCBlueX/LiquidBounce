@@ -34,11 +34,8 @@ class FastBow : Module()
 		{
 			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(WBlockPos.ORIGIN, 255, currentItem, 0F, 0F, 0F))
 
-			val yaw = if (RotationUtils.targetRotation != null) RotationUtils.targetRotation.yaw
-			else thePlayer.rotationYaw
-
-			val pitch = if (RotationUtils.targetRotation != null) RotationUtils.targetRotation.pitch
-			else thePlayer.rotationPitch
+			val yaw = RotationUtils.targetRotation?.yaw ?: thePlayer.rotationYaw
+			val pitch = RotationUtils.targetRotation?.pitch ?: thePlayer.rotationPitch
 
 			for (i in 0 until packetsValue.get()) mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerLook(yaw, pitch, true))
 

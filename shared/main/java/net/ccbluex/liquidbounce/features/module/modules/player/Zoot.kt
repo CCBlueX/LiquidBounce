@@ -29,9 +29,10 @@ class Zoot : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
-		if (noMoveValue.get() && MovementUtils.isMoving) return
-
 		val thePlayer = mc.thePlayer ?: return
+
+		if (noMoveValue.get() && MovementUtils.isMoving(thePlayer)) return
+
 		val onGround = thePlayer.onGround
 
 		if (noAirValue.get() && !onGround) return

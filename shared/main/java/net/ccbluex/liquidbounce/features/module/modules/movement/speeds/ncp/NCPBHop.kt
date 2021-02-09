@@ -33,14 +33,14 @@ class NCPBHop : SpeedMode("NCPBHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)
 			{
 				jump(thePlayer)
 				thePlayer.speedInAir = 0.0223f
 			}
-			MovementUtils.strafe()
+			MovementUtils.strafe(thePlayer)
 		}
 		else
 		{

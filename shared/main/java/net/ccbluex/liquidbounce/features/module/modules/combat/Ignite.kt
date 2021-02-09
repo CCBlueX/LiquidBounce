@@ -52,8 +52,8 @@ class Ignite : Module()
 
 		val itemDelay = itemDelayValue.get()
 		val randomSlot = randomSlotValue.get()
-		val lighterInHotbar = if (lighterValue.get()) InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.FLINT_AND_STEEL), itemDelay.toLong(), randomSlot) else -1
-		val lavaInHotbar = if (lavaBucketValue.get()) InventoryUtils.findItem(26, 45, classProvider.getItemEnum(ItemType.LAVA_BUCKET), itemDelay.toLong(), randomSlot) else -1
+		val lighterInHotbar = if (lighterValue.get()) InventoryUtils.findItem(thePlayer, 36, 45, classProvider.getItemEnum(ItemType.FLINT_AND_STEEL), itemDelay.toLong(), randomSlot) else -1
+		val lavaInHotbar = if (lavaBucketValue.get()) InventoryUtils.findItem(thePlayer, 26, 45, classProvider.getItemEnum(ItemType.LAVA_BUCKET), itemDelay.toLong(), randomSlot) else -1
 
 		if (lighterInHotbar == -1 && lavaInHotbar == -1) return
 

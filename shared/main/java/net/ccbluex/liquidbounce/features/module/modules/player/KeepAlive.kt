@@ -45,7 +45,7 @@ class KeepAlive : Module()
 
 				"soup" ->
 				{
-					val soupInHotbar = InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelayValue.get().toLong(), randomSlotValue.get())
+					val soupInHotbar = InventoryUtils.findItem(thePlayer, 36, 45, classProvider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelayValue.get().toLong(), randomSlotValue.get())
 
 					if (soupInHotbar != -1)
 					{

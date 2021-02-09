@@ -19,9 +19,10 @@ class HClipCommand : Command("hclip")
 		{
 			try
 			{
-				MovementUtils.forward(args[1].toDouble())
+				MovementUtils.forward(mc.thePlayer ?: return, args[1].toDouble())
 				chat("You were teleported.")
-			} catch (exception: NumberFormatException)
+			}
+			catch (exception: NumberFormatException)
 			{
 				chatSyntaxError()
 			}

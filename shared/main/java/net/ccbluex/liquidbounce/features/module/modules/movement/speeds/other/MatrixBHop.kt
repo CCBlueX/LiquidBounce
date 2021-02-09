@@ -18,7 +18,7 @@ class MatrixBHop : SpeedMode("Matrix-BHop")
 		val thePlayer = mc.thePlayer ?: return
 
 		if (thePlayer.isInWater) return
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)
 			{
@@ -26,7 +26,7 @@ class MatrixBHop : SpeedMode("Matrix-BHop")
 				thePlayer.speedInAir = 0.02098f
 				mc.timer.timerSpeed = 1.055f
 			}
-			else MovementUtils.strafe(MovementUtils.speed)
+			else MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer))
 		}
 		else mc.timer.timerSpeed = 1f
 	}

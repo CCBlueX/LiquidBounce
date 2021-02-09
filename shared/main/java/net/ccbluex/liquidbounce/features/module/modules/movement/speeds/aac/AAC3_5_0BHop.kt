@@ -16,7 +16,7 @@ class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop") // Was AACHop3.5.0
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (eventState == EventState.POST && MovementUtils.isMoving && !thePlayer.isInWater && !thePlayer.isInLava)
+		if (eventState == EventState.POST && MovementUtils.isMoving(thePlayer) && !thePlayer.isInWater && !thePlayer.isInLava)
 		{
 			thePlayer.jumpMovementFactor += 0.00208f
 			if (thePlayer.fallDistance <= 1f)

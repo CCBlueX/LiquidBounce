@@ -20,7 +20,7 @@ class CustomSpeed : SpeedMode("Custom")
 		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
 
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			val speed = LiquidBounce.moduleManager[Speed::class.java] as Speed? ?: return
 			mc.timer.timerSpeed = speed.customTimerValue.get()
@@ -30,13 +30,13 @@ class CustomSpeed : SpeedMode("Custom")
 				{
 					val customY = speed.customYValue.get()
 
-					MovementUtils.strafe(speed.customSpeedValue.get())
+					MovementUtils.strafe(thePlayer, speed.customSpeedValue.get())
 					thePlayer.motionY = customY.toDouble()
 					LiquidBounce.eventManager.callEvent(JumpEvent(customY))
 				}
 
-				speed.customStrafeValue.get() -> MovementUtils.strafe(speed.customSpeedValue.get())
-				else -> MovementUtils.strafe()
+				speed.customStrafeValue.get() -> MovementUtils.strafe(thePlayer, speed.customSpeedValue.get())
+				else -> MovementUtils.strafe(thePlayer)
 			}
 		}
 		else

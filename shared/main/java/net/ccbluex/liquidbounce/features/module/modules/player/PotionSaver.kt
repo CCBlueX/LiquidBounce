@@ -24,6 +24,6 @@ class PotionSaver : Module()
 		val packet = e.packet
 		val isMovePacket = classProvider.isCPacketPlayer(packet) && !classProvider.isCPacketPlayerPosition(packet) && !classProvider.isCPacketPlayerPosLook(packet) && !classProvider.isCPacketPlayerPosLook(packet)
 
-		if (!MovementUtils.isMoving && isMovePacket && !thePlayer.isUsingItem) e.cancelEvent()
+		if (!MovementUtils.isMoving(thePlayer) && isMovePacket && !thePlayer.isUsingItem) e.cancelEvent()
 	}
 }

@@ -19,7 +19,7 @@ class ACP : SpeedMode("ACP")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (isMoving)
+		if (isMoving(thePlayer))
 		{
 			val amplifier = if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier else -1
 
@@ -47,7 +47,7 @@ class ACP : SpeedMode("ACP")
 				else -> 0.55F
 			}
 
-			strafe(moveSpeed)
+			strafe(thePlayer, moveSpeed)
 		}
 		else
 		{

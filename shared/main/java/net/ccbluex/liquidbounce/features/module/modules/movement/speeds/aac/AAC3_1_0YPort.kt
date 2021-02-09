@@ -19,7 +19,7 @@ class AAC3_1_0YPort : SpeedMode("AAC3.1.0-YPort") // Was AACYPort
 		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
 
-		if (MovementUtils.isMoving && !thePlayer.sneaking)
+		if (MovementUtils.isMoving(thePlayer) && !thePlayer.sneaking)
 		{
 
 			//			thePlayer.cameraPitch = 0f

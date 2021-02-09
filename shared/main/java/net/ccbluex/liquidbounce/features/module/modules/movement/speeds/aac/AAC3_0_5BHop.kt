@@ -19,7 +19,7 @@ class AAC3_0_5BHop : SpeedMode("AAC3.0.5-BHop") // Was AAC2BHop
 
 		if (thePlayer.isInWater) return
 
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)
 			{

@@ -127,7 +127,7 @@ class BugUp : Module()
 						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, true))
 						thePlayer.motionY = flagYMotion.get().toDouble()
 
-						MovementUtils.strafe()
+						MovementUtils.strafe(thePlayer)
 						thePlayer.fallDistance = 0f
 					}
 				}

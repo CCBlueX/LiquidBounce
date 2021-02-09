@@ -28,8 +28,8 @@ class MineplexBHop2 : SpeedMode("Mineplex-BHop2")
 		val thePlayer = mc.thePlayer ?: return
 
 		var speed = 0.15f
-		if (thePlayer.isCollidedHorizontally || !isMoving) mineplex = -2
-		if (thePlayer.onGround && isMoving)
+		if (thePlayer.isCollidedHorizontally || !isMoving(thePlayer)) mineplex = -2
+		if (thePlayer.onGround && isMoving(thePlayer))
 		{
 			stage = 0
 			thePlayer.motionY = 0.42
@@ -44,7 +44,7 @@ class MineplexBHop2 : SpeedMode("Mineplex-BHop2")
 			stage++
 		}
 
-		strafe(speed)
+		strafe(thePlayer, speed)
 	}
 
 	override fun onMove(event: MoveEvent)

@@ -59,6 +59,7 @@ class CivBreak : Module()
 			return
 		}
 
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 		val netHandler = mc.netHandler
 
@@ -66,7 +67,7 @@ class CivBreak : Module()
 
 		when (event.eventState)
 		{
-			EventState.PRE -> if (rotationsValue.get()) RotationUtils.setTargetRotation((RotationUtils.faceBlock(pos) ?: return).rotation)
+			EventState.PRE -> if (rotationsValue.get()) RotationUtils.setTargetRotation((RotationUtils.faceBlock(theWorld, thePlayer, pos) ?: return).rotation)
 
 			EventState.POST ->
 			{

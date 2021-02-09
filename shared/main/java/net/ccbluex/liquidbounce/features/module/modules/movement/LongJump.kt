@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils.direction
+import net.ccbluex.liquidbounce.utils.MovementUtils.getDirection
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -54,9 +54,9 @@ class LongJump : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
-		if (LadderJump.jumped) MovementUtils.strafe(MovementUtils.speed * 1.08f)
-
 		val thePlayer = mc.thePlayer ?: return
+
+		if (LadderJump.jumped) MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * 1.08f)
 
 		val autoDisable = autoDisableValue.get()
 
@@ -84,7 +84,7 @@ class LongJump : Module()
 				{
 					"ncp" ->
 					{
-						MovementUtils.strafe(MovementUtils.speed * if (canBoost) ncpBoostValue.get() else 1f)
+						MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * if (canBoost) ncpBoostValue.get() else 1f)
 						canBoost = false
 						if (boosted && autoDisable) state = false
 					}
@@ -92,7 +92,7 @@ class LongJump : Module()
 					"aac3.0.1" ->
 					{
 						thePlayer.motionY += 0.05999
-						MovementUtils.strafe(MovementUtils.speed * 1.08f)
+						MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * 1.08f)
 						boosted = true
 					}
 
@@ -102,7 +102,7 @@ class LongJump : Module()
 						thePlayer.motionY += 0.0132099999999999999999999999999
 						thePlayer.jumpMovementFactor = 0.08f
 
-						MovementUtils.strafe()
+						MovementUtils.strafe(thePlayer)
 
 						boosted = true
 					}
@@ -138,7 +138,7 @@ class LongJump : Module()
 						thePlayer.motionY += 0.0132099999999999999999999999999
 						thePlayer.jumpMovementFactor = 0.08f
 						boosted = true
-						MovementUtils.strafe()
+						MovementUtils.strafe(thePlayer)
 					}
 
 					"mineplex2" ->
@@ -154,7 +154,7 @@ class LongJump : Module()
 						}
 
 						boosted = true
-						MovementUtils.strafe()
+						MovementUtils.strafe(thePlayer)
 					}
 
 					"redesky" ->
@@ -167,7 +167,7 @@ class LongJump : Module()
 				}
 			}
 		}
-		if (autoJumpValue.get() && thePlayer.onGround && isMoving)
+		if (autoJumpValue.get() && thePlayer.onGround && isMoving(thePlayer))
 		{
 			jumped = true
 			thePlayer.jump()
@@ -186,9 +186,9 @@ class LongJump : Module()
 		}
 		else if (jumped)
 
-			if (mode.equals("Teleport", ignoreCase = true) && isMoving && canBoost)
+			if (mode.equals("Teleport", ignoreCase = true) && isMoving(thePlayer) && canBoost)
 			{
-				val dir = direction
+				val dir = getDirection(thePlayer)
 				val teleportDistance = teleportDistanceValue.get()
 
 				event.x = (-functions.sin(dir) * teleportDistance).toDouble()
@@ -198,7 +198,7 @@ class LongJump : Module()
 				boosted = true
 				if (autoDisableValue.get()) state = false
 			}
-			else if (mode.equals("NCP", ignoreCase = true) && !isMoving)
+			else if (mode.equals("NCP", ignoreCase = true) && !isMoving(thePlayer))
 			{
 				thePlayer.motionX = 0.0
 				thePlayer.motionZ = 0.0

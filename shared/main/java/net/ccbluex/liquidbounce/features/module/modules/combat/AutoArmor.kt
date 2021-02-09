@@ -129,7 +129,7 @@ class AutoArmor : Module()
 			return true
 		}
 
-		if (!(noMoveValue.get() && isMoving) && (!invOpenValue.get() || classProvider.isGuiInventory(mc.currentScreen)) && item != -1)
+		if (!(noMoveValue.get() && isMoving(thePlayer)) && (!invOpenValue.get() || classProvider.isGuiInventory(mc.currentScreen)) && item != -1)
 		{
 			val openInventory = simulateInventory.get() && !classProvider.isGuiInventory(mc.currentScreen)
 

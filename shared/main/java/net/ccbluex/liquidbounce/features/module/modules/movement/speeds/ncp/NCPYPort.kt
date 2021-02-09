@@ -21,12 +21,12 @@ class NCPYPort : SpeedMode("NCPYPort")
 		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
 
-		if (thePlayer.isOnLadder || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb || !MovementUtils.isMoving || thePlayer.isInWater) return
+		if (thePlayer.isOnLadder || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb || !MovementUtils.isMoving(thePlayer) || thePlayer.isInWater) return
 		if (jumps >= 4 && thePlayer.onGround) jumps = 0
 		if (thePlayer.onGround)
 		{
 			val motion = if (jumps <= 1) 0.42f else 0.4f
-			val dir = MovementUtils.direction
+			val dir = MovementUtils.getDirection(thePlayer)
 
 			thePlayer.motionY = motion.toDouble()
 			thePlayer.motionX -= functions.sin(dir) * 0.2f
@@ -36,7 +36,7 @@ class NCPYPort : SpeedMode("NCPYPort")
 			jumps++
 		}
 		else if (jumps <= 1) thePlayer.motionY = -5.0
-		MovementUtils.strafe()
+		MovementUtils.strafe(thePlayer)
 	}
 
 	override fun onUpdate()

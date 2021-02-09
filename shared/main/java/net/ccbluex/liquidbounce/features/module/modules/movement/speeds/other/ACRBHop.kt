@@ -19,7 +19,7 @@ class ACRBHop : SpeedMode("ACR-BHop")
 		val thePlayer = mc.thePlayer ?: return
 
 
-		if (isMoving)
+		if (isMoving(thePlayer))
 		{
 			thePlayer.jumpMovementFactor = 0.1F
 
@@ -35,7 +35,7 @@ class ACRBHop : SpeedMode("ACR-BHop")
 				jump(thePlayer)
 			}
 
-			MovementUtils.strafe()
+			MovementUtils.strafe(thePlayer)
 		}
 		else
 		{

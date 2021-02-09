@@ -175,6 +175,9 @@ class Tower : Module()
 
 		active = false
 
+		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
+
 		// OnJump
 		if (onJumpValue.get() && !mc.gameSettings.keyBindJump.isKeyDown)
 		{
@@ -183,15 +186,11 @@ class Tower : Module()
 			if (onJumpDelayValue.get() > 0) onJumpTimer.reset()
 			return
 		}
-		else if (onJumpValue.get() && onJumpDelayValue.get() > 0 && (!onJumpTimer.hasTimePassed(
-				onJumpDelayValue.get().toLong()
-			) || disableOnJumpWhileMoving.get()) && (isMoving || !onJumpNoDelayIfNotMovingValue.get())) // Skip if onjump delay aren't over yet.
+		else if (onJumpValue.get() && onJumpDelayValue.get() > 0 && (!onJumpTimer.hasTimePassed(onJumpDelayValue.get().toLong()) || disableOnJumpWhileMoving.get()) && (isMoving(thePlayer) || !onJumpNoDelayIfNotMovingValue.get())) // Skip if onjump delay aren't over yet.
 			return
 
 		active = true
 
-		val thePlayer = mc.thePlayer ?: return
-		val theWorld = mc.theWorld ?: return
 
 		mc.timer.timerSpeed = timerValue.get()
 		val eventState = event.eventState
@@ -205,7 +204,7 @@ class Tower : Module()
 			placeInfo = null
 			timer.update()
 
-			val update = if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), 0.0) != -1 || thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
+			val update = if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer, autoBlockFullCubeOnlyValue.get(), 0.0) != -1 || thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
 			else thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
 
 			if (update)
@@ -215,7 +214,7 @@ class Tower : Module()
 				val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)
 				if (classProvider.isBlockAir(theWorld.getBlockState(blockPos).block) && search(theWorld, blockPos) && rotationsValue.get())
 				{
-					val vecRotation = RotationUtils.faceBlock(blockPos)
+					val vecRotation = RotationUtils.faceBlock(theWorld, thePlayer, blockPos)
 					if (vecRotation != null)
 					{
 						RotationUtils.setTargetRotation(vecRotation.rotation, keepRotationTicks)
@@ -371,7 +370,7 @@ class Tower : Module()
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
-			val blockSlot = InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), 0.0)
+			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer, autoBlockFullCubeOnlyValue.get(), 0.0)
 			if (blockSlot == -1) return
 
 			when (autoBlockValue.get())
@@ -521,7 +520,8 @@ class Tower : Module()
 	@EventTarget
 	fun onJump(event: JumpEvent)
 	{
-		if (onJumpValue.get() && (onJumpDelayValue.get() > 0 && onJumpTimer.hasTimePassed(onJumpDelayValue.get().toLong()) && !disableOnJumpWhileMoving.get() || !isMoving && onJumpNoDelayIfNotMovingValue.get())) event.cancelEvent()
+		val thePlayer = mc.thePlayer ?: return
+		if (onJumpValue.get() && (onJumpDelayValue.get() > 0 && onJumpTimer.hasTimePassed(onJumpDelayValue.get().toLong()) && !disableOnJumpWhileMoving.get() || !isMoving(thePlayer) && onJumpNoDelayIfNotMovingValue.get())) event.cancelEvent()
 	}
 
 	/**

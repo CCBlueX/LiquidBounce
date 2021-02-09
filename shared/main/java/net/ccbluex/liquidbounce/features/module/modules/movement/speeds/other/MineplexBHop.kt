@@ -28,7 +28,7 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
 		val x = thePlayer.posX - thePlayer.prevPosX
 		val z = thePlayer.posZ - thePlayer.prevPosZ
 		val distance = hypot(x, z).toFloat()
-		if (MovementUtils.isMoving && thePlayer.onGround)
+		if (MovementUtils.isMoving(thePlayer) && thePlayer.onGround)
 		{
 			thePlayer.motionY = 0.4052393
 			wfg = true
@@ -48,7 +48,7 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
 		var minimum = 0f
 		if (!wfg) minimum = 0.399900111f
 		val strafe = max(min(speed1, 2f), minimum)
-		MovementUtils.strafe(strafe)
+		MovementUtils.strafe(thePlayer, strafe)
 	}
 
 	override fun onMotion(eventState: EventState)

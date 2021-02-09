@@ -18,9 +18,10 @@ class AAC3_2_2YPort : SpeedMode("AAC3.2.2-YPort") // Was AACYPort2
 	{
 		if (eventState != EventState.PRE) return
 
-		if (MovementUtils.isMoving)
+		val thePlayer = mc.thePlayer ?: return
+
+		if (MovementUtils.isMoving(thePlayer))
 		{
-			val thePlayer = mc.thePlayer ?: return
 
 			//			thePlayer.cameraPitch = 0f
 

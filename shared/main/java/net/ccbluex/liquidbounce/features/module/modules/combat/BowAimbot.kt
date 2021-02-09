@@ -85,7 +85,7 @@ class BowAimbot : Module()
 			val entity = getTarget(thePlayer, throughWallsValue.get(), priorityValue.get()) ?: return
 
 			target = entity
-			RotationUtils.faceBow(target, silentValue.get(), predictValue.get(), playerPredictValue.get(), minTurnSpeed.get(), maxTurnSpeed.get(), minAccelerationRatio.get(), maxAccelerationRatio.get())
+			RotationUtils.faceBow(thePlayer, entity, silentValue.get(), predictValue.get(), playerPredictValue.get(), minTurnSpeed.get(), maxTurnSpeed.get(), minAccelerationRatio.get(), maxAccelerationRatio.get())
 		}
 	}
 
@@ -102,7 +102,8 @@ class BowAimbot : Module()
 		return when
 		{
 			priorityMode.equals("distance", true) -> targets.minBy(thePlayer::getDistanceToEntity)
-			priorityMode.equals("direction", true) -> targets.minBy { RotationUtils.getRotationDifference(it) }
+			// TODO: Client-sided rotation difference priority
+			priorityMode.equals("direction", true) -> targets.minBy { RotationUtils.getServerRotationDifference(thePlayer, it) }
 			priorityMode.equals("health", true) -> targets.minBy { it.asEntityLivingBase().health }
 			else -> null
 		}

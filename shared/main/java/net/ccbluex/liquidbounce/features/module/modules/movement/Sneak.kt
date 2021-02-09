@@ -30,7 +30,7 @@ class Sneak : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (stopMoveValue.get() && MovementUtils.isMoving)
+		if (stopMoveValue.get() && MovementUtils.isMoving(thePlayer))
 		{
 			if (sneaking) onDisable()
 			return

@@ -344,7 +344,7 @@ class Scaffold : Module()
 		{
 			if (modeValue.get().equals("Rewinside", ignoreCase = true))
 			{
-				MovementUtils.strafe(0.2F)
+				MovementUtils.strafe(thePlayer, 0.2F)
 				thePlayer.motionY = 0.0
 			}
 
@@ -497,7 +497,7 @@ class Scaffold : Module()
 			// Teleport Zitter
 			if (zitterValue.get() && zitterModeValue.get().equals("teleport", true))
 			{
-				MovementUtils.strafe(zitterSpeed.get())
+				MovementUtils.strafe(thePlayer, zitterSpeed.get())
 
 				val yaw = WMathHelper.toRadians(thePlayer.rotationYaw + if (zitterDirection) 90.0F else -90.0F)
 				thePlayer.motionX = thePlayer.motionX - functions.sin(yaw) * zitterStrength.get()
@@ -552,7 +552,7 @@ class Scaffold : Module()
 	fun update(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
 		val isNotHeldItemBlock: Boolean = thePlayer.heldItem == null || !classProvider.isItemBlock(thePlayer.heldItem!!.item)
-		if (if (autoBlockValue.get().equals("Off", true)) isNotHeldItemBlock else InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), 0.0) == -1 && isNotHeldItemBlock) return
+		if (if (autoBlockValue.get().equals("Off", true)) isNotHeldItemBlock else InventoryUtils.findAutoBlockBlock(theWorld, thePlayer, autoBlockFullCubeOnlyValue.get(), 0.0) == -1 && isNotHeldItemBlock) return
 
 		val groundSearchDepth = 0.2
 
@@ -617,7 +617,7 @@ class Scaffold : Module()
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
-			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), 0.0)
+			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer, autoBlockFullCubeOnlyValue.get(), 0.0)
 			if (autoBlockSlot == -1) return
 
 			autoblock = thePlayer.inventoryContainer.getSlot(autoBlockSlot).stack
@@ -715,7 +715,7 @@ class Scaffold : Module()
 		val ySearch = ySearchValue.get() || clutching
 		if (expand)
 		{
-			val horizontalFacing = functions.getHorizontalFacing(MovementUtils.directionDegrees)
+			val horizontalFacing = functions.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
 			for (i in 0 until expandLengthValue.get())
 			{
 				if (search(
@@ -770,7 +770,7 @@ class Scaffold : Module()
 			if (autoBlockValue.get().equals("Off", true)) return
 
 			// Auto-Block
-			val blockSlot = InventoryUtils.findAutoBlockBlock(autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let(BlockUtils::getBlock)?.getBlockBoundsMaxY() ?: 0.0) // Default boundingBoxYLimit it 0.0
+			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let(BlockUtils::getBlock)?.getBlockBoundsMaxY() ?: 0.0) // Default boundingBoxYLimit it 0.0
 
 			// If there is no autoblock-able blocks in your inventory, we can't continue.
 			if (blockSlot == -1) return
@@ -900,7 +900,7 @@ class Scaffold : Module()
 
 		for (i in 0 until if (modeValue.get().equals("Expand", true)) expandLengthValue.get() + 1 else 2)
 		{
-			val horizontalFacing = functions.getHorizontalFacing(MovementUtils.directionDegrees)
+			val horizontalFacing = functions.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
 			val blockPos = WBlockPos(
 				thePlayer.posX + when (horizontalFacing)
 				{
@@ -1035,21 +1035,24 @@ class Scaffold : Module()
 				{
 					val side = classProvider.getEnumFacing(facingType)
 					val neighbor = blockPosition.offset(side)
+
 					if (!canBeClicked(neighbor)) continue
+
 					val dirVec = WVec3(side.directionVec)
 					val posVec = WVec3(blockPosition).addVector(xSearchFace, ySearchFace, zSearchFace)
 					val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
 					val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
-					if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(
-							posVec.add(dirVec)
-						) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) continue
-					val rotationVector = RotationUtils.getVectorForRotation(limitedRotation)
-					val vector = eyesPos.addVector(
-						rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4
-					)
+
+					if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) continue
+
+					val rotationVector = RotationUtils.getVectorForRotation(limitedRotation!!)
+					val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
 					val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false, false, true)
+
 					if (!(rayTrace!!.typeOfHit == IMovingObjectPosition.WMovingObjectType.BLOCK && rayTrace.blockPos!! == neighbor)) continue
+
 					facesBlock = true
+
 					break
 				}
 			}

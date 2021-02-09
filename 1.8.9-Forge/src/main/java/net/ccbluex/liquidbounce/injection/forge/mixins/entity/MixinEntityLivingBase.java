@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
 import net.ccbluex.liquidbounce.event.JumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.AirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.LiquidWalk;
@@ -75,9 +76,6 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	@Shadow
 	public abstract ItemStack getHeldItem();
 
-	@Shadow
-	protected abstract void updateAITick();
-
 	/**
 	 * @author CCBlueX
 	 * @reason JumpEvent
@@ -85,6 +83,9 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	@Overwrite
 	protected void jump()
 	{
+		final IEntityPlayerSP thePlayer = LiquidBounce.wrapper.getMinecraft().getThePlayer();
+		if (thePlayer == null) return;
+
 		final JumpEvent jumpEvent = new JumpEvent(getJumpUpwardsMotion());
 		LiquidBounce.eventManager.callEvent(jumpEvent);
 		if (jumpEvent.isCancelled())
@@ -101,7 +102,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 		if (isSprinting() && (!speed.getState() || speed.allowSprintBoost()))
 		{
 			// Sprint-Jump Boost
-			final float dir = MovementUtils.getDirection(); // Compatibility with Sprint AllDirection mode
+			final float dir = MovementUtils.getDirection(thePlayer); // Compatibility with Sprint AllDirection mode
 			motionX -= MathHelper.sin(dir) * 0.2F;
 			motionZ += MathHelper.cos(dir) * 0.2F;
 		}

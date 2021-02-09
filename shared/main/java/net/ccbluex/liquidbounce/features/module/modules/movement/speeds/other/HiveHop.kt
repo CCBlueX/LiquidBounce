@@ -32,12 +32,12 @@ class HiveHop : SpeedMode("HiveHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround) thePlayer.motionY = 0.3
 			thePlayer.speedInAir = 0.0425f
 			mc.timer.timerSpeed = 1.04f
-			MovementUtils.strafe()
+			MovementUtils.strafe(thePlayer)
 		}
 		else
 		{

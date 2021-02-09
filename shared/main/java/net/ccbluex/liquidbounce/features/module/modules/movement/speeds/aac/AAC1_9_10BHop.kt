@@ -19,16 +19,16 @@ class AAC1_9_10BHop : SpeedMode("AAC1.9.10-BHop") // Was OldAACBHop
 		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
 
-		if (MovementUtils.isMoving)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)
 			{
-				MovementUtils.strafe(0.56f)
+				MovementUtils.strafe(thePlayer, 0.56f)
 
 				thePlayer.motionY = 0.41999998688697815
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.42F))
 			}
-			else MovementUtils.strafe(MovementUtils.speed * if (thePlayer.fallDistance > 0.4f) 1.0f else 1.01f)
+			else MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * if (thePlayer.fallDistance > 0.4f) 1.0f else 1.01f)
 		}
 		else
 		{

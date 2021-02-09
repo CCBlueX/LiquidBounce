@@ -43,7 +43,7 @@ class YPort : SpeedMode("YPort")
 		val zDist = thePlayer.posZ - thePlayer.prevPosZ
 		lastDist = hypot(xDist, zDist)
 
-		if (!MovementUtils.isMoving) safeJump = true else if (thePlayer.onGround) safeJump = false
+		if (!MovementUtils.isMoving(thePlayer)) safeJump = true else if (thePlayer.onGround) safeJump = false
 	}
 
 	override fun onUpdate()
@@ -62,15 +62,15 @@ class YPort : SpeedMode("YPort")
 		}
 		else
 		{
-			if (MovementUtils.hasMotion()) mc.timer.timerSpeed = 32767f
-			if (MovementUtils.hasMotion())
+			if (MovementUtils.hasMotion(thePlayer)) mc.timer.timerSpeed = 32767f
+			if (MovementUtils.hasMotion(thePlayer))
 			{
 				mc.timer.timerSpeed = 1.3f
 				thePlayer.motionX *= 1.0199999809265137
 				thePlayer.motionZ *= 1.0199999809265137
 			}
 		}
-		if (thePlayer.onGround && MovementUtils.hasMotion()) level = 2
+		if (thePlayer.onGround && MovementUtils.hasMotion(thePlayer)) level = 2
 		if (round(thePlayer.posY - thePlayer.posY.toInt()) == round(0.138))
 		{
 			thePlayer.motionY -= 0.08

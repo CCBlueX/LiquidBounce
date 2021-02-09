@@ -16,7 +16,7 @@ class AAC3_3_11BHop : SpeedMode("AAC3.3.11-BHop") // Was AAC7BHop
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving || thePlayer.ridingEntity != null || thePlayer.hurtTime > 0) return
+		if (!MovementUtils.isMoving(thePlayer) || thePlayer.ridingEntity != null || thePlayer.hurtTime > 0) return
 
 		if (thePlayer.onGround)
 		{
@@ -27,7 +27,7 @@ class AAC3_3_11BHop : SpeedMode("AAC3.3.11-BHop") // Was AAC7BHop
 			return
 		}
 
-		MovementUtils.strafe()
+		MovementUtils.strafe(thePlayer)
 	}
 
 	override fun onMotion(eventState: EventState)

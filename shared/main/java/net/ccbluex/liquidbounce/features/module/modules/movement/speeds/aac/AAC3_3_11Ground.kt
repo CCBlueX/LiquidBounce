@@ -18,7 +18,7 @@ class AAC3_3_11Ground : SpeedMode("AAC3.3.11-Ground") // Was AACGround
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving) return
+		if (!MovementUtils.isMoving(thePlayer)) return
 
 		mc.timer.timerSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).aacGroundTimerValue.get()
 		mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
