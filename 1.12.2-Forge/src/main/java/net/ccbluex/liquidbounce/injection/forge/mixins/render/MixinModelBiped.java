@@ -44,7 +44,7 @@ public class MixinModelBiped
 
 		if (LiquidBounce.moduleManager.get(Rotations.class).getState() && RotationUtils.serverRotation != null && p_setRotationAngles_7_ instanceof EntityPlayer && p_setRotationAngles_7_.equals(Minecraft.getMinecraft().player))
 		{
-			this.bipedHead.rotateAngleX = RotationUtils.serverRotation.getPitch() / (180F / (float) Math.PI);
+			this.bipedHead.rotateAngleX = RotationUtils.serverRotation.getPitch() / (180F / net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.PI);
 		}
 	}
 }

@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.ItemType
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.wrapAngleTo180_float
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -76,14 +77,10 @@ class Ignite : Module()
 				val diffZ = blockPos.z + 0.5 - thePlayer.posZ
 				val sqrt = hypot(diffX, diffZ)
 
-				val yaw = (StrictMath.atan2(diffZ, diffX) * 180.0 / Math.PI).toFloat() - 90.0f
-				val pitch = (-(StrictMath.atan2(diffY, sqrt) * 180.0 / Math.PI)).toFloat()
+				val yaw = WMathHelper.toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f
+				val pitch = -WMathHelper.toDegrees(StrictMath.atan2(diffY, sqrt).toFloat())
 
-				mc.netHandler.addToSendQueue(
-					classProvider.createCPacketPlayerLook(
-						thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround
-					)
-				)
+				mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerLook(thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround))
 
 				mc.playerController.sendUseItem(thePlayer, theWorld, itemStack)
 			}
@@ -99,8 +96,8 @@ class Ignite : Module()
 				val diffZ = neighbor.z + 0.5 - thePlayer.posZ
 				val sqrt = hypot(diffX, diffZ)
 
-				val yaw = (StrictMath.atan2(diffZ, diffX) * 180.0 / Math.PI).toFloat() - 90.0f
-				val pitch = (-(StrictMath.atan2(diffY, sqrt) * 180.0 / Math.PI)).toFloat()
+				val yaw = WMathHelper.toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f
+				val pitch = -WMathHelper.toDegrees(StrictMath.atan2(diffY, sqrt).toFloat())
 
 				mc.netHandler.addToSendQueue(
 					classProvider.createCPacketPlayerLook(

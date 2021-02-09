@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.utils.misc;
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition;
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition.WMovingObjectType;
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos;
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 
@@ -59,10 +60,13 @@ public class FallingPlayer extends MinecraftInstance
 			v = mc.getThePlayer().getJumpMovementFactor() / v;
 			strafe *= v;
 			forward *= v;
-			final float f1 = functions.sin(yaw * (float) Math.PI / 180.0F);
-			final float f2 = functions.cos(yaw * (float) Math.PI / 180.0F);
-			motionX += strafe * f2 - forward * f1;
-			motionZ += forward * f2 + strafe * f1;
+
+			final float yawRadians = WMathHelper.toRadians(yaw);
+			final float sin = functions.sin(yawRadians);
+			final float cos = functions.cos(yawRadians);
+
+			motionX += strafe * cos - forward * sin;
+			motionZ += forward * cos + strafe * sin;
 		}
 
 		motionY -= 0.08;

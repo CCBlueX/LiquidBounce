@@ -144,9 +144,9 @@ public abstract class MixinItemRenderer
 			}
 			else
 			{
-				float f = -0.4F * MathHelper.sin(MathHelper.sqrt(p_187457_5_) * (float) Math.PI);
-				float f1 = 0.2F * MathHelper.sin(MathHelper.sqrt(p_187457_5_) * ((float) Math.PI * 2F));
-				float f2 = -0.2F * MathHelper.sin(p_187457_5_ * (float) Math.PI);
+				float f = -0.4F * MathHelper.sin(MathHelper.sqrt(p_187457_5_) * net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.PI);
+				float f1 = 0.2F * MathHelper.sin(MathHelper.sqrt(p_187457_5_) * (net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.PI * 2F));
+				float f2 = -0.2F * MathHelper.sin(p_187457_5_ * net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.PI);
 				int i = flag1 ? 1 : -1;
 				GlStateManager.translate((float) i * f, f1, f2);
 				this.transformSideFirstPerson(enumhandside, p_187457_7_);

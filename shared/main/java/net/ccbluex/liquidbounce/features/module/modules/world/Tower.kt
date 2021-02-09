@@ -449,9 +449,7 @@ class Tower : Module()
 						val diffZ = hitVec.zCoord - eyesPos.zCoord
 						val diffXZ = hypot(diffX, diffZ)
 
-						val rotation = Rotation(
-							WMathHelper.wrapAngleTo180_float(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f), WMathHelper.wrapAngleTo180_float((-Math.toDegrees(atan2(diffY, diffXZ))).toFloat())
-						)
+						val rotation = Rotation(WMathHelper.wrapAngleTo180_float(WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90f), WMathHelper.wrapAngleTo180_float((-WMathHelper.toDegrees(atan2(diffY, diffXZ).toFloat()))))
 						val rotationVector = RotationUtils.getVectorForRotation(rotation)
 						val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
 						val rayTrace = theWorld.rayTraceBlocks(

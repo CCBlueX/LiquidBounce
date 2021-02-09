@@ -158,7 +158,7 @@ public abstract class MixinItemRenderer
 				return sqSmoothSin ? MathHelper.sin(fixedSwingProgress * WMathHelper.PI) : fixedSwingProgress;
 			}
 
-			return MathHelper.sin(swingProgress * swingProgress * (float) Math.PI);
+			return MathHelper.sin(swingProgress * swingProgress * WMathHelper.PI);
 		}
 
 		if (swingAnimation.getState())
@@ -184,10 +184,10 @@ public abstract class MixinItemRenderer
 			}
 
 			final Boolean sqrtSmoothSin = (isSwing ? swingAnimation.getSwingSqrtSmoothingSin() : swingAnimation.getBlockSqrtSmoothingSin()).get();
-			return sqrtSmoothSin ? MathHelper.sin(fixedSwingProgress * (float) Math.PI) : fixedSwingProgress;
+			return sqrtSmoothSin ? MathHelper.sin(fixedSwingProgress * WMathHelper.PI) : fixedSwingProgress;
 		}
 
-		return MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
+		return MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
 	}
 
 	/**
@@ -232,7 +232,7 @@ public abstract class MixinItemRenderer
 		final float interpolatedEquipProgress = prevEquippedProgress + (equippedProgress - prevEquippedProgress) * partialTicks;
 		final EntityPlayerSP abstractclientplayer = mc.thePlayer;
 
-		float swingProgress = abstractclientplayer.getSwingProgress(partialTicks);
+		final float swingProgress = abstractclientplayer.getSwingProgress(partialTicks);
 		final float smoothPitchRotation = abstractclientplayer.prevRotationPitch + (abstractclientplayer.rotationPitch - abstractclientplayer.prevRotationPitch) * partialTicks;
 		final float smoothYawRotation = abstractclientplayer.prevRotationYaw + (abstractclientplayer.rotationYaw - abstractclientplayer.prevRotationYaw) * partialTicks;
 
@@ -464,16 +464,16 @@ public abstract class MixinItemRenderer
 		switch (swingAnimation.getXRTranslationSmoothingMethod().get().toLowerCase())
 		{
 			case "sqrt":
-				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
+				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
 				break;
 			case "sqrtsqrt":
-				smooth = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * (float) Math.PI);
+				smooth = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * WMathHelper.PI);
 				break;
 			case "sq":
-				smooth = MathHelper.sin(swingProgress * swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * swingProgress * WMathHelper.PI);
 				break;
 			case "sqsq":
-				smooth = MathHelper.sin(swingProgress * swingProgress * swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * swingProgress * swingProgress * WMathHelper.PI);
 				break;
 			case "none":
 				smooth = swingProgress;
@@ -482,23 +482,23 @@ public abstract class MixinItemRenderer
 				smooth = 1 - swingProgress;
 				break;
 			default:
-				smooth = MathHelper.sin(swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * WMathHelper.PI);
 		}
 
 		final double x = 0.56 + swingAnimation.getXTranslation().get() + smooth * swingAnimation.getXRTranslation().get();
 		switch (swingAnimation.getYRTranslationSmoothingMethod().get().toLowerCase())
 		{
 			case "sqrt":
-				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
+				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
 				break;
 			case "sqrtsqrt":
-				smooth = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * (float) Math.PI);
+				smooth = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * WMathHelper.PI);
 				break;
 			case "sq":
-				smooth = MathHelper.sin(swingProgress * swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * swingProgress * WMathHelper.PI);
 				break;
 			case "sqsq":
-				smooth = MathHelper.sin(swingProgress * swingProgress * swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * swingProgress * swingProgress * WMathHelper.PI);
 				break;
 			case "none":
 				smooth = swingProgress;
@@ -507,23 +507,23 @@ public abstract class MixinItemRenderer
 				smooth = 1 - swingProgress;
 				break;
 			default:
-				smooth = MathHelper.sin(swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * WMathHelper.PI);
 		}
 
 		final double y = -0.52 + swingAnimation.getYTranslation().get() + smooth * swingAnimation.getYRTranslation().get();
 		switch (swingAnimation.getZRTranslationSmoothingMethod().get().toLowerCase())
 		{
 			case "sqrt":
-				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
+				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
 				break;
 			case "sqrtsqrt":
-				smooth = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * (float) Math.PI);
+				smooth = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * WMathHelper.PI);
 				break;
 			case "sq":
-				smooth = MathHelper.sin(swingProgress * swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * swingProgress * WMathHelper.PI);
 				break;
 			case "sqsq":
-				smooth = MathHelper.sin(swingProgress * swingProgress * swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * swingProgress * swingProgress * WMathHelper.PI);
 				break;
 			case "none":
 				smooth = swingProgress;
@@ -532,7 +532,7 @@ public abstract class MixinItemRenderer
 				smooth = 1 - swingProgress;
 				break;
 			default:
-				smooth = MathHelper.sin(swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * WMathHelper.PI);
 		}
 
 		final double z = -0.72 + swingAnimation.getZTranslation().get() + smooth * swingAnimation.getZRTranslation().get();
@@ -552,16 +552,16 @@ public abstract class MixinItemRenderer
 		switch (swingAnimation.getBlockXRTranslationSmoothingMethod().get().toLowerCase())
 		{
 			case "sqrt":
-				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
+				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
 				break;
 			case "sqrtsqrt":
-				smooth = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * (float) Math.PI);
+				smooth = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * WMathHelper.PI);
 				break;
 			case "sq":
-				smooth = MathHelper.sin(swingProgress * swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * swingProgress * WMathHelper.PI);
 				break;
 			case "sqsq":
-				smooth = MathHelper.sin(swingProgress * swingProgress * swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * swingProgress * swingProgress * WMathHelper.PI);
 				break;
 			case "none":
 				smooth = swingProgress;
@@ -570,23 +570,23 @@ public abstract class MixinItemRenderer
 				smooth = 1 - swingProgress;
 				break;
 			default:
-				smooth = MathHelper.sin(swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * WMathHelper.PI);
 		}
 
 		final double x = 0.56 + swingAnimation.getBlockXTranslation().get() + smooth * swingAnimation.getBlockXRTranslation().get();
 		switch (swingAnimation.getBlockYRTranslationSmoothingMethod().get().toLowerCase())
 		{
 			case "sqrt":
-				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
+				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
 				break;
 			case "sqrtsqrt":
-				smooth = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * (float) Math.PI);
+				smooth = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * WMathHelper.PI);
 				break;
 			case "sq":
-				smooth = MathHelper.sin(swingProgress * swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * swingProgress * WMathHelper.PI);
 				break;
 			case "sqsq":
-				smooth = MathHelper.sin(swingProgress * swingProgress * swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * swingProgress * swingProgress * WMathHelper.PI);
 				break;
 			case "none":
 				smooth = swingProgress;
@@ -595,23 +595,23 @@ public abstract class MixinItemRenderer
 				smooth = 1 - swingProgress;
 				break;
 			default:
-				smooth = MathHelper.sin(swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * WMathHelper.PI);
 		}
 
 		final double y = -0.52 + swingAnimation.getBlockYTranslation().get() + smooth * swingAnimation.getBlockYRTranslation().get();
 		switch (swingAnimation.getBlockZRTranslationSmoothingMethod().get().toLowerCase())
 		{
 			case "sqrt":
-				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
+				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
 				break;
 			case "sqrtsqrt":
-				smooth = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * (float) Math.PI);
+				smooth = MathHelper.sin(MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress)) * WMathHelper.PI);
 				break;
 			case "sq":
-				smooth = MathHelper.sin(swingProgress * swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * swingProgress * WMathHelper.PI);
 				break;
 			case "sqsq":
-				smooth = MathHelper.sin(swingProgress * swingProgress * swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * swingProgress * swingProgress * WMathHelper.PI);
 				break;
 			case "none":
 				smooth = swingProgress;
@@ -620,7 +620,7 @@ public abstract class MixinItemRenderer
 				smooth = 1 - swingProgress;
 				break;
 			default:
-				smooth = MathHelper.sin(swingProgress * (float) Math.PI);
+				smooth = MathHelper.sin(swingProgress * WMathHelper.PI);
 		}
 
 		final double z = -0.72 + swingAnimation.getBlockZTranslation().get() + smooth * swingAnimation.getBlockZRTranslation().get();

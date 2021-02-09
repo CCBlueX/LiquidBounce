@@ -742,7 +742,7 @@ class Scaffold : Module()
 		else if (searchValue.get()) for (x in -1..1) for (y in (if (ySearch) -1..1 else 0..0)) for (z in -1..1) if (search(thePlayer, searchPosition.add(x, 0, z), !shouldGoDown, searchBounds)) return
 	}
 
-	fun place(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
+	private fun place(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
 		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
 		val waitForKillauraEnd = killauraBypassValue.get().equals("WaitForKillauraEnd", true) && killAura.hasTarget        // targetPlace, Blacklist, killauraWait check
@@ -992,8 +992,8 @@ class Scaffold : Module()
 								val diff: Double = abs(if (side.isNorth() || side.isSouth()) diffZ else diffX)
 								if (diff < minDiffValue.get() || diff > 0.3f) continue
 							}
-							val pitch = if (staticPitch) staticPitchOffset else wrapAngleTo180_float((-Math.toDegrees(atan2(diffY, diffXZ))).toFloat())
-							val rotation = Rotation(wrapAngleTo180_float(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f + if (staticYaw) staticYawOffset else 0f), pitch)
+							val pitch = if (staticPitch) staticPitchOffset else wrapAngleTo180_float((-WMathHelper.toDegrees(atan2(diffY, diffXZ).toFloat())))
+							val rotation = Rotation(wrapAngleTo180_float(WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90f + if (staticYaw) staticYawOffset else 0f), pitch)
 							val rotationVector = RotationUtils.getVectorForRotation(rotation)
 							val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
 							val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false, false, true)

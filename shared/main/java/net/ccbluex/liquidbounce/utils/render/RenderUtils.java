@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.utils.render;
 
-import static java.lang.Math.PI;
 import static org.lwjgl.opengl.GL11.*;
 
 import java.awt.*;
@@ -435,8 +434,12 @@ public final class RenderUtils extends MinecraftInstance
 		glEnable(GL_LINE_SMOOTH);
 		glLineWidth(2.00F);
 		glBegin(GL_LINE_STRIP);
-		for (float current = end; current >= start; current -= 360 / 90.0f)
-			glVertex2f((float) (x + StrictMath.cos(current * PI / 180) * (radius * 1.001F)), (float) (y + StrictMath.sin(current * PI / 180) * (radius * 1.001F)));
+
+		for (float current = end; current >= start; current -= 360 / 90.0f) {
+			final float radians = WMathHelper.toRadians(current);
+			glVertex2f(x + functions.cos(radians) * (radius * 1.001F), y + functions.sin(radians) * (radius * 1.001F));
+		}
+
 		glEnd();
 		glDisable(GL_LINE_SMOOTH);
 

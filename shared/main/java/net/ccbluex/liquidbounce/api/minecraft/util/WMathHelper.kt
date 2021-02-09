@@ -40,4 +40,7 @@ object WMathHelper
 
 	@JvmStatic
 	fun toRadians(degrees: Float): Float = degrees * 0.017453292F /* 1 / 180 * PI = 0.017453292... */
+
+	@JvmStatic
+	fun toDegrees(radians: Float): Float = radians * 57.295779513F /* 1 * 180 / PI = 57.295779513... */
 }
