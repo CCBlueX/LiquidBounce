@@ -15,17 +15,19 @@ class PrivateChatCommand : Command("pchat", "privatechat", "lcpm")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size > 2)
 		{
 			if (!lChat.state)
 			{
-				chat("\u00A7cError: \u00A77LiquidChat is disabled!")
+				chat(thePlayer, "\u00A7cError: \u00A77LiquidChat is disabled!")
 				return
 			}
 
 			if (!lChat.client.isConnected())
 			{
-				chat("\u00A7cError: \u00A7LiquidChat is currently not connected to the server!")
+				chat(thePlayer, "\u00A7cError: \u00A7LiquidChat is currently not connected to the server!")
 				return
 			}
 
@@ -33,7 +35,8 @@ class PrivateChatCommand : Command("pchat", "privatechat", "lcpm")
 			val message = StringUtils.toCompleteString(args, 2)
 
 			lChat.client.sendPrivateMessage(target, message)
-			chat("Message was successfully sent.")
-		} else chatSyntax("pchat <username> <message>")
+			chat(thePlayer, "Message was successfully sent.")
+		}
+		else chatSyntax(thePlayer, "pchat <username> <message>")
 	}
 }

@@ -18,26 +18,29 @@ class BindCommand : Command("bind")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size > 2)
-		{ // Get module by name
+		{
+			// Get module by name
 			val module = LiquidBounce.moduleManager.getModule(args[1])
 
 			if (module == null)
 			{
-				chat("Module \u00A7a\u00A7l" + args[1] + "\u00A73 not found.")
+				chat(thePlayer, "Module \u00A7a\u00A7l" + args[1] + "\u00A73 not found.")
 				return
 			} // Find key by name and change
 			val key = Keyboard.getKeyIndex(args[2].toUpperCase())
 			module.keyBind = key
 
 			// Response to user
-			chat("Bound module \u00A7a\u00A7l${module.name}\u00A73 to key \u00A7a\u00A7l${Keyboard.getKeyName(key)}\u00A73.")
+			chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key \u00A7a\u00A7l${Keyboard.getKeyName(key)}\u00A73.")
 			LiquidBounce.hud.addNotification(Notification("Key Binding", "Bound ${module.name} to ${Keyboard.getKeyName(key)}", null))
 			playEdit()
 			return
 		}
 
-		chatSyntax(arrayOf("<module> <key>", "<module> none"))
+		chatSyntax(thePlayer, arrayOf("<module> <key>", "<module> none"))
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

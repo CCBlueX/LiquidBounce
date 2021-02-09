@@ -16,11 +16,13 @@ class HoloStandCommand : Command("holostand")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size > 4)
 		{
 			if (mc.playerController.isNotCreative)
 			{
-				chat("\u00A7c\u00A7lError: \u00A73You need to be in creative mode.")
+				chat(thePlayer, "\u00A7c\u00A7lError: \u00A73You need to be in creative mode.")
 				return
 			}
 
@@ -48,15 +50,16 @@ class HoloStandCommand : Command("holostand")
 				itemStack.setStackDisplayName("\u00A7c\u00A7lHolo\u00A7eStand")
 				mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(36, itemStack))
 
-				chat("The HoloStand was successfully added to your inventory.")
-			} catch (exception: NumberFormatException)
+				chat(thePlayer, "The HoloStand was successfully added to your inventory.")
+			}
+			catch (exception: NumberFormatException)
 			{
-				chatSyntaxError()
+				chatSyntaxError(thePlayer)
 			}
 
 			return
 		}
 
-		chatSyntax("holostand <x> <y> <z> <message...>")
+		chatSyntax(thePlayer, "holostand <x> <y> <z> <message...>")
 	}
 }

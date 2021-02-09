@@ -30,19 +30,21 @@ object SettingsUtils
 	 */
 	fun executeScript(script: String)
 	{
+		val thePlayer = LiquidBounce.wrapper.minecraft.thePlayer
+
 		script.lines().asSequence().filter { it.isNotEmpty() && !it.startsWith('#') }.forEachIndexed { index, s ->
 			val args = s.split(" ").toTypedArray()
 
 			if (args.size <= 1)
 			{
-				ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cSyntax error at line '$index' in setting script.\n\u00A78\u00A7lLine: \u00A77$s")
+				ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cSyntax error at line '$index' in setting script.\n\u00A78\u00A7lLine: \u00A77$s")
 				return@forEachIndexed
 			}
 
 			when (args[0].toLowerCase())
 			{
-				"chat" -> ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7e${translateAlternateColorCodes(StringUtils.toCompleteString(args, 1))}")
-				"unchat" -> ClientUtils.displayChatMessage(translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
+				"chat" -> ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7e${translateAlternateColorCodes(StringUtils.toCompleteString(args, 1))}")
+				"unchat" -> ClientUtils.displayChatMessage(thePlayer, translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
 
 				"load" ->
 				{
@@ -52,51 +54,51 @@ object SettingsUtils
 
 					try
 					{
-						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Loading settings from \u00A7a\u00A7l$url\u00A77...")
+						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Loading settings from \u00A7a\u00A7l$url\u00A77...")
 						executeScript(get(url))
-						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Loaded settings from \u00A7a\u00A7l$url\u00A77.")
+						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Loaded settings from \u00A7a\u00A7l$url\u00A77.")
 					}
 					catch (e: Exception)
 					{
-						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Failed to load settings from \u00A7a\u00A7l$url\u00A77.")
+						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Failed to load settings from \u00A7a\u00A7l$url\u00A77.")
 					}
 				}
 
 				"targetplayer", "targetplayers" ->
 				{
 					EntityUtils.targetPlayer = args[1].equals("true", ignoreCase = true)
-					ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetPlayer}\u00A77.")
+					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetPlayer}\u00A77.")
 				}
 
 				"targetmobs" ->
 				{
 					EntityUtils.targetMobs = args[1].equals("true", ignoreCase = true)
-					ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetMobs}\u00A77.")
+					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetMobs}\u00A77.")
 				}
 
 				"targetanimals" ->
 				{
 					EntityUtils.targetAnimals = args[1].equals("true", ignoreCase = true)
-					ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetAnimals}\u00A77.")
+					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetAnimals}\u00A77.")
 				}
 
 				"targetinvisible" ->
 				{
 					EntityUtils.targetInvisible = args[1].equals("true", ignoreCase = true)
-					ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetInvisible}\u00A77.")
+					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetInvisible}\u00A77.")
 				}
 
 				"targetdead" ->
 				{
 					EntityUtils.targetDead = args[1].equals("true", ignoreCase = true)
-					ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetDead}\u00A77.")
+					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetDead}\u00A77.")
 				}
 
 				else ->
 				{
 					if (args.size != 3)
 					{
-						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cSyntax error at line '$index' in setting script.\n\u00A78\u00A7lLine: \u00A77$s")
+						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cSyntax error at line '$index' in setting script.\n\u00A78\u00A7lLine: \u00A77$s")
 						return@forEachIndexed
 					}
 
@@ -107,28 +109,28 @@ object SettingsUtils
 
 					if (module == null)
 					{
-						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cModule \u00A7a\u00A7l$moduleName\u00A7c was not found!")
+						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cModule \u00A7a\u00A7l$moduleName\u00A7c was not found!")
 						return@forEachIndexed
 					}
 
 					if (valueName.equals("toggle", ignoreCase = true))
 					{
 						module.state = value.equals("true", ignoreCase = true)
-						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name} \u00A77was toggled \u00A7c\u00A7l${if (module.state) "on" else "off"}\u00A77.")
+						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name} \u00A77was toggled \u00A7c\u00A7l${if (module.state) "on" else "off"}\u00A77.")
 						return@forEachIndexed
 					}
 
 					if (valueName.equals("bind", ignoreCase = true))
 					{
 						module.keyBind = Keyboard.getKeyIndex(value)
-						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name} \u00A77was bound to \u00A7c\u00A7l${Keyboard.getKeyName(module.keyBind)}\u00A77.")
+						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name} \u00A77was bound to \u00A7c\u00A7l${Keyboard.getKeyName(module.keyBind)}\u00A77.")
 						return@forEachIndexed
 					}
 
 					val moduleValue = module.getValue(valueName)
 					if (moduleValue == null)
 					{
-						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cValue \u00A7a\u00A7l$valueName\u00A7c don't found in module \u00A7a\u00A7l$moduleName\u00A7c.")
+						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cValue \u00A7a\u00A7l$valueName\u00A7c don't found in module \u00A7a\u00A7l$moduleName\u00A7c.")
 						return@forEachIndexed
 					}
 
@@ -143,11 +145,11 @@ object SettingsUtils
 							is ListValue -> moduleValue.changeValue(value)
 						}
 
-						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name}\u00A77 value \u00A78\u00A7l${moduleValue.name}\u00A77 set to \u00A7c\u00A7l$value\u00A77.")
+						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name}\u00A77 value \u00A78\u00A7l${moduleValue.name}\u00A77 set to \u00A7c\u00A7l$value\u00A77.")
 					}
 					catch (e: Exception)
 					{
-						ClientUtils.displayChatMessage("\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${e.javaClass.name}\u00A77(${e.message}) \u00A7cAn Exception occurred while setting \u00A7a\u00A7l$value\u00A7c to \u00A7a\u00A7l${moduleValue.name}\u00A7c in \u00A7a\u00A7l${module.name}\u00A7c.")
+						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${e.javaClass.name}\u00A77(${e.message}) \u00A7cAn Exception occurred while setting \u00A7a\u00A7l$value\u00A7c to \u00A7a\u00A7l${moduleValue.name}\u00A7c in \u00A7a\u00A7l${module.name}\u00A7c.")
 					}
 				}
 			}

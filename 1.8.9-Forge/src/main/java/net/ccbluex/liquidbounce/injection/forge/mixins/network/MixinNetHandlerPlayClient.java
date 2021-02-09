@@ -101,7 +101,7 @@ public abstract class MixinNetHandlerPlayClient
 	@Inject(method = "handleJoinGame", at = @At("HEAD"), cancellable = true)
 	private void handleJoinGameWithAntiForge(final S01PacketJoinGame packetIn, final CallbackInfo callbackInfo)
 	{
-		if (!AntiModDisable.enabled || !AntiModDisable.blockFMLPackets || Minecraft.getMinecraft().isIntegratedServerRunning())
+		if (!AntiModDisable.Companion.getEnabled() || !AntiModDisable.Companion.getBlockFMLPackets() || Minecraft.getMinecraft().isIntegratedServerRunning())
 			return;
 
 		// noinspection OverlyStrongTypeCast

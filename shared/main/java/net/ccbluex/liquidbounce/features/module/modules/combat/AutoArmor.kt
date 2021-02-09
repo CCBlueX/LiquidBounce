@@ -73,7 +73,7 @@ class AutoArmor : Module()
 		val armorPieces = IntStream.range(0, 36).filter { i: Int ->
 			val itemStack = thePlayer.inventory.getStackInSlot(i)
 			itemStack != null && classProvider.isItemArmor(itemStack.item) && (i < 9 || System.currentTimeMillis() - itemStack.itemDelay >= itemDelayValue.get())
-		}.mapToObj { ArmorPiece(thePlayer.inventory.getStackInSlot(it), it) }.collect(Collectors.groupingBy { armor: ArmorPiece -> armor.armorType })
+		}.mapToObj { ArmorPiece(thePlayer.inventory.getStackInSlot(it)!!, it) }.collect(Collectors.groupingBy(ArmorPiece::armorType))
 
 		val bestArmor = arrayOfNulls<ArmorPiece>(4)
 
@@ -84,7 +84,7 @@ class AutoArmor : Module()
 		{
 			val armorPiece = bestArmor[i] ?: continue
 			val armorSlot = 3 - i
-			val oldArmor = ArmorPiece(thePlayer.inventory.armorItemInSlot(armorSlot), -1)
+			val oldArmor = ArmorPiece(thePlayer.inventory.armorItemInSlot(armorSlot) ?: continue, -1)
 
 			if (ItemUtils.isStackEmpty(oldArmor.itemStack) || !classProvider.isItemArmor(oldArmor.itemStack.item) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0)
 			{
@@ -159,6 +159,6 @@ class AutoArmor : Module()
 
 	companion object
 	{
-		val ARMOR_COMPARATOR: Comparator<ArmorPiece?> = ArmorComparator()
+		val ARMOR_COMPARATOR: Comparator<ArmorPiece> = ArmorComparator()
 	}
 }

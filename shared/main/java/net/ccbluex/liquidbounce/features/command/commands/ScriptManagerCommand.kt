@@ -26,6 +26,8 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size > 1)
 		{
 			when (args[1].toLowerCase())
@@ -44,7 +46,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 							LiquidBounce.clickGui = ClickGui()
 							FileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
 
-							chat("Successfully imported script.")
+							chat(thePlayer, "Successfully imported script.")
 							return
 						} else if (fileName.endsWith(".zip"))
 						{
@@ -80,15 +82,15 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 							FileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
 							FileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
 
-							chat("Successfully imported script.")
+							chat(thePlayer, "Successfully imported script.")
 							return
 						}
 
-						chat("The file extension has to be .js or .zip")
+						chat(thePlayer, "The file extension has to be .js or .zip")
 					} catch (t: Throwable)
 					{
 						ClientUtils.logger.error("Something went wrong while importing a script.", t)
-						chat("${t.javaClass.name}: ${t.message}")
+						chat(thePlayer, "${t.javaClass.name}: ${t.message}")
 					}
 				}
 
@@ -98,7 +100,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 					{
 						if (args.size <= 2)
 						{
-							chatSyntax("scriptmanager delete <index>")
+							chatSyntax(thePlayer, "scriptmanager delete <index>")
 							return
 						}
 
@@ -107,7 +109,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 
 						if (scriptIndex >= scripts.size)
 						{
-							chat("Index $scriptIndex is too high.")
+							chat(thePlayer, "Index $scriptIndex is too high.")
 							return
 						}
 
@@ -118,14 +120,14 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 						LiquidBounce.clickGui = ClickGui()
 						FileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
 						FileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
-						chat("Successfully deleted script.")
+						chat(thePlayer, "Successfully deleted script.")
 					} catch (numberFormat: NumberFormatException)
 					{
-						chatSyntaxError()
+						chatSyntaxError(thePlayer)
 					} catch (t: Throwable)
 					{
 						ClientUtils.logger.error("Something went wrong while deleting a script.", t)
-						chat("${t.javaClass.name}: ${t.message}")
+						chat(thePlayer, "${t.javaClass.name}: ${t.message}")
 					}
 				}
 
@@ -143,11 +145,11 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 						FileManager.loadConfig(LiquidBounce.fileManager.valuesConfig)
 						LiquidBounce.clickGui = ClickGui()
 						FileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
-						chat("Successfully reloaded all scripts.")
+						chat(thePlayer, "Successfully reloaded all scripts.")
 					} catch (t: Throwable)
 					{
 						ClientUtils.logger.error("Something went wrong while reloading all scripts.", t)
-						chat("${t.javaClass.name}: ${t.message}")
+						chat(thePlayer, "${t.javaClass.name}: ${t.message}")
 					}
 				}
 
@@ -156,11 +158,11 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 					try
 					{
 						Desktop.getDesktop().open(LiquidBounce.scriptManager.scriptsFolder)
-						chat("Successfully opened scripts folder.")
+						chat(thePlayer, "Successfully opened scripts folder.")
 					} catch (t: Throwable)
 					{
 						ClientUtils.logger.error("Something went wrong while trying to open your scripts folder.", t)
-						chat("${t.javaClass.name}: ${t.message}")
+						chat(thePlayer, "${t.javaClass.name}: ${t.message}")
 					}
 				}
 			}
@@ -172,11 +174,11 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 
 		if (scriptManager.scripts.isNotEmpty())
 		{
-			chat("\u00A7c\u00A7lScripts")
-			scriptManager.scripts.forEachIndexed { index, script -> chat("$index: \u00A7a\u00A7l${script.scriptName} \u00A7a\u00A7lv${script.scriptVersion} \u00A73by \u00A7a\u00A7l${script.scriptAuthors.joinToString(", ")}") }
+			chat(thePlayer, "\u00A7c\u00A7lScripts")
+			scriptManager.scripts.forEachIndexed { index, script -> chat(thePlayer, "$index: \u00A7a\u00A7l${script.scriptName} \u00A7a\u00A7lv${script.scriptVersion} \u00A73by \u00A7a\u00A7l${script.scriptAuthors.joinToString(", ")}") }
 		}
 
-		chatSyntax("scriptmanager <import/delete/reload/folder>")
+		chatSyntax(thePlayer, "scriptmanager <import/delete/reload/folder>")
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

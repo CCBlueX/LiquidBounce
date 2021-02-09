@@ -222,7 +222,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		{
 			try
 			{
-				HttpUtils.requestStream("${credit.avatarUrl}?s=${representedScreen.fontRendererObj.fontHeight * 4}", "GET")?.use { credit.avatar = CustomTexture(ImageIO.read(it)!!) }
+				HttpUtils.requestStream("${credit.avatarUrl}?s=${representedScreen.fontRendererObj.fontHeight * 4}", "GET").use { credit.avatar = CustomTexture(ImageIO.read(it)!!) }
 			}
 			catch (e: Exception)
 			{

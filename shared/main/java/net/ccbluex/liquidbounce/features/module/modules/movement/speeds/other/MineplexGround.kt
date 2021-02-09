@@ -50,7 +50,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 
 		if (!spoofSlot && thePlayer.inventory.getCurrentItemInHand() != null)
 		{
-			ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lMineplex\u00A7aSpeed\u00A78] \u00A7cYou need one empty slot.")
+			ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A7c\u00A7lMineplex\u00A7aSpeed\u00A78] \u00A7cYou need one empty slot.")
 			return
 		}
 

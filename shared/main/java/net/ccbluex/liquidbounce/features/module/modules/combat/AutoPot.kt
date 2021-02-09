@@ -136,6 +136,7 @@ class AutoPot : Module()
 		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
 		if (killauraBypassValue.get().equals("WaitForKillauraEnd", true) && killAura.state && killAura.target != null) return
 
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		val randomSlot = randomSlotValue.get()
@@ -163,9 +164,7 @@ class AutoPot : Module()
 						}
 
 						// Prevent throwing potions into the void
-						val fallingPlayer = FallingPlayer(
-							thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward
-						)
+						val fallingPlayer = FallingPlayer(theWorld, thePlayer, thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
 
 						val collisionBlock = fallingPlayer.findCollision(20)?.pos
 

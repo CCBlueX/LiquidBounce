@@ -61,6 +61,7 @@ class BugUp : Module()
 	{
 		detectedLocation = null
 
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		val posX = thePlayer.posX
@@ -78,7 +79,7 @@ class BugUp : Module()
 
 		if (!thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater)
 		{
-			val fallingPlayer = FallingPlayer(posX, posY, posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
+			val fallingPlayer = FallingPlayer(theWorld, thePlayer, posX, posY, posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
 
 			detectedLocation = fallingPlayer.findCollision(60)?.pos
 
@@ -193,7 +194,7 @@ class BugUp : Module()
 			if (!mode.equals("TeleportBack", true) && tryingFlag)
 			{
 				// Automatically stop to try flag after teleported back.
-				ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lBugUp\u00A78] \u00A7cTeleported.")
+				ClientUtils.displayChatMessage(mc.thePlayer, "\u00A78[\u00A7c\u00A7lBugUp\u00A78] \u00A7cTeleported.")
 				tryingFlag = false
 			}
 		}

@@ -15,23 +15,26 @@ class LiquidChatCommand : Command("chat", "lc", "irc")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size > 1)
 		{
 			if (!lChat.state)
 			{
-				chat("\u00A7cError: \u00A77LiquidChat is disabled!")
+				chat(thePlayer, "\u00A7cError: \u00A77LiquidChat is disabled!")
 				return
 			}
 
 			if (!lChat.client.isConnected())
 			{
-				chat("\u00A7cError: \u00A7LiquidChat is currently not connected to the server!")
+				chat(thePlayer, "\u00A7cError: \u00A7LiquidChat is currently not connected to the server!")
 				return
 			}
 
 			val message = StringUtils.toCompleteString(args, 1)
 
 			lChat.client.sendMessage(message)
-		} else chatSyntax("chat <message>")
+		}
+		else chatSyntax(thePlayer, "chat <message>")
 	}
 }

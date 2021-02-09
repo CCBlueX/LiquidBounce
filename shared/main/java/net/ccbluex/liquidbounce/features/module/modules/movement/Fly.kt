@@ -264,11 +264,11 @@ class Fly : Module()
 					thePlayer.swingItem()
 				}
 
-				"infinitycubecraft" -> ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lCubeCraft-\u00A7a\u00A7lFly\u00A78] \u00A7aPlace a block before landing.")
+				"infinitycubecraft" -> ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A7c\u00A7lCubeCraft-\u00A7a\u00A7lFly\u00A78] \u00A7aPlace a block before landing.")
 
 				"infinityvcubecraft" ->
 				{
-					ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lCubeCraft-\u00A7a\u00A7lFly\u00A78] \u00A7aPlace a block before landing.")
+					ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A7c\u00A7lCubeCraft-\u00A7a\u00A7lFly\u00A78] \u00A7aPlace a block before landing.")
 
 					thePlayer.setPosition(posX, posY + 2, posZ)
 				}
@@ -616,7 +616,7 @@ class Fly : Module()
 				{
 					mc.timer.timerSpeed = 1.0f
 					state = false
-					ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lMineplex-\u00A7a\u00A7lFly\u00A78] \u00A7aSelect an empty slot to fly.")
+					ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A7c\u00A7lMineplex-\u00A7a\u00A7lFly\u00A78] \u00A7aSelect an empty slot to fly.")
 				}
 
 				"aac3.3.12" ->
@@ -668,7 +668,7 @@ class Fly : Module()
 
 				"watchcat" ->
 				{
-					MovementUtils.strafe(thePlayer,0.15f)
+					MovementUtils.strafe(thePlayer, 0.15f)
 					thePlayer.sprinting = true
 
 					if (posY < startY + 2)
@@ -677,7 +677,7 @@ class Fly : Module()
 						return@run
 					}
 
-					if (startY > posY) MovementUtils.strafe(thePlayer,0f)
+					if (startY > posY) MovementUtils.strafe(thePlayer, 0f)
 				}
 
 				"spartan185" ->
@@ -695,7 +695,7 @@ class Fly : Module()
 
 				"spartan185glide" ->
 				{
-					MovementUtils.strafe(thePlayer,0.264f)
+					MovementUtils.strafe(thePlayer, 0.264f)
 
 					if (thePlayer.ticksExisted % 8 == 0) thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 10, posZ, true))
 				}
@@ -789,7 +789,7 @@ class Fly : Module()
 					if (jumpKeyDown) thePlayer.motionY += vanillaSpeed
 					if (sneakKeyDown) thePlayer.motionY -= vanillaSpeed
 
-					MovementUtils.strafe(thePlayer,vanillaSpeed)
+					MovementUtils.strafe(thePlayer, vanillaSpeed)
 				}
 
 				"redesky" ->
@@ -934,7 +934,7 @@ class Fly : Module()
 			if (mode.equals("Hypixel", ignoreCase = true) && canPerformHypixelDamageFly && hypixelFlyStarted)
 			{
 				hypixelDamageBoostFailed = true
-				ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lHypixel-\u00A7a\u00A7lFly\u00A78] \u00A7cSetback detected.")
+				ClientUtils.displayChatMessage(mc.thePlayer, "\u00A78[\u00A7c\u00A7lHypixel-\u00A7a\u00A7lFly\u00A78] \u00A7cSetback detected.")
 			}
 		}
 	}

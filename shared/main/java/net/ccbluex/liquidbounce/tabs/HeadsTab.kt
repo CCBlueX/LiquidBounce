@@ -71,7 +71,7 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 				{
 					val headElement = value.asJsonObject
 
-					heads.add(ItemUtils.createItem("skull 1 3 {display:{Name:\"${headElement.get("name").asString}\"},SkullOwner:{Id:\"${headElement.get("uuid").asString}\",Properties:{textures:[{Value:\"${headElement.get("value").asString}\"}]}}}"))
+					ItemUtils.createItem("skull 1 3 {display:{Name:\"${headElement.get("name").asString}\"},SkullOwner:{Id:\"${headElement.get("uuid").asString}\",Properties:{textures:[{Value:\"${headElement.get("value").asString}\"}]}}}")?.let(heads::add)
 				}
 
 				ClientUtils.logger.info("Loaded " + heads.size + " heads from HeadDB. Took ${TimeUtils.NanosecondsToString(System.nanoTime() - nanoTime)}.")

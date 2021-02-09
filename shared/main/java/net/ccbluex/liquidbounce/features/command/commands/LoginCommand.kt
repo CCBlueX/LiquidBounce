@@ -17,16 +17,18 @@ class LoginCommand : Command("login")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size <= 1)
 		{
-			chatSyntax("login <username/email> [password]")
+			chatSyntax(thePlayer, "login <username/email> [password]")
 			return
 		}
 
 		val result: String = if (args.size > 2) GuiAltManager.login(MinecraftAccount(MinecraftAccount.AltServiceType.MOJANG, args[1], args[2]))
 		else GuiAltManager.login(MinecraftAccount(MinecraftAccount.AltServiceType.MOJANG, args[1]))
 
-		chat(result)
+		chat(thePlayer, result)
 
 		if (result.startsWith("\u00A7cYour name is now"))
 		{

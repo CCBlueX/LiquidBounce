@@ -75,7 +75,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 		buttonList.add(new GuiButton(4, middleWidth + 2, buttonY + 44, 98, 20, "Random username"));
 		buttonList.add(new GuiButton(5, middleWidth - 100, buttonY + 88, "AltManager"));
 		buttonList.add(markBanned = new GuiButton(6, middleWidth - 100, buttonY + 110, "Mark this account " + (canMarkBannedOnThisServer ? "\u00A7cBANNED" : "\u00A7aUN-BANNED") + "\u00A7r from this server"));
-		buttonList.add(forgeBypassButton = new GuiButton(7, middleWidth - 100, buttonY + 66, "AntiModDisable: " + (AntiModDisable.enabled ? "\u00A7a(On)" : "\u00A7c(Off)")));
+		buttonList.add(forgeBypassButton = new GuiButton(7, middleWidth - 100, buttonY + 66, "AntiModDisable: " + (AntiModDisable.Companion.getEnabled() ? "\u00A7a(On)" : "\u00A7c(Off)")));
 
 		if (lastServerIp != null)
 			markBanned.enabled = GuiAltManager.canEnableMarkBannedButton();
@@ -142,8 +142,8 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 				}
 				break;
 			case 7:
-				AntiModDisable.enabled = !AntiModDisable.enabled;
-				forgeBypassButton.displayString = "AntiModDisable: " + (AntiModDisable.enabled ? "\u00A7a(On)" : "\u00A7c(Off)");
+				AntiModDisable.Companion.setEnabled(!AntiModDisable.Companion.getEnabled());
+				forgeBypassButton.displayString = "AntiModDisable: " + (AntiModDisable.Companion.getEnabled() ? "\u00A7a(On)" : "\u00A7c(Off)");
 				FileManager.Companion.saveConfig(LiquidBounce.fileManager.valuesConfig);
 				break;
 		}

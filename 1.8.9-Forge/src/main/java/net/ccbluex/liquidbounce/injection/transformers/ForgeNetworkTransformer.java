@@ -72,6 +72,6 @@ public class ForgeNetworkTransformer implements IClassTransformer
 	// Block FML Packets
 	public static boolean blockFMLPackets()
 	{
-		return AntiModDisable.enabled && AntiModDisable.blockFMLPackets && !Minecraft.getMinecraft().isIntegratedServerRunning();
+		return AntiModDisable.Companion.getEnabled() && AntiModDisable.Companion.getBlockFMLPackets() && !Minecraft.getMinecraft().isIntegratedServerRunning();
 	}
 }

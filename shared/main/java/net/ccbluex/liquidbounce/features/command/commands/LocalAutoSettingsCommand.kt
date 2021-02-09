@@ -21,9 +21,11 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size > 1)
 		{
-			when(args[1].toLowerCase())
+			when (args[1].toLowerCase())
 			{
 				"load" ->
 				{
@@ -35,14 +37,15 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 						{
 							try
 							{
-								chat("\u00A79Loading settings...")
+								chat(thePlayer, "\u00A79Loading settings...")
 								val settings = scriptFile.readText()
-								chat("\u00A79Set settings...")
+								chat(thePlayer, "\u00A79Set settings...")
 								SettingsUtils.executeScript(settings)
-								chat("\u00A76Settings applied successfully.")
+								chat(thePlayer, "\u00A76Settings applied successfully.")
 								LiquidBounce.hud.addNotification(Notification("Local Autosettings", "Updated Settings", null))
 								playEdit()
-							} catch (e: IOException)
+							}
+							catch (e: IOException)
 							{
 								e.printStackTrace()
 							}
@@ -50,11 +53,11 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 							return
 						}
 
-						chat("\u00A7cSettings file does not exist!")
+						chat(thePlayer, "\u00A7cSettings file does not exist!")
 						return
 					}
 
-					chatSyntax("localautosettings load <name>")
+					chatSyntax(thePlayer, "localautosettings load <name>")
 					return
 				}
 
@@ -75,24 +78,25 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 							val states = option.contains("all") || option.contains("states")
 							if (!values && !binds && !states)
 							{
-								chatSyntaxError()
+								chatSyntaxError(thePlayer)
 								return
 							}
 
-							chat("\u00A79Creating settings...")
+							chat(thePlayer, "\u00A79Creating settings...")
 							val settingsScript = SettingsUtils.generateScript(values, binds, states)
-							chat("\u00A79Saving settings...")
+							chat(thePlayer, "\u00A79Saving settings...")
 							scriptFile.writeText(settingsScript)
-							chat("\u00A76Settings saved successfully.")
-						} catch (throwable: Throwable)
+							chat(thePlayer, "\u00A76Settings saved successfully.")
+						}
+						catch (throwable: Throwable)
 						{
-							chat("\u00A7cFailed to create local config: \u00A73${throwable.message}")
+							chat(thePlayer, "\u00A7cFailed to create local config: \u00A73${throwable.message}")
 							ClientUtils.logger.error("Failed to create local config.", throwable)
 						}
 						return
 					}
 
-					chatSyntax("localsettings save <name> [all/values/binds/states]...")
+					chatSyntax(thePlayer, "localsettings save <name> [all/values/binds/states]...")
 					return
 				}
 
@@ -105,30 +109,31 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 						if (scriptFile.exists())
 						{
 							scriptFile.delete()
-							chat("\u00A76Settings file deleted successfully.")
+							chat(thePlayer, "\u00A76Settings file deleted successfully.")
 							return
 						}
 
-						chat("\u00A7cSettings file does not exist!")
+						chat(thePlayer, "\u00A7cSettings file does not exist!")
 						return
 					}
 
-					chatSyntax("localsettings delete <name>")
+					chatSyntax(thePlayer, "localsettings delete <name>")
 					return
 				}
 
 				"list" ->
 				{
-					chat("\u00A7cSettings:")
+					chat(thePlayer, "\u00A7cSettings:")
 
 					val settings = getLocalSettings() ?: return
 
-					for (file in settings) chat("> " + file.name)
+					for (file in settings) chat(thePlayer, "> " + file.name)
 					return
 				}
 			}
 		}
-		chatSyntax("localsettings <load/save/list/delete>")
+
+		chatSyntax(thePlayer, "localsettings <load/save/list/delete>")
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

@@ -19,15 +19,17 @@ class HideCommand : Command("hide")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size > 1)
 		{
 			when (args[1].toLowerCase())
 			{
 				"list" ->
 				{
-					chat("\u00A7c\u00A7lHidden")
+					chat(thePlayer, "\u00A7c\u00A7lHidden")
 					LiquidBounce.moduleManager.modules.asSequence().filter { !it.array }.forEach {
-						ClientUtils.displayChatMessage("\u00A76> \u00A7c${it.name}")
+						ClientUtils.displayChatMessage(thePlayer, "\u00A76> \u00A7c${it.name}")
 					}
 					return
 				}
@@ -36,7 +38,7 @@ class HideCommand : Command("hide")
 				{
 					for (module in LiquidBounce.moduleManager.modules) module.array = true
 
-					chat("Cleared hidden modules.")
+					chat(thePlayer, "Cleared hidden modules.")
 					return
 				}
 
@@ -44,7 +46,7 @@ class HideCommand : Command("hide")
 				{
 					for (module in LiquidBounce.moduleManager.modules) module.array = module::class.java.getAnnotation(ModuleInfo::class.java).array
 
-					chat("Reset hidden modules.")
+					chat(thePlayer, "Reset hidden modules.")
 					return
 				}
 
@@ -56,7 +58,7 @@ class HideCommand : Command("hide")
 
 					if (module == null)
 					{
-						chat("Module \u00A7a\u00A7l${args[1]}\u00A73 not found.")
+						chat(thePlayer, "Module \u00A7a\u00A7l${args[1]}\u00A73 not found.")
 						return
 					}
 
@@ -64,14 +66,14 @@ class HideCommand : Command("hide")
 					module.array = !module.array
 
 					// Response to user
-					chat("Module \u00A7a\u00A7l${module.name}\u00A73 is now \u00A7a\u00A7l${if (module.array) "visible" else "invisible"}\u00A73 on the array list.")
+					chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 is now \u00A7a\u00A7l${if (module.array) "visible" else "invisible"}\u00A73 on the array list.")
 					playEdit()
 					return
 				}
 			}
 		}
 
-		chatSyntax("hide <module/list/clear/reset>")
+		chatSyntax(thePlayer, "hide <module/list/clear/reset>")
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

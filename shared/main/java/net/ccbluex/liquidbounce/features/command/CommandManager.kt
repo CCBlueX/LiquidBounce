@@ -84,7 +84,7 @@ class CommandManager
 			}
 		}
 
-		ClientUtils.displayChatMessage("\u00A7cCommand not found. Type ${prefix}help to view all commands.")
+		ClientUtils.displayChatMessage(LiquidBounce.wrapper.minecraft.thePlayer, "\u00A7cCommand not found. Type ${prefix}help to view all commands.")
 	}
 
 	/**

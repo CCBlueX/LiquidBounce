@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.utils
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.INetworkManager
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.network.login.server.ISPacketEncryptionRequest
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
@@ -35,9 +36,9 @@ object ClientUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun displayChatMessage(message: String?)
+	fun displayChatMessage(thePlayer: IEntityPlayerSP?, message: String?)
 	{
-		if (mc.thePlayer == null)
+		if (thePlayer == null)
 		{
 			logger.info("(MCChat) {}", message)
 			return
@@ -45,6 +46,6 @@ object ClientUtils : MinecraftInstance()
 
 		val jsonObject = JsonObject()
 		jsonObject.addProperty("text", message)
-		mc.thePlayer!!.addChatMessage(LiquidBounce.wrapper.functions.jsonToComponent("$jsonObject"))
+		thePlayer.addChatMessage(LiquidBounce.wrapper.functions.jsonToComponent("$jsonObject"))
 	}
 }

@@ -29,6 +29,7 @@ class MidClick : Module()
 		if (!wasDown && Mouse.isButtonDown(2))
 		{
 			val entity = (mc.objectMouseOver ?: return).entityHit
+			val thePlayer = mc.thePlayer ?: return
 
 			if (classProvider.isEntityPlayer(entity))
 			{
@@ -39,17 +40,17 @@ class MidClick : Module()
 				{
 					friendsConfig.addFriend(playerName)
 					FileManager.saveConfig(friendsConfig)
-					ClientUtils.displayChatMessage("\u00A7a\u00A7l$playerName\u00A7c was added to your friends.")
+					ClientUtils.displayChatMessage(thePlayer, "\u00A7a\u00A7l$playerName\u00A7c was added to your friends.")
 				}
 				else
 				{
 					friendsConfig.removeFriend(playerName)
 					FileManager.saveConfig(friendsConfig)
-					ClientUtils.displayChatMessage("\u00A7a\u00A7l$playerName\u00A7c was removed from your friends.")
+					ClientUtils.displayChatMessage(thePlayer, "\u00A7a\u00A7l$playerName\u00A7c was removed from your friends.")
 				}
 
 			}
-			else ClientUtils.displayChatMessage("\u00A7c\u00A7lError: \u00A7aYou need to select a player.")
+			else ClientUtils.displayChatMessage(thePlayer, "\u00A7c\u00A7lError: \u00A7aYou need to select a player.")
 		}
 
 		wasDown = Mouse.isButtonDown(2)

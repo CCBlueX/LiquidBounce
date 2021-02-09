@@ -16,13 +16,15 @@ class ToggleCommand : Command("toggle", "t")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size > 1)
 		{
 			val module = LiquidBounce.moduleManager.getModule(args[1])
 
 			if (module == null)
 			{
-				chat("Module '${args[1]}' not found.")
+				chat(thePlayer, "Module '${args[1]}' not found.")
 				return
 			}
 
@@ -33,21 +35,23 @@ class ToggleCommand : Command("toggle", "t")
 				if (newState == "on" || newState == "off")
 				{
 					module.state = newState == "on"
-				} else
+				}
+				else
 				{
-					chatSyntax("toggle <module> [on/off]")
+					chatSyntax(thePlayer, "toggle <module> [on/off]")
 					return
 				}
-			} else
+			}
+			else
 			{
 				module.toggle()
 			}
 
-			chat("${if (module.state) "Enabled" else "Disabled"} module \u00A78${module.name}\u00A73.")
+			chat(thePlayer, "${if (module.state) "Enabled" else "Disabled"} module \u00A78${module.name}\u00A73.")
 			return
 		}
 
-		chatSyntax("toggle <module> [on/off]")
+		chatSyntax(thePlayer, "toggle <module> [on/off]")
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

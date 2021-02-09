@@ -6,10 +6,7 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.Render2DEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -45,7 +42,7 @@ class TacoCommand : Command("taco"), Listenable
 	override fun execute(args: Array<String>)
 	{
 		toggle = !toggle
-		ClientUtils.displayChatMessage(if (toggle) "\u00A7aTACO TACO TACO. :)" else "\u00A7cYou made the little taco sad! :(")
+		ClientUtils.displayChatMessage(mc.thePlayer, if (toggle) "\u00A7aTACO TACO TACO. :)" else "\u00A7cYou made the little taco sad! :(")
 	}
 
 	@EventTarget

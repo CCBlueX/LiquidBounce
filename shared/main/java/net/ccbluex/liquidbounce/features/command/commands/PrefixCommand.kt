@@ -16,9 +16,11 @@ class PrefixCommand : Command("prefix")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size <= 1)
 		{
-			chatSyntax("prefix <character>")
+			chatSyntax(thePlayer, "prefix <character>")
 			return
 		}
 
@@ -26,13 +28,13 @@ class PrefixCommand : Command("prefix")
 
 		if (prefix.length > 1)
 		{
-			chat("\u00A7cPrefix can only be one character long!")
+			chat(thePlayer, "\u00A7cPrefix can only be one character long!")
 			return
 		}
 
 		LiquidBounce.commandManager.prefix = prefix.single()
 		FileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
 
-		chat("Successfully changed command prefix to '\u00A78$prefix\u00A73'")
+		chat(thePlayer, "Successfully changed command prefix to '\u00A78$prefix\u00A73'")
 	}
 }

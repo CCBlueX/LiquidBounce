@@ -26,22 +26,24 @@ class ServerInfoCommand : Command("serverinfo"), Listenable
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (mc.currentServerData == null)
 		{
-			chat("This command does not work in single player.")
+			chat(thePlayer, "This command does not work in single player.")
 			return
 		}
 
 		val data = mc.currentServerData!!
 
-		chat("Server infos:")
-		chat("\u00A77Name: \u00A78${data.serverName}")
-		chat("\u00A77IP: \u00A78$ip:$port")
-		chat("\u00A77Players: \u00A78${data.populationInfo}")
-		chat("\u00A77MOTD: \u00A78${data.serverMOTD}")
-		chat("\u00A77ServerVersion: \u00A78${data.gameVersion}")
-		chat("\u00A77ProtocolVersion: \u00A78${data.version}")
-		chat("\u00A77Ping: \u00A78${data.pingToServer}")
+		chat(thePlayer, "Server infos:")
+		chat(thePlayer, "\u00A77Name: \u00A78${data.serverName}")
+		chat(thePlayer, "\u00A77IP: \u00A78$ip:$port")
+		chat(thePlayer, "\u00A77Players: \u00A78${data.populationInfo}")
+		chat(thePlayer, "\u00A77MOTD: \u00A78${data.serverMOTD}")
+		chat(thePlayer, "\u00A77ServerVersion: \u00A78${data.gameVersion}")
+		chat(thePlayer, "\u00A77ProtocolVersion: \u00A78${data.version}")
+		chat(thePlayer, "\u00A77Ping: \u00A78${data.pingToServer}")
 	}
 
 	@EventTarget

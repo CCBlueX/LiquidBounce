@@ -18,7 +18,7 @@ class UsernameCommand : Command("username", "ign")
 	{
 		val username = mc.thePlayer!!.name
 
-		chat("Username: $username")
+		chat(mc.thePlayer, "Username: $username")
 
 		val stringSelection = StringSelection(username)
 		Toolkit.getDefaultToolkit().systemClipboard.setContents(stringSelection, stringSelection)

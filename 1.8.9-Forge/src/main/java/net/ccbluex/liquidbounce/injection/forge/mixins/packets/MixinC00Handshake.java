@@ -43,7 +43,7 @@ public class MixinC00Handshake
 	public void writePacketData(final PacketBuffer buffer)
 	{
 		buffer.writeVarIntToBuffer(protocolVersion);
-		buffer.writeString(ip + (AntiModDisable.enabled && AntiModDisable.blockFMLPackets && !Minecraft.getMinecraft().isIntegratedServerRunning() ? "" : "\0FML\0"));
+		buffer.writeString(ip + (AntiModDisable.Companion.getEnabled() && AntiModDisable.Companion.getBlockFMLPackets() && !Minecraft.getMinecraft().isIntegratedServerRunning() ? "" : "\0FML\0"));
 		buffer.writeShort(port);
 		buffer.writeVarIntToBuffer(requestedState.getId());
 	}

@@ -12,7 +12,7 @@ import net.minecraft.client.renderer.texture.TextureUtil;
 
 import org.lwjgl.opengl.GL11;
 
-public class CustomTexture
+public final class CustomTexture
 {
 	private final BufferedImage image;
 	private boolean unloaded;

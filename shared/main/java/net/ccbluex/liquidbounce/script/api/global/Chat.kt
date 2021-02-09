@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.script.api.global
 
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.utils.ClientUtils
 
 /**
@@ -19,8 +20,8 @@ object Chat
 	 */
 	@Suppress("unused")
 	@JvmStatic
-	fun print(message: String)
+	fun print(thePlayer: IEntityPlayerSP?, message: String)
 	{
-		ClientUtils.displayChatMessage(message)
+		ClientUtils.displayChatMessage(thePlayer, message)
 	}
 }

@@ -14,25 +14,27 @@ class VClipCommand : Command("vclip")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer ?: return
+
 		if (args.size > 1)
 		{
 			try
 			{
 				val y = args[1].toDouble()
-				val thePlayer = mc.thePlayer ?: return
 
 				val entity = if (thePlayer.isRiding) thePlayer.ridingEntity!! else thePlayer
 
 				entity.setPosition(entity.posX, entity.posY + y, entity.posZ)
-				chat("You were teleported.")
-			} catch (ex: NumberFormatException)
+				chat(thePlayer, "You were teleported.")
+			}
+			catch (ex: NumberFormatException)
 			{
-				chatSyntaxError()
+				chatSyntaxError(thePlayer)
 			}
 
 			return
 		}
 
-		chatSyntax("vclip <value>")
+		chatSyntax(thePlayer, "vclip <value>")
 	}
 }

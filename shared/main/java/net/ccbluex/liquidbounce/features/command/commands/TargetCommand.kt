@@ -15,14 +15,16 @@ class TargetCommand : Command("target")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size > 1)
 		{
-			when(args[1].toLowerCase())
+			when (args[1].toLowerCase())
 			{
 				"players" ->
 				{
 					EntityUtils.targetPlayer = !EntityUtils.targetPlayer
-					chat("\u00A77Target player toggled ${if (EntityUtils.targetPlayer) "on" else "off"}.")
+					chat(thePlayer, "\u00A77Target player toggled ${if (EntityUtils.targetPlayer) "on" else "off"}.")
 					playEdit()
 					return
 				}
@@ -30,7 +32,7 @@ class TargetCommand : Command("target")
 				"mobs" ->
 				{
 					EntityUtils.targetMobs = !EntityUtils.targetMobs
-					chat("\u00A77Target mobs toggled ${if (EntityUtils.targetMobs) "on" else "off"}.")
+					chat(thePlayer, "\u00A77Target mobs toggled ${if (EntityUtils.targetMobs) "on" else "off"}.")
 					playEdit()
 					return
 				}
@@ -38,7 +40,7 @@ class TargetCommand : Command("target")
 				"animals" ->
 				{
 					EntityUtils.targetAnimals = !EntityUtils.targetAnimals
-					chat("\u00A77Target animals toggled ${if (EntityUtils.targetAnimals) "on" else "off"}.")
+					chat(thePlayer, "\u00A77Target animals toggled ${if (EntityUtils.targetAnimals) "on" else "off"}.")
 					playEdit()
 					return
 				}
@@ -46,14 +48,14 @@ class TargetCommand : Command("target")
 				"invisible" ->
 				{
 					EntityUtils.targetInvisible = !EntityUtils.targetInvisible
-					chat("\u00A77Target Invisible toggled ${if (EntityUtils.targetInvisible) "on" else "off"}.")
+					chat(thePlayer, "\u00A77Target Invisible toggled ${if (EntityUtils.targetInvisible) "on" else "off"}.")
 					playEdit()
 					return
 				}
 			}
 		}
 
-		chatSyntax("target <players/mobs/animals/invisible>")
+		chatSyntax(thePlayer, "target <players/mobs/animals/invisible>")
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

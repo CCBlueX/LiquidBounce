@@ -51,12 +51,21 @@ class AccountsConfig(file: File) : FileConfig(file)
 				val password = accountObject["password"]
 				val inGameName = accountObject["inGameName"]
 				val bannedServers = accountObject["bannedServers"]
-				val account: MinecraftAccount = if ((inGameName == null || inGameName.isJsonNull) && !(password == null || password.isJsonNull)) MinecraftAccount(AltServiceType.getById(type!!.asString), name.asString, password.asString) else if (type == null || type.isJsonNull) MinecraftAccount(AltServiceType.MOJANG, name.asString) else if ((inGameName == null || inGameName.isJsonNull) && (password == null || password.isJsonNull)) MinecraftAccount(AltServiceType.getById(type.asString), name.asString) else MinecraftAccount(AltServiceType.getById(type.asString), name.asString, password!!.asString, inGameName!!.asString)
-				if (!bannedServers.isJsonNull)
+
+				val account: MinecraftAccount = if ((inGameName == null || inGameName.isJsonNull) && !(password == null || password.isJsonNull))
 				{
-					val _bannedServers: MutableList<String> = bannedServers.asJsonArray.mapTo(ArrayList()) { it.asString }
-					account.bannedServers = _bannedServers
+					val serviceType = type?.let { AltServiceType.getById(it.asString) } ?: AltServiceType.MOJANG
+					MinecraftAccount(serviceType, name.asString, password.asString)
 				}
+				else if (type == null || type.isJsonNull) MinecraftAccount(AltServiceType.MOJANG, name.asString)
+				else
+				{
+					val serviceType = AltServiceType.getById(type.asString) ?: AltServiceType.MOJANG
+					if ((inGameName == null || inGameName.isJsonNull) && (password == null || password.isJsonNull)) MinecraftAccount(serviceType, name.asString) else MinecraftAccount(serviceType, name.asString, password!!.asString, inGameName!!.asString)
+				}
+
+				if (!bannedServers.isJsonNull) account.bannedServers = bannedServers.asJsonArray.mapTo(ArrayList()) { it.asString }
+
 				addAccount(account)
 			}
 		}
@@ -72,12 +81,14 @@ class AccountsConfig(file: File) : FileConfig(file)
 				if (info.isNotEmpty())
 				{
 					val information = info[0].split(":").toTypedArray()
+					val serviceType = AltServiceType.getById(information[0]) ?: AltServiceType.MOJANG
+
 					val acc: MinecraftAccount = when (information.size)
 					{
 						1 -> MinecraftAccount(AltServiceType.MOJANG, information[0])
-						2 -> MinecraftAccount(AltServiceType.getById(information[0]), information[1])
-						3 -> MinecraftAccount(AltServiceType.getById(information[0]), information[1], information[2])
-						else -> MinecraftAccount(AltServiceType.getById(information[0]), information[1], information[2], information[3])
+						2 -> MinecraftAccount(serviceType, information[1])
+						3 -> MinecraftAccount(serviceType, information[1], information[2])
+						else -> MinecraftAccount(serviceType, information[1], information[2], information[3])
 					}
 
 					if (info.size > 1) acc.bannedServers = deserializeOldBannedServers(info[1])
@@ -102,12 +113,14 @@ class AccountsConfig(file: File) : FileConfig(file)
 				if (info.isNotEmpty())
 				{
 					val information = info[0].split(":").toTypedArray()
+					val serviceType = AltServiceType.getById(information[0]) ?: AltServiceType.MOJANG
+
 					val acc: MinecraftAccount = when (information.size)
 					{
 						1 -> MinecraftAccount(AltServiceType.MOJANG, information[0])
-						2 -> MinecraftAccount(AltServiceType.getById(information[0]), information[1])
-						3 -> MinecraftAccount(AltServiceType.getById(information[0]), information[1], information[2])
-						else -> MinecraftAccount(AltServiceType.getById(information[0]), information[1], information[2], information[3])
+						2 -> MinecraftAccount(serviceType, information[1])
+						3 -> MinecraftAccount(serviceType, information[1], information[2])
+						else -> MinecraftAccount(serviceType, information[1], information[2], information[3])
 					}
 
 					if (info.size > 1) acc.bannedServers = deserializeOldBannedServers(info[1])

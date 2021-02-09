@@ -15,20 +15,22 @@ class HClipCommand : Command("hclip")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size > 1)
 		{
 			try
 			{
 				MovementUtils.forward(mc.thePlayer ?: return, args[1].toDouble())
-				chat("You were teleported.")
+				chat(thePlayer, "You were teleported.")
 			}
 			catch (exception: NumberFormatException)
 			{
-				chatSyntaxError()
+				chatSyntaxError(thePlayer)
 			}
 			return
 		}
 
-		chatSyntax("hclip <value>")
+		chatSyntax(thePlayer, "hclip <value>")
 	}
 }

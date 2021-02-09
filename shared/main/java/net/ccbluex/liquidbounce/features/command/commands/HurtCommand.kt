@@ -15,6 +15,8 @@ class HurtCommand : Command("hurt")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		var damage = 1
 
 		if (args.size > 1)
@@ -22,9 +24,10 @@ class HurtCommand : Command("hurt")
 			try
 			{
 				damage = args[1].toInt()
-			} catch (ignored: NumberFormatException)
+			}
+			catch (ignored: NumberFormatException)
 			{
-				chatSyntaxError()
+				chatSyntaxError(thePlayer)
 				return
 			}
 		}
@@ -33,6 +36,6 @@ class HurtCommand : Command("hurt")
 		Damage.ncpDamage(damage)
 
 		// Output message
-		chat("You were damaged.")
+		chat(thePlayer, "You were damaged.")
 	}
 }

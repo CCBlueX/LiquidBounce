@@ -17,6 +17,8 @@ class PanicCommand : Command("panic")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		var modules = LiquidBounce.moduleManager.modules.asSequence().filter(Module::state)
 		val msg: String
 
@@ -38,7 +40,7 @@ class PanicCommand : Command("panic")
 
 					if (categories.isEmpty())
 					{
-						chat("Category ${args[1]} not found")
+						chat(thePlayer, "Category ${args[1]} not found")
 						return
 					}
 
@@ -50,13 +52,13 @@ class PanicCommand : Command("panic")
 		}
 		else
 		{
-			chatSyntax("panic <all/nonrender/combat/player/movement/render/world/misc/exploit/fun>")
+			chatSyntax(thePlayer, "panic <all/nonrender/combat/player/movement/render/world/misc/exploit/fun>")
 			return
 		}
 
 		for (module in modules) module.state = false
 
-		chat("Disabled $msg modules.")
+		chat(thePlayer, "Disabled $msg modules.")
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

@@ -14,11 +14,13 @@ class EnchantCommand : Command("enchant")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size > 2)
 		{
 			if (mc.playerController.isNotCreative)
 			{
-				chat("\u00A7c\u00A7lError: \u00A73You need to be in creative mode.")
+				chat(thePlayer, "\u00A7c\u00A7lError: \u00A73You need to be in creative mode.")
 				return
 			}
 
@@ -26,20 +28,21 @@ class EnchantCommand : Command("enchant")
 
 			if (item?.item == null)
 			{
-				chat("\u00A7c\u00A7lError: \u00A73You need to hold an item.")
+				chat(thePlayer, "\u00A7c\u00A7lError: \u00A73You need to hold an item.")
 				return
 			}
 
 			val enchantID: Int = try
 			{
 				args[1].toInt()
-			} catch (e: NumberFormatException)
+			}
+			catch (e: NumberFormatException)
 			{
 				val enchantment = functions.getEnchantmentByLocation(args[1])
 
 				if (enchantment == null)
 				{
-					chat("There is no enchantment with the name '${args[1]}'")
+					chat(thePlayer, "There is no enchantment with the name '${args[1]}'")
 					return
 				}
 
@@ -50,25 +53,27 @@ class EnchantCommand : Command("enchant")
 
 			if (enchantment == null)
 			{
-				chat("There is no enchantment with the ID '$enchantID'")
+				chat(thePlayer, "There is no enchantment with the ID '$enchantID'")
 				return
 			}
 
 			val level = try
 			{
 				args[2].toInt()
-			} catch (e: NumberFormatException)
+			}
+			catch (e: NumberFormatException)
 			{
-				chatSyntaxError()
+				chatSyntaxError(thePlayer)
 				return
 			}
 
 			item.addEnchantment(enchantment, level)
 			mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(36 + mc.thePlayer!!.inventory.currentItem, item))
-			chat("${enchantment.getTranslatedName(level)} added to ${item.displayName}.")
+			chat(thePlayer, "${enchantment.getTranslatedName(level)} added to ${item.displayName}.")
 			return
 		}
-		chatSyntax("enchant <type> [level]")
+
+		chatSyntax(thePlayer, "enchant <type> [level]")
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

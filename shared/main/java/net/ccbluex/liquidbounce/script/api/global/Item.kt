@@ -13,12 +13,11 @@ import net.ccbluex.liquidbounce.utils.item.ItemUtils
  */
 object Item
 {
-
 	/**
 	 * Creates an item.
 	 * @param itemArguments Arguments describing the item.
 	 * @return An instance of [ItemStack] with the given data.
 	 */
 	@JvmStatic
-	fun create(itemArguments: String): IItemStack = ItemUtils.createItem(itemArguments)
+	fun create(itemArguments: String): IItemStack? = ItemUtils.createItem(itemArguments)
 }

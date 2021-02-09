@@ -53,7 +53,7 @@ class HighJump : Module()
 			if (tower.state) tower.state = false
 		}
 
-		if (modeValue.get().equals("mineplex", ignoreCase = true)) ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cWalk off an island to highjump.")
+		if (modeValue.get().equals("mineplex", ignoreCase = true)) ClientUtils.displayChatMessage(mc.thePlayer, "\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cWalk off an island to highjump.")
 	}
 
 	@EventTarget
@@ -180,7 +180,7 @@ class HighJump : Module()
 			thePlayer.motionX *= 0
 			thePlayer.motionZ *= 0
 			thePlayer.jumpMovementFactor = 0.0F
-			ClientUtils.displayChatMessage("\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cSetback detected. Disabled highjump.")
+			ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cSetback detected. Disabled highjump.")
 		}
 	}
 

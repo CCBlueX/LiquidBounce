@@ -14,22 +14,25 @@ class ChatAdminCommand : Command("chatadmin")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (!lChat.state)
 		{
-			chat("\u00A7cError: \u00A77LiquidChat is disabled!")
+			chat(thePlayer, "\u00A7cError: \u00A77LiquidChat is disabled!")
 			return
 		}
 
 		if (args.size > 1)
 		{
-			when(args[1].toLowerCase())
+			when (args[1].toLowerCase())
 			{
 				"ban" ->
 				{
 					if (args.size > 2)
 					{
 						lChat.client.banUser(args[2])
-					} else chatSyntax("chatadmin ban <username>")
+					}
+					else chatSyntax(thePlayer, "chatadmin ban <username>")
 				}
 
 				"unban" ->
@@ -37,10 +40,12 @@ class ChatAdminCommand : Command("chatadmin")
 					if (args.size > 2)
 					{
 						lChat.client.unbanUser(args[2])
-					} else chatSyntax("chatadmin unban <username>")
+					}
+					else chatSyntax(thePlayer, "chatadmin unban <username>")
 				}
 			}
-		} else chatSyntax("chatadmin <ban/unban>")
+		}
+		else chatSyntax(thePlayer, "chatadmin <ban/unban>")
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

@@ -702,8 +702,8 @@ class Scaffold : Module()
 
 		if (searchDebug.get())
 		{
-			ClientUtils.displayChatMessage("$state - $searchBounds")
-			ClientUtils.displayChatMessage("AutoBlock: $abCollisionBB, Ground: $lastGroundBlockBB")
+			ClientUtils.displayChatMessage(thePlayer, "$state - $searchBounds")
+			ClientUtils.displayChatMessage(thePlayer, "AutoBlock: $abCollisionBB, Ground: $lastGroundBlockBB")
 		}
 
 		lastSearchPosition = searchPosition

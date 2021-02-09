@@ -15,6 +15,8 @@ class RemoteViewCommand : Command("remoteview", "rv")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size < 2)
 		{
 			if (mc.renderViewEntity != mc.thePlayer)
@@ -22,7 +24,7 @@ class RemoteViewCommand : Command("remoteview", "rv")
 				mc.renderViewEntity = mc.thePlayer
 				return
 			}
-			chatSyntax("remoteview <username>")
+			chatSyntax(thePlayer, "remoteview <username>")
 			return
 		}
 
@@ -33,8 +35,8 @@ class RemoteViewCommand : Command("remoteview", "rv")
 			if (targetName == entity.name)
 			{
 				mc.renderViewEntity = entity
-				chat("Now viewing perspective of \u00A78${entity.name}\u00A73.")
-				chat("Execute \u00A78${LiquidBounce.commandManager.prefix}remoteview \u00A73again to go back to yours.")
+				chat(thePlayer, "Now viewing perspective of \u00A78${entity.name}\u00A73.")
+				chat(thePlayer, "Execute \u00A78${LiquidBounce.commandManager.prefix}remoteview \u00A73again to go back to yours.")
 				break
 			}
 		}

@@ -25,14 +25,16 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		if (args.size <= 1)
 		{
-			chatSyntax("settings <load/list>")
+			chatSyntax(thePlayer, "settings <load/list>")
 
 			return
 		}
 
-		when(args[1].toLowerCase())
+		when (args[1].toLowerCase())
 		{
 
 			// Load subcommand
@@ -40,7 +42,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 			{
 				if (args.size < 3)
 				{
-					chatSyntax("settings load <name/url>")
+					chatSyntax(thePlayer, "settings load <name/url>")
 					return
 				}
 
@@ -48,22 +50,23 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 				val url = if (args[2].startsWith("http")) args[2]
 				else "${LiquidBounce.CLIENT_CLOUD}/settings/${args[2].toLowerCase()}"
 
-				chat("Loading settings...")
+				chat(thePlayer, "Loading settings...")
 
 				WorkerUtils.workers.submit {
 					try
 					{ // Load settings and apply them
 						val settings = HttpUtils[url]
 
-						chat("Applying settings...")
+						chat(thePlayer, "Applying settings...")
 						SettingsUtils.executeScript(settings)
-						chat("\u00A76Settings applied successfully")
+						chat(thePlayer, "\u00A76Settings applied successfully")
 						LiquidBounce.hud.addNotification(Notification("Autosettings", "Updated Settings", null))
 						playEdit()
-					} catch (exception: Exception)
+					}
+					catch (exception: Exception)
 					{
 						exception.printStackTrace()
-						chat("Failed to fetch auto settings.")
+						chat(thePlayer, "Failed to fetch auto settings.")
 					}
 				}
 			}
@@ -71,10 +74,10 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 			// List subcommand
 			"list" ->
 			{
-				chat("Loading settings...")
+				chat(thePlayer, "Loading settings...")
 
 				loadSettings(false) {
-					for (setting in it) chat("> $setting")
+					for (setting in it) chat(thePlayer, "> $setting")
 				}
 			}
 		}
@@ -105,9 +108,10 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 					callback(autoSettings)
 
 					autoSettingFiles = autoSettings
-				} catch (e: Exception)
+				}
+				catch (e: Exception)
 				{
-					chat("Failed to fetch auto settings list.")
+					chat(mc.thePlayer, "Failed to fetch auto settings list.")
 				}
 			}
 		}

@@ -16,6 +16,8 @@ class ShortcutCommand : Command("shortcut")
 	 */
 	override fun execute(args: Array<String>)
 	{
+		val thePlayer = mc.thePlayer
+
 		when
 		{
 			args.size > 3 && args[1].equals("add", true) ->
@@ -26,20 +28,21 @@ class ShortcutCommand : Command("shortcut")
 						args[2], StringUtils.toCompleteString(args, 3)
 					)
 
-					chat("Successfully added shortcut.")
-				} catch (e: IllegalArgumentException)
+					chat(thePlayer, "Successfully added shortcut.")
+				}
+				catch (e: IllegalArgumentException)
 				{
-					chat(e.message!!)
+					chat(thePlayer, e.message!!)
 				}
 			}
 
 			args.size >= 3 && args[1].equals("remove", true) ->
 			{
-				if (LiquidBounce.commandManager.unregisterShortcut(args[2])) chat("Successfully removed shortcut.")
-				else chat("Shortcut does not exist.")
+				if (LiquidBounce.commandManager.unregisterShortcut(args[2])) chat(thePlayer, "Successfully removed shortcut.")
+				else chat(thePlayer, "Shortcut does not exist.")
 			}
 
-			else -> chat("shortcut <add <shortcut_name> <script>/remove <shortcut_name>>")
+			else -> chat(thePlayer, "shortcut <add <shortcut_name> <script>/remove <shortcut_name>>")
 		}
 	}
 }

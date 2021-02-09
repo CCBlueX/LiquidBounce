@@ -30,10 +30,11 @@ class MurderDetector : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
 		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
 
 		theWorld.loadedEntityList.asSequence().filter { classProvider.isEntityPlayer(it) && it != mc.thePlayer && it.asEntityPlayer().currentEquippedItem != null && it.asEntityPlayer().currentEquippedItem!!.item != null && isMurder(it.asEntityPlayer().currentEquippedItem!!.item!!) && !murders.contains(it) }.forEach {
 			murders.add(it.asEntityPlayer())
-			ClientUtils.displayChatMessage("\u00A7a\u00A7l" + it.asEntityPlayer().name + "\u00A7r is the \u00A74\u00A7lmurderer\u00A7r!")
+			ClientUtils.displayChatMessage(thePlayer, "\u00A7a\u00A7l" + it.asEntityPlayer().name + "\u00A7r is the \u00A74\u00A7lmurderer\u00A7r!")
 		}
 	}
 
