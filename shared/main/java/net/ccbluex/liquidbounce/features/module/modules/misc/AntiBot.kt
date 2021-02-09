@@ -184,7 +184,6 @@ object AntiBot : Module()
 		return false
 	}
 
-	@JvmStatic // TODO: Remove as soon EntityUtils is translated to kotlin
 	fun isBot(entity: IEntityLivingBase): Boolean
 	{ // Check if entity is a player
 		if (!classProvider.isEntityPlayer(entity)) return false

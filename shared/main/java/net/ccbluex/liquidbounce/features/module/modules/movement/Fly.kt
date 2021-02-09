@@ -34,7 +34,6 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.*
 
-// TODO: Display remaining vanilla fly time (max is 80 ticks)
 @ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F)
 class Fly : Module()
 {

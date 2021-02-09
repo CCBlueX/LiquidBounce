@@ -31,7 +31,7 @@ class BowAimbot : Module()
 	//	private val predictSizeValue = FloatValue("PredictSize", 2F, 0.1F, 5F)
 	private val playerPredictValue = BoolValue("PlayerPredict", false)
 	private val throughWallsValue = BoolValue("ThroughWalls", false)
-	private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
+	private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "ServerDirection", "ClientDirection"), "ServerDirection")
 	private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f, 180f)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
@@ -99,12 +99,12 @@ class BowAimbot : Module()
 	{
 		val targets = (mc.theWorld ?: return null).loadedEntityList.asSequence().filter { classProvider.isEntityLivingBase(it) && EntityUtils.isSelected(it, true) && (throughWalls || thePlayer.canEntityBeSeen(it)) }
 
-		return when
+		return when (priorityMode.toLowerCase())
 		{
-			priorityMode.equals("distance", true) -> targets.minBy(thePlayer::getDistanceToEntity)
-			// TODO: Client-sided rotation difference priority
-			priorityMode.equals("direction", true) -> targets.minBy { RotationUtils.getServerRotationDifference(thePlayer, it) }
-			priorityMode.equals("health", true) -> targets.minBy { it.asEntityLivingBase().health }
+			"distance" -> targets.minBy(thePlayer::getDistanceToEntity)
+			"serverdirection" -> targets.minBy { RotationUtils.getServerRotationDifference(thePlayer, it) }
+			"clientdirection" -> targets.minBy { RotationUtils.getClientRotationDifference(thePlayer, it) }
+			"health" -> targets.minBy { it.asEntityLivingBase().health }
 			else -> null
 		}
 	}
