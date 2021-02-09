@@ -44,17 +44,21 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	{
 		Keyboard.enableRepeatEvents(true)
 
-		hostField = classProvider.createGuiTextField(0, Fonts.font40, representedScreen.width / 2 - 100, 60, 200, 20).apply { isFocused = true }.apply { maxStringLength = Int.MAX_VALUE }.apply { text = "localhost" }
+		val middleScreen = representedScreen.width / 2
 
-		minPortField = classProvider.createGuiTextField(1, Fonts.font40, representedScreen.width / 2 - 100, 90, 90, 20).apply { maxStringLength = 5 }.apply { text = "1" }
+		val buttonX = middleScreen - 100
 
-		maxPortField = classProvider.createGuiTextField(2, Fonts.font40, representedScreen.width / 2 + 10, 90, 90, 20).apply { maxStringLength = 5 }.apply { text = "65535" }
+		hostField = classProvider.createGuiTextField(0, Fonts.font40, buttonX, 60, 200, 20).apply { isFocused = true }.apply { maxStringLength = Int.MAX_VALUE }.apply { text = "localhost" }
 
-		threadsField = classProvider.createGuiTextField(3, Fonts.font40, representedScreen.width / 2 - 100, 120, 200, 20).apply { maxStringLength = Int.MAX_VALUE }.apply { text = "500" }
+		minPortField = classProvider.createGuiTextField(1, Fonts.font40, buttonX, 90, 90, 20).apply { maxStringLength = 5 }.apply { text = "1" }
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 95, if (running) "Stop" else "Start").also { buttonToggle = it })
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 - 100, representedScreen.height / 4 + 120, "Back"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, representedScreen.width / 2 - 100, representedScreen.height / 4 + 155, "Export"))
+		maxPortField = classProvider.createGuiTextField(2, Fonts.font40, middleScreen + 10, 90, 90, 20).apply { maxStringLength = 5 }.apply { text = "65535" }
+
+		threadsField = classProvider.createGuiTextField(3, Fonts.font40, buttonX, 120, 200, 20).apply { maxStringLength = Int.MAX_VALUE }.apply { text = "500" }
+
+		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, representedScreen.height / 4 + 95, if (running) "Stop" else "Start").also { buttonToggle = it })
+		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, representedScreen.height / 4 + 120, "Back"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, representedScreen.height / 4 + 155, "Export"))
 
 		super.initGui()
 	}

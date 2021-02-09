@@ -19,10 +19,13 @@ class GuiModsMenu(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	override fun initGui()
 	{
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 - 100, representedScreen.height / 4 + 48, "Forge Mods"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 48 + 25, "Scripts"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, representedScreen.width / 2 - 100, representedScreen.height / 4 + 48 + 50, "Rich Presence: ${if (LiquidBounce.clientRichPresence.showRichPresenceValue) "\u00A7aON" else "\u00A7cOFF"}"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(3, representedScreen.width / 2 - 100, representedScreen.height / 4 + 48 + 75, "Back"))
+		val buttonX = representedScreen.width / 2 - 100
+		val buttonY = representedScreen.height / 4 + 48
+
+		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, buttonY, "Forge Mods"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, buttonY + 25, "Scripts"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, buttonY + 50, "Rich Presence: ${if (LiquidBounce.clientRichPresence.showRichPresenceValue) "\u00A7aON" else "\u00A7cOFF"}"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(3, buttonX, buttonY + 75, "Back"))
 	}
 
 	override fun actionPerformed(button: IGuiButton)

@@ -19,10 +19,11 @@ object AnimationUtils
 	 * Total iterations
 	 * @return         Eased value
 	 */
+	@JvmStatic
 	fun easeOut(current: Float, total: Float): Float
 	{
 		var fixedCurrent = current
-		return (fixedCurrent / total - 1.also { fixedCurrent = it.toFloat() }) * fixedCurrent * fixedCurrent + 1
+		return ((fixedCurrent / total - 1).also { fixedCurrent = it }) * fixedCurrent * fixedCurrent + 1
 	}
 
 	/**
@@ -30,6 +31,7 @@ object AnimationUtils
 	 *
 	 * @return A value larger than 0
 	 */
+	@JvmStatic
 	fun easeOutElastic(x: Float): Float
 	{
 		val c4 = 2 * WMathHelper.PI / 3.0f

@@ -31,16 +31,20 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	override fun initGui()
 	{
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 - 100, representedScreen.height / 4 + 55 + 25 * 4 + 5, "Back"))
+		val buttonX = representedScreen.width / 2 - 100
+		val quarterScreen = representedScreen.height / 4
 
-		enabledButton = classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 35, "Enabled (${if (enabled) "On" else "Off"})")
+		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 55 + 25 * 4 + 5, "Back"))
+
+		enabledButton = classProvider.createGuiButton(1, buttonX, quarterScreen + 35, "Enabled (${if (enabled) "On" else "Off"})")
 		representedScreen.buttonList.add(enabledButton)
 
-		particlesButton = classProvider.createGuiButton(2, representedScreen.width / 2 - 100, representedScreen.height / 4 + 50 + 25, "Particles (${if (particles) "On" else "Off"})")
+		particlesButton = classProvider.createGuiButton(2, buttonX, quarterScreen + 50 + 25, "Particles (${if (particles) "On" else "Off"})")
 		representedScreen.buttonList.add(particlesButton)
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(3, representedScreen.width / 2 - 100, representedScreen.height / 4 + 50 + 25 * 2, 98, 20, "Change wallpaper"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(4, representedScreen.width / 2 + 2, representedScreen.height / 4 + 50 + 25 * 2, 98, 20, "Reset wallpaper"))
+		val buttonY = quarterScreen + 50 + 25 * 2
+		representedScreen.buttonList.add(classProvider.createGuiButton(3, buttonX, buttonY, 98, 20, "Change wallpaper"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(4, representedScreen.width / 2 + 2, buttonY, 98, 20, "Reset wallpaper"))
 	}
 
 	override fun actionPerformed(button: IGuiButton)

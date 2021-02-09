@@ -16,8 +16,11 @@ class GuiTools(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	override fun initGui()
 	{
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 48 + 25, "Port Scanner"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 - 100, representedScreen.height / 4 + 48 + 25 * 2 + 5, "Back"))
+		val buttonX = representedScreen.width / 2 - 100
+		val buttonY = representedScreen.height / 4 + 48
+
+		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, buttonY + 25, "Port Scanner"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, buttonY + 55, "Back"))
 	}
 
 	override fun actionPerformed(button: IGuiButton)
