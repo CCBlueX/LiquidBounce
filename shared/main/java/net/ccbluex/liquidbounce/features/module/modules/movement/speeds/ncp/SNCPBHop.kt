@@ -153,8 +153,8 @@ class SNCPBHop : SpeedMode("SNCPBHop")
 		val yawRadians = WMathHelper.toRadians(yaw + 90.0f)
 		val mx2 = functions.cos(yawRadians)
 		val mz2 = functions.sin(yawRadians)
-		event.x = forward.toDouble() * moveSpeed * mx2 + strafe.toDouble() * moveSpeed * mz2
-		event.z = forward.toDouble() * moveSpeed * mz2 - strafe.toDouble() * moveSpeed * mx2
+		event.x = forward * moveSpeed * mx2 + strafe * moveSpeed * mz2
+		event.z = forward * moveSpeed * mz2 - strafe * moveSpeed * mx2
 		thePlayer.stepHeight = 0.5f
 		if (forward == 0.0f && strafe == 0.0f) event.zeroXZ()
 	}

@@ -227,7 +227,7 @@ object ColorUtils : MinecraftInstance()
 		catch (exp: IllegalArgumentException)
 		{
 			val nf = NumberFormat.getNumberInstance()
-			println(nf.format(red.toDouble()) + "; " + nf.format(green.toDouble()) + "; " + nf.format(blue.toDouble()))
+			println(nf.format(red) + "; " + nf.format(green) + "; " + nf.format(blue))
 			exp.printStackTrace()
 		}
 		return color
