@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import kotlin.math.hypot
 
@@ -62,4 +63,7 @@ object MovementUtils : MinecraftInstance()
 
 		return rotationYaw
 	}
+
+	@JvmStatic
+	fun getSpeedEffectAmplifier(thePlayer: IEntityPlayerSP) = thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))?.amplifier?.plus(1) ?: 0
 }

@@ -977,14 +977,19 @@ class Fly : Module()
 
 				if (hypixelDamageBoostFailed) return
 
-				val amplifier = 1 + (if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) 0.2 * (thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier + 1.0) else 0.0)
+				val speedEffectActive = thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))
+				val amplifier = 1 + (if (speedEffectActive)
+				{
+					0.2 * MovementUtils.getSpeedEffectAmplifier(thePlayer)
+				}
+				else 0.0)
 				val baseSpeed = 0.29 * amplifier
 
 				when (hypixelBoostStep)
 				{
 					1 ->
 					{
-						hypixelBoostSpeed = (if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) 1.56 else 2.034) * baseSpeed
+						hypixelBoostSpeed = (if (speedEffectActive) 1.56 else 2.034) * baseSpeed
 						hypixelBoostStep = 2
 					}
 

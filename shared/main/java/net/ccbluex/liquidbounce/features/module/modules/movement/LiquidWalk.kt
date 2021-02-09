@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -27,6 +28,9 @@ class LiquidWalk : Module()
 	private val aacFlyValue = FloatValue("AAC3.3.5-Motion", 0.5f, 0.1f, 1f)
 
 	private var nextTick = false
+
+	private var dolphinStep = 1
+	private val dolphinTimer = MSTimer()
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
@@ -49,6 +53,7 @@ class LiquidWalk : Module()
 			"aac3.1.0" ->
 			{
 				val blockPos = thePlayer.position.down()
+
 				if (!thePlayer.onGround && getBlock(blockPos) == classProvider.getBlockEnum(BlockType.WATER) || isInWater)
 				{
 					if (!thePlayer.sprinting)
@@ -67,6 +72,7 @@ class LiquidWalk : Module()
 					}
 					if (thePlayer.fallDistance >= 4) thePlayer.motionY = -0.004 else if (isInWater) thePlayer.motionY = 0.09
 				}
+
 				if (thePlayer.hurtTime != 0) thePlayer.onGround = false
 			}
 
@@ -95,7 +101,7 @@ class LiquidWalk : Module()
 				if (thePlayer.isCollidedHorizontally) thePlayer.motionY = 0.24 else if (theWorld.getBlockState(WBlockPos(posX, posY + 1.0, posZ)).block != classProvider.getBlockEnum(BlockType.AIR)) thePlayer.motionY += 0.04
 			}
 
-			"dolphin" -> if (isInWater) thePlayer.motionY += 0.03999999910593033
+			"dolphin" -> if (isInWater) thePlayer.motionY += 0.03999999910593033 // Same as normal swimming
 		}
 	}
 

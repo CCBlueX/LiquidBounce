@@ -133,11 +133,14 @@ class YPort : SpeedMode("YPort")
 	private val baseMoveSpeed: Double
 		get()
 		{
+			val thePlayer = mc.thePlayer!!
+
 			var baseSpeed = 0.2873
-			if (mc.thePlayer!!.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED)))
+
+			if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED)))
 			{
-				val amplifier: Int = mc.thePlayer!!.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier
-				baseSpeed *= 1.0 + 0.2 * (amplifier + 1)
+				val amplifier: Int = MovementUtils.getSpeedEffectAmplifier(thePlayer)
+				baseSpeed *= 1.0 + 0.2 * amplifier
 			}
 			return baseSpeed
 		}
