@@ -18,7 +18,6 @@ typealias Collidable = (IBlock?) -> Boolean
 
 object BlockUtils : MinecraftInstance()
 {
-
 	/**
 	 * Get block from [blockPos]
 	 */
@@ -73,9 +72,8 @@ object BlockUtils : MinecraftInstance()
 	@JvmStatic
 	fun isFullBlock(blockPos: WBlockPos): Boolean
 	{
-		val axisAlignedBB = getBlock(blockPos)?.getCollisionBoundingBox(
-			mc.theWorld!!, blockPos, getState(blockPos) ?: return false
-		) ?: return false
+		val axisAlignedBB = getBlock(blockPos)?.getCollisionBoundingBox(mc.theWorld!!, blockPos, getState(blockPos) ?: return false) ?: return false
+
 		return axisAlignedBB.maxX - axisAlignedBB.minX == 1.0 && axisAlignedBB.maxY - axisAlignedBB.minY == 1.0 && axisAlignedBB.maxZ - axisAlignedBB.minZ == 1.0
 	}
 
@@ -101,9 +99,7 @@ object BlockUtils : MinecraftInstance()
 			{
 				for (z in radius downTo -radius + 1)
 				{
-					val blockPos = WBlockPos(
-						thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z
-					)
+					val blockPos = WBlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z)
 					val block = getBlock(blockPos) ?: continue
 
 					blocks[blockPos] = block
@@ -161,5 +157,4 @@ object BlockUtils : MinecraftInstance()
 		}
 		return false
 	}
-
 }
