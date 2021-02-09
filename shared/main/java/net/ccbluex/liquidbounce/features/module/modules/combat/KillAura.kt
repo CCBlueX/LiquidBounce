@@ -427,8 +427,9 @@ class KillAura : Module()
 						strafe *= f
 						forward *= f
 
-						val yawSin = functions.sin((yaw * WMathHelper.PI / 180F))
-						val yawCos = functions.cos((yaw * WMathHelper.PI / 180F))
+						val yawRadians = WMathHelper.toRadians(yaw)
+						val yawSin = functions.sin(yawRadians)
+						val yawCos = functions.cos(yawRadians)
 
 						thePlayer.motionX += strafe * yawCos - forward * yawSin
 						thePlayer.motionZ += forward * yawCos + strafe * yawSin

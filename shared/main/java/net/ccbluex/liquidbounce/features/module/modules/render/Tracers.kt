@@ -70,11 +70,11 @@ class Tracers : Module()
 		val renderPosY = renderManager.renderPosY
 		val renderPosZ = renderManager.renderPosZ
 
-		val rotationYaw = WMathHelper.toRadians(thePlayer.rotationYaw)
-		val rotationPitch = WMathHelper.toRadians(thePlayer.rotationPitch)
+		val rotationYawRadians = WMathHelper.toRadians(thePlayer.rotationYaw)
+		val rotationPitchRadians = WMathHelper.toRadians(thePlayer.rotationPitch)
 
 		val eyeHeight = thePlayer.eyeHeight.toDouble()
-		val eyeVector = WVec3(0.0, 0.0, 1.0).rotatePitch(-rotationPitch).rotateYaw(-rotationYaw).addVector(0.0, eyeHeight, 0.0)
+		val eyeVector = WVec3(0.0, 0.0, 1.0).rotatePitch(-rotationPitchRadians).rotateYaw(-rotationYawRadians).addVector(0.0, eyeHeight, 0.0)
 		val eyeX = eyeVector.xCoord
 		val eyeY = eyeVector.yCoord
 		val eyeZ = eyeVector.zCoord
