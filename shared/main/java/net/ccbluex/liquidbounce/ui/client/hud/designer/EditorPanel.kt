@@ -419,7 +419,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
 					if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10)
 					{
-						val fonts = Fonts.getFonts()
+						val fonts = Fonts.fonts
 
 						fonts.forEachIndexed { index, font ->
 							if (font == fontRenderer)

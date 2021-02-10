@@ -241,7 +241,7 @@ class LiquidBounceStyle : Style()
 
 						if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX >= elementX + elementWidth + 4 && mouseX <= elementX + elementWidth + moduleElement.settingsWidth && mouseY >= yPos + 4 && mouseY <= yPos + 12)
 						{
-							val fonts = Fonts.getFonts()
+							val fonts = Fonts.fonts
 
 							if (Mouse.isButtonDown(0))
 							{

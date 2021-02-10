@@ -215,7 +215,7 @@ class SlowlyStyle : Style()
 
 						if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX >= moduleElement.x + moduleElement.width + 4 && mouseX <= moduleElement.x + moduleElement.width + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12)
 						{
-							val fonts = Fonts.getFonts()
+							val fonts = Fonts.fonts
 							if (Mouse.isButtonDown(0))
 							{
 								var i = 0
