@@ -45,8 +45,8 @@ class ClickGuiConfig(file: File) : FileConfig(file)
 				val panelObject = jsonObject.getAsJsonObject(panel.name)
 				panel.open = panelObject["open"].asBoolean
 				panel.isVisible = panelObject["visible"].asBoolean
-				panel.setX(panelObject["posX"].asInt)
-				panel.setY(panelObject["posY"].asInt)
+				panel.x = panelObject["posX"].asInt
+				panel.y = panelObject["posY"].asInt
 				panel.elements.filterIsInstance<ModuleElement>().filter { panelObject.has(it.module.name) }.forEach {
 					try
 					{
@@ -81,8 +81,8 @@ class ClickGuiConfig(file: File) : FileConfig(file)
 			val panelObject = JsonObject()
 			panelObject.addProperty("open", panel.open)
 			panelObject.addProperty("visible", panel.isVisible)
-			panelObject.addProperty("posX", panel.getX())
-			panelObject.addProperty("posY", panel.getY())
+			panelObject.addProperty("posX", panel.x)
+			panelObject.addProperty("posY", panel.y)
 
 			for (element in panel.elements)
 			{

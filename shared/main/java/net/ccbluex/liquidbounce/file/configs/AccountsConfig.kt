@@ -218,10 +218,10 @@ class AccountsConfig(file: File) : FileConfig(file)
 
 	companion object
 	{
-		fun deserializeOldBannedServers(str: String): List<String>
+		fun deserializeOldBannedServers(str: String): MutableList<String>
 		{
 			val split = str.split(";").toTypedArray()
-			return ArrayList(listOf(*split))
+			return mutableListOf(*split)
 		}
 	}
 }

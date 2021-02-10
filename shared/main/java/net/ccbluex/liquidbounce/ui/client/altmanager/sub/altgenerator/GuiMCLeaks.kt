@@ -26,7 +26,8 @@ import java.io.IOException
 class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 {
 	private lateinit var tokenField: IGuiTextField
-	private var status: String? = null
+
+	private var status = "\u00A77Idle..."
 
 	override fun updateScreen() = tokenField.updateCursorCounter()
 
@@ -148,7 +149,7 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		// Draw status
 		val status = status
 
-		if (status != null) Fonts.font40.drawCenteredString(status, representedScreen.width / 2.0f, 18.0f, 0xffffff)
+		Fonts.font40.drawCenteredString(status, representedScreen.width / 2.0f, 18.0f, 0xffffff)
 
 		tokenField.drawTextBox()
 		super.drawScreen(mouseX, mouseY, partialTicks)

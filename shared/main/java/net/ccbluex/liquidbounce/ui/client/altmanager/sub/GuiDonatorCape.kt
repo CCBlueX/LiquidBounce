@@ -40,7 +40,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	private lateinit var transferCodeField: IGuiTextField
 
 	// Status
-	private var status = ""
+	private var status = "\u00A77Idle..."
 
 	// Donator Cape
 
@@ -78,8 +78,8 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 		// Draw title and status
 		Fonts.font35.drawCenteredString("Donator Cape", representedScreen.width / 2.0f, 36.0f, 0xffffff)
-		Fonts.font35.drawCenteredString("use prefix \"file:\" to load cape file from .minecraft/LiquidBounce directory.", representedScreen.width / 2.0f, representedScreen.height - 50.0f, 0xffffff)
-		Fonts.font35.drawCenteredString("(ex. \"file:cape\" or \"file:cape.png\" will load \"" + LiquidBounce.fileManager.dir.toString() + File.separatorChar + "cape.png\")", representedScreen.width / 2.0f, representedScreen.height - 36.0f, 0xffffff)
+		Fonts.font35.drawCenteredString("use prefix \"file:\" to load cape file from .minecraft/LiquidBounce directory.", representedScreen.width / 2.0f, representedScreen.height - 70.0f, 0xffffff)
+		Fonts.font35.drawCenteredString("(ex. \"file:cape\" or \"file:cape.png\" will load \"" + LiquidBounce.fileManager.dir.toString() + File.separatorChar + "cape.png\")", representedScreen.width / 2.0f, representedScreen.height - 56.0f, 0xffffff)
 
 		Fonts.font35.drawCenteredString(status, representedScreen.width / 2.0f, representedScreen.height / 4.0f + 80, 0xffffff)
 

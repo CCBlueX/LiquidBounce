@@ -201,7 +201,7 @@ class Effects(
 
 				Side.Horizontal.LEFT ->
 				{
-					val xPos = (if (rectMode.equals("left", true)) 5 else 2).toFloat()
+					val xPos = (if (rectMode.equals("left", true)) 5f else 2f)
 					val yPos = (if (side.vertical == Side.Vertical.DOWN) -textSpacer else textSpacer) * if (side.vertical == Side.Vertical.DOWN) index + 1 else index
 
 					// Draw Background

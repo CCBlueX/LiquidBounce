@@ -176,7 +176,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		height += 10
 		realHeight += 10
 
-		Fonts.font35.drawString("\u00A7lReset", x + 2.toFloat(), y.toFloat() + height, Color.WHITE.rgb)
+		Fonts.font35.drawString("\u00A7lReset", x + 2f, y.toFloat() + height, Color.WHITE.rgb)
 		if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10) LiquidBounce.hud = createDefault()
 
 		height += 15

@@ -24,7 +24,13 @@ class BackgroundShader : Shader("background.frag")
 	{
 		val resolutionID = getUniform("iResolution")
 
-		if (resolutionID > -1) GL20.glUniform2f(resolutionID, Display.getWidth().toFloat(), Display.getHeight().toFloat())
+		if (resolutionID > -1)
+		{
+			val displayWidth = Display.getWidth().toFloat()
+			val displayHeight = Display.getHeight().toFloat()
+
+			GL20.glUniform2f(resolutionID, displayWidth, displayHeight)
+		}
 
 		val timeID = getUniform("iTime")
 

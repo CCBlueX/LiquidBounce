@@ -15,7 +15,7 @@ class MinecraftAccount
 	var password: String? = null
 		private set
 	var accountName: String? = null
-	var bannedServers: List<String> = ArrayList()
+	var bannedServers = mutableListOf<String>()
 
 	constructor(serviceType: AltServiceType, name: String)
 	{
@@ -23,7 +23,7 @@ class MinecraftAccount
 		this.name = name
 	}
 
-	constructor(serviceType: AltServiceType, name: String, bannedServers: List<String>)
+	constructor(serviceType: AltServiceType, name: String, bannedServers: MutableList<String>)
 	{
 		this.serviceType = serviceType
 		this.name = name
@@ -37,7 +37,7 @@ class MinecraftAccount
 		this.password = password
 	}
 
-	constructor(serviceType: AltServiceType, name: String, password: String?, bannedServers: List<String>)
+	constructor(serviceType: AltServiceType, name: String, password: String?, bannedServers: MutableList<String>)
 	{
 		this.serviceType = serviceType
 		this.name = name
@@ -53,7 +53,7 @@ class MinecraftAccount
 		accountName = inGameName
 	}
 
-	constructor(serviceType: AltServiceType, name: String, password: String?, inGameName: String?, bannedServers: List<String>)
+	constructor(serviceType: AltServiceType, name: String, password: String?, inGameName: String?, bannedServers: MutableList<String>)
 	{
 		this.serviceType = serviceType
 		this.name = name

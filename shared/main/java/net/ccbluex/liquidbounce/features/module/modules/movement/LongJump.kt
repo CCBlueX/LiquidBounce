@@ -15,24 +15,32 @@ import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.getDirection
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 
 @ModuleInfo(name = "LongJump", description = "Allows you to jump further.", category = ModuleCategory.MOVEMENT)
 class LongJump : Module()
 {
+	/**
+	 * Options
+	 */
 	private val modeValue = ListValue("Mode", arrayOf("NCP", "Teleport", "AAC3.0.1", "AAC3.0.5", "AAC3.1.0", "Mineplex", "Mineplex2", "Mineplex3", "RedeSky"), "NCP")
 	private val ncpBoostValue = FloatValue("NCPBoost", 4.25f, 1f, 10f)
 	private val teleportDistanceValue = FloatValue("TeleportDistance", 2.5f, 1.0f, 10.0f)
+	private val teleportAtTicksValue = IntegerValue("TeleportAtTicks", 0, 0, 10)
 	private val autoJumpValue = BoolValue("AutoJump", false)
 	private val autoDisableValue = BoolValue("AutoDisable", true)
 	private val autoDisableScaffoldValue = BoolValue("DisableScaffoldAndTower", true)
+	// TODO: DamageOnStart
 
+	/**
+	 * Variables
+	 */
 	private var jumped = false
 	private var canBoost = false
 	private var boosted = false
 	private var canMineplexBoost = false
+
+	private var teleportTicks = 0
 
 	override fun onEnable()
 	{
@@ -86,7 +94,7 @@ class LongJump : Module()
 					{
 						MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * if (canBoost) ncpBoostValue.get() else 1f)
 						canBoost = false
-						if (boosted && autoDisable) state = false
+						if (autoDisable) state = false
 					}
 
 					"aac3.0.1" ->
@@ -130,6 +138,7 @@ class LongJump : Module()
 
 							thePlayer.setPosition(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z)
 							boosted = true
+							if (autoDisable) state = false
 						}
 					}
 
@@ -178,32 +187,41 @@ class LongJump : Module()
 	fun onMove(event: MoveEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
-		val mode = modeValue.get()
+		val mode = modeValue.get().toLowerCase()
 
-		if (mode.equals("mineplex3", ignoreCase = true))
+		if (mode == "mineplex3")
 		{
 			if (thePlayer.fallDistance != 0.0f) thePlayer.motionY += 0.037
 		}
 		else if (jumped)
+		{
+			val isTeleportMode = mode == "teleport"
 
-			if (mode.equals("Teleport", ignoreCase = true) && isMoving(thePlayer) && canBoost)
+			if (isTeleportMode && isMoving(thePlayer) && canBoost)
 			{
-				val dir = getDirection(thePlayer)
-				val teleportDistance = teleportDistanceValue.get()
+				if (teleportTicks >= teleportAtTicksValue.get())
+				{
+					val dir = getDirection(thePlayer)
+					val teleportDistance = teleportDistanceValue.get()
 
-				event.x = (-functions.sin(dir) * teleportDistance).toDouble()
-				event.z = (functions.cos(dir) * teleportDistance).toDouble()
+					event.x = (-functions.sin(dir) * teleportDistance).toDouble()
+					event.z = (functions.cos(dir) * teleportDistance).toDouble()
 
-				canBoost = false
-				boosted = true
-				if (autoDisableValue.get()) state = false
+					canBoost = false
+					boosted = true
+					teleportTicks = 0
+					if (autoDisableValue.get()) state = false
+				}
+				teleportTicks++
 			}
-			else if (mode.equals("NCP", ignoreCase = true) && !isMoving(thePlayer))
+
+			if (!isMoving(thePlayer) && mode == "ncp")
 			{
 				thePlayer.motionX = 0.0
 				thePlayer.motionZ = 0.0
 				event.zeroXZ()
 			}
+		}
 	}
 
 	@EventTarget(ignoreCondition = true)
@@ -237,7 +255,7 @@ class LongJump : Module()
 		get() = when
 		{
 			modeValue.get().equals("NCP", ignoreCase = true) -> "NCP-${ncpBoostValue.get()}"
-			modeValue.get().equals("Teleport", ignoreCase = true) -> "Teleport-${teleportDistanceValue.get()}"
+			modeValue.get().equals("Teleport", ignoreCase = true) -> "Teleport-${teleportDistanceValue.get()}-At ${teleportAtTicksValue.get()}"
 			else -> modeValue.get()
 		}
 }

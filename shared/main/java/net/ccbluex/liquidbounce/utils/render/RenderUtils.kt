@@ -487,7 +487,12 @@ object RenderUtils : MinecraftInstance()
 
 		mc.textureManager.bindTexture(image!!)
 
-		drawModalRectWithCustomSizedTexture(x.toFloat(), y.toFloat(), 0f, 0f, width.toFloat(), height.toFloat(), width.toFloat(), height.toFloat())
+		val xF = x.toFloat()
+		val yF = y.toFloat()
+		val widthF = width.toFloat()
+		val heightF = height.toFloat()
+
+		drawModalRectWithCustomSizedTexture(xF, yF, 0f, 0f, widthF, heightF, widthF, heightF)
 
 		GL11.glDepthMask(true)
 		GL11.glDisable(GL11.GL_BLEND)

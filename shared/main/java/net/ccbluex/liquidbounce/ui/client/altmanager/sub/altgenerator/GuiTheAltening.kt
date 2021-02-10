@@ -47,7 +47,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	private lateinit var tokenField: IGuiTextField
 
 	// Status
-	private var status = ""
+	private var status = "\u00A77Idle..."
 
 	/**
 	 * Initialize The Altening Generator GUI

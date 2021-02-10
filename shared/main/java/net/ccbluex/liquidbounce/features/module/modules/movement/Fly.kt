@@ -215,12 +215,10 @@ class Fly : Module()
 
 		if (damageOnStart && onGround)
 		{
-			WorkerUtils.workers.submit {
-				when (damageModeValue.get().toLowerCase())
-				{
-					"ncp" -> Damage.ncpDamage()
-					"hypixel" -> Damage.hypixelDamage()
-				}
+			when (damageModeValue.get().toLowerCase())
+			{
+				"ncp" -> Damage.ncpDamage()
+				"hypixel" -> Damage.hypixelDamage()
 			}
 		}
 

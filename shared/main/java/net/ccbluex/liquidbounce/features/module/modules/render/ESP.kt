@@ -123,7 +123,14 @@ class ESP : Module()
 				"real2d" ->
 				{
 					val bb = entityLiving.entityBoundingBox.offset(-posX, -posY, -posZ).offset(lastTickPosX + (posX - lastTickPosX) * renderPartialTicks, lastTickPosY + (posY - lastTickPosY) * renderPartialTicks, lastTickPosZ + (posZ - lastTickPosZ) * renderPartialTicks).offset(-renderPosX, -renderPosY, -renderPosZ)
-					val boxVertices = arrayOf(doubleArrayOf(bb.minX, bb.minY, bb.minZ), doubleArrayOf(bb.minX, bb.maxY, bb.minZ), doubleArrayOf(bb.maxX, bb.maxY, bb.minZ), doubleArrayOf(bb.maxX, bb.minY, bb.minZ), doubleArrayOf(bb.minX, bb.minY, bb.maxZ), doubleArrayOf(bb.minX, bb.maxY, bb.maxZ), doubleArrayOf(bb.maxX, bb.maxY, bb.maxZ), doubleArrayOf(bb.maxX, bb.minY, bb.maxZ))
+					val bbMinX = bb.minX.toFloat()
+					val bbMinY = bb.minY.toFloat()
+					val bbMinZ = bb.minZ.toFloat()
+					val bbMaxX = bb.maxX.toFloat()
+					val bbMaxY = bb.maxY.toFloat()
+					val bbMaxZ = bb.maxZ.toFloat()
+
+					val boxVertices = arrayOf(floatArrayOf(bbMinX, bbMinY, bbMinZ), floatArrayOf(bbMinX, bbMaxY, bbMinZ), floatArrayOf(bbMaxX, bbMaxY, bbMinZ), floatArrayOf(bbMaxX, bbMinY, bbMinZ), floatArrayOf(bbMinX, bbMinY, bbMaxZ), floatArrayOf(bbMinX, bbMaxY, bbMaxZ), floatArrayOf(bbMaxX, bbMaxY, bbMaxZ), floatArrayOf(bbMaxX, bbMinY, bbMaxZ))
 
 					var minX = Float.MAX_VALUE
 					var minY = Float.MAX_VALUE
@@ -132,7 +139,7 @@ class ESP : Module()
 
 					for (boxVertex in boxVertices)
 					{
-						val screenPos = WorldToScreen.worldToScreen(Vector3f(boxVertex[0].toFloat(), boxVertex[1].toFloat(), boxVertex[2].toFloat()), mvMatrix, projectionMatrix, displayWidth, displayHeight) ?: continue
+						val screenPos = WorldToScreen.worldToScreen(Vector3f(boxVertex[0], boxVertex[1], boxVertex[2]), mvMatrix, projectionMatrix, displayWidth, displayHeight) ?: continue
 
 						minX = min(screenPos.x, minX)
 						minY = min(screenPos.y, minY)
