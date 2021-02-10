@@ -119,9 +119,7 @@ object LiquidBounce
 		commandManager.registerCommands()
 
 		// Load configs
-		FileManager.loadConfigs(
-			fileManager.modulesConfig, fileManager.valuesConfig, fileManager.accountsConfig, fileManager.friendsConfig, fileManager.xrayConfig, fileManager.shortcutsConfig
-		)
+		FileManager.loadConfigs(fileManager.modulesConfig, fileManager.valuesConfig, fileManager.accountsConfig, fileManager.friendsConfig, fileManager.xrayConfig, fileManager.shortcutsConfig)
 
 		// ClickGUI
 		clickGui = ClickGui()

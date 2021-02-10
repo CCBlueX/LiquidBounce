@@ -14,6 +14,8 @@ import net.ccbluex.liquidbounce.file.configs.*
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.WorkerUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import java.io.File
@@ -28,12 +30,12 @@ class FileManager : MinecraftInstance()
 	@JvmField
 	val fontsDir = File(dir, "fonts")
 	val settingsDir = File(dir, "settings")
+
 	val modulesConfig: FileConfig = ModulesConfig(File(dir, "modules.json"))
 
 	@JvmField
 	val valuesConfig: FileConfig = ValuesConfig(File(dir, "values.json"))
 
-	@JvmField
 	val clickGuiConfig: FileConfig = ClickGuiConfig(File(dir, "clickgui.json"))
 
 	@JvmField
@@ -143,20 +145,28 @@ class FileManager : MinecraftInstance()
 		 */
 		fun loadConfig(config: FileConfig)
 		{
+
 			if (!config.hasConfig())
 			{
 				logger.info("[FileManager] Skipped loading config: {}.", config.file.name)
 				saveConfig(config, true)
 				return
 			}
-			try
-			{
-				config.loadConfig()
-				logger.info("[FileManager] Loaded config: {}.", config.file.name)
-			}
-			catch (t: Throwable)
-			{
-				logger.error("[FileManager] Failed to load config file: {}.", config.file.name, t)
+
+			// To minimize overheads caused by saving config, use workers instead of directly saving it
+			WorkerUtils.workers.submit {
+				try
+				{
+					val nanoTime = System.nanoTime()
+
+					config.loadConfig()
+
+					logger.info("[FileManager] Loaded config: {}. Took {}.", config.file.name, TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime))
+				}
+				catch (t: Throwable)
+				{
+					logger.error("[FileManager] Failed to load config file: {}.", config.file.name, t)
+				}
 			}
 		}
 
@@ -194,15 +204,24 @@ class FileManager : MinecraftInstance()
 		private fun saveConfig(config: FileConfig, ignoreStarting: Boolean)
 		{
 			if (!ignoreStarting && isStarting) return
-			try
-			{
-				if (!config.hasConfig()) config.createConfig()
-				config.saveConfig()
-				logger.info("[FileManager] Saved config: {}.", config.file.name)
-			}
-			catch (t: Throwable)
-			{
-				logger.error("[FileManager] Failed to save config file: {}.", config.file.name, t)
+
+			// To minimize overheads caused by saving config, use workers instead of directly saving it
+			WorkerUtils.workers.submit {
+				try
+				{
+					val nanoTime = System.nanoTime()
+
+					if (!config.hasConfig()) config.createConfig()
+
+					config.saveConfig()
+
+					logger.info("[FileManager] Saved config: \"{}\". Took {}.", config.file.name, TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime))
+				}
+				catch (t: Throwable)
+				{
+					// TODO: Create Back-up
+					logger.error("[FileManager] Failed to save config file: \"{}\". A back-up created with name \"{}\".", config.file.name, t)
+				}
 			}
 		}
 	}

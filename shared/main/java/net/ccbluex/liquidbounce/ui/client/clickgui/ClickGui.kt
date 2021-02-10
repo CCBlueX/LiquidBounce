@@ -69,7 +69,8 @@ class ClickGui : WrappedGuiScreen()
 			panel.drawScreen(newMouseXI, newMouseYI, partialTicks)
 		}
 
-		for (panel in panels) for (element in panel.elements) if (element is ModuleElement) if (newMouseX != 0.0 && newMouseY != 0.0 && element.isHovering(newMouseXI, newMouseYI) && element.isVisible && element.getY() <= panel.y + panel.fade) style.drawDescription(newMouseXI, newMouseYI, element.module.description)
+		// Draw Element Description
+		for (panel in panels) panel.elements.asSequence().filterIsInstance<ModuleElement>().filter { newMouseX != 0.0 && newMouseY != 0.0 && it.isHovering(newMouseXI, newMouseYI) && it.isVisible && it.y <= panel.y + panel.fade }.forEach { style.drawDescription(newMouseXI, newMouseYI, it.module.description) }
 
 		if (Mouse.hasWheel())
 		{
@@ -198,17 +199,17 @@ class ClickGui : WrappedGuiScreen()
 
 				elements.add(object : ButtonElement("Players")
 				{
+					override var displayName: String = "Players"
+						get()
+						{
+							color = if (EntityUtils.targetPlayer) clickGuiColor else i
+							return field
+						}
+
 					override fun createButton(displayName: String)
 					{
 						color = if (EntityUtils.targetPlayer) clickGuiColor else i
 						super.createButton(displayName)
-					}
-
-					override fun getDisplayName(): String
-					{
-						displayName = "Players"
-						color = if (EntityUtils.targetPlayer) clickGuiColor else i
-						return super.getDisplayName()
 					}
 
 					override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
@@ -225,17 +226,17 @@ class ClickGui : WrappedGuiScreen()
 
 				elements.add(object : ButtonElement("Mobs")
 				{
+					override var displayName: String = "Mobs"
+						get()
+						{
+							color = if (EntityUtils.targetMobs) clickGuiColor else i
+							return field
+						}
+
 					override fun createButton(displayName: String)
 					{
 						color = if (EntityUtils.targetMobs) clickGuiColor else i
 						super.createButton(displayName)
-					}
-
-					override fun getDisplayName(): String
-					{
-						displayName = "Mobs"
-						color = if (EntityUtils.targetMobs) clickGuiColor else i
-						return super.getDisplayName()
 					}
 
 					override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
@@ -252,17 +253,17 @@ class ClickGui : WrappedGuiScreen()
 
 				elements.add(object : ButtonElement("Animals")
 				{
+					override var displayName: String = "Animals"
+						get()
+						{
+							color = if (EntityUtils.targetAnimals) clickGuiColor else i
+							return field
+						}
+
 					override fun createButton(displayName: String)
 					{
 						color = if (EntityUtils.targetAnimals) clickGuiColor else i
 						super.createButton(displayName)
-					}
-
-					override fun getDisplayName(): String
-					{
-						displayName = "Animals"
-						color = if (EntityUtils.targetAnimals) clickGuiColor else i
-						return super.getDisplayName()
 					}
 
 					override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
@@ -279,17 +280,17 @@ class ClickGui : WrappedGuiScreen()
 
 				elements.add(object : ButtonElement("Invisible")
 				{
+					override var displayName: String = "Invisible"
+						get()
+						{
+							color = if (EntityUtils.targetInvisible) clickGuiColor else i
+							return field
+						}
+
 					override fun createButton(displayName: String)
 					{
 						color = if (EntityUtils.targetInvisible) clickGuiColor else i
 						super.createButton(displayName)
-					}
-
-					override fun getDisplayName(): String
-					{
-						displayName = "Invisible"
-						color = if (EntityUtils.targetInvisible) clickGuiColor else i
-						return super.getDisplayName()
 					}
 
 					override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
@@ -306,17 +307,17 @@ class ClickGui : WrappedGuiScreen()
 
 				elements.add(object : ButtonElement("Dead")
 				{
+					override var displayName: String = "Dead"
+						get()
+						{
+							color = if (EntityUtils.targetDead) clickGuiColor else i
+							return field
+						}
+
 					override fun createButton(displayName: String)
 					{
 						color = if (EntityUtils.targetDead) clickGuiColor else i
 						super.createButton(displayName)
-					}
-
-					override fun getDisplayName(): String
-					{
-						displayName = "Dead"
-						color = if (EntityUtils.targetDead) clickGuiColor else i
-						return super.getDisplayName()
 					}
 
 					override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
