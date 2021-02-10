@@ -24,8 +24,10 @@ import net.ccbluex.liquidbounce.api.minecraft.client.render.WIImageBuffer
 import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.IDynamicTexture
 import net.ccbluex.liquidbounce.api.minecraft.client.render.vertex.IVertexFormat
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.texture.ITextureUtil
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexBuffer
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
+import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
 import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
@@ -56,6 +58,7 @@ import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.ThreadDownloadImageData
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
+import net.minecraft.client.shader.Framebuffer
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.boss.EntityDragon
@@ -91,6 +94,10 @@ object ClassProviderImpl : IClassProvider
 		get() = TessellatorImpl(Tessellator.getInstance())
 	override val jsonToNBTInstance: IJsonToNBT
 		get() = JsonToNBTImpl
+	override val glStateManager: IGlStateManager
+		get() = GlStateManagerImpl
+	override val textureUtil: ITextureUtil
+		get() = TextureUtilImpl
 
 	override fun createResourceLocation(resourceName: String): IResourceLocation = ResourceLocationImpl(ResourceLocation(resourceName))
 
@@ -120,6 +127,8 @@ object ClassProviderImpl : IClassProvider
 	override fun createSession(name: String, uuid: String, accessToken: String, accountType: String): ISession = SessionImpl(Session(name, uuid, accessToken, accountType))
 
 	override fun createDynamicTexture(image: BufferedImage): IDynamicTexture = DynamicTextureImpl(DynamicTexture(image))
+
+	override fun createDynamicTexture(width: Int, height: Int): IDynamicTexture = DynamicTextureImpl(DynamicTexture(width, height))
 
 	override fun createItem(): IItem = ItemImpl(Item())
 
@@ -193,6 +202,8 @@ object ClassProviderImpl : IClassProvider
 	override fun createCPacketAnimation(): ICPacketAnimation = CPacketAnimationImpl(C0APacketAnimation())
 
 	override fun createCPacketKeepAlive(): ICPacketKeepAlive = CPacketKeepAliveImpl(C00PacketKeepAlive())
+
+	override fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer = FramebufferImpl(Framebuffer(displayWidth, displayHeight, useDepth))
 
 	override fun isEntityAnimal(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityAnimal
 
@@ -646,7 +657,6 @@ object ClassProviderImpl : IClassProvider
 		GuiSlotWrapper(wrappedGuiSlot, mc, width, height, top, bottom, slotHeight)
 	}
 
-	override fun getGlStateManager(): IGlStateManager = GlStateManagerImpl
 	override fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket = PacketImpl(C01PacketEncryptionResponse(secretKey, publicKey, VerifyToken))
 
 	override fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean = Block.isEqualTo(block1?.unwrap(), block2?.unwrap())

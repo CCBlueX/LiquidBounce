@@ -55,10 +55,10 @@ class Armor(
 				else if (mode.equals("Vertical", true)) y += 18
 			}
 
-			classProvider.getGlStateManager().enableAlpha()
-			classProvider.getGlStateManager().disableBlend()
-			classProvider.getGlStateManager().disableLighting()
-			classProvider.getGlStateManager().disableCull()
+			classProvider.glStateManager.enableAlpha()
+			classProvider.glStateManager.disableBlend()
+			classProvider.glStateManager.disableLighting()
+			classProvider.glStateManager.disableCull()
 			GL11.glPopMatrix()
 		}
 

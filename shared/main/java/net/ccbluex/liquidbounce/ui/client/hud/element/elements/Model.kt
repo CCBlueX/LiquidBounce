@@ -98,8 +98,8 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
 	 */
 	private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: IEntityLivingBase)
 	{
-		classProvider.getGlStateManager().resetColor()
-		classProvider.getGlStateManager().enableColorMaterial()
+		classProvider.glStateManager.resetColor()
+		classProvider.glStateManager.enableColorMaterial()
 		GL11.glPushMatrix()
 		GL11.glTranslatef(0F, 0F, 50F)
 		GL11.glScalef(-50F, 50F, 50F)
@@ -138,10 +138,10 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
 
 		GL11.glPopMatrix()
 		functions.disableStandardItemLighting()
-		classProvider.getGlStateManager().disableRescaleNormal()
+		classProvider.glStateManager.disableRescaleNormal()
 		functions.setActiveTextureLightMapTexUnit()
-		classProvider.getGlStateManager().disableTexture2D()
+		classProvider.glStateManager.disableTexture2D()
 		functions.setActiveTextureDefaultTexUnit()
-		classProvider.getGlStateManager().resetColor()
+		classProvider.glStateManager.resetColor()
 	}
 }

@@ -77,10 +77,10 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 		if (rainbow) glUseProgram(rainbowShaderId)
 
 		GL11.glTranslated(x - 1.5, y + 0.5, 0.0)
-		classProvider.getGlStateManager().enableAlpha()
-		classProvider.getGlStateManager().enableBlend()
-		classProvider.getGlStateManager().tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
-		classProvider.getGlStateManager().enableTexture2D()
+		classProvider.glStateManager.enableAlpha()
+		classProvider.glStateManager.enableBlend()
+		classProvider.glStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+		classProvider.glStateManager.enableTexture2D()
 
 		var currentColor = color
 
@@ -182,7 +182,7 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 			defaultFont.drawString(text, 0.0, 0.0, currentColor)
 		}
 
-		classProvider.getGlStateManager().disableBlend()
+		classProvider.glStateManager.disableBlend()
 		GL11.glTranslated(-(x - 1.5), -(y + 0.5), 0.0)
 		GL11.glColor4f(1f, 1f, 1f, 1f)
 

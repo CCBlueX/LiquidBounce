@@ -9,7 +9,6 @@ package net.ccbluex.liquidbounce.utils.render
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.world.IChunk
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.client.renderer.texture.DynamicTexture
 import java.util.concurrent.atomic.AtomicBoolean
 
 object MiniMapRegister : MinecraftInstance()
@@ -78,7 +77,7 @@ object MiniMapRegister : MinecraftInstance()
 
 	class MiniMapTexture
 	{
-		val texture = DynamicTexture(16, 16)
+		val texture = classProvider.createDynamicTexture(16, 16)
 		private var deleted = false
 
 		fun updateChunkData(chunk: IChunk)

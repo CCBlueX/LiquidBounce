@@ -72,14 +72,14 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			{
 				GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
 
-				classProvider.getGlStateManager().enableAlpha()
-				classProvider.getGlStateManager().enableBlend()
-				classProvider.getGlStateManager().tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
-				classProvider.getGlStateManager().enableTexture2D()
+				classProvider.glStateManager.enableAlpha()
+				classProvider.glStateManager.enableBlend()
+				classProvider.glStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+				classProvider.glStateManager.enableTexture2D()
 
 				GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
-				classProvider.getGlStateManager().bindTexture(avatar.textureId)
+				classProvider.glStateManager.bindTexture(avatar.textureId)
 
 
 				GL11.glBegin(GL11.GL_QUADS)
@@ -95,9 +95,9 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 				GL11.glEnd()
 
-				classProvider.getGlStateManager().bindTexture(0)
+				classProvider.glStateManager.bindTexture(0)
 
-				classProvider.getGlStateManager().disableBlend()
+				classProvider.glStateManager.disableBlend()
 
 				infoOffset = imageSize
 
@@ -115,7 +115,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			{
 				y += Fonts.font40.fontHeight + 2
 
-				classProvider.getGlStateManager().disableTexture2D()
+				classProvider.glStateManager.disableTexture2D()
 				GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 				GL11.glBegin(GL11.GL_LINES)
 

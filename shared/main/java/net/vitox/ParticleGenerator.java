@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
 
-import net.minecraft.client.Minecraft;
+import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.vitox.particle.util.RenderUtils;
@@ -33,14 +34,18 @@ public class ParticleGenerator
 
 	public void draw(final int mouseX, final int mouseY)
 	{
-		if (particles.isEmpty() || prevWidth != Minecraft.getMinecraft().displayWidth || prevHeight != Minecraft.getMinecraft().displayHeight)
+		final IMinecraft mc = LiquidBounce.wrapper.getMinecraft();
+		final int displayWidth = mc.getDisplayWidth();
+		final int displayHeight = mc.getDisplayHeight();
+
+		if (particles.isEmpty() || prevWidth != displayWidth || prevHeight != displayHeight)
 		{
 			particles.clear();
 			create();
 		}
 
-		prevWidth = Minecraft.getMinecraft().displayWidth;
-		prevHeight = Minecraft.getMinecraft().displayHeight;
+		prevWidth = displayWidth;
+		prevHeight = displayHeight;
 
 		for (final Particle particle : particles)
 		{
@@ -61,7 +66,11 @@ public class ParticleGenerator
 	{
 		final Random random = new Random();
 
+		final IMinecraft mc = LiquidBounce.wrapper.getMinecraft();
+		final int displayWidth = mc.getDisplayWidth();
+		final int displayHeight = mc.getDisplayHeight();
+
 		for (int i = 0; i < amount; i++)
-			particles.add(new Particle(random.nextInt(Minecraft.getMinecraft().displayWidth), random.nextInt(Minecraft.getMinecraft().displayHeight)));
+			particles.add(new Particle(random.nextInt(displayWidth), random.nextInt(displayHeight)));
 	}
 }

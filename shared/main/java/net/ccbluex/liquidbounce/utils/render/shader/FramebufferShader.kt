@@ -5,8 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils.render.shader
 
-import net.minecraft.client.renderer.RenderHelper
-import net.minecraft.client.shader.Framebuffer
+import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL20
 import java.awt.Color
@@ -27,9 +26,9 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
 
 	fun startDraw(partialTicks: Float)
 	{
-		classProvider.getGlStateManager().enableAlpha()
-		classProvider.getGlStateManager().pushMatrix()
-		classProvider.getGlStateManager().pushAttrib()
+		classProvider.glStateManager.enableAlpha()
+		classProvider.glStateManager.pushMatrix()
+		classProvider.glStateManager.pushAttrib()
 
 		framebuffer = setupFrameBuffer(framebuffer).apply {
 			framebufferClear()
@@ -49,7 +48,7 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
 		GL11.glEnable(GL11.GL_BLEND)
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 
-		mc.framebuffer.bindFramebuffer(true)
+		mc.framebuffer?.bindFramebuffer(true)
 
 		red = color.red / 255.0f
 		green = color.green / 255.0f
@@ -60,7 +59,7 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
 		this.quality = quality
 
 		mc.entityRenderer.disableLightmap()
-		RenderHelper.disableStandardItemLighting()
+		functions.disableStandardItemLighting()
 
 		startShader()
 
@@ -71,29 +70,29 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
 		stopShader()
 
 		mc.entityRenderer.disableLightmap()
-		classProvider.getGlStateManager().popMatrix()
-		classProvider.getGlStateManager().popAttrib()
+		classProvider.glStateManager.popMatrix()
+		classProvider.glStateManager.popAttrib()
 	}
 
 	companion object
 	{
-		private var framebuffer: Framebuffer? = null
+		private var framebuffer: IFramebuffer? = null
 
 		/**
 		 * @param  frameBuffer
 		 * @return             frameBuffer
 		 * @author             TheSlowly
 		 */
-		fun setupFrameBuffer(frameBuffer: Framebuffer?): Framebuffer
+		fun setupFrameBuffer(frameBuffer: IFramebuffer?): IFramebuffer
 		{
 			frameBuffer?.deleteFramebuffer()
-			return Framebuffer(mc.displayWidth, mc.displayHeight, true)
+			return classProvider.createFramebuffer(mc.displayWidth, mc.displayHeight, true)
 		}
 
 		/**
 		 * @author TheSlowly
 		 */
-		fun drawFramebuffer(framebuffer: Framebuffer?)
+		fun drawFramebuffer(framebuffer: IFramebuffer?)
 		{
 			val scaledResolution = classProvider.createScaledResolution(mc)
 			GL11.glBindTexture(GL11.GL_TEXTURE_2D, (framebuffer ?: return).framebufferTexture)

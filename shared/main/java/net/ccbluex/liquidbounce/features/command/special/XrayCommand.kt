@@ -4,7 +4,6 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay
 import net.ccbluex.liquidbounce.file.FileManager
-import net.minecraft.block.Block
 
 class XrayCommand : Command("xray")
 {
@@ -134,7 +133,7 @@ class XrayCommand : Command("xray")
 
 			2 -> when (args[0].toLowerCase())
 			{
-				"add" -> return functions.getBlockRegistryKeys().asSequence().map { it.resourcePath.toLowerCase() }.filter { Block.getBlockFromName(it.toLowerCase()) != null }.filter { !xRay.xrayBlocks.contains(functions.getBlockFromName(it.toLowerCase())) }.filter { it.startsWith(args[1], true) }.toList()
+				"add" -> return functions.getBlockRegistryKeys().asSequence().map { it.resourcePath.toLowerCase() }.filter { functions.getBlockFromName(it.toLowerCase()) != null }.filter { !xRay.xrayBlocks.contains(functions.getBlockFromName(it.toLowerCase())) }.filter { it.startsWith(args[1], true) }.toList()
 				"remove" -> return functions.getBlockRegistryKeys().asSequence().map { it.resourcePath.toLowerCase() }.filter { xRay.xrayBlocks.contains(functions.getBlockFromName(it)) }.filter { it.startsWith(args[1], true) }.toList()
 				else -> emptyList()
 			}

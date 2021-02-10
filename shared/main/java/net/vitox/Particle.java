@@ -2,8 +2,9 @@ package net.vitox;
 
 import java.util.Random;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
+import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft;
+import net.ccbluex.liquidbounce.api.minecraft.util.IScaledResolution;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.vitox.particle.util.RenderUtils;
@@ -106,15 +107,15 @@ class Particle
 
 	void fall()
 	{
-		final Minecraft mc = Minecraft.getMinecraft();
-		final ScaledResolution scaledResolution = new ScaledResolution(mc);
+		final IMinecraft mc = LiquidBounce.wrapper.getMinecraft();
+		final IScaledResolution scaledResolution = LiquidBounce.wrapper.getClassProvider().createScaledResolution(mc);
 		y += ySpeed;
 		x += xSpeed;
 
-		if (y > mc.displayHeight)
+		if (y > mc.getDisplayHeight())
 			y = 1;
 
-		if (x > mc.displayWidth)
+		if (x > mc.getDisplayWidth())
 			x = 1;
 
 		if (x < 1)

@@ -29,8 +29,6 @@ import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.item.ItemSword
-import net.minecraft.item.ItemTool
 import kotlin.random.Random
 
 @ModuleInfo(name = "InventoryCleaner", description = "Automatically throws away useless items.", category = ModuleCategory.PLAYER)
@@ -266,7 +264,7 @@ class InventoryCleaner : Module()
 			{
 				val thePlayer = mc.thePlayer ?: return true
 
-				if ((item is ItemSword && keepOldSwordValue.get()) || (item is ItemTool && keepOldToolsValue.get())) return true
+				if ((classProvider.isItemSword(item) && keepOldSwordValue.get()) || (classProvider.isItemTool(item) && keepOldToolsValue.get())) return true
 
 				if (slot >= 36 && findBetterItem(slot - 36, thePlayer.inventory.getStackInSlot(slot - 36)) == slot - 36) return true
 

@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.client.renderer.GlStateManager
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.util.*
@@ -249,7 +248,7 @@ class SpeedGraph(
 		GL11.glEnable(GL11.GL_DEPTH_TEST)
 		GL11.glDepthMask(true)
 		GL11.glDisable(GL11.GL_BLEND)
-		GlStateManager.resetColor()
+		classProvider.glStateManager.resetColor()
 
 		return Border(0F, 0F, width.toFloat(), height + 2.0f)
 	}

@@ -30,7 +30,7 @@ import java.io.File
 interface IMinecraft
 {
 	val inGameHasFocus: Boolean
-	val framebuffer: IFramebuffer
+	val framebuffer: IFramebuffer?
 	val isFullScreen: Boolean
 	val dataDir: File
 	val debugFPS: Int

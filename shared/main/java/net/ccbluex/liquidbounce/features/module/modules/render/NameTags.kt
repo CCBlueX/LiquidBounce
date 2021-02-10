@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.renderer.GlStateManager.*
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.text.DecimalFormat
@@ -68,7 +67,9 @@ class NameTags : Module()
 		glEnable(GL_BLEND)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-		for (entity in mc.theWorld!!.loadedEntityList)
+		val theWorld = mc.theWorld ?: return
+
+		for (entity in theWorld.loadedEntityList)
 		{
 			if (!EntityUtils.isSelected(entity, false)) continue
 			if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
@@ -203,9 +204,10 @@ class NameTags : Module()
 				mc.renderItem.renderItemAndEffectIntoGUI(equipmentInSlot, -50 + index * 20, -22)
 			}
 
-			enableAlpha()
-			disableBlend()
-			enableTexture2D()
+			val glStateManager = classProvider.glStateManager
+			glStateManager.enableAlpha()
+			glStateManager.disableBlend()
+			glStateManager.enableTexture2D()
 		}
 
 		// Pop

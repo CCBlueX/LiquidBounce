@@ -187,7 +187,7 @@ class Arraylist(
 						RenderUtils.drawRect(xPos - xPosCorrection, yPos, x2Pos, yPos + textHeight, color)
 					}
 
-					classProvider.getGlStateManager().resetColor()
+					classProvider.glStateManager.resetColor()
 
 					// Draw Module Name
 					val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
@@ -282,7 +282,7 @@ class Arraylist(
 						RenderUtils.drawRect(0F, yPos, xPos + width + xPosCorrection, yPos + textHeight, color)
 					}
 
-					classProvider.getGlStateManager().resetColor()
+					classProvider.glStateManager.resetColor()
 
 					// Draw Module Name
 					val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)

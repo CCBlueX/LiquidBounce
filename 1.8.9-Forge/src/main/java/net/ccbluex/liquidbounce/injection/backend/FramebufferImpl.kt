@@ -11,7 +11,21 @@ import net.minecraft.client.shader.Framebuffer
 
 class FramebufferImpl(val wrapped: Framebuffer) : IFramebuffer
 {
+	override val framebufferTexture: Int
+		get() = wrapped.framebufferTexture
+
+	override var depthBuffer: Int
+		get() = wrapped.depthBuffer
+		set(value)
+		{
+			wrapped.depthBuffer = value
+		}
+
 	override fun bindFramebuffer(b: Boolean) = wrapped.bindFramebuffer(b)
+
+	override fun framebufferClear() = wrapped.framebufferClear()
+
+	override fun deleteFramebuffer() = wrapped.deleteFramebuffer()
 
 	override fun equals(other: Any?): Boolean = other is FramebufferImpl && other.wrapped == wrapped
 }

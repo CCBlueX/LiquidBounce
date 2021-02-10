@@ -31,8 +31,8 @@ import java.io.File
 
 class MinecraftImpl(val wrapped: Minecraft) : IMinecraft
 {
-	override val framebuffer: IFramebuffer
-		get() = wrapped.framebuffer.wrap()
+	override val framebuffer: IFramebuffer?
+		get() = wrapped.framebuffer?.wrap()
 	override val isFullScreen: Boolean
 		get() = wrapped.isFullScreen
 	override val dataDir: File

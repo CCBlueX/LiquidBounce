@@ -7,3 +7,8 @@
 package net.ccbluex.liquidbounce.api.minecraft.client.render.texture
 
 interface IAbstractTexture
+{
+	val glTextureId: Int
+
+	fun deleteGlTexture()
+}

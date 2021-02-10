@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.client.renderer.texture.TextureUtil
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.opengl.GL11
@@ -89,7 +88,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 		GL11.glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
 
 		if (loadingScreen) GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
-		else classProvider.getGlStateManager().bindTexture(textureID)
+		else classProvider.glStateManager.bindTexture(textureID)
 
 		val red: Float = (color shr 16 and 0xff) / 255F
 		val green: Float = (color shr 8 and 0xff) / 255F
@@ -138,7 +137,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 				GL11.glScalef(scale, scale, scale)
 
 				if (loadingScreen) GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
-				else classProvider.getGlStateManager().bindTexture(textureID)
+				else classProvider.glStateManager.bindTexture(textureID)
 
 				GL11.glColor4f(red, green, blue, alpha)
 
@@ -235,7 +234,9 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 
 		(startChar until stopChar).filter { fontImages[it] != null && charLocations[it] != null }.forEach { graphics2D.drawImage(fontImages[it], charLocations[it]!!.x, charLocations[it]!!.y, null) }
 
-		textureID = TextureUtil.uploadTextureImageAllocate(TextureUtil.glGenTextures(), bufferedImage, true, true)
+		val textureUtil = classProvider.textureUtil
+
+		textureID = textureUtil.uploadTextureImageAllocate(textureUtil.glGenTextures(), bufferedImage, true, true)
 	}
 
 	/**

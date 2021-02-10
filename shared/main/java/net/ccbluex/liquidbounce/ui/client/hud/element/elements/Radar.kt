@@ -131,7 +131,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 						val onScreenX = (currX - floor(currX).toLong() - 1 - x) * sc
 						val onScreenZ = (currZ - floor(currZ).toLong() - 1 - z) * sc
 
-						classProvider.getGlStateManager().bindTexture(currChunk.texture.glTextureId)
+						classProvider.glStateManager.bindTexture(currChunk.texture.glTextureId)
 
 						glBegin(GL_QUADS)
 
@@ -150,7 +150,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 				}
 			}
 
-			classProvider.getGlStateManager().bindTexture(0)
+			classProvider.glStateManager.bindTexture(0)
 
 			glDisable(GL_TEXTURE_2D)
 		}

@@ -7,20 +7,18 @@ package net.ccbluex.liquidbounce.ui.client.clickgui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI;
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.Element;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
-import net.minecraft.util.StringUtils;
+import net.ccbluex.liquidbounce.utils.misc.StringUtils;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public abstract class Panel extends MinecraftInstance
 {
-
 	private final String name;
 	public int x;
 	public int y;
@@ -87,14 +85,16 @@ public abstract class Panel extends MinecraftInstance
 		int count = 0;
 
 		for (final Element element : elements)
-			if (++count > scroll && count < scroll + maxElements + 1 && scroll < elements.size()) {
+			if (++count > scroll && count < scroll + maxElements + 1 && scroll < elements.size())
+			{
 				element.setLocation(x, y);
 				element.setWidth(width);
 				if (y <= this.y + fade)
 					element.drawScreen(mouseX, mouseY, button);
 				y += element.getHeight() + 1;
 				element.setVisible(true);
-			} else
+			}
+			else
 				element.setVisible(false);
 	}
 
@@ -258,6 +258,7 @@ public abstract class Panel extends MinecraftInstance
 	{
 		int height = 0;
 		int count = 0;
+
 		for (final Element element : elements)
 		{
 			if (count >= ((ClickGUI) LiquidBounce.moduleManager.getModule(ClickGUI.class)).getMaxElementsValue().get())

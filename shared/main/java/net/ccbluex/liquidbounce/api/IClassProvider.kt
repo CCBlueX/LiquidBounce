@@ -23,8 +23,10 @@ import net.ccbluex.liquidbounce.api.minecraft.client.render.WIImageBuffer
 import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.IDynamicTexture
 import net.ccbluex.liquidbounce.api.minecraft.client.render.vertex.IVertexFormat
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.texture.ITextureUtil
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexBuffer
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
+import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
 import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
@@ -50,6 +52,8 @@ interface IClassProvider
 {
 	val tessellatorInstance: ITessellator
 	val jsonToNBTInstance: IJsonToNBT
+	val glStateManager: IGlStateManager
+	val textureUtil: ITextureUtil
 
 	fun createResourceLocation(resourceName: String): IResourceLocation
 	fun createThreadDownloadImageData(cacheFileIn: File?, imageUrlIn: String, textureResourceLocation: IResourceLocation?, imageBufferIn: WIImageBuffer): IThreadDownloadImageData
@@ -62,6 +66,7 @@ interface IClassProvider
 	fun createGuiButton(id: Int, x: Int, y: Int, text: String): IGuiButton
 	fun createSession(name: String, uuid: String, accessToken: String, accountType: String): ISession
 	fun createDynamicTexture(image: BufferedImage): IDynamicTexture
+	fun createDynamicTexture(width: Int, height: Int): IDynamicTexture
 
 	fun createItem(): IItem
 	fun createItemStack(item: IItem, amount: Int, meta: Int): IItemStack
@@ -106,6 +111,7 @@ interface IClassProvider
 	fun createCPacketTabComplete(text: String): IPacket
 	fun createCPacketAnimation(): ICPacketAnimation
 	fun createCPacketKeepAlive(): ICPacketKeepAlive
+	fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer
 
 	fun isEntityAnimal(obj: Any?): Boolean
 	fun isEntitySquid(obj: Any?): Boolean
@@ -244,7 +250,6 @@ interface IClassProvider
 	fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer
 	fun wrapCreativeTab(name: String, wrappedCreativeTabs: WrappedCreativeTabs)
 	fun wrapGuiSlot(wrappedGuiSlot: WrappedGuiSlot, mc: IMinecraft, width: Int, height: Int, top: Int, bottom: Int, slotHeight: Int)
-	fun getGlStateManager(): IGlStateManager
 	fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket
 
 	fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean

@@ -7,12 +7,16 @@ package net.ccbluex.liquidbounce.utils.misc
 
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
+import org.jetbrains.annotations.Contract
+import java.util.regex.Pattern
 import kotlin.math.abs
 import kotlin.math.floor
 
 @SideOnly(Side.CLIENT)
 object StringUtils
 {
+	private val patternControlCode = Pattern.compile("(?i)\\u00A7[0-9A-FK-OR]")
+
 	@JvmStatic
 	fun toCompleteString(args: Array<String>, start: Int): String = if (args.size <= start) "" else args.copyOfRange(start, args.size).joinToString(separator = " ")
 
@@ -62,5 +66,12 @@ object StringUtils
 		val facings = arrayOf("+Z", "+X +Z", "+X", "+X -Z", "-Z", "-X -Z", "-Z", "-X +Z")
 
 		return facings[abs(floor(yaw * facings.size / 360 + 0.5)).toInt() and facings.size - 1]
+	}
+
+	@Contract("null -> null; !null ->!null")
+	@JvmStatic
+	fun stripControlCodes(text: String?): String?
+	{
+		return patternControlCode.matcher(text ?: return null).replaceAll("")
 	}
 }

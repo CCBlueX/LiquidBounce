@@ -12,6 +12,7 @@ import java.util.List;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer;
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager;
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI;
 import net.ccbluex.liquidbounce.ui.client.clickgui.Panel;
@@ -23,10 +24,9 @@ import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.ui.font.Fonts.FontInfo;
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
+import net.ccbluex.liquidbounce.utils.misc.StringUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.ccbluex.liquidbounce.value.*;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.StringUtils;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -59,14 +59,14 @@ public class LiquidBounceStyle extends Style
 		final int textWidth = Fonts.font35.getStringWidth(text);
 
 		RenderUtils.drawBorderedRect(mouseX + 9, mouseY, mouseX + textWidth + 14, mouseY + Fonts.font35.getFontHeight() + 3, 1, new Color(255, 255, 255, 90).getRGB(), Integer.MIN_VALUE);
-		GlStateManager.resetColor();
+		classProvider.getGlStateManager().resetColor();
 		Fonts.font35.drawString(text, mouseX + 12, mouseY + Fonts.font35.getFontHeight() / 2, Integer.MAX_VALUE);
 	}
 
 	@Override
 	public void drawButtonElement(final int mouseX, final int mouseY, final ButtonElement buttonElement)
 	{
-		GlStateManager.resetColor();
+		classProvider.getGlStateManager().resetColor();
 		Fonts.font35.drawString(buttonElement.getDisplayName(), (int) (buttonElement.getX() - (Fonts.font35.getStringWidth(buttonElement.getDisplayName()) - 100.0f) / 2.0f), buttonElement.getY() + 6, buttonElement.getColor());
 	}
 
@@ -74,7 +74,8 @@ public class LiquidBounceStyle extends Style
 	public void drawModuleElement(final int mouseX, final int mouseY, final ModuleElement moduleElement)
 	{
 		final int guiColor = ClickGUI.generateColor().getRGB();
-		GlStateManager.resetColor();
+		final IGlStateManager glStateManager = classProvider.getGlStateManager();
+		glStateManager.resetColor();
 		Fonts.font35.drawString(moduleElement.getDisplayName(), (int) (moduleElement.getX() - (Fonts.font35.getStringWidth(moduleElement.getDisplayName()) - 100.0f) / 2.0f), moduleElement.getY() + 6, moduleElement.getModule().getState() ? guiColor : Integer.MAX_VALUE);
 
 		final List<Value<?>> moduleValues = moduleElement.getModule().getValues();
@@ -112,7 +113,7 @@ public class LiquidBounceStyle extends Style
 								mc.getSoundHandler().playSound("gui.button.press", 1.0F);
 							}
 
-						GlStateManager.resetColor();
+						glStateManager.resetColor();
 						Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, ((BoolValue) value).get() ? guiColor : Integer.MAX_VALUE);
 						yPos += 12;
 					}
@@ -127,7 +128,7 @@ public class LiquidBounceStyle extends Style
 							moduleElement.setSettingsWidth(textWidth + 16);
 
 						RenderUtils.drawRect(moduleElement.getX() + moduleElement.getWidth() + 4, yPos + 2, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 14, Integer.MIN_VALUE);
-						GlStateManager.resetColor();
+						glStateManager.resetColor();
 						Fonts.font35.drawString("\u00A7c" + text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
 						Fonts.font35.drawString(listValue.openList ? "-" : "+", (int) (moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() - (listValue.openList ? 5 : 6)), yPos + 4, 0xffffff);
 
@@ -158,7 +159,7 @@ public class LiquidBounceStyle extends Style
 										mc.getSoundHandler().playSound("gui.button.press", 1.0F);
 									}
 
-								GlStateManager.resetColor();
+								glStateManager.resetColor();
 								Fonts.font35.drawString(">", moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, Integer.MAX_VALUE);
 								Fonts.font35.drawString(valueOfList, moduleElement.getX() + moduleElement.getWidth() + 14, yPos + 4, listValue.get() != null && listValue.get().equalsIgnoreCase(valueOfList) ? guiColor : Integer.MAX_VALUE);
 								yPos += 12;
@@ -186,7 +187,7 @@ public class LiquidBounceStyle extends Style
 								floatValue.set(round((float) (floatValue.getMinimum() + (floatValue.getMaximum() - floatValue.getMinimum()) * d)).floatValue());
 							}
 
-						GlStateManager.resetColor();
+						glStateManager.resetColor();
 						Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
 						yPos += 22;
 					}
@@ -211,7 +212,7 @@ public class LiquidBounceStyle extends Style
 								integerValue.set((int) (integerValue.getMinimum() + (integerValue.getMaximum() - integerValue.getMinimum()) * d));
 							}
 
-						GlStateManager.resetColor();
+						glStateManager.resetColor();
 						Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
 						yPos += 22;
 					}
@@ -298,7 +299,7 @@ public class LiquidBounceStyle extends Style
 							moduleElement.setSettingsWidth(textWidth + 8);
 
 						RenderUtils.drawRect(moduleElement.getX() + moduleElement.getWidth() + 4, yPos + 2, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 14, Integer.MIN_VALUE);
-						GlStateManager.resetColor();
+						glStateManager.resetColor();
 						Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
 						yPos += 12;
 					}

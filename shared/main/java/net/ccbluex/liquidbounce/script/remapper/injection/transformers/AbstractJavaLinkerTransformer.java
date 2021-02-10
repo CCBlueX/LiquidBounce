@@ -24,7 +24,6 @@ import org.objectweb.asm.tree.VarInsnNode;
  */
 public class AbstractJavaLinkerTransformer implements IClassTransformer
 {
-
 	/**
 	 * Transform a class
 	 *

@@ -11,6 +11,11 @@ import net.minecraft.client.renderer.texture.AbstractTexture
 
 open class AbstractTextureImpl<out T : AbstractTexture>(val wrapped: T) : IAbstractTexture
 {
+	override val glTextureId: Int
+		get() = wrapped.glTextureId
+
+	override fun deleteGlTexture() = wrapped.deleteGlTexture()
+
 	override fun equals(other: Any?): Boolean = other is AbstractTextureImpl<*> && other.wrapped == wrapped
 }
 

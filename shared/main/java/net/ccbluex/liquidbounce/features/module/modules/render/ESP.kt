@@ -92,7 +92,7 @@ class ESP : Module()
 			GL11.glDisable(GL11.GL_DEPTH_TEST)
 			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 
-			classProvider.getGlStateManager().enableTexture2D()
+			classProvider.glStateManager.enableTexture2D()
 
 			GL11.glDepthMask(true)
 			GL11.glLineWidth(real2DWidth.get())

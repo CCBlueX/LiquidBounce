@@ -114,6 +114,8 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 	override fun setActiveTextureLightMapTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
 	override fun setActiveTextureDefaultTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
 	override fun getHorizontalFacing(yaw: Float): IEnumFacing = EnumFacing.getHorizontal(MathHelper.floor_double((yaw * 4.0 / 360.0) + 0.5) and 3).wrap()
+	override fun getLightMapTexUnit(): Int = OpenGlHelper.lightmapTexUnit
+	override fun setLightmapTextureCoords(target: Int, j: Float, k: Float) = OpenGlHelper.setLightmapTextureCoords(target, j, k)
 
 	override fun cos(radians: Float): Float = MathHelper.cos(radians)
 	override fun sin(radians: Float): Float = MathHelper.sin(radians)

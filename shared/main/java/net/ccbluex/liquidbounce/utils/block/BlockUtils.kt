@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.block.BlockSnow
 import kotlin.math.floor
 
 typealias Collidable = (IBlock?) -> Boolean
@@ -39,7 +38,7 @@ object BlockUtils : MinecraftInstance()
 	fun isReplaceable(bs: IIBlockState?): Boolean
 	{
 		bs ?: return true
-		return bs.block.getMaterial(bs)!!.isReplaceable && !(bs.block is BlockSnow && bs.block.getBlockBoundsMaxY() > .125)
+		return bs.block.getMaterial(bs)!!.isReplaceable && !(classProvider.isBlockSnow(bs.block) && bs.block.getBlockBoundsMaxY() > .125)
 	}
 
 	/**

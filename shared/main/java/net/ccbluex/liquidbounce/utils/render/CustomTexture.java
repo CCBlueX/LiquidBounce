@@ -8,7 +8,8 @@ package net.ccbluex.liquidbounce.utils.render;
 
 import java.awt.image.BufferedImage;
 
-import net.minecraft.client.renderer.texture.TextureUtil;
+import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.texture.ITextureUtil;
 
 import org.lwjgl.opengl.GL11;
 
@@ -33,8 +34,10 @@ public final class CustomTexture
 		if (unloaded)
 			throw new IllegalStateException("Texture unloaded");
 
+		final ITextureUtil textureUtil = LiquidBounce.wrapper.getClassProvider().getTextureUtil();
+
 		if (textureId == -1)
-			textureId = TextureUtil.uploadTextureImageAllocate(TextureUtil.glGenTextures(), image, true, true);
+			textureId = textureUtil.uploadTextureImageAllocate(textureUtil.glGenTextures(), image, true, true);
 
 		return textureId;
 	}

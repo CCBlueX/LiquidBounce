@@ -180,7 +180,7 @@ class BugUp : Module()
 
 		RenderUtils.renderNameTag("${fallDistance}m (~${max(0, fallDistance - 3)} damage)", x + 0.5, y + 1.7, z + 0.5)
 
-		classProvider.getGlStateManager().resetColor()
+		classProvider.glStateManager.resetColor()
 	}
 
 	@EventTarget

@@ -420,9 +420,9 @@ object RenderUtils : MinecraftInstance()
 	@JvmStatic
 	private fun drawCircle(x: Float, y: Float, radius: Float, start: Int, end: Int)
 	{
-		classProvider.getGlStateManager().enableBlend()
-		classProvider.getGlStateManager().disableTexture2D()
-		classProvider.getGlStateManager().tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+		classProvider.glStateManager.enableBlend()
+		classProvider.glStateManager.disableTexture2D()
+		classProvider.glStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
 
 		glColor(Color.WHITE)
 
@@ -443,8 +443,8 @@ object RenderUtils : MinecraftInstance()
 		GL11.glEnd()
 
 		GL11.glDisable(GL11.GL_LINE_SMOOTH)
-		classProvider.getGlStateManager().enableTexture2D()
-		classProvider.getGlStateManager().disableBlend()
+		classProvider.glStateManager.enableTexture2D()
+		classProvider.glStateManager.disableBlend()
 	}
 
 	@JvmStatic

@@ -211,7 +211,7 @@ class Effects(
 						RenderUtils.drawRect(0F, yPos, xPos + width + xPosCorrection, yPos + textHeight, backgroundColor)
 					}
 
-					classProvider.getGlStateManager().resetColor()
+					classProvider.glStateManager.resetColor()
 
 					// Draw String
 					RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {

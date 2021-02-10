@@ -69,7 +69,7 @@ class BlockOverlay : Module()
 		val rainbowSpeed = rainbowSpeedValue.get()
 		val color = if (colorRainbow.get()) rainbow(alpha = alpha / 255.0F, speed = rainbowSpeed, saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
 
-		val glStateManager = classProvider.getGlStateManager()
+		val glStateManager = classProvider.glStateManager
 
 		glStateManager.enableBlend()
 		glStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
@@ -111,7 +111,7 @@ class BlockOverlay : Module()
 
 			RenderUtils.drawBorderedRect(scaledResolution.scaledWidth / 2 - 2F, scaledResolution.scaledHeight / 2 + 5F, scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2F, scaledResolution.scaledHeight / 2 + 16F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
 
-			classProvider.getGlStateManager().resetColor()
+			classProvider.glStateManager.resetColor()
 			Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2f, scaledResolution.scaledHeight / 2f + 7f, 0xffffff, false)
 		}
 	}
