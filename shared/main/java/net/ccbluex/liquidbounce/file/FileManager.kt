@@ -220,7 +220,7 @@ class FileManager : MinecraftInstance()
 				catch (t: Throwable)
 				{
 					// TODO: Create Back-up
-					logger.error("[FileManager] Failed to save config file: \"{}\". A back-up created with name \"{}\".", config.file.name, t)
+					logger.error("[FileManager] Failed to save config file: \"{}\".", config.file.name, t)
 				}
 			}
 		}

@@ -20,7 +20,7 @@ class Config
 
 	constructor(config: String)
 	{
-		jsonArray = Gson().fromJson(config, JsonArray::class.java)
+		jsonArray = Gson().fromJson(config, JsonArray::class.java) ?: throw IllegalStateException("Config $config seems empty or broken")
 	}
 
 	constructor(hud: HUD)

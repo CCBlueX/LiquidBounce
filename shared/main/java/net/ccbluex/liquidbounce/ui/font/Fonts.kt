@@ -126,12 +126,12 @@ object Fonts : MinecraftInstance()
 
 			if (fontRenderer is IFontRenderer)
 			{
-				val fontDetails = field.getAnnotation(FontDetails::class.java)
+				val fontDetails = field.getAnnotation(FontDetails::class.java) ?: continue
 
 				if (fontDetails.fontName == name && fontDetails.fontSize == size) return fontRenderer
 			}
 		}
-		catch (e: IllegalAccessException)
+		catch (e: Exception)
 		{
 			logger.error("Unexpected exception occurred while reading details about default fonts declared in Fonts.class", e)
 		}
@@ -149,12 +149,12 @@ object Fonts : MinecraftInstance()
 
 			if (fieldValue == fontRenderer)
 			{
-				val fontDetails = field.getAnnotation(FontDetails::class.java)
+				val fontDetails = field.getAnnotation(FontDetails::class.java) ?: continue
 
 				return FontInfo(fontDetails.fontName, fontDetails.fontSize)
 			}
 		}
-		catch (e: IllegalAccessException)
+		catch (e: Exception)
 		{
 			logger.error("Unexpected exception occurred while reading details about default fonts declared in Fonts.class", e)
 		}
