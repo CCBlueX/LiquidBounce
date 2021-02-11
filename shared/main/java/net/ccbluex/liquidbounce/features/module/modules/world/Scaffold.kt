@@ -632,7 +632,7 @@ class Scaffold : Module()
 		var sameY = false
 		if (sameYValue.get() && launchY != -999)
 		{
-			pos = WBlockPos(thePlayer.posX, launchY + 1.0, thePlayer.posZ)
+			pos = WBlockPos(thePlayer.posX, launchY - 1.0, thePlayer.posZ)
 			sameY = true
 		}
 
@@ -668,8 +668,12 @@ class Scaffold : Module()
 		var clutching = false
 		if (fallStartY - thePlayer.posY > 2) // Clutch while falling
 		{
-			searchPosition = WBlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY - 1.5, thePlayer.posZ)
-			state = "Clutch"
+			val mx = thePlayer.motionX.coerceAtLeast(-2.5).coerceAtMost(2.5)
+			val my = thePlayer.motionY.coerceAtLeast(-2.5).coerceAtMost(0.0)
+			val mz = thePlayer.motionZ.coerceAtLeast(-2.5).coerceAtMost(2.5)
+
+			searchPosition = WBlockPos(thePlayer.posX + mx, thePlayer.entityBoundingBox.minY + my, thePlayer.posZ + mz).down() // Predict position and clutch
+			state = "Clutch based at motion $mx $my $mz"
 			clutching = true
 		}
 		else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundBlockBB.maxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY < groundBlockBB.maxY - groundBlockBB.minY)

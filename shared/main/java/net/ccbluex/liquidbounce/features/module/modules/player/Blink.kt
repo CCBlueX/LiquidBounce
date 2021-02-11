@@ -191,7 +191,7 @@ class Blink : Module()
 
 		try
 		{
-			while (!packets.isEmpty()) mc.netHandler.networkManager.sendPacketWithoutEvent(packets.take())
+			while (packets.isNotEmpty()) mc.netHandler.networkManager.sendPacketWithoutEvent(packets.take())
 		}
 		catch (e: Exception)
 		{

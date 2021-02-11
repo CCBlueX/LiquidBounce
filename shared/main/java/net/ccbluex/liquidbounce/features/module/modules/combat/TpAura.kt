@@ -119,6 +119,13 @@ class TpAura : Module()
 	override fun onDisable()
 	{
 		currentTargets.clear()
+
+		if (serverSideBlockingStatus)
+		{
+			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+			serverSideBlockingStatus = false
+		}
+
 		clientSideBlockingStatus = false
 	}
 
@@ -192,6 +199,12 @@ class TpAura : Module()
 		}
 		else
 		{
+			if (serverSideBlockingStatus)
+			{
+				mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+				serverSideBlockingStatus = false
+			}
+
 			clientSideBlockingStatus = false
 			currentTarget = null
 		}

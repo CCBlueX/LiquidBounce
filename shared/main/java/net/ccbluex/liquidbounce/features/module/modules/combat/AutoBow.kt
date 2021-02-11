@@ -28,7 +28,7 @@ class AutoBow : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val bowAimbot = LiquidBounce.moduleManager[BowAimbot::class.java] as BowAimbot
 
-		if (thePlayer.isUsingItem && classProvider.isItemBow(thePlayer.heldItem?.item) && thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot.get() || !bowAimbot.state || bowAimbot.hasTarget()))
+		if (thePlayer.isUsingItem && classProvider.isItemBow(thePlayer.heldItem?.item) && thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot.get() || !bowAimbot.state || bowAimbot.hasTarget(thePlayer)))
 		{
 			thePlayer.stopUsingItem()
 			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))

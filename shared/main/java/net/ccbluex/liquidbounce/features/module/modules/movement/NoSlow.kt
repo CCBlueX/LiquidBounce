@@ -62,10 +62,10 @@ class NoSlow : Module()
 
 		if (!thePlayer.isBlocking && !aura.serverSideBlockingStatus && !tpaura.serverSideBlockingStatus) return
 
-		val netHandler = mc.netHandler
-
 		if (ncpValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8 && ncpDelay.hasTimePassed(ncpPacketsDelayValue.get()))
 		{
+			val netHandler = mc.netHandler
+
 			when (event.eventState)
 			{
 				EventState.PRE -> netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), classProvider.getEnumFacing(EnumFacingType.DOWN)))

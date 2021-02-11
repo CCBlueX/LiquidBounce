@@ -179,6 +179,9 @@ class KillAura : Module()
 	private val hitboxDecrementValue = FloatValue("EnemyHitboxDecrement", 0.2f, 0.15f, 0.45f)
 	private val centerSearchSensitivityValue = FloatValue("SearchCenterSensitivity", 0.2f, 0.15f, 0.25f)
 
+	/**
+	 * Keep Rotation
+	 */
 	private val keepRotationValue = BoolValue("KeepRotation", false)
 	private val minKeepRotationTicksValue: IntegerValue = object : IntegerValue("MinKeepRotationTicks", 20, 0, 50)
 	{
@@ -197,44 +200,49 @@ class KillAura : Module()
 		}
 	}
 
-	// Aim Smoothing
-	private val maxAccelerationRatio: FloatValue = object : FloatValue("MaxAccelerationRatio", 0f, 0f, .99f)
+	/**
+	 * Acceleration
+	 */
+	private val maxAccelerationRatioValue: FloatValue = object : FloatValue("MaxAccelerationRatio", 0f, 0f, .99f)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
-			val v = minAccelerationRatio.get()
+			val v = minAccelerationRatioValue.get()
 			if (v > newValue) this.set(v)
 		}
 	}
-	private val minAccelerationRatio: FloatValue = object : FloatValue("MinAccelerationRatio", 0f, 0f, .99f)
+	private val minAccelerationRatioValue: FloatValue = object : FloatValue("MinAccelerationRatio", 0f, 0f, .99f)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
-			val v = maxAccelerationRatio.get()
+			val v = maxAccelerationRatioValue.get()
 			if (v < newValue) this.set(v)
 		}
 	}
 
-	// Attack Turn Speed
-	private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 0f, 180f)
+	/**
+	 * TurnSpeed
+	 */
+	private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 0f, 180f)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
-			val v = minTurnSpeed.get()
+			val v = minTurnSpeedValue.get()
 			if (v > newValue) set(v)
 		}
 	}
-
-	private val minTurnSpeed: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 0f, 180f)
+	private val minTurnSpeedValue: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 0f, 180f)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
-			val v = maxTurnSpeed.get()
+			val v = maxTurnSpeedValue.get()
 			if (v < newValue) set(v)
 		}
 	}
 
-	// Reset Turn Speed
+	/**
+	 * Rotation Reset TurnSpeed
+	 */
 	private val maxResetTurnSpeed: FloatValue = object : FloatValue("MaxRotationResetSpeed", 180f, 20f, 180f)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
@@ -252,40 +260,70 @@ class KillAura : Module()
 		}
 	}
 
+	/**
+	 * Rotation strafe (to bypass AAC4)
+	 */
 	private val rotationStrafeValue = ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off")
 
+	/**
+	 * Field of View
+	 */
 	private val fovValue = FloatValue("FoV", 180f, 0f, 180f)
 	private val fovModeValue = ListValue("FoVMode", arrayOf("ServerRotation", "ClientRotation"), "ClientRotation")
 
-	// Predict
+	/**
+	 * Target Predict
+	 */
 	private val predictValue = BoolValue("Predict", true)
-	private val playerPredictValue = BoolValue("PlayerPredict", true)
-
-	private val maxPredictSize: FloatValue = object : FloatValue("MaxPredictSize", 1f, -5f, 5f)
+	private val maxPredictSizeValue: FloatValue = object : FloatValue("MaxPredictSize", 1f, -2f, 2f)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
-			val v = minPredictSize.get()
+			val v = minPredictSizeValue.get()
 			if (v > newValue) set(v)
 		}
 	}
-
-	private val minPredictSize: FloatValue = object : FloatValue("MinPredictSize", 1f, -5f, 5f)
+	private val minPredictSizeValue: FloatValue = object : FloatValue("MinPredictSize", 1f, -2f, 2f)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
-			val v = maxPredictSize.get()
+			val v = maxPredictSizeValue.get()
 			if (v < newValue) set(v)
 		}
 	}
 
-	// Bypass
+	/**
+	 * Player Predict
+	 */
+	private val playerPredictValue = BoolValue("PlayerPredict", true)
+	private val maxPlayerPredictSizeValue: FloatValue = object : FloatValue("MaxPlayerPredictSize", 1f, -2f, 2f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = minPlayerPredictSizeValue.get()
+			if (v > newValue) set(v)
+		}
+	}
+	private val minPlayerPredictSizeValue: FloatValue = object : FloatValue("MinPlayerPredictSize", 1f, -2f, 2f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = maxPlayerPredictSizeValue.get()
+			if (v < newValue) set(v)
+		}
+	}
+
+	/**
+	 * Bypass
+	 */
 	private val failRateValue = FloatValue("FailRate", 0f, 0f, 100f)
 	private val noInventoryAttackValue = BoolValue("NoInvAttack", false)
 	private val noInventoryDelayValue = IntegerValue("NoInvDelay", 200, 0, 500)
 	private val limitedMultiTargetsValue = IntegerValue("LimitedMultiTargets", 0, 0, 50)
 
-	// Visuals
+	/**
+	 * Visual
+	 */
 	private val markValue = BoolValue("Mark", true)
 	private val fakeSharpValue = BoolValue("FakeSharp", true)
 	private val particles = IntegerValue("Particles", 1, 0, 10)
@@ -380,7 +418,7 @@ class KillAura : Module()
 			currentTarget ?: return
 
 			// Update hitable
-			updateHitable(theWorld)
+			updateHitable(theWorld, thePlayer)
 
 			// Delayed-AutoBlock
 			if (autoBlockValue.get().equals("AfterTick", true) && canBlock && currentTarget != null) startBlocking(currentTarget, interactAutoBlockValue.get() && hitable)
@@ -570,7 +608,7 @@ class KillAura : Module()
 
 		if (target == null || movedEntity != currentTarget) return
 
-		updateHitable(mc.theWorld ?: return)
+		updateHitable(mc.theWorld ?: return, mc.thePlayer ?: return)
 	}
 
 	/**
@@ -661,6 +699,9 @@ class KillAura : Module()
 		val hurtTime = hurtTimeValue.get()
 		val fov = fovValue.get()
 		val switchMode = targetModeValue.get().equals("Switch", ignoreCase = true)
+		val playerPredict = playerPredictValue.get()
+		val minPlayerPredictSize = minPlayerPredictSizeValue.get()
+		val maxPlayerPredictSize = maxPlayerPredictSizeValue.get()
 
 		// Find possible targets
 		val targets = mutableListOf<IEntityLivingBase>()
@@ -673,8 +714,8 @@ class KillAura : Module()
 			val distance = thePlayer.getDistanceToEntityBox(entity)
 			val entityFov = when (fovModeValue.get())
 			{
-				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity)
-				else -> RotationUtils.getClientRotationDifference(thePlayer, entity)
+				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
+				else -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
 			}
 
 			if (fov == 180F || entityFov <= fov)
@@ -691,8 +732,8 @@ class KillAura : Module()
 			val distance = thePlayer.getDistanceToEntityBox(entity)
 			val entityFov = when (fovModeValue.get())
 			{
-				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity)
-				else -> RotationUtils.getClientRotationDifference(thePlayer, entity)
+				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
+				else -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
 			}
 
 			if ((fov == 180F || entityFov <= fov) && distance <= maxTargetRange && entity.asEntityLivingBase().hurtTime <= hurtTime) targets.add(entity.asEntityLivingBase())
@@ -721,16 +762,16 @@ class KillAura : Module()
 			{
 
 				// Sort by server-sided rotation difference
-				targets.sortBy { RotationUtils.getServerRotationDifference(thePlayer, it) }
-				abTargets.sortBy { RotationUtils.getServerRotationDifference(thePlayer, it) }
+				targets.sortBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
+				abTargets.sortBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
 			}
 
 			"clientdirection" ->
 			{
 
 				// Sort by client-sided rotation difference
-				targets.sortBy { RotationUtils.getClientRotationDifference(thePlayer, it) }
-				abTargets.sortBy { RotationUtils.getClientRotationDifference(thePlayer, it) }
+				targets.sortBy { RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
+				abTargets.sortBy { RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
 			}
 
 			"livingtime" ->
@@ -813,45 +854,91 @@ class KillAura : Module()
 	 */
 	private fun updateRotations(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, entity: IEntity): Boolean
 	{
-		var boundingBox = entity.entityBoundingBox
+		var targetBox = entity.entityBoundingBox
 
 		// Entity movement predict
-		if (predictValue.get()) boundingBox = boundingBox.offset(
-			(entity.posX - entity.prevPosX - (thePlayer.posX - thePlayer.prevPosX)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()), (entity.posY - entity.prevPosY - (thePlayer.posY - thePlayer.prevPosY)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()), (entity.posZ - entity.prevPosZ - (thePlayer.posZ - thePlayer.prevPosZ)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get())
-		)
+		if (predictValue.get())
+		{
+			val minPredictSize = minPredictSizeValue.get()
+			val maxPredictSize = maxPredictSizeValue.get()
 
-		val (_, rotation) = RotationUtils.searchCenter(
-			theWorld, thePlayer, boundingBox, when
-			{
-				lockCenterValue.get() -> RotationUtils.SearchCenterMode.LOCK_CENTER
-				outborderValue.get() && !attackTimer.hasTimePassed(attackDelay / 2) -> RotationUtils.SearchCenterMode.OUT_BORDER
-				randomCenterValue.get() -> RotationUtils.SearchCenterMode.RANDOM_GOOD_CENTER
-				else -> RotationUtils.SearchCenterMode.SEARCH_GOOD_CENTER
-			}, jitterValue.get() && (thePlayer.getDistanceToEntityBox(entity) <= min(maxAttackRange, if (fakeSwingValue.get()) swingRange else Float.MAX_VALUE)), RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get()), playerPredictValue.get(), thePlayer.getDistanceToEntityBox(entity) <= throughWallsRangeValue.get(), /* maxAttackRange */
-			aimRange, hitboxDecrementValue.get().toDouble(), centerSearchSensitivityValue.get().toDouble()
-		) ?: return false
+			val xPredict = (entity.posX - entity.prevPosX - (thePlayer.posX - thePlayer.prevPosX)) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
+			val yPredict = (entity.posY - entity.prevPosY - (thePlayer.posY - thePlayer.prevPosY)) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
+			val zPredict = (entity.posZ - entity.prevPosZ - (thePlayer.posZ - thePlayer.prevPosZ)) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
+
+			targetBox = targetBox.offset(xPredict, yPredict, zPredict)
+		}
+
+		// Rotation Mode
+		val mode = when
+		{
+			lockCenterValue.get() -> RotationUtils.SearchCenterMode.LOCK_CENTER
+			outborderValue.get() && !attackTimer.hasTimePassed(attackDelay / 2) -> RotationUtils.SearchCenterMode.OUT_BORDER
+			randomCenterValue.get() -> RotationUtils.SearchCenterMode.RANDOM_GOOD_CENTER
+			else -> RotationUtils.SearchCenterMode.SEARCH_GOOD_CENTER
+		}
+
+		// Jitter
+		val jitterEnabled = jitterValue.get() && (thePlayer.getDistanceToEntityBox(entity) <= min(maxAttackRange, if (fakeSwingValue.get()) swingRange else Float.MAX_VALUE))
+		val jitterYawRate = jitterRateYaw.get()
+		val jitterPitchRate = jitterRatePitch.get()
+		val jitterMinYaw = minYawJitterStrengthValue.get()
+		val jitterMaxYaw = maxYawJitterStrengthValue.get()
+		val jitterMinPitch = minPitchJitterStrengthValue.get()
+		val jitterMaxPitch = maxPitchJitterStrengthValue.get()
+		val jitterData = RotationUtils.JitterData(jitterYawRate, jitterPitchRate, jitterMinYaw, jitterMaxYaw, jitterMinPitch, jitterMaxPitch)
+
+		val canAttackThroughWalls = thePlayer.getDistanceToEntityBox(entity) <= throughWallsRangeValue.get()
+		val hitboxDecrement = hitboxDecrementValue.get().toDouble()
+		val searchSensitivity = centerSearchSensitivityValue.get().toDouble()
+
+		// Player Predict
+		val playerPrediction = playerPredictValue.get()
+		val minPlayerPredictSize = minPlayerPredictSizeValue.get()
+		val maxPlayerPredictSize = maxPlayerPredictSizeValue.get()
+
+		// Search
+		val (_, rotation) = RotationUtils.searchCenter(theWorld, thePlayer, targetBox, mode, jitterEnabled, jitterData, playerPrediction, minPlayerPredictSize, maxPlayerPredictSize, canAttackThroughWalls, aimRange, hitboxDecrement, searchSensitivity) ?: return false
 
 		fakeYaw = rotation.yaw
 		fakePitch = rotation.pitch
 
-		if (maxTurnSpeed.get() <= 0F || !rotationsValue.get()) return true
+		val maxTurnSpeed = maxTurnSpeedValue.get()
+		val minTurnSpeed = minTurnSpeedValue.get()
 
-		// Smooth aim
-		val turnSpeed = (Random.nextFloat() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get())
-		val acceleration = (Random.nextFloat() * (maxAccelerationRatio.get() - minAccelerationRatio.get()) + minAccelerationRatio.get())
+		if (!rotationsValue.get() || maxTurnSpeed <= 0F) return true
+
+		// Limit TurnSpeed
+		val turnSpeed = minTurnSpeed + (maxTurnSpeed - minTurnSpeed) * Random.nextFloat()
+
+		// Acceleration
+		val maxAcceleration = maxAccelerationRatioValue.get()
+		val minAcceleration = minAccelerationRatioValue.get()
+		val acceleration = minAcceleration + (maxAcceleration - minAcceleration) * Random.nextFloat()
 
 		val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation, turnSpeed, acceleration)
 
 		fakeYaw = limitedRotation.yaw
 		fakePitch = limitedRotation.pitch
 
-		if (silentRotationValue.get()) RotationUtils.setTargetRotation(
-			limitedRotation, if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get()
-			else minKeepRotationTicksValue.get() + Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get())
+		if (silentRotationValue.get())
+		{
+			val keepLength = if (keepRotationValue.get())
+			{
+				val maxKeepLength = maxKeepRotationTicksValue.get()
+				val minKeepLength = minKeepRotationTicksValue.get()
+
+				if (maxKeepLength == minKeepLength) maxKeepLength else minKeepLength + Random.nextInt(maxKeepLength - minKeepLength)
+			}
 			else 0
-		)
+
+			RotationUtils.setTargetRotation(limitedRotation, keepLength)
+		}
 		else limitedRotation.applyRotationToPlayer(thePlayer)
-		RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
+
+		val maxResetSpeed = maxResetTurnSpeed.get().coerceAtLeast(20F)
+		val minResetSpeed = minResetTurnSpeed.get().coerceAtLeast(20F)
+		RotationUtils.setNextResetTurnSpeed(minResetSpeed, maxResetSpeed)
 
 		return true
 	}
@@ -859,16 +946,16 @@ class KillAura : Module()
 	/**
 	 * Check if enemy is hitable with current rotations
 	 */
-	private fun updateHitable(theWorld: IWorldClient)
+	private fun updateHitable(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
-		if (!rotationsValue.get() || maxTurnSpeed.get() <= 0F) // Disable hitable check if turn speed is zero
+		if (!rotationsValue.get() || maxTurnSpeedValue.get() <= 0F) // Disable hitable check if turn speed is zero
 		{
 			hitable = true
 			return
 		}
 
-		val multi = targetModeValue.get().equals("Multi", ignoreCase = true)
-		val reach = min(maxAttackRange.toDouble(), (mc.thePlayer ?: return).getDistanceToEntityBox(target!!)) + 1
+		val multiaura = targetModeValue.get().equals("Multi", ignoreCase = true)
+		val reach = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(target!!)) + 1
 
 		if (raycastValue.get())
 		{
@@ -876,11 +963,11 @@ class KillAura : Module()
 			{
 				override fun canRaycast(entity: IEntity?): Boolean
 				{
-					return (!livingRaycastValue.get() || (classProvider.isEntityLivingBase(entity) && !classProvider.isEntityArmorStand(entity))) && (EntityUtils.isEnemy(
-						entity, aacValue.get()
-					) || raycastIgnoredValue.get() || aacValue.get() && theWorld.getEntitiesWithinAABBExcludingEntity(
-						entity, entity!!.entityBoundingBox
-					).isNotEmpty())
+					val aac = aacValue.get()
+					val livingRaycast = livingRaycastValue.get()
+					val raycastIgnored = raycastIgnoredValue.get()
+
+					return (!livingRaycast || (classProvider.isEntityLivingBase(entity) && !classProvider.isEntityArmorStand(entity))) && (EntityUtils.isEnemy(entity, aac) || raycastIgnored || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity!!.entityBoundingBox).isNotEmpty())
 				}
 			})
 
@@ -888,7 +975,7 @@ class KillAura : Module()
 
 			hitable = currentTarget == raycastedEntity
 		}
-		else hitable = if (currentTarget != null) if (multi) (mc.thePlayer ?: return).getDistanceToEntityBox(currentTarget!!) <= (reach - 1) else RotationUtils.isFaced(currentTarget, reach) else false
+		else hitable = if (currentTarget != null) if (multiaura) thePlayer.getDistanceToEntityBox(currentTarget!!) <= (reach - 1) else RotationUtils.isFaced(currentTarget, reach) else false
 	}
 
 	/**

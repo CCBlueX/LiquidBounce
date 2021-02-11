@@ -8,8 +8,10 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.network;
 import java.awt.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.DecimalFormat;
 import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Locale;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EntityMovementEvent;
@@ -81,12 +83,12 @@ public abstract class MixinNetHandlerPlayClient
 		try
 		{
 			final String scheme = new URI(url).getScheme();
-			final boolean isLevelProtocol = "level".equals(scheme);
+			final boolean isLevelProtocol = "level".equalsIgnoreCase(scheme);
 
-			if (!"http".equals(scheme) && !"https".equals(scheme) && !isLevelProtocol)
+			if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme) && !isLevelProtocol)
 				throw new URISyntaxException(url, "Wrong protocol");
 
-			if (isLevelProtocol && (url.contains("..") || !url.endsWith("/resources.zip")))
+			if (isLevelProtocol && (url.contains("..") || !url.toLowerCase(Locale.ROOT).endsWith("/resources.zip")))
 				throw new URISyntaxException(url, "Invalid levelstorage resourcepack path");
 		}
 		catch (final URISyntaxException e)
@@ -148,42 +150,55 @@ public abstract class MixinNetHandlerPlayClient
 		float pitch = packetIn.getPitch();
 		final NoRotateSet noRotateSet = (NoRotateSet) LiquidBounce.moduleManager.get(NoRotateSet.class);
 
+		final double prevPosX = entityplayer.posX;
+		final double prevPosY = entityplayer.posY;
+		final double prevPosZ = entityplayer.posZ;
+
 		if (packetIn.func_179834_f().contains(EnumFlags.X))
-			x += entityplayer.posX;
+			x += prevPosX;
 		else
 			entityplayer.motionX = 0.0D;
 
 		if (packetIn.func_179834_f().contains(EnumFlags.Y))
-			y += entityplayer.posY;
+			y += prevPosY;
 		else
 			entityplayer.motionY = 0.0D;
 
 		if (packetIn.func_179834_f().contains(EnumFlags.Z))
-			z += entityplayer.posZ;
+			z += prevPosZ;
 		else
 			entityplayer.motionZ = 0.0D;
 
 		final boolean relativePitch = packetIn.func_179834_f().contains(EnumFlags.X_ROT);
 		final boolean relativeYaw = packetIn.func_179834_f().contains(EnumFlags.Y_ROT);
 
+		final float prevYaw = entityplayer.rotationYaw;
+		final float prevPitch = entityplayer.rotationPitch;
+
 		if (relativePitch)
-			pitch += entityplayer.rotationPitch;
+			pitch += prevPitch;
+
 		if (relativeYaw)
-			yaw += entityplayer.rotationYaw;
+			yaw += prevYaw;
+
+		final float newYaw = yaw % 360.0F;
+
+		final DecimalFormat coordFormat = new DecimalFormat("0.000");
 
 		LiquidBounce.hud.clearNotifications();
-		LiquidBounce.hud.addNotification("Movement Check", "Set-back detected.", Color.yellow, 500L);
+		LiquidBounce.hud.addNotification("Setback check", "(" + coordFormat.format(prevPosX) + ", " + coordFormat.format(prevPosY) + ", " + coordFormat.format(prevPosZ) + ") -> (" + coordFormat.format(x) + ", " + coordFormat.format(y) + ", " + coordFormat.format(z) + ")", Color.yellow, 500L);
 
 		if (noRotateSet.getState() && !(noRotateSet.getNoZeroValue().get() && !relativeYaw && yaw == 0.0f && !relativePitch && pitch == 0.0f))
 		{
 			entityplayer.setPosition(x, y, z);
+
 			// Send (Spoofed) Responce Packet
-			netManager.sendPacket(noRotateSet.getConfirmValue().get() && (noRotateSet.getConfirmIllegalRotationValue().get() || pitch >= -90 && pitch <= 90) && (RotationUtils.serverRotation == null || yaw % 360.0F != RotationUtils.serverRotation.getYaw() || pitch != RotationUtils.serverRotation.getPitch()) ? new C06PacketPlayerPosLook(entityplayer.posX, entityplayer.getEntityBoundingBox().minY, entityplayer.posZ, yaw % 360.0F, pitch % 360.0F, false) : new C06PacketPlayerPosLook(entityplayer.posX, entityplayer.getEntityBoundingBox().minY, entityplayer.posZ, entityplayer.rotationYaw % 360.0F, entityplayer.rotationPitch % 360.0F, false));
+			netManager.sendPacket(noRotateSet.getConfirmValue().get() && (noRotateSet.getConfirmIllegalRotationValue().get() || pitch >= -90 && pitch <= 90) && (newYaw != RotationUtils.serverRotation.getYaw() || pitch != RotationUtils.serverRotation.getPitch()) ? new C06PacketPlayerPosLook(entityplayer.posX, entityplayer.getEntityBoundingBox().minY, entityplayer.posZ, newYaw, pitch % 360.0F, false) : new C06PacketPlayerPosLook(entityplayer.posX, entityplayer.getEntityBoundingBox().minY, entityplayer.posZ, prevYaw % 360.0F, entityplayer.rotationPitch % 360.0F, false));
 		}
 		else
 		{
 			entityplayer.setPositionAndRotation(x, y, z, yaw, pitch);
-			netManager.sendPacket(new C06PacketPlayerPosLook(entityplayer.posX, entityplayer.getEntityBoundingBox().minY, entityplayer.posZ, entityplayer.rotationYaw, entityplayer.rotationPitch, false));
+			netManager.sendPacket(new C06PacketPlayerPosLook(entityplayer.posX, entityplayer.getEntityBoundingBox().minY, entityplayer.posZ, prevYaw, entityplayer.rotationPitch, false));
 		}
 
 		if (!doneLoadingTerrain)

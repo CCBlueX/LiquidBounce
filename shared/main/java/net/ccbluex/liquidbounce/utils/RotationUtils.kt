@@ -168,12 +168,15 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * @param playerPrediction
 		 * enemyPrediction new player position
 		 */
-		fun faceBow(thePlayer: IEntityPlayerSP, target: IEntity, silent: Boolean, enemyPrediction: Boolean, playerPrediction: Boolean, minTurnSpeed: Float, maxTurnSpeed: Float, minSmoothingRatio: Float, maxSmoothingRatio: Float)
+		fun faceBow(thePlayer: IEntityPlayerSP, target: IEntity, silent: Boolean, enemyPrediction: Boolean, playerPrediction: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float, minTurnSpeed: Float, maxTurnSpeed: Float, minSmoothingRatio: Float, maxSmoothingRatio: Float)
 		{
-			// Prediction
-			val xDelta = (target.posX - target.lastTickPosX) * 0.4
-			val yDelta = (target.posY - target.lastTickPosY) * 0.4
-			val zDelta = (target.posZ - target.lastTickPosZ) * 0.4
+			val targetPosX = target.posX
+			val targetPosY = target.posY
+			val targetPosZ = target.posZ
+
+			val xDelta = (targetPosX - target.lastTickPosX) * 0.4
+			val yDelta = (targetPosY - target.lastTickPosY) * 0.4
+			val zDelta = (targetPosZ - target.lastTickPosZ) * 0.4
 
 			var distance = thePlayer.getDistanceToEntity(target).toDouble()
 			distance -= distance % 0.8
@@ -184,9 +187,17 @@ class RotationUtils : MinecraftInstance(), Listenable
 			val zPrediction = distance / 0.8 * zDelta * if (sprinting) 1.25f else 1f
 
 			// Calculate the (predicted) target position
-			val posX = target.posX + (if (enemyPrediction) xPrediction else 0.0) - (thePlayer.posX + if (playerPrediction) thePlayer.posX - thePlayer.prevPosX else 0.0)
-			val posY = target.entityBoundingBox.minY + (if (enemyPrediction) yPrediction else 0.0) + target.eyeHeight - 0.15 - (thePlayer.entityBoundingBox.minY + if (enemyPrediction) thePlayer.posY - thePlayer.prevPosY else 0.0) - thePlayer.eyeHeight
-			val posZ = target.posZ + (if (enemyPrediction) zPrediction else 0.0) - (thePlayer.posZ + if (playerPrediction) thePlayer.posZ - thePlayer.prevPosZ else 0.0)
+			val xTargetPredict = if (enemyPrediction) xPrediction else 0.0
+			val yTargetPredict = if (enemyPrediction) yPrediction else 0.0
+			val zTargetPredict = if (enemyPrediction) zPrediction else 0.0
+
+			val xPlayerPredict = thePlayer.posX + if (playerPrediction) (thePlayer.posX - thePlayer.prevPosX) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize) else 0.0
+			val yPlayerPredict = thePlayer.entityBoundingBox.minY + if (playerPrediction) (thePlayer.posY - thePlayer.prevPosY) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize) else 0.0
+			val zPlayerPredict = thePlayer.posZ + if (playerPrediction) (thePlayer.posZ - thePlayer.prevPosZ) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize) else 0.0
+
+			val posX = targetPosX + xTargetPredict - xPlayerPredict
+			val posY = target.entityBoundingBox.minY + yTargetPredict + target.eyeHeight - 0.15 - yPlayerPredict - thePlayer.eyeHeight
+			val posZ = targetPosZ + zTargetPredict - zPlayerPredict
 
 			// Bow Power Calculation
 			val fastBow = LiquidBounce.moduleManager[FastBow::class.java] as FastBow
@@ -214,16 +225,34 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * @param  vec
 		 * target vec
 		 * @param  playerPredict
-		 * predict new location of your body
+		 * predict new location of your body (based on position delta, not motion)
+		 * @param minPlayerPredictSize
+		 * minimum predict size of your body
+		 * @param maxPlayerPredictSize
+		 * maximum predict size of your body
 		 * @return               rotation
 		 */
-		private fun toRotation(thePlayer: IEntityPlayerSP, vec: WVec3, playerPredict: Boolean): Rotation
+		private fun toRotation(thePlayer: IEntityPlayerSP, vec: WVec3, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Rotation
 		{
-			val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
-			if (playerPredict) eyesPos.addVector(thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ)
+			val posX = thePlayer.posX
+			val posZ = thePlayer.posZ
+			var eyesPos = WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ)
+
+			if (playerPredict)
+			{
+				val xPredict = (posX - thePlayer.prevPosX) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize)
+				val yPredict = (thePlayer.posY - thePlayer.prevPosY) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize)
+				val zPredict = (posZ - thePlayer.prevPosZ) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize)
+
+				eyesPos = eyesPos.addVector(xPredict, yPredict, zPredict)
+			}
+
+			// if (playerPredict) eyesPos.addVector(thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ)
+
 			val diffX = vec.xCoord - eyesPos.xCoord
 			val diffY = vec.yCoord - eyesPos.yCoord
 			val diffZ = vec.zCoord - eyesPos.zCoord
+
 			return Rotation(wrapAngleTo180_float(toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f), wrapAngleTo180_float(-toDegrees(StrictMath.atan2(diffY, StrictMath.hypot(diffX, diffZ)).toFloat())))
 		}
 
@@ -239,7 +268,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		/**
 		 * Search good center
 		 *
-		 * @param  box
+		 * @param  targetBox
 		 * enemy box
 		 * @param  mode
 		 * search center mode
@@ -247,9 +276,9 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * jitter option
 		 * @param  jitterData
 		 * jitter data option (minyawspeed, minpitchspeed etc.)
-		 * @param  playerPrediction
+		 * @param  playerPredict
 		 * predict option
-		 * @param  throughWalls
+		 * @param  shouldAttackThroughWalls
 		 * throughWalls option
 		 * @param  distance
 		 * vec3 distance limit
@@ -259,22 +288,31 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * count of step to search the good center. (*Warning If you set this value too low, it will make your minecraft SO SLOW AND SLOW.*) default is 0.2D
 		 * @return                   center
 		 */
-		fun searchCenter(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, box: IAxisAlignedBB, mode: SearchCenterMode, jitter: Boolean, jitterData: JitterData, playerPrediction: Boolean, throughWalls: Boolean, distance: Float, hitboxDecrement: Double, searchSensitivity: Double): VecRotation?
+		fun searchCenter(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetBox: IAxisAlignedBB, mode: SearchCenterMode, jitter: Boolean, jitterData: JitterData, playerPredict: Boolean, minPlayerPredict: Float, maxPlayerPredict: Float, shouldAttackThroughWalls: Boolean, distance: Float, hitboxDecrement: Double, searchSensitivity: Double): VecRotation?
 		{
 			val randomVec: WVec3
 			val eyes = thePlayer.getPositionEyes(1.0f)
+
+			// Target box
+			val minX = targetBox.minX
+			val maxX = targetBox.maxX
+			val minY = targetBox.minY
+			val maxY = targetBox.maxY
+			val minZ = targetBox.minZ
+			val maxZ = targetBox.maxZ
+
 			when (mode)
 			{
 				SearchCenterMode.LOCK_CENTER ->
 				{
-					randomVec = getCenter(box)
-					return VecRotation(randomVec, toRotation(thePlayer, randomVec, playerPrediction))
+					randomVec = getCenter(targetBox)
+					return VecRotation(randomVec, toRotation(thePlayer, randomVec, playerPredict, minPlayerPredict, maxPlayerPredict))
 				}
 
 				SearchCenterMode.OUT_BORDER ->
 				{
-					randomVec = WVec3(box.minX + (box.maxX - box.minX) * (x * 0.3 + 1.0), box.minY + (box.maxY - box.minY) * (y * 0.3 + 1.0), box.minZ + (box.maxZ - box.minZ) * (z * 0.3 + 1.0))
-					return VecRotation(randomVec, toRotation(thePlayer, randomVec, playerPrediction))
+					randomVec = WVec3(minX + (maxX - minX) * (x * 0.3 + 1.0), minY + (maxY - minY) * (y * 0.3 + 1.0), minZ + (maxZ - minZ) * (z * 0.3 + 1.0))
+					return VecRotation(randomVec, toRotation(thePlayer, randomVec, playerPredict, minPlayerPredict, maxPlayerPredict))
 				}
 
 				else ->
@@ -282,9 +320,9 @@ class RotationUtils : MinecraftInstance(), Listenable
 				}
 			}
 
-			randomVec = WVec3(box.minX + (box.maxX - box.minX) * x * 0.8, box.minY + (box.maxY - box.minY) * y * 0.8, box.minZ + (box.maxZ - box.minZ) * z * 0.8)
+			randomVec = WVec3(minX + (maxX - minX) * x * 0.8, minY + (maxY - minY) * y * 0.8, minZ + (maxZ - minZ) * z * 0.8)
 
-			val randomRotation = toRotation(thePlayer, randomVec, playerPrediction)
+			val randomRotation = toRotation(thePlayer, randomVec, playerPredict, minPlayerPredict, maxPlayerPredict)
 			var yawJitterAmount = 0f
 			var pitchJitterAmount = 0f
 
@@ -293,28 +331,43 @@ class RotationUtils : MinecraftInstance(), Listenable
 			{
 				val yawJitter = jitterData.yawRate > 0 && Random().nextInt(100) <= jitterData.yawRate
 				val pitchJitter = jitterData.pitchRate > 0 && Random().nextInt(100) <= jitterData.pitchRate
-				val yawNegative = Random().nextBoolean()
-				val pitchNegative = Random().nextBoolean()
 
-				if (yawJitter) yawJitterAmount = if (yawNegative) -nextFloat(jitterData.minYaw, jitterData.maxYaw) else nextFloat(jitterData.minYaw, jitterData.maxYaw)
-				if (pitchJitter) pitchJitterAmount = if (pitchNegative) -nextFloat(jitterData.minPitch, jitterData.maxPitch) else nextFloat(jitterData.minPitch, jitterData.maxPitch)
+				if (yawJitter)
+				{
+					val yawNegative = Random().nextBoolean()
+
+					val minYaw = jitterData.minYaw
+					val maxYaw = jitterData.maxYaw
+
+					yawJitterAmount = if (yawNegative) -nextFloat(minYaw, maxYaw) else nextFloat(minYaw, maxYaw)
+				}
+
+				if (pitchJitter)
+				{
+					val pitchNegative = Random().nextBoolean()
+
+					val minPitch = jitterData.minPitch
+					val maxPitch = jitterData.maxPitch
+
+					pitchJitterAmount = if (pitchNegative) -nextFloat(minPitch, maxPitch) else nextFloat(minPitch, maxPitch)
+				}
 			}
 
 			// Search boundingbox center
 			var vecRotation: VecRotation? = null
-			var xSearch = hitboxDecrement
 
-			while (xSearch < 1 - hitboxDecrement)
+			val fixedHitboxDecrement = hitboxDecrement.coerceAtLeast(0.0).coerceAtMost(1.0) // Fail-safe
+
+			var xSearch = fixedHitboxDecrement
+			while (xSearch < 1 - fixedHitboxDecrement)
 			{
-				var ySearch = hitboxDecrement
-
-				while (ySearch < 1 - hitboxDecrement)
+				var ySearch = fixedHitboxDecrement
+				while (ySearch < 1 - fixedHitboxDecrement)
 				{
-					var zSearch = hitboxDecrement
-
-					while (zSearch < 1 - hitboxDecrement)
+					var zSearch = fixedHitboxDecrement
+					while (zSearch < 1 - fixedHitboxDecrement)
 					{
-						val vec3 = WVec3(box.minX + (box.maxX - box.minX) * xSearch, box.minY + (box.maxY - box.minY) * ySearch, box.minZ + (box.maxZ - box.minZ) * zSearch)
+						val vec3 = WVec3(minX + (maxX - minX) * xSearch, minY + (maxY - minY) * ySearch, minZ + (maxZ - minZ) * zSearch)
 						val vecDist = eyes.distanceTo(vec3)
 
 						if (vecDist > distance)
@@ -323,30 +376,31 @@ class RotationUtils : MinecraftInstance(), Listenable
 							continue
 						}
 
-						if (throughWalls || isVisible(theWorld, thePlayer, vec3))
+						if (shouldAttackThroughWalls || isVisible(theWorld, thePlayer, vec3))
 						{
-							val rotation = toRotation(thePlayer, vec3, playerPrediction)
+							val rotation = toRotation(thePlayer, vec3, playerPredict, minPlayerPredict, maxPlayerPredict)
 							val currentVec = VecRotation(vec3, rotation)
+
 							if (vecRotation == null || (if (mode == SearchCenterMode.RANDOM_GOOD_CENTER) getRotationDifference(currentVec.rotation, randomRotation) < getRotationDifference(vecRotation.rotation, randomRotation) else getRotationDifference(currentVec.rotation) < getRotationDifference(vecRotation.rotation))) vecRotation = currentVec
 						}
-
 						zSearch += searchSensitivity
 					}
-
 					ySearch += searchSensitivity
 				}
-
 				xSearch += searchSensitivity
 			}
 
-			// Jitter
+			// Apply Jitter
 			if (vecRotation != null && jitter)
 			{
 				vecRotation.rotation.yaw = vecRotation.rotation.yaw + yawJitterAmount
+
+				// Enforce pitch to 90 ~ -90
 				var pitch = vecRotation.rotation.pitch + pitchJitterAmount
 				if (pitch > 90) pitch = 90f else if (pitch < -90) pitch = -90f
 				vecRotation.rotation.pitch = pitch
 			}
+
 			return vecRotation
 		}
 
@@ -357,9 +411,9 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your entity
 		 * @return        difference between rotation
 		 */
-		fun getClientRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity): Double
+		fun getClientRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double
 		{
-			val rotation = toRotation(thePlayer, getCenter(entity.entityBoundingBox), true)
+			val rotation = toRotation(thePlayer, getCenter(entity.entityBoundingBox), playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
 			return getRotationDifference(rotation, Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch))
 		}
 
@@ -370,9 +424,9 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your entity
 		 * @return        difference between rotation
 		 */
-		fun getServerRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity): Double
+		fun getServerRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double
 		{
-			val rotation = toRotation(thePlayer, getCenter(entity.entityBoundingBox), true)
+			val rotation = toRotation(thePlayer, getCenter(entity.entityBoundingBox), playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
 			return getRotationDifference(rotation, serverRotation)
 		}
 

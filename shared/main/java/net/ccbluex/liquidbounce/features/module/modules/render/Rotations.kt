@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -34,7 +35,7 @@ class Rotations : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (bodyValue.get() || !isRotating()) return
+		if (bodyValue.get() || !isRotating(thePlayer)) return
 
 		// Head Rotations
 		thePlayer.rotationYawHead = if (interpolateRotationsValue.get()) interpolateRotation(RotationUtils.lastServerRotation.yaw, RotationUtils.serverRotation.yaw, event.partialTicks) else RotationUtils.serverRotation.yaw
@@ -42,7 +43,7 @@ class Rotations : Module()
 
 	private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module].state
 
-	fun isRotating(): Boolean
+	fun isRotating(thePlayer: IEntityPlayerSP): Boolean
 	{
 		if (!onlyWhileRotatingValue.get()) return true
 
@@ -57,7 +58,7 @@ class Rotations : Module()
 		val towerState = getState(Tower::class.java)
 		val killauraState = getState(KillAura::class.java)
 		val derpState = getState(Derp::class.java)
-		val bowAimbotState = bowAimbot.state && bowAimbot.hasTarget()
+		val bowAimbotState = bowAimbot.state && bowAimbot.hasTarget(thePlayer)
 		val fuckerState = fucker.state && fucker.currentPos != null
 		val civBreakState = civBreak.state && civBreak.blockPos != null
 		val nukerState = nuker.state && nuker.currentBlock != null

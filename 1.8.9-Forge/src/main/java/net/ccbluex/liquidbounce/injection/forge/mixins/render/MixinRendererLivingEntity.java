@@ -9,13 +9,17 @@ import java.awt.*;
 import java.nio.FloatBuffer;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.injection.backend.EntityLivingBaseImplKt;
+import net.ccbluex.liquidbounce.injection.backend.EntityPlayerSPImplKt;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
+import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -149,13 +153,23 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 
 			float interpolatedPitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
 
-			if (entity instanceof EntityPlayer && entity == Minecraft.getMinecraft().thePlayer && entityYaw != 0 && rotations.getState() && rotations.getBodyValue().get() && rotations.isRotating() && RotationUtils.serverRotation != null && RotationUtils.lastServerRotation != null)
+			final EntityPlayerSP thePlayer = Minecraft.getMinecraft().thePlayer;
+			final IEntityPlayerSP wrappedThePlayer = EntityPlayerSPImplKt.wrap(thePlayer);
+			if (entity instanceof EntityPlayer && entity == thePlayer && entityYaw != 0 && rotations.getState() && rotations.getBodyValue().get() && rotations.isRotating(wrappedThePlayer))
 			{
+				final Rotation lastServerRotation = RotationUtils.lastServerRotation;
+				final Rotation serverRotation = RotationUtils.serverRotation;
+
+				final float lastYaw = lastServerRotation.getYaw();
+				final float yaw = serverRotation.getYaw();
+				final float lastPitch = lastServerRotation.getPitch();
+				final float pitch = serverRotation.getPitch();
+
 				final boolean interpolate = rotations.getInterpolateRotationsValue().get();
-				interpolatedYawOffset = interpolate ? interpolateRotation(RotationUtils.lastServerRotation.getYaw(), RotationUtils.serverRotation.getYaw(), partialTicks) : RotationUtils.serverRotation.getYaw(); // Body Rotation
+				interpolatedYawOffset = interpolate ? interpolateRotation(lastYaw, yaw, partialTicks) : yaw; // Body Rotation
 
 				yawDelta = 0;
-				interpolatedPitch = interpolate ? interpolateRotation(RotationUtils.lastServerRotation.getPitch(), RotationUtils.serverRotation.getPitch(), partialTicks) : RotationUtils.serverRotation.getPitch(); // Pitch
+				interpolatedPitch = interpolate ? interpolateRotation(lastPitch, pitch, partialTicks) : pitch; // Pitch
 			}
 
 			renderLivingAt(entity, x, y, z);
