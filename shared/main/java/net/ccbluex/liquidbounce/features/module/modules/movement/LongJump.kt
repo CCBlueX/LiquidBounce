@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.exploit.Damage
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.utils.MovementUtils
@@ -24,13 +25,48 @@ class LongJump : Module()
 	 * Options
 	 */
 	private val modeValue = ListValue("Mode", arrayOf("NCP", "Teleport", "AAC3.0.1", "AAC3.0.5", "AAC3.1.0", "Mineplex", "Mineplex2", "Mineplex3", "RedeSky"), "NCP")
+
+	/**
+	 * NCP mode - Boost motion multiplier
+	 */
 	private val ncpBoostValue = FloatValue("NCPBoost", 4.25f, 1f, 10f)
+
+	/**
+	 * Teleport mode - Teleport Distance
+	 */
 	private val teleportDistanceValue = FloatValue("TeleportDistance", 2.5f, 1.0f, 10.0f)
+
+	/**
+	 * Teleport mode - Air-ticks to teleport
+	 */
 	private val teleportAtTicksValue = IntegerValue("TeleportAtTicks", 0, 0, 10)
+
+	/**
+	 * Automatically jump when player is on ground
+	 */
 	private val autoJumpValue = BoolValue("AutoJump", false)
+
+	/**
+	 * Automatically disable LongJump after landing
+	 */
 	private val autoDisableValue = BoolValue("AutoDisable", true)
+
+	/**
+	 * Disable Scaffold and Tower to bypass fastplace (and scaffold) checks
+	 */
 	private val autoDisableScaffoldValue = BoolValue("DisableScaffoldAndTower", true)
-	// TODO: DamageOnStart
+
+	/**
+	 * Damage on start (Warning: Only works when AutoJump option enabled)
+	 */
+	private val damageOnStartValue = object : BoolValue("DamageOnStart", false)
+	{
+		override fun onChanged(oldValue: Boolean, newValue: Boolean)
+		{
+			if (newValue) autoJumpValue.set(true)
+		}
+	}
+	private val damageModeValue = ListValue("DamageMode", arrayOf("NCP", "Hypixel"), "NCP")
 
 	/**
 	 * Variables
@@ -119,22 +155,10 @@ class LongJump : Module()
 					{
 						if (thePlayer.fallDistance > 0.5f && canBoost && !boosted)
 						{
-							val value = 3.0
-							val horizontalFacing = thePlayer.horizontalFacing
-							var x = 0.0
-							var z = 0.0
-
-							when
-							{
-								horizontalFacing.isNorth() -> z = -value
-								horizontalFacing.isEast() -> x = +value
-								horizontalFacing.isSouth() -> z = +value
-								horizontalFacing.isWest() -> x = -value
-
-								else ->
-								{
-								}
-							}
+							val teleportDistance = 3.0
+							val dir = getDirection(thePlayer)
+							val x = (-functions.sin(dir) * teleportDistance)
+							val z = (functions.cos(dir) * teleportDistance)
 
 							thePlayer.setPosition(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z)
 							boosted = true
@@ -176,9 +200,18 @@ class LongJump : Module()
 				}
 			}
 		}
+
 		if (autoJumpValue.get() && thePlayer.onGround && isMoving(thePlayer))
 		{
 			jumped = true
+
+
+			if (damageOnStartValue.get()) when (damageModeValue.get().toLowerCase())
+			{
+				"ncp" -> Damage.ncpDamage()
+				"hypixel" -> Damage.hypixelDamage()
+			}
+
 			thePlayer.jump()
 		}
 	}

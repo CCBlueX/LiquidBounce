@@ -68,7 +68,7 @@ class HighJump : Module()
 			if (autodisable.get()) state = false
 		}
 
-		if (glassValue.get() && !classProvider.isBlockPane(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
+		if (glassValue.get() && !classProvider.isBlockPane(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return // 'AAC Ground-check always returns true when player is collided with glass pane or iron bars, etc.' bug exploit
 
 		when (modeValue.get().toLowerCase())
 		{
@@ -179,7 +179,7 @@ class HighJump : Module()
 			state = false
 			thePlayer.motionX *= 0
 			thePlayer.motionZ *= 0
-			thePlayer.jumpMovementFactor = 0.0F
+			thePlayer.jumpMovementFactor = 0.02F
 			ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cSetback detected. Disabled highjump.")
 		}
 	}
