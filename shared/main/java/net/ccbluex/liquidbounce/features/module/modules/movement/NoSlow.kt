@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 )
 class NoSlow : Module()
 {
-
 	// Highly customizable values
 	private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1.0F, 0.2F, 1.0F)
 	private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1.0F, 0.2F, 1.0F)
@@ -82,8 +81,8 @@ class NoSlow : Module()
 	{
 		val heldItem = (mc.thePlayer ?: return).heldItem?.item
 
-		event.forward = getMultiplier(heldItem, true)
-		event.strafe = getMultiplier(heldItem, false)
+		event.forward = getMultiplier(heldItem, isForward = true)
+		event.strafe = getMultiplier(heldItem, isForward = false)
 	}
 
 	private fun getMultiplier(item: IItem?, isForward: Boolean): Float

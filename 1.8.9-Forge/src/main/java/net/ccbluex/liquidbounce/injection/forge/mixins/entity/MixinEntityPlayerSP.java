@@ -353,18 +353,21 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		final boolean foodCheck = !sprint.getFoodValue().get() || getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
 
-		if (onGround && !sneak && !forward && movementInput.moveForward >= f && !isSprinting() && foodCheck && !isUsingItem() && !isPotionActive(Potion.blindness))
+		final boolean blindCheck = !isPotionActive(Potion.blindness);
+		if (onGround && !sneak && !forward && movementInput.moveForward >= f && !isSprinting() && foodCheck && !isUsingItem() && blindCheck)
 			if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown())
 				sprintToggleTimer = 7;
 			else
 				setSprinting(true);
 
-		if (!isSprinting() && movementInput.moveForward >= f && foodCheck && (noSlow.getState() || !isUsingItem()) && !isPotionActive(Potion.blindness) && mc.gameSettings.keyBindSprint.isKeyDown())
+		final boolean sprintCheck = noSlow.getState() || !isUsingItem();
+		if (!isSprinting() && movementInput.moveForward >= f && foodCheck && sprintCheck && blindCheck && mc.gameSettings.keyBindSprint.isKeyDown())
 			setSprinting(true);
 
 		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.get(Scaffold.class);
 
-		if (scaffold.getState() && !scaffold.getSprintValue().get() || sprint.getState() && sprint.getCheckServerSide().get() && (onGround || !sprint.getCheckServerSideGround().get()) && !sprint.getAllDirectionsValue().get() && RotationUtils.targetRotation != null && RotationUtils.Companion.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)
+		final boolean groundCheck = onGround || !sprint.getCheckServerSideGround().get();
+		if (scaffold.getState() && !scaffold.getSprintValue().get() || sprint.getState() && sprint.getCheckServerSide().get() && groundCheck && !sprint.getAllDirectionsValue().get() && RotationUtils.targetRotation != null && RotationUtils.Companion.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)
 			setSprinting(false);
 
 		final boolean allDirection = sprint.getState() && sprint.getAllDirectionsValue().get();
