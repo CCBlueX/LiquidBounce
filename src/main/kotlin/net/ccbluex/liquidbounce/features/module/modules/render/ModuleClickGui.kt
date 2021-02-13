@@ -21,13 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.sciter.SciterScreen
-import net.minecraft.client.MinecraftClient
 
 object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
 
     override fun enable() {
-        MinecraftClient.getInstance().openScreen(SciterScreen("helo"))
+
     }
 
 }

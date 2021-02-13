@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
 import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
+import net.ccbluex.liquidbounce.renderer.ultralight.WebView
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.extensions.globalEnemyConfigurable
 import org.apache.logging.log4j.LogManager
@@ -82,6 +83,9 @@ object LiquidBounce {
 
         // Register tabs
         Tabs
+
+        // Load natives
+        WebView
 
         moduleManager.registerInbuilt()
         scriptManager.loadScripts()

@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.LiquidBounceRenderEvent
 import net.ccbluex.liquidbounce.event.RenderHudEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -28,36 +27,34 @@ import net.ccbluex.liquidbounce.renderer.engine.Color4b
 import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
 import net.ccbluex.liquidbounce.renderer.engine.RenderTask
 import net.ccbluex.liquidbounce.renderer.engine.font.FontRenderer
+import net.ccbluex.liquidbounce.renderer.ultralight.WebView
+import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
 import java.awt.Font
 
 object ModuleHud : Module("HUD", Category.RENDER, defaultState = true, hide = true) {
+
+    private val webView = WebView(width = { mc.window.width }, height = { mc.window.height })
+
+    init {
+        webView.loadPage(ThemeManager.defaultTheme.page("hud"))
+    }
+
+    val renderHandler = handler<RenderHudEvent> {
+        webView.update()
+        webView.render()
+    }
+
+    // Engine testing
+
     val liquidBounceFont: Array<RenderTask> = run {
         val renderer = FontRenderer.createFontRendererWithStyles(Font("Roboto Bold", Font.PLAIN, 45))
 
         renderer.begin()
-
         renderer.draw("LiquidBounce", 2f, 0f, Color4b(0, 111, 255, 255), true)
-
         renderer.commit()
     }
 
-    val renderHandler = handler<RenderHudEvent> {
-//        mc.textRenderer.drawWithShadow(it.matrixStack, "LiquidBounce", 2F, 2F, 0xfffff)
-
-        LiquidBounce.moduleManager.filter { module -> module.enabled && !module.hidden }.forEachIndexed { index, module ->
-            val width = mc.textRenderer.getWidth(module.name)
-            mc.textRenderer.drawWithShadow(
-                it.matrixStack,
-                module.name,
-                mc.window.scaledWidth - width - 2F,
-                2F + (mc.textRenderer.fontHeight * index),
-                0xfffff
-            )
-        }
-    }
-
-
-    val realRenderHandler = handler<LiquidBounceRenderEvent> {
+    val engineRenderHandler = handler<LiquidBounceRenderEvent> {
         RenderEngine.enqueueForRendering(RenderEngine.HUD_LAYER, liquidBounceFont)
     }
 

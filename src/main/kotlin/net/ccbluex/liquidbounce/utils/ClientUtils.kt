@@ -26,6 +26,7 @@ import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.apache.logging.log4j.Logger
+import java.io.InputStream
 
 val mc = MinecraftClient.getInstance()!!
 
@@ -56,16 +57,21 @@ fun chat(vararg texts: Text, prefix: Boolean = true) {
 fun chat(text: String) = chat(text.asText())
 
 /**
- * Converts a resource to string
+ * Find resource
  *
  * @param path The *absolute* resource path
  * @throws IllegalArgumentException If the path is invalid
  */
-fun resourceToString(path: String): String {
+fun resource(path: String): InputStream {
     class Empty
-
-    val resourceAsStream =
-        Empty::class.java.getResourceAsStream(path) ?: throw IllegalArgumentException("Resource $path not found")
-
-    return resourceAsStream.use { it.reader().readText() }
+    return Empty::class.java.getResourceAsStream(path) ?: throw IllegalArgumentException("Resource $path not found")
 }
+
+
+/**
+ * Converts resource to string
+ *
+ * @param path The *absolute* resource path
+ * @throws IllegalArgumentException If the path is invalid
+ */
+fun resourceToString(path: String) = resource(path).use { it.reader().readText() }
