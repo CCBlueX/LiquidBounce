@@ -64,7 +64,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		val middleScreen = representedScreen.width / 2f
 
 		Fonts.font40.drawCenteredString("Add Account", middleScreen, 34f, 0xffffff)
-		Fonts.font35.drawCenteredString(Optional.ofNullable(status).orElse(""), middleScreen, representedScreen.height / 4.0f + 60, 0xffffff)
+		Fonts.font35.drawCenteredString(status, middleScreen, representedScreen.height / 4.0f + 60, 0xffffff)
 
 		username.drawTextBox()
 		password.drawTextBox()

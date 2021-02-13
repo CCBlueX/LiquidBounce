@@ -543,14 +543,14 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		fun canEnableMarkBannedButton(): Boolean
 		{
 			val profileName = mc.session.profile.name
-			return LiquidBounce.fileManager.accountsConfig.accounts.stream().anyMatch { acc: MinecraftAccount -> profileName.equals(acc.name, ignoreCase = true) || profileName.equals(acc.accountName, ignoreCase = true) }
+			return LiquidBounce.fileManager.accountsConfig.accounts.any { acc: MinecraftAccount -> profileName.equals(acc.name, ignoreCase = true) || profileName.equals(acc.accountName, ignoreCase = true) }
 		}
 
 		@JvmStatic
 		fun canMarkBannedCurrent(serverIp: String?): Boolean
 		{
 			val profileName = mc.session.profile.name
-			return serverIp == null || LiquidBounce.fileManager.accountsConfig.accounts.stream().filter { acc: MinecraftAccount -> profileName.equals(acc.name, ignoreCase = true) || profileName.equals(acc.accountName, ignoreCase = true) }.findFirst().map { acc: MinecraftAccount -> !acc.bannedServers.contains(serverIp) }.orElse(true)
+			return serverIp == null || LiquidBounce.fileManager.accountsConfig.accounts.firstOrNull { acc: MinecraftAccount -> profileName.equals(acc.name, ignoreCase = true) || profileName.equals(acc.accountName, ignoreCase = true) }?.let { !it.bannedServers.contains(serverIp) } ?: true
 		}
 
 		@JvmStatic

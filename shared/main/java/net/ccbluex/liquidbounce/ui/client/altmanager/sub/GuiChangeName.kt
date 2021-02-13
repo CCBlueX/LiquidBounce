@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import org.lwjgl.input.Keyboard
 import java.io.IOException
-import java.util.*
 
 class GuiChangeName(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 {
@@ -47,7 +46,7 @@ class GuiChangeName(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		drawRect(30, 30, representedScreen.width - 30, representedScreen.height - 30, Int.MIN_VALUE)
 
 		Fonts.font40.drawCenteredString("Change Name", representedScreen.width / 2.0f, 34f, 0xffffff)
-		Fonts.font40.drawCenteredString(Optional.ofNullable(status).orElse(""), representedScreen.width / 2.0f, representedScreen.height / 4.0f + 84, 0xffffff)
+		Fonts.font40.drawCenteredString(status, representedScreen.width / 2.0f, representedScreen.height / 4.0f + 84, 0xffffff)
 
 		name.drawTextBox()
 

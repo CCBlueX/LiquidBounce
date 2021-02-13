@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.isAnimal
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.extensions.isMob
-import java.util.*
 
 object EntityUtils : MinecraftInstance()
 {
@@ -119,6 +118,6 @@ object EntityUtils : MinecraftInstance()
 	fun getPing(entityPlayer: IEntityLivingBase): Int
 	{
 		val networkPlayerInfo: INetworkPlayerInfo? = mc.netHandler.getPlayerInfo(entityPlayer.uniqueID)
-		return Optional.ofNullable(networkPlayerInfo).map(INetworkPlayerInfo::responseTime).orElse(-1)
+		return networkPlayerInfo?.let(INetworkPlayerInfo::responseTime) ?: -1
 	}
 }

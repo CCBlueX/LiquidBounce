@@ -265,6 +265,6 @@ object Fonts : MinecraftInstance()
 			return fontSize == fontInfo.fontSize && name == fontInfo.name
 		}
 
-		override fun hashCode(): Int = 31 * Optional.ofNullable(name).map(String::hashCode).orElse(0) + fontSize
+		override fun hashCode(): Int = 31 * name.hashCode() + fontSize
 	}
 }

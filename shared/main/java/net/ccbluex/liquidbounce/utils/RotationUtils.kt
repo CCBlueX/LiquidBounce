@@ -450,7 +450,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your rotation
 		 * @return          difference between rotation
 		 */
-		fun getRotationDifference(rotation: Rotation): Double = Optional.ofNullable(serverRotation).map { serverRotation1: Rotation? -> getRotationDifference(rotation, serverRotation1) }.orElse(0.0)
+		fun getRotationDifference(rotation: Rotation): Double = getRotationDifference(rotation, serverRotation)
 
 		/**
 		 * Calculate difference between two rotations

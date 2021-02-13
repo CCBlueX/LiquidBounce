@@ -22,22 +22,25 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		// For damage reduction it is better if it is smaller, so it has to be inverted
 		// The decimal values have to be rounded since in double math equals is inaccurate
 		// For example 1.03 - 0.41 = 0.6200000000000001 and (1.03 - 0.41) == 0.62 would be false
-		val compare = round(getThresholdedDamageReduction(otherArmor.itemStack).toDouble(), 3).compareTo(round(getThresholdedDamageReduction(armor.itemStack).toDouble(), 3))
+		val stack = armor.itemStack ?: throw IllegalArgumentException("armor.itemStack is null")
+		val otherStack = otherArmor.itemStack ?: throw IllegalArgumentException("otherArmor.itemStack is null")
+
+		val compare = round(getThresholdedDamageReduction(otherStack).toDouble(), 3).compareTo(round(getThresholdedDamageReduction(stack).toDouble(), 3))
 
 		// If both armor pieces have the exact same damage, compare enchantments
 		if (compare == 0)
 		{
-			val otherEnchantmentCmp = round(getEnchantmentThreshold(armor.itemStack).toDouble(), 3).compareTo(round(getEnchantmentThreshold(otherArmor.itemStack).toDouble(), 3))
+			val otherEnchantmentCmp = round(getEnchantmentThreshold(stack).toDouble(), 3).compareTo(round(getEnchantmentThreshold(otherStack).toDouble(), 3))
 
 			// If both have the same enchantment threshold, prefer the item with more enchantments
 			if (otherEnchantmentCmp == 0)
 			{
-				val enchantmentCountCmp = ItemUtils.getEnchantmentCount(armor.itemStack).compareTo(ItemUtils.getEnchantmentCount(otherArmor.itemStack))
+				val enchantmentCountCmp = ItemUtils.getEnchantmentCount(stack).compareTo(ItemUtils.getEnchantmentCount(otherStack))
 				if (enchantmentCountCmp != 0) return enchantmentCountCmp
 
 				// Then durability...
-				val o1a = armor.itemStack.item!!.asItemArmor()
-				val o2a = otherArmor.itemStack.item!!.asItemArmor()
+				val o1a = stack.item!!.asItemArmor()
+				val o2a = otherStack.item!!.asItemArmor()
 				val durabilityCmp = o1a.armorMaterial.getDurability(o1a.armorType).compareTo(o2a.armorMaterial.getDurability(o2a.armorType))
 
 				// Last comparision: Enchantability
@@ -120,41 +123,15 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 
 		private fun getThresholdedDamageReduction(itemStack: IItemStack): Float
 		{
-			val item = itemStack.item!!.asItemArmor()
+			val item = itemStack.item?.asItemArmor()!!
 			return getDamageReduction(item.armorMaterial.getDamageReductionAmount(item.armorType), 0) * (1 - getThresholdedEnchantmentDamageReduction(itemStack))
 		}
 
 		private fun getDamageReduction(defensePoints: Int, toughness: Int): Float = 1 - min(20.0f, max(defensePoints / 5.0f, defensePoints - 1 / (2 + toughness / 4.0f))) / 25.0f
 
-		private fun getThresholdedEnchantmentDamageReduction(itemStack: IItemStack): Float
-		{
-			var sum = 0.0f
-			var i = 0
-			val j = DAMAGE_REDUCTION_ENCHANTMENTS.size
+		private fun getThresholdedEnchantmentDamageReduction(itemStack: IItemStack): Float = DAMAGE_REDUCTION_ENCHANTMENTS.indices.map { ItemUtils.getEnchantment(itemStack, DAMAGE_REDUCTION_ENCHANTMENTS[it]) * ENCHANTMENT_FACTORS[it] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[it] }.sum()
 
-			while (i < j)
-			{
-				sum += ItemUtils.getEnchantment(itemStack, DAMAGE_REDUCTION_ENCHANTMENTS[i]) * ENCHANTMENT_FACTORS[i] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[i]
-				i++
-			}
-
-			return sum
-		}
-
-		private fun getEnchantmentThreshold(itemStack: IItemStack): Float
-		{
-			var sum = 0.0f
-			var i = 0
-			val j = OTHER_ENCHANTMENTS.size
-
-			while (i < j)
-			{
-				sum += ItemUtils.getEnchantment(itemStack, OTHER_ENCHANTMENTS[i]) * OTHER_ENCHANTMENT_FACTORS[i]
-				i++
-			}
-
-			return sum
-		}
+		private fun getEnchantmentThreshold(itemStack: IItemStack): Float = OTHER_ENCHANTMENTS.indices.map { ItemUtils.getEnchantment(itemStack, OTHER_ENCHANTMENTS[it]) * OTHER_ENCHANTMENT_FACTORS[it] }.sum()
 
 		private const val serialVersionUID = 5242270904486038484L
 	}

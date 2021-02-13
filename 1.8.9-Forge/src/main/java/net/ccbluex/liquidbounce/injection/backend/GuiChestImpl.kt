@@ -24,7 +24,7 @@ class GuiChestImpl<out T : GuiChest>(wrapped: T) : GuiScreenImpl<T>(wrapped), IG
 	override fun handleMouseClick(slot: ISlot, slotNumber: Int, clickedButton: Int, clickType: Int) = wrapped.handleMouseClick(slot.unwrap(), slotNumber, clickedButton, clickType)
 	override fun highlight(slotNumber: Int, length: Long, color: Int)
 	{
-		TODO("Implemented in GuiContainerImpl; Call it instead.")
+		asGuiContainer().highlight(slotNumber, length, color)
 	}
 }
 

@@ -65,7 +65,7 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 		path = hubs[0].path
 	}
 
-	private fun isHubExisting(pos: WVec3): Hub? = hubs.firstOrNull { it.position.xCoord == pos.xCoord && it.position.yCoord == pos.yCoord && it.position.zCoord == pos.zCoord } ?: hubsToWork.stream().filter { hub: Hub? -> hub!!.position.xCoord == pos.xCoord && hub.position.yCoord == pos.yCoord && hub.position.zCoord == pos.zCoord }.findFirst().orElse(null)
+	private fun isHubExisting(pos: WVec3): Hub? = hubs.firstOrNull { it.position.xCoord == pos.xCoord && it.position.yCoord == pos.yCoord && it.position.zCoord == pos.zCoord } ?: hubsToWork.firstOrNull { hub: Hub? -> hub!!.position.xCoord == pos.xCoord && hub.position.yCoord == pos.yCoord && hub.position.zCoord == pos.zCoord }
 
 	private fun addHub(parent: Hub?, loc: WVec3, cost: Double): Boolean
 	{

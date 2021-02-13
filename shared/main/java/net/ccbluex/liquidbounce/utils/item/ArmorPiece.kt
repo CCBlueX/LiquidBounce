@@ -7,8 +7,8 @@ package net.ccbluex.liquidbounce.utils.item
 
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 
-class ArmorPiece(val itemStack: IItemStack, val slot: Int)
+class ArmorPiece(val itemStack: IItemStack?, val slot: Int)
 {
 	val armorType: Int
-		get() = itemStack.item!!.asItemArmor().armorType
+		get() = itemStack?.item?.asItemArmor()?.armorType!!
 }

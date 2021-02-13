@@ -68,7 +68,7 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		representedScreen.drawBackground(0)
 
 		Fonts.font40.drawCenteredString("Port Scanner", representedScreen.width / 2.0f, 34f, 0xffffff)
-		Fonts.font35.drawCenteredString(if (running) "\u00A77$checkedPort \u00A78/ \u00A77$maxPort" else Optional.ofNullable(status).orElse(""), representedScreen.width / 2.0f, representedScreen.height / 4.0f + 80, 0xffffff)
+		Fonts.font35.drawCenteredString(if (running) "\u00A77$checkedPort \u00A78/ \u00A77$maxPort" else status, representedScreen.width / 2.0f, representedScreen.height / 4.0f + 80, 0xffffff)
 
 		buttonToggle.displayString = if (running) "Stop" else "Start"
 		hostField.drawTextBox()

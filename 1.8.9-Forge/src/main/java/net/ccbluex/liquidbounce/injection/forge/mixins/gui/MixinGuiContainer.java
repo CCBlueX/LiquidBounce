@@ -222,8 +222,10 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 		RenderHelper.disableStandardItemLighting();
 		drawGuiContainerForegroundLayer(mouseX, mouseY);
 		RenderHelper.enableGUIStandardItemLighting();
+
 		final InventoryPlayer inventoryplayer = mc.thePlayer.inventory;
 		ItemStack itemstack = Optional.ofNullable(draggedStack).orElseGet(inventoryplayer::getItemStack);
+
 		if (itemstack != null)
 		{
 			final int j2 = 8;

@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
+import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.inventory.ISlot
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -17,7 +18,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
-import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
@@ -87,7 +87,7 @@ class ChestStealer : Module()
 	// Pick Options
 	private val onlyItemsValue = BoolValue("OnlyItems", false)
 	private val noCompassValue = BoolValue("NoCompass", false)
-	private val invCleanBeforeSteal = BoolValue("PerformInvCleanBeforeSteal", true)
+	// private val invCleanBeforeSteal = BoolValue("PerformInvCleanBeforeSteal", true) // Disabled due bug
 
 	// AutoClose
 	private val autoCloseValue = BoolValue("AutoClose", true)
@@ -171,10 +171,14 @@ class ChestStealer : Module()
 		val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 
 		// Is empty?
-		val notEmpty = !this.isEmpty(screen)
+		val notEmpty = !this.isEmpty(thePlayer, screen)
 
-		// Perform the InventoryCleaner before start stealing if option is present and InventoryCleaner is enabled. This will be helpful if player's inventory is nearly fucked up with tons of garbage. The settings of InventoryCleaner is depends on InventoryCleaner's official settings.
-		if (notEmpty && invCleanBeforeSteal.get() && inventoryCleaner.state && !inventoryCleaner.cleanInventory(start = screen.inventoryRows * 9, end = screen.inventoryRows * 9 + if (inventoryCleaner.hotbarValue.get()) 36 else 27, timer = InventoryUtils.CLICK_TIMER, container = screen.inventorySlots!!, delayResetFunc = Runnable { nextDelay = TimeUtils.randomDelay(inventoryCleaner.minDelayValue.get(), inventoryCleaner.maxDelayValue.get()) })) return
+		val container = screen.inventorySlots ?: return
+		val end = screen.inventoryRows * 9
+
+		// Disabled due bug
+		// // Perform the InventoryCleaner before start stealing if option is present and InventoryCleaner is enabled. This will be helpful if player's inventory is nearly fucked up with tons of garbage. The settings of InventoryCleaner is depends on InventoryCleaner's official settings.
+		// if (notEmpty && invCleanBeforeSteal.get() && inventoryCleaner.state && !inventoryCleaner.cleanInventory(start = end, end = end + if (inventoryCleaner.hotbarValue.get()) 36 else 27, timer = InventoryUtils.CLICK_TIMER, container = container, delayResetFunc = Runnable { nextDelay = TimeUtils.randomDelay(inventoryCleaner.minDelayValue.get(), inventoryCleaner.maxDelayValue.get()) })) return
 
 		if (notEmpty && (!closeOnFullValue.get() || !getFullInventory(thePlayer)))
 		{
@@ -185,7 +189,7 @@ class ChestStealer : Module()
 			{
 				do
 				{
-					val items = (0 until screen.inventoryRows * 9).asSequence().map(screen.inventorySlots!!::getSlot).filter { shouldTake(it.stack, inventoryCleaner) }.toList()
+					val items = (0 until end).asSequence().map(container::getSlot).filter { shouldTake(thePlayer, it.stack, it.slotNumber, inventoryCleaner, end, container) }.toList()
 
 					val randomSlot = Random.nextInt(items.size)
 					var slot = items[randomSlot]
@@ -195,7 +199,7 @@ class ChestStealer : Module()
 					// Simulate Click Mistakes to bypass some anti-cheats
 					if (allowMisclicksValue.get() && remainingMisclickCount > 0 && misclicksRateValue.get() > 0 && Random.nextInt(100) <= misclicksRateValue.get())
 					{
-						val firstEmpty: ISlot? = firstEmpty(screen.inventorySlots!!.inventorySlots, screen.inventoryRows * 9, true)
+						val firstEmpty: ISlot? = firstEmpty(container.inventorySlots, end, true)
 						if (firstEmpty != null)
 						{
 							slot = firstEmpty
@@ -210,18 +214,18 @@ class ChestStealer : Module()
 			}
 
 			// Non randomized
-			for (slotIndex in screen.inventoryRows * 9 - 1 downTo 0) // Reversed-direction
+			for (slotIndex in end - 1 downTo 0) // Reversed-direction
 			{
-				var slot = screen.inventorySlots!!.getSlot(slotIndex)
+				var slot = container.getSlot(slotIndex)
 				val stack = slot.stack
 
-				if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack, inventoryCleaner))
+				if (delayTimer.hasTimePassed(nextDelay) && shouldTake(thePlayer, stack, slot.slotNumber, inventoryCleaner, end, container))
 				{
 					var misclick = false
 
 					if (allowMisclicksValue.get() && remainingMisclickCount > 0 && misclicksRateValue.get() > 0 && Random.nextInt(100) <= misclicksRateValue.get())
 					{
-						val firstEmpty: ISlot? = firstEmpty(screen.inventorySlots!!.inventorySlots, screen.inventoryRows * 9, false)
+						val firstEmpty: ISlot? = firstEmpty(container.inventorySlots, end, false)
 						if (firstEmpty != null)
 						{
 							slot = firstEmpty
@@ -234,7 +238,7 @@ class ChestStealer : Module()
 				}
 			}
 		}
-		else if (autoCloseValue.get() && screen.inventorySlots!!.windowId == contentReceived && autoCloseTimer.hasTimePassed(nextCloseDelay))
+		else if (autoCloseValue.get() && container.windowId == contentReceived && autoCloseTimer.hasTimePassed(nextCloseDelay))
 		{
 			thePlayer.closeScreen()
 			nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
@@ -249,9 +253,7 @@ class ChestStealer : Module()
 		if (classProvider.isSPacketWindowItems(packet)) contentReceived = packet.asSPacketWindowItems().windowId
 	}
 
-	private fun shouldTake(stack: IItemStack?, inventoryCleaner: InventoryCleaner): Boolean = stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(
-		stack, -1
-	)) && (System.currentTimeMillis() - stack.itemDelay >= itemDelayValue.get())
+	private fun shouldTake(thePlayer: IEntityPlayerSP, stack: IItemStack?, slot: Int, inventoryCleaner: InventoryCleaner, end: Int, container: IContainer): Boolean = stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(thePlayer, slot, stack, end = end, container = container) && inventoryCleaner.isUseful(thePlayer, -1, stack) /* 상자 안에서 가장 좋은 아이템과 플레이어 인벤토리 내의 가장 좋은 아이템 비교해서 상자 안의 것이 더 좋을 경우에만 가져가기 */) && (System.currentTimeMillis() - stack.itemDelay >= itemDelayValue.get())
 
 	private fun move(screen: IGuiChest, slot: ISlot, misclick: Boolean)
 	{
@@ -261,11 +263,13 @@ class ChestStealer : Module()
 		nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 	}
 
-	private fun isEmpty(chest: IGuiChest): Boolean
+	private fun isEmpty(thePlayer: IEntityPlayerSP, chest: IGuiChest): Boolean
 	{
 		val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 
-		return (0 until chest.inventoryRows * 9).map(chest.inventorySlots!!::getSlot).map(ISlot::stack).none { shouldTake(it, inventoryCleaner) }
+		val container = chest.inventorySlots!!
+		val end = chest.inventoryRows * 9
+		return (0 until end).map(container::getSlot).none { shouldTake(thePlayer, it.stack, it.slotNumber, inventoryCleaner, end, container) }
 	}
 
 	private fun firstEmpty(slots: List<ISlot>?, length: Int, random: Boolean): ISlot?

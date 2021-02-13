@@ -107,19 +107,19 @@ class InventoryUtils : MinecraftInstance(), Listenable
 				}
 			}
 
-			val pred = if (boundingBoxYLimit == 0.0) Optional.ofNullable(if (hotbarSlots.isEmpty()) null else hotbarSlots[0])
-			else hotbarSlots.stream().filter { hotbarSlot: Int? ->
+			val pred = if (boundingBoxYLimit == 0.0) if (hotbarSlots.isEmpty()) null else hotbarSlots[0]
+			else hotbarSlots.filter { hotbarSlot: Int? ->
 				val block = thePlayer.inventoryContainer.getSlot(hotbarSlot!!).stack!!.item!!.asItemBlock().block
 				val box = block.getCollisionBoundingBox(theWorld, ORIGIN, block.defaultState!!)
 
 				box != null && box.maxY - box.minY <= boundingBoxYLimit
-			}.max(Comparator.comparingDouble { hotbarSlot: Int? ->
+			}.maxWith(Comparator.comparingDouble { hotbarSlot: Int? ->
 				val block = thePlayer.inventoryContainer.getSlot(hotbarSlot!!).stack!!.item!!.asItemBlock().block
 
 				block.getBlockBoundsMaxY() - block.getBlockBoundsMinY()
 			})
 
-			if (pred.isPresent) return pred.get()
+			if (pred != null) return pred
 
 			hotbarSlots.clear() // Reuse list
 
@@ -137,19 +137,19 @@ class InventoryUtils : MinecraftInstance(), Listenable
 					}
 				}
 
-				val pred2 = if (boundingBoxYLimit == 0.0) Optional.ofNullable(if (hotbarSlots.isEmpty()) null else hotbarSlots[0])
-				else hotbarSlots.stream().filter { hotbarSlot: Int? ->
+				val pred2 = if (boundingBoxYLimit == 0.0) if (hotbarSlots.isEmpty()) null else hotbarSlots[0]
+				else hotbarSlots.filter { hotbarSlot: Int? ->
 					val block = thePlayer.inventoryContainer.getSlot(hotbarSlot!!).stack!!.item!!.asItemBlock().block
 					val box = block.getCollisionBoundingBox(theWorld, ORIGIN, block.defaultState!!)
 
 					box != null && box.maxY - box.minY <= boundingBoxYLimit
-				}.max(Comparator.comparingDouble { hotbarSlot: Int? ->
+				}.maxWith(Comparator.comparingDouble { hotbarSlot: Int? ->
 					val block = thePlayer.inventoryContainer.getSlot(hotbarSlot!!).stack!!.item!!.asItemBlock().block
 
 					block.getBlockBoundsMaxY() - block.getBlockBoundsMinY()
 				})
 
-				if (pred2.isPresent) return pred2.get()
+				if (pred2 != null) return pred2
 			}
 
 			return -1

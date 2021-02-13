@@ -178,7 +178,7 @@ class ValuesConfig(file: File) : FileConfig(file)
 		backgroundObject.addProperty("Particles", particles)
 		jsonObject.add("Background", backgroundObject)
 
-		LiquidBounce.moduleManager.modules.stream().filter { module: Module -> module.values.isNotEmpty() }.forEach { module: Module ->
+		LiquidBounce.moduleManager.modules.filter { module: Module -> module.values.isNotEmpty() }.forEach { module: Module ->
 			val jsonModule = JsonObject()
 			module.values.forEach(Consumer { value: Value<*> -> jsonModule.add(value.name, value.toJson()) })
 			jsonObject.add(module.name, jsonModule)

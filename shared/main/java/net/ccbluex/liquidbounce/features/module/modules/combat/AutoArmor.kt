@@ -23,9 +23,6 @@ import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import java.util.*
-import java.util.stream.Collectors
-import java.util.stream.IntStream
 
 @ModuleInfo(name = "AutoArmor", description = "Automatically equips the best armor in your inventory.", category = ModuleCategory.COMBAT)
 class AutoArmor : Module()
@@ -70,25 +67,25 @@ class AutoArmor : Module()
 		if (!InventoryUtils.CLICK_TIMER.hasTimePassed(nextDelay) || thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0) return
 
 		// Find best armor
-		val armorPieces = IntStream.range(0, 36).filter { i: Int ->
+		val armorPieces = (0 until 36).filter { i: Int ->
 			val itemStack = thePlayer.inventory.getStackInSlot(i)
 			itemStack != null && classProvider.isItemArmor(itemStack.item) && (i < 9 || System.currentTimeMillis() - itemStack.itemDelay >= itemDelayValue.get())
-		}.mapToObj { ArmorPiece(thePlayer.inventory.getStackInSlot(it)!!, it) }.collect(Collectors.groupingBy(ArmorPiece::armorType))
+		}.map { ArmorPiece(thePlayer.inventory.getStackInSlot(it), it) }.groupBy(ArmorPiece::armorType)
 
 		val bestArmor = arrayOfNulls<ArmorPiece>(4)
 
-		for ((key, value) in armorPieces) bestArmor[key] = value.stream().max(ARMOR_COMPARATOR).orElse(null)
+		for ((key, value) in armorPieces) bestArmor[key] = value.maxWith(ARMOR_COMPARATOR)
 
 		// Swap armor
 		for (i in 0..3)
 		{
 			val armorPiece = bestArmor[i] ?: continue
 			val armorSlot = 3 - i
-			val oldArmor = ArmorPiece(thePlayer.inventory.armorItemInSlot(armorSlot) ?: continue, -1)
+			val oldArmor = ArmorPiece(thePlayer.inventory.armorItemInSlot(armorSlot), -1)
 
-			if (ItemUtils.isStackEmpty(oldArmor.itemStack) || !classProvider.isItemArmor(oldArmor.itemStack.item) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0)
+			if (ItemUtils.isStackEmpty(oldArmor.itemStack) || !classProvider.isItemArmor(oldArmor.itemStack?.item) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0)
 			{
-				if (!ItemUtils.isStackEmpty(oldArmor.itemStack) && move(thePlayer, netHandler, 8 - (3 - armorSlot), true))
+				if (!ItemUtils.isStackEmpty(oldArmor.itemStack) && move(thePlayer, netHandler, 8 - armorSlot, true))
 				{
 					locked = true
 					return

@@ -24,7 +24,6 @@ import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.UnsupportedFlavorException
 import java.io.IOException
-import java.util.*
 
 class GuiDirectLogin(gui: GuiAltManager) : WrappedGuiScreen()
 {
@@ -65,7 +64,7 @@ class GuiDirectLogin(gui: GuiAltManager) : WrappedGuiScreen()
 		val middleScreen = representedScreen.width / 2.0f
 
 		Fonts.font40.drawCenteredString("Direct Login", middleScreen, 34f, 0xffffff)
-		Fonts.font35.drawCenteredString(Optional.ofNullable(status).orElse(""), middleScreen, representedScreen.height / 4.0f + 60, 0xffffff)
+		Fonts.font35.drawCenteredString(status, middleScreen, representedScreen.height / 4.0f + 60, 0xffffff)
 
 		username.drawTextBox()
 		password.drawTextBox()

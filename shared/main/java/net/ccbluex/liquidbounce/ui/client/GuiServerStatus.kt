@@ -24,7 +24,10 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	override fun initGui()
 	{
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 145, "Back"))
+		val width = representedScreen.width
+		val height = representedScreen.height
+
+		representedScreen.buttonList.add(classProvider.createGuiButton(1, width / 2 - 100, height / 4 + 145, "Back"))
 
 		WorkerUtils.workers.submit(::loadInformation)
 	}
@@ -33,34 +36,42 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	{
 		representedScreen.drawBackground(0)
 
-		var i = representedScreen.height / 4 + 40
-		RenderUtils.drawRect(representedScreen.width / 2.0f - 115, i - 5.0f, representedScreen.width / 2.0f + 115, representedScreen.height / 4.0f + 43 + if (status.keys.isEmpty()) 10 else status.keys.size * Fonts.font40.fontHeight, Integer.MIN_VALUE)
+		val width = representedScreen.width
+		val height = representedScreen.height
+
+		var i = height / 4 + 40
+
+		val middleScreen = width / 2.0f
+		val quarterScreen = height / 4.0f
+
+		RenderUtils.drawRect(middleScreen - 115, i - 5.0f, middleScreen + 115, quarterScreen + 43 + if (status.keys.isEmpty()) 10 else status.keys.size * Fonts.font40.fontHeight, Integer.MIN_VALUE)
 
 		if (status.isEmpty())
 		{
-			Fonts.font40.drawCenteredString("Loading...", representedScreen.width / 2.0f, representedScreen.height / 4.0f + 40, Color.WHITE.rgb)
+			Fonts.font40.drawCenteredString("Loading...", middleScreen, quarterScreen + 40, Color.WHITE.rgb)
 		}
 		else
 		{
 			for (server in status.keys)
 			{
 				val color = status[server]
-				Fonts.font40.drawCenteredString(
-					"$server: ${
-						when
-						{
-							color.equals("green", ignoreCase = true) -> "\u00A7aOnline and Stable"
-							color.equals("yellow", ignoreCase = true) -> "\u00A7eSlow or Unstable"
-							color.equals("red", ignoreCase = true) -> "\u00A7cOffline or Down"
-							else -> color
-						}
-					}", representedScreen.width / 2.0f, i.toFloat(), Color.WHITE.rgb
-				)
+				val text = "$server: ${
+					when (color?.toLowerCase())
+					{
+						"green" -> "\u00A7aOnline and Stable"
+						"yellow" -> "\u00A7eSlow or Unstable"
+						"red" -> "\u00A7cOffline or Down"
+						else -> color
+					}
+				}"
+
+				Fonts.font40.drawCenteredString(text, middleScreen, i.toFloat(), Color.WHITE.rgb)
+
 				i += Fonts.font40.fontHeight
 			}
 		}
 
-		Fonts.fontBold180.drawCenteredString("Server Status", representedScreen.width / 2F, representedScreen.height / 8f + 5F, 4673984, true)
+		Fonts.fontBold180.drawCenteredString("Server Status", width / 2F, height / 8f + 5F, 4673984, true)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 	}
