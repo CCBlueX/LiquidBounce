@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -18,6 +19,7 @@ import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import kotlin.random.Random
 
 @ModuleInfo(name = "Criticals", description = "Automatically deals critical hits.", category = ModuleCategory.COMBAT)
 class Criticals : Module()
@@ -31,6 +33,7 @@ class Criticals : Module()
 	private val minDelayValue = IntegerValue("MinDelay", 0, 0, 500)
 
 	private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
+	private val hitChanceValue = IntegerValue("Chance", 100, 0, 100)
 
 	/**
 	 * Custom Criticals Options
@@ -61,10 +64,14 @@ class Criticals : Module()
 		if (classProvider.isEntityLivingBase(event.targetEntity))
 		{
 			val thePlayer = mc.thePlayer ?: return
-			val entity = (event.targetEntity ?: return).asEntityLivingBase()
+			val entity = (event.targetEntity ?: return)
+			if (!classProvider.isEntityLivingBase(entity)) return
+			val targetEntity = entity.asEntityLivingBase()
+
 			val networkManager = mc.netHandler.networkManager
 
-			if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.ridingEntity != null || entity.hurtTime > hurtTimeValue.get() || LiquidBounce.moduleManager[Fly::class.java].state || !canCritical) return
+			val chance = hitChanceValue.get()
+			if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.ridingEntity != null || targetEntity.hurtTime > hurtTimeValue.get() || !(chance > 0 && Random.nextInt(100) <= chance) || LiquidBounce.moduleManager[Fly::class.java].state || !canCritical(thePlayer)) return
 
 			val x = thePlayer.posX
 			val y = thePlayer.posY
@@ -78,7 +85,7 @@ class Criticals : Module()
 					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y, z, false))
 					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.000011, z, false))
 					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y, z, false))
-					thePlayer.onCriticalHit(entity)
+					thePlayer.onCriticalHit(targetEntity)
 				}
 
 				"ncppacket" ->
@@ -86,7 +93,7 @@ class Criticals : Module()
 					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.11, z, false))
 					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.1100013579, z, false))
 					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.0000013579, z, false))
-					thePlayer.onCriticalHit(entity)
+					thePlayer.onCriticalHit(targetEntity)
 				}
 
 				"tphop" ->
@@ -94,7 +101,7 @@ class Criticals : Module()
 					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.02, z, false))
 					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.01, z, false))
 					thePlayer.setPosition(x, y + 0.01, z)
-					thePlayer.onCriticalHit(entity)
+					thePlayer.onCriticalHit(targetEntity)
 				}
 
 				"custom" ->
@@ -103,7 +110,7 @@ class Criticals : Module()
 
 					for (i in 0 until customStepsValue.get()) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + ystep[i], z, false))
 
-					thePlayer.onCriticalHit(entity)
+					thePlayer.onCriticalHit(targetEntity)
 				}
 
 				"hop" ->
@@ -115,7 +122,7 @@ class Criticals : Module()
 
 				"jump" -> thePlayer.motionY = 0.42
 				"lowjump" -> thePlayer.motionY = 0.3425
-				"visual" -> thePlayer.onCriticalHit(entity)
+				"visual" -> thePlayer.onCriticalHit(targetEntity)
 			}
 
 			delayTimer.reset()
@@ -123,12 +130,7 @@ class Criticals : Module()
 		}
 	}
 
-	val canCritical: Boolean
-		get()
-		{
-			val thePlayer = mc.thePlayer!!
-			return !thePlayer.isInWeb && !thePlayer.isInWater && !thePlayer.isInLava && delayTimer.hasTimePassed(nextDelay)
-		}
+	fun canCritical(thePlayer: IEntityPlayerSP): Boolean = !thePlayer.isInWeb && !thePlayer.isInWater && !thePlayer.isInLava && delayTimer.hasTimePassed(nextDelay)
 
 	@EventTarget
 	fun onPacket(event: PacketEvent)

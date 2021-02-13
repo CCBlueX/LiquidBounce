@@ -833,11 +833,11 @@ class KillAura : Module()
 		// Extra critical effects
 		val criticals = LiquidBounce.moduleManager[Criticals::class.java] as Criticals
 
-		if (particles.get() > 0) for (i in 0..(particles.get()))
+		val crackSize = particles.get()
+		if (crackSize > 0) for (i in 0..crackSize)
 		{
-
 			// Critical Effect
-			if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) && thePlayer.ridingEntity == null || criticals.state && criticals.canCritical) thePlayer.onCriticalHit(target ?: return)
+			if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) && thePlayer.ridingEntity == null || criticals.state && criticals.canCritical(thePlayer)) thePlayer.onCriticalHit(target ?: return)
 
 			// Enchant Effect
 			if (functions.getModifierForCreature(thePlayer.heldItem, (target ?: return).creatureAttribute) > 0.0f || fakeSharpValue.get()) thePlayer.onEnchantmentCritical(target ?: return)
@@ -985,11 +985,14 @@ class KillAura : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		// BlockRate check
-		if (!(blockRate.get() > 0 && Random.nextInt(100) <= blockRate.get())) return
+		val autoBlockMode = autoBlockValue.get()
+		val blockRate = blockRate.get()
 
-		val visual = !autoBlockValue.get().equals("Off", true) // Fake, Packet, AfterTick
-		val packet = visual && !autoBlockValue.get().equals("Fake", true) // Packet, AfterTick
+		// BlockRate check
+		if (!(blockRate > 0 && Random.nextInt(100) <= blockRate)) return
+
+		val visual = !autoBlockMode.equals("Off", true) // Fake, Packet, AfterTick
+		val packet = visual && !autoBlockMode.equals("Fake", true) // Packet, AfterTick
 
 		if (packet && !serverSideBlockingStatus)
 		{
