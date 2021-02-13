@@ -103,14 +103,14 @@ object EntityUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun getPlayerHealthFromScoreboard(playername: String?, mineplex: Boolean): Int
+	fun getPlayerHealthFromScoreboard(playername: String?, isMineplex: Boolean): Int
 	{
 		val scoreboard: IScoreboard = mc.theWorld!!.scoreboard
 		for (entity in mc.theWorld!!.loadedEntityList) if (classProvider.isEntityPlayer(entity) && entity != mc.thePlayer)
 		{
 			val player = entity.asEntityPlayer()
 			val objectives = scoreboard.getObjectivesForEntity(player.gameProfile.name)
-			for (score in objectives.values) if (player.gameProfile.name.equals(playername, ignoreCase = true)) return score.scorePoints * if (mineplex) 2 else 1
+			for (score in objectives.values) if (player.gameProfile.name.equals(playername, ignoreCase = true)) return score.scorePoints * if (isMineplex) 2 else 1
 		}
 		return 0
 	}

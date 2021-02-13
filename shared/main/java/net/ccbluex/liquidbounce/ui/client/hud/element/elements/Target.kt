@@ -9,6 +9,7 @@ package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
+import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.ITextureManager
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.api.minecraft.util.WDefaultPlayerSkin
 import net.ccbluex.liquidbounce.features.module.modules.combat.Aimbot
@@ -38,8 +39,10 @@ import kotlin.math.roundToInt
 @ElementInfo(name = "Target")
 class Target : Element()
 {
-
-	private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
+	companion object
+	{
+		private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
+	}
 
 	private val damageAnimationColorRed = IntegerValue("DamageAnimationColorRed", 252, 0, 255)
 	private val damageAnimationColorGreen = IntegerValue("DamageAnimationColorGreen", 185, 0, 255)
@@ -69,18 +72,23 @@ class Target : Element()
 
 	override fun drawElement(): Border
 	{
+		val thePlayer = mc.thePlayer!!
+		val renderItem = mc.renderItem
+		val netHandler = mc.netHandler
+		val textureManager = mc.textureManager
+
 		val tpAura = LiquidBounce.moduleManager[TpAura::class.java] as TpAura
 		val targetEntity = if (tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null) tpAura.currentTarget else ((LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target ?: (LiquidBounce.moduleManager[Aimbot::class.java] as Aimbot).target)
 
 		if (classProvider.isEntityPlayer(targetEntity) && targetEntity!!.asEntityPlayer().entityAlive)
 		{
 			val targetPlayer: IEntityPlayer = targetEntity.asEntityPlayer()
+
 			val targetHealth = when (healthGetMethod.get().toLowerCase())
 			{
-				"mineplex", "hive" -> EntityUtils.getPlayerHealthFromScoreboard(targetPlayer.gameProfile.name, healthGetMethod.get().equals("Mineplex", true)).toFloat()
+				"mineplex", "hive" -> EntityUtils.getPlayerHealthFromScoreboard(targetPlayer.gameProfile.name, isMineplex = healthGetMethod.get().equals("Mineplex", true)).toFloat()
 				else -> targetPlayer.health
 			} + targetPlayer.absorptionAmount
-
 			val targetArmor = targetPlayer.totalArmorValue
 
 			val targetMaxHealth = targetPlayer.maxHealth /* + ptargetHealthBoost + ptargetAbsorption */ + targetPlayer.absorptionAmount
@@ -89,53 +97,60 @@ class Target : Element()
 			val damageColor = Color(damageAnimationColorRed.get(), damageAnimationColorGreen.get(), damageAnimationColorBlue.get())
 			val healColor = Color(healAnimationColorRed.get(), healAnimationColorGreen.get(), healAnimationColorBlue.get())
 
-			if (targetPlayer != lastTarget || easingHealth < 0 || easingHealth > targetMaxHealth || abs(easingHealth - targetHealth) < 0.01) easingHealth = targetHealth
-			if (targetPlayer != lastTarget || easingAbsorption < 0 || easingAbsorption > targetPlayer.absorptionAmount || abs(easingAbsorption - targetPlayer.absorptionAmount) < 0.01) easingAbsorption = targetPlayer.absorptionAmount
-			if (targetPlayer != lastTarget || easingArmor < 0 || easingArmor > 20 || abs(easingArmor - targetArmor) < 0.01) easingArmor = targetArmor.toFloat()
+			if (targetPlayer != lastTarget)
+			{
+				if (easingHealth < 0 || easingHealth > targetMaxHealth || abs(easingHealth - targetHealth) < 0.01) easingHealth = targetHealth
+				if (easingAbsorption < 0 || easingAbsorption > targetPlayer.absorptionAmount || abs(easingAbsorption - targetPlayer.absorptionAmount) < 0.01) easingAbsorption = targetPlayer.absorptionAmount
+				if (easingArmor < 0 || easingArmor > 20 || abs(easingArmor - targetArmor) < 0.01) easingArmor = targetArmor.toFloat()
+			}
 
 			val healthColor = ColorUtils.getHealthColor(easingHealth, targetMaxHealth)
 
 			val width = (100.0F + Fonts.font60.getStringWidth(targetPlayer.name!!)).coerceAtLeast(250.0F)
 
-			// Draw rect box
+			// Draw Body Rect
 			RenderUtils.drawBorderedRect(0F, 0F, width, 110F, borderWidth.get(), Color(borderColorRed.get(), borderColorGreen.get(), borderColorBlue.get()).rgb, Color.black.rgb)
 
-			// Head Box
+			// Draw Head Box
 			RenderUtils.drawRect(2F, 2F, 96F, 96F, Color.darkGray.rgb)
 
-			// Absorption
+			// Draw Absorption
 			RenderUtils.drawRect(((easingHealth / targetMaxHealth) * width) - ((/* ptargetAbsorption */ easingAbsorption / targetMaxHealth) * width) + 1, 103F, (easingHealth / targetMaxHealth) * width, 104F, Color.yellow.rgb)
 
-			// Damage animation
+			// Draw Damage animation
 			if (easingHealth > targetHealth) RenderUtils.drawRect(0F, 105F, (easingHealth / targetMaxHealth) * width, 107F, damageColor.rgb)
 
-			// Health bar
+			// Draw Health bar
 			RenderUtils.drawRect(0F, 105F, (targetHealth / targetMaxHealth) * width, 107F, healthColor.rgb)
 
-			// Heal animation
+			// Draw Heal animation
 			if (easingHealth < targetHealth) RenderUtils.drawRect((easingHealth / targetMaxHealth) * width, 105F, (targetHealth / targetMaxHealth) * width, 107F, healColor.rgb)
 
-			for (index in 1..targetMaxHealthInt) RenderUtils.drawRect(width / targetMaxHealthInt * index, 103F, width / targetMaxHealthInt * index + 1, 107F, Color.black.rgb)
+			// Draw Health Gradations
+			val healthGradationGap = width / targetMaxHealthInt
+			for (index in 1..targetMaxHealthInt) RenderUtils.drawRect(healthGradationGap * index, 103F, healthGradationGap * index + 1, 107F, Color.black.rgb)
 
-			// Indicate total armor value
+			// Draw Total Armor bar
 			RenderUtils.drawRect(0F, 109F, (easingArmor / 20) * width, 110F, Color.cyan.rgb)
 
-			for (index in 1..20) RenderUtils.drawRect(width / 20 * index, 109F, width / 20 * index + 1, 110F, Color.black.rgb)
+			// Draw Armor Gradations
+			val armorGradationGap = width / 20
+			for (index in 1..20) RenderUtils.drawRect(armorGradationGap * index, 109F, armorGradationGap * index + 1, 110F, Color.black.rgb)
 
 			easingHealth += ((targetHealth - easingHealth) / 2.0F.pow(10.0F - healthFadeSpeed.get())) * RenderUtils.deltaTime
 			easingAbsorption += ((targetPlayer.absorptionAmount - easingAbsorption) / 2.0F.pow(10.0F - absorptionFadeSpeed.get())) * RenderUtils.deltaTime
 			easingArmor += ((targetArmor - easingArmor) / 2.0F.pow(10.0F - armorFadeSpeed.get())) * RenderUtils.deltaTime
 
-			// Draw Name
+			// Draw Target Name
 			Fonts.font60.drawString(targetPlayer.displayNameString, 100, 3, 0xffffff)
 
 			// Draw informations
-			val playerInfo = mc.netHandler.getPlayerInfo(targetPlayer.uniqueID)
 
 			val skinResource: IResourceLocation
 			val ping: Int
 			val pingTextColor: Int
 
+			val playerInfo = netHandler.getPlayerInfo(targetPlayer.uniqueID)
 			if (playerInfo != null)
 			{
 				ping = playerInfo.responseTime.coerceAtLeast(0)
@@ -150,54 +165,69 @@ class Target : Element()
 			}
 
 			// Draw head
-			drawHead(skinResource, 90, 90)
+			drawHead(textureManager, skinResource, 90, 90)
 
-			val pingLevelImageID: Int = if (ping < 0L) 5 else if (ping < 150L) 0 else if (ping < 300L) 1 else if (ping < 600L) 2 else if (ping < 1000L) 3 else 4
+			RenderUtils.glColor(Color.white) // Reset Color
+
+			val pingLevelImageID: Int = when
+			{
+				ping < 0L -> 5
+				ping < 150L -> 0
+				ping < 300L -> 1
+				ping < 600L -> 2
+				ping < 1000L -> 3
+				else -> 4
+			}
 
 			// Draw Ping level
-			RenderUtils.glColor(Color.white) // Reset Color
-			mc.textureManager.bindTexture(RenderUtils.ICONS)
+			textureManager.bindTexture(RenderUtils.ICONS)
 			RenderUtils.drawModalRectWithCustomSizedTexture(100f, 20f, 0f, (176 + (pingLevelImageID shl 3)).toFloat(), 10f, 8f, 256f, 256f)
 
+			// Draw Ping text
 			Fonts.font35.drawString("${ping}ms", 112, 22, pingTextColor)
 
 			// Render equipments
 			if (armor.get())
 			{
+				val equipmentY = 35
 				for (index in 0..4)
 				{
 					val isHeldItem = index == 0
 
 					val equipmentX = 100 + (4 - index) * 20 + if (isHeldItem) 5 else 0
-					val equipmentY = 35
 
 					RenderUtils.drawRect(equipmentX, equipmentY, equipmentX + 16, equipmentY + 16, Color.darkGray.rgb)
 
-					if (targetPlayer.getEquipmentInSlot(index) != null)
-					{
-						mc.renderItem.zLevel = -147F
-						mc.renderItem.renderItemAndEffectIntoGUI(targetPlayer.getEquipmentInSlot(index)!!, equipmentX, equipmentY)
-					}
+					val armor = targetPlayer.getEquipmentInSlot(index) ?: continue
+
+					RenderUtils.glColor(Color.white) // Reset Color
+					renderItem.zLevel = -147F
+					renderItem.renderItemAndEffectIntoGUI(armor, equipmentX, equipmentY)
 				}
 			}
 
 			RenderUtils.glColor(Color.white) // Reset Color
 
 			// Render Target Stats
-			Fonts.font35.drawString("${if (targetPlayer.onGround) "On" else "Off"} Ground", 100, 60, 0xffffff)
-			Fonts.font35.drawString("${if (!targetPlayer.sprinting) "Not " else ""}Sprinting | ${if (!targetPlayer.sneaking) "Not " else ""}Sneaking", 100, 70, 0xffffff)
-			Fonts.font35.drawString("Distance > ${decimalFormat.format(mc.thePlayer!!.getDistanceToEntityBox(targetPlayer))}m", 100, 80, 0xffffff)
-			Fonts.font35.drawString("Hurt > ${targetPlayer.hurtTime}", 100, 90, if (targetPlayer.hurtTime > 0) 0xff0000 /* RED */ else 0x00ff00 /* GREEN */)
+
+			val distanceText = decimalFormat.format(thePlayer.getDistanceToEntityBox(targetPlayer))
+			Fonts.font35.drawString("${if (targetPlayer.onGround) "\u00A7aOn" else "\u00A7cOff"}-Ground\u00A7r | distance: ${distanceText}m", 100, 60, 0xffffff)
+			Fonts.font35.drawString("${if (!targetPlayer.sprinting) "\u00A7cNot " else "\u00A7a"}Sprinting\u00A7r | ${if (!targetPlayer.sneaking) "\u00A7cNot " else "\u00A7a"}Sneaking\u00A7r", 100, 70, 0xffffff)
+
+			val yawText = decimalFormat.format(targetPlayer.rotationYaw % 360f)
+			val pitchText = decimalFormat.format(targetPlayer.rotationPitch)
+			Fonts.font35.drawString("yaw: $yawText | pitch: $pitchText | hurt: ${if (targetPlayer.hurtTime > 0) "\u00A7c" else "\u00A7a"}${targetPlayer.hurtTime}\u00A7r", 100, 85, 0xffffff)
 		}
 
 		lastTarget = targetEntity
 		return Border(0F, 0F, 250F, 110F)
 	}
 
-	private fun drawHead(skin: IResourceLocation, width: Int, height: Int)
+	private fun drawHead(textureManager: ITextureManager, skin: IResourceLocation, width: Int, height: Int)
 	{
 		GL11.glColor4f(1F, 1F, 1F, 1F)
-		mc.textureManager.bindTexture(skin)
+
+		textureManager.bindTexture(skin)
 		RenderUtils.drawScaledCustomSizeModalRect(4, 4, 8F, 8F, 8, 8, width, height, 64F, 64F)
 	}
 }

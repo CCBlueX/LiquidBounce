@@ -119,7 +119,7 @@ class Criticals : Module()
 			}
 
 			delayTimer.reset()
-			nextDelay = TimeUtils.randomClickDelay(minDelayValue.get(), maxDelayValue.get())
+			nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 		}
 	}
 

@@ -129,7 +129,7 @@ class NameTags : Module()
 		val healthText = if (healthValue.get())
 		{
 			val health: Float = if (!classProvider.isEntityPlayer(entity) || healthModeValue.get().equals("Datawatcher", true)) entity.health
-			else EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, healthModeValue.get().equals("Mineplex", true)).toFloat()
+			else EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthModeValue.get().equals("Mineplex", true)).toFloat()
 
 			val absorption = if (ceil(entity.absorptionAmount.toDouble()) > 0) entity.absorptionAmount else 0f
 			val healthPercentage = (health + absorption) / entity.maxHealth * 100f

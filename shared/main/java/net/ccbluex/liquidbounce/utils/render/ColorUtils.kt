@@ -141,7 +141,7 @@ object ColorUtils : MinecraftInstance()
 				{
 					var health = entityLiving.health
 					val maxHealth = entityLiving.maxHealth
-					if (classProvider.isEntityPlayer(entity) && (healthMode.equals("Mineplex", ignoreCase = true) || healthMode.equals("Hive", ignoreCase = true))) health = EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, healthMode.equals("mineplex", ignoreCase = true)).toFloat()
+					if (classProvider.isEntityPlayer(entity) && (healthMode.equals("Mineplex", ignoreCase = true) || healthMode.equals("Hive", ignoreCase = true))) health = EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("mineplex", ignoreCase = true)).toFloat()
 					return getHealthColor(health, maxHealth)
 				}
 			}
