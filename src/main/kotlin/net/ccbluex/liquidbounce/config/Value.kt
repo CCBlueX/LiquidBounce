@@ -31,8 +31,6 @@ import kotlin.reflect.KProperty
  */
 open class Value<T>(@SerializedName("name")
                     val name: String,
-                    @Exclude
-                    var description: String = "",
                     @SerializedName("value")
                     var value: T,
                     @Exclude
@@ -67,15 +65,15 @@ open class Value<T>(@SerializedName("name")
 /**
  * Ranged value adds support for closed ranges
  */
-class RangedValue<T>(name: String, description: String = "", value: T, val range: ClosedRange<*>, change: (T, T) -> Unit = { _, _ -> })
-    : Value<T>(name, description, value, change)
+class RangedValue<T>(name: String, value: T, val range: ClosedRange<*>, change: (T, T) -> Unit = { _, _ -> })
+    : Value<T>(name, value, change)
 
 /**
  * Ranged value adds support for closed ranges
  */
-class ModeValue(name: String, description: String = "", @Exclude val module: Module, mode: String,
-                @Exclude val modes: Array<Mode>, change: (String, String) -> Unit = { _, _ -> })
-    : Value<String>(name, description, mode, { old, new ->
+class ModeValue(name: String, @Exclude val module: Module, mode: String, @Exclude val modes: Array<Mode>,
+                change: (String, String) -> Unit = { _, _ -> })
+    : Value<String>(name, mode, { old, new ->
         change(old, new)
 
         // disable old mode
@@ -97,9 +95,8 @@ class ModeValue(name: String, description: String = "", @Exclude val module: Mod
 /**
  *
  */
-class ListValue(name: String, description: String = "", selected: String,
-                @Exclude val selectables: Array<String>, change: (String, String) -> Unit = { _, _ -> })
-    : Value<String>(name, description, selected, change)
+class ListValue(name: String, selected: String, @Exclude val selectables: Array<String>, change: (String, String) -> Unit = { _, _ -> })
+    : Value<String>(name, selected, change)
 
 /**
  * Extensions
