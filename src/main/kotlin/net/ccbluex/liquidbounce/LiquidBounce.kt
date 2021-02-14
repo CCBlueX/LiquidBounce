@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
 import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
 import net.ccbluex.liquidbounce.renderer.ultralight.WebView
+import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.extensions.globalEnemyConfigurable
 import org.apache.logging.log4j.LogManager
@@ -58,6 +59,7 @@ object LiquidBounce {
     val moduleManager = ModuleManager
     val commandManager = CommandManager
     val scriptManager = ScriptManager
+    val themeManager = ThemeManager
     val chat = Chat()
 
 
