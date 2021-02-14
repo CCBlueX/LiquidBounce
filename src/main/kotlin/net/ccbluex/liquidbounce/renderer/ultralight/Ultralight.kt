@@ -108,7 +108,7 @@ class WebView(
     var currentPage: Page? = null
 
     private var glTexture = -1
-    private val textureScale: Float = WebPlatform.SCALE.toFloat()
+    val textureScale: Float = WebPlatform.SCALE.toFloat()
 
     init {
         // Setup view
