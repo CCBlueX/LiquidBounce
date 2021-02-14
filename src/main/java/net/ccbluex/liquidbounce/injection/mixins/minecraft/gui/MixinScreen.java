@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.injection.mixins.gui;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import net.ccbluex.liquidbounce.event.ChatSendEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
