@@ -20,17 +20,19 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.boolean
+import net.ccbluex.liquidbounce.config.int
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.util.InputUtil
 import net.minecraft.world.World
+import org.lwjgl.glfw.GLFW
 
 /**
  * A module also called 'hack' is able to be enabled and handle events
  */
-open class Module(val name: String, val category: Category, var description: String = "", var bind: InputUtil.Key = InputUtil.UNKNOWN_KEY,
+open class Module(val name: String, val category: Category, var description: String = "", defaultBind: Int = GLFW.GLFW_KEY_UNKNOWN,
                   defaultState: Boolean = false, val disableActivation: Boolean = false, hide: Boolean = false) : Listenable, Configurable(name) {
 
     // Module options
@@ -56,6 +58,7 @@ open class Module(val name: String, val category: Category, var description: Str
             throw it
         }
     })
+    var bind by int("bind", defaultBind)
     var hidden by boolean("hidden", hide)
 
     // Tag to be displayed on the HUD

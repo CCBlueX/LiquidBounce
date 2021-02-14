@@ -23,11 +23,9 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.utils.chat
-import net.ccbluex.liquidbounce.utils.dot
-import net.ccbluex.liquidbounce.utils.regular
-import net.ccbluex.liquidbounce.utils.variable
-import net.minecraft.client.util.InputUtil
+import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.extensions.asText
+import org.lwjgl.glfw.GLFW
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -59,16 +57,17 @@ object CommandBinds {
                     )
                     .handler { args ->
                         val name = args[0] as String
-                        val key = args[1] as String
+                        val keyName = args[1] as String
                         val module = ModuleManager.find { it.name.equals(name, true) }
-                            ?: throw CommandException("Module §b§l${args[1]}§c not found.")
+                            ?: throw CommandException("Module $name not found.")
 
-                        val bindKey = runCatching {
-                            InputUtil.fromTranslationKey("key.keyboard.${key.toLowerCase()}")
-                        }.getOrElse { InputUtil.UNKNOWN_KEY }
+                        val bindKey = key(keyName)
+                        if (bindKey == GLFW.GLFW_KEY_UNKNOWN) {
+                            throw CommandException("Unknown key.")
+                        }
 
                         module.bind = bindKey
-                        chat(regular("Bound module "), variable(module.name), regular(" to key "), bindKey.localizedText, dot())
+                        chat(regular("Bound module "), variable(module.name), regular(" to key "), variable(keyName(bindKey)), dot())
                     }
                     .build()
             )
@@ -87,9 +86,13 @@ object CommandBinds {
                     .handler { args ->
                         val name = args[0] as String
                         val module = ModuleManager.find { it.name.equals(name, true) }
-                            ?: throw CommandException("Module ${args[1]} not found.")
+                            ?: throw CommandException("Module $name not found.")
 
-                        module.bind = InputUtil.UNKNOWN_KEY
+                        if (module.bind == GLFW.GLFW_KEY_UNKNOWN) {
+                            throw CommandException("Module is not bound to any key.")
+                        }
+
+                        module.bind = GLFW.GLFW_KEY_UNKNOWN
                         chat(regular("The bind for module "), variable(module.name), regular(" has been removed"), dot())
                     }
                     .build()
@@ -114,7 +117,7 @@ object CommandBinds {
                         }.coerceAtLeast(1)
 
                         val bindings = ModuleManager.sortedBy { it.name }
-                            .filter { it.bind != InputUtil.UNKNOWN_KEY }
+                            .filter { it.bind != GLFW.GLFW_KEY_UNKNOWN }
 
                         if (bindings.isEmpty()) {
                             throw CommandException("There are no bindings to be shown.")
@@ -133,7 +136,7 @@ object CommandBinds {
 
                         val iterPage = 8 * page
                         for (module in bindings.subList(iterPage - 8, iterPage.coerceAtMost(bindings.size))) {
-                            bindingsOut.append("§6> §7${module.name} (§8§l${module.bind.localizedText.asString()}§7)\n")
+                            bindingsOut.append("§6> §7${module.name} (§8§l${keyName(module.bind).asText()}§7)\n")
                         }
                         chat(bindingsOut.toString())
                     }
@@ -144,7 +147,7 @@ object CommandBinds {
                     .begin("clear")
                     .description("Clears your binds")
                     .handler {
-                        ModuleManager.forEach { it.bind = InputUtil.UNKNOWN_KEY }
+                        ModuleManager.forEach { it.bind = GLFW.GLFW_KEY_UNKNOWN }
                         chat("Cleared all binds.")
                     }
                     .build()

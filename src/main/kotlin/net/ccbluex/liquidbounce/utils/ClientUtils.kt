@@ -22,10 +22,12 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.extensions.asText
 import net.ccbluex.liquidbounce.utils.extensions.outputString
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.util.InputUtil
 import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.apache.logging.log4j.Logger
+import org.lwjgl.glfw.GLFW
 import java.io.InputStream
 
 val mc = MinecraftClient.getInstance()!!
@@ -67,7 +69,6 @@ fun resource(path: String): InputStream {
     return Empty::class.java.getResourceAsStream(path) ?: throw IllegalArgumentException("Resource $path not found")
 }
 
-
 /**
  * Converts resource to string
  *
@@ -75,3 +76,26 @@ fun resource(path: String): InputStream {
  * @throws IllegalArgumentException If the path is invalid
  */
 fun resourceToString(path: String) = resource(path).use { it.reader().readText() }
+
+/**
+ * Translated key code to key name using GLFW and translates unknown key to NONE
+ */
+fun key(name: String) = when(name.toLowerCase()) {
+    "rshift" -> GLFW.GLFW_KEY_RIGHT_SHIFT
+    "lshift" -> GLFW.GLFW_KEY_LEFT_SHIFT
+    else -> runCatching {
+        InputUtil.fromTranslationKey("key.keyboard.$name").code
+    }.getOrElse { GLFW.GLFW_KEY_UNKNOWN }
+}
+
+/**
+ * Translated key code to key name using GLFW and translates unknown key to NONE
+ */
+fun keyName(keyCode: Int) = when(keyCode) {
+    GLFW.GLFW_KEY_UNKNOWN -> "NONE"
+    else -> InputUtil.fromKeyCode(keyCode, -1).translationKey
+        .split(".")
+        .drop(2)
+        .joinToString(separator = "_")
+        .toUpperCase()
+}
