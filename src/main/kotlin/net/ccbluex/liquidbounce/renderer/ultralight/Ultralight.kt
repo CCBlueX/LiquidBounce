@@ -115,6 +115,7 @@ class WebView(
         view = renderer.createView(width().toLong() * textureScale.toLong(), height().toLong() * textureScale.toLong(), true)
         view.setViewListener(ViewListener(CursorAdapter(window)))
         view.setLoadListener(ViewLoadListener(view))
+        logger.debug("Created new view $this")
     }
 
     /**
@@ -127,6 +128,7 @@ class WebView(
 
         view.loadURL(page.viewableFile)
         currentPage = page
+        logger.debug("Loaded page on $this")
     }
 
     /**
@@ -155,7 +157,7 @@ class WebView(
      * @param height The new view height
      */
     fun resize(width: Int, height: Int) {
-        println("resize $width ${view.width()}, $height ${view.height()}")
+        logger.debug("Resizied $this to (w: $width h: $height)")
         view.resize(width.toLong() * textureScale.toLong(), height.toLong() * textureScale.toLong())
     }
 
@@ -165,6 +167,7 @@ class WebView(
     fun close() {
         view.unfocus()
         view.stop()
+        currentPage?.close()
         GL11.glDeleteTextures(glTexture)
         glTexture = -1
     }
@@ -287,5 +290,7 @@ class WebView(
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
         GL11.glDisable(GL11.GL_TEXTURE_2D)
     }
+
+    override fun toString() = "View(p: $currentPage, url: ${view.url()}, w: ${view.width()}, h: ${view.height()})"
 
 }

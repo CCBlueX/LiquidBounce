@@ -67,7 +67,7 @@ class Page(theme: Theme, val name: String) {
     val viewableFile: String
         get() = htmlFile.toURI().toString()
 
-    val watcher by lazy {
+    private val watcher by lazy {
         val path = pageFolder.toPath()
         val watchService = path.fileSystem.newWatchService()
         path.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
@@ -84,5 +84,7 @@ class Page(theme: Theme, val name: String) {
     fun close() {
         watcher.close()
     }
+
+    override fun toString() = "Page($name, $viewableFile)"
 
 }

@@ -38,6 +38,7 @@
 package net.ccbluex.liquidbounce.renderer.ultralight.support
 
 import com.labymedia.ultralight.plugin.filesystem.UltralightFileSystem
+import net.ccbluex.liquidbounce.utils.logger
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
@@ -262,9 +263,9 @@ class ViewFileSystem : UltralightFileSystem {
     private fun log(error: Boolean, fmt: String, vararg args: Any) {
         val message = String.format(fmt, *args)
         if (error) {
-            System.err.println("[ERROR/FileSystem] $message")
+            logger.debug("[ERROR/FileSystem] $message")
         } else {
-            println("[INFO/FileSystem] $message")
+            logger.debug("[INFO/FileSystem] $message")
         }
     }
 }
