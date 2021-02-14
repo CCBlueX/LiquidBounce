@@ -40,8 +40,8 @@ package net.ccbluex.liquidbounce.renderer.ultralight.listener
 import com.labymedia.ultralight.Databind
 import com.labymedia.ultralight.DatabindConfiguration
 import com.labymedia.ultralight.UltralightView
-import com.labymedia.ultralight.api.JavaAPI
 import com.labymedia.ultralight.plugin.loading.UltralightLoadListener
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.renderer.ultralight.support.ViewContextProvider
 
 class ViewLoadListener(private val view: UltralightView) : UltralightLoadListener {
@@ -52,7 +52,6 @@ class ViewLoadListener(private val view: UltralightView) : UltralightLoadListene
             .contextProviderFactory(ViewContextProvider.Factory(view))
             .build()
     )
-    private val javaApi = JavaAPI(databind)
 
     /**
      * Helper function to construct a name for a frame from a given set of parameters.
@@ -119,21 +118,12 @@ class ViewLoadListener(private val view: UltralightView) : UltralightLoadListene
      */
     override fun onWindowObjectReady(frameId: Long, isMainFrame: Boolean, url: String) {
         view.lockJavascriptContext().use { lock ->
-            // Retrieve the context and convert it to a global context
             val context = lock.context
             val globalContext = context.globalContext
-
-            // Retrieve the global object (the window object)
             val globalObject = globalContext.globalObject
 
-            // Set the JavaAPI as a java on it
-            // Javascript will now be able to access Java classes using "java.importClass('class name')"
-            //
-            // Of course you could set any other arbitrary Java object here and Javascript would be able to access it.
-            //
-            // You can also set Javascript values.
-            val translatedApi = databind.conversionUtils.toJavascript(context, javaApi)
-            globalObject.setProperty("java", translatedApi, 0)
+            globalObject.setProperty("client",
+                databind.conversionUtils.toJavascript(context, LiquidBounce), 0)
         }
     }
 
