@@ -260,7 +260,7 @@ class ViewFileSystem : UltralightFileSystem {
      * @param fmt   The format string
      * @param args  Arguments to format the string with
      */
-    private fun log(error: Boolean, fmt: String, vararg args: Any) {
+    private fun log(error: Boolean, fmt: String, vararg args: Any?) {
         val message = String.format(fmt, *args)
         if (error) {
             logger.debug("[ERROR/FileSystem] $message")
