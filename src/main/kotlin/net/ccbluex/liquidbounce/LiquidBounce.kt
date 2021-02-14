@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
 import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
+import net.ccbluex.liquidbounce.renderer.ultralight.WebPlatform
 import net.ccbluex.liquidbounce.renderer.ultralight.WebView
 import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
@@ -86,8 +87,8 @@ object LiquidBounce {
         // Register tabs
         Tabs
 
-        // Load natives
-        WebView
+        // Load up web platform
+        WebPlatform
 
         moduleManager.registerInbuilt()
         scriptManager.loadScripts()
