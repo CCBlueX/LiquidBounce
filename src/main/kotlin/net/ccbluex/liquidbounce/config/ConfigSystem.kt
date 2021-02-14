@@ -78,6 +78,7 @@ object ConfigSystem {
                 configurable.overwrite(gson.fromJson(gson.newJsonReader(reader()), confType))
             }.onFailure {
                 logger.error("Unable to load config ${configurable.keyName}", it)
+                store()
             }
         }
     }
