@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.renderer.engine
 
 import net.minecraft.util.math.Matrix4f
 import org.lwjgl.BufferUtils
