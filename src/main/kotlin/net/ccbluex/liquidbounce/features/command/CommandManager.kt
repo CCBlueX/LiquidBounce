@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.command
 
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.ChatSendEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
@@ -42,9 +44,9 @@ object CommandExecutor : Listenable {
      * Handles command execution
      */
     val chatEventHandler = handler<ChatSendEvent> {
-        if (it.message.startsWith(CommandManager.prefix)) {
+        if (it.message.startsWith(CommandManager.Options.prefix)) {
             try {
-                CommandManager.execute(it.message.substring(CommandManager.prefix.length))
+                CommandManager.execute(it.message.substring(CommandManager.Options.prefix.length))
             } catch (e: CommandException) {
                 chat("§c${e.message}")
                 chat("§cUsage: ")
@@ -83,20 +85,23 @@ object CommandManager : Iterable<Command> {
 
     internal val commands = mutableListOf<Command>()
 
-    /**
-     * The prefix of the commands.
-     *
-     * ```
-     * .friend add "Senk Ju"
-     * ^
-     * ------
-     * prefix (.)
-     * ```
-     */
-    var prefix = ""
+    object Options : Configurable("commands") {
+        /**
+         * The prefix of the commands.
+         *
+         * ```
+         * .friend add "Senk Ju"
+         * ^
+         * ------
+         * prefix (.)
+         * ```
+         */
+        var prefix by text("prefix", ".")
+
+    }
 
     init {
-        // LiquidBounce.configSystem.root(this)
+        LiquidBounce.configSystem.root(Options)
     }
 
     fun registerInbuilt() {
