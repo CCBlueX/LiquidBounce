@@ -19,9 +19,11 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.Exclude
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.world.World
 import org.lwjgl.glfw.GLFW
@@ -29,11 +31,16 @@ import org.lwjgl.glfw.GLFW
 /**
  * A module also called 'hack' is able to be enabled and handle events
  */
-open class Module(override val name: String, val category: Category, var description: String = "", defaultBind: Int = GLFW.GLFW_KEY_UNKNOWN,
-    defaultState: Boolean = false, val disableActivation: Boolean = false, hide: Boolean = false) : Listenable, Configurable(name) {
+open class Module(name: String, // name parameter in configurable
+                  @Exclude val category: Category, // module category
+                  bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
+                  state: Boolean = false, // default state
+                  @Exclude val disableActivation: Boolean = false, // disable activation
+                  hide: Boolean = false // default hide
+) : Listenable, Configurable(name) {
 
     // Module options
-    var enabled by boolean("enabled", defaultState, change = { old, new ->
+    var enabled by boolean("enabled", state, change = { old, new ->
         runCatching {
             // Call enable or disable function
             if (new) {
@@ -55,7 +62,7 @@ open class Module(override val name: String, val category: Category, var descrip
             throw it
         }
     })
-    var bind by int("bind", defaultBind)
+    var bind by int("bind", bind)
     var hidden by boolean("hidden", hide)
 
     // Tag to be displayed on the HUD
@@ -71,6 +78,8 @@ open class Module(override val name: String, val category: Category, var descrip
         get() = mc.player!!
     protected val world: World
         get() = mc.world!!
+    protected val network: ClientPlayNetworkHandler
+        get() = mc.networkHandler!!
 
     /**
      * Execute when module is turned on
@@ -89,24 +98,44 @@ open class Module(override val name: String, val category: Category, var descrip
 
 }
 
+open class ListenableConfigurable(val module: Module, name: String, enabled: Boolean) : Listenable, Configurable(name) {
+
+    val enabled by boolean("Enabled", enabled)
+
+    override fun handleEvents() = module.enabled && enabled
+
+}
+
+open class ModeConfigurable(val module: Module, name: String, val active: String, val initialize: () -> Unit) : Configurable(name) {
+    val modes: MutableList<Mode> = mutableListOf()
+}
+
+
 /**
  * A mode is sub-module to separate different bypasses into extra classes
  */
-open class Mode(override val name: String, val module: Module) : Listenable, Configurable(name) {
+open class Mode(name: String, private val configurable: ModeConfigurable) : Listenable, Configurable(name) {
 
-    var state = false
+    init {
+        configurable.modes += this
+    }
 
+    /**
+     * Quick access
+     */
     protected val mc: MinecraftClient
         get() = net.ccbluex.liquidbounce.utils.mc
     protected val player: ClientPlayerEntity
         get() = mc.player!!
     protected val world: World
         get() = mc.world!!
+    protected val network: ClientPlayNetworkHandler
+        get() = mc.networkHandler!!
 
     /**
      * Events should be handled when mode is enabled
      */
-    override fun handleEvents() = module.enabled && state
+    override fun handleEvents() = configurable.module.enabled && configurable.active.equals(name, true)
 
 }
 
@@ -120,10 +149,10 @@ inline fun <reified T : Event> Listenable.sequenceHandler(ignoreCondition: Boole
 /**
  * Registers a repeatable sequence which continues to execute until the module is turned off
  */
-inline fun Listenable.repeatableSequence(noinline eventHandler: SuspendableHandler<ModuleEvent>) {
+inline fun Listenable.repeatableSequence(module: Listenable = this, noinline eventHandler: SuspendableHandler<ModuleEvent>) {
     var sequence: Sequence<ModuleEvent>? = null
     handler<ModuleEvent>(true) { event ->
-        if (event.module != this)
+        if (event.module != module)
             return@handler
 
         sequence = if (event.newState) {

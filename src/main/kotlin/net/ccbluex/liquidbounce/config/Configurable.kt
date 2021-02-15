@@ -19,8 +19,7 @@
 package net.ccbluex.liquidbounce.config
 
 import com.google.gson.annotations.SerializedName
-import net.ccbluex.liquidbounce.features.module.Mode
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
@@ -67,37 +66,18 @@ open class Value<T>(@SerializedName("name")
 /**
  * Ranged value adds support for closed ranges
  */
-class RangedValue<T>(name: String, value: T, val range: ClosedRange<*>, change: (T, T) -> Unit = { _, _ -> })
+class RangedValue<T>(name: String, value: T, @Exclude val range: ClosedRange<*>, change: (T, T) -> Unit = { _, _ -> })
     : Value<T>(name, value, change)
-
-/**
- * Ranged value adds support for closed ranges
- */
-class ModeValue(name: String, @Exclude val module: Module, mode: String, @Exclude val modes: Array<Mode>,
-                change: (String, String) -> Unit = { _, _ -> })
-    : Value<String>(name, mode, { old, new ->
-    change(old, new)
-
-    // disable old mode
-    modes.find { it.name.equals(old, true) }?.state = false
-    // enable new mode
-    modes.find { it.name.equals(new, true) }?.state = true
-}) {
-    init {
-        val currMode = modes.find { it.name.equals(value, true) }
-
-        if (currMode == null) {
-            modes.firstOrNull()?.name?.let { value = it }
-        } else {
-            currMode.state = true
-        }
-    }
-}
 
 class ListValue(name: String, selected: String, @Exclude val selectables: Array<String>, change: (String, String) -> Unit = { _, _ -> })
     : Value<String>(name, selected, change)
 
 open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf()): Value<MutableList<Value<*>>>(name, value = value) {
+
+    fun tree(configurable: Configurable): Configurable {
+        value.add(configurable)
+        return configurable
+    }
 
     fun boolean(name: String, default: Boolean = false, change: (Boolean, Boolean) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
@@ -116,9 +96,6 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
 
     fun text(name: String, default: String = "", change: (String, String) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
-
-    fun Module.mode(name: String, default: String, modes: Array<Mode>, change: (String, String) -> Unit = { _, _ -> })
-        = ModeValue(name, mode = default, module = this, modes = modes, change = change).apply { this@Configurable.value.add(this) }
 
     fun list(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
         = ListValue(name, selected = default, selectables = array, change = change).apply { this@Configurable.value.add(this) }

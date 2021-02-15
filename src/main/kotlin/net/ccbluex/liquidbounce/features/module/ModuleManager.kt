@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.Value
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
@@ -39,11 +39,6 @@ import org.lwjgl.glfw.GLFW
 object ModuleManager : Iterable<Module>, Listenable {
 
     private val modules = mutableListOf<Module>()
-
-    init {
-        // TODO: Figure out how to link modules list with configurable
-        LiquidBounce.configSystem.root("modules", modules)
-    }
 
     /**
      * Handle key input for module binds
@@ -75,8 +70,12 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleVelocity,
             ModuleSpeed,
             ModuleAutoRespawn,
-            ModuleTrigger
+            ModuleTrigger,
+            ModuleAutoBow
         )
+
+        // TODO: Figure out how to link modules list with configurable
+        ConfigSystem.root("modules", modules)
     }
 
     fun addModule(module: Module) {

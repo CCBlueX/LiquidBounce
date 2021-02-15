@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.renderer.ultralight.WebView
 import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
 import java.awt.Font
 
-object ModuleHud : Module("HUD", Category.RENDER, defaultState = true, hide = true) {
+object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
     private val webView = WebView(width = { mc.window.width }, height = { mc.window.height })
 
