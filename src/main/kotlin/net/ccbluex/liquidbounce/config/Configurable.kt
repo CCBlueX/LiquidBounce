@@ -74,39 +74,39 @@ class ListValue(name: String, selected: String, @Exclude val selectables: Array<
 
 open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf()): Value<MutableList<Value<*>>>(name, value = value) {
 
-    fun tree(configurable: Configurable): Configurable {
+    protected fun <T: Configurable> tree(configurable: T): T {
         value.add(configurable)
         return configurable
     }
 
-    fun boolean(name: String, default: Boolean = false, change: (Boolean, Boolean) -> Unit = { _, _ -> })
+    protected fun boolean(name: String, default: Boolean = false, change: (Boolean, Boolean) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    fun float(name: String, default: Float = 1.0f,  range: ClosedFloatingPointRange<Float> = 0.0f..default, change: (Float, Float) -> Unit = { _, _ -> })
+    protected fun float(name: String, default: Float = 1.0f,  range: ClosedFloatingPointRange<Float> = 0.0f..default, change: (Float, Float) -> Unit = { _, _ -> })
         = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
 
-    fun floatRange(name: String, default: ClosedFloatingPointRange<Float> = 0.0f..1.0f, range: ClosedFloatingPointRange<Float> = default, change: (ClosedFloatingPointRange<Float>, ClosedFloatingPointRange<Float>) -> Unit = { _, _ -> })
+    protected fun floatRange(name: String, default: ClosedFloatingPointRange<Float> = 0.0f..1.0f, range: ClosedFloatingPointRange<Float> = default, change: (ClosedFloatingPointRange<Float>, ClosedFloatingPointRange<Float>) -> Unit = { _, _ -> })
         = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
 
-    fun int(name: String, default: Int = 1, range: IntRange = 0..default, change: (Int, Int) -> Unit = { _, _ -> })
+    protected fun int(name: String, default: Int = 1, range: IntRange = 0..default, change: (Int, Int) -> Unit = { _, _ -> })
         = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
 
-    fun intRange(name: String, default: IntRange = 0..1, range: IntRange = default, change: (IntRange, IntRange) -> Unit = { _, _ -> })
+    protected fun intRange(name: String, default: IntRange = 0..1, range: IntRange = default, change: (IntRange, IntRange) -> Unit = { _, _ -> })
         = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
 
-    fun text(name: String, default: String = "", change: (String, String) -> Unit = { _, _ -> })
+    protected fun text(name: String, default: String = "", change: (String, String) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    fun list(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
+    protected fun list(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
         = ListValue(name, selected = default, selectables = array, change = change).apply { this@Configurable.value.add(this) }
 
-    fun color(name: String, color: Color = Color.WHITE, change: (Color, Color) -> Unit = { _, _ -> })
+    protected fun color(name: String, color: Color = Color.WHITE, change: (Color, Color) -> Unit = { _, _ -> })
         = Value(name, value = color, change = change).apply { this@Configurable.value.add(this) }
 
-    fun block(name: String, default: Block = Blocks.AIR, change: (Block, Block) -> Unit = { _, _ -> })
+    protected fun block(name: String, default: Block = Blocks.AIR, change: (Block, Block) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    fun blocks(name: String, default: MutableList<Block> = mutableListOf(), change: (MutableList<Block>, MutableList<Block>) -> Unit = { _, _ -> })
+    protected fun blocks(name: String, default: MutableList<Block> = mutableListOf(), change: (MutableList<Block>, MutableList<Block>) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
     /**
