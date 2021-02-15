@@ -65,13 +65,8 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
      */
     private object BowAimbotOptions : ListenableConfigurable(this, "BowAimbot", false) {
 
-        // TODO: Aiming options
-        // TODO: Prediction options
-
         val tickRepeatable = repeatableSequence(module) {
-            waitUntil { player.getAttackCooldownProgress(0.0f) >= 1.0f }
 
-            // TODO: Make bow aimbot
         }
 
     }
@@ -95,7 +90,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                     // Send movement packet to simulate ticks (has been patched in 1.19)
                     network.sendPacket(PlayerMoveC2SPacket(true))
                     // Just show visual effect (not required to work - but looks better)
-                    // player.tickActiveItemStack()
+                    player.tickActiveItemStack()
                 }
 
                 // Shoot with bow (auto shoot has to be enabled)
