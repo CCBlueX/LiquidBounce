@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
@@ -40,6 +41,7 @@ object ModuleManager : Iterable<Module>, Listenable {
     private val modules = mutableListOf<Module>()
 
     init {
+        // TODO: Figure out how to link modules list with configurable
         LiquidBounce.configSystem.root("modules", modules)
     }
 

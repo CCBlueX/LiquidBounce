@@ -41,14 +41,14 @@ class ScriptModule(private val moduleObject: JSObject) : Module(
     /**
      * Allows the user to access values by typing module.settings.<valuename>
      */
-    val settings by lazy { values }
+    val settings by lazy { value }
 
     init {
         if (moduleObject.hasMember("settings")) {
             val settings = moduleObject.getMember("settings") as JSObject
 
             for (settingName in settings.keySet())
-                values += settings.getMember(settingName) as Value<*>
+                value.add(settings.getMember(settingName) as Value<*>)
         }
 
         if (moduleObject.hasMember("tag"))

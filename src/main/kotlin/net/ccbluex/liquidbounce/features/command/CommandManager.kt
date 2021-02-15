@@ -19,9 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.command
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.text
 import net.ccbluex.liquidbounce.event.ChatSendEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
@@ -82,7 +79,7 @@ object CommandExecutor : Listenable {
  *
  * @author superblaubeere27 (@team CCBlueX)
  */
-object CommandManager : Configurable("command"), Iterable<Command> {
+object CommandManager : Iterable<Command> {
 
     internal val commands = mutableListOf<Command>()
 
@@ -96,10 +93,10 @@ object CommandManager : Configurable("command"), Iterable<Command> {
      * prefix (.)
      * ```
      */
-    var prefix by text("prefix", ".")
+    var prefix = ""
 
     init {
-        LiquidBounce.configSystem.root(this)
+        // LiquidBounce.configSystem.root(this)
     }
 
     fun registerInbuilt() {

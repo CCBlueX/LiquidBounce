@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.boolean
 import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity

@@ -19,21 +19,18 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.boolean
-import net.ccbluex.liquidbounce.config.int
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.util.InputUtil
 import net.minecraft.world.World
 import org.lwjgl.glfw.GLFW
 
 /**
  * A module also called 'hack' is able to be enabled and handle events
  */
-open class Module(val name: String, val category: Category, var description: String = "", defaultBind: Int = GLFW.GLFW_KEY_UNKNOWN,
-                  defaultState: Boolean = false, val disableActivation: Boolean = false, hide: Boolean = false) : Listenable, Configurable(name) {
+open class Module(override val name: String, val category: Category, var description: String = "", defaultBind: Int = GLFW.GLFW_KEY_UNKNOWN,
+    defaultState: Boolean = false, val disableActivation: Boolean = false, hide: Boolean = false) : Listenable, Configurable(name) {
 
     // Module options
     var enabled by boolean("enabled", defaultState, change = { old, new ->
@@ -95,7 +92,7 @@ open class Module(val name: String, val category: Category, var description: Str
 /**
  * A mode is sub-module to separate different bypasses into extra classes
  */
-open class Mode(val name: String, val module: Module) : Listenable, Configurable(name) {
+open class Mode(override val name: String, val module: Module) : Listenable, Configurable(name) {
 
     var state = false
 
