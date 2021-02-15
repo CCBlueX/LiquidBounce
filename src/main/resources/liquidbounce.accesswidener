@@ -7,6 +7,8 @@ mutable field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/au
 
 mutable field net/minecraft/item/ItemGroup GROUPS [Lnet/minecraft/item/ItemGroup;
 
+accessible method net/minecraft/entity/LivingEntity tickActiveItemStack ()V
+
 accessible field net/minecraft/util/math/Matrix4f a00 F
 accessible field net/minecraft/util/math/Matrix4f a01 F
 accessible field net/minecraft/util/math/Matrix4f a02 F
