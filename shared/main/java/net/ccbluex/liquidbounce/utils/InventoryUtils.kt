@@ -84,9 +84,12 @@ class InventoryUtils : MinecraftInstance(), Listenable
 				if (stack != null && stack.item == item && stack.itemDelay >= itemDelay) candidates.add(i)
 			}
 
-			if (candidates.isEmpty()) return -1
-
-			return if (random) candidates[RANDOM.nextInt(candidates.size)] else candidates[0]
+			return when
+			{
+				candidates.isEmpty() -> -1
+				random -> candidates.random()
+				else -> candidates.first()
+			}
 		}
 
 		fun hasSpaceHotbar(thePlayer: IEntityPlayerSP): Boolean = IntStream.range(36, 45).mapToObj(thePlayer.inventory::getStackInSlot).anyMatch { obj: IItemStack? -> Objects.isNull(obj) }
@@ -107,17 +110,16 @@ class InventoryUtils : MinecraftInstance(), Listenable
 				}
 			}
 
-			val pred = if (boundingBoxYLimit == 0.0) if (hotbarSlots.isEmpty()) null else hotbarSlots[0]
-			else hotbarSlots.filter { hotbarSlot: Int? ->
-				val block = thePlayer.inventoryContainer.getSlot(hotbarSlot!!).stack!!.item!!.asItemBlock().block
+			val pred = if (boundingBoxYLimit == 0.0) hotbarSlots.firstOrNull()
+			else hotbarSlots.filter {
+				val block = thePlayer.inventoryContainer.getSlot(it).stack?.item!!.asItemBlock().block
 				val box = block.getCollisionBoundingBox(theWorld, ORIGIN, block.defaultState!!)
 
 				box != null && box.maxY - box.minY <= boundingBoxYLimit
-			}.maxWith(Comparator.comparingDouble { hotbarSlot: Int? ->
-				val block = thePlayer.inventoryContainer.getSlot(hotbarSlot!!).stack!!.item!!.asItemBlock().block
-
+			}.maxBy {
+				val block = thePlayer.inventoryContainer.getSlot(it).stack?.item!!.asItemBlock().block
 				block.getBlockBoundsMaxY() - block.getBlockBoundsMinY()
-			})
+			}
 
 			if (pred != null) return pred
 
@@ -137,17 +139,16 @@ class InventoryUtils : MinecraftInstance(), Listenable
 					}
 				}
 
-				val pred2 = if (boundingBoxYLimit == 0.0) if (hotbarSlots.isEmpty()) null else hotbarSlots[0]
-				else hotbarSlots.filter { hotbarSlot: Int? ->
-					val block = thePlayer.inventoryContainer.getSlot(hotbarSlot!!).stack!!.item!!.asItemBlock().block
+				val pred2 = if (boundingBoxYLimit == 0.0) hotbarSlots.firstOrNull()
+				else hotbarSlots.filter {
+					val block = thePlayer.inventoryContainer.getSlot(it).stack?.item!!.asItemBlock().block
 					val box = block.getCollisionBoundingBox(theWorld, ORIGIN, block.defaultState!!)
 
 					box != null && box.maxY - box.minY <= boundingBoxYLimit
-				}.maxWith(Comparator.comparingDouble { hotbarSlot: Int? ->
-					val block = thePlayer.inventoryContainer.getSlot(hotbarSlot!!).stack!!.item!!.asItemBlock().block
-
+				}.maxBy {
+					val block = thePlayer.inventoryContainer.getSlot(it).stack?.item!!.asItemBlock().block
 					block.getBlockBoundsMaxY() - block.getBlockBoundsMinY()
-				})
+				}
 
 				if (pred2 != null) return pred2
 			}
@@ -161,9 +162,12 @@ class InventoryUtils : MinecraftInstance(), Listenable
 		{
 			val emptySlots = IntStream.range(startSlot, endSlot).filter { i: Int -> thePlayer.inventoryContainer.getSlot(i).stack == null }.boxed().collect(Collectors.toList())
 
-			if (emptySlots.isEmpty()) return -1
-
-			return if (randomSlot) emptySlots[RANDOM.nextInt(emptySlots.size)] else emptySlots[0]
+			return when
+			{
+				emptySlots.isEmpty() -> -1
+				randomSlot -> emptySlots.random()
+				else -> emptySlots.first()
+			}
 		}
 	}
 }

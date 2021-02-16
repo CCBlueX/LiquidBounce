@@ -275,13 +275,15 @@ class Text(
 
 		// Render Text
 		RainbowFontShader.begin(
-			textRainbowShader, if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get(), if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get(), System.currentTimeMillis() % 10000 / 10000F
+			textRainbowShader, rainbowShaderX, rainbowShaderY, System.currentTimeMillis() % 10000 / 10000F
 		).use {
 			fontRenderer.drawString(displayText, if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f, 0F, textColor, shadow)
 
-			if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40) fontRenderer.drawString(
-				"_", if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f + fontRenderer.getStringWidth(displayText) + 2F, 0F, textColor, shadow
-			)
+			if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40)
+			{
+				val xPos = if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f + fontRenderer.getStringWidth(displayText) + 2F
+				fontRenderer.drawString("_", xPos, 0F, textColor, shadow)
+			}
 		}
 
 		// Disable edit mode when current gui is not HUD Designer

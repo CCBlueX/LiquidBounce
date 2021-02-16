@@ -54,6 +54,7 @@ class ProphuntESP : Module()
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
 		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
 
 		val mode = modeValue.get()
 		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
@@ -79,7 +80,7 @@ class ProphuntESP : Module()
 					continue
 				}
 
-				RenderUtils.drawBlockBox(entry.key, color, mode.equals("Box", true))
+				RenderUtils.drawBlockBox(theWorld, thePlayer, entry.key, color, mode.equals("Box", true))
 			}
 		}
 	}

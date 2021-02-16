@@ -22,6 +22,7 @@ class AACPort : SpeedMode("AACPort")
 
 	override fun onUpdate()
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (!MovementUtils.isMoving(thePlayer)) return
@@ -35,7 +36,7 @@ class AACPort : SpeedMode("AACPort")
 			val x = thePlayer.posX - functions.sin(dir) * speed
 			val z = thePlayer.posZ + functions.cos(dir) * speed
 
-			if (thePlayer.posY < thePlayer.posY.toInt() + 0.5 && !classProvider.isBlockAir(getBlock(WBlockPos(x, thePlayer.posY, z)))) break
+			if (thePlayer.posY < thePlayer.posY.toInt() + 0.5 && !classProvider.isBlockAir(getBlock(theWorld, WBlockPos(x, thePlayer.posY, z)))) break
 
 			thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketPlayerPosition(x, thePlayer.posY, z, true))
 			speed += 0.2

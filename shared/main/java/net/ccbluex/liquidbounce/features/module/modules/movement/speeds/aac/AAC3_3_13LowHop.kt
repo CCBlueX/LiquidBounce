@@ -21,6 +21,7 @@ class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 
 	override fun onUpdate()
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (!MovementUtils.isMoving(thePlayer) || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isRiding || thePlayer.hurtTime > 0) return
@@ -38,7 +39,7 @@ class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 		}
 		else if (thePlayer.fallDistance < 0.31f)
 		{
-			if (classProvider.isBlockCarpet(getBlock(thePlayer.position))) // why?
+			if (classProvider.isBlockCarpet(getBlock(theWorld, thePlayer.position))) // why?
 				return
 
 			// Motion XZ

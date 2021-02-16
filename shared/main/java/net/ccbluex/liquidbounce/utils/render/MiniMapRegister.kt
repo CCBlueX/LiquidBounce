@@ -41,14 +41,12 @@ object MiniMapRegister : MinecraftInstance()
 
 				deleteAllChunks.set(false)
 			}
-			else
-			{
-				synchronized(queuedChunkDeletions) {
-					queuedChunkDeletions.forEach {
-						chunkTextureMap.remove(it)?.delete()
-					}
-					queuedChunkDeletions.clear()
+			else synchronized(queuedChunkDeletions) {
+				queuedChunkDeletions.forEach {
+					chunkTextureMap.remove(it)?.delete()
 				}
+
+				queuedChunkDeletions.clear()
 			}
 
 			queuedChunkUpdates.forEach {
@@ -108,7 +106,8 @@ object MiniMapRegister : MinecraftInstance()
 		}
 
 		protected fun finalize()
-		{ // We don't need to set deleted to true since the object is deleted after this method call
+		{
+			// We don't need to set deleted to true since the object is deleted after this method call
 			if (!deleted) texture.deleteGlTexture()
 		}
 	}

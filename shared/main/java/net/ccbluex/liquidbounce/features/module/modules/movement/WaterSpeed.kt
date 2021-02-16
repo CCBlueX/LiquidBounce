@@ -21,9 +21,10 @@ class WaterSpeed : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer.isInWater && classProvider.isBlockLiquid(getBlock(thePlayer.position)))
+		if (thePlayer.isInWater && classProvider.isBlockLiquid(getBlock(theWorld, thePlayer.position)))
 		{
 			val speed = speedValue.get()
 

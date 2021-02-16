@@ -44,13 +44,13 @@ class LiquidWalk : Module()
 
 		when (modeValue.get().toLowerCase())
 		{
-			"ncp", "vanilla" -> if (collideBlock(thePlayer.entityBoundingBox, classProvider::isBlockLiquid) && thePlayer.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.AIR)) && !thePlayer.sneaking) thePlayer.motionY = 0.08
+			"ncp", "vanilla" -> if (collideBlock(theWorld, thePlayer.entityBoundingBox, classProvider::isBlockLiquid) && thePlayer.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.AIR)) && !thePlayer.sneaking) thePlayer.motionY = 0.08
 
 			"aac3.1.0" ->
 			{
 				val blockPos = thePlayer.position.down()
 
-				if (!thePlayer.onGround && getBlock(blockPos) == classProvider.getBlockEnum(BlockType.WATER) || isInWater)
+				if (!thePlayer.onGround && getBlock(theWorld, blockPos) == classProvider.getBlockEnum(BlockType.WATER) || isInWater)
 				{
 					if (!thePlayer.sprinting)
 					{
@@ -80,8 +80,8 @@ class LiquidWalk : Module()
 					return
 				}
 
-				val block = getBlock(WBlockPos(posX, posY + 1, posZ))
-				val blockUp = getBlock(WBlockPos(posX, posY + 1.1, posZ))
+				val block = getBlock(theWorld, WBlockPos(posX, posY + 1, posZ))
+				val blockUp = getBlock(theWorld, WBlockPos(posX, posY + 1.1, posZ))
 
 				if (classProvider.isBlockLiquid(blockUp)) thePlayer.motionY = 0.1 else if (classProvider.isBlockLiquid(block)) thePlayer.motionY = 0.0
 
@@ -117,9 +117,10 @@ class LiquidWalk : Module()
 	@EventTarget
 	fun onBlockBB(event: BlockBBEvent)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (classProvider.isBlockLiquid(event.block) && !collideBlock(thePlayer.entityBoundingBox, classProvider::isBlockLiquid) && !thePlayer.sneaking) when (modeValue.get().toLowerCase())
+		if (classProvider.isBlockLiquid(event.block) && !collideBlock(theWorld, thePlayer.entityBoundingBox, classProvider::isBlockLiquid) && !thePlayer.sneaking) when (modeValue.get().toLowerCase())
 		{
 			"ncp", "vanilla" ->
 			{
@@ -137,13 +138,14 @@ class LiquidWalk : Module()
 	{
 		if (!modeValue.get().equals("NCP", ignoreCase = true)) return
 
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (classProvider.isCPacketPlayer(event.packet))
 		{
 			val packetPlayer = event.packet.asCPacketPlayer()
 
-			if (collideBlock(classProvider.createAxisAlignedBB(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ), classProvider::isBlockLiquid))
+			if (collideBlock(theWorld, classProvider.createAxisAlignedBB(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ), classProvider::isBlockLiquid))
 			{
 				nextTick = !nextTick
 				if (nextTick) packetPlayer.y -= 0.001
@@ -154,9 +156,10 @@ class LiquidWalk : Module()
 	@EventTarget
 	fun onJump(event: JumpEvent)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		val block = getBlock(WBlockPos(thePlayer.posX, thePlayer.posY - 0.01, thePlayer.posZ))
+		val block = getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY - 0.01, thePlayer.posZ))
 
 		if (noJumpValue.get() && classProvider.isBlockLiquid(block)) event.cancelEvent()
 	}

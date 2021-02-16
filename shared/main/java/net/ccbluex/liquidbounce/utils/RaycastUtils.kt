@@ -18,70 +18,64 @@ object RaycastUtils : MinecraftInstance()
 	@JvmStatic
 	fun raycastEntity(range: Double, yaw: Float, pitch: Float, entityFilter: EntityFilter): IEntity?
 	{
-		val renderViewEntity = mc.renderViewEntity
+		val theWorld = mc.theWorld ?: return null
+		val renderViewEntity = mc.renderViewEntity ?: return null
 
-		if (renderViewEntity != null && mc.theWorld != null)
+		var blockReachDistance = range
+		val eyePosition = renderViewEntity.getPositionEyes(1f)
+
+		val yawRadians = WMathHelper.toRadians(yaw)
+		val pitchRadians = WMathHelper.toRadians(pitch)
+		val yawCos = functions.cos(-yawRadians - WMathHelper.PI)
+		val yawSin = functions.sin(-yawRadians - WMathHelper.PI)
+		val pitchCos = -functions.cos(-pitchRadians)
+		val pitchSin = functions.sin(-pitchRadians)
+
+		val entityLook = WVec3((yawSin * pitchCos).toDouble(), pitchSin.toDouble(), (yawCos * pitchCos).toDouble())
+		val xCoord = entityLook.xCoord
+		val yCoord = entityLook.yCoord
+		val zCoord = entityLook.zCoord
+
+		val reachEndPos = eyePosition.addVector(xCoord * blockReachDistance, yCoord * blockReachDistance, zCoord * blockReachDistance)
+
+		val entityList = theWorld.getEntitiesInAABBexcluding(renderViewEntity, renderViewEntity.entityBoundingBox.addCoord(xCoord * blockReachDistance, yCoord * blockReachDistance, zCoord * blockReachDistance).expand(1.0, 1.0, 1.0)) { it != null && (!classProvider.isEntityPlayer(it) || !it.asEntityPlayer().spectator) && it.canBeCollidedWith() }
+
+		var pointedEntity: IEntity? = null
+
+		for (entity in entityList)
 		{
-			var blockReachDistance = range
-			val eyePosition = renderViewEntity.getPositionEyes(1f)
+			if (!entityFilter.canRaycast(entity)) continue
 
-			val yawRadians = WMathHelper.toRadians(yaw)
-			val pitchRadians = WMathHelper.toRadians(pitch)
-			val yawCos = functions.cos(-yawRadians - WMathHelper.PI)
-			val yawSin = functions.sin(-yawRadians - WMathHelper.PI)
-			val pitchCos = -functions.cos(-pitchRadians)
-			val pitchSin = functions.sin(-pitchRadians)
+			val collisionBorderSize = entity.collisionBorderSize.toDouble()
+			val axisAlignedBB = entity.entityBoundingBox.expand(collisionBorderSize, collisionBorderSize, collisionBorderSize)
 
-			val entityLook = WVec3((yawSin * pitchCos).toDouble(), pitchSin.toDouble(), (yawCos * pitchCos).toDouble())
-			val vector = eyePosition.addVector(entityLook.xCoord * blockReachDistance, entityLook.yCoord * blockReachDistance, entityLook.zCoord * blockReachDistance)
-			val entityList = mc.theWorld!!.getEntitiesInAABBexcluding(
-				renderViewEntity, renderViewEntity.entityBoundingBox.addCoord(entityLook.xCoord * blockReachDistance, entityLook.yCoord * blockReachDistance, entityLook.zCoord * blockReachDistance).expand(1.0, 1.0, 1.0)
-			) {
-				it != null && (!classProvider.isEntityPlayer(it) || !it.asEntityPlayer().spectator) && it.canBeCollidedWith()
-			}
+			val rayIntercept = axisAlignedBB.calculateIntercept(eyePosition, reachEndPos)
 
-			var pointedEntity: IEntity? = null
-
-			for (entity in entityList)
+			if (axisAlignedBB.isVecInside(eyePosition))
 			{
-				if (!entityFilter.canRaycast(entity)) continue
-
-				val collisionBorderSize = entity.collisionBorderSize.toDouble()
-				val axisAlignedBB = entity.entityBoundingBox.expand(collisionBorderSize, collisionBorderSize, collisionBorderSize)
-
-				val movingObjectPosition = axisAlignedBB.calculateIntercept(eyePosition, vector)
-
-				if (axisAlignedBB.isVecInside(eyePosition))
+				if (blockReachDistance >= 0.0)
 				{
-					if (blockReachDistance >= 0.0)
-					{
-						pointedEntity = entity
-						blockReachDistance = 0.0
-					}
-				}
-				else if (movingObjectPosition != null)
-				{
-					val eyeDistance = eyePosition.distanceTo(movingObjectPosition.hitVec)
-
-					if (eyeDistance < blockReachDistance || blockReachDistance == 0.0)
-					{
-						if (entity == renderViewEntity.ridingEntity && !renderViewEntity.canRiderInteract())
-						{
-							if (blockReachDistance == 0.0) pointedEntity = entity
-						}
-						else
-						{
-							pointedEntity = entity
-							blockReachDistance = eyeDistance
-						}
-					}
+					pointedEntity = entity
+					blockReachDistance = 0.0
 				}
 			}
+			else if (rayIntercept != null)
+			{
+				val hitDistance = eyePosition.distanceTo(rayIntercept.hitVec)
 
-			return pointedEntity
+				if (hitDistance < blockReachDistance || blockReachDistance == 0.0) if (entity == renderViewEntity.ridingEntity && !renderViewEntity.canRiderInteract())
+				{
+					if (blockReachDistance == 0.0) pointedEntity = entity
+				}
+				else
+				{
+					pointedEntity = entity
+					blockReachDistance = hitDistance
+				}
+			}
 		}
 
-		return null
+		return pointedEntity
 	}
 
 	interface EntityFilter

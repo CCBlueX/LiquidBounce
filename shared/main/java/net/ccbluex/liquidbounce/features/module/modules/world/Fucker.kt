@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
@@ -73,7 +74,7 @@ object Fucker : Module()
 
 		val targetId = blockValue.get()
 
-		if (currentPos == null || functions.getIdFromBlock(getBlock(currentPos!!)!!) != targetId || getCenterDistance(currentPos!!) > rangeValue.get()) currentPos = find(thePlayer, targetId)
+		if (currentPos == null || functions.getIdFromBlock(getBlock(theWorld, currentPos!!)) != targetId || getCenterDistance(thePlayer, currentPos!!) > rangeValue.get()) currentPos = find(theWorld, thePlayer, targetId)
 
 		// Reset current breaking when there is no target block
 		if (currentPos == null)
@@ -151,7 +152,7 @@ object Fucker : Module()
 				}
 
 				// Minecraft block breaking
-				val block = currentPos.getBlock() ?: return
+				val block = currentPos.getBlock(theWorld)
 
 				if (currentDamage == 0F)
 				{
@@ -198,7 +199,7 @@ object Fucker : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		RenderUtils.drawBlockBox(currentPos ?: return, Color.RED, true)
+		RenderUtils.drawBlockBox(mc.theWorld ?: return, mc.thePlayer ?: return, currentPos ?: return, Color.RED, true)
 	}
 
 	/*/**
@@ -214,7 +215,7 @@ object Fucker : Module()
 	/**
 	 * Find new target block by [targetID]
 	 */
-	private fun find(thePlayer: IEntityPlayerSP, targetID: Int): WBlockPos?
+	private fun find(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetID: Int): WBlockPos?
 	{
 		val radius = rangeValue.get().toInt() + 1
 
@@ -228,14 +229,14 @@ object Fucker : Module()
 				for (z in radius downTo -radius + 1)
 				{
 					val blockPos = WBlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z)
-					val block = getBlock(blockPos) ?: continue
+					val block = getBlock(theWorld, blockPos)
 
 					if (functions.getIdFromBlock(block) != targetID) continue
 
-					val distance = getCenterDistance(blockPos)
+					val distance = getCenterDistance(thePlayer, blockPos)
 					if (distance > rangeValue.get()) continue
 					if (nearestBlockDistance < distance) continue
-					if (!isHitable(thePlayer, blockPos) && !surroundingsValue.get()) continue
+					if (!isHitable(theWorld, thePlayer, blockPos) && !surroundingsValue.get()) continue
 
 					nearestBlockDistance = distance
 					nearestBlock = blockPos
@@ -249,7 +250,7 @@ object Fucker : Module()
 	/**
 	 * Check if block is hitable (or allowed to hit through walls)
 	 */
-	private fun isHitable(thePlayer: IEntityPlayerSP, blockPos: WBlockPos): Boolean
+	private fun isHitable(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPos: WBlockPos): Boolean
 	{
 		return when (throughWallsValue.get().toLowerCase())
 		{
@@ -261,7 +262,7 @@ object Fucker : Module()
 				movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
 			}
 
-			"around" -> !isFullBlock(blockPos.down()) || !isFullBlock(blockPos.up()) || !isFullBlock(blockPos.north()) || !isFullBlock(blockPos.east()) || !isFullBlock(blockPos.south()) || !isFullBlock(blockPos.west())
+			"around" -> !isFullBlock(theWorld, blockPos.down()) || !isFullBlock(theWorld, blockPos.up()) || !isFullBlock(theWorld, blockPos.north()) || !isFullBlock(theWorld, blockPos.east()) || !isFullBlock(theWorld, blockPos.south()) || !isFullBlock(theWorld, blockPos.west())
 			else -> true
 		}
 	}

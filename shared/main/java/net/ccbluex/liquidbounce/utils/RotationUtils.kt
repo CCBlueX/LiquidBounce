@@ -72,10 +72,12 @@ class RotationUtils : MinecraftInstance(), Listenable
 		if (classProvider.isCPacketPlayer(packet))
 		{
 			val packetPlayer = packet.asCPacketPlayer()
-			if (targetRotation != null && !keepCurrentRotation && (targetRotation!!.yaw != serverRotation.yaw || targetRotation!!.pitch != serverRotation.pitch))
+
+			val targetRot = targetRotation
+			if (targetRot != null && !keepCurrentRotation && (targetRot.yaw != serverRotation.yaw || targetRot.pitch != serverRotation.pitch))
 			{
-				packetPlayer.yaw = targetRotation!!.yaw
-				packetPlayer.pitch = targetRotation!!.pitch
+				packetPlayer.yaw = targetRot.yaw
+				packetPlayer.pitch = targetRot.pitch
 				packetPlayer.rotating = true
 			}
 
@@ -461,7 +463,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * rotation
 		 * @return        difference between rotation
 		 */
-		fun getRotationDifference(first: Rotation, second: Rotation?): Double = StrictMath.hypot(getAngleDifference(first.yaw, second!!.yaw).toDouble(), (first.pitch - second.pitch).toDouble())
+		private fun getRotationDifference(first: Rotation, second: Rotation?): Double = StrictMath.hypot(getAngleDifference(first.yaw, second!!.yaw).toDouble(), (first.pitch - second.pitch).toDouble())
 
 		/**
 		 * Limit your rotation using a turn speed

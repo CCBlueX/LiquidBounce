@@ -381,7 +381,7 @@ class Scaffold : Module()
 						0 ->
 						{
 							val blockPos = WBlockPos(thePlayer.posX - 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ)
-							val placeInfo: PlaceInfo? = PlaceInfo[blockPos]
+							val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
 							if (isReplaceable(blockPos) && placeInfo != null)
 							{
 								var calcDif: Double = thePlayer.posX - blockPos.x
@@ -401,10 +401,8 @@ class Scaffold : Module()
 
 						1 ->
 						{
-							val blockPos = WBlockPos(
-								thePlayer.posX + 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ
-							)
-							val placeInfo: PlaceInfo? = PlaceInfo[blockPos]
+							val blockPos = WBlockPos(thePlayer.posX + 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ)
+							val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
 
 							if (isReplaceable(blockPos) && placeInfo != null)
 							{
@@ -416,19 +414,15 @@ class Scaffold : Module()
 									calcDif *= -1.0
 									calcDif -= 0.5
 								}
-								if (calcDif < dif)
-								{
-									dif = calcDif
-								}
+
+								if (calcDif < dif) dif = calcDif
 							}
 						}
 
 						2 ->
 						{
-							val blockPos = WBlockPos(
-								thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ - 1.0
-							)
-							val placeInfo: PlaceInfo? = PlaceInfo[blockPos]
+							val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ - 1.0)
+							val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
 
 							if (isReplaceable(blockPos) && placeInfo != null)
 							{
@@ -440,19 +434,15 @@ class Scaffold : Module()
 									calcDif *= -1.0
 									calcDif -= 0.5
 								}
-								if (calcDif < dif)
-								{
-									dif = calcDif
-								}
+
+								if (calcDif < dif) dif = calcDif
 							}
 						}
 
 						3 ->
 						{
-							val blockPos = WBlockPos(
-								thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ + 1.0
-							)
-							val placeInfo: PlaceInfo? = PlaceInfo[blockPos]
+							val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ + 1.0)
+							val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
 
 							if (isReplaceable(blockPos) && placeInfo != null)
 							{
@@ -464,10 +454,8 @@ class Scaffold : Module()
 									calcDif *= -1
 									calcDif -= 0.5
 								}
-								if (calcDif < dif)
-								{
-									dif = calcDif
-								}
+
+								if (calcDif < dif) dif = calcDif
 							}
 						}
 					}
@@ -714,7 +702,7 @@ class Scaffold : Module()
 
 		val checkVisible = checkVisibleValue.get() && !shouldGoDown
 
-		if (!expand && (!isReplaceable(searchPosition) || search(thePlayer, searchPosition, checkVisible, searchBounds))) return
+		if (!expand && (!isReplaceable(searchPosition) || search(theWorld, thePlayer, searchPosition, checkVisible, searchBounds))) return
 
 		val ySearch = ySearchValue.get() || clutching
 		if (expand)
@@ -723,7 +711,7 @@ class Scaffold : Module()
 			for (i in 0 until expandLengthValue.get())
 			{
 				if (search(
-						thePlayer, searchPosition.add(
+						theWorld, thePlayer, searchPosition.add(
 							when (horizontalFacing)
 							{
 								classProvider.getEnumFacing(
@@ -743,14 +731,14 @@ class Scaffold : Module()
 					)) return
 			}
 		}
-		else if (searchValue.get()) for (x in -1..1) for (y in (if (ySearch) -1..1 else 0..0)) for (z in -1..1) if (search(thePlayer, searchPosition.add(x, 0, z), !shouldGoDown, searchBounds)) return
+		else if (searchValue.get()) for (x in -1..1) for (y in (if (ySearch) -1..1 else 0..0)) for (z in -1..1) if (search(theWorld, thePlayer, searchPosition.add(x, 0, z), !shouldGoDown, searchBounds)) return
 	}
 
 	private fun place(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
 		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
 		val waitForKillauraEnd = killauraBypassValue.get().equals("WaitForKillauraEnd", true) && killAura.hasTarget        // targetPlace, Blacklist, killauraWait check
-		if (targetPlace == null || InventoryUtils.AUTOBLOCK_BLACKLIST.contains(BlockUtils.getBlock((targetPlace ?: return).blockPos)) || waitForKillauraEnd)
+		if (targetPlace == null || InventoryUtils.AUTOBLOCK_BLACKLIST.contains(BlockUtils.getBlock(theWorld, (targetPlace ?: return).blockPos)) || waitForKillauraEnd)
 		{
 			if (placeableDelay.get()) delayTimer.reset()
 			return
@@ -774,7 +762,7 @@ class Scaffold : Module()
 			if (autoBlockValue.get().equals("Off", true)) return
 
 			// Auto-Block
-			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let(BlockUtils::getBlock)?.getBlockBoundsMaxY() ?: 0.0) // Default boundingBoxYLimit it 0.0
+			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let { BlockUtils.getBlock(theWorld, it) }?.getBlockBoundsMaxY() ?: 0.0) // Default boundingBoxYLimit it 0.0
 
 			// If there is no autoblock-able blocks in your inventory, we can't continue.
 			if (blockSlot == -1) return
@@ -900,6 +888,7 @@ class Scaffold : Module()
 	{
 		if (!markValue.get()) return
 
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		for (i in 0 until if (modeValue.get().equals("Expand", true)) expandLengthValue.get() + 1 else 2)
@@ -922,10 +911,10 @@ class Scaffold : Module()
 					else -> 0.0
 				}
 			)
-			val placeInfo: PlaceInfo? = PlaceInfo[blockPos]
+			val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
 			if (isReplaceable(blockPos) && placeInfo != null)
 			{
-				RenderUtils.drawBlockBox(blockPos, Color(68, 117, 255, 100), false)
+				RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, Color(68, 117, 255, 100), false)
 				break
 			}
 		}
@@ -939,7 +928,7 @@ class Scaffold : Module()
 	 * @return
 	 */
 
-	private fun search(thePlayer: IEntityPlayerSP, blockPosition: WBlockPos, checkVisible: Boolean, data: SearchBounds): Boolean
+	private fun search(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPosition: WBlockPos, checkVisible: Boolean, data: SearchBounds): Boolean
 	{
 		if (!isReplaceable(blockPosition)) return false
 
@@ -961,7 +950,9 @@ class Scaffold : Module()
 		{
 			val side = classProvider.getEnumFacing(facingType)
 			val neighbor = blockPosition.offset(side)
-			if (!canBeClicked(neighbor)) continue
+
+			if (!canBeClicked(theWorld, neighbor)) continue
+
 			val dirVec = WVec3(side.directionVec)
 			var xSearch = data.minX
 			while (xSearch <= data.maxX)
@@ -1040,7 +1031,7 @@ class Scaffold : Module()
 					val side = classProvider.getEnumFacing(facingType)
 					val neighbor = blockPosition.offset(side)
 
-					if (!canBeClicked(neighbor)) continue
+					if (!canBeClicked(theWorld, neighbor)) continue
 
 					val dirVec = WVec3(side.directionVec)
 					val posVec = WVec3(blockPosition).addVector(xSearchFace, ySearchFace, zSearchFace)

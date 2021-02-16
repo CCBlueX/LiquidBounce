@@ -6,6 +6,6 @@ import java.awt.image.BufferedImage
 
 object TextureUtilImpl : ITextureUtil
 {
-	override fun uploadTextureImageAllocate(textureId: Int, p_110989_1_: BufferedImage, p_110989_2_: Boolean, p_110989_3_: Boolean): Int = TextureUtil.uploadTextureImageAllocate(textureId, p_110989_1_, p_110989_2_, p_110989_3_)
+	override fun uploadTextureImageAllocate(textureId: Int, texture: BufferedImage, textureBlur: Boolean, textureClamp: Boolean): Int = TextureUtil.uploadTextureImageAllocate(textureId, texture, textureBlur, textureClamp)
 	override fun glGenTextures(): Int = TextureUtil.glGenTextures()
 }

@@ -8,21 +8,17 @@ object WorkerUtils
 	@JvmStatic
 	val workers: ThreadPoolExecutor
 
-	@JvmStatic
-	val forkJoinWorkers: ForkJoinPool
-
 	init
 	{
 		val availableProcessors = Runtime.getRuntime().availableProcessors()
-		workers = ThreadPoolExecutor(availableProcessors, availableProcessors, 5L, TimeUnit.MINUTES, LinkedBlockingQueue(), LiquidBounceThreadFactory(Thread.NORM_PRIORITY))
-		forkJoinWorkers = ForkJoinPool(availableProcessors)
+		workers = ThreadPoolExecutor(availableProcessors, availableProcessors, 5L, TimeUnit.MINUTES, LinkedBlockingQueue(), LiquidBounceThreadFactory())
 	}
 
-	private class LiquidBounceThreadFactory(private val priority: Int) : ThreadFactory
+	private class LiquidBounceThreadFactory : ThreadFactory
 	{
-		private val poolNumber = AtomicInteger(1)
+		private val poolNumber = AtomicInteger()
 		private var group: ThreadGroup
-		private val threadNumber = AtomicInteger(1)
+		private val threadNumber = AtomicInteger()
 		private var namePrefix: String? = null
 
 		init
@@ -36,7 +32,7 @@ object WorkerUtils
 		{
 			val t = Thread(group, task, namePrefix + threadNumber.getAndIncrement(), 0)
 			if (t.isDaemon) t.isDaemon = false
-			t.priority = priority
+			if (t.priority != Thread.NORM_PRIORITY) t.priority = Thread.NORM_PRIORITY
 			return t
 		}
 	}

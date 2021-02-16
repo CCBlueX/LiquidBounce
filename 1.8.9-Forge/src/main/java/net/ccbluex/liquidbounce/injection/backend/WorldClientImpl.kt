@@ -31,7 +31,7 @@ class WorldClientImpl(wrapped: WorldClient) : WorldImpl<WorldClient>(wrapped), I
 
 	override fun sendBlockBreakProgress(entityId: Int, blockPos: WBlockPos, damage: Int) = wrapped.sendBlockBreakProgress(entityId, blockPos.unwrap(), damage)
 
-	override fun addEntityToWorld(entityId: Int, fakePlayer: IEntity) = wrapped.addEntityToWorld(entityId, fakePlayer.unwrap())
+	override fun addEntityToWorld(entityId: Int, entity: IEntity) = wrapped.addEntityToWorld(entityId, entity.unwrap())
 
 	override fun removeEntityFromWorld(entityId: Int)
 	{

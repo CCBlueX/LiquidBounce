@@ -87,6 +87,7 @@ class BlockESP : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (task == null && searchTimer.hasTimePassed(updateDelayValue.get().toLong()))
@@ -103,7 +104,7 @@ class BlockESP : Module()
 			task = Runnable {
 				val blockList: MutableList<WBlockPos> = ArrayList()
 
-				(-radius until radius).forEach { x -> (-radius until radius).forEach { y -> (-radius until radius).asSequence().map { z -> WBlockPos(playerX + x, playerY + y, playerZ + z) }.filter { getBlock(it) == selectedBlock && blockList.size < blockLimitValue.get() }.forEach { blockList.add(it) } } }
+				(-radius until radius).forEach { x -> (-radius until radius).forEach { y -> (-radius until radius).asSequence().map { z -> WBlockPos(playerX + x, playerY + y, playerZ + z) }.filter { getBlock(theWorld, it) == selectedBlock && blockList.size < blockLimitValue.get() }.forEach { blockList.add(it) } } }
 
 				searchTimer.reset()
 
@@ -116,6 +117,9 @@ class BlockESP : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
+		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
+
 		val alpha = colorAlphaValue.get()
 		val color = if (colorRainbow.get()) rainbow(alpha = alpha, speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
 
@@ -123,7 +127,7 @@ class BlockESP : Module()
 		{
 			when (val mode = modeValue.get().toLowerCase())
 			{
-				"box", "otherbox" -> RenderUtils.drawBlockBox(blockPos, color, mode == "box")
+				"box", "otherbox" -> RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, color, mode == "box")
 				"2d" -> RenderUtils.draw2D(blockPos, color.rgb, Color.BLACK.rgb)
 			}
 		}

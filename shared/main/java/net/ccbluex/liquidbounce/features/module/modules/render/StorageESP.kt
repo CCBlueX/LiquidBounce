@@ -74,6 +74,7 @@ class StorageESP : Module()
 	fun onRender3D(event: Render3DEvent)
 	{
 		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
 
 		try
 		{
@@ -126,13 +127,13 @@ class StorageESP : Module()
 
 				if (!(classProvider.isTileEntityChest(tileEntity) || classProvider.isTileEntityEnderChest(tileEntity)))
 				{
-					RenderUtils.drawBlockBox(tileEntity.pos, color, mode.equals("Box", ignoreCase = true))
+					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode.equals("Box", ignoreCase = true))
 					continue
 				}
 
 				when (mode.toLowerCase())
 				{
-					"otherbox", "box" -> RenderUtils.drawBlockBox(tileEntity.pos, color, mode.equals("Box", ignoreCase = true))
+					"otherbox", "box" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode.equals("Box", ignoreCase = true))
 
 					"2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
 

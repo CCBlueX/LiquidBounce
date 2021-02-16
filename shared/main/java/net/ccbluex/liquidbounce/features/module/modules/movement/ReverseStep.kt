@@ -23,6 +23,7 @@ class ReverseStep : Module()
 	@EventTarget(ignoreCondition = true)
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (thePlayer.onGround) jumped = false
@@ -33,7 +34,7 @@ class ReverseStep : Module()
 
 		val entityBoundingBox = thePlayer.entityBoundingBox
 
-		if (collideBlock(entityBoundingBox, classProvider::isBlockLiquid) || collideBlock(classProvider.createAxisAlignedBB(entityBoundingBox.maxX, entityBoundingBox.maxY, entityBoundingBox.maxZ, entityBoundingBox.minX, entityBoundingBox.minY - 0.01, entityBoundingBox.minZ), classProvider::isBlockLiquid)) return
+		if (collideBlock(theWorld, entityBoundingBox, classProvider::isBlockLiquid) || collideBlock(theWorld, classProvider.createAxisAlignedBB(entityBoundingBox.maxX, entityBoundingBox.maxY, entityBoundingBox.maxZ, entityBoundingBox.minX, entityBoundingBox.minY - 0.01, entityBoundingBox.minZ), classProvider::isBlockLiquid)) return
 
 		if (!mc.gameSettings.keyBindJump.isKeyDown && !thePlayer.onGround && !thePlayer.movementInput.jump && thePlayer.motionY <= 0.0 && thePlayer.fallDistance <= 1f && !jumped) thePlayer.motionY = (-motionValue.get()).toDouble()
 	}

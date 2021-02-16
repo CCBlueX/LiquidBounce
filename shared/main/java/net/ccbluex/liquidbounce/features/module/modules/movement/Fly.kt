@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.StatType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.event.*
@@ -197,6 +198,7 @@ class Fly : Module()
 
 	override fun onEnable()
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		hypixelFlyTimer.reset()
@@ -280,7 +282,7 @@ class Fly : Module()
 						{
 							if (!hypixelFlyStarted) if (hypixelDMGBoostStartTiming.get().equals("Immediately", ignoreCase = true))
 							{
-								if (hypixelJump) jump()
+								if (hypixelJump) jump(theWorld, thePlayer)
 
 								hypixelBoostStep = 1
 								hypixelBoostSpeed = 0.1
@@ -293,7 +295,7 @@ class Fly : Module()
 						}
 						else waitForDamage = true
 					}
-					else if (hypixelJump && onGround) jump()
+					else if (hypixelJump && onGround) jump(theWorld, thePlayer)
 				}
 
 				"redesky" -> if (onGround) redeskyVClip(thePlayer, redeskyVClipHeight.get())
@@ -746,7 +748,7 @@ class Fly : Module()
 					{
 
 						// Start boost when the player takes damage
-						if (hypixelJumpValue.get()) jump()
+						if (hypixelJumpValue.get()) jump(theWorld, thePlayer)
 
 						hypixelBoostStep = 1
 						hypixelBoostSpeed = 0.1
@@ -1135,13 +1137,11 @@ class Fly : Module()
 		return 0.0
 	}
 
-	private fun jump()
+	private fun jump(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
-		val thePlayer = mc.thePlayer ?: return
-
-		val blockAbove = BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ))
+		val blockAbove = BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ))
 		val normalJumpY = 0.42 + if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.JUMP))) (thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.JUMP))!!.amplifier + 1) * 0.1f else 0f
-		val jumpY = if (classProvider.isBlockAir(blockAbove)) normalJumpY else min(0.2 + (blockAbove?.getBlockBoundsMinY() ?: 0.0), normalJumpY)
+		val jumpY = if (classProvider.isBlockAir(blockAbove)) normalJumpY else min(0.2 + blockAbove.getBlockBoundsMinY(), normalJumpY)
 
 		// Simulate Vanilla Player Jump
 		thePlayer.setPosition(thePlayer.posX, thePlayer.posY + jumpY, thePlayer.posZ)

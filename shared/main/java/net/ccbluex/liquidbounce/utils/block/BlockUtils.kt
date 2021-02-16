@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.utils.block
 import net.ccbluex.liquidbounce.api.minecraft.block.material.IMaterial
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
@@ -21,7 +23,7 @@ object BlockUtils : MinecraftInstance()
 	 * Get block from [blockPos]
 	 */
 	@JvmStatic
-	fun getBlock(blockPos: WBlockPos): IBlock? = mc.theWorld?.getBlockState(blockPos)?.block
+	fun getBlock(theWorld: IWorldClient, blockPos: WBlockPos): IBlock = theWorld.getBlockState(blockPos).block
 
 	/**
 	 * Get material from [blockPos]
@@ -57,7 +59,7 @@ object BlockUtils : MinecraftInstance()
 	 * Check if [blockPos] is clickable
 	 */
 	@JvmStatic
-	fun canBeClicked(blockPos: WBlockPos) = getBlock(blockPos)?.canCollideCheck(getState(blockPos), false) ?: false && mc.theWorld!!.worldBorder.contains(blockPos)
+	fun canBeClicked(theWorld: IWorldClient, blockPos: WBlockPos) = getBlock(theWorld, blockPos).canCollideCheck(getState(blockPos), false) && blockPos in theWorld.worldBorder
 
 	/**
 	 * Get block name by [id]
@@ -69,9 +71,9 @@ object BlockUtils : MinecraftInstance()
 	 * Check if block is full block
 	 */
 	@JvmStatic
-	fun isFullBlock(blockPos: WBlockPos): Boolean
+	fun isFullBlock(theWorld: IWorldClient, blockPos: WBlockPos): Boolean
 	{
-		val axisAlignedBB = getBlock(blockPos)?.getCollisionBoundingBox(mc.theWorld!!, blockPos, getState(blockPos) ?: return false) ?: return false
+		val axisAlignedBB = getBlock(theWorld, blockPos).getCollisionBoundingBox(theWorld, blockPos, getState(blockPos) ?: return false) ?: return false
 
 		return axisAlignedBB.maxX - axisAlignedBB.minX == 1.0 && axisAlignedBB.maxY - axisAlignedBB.minY == 1.0 && axisAlignedBB.maxZ - axisAlignedBB.minZ == 1.0
 	}
@@ -80,17 +82,15 @@ object BlockUtils : MinecraftInstance()
 	 * Get distance to center of [blockPos]
 	 */
 	@JvmStatic
-	fun getCenterDistance(blockPos: WBlockPos) = mc.thePlayer!!.getDistance(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)
+	fun getCenterDistance(thePlayer: IEntityPlayerSP, blockPos: WBlockPos) = thePlayer.getDistance(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)
 
 	/**
 	 * Search blocks around the player in a specific [radius]
 	 */
 	@JvmStatic
-	fun searchBlocks(radius: Int): Map<WBlockPos, IBlock>
+	fun searchBlocks(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, radius: Int): Map<WBlockPos, IBlock>
 	{
 		val blocks = mutableMapOf<WBlockPos, IBlock>()
-
-		val thePlayer = mc.thePlayer ?: return blocks
 
 		for (x in radius downTo -radius + 1)
 		{
@@ -99,7 +99,7 @@ object BlockUtils : MinecraftInstance()
 				for (z in radius downTo -radius + 1)
 				{
 					val blockPos = WBlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z)
-					val block = getBlock(blockPos) ?: continue
+					val block = getBlock(theWorld, blockPos)
 
 					blocks[blockPos] = block
 				}
@@ -113,7 +113,7 @@ object BlockUtils : MinecraftInstance()
 	 * Check if [axisAlignedBB] has collidable blocks using custom [collide] check
 	 */
 	@JvmStatic
-	fun collideBlock(axisAlignedBB: IAxisAlignedBB, collide: Collidable): Boolean
+	fun collideBlock(theWorld: IWorldClient, axisAlignedBB: IAxisAlignedBB, collide: Collidable): Boolean
 	{
 		val thePlayer = mc.thePlayer!!
 
@@ -121,7 +121,7 @@ object BlockUtils : MinecraftInstance()
 		{
 			for (z in floor(thePlayer.entityBoundingBox.minZ).toInt() until floor(thePlayer.entityBoundingBox.maxZ).toInt() + 1)
 			{
-				val block = getBlock(WBlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble()))
+				val block = getBlock(theWorld, WBlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble()))
 
 				if (!collide(block)) return false
 			}
@@ -134,7 +134,7 @@ object BlockUtils : MinecraftInstance()
 	 * Check if [axisAlignedBB] has collidable blocks using custom [collide] check
 	 */
 	@JvmStatic
-	fun collideBlockIntersects(axisAlignedBB: IAxisAlignedBB, collide: Collidable): Boolean
+	fun collideBlockIntersects(theWorld: IWorldClient, axisAlignedBB: IAxisAlignedBB, collide: Collidable): Boolean
 	{
 		val thePlayer = mc.thePlayer!!
 		val world = mc.theWorld!!
@@ -144,16 +144,17 @@ object BlockUtils : MinecraftInstance()
 			for (z in floor(thePlayer.entityBoundingBox.minZ).toInt() until floor(thePlayer.entityBoundingBox.maxZ).toInt() + 1)
 			{
 				val blockPos = WBlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble())
-				val block = getBlock(blockPos)
+				val block = getBlock(theWorld, blockPos)
 
 				if (collide(block))
 				{
-					val boundingBox = getState(blockPos)?.let { block?.getCollisionBoundingBox(world, blockPos, it) } ?: continue
+					val boundingBox = getState(blockPos)?.let { block.getCollisionBoundingBox(world, blockPos, it) } ?: continue
 
 					if (thePlayer.entityBoundingBox.intersectsWith(boundingBox)) return true
 				}
 			}
 		}
+
 		return false
 	}
 }

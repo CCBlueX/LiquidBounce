@@ -19,9 +19,10 @@ class AirLadder : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (classProvider.isBlockLadder(BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))) && thePlayer.isCollidedHorizontally || classProvider.isBlockVine(BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ))) || classProvider.isBlockVine(BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))))
+		if (classProvider.isBlockLadder(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))) && thePlayer.isCollidedHorizontally || classProvider.isBlockVine(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ))) || classProvider.isBlockVine(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))))
 		{
 			thePlayer.motionY = 0.15
 			thePlayer.motionX = 0.0

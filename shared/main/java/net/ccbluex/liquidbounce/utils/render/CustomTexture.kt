@@ -23,7 +23,7 @@ class CustomTexture(private val image: BufferedImage)
 		{
 			check(!unloaded) { "Texture unloaded" }
 			val textureUtil = LiquidBounce.wrapper.classProvider.textureUtil
-			if (field == -1) field = textureUtil.uploadTextureImageAllocate(textureUtil.glGenTextures(), image, true, true)
+			if (field == -1) field = textureUtil.uploadTextureImageAllocate(textureUtil.glGenTextures(), image, textureBlur = true, textureClamp = true)
 			return field
 		}
 		private set

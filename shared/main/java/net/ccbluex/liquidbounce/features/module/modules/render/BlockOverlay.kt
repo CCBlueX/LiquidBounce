@@ -44,7 +44,7 @@ class BlockOverlay : Module()
 	{
 		val blockPos = mc.objectMouseOver?.blockPos ?: return null
 
-		if (canBeClicked(blockPos) && blockPos in theWorld.worldBorder) return blockPos
+		if (canBeClicked(theWorld, blockPos) && blockPos in theWorld.worldBorder) return blockPos
 
 		return null
 	}
@@ -104,7 +104,7 @@ class BlockOverlay : Module()
 			val theWorld = mc.theWorld ?: return
 
 			val blockPos = getCurrentBlock(theWorld) ?: return
-			val block = getBlock(blockPos) ?: return
+			val block = getBlock(theWorld, blockPos)
 
 			val info = "${block.localizedName} \u00A77ID: ${functions.getIdFromBlock(block)}"
 			val scaledResolution = classProvider.createScaledResolution(mc)

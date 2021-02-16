@@ -28,6 +28,7 @@ class FastClimb : Module()
 	{
 		val mode = modeValue.get().toLowerCase()
 
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		val speed = speedValue.get().toDouble()
@@ -59,7 +60,7 @@ class FastClimb : Module()
 					}
 				}
 
-				val block = getBlock(WBlockPos(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z))
+				val block = getBlock(theWorld, WBlockPos(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z))
 
 				if (classProvider.isBlockLadder(block) || classProvider.isBlockVine(block))
 				{
@@ -68,7 +69,7 @@ class FastClimb : Module()
 				}
 			}
 
-			"aac3.0.5" -> if (mc.gameSettings.keyBindForward.isKeyDown && collideBlockIntersects(thePlayer.entityBoundingBox) {
+			"aac3.0.5" -> if (mc.gameSettings.keyBindForward.isKeyDown && collideBlockIntersects(theWorld, thePlayer.entityBoundingBox) {
 					classProvider.isBlockLadder(it) || classProvider.isBlockVine(it)
 				})
 			{
@@ -97,7 +98,7 @@ class FastClimb : Module()
 			{
 				for (i in thePlayer.posY.toInt()..thePlayer.posY.toInt() + 8)
 				{
-					val block = getBlock(WBlockPos(thePlayer.posX, i.toDouble(), thePlayer.posZ))
+					val block = getBlock(theWorld, WBlockPos(thePlayer.posX, i.toDouble(), thePlayer.posZ))
 
 					if (!classProvider.isBlockLadder(block))
 					{

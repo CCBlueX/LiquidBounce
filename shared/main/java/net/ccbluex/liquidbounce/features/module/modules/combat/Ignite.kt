@@ -47,8 +47,8 @@ class Ignite : Module()
 	{
 		if (!msTimer.hasTimePassed(500L)) return
 
-		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
 
 		val itemDelay = itemDelayValue.get()
 		val randomSlot = randomSlotValue.get()
@@ -63,7 +63,7 @@ class Ignite : Module()
 		{
 			val blockPos = entity.position
 
-			if (thePlayer.getDistanceSq(blockPos) >= 22.3 || !isReplaceable(blockPos) || !classProvider.isBlockAir(getBlock(blockPos))) continue
+			if (thePlayer.getDistanceSq(blockPos) >= 22.3 || !isReplaceable(blockPos) || !classProvider.isBlockAir(getBlock(theWorld, blockPos))) continue
 
 			RotationUtils.keepCurrentRotation = true
 			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(fireInHotbar - 36))
@@ -89,7 +89,7 @@ class Ignite : Module()
 				val side = classProvider.getEnumFacing(enumFacingType)
 				val neighbor = blockPos.offset(side)
 
-				if (!canBeClicked(neighbor)) continue
+				if (!canBeClicked(theWorld, neighbor)) continue
 
 				val diffX = neighbor.x + 0.5 - thePlayer.posX
 				val diffY = neighbor.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)

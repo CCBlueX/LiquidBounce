@@ -46,6 +46,7 @@ class IceSpeed : Module()
 			classProvider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.98f
 		}
 
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.sneaking && thePlayer.sprinting && thePlayer.movementInput.moveForward > 0.0)
@@ -66,7 +67,7 @@ class IceSpeed : Module()
 				"spartan146" -> getMaterial(thePlayer.position.down()).let {
 					if (it == classProvider.getBlockEnum(BlockType.ICE) || it == classProvider.getBlockEnum(BlockType.ICE_PACKED))
 					{
-						val blockAbove: IBlock? = BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))
+						val blockAbove: IBlock = BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))
 
 						if (classProvider.isBlockAir(blockAbove))
 						{

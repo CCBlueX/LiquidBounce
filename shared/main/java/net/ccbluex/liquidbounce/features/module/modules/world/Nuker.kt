@@ -94,8 +94,8 @@ class Nuker : Module()
 
 			// Default nuker
 
-			val validBlocks = searchBlocks(radius.roundToInt() + 1).filter { (pos, block) ->
-				if (getCenterDistance(pos) <= radius && validBlock(block))
+			val validBlocks = searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filter { (pos, block) ->
+				if (getCenterDistance(thePlayer, pos) <= radius && validBlock(block))
 				{
 					if (layerValue.get() && pos.y < thePlayer.posY)
 					{
@@ -124,7 +124,7 @@ class Nuker : Module()
 				val (blockPos, block) = when (priorityValue.get())
 				{
 					"Distance" -> validBlocks.minBy { (pos, _) ->
-						val distance = getCenterDistance(pos)
+						val distance = getCenterDistance(thePlayer, pos)
 						val safePos = WBlockPos(posX, thePlayer.posY - 1, posZ)
 
 						if (pos.x == safePos.x && safePos.y <= pos.y && pos.z == safePos.z) Double.MAX_VALUE - distance // Last block
@@ -209,8 +209,8 @@ class Nuker : Module()
 			if (classProvider.isItemSword(thePlayer.heldItem?.item)) return
 
 			// Search for new blocks to break
-			searchBlocks(radius.roundToInt() + 1).filter { (pos, block) ->
-				if (getCenterDistance(pos) <= radius && validBlock(block))
+			searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filter { (pos, block) ->
+				if (getCenterDistance(thePlayer, pos) <= radius && validBlock(block))
 				{
 					if (layerValue.get() && pos.y < thePlayer.posY)
 					{
@@ -244,18 +244,19 @@ class Nuker : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		// Safe block
 		if (!layerValue.get())
 		{
 			val safePos = WBlockPos(thePlayer.posX, thePlayer.posY - 1, thePlayer.posZ)
-			val safeBlock = BlockUtils.getBlock(safePos)
-			if (safeBlock != null && validBlock(safeBlock)) RenderUtils.drawBlockBox(safePos, Color.GREEN, true)
+			val safeBlock = BlockUtils.getBlock(theWorld, safePos)
+			if (validBlock(safeBlock)) RenderUtils.drawBlockBox(theWorld, thePlayer, safePos, Color.GREEN, true)
 		}
 
 		// Just draw all blocks
-		for (blockPos in attackedBlocks) RenderUtils.drawBlockBox(blockPos, Color.RED, true)
+		for (blockPos in attackedBlocks) RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, Color.RED, true)
 	}
 
 	/**

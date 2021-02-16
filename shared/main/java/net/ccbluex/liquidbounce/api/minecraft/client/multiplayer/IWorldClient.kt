@@ -20,6 +20,6 @@ interface IWorldClient : IWorld
 
 	fun sendQuittingDisconnectingPacket()
 	fun sendBlockBreakProgress(entityId: Int, blockPos: WBlockPos, damage: Int)
-	fun addEntityToWorld(entityId: Int, fakePlayer: IEntity)
+	fun addEntityToWorld(entityId: Int, entity: IEntity)
 	fun removeEntityFromWorld(entityId: Int)
 }

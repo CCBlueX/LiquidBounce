@@ -10,7 +10,7 @@ package net.ccbluex.liquidbounce.utils
  */
 object CPSCounter
 {
-	private const val MAX_CPS = 100
+	private const val MAX_CPS = 50
 	private val TIMESTAMP_BUFFERS = arrayOfNulls<RollingArrayLongBuffer>(MouseButton.values().size)
 
 	/**

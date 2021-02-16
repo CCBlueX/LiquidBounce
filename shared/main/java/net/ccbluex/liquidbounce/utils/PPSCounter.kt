@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.utils
 
 object PPSCounter
 {
-	private const val MAX_PPS = 1000
+	private const val MAX_PPS = 2048
 	private val TIMESTAMP_BUFFERS = arrayOfNulls<RollingArrayLongBuffer>(BoundType.values().size)
 
 	/**

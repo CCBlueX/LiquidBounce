@@ -36,7 +36,9 @@ class CivBreak : Module()
 	@EventTarget
 	fun onBlockClick(event: ClickBlockEvent)
 	{
-		if (classProvider.isBlockBedrock(event.clickedBlock?.let(BlockUtils::getBlock))) return
+		val theWorld = mc.theWorld ?: return
+
+		if (classProvider.isBlockBedrock(event.clickedBlock?.let { BlockUtils.getBlock(theWorld, it) })) return
 
 		val netHandler = mc.netHandler
 
@@ -53,17 +55,18 @@ class CivBreak : Module()
 	{
 		val pos = blockPos ?: return
 
-		if (airResetValue.get() && classProvider.isBlockAir(BlockUtils.getBlock(pos)) || rangeResetValue.get() && BlockUtils.getCenterDistance(pos) > range.get())
+		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
+
+		if (airResetValue.get() && classProvider.isBlockAir(BlockUtils.getBlock(theWorld, pos)) || rangeResetValue.get() && BlockUtils.getCenterDistance(thePlayer, pos) > range.get())
 		{
 			blockPos = null
 			return
 		}
 
-		val theWorld = mc.theWorld ?: return
-		val thePlayer = mc.thePlayer ?: return
 		val netHandler = mc.netHandler
 
-		if (classProvider.isBlockAir(BlockUtils.getBlock(pos)) || BlockUtils.getCenterDistance(pos) > range.get()) return
+		if (classProvider.isBlockAir(BlockUtils.getBlock(theWorld, pos)) || BlockUtils.getCenterDistance(thePlayer, pos) > range.get()) return
 
 		when (event.eventState)
 		{
@@ -87,7 +90,7 @@ class CivBreak : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		RenderUtils.drawBlockBox(blockPos ?: return, Color.RED, true)
+		RenderUtils.drawBlockBox(mc.theWorld ?: return, mc.thePlayer ?: return, blockPos ?: return, Color.RED, true)
 	}
 
 	override val tag: String

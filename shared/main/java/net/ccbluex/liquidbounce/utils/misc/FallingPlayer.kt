@@ -65,18 +65,19 @@ class FallingPlayer(private val theWorld: IWorldClient, private val thePlayer: I
 			calculateForTick()
 
 			var raytracedBlock: WBlockPos?
-			val w = thePlayer.width / 2.0f
+			val w = thePlayer.width / 2.0
 
 			if (rayTrace(theWorld, start, end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
-			if (rayTrace(theWorld, start.addVector(w.toDouble(), 0.0, w.toDouble()), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
-			if (rayTrace(theWorld, start.addVector(-w.toDouble(), 0.0, w.toDouble()), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
-			if (rayTrace(theWorld, start.addVector(w.toDouble(), 0.0, -w.toDouble()), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
-			if (rayTrace(theWorld, start.addVector(-w.toDouble(), 0.0, -w.toDouble()), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
-			if (rayTrace(theWorld, start.addVector(w.toDouble(), 0.0, (w / 2.0f).toDouble()), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
-			if (rayTrace(theWorld, start.addVector(-w.toDouble(), 0.0, (w / 2.0f).toDouble()), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
-			if (rayTrace(theWorld, start.addVector((w / 2.0f).toDouble(), 0.0, w.toDouble()), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
-			if (rayTrace(theWorld, start.addVector((w / 2.0f).toDouble(), 0.0, -w.toDouble()), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
+			if (rayTrace(theWorld, start.addVector(w, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
+			if (rayTrace(theWorld, start.addVector(-w, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
+			if (rayTrace(theWorld, start.addVector(w, 0.0, -w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
+			if (rayTrace(theWorld, start.addVector(-w, 0.0, -w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
+			if (rayTrace(theWorld, start.addVector(w, 0.0, w / 2.0), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
+			if (rayTrace(theWorld, start.addVector(-w, 0.0, w / 2.0), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
+			if (rayTrace(theWorld, start.addVector(w / 2.0, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
+			if (rayTrace(theWorld, start.addVector(w / 2.0, 0.0, -w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
 		}
+
 		return null
 	}
 

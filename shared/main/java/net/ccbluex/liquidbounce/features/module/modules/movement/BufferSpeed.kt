@@ -72,6 +72,7 @@ class BufferSpeed : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (LiquidBounce.moduleManager[Speed::class.java].state || noHurtValue.get() && thePlayer.hurtTime > 0)
@@ -110,7 +111,7 @@ class BufferSpeed : Module()
 		{
 			fastHop = false
 
-			if (slimeValue.get() && (classProvider.isBlockSlime(getBlock(blockPos.down())) || classProvider.isBlockSlime(getBlock(blockPos))))
+			if (slimeValue.get() && (classProvider.isBlockSlime(getBlock(theWorld, blockPos.down())) || classProvider.isBlockSlime(getBlock(theWorld, blockPos))))
 			{
 				thePlayer.jump()
 
@@ -122,7 +123,7 @@ class BufferSpeed : Module()
 				return
 			}
 
-			if (slabsValue.get() && classProvider.isBlockSlab(getBlock(blockPos)))
+			if (slabsValue.get() && classProvider.isBlockSlab(getBlock(theWorld, blockPos)))
 			{
 				when (slabsModeValue.get().toLowerCase())
 				{
@@ -153,7 +154,7 @@ class BufferSpeed : Module()
 				}
 			}
 
-			if (stairsValue.get() && (classProvider.isBlockStairs(getBlock(blockPos.down())) || classProvider.isBlockStairs(getBlock(blockPos))))
+			if (stairsValue.get() && (classProvider.isBlockStairs(getBlock(theWorld, blockPos.down())) || classProvider.isBlockStairs(getBlock(theWorld, blockPos))))
 			{
 				when (stairsModeValue.get().toLowerCase())
 				{
@@ -185,19 +186,19 @@ class BufferSpeed : Module()
 			}
 			legitHop = true
 
-			if (headBlockValue.get() && getBlock(blockPos.up(2)) != classProvider.getBlockEnum(BlockType.AIR))
+			if (headBlockValue.get() && getBlock(theWorld, blockPos.up(2)) != classProvider.getBlockEnum(BlockType.AIR))
 			{
 				boost(thePlayer, headBlockBoostValue.get())
 				return
 			}
 
-			if (iceValue.get() && (getBlock(blockPos.down()) == classProvider.getBlockEnum(BlockType.ICE) || getBlock(blockPos.down()) == classProvider.getBlockEnum(BlockType.ICE_PACKED)))
+			if (iceValue.get() && (getBlock(theWorld, blockPos.down()) == classProvider.getBlockEnum(BlockType.ICE) || getBlock(theWorld, blockPos.down()) == classProvider.getBlockEnum(BlockType.ICE_PACKED)))
 			{
 				boost(thePlayer, iceBoostValue.get())
 				return
 			}
 
-			if (snowValue.get() && getBlock(blockPos) == classProvider.getBlockEnum(BlockType.SNOW_LAYER) && (snowPortValue.get() || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500))
+			if (snowValue.get() && getBlock(theWorld, blockPos) == classProvider.getBlockEnum(BlockType.SNOW_LAYER) && (snowPortValue.get() || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500))
 			{
 				if (thePlayer.posY - thePlayer.posY.toInt() >= 0.12500) boost(thePlayer, snowBoostValue.get())
 				else
@@ -212,7 +213,7 @@ class BufferSpeed : Module()
 			{
 				when (wallModeValue.get().toLowerCase())
 				{
-					"aac3.2.1" -> if (thePlayer.isCollidedVertically && isNearBlock || !classProvider.isBlockAir(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))))
+					"aac3.2.1" -> if (thePlayer.isCollidedVertically && isNearBlock || !classProvider.isBlockAir(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))))
 					{
 						boost(thePlayer, wallBoostValue.get())
 						return

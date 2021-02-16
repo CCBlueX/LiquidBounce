@@ -209,7 +209,7 @@ class Tower : Module()
 
 			if (update)
 			{
-				if (!stopWhenBlockAbove.get() || classProvider.isBlockAir(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)))) move()
+				if (!stopWhenBlockAbove.get() || classProvider.isBlockAir(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)))) move()
 
 				val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)
 				if (classProvider.isBlockAir(theWorld.getBlockState(blockPos).block) && search(theWorld, blockPos) && rotationsValue.get())
@@ -418,7 +418,7 @@ class Tower : Module()
 			val side = classProvider.getEnumFacing(facingType)
 			val neighbor = blockPosition.offset(side)
 
-			if (!canBeClicked(neighbor)) continue
+			if (!canBeClicked(theWorld, neighbor)) continue
 
 			val dirVec = WVec3(side.directionVec)
 

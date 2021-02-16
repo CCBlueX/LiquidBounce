@@ -43,6 +43,7 @@ class WallClimb : Module()
 	@EventTarget
 	fun onUpdate(event: MotionEvent)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (event.eventState != EventState.POST) return
@@ -69,9 +70,7 @@ class WallClimb : Module()
 
 			"checkerclimb" ->
 			{
-				val isInsideBlock = collideBlockIntersects(thePlayer.entityBoundingBox) {
-					!classProvider.isBlockAir(it)
-				}
+				val isInsideBlock = collideBlockIntersects(theWorld, thePlayer.entityBoundingBox) { !classProvider.isBlockAir(it) }
 				val motion = checkerClimbMotionValue.get()
 
 				if (isInsideBlock && motion != 0f) thePlayer.motionY = motion.toDouble()

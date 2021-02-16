@@ -68,7 +68,7 @@ class HighJump : Module()
 			if (autodisable.get()) state = false
 		}
 
-		if (glassValue.get() && !classProvider.isBlockPane(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return // 'AAC Ground-check always returns true when player is collided with glass pane or iron bars, etc.' bug exploit
+		if (glassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return // 'AAC Ground-check always returns true when player is collided with glass pane or iron bars, etc.' bug exploit
 
 		when (modeValue.get().toLowerCase())
 		{
@@ -151,18 +151,20 @@ class HighJump : Module()
 	@EventTarget
 	fun onMove(@Suppress("UNUSED_PARAMETER") event: MoveEvent?)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (glassValue.get() && !classProvider.isBlockPane(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
+		if (glassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
 		if (!thePlayer.onGround && modeValue.get().equals("oldmineplex", ignoreCase = true)) thePlayer.motionY += if (thePlayer.fallDistance == 0.0f) 0.0499 else 0.05
 	}
 
 	@EventTarget
 	fun onJump(event: JumpEvent)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (glassValue.get() && !classProvider.isBlockPane(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
+		if (glassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
 		when (modeValue.get().toLowerCase())
 		{
 			"vanilla" -> event.motion = event.motion * heightValue.get()

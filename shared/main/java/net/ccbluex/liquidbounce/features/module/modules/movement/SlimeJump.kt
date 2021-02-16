@@ -23,9 +23,10 @@ class SlimeJump : Module()
 	@EventTarget
 	fun onJump(event: JumpEvent)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (classProvider.isBlockSlime(getBlock(thePlayer.position.down())))
+		if (classProvider.isBlockSlime(getBlock(theWorld, thePlayer.position.down())))
 		{
 			event.cancelEvent()
 

@@ -58,8 +58,8 @@ object ChestAura : Module()
 				val radius = rangeValue.get() + 1
 				val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
 
-				currentBlock = BlockUtils.searchBlocks(radius.toInt()).asSequence().filter {
-					functions.getIdFromBlock(it.value) == chestValue.get() && !clickedBlocks.contains(it.key) && BlockUtils.getCenterDistance(it.key) < rangeValue.get()
+				currentBlock = BlockUtils.searchBlocks(theWorld, thePlayer, radius.toInt()).asSequence().filter {
+					functions.getIdFromBlock(it.value) == chestValue.get() && !clickedBlocks.contains(it.key) && BlockUtils.getCenterDistance(thePlayer, it.key) < rangeValue.get()
 				}.filter {
 					if (throughWallsValue.get()) return@filter true
 
@@ -67,7 +67,7 @@ object ChestAura : Module()
 					val movingObjectPosition = theWorld.rayTraceBlocks(eyesPos, blockPos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
 
 					movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
-				}.minBy { BlockUtils.getCenterDistance(it.key) }?.key
+				}.minBy { BlockUtils.getCenterDistance(thePlayer, it.key) }?.key
 
 				if (rotationsValue.get()) RotationUtils.setTargetRotation((RotationUtils.faceBlock(theWorld, thePlayer, currentBlock ?: return) ?: return).rotation)
 			}
