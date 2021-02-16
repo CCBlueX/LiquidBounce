@@ -52,6 +52,7 @@ import net.ccbluex.liquidbounce.renderer.ultralight.listener.ViewLoadListener
 import net.ccbluex.liquidbounce.renderer.ultralight.support.ViewFileSystem
 import net.ccbluex.liquidbounce.renderer.ultralight.support.ViewLogger
 import net.ccbluex.liquidbounce.renderer.ultralight.theme.Page
+import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.GL11
@@ -59,37 +60,28 @@ import org.lwjgl.opengl.GL12
 import java.io.File
 import java.nio.ByteBuffer
 
-class WebView(
-    val window: Long = mc.window.handle,
-    val scale: Float = 2.0f,
-    deviceScale: Double = scale.toDouble(),
-    var width: () -> Int,
-    var height: () -> Int
-) {
+object WebPlatform {
+
+    const val SCALE = 2.0
 
     var platform: UltralightPlatform
     var renderer: UltralightRenderer
-    var view: UltralightView
-
-    var currentPage: Page? = null
-
-    private var glTexture = -1
-
-    companion object {
-        init {
-            // Load natives from native directory inside root folder
-            UltralightJava.load(File(LiquidBounce.configSystem.rootFolder, "natives").toPath())
-        }
-    }
 
     init {
+        logger.info("Loading ultralight...")
+
+        // Load natives from native directory inside root folder
+        logger.debug("Loading ultralight natives")
+        UltralightJava.load(File(LiquidBounce.configSystem.rootFolder, "natives").toPath())
+
         // Setup platform
+        logger.debug("Setting up ultralight platform")
         platform = UltralightPlatform.instance()
         platform.setConfig(
             UltralightConfig()
                 .resourcePath("./resources/")
                 .fontHinting(FontHinting.NORMAL)
-                .deviceScale(deviceScale)
+                .deviceScale(SCALE)
         )
         platform.usePlatformFontLoader()
         platform.setFileSystem(ViewFileSystem())
@@ -97,13 +89,33 @@ class WebView(
         platform.setClipboard(ClipboardAdapter())
 
         // Setup renderer
+        logger.debug("Setting up ultralight renderer")
         renderer = UltralightRenderer.create()
-        renderer.logMemoryUsage()
 
+        logger.info("Successfully loaded ultralight!")
+    }
+
+}
+
+class WebView(
+    val window: Long = mc.window.handle,
+    var width: () -> Int,
+    var height: () -> Int
+) {
+
+    var renderer = WebPlatform.renderer
+    var view: UltralightView
+    var currentPage: Page? = null
+
+    private var glTexture = -1
+    val textureScale: Float = WebPlatform.SCALE.toFloat()
+
+    init {
         // Setup view
-        view = renderer.createView(width().toLong() * scale.toLong(), height().toLong() * scale.toLong(), true)
+        view = renderer.createView(width().toLong() * textureScale.toLong(), height().toLong() * textureScale.toLong(), true)
         view.setViewListener(ViewListener(CursorAdapter(window)))
         view.setLoadListener(ViewLoadListener(view))
+        logger.debug("Created new view $this")
     }
 
     /**
@@ -116,6 +128,7 @@ class WebView(
 
         view.loadURL(page.viewableFile)
         currentPage = page
+        logger.debug("Loaded page on $this")
     }
 
     /**
@@ -124,7 +137,7 @@ class WebView(
     fun update() {
         val width = width()
         val height = height()
-        if (width.toLong() * scale.toLong() != view.width() || height.toLong() * scale.toLong() != view.height()) {
+        if (width.toLong() * textureScale.toLong() != view.width() || height.toLong() * textureScale.toLong() != view.height()) {
             resize(width, height)
         }
 
@@ -144,16 +157,27 @@ class WebView(
      * @param height The new view height
      */
     fun resize(width: Int, height: Int) {
-        println("resize $width ${view.width()}, $height ${view.height()}")
-        view.resize(width.toLong() * scale.toLong(), height.toLong() * scale.toLong())
+        logger.debug("Resizied $this to (w: $width h: $height)")
+        view.resize(width.toLong() * textureScale.toLong(), height.toLong() * textureScale.toLong())
     }
 
     /**
-     * Render the current image using OpenGL
+     * Closes view (very important!)
+     */
+    fun close() {
+        view.unfocus()
+        view.stop()
+        currentPage?.close()
+        GL11.glDeleteTextures(glTexture)
+        glTexture = -1
+    }
+
+    /**
+     * Render the current view
      */
     fun render() {
         if (glTexture == -1) {
-            createGLTexture()
+            createGlTexture()
         }
 
         // As we are using the CPU renderer, draw with a bitmap (we did not set a custom surface)
@@ -255,7 +279,7 @@ class WebView(
     /**
      * Sets up the OpenGL texture for rendering
      */
-    private fun createGLTexture() {
+    private fun createGlTexture() {
         GL11.glEnable(GL11.GL_TEXTURE_2D)
         glTexture = GL11.glGenTextures()
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, glTexture)
@@ -266,5 +290,7 @@ class WebView(
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
         GL11.glDisable(GL11.GL_TEXTURE_2D)
     }
+
+    override fun toString() = "View(p: $currentPage, url: ${view.url()}, w: ${view.width()}, h: ${view.height()})"
 
 }

@@ -6,13 +6,13 @@
   "mixins": [
   ],
   "client": [
-    "client.MixinClientConnection",
-    "client.MixinKeyboard",
-    "client.MixinMinecraftClient",
-    "entity.MixinClientPlayerEntity",
-    "gui.MixinInGameHud",
-    "gui.MixinScreen",
-    "render.MixinGameRenderer"
+    "minecraft.client.MixinClientConnection",
+    "minecraft.client.MixinKeyboard",
+    "minecraft.client.MixinMinecraftClient",
+    "minecraft.entity.MixinClientPlayerEntity",
+    "minecraft.gui.MixinInGameHud",
+    "minecraft.gui.MixinScreen",
+    "minecraft.render.MixinGameRenderer"
   ],
   "server": [],
   "injectors": {

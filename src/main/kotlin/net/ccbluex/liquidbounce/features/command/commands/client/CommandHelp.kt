@@ -64,10 +64,10 @@ object CommandHelp {
                 val iterPage = 8 * page
                 for (command in commands.subList(iterPage - 8, iterPage.coerceAtMost(commands.size))){
                     val aliases = if (command.aliases.isEmpty()) "" else " §7(§8${command.aliases.joinToString("§7, §8")}§7)"
-                    helpOut.append("§6> §7${CommandManager.prefix}${command.name}$aliases\n")
+                    helpOut.append("§6> §7${CommandManager.Options.prefix}${command.name}$aliases\n")
                 }
 
-                helpOut.append("§a------------\n§7> §c${CommandManager.prefix}help §8<§7§lpage§8>")
+                helpOut.append("§a------------\n§7> §c${CommandManager.Options.prefix}help §8<§7§lpage§8>")
                 chat(helpOut.toString())
             }
             .build()

@@ -21,11 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.renderer.ultralight.screen.UltralightScreen
 
 object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
 
     override fun enable() {
-
+        mc.openScreen(UltralightScreen("clickgui"))
     }
 
 }

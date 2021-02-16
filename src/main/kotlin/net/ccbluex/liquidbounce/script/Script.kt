@@ -63,10 +63,7 @@ class Script(val scriptFile: File) {
 
         // Global instances
         scriptEngine.put("mc", mc)
-
-        scriptEngine.put("moduleManager", LiquidBounce.moduleManager)
-        scriptEngine.put("commandManager", LiquidBounce.commandManager)
-        scriptEngine.put("scriptManager", LiquidBounce.scriptManager)
+        scriptEngine.put("client", LiquidBounce)
 
         // Global functions
         scriptEngine.put("registerScript", RegisterScript())

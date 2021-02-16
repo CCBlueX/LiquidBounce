@@ -18,11 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
@@ -38,16 +39,13 @@ object ModuleManager : Iterable<Module>, Listenable {
 
     private val modules = mutableListOf<Module>()
 
-    init {
-        LiquidBounce.configSystem.root("modules", modules)
-    }
-
     /**
      * Handle key input for module binds
      */
     val keyHandler = handler<KeyEvent> { ev ->
         if (ev.action == GLFW.GLFW_PRESS) {
-            filter { it.bind == ev.key }.forEach { it.enabled = !it.enabled }
+            filter { it.bind == ev.key.code } // modules bound to specific key
+                .forEach { it.enabled = !it.enabled } // toggle modules
         }
     }
 
@@ -72,10 +70,14 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleSpeed,
             ModuleAutoRespawn,
             ModuleTrigger,
+            ModuleTrigger,
             ModuleNametags,
             ModuleBreadcrumbs,
             ModuleItemESP
         )
+
+        // TODO: Figure out how to link modules list with configurable
+        ConfigSystem.root("modules", modules)
     }
 
     fun addModule(module: Module) {

@@ -39,6 +39,7 @@ package net.ccbluex.liquidbounce.renderer.ultralight.support
 
 import com.labymedia.ultralight.plugin.logging.UltralightLogLevel
 import com.labymedia.ultralight.plugin.logging.UltralightLogger
+import net.ccbluex.liquidbounce.utils.logger
 
 /**
  * Implementation of a logger
@@ -47,9 +48,9 @@ class ViewLogger : UltralightLogger {
 
     override fun logMessage(level: UltralightLogLevel, message: String) {
         when (level) {
-            UltralightLogLevel.ERROR -> System.err.println("[Ultralight/ERR] $message")
-            UltralightLogLevel.WARNING -> System.err.println("[Ultralight/WARN] $message")
-            UltralightLogLevel.INFO -> println("[Ultralight/INFO] $message")
+            UltralightLogLevel.ERROR -> logger.debug("[Ultralight/ERR] $message")
+            UltralightLogLevel.WARNING -> logger.debug("[Ultralight/WARN] $message")
+            UltralightLogLevel.INFO -> logger.debug("[Ultralight/INFO] $message")
         }
     }
 

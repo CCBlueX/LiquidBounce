@@ -2,8 +2,7 @@ package net.ccbluex.liquidbounce.features.chat
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.boolean
-import net.ccbluex.liquidbounce.config.text
+
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.chat.client.Client
 import net.ccbluex.liquidbounce.features.chat.client.ClientListener

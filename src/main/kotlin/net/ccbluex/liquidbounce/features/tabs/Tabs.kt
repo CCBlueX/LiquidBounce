@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.tabs
 
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.decode
+import net.ccbluex.liquidbounce.utils.HttpUtils
 import net.ccbluex.liquidbounce.utils.extensions.asText
 import net.ccbluex.liquidbounce.utils.extensions.createItem
 import net.ccbluex.liquidbounce.utils.logger
@@ -28,6 +31,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.collection.DefaultedList
 import java.util.*
+import kotlin.collections.HashMap
 
 /**
  * LiquidBounce Creative Tabs with useful items and blocks
@@ -64,9 +68,7 @@ object Tabs {
      */
     val exploits = LiquidsItemGroup(
         "Exploits",
-        icon = {
-            ItemStack(Items.LINGERING_POTION)
-        },
+        icon = { ItemStack(Items.LINGERING_POTION) },
         items = {
             // TODO: Add exploits
             // it.add(createItem("spawner{BlockEntityTag:{EntityId:\"Painting\"}}", 1).setCustomName("§8Test §7| §cmc1.8-mc1.16.4".asText()))
@@ -77,35 +79,36 @@ object Tabs {
      * Heads item group allows you to decorate your world with different heads
      */
     private class Head(val name: String, val uuid: UUID, val value: String)
+    private class HeadsService(val enabled: Boolean, val url: String)
     private var headsCollection: Array<Head> = runCatching {
-        class HeadsService(val enabled: Boolean, val url: String)
-
         logger.info("Loading heads...")
-        TODO("not done yet")
+        // Load head service from cloud
+        //  Makes it possible to disable service or change domain in case of an emergency
+        val headService: HeadsService = decode(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/heads.json"))
 
-        /*val headService = Json.decodeFromString<HeadsService>(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/heads.json"))
         if (headService.enabled) {
-            Json.decodeFromString<HashMap<String, Head>>(HttpUtils.get(headService.url))
-                .map { it.value }
+            // Load heads from service
+            //  Syntax based on HeadDB (headdb.org)
+            val heads: HashMap<String, Head> = decode(HttpUtils.get(headService.url))
+
+            heads.map { it.value }
                 .toTypedArray()
                 .also {
                     logger.info("Successfully loaded ${it.size} heads from the database")
                 }
         } else {
             error("Head service has been disabled")
-        }*/
+        }
     }.onFailure {
         logger.error("Unable to load heads database", it)
     }.getOrElse { emptyArray() }
 
     val heads = LiquidsItemGroup(
         "Heads",
-        icon = {
-            ItemStack(Items.SKELETON_SKULL)
-        },
+        icon = { ItemStack(Items.SKELETON_SKULL) },
         items = {
             it += headsCollection.map { head ->
-                createItem("skull{display:{Name:\\\"${head.name}\\\"},SkullOwner:{Id:\\\"${head.uuid}\\\",Properties:{textures:[{Value:\\\"${head.value}\\\"}]}}}")
+                createItem("minecraft:player_head{display:{Name:\"{\\\"text\\\":\\\"${head.name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${head.value}\"}]}}}")
             }
         }
     ).create()
@@ -117,7 +120,8 @@ object Tabs {
 /**
  * A item group from the client
  */
-open class LiquidsItemGroup(val plainName: String, val icon: () -> ItemStack, val items: (items: MutableList<ItemStack>) -> Unit) {
+open class LiquidsItemGroup(val plainName: String, val icon: () -> ItemStack,
+                            val items: (items: MutableList<ItemStack>) -> Unit) {
 
     // Create item group and assign to minecraft groups
     fun create(): ItemGroup {
