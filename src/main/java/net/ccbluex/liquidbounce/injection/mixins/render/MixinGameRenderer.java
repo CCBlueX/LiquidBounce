@@ -83,8 +83,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
         matrixStack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
 
-        if (rotateYaw)
-            matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));
+        matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));
 
         Vec3d pos = this.camera.getPos();
 

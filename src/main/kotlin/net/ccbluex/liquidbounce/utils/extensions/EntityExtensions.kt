@@ -18,7 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.entity.player.PlayerEntity
 
 val ClientPlayerEntity.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
+val PlayerEntity.ping: Int
+    get() = MinecraftClient.getInstance().networkHandler?.getPlayerListEntry(uuid)?.latency ?: 0

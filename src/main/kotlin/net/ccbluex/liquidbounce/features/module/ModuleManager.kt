@@ -28,8 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.features.module.modules.render.*
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -72,7 +71,10 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleVelocity,
             ModuleSpeed,
             ModuleAutoRespawn,
-            ModuleTrigger
+            ModuleTrigger,
+            ModuleNametags,
+            ModuleBreadcrumbs,
+            ModuleItemESP
         )
     }
 

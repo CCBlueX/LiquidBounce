@@ -33,6 +33,10 @@ object Shaders {
      * @throws IllegalStateException When one of the program fails to initialize
      */
     fun init() {
+        // Don't try to load shaders if they are not supported
+        if (!RenderEngine.openglLevel.supportsShaders())
+            return
+
         try {
             InstancedColoredPrimitiveShader
             ColoredPrimitiveShader

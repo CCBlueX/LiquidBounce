@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.renderer.engine.utils.imVertexPositionFromBuffer
 import net.ccbluex.liquidbounce.renderer.engine.utils.popMVP
 import net.ccbluex.liquidbounce.renderer.engine.utils.pushMVP
 import net.ccbluex.liquidbounce.utils.Mat4
-import net.minecraft.client.MinecraftClient
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL20
@@ -68,7 +67,7 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
      */
     private var indexBufferIndex: Int = 0
 
-    private lateinit var VAOData: VAOData
+    private lateinit var vaoData: VAOData
 
     init {
         if (maxPrimitiveCount * type.verticesPerPrimitive > 65535)
@@ -78,7 +77,7 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
     /**
      * Puts a vertex into [vertexBuffer]
      */
-    fun vertex(point: Point3f, color: Color4b, uv: UV2s): Int {
+    fun vertex(point: Vec3, color: Color4b, uv: UV2s): Int {
         val vexIndex = vertexBufferIndex * WORDS_PER_VERTEX
 
         point.writeToBuffer((vexIndex) * 4, this.vertexBuffer)
@@ -99,13 +98,13 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
      * Renders a triangle. Points have to be passed in counter-clockwise order.
      */
     fun triangle(
-        p1: Point3f,
+        p1: Vec3,
         color1: Color4b,
         UV1: UV2s,
-        p2: Point3f,
+        p2: Vec3,
         color2: Color4b,
         UV2: UV2s,
-        p3: Point3f,
+        p3: Vec3,
         color3: Color4b,
         UV3: UV2s
     ) {
@@ -120,16 +119,16 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
      * A quad consists out of two triangles.
      */
     fun quad(
-        p1: Point3f,
+        p1: Vec3,
         color1: Color4b,
         UV1: UV2s,
-        p2: Point3f,
+        p2: Vec3,
         color2: Color4b,
         UV2: UV2s,
-        p3: Point3f,
+        p3: Vec3,
         color3: Color4b,
         UV3: UV2s,
-        p4: Point3f,
+        p4: Vec3,
         color4: Color4b,
         UV4: UV2s
     ) {
@@ -158,8 +157,6 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
     override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
         when (level) {
             OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
-                val mc = MinecraftClient.getInstance()
-
                 // Create an orthographic projection matrix
                 TexturedPrimitiveShader.bind(mvpMatrix)
             }
@@ -210,7 +207,7 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
                 // Upload if not done yet
                 this.uploadIfNotUploaded()
 
-                this.VAOData.bind()
+                this.vaoData.bind()
 
                 this.texture.bind()
 
@@ -255,9 +252,11 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
         vboData.elementBuffer.bind()
         vboData.elementBuffer.putData(this.indexBuffer)
 
+        vboData.arrayBuffer.unbind()
+
         vboData.unbind()
 
-        this.VAOData = vboData
+        this.vaoData = vboData
     }
 
     override fun cleanupRendering(level: OpenGLLevel) {
@@ -274,8 +273,4 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
         }
     }
 
-    /**
-     * Render tasks can *always* be packed into a single VBO.
-     */
-    override fun typeId(): Int = 0
 }

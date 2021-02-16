@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.minecraft.util.math.Matrix4f
+import net.minecraft.util.math.Quaternion
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL20
 import java.nio.FloatBuffer
@@ -45,6 +46,32 @@ class Mat4() {
     var a32 = 0f
     var a33 = 0f
 
+    constructor(quaternion: Quaternion) : this() {
+        val f = quaternion.x
+        val g = quaternion.y
+        val h = quaternion.z
+        val i = quaternion.w
+        val j = 2.0f * f * f
+        val k = 2.0f * g * g
+        val l = 2.0f * h * h
+        a00 = 1.0f - k - l
+        a11 = 1.0f - l - j
+        a22 = 1.0f - j - k
+        a33 = 1.0f
+        val m = f * g
+        val n = g * h
+        val o = h * f
+        val p = f * i
+        val q = g * i
+        val r = h * i
+        a10 = 2.0f * (m + r)
+        a01 = 2.0f * (m - r)
+        a20 = 2.0f * (o - q)
+        a02 = 2.0f * (o + q)
+        a21 = 2.0f * (n + p)
+        a12 = 2.0f * (n - p)
+    }
+
     constructor(matrix4f: Matrix4f) : this() {
         this.a00 = matrix4f.a00
         this.a01 = matrix4f.a01
@@ -62,6 +89,25 @@ class Mat4() {
         this.a31 = matrix4f.a31
         this.a32 = matrix4f.a32
         this.a33 = matrix4f.a33
+    }
+
+    constructor(mat4: Mat4) : this() {
+        this.a00 = mat4.a00
+        this.a01 = mat4.a01
+        this.a02 = mat4.a02
+        this.a03 = mat4.a03
+        this.a10 = mat4.a10
+        this.a11 = mat4.a11
+        this.a12 = mat4.a12
+        this.a13 = mat4.a13
+        this.a20 = mat4.a20
+        this.a21 = mat4.a21
+        this.a22 = mat4.a22
+        this.a23 = mat4.a23
+        this.a30 = mat4.a30
+        this.a31 = mat4.a31
+        this.a32 = mat4.a32
+        this.a33 = mat4.a33
     }
 
     override fun toString(): String {
@@ -169,6 +215,10 @@ $a30 $a31 $a32 $a33
         a33 = u
     }
 
+    fun multiply(quaternion: Quaternion) {
+        this.multiply(Mat4(quaternion))
+    }
+
     fun putToUniform(uniformLocation: Int) {
         val buffer = BufferUtils.createFloatBuffer(4 * 4)
 
@@ -199,6 +249,30 @@ $a30 $a31 $a32 $a33
             mat4.a13 = -(top + bottom) / (top - bottom)
             mat4.a23 = -(farPlane + nearPlane) / f
             mat4.a33 = 1.0f
+            return mat4
+        }
+
+        fun translate(x: Float, y: Float, z: Float): Mat4 {
+            val mat4 = Mat4()
+            mat4.a00 = 1.0f
+            mat4.a11 = 1.0f
+            mat4.a22 = 1.0f
+            mat4.a33 = 1.0f
+            mat4.a03 = x
+            mat4.a13 = y
+            mat4.a23 = z
+            return mat4
+        }
+
+
+        fun scale(x: Float, y: Float, z: Float): Mat4 {
+            val mat4 = Mat4()
+
+            mat4.a00 = x
+            mat4.a11 = y
+            mat4.a22 = z
+            mat4.a33 = 1.0f
+
             return mat4
         }
     }

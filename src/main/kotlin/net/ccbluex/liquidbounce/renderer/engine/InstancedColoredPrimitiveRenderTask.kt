@@ -51,7 +51,7 @@ class InstancedColoredPrimitiveRenderTask(
     /**
      * Stores information about the next instance in the instance buffer
      */
-    fun instance(pos: Point3f, color: Color4b) {
+    fun instance(pos: Vec3, color: Color4b) {
         val wordIdx = this.instanceCount * WORDS_PER_INSTANCE
 
         pos.writeToBuffer(wordIdx * 4, this.instanceBuffer)
@@ -100,13 +100,13 @@ class InstancedColoredPrimitiveRenderTask(
 
                 GL11.glEndList()
 
-                var currentPosition = Point3f(0.0f, 0.0f, 0.0f)
+                var currentPosition = Vec3(0.0f, 0.0f, 0.0f)
 
                 // Iterate through the instances
                 for (i in 0 until this.baseTask.indexBufferIndex) {
                     val idx = i * WORDS_PER_INSTANCE
 
-                    val instancePosition = Point3f(
+                    val instancePosition = Vec3(
                         this.instanceBuffer.getFloat(idx * 4),
                         this.instanceBuffer.getFloat((idx + 1) * 4),
                         this.instanceBuffer.getFloat((idx + 2) * 4)
@@ -198,5 +198,4 @@ class InstancedColoredPrimitiveRenderTask(
         this.vaoData = vaoData
     }
 
-    override fun typeId(): Int = 0
 }

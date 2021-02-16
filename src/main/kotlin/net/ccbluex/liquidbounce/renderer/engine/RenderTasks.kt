@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.renderer.engine
 
 import net.ccbluex.liquidbounce.utils.Mat4
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.nio.ByteBuffer
@@ -38,6 +39,8 @@ enum class OpenGLLevel(val minor: Int, val major: Int, val backendInfo: String) 
 
         return major >= this.major && minor >= this.minor
     }
+
+    fun supportsShaders(): Boolean = isSupported(3, 3)
 
     companion object {
         /**
@@ -103,10 +106,6 @@ abstract class RenderTask {
      */
     abstract fun cleanupRendering(level: OpenGLLevel)
 
-    /**
-     * Render tasks with the same type identifier can share their initialization, cleanup and rendering functions.
-     */
-    abstract fun typeId(): Int
 }
 
 data class Point2f(val x: Float, val y: Float) {
@@ -116,14 +115,27 @@ data class Point2f(val x: Float, val y: Float) {
     }
 }
 
-data class Point3f(val x: Float, val y: Float, val z: Float) {
+data class Vec3(val x: Float, val y: Float, val z: Float) {
     constructor(x: Double, y: Double, z: Double) : this(x.toFloat(), y.toFloat(), z.toFloat())
+    constructor(vec: Vec3d) : this(vec.x, vec.y, vec.z)
 
     fun writeToBuffer(idx: Int, buffer: ByteBuffer) {
         buffer.putFloat(idx, x)
         buffer.putFloat(idx + 4, y)
         buffer.putFloat(idx + 8, z)
     }
+
+    fun add(other: Vec3): Vec3 {
+        return Vec3(this.x + other.x, this.y + other.y, this.z + other.z)
+    }
+
+    fun sub(other: Vec3): Vec3 {
+        return Vec3(this.x - other.x, this.y - other.y, this.z - other.z)
+    }
+
+    operator fun plus(other: Vec3): Vec3 = add(other)
+    operator fun minus(other: Vec3): Vec3 = sub(other)
+    operator fun times(scale: Float): Vec3 = Vec3(this.x * scale, this.y * scale, this.z * scale)
 }
 
 /**
@@ -204,5 +216,6 @@ enum class PrimitiveType(val verticesPerPrimitive: Int, val mode: Int) {
     /**
      * Line loop; 1 vertices per primitive
      */
-    LineLoop(1, GL11.GL_LINE_LOOP)
+    LineLoop(1, GL11.GL_LINE_LOOP),
+    LineStrip(1, GL11.GL_LINE_STRIP),
 }

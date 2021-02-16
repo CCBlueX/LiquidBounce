@@ -23,13 +23,12 @@ import net.ccbluex.liquidbounce.event.RenderHudEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.renderer.Fonts
 import net.ccbluex.liquidbounce.renderer.engine.Color4b
 import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
 import net.ccbluex.liquidbounce.renderer.engine.RenderTask
-import net.ccbluex.liquidbounce.renderer.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.renderer.ultralight.WebView
 import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
-import java.awt.Font
 
 object ModuleHud : Module("HUD", Category.RENDER, defaultState = true, hide = true) {
 
@@ -40,18 +39,16 @@ object ModuleHud : Module("HUD", Category.RENDER, defaultState = true, hide = tr
     }
 
     val renderHandler = handler<RenderHudEvent> {
-        webView.update()
-        webView.render()
+//        webView.update()
+//        webView.render()
     }
 
     // Engine testing
 
     val liquidBounceFont: Array<RenderTask> = run {
-        val renderer = FontRenderer.createFontRendererWithStyles(Font("Roboto Bold", Font.PLAIN, 45))
-
-        renderer.begin()
-        renderer.draw("LiquidBounce", 2f, 0f, Color4b(0, 111, 255, 255), true)
-        renderer.commit()
+        Fonts.fontBold180.begin()
+        Fonts.fontBold180.draw("LiquidBounce", 2f, 0f, Color4b(0, 111, 255, 255), true)
+        Fonts.fontBold180.commit()
     }
 
     val engineRenderHandler = handler<LiquidBounceRenderEvent> {

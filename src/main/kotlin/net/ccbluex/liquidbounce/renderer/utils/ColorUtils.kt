@@ -17,18 +17,14 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.interfaces;
+package net.ccbluex.liquidbounce.renderer.utils
 
-import net.minecraft.util.math.Matrix4f;
+import net.ccbluex.liquidbounce.renderer.engine.Color4b
+import java.awt.Color
 
-public interface IMixinGameRenderer {
 
-    /**
-     * Creates a matrix that renders the perspective of the camera
-     *
-     * @param pseudo2D  Enabled Pseudo 2D Mode, useful for NameTags and 2D-ESP
-     * @param tickDelta The count of ticks passed since the last time rendered
-     */
-    Matrix4f getCameraMVPMatrix(boolean pseudo2D, float tickDelta);
+fun rainbow(): Color4b {
+    val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + 400000L) / 10000000000F % 1, 1F, 1F))
 
+    return Color4b(currentColor)
 }

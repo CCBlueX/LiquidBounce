@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.renderer.engine
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer
+import net.ccbluex.liquidbounce.renderer.Fonts
 import net.ccbluex.liquidbounce.renderer.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.utils.Mat4
 import net.ccbluex.liquidbounce.utils.toMat4
@@ -45,9 +46,9 @@ object RenderEngine : Listenable {
     const val CAMERA_VIEW_LAYER = 0
 
     /**
-     * Similar to [CAMERA_VIEW_LAYER], but doesn't apply the yaw rotation. Useful for 2D-ESP, Nametags, etc., backface culling enabled
+     * Similar to [CAMERA_VIEW_LAYER]. Used for 2D-ESP, Nametags, etc., backface culling enabled
      */
-    const val WORLD_LAYER = 1
+    const val PSEUDO_2D_LAYER = 1
 
     /**
      * Projects the vertices on the screen. 1 unit = 1 px, backface culling enabled
@@ -80,7 +81,7 @@ object RenderEngine : Listenable {
     val openGlVersionRegex = Pattern.compile("(\\d+)\\.(\\d+)(\\.(\\d+))?(.*)")
 
     val renderHandler = handler<RenderHudEvent> {
-        EventManager.callEvent(LiquidBounceRenderEvent())
+        EventManager.callEvent(LiquidBounceRenderEvent(it.tickDelta))
 
         render(it.tickDelta)
 
@@ -98,6 +99,7 @@ object RenderEngine : Listenable {
     fun init() {
         Shaders.init()
         GlyphPage.init()
+        Fonts.loadFonts()
 
         val versionString = GL11.glGetString(GL11.GL_VERSION)
 
@@ -180,11 +182,11 @@ object RenderEngine : Listenable {
         return when (layer) {
             CAMERA_VIEW_LAYER -> LayerSettings(
                 (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
-                    true,
+                    false,
                     tickDelta
                 ).toMat4(), true
             )
-            WORLD_LAYER -> LayerSettings(
+            PSEUDO_2D_LAYER -> LayerSettings(
                 (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
                     false,
                     tickDelta

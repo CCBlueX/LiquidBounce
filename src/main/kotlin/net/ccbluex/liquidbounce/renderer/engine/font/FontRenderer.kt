@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.renderer.engine.font
 
+import net.ccbluex.liquidbounce.renderer.AbstractFontRenderer
 import net.ccbluex.liquidbounce.renderer.engine.*
 import java.awt.Font
 import java.util.*
@@ -37,7 +38,7 @@ data class RenderedGlyph(
     val color: Color4b
 )
 
-data class RenderedLine(val p1: Point3f, val p2: Point3f, val color: Color4b)
+data class RenderedLine(val p1: Vec3, val p2: Vec3, val color: Color4b)
 
 private class FontRendererCache {
     val renderedGlyphs: ArrayList<RenderedGlyph> = ArrayList(100)
@@ -57,12 +58,14 @@ class FontRenderer(
      * [Font.BOLD] | [Font.ITALIC] -> 3 (Can be null)
      */
     private val glyphPages: Array<GlyphPage?>,
-) {
+    override val size: Float
+) : AbstractFontRenderer() {
+
     /**
      * The cache the drawn structures are stored in until they are packed into a [RenderTask]
      */
-    private val cache: FontRendererCache = FontRendererCache()
-    val height: Float
+    private val cache = FontRendererCache()
+    override val height: Float
     val ascent: Float
 
     init {
@@ -95,7 +98,10 @@ class FontRenderer(
          * It generates glyph pages for all possible styles.
          */
         fun createFontRenderer(font: Font): FontRenderer {
-            return FontRenderer(Array(4) { style -> GlyphPage.create('\u0000'..'\u00FF', font.deriveFont(style)) })
+            return FontRenderer(
+                Array(4) { style -> GlyphPage.create('\u0000'..'\u00FF', font.deriveFont(style)) },
+                font.size.toFloat()
+            )
         }
 
         /**
@@ -111,7 +117,7 @@ class FontRenderer(
                     '\u0000'..'\u00FF',
                     font.deriveFont(style)
                 )
-            })
+            }, font.size.toFloat())
         }
 
 
@@ -127,27 +133,18 @@ class FontRenderer(
 
     }
 
-    /**
-     * Must be called before rendering
-     */
-    fun begin() {
+    override fun begin() {
         if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty())
             throw IllegalStateException("Can't begin a build a new batch when there are pending operations.")
     }
 
-    /**
-     * Draws a string with minecraft font markup to this object.
-     *
-     * @param defaultColor The color of the font when no minecraft-markup applies
-     * @param shadow Add a shadow to the font?
-     */
-    fun draw(
+    override fun draw(
         text: String,
         x0: Float,
         y0: Float,
         defaultColor: Color4b,
-        shadow: Boolean = false,
-        z: Float = 0.0f
+        shadow: Boolean,
+        z: Float
     ): Float {
         var len = 0.0f
         // Create a common seed for rendering random fonts
@@ -290,8 +287,8 @@ class FontRenderer(
                         glyph,
                         x + glyph.glyphBounds.xMin,
                         y + glyph.glyphBounds.yMin,
-                        x + glyph.glyphBounds.xMin + glyph.atlasWidth,
-                        y + glyph.glyphBounds.yMin + glyph.atlasHeight,
+                        x + (glyph.glyphBounds.xMin + glyph.atlasWidth),
+                        y + (glyph.glyphBounds.yMin + glyph.atlasHeight),
                         z,
                         currentColor
                     )
@@ -313,12 +310,9 @@ class FontRenderer(
     }
 
 
-    /**
-     * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting
-     */
-    private fun getStringWidth(
+    override fun getStringWidth(
         text: String,
-        shadow: Boolean = false
+        shadow: Boolean
     ): Float {
         if (text.isEmpty())
             return 0.0f
@@ -393,16 +387,16 @@ class FontRenderer(
         if (through) {
             this.cache.lines.add(
                 RenderedLine(
-                    Point3f(x0, y - this.height + this.ascent, z),
-                    Point3f(x, y - this.height + this.ascent, z),
+                    Vec3(x0, y - this.height + this.ascent, z),
+                    Vec3(x, y - this.height + this.ascent, z),
                     color
                 )
             )
         } else {
             this.cache.lines.add(
                 RenderedLine(
-                    Point3f(x0, y + 1.0f, z),
-                    Point3f(x, y + 1.0f, z),
+                    Vec3(x0, y + 1.0f, z),
+                    Vec3(x, y + 1.0f, z),
                     color
                 )
             )
@@ -410,10 +404,8 @@ class FontRenderer(
 
     }
 
-    /**
-     * Packs all the pending operations into [RenderTask]s
-     */
-    fun commit(): Array<RenderTask> {
+
+    override fun commit(): Array<RenderTask> {
         val tasks = ArrayList<RenderTask>(5)
         val renderTasks = this.cache.renderedGlyphs.groupByTo(TreeMap<Int, MutableList<RenderedGlyph>>()) { it.style }
 
@@ -425,16 +417,16 @@ class FontRenderer(
                 val atlasLocation = glyph.glyph.atlasLocation!!
 
                 renderTask.quad(
-                    Point3f(glyph.x1, glyph.y1, glyph.z),
+                    Vec3(glyph.x1, glyph.y1, glyph.z),
                     color,
                     UV2s(atlasLocation.min.u, atlasLocation.min.v),
-                    Point3f(glyph.x1, glyph.y2, glyph.z),
+                    Vec3(glyph.x1, glyph.y2, glyph.z),
                     color,
                     UV2s(atlasLocation.min.u, atlasLocation.max.v),
-                    Point3f(glyph.x2, glyph.y2, glyph.z),
+                    Vec3(glyph.x2, glyph.y2, glyph.z),
                     color,
                     UV2s(atlasLocation.max.u, atlasLocation.max.v),
-                    Point3f(glyph.x2, glyph.y1, glyph.z),
+                    Vec3(glyph.x2, glyph.y1, glyph.z),
                     color,
                     UV2s(atlasLocation.max.u, atlasLocation.min.v)
                 )
