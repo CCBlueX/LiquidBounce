@@ -19,6 +19,22 @@
 package net.ccbluex.liquidbounce.utils.extensions
 
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.entity.Entity
+import net.minecraft.stat.Stats
+
+val Entity.exactPosition
+    get() = Triple(x, y, z)
 
 val ClientPlayerEntity.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
+
+fun ClientPlayerEntity.upwards(height: Float) {
+    // Might be a jump
+    if (isOnGround ) {
+        // Allows to bypass modern anti cheat techniques
+        incrementStat(Stats.JUMP)
+    }
+
+    velocity.y = height.toDouble()
+    velocityDirty = true
+}
