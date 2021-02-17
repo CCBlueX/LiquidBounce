@@ -18,13 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.boolean
-import net.ccbluex.liquidbounce.config.int
-import net.ccbluex.liquidbounce.config.mode
 import net.ccbluex.liquidbounce.event.LiquidBounceRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Mode
+import net.ccbluex.liquidbounce.features.module.Choice
+import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.renderer.engine.*
 import net.ccbluex.liquidbounce.renderer.engine.utils.drawBox
@@ -35,13 +33,20 @@ import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
 
 object ModuleItemESP : Module("ItemESP", Category.RENDER) {
-    private val modeValue = mode("Mode", "Box", arrayOf(BoxMode(this)))
     private val colorRedValue = int("R", 255, 0..255)
     private val colorGreenValue = int("G", 179, 0..255)
     private val colorBlueValue = int("B", 72, 0..255)
     private val colorRainbow = boolean("Rainbow", false)
 
-    private class BoxMode(module: Module) : Mode("Box", module) {
+    private object ModeConfigurable : ChoiceConfigurable(this, "Mode", "YPort", {
+        BoxMode
+    })
+
+    init {
+        tree(ModeConfigurable)
+    }
+
+    private object BoxMode : Choice("Box", ModeConfigurable) {
         val box = run {
             val task = drawBox(Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125), Color4b.WHITE)
 

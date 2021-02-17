@@ -112,21 +112,23 @@ open class ListenableConfigurable(val module: Module? = null, name: String, enab
 /**
  * Allows to configure and manage modes
  */
-open class ModeConfigurable(val module: Module, name: String, val active: String, val initialize: () -> Unit) : Configurable(name) {
-    val modes: MutableList<Mode> = mutableListOf()
+open class ChoiceConfigurable(val module: Module, name: String, val active: String, val initialize: () -> Unit) :
+    Configurable(name) {
+    val modes: MutableList<Choice> = mutableListOf()
 }
 
 /**
  * Empty mode. It does nothing. Use it when you want a client-user to disable a feature.
  */
-class NoneMode(configurable: ModeConfigurable) : Mode("None", configurable)
+class NoneChoice(configurable: ChoiceConfigurable) : Choice("None", configurable)
 
 /**
  * A mode is sub-module to separate different bypasses into extra classes
  */
-open class Mode(name: String, private val configurable: ModeConfigurable) : Listenable, Configurable(name) {
+open class Choice(name: String, private val configurable: ChoiceConfigurable) : Listenable, Configurable(name) {
 
     init {
+        configurable.initialize()
         configurable.modes += this
     }
 
