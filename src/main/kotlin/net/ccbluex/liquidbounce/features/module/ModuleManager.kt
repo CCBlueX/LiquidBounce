@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
@@ -71,7 +72,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleSpeed,
             ModuleAutoRespawn,
             ModuleTrigger,
-            ModuleAutoBow
+            ModuleAutoBow,
+            ModuleCriticals
         )
 
         // TODO: Figure out how to link modules list with configurable
