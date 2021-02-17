@@ -9,14 +9,14 @@ import net.ccbluex.liquidbounce.features.chat.client.ClientListener
 import net.ccbluex.liquidbounce.features.chat.client.packet.User
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.module.ListenableConfigurable
 import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.extensions.asText
 import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
 
-class Chat : Configurable("chat"), ClientListener, Listenable {
+class Chat : ListenableConfigurable(null, "chat", true), ClientListener {
 
-    private val enabled by boolean("enabled", true)
     private var jwtLogin by boolean("JWT", false)
     private var jwtToken by text("JWTToken")
 
@@ -102,7 +102,5 @@ class Chat : Configurable("chat"), ClientListener, Listenable {
     override fun onError(cause: Throwable) {
         chat("§7[§a§lChat§7] §c§lError: §7${cause.javaClass.name}: ${cause.message}")
     }
-
-    override fun handleEvents() = enabled
 
 }

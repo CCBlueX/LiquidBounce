@@ -98,18 +98,28 @@ open class Module(name: String, // name parameter in configurable
 
 }
 
-open class ListenableConfigurable(val module: Module, name: String, enabled: Boolean) : Listenable, Configurable(name) {
+/**
+ * Should handle events when enabled. Allows the client-user to toggle features. (like modules)
+ */
+open class ListenableConfigurable(val module: Module? = null, name: String, enabled: Boolean) : Listenable, Configurable(name) {
 
     val enabled by boolean("Enabled", enabled)
 
-    override fun handleEvents() = module.enabled && enabled
+    override fun handleEvents() = module?.enabled == true && enabled
 
 }
 
+/**
+ * Allows to configure and manage modes
+ */
 open class ModeConfigurable(val module: Module, name: String, val active: String, val initialize: () -> Unit) : Configurable(name) {
     val modes: MutableList<Mode> = mutableListOf()
 }
 
+/**
+ * Empty mode. It does nothing. Use it when you want a client-user to disable a feature.
+ */
+class NoneMode(configurable: ModeConfigurable) : Mode("None", configurable)
 
 /**
  * A mode is sub-module to separate different bypasses into extra classes
