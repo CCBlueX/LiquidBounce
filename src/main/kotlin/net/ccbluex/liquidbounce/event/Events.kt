@@ -22,6 +22,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.entity.Entity
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
 
 class ModuleEvent(val module: Module, val newState: Boolean) : Event()
@@ -51,3 +53,5 @@ class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
 class SessionEvent : Event()
 
 class ScreenEvent(val screen: Screen?) : Event()
+
+class AttackEvent(val enemy: LivingEntity) : Event()

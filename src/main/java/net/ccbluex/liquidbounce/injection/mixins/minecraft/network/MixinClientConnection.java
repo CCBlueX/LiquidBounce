@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import io.netty.channel.ChannelHandlerContext;
 import net.ccbluex.liquidbounce.event.EventManager;
@@ -38,8 +38,8 @@ public class MixinClientConnection {
      * @param callbackInfo callback
      */
     @Inject(method = "send(Lnet/minecraft/network/Packet;)V", at = @At("HEAD"), cancellable = true)
-    private void handleSendingPacket(Packet<?> packet, final CallbackInfo callbackInfo) {
-        PacketEvent event = new PacketEvent(packet);
+    private void hookSendingPacket(Packet<?> packet, final CallbackInfo callbackInfo) {
+        final PacketEvent event = new PacketEvent(packet);
 
         EventManager.INSTANCE.callEvent(event);
 
@@ -55,8 +55,8 @@ public class MixinClientConnection {
      * @param callbackInfo          callback
      */
     @Inject(method = "channelRead0", at = @At("HEAD"), cancellable = true)
-    private void handleReceivingPacket(ChannelHandlerContext channelHandlerContext, Packet<?> packet, CallbackInfo callbackInfo) {
-        PacketEvent event = new PacketEvent(packet);
+    private void hookReceivingPacket(ChannelHandlerContext channelHandlerContext, Packet<?> packet, CallbackInfo callbackInfo) {
+        final PacketEvent event = new PacketEvent(packet);
 
         EventManager.INSTANCE.callEvent(event);
 

@@ -35,6 +35,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(GameRenderer.class)
 public abstract class MixinGameRenderer implements IMixinGameRenderer {
+
     @Shadow
     @Final
     private Camera camera;

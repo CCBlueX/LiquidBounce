@@ -76,7 +76,7 @@ public abstract class MixinMinecraftClient {
      * @param callback not needed
      */
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void startClient(final CallbackInfo callback) {
+    private void startClient(CallbackInfo callback) {
         LiquidBounce.INSTANCE.start();
     }
 
@@ -86,7 +86,7 @@ public abstract class MixinMinecraftClient {
      * @param callback not needed
      */
     @Inject(method = "stop", at = @At("HEAD"))
-    private void stopClient(final CallbackInfo callback) {
+    private void stopClient(CallbackInfo callback) {
         LiquidBounce.INSTANCE.stop();
     }
 
@@ -97,7 +97,7 @@ public abstract class MixinMinecraftClient {
      * @param callback our window title
      */
     @Inject(method = "getWindowTitle", at = @At("HEAD"), cancellable = true)
-    private void getClientTitle(final CallbackInfoReturnable<String> callback) {
+    private void getClientTitle(CallbackInfoReturnable<String> callback) {
         LiquidBounce.INSTANCE.getLogger().debug("Modifying window title");
 
         final StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
@@ -155,7 +155,7 @@ public abstract class MixinMinecraftClient {
      * @param callbackInfo          callback
      */
     @Inject(method = "openScreen", at = @At("HEAD"))
-    private void onScreen(final Screen screen, final CallbackInfo callbackInfo) {
+    private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new ScreenEvent(screen));
     }
 
@@ -163,15 +163,15 @@ public abstract class MixinMinecraftClient {
      * Hook game tick event at HEAD
      */
     @Inject(method = "tick", at = @At("HEAD"))
-    private void hookTickEvent(final CallbackInfo callbackInfo) {
+    private void hookTickEvent(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new GameTickEvent());
     }
 
     /**
-     * Hook game tick event at HEAD
+     * Hook input handling
      */
     @Inject(method = "tick", at = @At("RETURN"))
-    private void hookHandleInputEvent(final CallbackInfo callbackInfo) {
+    private void hookHandleInputEvent(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new InputHandleEvent());
     }
 

@@ -16,7 +16,7 @@ public class MixinKeyboard {
      * Hook key event
      */
     @Inject(method = "onKey", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/InputUtil;fromKeyCode(II)Lnet/minecraft/client/util/InputUtil$Key;", shift = At.Shift.AFTER))
-    private void handleKey(long window, int key, int scancode, int i, int j, final CallbackInfo callback) {
+    private void hookKey(long window, int key, int scancode, int i, int j, CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(new KeyEvent(InputUtil.fromKeyCode(key, scancode), i, j));
     }
 

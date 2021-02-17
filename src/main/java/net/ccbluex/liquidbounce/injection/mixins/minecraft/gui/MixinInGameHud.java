@@ -34,7 +34,7 @@ public class MixinInGameHud {
      * Hook render hud event at the top layer
      */
     @Inject(method = "render", at = @At("HEAD"))
-    private void hookRenderEvent(MatrixStack matrices, float tickDelta, final CallbackInfo callbackInfo) {
+    private void hookRenderEvent(MatrixStack matrices, float tickDelta, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new RenderHudEvent(matrices, tickDelta));
     }
 

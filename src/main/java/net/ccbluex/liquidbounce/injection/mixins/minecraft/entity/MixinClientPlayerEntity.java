@@ -17,7 +17,7 @@ public class MixinClientPlayerEntity {
      * Not useful to check for loaded chunk, PRE tick, next step is movement packet
      */
     @Inject(method = "tick", at = @At("HEAD"))
-    private void hookTickEvent(final CallbackInfo callbackInfo) {
+    private void hookTickEvent(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new EntityTickEvent());
     }
 

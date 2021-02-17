@@ -16,41 +16,32 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
-import net.ccbluex.liquidbounce.event.ChatSendEvent;
+import net.ccbluex.liquidbounce.event.AttackEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.decoration.ItemFrameEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.annotation.Nullable;
-
-@Mixin(Screen.class)
-public class MixinScreen {
-
-    @Shadow @Nullable
-    protected MinecraftClient client;
+@Mixin(ClientPlayerInteractionManager.class)
+public class MixinClientPlayerInteractionManager {
 
     /**
-     * Handle user chat messages
-     *
-     * @param message chat message by client user
-     * @param callbackInfo callback
+     * Hook attacking entity
      */
-    @Inject(method = "sendMessage(Ljava/lang/String;)V", at = @At("HEAD"), cancellable = true)
-    private void handleChatMessage(String message, CallbackInfo callbackInfo) {
-        ChatSendEvent chatSendEvent = new ChatSendEvent(message);
-
-        EventManager.INSTANCE.callEvent(chatSendEvent);
-
-        if (chatSendEvent.isCancelled()) {
-            client.inGameHud.getChatHud().addToMessageHistory(message);
-            callbackInfo.cancel();
+    @Inject(method = "attackEntity", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;syncSelectedSlot()V", shift = At.Shift.AFTER))
+    private void hookAttack(PlayerEntity player, Entity target, CallbackInfo callbackInfo) {
+        // Check for living entity because we're also able to attack non-living entities like item frames
+        if (target instanceof LivingEntity) {
+            EventManager.INSTANCE.callEvent(new AttackEvent((LivingEntity) target));
         }
     }
 
