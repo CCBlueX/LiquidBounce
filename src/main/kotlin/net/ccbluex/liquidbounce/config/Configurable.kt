@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.config
 
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
+import net.ccbluex.liquidbounce.renderer.engine.Color4b
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
@@ -100,7 +101,7 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
     protected fun list(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
         = ListValue(name, selected = default, selectables = array, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun color(name: String, color: Color = Color.WHITE, change: (Color, Color) -> Unit = { _, _ -> })
+    protected fun color(name: String, color: Color4b = Color4b(255, 255, 255, 255), change: (Color4b, Color4b) -> Unit = { _, _ -> })
         = Value(name, value = color, change = change).apply { this@Configurable.value.add(this) }
 
     protected fun block(name: String, default: Block = Blocks.AIR, change: (Block, Block) -> Unit = { _, _ -> })

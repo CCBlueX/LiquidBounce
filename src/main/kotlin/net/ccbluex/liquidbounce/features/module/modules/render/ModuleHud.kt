@@ -39,8 +39,8 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
     }
 
     val renderHandler = handler<RenderHudEvent> {
-//        webView.update()
-//        webView.render()
+        webView.update()
+        webView.render()
     }
 
     // Engine testing

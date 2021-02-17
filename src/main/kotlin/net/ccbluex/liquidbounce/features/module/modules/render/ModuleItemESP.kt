@@ -33,10 +33,9 @@ import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
 
 object ModuleItemESP : Module("ItemESP", Category.RENDER) {
-    private val colorRedValue = int("R", 255, 0..255)
-    private val colorGreenValue = int("G", 179, 0..255)
-    private val colorBlueValue = int("B", 72, 0..255)
-    private val colorRainbow = boolean("Rainbow", false)
+
+    private val color by color("Color", Color4b(255, 179, 72, 255))
+    private val colorRainbow by boolean("Rainbow", false)
 
     private object ModeConfigurable : ChoiceConfigurable(this, "Mode", "YPort", {
         BoxMode
@@ -47,6 +46,7 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
     }
 
     private object BoxMode : Choice("Box", ModeConfigurable) {
+
         val box = run {
             val task = drawBox(Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125), Color4b.WHITE)
 
@@ -54,6 +54,7 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
             task
         }
+
         val boxOutline = run {
             val task = drawBoxOutline(Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125), Color4b.WHITE)
 
@@ -63,16 +64,9 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
         }
 
         val tickHandler = handler<LiquidBounceRenderEvent> {
-            val base = if (colorRainbow.value) rainbow() else Color4b(
-                colorRedValue.value,
-                colorGreenValue.value,
-                colorBlueValue.value,
-                255
-            )
-
+            val base = if (colorRainbow) rainbow() else color
             val baseColor = Color4b(base.r, base.g, base.b, 50)
             val outlineColor = Color4b(base.r, base.g, base.b, 100)
-
 
             val filtered = mc.world!!.entities.filter { en -> en is ItemEntity || en is ArrowEntity }
 

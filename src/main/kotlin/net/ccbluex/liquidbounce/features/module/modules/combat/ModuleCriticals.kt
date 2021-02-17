@@ -34,13 +34,13 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  */
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
-    private object CritModeConfigurable : ModeConfigurable(this, "Mode", "Packet", {
-        NoneMode(CritModeConfigurable)
+    private object CritChoiceConfigurable : ChoiceConfigurable(this, "Mode", "Packet", {
+        NoneChoice(CritChoiceConfigurable)
         PacketCrit
         JumpCrit
     })
 
-    private object PacketCrit : Mode("Packet", CritModeConfigurable) {
+    private object PacketCrit : Choice("Packet", CritChoiceConfigurable) {
 
         val attackHandler = handler<AttackEvent> { event ->
             val (x, y, z) = player.exactPosition
@@ -52,7 +52,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     }
 
-    private object JumpCrit : Mode("Jump", CritModeConfigurable) {
+    private object JumpCrit : Choice("Jump", CritChoiceConfigurable) {
 
         // There are diffrent possible jump heights to crit enemy
         //   Hop: 0.1 (like in Wurst-Client)
@@ -64,8 +64,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val range by float("Range", 4f, 1f..6f)
 
         val tickHandler = handler<EntityTickEvent> {
-            val (enemy, distance) = world.findEnemy(range) ?: return@handler
-            println("$enemy (distance: $distance)")
+            val (_, _) = world.findEnemy(range) ?: return@handler
 
             if (player.isOnGround) {
                 player.upwards(height)
@@ -95,8 +94,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     init {
-        CritModeConfigurable.initialize()
-        tree(CritModeConfigurable)
+        CritChoiceConfigurable.initialize()
+        tree(CritChoiceConfigurable)
         tree(VisualsConfigurable)
     }
 

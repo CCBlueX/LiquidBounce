@@ -34,6 +34,7 @@ import net.minecraft.util.math.Quaternion
 import kotlin.math.roundToInt
 
 object ModuleNametags : Module("Nametags", Category.RENDER) {
+
     private val healthValue = boolean("Health", true)
     private val pingValue = boolean("Ping", true)
     private val distanceValue = boolean("Distance", false)

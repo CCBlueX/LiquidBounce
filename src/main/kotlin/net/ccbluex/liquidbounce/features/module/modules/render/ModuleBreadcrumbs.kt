@@ -26,24 +26,20 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.renderer.engine.*
 import net.ccbluex.liquidbounce.renderer.utils.rainbow
 import org.lwjgl.opengl.GL11.*
+import java.awt.Color
 
 object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
-    private val colorRedValue = int("R", 255, 0..255)
-    private val colorGreenValue = int("G", 179, 0..255)
-    private val colorBlueValue = int("B", 72, 0..255)
-    private val colorRainbow = boolean("Rainbow", false)
-    private val positions = ArrayList<Double>()
+
+    private val color by color("Color", Color4b(255, 179, 72, 255))
+    private val colorRainbow by boolean("Rainbow", false)
+
+    private val positions = mutableListOf<Double>()
     private var lastPosX = 0.0
     private var lastPosY = 0.0
     private var lastPosZ = 0.0
 
     val renderHandler = handler<LiquidBounceRenderEvent> {
-        val color = if (colorRainbow.value) rainbow() else Color4b(
-            colorRedValue.value,
-            colorGreenValue.value,
-            colorBlueValue.value,
-            255
-        )
+        val color = if (colorRainbow) rainbow() else color
 
         synchronized(positions) {
             val renderTask = ColoredPrimitiveRenderTask(this.positions.size, PrimitiveType.LineStrip)

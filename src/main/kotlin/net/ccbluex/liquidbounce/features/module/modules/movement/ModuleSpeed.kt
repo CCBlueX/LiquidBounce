@@ -49,6 +49,7 @@ object ModuleSpeed : Module("Speed", Category.COMBAT) {
     }
 
     init {
+        SpeedChoiceConfigurable.initialize()
         tree(SpeedChoiceConfigurable)
     }
 
