@@ -17,9 +17,9 @@ class GuiMainMenu : WrappedGuiScreen()
 
 	override fun initGui()
 	{
-		val defaultHeight = representedScreen.height / 4 + 48
+		val defaultHeight = (representedScreen.height shr 2) + 48
 
-		val middleScreen = representedScreen.width / 2
+		val middleScreen = representedScreen.width shr 1
 		val buttonX1 = middleScreen - 100
 		val buttonX2 = middleScreen + 2
 
@@ -32,7 +32,7 @@ class GuiMainMenu : WrappedGuiScreen()
 		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX2, defaultHeight, 98, 20, functions.formatI18n("menu.multiplayer")))
 
 		// Minecraft Realms
-		//		this.buttonList.add(new classProvider.createGuiButton(14, this.width / 2 - 100, j + 24 * 2, I18n.format("menu.online", new Object[0])));
+		//		this.buttonList.add(new classProvider.createGuiButton(14, (this.width shr 1) - 100, j + (24 shl 1), I18n.format("menu.online", new Object[0])));
 
 		representedScreen.buttonList.add(classProvider.createGuiButton(108, buttonX1, defaultHeight + 72, "Contributors"))
 		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX1, defaultHeight + 96, 98, 20, functions.formatI18n("menu.options")))
@@ -43,10 +43,14 @@ class GuiMainMenu : WrappedGuiScreen()
 	{
 		representedScreen.drawBackground(0)
 
-		RenderUtils.drawRect(representedScreen.width / 2.0f - 115, representedScreen.height / 4.0f + 35, representedScreen.width / 2.0f + 115, representedScreen.height / 4.0f + 175, Integer.MIN_VALUE)
+		val middleScreenX = (representedScreen.width shr 1).toFloat()
+		val quarterScreenY = (representedScreen.height shr 2).toFloat()
+		val halfQuarterScreenY = (representedScreen.height shr 3).toFloat()
 
-		Fonts.fontBold180.drawCenteredString(LiquidBounce.CLIENT_NAME, representedScreen.width / 2F, representedScreen.height / 8F, 4673984, true)
-		Fonts.font35.drawCenteredString("b" + LiquidBounce.CLIENT_VERSION, representedScreen.width / 2F + 148, representedScreen.height / 8F + Fonts.font35.fontHeight, 0xffffff, true)
+		RenderUtils.drawRect(middleScreenX - 115, quarterScreenY + 35, middleScreenX + 115, quarterScreenY + 175, Integer.MIN_VALUE)
+
+		Fonts.fontBold180.drawCenteredString(LiquidBounce.CLIENT_NAME, middleScreenX, halfQuarterScreenY, 4673984, true)
+		Fonts.font35.drawCenteredString("b" + LiquidBounce.CLIENT_VERSION, middleScreenX + 148, halfQuarterScreenY + Fonts.font35.fontHeight, 0xffffff, true)
 
 		representedScreen.superDrawScreen(mouseX, mouseY, partialTicks)
 	}

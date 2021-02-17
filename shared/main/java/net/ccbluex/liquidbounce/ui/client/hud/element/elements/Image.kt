@@ -76,9 +76,9 @@ class Image : Element()
 	 */
 	override fun drawElement(): Border
 	{
-		RenderUtils.drawImage(resourceLocation, 0, 0, width / 2, height / 2)
+		RenderUtils.drawImage(resourceLocation, 0, 0, width shr 1, height shr 1)
 
-		return Border(0F, 0F, width / 2F, height / 2F)
+		return Border(0F, 0F, (width shr 1).toFloat(), (height shr 1).toFloat())
 	}
 
 	override fun createElement(): Boolean

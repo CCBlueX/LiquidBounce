@@ -873,7 +873,7 @@ class KillAura : Module()
 		val mode = when
 		{
 			lockCenterValue.get() -> RotationUtils.SearchCenterMode.LOCK_CENTER
-			outborderValue.get() && !attackTimer.hasTimePassed(attackDelay / 2) -> RotationUtils.SearchCenterMode.OUT_BORDER
+			outborderValue.get() && !attackTimer.hasTimePassed(attackDelay shr 1) -> RotationUtils.SearchCenterMode.OUT_BORDER
 			randomCenterValue.get() -> RotationUtils.SearchCenterMode.RANDOM_GOOD_CENTER
 			else -> RotationUtils.SearchCenterMode.SEARCH_GOOD_CENTER
 		}

@@ -508,11 +508,13 @@ class Tower : Module()
 			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}$blocksAmount"
 			val scaledResolution = classProvider.createScaledResolution(mc)
 
-			RenderUtils.drawBorderedRect(scaledResolution.scaledWidth / 2 - 2.0f, scaledResolution.scaledHeight / 2 + 5.0f, scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2.0f, scaledResolution.scaledHeight / 2 + 16.0f, 3f, Color.BLACK.rgb, Color.BLACK.rgb)
+			val middleScreenX = scaledResolution.scaledWidth shr 1
+			val middleScreenY = scaledResolution.scaledHeight shr 1
+			RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + 5.0f, ((scaledResolution.scaledWidth shr 1) + Fonts.font40.getStringWidth(info)) + 2.0f, middleScreenY + 16.0f, 3f, Color.BLACK.rgb, Color.BLACK.rgb)
 
 			classProvider.glStateManager.resetColor()
 
-			Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2.0f, scaledResolution.scaledHeight / 2 + 7.0f, 0xffffff)
+			Fonts.font40.drawString(info, middleScreenX.toFloat(), middleScreenY + 7.0f, 0xffffff)
 			GL11.glPopMatrix()
 		}
 	}

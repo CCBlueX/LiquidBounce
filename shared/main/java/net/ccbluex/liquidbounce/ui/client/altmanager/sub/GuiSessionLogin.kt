@@ -40,8 +40,8 @@ class GuiSessionLogin(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		// Add buttons to screen
 
-		val buttonX = representedScreen.width / 2 - 100
-		val quarterScreen = representedScreen.height / 4
+		val buttonX = (representedScreen.width shr 1) - 100
+		val quarterScreen = representedScreen.height shr 2
 
 		loginButton = classProvider.createGuiButton(1, buttonX, quarterScreen + 96, "Login")
 		representedScreen.buttonList.add(loginButton)
@@ -68,13 +68,14 @@ class GuiSessionLogin(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		RenderUtils.drawRect(30.0f, 30.0f, representedScreen.width - 30.0f, representedScreen.height - 30.0f, Integer.MIN_VALUE)
 
 		// Draw title and status
-		Fonts.font35.drawCenteredString("Session Login", representedScreen.width / 2.0f, 36.0f, 0xffffff)
-		Fonts.font35.drawCenteredString(status, representedScreen.width / 2.0f, representedScreen.height / 4.0f + 80.0f, 0xffffff)
+		val middleScreen = (representedScreen.width shr 1).toFloat()
+		Fonts.font35.drawCenteredString("Session Login", middleScreen, 36.0f, 0xffffff)
+		Fonts.font35.drawCenteredString(status, middleScreen, (representedScreen.height shr 2) + 80.0f, 0xffffff)
 
 		// Draw fields
 		sessionTokenField.drawTextBox()
 
-		Fonts.font40.drawCenteredString("\u00A77Session Token:", representedScreen.width / 2.0f - 65.0f, 66.0f, 0xffffff)
+		Fonts.font40.drawCenteredString("\u00A77Session Token:", middleScreen - 65.0f, 66.0f, 0xffffff)
 
 		// Call sub method
 		super.drawScreen(mouseX, mouseY, partialTicks)

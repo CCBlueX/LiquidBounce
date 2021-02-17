@@ -640,12 +640,12 @@ class Scaffold : Module()
 		val ySteps = calcStepSize(yRange) * deltaY
 		val zSteps = calcStepSize(xzRange) * deltaZ
 
-		val sMinX = (0.5 - xzRange / 2) * deltaX + gBB.minX
-		val sMaxX = (0.5 + xzRange / 2) * deltaX + gBB.minX
-		val sMinY = (0.5 - yRange / 2) * deltaY + gBB.minY
-		val sMaxY = (0.5 + yRange / 2) * deltaY + gBB.minY
-		val sMinZ = (0.5 - xzRange / 2) * deltaZ + gBB.minZ
-		val sMaxZ = (0.5 + xzRange / 2) * deltaZ + gBB.minZ
+		val sMinX = (0.5 - xzRange * 0.05) * deltaX + gBB.minX
+		val sMaxX = (0.5 + xzRange * 0.5) * deltaX + gBB.minX
+		val sMinY = (0.5 - yRange * 0.5) * deltaY + gBB.minY
+		val sMaxY = (0.5 + yRange * 0.5) * deltaY + gBB.minY
+		val sMinZ = (0.5 - xzRange * 0.5) * deltaZ + gBB.minZ
+		val sMaxZ = (0.5 + xzRange * 0.5) * deltaZ + gBB.minZ
 
 		val searchBounds = SearchBounds(sMinX, sMaxX, xSteps, sMinY, sMaxY, ySteps, sMinZ, sMaxZ, zSteps)
 
@@ -671,9 +671,10 @@ class Scaffold : Module()
 			// Failsafe for slab: Limits maxY to 0.5 to place slab safely.
 			if (searchBounds.maxY >= 0.5)
 			{
-				searchBounds.minY = 0.125 - (yRange / 4)
-				searchBounds.maxY = 0.125 + (yRange / 4)
+				searchBounds.minY = 0.125 - yRange * 0.25
+				searchBounds.maxY = 0.125 + yRange * 0.25
 			}
+
 			state = "Non-Fullblock-SlabCorrection"
 		}
 		else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundBlockBB.maxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY == groundBlockBB.maxY - groundBlockBB.minY)
@@ -874,11 +875,14 @@ class Scaffold : Module()
 			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}$blocksAmount"
 			val scaledResolution = classProvider.createScaledResolution(mc)
 
-			RenderUtils.drawBorderedRect(scaledResolution.scaledWidth / 2 - 2.0f, scaledResolution.scaledHeight / 2 + 5.0f, scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2.0f, scaledResolution.scaledHeight / 2 + 16.0f, 3f, Color.BLACK.rgb, Color.BLACK.rgb)
+			val middleScreenX = scaledResolution.scaledWidth shr 1
+			val middleScreenY = scaledResolution.scaledHeight shr 1
+
+			RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + 5.0f, middleScreenX + Fonts.font40.getStringWidth(info) + 2.0f, middleScreenY + 16.0f, 3f, Color.BLACK.rgb, Color.BLACK.rgb)
 
 			classProvider.glStateManager.resetColor()
 
-			Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2.0f, scaledResolution.scaledHeight / 2 + 7.0f, 0xffffff)
+			Fonts.font40.drawString(info, (scaledResolution.scaledWidth shr 1).toFloat(), middleScreenY + 7.0f, 0xffffff)
 			GL11.glPopMatrix()
 		}
 	}

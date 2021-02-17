@@ -45,7 +45,7 @@ abstract class Element(
 		get() = when (side.horizontal)
 		{
 			Side.Horizontal.LEFT -> x
-			Side.Horizontal.MIDDLE -> (classProvider.createScaledResolution(mc).scaledWidth / 2) - x
+			Side.Horizontal.MIDDLE -> (classProvider.createScaledResolution(mc).scaledWidth shr 1) - x
 			Side.Horizontal.RIGHT -> classProvider.createScaledResolution(mc).scaledWidth - x
 		}
 		set(value) = when (side.horizontal)
@@ -65,7 +65,7 @@ abstract class Element(
 		get() = when (side.vertical)
 		{
 			Side.Vertical.UP -> y
-			Side.Vertical.MIDDLE -> (classProvider.createScaledResolution(mc).scaledHeight / 2) - y
+			Side.Vertical.MIDDLE -> (classProvider.createScaledResolution(mc).scaledHeight shr 1) - y
 			Side.Vertical.DOWN -> classProvider.createScaledResolution(mc).scaledHeight - y
 		}
 		set(value) = when (side.vertical)

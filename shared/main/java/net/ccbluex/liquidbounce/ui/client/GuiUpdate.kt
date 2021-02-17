@@ -19,9 +19,9 @@ class GuiUpdate : WrappedGuiScreen()
 
 	override fun initGui()
 	{
-		val j = representedScreen.height / 4 + 48
+		val j = (representedScreen.height shr 2) + 48
 
-		val middleScreen = representedScreen.width / 2
+		val middleScreen = representedScreen.width shr 1
 
 		representedScreen.buttonList.add(classProvider.createGuiButton(1, middleScreen + 2, j + 48, 98, 20, "OK"))
 		representedScreen.buttonList.add(classProvider.createGuiButton(2, middleScreen - 100, j + 48, 98, 20, "Download"))
@@ -31,14 +31,16 @@ class GuiUpdate : WrappedGuiScreen()
 	{
 		representedScreen.drawBackground(0)
 
-		Fonts.font35.drawCenteredString("b${LiquidBounce.latestVersion} got released!", representedScreen.width / 2.0f, representedScreen.height / 8.0f + 80, 0xffffff)
-		Fonts.font35.drawCenteredString("Press \"Download\" to visit our website or dismiss this message by pressing \"OK\".", representedScreen.width / 2.0f, representedScreen.height / 8.0f + 80 + Fonts.font35.fontHeight, 0xffffff)
+		val middleScreen = (representedScreen.width shr 1).toFloat()
+
+		Fonts.font35.drawCenteredString("b${LiquidBounce.latestVersion} got released!", middleScreen, (representedScreen.height shr 3) + 80f, 0xffffff)
+		Fonts.font35.drawCenteredString("Press \"Download\" to visit our website or dismiss this message by pressing \"OK\".", middleScreen, (representedScreen.height shr 3) + 80f + Fonts.font35.fontHeight, 0xffffff)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 
 		// Title
 		GL11.glScalef(2F, 2F, 2F)
-		Fonts.font35.drawCenteredString("New update available!", representedScreen.width / 4.0f, representedScreen.height / 16.0f + 20, Color(255, 0, 0).rgb)
+		Fonts.font35.drawCenteredString("New update available!", (representedScreen.width shr 2).toFloat(), (representedScreen.height shr 4) + 20f, Color(255, 0, 0).rgb)
 	}
 
 	override fun actionPerformed(button: IGuiButton)

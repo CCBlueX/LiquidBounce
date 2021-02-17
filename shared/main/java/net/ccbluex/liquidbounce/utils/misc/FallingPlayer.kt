@@ -65,17 +65,17 @@ class FallingPlayer(private val theWorld: IWorldClient, private val thePlayer: I
 			calculateForTick()
 
 			var raytracedBlock: WBlockPos?
-			val w = thePlayer.width / 2.0
+			val w = thePlayer.width * 0.5
 
 			if (rayTrace(theWorld, start, end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
 			if (rayTrace(theWorld, start.addVector(w, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
 			if (rayTrace(theWorld, start.addVector(-w, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
 			if (rayTrace(theWorld, start.addVector(w, 0.0, -w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
 			if (rayTrace(theWorld, start.addVector(-w, 0.0, -w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
-			if (rayTrace(theWorld, start.addVector(w, 0.0, w / 2.0), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
-			if (rayTrace(theWorld, start.addVector(-w, 0.0, w / 2.0), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
-			if (rayTrace(theWorld, start.addVector(w / 2.0, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
-			if (rayTrace(theWorld, start.addVector(w / 2.0, 0.0, -w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
+			if (rayTrace(theWorld, start.addVector(w, 0.0, w * 0.5), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
+			if (rayTrace(theWorld, start.addVector(-w, 0.0, w * 0.5), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
+			if (rayTrace(theWorld, start.addVector(w * 0.5, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
+			if (rayTrace(theWorld, start.addVector(w * 0.5, 0.0, -w), end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock!!, i)
 		}
 
 		return null

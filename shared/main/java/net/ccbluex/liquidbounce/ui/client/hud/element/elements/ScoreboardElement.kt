@@ -131,9 +131,7 @@ class ScoreboardElement(
 
 				GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
-				fontRenderer.drawString(
-					displayName, (l1 + maxWidth / 2 - fontRenderer.getStringWidth(displayName) / 2.0f), (height - fontRenderer.fontHeight), textColor, shadowValue.get()
-				)
+				fontRenderer.drawString(displayName, (l1 + (maxWidth shr 1) - (fontRenderer.getStringWidth(displayName) shr 1)).toFloat(), (height - fontRenderer.fontHeight), textColor, shadowValue.get())
 			}
 
 			if (rectValue.get())

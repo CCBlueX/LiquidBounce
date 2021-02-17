@@ -26,8 +26,8 @@ class GuiChangeName(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	{
 		Keyboard.enableRepeatEvents(true)
 
-		val buttonX = representedScreen.width / 2 - 100
-		val quarterScreen = representedScreen.height / 4
+		val buttonX = (representedScreen.width shr 1) - 100
+		val quarterScreen = representedScreen.height shr 2
 
 		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 96, "Change"))
 		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
@@ -45,12 +45,15 @@ class GuiChangeName(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 		drawRect(30, 30, representedScreen.width - 30, representedScreen.height - 30, Int.MIN_VALUE)
 
-		Fonts.font40.drawCenteredString("Change Name", representedScreen.width / 2.0f, 34f, 0xffffff)
-		Fonts.font40.drawCenteredString(status, representedScreen.width / 2.0f, representedScreen.height / 4.0f + 84, 0xffffff)
+		val middleScreen = (representedScreen.width shr 1).toFloat()
+		val quarterScreen = (representedScreen.height shr 2).toFloat()
+
+		Fonts.font40.drawCenteredString("Change Name", middleScreen, 34f, 0xffffff)
+		Fonts.font40.drawCenteredString(status, middleScreen, quarterScreen + 84, 0xffffff)
 
 		name.drawTextBox()
 
-		if (name.text.isEmpty() && !name.isFocused) Fonts.font40.drawCenteredString("\u00A77Username", representedScreen.width / 2.0f - 74, 66f, 0xffffff)
+		if (name.text.isEmpty() && !name.isFocused) Fonts.font40.drawCenteredString("\u00A77Username", middleScreen - 74, 66f, 0xffffff)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 	}

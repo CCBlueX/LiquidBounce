@@ -44,7 +44,7 @@ class SlowlyStyle : Style()
 		classProvider.glStateManager.resetColor()
 
 		val textWidth = Fonts.font35.getStringWidth("\u00A7f" + stripControlCodes(panel.name)).toFloat()
-		Fonts.font35.drawString(panel.name, (panel.x - (textWidth - 100.0f) / 2.0f).toInt(), panel.y + 7 - 3, Color.WHITE.rgb)
+		Fonts.font35.drawString(panel.name, (panel.x - (textWidth - 100.0f) * 0.5).toInt(), panel.y + 7 - 3, Color.WHITE.rgb)
 	}
 
 	override fun drawDescription(mouseX: Int, mouseY: Int, text: String)
@@ -54,7 +54,7 @@ class SlowlyStyle : Style()
 
 		classProvider.glStateManager.resetColor()
 
-		Fonts.font35.drawString(text, mouseX + 12, mouseY + Fonts.font35.fontHeight / 2, Color.WHITE.rgb)
+		Fonts.font35.drawString(text, mouseX + 12, mouseY + Fonts.font35.fontHeight shr 1, Color.WHITE.rgb)
 	}
 
 	override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)

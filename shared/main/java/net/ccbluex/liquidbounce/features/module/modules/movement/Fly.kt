@@ -906,11 +906,11 @@ class Fly : Module()
 			val info = "You can fly ${if (remainingTicks <= 10) "\u00A7c" else ""}${remainingTicks}\u00A7r more ticks"
 			val scaledResolution = classProvider.createScaledResolution(mc)
 
-			RenderUtils.drawBorderedRect(scaledResolution.scaledWidth / 2 - 2.0f, scaledResolution.scaledHeight / 2 + 5.0f, scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2.0f, scaledResolution.scaledHeight / 2 + 16.0f, 3f, Color.BLACK.rgb, Color.BLACK.rgb)
+			RenderUtils.drawBorderedRect((scaledResolution.scaledWidth shr 1) - 2.0f, (scaledResolution.scaledHeight shr 1) + 5.0f, ((scaledResolution.scaledWidth shr 1) + Fonts.font40.getStringWidth(info)) + 2.0f, (scaledResolution.scaledHeight shr 1) + 16.0f, 3f, Color.BLACK.rgb, Color.BLACK.rgb)
 
 			classProvider.glStateManager.resetColor()
 
-			Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2.0f, scaledResolution.scaledHeight / 2 + 7.0f, 0xffffff)
+			Fonts.font40.drawString(info, (scaledResolution.scaledWidth shr 1).toFloat(), (scaledResolution.scaledHeight shr 1) + 7.0f, 0xffffff)
 			GL11.glPopMatrix()
 		}
 	}

@@ -96,7 +96,7 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 
 		Keyboard.enableRepeatEvents(true)
 
-		val middleScreen = width / 2
+		val middleScreen = width shr 1
 		val buttonX = middleScreen - 100
 		val buttonY = height - 54
 
@@ -123,7 +123,7 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 
 		drawRect(30, 30, width - 30, height - 30, Int.MIN_VALUE)
 
-		val middleScreen = width / 2f
+		val middleScreen = (width shr 1).toFloat()
 
 		Fonts.font40.drawCenteredString("Decode session token", middleScreen, 34f, 0xffffff)
 

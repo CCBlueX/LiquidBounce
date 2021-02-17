@@ -114,11 +114,11 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
 		GL11.glRotatef(135F, 0F, 1F, 0F)
 		functions.enableStandardItemLighting()
 		GL11.glRotatef(-135F, 0F, 1F, 0F)
-		GL11.glRotatef(-atan(pitch / 40F) * 20.0F, 1F, 0F, 0F)
+		GL11.glRotatef(-atan(pitch * 0.025f) * 20.0F, 1F, 0F, 0F)
 
-		entityLivingBase.renderYawOffset = atan(yaw / 40F) * 20F
-		entityLivingBase.rotationYaw = atan(yaw / 40F) * 40F
-		entityLivingBase.rotationPitch = -atan(pitch / 40F) * 20F
+		entityLivingBase.renderYawOffset = atan(yaw * 0.025f) * 20F
+		entityLivingBase.rotationYaw = atan(yaw * 0.025f) * 40F
+		entityLivingBase.rotationPitch = -atan(pitch * 0.025f) * 20F
 		entityLivingBase.rotationYawHead = entityLivingBase.rotationYaw
 		entityLivingBase.prevRotationYawHead = entityLivingBase.rotationYaw
 

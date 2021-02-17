@@ -45,7 +45,7 @@ class GuiBannedServers(private val prevGui: GuiAltManager, private val account: 
 		representedScreen.drawBackground(0)
 		serversList.represented.drawScreen(mouseX, mouseY, partialTicks)
 
-		val middleScreen = width / 2f
+		val middleScreen = (width shr 1).toFloat()
 
 		Fonts.font40.drawCenteredString("\u00A7cBanned servers\u00A78 of \u00A7a" + if (account.accountName == null) account.name else account.accountName, middleScreen, 6f, 0xffffff)
 		Fonts.font35.drawCenteredString("\u00A7a" + (if (account.accountName == null) account.name else account.accountName) + "\u00A78 is \u00A7cbanned\u00A78 from \u00A7c" + serversList.getSize() + "\u00A7a servers.", middleScreen, 18f, 0xffffff)
@@ -137,7 +137,7 @@ class GuiBannedServers(private val prevGui: GuiAltManager, private val account: 
 		override fun drawSlot(id: Int, x: Int, y: Int, var4: Int, mouseXIn: Int, mouseYIn: Int)
 		{
 			val server = account.bannedServers[id]
-			val middleScreen = represented.width / 2f
+			val middleScreen = (represented.width shr 1).toFloat()
 
 			Fonts.font40.drawCenteredString(server, middleScreen, y + 1f, Color.RED.rgb, true)
 		}
@@ -159,8 +159,8 @@ class GuiBannedServers(private val prevGui: GuiAltManager, private val account: 
 
 			Keyboard.enableRepeatEvents(true)
 
-			val buttonX = width / 2 - 100
-			val quarterScreen = height / 4
+			val buttonX = (width shr 1) - 100
+			val quarterScreen = height shr 2
 
 			representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 96, "Add " + (if (account.accountName == null) account.name else account.accountName) + "'s banned server"))
 			representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
@@ -177,8 +177,8 @@ class GuiBannedServers(private val prevGui: GuiAltManager, private val account: 
 			val width = representedScreen.width
 			val height = representedScreen.height
 
-			val middleScreen = width / 2f
-			val quarterScreen = height / 4f
+			val middleScreen = (width shr 1).toFloat()
+			val quarterScreen = (height shr 2).toFloat()
 
 			representedScreen.drawBackground(0)
 

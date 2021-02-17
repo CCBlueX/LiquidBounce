@@ -92,7 +92,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		val viewDistance = viewDistanceValue.get() * 16.0F
 
 		val maxDisplayableDistanceSquare = ((viewDistance + fovSizeValue.get().toDouble()) * (viewDistance + fovSizeValue.get().toDouble()))
-		val halfSize = size / 2f
+		val halfSize = size * 0.5f
 
 		RenderUtils.makeScissorBox(x.toFloat(), y.toFloat(), x.toFloat() + ceil(size), y.toFloat() + ceil(size))
 
@@ -115,8 +115,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 			val chunkSizeOnScreen = size / viewDistanceValue.get()
 			val chunksToRender = max(1, ceil((SQRT_OF_TWO * (viewDistanceValue.get() * 0.5f))).toInt())
 
-			val currX = renderViewEntity.posX / 16.0
-			val currZ = renderViewEntity.posZ / 16.0
+			val currX = renderViewEntity.posX * 0.0625
+			val currZ = renderViewEntity.posZ * 0.0625
 
 			for (x in -chunksToRender..chunksToRender)
 			{

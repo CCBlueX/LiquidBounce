@@ -43,16 +43,19 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	{
 		Keyboard.enableRepeatEvents(true)
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 72, "Add").also { addButton = it })
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, representedScreen.width / 2 - 100, representedScreen.height / 4 + 96, "Clipboard").also { clipboardButton = it })
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 - 100, representedScreen.height / 4 + 120, "Back"))
+		val buttonX = representedScreen.width shr 1 - 100
+		val quarterScreen = representedScreen.height shr 2
 
-		username = classProvider.createGuiTextField(2, Fonts.font40, representedScreen.width / 2 - 100, 60, 200, 20).apply {
+		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 72, "Add").also { addButton = it })
+		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 96, "Clipboard").also { clipboardButton = it })
+		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+
+		username = classProvider.createGuiTextField(2, Fonts.font40, buttonX, 60, 200, 20).apply {
 			isFocused = true
 			maxStringLength = Int.MAX_VALUE
 		}
 
-		password = classProvider.createGuiPasswordField(3, Fonts.font40, representedScreen.width / 2 - 100, 85, 200, 20).apply { maxStringLength = Int.MAX_VALUE }
+		password = classProvider.createGuiPasswordField(3, Fonts.font40, buttonX, 85, 200, 20).apply { maxStringLength = Int.MAX_VALUE }
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
@@ -61,10 +64,10 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 		drawRect(30, 30, representedScreen.width - 30, representedScreen.height - 30, Int.MIN_VALUE)
 
-		val middleScreen = representedScreen.width / 2f
+		val middleScreen = (representedScreen.width shr 1).toFloat()
 
 		Fonts.font40.drawCenteredString("Add Account", middleScreen, 34f, 0xffffff)
-		Fonts.font35.drawCenteredString(status, middleScreen, representedScreen.height / 4.0f + 60, 0xffffff)
+		Fonts.font35.drawCenteredString(status, middleScreen, (representedScreen.height shr 2) + 60f, 0xffffff)
 
 		username.drawTextBox()
 		password.drawTextBox()

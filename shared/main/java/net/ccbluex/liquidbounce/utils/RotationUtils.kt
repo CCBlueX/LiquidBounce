@@ -203,7 +203,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 
 			// Bow Power Calculation
 			val fastBow = LiquidBounce.moduleManager[FastBow::class.java] as FastBow
-			var velocity = (if (fastBow.state) fastBow.packetsValue.get() else thePlayer.itemInUseDuration) / 20.0f
+			var velocity = (if (fastBow.state) fastBow.packetsValue.get() else thePlayer.itemInUseDuration) * 0.05f
 			velocity = (velocity * velocity + velocity * 2) / 3
 			if (velocity > 1) velocity = 1f
 

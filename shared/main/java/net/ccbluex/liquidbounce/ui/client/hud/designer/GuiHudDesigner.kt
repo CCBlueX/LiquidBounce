@@ -24,7 +24,7 @@ class GuiHudDesigner : WrappedGuiScreen()
 	override fun initGui()
 	{
 		Keyboard.enableRepeatEvents(true)
-		editorPanel = EditorPanel(this, representedScreen.width / 2, representedScreen.height / 2)
+		editorPanel = EditorPanel(this, representedScreen.width shr 1, representedScreen.height shr 1)
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)

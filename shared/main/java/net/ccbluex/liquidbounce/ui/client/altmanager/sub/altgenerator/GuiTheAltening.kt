@@ -57,26 +57,28 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		Keyboard.enableRepeatEvents(true)
 
 		// Login button & Add to alt list and Login button
-		addAltAndLoginButton = classProvider.createGuiButton(4, representedScreen.width / 2 - 100, 75, 98, 20, "Add Alt and Login")
+		val middleScreen = representedScreen.width shr 1
+
+		addAltAndLoginButton = classProvider.createGuiButton(4, middleScreen - 100, 75, 98, 20, "Add Alt and Login")
 		representedScreen.buttonList.add(addAltAndLoginButton)
-		loginButton = classProvider.createGuiButton(2, representedScreen.width / 2 + 2, 75, 98, 20, "Just Login")
+		loginButton = classProvider.createGuiButton(2, middleScreen + 2, 75, 98, 20, "Just Login")
 		representedScreen.buttonList.add(loginButton)
 
 		// Generate button
-		generateButton = classProvider.createGuiButton(1, representedScreen.width / 2 - 100, 140, "Generate")
+		generateButton = classProvider.createGuiButton(1, middleScreen - 100, 140, "Generate")
 		representedScreen.buttonList.add(generateButton)
 
 		// Buy & Back buttons
-		representedScreen.buttonList.add(classProvider.createGuiButton(3, representedScreen.width / 2 - 100, representedScreen.height - 54, 98, 20, "Buy"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 + 2, representedScreen.height - 54, 98, 20, "Back"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(3, middleScreen - 100, representedScreen.height - 54, 98, 20, "Buy"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(0, middleScreen + 2, representedScreen.height - 54, 98, 20, "Back"))
 
 		// Token text field
-		tokenField = classProvider.createGuiTextField(666, Fonts.font40, representedScreen.width / 2 - 100, 50, 200, 20)
+		tokenField = classProvider.createGuiTextField(666, Fonts.font40, middleScreen - 100, 50, 200, 20)
 		tokenField.isFocused = true
 		tokenField.maxStringLength = Integer.MAX_VALUE
 
 		// Api key password field
-		apiKeyField = classProvider.createGuiPasswordField(1337, Fonts.font40, representedScreen.width / 2 - 100, 115, 200, 20)
+		apiKeyField = classProvider.createGuiPasswordField(1337, Fonts.font40, middleScreen - 100, 115, 200, 20)
 		apiKeyField.maxStringLength = 18
 		apiKeyField.text = apiKey
 		super.initGui()
@@ -91,17 +93,18 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		RenderUtils.drawRect(30.0f, 30.0f, representedScreen.width - 30.0f, representedScreen.height - 30.0f, Integer.MIN_VALUE)
 
 		// Draw title and status
-		Fonts.font35.drawCenteredString("TheAltening", representedScreen.width / 2.0f, 6.0f, 0xffffff)
-		Fonts.font35.drawCenteredString(status, representedScreen.width / 2.0f, 18.0f, 0xffffff)
+		val middleScreen = (representedScreen.width shr 1).toFloat()
+		Fonts.font35.drawCenteredString("TheAltening", middleScreen, 6.0f, 0xffffff)
+		Fonts.font35.drawCenteredString(status, middleScreen, 18.0f, 0xffffff)
 
 		// Draw fields
 		apiKeyField.drawTextBox()
 		tokenField.drawTextBox()
 
 		// Draw text
-		Fonts.font40.drawCenteredString("\u00A77Token:", representedScreen.width / 2.0f - 84, 40.0f, 0xffffff)
-		Fonts.font40.drawCenteredString("\u00A77API-Key:", representedScreen.width / 2.0f - 78, 105.0f, 0xffffff)
-		Fonts.font40.drawCenteredString("\u00A77Use coupon code 'liquidbounce' for 20% off!", representedScreen.width / 2.0f, representedScreen.height - 65.0f, 0xffffff)
+		Fonts.font40.drawCenteredString("\u00A77Token:", middleScreen - 84, 40.0f, 0xffffff)
+		Fonts.font40.drawCenteredString("\u00A77API-Key:", middleScreen - 78, 105.0f, 0xffffff)
+		Fonts.font40.drawCenteredString("\u00A77Use coupon code 'liquidbounce' for 20% off!", middleScreen, representedScreen.height - 65.0f, 0xffffff)
 		super.drawScreen(mouseX, mouseY, partialTicks)
 	}
 

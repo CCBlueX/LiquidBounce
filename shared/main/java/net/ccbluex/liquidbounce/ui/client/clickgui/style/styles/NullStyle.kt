@@ -43,7 +43,7 @@ class NullStyle : Style()
 		classProvider.glStateManager.resetColor()
 
 		val textWidth = Fonts.font35.getStringWidth("\u00A7f" + stripControlCodes(panel.name))
-		Fonts.font35.drawString("\u00A7f" + panel.name, (panel.x - (textWidth - 100.0f) / 2.0f).toInt(), panel.y + 7, Int.MAX_VALUE)
+		Fonts.font35.drawString("\u00A7f" + panel.name, (panel.x - (textWidth - 100.0f) * 0.5f).toInt(), panel.y + 7, Int.MAX_VALUE)
 	}
 
 	override fun drawDescription(mouseX: Int, mouseY: Int, text: String)
@@ -53,13 +53,13 @@ class NullStyle : Style()
 
 		classProvider.glStateManager.resetColor()
 
-		Fonts.font35.drawString(text, mouseX + 12, mouseY + Fonts.font35.fontHeight / 2, Int.MAX_VALUE)
+		Fonts.font35.drawString(text, mouseX + 12, mouseY + Fonts.font35.fontHeight shr 1, Int.MAX_VALUE)
 	}
 
 	override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
 	{
 		classProvider.glStateManager.resetColor()
-		Fonts.font35.drawString(buttonElement.displayName, (buttonElement.x - (Fonts.font35.getStringWidth(buttonElement.displayName) - 100.0f) / 2.0f).toInt(), buttonElement.y + 6, buttonElement.color)
+		Fonts.font35.drawString(buttonElement.displayName, (buttonElement.x - (Fonts.font35.getStringWidth(buttonElement.displayName) - 100.0f) * 0.5f).toInt(), buttonElement.y + 6, buttonElement.color)
 	}
 
 	override fun drawModuleElement(mouseX: Int, mouseY: Int, moduleElement: ModuleElement)
@@ -75,7 +75,7 @@ class NullStyle : Style()
 
 		if (moduleValues.isNotEmpty())
 		{
-			Fonts.font35.drawString("+", moduleElement.x + moduleElement.width - 8, moduleElement.y + moduleElement.height / 2, Color.WHITE.rgb)
+			Fonts.font35.drawString("+", moduleElement.x + moduleElement.width - 8, moduleElement.y + moduleElement.height shr 1, Color.WHITE.rgb)
 
 			if (moduleElement.isShowSettings)
 			{

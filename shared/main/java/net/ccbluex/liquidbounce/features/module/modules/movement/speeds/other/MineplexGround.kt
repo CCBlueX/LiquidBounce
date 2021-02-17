@@ -61,7 +61,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 
 		val targetSpeed = ((LiquidBounce.moduleManager[Speed::class.java] as Speed?) ?: return).mineplexGroundSpeedValue.get()
 
-		if (targetSpeed > speed) speed += targetSpeed / 8
+		if (targetSpeed > speed) speed += targetSpeed * 0.125f
 		if (speed >= targetSpeed) speed = targetSpeed
 
 		MovementUtils.strafe(thePlayer, speed)

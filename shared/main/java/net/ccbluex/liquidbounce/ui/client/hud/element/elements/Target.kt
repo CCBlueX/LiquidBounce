@@ -131,10 +131,10 @@ class Target : Element()
 			for (index in 1..targetMaxHealthInt) RenderUtils.drawRect(healthGradationGap * index, 103F, healthGradationGap * index + 1, 107F, Color.black.rgb)
 
 			// Draw Total Armor bar
-			RenderUtils.drawRect(0F, 109F, (easingArmor / 20) * width, 110F, Color.cyan.rgb)
+			RenderUtils.drawRect(0F, 109F, easingArmor * width * 0.05f, 110F, Color.cyan.rgb)
 
 			// Draw Armor Gradations
-			val armorGradationGap = width / 20
+			val armorGradationGap = width * 0.05f
 			for (index in 1..20) RenderUtils.drawRect(armorGradationGap * index, 109F, armorGradationGap * index + 1, 110F, Color.black.rgb)
 
 			easingHealth += ((targetHealth - easingHealth) / 2.0F.pow(10.0F - healthFadeSpeed.get())) * RenderUtils.deltaTime

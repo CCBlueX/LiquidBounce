@@ -35,10 +35,10 @@ class GuiAntiModDisable(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		val width = representedScreen.width
 		val height = representedScreen.height
 
-		val buttonX = width / 2 - 100
-		val buttonY = height / 4 + 50
+		val buttonX = (width shr 1) - 100
+		val buttonY = (height shr 2) + 50
 
-		buttonsList.add(classProvider.createGuiButton(1, buttonX, representedScreen.height / 4 + 35, "Enabled ${stateString(AntiModDisable.enabled)}").also { enabledButton = it })
+		buttonsList.add(classProvider.createGuiButton(1, buttonX, (representedScreen.height shr 2) + 35, "Enabled ${stateString(AntiModDisable.enabled)}").also { enabledButton = it })
 		buttonsList.add(classProvider.createGuiButton(2, buttonX, buttonY + 25, "$BLOCK_FML${stateString(AntiModDisable.enabled && AntiModDisable.blockFMLPackets)}").also { fmlButton = it })
 		buttonsList.add(classProvider.createGuiButton(3, buttonX, buttonY + 50, "$BLOCK_FML_PROXY_PACKET${stateString(AntiModDisable.enabled && AntiModDisable.blockFMLProxyPackets)}").also { fmlProxyPacket = it })
 		buttonsList.add(classProvider.createGuiButton(4, buttonX, buttonY + 75, "$SPOOF_BRAND_PAYLOAD_PACKETS${stateString(AntiModDisable.enabled && AntiModDisable.blockClientBrandRetrieverPackets)}").also { clientBrandPayloadPacket = it })
@@ -51,7 +51,7 @@ class GuiAntiModDisable(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		buttonsList.add(classProvider.createGuiButton(11, buttonX, buttonY + 250, "$BLOCK_SCHEMATICA_PACKETS${stateString(AntiModDisable.enabled && AntiModDisable.blockSchematicaPayloads)}").also { schematicaButton = it })
 		buttonsList.add(classProvider.createGuiButton(999, buttonX, buttonY + 275, "$PRINT_DEBUG_MESSAGES${stateString(AntiModDisable.enabled && AntiModDisable.debug)}").also { debugmode = it })
 
-		buttonsList.add(classProvider.createGuiButton(0, buttonX, height / 4 + 55 + 300 + 5, "Back"))
+		buttonsList.add(classProvider.createGuiButton(0, buttonX, (height shr 2) + 55 + 300 + 5, "Back"))
 	}
 
 	override fun actionPerformed(button: IGuiButton)
@@ -157,7 +157,7 @@ class GuiAntiModDisable(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
 	{
 		representedScreen.drawBackground(0)
-		Fonts.fontBold180.drawCenteredString("AntiModDisable", representedScreen.width / 2.0f, representedScreen.height / 10.0f + 5.0f, 4673984, true)
+		Fonts.fontBold180.drawCenteredString("AntiModDisable", (representedScreen.width shr 1).toFloat(), representedScreen.height / 10.0f + 5.0f, 4673984, true)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 	}

@@ -40,9 +40,9 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		val buttonX = representedScreen.width - 80
 		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, representedScreen.height - 65, 70, 20, "Back"))
 		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, j + 24, 70, 20, "Import"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, j + 24 * 2, 70, 20, "Delete"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, j + (24 shl 1), 70, 20, "Delete"))
 		representedScreen.buttonList.add(classProvider.createGuiButton(3, buttonX, j + 24 * 3, 70, 20, "Reload"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(4, buttonX, j + 24 * 4, 70, 20, "Folder"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(4, buttonX, j + (24 shl 2), 70, 20, "Folder"))
 		representedScreen.buttonList.add(classProvider.createGuiButton(5, buttonX, j + 24 * 5, 70, 20, "Docs"))
 		representedScreen.buttonList.add(classProvider.createGuiButton(6, buttonX, j + 24 * 6, 70, 20, "Find Scripts"))
 	}
@@ -53,7 +53,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		list.represented.drawScreen(mouseX, mouseY, partialTicks)
 
-		Fonts.font40.drawCenteredString("\u00A79\u00A7lScripts", representedScreen.width / 2.0f, 28.0f, 0xffffff)
+		Fonts.font40.drawCenteredString("\u00A79\u00A7lScripts", (representedScreen.width shr 1).toFloat(), 28.0f, 0xffffff)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 	}
@@ -211,8 +211,10 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		{
 			val script = LiquidBounce.scriptManager.scripts[id]
 
-			Fonts.font40.drawCenteredString("\u00A79" + script.scriptName + " \u00A77v" + script.scriptVersion, representedScreen.width / 2.0f, y + 2.0f, Color.LIGHT_GRAY.rgb)
-			Fonts.font40.drawCenteredString("by \u00A7c" + script.scriptAuthors.joinToString(", "), representedScreen.width / 2.0f, y + 15.0f, Color.LIGHT_GRAY.rgb).coerceAtLeast(x)
+			val middleScreen = (representedScreen.width shr 1).toFloat()
+
+			Fonts.font40.drawCenteredString("\u00A79" + script.scriptName + " \u00A77v" + script.scriptVersion, middleScreen, y + 2.0f, Color.LIGHT_GRAY.rgb)
+			Fonts.font40.drawCenteredString("by \u00A7c" + script.scriptAuthors.joinToString(", "), middleScreen, y + 15.0f, Color.LIGHT_GRAY.rgb).coerceAtLeast(x)
 		}
 
 		override fun drawBackground()

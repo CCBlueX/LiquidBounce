@@ -37,14 +37,16 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		if (MCLeaks.isAltActive()) status = "\u00A7aToken active. Using \u00A79${MCLeaks.getSession().username}\u00A7a to login!"
 
 		// Add buttons
-		representedScreen.buttonList.add(classProvider.createGuiButton(4, representedScreen.width / 2 - 100, representedScreen.height / 4 + 65, 98, 20, "Add Alt and Login"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 + 2, representedScreen.height / 4 + 65, 98, 20, "Just Login"))
+		val middleScreen = representedScreen.width shr 1
+		val quarterScreen = representedScreen.height shr 2
+		representedScreen.buttonList.add(classProvider.createGuiButton(4, middleScreen - 100, quarterScreen + 65, 98, 20, "Add Alt and Login"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(1, middleScreen + 2, quarterScreen + 65, 98, 20, "Just Login"))
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, representedScreen.width / 2 - 100, representedScreen.height - 54, 98, 20, "Get Token"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(3, representedScreen.width / 2 + 2, representedScreen.height - 54, 98, 20, "Back"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(2, middleScreen - 100, representedScreen.height - 54, 98, 20, "Get Token"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(3, middleScreen + 2, representedScreen.height - 54, 98, 20, "Back"))
 
 		// Token text field
-		tokenField = classProvider.createGuiTextField(0, Fonts.font40, representedScreen.width / 2 - 100, representedScreen.height / 4 + 40, 200, 20)
+		tokenField = classProvider.createGuiTextField(0, Fonts.font40, middleScreen - 100, quarterScreen + 40, 200, 20)
 		tokenField.isFocused = true
 		tokenField.maxStringLength = 16
 	}
@@ -143,13 +145,14 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		RenderUtils.drawRect(30.0f, 30.0f, representedScreen.width - 30.0f, representedScreen.height - 30.0f, Int.MIN_VALUE)
 
 		// Draw text
-		Fonts.font40.drawCenteredString("MCLeaks", representedScreen.width / 2.0f, 6.0f, 0xffffff)
-		Fonts.font40.drawString("Token:", representedScreen.width / 2.0f - 100, representedScreen.height / 4.0f + 30, 10526880)
+		val middleScreen = (representedScreen.width shr 1).toFloat()
+		Fonts.font40.drawCenteredString("MCLeaks", middleScreen, 6.0f, 0xffffff)
+		Fonts.font40.drawString("Token:", middleScreen - 100, (representedScreen.height shr 2) + 30f, 10526880)
 
 		// Draw status
 		val status = status
 
-		Fonts.font40.drawCenteredString(status, representedScreen.width / 2.0f, 18.0f, 0xffffff)
+		Fonts.font40.drawCenteredString(status, middleScreen, 18.0f, 0xffffff)
 
 		tokenField.drawTextBox()
 		super.drawScreen(mouseX, mouseY, partialTicks)

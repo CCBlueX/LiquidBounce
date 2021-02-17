@@ -27,7 +27,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		val width = representedScreen.width
 		val height = representedScreen.height
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, width / 2 - 100, height / 4 + 145, "Back"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(1, (width shr 1) - 100, (height shr 2) + 145, "Back"))
 
 		WorkerUtils.workers.submit(::loadInformation)
 	}
@@ -39,10 +39,10 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		val width = representedScreen.width
 		val height = representedScreen.height
 
-		var i = height / 4 + 40
+		var i = (height shr 2) + 40
 
-		val middleScreen = width / 2.0f
-		val quarterScreen = height / 4.0f
+		val middleScreen = (width shr 1).toFloat()
+		val quarterScreen = (height shr 2).toFloat()
 
 		RenderUtils.drawRect(middleScreen - 115, i - 5.0f, middleScreen + 115, quarterScreen + 43 + if (status.keys.isEmpty()) 10 else status.keys.size * Fonts.font40.fontHeight, Integer.MIN_VALUE)
 
@@ -71,7 +71,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			}
 		}
 
-		Fonts.fontBold180.drawCenteredString("Server Status", width / 2F, height / 8f + 5F, 4673984, true)
+		Fonts.fontBold180.drawCenteredString("Server Status", (width shr 1).toFloat(), (height shr 3) + 5F, 4673984, true)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 	}

@@ -40,7 +40,7 @@ class LiquidBounceStyle : Style()
 		drawBorderedRect(xF - if (panel.scrollbar) 4 else 0, yF, xF + panel.width, yF + 19 + panel.fade, 1.0f, Color(255, 255, 255, 90).rgb, Int.MIN_VALUE)
 
 		val textWidth = Fonts.font35.getStringWidth("\u00A7f" + stripControlCodes(panel.name))
-		Fonts.font35.drawString("\u00A7f" + panel.name, (panel.x - (textWidth - 100f) / 2f).toInt(), panel.y + 7, -16777216)
+		Fonts.font35.drawString("\u00A7f" + panel.name, (panel.x - (textWidth - 100f) * 0.5f).toInt(), panel.y + 7, -16777216)
 
 		if (panel.scrollbar && panel.fade > 0)
 		{
@@ -56,13 +56,13 @@ class LiquidBounceStyle : Style()
 
 		classProvider.glStateManager.resetColor()
 
-		Fonts.font35.drawString(text, mouseX + 12, mouseY + Fonts.font35.fontHeight / 2, Int.MAX_VALUE)
+		Fonts.font35.drawString(text, mouseX + 12, mouseY + Fonts.font35.fontHeight shr 1, Int.MAX_VALUE)
 	}
 
 	override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
 	{
 		classProvider.glStateManager.resetColor()
-		Fonts.font35.drawString(buttonElement.displayName, (buttonElement.x - (Fonts.font35.getStringWidth(buttonElement.displayName) - 100.0f) / 2.0f).toInt(), buttonElement.y + 6, buttonElement.color)
+		Fonts.font35.drawString(buttonElement.displayName, (buttonElement.x - (Fonts.font35.getStringWidth(buttonElement.displayName) - 100.0f) * 0.5f).toInt(), buttonElement.y + 6, buttonElement.color)
 	}
 
 	override fun drawModuleElement(mouseX: Int, mouseY: Int, moduleElement: ModuleElement)
@@ -78,13 +78,13 @@ class LiquidBounceStyle : Style()
 		val elementWidth = moduleElement.width
 		val elementHeight = moduleElement.height
 
-		Fonts.font35.drawString(moduleElement.displayName, (elementX - (Fonts.font35.getStringWidth(moduleElement.displayName) - 100.0f) / 2.0f).toInt(), elementY + 6, if (moduleElement.module.state) guiColor else Int.MAX_VALUE)
+		Fonts.font35.drawString(moduleElement.displayName, (elementX - (Fonts.font35.getStringWidth(moduleElement.displayName) - 100.0f) * 0.5f).toInt(), elementY + 6, if (moduleElement.module.state) guiColor else Int.MAX_VALUE)
 
 		val moduleValues = moduleElement.module.values
 		if (moduleValues.isNotEmpty())
 		{
 
-			Fonts.font35.drawString("+", elementX + elementWidth - 8, elementY + elementHeight / 2, Color.WHITE.rgb)
+			Fonts.font35.drawString("+", elementX + elementWidth - 8, elementY + elementHeight shr 1, Color.WHITE.rgb)
 			if (moduleElement.isShowSettings)
 			{
 				var yPos = elementY + 4

@@ -127,7 +127,7 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 			return getDamageReduction(item.armorMaterial.getDamageReductionAmount(item.armorType), 0) * (1 - getThresholdedEnchantmentDamageReduction(itemStack))
 		}
 
-		private fun getDamageReduction(defensePoints: Int, toughness: Int): Float = 1 - min(20.0f, max(defensePoints / 5.0f, defensePoints - 1 / (2 + toughness / 4.0f))) / 25.0f
+		private fun getDamageReduction(defensePoints: Int, toughness: Int): Float = 1 - min(20.0f, max(defensePoints / 5.0f, defensePoints - 1 / (2 + toughness * 0.25f))) * 0.04f
 
 		private fun getThresholdedEnchantmentDamageReduction(itemStack: IItemStack): Float = DAMAGE_REDUCTION_ENCHANTMENTS.indices.map { ItemUtils.getEnchantment(itemStack, DAMAGE_REDUCTION_ENCHANTMENTS[it]) * ENCHANTMENT_FACTORS[it] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[it] }.sum()
 

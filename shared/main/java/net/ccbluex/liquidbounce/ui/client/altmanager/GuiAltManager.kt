@@ -61,7 +61,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		val width = representedScreen.width
 		val height = representedScreen.height
 
-		val textFieldWidth = (width / 8).coerceAtLeast(70)
+		val textFieldWidth = (width shr 3).coerceAtLeast(70)
 
 		searchField = classProvider.createGuiTextField(2, Fonts.font40, width - textFieldWidth - 10, 10, textFieldWidth, 20)
 		searchField.maxStringLength = Int.MAX_VALUE
@@ -88,34 +88,31 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		altsList.elementClicked(index, false, 0, 0)
 		altsList.represented.scrollBy(index * altsList.represented.slotHeight)
 
-		val buttonYPos = 22
-
 		val buttonScreenRightPos = width - 80
 		val buttonList = representedScreen.buttonList
 
 		buttonList.add(classProvider.createGuiButton(0, buttonScreenRightPos, height - 65, 70, 20, "Back"))
 
-		buttonList.add(classProvider.createGuiButton(1, buttonScreenRightPos, buttonYPos + 24, 70, 20, "Add"))
-		buttonList.add(classProvider.createGuiButton(2, buttonScreenRightPos, buttonYPos + 24 * 2, 70, 20, "Remove"))
-		buttonList.add(classProvider.createGuiButton(8, buttonScreenRightPos, buttonYPos + 24 * 3, 70, 20, "Copy"))
-		buttonList.add(classProvider.createGuiButton(7, buttonScreenRightPos, buttonYPos + 24 * 4, 70, 20, "Import"))
-		buttonList.add(classProvider.createGuiButton(12, buttonScreenRightPos, buttonYPos + 24 * 5, 70, 20, "Export"))
+		buttonList.add(classProvider.createGuiButton(1, buttonScreenRightPos, 46, 70, 20, "Add"))
+		buttonList.add(classProvider.createGuiButton(2, buttonScreenRightPos, 70, 70, 20, "Remove"))
+		buttonList.add(classProvider.createGuiButton(8, buttonScreenRightPos, 94, 70, 20, "Copy"))
+		buttonList.add(classProvider.createGuiButton(7, buttonScreenRightPos, 118, 70, 20, "Import"))
+		buttonList.add(classProvider.createGuiButton(12, buttonScreenRightPos, 142, 70, 20, "Export"))
 		buttonList.add(classProvider.createGuiButton(13, buttonScreenRightPos, 166, 70, 20, "Banned Servers"))
 		buttonList.add(classProvider.createGuiButton(14, buttonScreenRightPos, 190, 70, 20, "Copy Current Session Into Clipboard"))
 		buttonList.add(classProvider.createGuiButton(15, buttonScreenRightPos, 214, 70, 20, "Current Session Info"))
 
 
-		buttonList.add(classProvider.createGuiButton(3, 5, buttonYPos + 24, 90, 20, "Login").also { loginButton = it })
-		buttonList.add(classProvider.createGuiButton(4, 5, buttonYPos + 24 * 2, 90, 20, "Random").also { randomButton = it })
-		buttonList.add(classProvider.createGuiButton(6, 5, buttonYPos + 24 * 3, 90, 20, "Direct Login"))
-		buttonList.add(classProvider.createGuiButton(88, 5, buttonYPos + 24 * 4, 90, 20, "Change Name"))
-		buttonList.add(classProvider.createGuiButton(10, 5, buttonYPos + 24 * 5 + 5, 90, 20, "Session Login"))
-		buttonList.add(classProvider.createGuiButton(11, 5, buttonYPos + 24 * 6 + 10, 90, 20, "Cape"))
+		buttonList.add(classProvider.createGuiButton(3, 5, 46, 90, 20, "Login").also { loginButton = it })
+		buttonList.add(classProvider.createGuiButton(4, 5, 70, 90, 20, "Random").also { randomButton = it })
+		buttonList.add(classProvider.createGuiButton(6, 5, 94, 90, 20, "Direct Login"))
+		buttonList.add(classProvider.createGuiButton(88, 5, 118, 90, 20, "Change Name"))
+		buttonList.add(classProvider.createGuiButton(10, 5, 147, 90, 20, "Session Login"))
+		buttonList.add(classProvider.createGuiButton(11, 5, 171, 90, 20, "Cape"))
+		buttonList.add(classProvider.createGuiButton(99, 5, 195, 90, 20, "Reconnect to last server"))
 
-		if (GENERATORS.getOrDefault("mcleaks", true)) buttonList.add(classProvider.createGuiButton(5, 5, buttonYPos + 24 * 7 + 5, 90, 20, "MCLeaks"))
-		if (GENERATORS.getOrDefault("thealtening", true)) buttonList.add(classProvider.createGuiButton(9, 5, buttonYPos + 24 * 8 + 5, 90, 20, "TheAltening"))
-
-		buttonList.add(classProvider.createGuiButton(99, 5, 248, 90, 20, "Reconnect to last server"))
+		if (GENERATORS.getOrDefault("mcleaks", true)) buttonList.add(classProvider.createGuiButton(5, 5, 230, 90, 20, "MCLeaks"))
+		if (GENERATORS.getOrDefault("thealtening", true)) buttonList.add(classProvider.createGuiButton(9, 5, 255, 90, 20, "TheAltening"))
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
@@ -125,9 +122,9 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		representedScreen.drawBackground(0)
 		altsList.represented.drawScreen(mouseX, mouseY, partialTicks)
 
-		Fonts.font40.drawCenteredString("AltManager", width / 2.0f, 6f, 0xffffff)
-		Fonts.font35.drawCenteredString(if (searchField.text.isEmpty()) "${LiquidBounce.fileManager.accountsConfig.accounts.size} Alts" else "${altsList.accounts.size} Search Results", width / 2.0f, 18f, 0xffffff)
-		Fonts.font35.drawCenteredString(status, width / 2.0f, 32f, 0xffffff)
+		Fonts.font40.drawCenteredString("AltManager", (width shr 1).toFloat(), 6f, 0xffffff)
+		Fonts.font35.drawCenteredString(if (searchField.text.isEmpty()) "${LiquidBounce.fileManager.accountsConfig.accounts.size} Alts" else "${altsList.accounts.size} Search Results", (width shr 1).toFloat(), 18f, 0xffffff)
+		Fonts.font35.drawCenteredString(status, (width shr 1).toFloat(), 32f, 0xffffff)
 		Fonts.font35.drawStringWithShadow("\u00A77User: \u00A7a${if (MCLeaks.isAltActive()) MCLeaks.getSession().username else mc.session.username}", 6, 6, 0xffffff)
 		Fonts.font35.drawStringWithShadow("\u00A77Type: \u00A7a${if (altService.currentService == EnumAltService.THEALTENING) "\u00A7aTheAltening" else if (MCLeaks.isAltActive()) "\u00A7bMCLeaks" else if (isValidTokenOffline(mc.session.token)) "\u00A76Mojang" else "\u00A78Cracked"}", 6, 15, 0xffffff)
 
@@ -400,7 +397,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 			// noinspection NegativelyNamedBooleanVariable
 			val isInvalid = serviceType == AltServiceType.MOJANG_INVALID || serviceType == AltServiceType.MOJANG_MIGRATED || serviceType == AltServiceType.MCLEAKS_INVALID || serviceType == AltServiceType.THEALTENING_INVALID
-			val middleScreen = width / 2f
+			val middleScreen = (width shr 1).toFloat()
 			Fonts.font40.drawCenteredString((if (minecraftAccount.accountName == null) minecraftAccount.name else minecraftAccount.accountName!!), middleScreen, y + 2f, Color.WHITE.rgb, true)
 			Fonts.font40.drawCenteredString(if (minecraftAccount.isCracked) "Cracked" else minecraftAccount.serviceType.id, middleScreen, y + 10f, if (minecraftAccount.isCracked) Color.GRAY.rgb else if (minecraftAccount.accountName == null) Color.LIGHT_GRAY.rgb else (if (isInvalid) Color.RED else Color.GREEN).rgb, true)
 			if (minecraftAccount.bannedServers.isNotEmpty()) Fonts.font35.drawCenteredString("Banned on " + minecraftAccount.serializeBannedServers(), middleScreen, y + 20f, Color.RED.rgb, true)

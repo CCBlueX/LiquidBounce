@@ -57,14 +57,14 @@ class LiquidWalk : Module()
 						thePlayer.motionX *= 0.99999
 						thePlayer.motionY *= 0.0
 						thePlayer.motionZ *= 0.99999
-						if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((posY - (posY - 1).toInt()).toInt() / 8.0)
+						if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((posY - (posY - 1).toInt()).toInt() * 0.125)
 					}
 					else
 					{
 						thePlayer.motionX *= 0.99999
 						thePlayer.motionY *= 0.0
 						thePlayer.motionZ *= 0.99999
-						if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((posY - (posY - 1).toInt()).toInt() / 8.0)
+						if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((posY - (posY - 1).toInt()).toInt() * 0.125)
 					}
 					if (thePlayer.fallDistance >= 4) thePlayer.motionY = -0.004 else if (isInWater) thePlayer.motionY = 0.09
 				}

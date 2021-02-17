@@ -161,7 +161,7 @@ abstract class Panel(val name: String, x: Int, y: Int, width: Int, height: Int, 
 	{
 		val textWidth = mc.fontRendererObj.getStringWidth(stripControlCodes(name)!!) - 100.0f
 
-		return mouseX >= x - textWidth / 2.0f - 19.0f && mouseX <= x - textWidth / 2.0f + mc.fontRendererObj.getStringWidth(stripControlCodes(name)!!) + 19.0f && mouseY >= y && mouseY <= y + height - if (open) 2 else 0
+		return mouseX >= x - textWidth * 0.5f - 19.0f && mouseX <= x - textWidth * 0.5f + mc.fontRendererObj.getStringWidth(stripControlCodes(name)!!) + 19.0f && mouseY >= y && mouseY <= y + height - if (open) 2 else 0
 	}
 
 	init

@@ -19,8 +19,8 @@ class GuiModsMenu(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	override fun initGui()
 	{
-		val buttonX = representedScreen.width / 2 - 100
-		val buttonY = representedScreen.height / 4 + 48
+		val buttonX = (representedScreen.width shr 1) - 100
+		val buttonY = (representedScreen.height shr 2) + 48
 
 		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, buttonY, "Forge Mods"))
 		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, buttonY + 25, "Scripts"))
@@ -87,7 +87,7 @@ class GuiModsMenu(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	{
 		representedScreen.drawBackground(0)
 
-		Fonts.fontBold180.drawCenteredString("Mods", representedScreen.width / 2F, representedScreen.height / 8F + 5F, 4673984, true)
+		Fonts.fontBold180.drawCenteredString("Mods", (representedScreen.width shr 1).toFloat(), (representedScreen.height shr 3) + 5F, 4673984, true)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 	}

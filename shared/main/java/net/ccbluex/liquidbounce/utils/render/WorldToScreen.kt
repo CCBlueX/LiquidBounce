@@ -24,8 +24,8 @@ object WorldToScreen
 		val ndcSpacePos = Vector3f(clipSpacePos.x / clipSpacePos.w, clipSpacePos.y / clipSpacePos.w, clipSpacePos.z / clipSpacePos.w)
 
 //        System.out.println(pointInNdc);
-		val screenX = (ndcSpacePos.x + 1.0f) / 2.0f * screenWidth
-		val screenY = (1.0f - ndcSpacePos.y) / 2.0f * screenHeight
+		val screenX = (ndcSpacePos.x + 1.0f) * 0.5f * screenWidth
+		val screenY = (1.0f - ndcSpacePos.y) * 0.5f * screenHeight
 
 		// nPlane = -1, fPlane = 1
 		return if (ndcSpacePos.z < -1.0 || ndcSpacePos.z > 1.0) null else Vector2f(screenX, screenY)

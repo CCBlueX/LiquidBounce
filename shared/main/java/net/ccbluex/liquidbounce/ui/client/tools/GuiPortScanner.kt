@@ -44,7 +44,7 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	{
 		Keyboard.enableRepeatEvents(true)
 
-		val middleScreen = representedScreen.width / 2
+		val middleScreen = representedScreen.width shr 1
 
 		val buttonX = middleScreen - 100
 
@@ -56,9 +56,10 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		threadsField = classProvider.createGuiTextField(3, Fonts.font40, buttonX, 120, 200, 20).apply { maxStringLength = Int.MAX_VALUE }.apply { text = "500" }
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, representedScreen.height / 4 + 95, if (running) "Stop" else "Start").also { buttonToggle = it })
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, representedScreen.height / 4 + 120, "Back"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, representedScreen.height / 4 + 155, "Export"))
+		val quarterScreen = representedScreen.height shr 2
+		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 95, if (running) "Stop" else "Start").also { buttonToggle = it })
+		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 155, "Export"))
 
 		super.initGui()
 	}
@@ -67,8 +68,8 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	{
 		representedScreen.drawBackground(0)
 
-		Fonts.font40.drawCenteredString("Port Scanner", representedScreen.width / 2.0f, 34f, 0xffffff)
-		Fonts.font35.drawCenteredString(if (running) "\u00A77$checkedPort \u00A78/ \u00A77$maxPort" else status, representedScreen.width / 2.0f, representedScreen.height / 4.0f + 80, 0xffffff)
+		Fonts.font40.drawCenteredString("Port Scanner", (representedScreen.width shr 1).toFloat(), 34f, 0xffffff)
+		Fonts.font35.drawCenteredString(if (running) "\u00A77$checkedPort \u00A78/ \u00A77$maxPort" else status, (representedScreen.width shr 1).toFloat(), (representedScreen.height shr 2) + 80f, 0xffffff)
 
 		buttonToggle.displayString = if (running) "Stop" else "Start"
 		hostField.drawTextBox()

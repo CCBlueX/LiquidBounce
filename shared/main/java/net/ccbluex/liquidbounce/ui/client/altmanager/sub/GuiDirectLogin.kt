@@ -40,8 +40,8 @@ class GuiDirectLogin(gui: GuiAltManager) : WrappedGuiScreen()
 	{
 		Keyboard.enableRepeatEvents(true)
 
-		val buttonX = representedScreen.width / 2 - 100
-		val quarterScreen = representedScreen.height / 4
+		val buttonX = representedScreen.width shr 1 - 100
+		val quarterScreen = representedScreen.height shr 2
 
 		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 72, "Login").also { loginButton = it })
 		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 96, "Clipboard Login").also { clipboardLoginButton = it })
@@ -61,10 +61,10 @@ class GuiDirectLogin(gui: GuiAltManager) : WrappedGuiScreen()
 
 		drawRect(30, 30, representedScreen.width - 30, representedScreen.height - 30, Int.MIN_VALUE)
 
-		val middleScreen = representedScreen.width / 2.0f
+		val middleScreen = (representedScreen.width shr 1).toFloat()
 
 		Fonts.font40.drawCenteredString("Direct Login", middleScreen, 34f, 0xffffff)
-		Fonts.font35.drawCenteredString(status, middleScreen, representedScreen.height / 4.0f + 60, 0xffffff)
+		Fonts.font35.drawCenteredString(status, middleScreen, (representedScreen.height shr 2) + 60f, 0xffffff)
 
 		username.drawTextBox()
 		password.drawTextBox()

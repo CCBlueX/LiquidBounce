@@ -90,7 +90,7 @@ class Projectiles : Module()
 
 				// Interpolate and calculate power of bow
 				val bowChargeDuration = if (fastBowEnabled) fastBow.packetsValue.get() else thePlayer.itemInUseDuration
-				var power = (lastBowChargeDuration + (bowChargeDuration - lastBowChargeDuration) * partialTicks) / 20f
+				var power = (lastBowChargeDuration + (bowChargeDuration - lastBowChargeDuration) * partialTicks) * 0.05f
 				lastBowChargeDuration = bowChargeDuration
 
 				power = (power * power + power * 2F) / 3F
@@ -209,11 +209,11 @@ class Projectiles : Module()
 			// Set arrow box
 			val arrowBox = classProvider.createAxisAlignedBB(posX - size, posY - size, posZ - size, posX + size, posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
 
-			val chunkMinX = floor((arrowBox.minX - 2.0) / 16.0).toInt()
-			val chunkMaxX = floor((arrowBox.maxX + 2.0) / 16.0).toInt()
+			val chunkMinX = floor((arrowBox.minX - 2.0) * 0.0625).toInt()
+			val chunkMaxX = floor((arrowBox.maxX + 2.0) * 0.0625).toInt()
 
-			val chunkMinZ = floor((arrowBox.minZ - 2.0) / 16.0).toInt()
-			val chunkMaxZ = floor((arrowBox.maxZ + 2.0) / 16.0).toInt()
+			val chunkMinZ = floor((arrowBox.minZ - 2.0) * 0.0625).toInt()
+			val chunkMaxZ = floor((arrowBox.maxZ + 2.0) * 0.0625).toInt()
 
 			// Check which entities colliding with the arrow
 			val collidedEntities = mutableListOf<IEntity>()

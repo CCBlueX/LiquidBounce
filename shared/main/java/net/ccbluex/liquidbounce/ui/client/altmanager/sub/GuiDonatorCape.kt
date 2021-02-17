@@ -52,14 +52,16 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		Keyboard.enableRepeatEvents(true)
 
 		// Add buttons to screen
-		stateButton = classProvider.createGuiButton(1, representedScreen.width / 2 - 100, 105, "Disable Cape")
+		val buttonX = representedScreen.width shr 1 - 100
+		val quarterScreen = representedScreen.height shr 2
+		stateButton = classProvider.createGuiButton(1, buttonX, 105, "Disable Cape")
 
 		representedScreen.buttonList.add(stateButton)
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, representedScreen.width / 2 - 100, representedScreen.height / 4 + 96, "Donate to get Cape"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 - 100, representedScreen.height / 4 + 120, "Back"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 96, "Donate to get Cape"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
 
 		// Add fields to screen
-		transferCodeField = classProvider.createGuiTextField(666, Fonts.font40, representedScreen.width / 2 - 100, 80, 200, 20)
+		transferCodeField = classProvider.createGuiTextField(666, Fonts.font40, buttonX, 80, 200, 20)
 		transferCodeField.isFocused = true
 		transferCodeField.maxStringLength = Integer.MAX_VALUE
 		transferCodeField.text = transferCode
@@ -77,16 +79,18 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		RenderUtils.drawRect(30.0f, 30.0f, representedScreen.width - 30.0f, representedScreen.height - 30.0f, Integer.MIN_VALUE)
 
 		// Draw title and status
-		Fonts.font35.drawCenteredString("Donator Cape", representedScreen.width / 2.0f, 36.0f, 0xffffff)
-		Fonts.font35.drawCenteredString("use prefix \"file:\" to load cape file from .minecraft/LiquidBounce directory.", representedScreen.width / 2.0f, representedScreen.height - 70.0f, 0xffffff)
-		Fonts.font35.drawCenteredString("(ex. \"file:cape\" or \"file:cape.png\" will load \"" + LiquidBounce.fileManager.dir.toString() + File.separatorChar + "cape.png\")", representedScreen.width / 2.0f, representedScreen.height - 56.0f, 0xffffff)
+		val middleScreen = (representedScreen.width shr 1).toFloat()
 
-		Fonts.font35.drawCenteredString(status, representedScreen.width / 2.0f, representedScreen.height / 4.0f + 80, 0xffffff)
+		Fonts.font35.drawCenteredString("Donator Cape", middleScreen, 36.0f, 0xffffff)
+		Fonts.font35.drawCenteredString("use prefix \"file:\" to load cape file from .minecraft/LiquidBounce directory.", middleScreen, representedScreen.height - 70.0f, 0xffffff)
+		Fonts.font35.drawCenteredString("(ex. \"file:cape\" or \"file:cape.png\" will load \"" + LiquidBounce.fileManager.dir.toString() + File.separatorChar + "cape.png\")", middleScreen, representedScreen.height - 56.0f, 0xffffff)
+
+		Fonts.font35.drawCenteredString(status, middleScreen, (representedScreen.height shr 2) + 80f, 0xffffff)
 
 		// Draw fields
 		transferCodeField.drawTextBox()
 
-		Fonts.font40.drawCenteredString("\u00A77Transfer Code:", representedScreen.width / 2.0f - 65, 66.0f, 0xffffff)
+		Fonts.font40.drawCenteredString("\u00A77Transfer Code:", middleScreen - 65, 66.0f, 0xffffff)
 
 		stateButton.displayString = if (capeEnabled)
 		{

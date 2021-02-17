@@ -39,7 +39,7 @@ class HelpCommand : Command("help")
 			return
 		}
 
-		val maxPageDouble = LiquidBounce.commandManager.commands.size / 8.0
+		val maxPageDouble = LiquidBounce.commandManager.commands.size * 0.125f
 		val maxPage = if (maxPageDouble > maxPageDouble.toInt()) maxPageDouble.toInt() + 1
 		else maxPageDouble.toInt()
 

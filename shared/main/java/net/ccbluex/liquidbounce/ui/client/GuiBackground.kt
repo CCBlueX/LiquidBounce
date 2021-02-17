@@ -31,10 +31,10 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	override fun initGui()
 	{
-		val buttonX = representedScreen.width / 2 - 100
-		val quarterScreen = representedScreen.height / 4
+		val buttonX = (representedScreen.width shr 1) - 100
+		val quarterScreen = representedScreen.height shr 2
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 55 + 25 * 4 + 5, "Back"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 55 + (25 shl 2) + 5, "Back"))
 
 		enabledButton = classProvider.createGuiButton(1, buttonX, quarterScreen + 35, "Enabled (${if (enabled) "On" else "Off"})")
 		representedScreen.buttonList.add(enabledButton)
@@ -42,9 +42,9 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen()
 		particlesButton = classProvider.createGuiButton(2, buttonX, quarterScreen + 50 + 25, "Particles (${if (particles) "On" else "Off"})")
 		representedScreen.buttonList.add(particlesButton)
 
-		val buttonY = quarterScreen + 50 + 25 * 2
+		val buttonY = quarterScreen + (25 shl 1) + 50
 		representedScreen.buttonList.add(classProvider.createGuiButton(3, buttonX, buttonY, 98, 20, "Change wallpaper"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(4, representedScreen.width / 2 + 2, buttonY, 98, 20, "Reset wallpaper"))
+		representedScreen.buttonList.add(classProvider.createGuiButton(4, (representedScreen.width shr 1) + 2, buttonY, 98, 20, "Reset wallpaper"))
 	}
 
 	override fun actionPerformed(button: IGuiButton)
@@ -100,9 +100,7 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen()
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
 	{
 		representedScreen.drawBackground(0)
-		Fonts.fontBold180.drawCenteredString(
-			"Background", representedScreen.width / 2F, representedScreen.height / 8F + 5F, 4673984, true
-		)
+		Fonts.fontBold180.drawCenteredString("Background", (representedScreen.width shr 1).toFloat(), (representedScreen.height shr 3) + 5F, 4673984, true)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 	}

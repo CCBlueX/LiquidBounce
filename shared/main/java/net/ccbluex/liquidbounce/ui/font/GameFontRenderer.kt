@@ -27,7 +27,7 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 	private var boldItalicFont = AWTFontRenderer(font.deriveFont(Font.BOLD or Font.ITALIC))
 
 	val height: Int
-		get() = defaultFont.height / 2
+		get() = defaultFont.height shr 1
 
 	val size: Int
 		get() = defaultFont.font.size
@@ -41,9 +41,9 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 
 	override fun drawStringWithShadow(text: String?, x: Float, y: Float, color: Int) = drawString(text, x, y, color, true)
 
-	override fun drawCenteredString(s: String, x: Float, y: Float, color: Int, shadow: Boolean) = drawString(s, x - getStringWidth(s) / 2F, y, color, shadow)
+	override fun drawCenteredString(s: String, x: Float, y: Float, color: Int, shadow: Boolean) = drawString(s, x - getStringWidth(s) * 0.5f, y, color, shadow)
 
-	override fun drawCenteredString(s: String, x: Float, y: Float, color: Int) = drawStringWithShadow(s, x - getStringWidth(s) / 2F, y, color)
+	override fun drawCenteredString(s: String, x: Float, y: Float, color: Int) = drawStringWithShadow(s, x - getStringWidth(s) * 0.5F, y, color)
 
 	override fun drawString(text: String?, x: Float, y: Float, color: Int, shadow: Boolean): Int
 	{
@@ -165,13 +165,15 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 
 					currentFont.drawString(if (randomCase) ColorUtils.randomMagicText(words) else words, width, 0.0, currentColor)
 
-					if (strikeThrough) RenderUtils.drawLine(
-						width / 2.0 + 1, currentFont.height / 3.0, (width + currentFont.getStringWidth(words)) / 2.0 + 1, currentFont.height / 3.0, fontHeight / 16F
-					)
+					val quarterHeight = (fontHeight shr 4).toFloat()
 
-					if (underline) RenderUtils.drawLine(
-						width / 2.0 + 1, currentFont.height / 2.0, (width + currentFont.getStringWidth(words)) / 2.0 + 1, currentFont.height / 2.0, fontHeight / 16F
-					)
+					if (strikeThrough) RenderUtils.drawLine(width * 0.5 + 1, currentFont.height / 3.0, (width + currentFont.getStringWidth(words)) * 0.5 + 1, currentFont.height / 3.0, quarterHeight)
+
+					if (underline)
+					{
+						val middleFontHeight = (currentFont.height shr 1).toDouble()
+						RenderUtils.drawLine(width * 0.5 + 1, middleFontHeight, (width + currentFont.getStringWidth(words)) * 0.5 + 1, middleFontHeight, quarterHeight)
+					}
 
 					width += currentFont.getStringWidth(words)
 				}
@@ -211,10 +213,7 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 			parts.forEachIndexed { index, part ->
 				if (part.isEmpty()) return@forEachIndexed
 
-				if (index == 0)
-				{
-					width += currentFont.getStringWidth(part)
-				}
+				if (index == 0) width += currentFont.getStringWidth(part)
 				else
 				{
 					val words = part.substring(1)
@@ -247,9 +246,9 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 				}
 			}
 
-			width / 2
+			width shr 1
 		}
-		else defaultFont.getStringWidth(currentText) / 2
+		else defaultFont.getStringWidth(currentText) shr 1
 	}
 
 	override fun getCharWidth(character: Char) = getStringWidth("$character")

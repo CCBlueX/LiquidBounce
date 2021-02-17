@@ -109,10 +109,13 @@ class BlockOverlay : Module()
 			val info = "${block.localizedName} \u00A77ID: ${functions.getIdFromBlock(block)}"
 			val scaledResolution = classProvider.createScaledResolution(mc)
 
-			RenderUtils.drawBorderedRect(scaledResolution.scaledWidth / 2 - 2F, scaledResolution.scaledHeight / 2 + 5F, scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2F, scaledResolution.scaledHeight / 2 + 16F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
+			val middleScreenX = scaledResolution.scaledWidth shr 1
+			val middleScreenY = scaledResolution.scaledHeight shr 1
+
+			RenderUtils.drawBorderedRect(middleScreenX - 2F, middleScreenY + 5F, (middleScreenX + Fonts.font40.getStringWidth(info)) + 2F, middleScreenY + 16F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
 
 			classProvider.glStateManager.resetColor()
-			Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2f, scaledResolution.scaledHeight / 2f + 7f, 0xffffff, false)
+			Fonts.font40.drawString(info, middleScreenX.toFloat(), middleScreenY + 7f, 0xffffff, false)
 		}
 	}
 }

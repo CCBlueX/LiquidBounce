@@ -61,7 +61,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 	private var textureHeight = 0
 
 	val height: Int
-		get() = (fontHeight - 8) / 2
+		get() = (fontHeight - 8) shr 1
 
 	init
 	{
@@ -283,7 +283,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 			else '\u0003'.toInt()]
 		}.sumBy { it!!.width - 8 }
 
-		return width / 2
+		return width shr 1
 	}
 
 	fun delete()
