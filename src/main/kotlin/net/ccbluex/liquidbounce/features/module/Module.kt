@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.client.world.ClientWorld
 import net.minecraft.world.World
 import org.lwjgl.glfw.GLFW
 
@@ -101,7 +102,7 @@ open class Module(name: String, // name parameter in configurable
 /**
  * Should handle events when enabled. Allows the client-user to toggle features. (like modules)
  */
-open class ListenableConfigurable(val module: Module? = null, name: String, enabled: Boolean) : Listenable, Configurable(name) {
+open class ListenableConfigurable(@Exclude val module: Module? = null, name: String, enabled: Boolean) : Listenable, Configurable(name) {
 
     val enabled by boolean("Enabled", enabled)
 
@@ -112,7 +113,7 @@ open class ListenableConfigurable(val module: Module? = null, name: String, enab
 /**
  * Allows to configure and manage modes
  */
-open class ModeConfigurable(val module: Module, name: String, val active: String, val initialize: () -> Unit) : Configurable(name) {
+open class ModeConfigurable(@Exclude val module: Module, name: String, val active: String, @Exclude val initialize: () -> Unit) : Configurable(name) {
     val modes: MutableList<Mode> = mutableListOf()
 }
 
@@ -124,7 +125,7 @@ class NoneMode(configurable: ModeConfigurable) : Mode("None", configurable)
 /**
  * A mode is sub-module to separate different bypasses into extra classes
  */
-open class Mode(name: String, private val configurable: ModeConfigurable) : Listenable, Configurable(name) {
+open class Mode(name: String, @Exclude private val configurable: ModeConfigurable) : Listenable, Configurable(name) {
 
     init {
         configurable.modes += this
@@ -137,7 +138,7 @@ open class Mode(name: String, private val configurable: ModeConfigurable) : List
         get() = net.ccbluex.liquidbounce.utils.mc
     protected val player: ClientPlayerEntity
         get() = mc.player!!
-    protected val world: World
+    protected val world: ClientWorld
         get() = mc.world!!
     protected val network: ClientPlayNetworkHandler
         get() = mc.networkHandler!!
