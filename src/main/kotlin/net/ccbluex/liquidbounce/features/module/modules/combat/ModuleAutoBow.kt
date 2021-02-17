@@ -43,7 +43,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         val charged by int("Charged", 20, 3..20)
 
-        val tickRepeatable = repeatableSequence(module) {
+        val tickRepeatable = repeatableSequence(module!!) {
             val currentItem = player.activeItem
 
             // Should check if player is using bow
@@ -65,7 +65,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
      */
     private object BowAimbotOptions : ListenableConfigurable(this, "BowAimbot", false) {
 
-        val tickRepeatable = repeatableSequence(module) {
+        val tickRepeatable = repeatableSequence(module!!) {
 
         }
 
@@ -81,7 +81,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         val packets by int("Packets", 20, 3..20)
 
-        val tickRepeatable = repeatableSequence(module) {
+        val tickRepeatable = repeatableSequence(module!!) {
             val currentItem = player.activeItem
 
             // Should accelerated game ticks when using bow
