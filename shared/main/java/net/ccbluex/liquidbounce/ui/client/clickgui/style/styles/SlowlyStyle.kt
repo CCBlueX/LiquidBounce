@@ -54,7 +54,7 @@ class SlowlyStyle : Style()
 
 		classProvider.glStateManager.resetColor()
 
-		Fonts.font35.drawString(text, mouseX + 12, mouseY + Fonts.font35.fontHeight shr 1, Color.WHITE.rgb)
+		Fonts.font35.drawString(text, mouseX + 12, mouseY + (Fonts.font35.fontHeight shr 1), Color.WHITE.rgb)
 	}
 
 	override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)

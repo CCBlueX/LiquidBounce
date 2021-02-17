@@ -53,7 +53,7 @@ class NullStyle : Style()
 
 		classProvider.glStateManager.resetColor()
 
-		Fonts.font35.drawString(text, mouseX + 12, mouseY + Fonts.font35.fontHeight shr 1, Int.MAX_VALUE)
+		Fonts.font35.drawString(text, mouseX + 12, mouseY + (Fonts.font35.fontHeight shr 1), Int.MAX_VALUE)
 	}
 
 	override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
@@ -75,7 +75,7 @@ class NullStyle : Style()
 
 		if (moduleValues.isNotEmpty())
 		{
-			Fonts.font35.drawString("+", moduleElement.x + moduleElement.width - 8, moduleElement.y + moduleElement.height shr 1, Color.WHITE.rgb)
+			Fonts.font35.drawString("+", moduleElement.x + moduleElement.width - 8, moduleElement.y + (moduleElement.height shr 1), Color.WHITE.rgb)
 
 			if (moduleElement.isShowSettings)
 			{

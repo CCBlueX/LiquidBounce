@@ -52,7 +52,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		Keyboard.enableRepeatEvents(true)
 
 		// Add buttons to screen
-		val buttonX = representedScreen.width shr 1 - 100
+		val buttonX = (representedScreen.width shr 1) - 100
 		val quarterScreen = representedScreen.height shr 2
 		stateButton = classProvider.createGuiButton(1, buttonX, 105, "Disable Cape")
 

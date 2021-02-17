@@ -43,7 +43,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	{
 		Keyboard.enableRepeatEvents(true)
 
-		val buttonX = representedScreen.width shr 1 - 100
+		val buttonX = (representedScreen.width shr 1) - 100
 		val quarterScreen = representedScreen.height shr 2
 
 		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 72, "Add").also { addButton = it })

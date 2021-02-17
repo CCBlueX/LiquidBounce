@@ -142,6 +142,7 @@ class ExtendedReach : Module()
 				event.cancelEvent()
 			}
 		}
+
 		if (classProvider.isCPacketPlayerDigging(packet))
 		{
 			val digging = packet.asCPacketPlayerDigging()

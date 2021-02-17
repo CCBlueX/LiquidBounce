@@ -56,7 +56,7 @@ class LiquidBounceStyle : Style()
 
 		classProvider.glStateManager.resetColor()
 
-		Fonts.font35.drawString(text, mouseX + 12, mouseY + Fonts.font35.fontHeight shr 1, Int.MAX_VALUE)
+		Fonts.font35.drawString(text, mouseX + 12, mouseY + (Fonts.font35.fontHeight shr 1), Int.MAX_VALUE)
 	}
 
 	override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
@@ -84,7 +84,7 @@ class LiquidBounceStyle : Style()
 		if (moduleValues.isNotEmpty())
 		{
 
-			Fonts.font35.drawString("+", elementX + elementWidth - 8, elementY + elementHeight shr 1, Color.WHITE.rgb)
+			Fonts.font35.drawString("+", elementX + elementWidth - 8, elementY + (elementHeight shr 1), Color.WHITE.rgb)
 			if (moduleElement.isShowSettings)
 			{
 				var yPos = elementY + 4
