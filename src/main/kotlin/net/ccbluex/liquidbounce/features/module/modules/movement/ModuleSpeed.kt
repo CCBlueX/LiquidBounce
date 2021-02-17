@@ -27,11 +27,11 @@ import kotlin.math.sin
 
 object ModuleSpeed : Module("Speed", Category.COMBAT) {
 
-    private object SpeedModeConfigurable : ModeConfigurable(this, "Mode", "YPort", {
+    private object SpeedChoiceConfigurable : ChoiceConfigurable(this, "Mode", "YPort", {
         SpeedYPort
     })
 
-    private object SpeedYPort : Mode("YPort", SpeedModeConfigurable) {
+    private object SpeedYPort : Choice("YPort", SpeedChoiceConfigurable) {
 
         val tickHandler = sequenceHandler<EntityTickEvent> {
             if (player.isOnGround && player.moving) {
@@ -49,8 +49,7 @@ object ModuleSpeed : Module("Speed", Category.COMBAT) {
     }
 
     init {
-        SpeedModeConfigurable.initialize()
-        tree(SpeedModeConfigurable)
+        tree(SpeedChoiceConfigurable)
     }
 
 }

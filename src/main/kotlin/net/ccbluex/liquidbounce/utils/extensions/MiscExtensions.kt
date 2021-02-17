@@ -20,6 +20,13 @@ package net.ccbluex.liquidbounce.utils.extensions
 
 import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
+import java.util.regex.Pattern
+
+private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
+
+fun String.stripMinecraftColorCodes(): String {
+    return COLOR_PATTERN.matcher(this).replaceAll("")
+}
 
 fun text() = LiteralText("")
 

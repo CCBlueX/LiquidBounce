@@ -18,19 +18,20 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
+import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.entity.Entity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.stat.Stats
-
-val Entity.exactPosition
-    get() = Triple(x, y, z)
 
 val ClientPlayerEntity.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
 
+val PlayerEntity.ping: Int
+    get() = mc.networkHandler?.getPlayerListEntry(uuid)?.latency ?: 0
+
 fun ClientPlayerEntity.upwards(height: Float) {
     // Might be a jump
-    if (isOnGround ) {
+    if (isOnGround) {
         // Allows to bypass modern anti cheat techniques
         incrementStat(Stats.JUMP)
     }

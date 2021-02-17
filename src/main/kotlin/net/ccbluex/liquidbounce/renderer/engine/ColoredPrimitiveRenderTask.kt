@@ -75,7 +75,7 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
     /**
      * Puts a vertex into [vertexBuffer]
      */
-    fun vertex(point: Point3f, color: Color4b): Int {
+    fun vertex(point: Vec3, color: Color4b): Int {
         val vexIndex = vertexBufferIndex * WORDS_PER_VERTEX
 
         point.writeToBuffer(vexIndex * 4, this.vertexBuffer)
@@ -96,7 +96,7 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
      *
      * @throws IllegalStateException If this tasks doesn't render lines ([type] != [PrimitiveType.Lines])
      */
-    fun line(p1: Point3f, p2: Point3f, color1: Color4b, color2: Color4b = color1) {
+    fun line(p1: Vec3, p2: Vec3, color1: Color4b, color2: Color4b = color1) {
         if (this.type != PrimitiveType.Lines)
             throw IllegalStateException("Type is not Lines")
 
@@ -110,9 +110,9 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
      * @throws IllegalStateException If this tasks doesn't render lines ([type] != [PrimitiveType.Triangles])
      */
     fun triangle(
-        p1: Point3f,
-        p2: Point3f,
-        p3: Point3f,
+        p1: Vec3,
+        p2: Vec3,
+        p3: Vec3,
         color1: Color4b,
         color2: Color4b = color1,
         color3: Color4b = color1
@@ -135,10 +135,10 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
      * @throws IllegalStateException If the maximal vertex count is reached ([primitiveCount] >= [maxPrimitiveCount])
      */
     fun quad(
-        p1: Point3f,
-        p2: Point3f,
-        p3: Point3f,
-        p4: Point3f,
+        p1: Vec3,
+        p2: Vec3,
+        p3: Vec3,
+        p4: Vec3,
         color1: Color4b,
         color2: Color4b = color1,
         color3: Color4b = color1,
@@ -158,6 +158,52 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
         index(v4)
         index(v2)
         index(v3)
+    }
+
+    /**
+     * Renders the outlines a quad. Points have to be passed in counter-clockwise order.
+     * Only available if [type] is [PrimitiveType.Triangles].
+     *
+     * A quad consists out of two primitives
+     *
+     * @throws IllegalStateException If this tasks doesn't render lines ([type] != [PrimitiveType.Triangles])
+     * @throws IllegalStateException If the maximal vertex count is reached ([primitiveCount] >= [maxPrimitiveCount])
+     */
+    fun outlineQuad(
+        p1: Vec3,
+        p2: Vec3,
+        p3: Vec3,
+        p4: Vec3,
+        color1: Color4b,
+        color2: Color4b = color1,
+        color3: Color4b = color1,
+        color4: Color4b = color1
+    ) {
+        if (this.type == PrimitiveType.Lines) {
+            val v1 = vertex(p1, color1)
+            val v2 = vertex(p2, color2)
+            val v3 = vertex(p3, color3)
+            val v4 = vertex(p4, color4)
+
+            index(v1)
+            index(v2)
+            index(v2)
+            index(v3)
+            index(v3)
+            index(v4)
+            index(v4)
+            index(v1)
+        } else if (this.type == PrimitiveType.LineLoop || this.type == PrimitiveType.LineStrip) {
+            vertex(p1, color1)
+            vertex(p2, color2)
+            vertex(p3, color3)
+            vertex(p4, color4)
+
+            if (this.type == PrimitiveType.LineStrip)
+                vertex(p1, color1)
+        } else {
+            throw IllegalStateException("Type is not Lines, LineLoop or LineStrip")
+        }
     }
 
     /**
@@ -273,9 +319,5 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
         }
     }
 
-    /**
-     * Render tasks can *always* be packed into a single VBO.
-     */
-    override fun typeId(): Int = 0
 }
 
