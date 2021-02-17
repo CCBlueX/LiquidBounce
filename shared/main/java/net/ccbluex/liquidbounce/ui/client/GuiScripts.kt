@@ -63,6 +63,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		when (button.id)
 		{
 			0 -> mc.displayGuiScreen(prevGui)
+
 			1 -> try
 			{
 				val file = MiscUtils.openFileChooser() ?: return
@@ -138,6 +139,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				ClientUtils.logger.error("Something went wrong while deleting a script.", t)
 				MiscUtils.showErrorPopup(t.javaClass.name, t.message)
 			}
+
 			3 -> try
 			{
 				LiquidBounce.scriptManager.reloadScripts()
@@ -147,6 +149,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				ClientUtils.logger.error("Something went wrong while reloading all scripts.", t)
 				MiscUtils.showErrorPopup(t.javaClass.name, t.message)
 			}
+
 			4 -> try
 			{
 				Desktop.getDesktop().open(LiquidBounce.scriptManager.scriptsFolder)
@@ -156,6 +159,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				ClientUtils.logger.error("Something went wrong while trying to open your scripts folder.", t)
 				MiscUtils.showErrorPopup(t.javaClass.name, t.message)
 			}
+
 			5 -> try
 			{
 				Desktop.getDesktop().browse(URL("https://liquidbounce.net/docs/ScriptAPI/Getting%20Started").toURI())
@@ -176,13 +180,26 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	override fun keyTyped(typedChar: Char, keyCode: Int)
 	{
-		if (Keyboard.KEY_ESCAPE == keyCode)
+		when (keyCode)
 		{
-			mc.displayGuiScreen(prevGui)
-			return
-		}
+			Keyboard.KEY_ESCAPE ->
+			{
+				mc.displayGuiScreen(prevGui)
+				return
+			}
 
-		super.keyTyped(typedChar, keyCode)
+			Keyboard.KEY_UP -> list.elementClicked((list.getSelectedSlot() - 1).coerceAtLeast(0), false, 0, 0)
+			Keyboard.KEY_DOWN -> list.elementClicked((list.getSelectedSlot() + 1).coerceAtMost(list.getSize() - 1), false, 0, 0)
+			Keyboard.KEY_NEXT -> list.represented.scrollBy(representedScreen.height - 100)
+
+			Keyboard.KEY_PRIOR ->
+			{
+				list.represented.scrollBy(-representedScreen.height + 100)
+				return
+			}
+
+			else -> super.keyTyped(typedChar, keyCode)
+		}
 	}
 
 	override fun handleMouseInput()
@@ -193,7 +210,6 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	private inner class GuiList(gui: IGuiScreen) : WrappedGuiSlot(mc, gui.width, gui.height, 40, gui.height - 40, 30)
 	{
-
 		private var selectedSlot = 0
 
 		override fun isSelected(id: Int) = selectedSlot == id

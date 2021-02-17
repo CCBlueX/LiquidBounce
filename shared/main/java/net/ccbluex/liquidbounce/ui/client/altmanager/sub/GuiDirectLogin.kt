@@ -105,7 +105,7 @@ class GuiDirectLogin(gui: GuiAltManager) : WrappedGuiScreen()
 			2 -> try
 			{
 				val clipboardData = Toolkit.getDefaultToolkit().systemClipboard.getData(DataFlavor.stringFlavor) as String
-				val args = clipboardData.split(":", ignoreCase = true, limit = 2).toTypedArray()
+				val args = clipboardData.split(":", ignoreCase = true, limit = 2)
 
 				if (!clipboardData.contains(":") || args.size != 2)
 				{

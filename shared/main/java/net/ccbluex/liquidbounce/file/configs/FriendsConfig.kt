@@ -60,7 +60,7 @@ class FriendsConfig(file: File) : FileConfig(file)
 				line = COMMA.matcher(line).replaceAll(emptyReplacement)
 				if (line.contains(":"))
 				{
-					val data = line.split(":").toTypedArray()
+					val data = line.split(":")
 					addFriend(data[0], data[1])
 				}
 				else addFriend(line)
@@ -88,7 +88,7 @@ class FriendsConfig(file: File) : FileConfig(file)
 				line = COMMA.matcher(line).replaceAll(emptyReplacement)
 				if (line.contains(":"))
 				{
-					val data = line.split(":").toTypedArray()
+					val data = line.split(":")
 					addFriend(data[0], data[1])
 				}
 				else addFriend(line)

@@ -100,18 +100,22 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 		val buttonX = middleScreen - 100
 		val buttonY = height - 54
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, buttonY - 48, "Decode").also { decodeButton = it })
+		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, buttonY - 48, "Analyze").also { decodeButton = it })
 		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, buttonY - 24, "Clipboard").also { clipboardButton = it })
 		representedScreen.buttonList.add(classProvider.createGuiButton(3, buttonX, buttonY - 72, "Login").also { loginButton = it })
 		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, buttonY, "Back"))
 
+		val token = if (defaultSessionId != null && defaultSessionId.isNotEmpty()) defaultSessionId else mc.session.token
+
 		sessionIdField = classProvider.createGuiTextField(2, Fonts.font40, middleScreen - 300, 60, 600, 20).apply {
 			isFocused = true
 			maxStringLength = Int.MAX_VALUE
-			text = if (defaultSessionId != null && defaultSessionId.isNotEmpty()) defaultSessionId else mc.session.token
+			text = token
 		}
 
 		loginButton.enabled = false
+
+		processToken(if (token.startsWith("token:")) token.split(":", ignoreCase = true, limit = 3)[1] else token)
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
@@ -165,13 +169,13 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 			{
 				val token = sessionIdField.text
 
-				processToken(if (token.startsWith("token:")) token.split(":", ignoreCase = true, limit = 3).toTypedArray()[1] else token)
+				processToken(if (token.startsWith("token:")) token.split(":", ignoreCase = true, limit = 3)[1] else token)
 			}
 
 			2 -> try
 			{
 				val clipboardData = Toolkit.getDefaultToolkit().systemClipboard.getData(DataFlavor.stringFlavor) as String
-				val jwt = if (clipboardData.startsWith("token:")) clipboardData.split(":", ignoreCase = true, limit = 3).toTypedArray()[1] else clipboardData
+				val jwt = if (clipboardData.startsWith("token:")) clipboardData.split(":", ignoreCase = true, limit = 3)[1] else clipboardData
 
 				if (processToken(jwt)) sessionIdField.text = jwt
 			}
@@ -186,7 +190,7 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 				val jwtToken: String
 				val token2 = sessionIdField.text
 
-				jwtToken = if (token2.startsWith("token:")) token2.split(":", ignoreCase = true, limit = 3).toTypedArray()[1] else token2
+				jwtToken = if (token2.startsWith("token:")) token2.split(":", ignoreCase = true, limit = 3)[1] else token2
 
 				val sl = GuiSessionLogin(representedScreen)
 
@@ -240,7 +244,7 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 
 	private fun processToken(token: String): Boolean
 	{
-		val tokenPieces = token.split("\\.", ignoreCase = true, limit = 3).toTypedArray()
+		val tokenPieces = token.split(".", ignoreCase = true, limit = 3)
 		if (tokenPieces.size < 3)
 		{
 			status = "\u00A7cSession token is invalid! (pieces: " + tokenPieces.size + ")"

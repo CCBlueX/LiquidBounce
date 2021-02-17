@@ -117,7 +117,8 @@ class CommandManager
 				val tabCompletions = command?.tabComplete(args.drop(1).toTypedArray())
 
 				tabCompletions?.toTypedArray()
-			} else
+			}
+			else
 			{
 				val rawInput = input.substring(1)
 				commands.asSequence().filter {
@@ -162,7 +163,8 @@ class CommandManager
 			}))
 
 			FileManager.saveConfig(LiquidBounce.fileManager.shortcutsConfig)
-		} else
+		}
+		else
 		{
 			throw IllegalArgumentException("Command already exists!")
 		}

@@ -141,7 +141,9 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		when (button.id)
 		{
 			0 -> mc.displayGuiScreen(prevGui)
+
 			1 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiAdd(this)))
+
 			2 -> if (altsList.selectedSlot != -1 && altsList.selectedSlot < altsList.getSize())
 			{
 				LiquidBounce.fileManager.accountsConfig.removeAccount(altsList.accounts[altsList.selectedSlot])
@@ -150,6 +152,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				altsList.updateAccounts(searchField.text)
 			}
 			else status = "\u00A7cSelect an account."
+
 			3 -> if (altsList.selectedSlot != -1 && altsList.selectedSlot < altsList.getSize())
 			{
 				loginButton.enabled = false
@@ -197,6 +200,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			}
 
 			5 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiMCLeaks(this)))
+
 			6 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiDirectLogin(this)))
 
 			7 ->
@@ -206,7 +210,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				var line: String
 				while (bufferedReader.readLine().also { line = it } != null)
 				{
-					val accountData = line.split(":", ignoreCase = true, limit = 2).toTypedArray()
+					val accountData = line.split(":", ignoreCase = true, limit = 2)
 					if (!LiquidBounce.fileManager.accountsConfig.isAccountExists(accountData[0])) LiquidBounce.fileManager.accountsConfig.addAccount(if (accountData.size > 1) MinecraftAccount(AltServiceType.MOJANG, accountData[0], accountData[1]) else MinecraftAccount(AltServiceType.MOJANG, accountData[0]))
 				}
 				bufferedReader.close()
@@ -224,8 +228,11 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			else "\u00A7cSelect an account."
 
 			88 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiChangeName(this)))
+
 			9 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiTheAltening(this)))
+
 			10 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiSessionLogin(representedScreen)))
+
 			11 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiDonatorCape(this)))
 
 			12 ->
@@ -259,6 +266,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			}
 
 			99 -> connectToLastServer()
+
 			13 -> if (altsList.selectedSlot != -1 && altsList.selectedSlot < altsList.getSize()) mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiBannedServers(this, LiquidBounce.fileManager.accountsConfig.accounts[altsList.selectedSlot]))) else status = "\u00A7cSelect an account."
 
 			14 ->
@@ -286,29 +294,10 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				return
 			}
 
-			Keyboard.KEY_UP ->
-			{
-				var i = altsList.selectedSlot - 1
-				if (i < 0) i = 0
-				altsList.elementClicked(i, false, 0, 0)
-			}
-
-			Keyboard.KEY_DOWN ->
-			{
-				var i = altsList.selectedSlot + 1
-				if (i >= altsList.getSize()) i = altsList.getSize() - 1
-				altsList.elementClicked(i, false, 0, 0)
-			}
-
-			Keyboard.KEY_RETURN ->
-			{
-				altsList.elementClicked(altsList.selectedSlot, true, 0, 0)
-			}
-
-			Keyboard.KEY_NEXT ->
-			{
-				altsList.represented.scrollBy(representedScreen.height - 100)
-			}
+			Keyboard.KEY_UP -> altsList.elementClicked((altsList.selectedSlot - 1).coerceAtLeast(0), false, 0, 0)
+			Keyboard.KEY_DOWN -> altsList.elementClicked((altsList.selectedSlot + 1).coerceAtMost(altsList.getSize() - 1), false, 0, 0)
+			Keyboard.KEY_RETURN -> altsList.elementClicked(altsList.selectedSlot, true, 0, 0)
+			Keyboard.KEY_NEXT -> altsList.represented.scrollBy(representedScreen.height - 100)
 
 			Keyboard.KEY_PRIOR ->
 			{
@@ -316,6 +305,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				return
 			}
 		}
+
 		representedScreen.superKeyTyped(typedChar, keyCode)
 	}
 

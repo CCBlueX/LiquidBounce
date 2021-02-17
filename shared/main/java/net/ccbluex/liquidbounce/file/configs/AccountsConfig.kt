@@ -46,92 +46,74 @@ class AccountsConfig(file: File) : FileConfig(file)
 			for (accountElement in jsonArray)
 			{
 				val accountObject = accountElement.asJsonObject
-				val type = accountObject["type"]
-				val name = accountObject["name"]
-				val password = accountObject["password"]
-				val inGameName = accountObject["inGameName"]
-				val bannedServers = accountObject["bannedServers"]
+				val type: JsonElement? = accountObject["type"]
+				val name: JsonElement = accountObject["name"]
+				val password: JsonElement? = accountObject["password"]
+				val inGameName: JsonElement? = accountObject["inGameName"]
+				val bannedServers: JsonElement? = accountObject["bannedServers"]
 
-				val account: MinecraftAccount = if ((inGameName == null || inGameName.isJsonNull) && !(password == null || password.isJsonNull))
+				val account: MinecraftAccount = if (inGameName?.isJsonNull != false && password?.isJsonNull == false)
 				{
 					val serviceType = type?.let { AltServiceType.getById(it.asString) } ?: AltServiceType.MOJANG
 					MinecraftAccount(serviceType, name.asString, password.asString)
 				}
-				else if (type == null || type.isJsonNull) MinecraftAccount(AltServiceType.MOJANG, name.asString)
+				else if (type?.isJsonNull != false) MinecraftAccount(AltServiceType.MOJANG, name.asString)
 				else
 				{
 					val serviceType = AltServiceType.getById(type.asString) ?: AltServiceType.MOJANG
-					if ((inGameName == null || inGameName.isJsonNull) && (password == null || password.isJsonNull)) MinecraftAccount(serviceType, name.asString) else MinecraftAccount(serviceType, name.asString, password!!.asString, inGameName!!.asString)
+					if ((inGameName?.isJsonNull != false) && (password?.isJsonNull != false)) MinecraftAccount(serviceType, name.asString) else MinecraftAccount(serviceType, name.asString, password?.asString, inGameName?.asString)
 				}
 
-				if (!bannedServers.isJsonNull) account.bannedServers = bannedServers.asJsonArray.mapTo(ArrayList()) { it.asString }
+				if (bannedServers?.isJsonNull == false) account.bannedServers = bannedServers.asJsonArray.mapTo(ArrayList()) { it.asString }
 
 				addAccount(account)
 			}
 		}
 		catch (ex: JsonSyntaxException)
 		{
-			// When the JSON Parse fail, the client try to load and update the old config
-			logger.info("[FileManager] Try to load old Accounts config...")
-			val accountList = Gson().fromJson<List<*>>(MiscUtils.createBufferedFileReader(file), MutableList::class.java) ?: return
-			accounts.clear()
-			for (account in accountList)
-			{
-				val info = account.toString().split(slashPattern, 2).toTypedArray()
-				if (info.isNotEmpty())
-				{
-					val information = info[0].split(":").toTypedArray()
-					val serviceType = AltServiceType.getById(information[0]) ?: AltServiceType.MOJANG
-
-					val acc: MinecraftAccount = when (information.size)
-					{
-						1 -> MinecraftAccount(AltServiceType.MOJANG, information[0])
-						2 -> MinecraftAccount(serviceType, information[1])
-						3 -> MinecraftAccount(serviceType, information[1], information[2])
-						else -> MinecraftAccount(serviceType, information[1], information[2], information[3])
-					}
-
-					if (info.size > 1) acc.bannedServers = deserializeOldBannedServers(info[1])
-
-					accounts.add(acc)
-				}
-			}
-			logger.info("[FileManager] Loaded old Accounts config...")
-
-			// Save the accounts into a new valid JSON file
-			saveConfig()
-			logger.info("[FileManager] Saved Accounts to new config...")
+			loadWithOldFormat(ex)
 		}
 		catch (ex: IllegalStateException)
 		{
-			logger.info("[FileManager] Try to load old Accounts config...")
-			val accountList = Gson().fromJson<List<*>>(MiscUtils.createBufferedFileReader(file), MutableList::class.java) ?: return
-			accounts.clear()
-			for (account in accountList)
-			{
-				val info = account.toString().split(slashPattern, 2).toTypedArray()
-				if (info.isNotEmpty())
-				{
-					val information = info[0].split(":").toTypedArray()
-					val serviceType = AltServiceType.getById(information[0]) ?: AltServiceType.MOJANG
-
-					val acc: MinecraftAccount = when (information.size)
-					{
-						1 -> MinecraftAccount(AltServiceType.MOJANG, information[0])
-						2 -> MinecraftAccount(serviceType, information[1])
-						3 -> MinecraftAccount(serviceType, information[1], information[2])
-						else -> MinecraftAccount(serviceType, information[1], information[2], information[3])
-					}
-
-					if (info.size > 1) acc.bannedServers = deserializeOldBannedServers(info[1])
-
-					accounts.add(acc)
-				}
-			}
-			logger.info("[FileManager] Loaded old Accounts config...")
-			saveConfig()
-			logger.info("[FileManager] Saved Accounts to new config...")
+			loadWithOldFormat(ex)
 		}
+	}
+
+	private fun loadWithOldFormat(ex: Exception)
+	{
+		// When the JSON Parse fail, the client try to load and update the old config
+		logger.info("[FileManager] Failed to load Accounts config with new format. Try to load old Accounts config...", ex)
+
+		val accountList = Gson().fromJson<List<*>>(MiscUtils.createBufferedFileReader(file), MutableList::class.java) ?: return
+
+		accounts.clear()
+
+		for (account in accountList)
+		{
+			val info = account.toString().split(slashPattern, 2)
+			if (info.isNotEmpty())
+			{
+				val information = info[0].split(":")
+				val serviceType = AltServiceType.getById(information[0]) ?: AltServiceType.MOJANG
+
+				val acc: MinecraftAccount = when (information.size)
+				{
+					1 -> MinecraftAccount(AltServiceType.MOJANG, information[0])
+					2 -> MinecraftAccount(serviceType, information[1])
+					3 -> MinecraftAccount(serviceType, information[1], information[2])
+					else -> MinecraftAccount(serviceType, information[1], information[2], information[3])
+				}
+
+				if (info.size > 1) acc.bannedServers = deserializeOldBannedServers(info[1])
+
+				accounts.add(acc)
+			}
+		}
+		logger.info("[FileManager] Loaded old Accounts config...")
+
+		// Save the accounts into a new valid JSON file
+		saveConfig()
+		logger.info("[FileManager] Saved Accounts to new config...")
 	}
 
 	/**
@@ -160,6 +142,7 @@ class AccountsConfig(file: File) : FileConfig(file)
 
 			jsonArray.add(accountObject)
 		}
+
 		val writer = MiscUtils.createBufferedFileWriter(file)
 		writer.write(FileManager.PRETTY_GSON.toJson(jsonArray) + System.lineSeparator())
 		writer.close()
@@ -177,16 +160,16 @@ class AccountsConfig(file: File) : FileConfig(file)
 		accounts.add(account)
 	}
 
-	/**
-	 * Remove account from config
-	 *
-	 * @param selectedSlot
-	 * of the account
-	 */
-	fun removeAccount(selectedSlot: Int)
-	{
-		accounts.removeAt(selectedSlot)
-	}
+	// /**
+	//  * Remove account from config
+	//  *
+	//  * @param selectedSlot
+	//  * of the account
+	//  */
+	// fun removeAccount(selectedSlot: Int)
+	// {
+	// 	accounts.removeAt(selectedSlot)
+	// }
 
 	/**
 	 * Removed an account from the config
@@ -211,17 +194,13 @@ class AccountsConfig(file: File) : FileConfig(file)
 	/**
 	 * Clear all minecraft accounts from alt array
 	 */
-	fun clearAccounts()
+	private fun clearAccounts()
 	{
 		accounts.clear()
 	}
 
 	companion object
 	{
-		fun deserializeOldBannedServers(str: String): MutableList<String>
-		{
-			val split = str.split(";").toTypedArray()
-			return mutableListOf(*split)
-		}
+		fun deserializeOldBannedServers(str: String): MutableList<String> = str.split(";").toMutableList()
 	}
 }

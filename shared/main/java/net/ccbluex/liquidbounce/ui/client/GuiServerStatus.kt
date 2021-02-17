@@ -55,12 +55,20 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			for (server in status.keys)
 			{
 				val color = status[server]
-				val text = "$server: ${
+				val text = "${
 					when (color?.toLowerCase())
 					{
-						"green" -> "\u00A7aOnline and Stable"
-						"yellow" -> "\u00A7eSlow or Unstable"
-						"red" -> "\u00A7cOffline or Down"
+						"green" -> "\u00A7a"
+						"yellow" -> "\u00A7e"
+						"red" -> "\u00A7c"
+						else -> color
+					}
+				}$server: ${
+					when (color?.toLowerCase())
+					{
+						"green" -> "Online and Stable"
+						"yellow" -> "Slow or Unstable"
+						"red" -> "Offline or Down"
 						else -> color
 					}
 				}"

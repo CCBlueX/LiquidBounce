@@ -37,13 +37,13 @@ object ItemUtils : MinecraftInstance()
 			itemArgs = itemArgs.replace('&', '\u00A7') // Translate Colorcodes
 
 			var item: IItem? = classProvider.createItem()
-			var args: Array<String>? = null
+			var args: List<String>? = null
 			var mode = 0
 			val modeSize = min(12, itemArgs.length - 2)
 
 			while (mode <= modeSize)
 			{
-				args = itemArgs.substring(mode).split(Pattern.quote(" ")).toTypedArray()
+				args = itemArgs.substring(mode).split(Pattern.quote(" "))
 
 				val resourcelocation = classProvider.createResourceLocation(args[0])
 

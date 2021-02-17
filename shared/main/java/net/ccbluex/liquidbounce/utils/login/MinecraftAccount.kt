@@ -63,7 +63,7 @@ class MinecraftAccount
 	}
 
 	val isCracked: Boolean
-		get() = password == null || password?.isEmpty() ?: true
+		get() = password.isNullOrBlank()
 
 	fun serializeBannedServers(): String = if (bannedServers.isEmpty()) "" else Joiner.on(", ").join(bannedServers)
 

@@ -101,7 +101,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 			2 -> try
 			{
 				val clipboardData = Toolkit.getDefaultToolkit().systemClipboard.getData(DataFlavor.stringFlavor) as String
-				val accountData = clipboardData.split(":", ignoreCase = true, limit = 2).toTypedArray()
+				val accountData = clipboardData.split(":", ignoreCase = true, limit = 2)
 
 				if (!clipboardData.contains(":") || accountData.size != 2)
 				{
@@ -182,7 +182,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		addButton.enabled = false
 		clipboardButton.enabled = false
 
-		val account = MinecraftAccount(AltServiceType.MOJANG, name, password)
+		val account = MinecraftAccount(AltServiceType.MOJANG, name, if (password.isEmpty()) null else password)
 
 		workers.submit {
 			if (!account.isCracked)
