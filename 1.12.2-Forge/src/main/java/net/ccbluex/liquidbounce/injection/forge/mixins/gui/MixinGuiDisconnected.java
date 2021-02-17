@@ -56,13 +56,13 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 	private void initGui(CallbackInfo callbackInfo)
 	{
 		reconnectTimer = 0;
-		buttonList.add(reconnectButton = new GuiButton(1, this.width / 2 - 100, this.height / 2 + textHeight / 2 + this.fontRenderer.FONT_HEIGHT + 22, 98, 20, "Reconnect"));
+		buttonList.add(reconnectButton = new GuiButton(1, (this.width >> 1) - 100, (this.height >> 1) + (textHeight >> 1) + this.fontRenderer.FONT_HEIGHT + 22, 98, 20, "Reconnect"));
 
 		this.drawReconnectDelaySlider();
 
-		buttonList.add(new GuiButton(3, this.width / 2 - 100, this.height / 2 + textHeight / 2 + this.fontRenderer.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
-		buttonList.add(new GuiButton(4, this.width / 2 + 2, this.height / 2 + textHeight / 2 + this.fontRenderer.FONT_HEIGHT + 44, 98, 20, "Random username"));
-		buttonList.add(forgeBypassButton = new GuiButton(5, this.width / 2 - 100, this.height / 2 + textHeight / 2 + this.fontRenderer.FONT_HEIGHT + 66, "Bypass AntiForge: " + (AntiForge.enabled ? "On" : "Off")));
+		buttonList.add(new GuiButton(3, (this.width >> 1) - 100, (this.height >> 1) + (textHeight >> 1) + this.fontRenderer.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
+		buttonList.add(new GuiButton(4, (this.width >> 1) + 2, (this.height >> 1) + (textHeight >> 1) + this.fontRenderer.FONT_HEIGHT + 44, 98, 20, "Random username"));
+		buttonList.add(forgeBypassButton = new GuiButton(5, (this.width >> 1) - 100, (this.height >> 1) + (textHeight >> 1) + this.fontRenderer.FONT_HEIGHT + 66, "Bypass AntiForge: " + (AntiForge.enabled ? "On" : "Off")));
 
 		updateSliderText();
 	}
@@ -144,7 +144,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 
 	private void drawReconnectDelaySlider()
 	{
-		buttonList.add(autoReconnectDelaySlider = new GuiSlider(2, this.width / 2 + 2, this.height / 2 + textHeight / 2 + this.fontRenderer.FONT_HEIGHT + 22, 98, 20, "AutoReconnect: ", "ms", AutoReconnect.MIN, AutoReconnect.MAX, AutoReconnect.INSTANCE.getDelay(), false, true, guiSlider ->
+		buttonList.add(autoReconnectDelaySlider = new GuiSlider(2, (this.width >> 1) + 2, (this.height >> 1) + (textHeight >> 1) + this.fontRenderer.FONT_HEIGHT + 22, 98, 20, "AutoReconnect: ", "ms", AutoReconnect.MIN, AutoReconnect.MAX, AutoReconnect.INSTANCE.getDelay(), false, true, guiSlider ->
 		{
 			AutoReconnect.INSTANCE.setDelay(guiSlider.getValueInt());
 
@@ -172,6 +172,6 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 	private void updateReconnectButton()
 	{
 		if (reconnectButton != null)
-			reconnectButton.displayString = "Reconnect" + (AutoReconnect.INSTANCE.isEnabled() ? " (" + (AutoReconnect.INSTANCE.getDelay() / 1000 - reconnectTimer / 20) + ")" : "");
+			reconnectButton.displayString = "Reconnect" + (AutoReconnect.INSTANCE.isEnabled() ? " (" + (AutoReconnect.INSTANCE.getDelay() / 1000 - reconnectTimer * 0.05) + ")" : "");
 	}
 }

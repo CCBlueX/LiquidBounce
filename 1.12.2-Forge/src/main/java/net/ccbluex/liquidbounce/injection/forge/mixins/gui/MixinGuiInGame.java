@@ -65,7 +65,7 @@ public abstract class MixinGuiInGame extends MixinGui
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 			ItemStack offHandItemStack = entityPlayer.getHeldItemOffhand();
 			EnumHandSide enumhandside = entityPlayer.getPrimaryHand().opposite();
-			int middleScreen = sr.getScaledWidth() / 2;
+			int middleScreen = sr.getScaledWidth() >> 1;
 			float f = this.zLevel;
 			int j = 182;
 			int k = 91;

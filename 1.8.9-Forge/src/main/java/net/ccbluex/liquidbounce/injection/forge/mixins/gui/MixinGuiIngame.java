@@ -52,7 +52,7 @@ public abstract class MixinGuiIngame
 		{
 			final EntityPlayer entityPlayer = (EntityPlayer) Minecraft.getMinecraft().getRenderViewEntity();
 
-			final int middleScreen = sr.getScaledWidth() / 2;
+			final int middleScreen = sr.getScaledWidth() >> 1;
 
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 			Gui.drawRect(middleScreen - 91, sr.getScaledHeight() - 24, middleScreen + 90, sr.getScaledHeight(), Integer.MIN_VALUE);
@@ -62,7 +62,7 @@ public abstract class MixinGuiIngame
 			GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
 			RenderHelper.enableGUIStandardItemLighting();
 
-			final int hotbarItemXPos = sr.getScaledWidth() / 2 - 90 + 2;
+			final int hotbarItemXPos = (sr.getScaledWidth() >> 1) - 90 + 2;
 			final int hotbarItemYPos = sr.getScaledHeight() - 16 - 3;
 
 			for (int j = 0; j < 9; ++j)

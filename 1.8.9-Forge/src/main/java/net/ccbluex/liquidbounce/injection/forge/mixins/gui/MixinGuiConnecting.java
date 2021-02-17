@@ -140,8 +140,8 @@ public abstract class MixinGuiConnecting extends GuiScreen
 	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
 	{
 		final ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
-		final float middleWidth = scaledResolution.getScaledWidth() / 2.0f;
-		final float quarterHeight = scaledResolution.getScaledHeight() / 4.0f;
+		final float middleWidth = scaledResolution.getScaledWidth() >> 1;
+		final float quarterHeight = scaledResolution.getScaledHeight() >> 2;
 
 		drawDefaultBackground();
 

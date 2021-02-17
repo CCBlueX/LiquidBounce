@@ -70,7 +70,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
 			}
 
 			final int i = getItemInUseDuration();
-			float f1 = i / 20.0f;
+			float f1 = i * 0.05f;
 			f1 = f1 > 1.0f ? 1.0f : f1 * f1;
 			newFOV *= 1.0f - f1 * 0.15f;
 			callbackInfoReturnable.setReturnValue(newFOV);

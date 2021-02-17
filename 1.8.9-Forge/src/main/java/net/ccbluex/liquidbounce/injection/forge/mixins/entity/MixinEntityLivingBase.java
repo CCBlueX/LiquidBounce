@@ -173,7 +173,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 		if (stack == null || stack.getItem() == null || !stack.getItem().onEntitySwing((EntityLivingBase) (Object) this, stack))
 		{
 			final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.getModule(SwingAnimation.class);
-			if (!isSwingInProgress || swingProgressInt >= (sa.getState() ? sa.getSwingProgressLimit().get() : getArmSwingAnimationEnd() / 2) || swingProgressInt < 0)
+			if (!isSwingInProgress || swingProgressInt >= (sa.getState() ? sa.getSwingProgressLimit().get() : getArmSwingAnimationEnd() >> 1) || swingProgressInt < 0)
 			{
 				swingProgressInt = -1;
 				isSwingInProgress = true;

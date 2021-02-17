@@ -65,8 +65,8 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 		final String lastServerIp = ServerUtils.getLastServerIp();
 		final boolean canMarkBannedOnThisServer = GuiAltManager.canMarkBannedCurrent(lastServerIp);
 
-		final int middleWidth = width / 2;
-		final int buttonY = height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT;
+		final int middleWidth = width >> 1;
+		final int buttonY = (height >> 1) + (field_175353_i >> 1) + fontRendererObj.FONT_HEIGHT;
 		buttonList.add(reconnectButton = new GuiButton(1, middleWidth - 100, buttonY + 22, 98, 20, "Reconnect"));
 
 		drawReconnectDelaySlider();
@@ -169,7 +169,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 
 	private void drawReconnectDelaySlider()
 	{
-		buttonList.add(autoReconnectDelaySlider = new GuiSlider(2, width / 2 + 2, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 22, 98, 20, "AutoReconnect: ", "ms", AutoReconnect.MIN, AutoReconnect.MAX, AutoReconnect.INSTANCE.getDelay(), false, true, guiSlider ->
+		buttonList.add(autoReconnectDelaySlider = new GuiSlider(2, (width >> 1) + 2, (height >> 1) + (field_175353_i >> 1) + fontRendererObj.FONT_HEIGHT + 22, 98, 20, "AutoReconnect: ", "ms", AutoReconnect.MIN, AutoReconnect.MAX, AutoReconnect.INSTANCE.getDelay(), false, true, guiSlider ->
 		{
 			AutoReconnect.INSTANCE.setDelay(guiSlider.getValueInt());
 

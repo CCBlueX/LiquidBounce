@@ -101,7 +101,7 @@ public abstract class MixinGuiNewChat
 							lvt_11_1_ = p_drawChat_1_ - lvt_10_1_.getUpdatedCounter();
 							if (lvt_11_1_ < 200 || lvt_3_1_)
 							{
-								double lvt_12_1_ = (double) lvt_11_1_ / 200.0D;
+								double lvt_12_1_ = (double) lvt_11_1_ * 0.005;
 								lvt_12_1_ = 1.0D - lvt_12_1_;
 								lvt_12_1_ *= 10.0D;
 								lvt_12_1_ = MathHelper.clamp(lvt_12_1_, 0.0D, 1.0D);
@@ -118,7 +118,7 @@ public abstract class MixinGuiNewChat
 								{
 									int lvt_15_1_ = 0;
 									int lvt_16_1_ = -lvt_9_1_ * 9;
-									Gui.drawRect(lvt_15_1_, lvt_16_1_ - 9, lvt_15_1_ + lvt_8_1_ + 4, lvt_16_1_, lvt_14_1_ / 2 << 24);
+									Gui.drawRect(lvt_15_1_, lvt_16_1_ - 9, lvt_15_1_ + lvt_8_1_ + 4, lvt_16_1_, (lvt_14_1_ >> 1) << 24);
 									String lvt_17_1_ = lvt_10_1_.getChatComponent().getFormattedText();
 									Fonts.font40.drawStringWithShadow(lvt_17_1_, lvt_15_1_ + 2, (lvt_16_1_ - 8), 16777215 + (lvt_14_1_ << 24));
 									GL11.glColor4f(1, 1, 1, 1);

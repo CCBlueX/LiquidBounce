@@ -121,7 +121,7 @@ public abstract class MixinItemRenderer
 						GlStateManager.rotate((float) j * 35.3F, 0.0F, 1.0F, 0.0F);
 						GlStateManager.rotate((float) j * -9.785F, 0.0F, 0.0F, 1.0F);
 						float f5 = (float) stack.getMaxItemUseDuration() - ((float) this.mc.player.getItemInUseCount() - p_187457_2_ + 1.0F);
-						float f6 = f5 / 20.0F;
+						float f6 = f5 * 0.05f;
 						f6 = (f6 * f6 + f6 * 2.0F) / 3.0F;
 
 						if (f6 > 1.0F)

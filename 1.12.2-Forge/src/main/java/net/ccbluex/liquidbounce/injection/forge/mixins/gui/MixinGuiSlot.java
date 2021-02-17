@@ -104,7 +104,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 			BufferBuilder bufferbuilder = tessellator.getBuffer();
 			// Forge: background rendering moved into separate method.
 //            this.drawContainerBackground(tessellator);
-			int k = this.left + this.width / 2 - this.getListWidth() / 2 + 2;
+			int k = this.left + (this.width >> 1) - (this.getListWidth() >> 1) + 2;
 			int l = this.top + 4 - (int) this.amountScrolled;
 
 			if (this.hasListHeader)
@@ -198,7 +198,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 //            Tessellator tessellator = Tessellator.getInstance();
 //            BufferBuilder worldrenderer = tessellator.getBuffer();
 //            this.drawContainerBackground(tessellator);
-//            int k = this.left + this.width / 2 - this.getListWidth() / 2 + 2;
+//            int k = this.left + (this.width >> 1) - (this.getListWidth() >> 1) + 2;
 //            int l = this.top + 4 - (int) this.amountScrolled;
 //            if (this.hasListHeader) {
 //                this.drawListHeader(k, l, tessellator);

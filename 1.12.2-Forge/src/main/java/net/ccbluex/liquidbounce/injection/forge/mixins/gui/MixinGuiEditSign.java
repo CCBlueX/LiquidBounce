@@ -47,12 +47,12 @@ public class MixinGuiEditSign extends GuiScreen
 	@Inject(method = "initGui", at = @At("RETURN"))
 	private void initGui(final CallbackInfo callbackInfo)
 	{
-		buttonList.add(toggleButton = new GuiButton(1, this.width / 2 - 100, this.height / 4 + 145, enabled ? "Disable Formatting codes" : "Enable Formatting codes"));
+		buttonList.add(toggleButton = new GuiButton(1, (this.width >> 1) - 100, (this.height >> 2) + 145, enabled ? "Disable Formatting codes" : "Enable Formatting codes"));
 
-		this.signCommand1 = new GuiTextField(0, this.fontRenderer, this.width / 2 - 100, height - 15, 200, 10);
-		this.signCommand2 = new GuiTextField(1, this.fontRenderer, this.width / 2 - 100, height - 15 * 2, 200, 10);
-		this.signCommand3 = new GuiTextField(2, this.fontRenderer, this.width / 2 - 100, height - 15 * 3, 200, 10);
-		this.signCommand4 = new GuiTextField(3, this.fontRenderer, this.width / 2 - 100, height - 15 * 4, 200, 10);
+		this.signCommand1 = new GuiTextField(0, this.fontRenderer, (this.width >> 1) - 100, height - 15, 200, 10);
+		this.signCommand2 = new GuiTextField(1, this.fontRenderer, (this.width >> 1) - 100, height - (15 << 1), 200, 10);
+		this.signCommand3 = new GuiTextField(2, this.fontRenderer, (this.width >> 1) - 100, height - 15 * 3, 200, 10);
+		this.signCommand4 = new GuiTextField(3, this.fontRenderer, (this.width >> 1) - 100, height - (15 << 2), 200, 10);
 
 		this.signCommand1.setText("");
 		this.signCommand2.setText("");
@@ -88,7 +88,7 @@ public class MixinGuiEditSign extends GuiScreen
 	@Inject(method = "drawScreen", at = @At("RETURN"))
 	private void drawFields(CallbackInfo callbackInfo)
 	{
-		this.fontRenderer.drawString("\u00A7c\u00A7lCommands \u00A77(\u00A7f\u00A7l1.8\u00A77)", width / 2 - 100, height - 15 * 5, Color.WHITE.getRGB());
+		this.fontRenderer.drawString("\u00A7c\u00A7lCommands \u00A77(\u00A7f\u00A7l1.8\u00A77)", (width >> 1) - 100, height - 15 * 5, Color.WHITE.getRGB());
 
 		signCommand1.drawTextBox();
 		signCommand2.drawTextBox();

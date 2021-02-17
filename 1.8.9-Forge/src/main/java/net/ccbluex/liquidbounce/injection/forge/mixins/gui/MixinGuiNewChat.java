@@ -97,7 +97,7 @@ public abstract class MixinGuiNewChat
 							updateCounterDelta = updateCounter - lvt_10_1_.getUpdatedCounter();
 							if (updateCounterDelta < 200 || chatOpen)
 							{
-								double updatedPercentage = updateCounterDelta / 200.0D;
+								double updatedPercentage = updateCounterDelta * 0.005;
 								updatedPercentage = 1.0D - updatedPercentage;
 								updatedPercentage *= 10.0D;
 								updatedPercentage = MathHelper.clamp_double(updatedPercentage, 0.0D, 1.0D);
@@ -113,7 +113,7 @@ public abstract class MixinGuiNewChat
 									final int xPos = 0;
 									final int yPos = -currentLine * 9;
 
-									Gui.drawRect(xPos, yPos - 9, xPos + chatWidthRatio + 4, yPos, currentLineOpacity / 2 << 24);
+									Gui.drawRect(xPos, yPos - 9, xPos + chatWidthRatio + 4, yPos, (currentLineOpacity >> 1) << 24);
 
 									final String formattedText = lvt_10_1_.getChatComponent().getFormattedText();
 

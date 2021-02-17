@@ -24,10 +24,10 @@ public class MixinServerListEntryLanScan
 	@Overwrite
 	public void drawEntry(final int slotIndex, final int x, final int y, final int listWidth, final int slotHeight, final int mouseX, final int mouseY, final boolean isSelected)
 	{
-		final int middleWidth = mc.currentScreen.width / 2;
-		final int ypos = y + slotHeight / 2 - mc.fontRendererObj.FONT_HEIGHT / 2;
+		final int middleWidth = mc.currentScreen.width >> 1;
+		final int ypos = y + (slotHeight >> 1) - (mc.fontRendererObj.FONT_HEIGHT >> 1);
 
-		mc.fontRendererObj.drawString(I18n.format("lanServer.scanning"), middleWidth - mc.fontRendererObj.getStringWidth(I18n.format("lanServer.scanning")) / 2, ypos, 16777215);
+		mc.fontRendererObj.drawString(I18n.format("lanServer.scanning"), middleWidth - (mc.fontRendererObj.getStringWidth(I18n.format("lanServer.scanning")) >> 1), ypos, 16777215);
 
 		// xd
 		final String text;
@@ -82,6 +82,6 @@ public class MixinServerListEntryLanScan
 				break;
 		}
 
-		mc.fontRendererObj.drawString(text, middleWidth - mc.fontRendererObj.getStringWidth(text) / 2, ypos + mc.fontRendererObj.FONT_HEIGHT, ColorUtils.rainbow(10, 1.0f, 1.0f).getRGB()/*8421504*/);
+		mc.fontRendererObj.drawString(text, middleWidth - (mc.fontRendererObj.getStringWidth(text) >> 1), ypos + mc.fontRendererObj.FONT_HEIGHT, ColorUtils.rainbow(10, 1.0f, 1.0f).getRGB()/*8421504*/);
 	}
 }

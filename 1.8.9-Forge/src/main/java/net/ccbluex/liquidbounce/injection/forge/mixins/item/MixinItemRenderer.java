@@ -364,7 +364,7 @@ public abstract class MixinItemRenderer
 			{
 				transformFirstPersonItemBlock(equipProgress, 0, 1);
 				GlStateManager.rotate(equipProgressAffect * -sqrt * 55 / 2.0F, -8.0f, -0.0f, 9.0F);
-				GlStateManager.rotate(equipProgressAffect * -sqrt * 45, 1.0F, sqrt / 2, -0.0f);
+				GlStateManager.rotate(equipProgressAffect * -sqrt * 45, 1.0F, sqrt * 0.5f, -0.0f);
 				doBlockTransformations();
 				GL11.glTranslated(1.2, 0.3, 0.5);
 				GL11.glTranslatef(-1, mc.thePlayer.isSneaking() ? -0.1f : -0.2f, 0.2F);

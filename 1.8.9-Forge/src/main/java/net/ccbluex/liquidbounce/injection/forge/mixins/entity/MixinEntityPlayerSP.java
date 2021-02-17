@@ -457,9 +457,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 		if (noClip)
 		{
 			setEntityBoundingBox(getEntityBoundingBox().offset(x, y, z));
-			posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2.0D;
+			posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) * 0.5;
 			posY = getEntityBoundingBox().minY;
-			posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2.0D;
+			posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) * 0.5;
 		}
 		else
 		{
@@ -639,9 +639,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 			worldObj.theProfiler.endSection();
 			worldObj.theProfiler.startSection("rest");
-			posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2.0D;
+			posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) * 0.5;
 			posY = getEntityBoundingBox().minY;
-			posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2.0D;
+			posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) * 0.5;
 			isCollidedHorizontally = d3 != x || d5 != z;
 			isCollidedVertically = d4 != y;
 			onGround = isCollidedVertically && d4 < 0.0D;

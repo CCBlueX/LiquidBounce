@@ -105,8 +105,8 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 		if ((Object) this instanceof GuiInventory)
 			return;
 
-		final int screenCenterX = width / 2;
-		final int screenQuarterY = height / 4;
+		final int screenCenterX = width >> 1;
+		final int screenQuarterY = height >> 2;
 
 		buttonList.add(new GuiButton(996, screenCenterX - 100, screenQuarterY - 52, "Disable KillAura"));
 
@@ -234,7 +234,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 			if (draggedStack != null && isRightMouseClick)
 			{
 				itemstack = itemstack.copy();
-				itemstack.stackSize = MathHelper.ceiling_float_int(itemstack.stackSize / 2.0F);
+				itemstack.stackSize = MathHelper.ceiling_float_int(itemstack.stackSize * 0.5f);
 			}
 			else if (dragSplitting && dragSplittingSlots.size() > 1)
 			{

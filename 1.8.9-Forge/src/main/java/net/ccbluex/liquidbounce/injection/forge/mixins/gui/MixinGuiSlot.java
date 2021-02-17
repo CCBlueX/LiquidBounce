@@ -115,7 +115,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 			final WorldRenderer worldrenderer = tessellator.getWorldRenderer();
 
 			// noinspection CallToSimpleGetterFromWithinClass
-			final int k = left + width / 2 - getListWidth() / 2 + 2;
+			final int k = left + (width >> 1) - (getListWidth() >> 1) + 2;
 			final int l = top + 4 - (int) amountScrolled;
 
 			if (hasListHeader)

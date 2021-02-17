@@ -84,7 +84,7 @@ public abstract class MixinGuiButtonExt extends GuiButton
 			mc.getTextureManager().bindTexture(buttonTextures);
 			mouseDragged(mc, mouseX, mouseY);
 
-			fontRenderer.drawStringWithShadow(displayString, xPosition + width / 2.0F - fontRenderer.getStringWidth(displayString) / 2.0F, yPosition + (height - 5) / 2.0F, 14737632);
+			fontRenderer.drawStringWithShadow(displayString, xPosition + (width >> 1) - (fontRenderer.getStringWidth(displayString) >> 1), yPosition + (height - 5 >> 1), 14737632);
 			GlStateManager.resetColor();
 		}
 	}

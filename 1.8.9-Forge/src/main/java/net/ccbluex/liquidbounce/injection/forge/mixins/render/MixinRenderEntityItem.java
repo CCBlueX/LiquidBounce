@@ -61,7 +61,7 @@ public class MixinRenderEntityItem
 		if (itemPhysics.getState())
 		{
 			final RenderEntityItem renderer = (RenderEntityItem) (Object) this;
-			rotation = (double) (System.nanoTime() - itemPhysics.getTick()) / 2500000 * itemPhysics.getItemRotationSpeed().get();
+			rotation = (double) (System.nanoTime() - itemPhysics.getTick()) * 0.0000004 * itemPhysics.getItemRotationSpeed().get();
 			if (!mc.inGameHasFocus)
 				rotation = 0;
 

@@ -93,7 +93,7 @@ class Particle
 	{
 		for (int n = 0; n <= 64; ++n)
 		{
-			final float f = n / 64.0f;
+			final float f = n * 0.015625f;
 			final float p1 = lint1(f);
 			final float p2 = lint2(f);
 

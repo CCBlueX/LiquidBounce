@@ -25,7 +25,7 @@ public abstract class MixinGuiDownloadTerrain extends MixinGuiScreen
 	@Inject(method = "initGui", at = @At("RETURN"))
 	private void injectDisconnectButton(final CallbackInfo ci)
 	{
-		buttonList.add(new GuiButton(0, width / 2 - 100, height / 4 + 120 + 12, I18n.format("gui.cancel")));
+		buttonList.add(new GuiButton(0, (width >> 1) - 100, (height >> 2) + 120 + 12, I18n.format("gui.cancel")));
 	}
 
 	@Override

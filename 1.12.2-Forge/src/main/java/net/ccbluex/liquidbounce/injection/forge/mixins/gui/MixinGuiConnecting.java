@@ -139,7 +139,7 @@ public abstract class MixinGuiConnecting extends GuiScreen
 
 		this.drawDefaultBackground();
 
-		RenderUtils.drawLoadingCircle(scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 70);
+		RenderUtils.drawLoadingCircle(scaledResolution.getScaledWidth() >> 1, (scaledResolution.getScaledHeight() >> 2) + 70);
 
 		String ip = "Unknown";
 
@@ -147,8 +147,8 @@ public abstract class MixinGuiConnecting extends GuiScreen
 		if (serverData != null)
 			ip = serverData.serverIP;
 
-		Fonts.font40.drawCenteredString("Connecting to", scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 110, 0xFFFFFF, true);
-		Fonts.font35.drawCenteredString(ip, scaledResolution.getScaledWidth() / 2, scaledResolution.getScaledHeight() / 4 + 120, 0x5281FB, true);
+		Fonts.font40.drawCenteredString("Connecting to", scaledResolution.getScaledWidth() >> 1, (scaledResolution.getScaledHeight() >> 2) + 110, 0xFFFFFF, true);
+		Fonts.font35.drawCenteredString(ip, scaledResolution.getScaledWidth() >> 1, (scaledResolution.getScaledHeight() >> 2) + 120, 0x5281FB, true);
 
 		super.drawScreen(mouseX, mouseY, partialTicks);
 	}

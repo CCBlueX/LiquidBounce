@@ -47,8 +47,8 @@ public class MixinGuiEditSign extends GuiScreen
 	@Inject(method = "initGui", at = @At("RETURN"))
 	private void initGui(final CallbackInfo callbackInfo)
 	{
-		final int xPos = width / 2 - 100;
-		buttonList.add(toggleButton = new GuiButton(1, xPos, height / 4 + 145, enabled ? "Disable Formatting codes" : "Enable Formatting codes"));
+		final int xPos = (width >> 1) - 100;
+		buttonList.add(toggleButton = new GuiButton(1, xPos, (height >> 2) + 145, enabled ? "Disable Formatting codes" : "Enable Formatting codes"));
 
 		signCommand1 = new GuiTextField(0, fontRendererObj, xPos, height - 15, 200, 10);
 		signCommand2 = new GuiTextField(1, fontRendererObj, xPos, height - (15 << 1), 200, 10);
@@ -89,7 +89,7 @@ public class MixinGuiEditSign extends GuiScreen
 	@Inject(method = "drawScreen", at = @At("RETURN"))
 	private void drawFields(final CallbackInfo callbackInfo)
 	{
-		fontRendererObj.drawString("\u00A7c\u00A7lCommands \u00A77(\u00A7f\u00A7l1.8\u00A77)", width / 2 - 100, height - 15 * 5, Color.WHITE.getRGB());
+		fontRendererObj.drawString("\u00A7c\u00A7lCommands \u00A77(\u00A7f\u00A7l1.8\u00A77)", (width >> 1) - 100, height - 15 * 5, Color.WHITE.getRGB());
 
 		signCommand1.drawTextBox();
 		signCommand2.drawTextBox();
