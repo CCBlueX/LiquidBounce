@@ -56,8 +56,8 @@ object ColoredPrimitiveShader {
 
     init {
         val shaderProgram = ShaderProgram(
-            resourceToString("/assets/liquidbounce/shaders/primitive3d.vert"),
-            resourceToString("/assets/liquidbounce/shaders/primitive3d.frag")
+            resourceToString("/assets/liquidbounce/shaders/primitive/primitive.vert"),
+            resourceToString("/assets/liquidbounce/shaders/primitive/primitive.frag")
         )
 
         shaderProgram.bindAttribLocation("in_pos", 0)
@@ -90,8 +90,8 @@ object TexturedPrimitiveShader {
 
     init {
         val shaderProgram = ShaderProgram(
-            resourceToString("/assets/liquidbounce/shaders/textured3d.vert"),
-            resourceToString("/assets/liquidbounce/shaders/textured3d.frag")
+            resourceToString("/assets/liquidbounce/shaders/primitive/textured.vert"),
+            resourceToString("/assets/liquidbounce/shaders/primitive/textured.frag")
         )
 
         shaderProgram.bindAttribLocation("in_pos", 0)
@@ -126,7 +126,7 @@ object InstancedColoredPrimitiveShader {
     init {
         val shaderProgram = ShaderProgram(
             resourceToString("/assets/liquidbounce/shaders/instanced_primitive3d.vert"),
-            resourceToString("/assets/liquidbounce/shaders/primitive3d.frag")
+            resourceToString("/assets/liquidbounce/shaders/primitive/primitive.frag")
         )
 
         shaderProgram.bindAttribLocation("in_pos", 0)

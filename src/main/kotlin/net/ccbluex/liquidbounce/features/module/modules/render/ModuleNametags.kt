@@ -18,56 +18,52 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.EngineRenderEvent
+import net.ccbluex.liquidbounce.event.LiquidBounceRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.renderer.Fonts
 import net.ccbluex.liquidbounce.renderer.engine.*
-import net.ccbluex.liquidbounce.renderer.utils.rect
-import net.ccbluex.liquidbounce.utils.Mat4
+import net.ccbluex.liquidbounce.renderer.engine.utils.rect
 import net.ccbluex.liquidbounce.utils.extensions.ping
-import net.ccbluex.liquidbounce.utils.extensions.shouldBeShown
 import net.ccbluex.liquidbounce.utils.extensions.stripMinecraftColorCodes
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.passive.VillagerEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.Quaternion
 import kotlin.math.roundToInt
 
 object ModuleNametags : Module("Nametags", Category.RENDER) {
-
     private val healthValue = boolean("Health", true)
     private val pingValue = boolean("Ping", true)
     private val distanceValue = boolean("Distance", false)
-    private val armorValue = boolean("Armor", true)
+
+    //    private val armorValue = boolean("Armor", true) // TODO Add Armor to NameTags
     private val clearNamesValue = boolean("ClearNames", false)
 
+    //    private val fontValue = font("Font", Fonts.font40) // TODO Please add this option after marco adds the fkin system
     private val borderValue = boolean("Border", true)
     private val scaleValue = float("Scale", 2F, 1F..4F)
     private val botValue = boolean("Bots", true)
 
-    val renderHandler = handler<EngineRenderEvent> {
-        val filteredEntities = mc.world!!.entities
+    val realRenderHandler = handler<LiquidBounceRenderEvent> {
+        val filteredEntities = mc.world!!.entities.filterIsInstance<VillagerEntity>()
 
+        // Two triangles per rect
+        val rectRenderTask = ColoredPrimitiveRenderTask(2 * filteredEntities.size, PrimitiveType.Triangles)
 
-        val rotMat = Mat4()
+        val borderRenderTask = if (this.borderValue.value) {
+            ColoredPrimitiveRenderTask(4 * filteredEntities.size, PrimitiveType.LineLoop)
+        } else {
+            null
+        }
+//
+        val fontRenderer = Fonts.font40
 
-        rotMat.multiply(Quaternion(0.0f, -mc.player!!.yaw, 0.0f, true))
-        rotMat.multiply(Quaternion(mc.player!!.pitch, 0.0f, 0.0f, true))
+        fontRenderer.begin()
 
         for (entity in filteredEntities) {
-            if (!entity.shouldBeShown())
-                continue
-
-            // if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
-
-            // Two triangles per rect
-            val rectRenderTask = ColoredPrimitiveRenderTask(2, PrimitiveType.Triangles)
-            val borderRenderTask = if (this.borderValue.value) {
-                ColoredPrimitiveRenderTask(4, PrimitiveType.LineLoop)
-            } else {
-                null
-            }
+//            if (!EntityUtils.isSelected(entity, false)) continue // TODO Fix targeting
+//            if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
 
             val tag = if (clearNamesValue.value)
                 entity.displayName.asTruncatedString(100)?.stripMinecraftColorCodes() ?: continue
@@ -79,14 +75,10 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
             // Scale
             var distance = player.distanceTo(entity) * 0.25f
 
-            if (distance < 1.0f)
-                distance = 1.0f
-
-            val fontRenderer = Fonts.bodyFont
+            if (distance < 1F)
+                distance = 1F
 
             val scale = distance / (10f * fontRenderer.size) * scaleValue.value
-
-            fontRenderer.begin()
 
             // Modify tag
 //            val bot = AntiBot.isBot(entity) // TODO Fix AntiBot
@@ -95,8 +87,10 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
             val ping = if (entity is PlayerEntity) entity.ping else 0
 
             val distanceText = if (distanceValue.value) "§7${player.distanceTo(entity).roundToInt()}m " else ""
-            val pingText = if (pingValue.value && entity is PlayerEntity) (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms §7" else ""
-            val healthText =  if (healthValue.value && entity is LivingEntity) "§7§c ${entity.health.toInt()} HP" else ""
+            val pingText =
+                if (pingValue.value && entity is PlayerEntity) (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms §7" else ""
+            val healthText =
+                if (healthValue.value && entity is LivingEntity) "§7§c " + entity.health.toInt() + " HP" else ""
             val botText = if (bot) " §c§lBot" else ""
 
             val text = "$distanceText$pingText$nameColor$tag$healthText$botText"
@@ -115,40 +109,65 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                 boundingBoxCenter.z - entity.z + entity.lastRenderZ + (entity.z - entity.lastRenderZ) * it.tickDelta
             )
 
-            val p1 = Vec3(-width - 2F, -2f, 0.0f)
-            val p2 = Vec3(width + 4f, fontRenderer.height + 2F, 0.0f)
+            val vec = RenderEngine.cameraMvp * Vec4(offset, 1.0f)
+
+            val vecOnScreen = Vec3(vec.x, -vec.y, -vec.z)
+
+            println(vec)
 
             rectRenderTask.rect(
-                p1,
-                p2,
-                Color4b(0, 0, 0, 127)
+                vecOnScreen + Vec3(-0.1f, -0.1f, 0.0f),
+                vecOnScreen + Vec3(0.1f, 0.1f, 0.0f),
+                Color4b.WHITE
             )
 
-            borderRenderTask?.rect(
-                p1,
-                p2,
-                Color4b(0, 0, 0, 127),
-                true
-            )
+//            println(vecOnScreen)
 
-            Fonts.bodyFont.draw(text, (1F - width), 0.0f, Color4b.WHITE, true, z = 0.0f)
-
-            val matrix = Mat4()
-
-            matrix.multiply(Mat4.translate(offset.x, offset.y, offset.z))
-            matrix.multiply(rotMat)
-            matrix.multiply(Mat4.scale(-scale, -scale, -scale))
-
-            RenderEngine.enqueueForRendering(
-                RenderEngine.PSEUDO_2D_LAYER,
-                MVPRenderTask(
-                    if (borderRenderTask == null) arrayOf(rectRenderTask) else arrayOf<RenderTask>(
-                        rectRenderTask,
-                        borderRenderTask
-                    ) + Fonts.bodyFont.commit(), matrix
-                )
-            )
+//            val p1 = Vec3(-width - 2F, -2f, 0.0f) * scale + vecOnScreen
+//            val p2 = Vec3(width + 4f, fontRenderer.height + 2F, 0.0f) * scale + vecOnScreen
+////
+//            println(p1)
+//
+//            rectRenderTask.rect(
+//                p1,
+//                p2,
+//                Color4b(0, 0, 0, 127)
+//            )
+//
+//            borderRenderTask?.rect(
+//                p1,
+//                p2,
+//                Color4b(0, 0, 0, 127),
+//                true
+//            )
+//
+//            Fonts.font40.draw(
+//                text, (1F - width), (if (fontRenderer == Fonts.minecraftFont) 1F else 0.0F),
+//                Color4b.WHITE, true, z = 0.0f
+//            )
+//
+//
+//            val matrix = Mat4()
+//
+//            matrix.multiply(Mat4.translate(offset.x, offset.y, offset.z))
+//            matrix.multiply(rotMat)
+//            matrix.multiply(Mat4.scale(-scale, -scale, -scale))
+//
+//            RenderEngine.enqueueForRendering(
+//                RenderEngine.`SCREEN_SPACE_LAYER`,
+//                MVPRenderTask(
+//                    if (borderRenderTask == null) arrayOf(rectRenderTask) else arrayOf<RenderTask>(
+//                        rectRenderTask,
+//                        borderRenderTask
+//                    ) + Fonts.font40.commit(), matrix
+//                )
+//            )
         }
+
+        RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, rectRenderTask)
+        rectRenderTask.let { task -> RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, task) }
+
+        RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, fontRenderer.commit())
 
     }
 

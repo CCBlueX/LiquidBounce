@@ -43,7 +43,8 @@ object CommandToggle {
                 .build())
             .handler { args ->
                 val name = args[0] as String
-                val module = LiquidBounce.moduleManager.find { it.name.equals(name, true) } ?: throw CommandException("Module §b§l${args[1]}§c not found.")
+                val module = LiquidBounce.moduleManager.find { it.name.equals(name, true) }
+                    ?: throw CommandException("Module §b§l${args[0]}§c not found.")
 
                 val newState = !module.enabled
                 module.enabled = newState

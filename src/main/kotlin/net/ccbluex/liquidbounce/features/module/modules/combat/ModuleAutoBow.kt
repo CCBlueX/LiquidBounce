@@ -52,8 +52,12 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                 waitUntil { player.itemUseTime >= charged }
 
                 // Send stop using item to server
-                network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN,
-                    Direction.DOWN))
+                network.sendPacket(
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN,
+                        Direction.DOWN
+                    )
+                )
                 // Stop using item client-side
                 player.stopUsingItem()
             }
