@@ -21,11 +21,13 @@ package net.ccbluex.liquidbounce.utils.extensions
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.mc
+import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.World
 
 val globalEnemyConfigurable = EnemyConfigurable()
 
@@ -50,7 +52,27 @@ class EnemyConfigurable : Configurable("enemies") {
     // Friends (client friends - other players) should be also considered as enemy
     val friends by boolean("Friends", false)
     // Should bots be blocked to bypass anti cheat techniques
-    // todo: add value nodes
+    val antibot = tree(AntiBotConfigurable())
+
+    class AntiBotConfigurable : Configurable("AntiBot") {
+
+        /**
+         * Should always be enabled. A good antibot should never detect a real player as a bot (on default settings).
+         */
+        val enabled by boolean("Enabled", true)
+
+        /**
+         * Check if player might be a bot
+         */
+        fun isBot(player: ClientPlayerEntity): Boolean {
+            if (!enabled)
+                return false
+
+
+            return false
+        }
+
+    }
 
     init {
         LiquidBounce.configSystem.root(this)
@@ -67,7 +89,12 @@ class EnemyConfigurable : Configurable("enemies") {
                 // Check if enemy is a player and should be considered as enemy
                 if (enemy is PlayerEntity && players && enemy != mc.player) {
                     // TODO: Check friends because there is no friend system right now
-                    // TODO: Check if player might be a bot
+
+                    // Check if player might be a bot
+                    if (enemy is ClientPlayerEntity && antibot.isBot(enemy)) {
+                        return false
+                    }
+
                     return true
                 }else if (enemy is PassiveEntity && animals) {
                     return true
