@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.utils.Nameable
+import net.ccbluex.liquidbounce.utils.logger
 import kotlin.reflect.full.findAnnotation
 
 /**
@@ -88,7 +89,11 @@ object EventManager {
             if (!eventHook.ignoresCondition && !eventHook.handlerClass.handleEvents())
                 continue
 
-            eventHook.handler(event)
+            runCatching {
+                eventHook.handler(event)
+            }.onFailure {
+                logger.error("Exception while executing handler.", it)
+            }
         }
     }
 
