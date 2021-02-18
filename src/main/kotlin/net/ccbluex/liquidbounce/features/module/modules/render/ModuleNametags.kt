@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.renderer.Fonts
 import net.ccbluex.liquidbounce.renderer.engine.*
-import net.ccbluex.liquidbounce.renderer.engine.utils.rect
+import net.ccbluex.liquidbounce.renderer.utils.rect
 import net.ccbluex.liquidbounce.utils.Mat4
 import net.ccbluex.liquidbounce.utils.extensions.ping
 import net.ccbluex.liquidbounce.utils.extensions.shouldBeShown

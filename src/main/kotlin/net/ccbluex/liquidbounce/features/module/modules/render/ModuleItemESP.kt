@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.features.module.Choice
 import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.renderer.engine.*
-import net.ccbluex.liquidbounce.renderer.engine.utils.drawBox
-import net.ccbluex.liquidbounce.renderer.engine.utils.drawBoxOutline
+import net.ccbluex.liquidbounce.renderer.utils.drawBox
+import net.ccbluex.liquidbounce.renderer.utils.drawBoxOutline
 import net.ccbluex.liquidbounce.renderer.utils.rainbow
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.projectile.ArrowEntity

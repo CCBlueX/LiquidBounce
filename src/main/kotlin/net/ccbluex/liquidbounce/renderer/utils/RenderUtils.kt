@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.renderer.engine.utils
+package net.ccbluex.liquidbounce.renderer.utils
 
 import net.ccbluex.liquidbounce.renderer.engine.Color4b
 import net.ccbluex.liquidbounce.renderer.engine.ColoredPrimitiveRenderTask
