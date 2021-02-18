@@ -60,7 +60,6 @@ class FastUse : Module()
 		if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem))
 		{
 			val netHandler = mc.netHandler
-			val playerController = mc.playerController
 			val onGround = thePlayer.onGround
 
 			when (modeValue.get().toLowerCase())
@@ -72,8 +71,6 @@ class FastUse : Module()
 							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 						}
 					}
-
-					playerController.onStoppedUsingItem(thePlayer)
 				}
 
 				"ncp" ->
@@ -83,11 +80,11 @@ class FastUse : Module()
 					{
 						"atonce" -> if (thePlayer.itemInUseDuration > ncpWaitTicksValue.get())
 						{
-							repeat(ncpPacketsValue.get()) {
-								netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
+							WorkerUtils.workers.submit {
+								repeat(ncpPacketsValue.get()) {
+									netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
+								}
 							}
-
-							playerController.onStoppedUsingItem(thePlayer)
 						}
 
 						"constant" -> repeat(ncpConstantPacketsValue.get()) {
@@ -111,8 +108,10 @@ class FastUse : Module()
 
 					if (!msTimer.hasTimePassed(delayValue.get().toLong())) return
 
-					repeat(customSpeedValue.get()) {
-						netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
+					WorkerUtils.workers.submit {
+						repeat(customSpeedValue.get()) {
+							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
+						}
 					}
 
 					msTimer.reset()

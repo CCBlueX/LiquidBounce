@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.Maps
 import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
 import kotlin.math.*
 
@@ -31,7 +32,11 @@ class ExtendedTooltips : Module()
 {
 	private val attackDamage = BoolValue("AttackDamage", true)
 	private val enchantments = BoolValue("Enchantments", true)
-	private val heldItemCount = BoolValue("ArrowCount", true)
+	private val itemDamageAndEnchantmentYPosValue = IntegerValue("AttackDamageAndEnchantYPos", 75, 50, 100)
+
+	private val heldItemCount = BoolValue("HeldItemCount", true)
+	private val heldItemCountYPosValue = IntegerValue("HeldItemCountYPos", 46, 20, 100)
+
 	private val armorPotential = BoolValue("ArmorPotential", true)
 	private val durabilityWarning = BoolValue("DurabilityWarning", true)
 
@@ -54,8 +59,13 @@ class ExtendedTooltips : Module()
 		val scaledWidth = res.scaledWidth
 		val scaledHeight = res.scaledHeight
 
+		val playerController = mc.playerController
+
 		val fontRenderer = mc.fontRendererObj
 		val fontHeight = fontRenderer.fontHeight
+
+		val dmgAndEnchYPos = itemDamageAndEnchantmentYPosValue.get()
+		val heldItemCountYPos = heldItemCountYPosValue.get()
 
 		if (heldItemStack != null)
 		{
@@ -67,8 +77,8 @@ class ExtendedTooltips : Module()
 				val attackDamage: String = getAttackDamageString(thePlayer, heldItemStack)
 
 				val x: Int = scaledWidth - (fontRenderer.getStringWidth(attackDamage) shr 1)
-				var y: Int = scaledHeight - 80
-				y += if (mc.playerController.shouldDrawHUD()) -1 else 14
+				var y: Int = scaledHeight - dmgAndEnchYPos
+				y += if (playerController.shouldDrawHUD()) -1 else 14
 				y = y + fontHeight shl 0
 				y = y shl 1
 				y += fontHeight
@@ -87,8 +97,8 @@ class ExtendedTooltips : Module()
 				GL11.glScalef(0.5f, 0.5f, 0.5f)
 
 				val x: Int = scaledWidth - (fontRenderer.getStringWidth(toDraw) shr 1)
-				var y: Int = scaledHeight - 80
-				y += if (mc.playerController.shouldDrawHUD()) -2 else 14
+				var y: Int = scaledHeight - dmgAndEnchYPos
+				y += if (playerController.shouldDrawHUD()) -2 else 14
 				y = y + fontHeight shl 0
 				y = y shl 1
 
@@ -106,9 +116,9 @@ class ExtendedTooltips : Module()
 
 			if (count > 1 || isHoldingBow && count > 0)
 			{
-				val offset = if (mc.playerController.currentGameType == IWorldSettings.WGameType.CREATIVE) 10 else 0
+				val offset = if (playerController.currentGameType == IWorldSettings.WGameType.CREATIVE) 10 else 0
 
-				fontRenderer.drawString("$count", (scaledWidth - fontRenderer.getStringWidth("$count" + "") shr 1).toFloat(), (scaledHeight - 46 - offset).toFloat(), 16777215, true)
+				fontRenderer.drawString("$count", (scaledWidth - fontRenderer.getStringWidth("$count" + "") shr 1).toFloat(), (scaledHeight - heldItemCountYPos - offset).toFloat(), 16777215, true)
 			}
 		}
 
