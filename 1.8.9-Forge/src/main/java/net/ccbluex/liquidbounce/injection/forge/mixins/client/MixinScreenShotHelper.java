@@ -11,6 +11,9 @@ import java.util.Optional;
 import javax.imageio.ImageIO;
 
 import net.ccbluex.liquidbounce.utils.WorkerUtils;
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.texture.TextureUtil;
@@ -56,6 +59,8 @@ public abstract class MixinScreenShotHelper
 	@Overwrite
 	public static IChatComponent saveScreenshot(final File gameDirectory, final String screenshotName, int widthIn, int heightIn, final Framebuffer buffer)
 	{
+		final GuiNewChat chatGUI = Minecraft.getMinecraft().ingameGUI.getChatGUI();
+
 		try
 		{
 			final File screenshotsFolder = new File(gameDirectory, "screenshots");
@@ -109,6 +114,7 @@ public abstract class MixinScreenShotHelper
 
 			WorkerUtils.getWorkers().submit(() ->
 			{
+				final long nanoTime = System.nanoTime();
 
 				// Process pixels
 				TextureUtil.processPixelValues(pixelValues, width, height);
@@ -135,6 +141,7 @@ public abstract class MixinScreenShotHelper
 				catch (final Throwable t)
 				{
 					logger.warn("Couldn't take screenshot asynchronously", t);
+					chatGUI.printChatMessage(new ChatComponentTranslation("screenshot.failure", t.getMessage()));
 				}
 
 				// Write the screenshot file
@@ -157,8 +164,11 @@ public abstract class MixinScreenShotHelper
 						{
 							// If fallback strategy failed, nothing we can to anymore.
 							logger.warn("Couldn't save screenshot file asynchronously with fallback strategy", e);
+							chatGUI.printChatMessage(new ChatComponentTranslation("screenshot.failure", e.getMessage()));
 						}
 					}
+
+				chatGUI.printChatMessage(new ChatComponentText("Took " + TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime) + " to save screenshot."));
 			});
 
 			final IChatComponent ichatcomponent = new ChatComponentText(screenshotFile.getName());
