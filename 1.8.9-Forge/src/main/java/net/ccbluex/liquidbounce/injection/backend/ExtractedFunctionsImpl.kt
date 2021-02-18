@@ -119,4 +119,9 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 
 	override fun cos(radians: Float): Float = MathHelper.cos(radians)
 	override fun sin(radians: Float): Float = MathHelper.sin(radians)
+
+	override fun getEnchantments(item: IItemStack): Map<Int, Int> = EnchantmentHelper.getEnchantments(item.unwrap())
+	override fun getIdFromItem(item: IItem): Int = Item.getIdFromItem(item.unwrap())
+	override fun getEnchantmentLevel(enchId: Int, stack: IItemStack): Int = EnchantmentHelper.getEnchantmentLevel(enchId, stack.unwrap())
+	override fun translateToLocal(key: String): String = StatCollector.translateToLocal(key)
 }

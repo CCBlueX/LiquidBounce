@@ -50,4 +50,9 @@ interface IExtractedFunctions
 	// MathHelper's sin and cos algorithm is faster than StrictMath's (Because MathHelper uses better algorithm and it is compatible with BetterFps mod)
 	fun cos(radians: Float): Float
 	fun sin(radians: Float): Float
+
+	fun getEnchantments(item: IItemStack): Map<Int, Int>
+	fun getIdFromItem(item: IItem): Int
+	fun getEnchantmentLevel(enchId: Int, stack: IItemStack): Int
+	fun translateToLocal(key: String): String
 }

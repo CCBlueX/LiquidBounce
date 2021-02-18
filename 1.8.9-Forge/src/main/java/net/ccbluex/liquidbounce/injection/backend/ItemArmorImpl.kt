@@ -12,6 +12,8 @@ import net.minecraft.item.ItemArmor
 
 class ItemArmorImpl(wrapped: ItemArmor) : ItemImpl<ItemArmor>(wrapped), IItemArmor
 {
+	override val damageReduceAmount: Int
+		get() = wrapped.damageReduceAmount
 	override val armorMaterial: IArmorMaterial
 		get() = wrapped.armorMaterial.wrap()
 	override val armorType: Int

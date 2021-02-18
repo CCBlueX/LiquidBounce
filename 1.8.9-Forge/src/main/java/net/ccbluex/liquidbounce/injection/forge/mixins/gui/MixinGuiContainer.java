@@ -1,6 +1,14 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+
 import com.google.common.collect.Sets;
+
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
@@ -10,7 +18,6 @@ import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
-
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -22,6 +29,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -29,13 +37,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.AbstractMap.SimpleEntry;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 
 @Mixin(GuiContainer.class)
 public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixinGuiContainer
@@ -71,6 +72,8 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 	protected boolean dragSplitting;
 	@Shadow
 	protected int dragSplittingRemnant;
+	@Shadow
+	protected int xSize;
 
 	private final Map<Integer, Entry<Long, Entry<Long, Integer>>> highlightingMap = new HashMap<>();
 

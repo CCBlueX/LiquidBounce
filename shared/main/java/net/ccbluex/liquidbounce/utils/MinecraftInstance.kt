@@ -12,7 +12,7 @@ open class MinecraftInstance
 	companion object
 	{
 		@JvmField
-		val mc = wrapper.minecraft
+		var mc = wrapper.minecraft
 
 		@JvmField
 		val classProvider = wrapper.classProvider

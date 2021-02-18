@@ -7,6 +7,7 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
 import net.ccbluex.liquidbounce.api.minecraft.entity.ai.attributes.IAttributeModifier
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
@@ -22,14 +23,8 @@ import net.minecraft.item.ItemStack
 
 class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 {
-	override fun setTagInfo(key: String, nbt: INBTBase) = wrapped.setTagInfo(key, nbt.unwrap())
-
-	override fun setStackDisplayName(displayName: String): IItemStack = wrapped.setStackDisplayName(displayName).wrap()
-
-	override fun addEnchantment(enchantment: IEnchantment, level: Int) = wrapped.addEnchantment(enchantment.unwrap(), level)
-	override fun getAttributeModifier(key: String): Collection<IAttributeModifier> = WrappedCollection(wrapped.attributeModifiers[key], IAttributeModifier::unwrap, AttributeModifier::wrap)
-	override fun isSplash(): Boolean = ItemPotion.isSplash(wrapped.metadata)
-
+	override val isItemEnchanted: Boolean
+		get() = wrapped.isItemEnchanted
 	override val displayName: String
 		get() = wrapped.displayName
 
@@ -59,6 +54,19 @@ class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 	@Suppress("CAST_NEVER_SUCCEEDS")
 	override val itemDelay: Long
 		get() = (wrapped as IMixinItemStack).itemDelay
+
+	override val maxDamage: Int
+		get() = wrapped.maxDamage
+
+	override fun setTagInfo(key: String, nbt: INBTBase) = wrapped.setTagInfo(key, nbt.unwrap())
+
+	override fun setStackDisplayName(displayName: String): IItemStack = wrapped.setStackDisplayName(displayName).wrap()
+
+	override fun addEnchantment(enchantment: IEnchantment, level: Int) = wrapped.addEnchantment(enchantment.unwrap(), level)
+	override fun getAttributeModifier(key: String): Collection<IAttributeModifier> = WrappedCollection(wrapped.attributeModifiers[key], IAttributeModifier::unwrap, AttributeModifier::wrap)
+	override fun isSplash(): Boolean = ItemPotion.isSplash(wrapped.metadata)
+
+	override fun getTooltip(thePlayer: IEntityPlayer, advanced: Boolean): List<String> = wrapped.getTooltip(thePlayer.unwrap(), advanced)
 
 	override fun getStrVsBlock(block: IIBlockState): Float = wrapped.getStrVsBlock(block.block.unwrap())
 }

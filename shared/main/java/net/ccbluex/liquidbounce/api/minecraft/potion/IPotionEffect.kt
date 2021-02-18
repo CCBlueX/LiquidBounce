@@ -10,6 +10,7 @@ interface IPotionEffect
 {
 	fun getDurationString(): String
 
+	val effectName: String
 	val amplifier: Int
 	val duration: Int
 	val potionID: Int

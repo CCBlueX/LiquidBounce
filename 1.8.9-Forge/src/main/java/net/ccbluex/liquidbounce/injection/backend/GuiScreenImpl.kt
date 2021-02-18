@@ -30,6 +30,11 @@ open class GuiScreenImpl<out T : GuiScreen>(wrapped: T) : GuiImpl<T>(wrapped), I
 
 	override fun asGuiChest(): IGuiChest = GuiChestImpl(wrapped as GuiChest)
 
+	override fun drawString(fontRendererObj: IFontRenderer, message: String, x: Int, y: Int, color: Int)
+	{
+		wrapped.drawString(fontRendererObj.unwrap(), message, x, y, color)
+	}
+
 	override fun superMouseReleased(mouseX: Int, mouseY: Int, state: Int) = (wrapped as GuiScreenWrapper).superMouseReleased(mouseX, mouseY, state)
 
 	override fun drawBackground(i: Int) = wrapped.drawBackground(i)

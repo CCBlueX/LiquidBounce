@@ -14,6 +14,8 @@ class PotionEffectImpl(val wrapped: PotionEffect) : IPotionEffect
 {
 	override fun getDurationString(): String = Potion.getDurationString(wrapped)
 
+	override val effectName: String
+		get() = wrapped.effectName
 	override val amplifier: Int
 		get() = wrapped.amplifier
 	override val duration: Int

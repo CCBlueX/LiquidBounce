@@ -20,6 +20,8 @@ interface IGuiScreen : IGui
 	fun asGuiGameOver(): IGuiGameOver
 	fun asGuiChest(): IGuiChest
 
+	fun drawString(fontRendererObj: IFontRenderer, message: String, x: Int, y: Int, color: Int)
+
 	// Non-virtual calls. Used for GuiScreen-Wrapping
 	fun superMouseReleased(mouseX: Int, mouseY: Int, state: Int)
 	fun drawBackground(i: Int)

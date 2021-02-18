@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.IFoodStats
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
 
 @Suppress("INAPPLICABLE_JVM_NAME")
 interface IEntityPlayer : IEntityLivingBase

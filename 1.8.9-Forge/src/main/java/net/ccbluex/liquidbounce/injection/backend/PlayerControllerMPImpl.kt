@@ -60,6 +60,8 @@ class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControlle
 
 	override fun onPlayerDestroyBlock(blockPos: WBlockPos, enumFacing: IEnumFacing): Boolean = wrapped.onPlayerDestroyBlock(blockPos.unwrap(), enumFacing.unwrap())
 
+	override fun shouldDrawHUD(): Boolean = wrapped.shouldDrawHUD()
+
 	override fun equals(other: Any?): Boolean = other is PlayerControllerMPImpl && other.wrapped == wrapped
 }
 

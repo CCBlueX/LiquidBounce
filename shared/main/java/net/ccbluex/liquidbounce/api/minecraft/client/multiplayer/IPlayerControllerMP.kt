@@ -31,4 +31,5 @@ interface IPlayerControllerMP
 	fun onStoppedUsingItem(thePlayer: IEntityPlayerSP)
 	fun clickBlock(blockPos: WBlockPos, enumFacing: IEnumFacing): Boolean
 	fun onPlayerDestroyBlock(blockPos: WBlockPos, enumFacing: IEnumFacing): Boolean
+	fun shouldDrawHUD(): Boolean
 }

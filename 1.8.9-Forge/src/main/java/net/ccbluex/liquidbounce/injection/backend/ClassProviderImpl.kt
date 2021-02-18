@@ -599,6 +599,7 @@ object ClassProviderImpl : IClassProvider
 				ItemType.POTION_ITEM -> Items.potionitem
 				ItemType.SKULL -> Items.skull
 				ItemType.ARMOR_STAND -> Items.armor_stand
+				ItemType.ARROW -> Items.arrow
 			}
 		)
 	}
