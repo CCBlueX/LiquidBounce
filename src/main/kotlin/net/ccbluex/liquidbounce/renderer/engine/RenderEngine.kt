@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.renderer.engine
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer
 import net.ccbluex.liquidbounce.renderer.Fonts
 import net.ccbluex.liquidbounce.renderer.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.utils.Mat4
+import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.toMat4
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.opengl.GL11
@@ -104,16 +104,14 @@ object RenderEngine : Listenable {
         val versionString = GL11.glGetString(GL11.GL_VERSION)
 
         if (versionString == null) {
-            LiquidBounce.logger.error("OpenGL didn't return a version string.")
-
+            logger.error("OpenGL didn't return a version string.")
             return
         }
 
         val matcher = openGlVersionRegex.matcher(versionString)
 
         if (!matcher.matches()) {
-            LiquidBounce.logger.error("OpenGL returned an invalid version string: $versionString")
-
+            logger.error("OpenGL returned an invalid version string: $versionString")
             return
         }
 
@@ -123,7 +121,7 @@ object RenderEngine : Listenable {
 
         openglLevel = OpenGLLevel.getBestLevelFor(majorVersion, minorVersion)
 
-        println("Found out OpenGL version to be $majorVersion.$minorVersion${if (patchVersion != null) ".$patchVersion" else ""}. Using backend for ${openglLevel.backendInfo}")
+        logger.info("Found out OpenGL version to be $majorVersion.$minorVersion${if (patchVersion != null) ".$patchVersion" else ""}. Using backend for ${openglLevel.backendInfo}")
     }
 
     /**
@@ -167,7 +165,7 @@ object RenderEngine : Listenable {
                 continue
 
             val settings = getSettingsForLayer(idx, tickDelta)
-//
+
             for (renderTask in layer.renderTasks) {
                 renderTask.initRendering(lvl, settings.mvpMatrix)
                 renderTask.draw(lvl)
