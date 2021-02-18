@@ -56,15 +56,15 @@ class ProphuntESP : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		val mode = modeValue.get()
+		val mode = modeValue.get().toLowerCase()
 		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
 		for (entity in theWorld.loadedEntityList)
 		{
-			if (!mode.equals("Box", true) || !mode.equals("OtherBox", true)) break
+			if (mode != "box" || mode != "otherbox") break
 			if (!classProvider.isEntityFallingBlock(entity)) continue
 
-			RenderUtils.drawEntityBox(entity, color, mode.equals("Box", true))
+			RenderUtils.drawEntityBox(entity, color, mode == "box")
 		}
 
 		synchronized(blocks) {
@@ -80,7 +80,7 @@ class ProphuntESP : Module()
 					continue
 				}
 
-				RenderUtils.drawBlockBox(theWorld, thePlayer, entry.key, color, mode.equals("Box", true))
+				RenderUtils.drawBlockBox(theWorld, thePlayer, entry.key, color, mode == "box")
 			}
 		}
 	}
@@ -90,15 +90,16 @@ class ProphuntESP : Module()
 	{
 		val theWorld = mc.theWorld ?: return
 
-		val mode = modeValue.get()
+		val mode = modeValue.get().toLowerCase()
 		val shader = when (mode)
 		{
-			"ShaderOutline" -> OutlineShader.INSTANCE
-			"ShaderGlow" -> GlowShader.INSTANCE
+			"shaderoutline" -> OutlineShader.INSTANCE
+			"shaderglow" -> GlowShader.INSTANCE
 			else -> null
 		} ?: return
 
 		shader.startDraw(event.partialTicks)
+
 		try
 		{
 			theWorld.loadedEntityList.asSequence().filter(classProvider::isEntityFallingBlock).forEach { mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true) }
@@ -109,7 +110,12 @@ class ProphuntESP : Module()
 		}
 
 		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
-		val radius = if (mode.equals("ShaderOutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("ShaderGlow", ignoreCase = true)) shaderGlowRadius.get() else 1f
+		val radius = when (mode)
+		{
+			"shadowoutline" -> shaderOutlineRadius.get()
+			"shaderglow" -> shaderGlowRadius.get()
+			else -> 1f
+		}
 
 		shader.stopDraw(color, radius, 1f)
 	}

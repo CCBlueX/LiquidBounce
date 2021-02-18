@@ -6,8 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import co.uk.hexeption.utils.OutlineUtils
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.tileentity.ITileEntity
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -78,7 +76,7 @@ class StorageESP : Module()
 
 		try
 		{
-			val mode = modeValue.get()
+			val mode = modeValue.get().toLowerCase()
 			val saturation = saturationValue.get()
 			val brightness = brightnessValue.get()
 			val rainbowSpeed = rainbowSpeedValue.get()
@@ -100,7 +98,7 @@ class StorageESP : Module()
 
 			val partialTicks = event.partialTicks
 
-			if (mode.equals("outline", ignoreCase = true))
+			if (mode == "outline")
 			{
 				ClientUtils.disableFastRender()
 				OutlineUtils.checkSetupFBO()
@@ -110,7 +108,6 @@ class StorageESP : Module()
 			val gamma = gameSettings.gammaSetting
 
 			gameSettings.gammaSetting = 100000.0f
-
 
 			for (tileEntity in theWorld.loadedTileEntityList)
 			{
@@ -127,36 +124,27 @@ class StorageESP : Module()
 
 				if (!(classProvider.isTileEntityChest(tileEntity) || classProvider.isTileEntityEnderChest(tileEntity)))
 				{
-					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode.equals("Box", ignoreCase = true))
+					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box")
 					continue
 				}
 
-				when (mode.toLowerCase())
+				when (mode)
 				{
-					"otherbox", "box" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode.equals("Box", ignoreCase = true))
+					"otherbox", "box" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box")
 
 					"2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
 
 					"outline" ->
 					{
 						RenderUtils.glColor(color)
-
 						OutlineUtils.renderOne(3f)
-
 						functions.renderTileEntity(tileEntity, partialTicks, -1)
-
 						OutlineUtils.renderTwo()
-
 						functions.renderTileEntity(tileEntity, partialTicks, -1)
-
 						OutlineUtils.renderThree()
-
 						functions.renderTileEntity(tileEntity, partialTicks, -1)
-
 						OutlineUtils.renderFour(color)
-
 						functions.renderTileEntity(tileEntity, partialTicks, -1)
-
 						OutlineUtils.renderFive()
 						OutlineUtils.setColor(Color.WHITE)
 					}
@@ -198,9 +186,9 @@ class StorageESP : Module()
 				} ?: continue
 
 
-				when (mode.toLowerCase())
+				when (mode)
 				{
-					"otherbox", "box" -> RenderUtils.drawEntityBox(it, color, mode.equals("Box", ignoreCase = true))
+					"otherbox", "box" -> RenderUtils.drawEntityBox(it, color, mode == "box")
 
 					"2d" -> RenderUtils.draw2D(it.position, color.rgb, Color.BLACK.rgb)
 
@@ -210,23 +198,14 @@ class StorageESP : Module()
 						gameSettings.entityShadows = false
 
 						RenderUtils.glColor(color)
-
 						OutlineUtils.renderOne(3f)
-
 						mc.renderManager.renderEntityStatic(it, partialTicks, true)
-
 						OutlineUtils.renderTwo()
-
 						mc.renderManager.renderEntityStatic(it, partialTicks, true)
-
 						OutlineUtils.renderThree()
-
 						mc.renderManager.renderEntityStatic(it, partialTicks, true)
-
 						OutlineUtils.renderFour(color)
-
 						mc.renderManager.renderEntityStatic(it, partialTicks, true)
-
 						OutlineUtils.renderFive()
 						OutlineUtils.setColor(Color.WHITE)
 
@@ -278,6 +257,8 @@ class StorageESP : Module()
 	@EventTarget
 	fun onRender2D(event: Render2DEvent)
 	{
+		val theWorld = mc.theWorld ?: return
+
 		val mode = modeValue.get()
 
 		val chest = chestValue.get()
@@ -312,23 +293,46 @@ class StorageESP : Module()
 		try
 		{
 			val startDraw = { shader.startDraw(partialTicks) }
-			val renderTileEntity = { predicate: (ITileEntity) -> Boolean ->
-				mc.theWorld!!.loadedTileEntityList.asSequence().filter(predicate).forEach {
-					mc.renderManager.renderEntityAt(it, it.pos.x - renderPosX, it.pos.y - renderPosY, it.pos.z - renderPosZ, partialTicks)
+			val stopDraw = { color: Color -> shader.stopDraw(color, radius, 1f) }
+
+			val tileEntityGroup = theWorld.loadedTileEntityList.groupBy {
+				when
+				{
+					classProvider.isTileEntityChest(it) -> 1 // Chest
+					classProvider.isTileEntityEnderChest(it) -> 2 // Ender Chest
+					classProvider.isTileEntityFurnace(it) -> 3 // Furnace
+					classProvider.isTileEntityDispenser(it) -> 4 // Dispenser (and Dropper)
+					classProvider.isTileEntityHopper(it) -> 5 // Hopper
+					classProvider.isTileEntityShulkerBox(it) -> 6 // Shulker box
+					else -> 999
+				}
+			}.filterNot { it.key == 999 }
+
+			val entityGroup = theWorld.loadedEntityList.groupBy {
+				when
+				{
+					classProvider.isEntityMinecartChest(it) -> 1 // Minecart Chest
+					classProvider.isEntityMinecartFurnace(it) -> 2 // Minecart Furnace
+					classProvider.isEntityMinecartHopper(it) -> 3 // Minecart Hopper
+					else -> 999
+				}
+			}.filterNot { it.key == 999 }
+
+			val renderTileEntity = { type: Int ->
+				tileEntityGroup[type]?.forEach {
+					renderManager.renderEntityAt(it, it.pos.x - renderPosX, it.pos.y - renderPosY, it.pos.z - renderPosZ, partialTicks)
 				}
 			}
 
-			val renderMinecart = { predicate: (IEntity) -> Boolean ->
-				mc.theWorld!!.loadedEntityList.asSequence().filter(predicate).forEach {
+			val renderMinecart = { type: Int ->
+				entityGroup[type]?.forEach {
 					renderManager.renderEntityStatic(it, partialTicks, true)
 				}
 			}
 
-			val stopDraw = { color: Color -> shader.stopDraw(color, radius, 1f) }
-
-			val renderTileEntityOnly = { predicate: ((ITileEntity) -> Boolean), color: Color ->
+			val renderTileEntityOnly = { type: Int, color: Color ->
 				startDraw()
-				renderTileEntity(predicate)
+				renderTileEntity(type)
 				stopDraw(color)
 			}
 
@@ -336,37 +340,37 @@ class StorageESP : Module()
 			if (chest)
 			{
 				startDraw()
-				renderTileEntity(classProvider::isTileEntityChest)
-				renderMinecart(classProvider::isEntityMinecartChest)
+				renderTileEntity(1) // TileEntityChest
+				renderMinecart(1) // EntityMinecartChest
 				stopDraw(chestColor)
 			}
 
 			// Draw EnderChest
-			if (enderChest) renderTileEntityOnly(classProvider::isTileEntityEnderChest, enderChestColor)
+			if (enderChest) renderTileEntityOnly(2, enderChestColor) // TileEntityEnderChest
 
 			// Draw Furnace and MinecartFurnace
 			if (furnace)
 			{
 				startDraw()
-				renderTileEntity(classProvider::isTileEntityFurnace)
-				renderMinecart(classProvider::isEntityMinecartFurnace)
+				renderTileEntity(3) // TileEntityFurnace
+				renderMinecart(2) // EntityMinecartFurnace
 				stopDraw(furnaceColor)
 			}
 
 			// Draw Dispenser
-			if (dispenser) renderTileEntityOnly(classProvider::isTileEntityDispenser, dispenserColor)
+			if (dispenser) renderTileEntityOnly(4, dispenserColor) // TileEntityDispenser
 
 			// Draw Hopper and MinecartHopper
 			if (hopper)
 			{
 				startDraw()
-				renderTileEntity(classProvider::isTileEntityHopper)
-				renderMinecart(classProvider::isEntityMinecartHopper)
+				renderTileEntity(5) // TileEntityHopper
+				renderMinecart(3) // EntityMinecartHopper
 				stopDraw(hopperColor)
 			}
 
 			// Draw Shulker box
-			if (shulkerBox) renderTileEntityOnly(classProvider::isTileEntityShulkerBox, shulkerBoxColor)
+			if (shulkerBox) renderTileEntityOnly(6, shulkerBoxColor) // TileEntityShulkerBox
 		}
 		catch (ex: Exception)
 		{

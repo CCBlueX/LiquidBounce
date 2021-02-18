@@ -50,12 +50,9 @@ class HUD : Module()
 		mc.theWorld ?: return
 		mc.thePlayer ?: return
 
-		if (state && blurValue.get() && !mc.entityRenderer.isShaderActive() && event.guiScreen != null && !(classProvider.isGuiChat(event.guiScreen) || classProvider.isGuiHudDesigner(event.guiScreen))) mc.entityRenderer.loadShader(
-			classProvider.createResourceLocation(
-				LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json"
-			)
-		)
-		else if (mc.entityRenderer.shaderGroup != null && mc.entityRenderer.shaderGroup!!.shaderGroupName.contains("liquidbounce/blur.json")) mc.entityRenderer.stopUseShader()
+		val entityRenderer = mc.entityRenderer
+		if (state && blurValue.get() && !entityRenderer.isShaderActive() && event.guiScreen != null && !(classProvider.isGuiChat(event.guiScreen) || classProvider.isGuiHudDesigner(event.guiScreen))) entityRenderer.loadShader(classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json"))
+		else if (entityRenderer.shaderGroup != null && entityRenderer.shaderGroup!!.shaderGroupName.contains("liquidbounce/blur.json")) entityRenderer.stopUseShader()
 	}
 
 	init
