@@ -19,14 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.EntityTickEvent
-import net.ccbluex.liquidbounce.event.LiquidBounceRenderEvent
+import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.renderer.engine.*
 import net.ccbluex.liquidbounce.renderer.utils.rainbow
 import org.lwjgl.opengl.GL11.*
-import java.awt.Color
 
 object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
 
@@ -51,7 +50,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         }
     }
 
-    val renderHandler = handler<LiquidBounceRenderEvent> {
+    val renderHandler = handler<EngineRenderEvent> {
         val color = if (colorRainbow) rainbow() else color
 
         synchronized(positions) {

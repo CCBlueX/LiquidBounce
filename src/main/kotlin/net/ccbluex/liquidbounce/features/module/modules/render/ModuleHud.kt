@@ -18,15 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.LiquidBounceRenderEvent
-import net.ccbluex.liquidbounce.event.RenderHudEvent
+import net.ccbluex.liquidbounce.event.FlatRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.renderer.Fonts
-import net.ccbluex.liquidbounce.renderer.engine.Color4b
-import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
-import net.ccbluex.liquidbounce.renderer.engine.RenderTask
 import net.ccbluex.liquidbounce.renderer.ultralight.WebView
 import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
 
@@ -38,7 +33,7 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
         webView.loadPage(ThemeManager.defaultTheme.page("hud"))
     }
 
-    val renderHandler = handler<RenderHudEvent> {
+    val renderHandler = handler<FlatRenderEvent> {
         webView.update()
         webView.render()
     }

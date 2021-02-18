@@ -55,7 +55,7 @@ open class Module(name: String, // name parameter in configurable
                 error("module disabled activation")
             }
             // Call out module event
-            EventManager.callEvent(ModuleEvent(this, new))
+            EventManager.callEvent(ToggleModuleEvent(this, new))
         }.onFailure {
             // Log error
             logger.error("Module toggle failed (old: $old, new: $new)", it)
@@ -160,9 +160,9 @@ inline fun <reified T : Event> Listenable.sequenceHandler(ignoreCondition: Boole
 /**
  * Registers a repeatable sequence which continues to execute until the module is turned off
  */
-inline fun Listenable.repeatableSequence(module: Listenable = this, noinline eventHandler: SuspendableHandler<ModuleEvent>) {
-    var sequence: Sequence<ModuleEvent>? = null
-    handler<ModuleEvent>(true) { event ->
+inline fun Listenable.repeatableSequence(module: Listenable = this, noinline eventHandler: SuspendableHandler<ToggleModuleEvent>) {
+    var sequence: Sequence<ToggleModuleEvent>? = null
+    handler<ToggleModuleEvent>(true) { event ->
         if (event.module != module)
             return@handler
 

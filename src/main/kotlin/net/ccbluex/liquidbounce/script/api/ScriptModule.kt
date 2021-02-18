@@ -61,20 +61,12 @@ class ScriptModule(private val moduleObject: JSObject) : Module(
      */
     fun on(eventName: String, handler: JSObject) {
         events[eventName] = handler
+        hookHandler(eventName)
     }
 
     override fun enable() = callEvent("enable")
 
     override fun disable() = callEvent("disable")
-
-    // todo: add handlers dynamically
-    val moduleHandler = handler<ModuleEvent> { callEvent("module", it) }
-    val tickHandler = handler<EntityTickEvent> { callEvent("tick") }
-    val chatSendHandler = handler<ChatSendEvent> { callEvent("chatSend", it) }
-    val keyHandler = handler<KeyEvent> { callEvent("key", it) }
-    val packetHandler = handler<PacketEvent> { callEvent("packet", it) }
-    val sessionHandler = handler<SessionEvent> { callEvent("session") }
-    val screenHandler = handler<ScreenEvent> { callEvent("screen") }
 
     /**
      * Calls the handler of a registered event.
@@ -86,7 +78,19 @@ class ScriptModule(private val moduleObject: JSObject) : Module(
         try {
             events[eventName]?.call(moduleObject, payload)
         } catch (throwable: Throwable) {
-            logger.error("[ScriptAPI] Exception in module '$name'!", throwable)
+            logger.error("Script caused exception in module $name on $eventName event!", throwable)
         }
     }
+
+    /**
+     * Register new event hook
+     */
+    private fun hookHandler(eventName: String) {
+        val (_, clazz) = EventManager.mappedEvents.find { (name, _) -> name.equals(eventName, true) } ?: return
+
+        EventManager.registerEventHook(clazz.java, EventHook(this, {
+            callEvent(eventName, it)
+        }, false))
+    }
+
 }

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.LiquidBounceRenderEvent
+import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -46,7 +46,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     private val scaleValue = float("Scale", 2F, 1F..4F)
     private val botValue = boolean("Bots", true)
 
-    val renderHandler = handler<LiquidBounceRenderEvent> {
+    val renderHandler = handler<EngineRenderEvent> {
         val filteredEntities = mc.world!!.entities
 
 

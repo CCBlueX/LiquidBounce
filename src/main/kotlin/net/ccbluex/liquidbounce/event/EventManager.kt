@@ -18,14 +18,32 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import java.util.*
+import net.ccbluex.liquidbounce.utils.Nameable
+import kotlin.reflect.full.findAnnotation
 
 /**
  * A modern and fast event handler using lambda handlers
  */
 object EventManager {
 
-    private val registry = HashMap<Class<out Event>, MutableList<EventHook<in Event>>>()
+    private val registry = mutableMapOf<Class<out Event>, MutableList<EventHook<in Event>>>()
+
+    val mappedEvents = arrayOf(
+        GameTickEvent::class,
+        EntityTickEvent::class,
+        EngineRenderEvent::class,
+        FlatRenderEvent::class,
+        InputHandleEvent::class,
+        KeyEvent::class,
+        AttackEvent::class,
+        SessionEvent::class,
+        ScreenEvent::class,
+        ChatSendEvent::class,
+        PacketEvent::class,
+        ClientStartEvent::class,
+        ClientShutdownEvent::class,
+        ToggleModuleEvent::class
+    ).map { Pair(it.findAnnotation<Nameable>()?.name, it) }
 
     /**
      * Registers an event hook for events of type [T]

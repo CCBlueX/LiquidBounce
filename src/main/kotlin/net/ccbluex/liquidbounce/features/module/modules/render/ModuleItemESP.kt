@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.LiquidBounceRenderEvent
+import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Choice
@@ -64,7 +64,7 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
             task
         }
 
-        val renderHandler = handler<LiquidBounceRenderEvent> { event ->
+        val renderHandler = handler<EngineRenderEvent> { event ->
             val base = if (colorRainbow) rainbow() else color
             val baseColor = Color4b(base.r, base.g, base.b, 50)
             val outlineColor = Color4b(base.r, base.g, base.b, 100)

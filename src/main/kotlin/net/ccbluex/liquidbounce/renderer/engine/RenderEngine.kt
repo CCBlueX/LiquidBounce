@@ -80,8 +80,8 @@ object RenderEngine : Listenable {
      */
     val openGlVersionRegex = Pattern.compile("(\\d+)\\.(\\d+)(\\.(\\d+))?(.*)")
 
-    val renderHandler = handler<RenderHudEvent> {
-        EventManager.callEvent(LiquidBounceRenderEvent(it.tickDelta))
+    val renderHandler = handler<FlatRenderEvent> {
+        EventManager.callEvent(EngineRenderEvent(it.tickDelta))
 
         render(it.tickDelta)
 

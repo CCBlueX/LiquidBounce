@@ -19,10 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.GameTickEvent;
-import net.ccbluex.liquidbounce.event.InputHandleEvent;
-import net.ccbluex.liquidbounce.event.ScreenEvent;
+import net.ccbluex.liquidbounce.event.*;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -77,7 +74,7 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "<init>", at = @At("RETURN"))
     private void startClient(CallbackInfo callback) {
-        LiquidBounce.INSTANCE.start();
+        EventManager.INSTANCE.callEvent(new ClientStartEvent());
     }
 
     /**
@@ -87,7 +84,7 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "stop", at = @At("HEAD"))
     private void stopClient(CallbackInfo callback) {
-        LiquidBounce.INSTANCE.stop();
+        EventManager.INSTANCE.callEvent(new ClientShutdownEvent());
     }
 
     /**

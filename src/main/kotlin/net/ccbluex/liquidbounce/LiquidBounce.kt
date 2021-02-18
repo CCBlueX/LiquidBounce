@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -40,7 +40,7 @@ import org.apache.logging.log4j.LogManager
  *
  * @author kawaiinekololis (@team CCBlueX)
  */
-object LiquidBounce {
+object LiquidBounce : Listenable {
 
     /**
      * CLIENT INFORMATION
@@ -75,7 +75,7 @@ object LiquidBounce {
     /**
      * Should be executed to start the client.
      */
-    fun start() {
+    val startHandler = handler<ClientStartEvent> {
         commandManager.registerInbuilt()
         // Initialize the executor
         CommandExecutor
@@ -99,7 +99,7 @@ object LiquidBounce {
     /**
      * Should be executed to stop the client.
      */
-    fun stop() {
+    val shutdownHandler = handler<ClientShutdownEvent> {
         configSystem.store()
     }
 

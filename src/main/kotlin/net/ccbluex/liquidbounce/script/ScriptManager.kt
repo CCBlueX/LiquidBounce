@@ -60,7 +60,7 @@ object ScriptManager {
 
         script
     }.onFailure {
-        logger.error("[ScriptAPI] Failed to load script '${file.name}'.", it)
+        logger.error("Unable to load script ${file.name}.", it)
     }.getOrNull()
 
     /**
@@ -82,7 +82,7 @@ object ScriptManager {
         file.copyTo(scriptFile)
 
         loadScript(scriptFile)
-        logger.info("[ScriptAPI] Successfully imported script '${scriptFile.name}'.")
+        logger.info("Successfully imported script '${scriptFile.name}'.")
     }
 
     /**
@@ -94,7 +94,7 @@ object ScriptManager {
         loadedScripts.remove(script)
         script.scriptFile.delete()
 
-        logger.info("[ScriptAPI] Successfully deleted script '${script.scriptFile.name}'.")
+        logger.info("Successfully deleted script '${script.scriptFile.name}'.")
     }
 
     /**
@@ -106,6 +106,6 @@ object ScriptManager {
         loadScripts()
         enableScripts()
 
-        logger.info("[ScriptAPI] Successfully reloaded scripts.")
+        logger.info("Successfully reloaded scripts.")
     }
 }

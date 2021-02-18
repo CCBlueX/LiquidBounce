@@ -19,39 +19,64 @@
 package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.Nameable
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
 
-class ModuleEvent(val module: Module, val newState: Boolean) : Event()
+// Game events
 
+@Nameable("gameTick")
 class GameTickEvent : Event()
 
-class InputHandleEvent : Event()
-
+@Nameable("entityTick")
 class EntityTickEvent : Event()
 
-class ChatSendEvent(val message: String) : CancellableEvent()
+// Render events
 
-/**
- * Calls when a frame is rendered and the modules are supposed to enqueue their render tasks
- */
-class LiquidBounceRenderEvent(val tickDelta: Float) : Event()
+@Nameable("engineRender")
+class EngineRenderEvent(val tickDelta: Float) : Event()
 
-/**
- * Called when the Minecraft HUD is rendered (at the beginning). Please don't use it to do anything with the render engine.
- */
-class RenderHudEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
+@Nameable("flatRender")
+class FlatRenderEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
 
-class PacketEvent(val packet: Packet<*>) : CancellableEvent()
+// Input events
 
+@Nameable("inputHandle")
+class InputHandleEvent : Event()
+
+@Nameable("key")
 class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
 
+// User action events
+
+@Nameable("attack")
+class AttackEvent(val enemy: LivingEntity) : Event()
+
+@Nameable("session")
 class SessionEvent : Event()
 
+@Nameable("screen")
 class ScreenEvent(val screen: Screen?) : Event()
 
-class AttackEvent(val enemy: LivingEntity) : Event()
+@Nameable("chatSend")
+class ChatSendEvent(val message: String) : CancellableEvent()
+
+// Network events
+
+@Nameable("packet")
+class PacketEvent(val packet: Packet<*>) : CancellableEvent()
+
+// Client events
+
+@Nameable("clientStart")
+class ClientStartEvent : Event()
+
+@Nameable("clientShutdown")
+class ClientShutdownEvent : Event()
+
+@Nameable("toggleModule")
+class ToggleModuleEvent(val module: Module, val newState: Boolean) : Event()
+
