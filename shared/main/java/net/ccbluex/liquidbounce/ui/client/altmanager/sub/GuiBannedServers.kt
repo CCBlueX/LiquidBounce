@@ -7,11 +7,11 @@ package net.ccbluex.liquidbounce.ui.client.altmanager.sub
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
 import net.ccbluex.liquidbounce.file.FileManager.Companion.saveConfig
-import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
@@ -19,7 +19,7 @@ import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.io.IOException
 
-class GuiBannedServers(private val prevGui: GuiAltManager, private val account: MinecraftAccount) : WrappedGuiScreen()
+class GuiBannedServers(private val prevGui: IGuiScreen, private val account: MinecraftAccount) : WrappedGuiScreen()
 {
 	private lateinit var serversList: GuiServersList
 
@@ -59,8 +59,8 @@ class GuiBannedServers(private val prevGui: GuiAltManager, private val account: 
 	{
 		when (button.id)
 		{
-			0 -> mc.displayGuiScreen(prevGui.representedScreen)
-			1 -> mc.displayGuiScreen(GuiAddBanned(this, account).representedScreen)
+			0 -> mc.displayGuiScreen(prevGui)
+			1 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiAddBanned(this, account)))
 			2 -> status = if (serversList.selectedSlot != -1 && serversList.selectedSlot < serversList.getSize())
 			{
 				account.bannedServers.remove(account.bannedServers[serversList.selectedSlot])
@@ -79,7 +79,7 @@ class GuiBannedServers(private val prevGui: GuiAltManager, private val account: 
 		{
 			Keyboard.KEY_ESCAPE ->
 			{
-				mc.displayGuiScreen(prevGui.representedScreen)
+				mc.displayGuiScreen(prevGui)
 				return
 			}
 

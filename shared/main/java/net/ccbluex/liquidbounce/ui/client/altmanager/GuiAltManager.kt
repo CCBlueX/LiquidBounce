@@ -267,7 +267,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 			99 -> connectToLastServer()
 
-			13 -> if (altsList.selectedSlot != -1 && altsList.selectedSlot < altsList.getSize()) mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiBannedServers(this, LiquidBounce.fileManager.accountsConfig.accounts[altsList.selectedSlot]))) else status = "\u00A7cSelect an account."
+			13 -> if (altsList.selectedSlot != -1 && altsList.selectedSlot < altsList.getSize()) mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiBannedServers(representedScreen, LiquidBounce.fileManager.accountsConfig.accounts[altsList.selectedSlot]))) else status = "\u00A7cSelect an account."
 
 			14 ->
 			{
