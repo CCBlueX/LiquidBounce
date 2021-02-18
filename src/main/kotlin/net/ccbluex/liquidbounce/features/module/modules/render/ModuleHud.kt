@@ -43,16 +43,4 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
         webView.render()
     }
 
-    // Engine testing
-
-    val liquidBounceFont: Array<RenderTask> = run {
-        Fonts.fontBold180.begin()
-        Fonts.fontBold180.draw("LiquidBounce", 2f, 0f, Color4b(0, 111, 255, 255), true)
-        Fonts.fontBold180.commit()
-    }
-
-    val engineRenderHandler = handler<LiquidBounceRenderEvent> {
-        RenderEngine.enqueueForRendering(RenderEngine.HUD_LAYER, liquidBounceFont)
-    }
-
 }

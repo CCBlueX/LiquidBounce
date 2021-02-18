@@ -37,11 +37,12 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
 
-    private object ModeConfigurable : ChoiceConfigurable(this, "Mode", "YPort", {
+    private object ModeConfigurable : ChoiceConfigurable(this, "Mode", "Box", {
         BoxMode
     })
 
     init {
+        ModeConfigurable.initialize()
         tree(ModeConfigurable)
     }
 
@@ -63,21 +64,21 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
             task
         }
 
-        val tickHandler = handler<LiquidBounceRenderEvent> {
+        val renderHandler = handler<LiquidBounceRenderEvent> { event ->
             val base = if (colorRainbow) rainbow() else color
             val baseColor = Color4b(base.r, base.g, base.b, 50)
             val outlineColor = Color4b(base.r, base.g, base.b, 100)
 
-            val filtered = mc.world!!.entities.filter { en -> en is ItemEntity || en is ArrowEntity }
+            val filtered = world.entities.filter { it is ItemEntity || it is ArrowEntity }
 
-            val renderTask = InstancedColoredPrimitiveRenderTask(filtered.size, this.box)
-            val outlineRenderTask = InstancedColoredPrimitiveRenderTask(filtered.size, this.boxOutline)
+            val renderTask = InstancedColoredPrimitiveRenderTask(filtered.size, box)
+            val outlineRenderTask = InstancedColoredPrimitiveRenderTask(filtered.size, boxOutline)
 
             for (entity in filtered) {
                 val pos = Vec3(
-                    entity.lastRenderX + (entity.x - entity.lastRenderX) * it.tickDelta,
-                    entity.lastRenderY + (entity.y - entity.lastRenderY) * it.tickDelta,
-                    entity.lastRenderZ + (entity.z - entity.lastRenderZ) * it.tickDelta
+                    entity.lastRenderX + (entity.x - entity.lastRenderX) * event.tickDelta,
+                    entity.lastRenderY + (entity.y - entity.lastRenderY) * event.tickDelta,
+                    entity.lastRenderZ + (entity.z - entity.lastRenderZ) * event.tickDelta
                 )
 
                 renderTask.instance(pos, baseColor)

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.renderer.engine.*
 import net.ccbluex.liquidbounce.renderer.engine.utils.rect
 import net.ccbluex.liquidbounce.utils.Mat4
 import net.ccbluex.liquidbounce.utils.extensions.ping
+import net.ccbluex.liquidbounce.utils.extensions.shouldBeShown
 import net.ccbluex.liquidbounce.utils.extensions.stripMinecraftColorCodes
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -41,12 +42,11 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     private val armorValue = boolean("Armor", true)
     private val clearNamesValue = boolean("ClearNames", false)
 
-    //    private val fontValue = font("Font", Fonts.font40) // TODO Please add this option after marco adds the fkin system
     private val borderValue = boolean("Border", true)
     private val scaleValue = float("Scale", 2F, 1F..4F)
     private val botValue = boolean("Bots", true)
 
-    val realRenderHandler = handler<LiquidBounceRenderEvent> {
+    val renderHandler = handler<LiquidBounceRenderEvent> {
         val filteredEntities = mc.world!!.entities
 
 
@@ -56,8 +56,10 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
         rotMat.multiply(Quaternion(mc.player!!.pitch, 0.0f, 0.0f, true))
 
         for (entity in filteredEntities) {
-//            if (!EntityUtils.isSelected(entity, false)) continue // TODO Fix targeting
-//            if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
+            if (!entity.shouldBeShown())
+                continue
+
+            // if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
 
             // Two triangles per rect
             val rectRenderTask = ColoredPrimitiveRenderTask(2, PrimitiveType.Triangles)
@@ -77,10 +79,10 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
             // Scale
             var distance = player.distanceTo(entity) * 0.25f
 
-            if (distance < 1F)
-                distance = 1F
+            if (distance < 1.0f)
+                distance = 1.0f
 
-            val fontRenderer = Fonts.font40
+            val fontRenderer = Fonts.bodyFont
 
             val scale = distance / (10f * fontRenderer.size) * scaleValue.value
 
@@ -93,10 +95,8 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
             val ping = if (entity is PlayerEntity) entity.ping else 0
 
             val distanceText = if (distanceValue.value) "§7${player.distanceTo(entity).roundToInt()}m " else ""
-            val pingText =
-                if (pingValue.value && entity is PlayerEntity) (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms §7" else ""
-            val healthText =
-                if (healthValue.value && entity is LivingEntity) "§7§c " + entity.health.toInt() + " HP" else ""
+            val pingText = if (pingValue.value && entity is PlayerEntity) (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms §7" else ""
+            val healthText =  if (healthValue.value && entity is LivingEntity) "§7§c ${entity.health.toInt()} HP" else ""
             val botText = if (bot) " §c§lBot" else ""
 
             val text = "$distanceText$pingText$nameColor$tag$healthText$botText"
@@ -131,11 +131,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                 true
             )
 
-            Fonts.font40.draw(
-                text, (1F - width), (if (fontRenderer == Fonts.minecraftFont) 1F else 0.0F),
-                Color4b.WHITE, true, z = 0.0f
-            )
-
+            Fonts.bodyFont.draw(text, (1F - width), 0.0f, Color4b.WHITE, true, z = 0.0f)
 
             val matrix = Mat4()
 
@@ -149,7 +145,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                     if (borderRenderTask == null) arrayOf(rectRenderTask) else arrayOf<RenderTask>(
                         rectRenderTask,
                         borderRenderTask
-                    ) + Fonts.font40.commit(), matrix
+                    ) + Fonts.bodyFont.commit(), matrix
                 )
             )
         }

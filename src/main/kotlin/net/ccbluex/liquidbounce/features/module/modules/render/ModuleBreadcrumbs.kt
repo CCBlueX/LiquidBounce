@@ -38,6 +38,19 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
     private var lastPosY = 0.0
     private var lastPosZ = 0.0
 
+    override fun enable() {
+        synchronized(positions) {
+            positions.addAll(listOf(player.x, player.eyeY, player.z))
+            positions.addAll(listOf(player.x, player.y, player.z))
+        }
+    }
+
+    override fun disable() {
+        synchronized(positions) {
+            positions.clear()
+        }
+    }
+
     val renderHandler = handler<LiquidBounceRenderEvent> {
         val color = if (colorRainbow) rainbow() else color
 
@@ -45,15 +58,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
             val renderTask = ColoredPrimitiveRenderTask(this.positions.size, PrimitiveType.LineStrip)
 
             for (i in 0 until this.positions.size / 3) {
-                renderTask.index(
-                    renderTask.vertex(
-                        Vec3(
-                            this.positions[i * 3],
-                            this.positions[i * 3 + 1],
-                            this.positions[i * 3 + 2]
-                        ), color
-                    )
-                )
+                renderTask.index(renderTask.vertex(Vec3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]), color))
             }
 
             RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, renderTask)
@@ -61,45 +66,17 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
     }
 
     val updateHandler = handler<EntityTickEvent> {
-        val player = mc.player!!
-
-        if (player.x == this.lastPosX && player.y == this.lastPosY && player.z == this.lastPosZ) {
+        if (player.x == lastPosX && player.y == lastPosY && player.z == lastPosZ) {
             return@handler
         }
 
-        this.lastPosX = player.x
-        this.lastPosY = player.y
-        this.lastPosZ = player.z
+        lastPosX = player.x
+        lastPosY = player.y
+        lastPosZ = player.z
 
         synchronized(positions) {
-            positions.addAll(
-                listOf(
-                    player.x,
-                    player.y,
-                    player.z
-                )
-            )
+            positions.addAll(listOf(player.x, player.y, player.z))
         }
     }
 
-
-    override fun enable() {
-        val thePlayer = mc.player ?: return
-
-        synchronized(positions) {
-            positions.addAll(
-                listOf(
-                    thePlayer.x,
-                    thePlayer.eyeY,
-                    thePlayer.z
-                )
-            )
-
-            positions.addAll(listOf(thePlayer.x, thePlayer.y, thePlayer.z))
-        }
-    }
-
-    override fun disable() {
-        synchronized(positions) { positions.clear() }
-    }
 }

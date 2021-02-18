@@ -33,10 +33,9 @@ import kotlin.reflect.jvm.isAccessible
  */
 open class Value<T>(@SerializedName("name")
                     open val name: String,
-                    @SerializedName("value")
-                    var value: T,
+                    @SerializedName("value") internal var value: T,
                     @Exclude
-                    val change: (T, T) -> Unit = { _, _ -> },
+                    private val change: (T, T) -> Unit = { _, _ -> },
 ) {
 
     /**
@@ -79,6 +78,9 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         value.add(configurable)
         return configurable
     }
+
+    protected fun <T> value(name: String, default: T, change: (T, T) -> Unit = { _, _ -> })
+        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
     protected fun boolean(name: String, default: Boolean = false, change: (Boolean, Boolean) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
