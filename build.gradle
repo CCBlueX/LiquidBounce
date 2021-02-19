@@ -18,9 +18,9 @@
  */
 
 plugins {
-    id 'fabric-loom'
-    id 'maven-publish'
+    id "fabric-loom"
     id "org.jetbrains.kotlin.jvm"
+    id "com.github.johnrengelman.shadow" version "6.1.0"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -41,29 +41,33 @@ repositories {
 }
 
 dependencies {
+    // Minecraft
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+
+    // Libraries (required mods)
+
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
+    // Ignore in export
     implementation "com.google.code.findbugs:jsr305:3.0.2" // to fix nullable imports
 
-    // TheAltening
+    // Client libraries
+
     implementation ('com.thealtening.api:api:4.1.0') {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    // Replace with latest version from https://search.maven.org/artifact/com.labymedia/ultralight-java-base
     implementation "com.labymedia:ultralight-java-base:0.3.5"
-    // Replace with latest version from https://search.maven.org/artifact/com.labymedia/ultralight-java-databind
     implementation "com.labymedia:ultralight-java-databind:0.3.5"
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    testImplementation "org.junit.jupiter:junit-jupiter:5.7.0"
+    // Test libraries
 
-    // TODO: Extract libraries into build jar
+    testImplementation "org.junit.jupiter:junit-jupiter:5.7.0"
 }
 
 processResources {
@@ -98,29 +102,24 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
 }
 
+shadowJar {
+    archiveClassifier.set('')
+
+    // Natives are going to be downloaded from our cloud
+    exclude 'native-binaries/*'
+
+    dependencies {
+        include(dependency('com.labymedia:ultralight-java-base'))
+        include(dependency('com.labymedia:ultralight-java-databind'))
+        include(dependency('com.thealtening.api:api'))
+    }
+}
+
+build.dependsOn shadowJar
+
 jar {
     from "LICENSE"
 }
 
-// configure the maven publication
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            // add all the jars that should be included when publishing to maven
-            artifact(remapJar) {
-                builtBy remapJar
-            }
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
-        }
-    }
-
-    // select the repositories you want to publish to
-    repositories {
-        // uncomment to publish to the local maven
-        // mavenLocal()
-    }
-}
-
 compileKotlin.kotlinOptions.jvmTarget = "1.8"
+
