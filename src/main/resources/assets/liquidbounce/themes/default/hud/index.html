@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>HUD</title>
+    <style>
+        @keyframes radial-pulse {
+            0% {
+                box-shadow: 0 0 0 0px rgba(0.6, 0, 0, 0.5);
+            }
+            100% {
+                box-shadow: 0 0 0 30px rgba(0.6, 0, 0, 0);
+            }
+        }
+
+        .attention {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 300px;
+            height: 200px;
+            color: rgba(0, 0, 0, 0.418);
+            background: linear-gradient(to left, violet, indigo, blue, green, yellow, orange, red);
+            border-radius: 50%;
+            animation: radial-pulse 2s infinite;
+        }
+
+        .modules {
+            width: 250px;
+            background: rgba(0, 0, 0, 0.418);
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-size: 30px;
+            color: white;
+        }
+
+        h1 {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: rgba(255, 0, 0, 0.76);
+            font-style: bold;
+            text-shadow: 2px 2px #00000048;
+            
+        }
+    </style>
+    
+</head>
+
+<body>
+    <div class="attention"><img src="logo_banner.png"></div>
+    <h1>NEXTGEN CLIENT</h1>
+
+    <div id="modules" class="modules"></div>
+
+    <script>
+        const moduleManager = client.getModuleManager();
+        const modulesElement = document.getElementById("modules");
+        
+        window.setInterval(function() {
+            removeAllChildNodes(modulesElement);
+
+            var modules = moduleManager.iterator();
+            while(modules.hasNext()) {
+                var module = modules.next();
+
+                if (module.getEnabled() && !module.getHidden()) {
+                    let node = document.createTextNode(module.getName());
+                    modulesElement.appendChild(node);
+                }
+            }
+        }, 100); // todo: add events
+        
+
+        function removeAllChildNodes(parent) {
+            while (parent.firstChild) {
+                parent.removeChild(parent.firstChild);
+            }
+        }
+    </script>
+</body>
+
+</html>

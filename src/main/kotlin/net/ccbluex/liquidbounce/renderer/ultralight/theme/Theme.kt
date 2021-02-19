@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.renderer.ultralight.theme
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.utils.extractZip
+import net.ccbluex.liquidbounce.utils.resource
 import java.io.File
 import java.nio.file.StandardWatchEventKinds.*
 
@@ -40,17 +42,13 @@ class Theme(val name: String) {
 
     companion object {
 
-        fun default(): Theme {
-            val themeFolder = Theme("default")
-            if (!themeFolder.exists) {
-                // extractDefault()
+        fun default() = Theme("default").apply {
+            if (exists) {
+                themeFolder.delete()
             }
 
-            return themeFolder
-        }
-
-        private fun extractDefault() {
-            // todo: extract default
+            extractZip(resource("/assets/liquidbounce/default_theme.zip"), themeFolder)
+            themeFolder.deleteOnExit()
         }
 
     }

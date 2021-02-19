@@ -102,11 +102,20 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
 }
 
+task packageDefaultTheme(type: Zip) {
+    archiveFileName = "default_theme.zip"
+    destinationDirectory = file("$buildDir/resources/main/assets/liquidbounce")
+
+    from "$buildDir/resources/main/assets/liquidbounce/themes/default"
+}
+
 shadowJar {
     archiveClassifier.set('')
 
     // Natives are going to be downloaded from our cloud
-    exclude 'native-binaries/*'
+    exclude "native-binaries/*"
+    // Themes are being zipped
+    exclude "assets/liquidbounce/themes"
 
     dependencies {
         include(dependency('com.labymedia:ultralight-java-base'))
@@ -115,6 +124,7 @@ shadowJar {
     }
 }
 
+build.dependsOn packageDefaultTheme
 build.dependsOn shadowJar
 
 jar {
