@@ -49,11 +49,13 @@ class Ignite : Module()
 
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
+		val inventoryContainer = thePlayer.inventoryContainer
 
 		val itemDelay = itemDelayValue.get()
 		val randomSlot = randomSlotValue.get()
-		val lighterInHotbar = if (lighterValue.get()) InventoryUtils.findItem(thePlayer, 36, 45, classProvider.getItemEnum(ItemType.FLINT_AND_STEEL), itemDelay.toLong(), randomSlot) else -1
-		val lavaInHotbar = if (lavaBucketValue.get()) InventoryUtils.findItem(thePlayer, 26, 45, classProvider.getItemEnum(ItemType.LAVA_BUCKET), itemDelay.toLong(), randomSlot) else -1
+
+		val lighterInHotbar = if (lighterValue.get()) InventoryUtils.findItem(inventoryContainer, 36, 45, classProvider.getItemEnum(ItemType.FLINT_AND_STEEL), itemDelay.toLong(), randomSlot) else -1
+		val lavaInHotbar = if (lavaBucketValue.get()) InventoryUtils.findItem(inventoryContainer, 26, 45, classProvider.getItemEnum(ItemType.LAVA_BUCKET), itemDelay.toLong(), randomSlot) else -1
 
 		if (lighterInHotbar == -1 && lavaInHotbar == -1) return
 
@@ -99,11 +101,7 @@ class Ignite : Module()
 				val yaw = WMathHelper.toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f
 				val pitch = -WMathHelper.toDegrees(StrictMath.atan2(diffY, sqrt).toFloat())
 
-				mc.netHandler.addToSendQueue(
-					classProvider.createCPacketPlayerLook(
-						thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround
-					)
-				)
+				mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerLook(thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround))
 				if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor, side.opposite, WVec3(side.directionVec)))
 				{
 					thePlayer.swingItem()

@@ -8,17 +8,14 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.entity.player.IInventoryPlayer
+import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos.Companion.ORIGIN
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import java.util.*
-import java.util.stream.Collectors
-import java.util.stream.IntStream
 
 class InventoryUtils : MinecraftInstance(), Listenable
 {
@@ -54,33 +51,28 @@ class InventoryUtils : MinecraftInstance(), Listenable
 		// mc.thePlayer.inventory.getStackInSlot() (same as mc.thePlayer.inventory.mainInventory) - https://minecraft.gamepedia.com/File:Items_slot_number.png
 		// !! ---------------------------------------------------------------------------------------------------------------------------- !!
 
-		val AUTOBLOCK_BLACKLIST: List<IBlock> = Collections.unmodifiableList(
-			listOf(
-				// Interactible blocks
-				classProvider.getBlockEnum(BlockType.CHEST), classProvider.getBlockEnum(BlockType.ENDER_CHEST), classProvider.getBlockEnum(BlockType.TRAPPED_CHEST), classProvider.getBlockEnum(BlockType.ANVIL), classProvider.getBlockEnum(BlockType.DISPENSER), classProvider.getBlockEnum(BlockType.DROPPER), classProvider.getBlockEnum(BlockType.FURNACE), classProvider.getBlockEnum(BlockType.LIT_FURNACE), classProvider.getBlockEnum(BlockType.CRAFTING_TABLE), classProvider.getBlockEnum(BlockType.ENCHANTING_TABLE), classProvider.getBlockEnum(BlockType.JUKEBOX), classProvider.getBlockEnum(BlockType.BED), classProvider.getBlockEnum(BlockType.NOTEBLOCK), classProvider.getBlockEnum(BlockType.WEB),
+		val AUTOBLOCK_BLACKLIST = arrayOf(
+			// Interactible blocks
+			classProvider.getBlockEnum(BlockType.CHEST), classProvider.getBlockEnum(BlockType.ENDER_CHEST), classProvider.getBlockEnum(BlockType.TRAPPED_CHEST), classProvider.getBlockEnum(BlockType.ANVIL), classProvider.getBlockEnum(BlockType.DISPENSER), classProvider.getBlockEnum(BlockType.DROPPER), classProvider.getBlockEnum(BlockType.FURNACE), classProvider.getBlockEnum(BlockType.LIT_FURNACE), classProvider.getBlockEnum(BlockType.CRAFTING_TABLE), classProvider.getBlockEnum(BlockType.ENCHANTING_TABLE), classProvider.getBlockEnum(BlockType.JUKEBOX), classProvider.getBlockEnum(BlockType.BED), classProvider.getBlockEnum(BlockType.NOTEBLOCK), classProvider.getBlockEnum(BlockType.WEB),
 
-				// Some excepted blocks
-				classProvider.getBlockEnum(BlockType.TORCH), classProvider.getBlockEnum(BlockType.REDSTONE_TORCH), classProvider.getBlockEnum(BlockType.REDSTONE_WIRE), classProvider.getBlockEnum(BlockType.LADDER), classProvider.getBlockEnum(BlockType.VINE), classProvider.getBlockEnum(BlockType.WATERLILY), classProvider.getBlockEnum(BlockType.CACTUS), classProvider.getBlockEnum(BlockType.GLASS_PANE), classProvider.getBlockEnum(BlockType.IRON_BARS),
+			// Some excepted blocks
+			classProvider.getBlockEnum(BlockType.TORCH), classProvider.getBlockEnum(BlockType.REDSTONE_TORCH), classProvider.getBlockEnum(BlockType.REDSTONE_WIRE), classProvider.getBlockEnum(BlockType.LADDER), classProvider.getBlockEnum(BlockType.VINE), classProvider.getBlockEnum(BlockType.WATERLILY), classProvider.getBlockEnum(BlockType.CACTUS), classProvider.getBlockEnum(BlockType.GLASS_PANE), classProvider.getBlockEnum(BlockType.IRON_BARS),
 
-				// Pressure plates
-				classProvider.getBlockEnum(BlockType.STONE_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.WODDEN_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.LIGHT_WEIGHTED_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.HEAVY_WEIGHTED_PRESSURE_PLATE),
+			// Pressure plates
+			classProvider.getBlockEnum(BlockType.STONE_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.WODDEN_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.LIGHT_WEIGHTED_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.HEAVY_WEIGHTED_PRESSURE_PLATE),
 
-				// Falling blocks
-				classProvider.getBlockEnum(BlockType.SAND), classProvider.getBlockEnum(BlockType.GRAVEL), classProvider.getBlockEnum(BlockType.TNT), classProvider.getBlockEnum(BlockType.STANDING_BANNER), classProvider.getBlockEnum(BlockType.WALL_BANNER)
-			)
-		)
+			// Falling blocks
+			classProvider.getBlockEnum(BlockType.SAND), classProvider.getBlockEnum(BlockType.GRAVEL), classProvider.getBlockEnum(BlockType.TNT), classProvider.getBlockEnum(BlockType.STANDING_BANNER), classProvider.getBlockEnum(BlockType.WALL_BANNER))
 
 		val CLICK_TIMER = MSTimer()
 
-		private val RANDOM = Random()
-
-		fun findItem(thePlayer: IEntityPlayerSP, startSlot: Int, endSlot: Int, item: IItem?, itemDelay: Long, random: Boolean): Int
+		fun findItem(container: IContainer, startSlot: Int, endSlot: Int, item: IItem?, itemDelay: Long, random: Boolean): Int
 		{
 			val candidates: MutableList<Int> = ArrayList(endSlot - startSlot)
 
 			for (i in startSlot until endSlot)
 			{
-				val stack = thePlayer.inventoryContainer.getSlot(i).stack
+				val stack = container.getSlot(i).stack
 				if (stack != null && stack.item == item && stack.itemDelay >= itemDelay) candidates.add(i)
 			}
 
@@ -92,15 +84,14 @@ class InventoryUtils : MinecraftInstance(), Listenable
 			}
 		}
 
-		fun hasSpaceHotbar(thePlayer: IEntityPlayerSP): Boolean = IntStream.range(36, 45).mapToObj(thePlayer.inventory::getStackInSlot).anyMatch { obj: IItemStack? -> Objects.isNull(obj) }
+		fun hasSpaceHotbar(inventory: IInventoryPlayer): Boolean = (36..44).map(inventory::getStackInSlot).any { it == null }
 
-		fun findAutoBlockBlock(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, autoblockFullcubeOnly: Boolean, boundingBoxYLimit: Double): Int
+		fun findAutoBlockBlock(theWorld: IWorldClient, container: IContainer, autoblockFullcubeOnly: Boolean, boundingBoxYLimit: Double): Int
 		{
 			val hotbarSlots: MutableList<Int> = ArrayList(9)
 
-			for (i in 36..44)
-			{
-				val itemStack = thePlayer.inventoryContainer.getSlot(i).stack
+			(36..44).forEach { i ->
+				val itemStack = container.getSlot(i).stack
 				if (itemStack != null && classProvider.isItemBlock(itemStack.item) && itemStack.stackSize > 0)
 				{
 					val itemBlock = itemStack.item!!.asItemBlock()
@@ -112,12 +103,12 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 			val pred = if (boundingBoxYLimit == 0.0) hotbarSlots.firstOrNull()
 			else hotbarSlots.filter {
-				val block = thePlayer.inventoryContainer.getSlot(it).stack?.item!!.asItemBlock().block
+				val block = container.getSlot(it).stack?.item!!.asItemBlock().block
 				val box = block.getCollisionBoundingBox(theWorld, ORIGIN, block.defaultState!!)
 
 				box != null && box.maxY - box.minY <= boundingBoxYLimit
 			}.maxBy {
-				val block = thePlayer.inventoryContainer.getSlot(it).stack?.item!!.asItemBlock().block
+				val block = container.getSlot(it).stack?.item!!.asItemBlock().block
 				block.getBlockBoundsMaxY() - block.getBlockBoundsMinY()
 			}
 
@@ -127,9 +118,8 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 			if (!autoblockFullcubeOnly)
 			{
-				for (i in 36..44)
-				{
-					val itemStack = thePlayer.inventoryContainer.getSlot(i).stack
+				(36..44).forEach { i ->
+					val itemStack = container.getSlot(i).stack
 					if (itemStack != null && classProvider.isItemBlock(itemStack.item) && itemStack.stackSize > 0)
 					{
 						val itemBlock = itemStack.item!!.asItemBlock()
@@ -141,12 +131,12 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 				val pred2 = if (boundingBoxYLimit == 0.0) hotbarSlots.firstOrNull()
 				else hotbarSlots.filter {
-					val block = thePlayer.inventoryContainer.getSlot(it).stack?.item!!.asItemBlock().block
+					val block = container.getSlot(it).stack?.item!!.asItemBlock().block
 					val box = block.getCollisionBoundingBox(theWorld, ORIGIN, block.defaultState!!)
 
 					box != null && box.maxY - box.minY <= boundingBoxYLimit
 				}.maxBy {
-					val block = thePlayer.inventoryContainer.getSlot(it).stack?.item!!.asItemBlock().block
+					val block = container.getSlot(it).stack?.item!!.asItemBlock().block
 					block.getBlockBoundsMaxY() - block.getBlockBoundsMinY()
 				}
 
@@ -156,11 +146,11 @@ class InventoryUtils : MinecraftInstance(), Listenable
 			return -1
 		}
 
-		fun canAutoBlock(block: IBlock?): Boolean = !AUTOBLOCK_BLACKLIST.contains(block) && !classProvider.isBlockBush(block) && !classProvider.isBlockRailBase(block) && !classProvider.isBlockSign(block) && !classProvider.isBlockDoor(block)
+		fun canAutoBlock(block: IBlock?): Boolean = block !in AUTOBLOCK_BLACKLIST && !classProvider.isBlockBush(block) && !classProvider.isBlockRailBase(block) && !classProvider.isBlockSign(block) && !classProvider.isBlockDoor(block)
 
-		fun firstEmpty(thePlayer: IEntityPlayerSP, startSlot: Int, endSlot: Int, randomSlot: Boolean): Int
+		fun firstEmpty(container: IContainer, startSlot: Int, endSlot: Int, randomSlot: Boolean): Int
 		{
-			val emptySlots = IntStream.range(startSlot, endSlot).filter { i: Int -> thePlayer.inventoryContainer.getSlot(i).stack == null }.boxed().collect(Collectors.toList())
+			val emptySlots = (startSlot until endSlot).filter { container.getSlot(it).stack == null }.toIntArray()
 
 			return when
 			{

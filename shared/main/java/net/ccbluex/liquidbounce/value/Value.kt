@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import java.util.*
 
 abstract class Value<T>(val name: String, protected var value: T)
 {
@@ -140,6 +139,7 @@ class FontValue(valueName: String, value: IFontRenderer) : Value<IFontRenderer>(
 		val valueObject = JsonObject()
 		valueObject.addProperty("fontName", fontDetails.name)
 		valueObject.addProperty("fontSize", fontDetails.fontSize)
+
 		return valueObject
 	}
 
@@ -170,18 +170,11 @@ open class ListValue(name: String, val values: Array<String>, value: String) : V
 		this.value = value
 	}
 
-	operator fun contains(string: String?): Boolean = Arrays.stream(values).anyMatch { s: String -> s.equals(string, ignoreCase = true) }
+	operator fun contains(string: String?): Boolean = sequenceOf(*values).any { it.equals(string, ignoreCase = true) }
 
 	override fun changeValue(value: String)
 	{
-		for (element in values)
-		{
-			if (element.equals(value, ignoreCase = true))
-			{
-				this.value = element
-				break
-			}
-		}
+		values.firstOrNull { it.equals(value, ignoreCase = true) }?.let { this.value = it }
 	}
 
 	override fun toJson() = JsonPrimitive(value)
@@ -190,5 +183,4 @@ open class ListValue(name: String, val values: Array<String>, value: String) : V
 	{
 		if (element.isJsonPrimitive) changeValue(element.asString)
 	}
-
 }

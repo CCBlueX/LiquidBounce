@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.utils.login
 
 import com.google.common.base.Joiner
-import java.util.*
 
 class MinecraftAccount
 {
@@ -75,7 +74,7 @@ class MinecraftAccount
 
 		companion object
 		{
-			fun getById(id: String?): AltServiceType? = Arrays.stream(values()).filter { altServiceType: AltServiceType -> altServiceType.id.equals(id, ignoreCase = true) }.findFirst().orElse(null)
+			fun getById(id: String?): AltServiceType? = sequenceOf(*values()).firstOrNull { it.id.equals(id, ignoreCase = true) }
 		}
 	}
 }

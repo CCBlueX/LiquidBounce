@@ -168,7 +168,7 @@ public abstract class MixinScreenShotHelper
 						}
 					}
 
-				chatGUI.printChatMessage(new ChatComponentText("Took " + TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime) + " to save screenshot."));
+				chatGUI.printChatMessage(new ChatComponentText("Took " + TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime) + " to save '" + screenshotFile + "'."));
 			});
 
 			final IChatComponent ichatcomponent = new ChatComponentText(screenshotFile.getName());

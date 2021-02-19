@@ -137,7 +137,7 @@ class BowAimbot : Module()
 
 			target = entity
 
-			RotationUtils.faceBow(thePlayer, entity, silentRotation, predict, playerPredict, minPlayerPredictSize, maxPlayerPredictSize, minTurnSpeed, maxTurnSpeed, minSmoothingRatio, maxSmoothingRatio)
+			RotationUtils.faceBow(thePlayer, entity, minTurnSpeed, maxTurnSpeed, minSmoothingRatio, maxSmoothingRatio, minPlayerPredictSize, maxPlayerPredictSize, predict, playerPredict, silentRotation)
 		}
 	}
 

@@ -41,10 +41,10 @@ class FallingPlayer(private val theWorld: IWorldClient, private val thePlayer: I
 			motionZ += (forward * cos + strafe * sin).toDouble()
 		}
 
-		motionY -= 0.08
 
 		motionX *= 0.91
 
+		motionY -= 0.08
 		motionY *= 0.9800000190734863
 		motionY *= 0.91
 

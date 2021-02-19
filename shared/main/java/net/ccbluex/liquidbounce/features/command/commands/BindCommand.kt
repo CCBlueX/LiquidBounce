@@ -29,7 +29,9 @@ class BindCommand : Command("bind")
 			{
 				chat(thePlayer, "Module \u00A7a\u00A7l" + args[1] + "\u00A73 not found.")
 				return
-			} // Find key by name and change
+			}
+
+			// Find key by name and change
 			val key = Keyboard.getKeyIndex(args[2].toUpperCase())
 			module.keyBind = key
 

@@ -41,9 +41,7 @@ object AbstractJavaLinkerHandler
 
 			if (remapped != name) return remapped
 
-			if (currentClass.superclass == null) break
-
-			currentClass = currentClass.superclass
+			currentClass = currentClass.superclass ?: break
 		}
 
 		return name
@@ -69,9 +67,7 @@ object AbstractJavaLinkerHandler
 
 			if (remapped != name) return remapped
 
-			if (currentClass.superclass == null) break
-
-			currentClass = currentClass.superclass
+			currentClass = currentClass.superclass ?: break
 		}
 
 		return name
@@ -97,9 +93,7 @@ object AbstractJavaLinkerHandler
 
 			if (remapped != name) return remapped
 
-			if (currentClass.superclass == null) break
-
-			currentClass = currentClass.superclass
+			currentClass = currentClass.superclass ?: break
 		}
 
 		return name

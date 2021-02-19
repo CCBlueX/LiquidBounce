@@ -62,6 +62,7 @@ object EntityUtils : MinecraftInstance()
 				return targetMobs && entity.isMob() || targetAnimals && entity.isAnimal()
 			}
 		}
+
 		return false
 	}
 

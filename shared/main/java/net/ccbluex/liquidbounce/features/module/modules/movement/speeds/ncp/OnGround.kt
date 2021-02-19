@@ -16,13 +16,9 @@ class OnGround : SpeedMode("OnGround")
 {
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer
-		if (eventState != EventState.PRE) return
+		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer == null || !MovementUtils.isMoving(thePlayer)) return
-
-		if (thePlayer.fallDistance > 3.994) return
-		if (thePlayer.isInWater || thePlayer.isOnLadder || thePlayer.isCollidedHorizontally) return
+		if (eventState != EventState.PRE || !MovementUtils.isMoving(thePlayer) || thePlayer.fallDistance > 3.994 || thePlayer.isInWater || thePlayer.isOnLadder || thePlayer.isCollidedHorizontally) return
 
 		thePlayer.posY -= 0.3993000090122223
 		thePlayer.motionY = -1000.0

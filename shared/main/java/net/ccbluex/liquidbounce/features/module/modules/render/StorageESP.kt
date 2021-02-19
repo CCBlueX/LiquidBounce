@@ -175,15 +175,14 @@ class StorageESP : Module()
 				}
 			}
 
-			for (it in theWorld.loadedEntityList)
-			{
+			theWorld.loadedEntityList.forEach {
 				val color = when
 				{
 					classProvider.isEntityMinecartChest(it) -> chestColor
 					classProvider.isEntityMinecartFurnace(it) -> furnaceColor
 					classProvider.isEntityMinecartHopper(it) -> hopperColor
 					else -> null
-				} ?: continue
+				} ?: return@forEach
 
 
 				when (mode)

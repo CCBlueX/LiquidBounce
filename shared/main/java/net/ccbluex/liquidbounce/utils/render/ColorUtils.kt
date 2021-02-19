@@ -116,21 +116,25 @@ object ColorUtils : MinecraftInstance()
 				"team" ->
 				{
 					val chars = entity.displayName!!.formattedText.toCharArray()
+					val charsSize = chars.size
+
 					var color = Int.MAX_VALUE
 					var i = 0
-					while (i < chars.size)
+					while (i < charsSize)
 					{
-						if (chars[i] != '\u00A7' || i + 1 >= chars.size)
+						if (chars[i] != '\u00A7' || i + 1 >= charsSize)
 						{
 							i++
 							continue
 						}
+
 						val index = GameFontRenderer.getColorIndex(chars[i + 1])
 						if (index < 0 || index > 15)
 						{
 							i++
 							continue
 						}
+
 						color = hexColors[index]
 						break
 					}

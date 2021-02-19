@@ -42,11 +42,7 @@ class Tower : Module()
 	/**
 	 * OPTIONS
 	 */
-	private val modeValue = ListValue(
-		"Mode", arrayOf(
-			"Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4"
-		), "Motion"
-	)
+	private val modeValue = ListValue("Mode", arrayOf("Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4"), "Motion")
 
 	// AutoBlock
 	private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
@@ -204,7 +200,7 @@ class Tower : Module()
 			placeInfo = null
 			timer.update()
 
-			val update = if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer, autoBlockFullCubeOnlyValue.get(), 0.0) != -1 || thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
+			val update = if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0) != -1 || thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
 			else thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
 
 			if (update)
@@ -370,7 +366,7 @@ class Tower : Module()
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
-			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer, autoBlockFullCubeOnlyValue.get(), 0.0)
+			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0)
 			if (blockSlot == -1) return
 
 			when (autoBlockValue.get())
@@ -389,9 +385,7 @@ class Tower : Module()
 		}
 
 		// Place block
-		if (mc.playerController.onPlayerRightClick(
-				thePlayer, theWorld, itemStack!!, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3
-			)) if (swingValue.get()) thePlayer.swingItem()
+		if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack!!, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3)) if (swingValue.get()) thePlayer.swingItem()
 		else netHandler.addToSendQueue(classProvider.createCPacketAnimation())
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
@@ -434,9 +428,7 @@ class Tower : Module()
 						val posVec = WVec3(blockPosition).addVector(xSearch, ySearch, zSearch)
 						val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
 						val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
-						if (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || theWorld.rayTraceBlocks(
-								eyesPos, hitVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false
-							) != null)
+						if (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || theWorld.rayTraceBlocks(eyesPos, hitVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) != null)
 						{
 							zSearch += 0.1
 							continue
@@ -451,9 +443,7 @@ class Tower : Module()
 						val rotation = Rotation(WMathHelper.wrapAngleTo180_float(WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90f), WMathHelper.wrapAngleTo180_float((-WMathHelper.toDegrees(atan2(diffY, diffXZ).toFloat()))))
 						val rotationVector = RotationUtils.getVectorForRotation(rotation)
 						val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
-						val rayTrace = theWorld.rayTraceBlocks(
-							eyesPos, vector, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true
-						)
+						val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
 						if (!(rayTrace!!.typeOfHit == IMovingObjectPosition.WMovingObjectType.BLOCK && rayTrace.blockPos == neighbor))
 						{
 							zSearch += 0.1

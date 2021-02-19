@@ -33,7 +33,7 @@ class NameProtect : Module()
 
 		if ((event.text ?: return).contains("\u00A78[\u00A79\u00A7l" + LiquidBounce.CLIENT_NAME + "\u00A78] \u00A73")) return
 
-		for (friend in LiquidBounce.fileManager.friendsConfig.friends) event.text = StringUtils.replace(event.text, friend.playerName, translateAlternateColorCodes(friend.alias) + "\u00A7f")
+		LiquidBounce.fileManager.friendsConfig.friends.forEach { event.text = StringUtils.replace(event.text, it.playerName, translateAlternateColorCodes(it.alias) + "\u00A7f") }
 
 		if (!state) return
 		event.text = StringUtils.replace(event.text, thePlayer.name, translateAlternateColorCodes(fakeNameValue.get()) + "\u00A7f")
@@ -43,14 +43,12 @@ class NameProtect : Module()
 			val customFakeName = allPlayersCustomFakeNameValue.get()
 
 			mc.netHandler.playerInfoMap.asSequence().map { it.gameProfile.name }.forEach {
-				event.text = StringUtils.replace(
-					event.text, it, when (allPlayersModeValue.get().toLowerCase())
-					{
-						"obfuscate" -> "\u00A7k$it"
-						"empty" -> ""
-						else -> customFakeName
-					}
-				)
+				event.text = StringUtils.replace(event.text, it, when (allPlayersModeValue.get().toLowerCase())
+				{
+					"obfuscate" -> "\u00A7k$it"
+					"empty" -> ""
+					else -> customFakeName
+				})
 			}
 		}
 	}

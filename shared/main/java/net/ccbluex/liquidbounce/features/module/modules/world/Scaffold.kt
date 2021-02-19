@@ -540,7 +540,7 @@ class Scaffold : Module()
 	fun update(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
 		val isNotHeldItemBlock: Boolean = thePlayer.heldItem == null || !classProvider.isItemBlock(thePlayer.heldItem!!.item)
-		if (if (autoBlockValue.get().equals("Off", true)) isNotHeldItemBlock else InventoryUtils.findAutoBlockBlock(theWorld, thePlayer, autoBlockFullCubeOnlyValue.get(), 0.0) == -1 && isNotHeldItemBlock) return
+		if (if (autoBlockValue.get().equals("Off", true)) isNotHeldItemBlock else InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0) == -1 && isNotHeldItemBlock) return
 
 		val groundSearchDepth = 0.2
 
@@ -605,7 +605,7 @@ class Scaffold : Module()
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
-			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer, autoBlockFullCubeOnlyValue.get(), 0.0)
+			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0)
 			if (autoBlockSlot == -1) return
 
 			autoblock = thePlayer.inventoryContainer.getSlot(autoBlockSlot).stack
@@ -763,7 +763,7 @@ class Scaffold : Module()
 			if (autoBlockValue.get().equals("Off", true)) return
 
 			// Auto-Block
-			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let { BlockUtils.getBlock(theWorld, it) }?.getBlockBoundsMaxY() ?: 0.0) // Default boundingBoxYLimit it 0.0
+			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let { BlockUtils.getBlock(theWorld, it) }?.getBlockBoundsMaxY() ?: 0.0) // Default boundingBoxYLimit it 0.0
 
 			// If there is no autoblock-able blocks in your inventory, we can't continue.
 			if (blockSlot == -1) return

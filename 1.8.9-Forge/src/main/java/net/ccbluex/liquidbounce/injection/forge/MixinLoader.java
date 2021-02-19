@@ -55,5 +55,5 @@ public class MixinLoader implements IFMLLoadingPlugin
 		return null;
 	}
 
-	public static final String[] ZERO_LENGTH_STRING_ARRAY = new String[0];
+	private static final String[] ZERO_LENGTH_STRING_ARRAY = new String[0];
 }

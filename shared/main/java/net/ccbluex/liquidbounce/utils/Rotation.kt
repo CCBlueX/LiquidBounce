@@ -64,9 +64,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		val facing = ((WMathHelper.wrapAngleTo180_float(
-			thePlayer.rotationYaw - yaw - 23.5f - 135
-		) + 180) / 45).toInt()
+		val facing = ((WMathHelper.wrapAngleTo180_float(thePlayer.rotationYaw - yaw - 23.5f - 135) + 180) / 45).toInt()
 
 		val yaw = yaw
 

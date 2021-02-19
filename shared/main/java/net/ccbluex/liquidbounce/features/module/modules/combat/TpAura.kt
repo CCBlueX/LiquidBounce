@@ -30,7 +30,6 @@ import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.stream.IntStream
 import kotlin.math.max
 import kotlin.math.min
 
@@ -71,11 +70,7 @@ class TpAura : Module()
 	private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
 	val maxTargetsValue = IntegerValue("MaxTargets", 4, 1, 50)
 	private val maxDashDistanceValue = IntegerValue("DashDistance", 5, 1, 10)
-	private val autoBlockValue = ListValue(
-		"AutoBlock", arrayOf(
-			"Off", "Fake", "Packet", "AfterTick"
-		), "Packet"
-	)
+	private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Fake", "Packet", "AfterTick"), "Packet")
 	private val swingValue = BoolValue("Swing", true)
 
 	private val pathEspValue = BoolValue("PathESP", true)
@@ -335,7 +330,7 @@ class TpAura : Module()
 	private val targets: MutableList<IEntityLivingBase>
 		get() = mc.theWorld!!.loadedEntityList.asSequence().filter(classProvider::isEntityLivingBase).map(IEntity::asEntityLivingBase).filter { entity: IEntityLivingBase -> mc.thePlayer!!.getDistanceToEntityBox(entity) <= rangeValue.get() && isEnemy(entity, false) && entity.hurtTime <= hurtTimeValue.get() }.sortedBy { it.getDistanceToEntity(mc.thePlayer!!) * 1000 }.toMutableList()
 
-	fun isTarget(entity: IEntity?): Boolean = currentTargets.isNotEmpty() && IntStream.range(0, if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size).anyMatch { i: Int -> currentTargets[i].isEntityEqual(entity) }
+	fun isTarget(entity: IEntity?): Boolean = currentTargets.isNotEmpty() && (0 until if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size).any { i: Int -> currentTargets[i].isEntityEqual(entity) }
 
 	override val tag: String
 		get() = "${maxDashDistanceValue.get()}"

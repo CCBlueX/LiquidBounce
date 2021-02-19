@@ -234,7 +234,7 @@ object AntiBot : Module()
 		{
 			val player = entity.asEntityPlayer()
 
-			if (player.inventory.armorInventory[0] == null && player.inventory.armorInventory[1] == null && player.inventory.armorInventory[2] == null && player.inventory.armorInventory[3] == null) return true
+			if (player.inventory.armorInventory.all { it == null }) return true
 		}
 
 		// Ping

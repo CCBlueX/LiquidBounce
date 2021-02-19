@@ -119,6 +119,7 @@ class Nuker : Module()
 				else false // Bad block
 			}.toMutableMap()
 
+			val nukeEnabled = nukeValue.get()
 			do
 			{
 				val (blockPos, block) = when (priorityValue.get())
@@ -198,7 +199,7 @@ class Nuker : Module()
 					currentDamage = 0F
 				}
 				return // Break out
-			} while (nuke < nukeValue.get())
+			} while (nuke < nukeEnabled)
 		}
 		else
 		{

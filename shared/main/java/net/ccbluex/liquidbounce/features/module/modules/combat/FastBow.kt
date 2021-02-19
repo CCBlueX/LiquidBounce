@@ -37,7 +37,7 @@ class FastBow : Module()
 			val yaw = RotationUtils.targetRotation?.yaw ?: thePlayer.rotationYaw
 			val pitch = RotationUtils.targetRotation?.pitch ?: thePlayer.rotationPitch
 
-			for (i in 0 until packetsValue.get()) mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerLook(yaw, pitch, true))
+			repeat(packetsValue.get()) { mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerLook(yaw, pitch, true)) }
 
 			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
 			thePlayer.itemInUseCount = currentItem.maxItemUseDuration - 1

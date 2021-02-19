@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
-import java.util.stream.Stream
 
 @ModuleInfo(name = "Step", description = "Allows you to step up blocks.", category = ModuleCategory.MOVEMENT)
 class Step : Module()
@@ -189,7 +188,7 @@ class Step : Module()
 		val mode = modeValue.get()
 
 		// Set step to default in some cases
-		if ((!thePlayer.onGround && !airStepValue.get()) || !timer.hasTimePassed(delay) || Stream.of("Jump", "MotionNCP", "AAC3.2.0", "AAC3.3.4").anyMatch { mode.equals(it, ignoreCase = true) })
+		if ((!thePlayer.onGround && !airStepValue.get()) || !timer.hasTimePassed(delay) || sequenceOf("Jump", "MotionNCP", "AAC3.2.0", "AAC3.3.4").any { mode.equals(it, ignoreCase = true) })
 		{
 			thePlayer.stepHeight = 0.5F
 			event.stepHeight = 0.5F
@@ -315,7 +314,7 @@ class Step : Module()
 		return theWorld.getCollisionBoxes(thePlayer.entityBoundingBox.offset(x, 1.001335979112147, z)).isEmpty()
 	}
 
-	fun canAirStep(): Boolean = Stream.of("Vanilla", "NCP", "OldNCP", "AAC3.1.5", "Spartan127", "Rewinside").anyMatch { modeValue.get().equals(it, ignoreCase = true) }
+	fun canAirStep(): Boolean = sequenceOf("Vanilla", "NCP", "OldNCP", "AAC3.1.5", "Spartan127", "Rewinside").any { modeValue.get().equals(it, ignoreCase = true) }
 
 	override val tag: String
 		get() = modeValue.get()

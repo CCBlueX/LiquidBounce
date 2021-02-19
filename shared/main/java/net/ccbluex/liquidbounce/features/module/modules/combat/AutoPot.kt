@@ -139,20 +139,29 @@ class AutoPot : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
+		val currentScreen = mc.currentScreen
+		val netHandler = mc.netHandler
+
 		val randomSlot = randomSlotValue.get()
+		val throwDirection = throwDirValue.get().toLowerCase()
+		val health = healthValue.get()
+
+		val containerOpen = classProvider.isGuiContainer(currentScreen)
+		val isNotInventory = !classProvider.isGuiInventory(currentScreen)
 
 		when (motionEvent.eventState)
 		{
 			PRE ->
 			{
-				if (potThrowDelayTimer.hasTimePassed(potThrowDelay) && (ignoreScreen.get() || classProvider.isGuiContainer(mc.currentScreen)))
+				if (potThrowDelayTimer.hasTimePassed(potThrowDelay) && (ignoreScreen.get() || containerOpen))
 				{
 
 					// Hotbar Potion
 					val healPotionInHotbar = findHealPotion(thePlayer, 36, 45, randomSlot)
 					val buffPotionInHotbar = findBuffPotion(thePlayer, 36, 45, randomSlot)
 
-					if (thePlayer.health <= healthValue.get() && healPotionInHotbar != -1 || buffPotionInHotbar != -1)
+
+					if (thePlayer.health <= health && healPotionInHotbar != -1 || buffPotionInHotbar != -1)
 					{
 						if (thePlayer.onGround)
 						{
@@ -163,73 +172,73 @@ class AutoPot : Module()
 							}
 						}
 
+						val posY = thePlayer.posY
+
 						// Prevent throwing potions into the void
-						val fallingPlayer = FallingPlayer(theWorld, thePlayer, thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
+						val fallingPlayer = FallingPlayer(theWorld, thePlayer, thePlayer.posX, posY, thePlayer.posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
 
 						val collisionBlock = fallingPlayer.findCollision(20)?.pos
 
-						if (thePlayer.posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get()) return
+						if (posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get()) return
 
+						// Suspend killaura if option is present
 						if (killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
 
-						potion = if (thePlayer.health <= healthValue.get() && healPotionInHotbar != -1) healPotionInHotbar else buffPotionInHotbar
-						mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(potion - 36))
+						potion = if (thePlayer.health <= health && healPotionInHotbar != -1) healPotionInHotbar else buffPotionInHotbar
 
-						if (thePlayer.rotationPitch <= 80F) RotationUtils.setTargetRotation(Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)))
+						// Swap hotbar slot to potion slot
+						netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(potion - 36))
 
-						if (when (throwDirValue.get().toLowerCase())
+						val pitch = thePlayer.rotationPitch
+
+						if (pitch <= 80F) RotationUtils.setTargetRotation(Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)))
+
+						if (when (throwDirection)
 							{
-								"up" -> thePlayer.rotationPitch > -80F
-								else -> thePlayer.rotationPitch < 80F
-							})
+								"up" -> pitch > -80F
+								else -> pitch < 80F
+							}) RotationUtils.setTargetRotation(Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(when (throwDirection)
 						{
-							RotationUtils.setTargetRotation(
-								Rotation(
-									thePlayer.rotationYaw, RandomUtils.nextFloat(
-										when (throwDirValue.get().toLowerCase())
-										{
-											"up" -> -80F
-											else -> 80F
-										}, when (throwDirValue.get().toLowerCase())
-										{
-											"up" -> -90F
-											else -> 90F
-										}
-									)
-								), if (keepRotationValue.get()) keepRotationLengthValue.get() else 0
-							)
-						}
+							"up" -> -80F
+							else -> 80F
+						}, when (throwDirection)
+						{
+							"up" -> -90F
+							else -> 90F
+						})), if (keepRotationValue.get()) keepRotationLengthValue.get() else 0)
+
 						return
 					}
 				}
 
-				if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0))
+				val currentContainer = thePlayer.openContainer
+				if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(currentContainer != null && currentContainer.windowId != 0))
 				{
 
 					// Move Potion Inventory -> Hotbar
 					val healPotionInInventory = findHealPotion(thePlayer, 9, 36, randomSlot)
 					val buffPotionInInventory = findBuffPotion(thePlayer, 9, 36, randomSlot)
 
-					if ((healPotionInInventory != -1 || buffPotionInInventory != -1) && InventoryUtils.hasSpaceHotbar(thePlayer))
+					if ((healPotionInInventory != -1 || buffPotionInInventory != -1) && InventoryUtils.hasSpaceHotbar(thePlayer.inventory))
 					{
-						if (openInventoryValue.get() && !classProvider.isGuiInventory(mc.currentScreen)) return
+						if (openInventoryValue.get() && isNotInventory) return
 
 						var slot = if (healPotionInInventory != -1) healPotionInInventory else buffPotionInInventory
 
 						// Simulate Click Mistakes to bypass some (geek) anti-cheat's click accuracy checks
 						if (misClickValue.get() && misClickRateValue.get() > 0 && Random.nextInt(100) <= misClickRateValue.get())
 						{
-							val firstEmpty = InventoryUtils.firstEmpty(thePlayer, 9, 36, randomSlot)
+							val firstEmpty = InventoryUtils.firstEmpty(thePlayer.inventoryContainer, 9, 36, randomSlot)
 							if (firstEmpty != -1) slot = firstEmpty
 						}
 
-						val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
+						val openInventory = isNotInventory && simulateInventory.get()
 
-						if (openInventory) mc.netHandler.addToSendQueue(createOpenInventoryPacket())
+						if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
 
 						mc.playerController.windowClick(0, slot, 0, 1, thePlayer)
 
-						if (openInventory) mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
+						if (openInventory) netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
 
 						invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
 						invDelayTimer.reset()
@@ -239,18 +248,20 @@ class AutoPot : Module()
 
 			POST ->
 			{
-				if ((ignoreScreen.get() || !classProvider.isGuiContainer(mc.currentScreen)) && potion >= 0 && when (throwDirValue.get().toLowerCase())
-					{
-						"up" -> RotationUtils.serverRotation.pitch <= -75F
-						else -> RotationUtils.serverRotation.pitch >= 75F
-					})
+				val pitchCheck = when (throwDirection)
+				{
+					"up" -> RotationUtils.serverRotation.pitch <= -75F
+					else -> RotationUtils.serverRotation.pitch >= 75F
+				}
+
+				if ((ignoreScreen.get() || !containerOpen) && potion >= 0 && pitchCheck)
 				{
 					val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack
 
 					if (itemStack != null)
 					{
-						mc.netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
-						mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+						netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
+						netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
 						potThrowDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 						potThrowDelayTimer.reset()
@@ -266,22 +277,25 @@ class AutoPot : Module()
 	{
 		val candidates = mutableListOf<Int>()
 
-		for (i in startSlot until endSlot)
+		for (slotIndex in startSlot until endSlot)
 		{
-			val stack = thePlayer.inventoryContainer.getSlot(i).stack
+			val stack = thePlayer.inventoryContainer.getSlot(slotIndex).stack ?: continue
 
-			if (stack == null || !classProvider.isItemPotion(stack.item) || !stack.isSplash()) continue
+			if (!classProvider.isItemPotion(stack.item) || !stack.isSplash()) continue
 
 			val itemPotion = stack.item!!.asItemPotion()
 
-			if (itemPotion.getEffects(stack).filter { it.potionID == classProvider.getPotionEnum(PotionType.HEAL).id }.any()) candidates.add(i)
+			if (itemPotion.getEffects(stack).filter { it.potionID == classProvider.getPotionEnum(PotionType.HEAL).id }.any()) candidates.add(slotIndex)
 
-			if (!thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.REGENERATION)) && itemPotion.getEffects(stack).filter { it.potionID == classProvider.getPotionEnum(PotionType.REGENERATION).id }.any()) candidates.add(i)
+			if (!thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.REGENERATION)) && itemPotion.getEffects(stack).filter { it.potionID == classProvider.getPotionEnum(PotionType.REGENERATION).id }.any()) candidates.add(slotIndex)
 		}
 
-		if (candidates.isEmpty()) return -1
-
-		return if (random) candidates.random() else candidates.first()
+		return when
+		{
+			candidates.isEmpty() -> -1
+			random -> candidates.random()
+			else -> candidates.first()
+		}
 	}
 
 	private fun findBuffPotion(thePlayer: IEntityPlayerSP, startSlot: Int, endSlot: Int, random: Boolean): Int
@@ -295,11 +309,12 @@ class AutoPot : Module()
 		var playerDamageBoost = -1
 		var playerFireResis = -1
 		var playerResis = -1
-		var playerInvis = false
 		var playerAbsorp = -1
 		var playerHealthBoost = -1
-		var playerNightVision = false
 		var playerWaterBreath = -1
+
+		var playerInvis = false
+		var playerNightVision = false
 
 		for (potionEffect in thePlayer.activePotionEffects)
 		{
@@ -309,19 +324,20 @@ class AutoPot : Module()
 			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.DAMAGE_BOOST).id) playerDamageBoost = potionEffect.amplifier
 			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.FIRE_RESISTANCE).id) playerFireResis = potionEffect.amplifier
 			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.RESISTANCE).id) playerResis = potionEffect.amplifier
-			if (invisPot && potionEffect.potionID == classProvider.getPotionEnum(PotionType.INVISIBILITY).id) playerInvis = true
 			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.ABSORPTION).id) playerAbsorp = potionEffect.amplifier
 			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.HEALTH_BOOST).id) playerHealthBoost = potionEffect.amplifier
-			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.NIGHT_VISION).id) playerNightVision = true
 			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.WATER_BREATHING).id) playerWaterBreath = potionEffect.amplifier
+
+			if (invisPot && potionEffect.potionID == classProvider.getPotionEnum(PotionType.INVISIBILITY).id) playerInvis = true
+			if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.NIGHT_VISION).id) playerNightVision = true
 		}
 
 		val candidates = mutableListOf<Int>()
 		for (i in startSlot until endSlot)
 		{
-			val stack = thePlayer.inventoryContainer.getSlot(i).stack
+			val stack = thePlayer.inventoryContainer.getSlot(i).stack ?: continue
 
-			if (stack == null || System.currentTimeMillis() - stack.itemDelay < itemDelayValue.get() || !classProvider.isItemPotion(stack.item) || !stack.isSplash()) continue
+			if (System.currentTimeMillis() - stack.itemDelay < itemDelayValue.get() || !classProvider.isItemPotion(stack.item) || !stack.isSplash()) continue
 
 			val itemPotion = stack.item!!.asItemPotion()
 
@@ -331,11 +347,12 @@ class AutoPot : Module()
 			var potionDamageBoost = -1
 			var potionFireResis = -1
 			var potionResis = -1
-			var potionInvis = false
 			var potionAbsorp = -1
 			var potionHealthboost = -1
-			var potionNightVision = false
 			var potionWaterBreath = -1
+
+			var potionInvis = false
+			var potionNightVision = false
 
 			for (potionEffect in itemPotion.getEffects(stack))
 			{
@@ -345,12 +362,14 @@ class AutoPot : Module()
 				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.DAMAGE_BOOST).id) potionDamageBoost = potionEffect.amplifier
 				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.FIRE_RESISTANCE).id) potionFireResis = potionEffect.amplifier
 				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.RESISTANCE).id) potionResis = potionEffect.amplifier
-				if (invisPot && potionEffect.potionID == classProvider.getPotionEnum(PotionType.INVISIBILITY).id) potionInvis = true
 				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.ABSORPTION).id) potionAbsorp = potionEffect.amplifier
 				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.HEALTH_BOOST).id) potionHealthboost = potionEffect.amplifier
-				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.NIGHT_VISION).id) potionNightVision = true
 				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.WATER_BREATHING).id) potionWaterBreath = potionEffect.amplifier
-			}            //</editor-fold>
+
+				if (invisPot && potionEffect.potionID == classProvider.getPotionEnum(PotionType.INVISIBILITY).id) potionInvis = true
+				if (potionEffect.potionID == classProvider.getPotionEnum(PotionType.NIGHT_VISION).id) potionNightVision = true
+			}
+			//</editor-fold>
 
 			// Speed Splash Potion
 			if (potionSpeed > -1 && playerSpeed < potionSpeed) candidates.add(i)
@@ -367,12 +386,6 @@ class AutoPot : Module()
 			// DigSpeed Potion
 			if (!candidates.contains(i) && potionDigSpeed > -1 && potionDigSpeed > playerDigSpeed) candidates.add(i)
 
-			// Jump Boost Splash Potion
-			if (jumpPot && !candidates.contains(i) && potionJump > -1 && potionJump > playerJump) candidates.add(i)
-
-			// Invisibility Splash Potion
-			if (invisPot && !candidates.contains(i) && potionInvis && !playerInvis) candidates.add(i)
-
 			// Absorption Splash Potion
 			if (!candidates.contains(i) && potionAbsorp > -1 && potionAbsorp > playerAbsorp) candidates.add(i)
 
@@ -384,11 +397,20 @@ class AutoPot : Module()
 
 			// Water Breathing Splash Potion
 			if (!candidates.contains(i) && potionWaterBreath > -1 && potionWaterBreath > playerWaterBreath) candidates.add(i)
+
+			// Jump Boost Splash Potion
+			if (jumpPot && !candidates.contains(i) && potionJump > -1 && potionJump > playerJump) candidates.add(i)
+
+			// Invisibility Splash Potion
+			if (invisPot && !candidates.contains(i) && potionInvis && !playerInvis) candidates.add(i)
 		}
 
-		if (candidates.isEmpty()) return -1
-
-		return if (random) candidates.random() else candidates.first()
+		return when
+		{
+			candidates.isEmpty() -> -1
+			random -> candidates.random()
+			else -> candidates.first()
+		}
 	}
 
 	override val tag: String

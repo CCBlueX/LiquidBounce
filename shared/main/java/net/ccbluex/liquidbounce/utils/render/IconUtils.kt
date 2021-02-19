@@ -32,8 +32,7 @@ object IconUtils
 	@Throws(IOException::class)
 	private fun readImageToBuffer(imageStream: InputStream?): ByteBuffer?
 	{
-		if (imageStream == null) return null
-		val bufferedImage = ImageIO.read(imageStream)
+		val bufferedImage = ImageIO.read(imageStream ?: return null)
 		val rgb = bufferedImage.getRGB(0, 0, bufferedImage.width, bufferedImage.height, null, 0, bufferedImage.width)
 		val byteBuffer = ByteBuffer.allocate(4 * rgb.size)
 

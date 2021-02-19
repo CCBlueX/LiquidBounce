@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import java.util.*
-import java.util.stream.Stream
 
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
 class Speed : Module()
@@ -56,6 +55,7 @@ class Speed : Module()
 
 		// Other
 		SlowHop(), CustomSpeed()
+
 	)
 
 	val modeValue: ListValue = object : ListValue("Mode", modes, "NCPBHop")
@@ -133,7 +133,7 @@ class Speed : Module()
 
 	override fun onEnable()
 	{
-		if (mc.thePlayer == null) return
+		mc.thePlayer ?: return
 
 		mc.timer.timerSpeed = 1f
 
@@ -142,14 +142,14 @@ class Speed : Module()
 
 	override fun onDisable()
 	{
-		if (mc.thePlayer == null) return
+		mc.thePlayer ?: return
 
 		mc.timer.timerSpeed = 1f
 
 		mode?.onDisable()
 	}
 
-	fun allowSprintBoost(): Boolean = Stream.of("AAC3.3.11-Ground", "AAC3.3.11-Ground2", "AACPort", "ACP").anyMatch { modeValue.get().equals(it, ignoreCase = true) }
+	fun allowSprintBoost(): Boolean = sequenceOf("AAC3.3.11-Ground", "AAC3.3.11-Ground2", "AACPort", "ACP").any { modeValue.get().equals(it, ignoreCase = true) }
 
 	override val tag: String
 		get() = modeValue.get()

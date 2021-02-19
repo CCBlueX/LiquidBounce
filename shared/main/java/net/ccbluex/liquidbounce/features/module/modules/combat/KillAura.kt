@@ -834,13 +834,12 @@ class KillAura : Module()
 		val criticals = LiquidBounce.moduleManager[Criticals::class.java] as Criticals
 
 		val crackSize = particles.get()
-		if (crackSize > 0) for (i in 0..crackSize)
-		{
+		if (crackSize > 0) repeat(crackSize) {
 			// Critical Effect
 			if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) && thePlayer.ridingEntity == null || criticals.state && criticals.canCritical(thePlayer)) thePlayer.onCriticalHit(target ?: return)
 
 			// Enchant Effect
-			if (functions.getModifierForCreature(thePlayer.heldItem, (target ?: return).creatureAttribute) > 0.0f || fakeSharpValue.get()) thePlayer.onEnchantmentCritical(target ?: return)
+			if (functions.getModifierForCreature(thePlayer.heldItem, (target ?: return@attackEntity).creatureAttribute) > 0.0f || fakeSharpValue.get()) thePlayer.onEnchantmentCritical(target ?: return)
 		}
 
 		// Start blocking after attack

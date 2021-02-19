@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagCompound
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.util.regex.Pattern
-import java.util.stream.IntStream
 import kotlin.math.min
 
 /**
@@ -54,7 +53,7 @@ object ItemUtils : MinecraftInstance()
 				++mode
 			}
 
-			if (item == null) return null
+			item ?: return null
 
 			var i = 1
 
@@ -84,9 +83,9 @@ object ItemUtils : MinecraftInstance()
 		}
 	}
 
-	fun getEnchantment(itemStack: IItemStack?, enchantment: IEnchantment): Int = if (itemStack?.enchantmentTagList == null || itemStack.enchantmentTagList!!.hasNoTags()) 0 else IntStream.range(0, itemStack.enchantmentTagList!!.tagCount()).mapToObj(itemStack.enchantmentTagList!!::getCompoundTagAt).filter { tagCompound: INBTTagCompound -> tagCompound.hasKey("ench") && tagCompound.getShort("ench").toInt() == enchantment.effectId || tagCompound.hasKey("id") && tagCompound.getShort("id").toInt() == enchantment.effectId }.findFirst().map { tagCompound: INBTTagCompound -> tagCompound.getShort("lvl") }.orElseGet(0::toShort).toInt()
+	fun getEnchantment(itemStack: IItemStack?, enchantment: IEnchantment): Int = if (itemStack?.enchantmentTagList == null || itemStack.enchantmentTagList!!.hasNoTags()) 0 else ((0 until itemStack.enchantmentTagList!!.tagCount()).map(itemStack.enchantmentTagList!!::getCompoundTagAt).firstOrNull { it.hasKey("ench") && it.getShort("ench").toInt() == enchantment.effectId || it.hasKey("id") && it.getShort("id").toInt() == enchantment.effectId }?.let { tagCompound: INBTTagCompound -> tagCompound.getShort("lvl").toInt() }) ?: 0
 
-	fun getEnchantmentCount(itemStack: IItemStack?): Int = if (itemStack?.enchantmentTagList == null || itemStack.enchantmentTagList!!.hasNoTags()) 0 else IntStream.range(0, itemStack.enchantmentTagList!!.tagCount()).mapToObj(itemStack.enchantmentTagList!!::getCompoundTagAt).filter { tagCompound: INBTTagCompound -> tagCompound.hasKey("ench") || tagCompound.hasKey("id") }.count().toInt()
+	fun getEnchantmentCount(itemStack: IItemStack?): Int = if (itemStack?.enchantmentTagList == null || itemStack.enchantmentTagList!!.hasNoTags()) 0 else (0 until itemStack.enchantmentTagList!!.tagCount()).map(itemStack.enchantmentTagList!!::getCompoundTagAt).count { it.hasKey("ench") || it.hasKey("id") }
 
 	fun isStackEmpty(stack: IItemStack?): Boolean = stack == null || classProvider.isItemAir(stack.item)
 

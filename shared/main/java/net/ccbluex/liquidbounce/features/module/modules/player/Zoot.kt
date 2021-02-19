@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.value.BoolValue
-import java.util.stream.Stream
 
 // TODO: Max packets per tick limit
 @ModuleInfo(name = "Zoot", description = "Removes all bad potion effects/fire.", category = ModuleCategory.PLAYER)
@@ -67,7 +66,8 @@ class Zoot : Module()
 	// TODO: Check current potion
 	private fun isBadEffect(effect: IPotionEffect): Boolean
 	{
-		return Stream.of(
+		return sequenceOf(
+
 			classProvider.getPotionEnum(PotionType.HUNGER), //
 			classProvider.getPotionEnum(PotionType.MOVE_SLOWDOWN), //
 			classProvider.getPotionEnum(PotionType.DIG_SLOWDOWN), //
@@ -77,6 +77,6 @@ class Zoot : Module()
 			classProvider.getPotionEnum(PotionType.WEAKNESS), //
 			classProvider.getPotionEnum(PotionType.WITHER), //
 			classProvider.getPotionEnum(PotionType.POISON) //
-		).anyMatch { effect.potionID == it.id }
+		).any { effect.potionID == it.id }
 	}
 }
