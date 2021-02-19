@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
+import net.ccbluex.liquidbounce.native.Natives
 import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
 import net.ccbluex.liquidbounce.renderer.ultralight.WebPlatform
 import net.ccbluex.liquidbounce.renderer.ultralight.WebView
@@ -76,6 +77,8 @@ object LiquidBounce : Listenable {
      * Should be executed to start the client.
      */
     val startHandler = handler<ClientStartEvent> {
+        Natives.downloadNatives()
+
         commandManager.registerInbuilt()
         // Initialize the executor
         CommandExecutor

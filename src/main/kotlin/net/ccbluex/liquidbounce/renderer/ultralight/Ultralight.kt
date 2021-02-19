@@ -45,6 +45,7 @@ import com.labymedia.ultralight.bitmap.UltralightBitmapSurface
 import com.labymedia.ultralight.config.FontHinting
 import com.labymedia.ultralight.config.UltralightConfig
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.native.Natives
 import net.ccbluex.liquidbounce.renderer.ultralight.input.ClipboardAdapter
 import net.ccbluex.liquidbounce.renderer.ultralight.input.CursorAdapter
 import net.ccbluex.liquidbounce.renderer.ultralight.listener.ViewListener
@@ -72,7 +73,7 @@ object WebPlatform {
 
         // Load natives from native directory inside root folder
         logger.debug("Loading ultralight natives")
-        UltralightJava.load(File(LiquidBounce.configSystem.rootFolder, "natives").toPath())
+        UltralightJava.load(Natives.nativesRoot.toPath())
 
         // Setup platform
         logger.debug("Setting up ultralight platform")

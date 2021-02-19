@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import com.google.common.io.ByteStreams
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -62,6 +61,6 @@ object HttpUtils {
 
     fun get(url: String) = request(url, "GET")
 
-    fun download(url: String, file: File) = FileOutputStream(file).use { ByteStreams.copy(make(url, "GET").inputStream, it) }
+    fun download(url: String, file: File) = FileOutputStream(file).use { make(url, "GET").inputStream.copyTo(it) }
 
 }
