@@ -17,6 +17,8 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import net.fabricmc.loom.task.RemapJarTask
+
 plugins {
     id "fabric-loom"
     id "org.jetbrains.kotlin.jvm"
@@ -110,7 +112,7 @@ task packageDefaultTheme(type: Zip) {
 }
 
 shadowJar {
-    archiveClassifier.set('')
+    archiveClassifier.set('shadow')
 
     // Natives are going to be downloaded from our cloud
     exclude "native-binaries/*"
@@ -124,12 +126,18 @@ shadowJar {
     }
 }
 
-build.dependsOn packageDefaultTheme
-build.dependsOn shadowJar
-
 jar {
     from "LICENSE"
 }
+
+task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
+    setInput(shadowJar.archiveFile)
+    remapAccessWidener.set(true)
+    addNestedDependencies.set(remapJar.addNestedDependencies)
+}
+
+build.dependsOn packageDefaultTheme
+build.dependsOn remapShadow
 
 compileKotlin.kotlinOptions.jvmTarget = "1.8"
 
