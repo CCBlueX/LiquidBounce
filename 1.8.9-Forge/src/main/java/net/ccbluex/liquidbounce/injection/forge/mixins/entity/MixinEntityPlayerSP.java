@@ -147,7 +147,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 		try
 		{
 			final IEntityPlayerSP thePlayer = LiquidBounce.wrapper.getMinecraft().getThePlayer();
-			if (thePlayer == null) return;
+			if (thePlayer == null)
+				return;
 
 			LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE));
 
@@ -327,9 +328,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			--timeUntilPortal;
 
 		final boolean jump = movementInput.jump;
+		final float sprintForwardThreshold = 0.8F;
+		final boolean forward = movementInput.moveForward >= sprintForwardThreshold;
 		final boolean sneak = movementInput.sneak;
-		final float f = 0.8F;
-		final boolean forward = movementInput.moveForward >= f;
+
 		movementInput.updatePlayerMoveState();
 
 		final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
@@ -354,14 +356,14 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 		final boolean foodCheck = !sprint.getFoodValue().get() || getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
 
 		final boolean blindCheck = !isPotionActive(Potion.blindness);
-		if (onGround && !sneak && !forward && movementInput.moveForward >= f && !isSprinting() && foodCheck && !isUsingItem() && blindCheck)
+		if (onGround && !sneak && !forward && movementInput.moveForward >= sprintForwardThreshold && !isSprinting() && foodCheck && !isUsingItem() && blindCheck)
 			if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown())
 				sprintToggleTimer = 7;
 			else
 				setSprinting(true);
 
 		final boolean sprintCheck = noSlow.getState() || !isUsingItem();
-		if (!isSprinting() && movementInput.moveForward >= f && foodCheck && sprintCheck && blindCheck && mc.gameSettings.keyBindSprint.isKeyDown())
+		if (!isSprinting() && movementInput.moveForward >= sprintForwardThreshold && foodCheck && sprintCheck && blindCheck && mc.gameSettings.keyBindSprint.isKeyDown())
 			setSprinting(true);
 
 		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.get(Scaffold.class);
@@ -371,7 +373,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			setSprinting(false);
 
 		final boolean allDirection = sprint.getState() && sprint.getAllDirectionsValue().get();
-		if (isSprinting() && (!allDirection && movementInput.moveForward < f || isCollidedHorizontally || !foodCheck))
+		if (isSprinting() && (!allDirection && movementInput.moveForward < sprintForwardThreshold || isCollidedHorizontally || !foodCheck))
 			setSprinting(false);
 
 		if (capabilities.allowFlying)
@@ -442,272 +444,346 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	}
 
 	@Override
-	public void moveEntity(double x, double y, double z)
+	public void moveEntity(double moveX, double moveY, double moveZ)
 	{
-		final MoveEvent moveEvent = new MoveEvent(x, y, z);
+		// Call MoveEvent
+		final MoveEvent moveEvent = new MoveEvent(moveX, moveY, moveZ);
 		LiquidBounce.eventManager.callEvent(moveEvent);
 
 		if (moveEvent.isCancelled())
 			return;
 
-		x = moveEvent.getX();
-		y = moveEvent.getY();
-		z = moveEvent.getZ();
+		// Fix Position
+		moveX = moveEvent.getX();
+		moveY = moveEvent.getY();
+		moveZ = moveEvent.getZ();
 
 		if (noClip)
 		{
-			setEntityBoundingBox(getEntityBoundingBox().offset(x, y, z));
+			setEntityBoundingBox(getEntityBoundingBox().offset(moveX, moveY, moveZ));
+
 			posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) * 0.5;
 			posY = getEntityBoundingBox().minY;
 			posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) * 0.5;
 		}
 		else
 		{
+			/* Move */
 			worldObj.theProfiler.startSection("move");
-			final double d0 = posX;
-			final double d1 = posY;
-			final double d2 = posZ;
+			final double lastPosX = posX;
+			final double lastPosY = posY;
+			final double lastPosZ = posZ;
 
+			// Motion correction for web
 			if (isInWeb)
 			{
 				isInWeb = false;
-				x *= 0.25D;
-				y *= 0.05000000074505806D;
-				z *= 0.25D;
+
+				moveX *= 0.25D;
+				moveY *= 0.05000000074505806D;
+				moveZ *= 0.25D;
+
 				motionX = 0.0D;
 				motionY = 0.0D;
 				motionZ = 0.0D;
 			}
 
-			double d3 = x;
-			final double d4 = y;
-			double d5 = z;
+			double safewalkAppliedX = moveX;
+			final double safewalkAppliedY = moveY;
+			double safewalkAppliedZ = moveZ;
+
 			final boolean sneaking = onGround && isSneaking();
 
+			// SafeWalk
 			if (sneaking || moveEvent.isSafeWalk())
 			{
-				final double d6;
+				final double collisionCheckRange = 0.05D;
 
+				// TODO: Please fold these triple-iterations into one if can
+
+				// X
 				// noinspection ConstantConditions
-				d6 = 0.05D;
-				while (x != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, 0.0D)).isEmpty())
+				while (moveX != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(moveX, -1.0D, 0.0D)).isEmpty())
 				{
-					if (x < d6 && x >= -d6)
-						x = 0.0D;
+					if (moveX < collisionCheckRange && moveX >= -collisionCheckRange)
+						moveX = 0.0D;
 					else
-						x -= x > 0.0D ? d6 : -d6;
+						moveX -= moveX > 0.0D ? collisionCheckRange : -collisionCheckRange;
 
-					d3 = x;
+					safewalkAppliedX = moveX;
 				}
 
+				// Z
 				// noinspection ConstantConditions
-				while (z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0.0D, -1.0D, z)).isEmpty())
+				while (moveZ != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0.0D, -1.0D, moveZ)).isEmpty())
 				{
-					if (z < d6 && z >= -d6)
-						z = 0.0D;
+					if (moveZ < collisionCheckRange && moveZ >= -collisionCheckRange)
+						moveZ = 0.0D;
 					else
-						z -= z > 0.0D ? d6 : -d6;
+						moveZ -= moveZ > 0.0D ? collisionCheckRange : -collisionCheckRange;
 
-					d5 = z;
+					safewalkAppliedZ = moveZ;
 				}
 
+				// X, Z
 				// noinspection ConstantConditions
-				while (x != 0.0D && z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, z)).isEmpty())
+				while (moveX != 0.0D && moveZ != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(moveX, -1.0D, moveZ)).isEmpty())
 				{
-					if (x < d6 && x >= -d6)
-						x = 0.0D;
+					if (moveX < collisionCheckRange && moveX >= -collisionCheckRange)
+						moveX = 0.0D;
 					else
-						x -= x > 0.0D ? d6 : -d6;
+						moveX -= moveX > 0.0D ? collisionCheckRange : -collisionCheckRange;
 
-					d3 = x;
+					safewalkAppliedX = moveX;
 
-					if (z < d6 && z >= -d6)
-						z = 0.0D;
+					if (moveZ < collisionCheckRange && moveZ >= -collisionCheckRange)
+						moveZ = 0.0D;
 					else
-						z -= z > 0.0D ? d6 : -d6;
+						moveZ -= moveZ > 0.0D ? collisionCheckRange : -collisionCheckRange;
 
-					d5 = z;
+					safewalkAppliedZ = moveZ;
 				}
 			}
 
 			// noinspection ConstantConditions
-			final List<AxisAlignedBB> collidedBoxList = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(x, y, z));
+			final List<AxisAlignedBB> collidedBoxList = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(moveX, moveY, moveZ));
 			final AxisAlignedBB entityBox = getEntityBoundingBox();
 
-			for (final AxisAlignedBB axisalignedbb1 : collidedBoxList)
-				y = axisalignedbb1.calculateYOffset(getEntityBoundingBox(), y);
+			// TODO: Please fold these triple-iterations into one if can
 
-			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
+			// Calculate Y Offset
+			for (final AxisAlignedBB collidedBox : collidedBoxList)
+				moveY = collidedBox.calculateYOffset(getEntityBoundingBox(), moveY);
+
+			// Apply Y Offset
+			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, moveY, 0.0D));
+
+			// Calculate X Offset
+			for (final AxisAlignedBB collidedBox : collidedBoxList)
+				moveX = collidedBox.calculateXOffset(getEntityBoundingBox(), moveX);
+
+			// Apply X Offset
+			setEntityBoundingBox(getEntityBoundingBox().offset(moveX, 0.0D, 0.0D));
+
+			// Calculate Z Offset
+			for (final AxisAlignedBB collidedBox : collidedBoxList)
+				moveZ = collidedBox.calculateZOffset(getEntityBoundingBox(), moveZ);
+
+			// Apply Z Offset
+			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, 0.0D, moveZ));
+
 			final Step step = (Step) LiquidBounce.moduleManager.getModule(Step.class);
 			final boolean airStep = step.getState() && step.getAirStepValue().get() && step.canAirStep();
-			final boolean steppable = onGround || airStep || d4 != y && d4 < 0.0D;
+			final boolean steppable = onGround || airStep || safewalkAppliedY != moveY && safewalkAppliedY < 0.0D;
 
-			for (final AxisAlignedBB axisalignedbb2 : collidedBoxList)
-				x = axisalignedbb2.calculateXOffset(getEntityBoundingBox(), x);
-
-			setEntityBoundingBox(getEntityBoundingBox().offset(x, 0.0D, 0.0D));
-
-			for (final AxisAlignedBB axisalignedbb13 : collidedBoxList)
-				z = axisalignedbb13.calculateZOffset(getEntityBoundingBox(), z);
-
-			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, 0.0D, z));
-
-			if (stepHeight > 0.0F && steppable && (d3 != x || d5 != z))
+			// Stepping
+			if (stepHeight > 0.0F && steppable && (safewalkAppliedX != moveX || safewalkAppliedZ != moveZ))
 			{
+				// Call StepEvent
 				final StepEvent stepEvent = new StepEvent(stepHeight);
 				LiquidBounce.eventManager.callEvent(stepEvent);
-				final double d11 = x;
-				final double d7 = y;
-				final double d8 = z;
-				final AxisAlignedBB axisalignedbb3 = getEntityBoundingBox();
+
+				final double __x = moveX;
+				final double __y = moveY;
+				final double __z = moveZ;
+
+				final AxisAlignedBB cachedBB = getEntityBoundingBox();
+
 				setEntityBoundingBox(entityBox);
-				y = stepEvent.getStepHeight();
+
+				moveY = stepEvent.getStepHeight();
+
 				// noinspection ConstantConditions
-				final List<AxisAlignedBB> list = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(d3, y, d5));
-				AxisAlignedBB axisalignedbb4 = getEntityBoundingBox();
-				final AxisAlignedBB axisalignedbb5 = axisalignedbb4.addCoord(d3, 0.0D, d5);
-				double d9 = y;
+				final List<AxisAlignedBB> collisionList = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(safewalkAppliedX, moveY, safewalkAppliedZ));
 
-				for (final AxisAlignedBB axisalignedbb6 : list)
-					d9 = axisalignedbb6.calculateYOffset(axisalignedbb5, d9);
+				AxisAlignedBB offsetAppliedBB = getEntityBoundingBox();
 
-				axisalignedbb4 = axisalignedbb4.offset(0.0D, d9, 0.0D);
-				double d15 = d3;
+				final AxisAlignedBB safewalkAppliedBB = offsetAppliedBB.addCoord(safewalkAppliedX, 0.0D, safewalkAppliedZ);
 
-				for (final AxisAlignedBB axisalignedbb7 : list)
-					d15 = axisalignedbb7.calculateXOffset(axisalignedbb4, d15);
+				// TODO: Please fold these triple-iterations into one if can
 
-				axisalignedbb4 = axisalignedbb4.offset(d15, 0.0D, 0.0D);
-				double d16 = d5;
+				double offsetY = moveY;
 
-				for (final AxisAlignedBB axisalignedbb8 : list)
-					d16 = axisalignedbb8.calculateZOffset(axisalignedbb4, d16);
+				// Calculate Y Offset
+				for (final AxisAlignedBB collision : collisionList)
+					offsetY = collision.calculateYOffset(safewalkAppliedBB, offsetY);
 
-				axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, d16);
-				AxisAlignedBB axisalignedbb14 = getEntityBoundingBox();
-				double d17 = y;
+				// Apply Y Offset
+				offsetAppliedBB = offsetAppliedBB.offset(0.0D, offsetY, 0.0D);
 
-				for (final AxisAlignedBB axisalignedbb9 : list)
-					d17 = axisalignedbb9.calculateYOffset(axisalignedbb14, d17);
+				double offsetX = safewalkAppliedX;
 
-				axisalignedbb14 = axisalignedbb14.offset(0.0D, d17, 0.0D);
-				double d18 = d3;
+				// Calculate X Offset
+				for (final AxisAlignedBB collision : collisionList)
+					offsetX = collision.calculateXOffset(offsetAppliedBB, offsetX);
 
-				for (final AxisAlignedBB axisalignedbb10 : list)
-					d18 = axisalignedbb10.calculateXOffset(axisalignedbb14, d18);
+				// Apply X Offset
+				offsetAppliedBB = offsetAppliedBB.offset(offsetX, 0.0D, 0.0D);
 
-				axisalignedbb14 = axisalignedbb14.offset(d18, 0.0D, 0.0D);
-				double d19 = d5;
+				double offsetZ = safewalkAppliedZ;
 
-				for (final AxisAlignedBB axisalignedbb11 : list)
-					d19 = axisalignedbb11.calculateZOffset(axisalignedbb14, d19);
+				// Calculate Z Offset
+				for (final AxisAlignedBB collision : collisionList)
+					offsetZ = collision.calculateZOffset(offsetAppliedBB, offsetZ);
 
-				axisalignedbb14 = axisalignedbb14.offset(0.0D, 0.0D, d19);
-				final double d20 = d15 * d15 + d16 * d16;
-				final double d10 = d18 * d18 + d19 * d19;
+				// Apply Z Offset
+				offsetAppliedBB = offsetAppliedBB.offset(0.0D, 0.0D, offsetZ);
 
-				if (d20 > d10)
+				AxisAlignedBB offset2AppliedBB = getEntityBoundingBox();
+
+				double offsetY2 = moveY;
+
+				// Calculate Y Offset 2
+				for (final AxisAlignedBB collision : collisionList)
+					offsetY2 = collision.calculateYOffset(offset2AppliedBB, offsetY2);
+
+				// Apply Y Offset 2
+				offset2AppliedBB = offset2AppliedBB.offset(0.0D, offsetY2, 0.0D);
+				double offsetX2 = safewalkAppliedX;
+
+				// Calculate X Offset 2
+				for (final AxisAlignedBB collision : collisionList)
+					offsetX2 = collision.calculateXOffset(offset2AppliedBB, offsetX2);
+
+				// Apply X Offset 2
+				offset2AppliedBB = offset2AppliedBB.offset(offsetX2, 0.0D, 0.0D);
+
+				double offsetZ2 = safewalkAppliedZ;
+
+				// Calculate Z Offset 2
+				for (final AxisAlignedBB collision : collisionList)
+					offsetZ2 = collision.calculateZOffset(offset2AppliedBB, offsetZ2);
+
+				// Apply Z Offset 2
+				offset2AppliedBB = offset2AppliedBB.offset(0.0D, 0.0D, offsetZ2);
+
+				final double offset = offsetX * offsetX + offsetZ * offsetZ;
+				final double offset2 = offsetX2 * offsetX2 + offsetZ2 * offsetZ2;
+
+				// Apply bigger one
+				if (offset > offset2)
 				{
-					x = d15;
-					z = d16;
-					y = -d9;
-					setEntityBoundingBox(axisalignedbb4);
+					moveX = offsetX;
+					moveZ = offsetZ;
+					moveY = -offsetY;
+					setEntityBoundingBox(offsetAppliedBB);
 				}
 				else
 				{
-					x = d18;
-					z = d19;
-					y = -d17;
-					setEntityBoundingBox(axisalignedbb14);
+					moveX = offsetX2;
+					moveZ = offsetZ2;
+					moveY = -offsetY2;
+					setEntityBoundingBox(offset2AppliedBB);
 				}
 
-				for (final AxisAlignedBB axisalignedbb12 : list)
-					y = axisalignedbb12.calculateYOffset(getEntityBoundingBox(), y);
+				// Calculate Y Offset 3
+				for (final AxisAlignedBB collision : collisionList)
+					moveY = collision.calculateYOffset(getEntityBoundingBox(), moveY);
 
-				setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
+				// Apply Y Offset 3
+				setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, moveY, 0.0D));
 
-				if (d11 * d11 + d8 * d8 >= x * x + z * z)
+				if (__x * __x + __z * __z >= moveX * moveX + moveZ * moveZ)
 				{
-					x = d11;
-					y = d7;
-					z = d8;
-					setEntityBoundingBox(axisalignedbb3);
+					moveX = __x;
+					moveY = __y;
+					moveZ = __z;
+					setEntityBoundingBox(cachedBB);
 				}
 				else
 					LiquidBounce.eventManager.callEvent(new StepConfirmEvent());
 			}
 
 			worldObj.theProfiler.endSection();
+
+			/* Rest */
 			worldObj.theProfiler.startSection("rest");
 			posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) * 0.5;
 			posY = getEntityBoundingBox().minY;
 			posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) * 0.5;
-			isCollidedHorizontally = d3 != x || d5 != z;
-			isCollidedVertically = d4 != y;
-			onGround = isCollidedVertically && d4 < 0.0D;
+			isCollidedHorizontally = safewalkAppliedX != moveX || safewalkAppliedZ != moveZ;
+			isCollidedVertically = safewalkAppliedY != moveY;
+			onGround = isCollidedVertically && safewalkAppliedY < 0.0D;
 			isCollided = isCollidedHorizontally || isCollidedVertically;
-			final int i = MathHelper.floor_double(posX);
-			final int j = MathHelper.floor_double(posY - 0.20000000298023224D);
-			final int k = MathHelper.floor_double(posZ);
-			BlockPos blockpos = new BlockPos(i, j, k);
-			Block block1 = worldObj.getBlockState(blockpos).getBlock();
 
-			if (block1.getMaterial() == Material.air)
+			final double groundCheckDepth = 0.20000000298023224D;
+
+			final int groundCheckX = MathHelper.floor_double(posX);
+			final int groundCheckY = MathHelper.floor_double(posY - groundCheckDepth);
+			final int groundCheckZ = MathHelper.floor_double(posZ);
+			BlockPos groundCheckPos = new BlockPos(groundCheckX, groundCheckY, groundCheckZ);
+			Block groundBlock = worldObj.getBlockState(groundCheckPos).getBlock();
+
+			if (groundBlock.getMaterial() == Material.air)
 			{
-				final Block block = worldObj.getBlockState(blockpos.down()).getBlock();
+				final Block groundDownBlock = worldObj.getBlockState(groundCheckPos.down()).getBlock();
 
-				if (block instanceof BlockFence || block instanceof BlockWall || block instanceof BlockFenceGate)
+				if (groundDownBlock instanceof BlockFence || groundDownBlock instanceof BlockWall || groundDownBlock instanceof BlockFenceGate)
 				{
-					block1 = block;
-					blockpos = blockpos.down();
+					groundBlock = groundDownBlock;
+					groundCheckPos = groundCheckPos.down();
 				}
 			}
 
-			updateFallState(y, onGround, block1, blockpos);
+			updateFallState(moveY, onGround, groundBlock, groundCheckPos);
 
-			if (d3 != x)
+			if (safewalkAppliedX != moveX)
 				motionX = 0.0D;
 
-			if (d5 != z)
-				motionZ = 0.0D;
+			if (safewalkAppliedY != moveY)
+				// noinspection ConstantConditions
+				groundBlock.onLanded(worldObj, (Entity) (Object) this);
 
-			if (d4 != y)
-				block1.onLanded(worldObj, (Entity) (Object) this);
+			if (safewalkAppliedZ != moveZ)
+				motionZ = 0.0D;
 
 			if (canTriggerWalking() && !sneaking && ridingEntity == null)
 			{
-				final double d12 = posX - d0;
-				double d13 = posY - d1;
-				final double d14 = posZ - d2;
+				final double xDelta = posX - lastPosX;
+				double yDelta = posY - lastPosY;
+				final double zDelta = posZ - lastPosZ;
 
-				if (block1 != Blocks.ladder)
-					d13 = 0.0D;
+				if (groundBlock != Blocks.ladder)
+					yDelta = 0.0D;
 
 				if (onGround)
-					block1.onEntityCollidedWithBlock(worldObj, blockpos, (Entity) (Object) this);
+					//noinspection ConstantConditions
+					groundBlock.onEntityCollidedWithBlock(worldObj, groundCheckPos, (Entity) (Object) this);
 
 				final Bobbing bobbing = (Bobbing) LiquidBounce.moduleManager.get(Bobbing.class);
-				distanceWalkedModified += MathHelper.sqrt_double(d12 * d12 + d14 * d14) * (bobbing.getState() ? bobbing.getMultiplierValue().get() : 0.6D);
-				distanceWalkedOnStepModified += MathHelper.sqrt_double(d12 * d12 + d13 * d13 + d14 * d14) * (bobbing.getState() ? bobbing.getMultiplierValue().get() : 0.6D);
+				final boolean bobbingState = bobbing.getState();
+				final double bobbingMultiplier = bobbingState ? bobbing.getMultiplierValue().get() : 0.6D;
 
-				if (distanceWalkedOnStepModified > getNextStepDistance() && block1.getMaterial() != Material.air)
+				distanceWalkedModified += StrictMath.hypot(xDelta, zDelta) * bobbingMultiplier;
+				distanceWalkedOnStepModified += MathHelper.sqrt_double(xDelta * xDelta + yDelta * yDelta + zDelta * zDelta) * bobbingMultiplier;
+
+				if (distanceWalkedOnStepModified > getNextStepDistance())
 				{
-					setNextStepDistance((int) distanceWalkedOnStepModified + 1);
+					final boolean isOnGround = groundBlock.getMaterial() != Material.air;
+					final boolean ignoreGroundCheck = bobbingState && !bobbing.getCheckGroundValue().get();
 
-					if (isInWater())
+					if (isOnGround || ignoreGroundCheck)
+						setNextStepDistance((int) distanceWalkedOnStepModified + 1);
+
+					if (isOnGround)
 					{
-						float f = MathHelper.sqrt_double(motionX * motionX * 0.20000000298023224D + motionY * motionY + motionZ * motionZ * 0.20000000298023224D) * 0.35F;
+						// Swimming check
+						if (isInWater())
+						{
+							float volume = MathHelper.sqrt_double(motionX * motionX * groundCheckDepth + motionY * motionY + motionZ * motionZ * groundCheckDepth) * 0.35F;
 
-						if (f > 1.0F)
-							f = 1.0F;
+							if (volume > 1.0F)
+								volume = 1.0F;
 
-						playSound(getSwimSound(), f, 1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
+							playSound(getSwimSound(), volume, 1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
+						}
+
+						playStepSound(groundCheckPos, groundBlock);
 					}
-
-					playStepSound(blockpos, block1);
 				}
 			}
 
+			// Block collision check
 			try
 			{
 				doBlockCollisions();
@@ -720,13 +796,14 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				throw new ReportedException(crashreport);
 			}
 
-			final boolean flag2 = isWet();
+			final boolean wet = isWet();
 
+			// Take fire damage
 			if (worldObj.isFlammableWithin(getEntityBoundingBox().contract(0.001D, 0.001D, 0.001D)))
 			{
 				dealFireDamage(1);
 
-				if (!flag2)
+				if (!wet)
 				{
 					setFire(getFire() + 1);
 
@@ -737,7 +814,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			else if (getFire() <= 0)
 				setFire(-fireResistance);
 
-			if (flag2 && getFire() > 0)
+			// Extinguish fire
+			if (wet && getFire() > 0)
 			{
 				playSound("random.fizz", 0.7F, 1.6F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
 				setFire(-fireResistance);

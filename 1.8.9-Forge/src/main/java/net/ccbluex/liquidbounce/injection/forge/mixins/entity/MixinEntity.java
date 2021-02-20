@@ -165,6 +165,9 @@ public abstract class MixinEntity
 	public float prevRotationYaw;
 
 	@Shadow
+	public int ticksExisted;
+
+	@Shadow
 	protected abstract Vec3 getVectorForRotation(float pitch, float yaw);
 
 	@Shadow
@@ -178,6 +181,9 @@ public abstract class MixinEntity
 
 	@Shadow
 	public abstract void setPosition(double x, double y, double z);
+
+	@Shadow
+	protected abstract void setRotation(float yaw, float pitch);
 
 	public int getNextStepDistance()
 	{

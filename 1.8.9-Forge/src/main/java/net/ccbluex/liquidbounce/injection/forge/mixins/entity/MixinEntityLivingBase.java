@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
 import net.ccbluex.liquidbounce.event.JumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.AirJump;
-import net.ccbluex.liquidbounce.features.module.modules.movement.LiquidWalk;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
@@ -19,6 +18,8 @@ import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.ai.attributes.IAttribute;
+import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S0BPacketAnimation;
 import net.minecraft.potion.Potion;
@@ -28,6 +29,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.WorldServer;
 
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -39,16 +41,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(EntityLivingBase.class)
 public abstract class MixinEntityLivingBase extends MixinEntity
 {
-
 	@Shadow
-	protected abstract float getJumpUpwardsMotion();
-
+	public float prevCameraPitch;
 	@Shadow
-	public abstract PotionEffect getActivePotionEffect(Potion potionIn);
-
-	@Shadow
-	public abstract boolean isPotionActive(Potion potionIn);
-
+	public float cameraPitch;
 	@Shadow
 	private int jumpTicks;
 
@@ -61,11 +57,26 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	@Shadow
 	public int swingProgressInt;
 
+	@Shadow
+	public float jumpMovementFactor;
+
+	@Shadow
+	protected abstract float getJumpUpwardsMotion();
+
+	@Shadow
+	public abstract PotionEffect getActivePotionEffect(Potion potionIn);
+
+	@Shadow
+	public abstract boolean isPotionActive(Potion potionIn);
+
 	@SuppressWarnings("NoopMethodInAbstractClass")
 	@Shadow
 	public void onLivingUpdate()
 	{
 	}
+
+	@Shadow
+	protected abstract void updateArmSwingProgress();
 
 	@Shadow
 	protected abstract void updateFallState(double y, boolean onGroundIn, Block blockIn, BlockPos pos);
@@ -76,6 +87,18 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	@Shadow
 	public abstract ItemStack getHeldItem();
 
+	@Shadow
+	public abstract void heal(float healAmount);
+
+	@Shadow
+	public abstract float getMaxHealth();
+
+	@Shadow
+	public abstract void setAIMoveSpeed(float speedIn);
+
+	@Shadow
+	public abstract IAttributeInstance getEntityAttribute(IAttribute attribute);
+
 	/**
 	 * @author CCBlueX
 	 * @reason JumpEvent
@@ -84,7 +107,8 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	protected void jump()
 	{
 		final IEntityPlayerSP thePlayer = LiquidBounce.wrapper.getMinecraft().getThePlayer();
-		if (thePlayer == null) return;
+		if (thePlayer == null)
+			return;
 
 		final JumpEvent jumpEvent = new JumpEvent(getJumpUpwardsMotion());
 		LiquidBounce.eventManager.callEvent(jumpEvent);
