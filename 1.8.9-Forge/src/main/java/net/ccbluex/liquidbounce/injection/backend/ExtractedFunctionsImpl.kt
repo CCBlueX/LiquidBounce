@@ -124,4 +124,5 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 	override fun getIdFromItem(item: IItem): Int = Item.getIdFromItem(item.unwrap())
 	override fun getEnchantmentLevel(enchId: Int, stack: IItemStack): Int = EnchantmentHelper.getEnchantmentLevel(enchId, stack.unwrap())
 	override fun translateToLocal(key: String): String = StatCollector.translateToLocal(key)
+	override fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean = Block.isEqualTo(block1?.unwrap(), block2?.unwrap())
 }

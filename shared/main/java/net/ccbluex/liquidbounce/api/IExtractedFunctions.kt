@@ -21,38 +21,44 @@ import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 
 interface IExtractedFunctions
 {
-	fun getBlockById(id: Int): IBlock?
-	fun getIdFromBlock(block: IBlock): Int
 	fun getModifierForCreature(heldItem: IItemStack?, creatureAttribute: IEnumCreatureAttribute): Float
 	fun getObjectFromItemRegistry(res: IResourceLocation): IItem?
 	fun renderTileEntity(tileEntity: ITileEntity, partialTicks: Float, destroyStage: Int)
+
+	fun getBlockById(id: Int): IBlock?
+	fun getIdFromBlock(block: IBlock): Int
 	fun getBlockFromName(name: String): IBlock?
+	fun getBlockRegistryKeys(): Collection<IResourceLocation>
+
+	fun getItemRegistryKeys(): Collection<IResourceLocation>
 	fun getItemByName(name: String): IItem?
+	fun getIdFromItem(item: IItem): Int
+
 	fun getEnchantmentByLocation(location: String): IEnchantment?
 	fun getEnchantmentById(enchantID: Int): IEnchantment?
 	fun getEnchantments(): Collection<IResourceLocation>
-	fun getItemRegistryKeys(): Collection<IResourceLocation>
-	fun getBlockRegistryKeys(): Collection<IResourceLocation>
+	fun getEnchantments(item: IItemStack): Map<Int, Int>
+	fun getEnchantmentLevel(enchId: Int, stack: IItemStack): Int
+
+	fun enableStandardItemLighting()
+
 	fun disableStandardItemLighting()
+	fun disableFastRender()
+	fun setActiveTextureLightMapTexUnit()
+	fun setActiveTextureDefaultTexUnit()
+	fun getLightMapTexUnit(): Int
+	fun setLightmapTextureCoords(target: Int, j: Float, k: Float)
+
 	fun formatI18n(key: String, vararg values: String): String
 	fun sessionServiceJoinServer(profile: GameProfile, token: String, sessionHash: String)
 	fun getPotionById(potionID: Int): IPotion
-	fun enableStandardItemLighting()
 	fun scoreboardFormatPlayerName(scorePlayerTeam: ITeam?, playerName: String): String
-	fun disableFastRender()
 	fun jsonToComponent(toString: String): IIChatComponent
-	fun setActiveTextureLightMapTexUnit()
-	fun setActiveTextureDefaultTexUnit()
 	fun getHorizontalFacing(yaw: Float): IEnumFacing
-	fun getLightMapTexUnit(): Int
-	fun setLightmapTextureCoords(target: Int, j: Float, k: Float)
+	fun translateToLocal(key: String): String
+	fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean
 
 	// MathHelper's sin and cos algorithm is faster than StrictMath's (Because MathHelper uses better algorithm and it is compatible with BetterFps mod)
 	fun cos(radians: Float): Float
 	fun sin(radians: Float): Float
-
-	fun getEnchantments(item: IItemStack): Map<Int, Int>
-	fun getIdFromItem(item: IItem): Int
-	fun getEnchantmentLevel(enchId: Int, stack: IItemStack): Int
-	fun translateToLocal(key: String): String
 }

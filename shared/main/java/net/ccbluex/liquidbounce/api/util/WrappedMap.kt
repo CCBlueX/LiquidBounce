@@ -8,24 +8,24 @@ package net.ccbluex.liquidbounce.api.util
 
 import java.util.*
 
-open class WrappedMap<OK, OV, WK, WV, out M : Map<OK, OV>>(private val wrappedMap: M, val keyWrapper: (OK) -> WK, val keyUnwrapper: (WK) -> OK, val valueWrapper: (OV) -> WV, val valueUnwrapper: (WV) -> OV) : Map<WK, WV>
+open class WrappedMap<WRAPPED_KEY, WRAPPED_VALUE, UNWRAPPED_KEY, UNWRAPPED_VALUE, out MAP : Map<WRAPPED_KEY, WRAPPED_VALUE>>(private val wrappedMap: MAP, val keyWrapper: (UNWRAPPED_KEY) -> WRAPPED_KEY, val keyUnwrapper: (WRAPPED_KEY) -> UNWRAPPED_KEY, val valueWrapper: (UNWRAPPED_VALUE) -> WRAPPED_VALUE, val valueUnwrapper: (WRAPPED_VALUE) -> UNWRAPPED_VALUE) : Map<UNWRAPPED_KEY, UNWRAPPED_VALUE>
 {
-	override val entries: Set<Map.Entry<WK, WV>>
-		get() = wrappedMap.entries.map { AbstractMap.SimpleImmutableEntry(keyWrapper(it.key), valueWrapper(it.value)) }.toSet()
+	override val entries: Set<Map.Entry<UNWRAPPED_KEY, UNWRAPPED_VALUE>>
+		get() = wrappedMap.entries.map { AbstractMap.SimpleImmutableEntry(keyUnwrapper(it.key), valueUnwrapper(it.value)) }.toSet()
 	override val size: Int
 		get() = wrappedMap.size
-	override val keys: Set<WK>
-		get() = wrappedMap.keys.map(keyWrapper).toSet()
-	override val values: Collection<WV>
-		get() = wrappedMap.values.map(valueWrapper)
+	override val keys: Set<UNWRAPPED_KEY>
+		get() = wrappedMap.keys.map(keyUnwrapper).toSet()
+	override val values: Collection<UNWRAPPED_VALUE>
+		get() = wrappedMap.values.map(valueUnwrapper)
 
-	override fun containsKey(key: WK): Boolean = wrappedMap.containsKey(keyUnwrapper(key))
+	override fun containsKey(key: UNWRAPPED_KEY): Boolean = wrappedMap.containsKey(keyWrapper(key))
 
-	override fun containsValue(value: WV): Boolean = wrappedMap.containsValue(valueUnwrapper(value))
+	override fun containsValue(value: UNWRAPPED_VALUE): Boolean = wrappedMap.containsValue(valueWrapper(value))
 
-	override fun get(key: WK): WV?
+	override fun get(key: UNWRAPPED_KEY): UNWRAPPED_VALUE?
 	{
-		return valueWrapper(wrappedMap[keyUnwrapper(key)] ?: return null)
+		return valueUnwrapper(wrappedMap[keyWrapper(key)] ?: return null)
 	}
 
 	override fun isEmpty(): Boolean = size == 0

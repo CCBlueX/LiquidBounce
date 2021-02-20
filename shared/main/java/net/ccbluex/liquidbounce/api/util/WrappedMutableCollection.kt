@@ -6,26 +6,26 @@
 
 package net.ccbluex.liquidbounce.api.util
 
-open class WrappedMutableCollection<O, T, out C : MutableCollection<O>>(wrapped: C, unwrapper: (T) -> O, wrapper: (O) -> T) : WrappedCollection<O, T, C>(wrapped, unwrapper, wrapper), MutableCollection<T>
+open class WrappedMutableCollection<WRAPPED, UNWRAPPED, out COLLECTION : MutableCollection<WRAPPED>>(wrapped: COLLECTION, wrapper: (UNWRAPPED) -> WRAPPED, unwrapper: (WRAPPED) -> UNWRAPPED) : WrappedCollection<WRAPPED, UNWRAPPED, COLLECTION>(wrapped, wrapper, unwrapper), MutableCollection<UNWRAPPED>
 {
-	override fun add(element: T): Boolean = wrapped.add(unwrapper.invoke(element))
+	override fun add(element: UNWRAPPED): Boolean = wrapped.add(wrapper.invoke(element))
 
-	override fun addAll(elements: Collection<T>): Boolean = wrapped.addAll(elements.map(unwrapper))
+	override fun addAll(elements: Collection<UNWRAPPED>): Boolean = wrapped.addAll(elements.map(wrapper))
 
 	override fun clear() = wrapped.clear()
 
-	override fun iterator(): MutableIterator<T> = WrappedCollectionIterator(wrapped.iterator(), wrapper)
-	override fun remove(element: T): Boolean = wrapped.remove(unwrapper.invoke(element))
+	override fun iterator(): MutableIterator<UNWRAPPED> = WrappedCollectionIterator(wrapped.iterator(), unwrapper)
+	override fun remove(element: UNWRAPPED): Boolean = wrapped.remove(wrapper.invoke(element))
 
-	override fun removeAll(elements: Collection<T>): Boolean = wrapped.addAll(elements.map(unwrapper))
+	override fun removeAll(elements: Collection<UNWRAPPED>): Boolean = wrapped.addAll(elements.map(wrapper))
 
-	override fun retainAll(elements: Collection<T>): Boolean = wrapped.addAll(elements.map(unwrapper))
+	override fun retainAll(elements: Collection<UNWRAPPED>): Boolean = wrapped.addAll(elements.map(wrapper))
 
-	class WrappedCollectionIterator<O, out T>(val wrapped: MutableIterator<O>, val unwrapper: (O) -> T) : MutableIterator<T>
+	class WrappedCollectionIterator<WRAPPED, out UNWRAPPED>(val wrapped: MutableIterator<WRAPPED>, val unwrapper: (WRAPPED) -> UNWRAPPED) : MutableIterator<UNWRAPPED>
 	{
 		override fun hasNext(): Boolean = wrapped.hasNext()
 
-		override fun next(): T = unwrapper(wrapped.next())
+		override fun next(): UNWRAPPED = unwrapper(wrapped.next())
 		override fun remove() = wrapped.remove()
 	}
 }

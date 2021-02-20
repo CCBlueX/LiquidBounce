@@ -6,45 +6,45 @@
 
 package net.ccbluex.liquidbounce.api.util
 
-class WrappedMutableList<O, T, out C : MutableList<O>>(wrapped: C, unwrapper: (T) -> O, wrapper: (O) -> T) : WrappedMutableCollection<O, T, C>(wrapped, unwrapper, wrapper), MutableList<T>
+class WrappedMutableList<WRAPPED, UNWRAPPED, out COLLECTION : MutableList<WRAPPED>>(wrapped: COLLECTION, unwrapper: (UNWRAPPED) -> WRAPPED, wrapper: (WRAPPED) -> UNWRAPPED) : WrappedMutableCollection<WRAPPED, UNWRAPPED, COLLECTION>(wrapped, unwrapper, wrapper), MutableList<UNWRAPPED>
 {
-	override fun get(index: Int): T = wrapper(wrapped[index])
+	override fun get(index: Int): UNWRAPPED = unwrapper(wrapped[index])
 
-	override fun indexOf(element: T): Int = wrapped.indexOf(unwrapper(element))
+	override fun indexOf(element: UNWRAPPED): Int = wrapped.indexOf(wrapper(element))
 
-	override fun lastIndexOf(element: T): Int = wrapped.lastIndexOf(unwrapper(element))
+	override fun lastIndexOf(element: UNWRAPPED): Int = wrapped.lastIndexOf(wrapper(element))
 
-	override fun add(index: Int, element: T) = wrapped.add(index, unwrapper(element))
+	override fun add(index: Int, element: UNWRAPPED) = wrapped.add(index, wrapper(element))
 
-	override fun addAll(index: Int, elements: Collection<T>): Boolean = wrapped.addAll(index, elements.map(unwrapper))
+	override fun addAll(index: Int, elements: Collection<UNWRAPPED>): Boolean = wrapped.addAll(index, elements.map(wrapper))
 
-	override fun listIterator(): MutableListIterator<T> = WrappedMutableCollectionIterator(wrapped.listIterator(), wrapper, unwrapper)
+	override fun listIterator(): MutableListIterator<UNWRAPPED> = WrappedMutableCollectionIterator(wrapped.listIterator(), wrapper, unwrapper)
 
-	override fun listIterator(index: Int): MutableListIterator<T> = WrappedMutableCollectionIterator(wrapped.listIterator(index), wrapper, unwrapper)
+	override fun listIterator(index: Int): MutableListIterator<UNWRAPPED> = WrappedMutableCollectionIterator(wrapped.listIterator(index), wrapper, unwrapper)
 
-	override fun removeAt(index: Int): T = wrapper(wrapped.removeAt(index))
+	override fun removeAt(index: Int): UNWRAPPED = unwrapper(wrapped.removeAt(index))
 
-	override fun set(index: Int, element: T): T = wrapper(wrapped.set(index, unwrapper(element)))
+	override fun set(index: Int, element: UNWRAPPED): UNWRAPPED = unwrapper(wrapped.set(index, wrapper(element)))
 
-	override fun subList(fromIndex: Int, toIndex: Int): MutableList<T> = WrappedMutableList(wrapped.subList(fromIndex, toIndex), unwrapper, wrapper)
+	override fun subList(fromIndex: Int, toIndex: Int): MutableList<UNWRAPPED> = WrappedMutableList(wrapped.subList(fromIndex, toIndex), wrapper, unwrapper)
 
-	class WrappedMutableCollectionIterator<O, T>(val wrapped: MutableListIterator<O>, val wrapper: (O) -> T, val unwrapper: (T) -> O) : MutableListIterator<T>
+	class WrappedMutableCollectionIterator<WRAPPED, UNWRAPPED>(val wrapped: MutableListIterator<WRAPPED>, val wrapper: (UNWRAPPED) -> WRAPPED, val unwrapper: (WRAPPED) -> UNWRAPPED) : MutableListIterator<UNWRAPPED>
 	{
 		override fun hasNext(): Boolean = wrapped.hasNext()
 
 		override fun hasPrevious(): Boolean = wrapped.hasPrevious()
 
-		override fun next(): T = wrapper(wrapped.next())
+		override fun next(): UNWRAPPED = unwrapper(wrapped.next())
 
 		override fun nextIndex(): Int = wrapped.nextIndex()
 
-		override fun previous(): T = wrapper(wrapped.previous())
+		override fun previous(): UNWRAPPED = unwrapper(wrapped.previous())
 
 		override fun previousIndex(): Int = wrapped.previousIndex()
-		override fun add(element: T) = wrapped.add(unwrapper(element))
+		override fun add(element: UNWRAPPED) = wrapped.add(wrapper(element))
 
 		override fun remove() = wrapped.remove()
 
-		override fun set(element: T) = wrapped.set(unwrapper(element))
+		override fun set(element: UNWRAPPED) = wrapped.set(wrapper(element))
 	}
 }

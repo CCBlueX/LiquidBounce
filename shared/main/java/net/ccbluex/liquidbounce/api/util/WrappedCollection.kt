@@ -6,17 +6,17 @@
 
 package net.ccbluex.liquidbounce.api.util
 
-open class WrappedCollection<O, T, out C : Collection<O>>(val wrapped: C, val unwrapper: (T) -> O, val wrapper: (O) -> T) : Collection<T>
+open class WrappedCollection<WRAPPED, UNWRAPPED, out C : Collection<WRAPPED>>(val wrapped: C, val wrapper: (UNWRAPPED) -> WRAPPED, val unwrapper: (WRAPPED) -> UNWRAPPED) : Collection<UNWRAPPED>
 {
 	override val size: Int
 		get() = wrapped.size
 
-	override fun contains(element: T): Boolean = wrapped.contains(unwrapper(element))
+	override fun contains(element: UNWRAPPED): Boolean = wrapped.contains(wrapper(element))
 
-	override fun containsAll(elements: Collection<T>): Boolean
+	override fun containsAll(elements: Collection<UNWRAPPED>): Boolean
 	{
 		elements.forEach {
-			if (wrapped.contains(unwrapper(it))) return@containsAll true
+			if (wrapped.contains(wrapper(it))) return@containsAll true
 		}
 
 		return false
@@ -24,12 +24,12 @@ open class WrappedCollection<O, T, out C : Collection<O>>(val wrapped: C, val un
 
 	override fun isEmpty(): Boolean = wrapped.isEmpty()
 
-	override fun iterator(): Iterator<T> = WrappedCollectionIterator(wrapped.iterator(), wrapper)
+	override fun iterator(): Iterator<UNWRAPPED> = WrappedCollectionIterator(wrapped.iterator(), unwrapper)
 
-	class WrappedCollectionIterator<O, out T>(val wrapped: Iterator<O>, val unwrapper: (O) -> T) : Iterator<T>
+	class WrappedCollectionIterator<WRAPPED, out UNWRAPPED>(val wrapped: Iterator<WRAPPED>, val unwrapper: (WRAPPED) -> UNWRAPPED) : Iterator<UNWRAPPED>
 	{
 		override fun hasNext(): Boolean = wrapped.hasNext()
 
-		override fun next(): T = unwrapper(wrapped.next())
+		override fun next(): UNWRAPPED = unwrapper(wrapped.next())
 	}
 }

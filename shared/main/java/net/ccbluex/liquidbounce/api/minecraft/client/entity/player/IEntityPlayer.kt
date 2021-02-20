@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.IFoodStats
-import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
 
 @Suppress("INAPPLICABLE_JVM_NAME")
 interface IEntityPlayer : IEntityLivingBase
@@ -32,9 +31,6 @@ interface IEntityPlayer : IEntityLivingBase
 	var speedInAir: Float
 	var cameraYaw: Float
 	val totalArmorValue: Int
-
-	@get:JvmName("isBlocking")
-	val isBlocking: Boolean
 	var itemInUseCount: Int
 	val itemInUse: IItemStack?
 	val capabilities: IPlayerCapabilities
@@ -47,6 +43,9 @@ interface IEntityPlayer : IEntityLivingBase
 	val displayNameString: String
 	val currentEquippedItem: IItemStack?
 
+	@get:JvmName("isBlocking")
+	val isBlocking: Boolean
+
 	@get:JvmName("isSpectator")
 	val spectator: Boolean
 
@@ -58,7 +57,7 @@ interface IEntityPlayer : IEntityLivingBase
 	fun triggerAchievement(stat: IStatBase)
 	fun jump()
 
-	@SupportsMinecraftVersions(value = [MinecraftVersion.MC_1_12])
+	@SupportsMinecraftVersions(MinecraftVersion.MC_1_12)
 	fun getCooledAttackStrength(fl: Float): Float
 	fun resetCooldown()
 }

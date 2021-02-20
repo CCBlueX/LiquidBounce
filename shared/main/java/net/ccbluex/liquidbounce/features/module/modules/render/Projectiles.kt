@@ -274,7 +274,6 @@ class Projectiles : Module()
 
 		if (landingPosition != null)
 		{
-
 			// Switch rotation of hit cylinder of the hit axis
 			when (landingPosition.sideHit!!.axisOrdinal)
 			{

@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.api
 
-annotation class SupportsMinecraftVersions(val value: Array<MinecraftVersion>)
+annotation class SupportsMinecraftVersions(vararg val value: MinecraftVersion)
 
 enum class MinecraftVersion
 {

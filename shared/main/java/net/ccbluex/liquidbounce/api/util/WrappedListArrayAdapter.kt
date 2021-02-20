@@ -6,14 +6,14 @@
 
 package net.ccbluex.liquidbounce.api.util
 
-class WrappedListArrayAdapter<O, T>(val wrapped: MutableList<O>, val unwrapper: (T) -> O, val wrapper: (O) -> T) : IWrappedArray<T>
+class WrappedListArrayAdapter<WRAPPED, UNWRAPPED>(val wrapped: MutableList<WRAPPED>, val wrapper: (UNWRAPPED) -> WRAPPED, val unwrapper: (WRAPPED) -> UNWRAPPED) : IWrappedArray<UNWRAPPED>
 {
-	override fun get(index: Int): T = wrapper(wrapped[index])
+	override fun get(index: Int): UNWRAPPED = unwrapper(wrapped[index])
 
-	override fun set(index: Int, value: T)
+	override fun set(index: Int, value: UNWRAPPED)
 	{
-		wrapped[index] = unwrapper(value)
+		wrapped[index] = wrapper(value)
 	}
 
-	override fun iterator(): Iterator<T> = WrappedCollection.WrappedCollectionIterator(wrapped.iterator(), wrapper)
+	override fun iterator(): Iterator<UNWRAPPED> = WrappedCollection.WrappedCollectionIterator(wrapped.iterator(), unwrapper)
 }

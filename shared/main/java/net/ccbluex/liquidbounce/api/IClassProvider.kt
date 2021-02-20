@@ -55,6 +55,7 @@ interface IClassProvider
 	val glStateManager: IGlStateManager
 	val textureUtil: ITextureUtil
 
+	// create new instance
 	fun createResourceLocation(resourceName: String): IResourceLocation
 	fun createThreadDownloadImageData(cacheFileIn: File?, imageUrlIn: String, textureResourceLocation: IResourceLocation?, imageBufferIn: WIImageBuffer): IThreadDownloadImageData
 	fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer
@@ -67,38 +68,40 @@ interface IClassProvider
 	fun createSession(name: String, uuid: String, accessToken: String, accountType: String): ISession
 	fun createDynamicTexture(image: BufferedImage): IDynamicTexture
 	fun createDynamicTexture(width: Int, height: Int): IDynamicTexture
+	fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB
+	fun createScaledResolution(mc: IMinecraft): IScaledResolution
+	fun createEntityOtherPlayerMP(world: IWorldClient, gameProfile: GameProfile): IEntityOtherPlayerMP
+	fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect
+	fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer
 
+	// Create new Item instances
 	fun createItem(): IItem
 	fun createItemStack(item: IItem, amount: Int, meta: Int): IItemStack
 	fun createItemStack(item: IItem): IItemStack
+
 	fun createItemStack(blockEnum: IBlock): IItemStack
-	fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB
-	fun createScaledResolution(mc: IMinecraft): IScaledResolution
+
+	// Create new NBT instances
 	fun createNBTTagCompound(): INBTTagCompound
 	fun createNBTTagList(): INBTTagList
 	fun createNBTTagString(string: String): INBTTagString
 	fun createNBTTagDouble(value: Double): INBTTagDouble
-	fun createEntityOtherPlayerMP(world: IWorldClient, gameProfile: GameProfile): IEntityOtherPlayerMP
-	fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect
+
+	// Create new GUI instances
 	fun createGuiOptions(parentScreen: IGuiScreen, gameSettings: IGameSettings): IGuiScreen
 	fun createGuiSelectWorld(parentScreen: IGuiScreen): IGuiScreen
 	fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen
 	fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen
 	fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen
 
+	// Create new CPackets instances
 	fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange
-
-	/**
-	 * Only available for 1.8.9, can be replaced with [createCPacketTryUseItem] in later versions
-	 */
-	@SupportsMinecraftVersions(value = [MinecraftVersion.MC_1_8])
-	fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement
 	fun createCPacketPlayerBlockPlacement(positionIn: WBlockPos, placedBlockDirectionIn: Int, stackIn: IItemStack?, facingXIn: Float, facingYIn: Float, facingZIn: Float): ICPacketPlayerBlockPlacement
 	fun createCPacketPlayerPosLook(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayerPosLook
 	fun createCPacketClientStatus(state: ICPacketClientStatus.WEnumState): ICPacketClientStatus
 	fun createCPacketPlayerDigging(wAction: ICPacketPlayerDigging.WAction, pos: WBlockPos, facing: IEnumFacing): IPacket
 	fun createCPacketPlayerPosition(x: Double, y: Double, z: Double, onGround: Boolean): ICPacketPlayer
-	fun createICPacketResourcePackStatus(hash: String, status: ICPacketResourcePackStatus.WAction): IPacket
+	fun createCPacketResourcePackStatus(hash: String, status: ICPacketResourcePackStatus.WAction): IPacket
 	fun createCPacketPlayerLook(yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayer
 	fun createCPacketUseEntity(player: IEntity, wAction: ICPacketUseEntity.WAction): ICPacketUseEntity
 	fun createCPacketUseEntity(entity: IEntity, positionVector: WVec3): ICPacketUseEntity
@@ -111,8 +114,20 @@ interface IClassProvider
 	fun createCPacketTabComplete(text: String): IPacket
 	fun createCPacketAnimation(): ICPacketAnimation
 	fun createCPacketKeepAlive(): ICPacketKeepAlive
+	fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket
+
+	/**
+	 * Only available for 1.8.9, can be replaced with [createCPacketTryUseItem] in later versions
+	 */
+	@SupportsMinecraftVersions(MinecraftVersion.MC_1_8)
+	fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement
+
+	@SupportsMinecraftVersions(MinecraftVersion.MC_1_12)
+	fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*>
+
 	fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer
 
+	// Entity instance checks
 	fun isEntityAnimal(obj: Any?): Boolean
 	fun isEntitySquid(obj: Any?): Boolean
 	fun isEntityBat(obj: Any?): Boolean
@@ -136,12 +151,15 @@ interface IClassProvider
 	fun isEntityMinecartHopper(obj: Any?): Boolean
 	fun isEntityShulker(obj: Any?): Boolean
 
+	// TileEntity instance checks
 	fun isTileEntityChest(obj: Any?): Boolean
 	fun isTileEntityEnderChest(obj: Any?): Boolean
 	fun isTileEntityFurnace(obj: Any?): Boolean
 	fun isTileEntityDispenser(obj: Any?): Boolean
 	fun isTileEntityHopper(obj: Any?): Boolean
+	fun isTileEntityShulkerBox(obj: Any?): Boolean
 
+	// SPacket instance checks
 	fun isSPacketEntity(obj: Any?): Boolean
 	fun isSPacketResourcePackSend(obj: Any?): Boolean
 	fun isSPacketPlayerPosLook(obj: Any?): Boolean
@@ -157,6 +175,7 @@ interface IClassProvider
 	fun isSPacketEntityTeleport(obj: Any?): Boolean
 	fun isSPacketTitle(obj: Any?): Boolean
 
+	// CPacket instance checks
 	fun isCPacketPlayer(obj: Any?): Boolean
 	fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean
 	fun isCPacketUseEntity(obj: Any?): Boolean
@@ -175,6 +194,7 @@ interface IClassProvider
 	fun isCPacketPlayerDigging(obj: Any?): Boolean
 	fun isCPacketConfirmTransaction(obj: Any?): Boolean
 
+	// Item instance checks
 	fun isItemSword(obj: Any?): Boolean
 	fun isItemTool(obj: Any?): Boolean
 	fun isItemArmor(obj: Any?): Boolean
@@ -198,6 +218,7 @@ interface IClassProvider
 	fun isItemAir(obj: Any?): Boolean
 	fun isItemMap(obj: Any?): Boolean
 
+	// Block instance checks
 	fun isBlockAir(obj: Any?): Boolean
 	fun isBlockFence(obj: Any?): Boolean
 	fun isBlockSnow(obj: Any?): Boolean
@@ -227,6 +248,7 @@ interface IClassProvider
 	fun isBlockTrapDoor(obj: Any?): Boolean
 	fun isBlockContainer(obj: Any?): Boolean
 
+	// GUI instance checks
 	fun isGuiInventory(obj: Any?): Boolean
 	fun isGuiContainer(obj: Any?): Boolean
 	fun isGuiGameOver(obj: Any?): Boolean
@@ -236,6 +258,7 @@ interface IClassProvider
 	fun isGuiHudDesigner(obj: Any?): Boolean
 	fun isClickGui(obj: Any?): Boolean
 
+	// get enums
 	fun getPotionEnum(type: PotionType): IPotion
 	fun getEnumFacing(type: EnumFacingType): IEnumFacing
 	fun getBlockEnum(type: BlockType): IBlock
@@ -245,16 +268,9 @@ interface IClassProvider
 	fun getEnchantmentEnum(type: EnchantmentType): IEnchantment
 	fun getVertexFormatEnum(type: WDefaultVertexFormats): IVertexFormat
 
+	// Wrap
 	fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer
 	fun wrapGuiScreen(clickGui: WrappedGuiScreen): IGuiScreen
-	fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer
 	fun wrapCreativeTab(name: String, wrappedCreativeTabs: WrappedCreativeTabs)
 	fun wrapGuiSlot(wrappedGuiSlot: WrappedGuiSlot, mc: IMinecraft, width: Int, height: Int, top: Int, bottom: Int, slotHeight: Int)
-	fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket
-
-	fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean
-
-	@SupportsMinecraftVersions(value = [MinecraftVersion.MC_1_12])
-	fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*>
-	fun isTileEntityShulkerBox(obj: Any?): Boolean
 }

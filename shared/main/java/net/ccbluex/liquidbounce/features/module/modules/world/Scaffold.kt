@@ -624,7 +624,7 @@ class Scaffold : Module()
 			sameY = true
 		}
 
-		val abCollisionBB = autoblockBlock.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, if (classProvider.isBlockEqualTo(groundBlock, autoblockBlock)) groundBlockState else autoblockBlock.defaultState!!)!!
+		val abCollisionBB = autoblockBlock.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, if (functions.isBlockEqualTo(groundBlock, autoblockBlock)) groundBlockState else autoblockBlock.defaultState!!)!!
 		val gBB = classProvider.createAxisAlignedBB(groundBlock.getBlockBoundsMinX(), groundBlock.getBlockBoundsMinY(), groundBlock.getBlockBoundsMinZ(), groundBlock.getBlockBoundsMaxX(), groundBlock.getBlockBoundsMaxY(), groundBlock.getBlockBoundsMaxZ())
 
 		// These delta variable has in range 0.0625 ~ 1.0
