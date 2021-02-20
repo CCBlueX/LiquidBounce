@@ -108,7 +108,7 @@ public class MixinRenderEntityItem
 							fluid = getFluid(entity, true);
 
 						if (fluid != null)
-							_rotation /= fluid.getDensity() * 0.01;
+							_rotation /= fluid.getDensity() * 0.0001;
 
 						entity.rotationPitch += _rotation;
 					}
@@ -121,7 +121,7 @@ public class MixinRenderEntityItem
 						double _rotation = rotation * 2;
 						final Fluid fluid = getFluid(entity);
 						if (fluid != null)
-							_rotation /= fluid.getDensity() * 0.01f;
+							_rotation /= fluid.getDensity() * 0.0001f;
 
 						entity.rotationPitch += _rotation;
 					}
