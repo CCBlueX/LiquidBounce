@@ -69,7 +69,7 @@ class NullStyle : Style()
 
 		glStateManager.resetColor()
 
-		Fonts.font35.drawString(moduleElement.displayName, (moduleElement.x - (Fonts.font35.getStringWidth(moduleElement.displayName) - 100.0f) / 2.0f).toInt(), moduleElement.y + 6, if (moduleElement.module.state) guiColor else Int.MAX_VALUE)
+		Fonts.font35.drawString(moduleElement.displayName, (moduleElement.x - (Fonts.font35.getStringWidth(moduleElement.displayName) - 100.0f) * 0.5f).toInt(), moduleElement.y + 6, if (moduleElement.module.state) guiColor else Int.MAX_VALUE)
 
 		val moduleValues = moduleElement.module.values
 

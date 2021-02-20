@@ -107,7 +107,7 @@ class Effects(
 		val rainbowSpeed = rainbowSpeedValue.get()
 		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
 		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
-		val rainbowShaderOffset = System.currentTimeMillis() % 10000 / 10000F
+		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
 		val shadow = shadowValue.get()
 
@@ -168,7 +168,7 @@ class Effects(
 					val yPos = (if (side.vertical == Side.Vertical.DOWN) -textSpacer else textSpacer) * if (side.vertical == Side.Vertical.DOWN) index + 1 else index
 
 					// Draw Background
-					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, System.currentTimeMillis() % 10000 / 10000F).use {
+					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 						val xPosCorrection = if (rectMode.equals("right", true)) 5 else 2
 						val x2Pos = if (rectMode.equals("right", true)) -3F else 0F
 

@@ -141,7 +141,7 @@ class Notification(private val header: String, private val message: String, priv
 
 		val rainbowShaderX = if (Notifications.rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / Notifications.rainbowShaderXValue.get()
 		val rainbowShaderY = if (Notifications.rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / Notifications.rainbowShaderYValue.get()
-		val rainbowShaderOffset = System.currentTimeMillis() % 10000 / 10000F
+		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
 		val saturation = Notifications.saturationValue.get()
 		val brightness = Notifications.brightnessValue.get()
@@ -222,7 +222,7 @@ class Notification(private val header: String, private val message: String, priv
 			}
 			else fadeState = FadeState.END
 
-			// FadeState.END -> LiquidBounce.hud.removeNotification(this) // Raises ConcurrentModificationException
+			// FadeState.END -> LiquidBounce.hud.removeNotification(this) // It throws ConcurrentModificationException
 		}
 	}
 }

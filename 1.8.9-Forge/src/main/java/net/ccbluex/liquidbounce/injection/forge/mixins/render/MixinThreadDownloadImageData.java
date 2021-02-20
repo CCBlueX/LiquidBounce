@@ -54,7 +54,7 @@ public abstract class MixinThreadDownloadImageData
 
 	/**
 	 * @author eric0210
-	 * @reason Use ExecutorService instead of manual thread creation & Make able to load offline cape files
+	 * @reason Use ExecutorService instead of thread creation & Make able to support more protocols (as file://)
 	 */
 	@Overwrite
 	protected void loadTextureFromServer()

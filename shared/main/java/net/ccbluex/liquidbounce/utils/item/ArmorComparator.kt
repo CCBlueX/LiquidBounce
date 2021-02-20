@@ -56,8 +56,7 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		/**
 		 * Damage-reduction Enchantments
 		 */
-		private val DAMAGE_REDUCTION_ENCHANTMENTS = arrayOf(
-			classProvider.getEnchantmentEnum(EnchantmentType.PROTECTION), // PROTECTION
+		private val DAMAGE_REDUCTION_ENCHANTMENTS = arrayOf(classProvider.getEnchantmentEnum(EnchantmentType.PROTECTION), // PROTECTION
 			classProvider.getEnchantmentEnum(EnchantmentType.PROJECTILE_PROTECTION), // PROJECTILE_PROTECTION
 			classProvider.getEnchantmentEnum(EnchantmentType.FIRE_PROTECTION), // FIRE_PROTECTION
 			classProvider.getEnchantmentEnum(EnchantmentType.BLAST_PROTECTION) // BLAST_PROTECTION
@@ -66,8 +65,7 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		/**
 		 * Enchantments factor
 		 */
-		private val ENCHANTMENT_FACTORS = floatArrayOf(
-			1.5f,  // PROTECTION
+		private val ENCHANTMENT_FACTORS = floatArrayOf(1.5f,  // PROTECTION
 			0.4f,  // PROJECTILE_PROTECTION
 			0.39f,  // FIRE_PROTECTION
 			0.38f // BLAST_PROTECTION
@@ -76,8 +74,7 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		/**
 		 * Damage-reduction Enchantments factor
 		 */
-		private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(
-			0.04f,  // PROTECTION
+		private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(0.04f,  // PROTECTION
 			0.08f,  // PROJECTILE_PROTECTION
 			0.15f,  // FIRE_PROTECTION
 			0.08f // BLAST_PROTECTION
@@ -86,8 +83,7 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		/**
 		 * Other Enchantments
 		 */
-		private val OTHER_ENCHANTMENTS = arrayOf(
-			classProvider.getEnchantmentEnum(EnchantmentType.FEATHER_FALLING), //FEATHER_FALLING
+		private val OTHER_ENCHANTMENTS = arrayOf(classProvider.getEnchantmentEnum(EnchantmentType.FEATHER_FALLING), //FEATHER_FALLING
 			classProvider.getEnchantmentEnum(EnchantmentType.THORNS), // THORNS
 			classProvider.getEnchantmentEnum(EnchantmentType.RESPIRATION), // RESPIRATION
 			classProvider.getEnchantmentEnum(EnchantmentType.AQUA_AFFINITY), // AQUA_AFFINITY
@@ -97,8 +93,7 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		/**
 		 * Other Enchantments factor
 		 */
-		private val OTHER_ENCHANTMENT_FACTORS = floatArrayOf(
-			3.0f,  // FEATHER_FALLING
+		private val OTHER_ENCHANTMENT_FACTORS = floatArrayOf(3.0f,  // FEATHER_FALLING
 			1.0f,  // THORNS
 			0.1f,  // RESPIRATION
 			0.05f,  // AQUA_AFFINITY
@@ -124,10 +119,10 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		private fun getThresholdedDamageReduction(itemStack: IItemStack): Float
 		{
 			val item = itemStack.item?.asItemArmor()!!
-			return getDamageReduction(item.armorMaterial.getDamageReductionAmount(item.armorType), 0) * (1 - getThresholdedEnchantmentDamageReduction(itemStack))
+			return getDamageReduction(item.armorMaterial.getDamageReductionAmount(item.armorType)) * (1 - getThresholdedEnchantmentDamageReduction(itemStack))
 		}
 
-		private fun getDamageReduction(defensePoints: Int, toughness: Int): Float = 1 - min(20.0f, max(defensePoints / 5.0f, defensePoints - 1 / (2 + toughness * 0.25f))) * 0.04f
+		private fun getDamageReduction(defensePoints: Int, toughness: Int = 0): Float = 1 - min(20.0f, max(defensePoints * 0.2f, defensePoints - 1 / (2 + toughness * 0.25f))) * 0.04f
 
 		private fun getThresholdedEnchantmentDamageReduction(itemStack: IItemStack): Float = DAMAGE_REDUCTION_ENCHANTMENTS.indices.map { ItemUtils.getEnchantment(itemStack, DAMAGE_REDUCTION_ENCHANTMENTS[it]) * ENCHANTMENT_FACTORS[it] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[it] }.sum()
 

@@ -55,7 +55,7 @@ public class MixinChunk
 	}
 
 	@Inject(method = "fillChunk", at = @At("RETURN"))
-	private void updateMiniMapChunk(final byte[] p_177439_1_, final int p_177439_2_, final boolean p_177439_3_, final CallbackInfo ci)
+	private void updateMiniMapChunk(final byte[] chunkData, final int chunkX, final boolean chunkZ, final CallbackInfo ci)
 	{
 		// noinspection ConstantConditions
 		MiniMapRegister.INSTANCE.updateChunk(ChunkImplKt.wrap((Chunk) (Object) this));

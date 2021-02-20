@@ -61,14 +61,14 @@ public class MixinRenderEntityItem
 		if (itemPhysics.getState())
 		{
 			final RenderEntityItem renderer = (RenderEntityItem) (Object) this;
-			rotation = (double) (System.nanoTime() - itemPhysics.getTick()) * 0.0000004 * itemPhysics.getItemRotationSpeed().get();
+			rotation = (System.nanoTime() - itemPhysics.getTick()) * 0.0000004 * itemPhysics.getItemRotationSpeed().get();
 			if (!mc.inGameHasFocus)
 				rotation = 0;
 
 			final ItemStack itemstack = entity.getEntityItem();
-			final int i = itemstack.getItem() != null ? Item.getIdFromItem(itemstack.getItem()) + itemstack.getMetadata() : 187;
 
-			random.setSeed(i);
+			final int rngSeed = itemstack.getItem() != null ? Item.getIdFromItem(itemstack.getItem()) + itemstack.getMetadata() : 187;
+			random.setSeed(rngSeed);
 
 			renderer.bindTexture(TextureMap.locationBlocksTexture);
 			renderer.getRenderManager().renderEngine.getTexture(TextureMap.locationBlocksTexture).setBlurMipmap(false, false);
@@ -79,9 +79,10 @@ public class MixinRenderEntityItem
 			RenderHelper.enableStandardItemLighting();
 			GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
 			GlStateManager.pushMatrix();
+
 			IBakedModel ibakedmodel = mc.getRenderItem().getItemModelMesher().getItemModel(itemstack);
 			final boolean is3D = ibakedmodel.isGui3d();
-			final int j = getModelCount(itemstack);
+			final int modelCount = getModelCount(itemstack);
 
 			GlStateManager.translate((float) x, (float) y, (float) z);
 
@@ -102,10 +103,12 @@ public class MixinRenderEntityItem
 					{
 						double _rotation = rotation * 2;
 						Fluid fluid = getFluid(entity);
+
 						if (fluid == null)
 							fluid = getFluid(entity, true);
+
 						if (fluid != null)
-							_rotation /= fluid.getDensity() / 1000.0 * 10;
+							_rotation /= fluid.getDensity() * 0.01;
 
 						entity.rotationPitch += _rotation;
 					}
@@ -118,7 +121,7 @@ public class MixinRenderEntityItem
 						double _rotation = rotation * 2;
 						final Fluid fluid = getFluid(entity);
 						if (fluid != null)
-							_rotation /= fluid.getDensity() / 1000.0 * 10;
+							_rotation /= fluid.getDensity() * 0.01f;
 
 						entity.rotationPitch += _rotation;
 					}
@@ -128,7 +131,7 @@ public class MixinRenderEntityItem
 
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 
-			for (int k = 0; k < j; ++k)
+			for (int k = 0; k < modelCount; ++k)
 				if (is3D)
 				{
 					GlStateManager.pushMatrix();

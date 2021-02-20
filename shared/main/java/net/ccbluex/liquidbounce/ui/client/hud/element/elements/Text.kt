@@ -222,7 +222,7 @@ class Text(
 		val rainbowSpeed = rainbowSpeedValue.get()
 		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
 		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
-		val rainbowShaderOffset = System.currentTimeMillis() % 10000 / 10000F
+		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 		val saturation = saturationValue.get()
 		val brightness = brightnessValue.get()
 		val shadow = shadowValue.get()
@@ -263,9 +263,7 @@ class Text(
 		}
 
 		// Render Rect
-		if (!rectMode.equals("none", true)) RainbowShader.begin(
-			rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset
-		).use {
+		if (!rectMode.equals("none", true)) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 			when
 			{
 				rectMode.equals("left", true) -> RenderUtils.drawRect(-2f, startY, 1f, endY, rectColor)
@@ -274,9 +272,7 @@ class Text(
 		}
 
 		// Render Text
-		RainbowFontShader.begin(
-			textRainbowShader, rainbowShaderX, rainbowShaderY, System.currentTimeMillis() % 10000 / 10000F
-		).use {
+		RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 			fontRenderer.drawString(displayText, if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f, 0F, textColor, shadow)
 
 			if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40)

@@ -157,7 +157,7 @@ class GuiAntiModDisable(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
 	{
 		representedScreen.drawBackground(0)
-		Fonts.fontBold180.drawCenteredString("AntiModDisable", (representedScreen.width shr 1).toFloat(), representedScreen.height / 10.0f + 5.0f, 4673984, true)
+		Fonts.fontBold180.drawCenteredString("AntiModDisable", (representedScreen.width shr 1).toFloat(), representedScreen.height * 0.1f + 5.0f, 4673984, true)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 	}

@@ -82,11 +82,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 		if (!minimapValue.get())
 		{
-			RenderUtils.drawRect(
-				0F, 0F, size, size, Color(
-					backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get()
-				).rgb
-			)
+			RenderUtils.drawRect(0F, 0F, size, size, Color(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get()).rgb)
 		}
 
 		val viewDistance = viewDistanceValue.get() * 16.0F
@@ -187,9 +183,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		{
 			if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false))
 			{
-				val positionRelativeToPlayer = Vector2f(
-					(renderViewEntity.posX - entity.posX).toFloat(), (renderViewEntity.posZ - entity.posZ).toFloat()
-				)
+				val positionRelativeToPlayer = Vector2f((renderViewEntity.posX - entity.posX).toFloat(), (renderViewEntity.posZ - entity.posZ).toFloat())
 
 				if (maxDisplayableDistanceSquare < positionRelativeToPlayer.lengthSquared()) continue
 
@@ -199,9 +193,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 				{
 					glPushMatrix()
 
-					glTranslatef(
-						(positionRelativeToPlayer.x / viewDistance) * size, (positionRelativeToPlayer.y / viewDistance) * size, 0f
-					)
+					glTranslatef((positionRelativeToPlayer.x / viewDistance) * size, (positionRelativeToPlayer.y / viewDistance) * size, 0f)
 					glRotatef(entity.rotationYaw, 0f, 0f, 1f)
 				}
 
@@ -254,9 +246,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 				{
 					val color = (LiquidBounce.moduleManager[ESP::class.java] as ESP).getColor(entity)
 
-					worldRenderer.pos(((positionRelativeToPlayer.x / viewDistance) * size).toDouble(), ((positionRelativeToPlayer.y / viewDistance) * size).toDouble(), 0.0).color(
-						color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f
-					).endVertex()
+					worldRenderer.pos(((positionRelativeToPlayer.x / viewDistance) * size).toDouble(), ((positionRelativeToPlayer.y / viewDistance) * size).toDouble(), 0.0).color(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f).endVertex()
 				}
 
 				if (transform)
@@ -269,10 +259,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 		if (!triangleMode) tessellator.draw()
 
-		if (circleMode)
-		{
-			glDisable(GL_POINT_SMOOTH)
-		}
+		if (circleMode) glDisable(GL_POINT_SMOOTH)
 
 		glDisable(GL_POLYGON_SMOOTH)
 
@@ -284,14 +271,12 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 		glPopMatrix()
 
-		RainbowShader.begin(
-			borderRainbowValue.get(), if (rainbowXValue.get() == 0.0F) 0.0F else 1.0F / rainbowXValue.get(), if (rainbowYValue.get() == 0.0F) 0.0F else 1.0F / rainbowYValue.get(), System.currentTimeMillis() % 10000 / 10000F
-		).use {
-			RenderUtils.drawBorder(
-				0F, 0F, size, size, borderStrengthValue.get(), Color(
-					borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get()
-				).rgb
-			)
+		val rainbowShaderX = if (rainbowXValue.get() == 0.0F) 0.0F else 1.0F / rainbowXValue.get()
+		val rainbowShaderY = if (rainbowYValue.get() == 0.0F) 0.0F else 1.0F / rainbowYValue.get()
+		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
+
+		RainbowShader.begin(borderRainbowValue.get(), rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+			RenderUtils.drawBorder(0F, 0F, size, size, borderStrengthValue.get(), Color(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get()).rgb)
 
 			glEnable(GL_BLEND)
 			glDisable(GL_TEXTURE_2D)

@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import com.google.common.collect.Iterables
-import com.google.common.collect.Lists
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreObjective
 import net.ccbluex.liquidbounce.api.minecraft.util.WEnumChatFormatting
 import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard
@@ -17,6 +15,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
+import kotlin.math.min
 
 /**
  * CustomHUD scoreboard
@@ -61,13 +60,13 @@ class ScoreboardElement(
 		if (NoScoreboard.state) return null
 
 		val fontRenderer = fontValue.get()
+		val fontHeight = fontRenderer.fontHeight
+
 		val textColor = textColor().rgb
 		val backColor = backgroundColor().rgb
 
 		val rectColorMode = rectColorModeValue.get()
-		val rectCustomColor = Color(
-			rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorBlueAlpha.get()
-		).rgb
+		val rectCustomColor = Color(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorBlueAlpha.get()).rgb
 
 		val saturation = saturationValue.get()
 		val brightness = brightnessValue.get()
@@ -87,51 +86,53 @@ class ScoreboardElement(
 		val objective = currObjective ?: worldScoreboard.getObjectiveInDisplaySlot(1) ?: return null
 
 		val scoreboard = objective.scoreboard
-		var scoreCollection = scoreboard.getSortedScores(objective)
-		val scores = Lists.newArrayList(Iterables.filter(scoreCollection) { input ->
-			input?.playerName != null && !input.playerName.startsWith("#")
-		})
 
-		scoreCollection = if (scores.size > 15) Lists.newArrayList(Iterables.skip(scores, scoreCollection.size - 15))
-		else scores
+		var scoreCollection = scoreboard.getSortedScores(objective)
+		val scoreCollectionSize = scoreCollection.size
+
+		val scores = scoreCollection.filter { !it.playerName.startsWith("#") }
+		val scoresSize = scores.size
+
+		scoreCollection = if (scoresSize > 15) scores.subList(min(scoresSize, scoreCollectionSize - 15), scoresSize) else scores
 
 		var maxWidth = fontRenderer.getStringWidth(objective.displayName)
 
 		for (score in scoreCollection)
 		{
-			val scorePlayerTeam = scoreboard.getPlayersTeam(score.playerName)
-			val width = "${functions.scoreboardFormatPlayerName(scorePlayerTeam, score.playerName)}: ${WEnumChatFormatting.RED}${score.scorePoints}"
+			val playerName = score.playerName
+			val scorePlayerTeam = scoreboard.getPlayersTeam(playerName)
+			val width = "${functions.scoreboardFormatPlayerName(scorePlayerTeam, playerName)}: ${WEnumChatFormatting.RED}${score.scorePoints}"
+
 			maxWidth = maxWidth.coerceAtLeast(fontRenderer.getStringWidth(width))
 		}
 
-		val maxHeight = scoreCollection.size * fontRenderer.fontHeight
-		val l1 = -maxWidth - 3 - if (rectValue.get()) 3 else 0
+		val maxHeight = scoreCollectionSize * fontHeight
+		val backgroundXPos = -maxWidth - 3 - if (rectValue.get()) 3 else 0
 
-
-
-		RenderUtils.drawRect(l1 - 2, -2, 5, (maxHeight + fontRenderer.fontHeight), backColor)
+		RenderUtils.drawRect(backgroundXPos - 2, -2, 5, (maxHeight + fontHeight), backColor)
 
 		scoreCollection.forEachIndexed { index, score ->
-			val team = scoreboard.getPlayersTeam(score.playerName)
+			val playerName = score.playerName
+			val team = scoreboard.getPlayersTeam(playerName)
 
-			val name = functions.scoreboardFormatPlayerName(team, score.playerName)
+			val formattedPlayerName = functions.scoreboardFormatPlayerName(team, playerName)
 			val scorePoints = "${WEnumChatFormatting.RED}${score.scorePoints}"
 
 			val width = 5 - if (rectValue.get()) 4 else 0
-			val height = maxHeight - index * fontRenderer.fontHeight.toFloat()
+			val height = maxHeight - index * fontHeight.toFloat()
 
 			GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
-			fontRenderer.drawString(name, l1.toFloat(), height, textColor, shadowValue.get())
+			fontRenderer.drawString(formattedPlayerName, backgroundXPos.toFloat(), height, textColor, shadowValue.get())
 			fontRenderer.drawString(scorePoints, (width - fontRenderer.getStringWidth(scorePoints)).toFloat(), height, textColor, shadowValue.get())
 
-			if (index == scoreCollection.size - 1)
+			if (index == scoreCollectionSize - 1)
 			{
 				val displayName = objective.displayName
 
 				GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
-				fontRenderer.drawString(displayName, (l1 + (maxWidth shr 1) - (fontRenderer.getStringWidth(displayName) shr 1)).toFloat(), (height - fontRenderer.fontHeight), textColor, shadowValue.get())
+				fontRenderer.drawString(displayName, (backgroundXPos + (maxWidth shr 1) - (fontRenderer.getStringWidth(displayName) shr 1)).toFloat(), (height - fontHeight), textColor, shadowValue.get())
 			}
 
 			if (rectValue.get())
@@ -142,19 +143,15 @@ class ScoreboardElement(
 					else -> rectCustomColor
 				}
 
-				RenderUtils.drawRect(2F, if (index == scoreCollection.size - 1) -2F else height, 5F, if (index == 0) fontRenderer.fontHeight.toFloat() else height + fontRenderer.fontHeight * 2F, rectColor)
+				RenderUtils.drawRect(2F, if (index == scoreCollectionSize - 1) -2F else height, 5F, if (index == 0) fontHeight.toFloat() else height + fontHeight * 2F, rectColor)
 			}
 		}
 
-		return Border(-maxWidth - 5.0f - if (rectValue.get()) 3 else 0, -2F, 5F, maxHeight + fontRenderer.fontHeight.toFloat())
+		return Border(-maxWidth - 5.0f - if (rectValue.get()) 3 else 0, -2F, 5F, maxHeight + fontHeight.toFloat())
 	}
 
-	private fun backgroundColor() = Color(
-		backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get()
-	)
+	private fun backgroundColor() = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get())
 
-	private fun textColor() = Color(
-		textRedValue.get(), textGreenValue.get(), textBlueValue.get()
-	)
+	private fun textColor() = Color(textRedValue.get(), textGreenValue.get(), textBlueValue.get())
 
 }

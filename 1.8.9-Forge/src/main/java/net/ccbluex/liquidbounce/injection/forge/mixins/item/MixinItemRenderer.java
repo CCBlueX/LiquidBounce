@@ -311,7 +311,7 @@ public abstract class MixinItemRenderer
 
 		final float sq = getAnimationProgress(swingProgress, true, false);
 		final float sqrt = getAnimationProgress(swingProgress, false, false);
-		final float equipProgressAffectness = swingAnimation.getEquipProgressAnimationAffectness().get() / 100.0F;
+		final float equipProgressAffectness = swingAnimation.getEquipProgressAnimationAffectness().get() * 0.01f;
 		final float equipProgressAffect = swingAnimation.getEquipProgressAffectsAnimation().get() ? 1 - equipProgressAffectness + interpolatedEquipProgress * equipProgressAffectness : 1;
 		final float blockScale = swingAnimation.getBlockScale().get();
 
@@ -363,7 +363,7 @@ public abstract class MixinItemRenderer
 			case "sigma":
 			{
 				transformFirstPersonItemBlock(equipProgress, 0, 1);
-				GlStateManager.rotate(equipProgressAffect * -sqrt * 55 / 2.0F, -8.0f, -0.0f, 9.0F);
+				GlStateManager.rotate(equipProgressAffect * -sqrt * 27.5f, -8.0f, -0.0f, 9.0F);
 				GlStateManager.rotate(equipProgressAffect * -sqrt * 45, 1.0F, sqrt * 0.5f, -0.0f);
 				doBlockTransformations();
 				GL11.glTranslated(1.2, 0.3, 0.5);

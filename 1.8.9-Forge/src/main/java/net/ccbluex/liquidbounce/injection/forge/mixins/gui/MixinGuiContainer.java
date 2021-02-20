@@ -252,7 +252,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 
 		if (returningStack != null)
 		{
-			float f = (Minecraft.getSystemTime() - returningStackTime) / 100.0F;
+			float f = (Minecraft.getSystemTime() - returningStackTime) * 0.01f;
 			if (f >= 1.0F)
 			{
 				f = 1.0F;

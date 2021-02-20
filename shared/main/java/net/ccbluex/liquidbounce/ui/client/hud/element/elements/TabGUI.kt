@@ -87,34 +87,33 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 		val rectangleRainbowEnabled = rectangleRainbow.get()
 
-		val backgroundColor = Color(
-			backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get()
-		)
+		val backgroundColor = Color(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get())
 
 		val borderColor = if (!borderRainbow.get()) Color(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get())
 		else Color.black
 
-		// Draw
+		val width = width.get()
 		val guiHeight = tabs.size * tabHeight.get()
 
-		RenderUtils.drawRect(1F, 0F, width.get(), guiHeight, backgroundColor.rgb)
+		// Draw
+		RenderUtils.drawRect(1F, 0F, width, guiHeight, backgroundColor.rgb)
+
+		val rainbowShaderX = if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get()
+		val rainbowShaderY = if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get()
+		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
 		if (borderValue.get())
 		{
-			RainbowShader.begin(borderRainbow.get(), if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-				RenderUtils.drawBorder(1F, 0F, width.get(), guiHeight, borderStrength.get(), borderColor.rgb)
+			RainbowShader.begin(borderRainbow.get(), rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+				RenderUtils.drawBorder(1F, 0F, width, guiHeight, borderStrength.get(), borderColor.rgb)
 			}
 		}
 
 		// Color
-		val rectColor = if (!rectangleRainbowEnabled) Color(redValue.get(), greenValue.get(), blueValue.get(), alphaValue.get())
-		else
-		{
-			Color.black
-		}
+		val rectColor = if (!rectangleRainbowEnabled) Color(redValue.get(), greenValue.get(), blueValue.get(), alphaValue.get()) else Color.black
 
-		RainbowShader.begin(rectangleRainbowEnabled, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-			RenderUtils.drawRect(1F, 1 + tabY - 1, width.get(), tabY + tabHeight.get(), rectColor)
+		RainbowShader.begin(rectangleRainbowEnabled, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+			RenderUtils.drawRect(1F, 1 + tabY - 1, width, tabY + tabHeight.get(), rectColor)
 		}
 
 		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
@@ -124,7 +123,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 			val tabName = if (upperCaseValue.get()) tab.tabName.toUpperCase()
 			else tab.tabName
 
-			val textX = if (side.horizontal == Side.Horizontal.RIGHT) width.get() - fontRenderer.getStringWidth(tabName) - tab.textFade - 3
+			val textX = if (side.horizontal == Side.Horizontal.RIGHT) width - fontRenderer.getStringWidth(tabName) - tab.textFade - 3
 			else tab.textFade + 5
 			val textY = y + textPositionY.get()
 
@@ -134,39 +133,36 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 			if (arrowsValue.get())
 			{
-				if (side.horizontal == Side.Horizontal.RIGHT) fontRenderer.drawString(
-					if (!categoryMenu && selectedCategory == index) ">" else "<", 3F, y + 2F, 0xffffff, textShadow.get()
-				)
-				else fontRenderer.drawString(
-					if (!categoryMenu && selectedCategory == index) "<" else ">", width.get() - 8F, y + 2F, 0xffffff, textShadow.get()
-				)
+				if (side.horizontal == Side.Horizontal.RIGHT) fontRenderer.drawString(if (!categoryMenu && selectedCategory == index) ">" else "<", 3F, y + 2F, 0xffffff, textShadow.get())
+				else fontRenderer.drawString(if (!categoryMenu && selectedCategory == index) "<" else ">", width - 8F, y + 2F, 0xffffff, textShadow.get())
 			}
 
 			if (index == selectedCategory && !categoryMenu)
 			{
 				val tabX = if (side.horizontal == Side.Horizontal.RIGHT) 1F - tab.menuWidth
-				else width.get() + 5
+				else width + 5
 
-				tab.drawTab(
-					tabX, y, rectColor.rgb, backgroundColor.rgb, borderColor.rgb, borderStrength.get(), upperCaseValue.get(), fontRenderer, borderRainbow.get(), rectangleRainbowEnabled
-				)
+				tab.drawTab(tabX, y, rectColor.rgb, backgroundColor.rgb, borderColor.rgb, borderStrength.get(), upperCaseValue.get(), fontRenderer, borderRainbow.get(), rectangleRainbowEnabled)
 			}
+
 			y += tabHeight.get()
 		}
 
 		AWTFontRenderer.assumeNonVolatile = false
 
-		return Border(1F, 0F, width.get(), guiHeight)
+		return Border(1F, 0F, width, guiHeight)
 	}
 
 	override fun handleKey(c: Char, keyCode: Int)
 	{
+		val horizontal = side.horizontal
+
 		when (keyCode)
 		{
 			Keyboard.KEY_UP -> parseAction(Action.UP)
 			Keyboard.KEY_DOWN -> parseAction(Action.DOWN)
-			Keyboard.KEY_RIGHT -> parseAction(if (side.horizontal == Side.Horizontal.RIGHT) Action.LEFT else Action.RIGHT)
-			Keyboard.KEY_LEFT -> parseAction(if (side.horizontal == Side.Horizontal.RIGHT) Action.RIGHT else Action.LEFT)
+			Keyboard.KEY_RIGHT -> parseAction(if (horizontal == Side.Horizontal.RIGHT) Action.LEFT else Action.RIGHT)
+			Keyboard.KEY_LEFT -> parseAction(if (horizontal == Side.Horizontal.RIGHT) Action.RIGHT else Action.LEFT)
 			Keyboard.KEY_RETURN -> parseAction(Action.TOGGLE)
 		}
 	}
@@ -182,6 +178,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 			else tabY -= 0.1F * delta
 		}
 		else tabY = xPos
+
 		val xPos2 = tabHeight.get() * selectedModule
 
 		if (itemY.toInt() != xPos2.toInt())
@@ -230,6 +227,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 			Action.UP -> if (categoryMenu)
 			{
 				--selectedCategory
+
 				if (selectedCategory < 0)
 				{
 					selectedCategory = tabs.size - 1
@@ -239,6 +237,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 			else
 			{
 				--selectedModule
+
 				if (selectedModule < 0)
 				{
 					selectedModule = tabs[selectedCategory].modules.size - 1
@@ -249,6 +248,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 			Action.DOWN -> if (categoryMenu)
 			{
 				++selectedCategory
+
 				if (selectedCategory > tabs.size - 1)
 				{
 					selectedCategory = 0
@@ -258,6 +258,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 			else
 			{
 				++selectedModule
+
 				if (selectedModule > tabs[selectedCategory].modules.size - 1)
 				{
 					selectedModule = 0
@@ -265,15 +266,9 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 				}
 			}
 
-			Action.LEFT ->
-			{
-				if (!categoryMenu) categoryMenu = true
-			}
+			Action.LEFT -> if (!categoryMenu) categoryMenu = true
 
-			Action.RIGHT -> if (!categoryMenu)
-			{
-				toggle = true
-			}
+			Action.RIGHT -> if (!categoryMenu) toggle = true
 			else
 			{
 				categoryMenu = false
@@ -300,9 +295,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 		var menuWidth = 0
 		var textFade = 0F
 
-		fun drawTab(
-			x: Float, y: Float, color: Int, backgroundColor: Int, borderColor: Int, borderStrength: Float, upperCase: Boolean, fontRenderer: IFontRenderer, borderRainbow: Boolean, rectRainbow: Boolean
-		)
+		fun drawTab(x: Float, y: Float, color: Int, backgroundColor: Int, borderColor: Int, borderStrength: Float, upperCase: Boolean, fontRenderer: IFontRenderer, borderRainbow: Boolean, rectRainbow: Boolean)
 		{
 			var maxWidth = 0
 
@@ -310,19 +303,24 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 			menuWidth = maxWidth
 
-			val menuHeight = modules.size * tabHeight.get()
+			val tabHeight = tabHeight.get()
+			val menuHeight = modules.size * tabHeight
+
+			val rainbowShaderX = if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get()
+			val rainbowShaderY = if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get()
+			val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
 			if (borderValue.get())
 			{
-				RainbowShader.begin(borderRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+				RainbowShader.begin(borderRainbow, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 					RenderUtils.drawBorder(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, borderStrength, borderColor)
 				}
 			}
 			RenderUtils.drawRect(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, backgroundColor)
 
 
-			RainbowShader.begin(rectRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-				RenderUtils.drawRect(x - 1.0f, y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight.get() - 1, color)
+			RainbowShader.begin(rectRainbow, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+				RenderUtils.drawRect(x - 1.0f, y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight - 1, color)
 			}
 
 			GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
@@ -330,9 +328,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 			modules.forEachIndexed { index, module ->
 				val moduleColor = if (module.state) 0xffffff else Color(205, 205, 205).rgb
 
-				fontRenderer.drawString(
-					if (upperCase) module.name.toUpperCase() else module.name, x + 2F, y + tabHeight.get() * index + textPositionY.get(), moduleColor, textShadow.get()
-				)
+				fontRenderer.drawString(if (upperCase) module.name.toUpperCase() else module.name, x + 2F, y + tabHeight * index + textPositionY.get(), moduleColor, textShadow.get())
 			}
 		}
 

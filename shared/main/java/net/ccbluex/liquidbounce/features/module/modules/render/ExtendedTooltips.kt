@@ -241,7 +241,7 @@ class ExtendedTooltips : Module()
 
 	private fun calcProtection(armorEpf: Double): Double
 	{
-		val protection = (50..100).sumByDouble { if (ceil(armorEpf * it.toDouble() / 100.0) < 20.0) ceil(armorEpf * it.toDouble() / 100.0) else 20.0 }
+		val protection = (50..100).sumByDouble { if (ceil(armorEpf * it.toDouble() * 0.01) < 20.0) ceil(armorEpf * it.toDouble() * 0.01) else 20.0 }
 		return protection / 51.0
 	}
 
@@ -252,7 +252,7 @@ class ExtendedTooltips : Module()
 		return if (protTotal < 1.0) protTotal else 1.0
 	}
 
-	private fun roundDouble(number: Double): Double = (number * 10000.0).roundToLong().toDouble() / 10000.0
+	private fun roundDouble(number: Double): Double = (number * 10000.0).roundToLong().toDouble() * 0.0001f
 
 	private fun getHeldItemCount(thePlayer: IEntityPlayerSP, bow: Boolean): Int
 	{

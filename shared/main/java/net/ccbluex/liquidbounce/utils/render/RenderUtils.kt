@@ -412,7 +412,7 @@ object RenderUtils : MinecraftInstance()
 	{
 		for (i in 0..3)
 		{
-			val rot = (System.nanoTime() / 5000000 * i % 360).toInt()
+			val rot = (System.nanoTime() * 0.0000002 * i % 360).toInt()
 			drawCircle(x, y, (i * 10).toFloat(), rot - 180, rot)
 		}
 	}

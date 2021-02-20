@@ -165,7 +165,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 		}
 		else
 		{
-			this.autoReconnectDelaySlider.displayString = "AutoReconnect: " + DECIMAL_FORMAT.format(AutoReconnect.INSTANCE.getDelay() / 1000.0) + "s";
+			this.autoReconnectDelaySlider.displayString = "AutoReconnect: " + DECIMAL_FORMAT.format(AutoReconnect.INSTANCE.getDelay() * 0.001f) + "s";
 		}
 	}
 

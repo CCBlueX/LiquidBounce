@@ -149,7 +149,7 @@ class Arraylist(
 		val rainbowOffsetVal = 400000000L + 40000000L * rainbowOffsetValue.get()
 		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
 		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
-		val rainbowShaderOffset = System.currentTimeMillis() % 10000 / 10000F
+		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
 		when (side.horizontal)
 		{
@@ -173,7 +173,7 @@ class Arraylist(
 					// Draw Background
 					val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
 
-					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, System.currentTimeMillis() % 10000 / 10000F).use {
+					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 						val xPosCorrection = if (rectMode.equals("right", true)) 5 else 2
 						val x2Pos = if (rectMode.equals("right", true)) -3F else 0F
 						val color = when

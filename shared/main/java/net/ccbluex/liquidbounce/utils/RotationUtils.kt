@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.utils.RaycastUtils.EntityFilter
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import java.lang.Double.isNaN
-import java.util.*
+import java.util.Random
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -110,9 +110,9 @@ class RotationUtils : MinecraftInstance(), Listenable
 
 		var keepCurrentRotation = false
 
-		private var x = random.nextDouble()
-		private var y = random.nextDouble()
-		private var z = random.nextDouble()
+		private var x = random.nextGaussian()
+		private var y = random.nextGaussian()
+		private var z = random.nextGaussian()
 
 		/**
 		 * Face block
@@ -332,12 +332,12 @@ class RotationUtils : MinecraftInstance(), Listenable
 			// Calculate jitter amount
 			if (jitter)
 			{
-				val yawJitter = jitterData.yawRate > 0 && Random().nextInt(100) <= jitterData.yawRate
-				val pitchJitter = jitterData.pitchRate > 0 && Random().nextInt(100) <= jitterData.pitchRate
+				val yawJitter = jitterData.yawRate > 0 && random.nextInt(100) <= jitterData.yawRate
+				val pitchJitter = jitterData.pitchRate > 0 && random.nextInt(100) <= jitterData.pitchRate
 
 				if (yawJitter)
 				{
-					val yawNegative = Random().nextBoolean()
+					val yawNegative = random.nextBoolean()
 
 					val minYaw = jitterData.minYaw
 					val maxYaw = jitterData.maxYaw
@@ -347,7 +347,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 
 				if (pitchJitter)
 				{
-					val pitchNegative = Random().nextBoolean()
+					val pitchNegative = random.nextBoolean()
 
 					val minPitch = jitterData.minPitch
 					val maxPitch = jitterData.maxPitch

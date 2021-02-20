@@ -168,7 +168,7 @@ class NameTags : Module()
 
 		if (distance < 1F) distance = 1F
 
-		val scale = distance / 100f * scaleValue.get()
+		val scale = distance * 0.01f * scaleValue.get()
 
 		glScalef(-scale, -scale, scale)
 

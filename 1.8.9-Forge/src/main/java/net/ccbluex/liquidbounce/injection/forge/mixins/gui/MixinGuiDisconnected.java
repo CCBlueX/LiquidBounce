@@ -184,7 +184,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 		if (autoReconnectDelaySlider == null)
 			return;
 
-		autoReconnectDelaySlider.displayString = AutoReconnect.INSTANCE.isEnabled() ? "AutoReconnect: " + DECIMAL_FORMAT.get().format(AutoReconnect.INSTANCE.getDelay() / 1000.0) + "s" : "AutoReconnect: Off";
+		autoReconnectDelaySlider.displayString = AutoReconnect.INSTANCE.isEnabled() ? "AutoReconnect: " + DECIMAL_FORMAT.get().format(AutoReconnect.INSTANCE.getDelay() * 0.0001f) + "s" : "AutoReconnect: Off";
 	}
 
 	private void updateReconnectButton()

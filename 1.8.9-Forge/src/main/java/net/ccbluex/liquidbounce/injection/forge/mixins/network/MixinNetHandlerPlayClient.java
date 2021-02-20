@@ -284,18 +284,18 @@ public abstract class MixinNetHandlerPlayClient
 		if (alerts)
 		{
 			if (isHackerChat(text))
-				LiquidBounce.hud.addNotification("Player Warning", "Someone called you a hacker.", Color.yellow, 500L);
+				LiquidBounce.hud.addNotification("Chat", "Someone called you a hacker.", Color.yellow, 500L);
 
 			if (text.contains("ground items will be removed in"))
 			{
 				final String message = text.substring(text.lastIndexOf("in "));
-				LiquidBounce.hud.addNotification("Clearlag Warning", "Clearlag " + message, null, 500L);
+				LiquidBounce.hud.addNotification("ClearLag", "Clearlag " + message, null, 500L);
 			}
 
 			if (text.contains("removed ") && text.contains("entities"))
 			{
 				final String message = text.substring(text.lastIndexOf("removed "));
-				LiquidBounce.hud.addNotification("Clearlag Removal", message, null, 500L);
+				LiquidBounce.hud.addNotification("ClearLag", message, null, 500L);
 			}
 
 			if (text.contains("you are now in "))
@@ -307,7 +307,7 @@ public abstract class MixinNetHandlerPlayClient
 			if (text.contains("now entering"))
 			{
 				final String message = text.substring(text.lastIndexOf(": ") + 4);
-				LiquidBounce.hud.addNotification("Faction Warning", "Chunk: " + message, null, 500L);
+				LiquidBounce.hud.addNotification("Faction", "Chunk: " + message, null, 500L);
 			}
 		}
 

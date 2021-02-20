@@ -40,7 +40,7 @@ class MineplexBHop2 : SpeedMode("Mineplex-BHop2")
 		else
 		{
 			if (mc.timer.timerSpeed == 2.001f) mc.timer.timerSpeed = 1.0F
-			speed = 0.62f - stage / 300.0f + mineplex / 5.0f
+			speed = 0.62f - stage / 300.0f + mineplex * 0.2f
 			stage++
 		}
 
