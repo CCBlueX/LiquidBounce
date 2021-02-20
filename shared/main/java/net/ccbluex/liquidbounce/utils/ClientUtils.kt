@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.utils
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.api.minecraft.INetworkManager
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.network.login.server.ISPacketEncryptionRequest
@@ -26,7 +27,7 @@ object ClientUtils : MinecraftInstance()
 	@JvmStatic
 	fun disableFastRender()
 	{
-		LiquidBounce.wrapper.functions.disableFastRender()
+		wrapper.functions.disableFastRender()
 	}
 
 	@JvmStatic
@@ -46,6 +47,6 @@ object ClientUtils : MinecraftInstance()
 
 		val jsonObject = JsonObject()
 		jsonObject.addProperty("text", message)
-		thePlayer.addChatMessage(LiquidBounce.wrapper.functions.jsonToComponent("$jsonObject"))
+		thePlayer.addChatMessage(wrapper.functions.jsonToComponent("$jsonObject"))
 	}
 }

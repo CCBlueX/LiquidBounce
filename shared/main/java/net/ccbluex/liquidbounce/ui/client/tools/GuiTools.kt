@@ -16,15 +16,20 @@ class GuiTools(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	override fun initGui()
 	{
-		val buttonX = (representedScreen.width shr 1) - 100
-		val buttonY = (representedScreen.height shr 2) + 48
+		val provider = classProvider
+		val screen = representedScreen
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, buttonY + 25, "Port Scanner"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, buttonY + 55, "Back"))
+		val buttonX = (screen.width shr 1) - 100
+		val buttonY = (screen.height shr 2) + 48
+		val buttonList = screen.buttonList
+
+		buttonList.add(provider.createGuiButton(1, buttonX, buttonY + 25, "Port Scanner"))
+		buttonList.add(provider.createGuiButton(0, buttonX, buttonY + 55, "Back"))
 	}
 
 	override fun actionPerformed(button: IGuiButton)
 	{
+		val mc = mc
 		when (button.id)
 		{
 			1 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiPortScanner(representedScreen)))
@@ -34,8 +39,10 @@ class GuiTools(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
 	{
-		representedScreen.drawBackground(0)
-		Fonts.fontBold180.drawCenteredString("Tools", (representedScreen.width shr 1).toFloat(), (representedScreen.height shr 3) + 5F, 4673984, true)
+		val screen = representedScreen
+
+		screen.drawBackground(0)
+		Fonts.fontBold180.drawCenteredString("Tools", (screen.width shr 1).toFloat(), (screen.height shr 3) + 5F, 4673984, true)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 	}

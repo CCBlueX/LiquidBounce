@@ -1,10 +1,10 @@
 package co.uk.hexeption.utils;
 
+import static net.ccbluex.liquidbounce.LiquidBounce.wrapper;
 import static org.lwjgl.opengl.GL11.*;
 
 import java.awt.*;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.IExtractedFunctions;
 import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft;
 import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer;
@@ -58,7 +58,7 @@ public final class OutlineUtils
 
 	public static void renderFour(final Color color)
 	{
-		final IExtractedFunctions functions = LiquidBounce.wrapper.getFunctions();
+		final IExtractedFunctions functions = wrapper.getFunctions();
 
 		setColor(color);
 		glDepthMask(false);
@@ -91,7 +91,7 @@ public final class OutlineUtils
 
 	public static void checkSetupFBO()
 	{
-		final IMinecraft mc = LiquidBounce.wrapper.getMinecraft();
+		final IMinecraft mc = wrapper.getMinecraft();
 
 		// Gets the FBO of Minecraft
 		final IFramebuffer fbo = mc.getFramebuffer();

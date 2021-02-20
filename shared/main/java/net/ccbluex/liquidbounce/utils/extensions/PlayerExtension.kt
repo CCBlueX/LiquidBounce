@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
@@ -43,19 +44,19 @@ fun getNearestPointBB(eye: WVec3, box: IAxisAlignedBB): WVec3
 
 fun IEntityPlayer.getPing(): Int
 {
-	val playerInfo = LiquidBounce.wrapper.minecraft.netHandler.getPlayerInfo(uniqueID)
+	val playerInfo = wrapper.minecraft.netHandler.getPlayerInfo(uniqueID)
 	return playerInfo?.responseTime ?: 0
 }
 
 fun IEntity.isAnimal(): Boolean
 {
-	val classProvider = LiquidBounce.wrapper.classProvider
+	val classProvider = wrapper.classProvider
 	return classProvider.isEntityAnimal(this) || classProvider.isEntitySquid(this) || classProvider.isEntityGolem(this) || classProvider.isEntityBat(this)
 }
 
 fun IEntity.isMob(): Boolean
 {
-	val classProvider = LiquidBounce.wrapper.classProvider
+	val classProvider = wrapper.classProvider
 	return classProvider.isEntityMob(this) || classProvider.isEntityVillager(this) || classProvider.isEntitySlime(this) || classProvider.isEntityGhast(this) || classProvider.isEntityDragon(this) || classProvider.isEntityShulker(this)
 }
 

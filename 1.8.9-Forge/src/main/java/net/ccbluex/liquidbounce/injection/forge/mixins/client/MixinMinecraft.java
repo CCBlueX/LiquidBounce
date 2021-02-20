@@ -9,6 +9,8 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.IClassProvider;
+import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
@@ -55,6 +57,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.wrapper;
 
 @Mixin(Minecraft.class)
 @SideOnly(Side.CLIENT)
@@ -111,7 +115,7 @@ public abstract class MixinMinecraft
 	private void injectWrapperInitializator(final CallbackInfo ci)
 	{
 		// Set Wrapper
-		LiquidBounce.wrapper = WrapperImpl.INSTANCE;
+		wrapper = WrapperImpl.INSTANCE;
 	}
 
 	@Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;checkGLError(Ljava/lang/String;)V", ordinal = 2, shift = Shift.AFTER))
@@ -142,13 +146,16 @@ public abstract class MixinMinecraft
 	@Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;displayGuiScreen(Lnet/minecraft/client/gui/GuiScreen;)V", shift = Shift.AFTER))
 	private void afterMainScreen(final CallbackInfo callbackInfo)
 	{
+		final IMinecraft mc = wrapper.getMinecraft();
+		final IClassProvider provider = wrapper.getClassProvider();
+
 		// Display welcome screen
 		if (LiquidBounce.fileManager.firstStart)
-			LiquidBounce.wrapper.getMinecraft().displayGuiScreen(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiWelcome()));
+			mc.displayGuiScreen(provider.wrapGuiScreen(new GuiWelcome()));
 
 		// Display update screen
 		else if (LiquidBounce.INSTANCE.getLatestVersion() > LiquidBounce.CLIENT_VERSION - (LiquidBounce.IN_DEV ? 1 : 0))
-			LiquidBounce.wrapper.getMinecraft().displayGuiScreen(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiUpdate()));
+			mc.displayGuiScreen(provider.wrapGuiScreen(new GuiUpdate()));
 	}
 
 	@Inject(method = "createDisplay", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/Display;setTitle(Ljava/lang/String;)V", shift = Shift.AFTER))
@@ -164,7 +171,7 @@ public abstract class MixinMinecraft
 		// Replace Main Menu screen
 		if (currentScreen instanceof net.minecraft.client.gui.GuiMainMenu || currentScreen != null && currentScreen.getClass().getName().startsWith("net.labymod") && "ModGuiMainMenu".equals(currentScreen.getClass().getSimpleName()))
 		{
-			currentScreen = GuiScreenImplKt.unwrap(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiMainMenu()));
+			currentScreen = GuiScreenImplKt.unwrap(wrapper.getClassProvider().wrapGuiScreen(new GuiMainMenu()));
 
 			final ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
 			currentScreen.setWorldAndResolution(Minecraft.getMinecraft(), scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight());

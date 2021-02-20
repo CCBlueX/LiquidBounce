@@ -51,18 +51,21 @@ class InventoryUtils : MinecraftInstance(), Listenable
 		// mc.thePlayer.inventory.getStackInSlot() (same as mc.thePlayer.inventory.mainInventory) - https://minecraft.gamepedia.com/File:Items_slot_number.png
 		// !! ---------------------------------------------------------------------------------------------------------------------------- !!
 
-		val AUTOBLOCK_BLACKLIST = arrayOf(
-			// Interactible blocks
-			classProvider.getBlockEnum(BlockType.CHEST), classProvider.getBlockEnum(BlockType.ENDER_CHEST), classProvider.getBlockEnum(BlockType.TRAPPED_CHEST), classProvider.getBlockEnum(BlockType.ANVIL), classProvider.getBlockEnum(BlockType.DISPENSER), classProvider.getBlockEnum(BlockType.DROPPER), classProvider.getBlockEnum(BlockType.FURNACE), classProvider.getBlockEnum(BlockType.LIT_FURNACE), classProvider.getBlockEnum(BlockType.CRAFTING_TABLE), classProvider.getBlockEnum(BlockType.ENCHANTING_TABLE), classProvider.getBlockEnum(BlockType.JUKEBOX), classProvider.getBlockEnum(BlockType.BED), classProvider.getBlockEnum(BlockType.NOTEBLOCK), classProvider.getBlockEnum(BlockType.WEB),
+		val AUTOBLOCK_BLACKLIST = run {
+			val provider = classProvider
+			arrayOf(
+				// Interactible blocks
+				provider.getBlockEnum(BlockType.CHEST), provider.getBlockEnum(BlockType.ENDER_CHEST), provider.getBlockEnum(BlockType.TRAPPED_CHEST), provider.getBlockEnum(BlockType.ANVIL), provider.getBlockEnum(BlockType.DISPENSER), provider.getBlockEnum(BlockType.DROPPER), provider.getBlockEnum(BlockType.FURNACE), provider.getBlockEnum(BlockType.LIT_FURNACE), provider.getBlockEnum(BlockType.CRAFTING_TABLE), provider.getBlockEnum(BlockType.ENCHANTING_TABLE), provider.getBlockEnum(BlockType.JUKEBOX), provider.getBlockEnum(BlockType.BED), provider.getBlockEnum(BlockType.NOTEBLOCK), provider.getBlockEnum(BlockType.WEB),
 
-			// Some excepted blocks
-			classProvider.getBlockEnum(BlockType.TORCH), classProvider.getBlockEnum(BlockType.REDSTONE_TORCH), classProvider.getBlockEnum(BlockType.REDSTONE_WIRE), classProvider.getBlockEnum(BlockType.LADDER), classProvider.getBlockEnum(BlockType.VINE), classProvider.getBlockEnum(BlockType.WATERLILY), classProvider.getBlockEnum(BlockType.CACTUS), classProvider.getBlockEnum(BlockType.GLASS_PANE), classProvider.getBlockEnum(BlockType.IRON_BARS),
+				// Some excepted blocks
+				provider.getBlockEnum(BlockType.TORCH), provider.getBlockEnum(BlockType.REDSTONE_TORCH), provider.getBlockEnum(BlockType.REDSTONE_WIRE), provider.getBlockEnum(BlockType.LADDER), provider.getBlockEnum(BlockType.VINE), provider.getBlockEnum(BlockType.WATERLILY), provider.getBlockEnum(BlockType.CACTUS), provider.getBlockEnum(BlockType.GLASS_PANE), provider.getBlockEnum(BlockType.IRON_BARS),
 
-			// Pressure plates
-			classProvider.getBlockEnum(BlockType.STONE_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.WODDEN_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.LIGHT_WEIGHTED_PRESSURE_PLATE), classProvider.getBlockEnum(BlockType.HEAVY_WEIGHTED_PRESSURE_PLATE),
+				// Pressure plates
+				provider.getBlockEnum(BlockType.STONE_PRESSURE_PLATE), provider.getBlockEnum(BlockType.WODDEN_PRESSURE_PLATE), provider.getBlockEnum(BlockType.LIGHT_WEIGHTED_PRESSURE_PLATE), provider.getBlockEnum(BlockType.HEAVY_WEIGHTED_PRESSURE_PLATE),
 
-			// Falling blocks
-			classProvider.getBlockEnum(BlockType.SAND), classProvider.getBlockEnum(BlockType.GRAVEL), classProvider.getBlockEnum(BlockType.TNT), classProvider.getBlockEnum(BlockType.STANDING_BANNER), classProvider.getBlockEnum(BlockType.WALL_BANNER))
+				// Falling blocks
+				provider.getBlockEnum(BlockType.SAND), provider.getBlockEnum(BlockType.GRAVEL), provider.getBlockEnum(BlockType.TNT), provider.getBlockEnum(BlockType.STANDING_BANNER), provider.getBlockEnum(BlockType.WALL_BANNER))
+		}
 
 		val CLICK_TIMER = MSTimer()
 

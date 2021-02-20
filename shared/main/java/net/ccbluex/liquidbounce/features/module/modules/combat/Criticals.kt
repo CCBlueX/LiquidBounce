@@ -61,11 +61,13 @@ class Criticals : Module()
 	@EventTarget
 	fun onAttack(event: AttackEvent)
 	{
-		if (classProvider.isEntityLivingBase(event.targetEntity))
+		val provider = classProvider
+
+		if (provider.isEntityLivingBase(event.targetEntity))
 		{
 			val thePlayer = mc.thePlayer ?: return
 			val entity = (event.targetEntity ?: return)
-			if (!classProvider.isEntityLivingBase(entity)) return
+			if (!provider.isEntityLivingBase(entity)) return
 			val targetEntity = entity.asEntityLivingBase()
 
 			val networkManager = mc.netHandler.networkManager
@@ -81,25 +83,25 @@ class Criticals : Module()
 			{
 				"packet" ->
 				{
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.0625, z, true))
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y, z, false))
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.000011, z, false))
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y, z, false))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.0625, z, true))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y, z, false))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.000011, z, false))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y, z, false))
 					thePlayer.onCriticalHit(targetEntity)
 				}
 
 				"ncppacket" ->
 				{
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.11, z, false))
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.1100013579, z, false))
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.0000013579, z, false))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.11, z, false))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.1100013579, z, false))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.0000013579, z, false))
 					thePlayer.onCriticalHit(targetEntity)
 				}
 
 				"tphop" ->
 				{
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.02, z, false))
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + 0.01, z, false))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.02, z, false))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.01, z, false))
 					thePlayer.setPosition(x, y + 0.01, z)
 					thePlayer.onCriticalHit(targetEntity)
 				}
@@ -108,7 +110,7 @@ class Criticals : Module()
 				{
 					val ystep = arrayOf(customYStep1Value.get(), customYStep2Value.get(), customYStep3Value.get(), customYStep4Value.get(), customYStep5Value.get(), customYStep6Value.get())
 
-					for (i in 0 until customStepsValue.get()) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(x, y + ystep[i], z, false))
+					for (i in 0 until customStepsValue.get()) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + ystep[i], z, false))
 
 					thePlayer.onCriticalHit(targetEntity)
 				}

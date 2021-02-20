@@ -39,11 +39,12 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		// Add buttons
 		val middleScreen = representedScreen.width shr 1
 		val quarterScreen = representedScreen.height shr 2
-		representedScreen.buttonList.add(classProvider.createGuiButton(4, middleScreen - 100, quarterScreen + 65, 98, 20, "Add Alt and Login"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, middleScreen + 2, quarterScreen + 65, 98, 20, "Just Login"))
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, middleScreen - 100, representedScreen.height - 54, 98, 20, "Get Token"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(3, middleScreen + 2, representedScreen.height - 54, 98, 20, "Back"))
+		val buttonList = representedScreen.buttonList
+		buttonList.add(classProvider.createGuiButton(4, middleScreen - 100, quarterScreen + 65, 98, 20, "Add Alt and Login"))
+		buttonList.add(classProvider.createGuiButton(1, middleScreen + 2, quarterScreen + 65, 98, 20, "Just Login"))
+		buttonList.add(classProvider.createGuiButton(2, middleScreen - 100, representedScreen.height - 54, 98, 20, "Get Token"))
+		buttonList.add(classProvider.createGuiButton(3, middleScreen + 2, representedScreen.height - 54, 98, 20, "Back"))
 
 		// Token text field
 		tokenField = classProvider.createGuiTextField(0, Fonts.font40, middleScreen - 100, quarterScreen + 40, 200, 20)

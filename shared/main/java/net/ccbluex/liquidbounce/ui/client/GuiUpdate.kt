@@ -23,8 +23,10 @@ class GuiUpdate : WrappedGuiScreen()
 
 		val middleScreen = representedScreen.width shr 1
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, middleScreen + 2, j + 48, 98, 20, "OK"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, middleScreen - 100, j + 48, 98, 20, "Download"))
+		val buttonList = representedScreen.buttonList
+		val provider = classProvider
+		buttonList.add(provider.createGuiButton(1, middleScreen + 2, j + 48, 98, 20, "OK"))
+		buttonList.add(provider.createGuiButton(2, middleScreen - 100, j + 48, 98, 20, "Download"))
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)

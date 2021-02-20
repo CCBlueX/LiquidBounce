@@ -134,20 +134,22 @@ class AutoArmor : Module()
 	 */
 	private fun move(thePlayer: IEntityPlayerSP, netHandler: IINetHandlerPlayClient, item: Int, isArmorSlot: Boolean): Boolean
 	{
-		if (!isArmorSlot && item < 9 && hotbarValue.get() && !classProvider.isGuiInventory(mc.currentScreen))
+		val provider = classProvider
+
+		if (!isArmorSlot && item < 9 && hotbarValue.get() && !provider.isGuiInventory(mc.currentScreen))
 		{
-			netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(item))
+			netHandler.addToSendQueue(provider.createCPacketHeldItemChange(item))
 			netHandler.addToSendQueue(createUseItemPacket(thePlayer.inventoryContainer.getSlot(item).stack, WEnumHand.MAIN_HAND))
-			netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+			netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
 			nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 
 			return true
 		}
 
-		if (!(noMoveValue.get() && isMoving(thePlayer)) && (!invOpenValue.get() || classProvider.isGuiInventory(mc.currentScreen)) && item != -1)
+		if (!(noMoveValue.get() && isMoving(thePlayer)) && (!invOpenValue.get() || provider.isGuiInventory(mc.currentScreen)) && item != -1)
 		{
-			val openInventory = simulateInventory.get() && !classProvider.isGuiInventory(mc.currentScreen)
+			val openInventory = simulateInventory.get() && !provider.isGuiInventory(mc.currentScreen)
 
 			if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
 
@@ -163,7 +165,7 @@ class AutoArmor : Module()
 
 			nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 
-			if (openInventory) netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
+			if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
 			return true
 		}

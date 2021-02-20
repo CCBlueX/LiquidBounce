@@ -372,6 +372,8 @@ class Fly : Module()
 		vanillaRemainingTime.update()
 
 		run {
+			val provider = classProvider
+
 			when (modeValue.get().toLowerCase())
 			{
 				"vanilla" ->
@@ -455,7 +457,7 @@ class Fly : Module()
 
 					if (startY + aacJump > posY)
 					{
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayer(true))
 						thePlayer.motionY = 0.8
 						MovementUtils.strafe(thePlayer, aacSpeedValue.get())
 					}
@@ -487,14 +489,14 @@ class Fly : Module()
 
 					aac3delay++
 
-					if (!aac3_1_6_touchedVoid) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, onGround))
+					if (!aac3_1_6_touchedVoid) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY, posZ, onGround))
 					if (posY <= 0.0) aac3_1_6_touchedVoid = true
 				}
 
 				"flag" ->
 				{
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosLook(posX + thePlayer.motionX * 999, posY + (if (jumpKeyDown) 1.5624 else 0.00000001) - if (sneakKeyDown) 0.0624 else 0.00000002, posZ + thePlayer.motionZ * 999, rotationYaw, rotationPitch, true))
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosLook(posX + thePlayer.motionX * 999, posY - 6969, posZ + thePlayer.motionZ * 999, rotationYaw, rotationPitch, true))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosLook(posX + thePlayer.motionX * 999, posY + (if (jumpKeyDown) 1.5624 else 0.00000001) - if (sneakKeyDown) 0.0624 else 0.00000002, posZ + thePlayer.motionZ * 999, rotationYaw, rotationPitch, true))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosLook(posX + thePlayer.motionX * 999, posY - 6969, posZ + thePlayer.motionZ * 999, rotationYaw, rotationPitch, true))
 
 					thePlayer.setPosition(posX + thePlayer.motionX * 11, posY, posZ + thePlayer.motionZ * 11)
 					thePlayer.motionY = 0.0
@@ -502,7 +504,7 @@ class Fly : Module()
 
 				"keepalive" ->
 				{
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketKeepAlive())
+					networkManager.sendPacketWithoutEvent(provider.createCPacketKeepAlive())
 					thePlayer.capabilities.isFlying = false
 					thePlayer.motionY = 0.0
 					thePlayer.motionX = 0.0
@@ -522,8 +524,8 @@ class Fly : Module()
 					MovementUtils.strafe(thePlayer, vanillaSpeed)
 					if (mineSecureVClipTimer.hasTimePassed(150) && jumpKeyDown)
 					{
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 5, posZ, false))
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(0.5, -1000.0, 0.5, false))
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY + 5, posZ, false))
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(0.5, -1000.0, 0.5, false))
 						val yaw = WMathHelper.toRadians(rotationYaw)
 						val x = -functions.sin(yaw) * 0.4
 						val z = functions.cos(yaw) * 0.4
@@ -553,8 +555,8 @@ class Fly : Module()
 					val vectorEnd = WVec3(
 						functions.sin(yawRadians) * functions.cos(pitchRadians) * length + vectorStart.xCoord, functions.sin(pitchRadians) * length + vectorStart.yCoord, functions.cos(yawRadians) * functions.cos(pitchRadians) * length + vectorStart.zCoord
 					)
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(vectorEnd.xCoord, posY + 2, vectorEnd.zCoord, true))
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(vectorStart.xCoord, posY + 2, vectorStart.zCoord, true))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(vectorEnd.xCoord, posY + 2, vectorEnd.zCoord, true))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(vectorStart.xCoord, posY + 2, vectorStart.zCoord, true))
 					thePlayer.motionY = 0.0
 				}
 
@@ -569,21 +571,21 @@ class Fly : Module()
 						val vec32: WVec3 = vec3.addVector(vec31.xCoord * 7, vec31.yCoord * 7, vec31.zCoord * 7)
 						if (thePlayer.fallDistance > 0.8)
 						{
-							thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 50, posZ, false))
+							thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY + 50, posZ, false))
 							thePlayer.fall(100.0f, 100.0f)
 							thePlayer.fallDistance = 0.0f
-							thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 20, posZ, true))
+							thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY + 20, posZ, true))
 						}
-						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(vec32.xCoord, posY + 50, vec32.zCoord, true))
-						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, false))
-						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(vec32.xCoord, posY, vec32.zCoord, true))
-						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, false))
+						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(vec32.xCoord, posY + 50, vec32.zCoord, true))
+						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY, posZ, false))
+						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(vec32.xCoord, posY, vec32.zCoord, true))
+						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY, posZ, false))
 						minesuchtTP.reset()
 					}
 					else
 					{
-						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, false))
-						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, true))
+						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY, posZ, false))
+						thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY, posZ, true))
 					}
 				}
 
@@ -607,8 +609,8 @@ class Fly : Module()
 						mineplexTimer.reset()
 					}
 					val blockPos = WBlockPos(posX, thePlayer.entityBoundingBox.minY - 1, posZ)
-					val vec: WVec3 = WVec3(blockPos).addVector(0.4, 0.4, 0.4).add(WVec3(classProvider.getEnumFacing(EnumFacingType.UP).directionVec))
-					mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.inventory.getCurrentItemInHand()!!, blockPos, classProvider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
+					val vec: WVec3 = WVec3(blockPos).addVector(0.4, 0.4, 0.4).add(WVec3(provider.getEnumFacing(EnumFacingType.UP).directionVec))
+					mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.inventory.getCurrentItemInHand()!!, blockPos, provider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
 					MovementUtils.strafe(thePlayer, 0.27f)
 					mc.timer.timerSpeed = 1 + mineplexSpeedValue.get()
 				}
@@ -687,8 +689,8 @@ class Fly : Module()
 					spartanTimer.update()
 					if (spartanTimer.hasTimePassed(12))
 					{
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 8, posZ, true))
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY - 8, posZ, true))
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY + 8, posZ, true))
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY - 8, posZ, true))
 						spartanTimer.reset()
 					}
 				}
@@ -697,7 +699,7 @@ class Fly : Module()
 				{
 					MovementUtils.strafe(thePlayer, 0.264f)
 
-					if (thePlayer.ticksExisted % 8 == 0) thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 10, posZ, true))
+					if (thePlayer.ticksExisted % 8 == 0) thePlayer.sendQueue.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY + 10, posZ, true))
 				}
 
 				"neruxvace" ->

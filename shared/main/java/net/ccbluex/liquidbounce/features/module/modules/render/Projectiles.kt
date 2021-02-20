@@ -70,10 +70,12 @@ class Projectiles : Module()
 
 		val partialTicks = event.partialTicks
 
+		val provider = classProvider
+
 		// Check items
 		when
 		{
-			classProvider.isItemBow(item) -> // Bow
+			provider.isItemBow(item) -> // Bow
 			{
 				val fastBow = LiquidBounce.moduleManager[FastBow::class.java] as FastBow
 				val fastBowEnabled = fastBow.state
@@ -102,14 +104,14 @@ class Projectiles : Module()
 				motionFactor = power * 3F
 			}
 
-			classProvider.isItemFishingRod(item) -> // Fishing Rod
+			provider.isItemFishingRod(item) -> // Fishing Rod
 			{
 				gravity = 0.04F
 				size = 0.25F
 				motionSlowdown = 0.92F
 			}
 
-			classProvider.isItemPotion(item) && heldItem.isSplash() -> // Splash potion
+			provider.isItemPotion(item) && heldItem.isSplash() -> // Splash potion
 			{
 				isSplash = true
 				gravity = 0.05F
@@ -119,7 +121,7 @@ class Projectiles : Module()
 
 			else -> // Snowball, Ender Pearl, Egg
 			{
-				if (!classProvider.isItemSnowball(item) && !classProvider.isItemEnderPearl(item) && !classProvider.isItemEgg(item)) return
+				if (!provider.isItemSnowball(item) && !provider.isItemEnderPearl(item) && !provider.isItemEgg(item)) return
 
 				gravity = 0.03F
 				size = 0.25F
@@ -165,7 +167,7 @@ class Projectiles : Module()
 		var hasLanded = false
 		var hitEntity = false
 
-		val tessellator = classProvider.tessellatorInstance
+		val tessellator = provider.tessellatorInstance
 		val worldRenderer = tessellator.worldRenderer
 
 		// Start drawing of path
@@ -184,7 +186,7 @@ class Projectiles : Module()
 
 		GL11.glLineWidth(lineWidthValue.get())
 
-		worldRenderer.begin(GL11.GL_LINE_STRIP, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
+		worldRenderer.begin(GL11.GL_LINE_STRIP, provider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
 
 		while (!hasLanded && posY > 0.0)
 		{
@@ -207,7 +209,7 @@ class Projectiles : Module()
 			}
 
 			// Set arrow box
-			val arrowBox = classProvider.createAxisAlignedBB(posX - size, posY - size, posZ - size, posX + size, posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
+			val arrowBox = provider.createAxisAlignedBB(posX - size, posY - size, posZ - size, posX + size, posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
 
 			val chunkMinX = floor((arrowBox.minX - 2.0) * 0.0625).toInt()
 			val chunkMaxX = floor((arrowBox.maxX + 2.0) * 0.0625).toInt()
@@ -244,7 +246,7 @@ class Projectiles : Module()
 			val blockState = theWorld.getBlockState(WBlockPos(posX, posY, posZ))
 
 			// Check is next position water
-			if (blockState.block.getMaterial(blockState) == classProvider.getMaterialEnum(MaterialType.WATER))
+			if (blockState.block.getMaterial(blockState) == provider.getMaterialEnum(MaterialType.WATER))
 			{
 				// Update motion in water
 				motionX *= 0.6

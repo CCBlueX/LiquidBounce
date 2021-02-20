@@ -2,12 +2,13 @@ package net.vitox;
 
 import java.util.Random;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft;
 import net.ccbluex.liquidbounce.api.minecraft.util.IScaledResolution;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.vitox.particle.util.RenderUtils;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.wrapper;
 
 /**
  * Particle API This Api is free2use But u have to mention me.
@@ -107,8 +108,8 @@ class Particle
 
 	void fall()
 	{
-		final IMinecraft mc = LiquidBounce.wrapper.getMinecraft();
-		final IScaledResolution scaledResolution = LiquidBounce.wrapper.getClassProvider().createScaledResolution(mc);
+		final IMinecraft mc = wrapper.getMinecraft();
+		final IScaledResolution scaledResolution = wrapper.getClassProvider().createScaledResolution(mc);
 		y += ySpeed;
 		x += xSpeed;
 

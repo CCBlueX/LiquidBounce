@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.file.configs
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay
 import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager
@@ -39,7 +40,7 @@ class XRayConfig(file: File) : FileConfig(file)
 
 		for (jsonElement in jsonArray) try
 		{
-			val block = LiquidBounce.wrapper.functions.getBlockFromName(jsonElement.asString) ?: continue
+			val block = wrapper.functions.getBlockFromName(jsonElement.asString) ?: continue
 
 			if (xRay.xrayBlocks.contains(block))
 			{
@@ -66,7 +67,7 @@ class XRayConfig(file: File) : FileConfig(file)
 		val xRay = LiquidBounce.moduleManager[XRay::class.java] as XRay
 		val jsonArray = JsonArray()
 
-		for (block in xRay.xrayBlocks) jsonArray.add(FileManager.PRETTY_GSON.toJsonTree(LiquidBounce.wrapper.functions.getIdFromBlock(block)))
+		for (block in xRay.xrayBlocks) jsonArray.add(FileManager.PRETTY_GSON.toJsonTree(wrapper.functions.getIdFromBlock(block)))
 
 		val writer = MiscUtils.createBufferedFileWriter(file)
 		writer.write(FileManager.PRETTY_GSON.toJson(jsonArray) + System.lineSeparator())

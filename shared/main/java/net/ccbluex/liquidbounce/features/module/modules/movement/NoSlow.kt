@@ -23,9 +23,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 
-@ModuleInfo(
-	name = "NoSlow", description = "Cancels slowness effects caused by soulsand and using items.", category = ModuleCategory.MOVEMENT
-)
+@ModuleInfo(name = "NoSlow", description = "Cancels slowness effects caused by soulsand and using items.", category = ModuleCategory.MOVEMENT)
 class NoSlow : Module()
 {
 	// Highly customizable values
@@ -87,11 +85,13 @@ class NoSlow : Module()
 
 	private fun getMultiplier(item: IItem?, isForward: Boolean): Float
 	{
+		val provider = classProvider
+
 		return when
 		{
-			classProvider.isItemFood(item) || classProvider.isItemPotion(item) || classProvider.isItemBucketMilk(item) -> if (isForward) consumeForwardMultiplier.get() else consumeStrafeMultiplier.get()
-			classProvider.isItemSword(item) -> if (isForward) blockForwardMultiplier.get() else blockStrafeMultiplier.get()
-			classProvider.isItemBow(item) -> if (isForward) bowForwardMultiplier.get() else bowStrafeMultiplier.get()
+			provider.isItemFood(item) || provider.isItemPotion(item) || provider.isItemBucketMilk(item) -> if (isForward) consumeForwardMultiplier.get() else consumeStrafeMultiplier.get()
+			provider.isItemSword(item) -> if (isForward) blockForwardMultiplier.get() else blockStrafeMultiplier.get()
+			provider.isItemBow(item) -> if (isForward) bowForwardMultiplier.get() else bowStrafeMultiplier.get()
 			else -> 0.2F
 		}
 	}

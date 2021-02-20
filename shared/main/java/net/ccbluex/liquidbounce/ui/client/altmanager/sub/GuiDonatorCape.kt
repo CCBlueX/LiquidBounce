@@ -56,9 +56,10 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		val quarterScreen = representedScreen.height shr 2
 		stateButton = classProvider.createGuiButton(1, buttonX, 105, "Disable Cape")
 
-		representedScreen.buttonList.add(stateButton)
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 96, "Donate to get Cape"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+		val buttonList = representedScreen.buttonList
+		buttonList.add(stateButton)
+		buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 96, "Donate to get Cape"))
+		buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
 
 		// Add fields to screen
 		transferCodeField = classProvider.createGuiTextField(666, Fonts.font40, buttonX, 80, 200, 20)

@@ -141,11 +141,7 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase
 		cameraPitch += (cameraPitchInc - cameraPitch) * pitchMultiplier;
 
 		if (getHealth() > 0.0F && !isSpectator())
-		{
 			// noinspection ConstantConditions
-			final List<Entity> list = worldObj.getEntitiesWithinAABBExcludingEntity((Entity) (Object) this, ridingEntity != null && !ridingEntity.isDead ? getEntityBoundingBox().union(ridingEntity.getEntityBoundingBox()).expand(1.0D, 0.0D, 1.0D) : getEntityBoundingBox().expand(1.0D, 0.5D, 1.0D));
-
-			list.stream().filter(entity -> !entity.isDead).forEach(this::collideWithPlayer);
-		}
+			worldObj.getEntitiesWithinAABBExcludingEntity((Entity) (Object) this, ridingEntity != null && !ridingEntity.isDead ? getEntityBoundingBox().union(ridingEntity.getEntityBoundingBox()).expand(1.0D, 0.0D, 1.0D) : getEntityBoundingBox().expand(1.0D, 0.5D, 1.0D)).stream().filter(entity -> !entity.isDead).forEach(this::collideWithPlayer);
 	}
 }

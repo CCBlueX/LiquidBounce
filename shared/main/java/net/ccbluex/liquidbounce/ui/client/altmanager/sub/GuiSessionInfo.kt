@@ -100,10 +100,11 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 		val buttonX = middleScreen - 100
 		val buttonY = height - 54
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, buttonY - 48, "Analyze").also { decodeButton = it })
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, buttonY - 24, "Clipboard").also { clipboardButton = it })
-		representedScreen.buttonList.add(classProvider.createGuiButton(3, buttonX, buttonY - 72, "Login").also { loginButton = it })
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, buttonY, "Back"))
+		val buttonList = representedScreen.buttonList
+		buttonList.add(classProvider.createGuiButton(1, buttonX, buttonY - 48, "Analyze").also { decodeButton = it })
+		buttonList.add(classProvider.createGuiButton(2, buttonX, buttonY - 24, "Clipboard").also { clipboardButton = it })
+		buttonList.add(classProvider.createGuiButton(3, buttonX, buttonY - 72, "Login").also { loginButton = it })
+		buttonList.add(classProvider.createGuiButton(0, buttonX, buttonY, "Back"))
 
 		val token = if (defaultSessionId != null && defaultSessionId.isNotEmpty()) defaultSessionId else mc.session.token
 

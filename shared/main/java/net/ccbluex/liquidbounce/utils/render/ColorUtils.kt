@@ -107,7 +107,7 @@ object ColorUtils : MinecraftInstance()
 			if (indicateFriend && EntityUtils.isFriend(entityLiving)) return Color.BLUE
 
 			// Indicate Murder
-			if (murderDetector.state && murderDetector.murders.contains(entity)) return Color.RED
+			if (murderDetector.state && murderDetector.murders.contains(entity)) return Color(153, 0, 153)
 
 			when (colorMode.toLowerCase())
 			{

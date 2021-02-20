@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.vitox.particle.util.RenderUtils;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.wrapper;
 
 /**
  * Particle API This Api is free2use But u have to mention me.
@@ -34,7 +35,7 @@ public class ParticleGenerator
 
 	public void draw(final int mouseX, final int mouseY)
 	{
-		final IMinecraft mc = LiquidBounce.wrapper.getMinecraft();
+		final IMinecraft mc = wrapper.getMinecraft();
 		final int displayWidth = mc.getDisplayWidth();
 		final int displayHeight = mc.getDisplayHeight();
 
@@ -66,7 +67,7 @@ public class ParticleGenerator
 	{
 		final Random random = new Random();
 
-		final IMinecraft mc = LiquidBounce.wrapper.getMinecraft();
+		final IMinecraft mc = wrapper.getMinecraft();
 		final int displayWidth = mc.getDisplayWidth();
 		final int displayHeight = mc.getDisplayHeight();
 

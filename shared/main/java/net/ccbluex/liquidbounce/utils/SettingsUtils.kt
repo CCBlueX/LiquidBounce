@@ -7,6 +7,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.Spammer
@@ -30,7 +31,7 @@ object SettingsUtils
 	 */
 	fun executeScript(script: String)
 	{
-		val thePlayer = LiquidBounce.wrapper.minecraft.thePlayer
+		val thePlayer = wrapper.minecraft.thePlayer
 
 		script.lines().asSequence().filter { it.isNotEmpty() && !it.startsWith('#') }.forEachIndexed { index, s ->
 			val args = s.split(" ").toTypedArray()

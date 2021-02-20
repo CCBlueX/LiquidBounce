@@ -43,11 +43,9 @@ class GuiSessionLogin(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		val buttonX = (representedScreen.width shr 1) - 100
 		val quarterScreen = representedScreen.height shr 2
 
-		loginButton = classProvider.createGuiButton(1, buttonX, quarterScreen + 96, "Login")
-		representedScreen.buttonList.add(loginButton)
-
-
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+		val buttonList = representedScreen.buttonList
+		buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 96, "Login").also { loginButton = it })
+		buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
 
 		// Add fields to screen
 		sessionTokenField = classProvider.createGuiTextField(666, Fonts.font40, buttonX, 80, 200, 20)

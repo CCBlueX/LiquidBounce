@@ -258,6 +258,8 @@ class LiquidChat : Module()
 		val matcher = urlPattern.matcher(string)
 		var lastEnd = 0
 
+		val provider = classProvider
+
 		while (matcher.find())
 		{
 			val start = matcher.start()
@@ -269,7 +271,7 @@ class LiquidChat : Module()
 			{
 				if (component == null)
 				{
-					component = classProvider.createChatComponentText(part)
+					component = provider.createChatComponentText(part)
 					component.chatStyle.color = WEnumChatFormatting.GRAY
 				}
 				else component.appendText(part)
@@ -283,9 +285,9 @@ class LiquidChat : Module()
 			{
 				if (URI(url).scheme != null)
 				{ // Set the click event and append the link.
-					val link: IIChatComponent = classProvider.createChatComponentText(url)
+					val link: IIChatComponent = provider.createChatComponentText(url)
 
-					link.chatStyle.chatClickEvent = classProvider.createClickEvent(IClickEvent.WAction.OPEN_URL, url)
+					link.chatStyle.chatClickEvent = provider.createClickEvent(IClickEvent.WAction.OPEN_URL, url)
 					link.chatStyle.underlined = true
 					link.chatStyle.color = WEnumChatFormatting.GRAY
 
@@ -300,7 +302,7 @@ class LiquidChat : Module()
 
 			if (component == null)
 			{
-				component = classProvider.createChatComponentText(url)
+				component = provider.createChatComponentText(url)
 				component.chatStyle.color = WEnumChatFormatting.GRAY
 			}
 			else component.appendText(url)
@@ -311,7 +313,7 @@ class LiquidChat : Module()
 
 		if (component == null)
 		{
-			component = classProvider.createChatComponentText(end)
+			component = provider.createChatComponentText(end)
 			component.chatStyle.color = WEnumChatFormatting.GRAY
 		}
 		else if (end.isNotEmpty()) component.appendText(string.substring(lastEnd))

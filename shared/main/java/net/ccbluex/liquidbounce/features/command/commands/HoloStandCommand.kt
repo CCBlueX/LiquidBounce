@@ -33,22 +33,26 @@ class HoloStandCommand : Command("holostand")
 				val z = args[3].toDouble()
 				val message = StringUtils.toCompleteString(args, 4)
 
-				val itemStack = classProvider.createItemStack(classProvider.getItemEnum(ItemType.ARMOR_STAND))
-				val base = classProvider.createNBTTagCompound()
-				val entityTag = classProvider.createNBTTagCompound()
+				val provider = classProvider
+
+				val itemStack = provider.createItemStack(provider.getItemEnum(ItemType.ARMOR_STAND))
+				val base = provider.createNBTTagCompound()
+				val entityTag = provider.createNBTTagCompound()
+
 				entityTag.setInteger("Invisible", 1)
 				entityTag.setString("CustomName", message)
 				entityTag.setInteger("CustomNameVisible", 1)
 				entityTag.setInteger("NoGravity", 1)
-				val position = classProvider.createNBTTagList()
-				position.appendTag(classProvider.createNBTTagDouble(x))
-				position.appendTag(classProvider.createNBTTagDouble(y))
-				position.appendTag(classProvider.createNBTTagDouble(z))
+
+				val position = provider.createNBTTagList()
+				position.appendTag(provider.createNBTTagDouble(x))
+				position.appendTag(provider.createNBTTagDouble(y))
+				position.appendTag(provider.createNBTTagDouble(z))
 				entityTag.setTag("Pos", position)
 				base.setTag("EntityTag", entityTag)
 				itemStack.tagCompound = base
 				itemStack.setStackDisplayName("\u00A7c\u00A7lHolo\u00A7eStand")
-				mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(36, itemStack))
+				mc.netHandler.addToSendQueue(provider.createCPacketCreativeInventoryAction(36, itemStack))
 
 				chat(thePlayer, "The HoloStand was successfully added to your inventory.")
 			}

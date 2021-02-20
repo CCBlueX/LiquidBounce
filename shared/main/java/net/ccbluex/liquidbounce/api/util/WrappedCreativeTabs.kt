@@ -6,12 +6,11 @@
 
 package net.ccbluex.liquidbounce.api.util
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.api.enums.ItemType
 import net.ccbluex.liquidbounce.api.minecraft.creativetabs.ICreativeTabs
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.injection.backend.WrapperImpl.classProvider
 
 abstract class WrappedCreativeTabs(val name: String)
 {
@@ -19,7 +18,7 @@ abstract class WrappedCreativeTabs(val name: String)
 
 	init
 	{
-		@Suppress("LeakingThis") LiquidBounce.wrapper.classProvider.wrapCreativeTab(name, this)
+		@Suppress("LeakingThis") wrapper.classProvider.wrapCreativeTab(name, this)
 	}
 
 	open fun displayAllReleventItems(itemList: MutableList<IItemStack>)
@@ -27,6 +26,6 @@ abstract class WrappedCreativeTabs(val name: String)
 	}
 
 	open fun getTranslatedTabLabel(): String = "asdf"
-	open fun getTabIconItem(): IItem = classProvider.getItemEnum(ItemType.WRITABLE_BOOK)
+	open fun getTabIconItem(): IItem = wrapper.classProvider.getItemEnum(ItemType.WRITABLE_BOOK)
 	open fun hasSearchBar(): Boolean = true
 }

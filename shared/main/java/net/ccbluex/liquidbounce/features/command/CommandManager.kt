@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.command
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.features.command.commands.*
 import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
 import net.ccbluex.liquidbounce.features.command.shortcuts.ShortcutParser
@@ -84,7 +85,7 @@ class CommandManager
 			}
 		}
 
-		ClientUtils.displayChatMessage(LiquidBounce.wrapper.minecraft.thePlayer, "\u00A7cCommand not found. Type ${prefix}help to view all commands.")
+		ClientUtils.displayChatMessage(wrapper.minecraft.thePlayer, "\u00A7cCommand not found. Type ${prefix}help to view all commands.")
 	}
 
 	/**

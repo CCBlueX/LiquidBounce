@@ -30,15 +30,17 @@ class BlocksTab : WrappedCreativeTabs("Special blocks")
 	 */
 	override fun displayAllReleventItems(itemList: MutableList<IItemStack>)
 	{
-		itemList.add(classProvider.createItemStack(classProvider.getBlockEnum(BlockType.COMMAND_BLOCK)))
-		itemList.add(classProvider.createItemStack(classProvider.getItemEnum(ItemType.COMMAND_BLOCK_MINECART)))
-		itemList.add(classProvider.createItemStack(classProvider.getBlockEnum(BlockType.BARRIER)))
-		itemList.add(classProvider.createItemStack(classProvider.getBlockEnum(BlockType.DRAGON_EGG)))
-		itemList.add(classProvider.createItemStack(classProvider.getBlockEnum(BlockType.BROWN_MUSHROOM_BLOCK)))
-		itemList.add(classProvider.createItemStack(classProvider.getBlockEnum(BlockType.RED_MUSHROOM_BLOCK)))
-		itemList.add(classProvider.createItemStack(classProvider.getBlockEnum(BlockType.FARMLAND)))
-		itemList.add(classProvider.createItemStack(classProvider.getBlockEnum(BlockType.MOB_SPAWNER)))
-		itemList.add(classProvider.createItemStack(classProvider.getBlockEnum(BlockType.LIT_FURNACE)))
+		val provider = classProvider
+
+		itemList.add(provider.createItemStack(provider.getBlockEnum(BlockType.COMMAND_BLOCK)))
+		itemList.add(provider.createItemStack(provider.getItemEnum(ItemType.COMMAND_BLOCK_MINECART)))
+		itemList.add(provider.createItemStack(provider.getBlockEnum(BlockType.BARRIER)))
+		itemList.add(provider.createItemStack(provider.getBlockEnum(BlockType.DRAGON_EGG)))
+		itemList.add(provider.createItemStack(provider.getBlockEnum(BlockType.BROWN_MUSHROOM_BLOCK)))
+		itemList.add(provider.createItemStack(provider.getBlockEnum(BlockType.RED_MUSHROOM_BLOCK)))
+		itemList.add(provider.createItemStack(provider.getBlockEnum(BlockType.FARMLAND)))
+		itemList.add(provider.createItemStack(provider.getBlockEnum(BlockType.MOB_SPAWNER)))
+		itemList.add(provider.createItemStack(provider.getBlockEnum(BlockType.LIT_FURNACE)))
 	}
 
 	/**

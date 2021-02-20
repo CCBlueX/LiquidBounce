@@ -38,13 +38,17 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		val j = 22
 		val buttonX = representedScreen.width - 80
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, representedScreen.height - 65, 70, 20, "Back"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, j + 24, 70, 20, "Import"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, j + (24 shl 1), 70, 20, "Delete"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(3, buttonX, j + 24 * 3, 70, 20, "Reload"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(4, buttonX, j + (24 shl 2), 70, 20, "Folder"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(5, buttonX, j + 24 * 5, 70, 20, "Docs"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(6, buttonX, j + 24 * 6, 70, 20, "Find Scripts"))
+
+		val provider = classProvider
+
+		val buttonList = representedScreen.buttonList
+		buttonList.add(provider.createGuiButton(0, buttonX, representedScreen.height - 65, 70, 20, "Back"))
+		buttonList.add(provider.createGuiButton(1, buttonX, j + 24, 70, 20, "Import"))
+		buttonList.add(provider.createGuiButton(2, buttonX, j + (24 shl 1), 70, 20, "Delete"))
+		buttonList.add(provider.createGuiButton(3, buttonX, j + 24 * 3, 70, 20, "Reload"))
+		buttonList.add(provider.createGuiButton(4, buttonX, j + (24 shl 2), 70, 20, "Folder"))
+		buttonList.add(provider.createGuiButton(5, buttonX, j + 24 * 5, 70, 20, "Docs"))
+		buttonList.add(provider.createGuiButton(6, buttonX, j + 24 * 6, 70, 20, "Find Scripts"))
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)

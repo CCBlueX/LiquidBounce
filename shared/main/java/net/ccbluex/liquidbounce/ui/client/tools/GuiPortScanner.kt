@@ -57,9 +57,11 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		threadsField = classProvider.createGuiTextField(3, Fonts.font40, buttonX, 120, 200, 20).apply { maxStringLength = Int.MAX_VALUE }.apply { text = "500" }
 
 		val quarterScreen = representedScreen.height shr 2
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 95, if (running) "Stop" else "Start").also { buttonToggle = it })
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 155, "Export"))
+
+		val buttonList = representedScreen.buttonList
+		buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 95, if (running) "Stop" else "Start").also { buttonToggle = it })
+		buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+		buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 155, "Export"))
 
 		super.initGui()
 	}
@@ -128,12 +130,10 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				catch (e: Exception)
 				{
 					logger.error("Can't export the port-scan result", e)
-					MiscUtils.showErrorPopup(
-						"Error", """
+					MiscUtils.showErrorPopup("Error", """
  	Exception class: ${e.javaClass.name}
  	Message: ${e.message}
- 	""".trimIndent()
-					)
+ 	""".trimIndent())
 				}
 			}
 		}

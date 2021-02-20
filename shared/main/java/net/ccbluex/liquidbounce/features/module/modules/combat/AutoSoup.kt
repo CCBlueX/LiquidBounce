@@ -90,22 +90,24 @@ class AutoSoup : Module()
 		val inventory = thePlayer.inventory
 		val inventoryContainer = thePlayer.inventoryContainer
 
+		val provider = classProvider
+
 		val itemDelay = itemDelayValue.get().toLong()
 		val random = randomSlotValue.get()
 		val handleBowl = bowlValue.get()
 
-		if (soupDelayTimer.hasTimePassed(soupDelay) && (ignoreScreen.get() || classProvider.isGuiContainer(mc.currentScreen)))
+		if (soupDelayTimer.hasTimePassed(soupDelay) && (ignoreScreen.get() || provider.isGuiContainer(mc.currentScreen)))
 		{
-			val soupInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, classProvider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
+			val soupInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
 
 			if (thePlayer.health <= healthValue.get() && soupInHotbar != -1)
 			{
-				netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(soupInHotbar - 36))
+				netHandler.addToSendQueue(provider.createCPacketHeldItemChange(soupInHotbar - 36))
 				netHandler.addToSendQueue(createUseItemPacket(inventory.getStackInSlot(soupInHotbar), WEnumHand.MAIN_HAND))
 
-				if (handleBowl.equals("Drop", true)) netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+				if (handleBowl.equals("Drop", true)) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 
-				netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(inventory.currentItem))
+				netHandler.addToSendQueue(provider.createCPacketHeldItemChange(inventory.currentItem))
 				soupDelayTimer.reset()
 				return
 			}
@@ -114,9 +116,9 @@ class AutoSoup : Module()
 		if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0))
 		{
 			// Move empty bowls to inventory
-			val bowlInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, classProvider.getItemEnum(ItemType.BOWL), itemDelay, random)
+			val bowlInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.BOWL), itemDelay, random)
 
-			val isGuiInventory = classProvider.isGuiInventory(mc.currentScreen)
+			val isGuiInventory = provider.isGuiInventory(mc.currentScreen)
 			val simulateInv = simulateInventoryValue.get()
 
 			if (handleBowl.equals("Move", true) && bowlInHotbar != -1)
@@ -134,7 +136,7 @@ class AutoSoup : Module()
 						bowlMovable = true
 						break
 					}
-					else if (itemStack.item == classProvider.getItemEnum(ItemType.BOWL) && itemStack.stackSize < 64)
+					else if (itemStack.item == provider.getItemEnum(ItemType.BOWL) && itemStack.stackSize < 64)
 					{
 						bowlMovable = true
 						break
@@ -156,7 +158,7 @@ class AutoSoup : Module()
 			}
 
 			// Move soups to hotbar
-			var soupInInventory = InventoryUtils.findItem(inventoryContainer, 9, 36, classProvider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
+			var soupInInventory = InventoryUtils.findItem(inventoryContainer, 9, 36, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
 
 			if (soupInInventory != -1 && InventoryUtils.hasSpaceHotbar(inventory))
 			{
@@ -176,7 +178,7 @@ class AutoSoup : Module()
 
 				mc.playerController.windowClick(0, soupInInventory, 0, 1, thePlayer)
 
-				if (openInventory) netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
+				if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
 				invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
 				invDelayTimer.reset()

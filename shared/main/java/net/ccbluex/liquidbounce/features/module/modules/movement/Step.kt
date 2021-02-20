@@ -226,6 +226,8 @@ class Step : Module()
 			val mode = modeValue.get().toLowerCase()
 			val networkManager = mc.netHandler.networkManager
 
+			val provider = classProvider
+
 			when (mode)
 			{
 				"ncp", "aac3.1.5" ->
@@ -233,8 +235,8 @@ class Step : Module()
 					fakeJump(thePlayer)
 
 					// Half legit step (1 packet missing) [COULD TRIGGER TOO MANY PACKETS]
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
 					resetTimer()
 				}
 
@@ -245,12 +247,12 @@ class Step : Module()
 					if (spartanSwitch)
 					{
 						// Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)) // 0.248
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)) // 0.248
 					}
 					else // Force step
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.6, stepZ, false))
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 0.6, stepZ, false))
 
 					// Spartan b127 allows one unlegit step so just swap between legit and unlegit
 					spartanSwitch = !spartanSwitch
@@ -264,9 +266,9 @@ class Step : Module()
 					fakeJump(thePlayer)
 
 					// Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)) // 0.248
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)) // 0.248
 
 					// Reset timer
 					resetTimer()

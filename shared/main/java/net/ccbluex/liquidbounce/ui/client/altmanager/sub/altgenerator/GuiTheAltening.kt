@@ -58,19 +58,21 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 		// Login button & Add to alt list and Login button
 		val middleScreen = representedScreen.width shr 1
+		val buttonList = representedScreen.buttonList
 
 		addAltAndLoginButton = classProvider.createGuiButton(4, middleScreen - 100, 75, 98, 20, "Add Alt and Login")
-		representedScreen.buttonList.add(addAltAndLoginButton)
+		buttonList.add(addAltAndLoginButton)
+
 		loginButton = classProvider.createGuiButton(2, middleScreen + 2, 75, 98, 20, "Just Login")
-		representedScreen.buttonList.add(loginButton)
+		buttonList.add(loginButton)
 
 		// Generate button
 		generateButton = classProvider.createGuiButton(1, middleScreen - 100, 140, "Generate")
-		representedScreen.buttonList.add(generateButton)
+		buttonList.add(generateButton)
 
 		// Buy & Back buttons
-		representedScreen.buttonList.add(classProvider.createGuiButton(3, middleScreen - 100, representedScreen.height - 54, 98, 20, "Buy"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, middleScreen + 2, representedScreen.height - 54, 98, 20, "Back"))
+		buttonList.add(classProvider.createGuiButton(3, middleScreen - 100, representedScreen.height - 54, 98, 20, "Buy"))
+		buttonList.add(classProvider.createGuiButton(0, middleScreen + 2, representedScreen.height - 54, 98, 20, "Back"))
 
 		// Token text field
 		tokenField = classProvider.createGuiTextField(666, Fonts.font40, middleScreen - 100, 50, 200, 20)

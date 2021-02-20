@@ -362,7 +362,9 @@ class Tower : Module()
 		// AutoBlock
 		var itemStack = thePlayer.heldItem
 
-		if (itemStack == null || !classProvider.isItemBlock(itemStack.item) || classProvider.isBlockBush(itemStack.item?.asItemBlock()?.block))
+		val provider = classProvider
+
+		if (itemStack == null || !provider.isItemBlock(itemStack.item) || provider.isBlockBush(itemStack.item?.asItemBlock()?.block))
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
@@ -377,19 +379,19 @@ class Tower : Module()
 					mc.playerController.updateController()
 				}
 
-				"Spoof" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
+				"Spoof" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
 
-				"Switch" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
+				"Switch" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
 			}
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
 		}
 
 		// Place block
 		if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack!!, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3)) if (swingValue.get()) thePlayer.swingItem()
-		else netHandler.addToSendQueue(classProvider.createCPacketAnimation())
+		else netHandler.addToSendQueue(provider.createCPacketAnimation())
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
-		if (autoBlockValue.get().equals("Switch", true) && slot != thePlayer.inventory.currentItem) netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+		if (autoBlockValue.get().equals("Switch", true) && slot != thePlayer.inventory.currentItem) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
 		placeInfo = null
 	}

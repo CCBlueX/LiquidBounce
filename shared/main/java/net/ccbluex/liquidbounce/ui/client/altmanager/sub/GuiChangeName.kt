@@ -26,11 +26,13 @@ class GuiChangeName(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	{
 		Keyboard.enableRepeatEvents(true)
 
-		val buttonX = (representedScreen.width shr 1) - 100
-		val quarterScreen = representedScreen.height shr 2
+		val screen = representedScreen
+		val buttonX = (screen.width shr 1) - 100
+		val quarterScreen = screen.height shr 2
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 96, "Change"))
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+		val buttonList = screen.buttonList
+		buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 96, "Change"))
+		buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
 
 		name = classProvider.createGuiTextField(2, Fonts.font40, buttonX, 60, 200, 20).apply {
 			isFocused = true
@@ -41,17 +43,21 @@ class GuiChangeName(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
 	{
-		representedScreen.drawBackground(0)
+		val screen = representedScreen
+		screen.drawBackground(0)
 
-		drawRect(30, 30, representedScreen.width - 30, representedScreen.height - 30, Int.MIN_VALUE)
+		val width = screen.width
+		val height = screen.height
 
-		val middleScreen = (representedScreen.width shr 1).toFloat()
-		val quarterScreen = (representedScreen.height shr 2).toFloat()
+		val middleScreen = (width shr 1).toFloat()
+		val quarterScreen = (height shr 2).toFloat()
+
+		drawRect(30, 30, width - 30, height - 30, Int.MIN_VALUE)
 
 		Fonts.font40.drawCenteredString("Change Name", middleScreen, 34f, 0xffffff)
 		Fonts.font40.drawCenteredString(status, middleScreen, quarterScreen + 84, 0xffffff)
 
-		name.drawTextBox()
+		val name = name.apply(IGuiTextField::drawTextBox)
 
 		if (name.text.isEmpty() && !name.isFocused) Fonts.font40.drawCenteredString("\u00A77Username", middleScreen - 74, 66f, 0xffffff)
 
@@ -66,23 +72,26 @@ class GuiChangeName(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 			1 ->
 			{
-				if (name.text.isEmpty())
+				val nameText = name.text
+				if (nameText.isEmpty())
 				{
 					status = "\u00A7cEnter a name!"
 					return
 				}
 
-				if (!name.text.equals(mc.session.username, ignoreCase = true))
+				val prevSession = mc.session
+
+				if (!nameText.equals(prevSession.username, ignoreCase = true))
 				{
 					status = "\u00A7cJust change the upper and lower case!"
 					return
 				}
 
-				mc.session = classProvider.createSession(name.text, mc.session.playerId, mc.session.token, mc.session.sessionType)
+				mc.session = classProvider.createSession(nameText, prevSession.playerId, prevSession.token, prevSession.sessionType)
 
 				LiquidBounce.eventManager.callEvent(SessionEvent())
 
-				status = "\u00A7aChanged name to \u00A77" + name.text + "\u00A7c."
+				status = "\u00A7aChanged name to \u00A77$nameText\u00A7c."
 				prevGui.status = status
 
 				mc.displayGuiScreen(prevGui.representedScreen)

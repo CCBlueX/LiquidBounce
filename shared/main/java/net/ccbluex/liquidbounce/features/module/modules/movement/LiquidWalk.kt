@@ -42,15 +42,17 @@ class LiquidWalk : Module()
 		val posY = thePlayer.posY
 		val posZ = thePlayer.posZ
 
+		val provider = classProvider
+
 		when (modeValue.get().toLowerCase())
 		{
-			"ncp", "vanilla" -> if (collideBlock(theWorld, thePlayer.entityBoundingBox, classProvider::isBlockLiquid) && thePlayer.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.AIR)) && !thePlayer.sneaking) thePlayer.motionY = 0.08
+			"ncp", "vanilla" -> if (collideBlock(theWorld, thePlayer.entityBoundingBox, provider::isBlockLiquid) && thePlayer.isInsideOfMaterial(provider.getMaterialEnum(MaterialType.AIR)) && !thePlayer.sneaking) thePlayer.motionY = 0.08
 
 			"aac3.1.0" ->
 			{
 				val blockPos = thePlayer.position.down()
 
-				if (!thePlayer.onGround && getBlock(theWorld, blockPos) == classProvider.getBlockEnum(BlockType.WATER) || isInWater)
+				if (!thePlayer.onGround && getBlock(theWorld, blockPos) == provider.getBlockEnum(BlockType.WATER) || isInWater)
 				{
 					if (!thePlayer.sprinting)
 					{
@@ -83,7 +85,7 @@ class LiquidWalk : Module()
 				val block = getBlock(theWorld, WBlockPos(posX, posY + 1, posZ))
 				val blockUp = getBlock(theWorld, WBlockPos(posX, posY + 1.1, posZ))
 
-				if (classProvider.isBlockLiquid(blockUp)) thePlayer.motionY = 0.1 else if (classProvider.isBlockLiquid(block)) thePlayer.motionY = 0.0
+				if (provider.isBlockLiquid(blockUp)) thePlayer.motionY = 0.1 else if (provider.isBlockLiquid(block)) thePlayer.motionY = 0.0
 
 				thePlayer.onGround = true
 				thePlayer.motionX *= 1.085
@@ -94,7 +96,7 @@ class LiquidWalk : Module()
 			{
 				thePlayer.motionX *= 1.17
 				thePlayer.motionZ *= 1.17
-				if (thePlayer.isCollidedHorizontally) thePlayer.motionY = 0.24 else if (theWorld.getBlockState(WBlockPos(posX, posY + 1.0, posZ)).block != classProvider.getBlockEnum(BlockType.AIR)) thePlayer.motionY += 0.04
+				if (thePlayer.isCollidedHorizontally) thePlayer.motionY = 0.24 else if (theWorld.getBlockState(WBlockPos(posX, posY + 1.0, posZ)).block != provider.getBlockEnum(BlockType.AIR)) thePlayer.motionY += 0.04
 			}
 
 			"dolphin" -> if (isInWater) thePlayer.motionY += 0.03999999910593033 // Same as normal swimming

@@ -35,15 +35,18 @@ class IceSpeed : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
 		val mode = modeValue.get()
+
+		val provider = classProvider
+
 		if (mode.equals("NCP", ignoreCase = true))
 		{
-			classProvider.getBlockEnum(BlockType.ICE).slipperiness = 0.39f
-			classProvider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.39f
+			provider.getBlockEnum(BlockType.ICE).slipperiness = 0.39f
+			provider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.39f
 		}
 		else
 		{
-			classProvider.getBlockEnum(BlockType.ICE).slipperiness = 0.98f
-			classProvider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.98f
+			provider.getBlockEnum(BlockType.ICE).slipperiness = 0.98f
+			provider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.98f
 		}
 
 		val theWorld = mc.theWorld ?: return
@@ -54,22 +57,22 @@ class IceSpeed : Module()
 			when (mode.toLowerCase())
 			{
 				"aac3.2.0" -> getMaterial(thePlayer.position.down()).let {
-					if (it == classProvider.getBlockEnum(BlockType.ICE) || it == classProvider.getBlockEnum(BlockType.ICE_PACKED))
+					if (it == provider.getBlockEnum(BlockType.ICE) || it == provider.getBlockEnum(BlockType.ICE_PACKED))
 					{
 						thePlayer.motionX *= 1.342
 						thePlayer.motionZ *= 1.342
 
-						classProvider.getBlockEnum(BlockType.ICE).slipperiness = 0.6f
-						classProvider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.6f
+						provider.getBlockEnum(BlockType.ICE).slipperiness = 0.6f
+						provider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.6f
 					}
 				}
 
 				"spartan146" -> getMaterial(thePlayer.position.down()).let {
-					if (it == classProvider.getBlockEnum(BlockType.ICE) || it == classProvider.getBlockEnum(BlockType.ICE_PACKED))
+					if (it == provider.getBlockEnum(BlockType.ICE) || it == provider.getBlockEnum(BlockType.ICE_PACKED))
 					{
 						val blockAbove: IBlock = BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))
 
-						if (classProvider.isBlockAir(blockAbove))
+						if (provider.isBlockAir(blockAbove))
 						{
 							thePlayer.motionX *= 1.18
 							thePlayer.motionZ *= 1.18
@@ -80,8 +83,8 @@ class IceSpeed : Module()
 							thePlayer.motionZ *= 1.342
 						}
 
-						classProvider.getBlockEnum(BlockType.ICE).slipperiness = 0.6f
-						classProvider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.6f
+						provider.getBlockEnum(BlockType.ICE).slipperiness = 0.6f
+						provider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.6f
 					}
 				}
 			}

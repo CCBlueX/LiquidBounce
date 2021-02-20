@@ -43,31 +43,38 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	{
 		Keyboard.enableRepeatEvents(true)
 
-		val buttonX = (representedScreen.width shr 1) - 100
-		val quarterScreen = representedScreen.height shr 2
+		val provider = classProvider
+		val screen = representedScreen
+		val buttonX = (screen.width shr 1) - 100
+		val quarterScreen = screen.height shr 2
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 72, "Add").also { addButton = it })
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 96, "Clipboard").also { clipboardButton = it })
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+		val buttonList = screen.buttonList
+		buttonList.add(provider.createGuiButton(1, buttonX, quarterScreen + 72, "Add").also { addButton = it })
+		buttonList.add(provider.createGuiButton(2, buttonX, quarterScreen + 96, "Clipboard").also { clipboardButton = it })
+		buttonList.add(provider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
 
-		username = classProvider.createGuiTextField(2, Fonts.font40, buttonX, 60, 200, 20).apply {
+		username = provider.createGuiTextField(2, Fonts.font40, buttonX, 60, 200, 20).apply {
 			isFocused = true
 			maxStringLength = Int.MAX_VALUE
 		}
 
-		password = classProvider.createGuiPasswordField(3, Fonts.font40, buttonX, 85, 200, 20).apply { maxStringLength = Int.MAX_VALUE }
+		password = provider.createGuiPasswordField(3, Fonts.font40, buttonX, 85, 200, 20).apply { maxStringLength = Int.MAX_VALUE }
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
 	{
-		representedScreen.drawBackground(0)
+		val screen = representedScreen
+		screen.drawBackground(0)
 
-		drawRect(30, 30, representedScreen.width - 30, representedScreen.height - 30, Int.MIN_VALUE)
+		drawRect(30, 30, screen.width - 30, screen.height - 30, Int.MIN_VALUE)
 
-		val middleScreen = (representedScreen.width shr 1).toFloat()
+		val middleScreen = (screen.width shr 1).toFloat()
 
 		Fonts.font40.drawCenteredString("Add Account", middleScreen, 34f, 0xffffff)
-		Fonts.font35.drawCenteredString(status, middleScreen, (representedScreen.height shr 2) + 60f, 0xffffff)
+		Fonts.font35.drawCenteredString(status, middleScreen, (screen.height shr 2) + 60f, 0xffffff)
+
+		val username = username
+		val password = password
 
 		username.drawTextBox()
 		password.drawTextBox()
@@ -89,13 +96,15 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 			1 ->
 			{
-				if (LiquidBounce.fileManager.accountsConfig.isAccountExists(username.text))
+				val name = username.text
+
+				if (LiquidBounce.fileManager.accountsConfig.isAccountExists(name))
 				{
 					status = "\u00A7cThe account has already been added."
 					return
 				}
 
-				addAccount(username.text, password.text)
+				addAccount(name, password.text)
 			}
 
 			2 -> try
@@ -122,6 +131,9 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	@Throws(IOException::class)
 	override fun keyTyped(typedChar: Char, keyCode: Int)
 	{
+		val username = username
+		val password = password
+
 		when (keyCode)
 		{
 			Keyboard.KEY_ESCAPE ->
@@ -188,6 +200,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 			if (!account.isCracked)
 			{
 				status = "\u00A7aChecking..."
+
 				try
 				{
 					val oldService = GuiAltManager.altService.currentService
@@ -205,33 +218,37 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 				}
 				catch (e: NullPointerException)
 				{
-					status = "\u00A7cThe account doesn't work."
+					status = "\u00A7cThe account doesn't work. (NPE)"
 					addButton.enabled = true
 					clipboardButton.enabled = true
+					logger.warn("The account \"${account.name}:${account.password}\" not working.", e)
 
 					return@submit
 				}
 				catch (e: AuthenticationException)
 				{
-					status = "\u00A7cThe account doesn't work."
+					status = "\u00A7cThe account doesn't work. (Authentication failed)"
 					addButton.enabled = true
 					clipboardButton.enabled = true
+					logger.warn("The account \"${account.name}:${account.password}\" not working.", e)
 
 					return@submit
 				}
 				catch (e: NoSuchFieldException)
 				{
-					status = "\u00A7cThe account doesn't work."
+					status = "\u00A7cThe account doesn't work. (Reflection API failed)"
 					addButton.enabled = true
 					clipboardButton.enabled = true
+					logger.warn("The account \"${account.name}:${account.password}\" not working.", e)
 
 					return@submit
 				}
 				catch (e: IllegalAccessException)
 				{
-					status = "\u00A7cThe account doesn't work."
+					status = "\u00A7cThe account doesn't work. (Reflection API failed)"
 					addButton.enabled = true
 					clipboardButton.enabled = true
+					logger.warn("The account \"${account.name}:${account.password}\" not working.", e)
 
 					return@submit
 				}

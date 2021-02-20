@@ -601,7 +601,10 @@ class Scaffold : Module()
 
 		// get the block that will be automatically placed
 		var autoblock: IItemStack? = thePlayer.heldItem
-		if (autoblock == null || !classProvider.isItemBlock(autoblock.item) || autoblock.stackSize <= 0 || !InventoryUtils.canAutoBlock(autoblock.item!!.asItemBlock().block))
+
+		val provider = classProvider
+
+		if (autoblock == null || !provider.isItemBlock(autoblock.item) || autoblock.stackSize <= 0 || !InventoryUtils.canAutoBlock(autoblock.item!!.asItemBlock().block))
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
@@ -625,7 +628,7 @@ class Scaffold : Module()
 		}
 
 		val abCollisionBB = autoblockBlock.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, if (functions.isBlockEqualTo(groundBlock, autoblockBlock)) groundBlockState else autoblockBlock.defaultState!!)!!
-		val gBB = classProvider.createAxisAlignedBB(groundBlock.getBlockBoundsMinX(), groundBlock.getBlockBoundsMinY(), groundBlock.getBlockBoundsMinZ(), groundBlock.getBlockBoundsMaxX(), groundBlock.getBlockBoundsMaxY(), groundBlock.getBlockBoundsMaxZ())
+		val gBB = provider.createAxisAlignedBB(groundBlock.getBlockBoundsMinX(), groundBlock.getBlockBoundsMinY(), groundBlock.getBlockBoundsMinZ(), groundBlock.getBlockBoundsMaxX(), groundBlock.getBlockBoundsMaxY(), groundBlock.getBlockBoundsMaxZ())
 
 		// These delta variable has in range 0.0625 ~ 1.0
 		val deltaX = gBB.maxX - gBB.minX
@@ -715,15 +718,15 @@ class Scaffold : Module()
 						theWorld, thePlayer, searchPosition.add(
 							when (horizontalFacing)
 							{
-								classProvider.getEnumFacing(
+								provider.getEnumFacing(
 									EnumFacingType.WEST
 								) -> -i
-								classProvider.getEnumFacing(EnumFacingType.EAST) -> i
+								provider.getEnumFacing(EnumFacingType.EAST) -> i
 								else -> 0
 							}, 0, when (horizontalFacing)
 							{
-								classProvider.getEnumFacing(EnumFacingType.NORTH) -> -i
-								classProvider.getEnumFacing(
+								provider.getEnumFacing(EnumFacingType.NORTH) -> -i
+								provider.getEnumFacing(
 									EnumFacingType.SOUTH
 								) -> i
 								else -> 0
@@ -758,7 +761,9 @@ class Scaffold : Module()
 
 		val netHandler = mc.netHandler
 
-		if (itemStack == null || !classProvider.isItemBlock(itemStack.item) || classProvider.isBlockBush(itemStack.item!!.asItemBlock().block) || thePlayer.heldItem!!.stackSize <= 0)
+		val provider = classProvider
+
+		if (itemStack == null || !provider.isItemBlock(itemStack.item) || provider.isBlockBush(itemStack.item!!.asItemBlock().block) || thePlayer.heldItem!!.stackSize <= 0)
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
@@ -777,9 +782,9 @@ class Scaffold : Module()
 					mc.playerController.updateController()
 				}
 
-				"Spoof" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
+				"Spoof" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
 
-				"Switch" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
+				"Switch" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
 			}
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
 		}
@@ -812,11 +817,11 @@ class Scaffold : Module()
 			}
 
 			if (swingValue.get()) thePlayer.swingItem()
-			else netHandler.addToSendQueue(classProvider.createCPacketAnimation())
+			else netHandler.addToSendQueue(provider.createCPacketAnimation())
 		}
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
-		if (autoBlockValue.get().equals("Switch", true) && slot != thePlayer.inventory.currentItem) netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+		if (autoBlockValue.get().equals("Switch", true) && slot != thePlayer.inventory.currentItem) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
 		this.targetPlace = null
 	}

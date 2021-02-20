@@ -21,18 +21,20 @@ class SuperKnockback : Module()
 	@EventTarget
 	fun onAttack(event: AttackEvent)
 	{
-		if (classProvider.isEntityLivingBase(event.targetEntity))
+		val provider = classProvider
+
+		if (provider.isEntityLivingBase(event.targetEntity))
 		{
 			if (event.targetEntity!!.asEntityLivingBase().hurtTime > hurtTimeValue.get()) return
 
 			val thePlayer = mc.thePlayer ?: return
 			val netHandler = mc.netHandler
 
-			if (thePlayer.sprinting) netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
+			if (thePlayer.sprinting) netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
 
-			netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
-			netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
-			netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+			netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+			netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
+			netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
 			thePlayer.sprinting = true
 			thePlayer.serverSprintState = true
 		}

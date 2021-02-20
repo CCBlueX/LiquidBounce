@@ -58,15 +58,17 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	override fun initGui()
 	{
-		val width = representedScreen.width
-		val height = representedScreen.height
+		val provider = classProvider
+		val screen = representedScreen
+		val width = screen.width
+		val height = screen.height
 
 		val textFieldWidth = (width shr 3).coerceAtLeast(70)
 
-		searchField = classProvider.createGuiTextField(2, Fonts.font40, width - textFieldWidth - 10, 10, textFieldWidth, 20)
+		searchField = provider.createGuiTextField(2, Fonts.font40, width - textFieldWidth - 10, 10, textFieldWidth, 20)
 		searchField.maxStringLength = Int.MAX_VALUE
 
-		altsList = GuiAltsList(representedScreen)
+		altsList = GuiAltsList(screen)
 		altsList.represented.registerScrollButtons(7, 8)
 
 		var index = -1
@@ -80,7 +82,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				if (minecraftAccount.password.isNullOrEmpty() && minecraftAccount.name == mc.session.username || minecraftAccount.accountName != null && minecraftAccount.accountName == mc.session.username)
 				{
 					index = i
-					break
+					return@run
 				}
 			}
 		}
@@ -89,30 +91,30 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		altsList.represented.scrollBy(index * altsList.represented.slotHeight)
 
 		val buttonScreenRightPos = width - 80
-		val buttonList = representedScreen.buttonList
+		val buttonList = screen.buttonList
 
-		buttonList.add(classProvider.createGuiButton(0, buttonScreenRightPos, height - 65, 70, 20, "Back"))
+		buttonList.add(provider.createGuiButton(0, buttonScreenRightPos, height - 65, 70, 20, "Back"))
 
-		buttonList.add(classProvider.createGuiButton(1, buttonScreenRightPos, 46, 70, 20, "Add"))
-		buttonList.add(classProvider.createGuiButton(2, buttonScreenRightPos, 70, 70, 20, "Remove"))
-		buttonList.add(classProvider.createGuiButton(8, buttonScreenRightPos, 94, 70, 20, "Copy"))
-		buttonList.add(classProvider.createGuiButton(7, buttonScreenRightPos, 118, 70, 20, "Import"))
-		buttonList.add(classProvider.createGuiButton(12, buttonScreenRightPos, 142, 70, 20, "Export"))
-		buttonList.add(classProvider.createGuiButton(13, buttonScreenRightPos, 166, 70, 20, "Banned Servers"))
-		buttonList.add(classProvider.createGuiButton(14, buttonScreenRightPos, 190, 70, 20, "Copy Current Session Into Clipboard"))
-		buttonList.add(classProvider.createGuiButton(15, buttonScreenRightPos, 214, 70, 20, "Current Session Info"))
+		buttonList.add(provider.createGuiButton(1, buttonScreenRightPos, 46, 70, 20, "Add"))
+		buttonList.add(provider.createGuiButton(2, buttonScreenRightPos, 70, 70, 20, "Remove"))
+		buttonList.add(provider.createGuiButton(8, buttonScreenRightPos, 94, 70, 20, "Copy"))
+		buttonList.add(provider.createGuiButton(7, buttonScreenRightPos, 118, 70, 20, "Import"))
+		buttonList.add(provider.createGuiButton(12, buttonScreenRightPos, 142, 70, 20, "Export"))
+		buttonList.add(provider.createGuiButton(13, buttonScreenRightPos, 166, 70, 20, "Banned Servers"))
+		buttonList.add(provider.createGuiButton(14, buttonScreenRightPos, 190, 70, 20, "Copy Current Session Into Clipboard"))
+		buttonList.add(provider.createGuiButton(15, buttonScreenRightPos, 214, 70, 20, "Current Session Info"))
 
 
-		buttonList.add(classProvider.createGuiButton(3, 5, 46, 90, 20, "Login").also { loginButton = it })
-		buttonList.add(classProvider.createGuiButton(4, 5, 70, 90, 20, "Random").also { randomButton = it })
-		buttonList.add(classProvider.createGuiButton(6, 5, 94, 90, 20, "Direct Login"))
-		buttonList.add(classProvider.createGuiButton(88, 5, 118, 90, 20, "Change Name"))
-		buttonList.add(classProvider.createGuiButton(10, 5, 147, 90, 20, "Session Login"))
-		buttonList.add(classProvider.createGuiButton(11, 5, 171, 90, 20, "Cape"))
-		buttonList.add(classProvider.createGuiButton(99, 5, 195, 90, 20, "Reconnect to last server"))
+		buttonList.add(provider.createGuiButton(3, 5, 46, 90, 20, "Login").also { loginButton = it })
+		buttonList.add(provider.createGuiButton(4, 5, 70, 90, 20, "Random").also { randomButton = it })
+		buttonList.add(provider.createGuiButton(6, 5, 94, 90, 20, "Direct Login"))
+		buttonList.add(provider.createGuiButton(88, 5, 118, 90, 20, "Change Name"))
+		buttonList.add(provider.createGuiButton(10, 5, 147, 90, 20, "Session Login"))
+		buttonList.add(provider.createGuiButton(11, 5, 171, 90, 20, "Cape"))
+		buttonList.add(provider.createGuiButton(99, 5, 195, 90, 20, "Reconnect to last server"))
 
-		if (GENERATORS.getOrDefault("mcleaks", true)) buttonList.add(classProvider.createGuiButton(5, 5, 230, 90, 20, "MCLeaks"))
-		if (GENERATORS.getOrDefault("thealtening", true)) buttonList.add(classProvider.createGuiButton(9, 5, 255, 90, 20, "TheAltening"))
+		if (GENERATORS.getOrDefault("mcleaks", true)) buttonList.add(provider.createGuiButton(5, 5, 230, 90, 20, "MCLeaks"))
+		if (GENERATORS.getOrDefault("thealtening", true)) buttonList.add(provider.createGuiButton(9, 5, 255, 90, 20, "TheAltening"))
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
@@ -138,11 +140,14 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	override fun actionPerformed(button: IGuiButton)
 	{
 		if (!button.enabled) return
+
+		val provider = classProvider
+
 		when (button.id)
 		{
 			0 -> mc.displayGuiScreen(prevGui)
 
-			1 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiAdd(this)))
+			1 -> mc.displayGuiScreen(provider.wrapGuiScreen(GuiAdd(this)))
 
 			2 -> if (altsList.selectedSlot != -1 && altsList.selectedSlot < altsList.getSize())
 			{
@@ -199,9 +204,9 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				}
 			}
 
-			5 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiMCLeaks(this)))
+			5 -> mc.displayGuiScreen(provider.wrapGuiScreen(GuiMCLeaks(this)))
 
-			6 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiDirectLogin(this)))
+			6 -> mc.displayGuiScreen(provider.wrapGuiScreen(GuiDirectLogin(this)))
 
 			7 ->
 			{
@@ -227,13 +232,13 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			}
 			else "\u00A7cSelect an account."
 
-			88 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiChangeName(this)))
+			88 -> mc.displayGuiScreen(provider.wrapGuiScreen(GuiChangeName(this)))
 
-			9 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiTheAltening(this)))
+			9 -> mc.displayGuiScreen(provider.wrapGuiScreen(GuiTheAltening(this)))
 
-			10 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiSessionLogin(representedScreen)))
+			10 -> mc.displayGuiScreen(provider.wrapGuiScreen(GuiSessionLogin(representedScreen)))
 
-			11 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiDonatorCape(this)))
+			11 -> mc.displayGuiScreen(provider.wrapGuiScreen(GuiDonatorCape(this)))
 
 			12 ->
 			{
@@ -256,18 +261,16 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				catch (e: Exception)
 				{
 					logger.error("Can't export accounts in AltManager", e)
-					showErrorPopup(
-						"Error", """
+					showErrorPopup("Error", """
  	Exception class: ${e.javaClass.name}
  	Message: ${e.message}
- 	""".trimIndent()
-					)
+ 	""".trimIndent())
 				}
 			}
 
 			99 -> connectToLastServer()
 
-			13 -> if (altsList.selectedSlot != -1 && altsList.selectedSlot < altsList.getSize()) mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiBannedServers(representedScreen, LiquidBounce.fileManager.accountsConfig.accounts[altsList.selectedSlot]))) else status = "\u00A7cSelect an account."
+			13 -> if (altsList.selectedSlot != -1 && altsList.selectedSlot < altsList.getSize()) mc.displayGuiScreen(provider.wrapGuiScreen(GuiBannedServers(representedScreen, LiquidBounce.fileManager.accountsConfig.accounts[altsList.selectedSlot]))) else status = "\u00A7cSelect an account."
 
 			14 ->
 			{
@@ -275,17 +278,25 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				status = "\u00A7aCopied current session id into your clipboard."
 			}
 
-			15 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiSessionInfo(representedScreen, null)))
+			15 -> mc.displayGuiScreen(provider.wrapGuiScreen(GuiSessionInfo(representedScreen, null)))
 		}
 	}
 
 	override fun keyTyped(typedChar: Char, keyCode: Int)
 	{
-		if (searchField.isFocused)
+		val list = altsList
+
+		val search = searchField
+		if (search.isFocused)
 		{
-			searchField.textboxKeyTyped(typedChar, keyCode)
-			altsList.updateAccounts(searchField.text)
+			search.textboxKeyTyped(typedChar, keyCode)
+			list.updateAccounts(search.text)
 		}
+
+		val screen = representedScreen
+		val height = screen.height
+		val selected = list.selectedSlot
+
 		when (keyCode)
 		{
 			Keyboard.KEY_ESCAPE ->
@@ -294,19 +305,19 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				return
 			}
 
-			Keyboard.KEY_UP -> altsList.elementClicked((altsList.selectedSlot - 1).coerceAtLeast(0), false, 0, 0)
-			Keyboard.KEY_DOWN -> altsList.elementClicked((altsList.selectedSlot + 1).coerceAtMost(altsList.getSize() - 1), false, 0, 0)
-			Keyboard.KEY_RETURN -> altsList.elementClicked(altsList.selectedSlot, true, 0, 0)
-			Keyboard.KEY_NEXT -> altsList.represented.scrollBy(representedScreen.height - 100)
+			Keyboard.KEY_UP -> list.elementClicked((selected - 1).coerceAtLeast(0), false, 0, 0)
+			Keyboard.KEY_DOWN -> list.elementClicked((selected + 1).coerceAtMost(list.getSize() - 1), false, 0, 0)
+			Keyboard.KEY_RETURN -> list.elementClicked(selected, true, 0, 0)
+			Keyboard.KEY_NEXT -> list.represented.scrollBy(height - 100)
 
 			Keyboard.KEY_PRIOR ->
 			{
-				altsList.represented.scrollBy(-representedScreen.height + 100)
+				list.represented.scrollBy(-height + 100)
 				return
 			}
 		}
 
-		representedScreen.superKeyTyped(typedChar, keyCode)
+		screen.superKeyTyped(typedChar, keyCode)
 	}
 
 	override fun handleMouseInput()
@@ -354,43 +365,61 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		override fun isSelected(id: Int): Boolean = selectedSlot == id
 
-		//		public void setSelectedSlot(final int selectedSlot)
-		//		{
-		//			this.selectedSlot = selectedSlot;
-		//		}
-
 		override fun getSize(): Int = accounts.size
 
 		override fun elementClicked(id: Int, doubleClick: Boolean, var3: Int, var4: Int)
 		{
 			selectedSlot = id
-			if (doubleClick) if (altsList.selectedSlot != -1 && altsList.selectedSlot < altsList.getSize() && loginButton.enabled)
+
+			if (doubleClick)
 			{
-				loginButton.enabled = false
-				randomButton.enabled = false
-				workers.submit {
-					val minecraftAccount = accounts[altsList.selectedSlot]
-					status = "\u00A7aLogging in..."
-					status = "\u00A7c" + login(minecraftAccount)
-					loginButton.enabled = true
-					randomButton.enabled = true
+				val selected = altsList.selectedSlot
+
+				if (selected != -1 && selected < altsList.getSize() && loginButton.enabled)
+				{
+					loginButton.enabled = false
+					randomButton.enabled = false
+
+					workers.submit {
+						val minecraftAccount = accounts[selected]
+						status = "\u00A7aLogging in..."
+						status = "\u00A7c" + login(minecraftAccount)
+						loginButton.enabled = true
+						randomButton.enabled = true
+					}
 				}
+				else status = "\u00A7cSelect an account."
 			}
-			else status = "\u00A7cSelect an account."
 		}
 
 		override fun drawSlot(id: Int, x: Int, y: Int, var4: Int, mouseXIn: Int, mouseYIn: Int)
 		{
 			val width = represented.width
-			val minecraftAccount = accounts[id]
-			val serviceType = minecraftAccount.serviceType
+			val middleScreen = (width shr 1).toFloat()
+
+			val account = accounts[id]
+			val serviceType = account.serviceType
+			val accName = account.accountName
+			val cracked = account.isCracked
 
 			// noinspection NegativelyNamedBooleanVariable
 			val isInvalid = serviceType == AltServiceType.MOJANG_INVALID || serviceType == AltServiceType.MOJANG_MIGRATED || serviceType == AltServiceType.MCLEAKS_INVALID || serviceType == AltServiceType.THEALTENING_INVALID
-			val middleScreen = (width shr 1).toFloat()
-			Fonts.font40.drawCenteredString((if (minecraftAccount.accountName == null) minecraftAccount.name else minecraftAccount.accountName!!), middleScreen, y + 2f, Color.WHITE.rgb, true)
-			Fonts.font40.drawCenteredString(if (minecraftAccount.isCracked) "Cracked" else minecraftAccount.serviceType.id, middleScreen, y + 10f, if (minecraftAccount.isCracked) Color.GRAY.rgb else if (minecraftAccount.accountName == null) Color.LIGHT_GRAY.rgb else (if (isInvalid) Color.RED else Color.GREEN).rgb, true)
-			if (minecraftAccount.bannedServers.isNotEmpty()) Fonts.font35.drawCenteredString("Banned on " + minecraftAccount.serializeBannedServers(), middleScreen, y + 20f, Color.RED.rgb, true)
+
+			// Draw account name
+			Fonts.font40.drawCenteredString((accName ?: account.name), middleScreen, y + 2f, Color.WHITE.rgb, true)
+
+			val serviceTypeText = if (cracked) "Cracked" else serviceType.id
+			val serviceTypeColor = when
+			{
+				cracked -> Color.GRAY // Cracked
+				accName == null -> Color.LIGHT_GRAY // Unchecked
+				isInvalid -> Color.RED // Premium (Invalid)
+				else -> Color.GREEN // Premium
+			}.rgb
+
+			Fonts.font40.drawCenteredString(serviceTypeText, middleScreen, y + 10f, serviceTypeColor, true)
+
+			if (account.bannedServers.isNotEmpty()) Fonts.font35.drawCenteredString("Banned on " + account.serializeBannedServers(), middleScreen, y + 20f, Color.RED.rgb, true)
 		}
 
 		override fun drawBackground()
@@ -407,7 +436,9 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	{
 		@JvmField
 		val altService = AltService()
+
 		private val GENERATORS: MutableMap<String, Boolean> = HashMap(2)
+
 		fun loadGenerators()
 		{
 			try
@@ -434,6 +465,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		fun login(minecraftAccount: MinecraftAccount?): String
 		{
 			if (minecraftAccount == null) return ""
+
 			if (AltServiceType.MOJANG.equals(minecraftAccount.serviceType) && altService.currentService != EnumAltService.MOJANG) try
 			{
 				altService.switchService(EnumAltService.MOJANG)
@@ -454,6 +486,9 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				MCLeaks.remove()
 				return "\u00A7cYour name is now \u00A78" + minecraftAccount.name + "\u00A7c."
 			}
+
+			val saveConfig = { saveConfig(LiquidBounce.fileManager.accountsConfig) }
+
 			return when (login(minecraftAccount.serviceType, minecraftAccount.name, minecraftAccount.password))
 			{
 				LoginResult.LOGGED_IN ->
@@ -461,7 +496,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					if (!AltServiceType.MCLEAKS.equals(minecraftAccount.serviceType)) MCLeaks.remove()
 					val userName = mc.session.username
 					minecraftAccount.accountName = userName
-					saveConfig(LiquidBounce.fileManager.accountsConfig)
+					saveConfig()
 					"\u00A7aYour name is now \u00A7b\u00A7l$userName\u00A7c."
 				}
 
@@ -482,20 +517,20 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 						AltServiceType.MCLEAKS ->
 						{
 							minecraftAccount.serviceType = AltServiceType.MCLEAKS_INVALID
-							saveConfig(LiquidBounce.fileManager.accountsConfig)
+							saveConfig()
 							"\u00A7cThe MCLeaks token has to be 16 characters long!"
 						}
 
 						AltServiceType.MCLEAKS_INVALID ->
 						{
-							saveConfig(LiquidBounce.fileManager.accountsConfig)
+							saveConfig()
 							"\u00A7cThe MCLeaks token has to be 16 characters long!"
 						}
 
 						else ->
 						{
 							minecraftAccount.serviceType = AltServiceType.MOJANG_INVALID
-							saveConfig(LiquidBounce.fileManager.accountsConfig)
+							saveConfig()
 							"\u00A7cInvalid username or wrong password or the account is get mojang-banned."
 						}
 					}
@@ -504,21 +539,21 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				LoginResult.MIGRATED ->
 				{
 					minecraftAccount.serviceType = AltServiceType.MOJANG_MIGRATED
-					saveConfig(LiquidBounce.fileManager.accountsConfig)
+					saveConfig()
 					"\u00A7cAccount migrated."
 				}
 
 				LoginResult.MCLEAKS_INVALID ->
 				{
 					minecraftAccount.serviceType = AltServiceType.MCLEAKS_INVALID
-					saveConfig(LiquidBounce.fileManager.accountsConfig)
+					saveConfig()
 					"\u00A7cMCLeaks token invalid or expired."
 				}
 
 				LoginResult.THEALTENING_INVALID ->
 				{
 					minecraftAccount.serviceType = AltServiceType.THEALTENING_INVALID
-					saveConfig(LiquidBounce.fileManager.accountsConfig)
+					saveConfig()
 					"\u00A7cTheAltening token invalid or expired."
 				}
 
@@ -537,18 +572,22 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		fun canMarkBannedCurrent(serverIp: String?): Boolean
 		{
 			val profileName = mc.session.profile.name
-			return serverIp == null || LiquidBounce.fileManager.accountsConfig.accounts.firstOrNull { acc: MinecraftAccount -> profileName.equals(acc.name, ignoreCase = true) || profileName.equals(acc.accountName, ignoreCase = true) }?.let { !it.bannedServers.contains(serverIp) } ?: true
+			return serverIp == null || LiquidBounce.fileManager.accountsConfig.accounts.firstOrNull { profileName.equals(it.name, ignoreCase = true) || profileName.equals(it.accountName, ignoreCase = true) }?.let { !it.bannedServers.contains(serverIp) } ?: true
 		}
 
 		@JvmStatic
 		fun toggleMarkBanned(serverIp: String)
 		{
-			for (acc in LiquidBounce.fileManager.accountsConfig.accounts) if (mc.session.profile.name.equals(acc.name, ignoreCase = true) || mc.session.profile.name.equals(acc.accountName, ignoreCase = true))
-			{
-				val canmarkbanned = canMarkBannedCurrent(serverIp)
-				if (canmarkbanned) acc.bannedServers.add(serverIp) else acc.bannedServers.remove(serverIp)
+			val sessionProfile = mc.session.profile
+
+			LiquidBounce.fileManager.accountsConfig.accounts.asSequence().filter { sessionProfile.name.equals(it.name, ignoreCase = true) || sessionProfile.name.equals(it.accountName, ignoreCase = true) }.forEach { account ->
+				val canMarkAsBanned = canMarkBannedCurrent(serverIp)
+
+				if (canMarkAsBanned) account.bannedServers.add(serverIp) else account.bannedServers.remove(serverIp)
+
 				saveConfig(LiquidBounce.fileManager.accountsConfig)
-				logger.info("Marked account {} {} on {}", acc.name, if (canmarkbanned) "banned" else "un-banned", serverIp)
+
+				logger.info("Marked account {} {} on {}", account.name, if (canMarkAsBanned) "banned" else "un-banned", serverIp)
 			}
 		}
 	}

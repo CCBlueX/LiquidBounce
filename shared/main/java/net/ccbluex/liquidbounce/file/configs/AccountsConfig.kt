@@ -189,7 +189,7 @@ class AccountsConfig(file: File) : FileConfig(file)
 	 * of account
 	 * @return      if the account exists
 	 */
-	fun isAccountExists(name: String): Boolean = accounts.any { minecraftAccount: MinecraftAccount -> minecraftAccount.name == name }
+	fun isAccountExists(name: String): Boolean = accounts.any { name.equals(it.name, ignoreCase = true) }
 
 	/**
 	 * Clear all minecraft accounts from alt array

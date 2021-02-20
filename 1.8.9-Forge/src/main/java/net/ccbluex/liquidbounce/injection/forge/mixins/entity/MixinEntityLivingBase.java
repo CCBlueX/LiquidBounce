@@ -29,7 +29,6 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.WorldServer;
 
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,6 +36,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.wrapper;
 
 @Mixin(EntityLivingBase.class)
 public abstract class MixinEntityLivingBase extends MixinEntity
@@ -106,7 +107,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	@Overwrite
 	protected void jump()
 	{
-		final IEntityPlayerSP thePlayer = LiquidBounce.wrapper.getMinecraft().getThePlayer();
+		final IEntityPlayerSP thePlayer = wrapper.getMinecraft().getThePlayer();
 		if (thePlayer == null)
 			return;
 

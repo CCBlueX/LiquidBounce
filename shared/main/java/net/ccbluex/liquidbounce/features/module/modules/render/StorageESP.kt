@@ -109,20 +109,22 @@ class StorageESP : Module()
 
 			gameSettings.gammaSetting = 100000.0f
 
+			val provider = classProvider
+
 			for (tileEntity in theWorld.loadedTileEntityList)
 			{
 				val color: Color = when
 				{
-					chest && classProvider.isTileEntityChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> chestColor
-					enderChest && classProvider.isTileEntityEnderChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> enderChestColor
-					furnace && classProvider.isTileEntityFurnace(tileEntity) -> furnaceColor
-					dispenser && classProvider.isTileEntityDispenser(tileEntity) -> dispenserColor
-					hopper && classProvider.isTileEntityHopper(tileEntity) -> hopperColor
-					shulkerBox && classProvider.isTileEntityShulkerBox(tileEntity) -> shulkerBoxColor.brighter()
+					chest && provider.isTileEntityChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> chestColor
+					enderChest && provider.isTileEntityEnderChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> enderChestColor
+					furnace && provider.isTileEntityFurnace(tileEntity) -> furnaceColor
+					dispenser && provider.isTileEntityDispenser(tileEntity) -> dispenserColor
+					hopper && provider.isTileEntityHopper(tileEntity) -> hopperColor
+					shulkerBox && provider.isTileEntityShulkerBox(tileEntity) -> shulkerBoxColor.brighter()
 					else -> null
 				} ?: continue
 
-				if (!(classProvider.isTileEntityChest(tileEntity) || classProvider.isTileEntityEnderChest(tileEntity)))
+				if (!(provider.isTileEntityChest(tileEntity) || provider.isTileEntityEnderChest(tileEntity)))
 				{
 					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box")
 					continue
@@ -178,9 +180,9 @@ class StorageESP : Module()
 			theWorld.loadedEntityList.forEach {
 				val color = when
 				{
-					classProvider.isEntityMinecartChest(it) -> chestColor
-					classProvider.isEntityMinecartFurnace(it) -> furnaceColor
-					classProvider.isEntityMinecartHopper(it) -> hopperColor
+					provider.isEntityMinecartChest(it) -> chestColor
+					provider.isEntityMinecartFurnace(it) -> furnaceColor
+					provider.isEntityMinecartHopper(it) -> hopperColor
 					else -> null
 				} ?: return@forEach
 
@@ -294,15 +296,17 @@ class StorageESP : Module()
 			val startDraw = { shader.startDraw(partialTicks) }
 			val stopDraw = { color: Color -> shader.stopDraw(color, radius, 1f) }
 
+			val provider = classProvider
+
 			val tileEntityGroup = theWorld.loadedTileEntityList.groupBy {
 				when
 				{
-					classProvider.isTileEntityChest(it) -> 1 // Chest
-					classProvider.isTileEntityEnderChest(it) -> 2 // Ender Chest
-					classProvider.isTileEntityFurnace(it) -> 3 // Furnace
-					classProvider.isTileEntityDispenser(it) -> 4 // Dispenser (and Dropper)
-					classProvider.isTileEntityHopper(it) -> 5 // Hopper
-					classProvider.isTileEntityShulkerBox(it) -> 6 // Shulker box
+					provider.isTileEntityChest(it) -> 1 // Chest
+					provider.isTileEntityEnderChest(it) -> 2 // Ender Chest
+					provider.isTileEntityFurnace(it) -> 3 // Furnace
+					provider.isTileEntityDispenser(it) -> 4 // Dispenser (and Dropper)
+					provider.isTileEntityHopper(it) -> 5 // Hopper
+					provider.isTileEntityShulkerBox(it) -> 6 // Shulker box
 					else -> 999
 				}
 			}.filterNot { it.key == 999 }
@@ -310,9 +314,9 @@ class StorageESP : Module()
 			val entityGroup = theWorld.loadedEntityList.groupBy {
 				when
 				{
-					classProvider.isEntityMinecartChest(it) -> 1 // Minecart Chest
-					classProvider.isEntityMinecartFurnace(it) -> 2 // Minecart Furnace
-					classProvider.isEntityMinecartHopper(it) -> 3 // Minecart Hopper
+					provider.isEntityMinecartChest(it) -> 1 // Minecart Chest
+					provider.isEntityMinecartFurnace(it) -> 2 // Minecart Furnace
+					provider.isEntityMinecartHopper(it) -> 3 // Minecart Hopper
 					else -> 999
 				}
 			}.filterNot { it.key == 999 }

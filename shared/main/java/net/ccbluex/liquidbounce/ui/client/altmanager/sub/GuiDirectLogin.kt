@@ -43,9 +43,10 @@ class GuiDirectLogin(gui: GuiAltManager) : WrappedGuiScreen()
 		val buttonX = (representedScreen.width shr 1) - 100
 		val quarterScreen = representedScreen.height shr 2
 
-		representedScreen.buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 72, "Login").also { loginButton = it })
-		representedScreen.buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 96, "Clipboard Login").also { clipboardLoginButton = it })
-		representedScreen.buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+		val buttonList = representedScreen.buttonList
+		buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 72, "Login").also { loginButton = it })
+		buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 96, "Clipboard Login").also { clipboardLoginButton = it })
+		buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
 
 		username = classProvider.createGuiTextField(2, Fonts.font40, buttonX, 60, 200, 20).apply {
 			isFocused = true

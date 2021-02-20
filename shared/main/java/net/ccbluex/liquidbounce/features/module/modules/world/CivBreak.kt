@@ -58,7 +58,9 @@ class CivBreak : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (airResetValue.get() && classProvider.isBlockAir(BlockUtils.getBlock(theWorld, pos)) || rangeResetValue.get() && BlockUtils.getCenterDistance(thePlayer, pos) > range.get())
+		val provider = classProvider
+
+		if (airResetValue.get() && provider.isBlockAir(BlockUtils.getBlock(theWorld, pos)) || rangeResetValue.get() && BlockUtils.getCenterDistance(thePlayer, pos) > range.get())
 		{
 			blockPos = null
 			return
@@ -66,7 +68,7 @@ class CivBreak : Module()
 
 		val netHandler = mc.netHandler
 
-		if (classProvider.isBlockAir(BlockUtils.getBlock(theWorld, pos)) || BlockUtils.getCenterDistance(thePlayer, pos) > range.get()) return
+		if (provider.isBlockAir(BlockUtils.getBlock(theWorld, pos)) || BlockUtils.getCenterDistance(thePlayer, pos) > range.get()) return
 
 		when (event.eventState)
 		{
@@ -77,11 +79,11 @@ class CivBreak : Module()
 				val facing = enumFacing!!
 
 				if (visualSwingValue.get()) thePlayer.swingItem()
-				else netHandler.addToSendQueue(classProvider.createCPacketAnimation())
+				else netHandler.addToSendQueue(provider.createCPacketAnimation())
 
 				// Break
-				netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, pos, facing))
-				netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, pos, facing))
+				netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, pos, facing))
+				netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, pos, facing))
 				mc.playerController.clickBlock(pos, facing)
 			}
 		}

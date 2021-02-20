@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.script.api.global
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.utils.ClientUtils
 
 /**
@@ -22,6 +22,6 @@ object Chat
 	@JvmStatic
 	fun print(message: String)
 	{
-		ClientUtils.displayChatMessage(LiquidBounce.wrapper.minecraft.thePlayer, message)
+		ClientUtils.displayChatMessage(wrapper.minecraft.thePlayer, message)
 	}
 }

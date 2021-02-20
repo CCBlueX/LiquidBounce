@@ -89,6 +89,8 @@ class Nuker : Module()
 		val radius = radiusValue.get()
 		val throughWalls = throughWallsValue.get()
 
+		val provider = classProvider
+
 		if (!playerController.isInCreativeMode)
 		{
 
@@ -166,7 +168,7 @@ class Nuker : Module()
 				// Start block breaking
 				if (currentDamage == 0F)
 				{
-					netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, blockPos, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, blockPos, provider.getEnumFacing(EnumFacingType.DOWN)))
 
 					// End block break if able to break instant
 					if (block.getPlayerRelativeBlockHardness(thePlayer, theWorld, blockPos) >= 1F)
@@ -174,7 +176,7 @@ class Nuker : Module()
 						currentDamage = 0F
 
 						thePlayer.swingItem()
-						playerController.onPlayerDestroyBlock(blockPos, classProvider.getEnumFacing(EnumFacingType.DOWN))
+						playerController.onPlayerDestroyBlock(blockPos, provider.getEnumFacing(EnumFacingType.DOWN))
 
 						blockHitDelay = hitDelay
 						validBlocks -= blockPos
@@ -192,8 +194,8 @@ class Nuker : Module()
 				// End of breaking block
 				if (currentDamage >= 1F)
 				{
-					netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos, classProvider.getEnumFacing(EnumFacingType.DOWN)))
-					playerController.onPlayerDestroyBlock(blockPos, classProvider.getEnumFacing(EnumFacingType.DOWN))
+					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos, provider.getEnumFacing(EnumFacingType.DOWN)))
+					playerController.onPlayerDestroyBlock(blockPos, provider.getEnumFacing(EnumFacingType.DOWN))
 
 					blockHitDelay = hitDelay
 					currentDamage = 0F
@@ -207,7 +209,7 @@ class Nuker : Module()
 			// Fast creative mode nuker (CreativeStorm option)
 
 			// Unable to break with swords in creative mode
-			if (classProvider.isItemSword(thePlayer.heldItem?.item)) return
+			if (provider.isItemSword(thePlayer.heldItem?.item)) return
 
 			// Search for new blocks to break
 			searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filter { (pos, block) ->
@@ -234,9 +236,9 @@ class Nuker : Module()
 				}
 				else false // Bad block
 			}.forEach { (pos, _) -> // Instant break block
-				netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, pos, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+				netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, pos, provider.getEnumFacing(EnumFacingType.DOWN)))
 				thePlayer.swingItem()
-				netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, pos, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+				netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, pos, provider.getEnumFacing(EnumFacingType.DOWN)))
 				attackedBlocks.add(pos)
 			}
 		}

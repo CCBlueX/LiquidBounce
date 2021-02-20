@@ -131,77 +131,82 @@ class TpAura : Module()
 
 		currentTargets = targets
 
-		if (attackTimer.hasTimePassed(attackDelay)) if (currentTargets.isNotEmpty())
+		if (attackTimer.hasTimePassed(attackDelay))
 		{
-			targetPaths.clear()
-			if (canBlock() && (thePlayer.isBlocking || !autoBlockValue.get().equals("Off", ignoreCase = true))) clientSideBlockingStatus = true
+			val provider = classProvider
 
-			val from = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
-			var targetIndex = 0
-
-			val targetCount = if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size
-
-			while (targetIndex < targetCount)
+			if (currentTargets.isNotEmpty())
 			{
-				currentTarget = currentTargets[targetIndex]
-				val to = WVec3(currentTarget!!.posX, currentTarget!!.posY, currentTarget!!.posZ)
+				targetPaths.clear()
+				if (canBlock() && (thePlayer.isBlocking || !autoBlockValue.get().equals("Off", ignoreCase = true))) clientSideBlockingStatus = true
 
-				currentPath = computePath(from, to)
-				targetPaths.add(currentPath) // Used for path esp
+				val from = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
+				var targetIndex = 0
 
-				// Unblock before attack
-				if (thePlayer.isBlocking || autoBlockValue.get().equals("Packet", ignoreCase = true) || serverSideBlockingStatus)
+				val targetCount = if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size
+
+				while (targetIndex < targetCount)
 				{
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+					currentTarget = currentTargets[targetIndex]
+					val to = WVec3(currentTarget!!.posX, currentTarget!!.posY, currentTarget!!.posZ)
+
+					currentPath = computePath(from, to)
+					targetPaths.add(currentPath) // Used for path esp
+
+					// Unblock before attack
+					if (thePlayer.isBlocking || autoBlockValue.get().equals("Packet", ignoreCase = true) || serverSideBlockingStatus)
+					{
+						mc.netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+						serverSideBlockingStatus = false
+					}
+
+					// Travel to the target
+					for (path in currentPath) mc.netHandler.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
+
+					LiquidBounce.eventManager.callEvent(AttackEvent(currentTarget))
+					CPSCounter.registerClick(CPSCounter.MouseButton.LEFT)
+					if (swingValue.get()) thePlayer.swingItem()
+
+					// Make AutoWeapon compatible
+					var sendAttack = true
+					val attackPacket: IPacket = provider.createCPacketUseEntity(currentTarget!!, ICPacketUseEntity.WAction.ATTACK)
+					val autoWeapon = LiquidBounce.moduleManager[AutoWeapon::class.java] as AutoWeapon
+
+					if (autoWeapon.state)
+					{
+						val packetEvent = PacketEvent(attackPacket)
+						autoWeapon.onPacket(packetEvent)
+						if (packetEvent.isCancelled) sendAttack = false
+					}
+					if (sendAttack) mc.netHandler.addToSendQueue(attackPacket)
+
+					// Block after attack
+					if (canBlock() && !serverSideBlockingStatus && (thePlayer.isBlocking || autoBlockValue.get().equals("Packet", ignoreCase = true)))
+					{
+						mc.netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(thePlayer.inventory.getCurrentItemInHand()))
+						serverSideBlockingStatus = true
+					}
+
+					// Travel back to the original position
+					currentPath.reverse()
+					for (path in currentPath) mc.netHandler.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
+					targetIndex++
+				}
+
+				attackTimer.reset()
+				attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
+			}
+			else
+			{
+				if (serverSideBlockingStatus)
+				{
+					mc.netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 					serverSideBlockingStatus = false
 				}
 
-				// Travel to the target
-				for (path in currentPath) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
-
-				LiquidBounce.eventManager.callEvent(AttackEvent(currentTarget))
-				CPSCounter.registerClick(CPSCounter.MouseButton.LEFT)
-				if (swingValue.get()) thePlayer.swingItem()
-
-				// Make AutoWeapon compatible
-				var sendAttack = true
-				val attackPacket: IPacket = classProvider.createCPacketUseEntity(currentTarget!!, ICPacketUseEntity.WAction.ATTACK)
-				val autoWeapon = LiquidBounce.moduleManager[AutoWeapon::class.java] as AutoWeapon
-
-				if (autoWeapon.state)
-				{
-					val packetEvent = PacketEvent(attackPacket)
-					autoWeapon.onPacket(packetEvent)
-					if (packetEvent.isCancelled) sendAttack = false
-				}
-				if (sendAttack) mc.netHandler.addToSendQueue(attackPacket)
-
-				// Block after attack
-				if (canBlock() && !serverSideBlockingStatus && (thePlayer.isBlocking || autoBlockValue.get().equals("Packet", ignoreCase = true)))
-				{
-					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(thePlayer.inventory.getCurrentItemInHand()))
-					serverSideBlockingStatus = true
-				}
-
-				// Travel back to the original position
-				currentPath.reverse()
-				for (path in currentPath) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
-				targetIndex++
+				clientSideBlockingStatus = false
+				currentTarget = null
 			}
-
-			attackTimer.reset()
-			attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
-		}
-		else
-		{
-			if (serverSideBlockingStatus)
-			{
-				mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
-				serverSideBlockingStatus = false
-			}
-
-			clientSideBlockingStatus = false
-			currentTarget = null
 		}
 	}
 
@@ -344,7 +349,9 @@ class TpAura : Module()
 			val state = getState(WBlockPos(pos.x, pos.y, pos.z))
 			val block = state!!.block
 
-			return classProvider.getMaterialEnum(MaterialType.AIR) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.PLANTS) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.VINE) == block.getMaterial(state) || classProvider.getBlockEnum(BlockType.LADDER) == block || classProvider.getBlockEnum(BlockType.WATER) == block || classProvider.getBlockEnum(BlockType.FLOWING_WATER) == block || classProvider.getBlockEnum(BlockType.WALL_SIGN) == block || classProvider.getBlockEnum(BlockType.STANDING_SIGN) == block
+			val provider = classProvider
+
+			return provider.getMaterialEnum(MaterialType.AIR) == block.getMaterial(state) || provider.getMaterialEnum(MaterialType.PLANTS) == block.getMaterial(state) || provider.getMaterialEnum(MaterialType.VINE) == block.getMaterial(state) || provider.getBlockEnum(BlockType.LADDER) == block || provider.getBlockEnum(BlockType.WATER) == block || provider.getBlockEnum(BlockType.FLOWING_WATER) == block || provider.getBlockEnum(BlockType.WALL_SIGN) == block || provider.getBlockEnum(BlockType.STANDING_SIGN) == block
 		}
 	}
 }

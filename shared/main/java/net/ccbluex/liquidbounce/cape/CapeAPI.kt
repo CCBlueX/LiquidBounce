@@ -77,6 +77,8 @@ object CapeAPI : MinecraftInstance()
 	 */
 	fun loadCape(uuid: UUID): CapeInfo?
 	{
+		val provider = classProvider
+
 		var url: String? = null
 		var resourceLocation: IResourceLocation? = null
 
@@ -87,7 +89,7 @@ object CapeAPI : MinecraftInstance()
 			var capeFile = File(LiquidBounce.fileManager.dir, GuiDonatorCape.transferCode.substring(5))
 			ClientUtils.logger.info("[Donator Cape] Loading offline cape from file ${capeFile.toPath()}")
 
-			resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation("offline-capes/%s".format("$capeFile"))
+			resourceLocation = provider.createResourceLocation("offline-capes/%s".format("$capeFile"))
 
 			if (!capeFile.exists())
 			{
@@ -109,10 +111,10 @@ object CapeAPI : MinecraftInstance()
 		if (url == null) url = (capeService ?: return null).getCape(uuid) ?: return null
 
 		// Load cape
-		if (resourceLocation == null) resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation("capes/%s.png".format("$uuid"))
+		if (resourceLocation == null) resourceLocation = provider.createResourceLocation("capes/%s.png".format("$uuid"))
 
 		val capeInfo = CapeInfo(resourceLocation)
-		val threadDownloadImageData = LiquidBounce.wrapper.classProvider.createThreadDownloadImageData(null, url, null, object : WIImageBuffer
+		val threadDownloadImageData = provider.createThreadDownloadImageData(null, url, null, object : WIImageBuffer
 		{
 			override fun parseUserSkin(image: BufferedImage?): BufferedImage? = image
 
