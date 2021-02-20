@@ -43,6 +43,8 @@
     "gui.MixinServerListEntryNormal",
     "gui.MixinServerListEntryLanScan",
     "gui.MixinInventoryEffectRenderer",
+    "gui.MixinGuiChest",
+    "gui.MixinGuiInventory",
 
     "item.MixinItemRenderer",
     "item.MixinMixinItemStack",

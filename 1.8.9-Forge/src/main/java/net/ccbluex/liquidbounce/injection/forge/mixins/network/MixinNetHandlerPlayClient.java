@@ -245,7 +245,6 @@ public abstract class MixinNetHandlerPlayClient
 					motionX *= horizontal;
 					motionY *= vertical;
 					motionZ *= horizontal;
-
 					break;
 				case "aac":
 				case "reverse":

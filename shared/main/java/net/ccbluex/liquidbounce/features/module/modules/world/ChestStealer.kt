@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -29,7 +30,6 @@ import kotlin.random.Random
 @ModuleInfo(name = "ChestStealer", description = "Automatically steals all items from a chest.", category = ModuleCategory.WORLD)
 class ChestStealer : Module()
 {
-
 	/**
 	 * OPTIONS
 	 */
@@ -137,12 +137,38 @@ class ChestStealer : Module()
 	// Remaining Misclicks count
 	private var remainingMisclickCount = maxAllowedMisclicksPerChestValue.get()
 
+	private val infoUpdateCooldown = Cooldown.getNewCooldownMiliseconds(100)
+
+	private var cachedInfo: String? = null
+
+	val advancedInformations: String
+		get() = if (cachedInfo == null || infoUpdateCooldown.attemptReset()) (if (!state) "ChestStealer is not active"
+		else
+		{
+			val minStartDelay = minStartDelay.get()
+			val maxStartDelay = maxStartDelay.get()
+			val minDelay = minDelayValue.get()
+			val maxDelay = maxDelayValue.get()
+			val invCleanerState = LiquidBounce.moduleManager[InventoryCleaner::class.java].state
+			val random = takeRandomizedValue.get()
+			val autoClose = autoCloseValue.get()
+			val minAutoClose = autoCloseMinDelayValue.get()
+			val maxAutoClose = autoCloseMaxDelayValue.get()
+			val itemDelay = itemDelayValue.get()
+			val misclick = allowMisclicksValue.get()
+			val misclickRate = misclicksRateValue.get()
+			val maxmisclick = maxAllowedMisclicksPerChestValue.get()
+
+			"ChestStealer active [startdelay: ($minStartDelay ~ $maxStartDelay), delay: ($minDelay ~ $maxDelay), itemdelay: $itemDelay, random: $random, onlyuseful: $invCleanerState${if (misclick) ", misclick($misclickRate%, max $maxmisclick per chest)" else ""}${if (autoClose) ", autoclose($minAutoClose ~ $maxAutoClose)" else ""}]"
+		}).apply { cachedInfo = this }
+		else cachedInfo!!
+
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!classProvider.isGuiChest(mc.currentScreen) || mc.currentScreen == null)
+		if (!classProvider.isGuiChest(mc.currentScreen))
 		{
 			if (delayOnFirstValue.get() || itemDelayValue.get() > 0)
 			{

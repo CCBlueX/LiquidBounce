@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.util.*
 import net.ccbluex.liquidbounce.injection.backend.ClassProviderImpl.createCPacketTryUseItem
 import net.ccbluex.liquidbounce.injection.backend.PacketImpl
+import org.jetbrains.annotations.Contract
 import java.awt.image.BufferedImage
 import java.io.File
 import java.security.PublicKey

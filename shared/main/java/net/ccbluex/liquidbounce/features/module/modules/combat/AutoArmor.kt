@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.utils.createUseItemPacket
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -57,6 +58,24 @@ class AutoArmor : Module()
 	 */
 	private var nextDelay: Long = 0
 	private var locked = false
+
+	private val infoUpdateCooldown = Cooldown.getNewCooldownMiliseconds(100)
+
+	private var cachedInfo: String? = null
+
+	val advancedInformations: String
+		get() = if (cachedInfo == null || infoUpdateCooldown.attemptReset()) (if (!state) "AutoArmor is not active"
+		else
+		{
+			val minDelay = minDelayValue.get()
+			val maxDelay = maxDelayValue.get()
+			val noMove = noMoveValue.get()
+			val hotbar = hotbarValue.get()
+			val itemDelay = itemDelayValue.get()
+
+			"AutoArmor active [delay: ($minDelay ~ $maxDelay), itemdelay: $itemDelay, nomove: $noMove, hotbar: $hotbar]"
+		}).apply { cachedInfo = this }
+		else cachedInfo!!
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)

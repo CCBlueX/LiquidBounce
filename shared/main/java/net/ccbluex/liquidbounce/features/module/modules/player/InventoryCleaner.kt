@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoPot
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -131,6 +132,27 @@ class InventoryCleaner : Module()
 	 */
 
 	private var delay = 0L
+
+	private val infoUpdateCooldown = Cooldown.getNewCooldownMiliseconds(100)
+
+	private var cachedInfo: String? = null
+
+	val advancedInformations: String
+		get() = if (cachedInfo == null || infoUpdateCooldown.attemptReset()) (if (!state) "InventoryCleaner is not active"
+		else
+		{
+			val minDelay = minDelayValue.get()
+			val maxDelay = maxDelayValue.get()
+			val random = randomSlotValue.get()
+			val noMove = noMoveValue.get()
+			val hotbar = hotbarValue.get()
+			val itemDelay = itemDelayValue.get()
+			val misclick = allowMisclicksValue.get()
+			val misclickRate = misclicksRateValue.get()
+
+			"InventoryCleaner active [delay: ($minDelay ~ $maxDelay), itemdelay: $itemDelay, random: $random, nomove: $noMove, hotbar: $hotbar${if (misclick) ", misclick($misclickRate%)" else ""}]"
+		}).apply { cachedInfo = this }
+		else cachedInfo!!
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)

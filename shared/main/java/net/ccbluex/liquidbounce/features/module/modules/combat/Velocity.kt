@@ -27,11 +27,7 @@ class Velocity : Module()
 	 */
 	val horizontalValue = FloatValue("Horizontal", 0F, 0F, 1F)
 	val verticalValue = FloatValue("Vertical", 0F, 0F, 1F)
-	val modeValue = ListValue(
-		"Mode", arrayOf(
-			"Simple", "AAC3.1.2", "AACPush", "AAC3.2.0-Reverse", "AAC3.3.4-Reverse", "AAC3.5.0-Zero", "Jump", "Glitch"
-		), "Simple"
-	)
+	val modeValue = ListValue("Mode", arrayOf("Simple", "AAC3.1.2", "AACPush", "AAC3.2.0-Reverse", "AAC3.3.4-Reverse", "AAC3.5.0-Zero", "Jump", "Glitch"), "Simple")
 
 	// AAC Reverse
 	private val reverseStrengthValue = FloatValue("AAC3.2.0-Reverse-Strength", 1F, 0.1F, 1F)

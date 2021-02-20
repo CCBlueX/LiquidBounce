@@ -747,7 +747,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 					yDelta = 0.0D;
 
 				if (onGround)
-					//noinspection ConstantConditions
+					// noinspection ConstantConditions
 					groundBlock.onEntityCollidedWithBlock(worldObj, groundCheckPos, (Entity) (Object) this);
 
 				final Bobbing bobbing = (Bobbing) LiquidBounce.moduleManager.get(Bobbing.class);
@@ -757,29 +757,22 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				distanceWalkedModified += StrictMath.hypot(xDelta, zDelta) * bobbingMultiplier;
 				distanceWalkedOnStepModified += MathHelper.sqrt_double(xDelta * xDelta + yDelta * yDelta + zDelta * zDelta) * bobbingMultiplier;
 
-				if (distanceWalkedOnStepModified > getNextStepDistance())
+				if (distanceWalkedOnStepModified > getNextStepDistance() && groundBlock.getMaterial() != Material.air)
 				{
-					final boolean isOnGround = groundBlock.getMaterial() != Material.air;
-					final boolean ignoreGroundCheck = bobbingState && !bobbing.getCheckGroundValue().get();
+					setNextStepDistance((int) distanceWalkedOnStepModified + 1);
 
-					if (isOnGround || ignoreGroundCheck)
-						setNextStepDistance((int) distanceWalkedOnStepModified + 1);
-
-					if (isOnGround)
+					// Swimming check
+					if (isInWater())
 					{
-						// Swimming check
-						if (isInWater())
-						{
-							float volume = MathHelper.sqrt_double(motionX * motionX * groundCheckDepth + motionY * motionY + motionZ * motionZ * groundCheckDepth) * 0.35F;
+						float volume = MathHelper.sqrt_double(motionX * motionX * groundCheckDepth + motionY * motionY + motionZ * motionZ * groundCheckDepth) * 0.35F;
 
-							if (volume > 1.0F)
-								volume = 1.0F;
+						if (volume > 1.0F)
+							volume = 1.0F;
 
-							playSound(getSwimSound(), volume, 1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
-						}
-
-						playStepSound(groundCheckPos, groundBlock);
+						playSound(getSwimSound(), volume, 1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
 					}
+
+					playStepSound(groundCheckPos, groundBlock);
 				}
 			}
 
