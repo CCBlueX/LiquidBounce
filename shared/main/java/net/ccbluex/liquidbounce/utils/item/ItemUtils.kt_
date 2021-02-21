@@ -27,6 +27,7 @@ object ItemUtils : MinecraftInstance()
 	 * @return               created item
 	 * @author               MCModding4K
 	 */
+	@JvmStatic
 	fun createItem(itemArguments: String): IItemStack?
 	{
 		var itemArgs = itemArguments
@@ -36,13 +37,13 @@ object ItemUtils : MinecraftInstance()
 			itemArgs = itemArgs.replace('&', '\u00A7') // Translate Colorcodes
 
 			var item: IItem? = classProvider.createItem()
-			var args: List<String>? = null
+			var args: Array<String>? = null
+
 			var mode = 0
 			val modeSize = min(12, itemArgs.length - 2)
-
 			while (mode <= modeSize)
 			{
-				args = itemArgs.substring(mode).split(Pattern.quote(" "))
+				args = itemArgs.substring(mode).split(Pattern.quote(" ")).toTypedArray()
 
 				val resourcelocation = classProvider.createResourceLocation(args[0])
 
@@ -53,17 +54,27 @@ object ItemUtils : MinecraftInstance()
 				++mode
 			}
 
-			item ?: return null
+			if (item == null)
+			{
+				logger.warn("Can't create the item with arguments \"${itemArgs.take(64)}\" - Can't find any item matches name")
+				return null
+			}
 
 			var i = 1
 
-			if ((args ?: return null).size >= 2 && PATTERN.matcher(args[1]).matches()) i = args[1].toInt()
+			if (args == null)
+			{
+				logger.warn("Can't create the item with arguments \"${itemArgs.take(64)}\" - args == null")
+				return null
+			}
 
-			var j = 0
+			if (args.size >= 2 && PATTERN.matcher(args[1]).matches()) i = args[1].toInt()
 
-			if (args.size >= 3 && PATTERN.matcher(args[2]).matches()) j = args[2].toInt()
+			var meta = 0
 
-			val itemstack = classProvider.createItemStack(item, i, j)
+			if (args.size >= 3 && PATTERN.matcher(args[2]).matches()) meta = args[2].toInt()
+
+			val itemstack = classProvider.createItemStack(item, i, meta)
 
 			if (args.size >= 4)
 			{
@@ -83,11 +94,15 @@ object ItemUtils : MinecraftInstance()
 		}
 	}
 
+	@JvmStatic
 	fun getEnchantment(itemStack: IItemStack?, enchantment: IEnchantment): Int = if (itemStack?.enchantmentTagList == null || itemStack.enchantmentTagList!!.hasNoTags()) 0 else ((0 until itemStack.enchantmentTagList!!.tagCount()).map(itemStack.enchantmentTagList!!::getCompoundTagAt).firstOrNull { it.hasKey("ench") && it.getShort("ench").toInt() == enchantment.effectId || it.hasKey("id") && it.getShort("id").toInt() == enchantment.effectId }?.let { tagCompound: INBTTagCompound -> tagCompound.getShort("lvl").toInt() }) ?: 0
 
+	@JvmStatic
 	fun getEnchantmentCount(itemStack: IItemStack?): Int = if (itemStack?.enchantmentTagList == null || itemStack.enchantmentTagList!!.hasNoTags()) 0 else (0 until itemStack.enchantmentTagList!!.tagCount()).map(itemStack.enchantmentTagList!!::getCompoundTagAt).count { it.hasKey("ench") || it.hasKey("id") }
 
+	@JvmStatic
 	fun isStackEmpty(stack: IItemStack?): Boolean = stack == null || classProvider.isItemAir(stack.item)
 
+	@JvmStatic
 	private val PATTERN = Pattern.compile("\\d+")
 }

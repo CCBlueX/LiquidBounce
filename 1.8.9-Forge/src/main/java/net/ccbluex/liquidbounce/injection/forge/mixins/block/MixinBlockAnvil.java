@@ -22,7 +22,8 @@ public abstract class MixinBlockAnvil extends MixinBlock
 		// Make anvil crash exploit not work for me
 		if ((meta >> 2 & ~0x3) != 0)
 		{
-			cir.setReturnValue(onBlockPlaced(worldIn, pos, facing, hitX, hitY, hitZ, meta, placer).withProperty(BlockAnvil.FACING, placer.getHorizontalFacing().rotateY()).withProperty(BlockAnvil.DAMAGE, 2));
+			// noinspection UnnecessarySuperQualifier - super qualifier is very important on this mixin context
+			cir.setReturnValue(super.onBlockPlaced(worldIn, pos, facing, hitX, hitY, hitZ, meta, placer).withProperty(BlockAnvil.FACING, placer.getHorizontalFacing().rotateY()).withProperty(BlockAnvil.DAMAGE, 2));
 			cir.cancel();
 		}
 	}
