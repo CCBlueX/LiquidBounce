@@ -38,9 +38,7 @@ object UserUtils
 	fun isValidTokenStatus(token: String): StatusLine
 	{
 		val client = HttpClients.createDefault()
-		val headers = arrayOf(
-			BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-		)
+		val headers = arrayOf(BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"))
 
 		val request = HttpPost("https://authserver.mojang.com/validate")
 		request.setHeaders(headers)
@@ -84,7 +82,8 @@ object UserUtils
 	fun getUUID(username: String): String
 	{
 		try
-		{ // Make a http connection to Mojang API and ask for UUID of username
+		{
+			// Make a http connection to Mojang API and ask for UUID of username
 			val httpConnection = URL("https://api.mojang.com/users/profiles/minecraft/$username").openConnection() as HttpsURLConnection
 			httpConnection.connectTimeout = 2000
 			httpConnection.readTimeout = 2000
@@ -99,10 +98,7 @@ object UserUtils
 			InputStreamReader(httpConnection.inputStream).use {
 				val jsonElement = JsonParser().parse(it)
 
-				if (jsonElement.isJsonObject)
-				{
-					return@getUUID jsonElement.asJsonObject.get("id").asString
-				}
+				if (jsonElement.isJsonObject) return@getUUID jsonElement.asJsonObject.get("id").asString
 			}
 		}
 		catch (ignored: Throwable)

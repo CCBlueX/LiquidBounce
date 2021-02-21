@@ -28,6 +28,7 @@ import java.awt.Color
 import java.text.DecimalFormat
 import kotlin.math.ceil
 
+// TODO: Optimize nametags
 @ModuleInfo(name = "NameTags", description = "Changes the scale of the nametags so you can always read them.", category = ModuleCategory.RENDER)
 class NameTags : Module()
 {
@@ -69,13 +70,9 @@ class NameTags : Module()
 
 		val theWorld = mc.theWorld ?: return
 
-		for (entity in theWorld.loadedEntityList)
-		{
-			if (!EntityUtils.isSelected(entity, false)) continue
-			if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
-			val displayName = entity.displayName ?: continue
-
-			renderNameTag(entity.asEntityLivingBase(), if (clearNamesValue.get()) ColorUtils.stripColor(displayName.unformattedText) ?: continue else displayName.unformattedText)
+		theWorld.loadedEntityList.asSequence().filterNot { !EntityUtils.isSelected(it, false) || AntiBot.isBot(it.asEntityLivingBase()) && !botValue.get() }.forEach { entity ->
+			val displayName = entity.displayName ?: return@forEach
+			renderNameTag(entity.asEntityLivingBase(), if (clearNamesValue.get()) ColorUtils.stripColor(displayName.unformattedText) ?: return@forEach else displayName.unformattedText)
 		}
 
 		glPopMatrix()
@@ -110,9 +107,11 @@ class NameTags : Module()
 			else -> ""
 		}
 
-		val pingText = if (pingValue.get() && classProvider.isEntityPlayer(entity))
+		val provider = classProvider
+
+		val pingText = if (pingValue.get() && provider.isEntityPlayer(entity))
 		{
-			val ping = if (classProvider.isEntityPlayer(entity)) EntityUtils.getPing(entity) else 0
+			val ping = if (provider.isEntityPlayer(entity)) EntityUtils.getPing(entity) else 0
 
 			(when
 			{
@@ -128,8 +127,7 @@ class NameTags : Module()
 
 		val healthText = if (healthValue.get())
 		{
-			val health: Float = if (!classProvider.isEntityPlayer(entity) || healthModeValue.get().equals("Datawatcher", true)) entity.health
-			else EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthModeValue.get().equals("Mineplex", true)).toFloat()
+			val health: Float = if (!provider.isEntityPlayer(entity) || healthModeValue.get().equals("Datawatcher", true)) entity.health else EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthModeValue.get().equals("Mineplex", true)).toFloat()
 
 			val absorption = if (ceil(entity.absorptionAmount.toDouble()) > 0) entity.absorptionAmount else 0f
 			val healthPercentage = (health + absorption) / entity.maxHealth * 100f
@@ -156,9 +154,15 @@ class NameTags : Module()
 		// Translate to player position
 		val renderPartialTicks = mc.timer.renderPartialTicks
 		val renderManager = mc.renderManager
+		val renderPosX = renderManager.renderPosX
+		val renderPosY = renderManager.renderPosY
+		val renderPosZ = renderManager.renderPosZ
 
 		// Translate to player position with render pos and interpolate it
-		glTranslated(entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * renderPartialTicks - renderManager.renderPosX, entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * renderPartialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + 0.55, entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * renderPartialTicks - renderManager.renderPosZ)
+		val lastTickPosX = entity.lastTickPosX
+		val lastTickPosY = entity.lastTickPosY
+		val lastTickPosZ = entity.lastTickPosZ
+		glTranslated(lastTickPosX + (entity.posX - lastTickPosX) * renderPartialTicks - renderPosX, lastTickPosY + (entity.posY - lastTickPosY) * renderPartialTicks - renderPosY + entity.eyeHeight.toDouble() + 0.55, lastTickPosZ + (entity.posZ - lastTickPosZ) * renderPartialTicks - renderPosZ)
 
 		glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
 		glRotatef(renderManager.playerViewX, 1F, 0F, 0F)
@@ -191,7 +195,7 @@ class NameTags : Module()
 
 		AWTFontRenderer.assumeNonVolatile = false
 
-		if (armorValue.get() && classProvider.isEntityPlayer(entity))
+		if (armorValue.get() && provider.isEntityPlayer(entity))
 		{
 			mc.renderItem.zLevel = -147F
 
@@ -204,7 +208,7 @@ class NameTags : Module()
 				mc.renderItem.renderItemAndEffectIntoGUI(equipmentInSlot, -50 + index * 20, -22)
 			}
 
-			val glStateManager = classProvider.glStateManager
+			val glStateManager = provider.glStateManager
 			glStateManager.enableAlpha()
 			glStateManager.disableBlend()
 			glStateManager.enableTexture2D()
