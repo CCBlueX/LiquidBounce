@@ -192,7 +192,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 				val account = MinecraftAccount(MinecraftAccount.AltServiceType.THEALTENING, tokenField.text, LiquidBounce.CLIENT_NAME)
 
-				WorkerUtils.workers.submit {
+				WorkerUtils.workers.execute {
 					try
 					{
 						status = "\u00A7cSwitching Alt Service..."

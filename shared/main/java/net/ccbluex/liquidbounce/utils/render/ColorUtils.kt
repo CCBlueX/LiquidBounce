@@ -35,7 +35,7 @@ object ColorUtils : MinecraftInstance()
 
 	init
 	{
-		WorkerUtils.workers.submit {
+		WorkerUtils.workers.execute {
 			repeat(16) { i ->
 				val baseColor = (i shr 3 and 1) * 85
 

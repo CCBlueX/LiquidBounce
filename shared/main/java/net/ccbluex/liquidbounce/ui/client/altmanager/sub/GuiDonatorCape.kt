@@ -128,7 +128,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					status = if (capeEnabled) "\u00A7aSuccessfully enabled offline cape"
 					else "\u00A7aSuccessfully disabled offline cape"
 				}
-				else WorkerUtils.workers.submit {
+				else WorkerUtils.workers.execute {
 					val httpClient = HttpClients.createDefault()
 					val headers = arrayOf(
 						BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"), BasicHeader(HttpHeaders.AUTHORIZATION, transferCodeField.text)

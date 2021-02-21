@@ -29,7 +29,7 @@ class DonatorCape : Listenable, MinecraftInstance()
 	{
 		if (!GuiDonatorCape.capeEnabled || GuiDonatorCape.transferCode.isEmpty() || !UserUtils.isValidTokenOffline(mc.session.token)) return
 
-		WorkerUtils.workers.submit {
+		WorkerUtils.workers.execute {
 			val uuid = mc.session.playerId
 			val username = mc.session.username
 

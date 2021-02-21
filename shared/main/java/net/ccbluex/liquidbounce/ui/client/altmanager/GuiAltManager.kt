@@ -173,7 +173,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			{
 				loginButton.enabled = false
 				randomButton.enabled = false
-				workers.submit {
+				workers.execute {
 					try
 					{
 						val minecraftAccount = altsList.accounts[altsList.selectedSlot]
@@ -200,7 +200,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				if (randomInteger < altsList.getSize()) altsList.selectedSlot = randomInteger
 				loginButton.enabled = false
 				randomButton.enabled = false
-				workers.submit {
+				workers.execute {
 					try
 					{
 						val minecraftAccount = altsList.accounts[randomInteger]
@@ -391,7 +391,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					loginButton.enabled = false
 					randomButton.enabled = false
 
-					workers.submit {
+					workers.execute {
 						val minecraftAccount = accounts[selected]
 						status = "\u00A7aLogging in..."
 						status = "\u00A7c" + login(minecraftAccount)

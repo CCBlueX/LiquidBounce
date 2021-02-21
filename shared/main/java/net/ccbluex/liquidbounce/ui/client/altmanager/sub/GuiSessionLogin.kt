@@ -99,7 +99,7 @@ class GuiSessionLogin(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		loginButton.enabled = false
 		status = "\u00A7aLogging in..."
 
-		WorkerUtils.workers.submit {
+		WorkerUtils.workers.execute {
 			val loginResult = LoginUtils.loginSessionId(token)
 
 			status = when (loginResult)

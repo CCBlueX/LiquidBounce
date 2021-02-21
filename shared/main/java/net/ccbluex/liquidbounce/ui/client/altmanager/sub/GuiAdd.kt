@@ -196,7 +196,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 		val account = MinecraftAccount(AltServiceType.MOJANG, name, if (password.isEmpty()) null else password)
 
-		workers.submit {
+		workers.execute {
 			if (!account.isCracked)
 			{
 				status = "\u00A7aChecking..."
@@ -223,7 +223,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					clipboardButton.enabled = true
 					logger.warn("The account \"${account.name}:${account.password}\" not working.", e)
 
-					return@submit
+					return@execute
 				}
 				catch (e: AuthenticationException)
 				{
@@ -232,7 +232,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					clipboardButton.enabled = true
 					logger.warn("The account \"${account.name}:${account.password}\" not working.", e)
 
-					return@submit
+					return@execute
 				}
 				catch (e: NoSuchFieldException)
 				{
@@ -241,7 +241,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					clipboardButton.enabled = true
 					logger.warn("The account \"${account.name}:${account.password}\" not working.", e)
 
-					return@submit
+					return@execute
 				}
 				catch (e: IllegalAccessException)
 				{
@@ -250,7 +250,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					clipboardButton.enabled = true
 					logger.warn("The account \"${account.name}:${account.password}\" not working.", e)
 
-					return@submit
+					return@execute
 				}
 			}
 

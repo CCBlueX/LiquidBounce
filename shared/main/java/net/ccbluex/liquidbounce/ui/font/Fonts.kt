@@ -98,7 +98,7 @@ object Fonts : MinecraftInstance()
 		val outputFile = File(LiquidBounce.fileManager.fontsDir, "roboto.zip")
 
 		// TEST: Download fonts in a worker thread
-		if (!outputFile.exists()) workers.submit {
+		if (!outputFile.exists()) workers.execute {
 			try
 			{
 				logger.info("Downloading fonts...")

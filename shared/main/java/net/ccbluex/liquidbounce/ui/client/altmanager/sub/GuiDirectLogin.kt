@@ -94,7 +94,7 @@ class GuiDirectLogin(gui: GuiAltManager) : WrappedGuiScreen()
 				loginButton.enabled = false
 				clipboardLoginButton.enabled = false
 
-				workers.submit {
+				workers.execute {
 					status = "\u00A7aLogging in..."
 					status = if (password.text.isEmpty()) login(MinecraftAccount(AltServiceType.MOJANG, translateAlternateColorCodes(username.text))) else login(MinecraftAccount(AltServiceType.MOJANG, username.text, password.text))
 
@@ -117,7 +117,7 @@ class GuiDirectLogin(gui: GuiAltManager) : WrappedGuiScreen()
 				loginButton.enabled = false
 				clipboardLoginButton.enabled = false
 
-				workers.submit {
+				workers.execute {
 					status = "\u00A7aLogging in..."
 					status = login(MinecraftAccount(AltServiceType.MOJANG, args[0], args[1]))
 

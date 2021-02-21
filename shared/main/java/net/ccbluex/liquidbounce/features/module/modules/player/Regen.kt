@@ -48,7 +48,7 @@ class Regen : Module()
 			{
 				"vanilla" ->
 				{
-					WorkerUtils.workers.submit {
+					WorkerUtils.workers.execute {
 						repeat(speedValue.get()) {
 							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 						}
@@ -59,7 +59,7 @@ class Regen : Module()
 				{
 					if (MovementUtils.isMoving(thePlayer) || !onGround) return
 
-					WorkerUtils.workers.submit {
+					WorkerUtils.workers.execute {
 						repeat(9) {
 							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 						}

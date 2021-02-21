@@ -10,8 +10,7 @@ object WorkerUtils
 
 	init
 	{
-		val availableProcessors = Runtime.getRuntime().availableProcessors()
-		workers = ThreadPoolExecutor(availableProcessors, availableProcessors, 5L, TimeUnit.MINUTES, LinkedBlockingQueue(), LiquidBounceThreadFactory())
+		workers = ThreadPoolExecutor(1, Runtime.getRuntime().availableProcessors(), 30L, TimeUnit.SECONDS, LinkedBlockingQueue(), LiquidBounceThreadFactory())
 	}
 
 	private class LiquidBounceThreadFactory : ThreadFactory
@@ -25,7 +24,7 @@ object WorkerUtils
 		{
 			val s = System.getSecurityManager()
 			group = if (s != null) s.threadGroup else Thread.currentThread().threadGroup
-			namePrefix = "LiquidBounceWorkers-" + poolNumber.getAndIncrement() + "-thread-"
+			namePrefix = "LiquidBounceWorker-pool-" + poolNumber.getAndIncrement() + "-thread-"
 		}
 
 		override fun newThread(task: Runnable): Thread

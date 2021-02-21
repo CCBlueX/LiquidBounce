@@ -154,7 +154,7 @@ class FileManager : MinecraftInstance()
 			}
 
 			// To minimize overheads caused by saving config, use workers instead of directly saving it
-			WorkerUtils.workers.submit {
+			WorkerUtils.workers.execute {
 				try
 				{
 					val nanoTime = System.nanoTime()
@@ -206,7 +206,7 @@ class FileManager : MinecraftInstance()
 			if (!ignoreStarting && isStarting) return
 
 			// To minimize overheads caused by saving config, use workers instead of directly saving it
-			WorkerUtils.workers.submit {
+			WorkerUtils.workers.execute {
 				try
 				{
 					val nanoTime = System.nanoTime()

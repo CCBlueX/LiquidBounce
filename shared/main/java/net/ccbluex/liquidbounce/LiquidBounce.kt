@@ -179,7 +179,7 @@ object LiquidBounce
 		// Setup Discord RPC
 		if (clientRichPresence.showRichPresenceValue)
 		{
-			WorkerUtils.workers.submit {
+			WorkerUtils.workers.execute {
 				try
 				{
 					clientRichPresence.setup()

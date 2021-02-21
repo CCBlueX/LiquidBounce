@@ -29,7 +29,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		representedScreen.buttonList.add(classProvider.createGuiButton(1, (width shr 1) - 100, (height shr 2) + 145, "Back"))
 
-		WorkerUtils.workers.submit(::loadInformation)
+		WorkerUtils.workers.execute(::loadInformation)
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)

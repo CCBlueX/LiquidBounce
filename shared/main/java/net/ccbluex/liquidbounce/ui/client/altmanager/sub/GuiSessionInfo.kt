@@ -328,7 +328,7 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 				if (payloadJson.has("yggt"))
 				{
 					val accesstoken = payloadJson["yggt"].asString.also { accesstoken = it }
-					workers.submit {
+					workers.execute {
 						val status = isValidTokenStatus(accesstoken)
 						val tokenValid = status.statusCode == 204
 
@@ -348,7 +348,7 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 				if (payloadJson.has("spr"))
 				{
 					val uuid = payloadJson["spr"].asString.also { uuid = it }
-					workers.submit {
+					workers.execute {
 						nickname = getUsername(uuid)
 						nicknameChecked = true
 					}

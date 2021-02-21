@@ -51,7 +51,7 @@ class GuiModsMenu(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					true ->
 					{
 						var value = true
-						WorkerUtils.workers.submit {
+						WorkerUtils.workers.execute {
 							value = try
 							{
 								rpc.setup()

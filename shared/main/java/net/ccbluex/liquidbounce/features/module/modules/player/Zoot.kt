@@ -44,7 +44,7 @@ class Zoot : Module()
 
 			if (effect != null)
 			{
-				WorkerUtils.workers.submit {
+				WorkerUtils.workers.execute {
 					repeat(effect.duration / 20) {
 						netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 					}
@@ -55,7 +55,7 @@ class Zoot : Module()
 
 		if (fireValue.get() && !thePlayer.capabilities.isCreativeMode && thePlayer.burning)
 		{
-			WorkerUtils.workers.submit {
+			WorkerUtils.workers.execute {
 				repeat(9) {
 					netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 				}

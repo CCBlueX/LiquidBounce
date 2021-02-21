@@ -66,7 +66,7 @@ class FastUse : Module()
 			{
 				"instant" ->
 				{
-					WorkerUtils.workers.submit {
+					WorkerUtils.workers.execute {
 						repeat(35) {
 							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 						}
@@ -80,7 +80,7 @@ class FastUse : Module()
 					{
 						"atonce" -> if (thePlayer.itemInUseDuration > ncpWaitTicksValue.get())
 						{
-							WorkerUtils.workers.submit {
+							WorkerUtils.workers.execute {
 								repeat(ncpPacketsValue.get()) {
 									netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 								}
@@ -108,7 +108,7 @@ class FastUse : Module()
 
 					if (!msTimer.hasTimePassed(delayValue.get().toLong())) return
 
-					WorkerUtils.workers.submit {
+					WorkerUtils.workers.execute {
 						repeat(customSpeedValue.get()) {
 							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 						}

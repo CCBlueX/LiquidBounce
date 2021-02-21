@@ -52,7 +52,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
 				chat(thePlayer, "Loading settings...")
 
-				WorkerUtils.workers.submit {
+				WorkerUtils.workers.execute {
 					try
 					{ // Load settings and apply them
 						val settings = HttpUtils[url]

@@ -45,7 +45,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		failed = false
 
-		WorkerUtils.workers.submit(::loadCredits)
+		WorkerUtils.workers.execute(::loadCredits)
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
