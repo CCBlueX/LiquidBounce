@@ -321,29 +321,24 @@ public abstract class MixinItemRenderer
 		final float yEquipProgressTranslationAffectness = -swingAnimation.getEquipProgressAnimationTranslationAffectnessY().get();
 		final float zEquipProgressTranslationAffectness = -swingAnimation.getEquipProgressAnimationTranslationAffectnessZ().get();
 
-		switch (swingAnimation.getAnimationMode().get().toLowerCase())
-		{
-			case "liquidbounce":
-			{
+		switch (swingAnimation.getAnimationMode().get().toLowerCase()) {
+			case "liquidbounce": {
 				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
 				doBlockTransformations();
 				GlStateManager.translate(-0.5f, 0.2F, 0.0F);
 				break;
 			}
-			case "1.8":
-			{
+			case "1.8": {
 				transformFirstPersonItemBlock(equipProgress, 0, 1);
 				doBlockTransformations();
 				break;
 			}
-			case "1.7":
-			{
+			case "1.7": {
 				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
 				doBlockTransformations();
 				break;
 			}
-			case "avatar":
-			{
+			case "avatar": {
 				translateBlock(swingAnimation, swingProgress);
 
 				final double xTranslate = equipProgress * (equipProgressAffectTranslation ? xEquipProgressTranslationAffectness : 0.0f);
@@ -360,8 +355,7 @@ public abstract class MixinItemRenderer
 				doBlockTransformations();
 				break;
 			}
-			case "sigma":
-			{
+			case "sigma": {
 				transformFirstPersonItemBlock(equipProgress, 0, 1);
 				GlStateManager.rotate(equipProgressAffect * -sqrt * 27.5f, -8.0f, -0.0f, 9.0F);
 				GlStateManager.rotate(equipProgressAffect * -sqrt * 45, 1.0F, sqrt * 0.5f, -0.0f);
@@ -370,16 +364,14 @@ public abstract class MixinItemRenderer
 				GL11.glTranslatef(-1, mc.thePlayer.isSneaking() ? -0.1f : -0.2f, 0.2F);
 				break;
 			}
-			case "push":
-			{
+			case "push": {
 				transformFirstPersonItemBlock(equipProgress, 0.0F, 1);
 				doBlockTransformations();
 				GlStateManager.translate(-0.3f, 0.1f, 0.0f);
 				GlStateManager.rotate(equipProgressAffect * sqrt * -25.0f, -8.0f, 0.0F, 9.0f);
 				break;
 			}
-			case "tap":
-			{
+			case "tap": {
 				translateBlock(swingAnimation, swingProgress);
 
 				final double xTranslate = equipProgress * (equipProgressAffectTranslation ? xEquipProgressTranslationAffectness : 0.0f);
@@ -394,8 +386,7 @@ public abstract class MixinItemRenderer
 				doBlockTransformations();
 				break;
 			}
-			case "tap2":
-			{
+			case "tap2": {
 				final float smooth = swingProgress * 0.8f - swingProgress * swingProgress * 0.8f;
 
 				translateBlock(swingAnimation, swingProgress);
@@ -412,8 +403,7 @@ public abstract class MixinItemRenderer
 				doBlockTransformations();
 				break;
 			}
-			case "slide":
-			{
+			case "slide": {
 				translateBlock(swingAnimation, swingProgress);
 
 				final double xTranslate = equipProgress * (equipProgressAffectTranslation ? xEquipProgressTranslationAffectness : 0.0f) + equipProgressAffect * sqrt * (swingAnimation.getSlideXPos().get() * 0.001);
@@ -430,8 +420,7 @@ public abstract class MixinItemRenderer
 				doBlockTransformations();
 				break;
 			}
-			case "exhibobo":
-			{
+			case "exhibobo": {
 				translateBlock(swingAnimation, swingProgress);
 
 				final double xTranslate = equipProgress * (equipProgressAffectTranslation ? xEquipProgressTranslationAffectness : 0.0f);
@@ -446,6 +435,91 @@ public abstract class MixinItemRenderer
 				GlStateManager.rotate(-equipProgressAffect * sqrt * (20 + swingAnimation.getExhiAngleX().get()), 1.0f, 0.0f, 0.0f);
 
 				GlStateManager.scale(blockScale, blockScale, blockScale);
+				doBlockTransformations();
+				break;
+			}
+			case "lucid": {
+				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
+				doBlockTransformations();
+
+				GL11.glTranslatef(-0.5F, 0.2F, 0.0F);
+
+				// Reverse previous rotations
+
+				GL11.glRotatef(60.0F, 0.0F, 0.0F, 1.0F);
+				GL11.glRotatef(10.0F, 1.0F, 0.0F, 0.0F);
+				GL11.glRotatef(50.0F, 0.0F, 1.0F, 0.0F);
+				GL11.glTranslatef(-0.05F, mc.thePlayer.isSneaking() ? -0.2F : 0.0F, 0.1F);
+				break;
+			}
+			case "tea": {
+				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
+				doBlockTransformations();
+
+				GlStateManager.translate(-equipProgressAffect * 0.5F, 0.4F, 0.0F);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * 50.0F, -10.0F, 5.0F, 9.0F);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * 70.0F, 1.0F, -0.4F, -0.0F);
+				break;
+			}
+			case "luna": {
+				transformFirstPersonItemBlock(equipProgress, 0.0F, equipProgressAffect);
+				doBlockTransformations();
+
+				GlStateManager.translate(0.0F, 0.4F, 0.3F);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * 35.0f, -8.0F, -0.0F, 9.0F);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * 10.0F, 1.0F, -0.4F, -0.5F);
+				break;
+			}
+			case "protocol": {
+				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
+				doBlockTransformations();
+
+				GL11.glTranslatef(-0.5F, 0.2F, 0.0F);
+				GL11.glRotatef(-5.0F, 5.0F, 1.0F, 5.0F);
+				GL11.glTranslatef(-0.05F, 0.0F, 0.1F);
+				break;
+			}
+			case "hooded":
+			{
+				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
+				doBlockTransformations();
+
+				GlStateManager.translate(-0.4F, 0.3F, 0.0F);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * 50.0F, 0.0F, 0.0F, 15.0F);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * 70.0F, 1.0F, -0.4F, -0.0F);
+				GL11.glTranslatef(-0.05F, -0.6F, 0.1F);
+				break;
+			}
+			case "smooth":
+			{
+				GlStateManager.translate(0.56F, -0.52F, -0.72F);
+				GlStateManager.translate(0.0F, 0.24f, 0.0F);
+				GlStateManager.rotate(45.0F, 0.0F, 0.2F, 0.0F);
+
+				GlStateManager.rotate(-equipProgressAffect * sq * 32.8F, 0.0F, 1.0F, 0.0F);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * 32.8F, 0.0F, 0.0F, 1.0F);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * 90.0F, 0.2F, 0.0F, 0.0F);
+				GlStateManager.scale(0.4F, 0.4F, 0.4F);
+				doBlockTransformations();
+				break;
+			}
+			case "bump":
+			{
+				transformFirstPersonItem(equipProgress, -0.4f);
+				doBlockTransformations();
+				GlStateManager.translate(-0.4F, 0.3F, 0.0F);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * 67.5F, -35.0F, -0.0F, 15.0F);
+				GlStateManager.rotate(-equipProgressAffect * sqrt * 70.0F, 1.0F, -0.4F, -0.0F);
+				GL11.glTranslatef(-0.05F, -0.6F, 0.1F);
+				break;
+			}
+			case "slap":
+			{
+				final float fastSqrt = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * 3.1F);
+				GL11.glTranslated(-0.1D, 0.0D, 0.0D);
+				transformFirstPersonItem(-0.4F, 0.0F);
+				GlStateManager.rotate(-fastSqrt * 20.0f, fastSqrt * 0.5F, -0.0F, 4.0F);
+				GlStateManager.rotate(-fastSqrt * 30.0F, 1.0F, fastSqrt * 0.5F, -0.0F);
 				doBlockTransformations();
 				break;
 			}
