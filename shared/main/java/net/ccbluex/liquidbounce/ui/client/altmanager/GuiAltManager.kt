@@ -127,8 +127,19 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		Fonts.font40.drawCenteredString("AltManager", (width shr 1).toFloat(), 6f, 0xffffff)
 		Fonts.font35.drawCenteredString(if (searchField.text.isEmpty()) "${LiquidBounce.fileManager.accountsConfig.accounts.size} Alts" else "${altsList.accounts.size} Search Results", (width shr 1).toFloat(), 18f, 0xffffff)
 		Fonts.font35.drawCenteredString(status, (width shr 1).toFloat(), 32f, 0xffffff)
-		Fonts.font35.drawStringWithShadow("\u00A77User: \u00A7a${if (MCLeaks.isAltActive()) MCLeaks.getSession().username else mc.session.username}", 6, 6, 0xffffff)
-		Fonts.font35.drawStringWithShadow("\u00A77Type: \u00A7a${if (altService.currentService == EnumAltService.THEALTENING) "\u00A7aTheAltening" else if (MCLeaks.isAltActive()) "\u00A7bMCLeaks" else if (isValidTokenOffline(mc.session.token)) "\u00A76Mojang" else "\u00A78Cracked"}", 6, 15, 0xffffff)
+
+		val mcleaksActive = MCLeaks.isAltActive
+		val sessionUsername = if (mcleaksActive) MCLeaks.session?.username else mc.session.username
+		val altServiceTypeText = when
+		{
+			altService.currentService == EnumAltService.THEALTENING -> "\u00A7aTheAltening"
+			mcleaksActive -> "\u00A7bMCLeaks"
+			isValidTokenOffline(mc.session.token) -> "\u00A76Mojang"
+			else -> "\u00A78Cracked"
+		}
+
+		Fonts.font35.drawStringWithShadow("\u00A77User: \u00A7a$sessionUsername", 6, 6, 0xffffff)
+		Fonts.font35.drawStringWithShadow("\u00A77Type: \u00A7a$altServiceTypeText", 6, 15, 0xffffff)
 
 		searchField.drawTextBox()
 		if (searchField.text.isEmpty() && !searchField.isFocused) Fonts.font40.drawStringWithShadow("\u00A77Search...", searchField.xPosition + 4, 17, 0xffffff)

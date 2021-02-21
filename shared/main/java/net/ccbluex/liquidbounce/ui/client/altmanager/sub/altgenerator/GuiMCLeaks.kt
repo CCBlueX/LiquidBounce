@@ -33,23 +33,29 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 	override fun initGui()
 	{
+		val screen = representedScreen
+		val height = screen.height
+
+		val provider = classProvider
+
 		Keyboard.enableRepeatEvents(true)
-		if (MCLeaks.isAltActive()) status = "\u00A7aToken active. Using \u00A79${MCLeaks.getSession().username}\u00A7a to login!"
+		if (MCLeaks.isAltActive) status = "\u00A7aToken active. Using \u00A79${MCLeaks.session?.username}\u00A7a to login!"
 
 		// Add buttons
-		val middleScreen = representedScreen.width shr 1
-		val quarterScreen = representedScreen.height shr 2
+		val middleScreen = screen.width shr 1
+		val quarterScreen = height shr 2
 
-		val buttonList = representedScreen.buttonList
-		buttonList.add(classProvider.createGuiButton(4, middleScreen - 100, quarterScreen + 65, 98, 20, "Add Alt and Login"))
-		buttonList.add(classProvider.createGuiButton(1, middleScreen + 2, quarterScreen + 65, 98, 20, "Just Login"))
-		buttonList.add(classProvider.createGuiButton(2, middleScreen - 100, representedScreen.height - 54, 98, 20, "Get Token"))
-		buttonList.add(classProvider.createGuiButton(3, middleScreen + 2, representedScreen.height - 54, 98, 20, "Back"))
+		val buttonList = screen.buttonList
+		buttonList.add(provider.createGuiButton(4, middleScreen - 100, quarterScreen + 65, 98, 20, "Add Alt and Login"))
+		buttonList.add(provider.createGuiButton(1, middleScreen + 2, quarterScreen + 65, 98, 20, "Just Login"))
+		buttonList.add(provider.createGuiButton(2, middleScreen - 100, height - 54, 98, 20, "Get Token"))
+		buttonList.add(provider.createGuiButton(3, middleScreen + 2, height - 54, 98, 20, "Back"))
 
 		// Token text field
-		tokenField = classProvider.createGuiTextField(0, Fonts.font40, middleScreen - 100, quarterScreen + 40, 200, 20)
-		tokenField.isFocused = true
-		tokenField.maxStringLength = 16
+		tokenField = provider.createGuiTextField(0, Fonts.font40, middleScreen - 100, quarterScreen + 40, 200, 20).apply {
+			isFocused = true
+			maxStringLength = 16
+		}
 	}
 
 	override fun onGuiClosed() = Keyboard.enableRepeatEvents(false)

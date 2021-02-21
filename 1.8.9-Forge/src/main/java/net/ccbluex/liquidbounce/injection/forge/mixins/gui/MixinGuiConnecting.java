@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 import java.awt.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.mojang.authlib.GameProfile;

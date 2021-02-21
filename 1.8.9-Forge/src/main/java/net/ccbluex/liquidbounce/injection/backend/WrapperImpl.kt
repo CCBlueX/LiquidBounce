@@ -15,7 +15,7 @@ import net.minecraft.client.Minecraft
 object WrapperImpl : Wrapper
 {
 	override val classProvider: IClassProvider = ClassProviderImpl
-	override val functions: IExtractedFunctions = ExtractedFunctionsImpl
 	override val minecraft: IMinecraft
 		get() = MinecraftImpl(Minecraft.getMinecraft())
+	override val functions: IExtractedFunctions = ExtractedFunctionsImpl
 }
