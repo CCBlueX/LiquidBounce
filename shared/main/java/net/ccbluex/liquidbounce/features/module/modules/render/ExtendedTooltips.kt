@@ -8,9 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.api.enums.ItemType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
-import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.IScaledResolution
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
@@ -30,6 +28,9 @@ import kotlin.math.*
 @ModuleInfo(name = "ExtendedTooltips", description = "Display more tooltip informations on hotbar. (From Vanilla Enhancements mod)", category = ModuleCategory.RENDER)
 class ExtendedTooltips : Module()
 {
+	/**
+	 * Options
+	 */
 	private val attackDamage = BoolValue("AttackDamage", true)
 	private val enchantments = BoolValue("Enchantments", true)
 	private val itemDamageAndEnchantmentYPosValue = IntegerValue("AttackDamageAndEnchantYPos", 75, 50, 100)
@@ -40,12 +41,15 @@ class ExtendedTooltips : Module()
 	private val armorPotential = BoolValue("ArmorPotential", true)
 	private val durabilityWarning = BoolValue("DurabilityWarning", true)
 
-	private var lastMessage = ""
+	/**
+	 * Variables
+	 */
+	private var lastArmorPotential = ""
 
-	private val cooldown: Cooldown = Cooldown.getNewCooldownMiliseconds(300)
+	private val armorPotentialCooldown: Cooldown = Cooldown.getNewCooldownMiliseconds(300)
+	private val durabilityWarningCooldown: Cooldown = Cooldown.getNewCooldownMiliseconds(1000)
 
 	private var showWarning = false
-	private val durCooldown: Cooldown = Cooldown.getNewCooldownMiliseconds(1000)
 
 	@EventTarget
 	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
@@ -54,15 +58,15 @@ class ExtendedTooltips : Module()
 
 		val heldItemStack: IItemStack? = thePlayer.inventory.getCurrentItemInHand()
 
-		val res = classProvider.createScaledResolution(mc)
+		val resolution = classProvider.createScaledResolution(mc)
 
-		val scaledWidth = res.scaledWidth
-		val scaledHeight = res.scaledHeight
+		val width = resolution.scaledWidth
+		val height = resolution.scaledHeight
 
-		val playerController = mc.playerController
+		val controller = mc.playerController
 
-		val fontRenderer = mc.fontRendererObj
-		val fontHeight = fontRenderer.fontHeight
+		val font = mc.fontRendererObj
+		val fontHeight = font.fontHeight
 
 		val dmgAndEnchYPos = itemDamageAndEnchantmentYPosValue.get()
 		val heldItemCountYPos = heldItemCountYPosValue.get()
@@ -76,14 +80,13 @@ class ExtendedTooltips : Module()
 
 				val attackDamage: String = getAttackDamageString(thePlayer, heldItemStack)
 
-				val x: Int = scaledWidth - (fontRenderer.getStringWidth(attackDamage) shr 1)
-				var y: Int = scaledHeight - dmgAndEnchYPos
-				y += if (playerController.shouldDrawHUD()) -1 else 14
+				var y: Int = height - dmgAndEnchYPos
+				y += if (controller.shouldDrawHUD()) -1 else 14
 				y = y + fontHeight shl 0
 				y = y shl 1
 				y += fontHeight
 
-				fontRenderer.drawString(attackDamage, x, y, 13421772)
+				font.drawString(attackDamage, width - (font.getStringWidth(attackDamage) shr 1), y, 13421772)
 
 				GL11.glScalef(2.0f, 2.0f, 2.0f)
 				GL11.glPopMatrix()
@@ -96,13 +99,12 @@ class ExtendedTooltips : Module()
 				GL11.glPushMatrix()
 				GL11.glScalef(0.5f, 0.5f, 0.5f)
 
-				val x: Int = scaledWidth - (fontRenderer.getStringWidth(toDraw) shr 1)
-				var y: Int = scaledHeight - dmgAndEnchYPos
-				y += if (playerController.shouldDrawHUD()) -2 else 14
+				var y: Int = height - dmgAndEnchYPos
+				y += if (controller.shouldDrawHUD()) -2 else 14
 				y = y + fontHeight shl 0
 				y = y shl 1
 
-				fontRenderer.drawString(toDraw, x, y, 13421772)
+				font.drawString(toDraw, width - (font.getStringWidth(toDraw) shr 1), y, 13421772)
 
 				GL11.glScalef(2.0f, 2.0f, 2.0f)
 				GL11.glPopMatrix()
@@ -114,194 +116,135 @@ class ExtendedTooltips : Module()
 			val isHoldingBow = classProvider.isItemBow(thePlayer.currentEquippedItem!!.item)
 			val count = getHeldItemCount(thePlayer, isHoldingBow)
 
-			if (count > 1 || isHoldingBow && count > 0)
-			{
-				val offset = if (playerController.currentGameType == IWorldSettings.WGameType.CREATIVE) 10 else 0
-
-				fontRenderer.drawString("$count", (scaledWidth - fontRenderer.getStringWidth("$count" + "") shr 1).toFloat(), (scaledHeight - heldItemCountYPos - offset).toFloat(), 16777215, true)
-			}
+			if (count > 1 || isHoldingBow && count > 0) font.drawString("$count", (width - font.getStringWidth("$count" + "") shr 1).toFloat(), (height - heldItemCountYPos - if (controller.currentGameType == IWorldSettings.WGameType.CREATIVE) 10 else 0).toFloat(), 16777215, true)
 		}
 
-		if (armorPotential.get() && classProvider.isGuiInventory(mc.currentScreen))
-		{
-			val message = getAsString(thePlayer)
+		val screen = mc.currentScreen
+		if (armorPotential.get() && classProvider.isGuiInventory(screen)) screen!!.drawString(font, getArmorPotential(thePlayer).also { lastArmorPotential = it }, 10, height - 16, 16777215)
 
-			lastMessage = message
-			mc.currentScreen!!.drawString(fontRenderer, message, 10, scaledHeight - 16, 16777215)
-		}
-
-		if (durabilityWarning.get() && isDurabilityLow(thePlayer)) printArmorWarning(res, fontRenderer)
-
+		if (durabilityWarning.get() && isArmorDurabilityLow(thePlayer)) printArmorWarning(resolution, font)
 	}
 
 	private fun getAttackDamageString(thePlayer: IEntityPlayerSP, stack: IItemStack): String
 	{
-		val itr: Iterator<String> = stack.getTooltip(thePlayer, true).iterator()
-		var entry: String
+		val tooltipIterator: Iterator<String> = stack.getTooltip(thePlayer, true).iterator()
+		var attackDamageEntry: String
 
 		do
 		{
-			if (!itr.hasNext()) return ""
+			if (!tooltipIterator.hasNext()) return ""
 
-			entry = itr.next()
-		} while (!entry.endsWith("Attack Damage"))
+			attackDamageEntry = tooltipIterator.next()
+		} while (!attackDamageEntry.endsWith("Attack Damage"))
 
-		return entry.split(" ", limit = 2)[0].substring(2)
+		return attackDamageEntry.split(" ", limit = 2)[0].substring(2)
 	}
 
-	private fun getPotionEffectString(heldItemStack: IItemStack): String
+	private fun getPotionEffectString(itemStack: IItemStack): String
 	{
-		val potion = heldItemStack.item!!.asItemPotion()
-		val effects: Iterable<IPotionEffect> = potion.getEffects(heldItemStack)
+		val potionBuilder = StringBuilder()
 
-		return run {
-			val potionBuilder = StringBuilder()
-			val itr = effects.iterator()
-
-			while (itr.hasNext())
-			{
-				val entry = itr.next()
-				val duration: Int = entry.duration / 20
-				potionBuilder.append("\u00A7l").append(functions.translateToLocal(entry.effectName)).append(" ").append(entry.amplifier + 1).append(" ").append("(").append("${duration / 60}${String.format(":%02d", duration % 60)}").append(") ")
-			}
-
-			"$potionBuilder".trim { it <= ' ' }
+		itemStack.item!!.asItemPotion().getEffects(itemStack).forEach { effect ->
+			val durationInSeconds: Int = effect.duration / 20
+			potionBuilder.append("\u00A7l${Maps.POTION_SHORT_NAME[effect.potionID]}*${effect.amplifier + 1}(${durationInSeconds / 60}${String.format(":%02d", durationInSeconds % 60)}) ")
 		}
+
+		return "$potionBuilder".trim { it <= ' ' }
 	}
 
-	private fun getEnchantmentString(heldItemStack: IItemStack): String
+	private fun getEnchantmentString(itemStack: IItemStack): String
 	{
 		val enchantBuilder = StringBuilder()
-		val enchantments: Map<Int, Int> = functions.getEnchantments(heldItemStack)
-		val var4: Iterator<Map.Entry<*, *>> = enchantments.entries.iterator()
 
-		while (var4.hasNext())
-		{
-			val entry = var4.next()
-			enchantBuilder.append("\u00A7l").append(Maps.ENCHANTMENT_SHORT_NAME[entry.key] as String).append(" ").append(entry.value).append(" ")
-		}
+		functions.getEnchantments(itemStack).forEach { (enchID, amplifier) -> enchantBuilder.append("\u00A7l${Maps.ENCHANTMENT_SHORT_NAME[enchID]}*$amplifier ") }
 
 		return "$enchantBuilder".trim { it <= ' ' }
 	}
 
-	private fun getAsString(thePlayer: IEntityPlayerSP): String
+	private fun getArmorPotential(thePlayer: IEntityPlayerSP): String
 	{
-		return if (!cooldown.attemptReset()) lastMessage
+		return if (!armorPotentialCooldown.attemptReset()) lastArmorPotential
 		else
 		{
 			val ap = roundDecimals(getArmorPotential(thePlayer, false))
 			val app = roundDecimals(getArmorPotential(thePlayer, true))
-			(if (ap == app) "$ap%" else "$ap% | $app%").also { lastMessage = it }
+			(if (ap == app) "$ap%" else "$ap% | $app%").also { lastArmorPotential = it }
 		}
 	}
 
-	private fun roundDecimals(num: Double, a: Int = 2): Double
-	{
-		var fixedNum = num
-
-		return if (fixedNum == 0.0) fixedNum
-		else
-		{
-			fixedNum = (fixedNum * 10.0.pow(a.toDouble())).toInt().toDouble()
-			fixedNum /= 10.0.pow(a.toDouble())
-			fixedNum
-		}
-	}
-
-	private fun getArmorPotential(thePlayer: IEntityPlayerSP, getProj: Boolean): Double
+	private fun getArmorPotential(thePlayer: IEntityPlayerSP, projectileProtection: Boolean): Double
 	{
 		var armor = 0.0
 		var epf = 0
-		val resistance = thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.RESISTANCE))?.amplifier?.plus(1) ?: 0
 
-		val armorInv: IWrappedArray<IItemStack?> = thePlayer.inventory.armorInventory
-
-		armorInv.forEach { itemStack ->
+		thePlayer.inventory.armorInventory.forEach { itemStack ->
 			if (itemStack != null)
 			{
-				if (classProvider.isItemArmor(itemStack.item))
-				{
-					val armorItem = itemStack.item!!.asItemArmor()
-					armor += armorItem.damageReduceAmount.toDouble() * 0.04
-				}
+				if (classProvider.isItemArmor(itemStack.item)) armor += itemStack.item!!.asItemArmor().damageReduceAmount.toDouble() * 0.04
 
 				if (itemStack.isItemEnchanted) epf += getEffProtPoints(functions.getEnchantmentLevel(0, itemStack))
 
-				if (getProj && itemStack.isItemEnchanted) epf += getEffProtPoints(functions.getEnchantmentLevel(4, itemStack))
+				if (projectileProtection && itemStack.isItemEnchanted) epf += getEffProtPoints(functions.getEnchantmentLevel(4, itemStack))
 			}
 		}
 
-		epf = if (epf < 25) epf else 25
-
-		val avgdef = addArmorProtResistance(armor, calcProtection(epf.toDouble()), resistance)
-		return roundDouble(avgdef * 100.0)
+		return roundDouble(addArmorProtResistance(armor, calcProtection(epf.coerceAtMost(25).toDouble()), thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.RESISTANCE))?.amplifier?.plus(1) ?: 0) * 100.0)
 	}
 
 	private fun getEffProtPoints(level: Int, typeModifier: Double = 0.75): Int = if (level != 0) floor((6 + level * level).toDouble() * typeModifier / 3.0).toInt() else 0
 
-	private fun calcProtection(armorEpf: Double): Double
+	private fun calcProtection(armorEpf: Double): Double = (50..100).sumByDouble { if (ceil(armorEpf * it.toDouble() * 0.01) < 20.0) ceil(armorEpf * it.toDouble() * 0.01) else 20.0 } / 51.0
+
+	private fun addArmorProtResistance(armor: Double, protection: Double, resistanceAmplifier: Int): Double
 	{
-		val protection = (50..100).sumByDouble { if (ceil(armorEpf * it.toDouble() * 0.01) < 20.0) ceil(armorEpf * it.toDouble() * 0.01) else 20.0 }
-		return protection / 51.0
+		var protTotal = armor + (1.0 - armor) * protection * 0.04
+		protTotal += (1.0 - protTotal) * resistanceAmplifier.toDouble() * 0.2
+		return protTotal.coerceAtMost(1.0)
 	}
 
-	private fun addArmorProtResistance(armor: Double, prot: Double, resi: Int): Double
-	{
-		var protTotal = armor + (1.0 - armor) * prot * 0.04
-		protTotal += (1.0 - protTotal) * resi.toDouble() * 0.2
-		return if (protTotal < 1.0) protTotal else 1.0
-	}
+	private fun roundDecimals(num: Double, places: Int = 2): Double = if (num == 0.0) num else (num * 10.0.pow(places.toDouble())).toInt().toDouble() / 10.0.pow(places.toDouble())
 
 	private fun roundDouble(number: Double): Double = (number * 10000.0).roundToLong().toDouble() * 0.0001f
 
 	private fun getHeldItemCount(thePlayer: IEntityPlayerSP, bow: Boolean): Int
 	{
-		var id: Int = functions.getIdFromItem(thePlayer.currentEquippedItem!!.item!!)
-		var data: Int = thePlayer.currentEquippedItem!!.itemDamage
+		var itemID: Int = functions.getIdFromItem(thePlayer.currentEquippedItem!!.item!!)
+		var itemMeta: Int = thePlayer.currentEquippedItem!!.itemDamage
 
 		if (bow)
 		{
-			id = functions.getIdFromItem(classProvider.getItemEnum(ItemType.ARROW))
-			data = 0
+			itemID = functions.getIdFromItem(classProvider.getItemEnum(ItemType.ARROW))
+			itemMeta = 0
 		}
 
-		var count = 0
+		var totalItemCount = 0
 
 		val inventory: IWrappedArray<IItemStack?> = thePlayer.inventory.mainInventory
 		inventory.forEachIndexed { i, _ ->
 			val itemInSlot = inventory[i]
-			if (itemInSlot != null)
-			{
-				val item: IItem = itemInSlot.item!!
-				if (functions.getIdFromItem(item) == id && itemInSlot.itemDamage == data) count += itemInSlot.stackSize
-			}
+			if (itemInSlot != null && functions.getIdFromItem(itemInSlot.item!!) == itemID && itemInSlot.itemDamage == itemMeta) totalItemCount += itemInSlot.stackSize
 		}
 
-		return count
+		return totalItemCount
 	}
 
-	private fun printArmorWarning(resolution: IScaledResolution, fontRendererObj: IFontRenderer)
+	private fun printArmorWarning(resolution: IScaledResolution, font: IFontRenderer)
 	{
-		val text = "Armor durability is low!"
-		val width: Int = resolution.scaledWidth - fontRendererObj.getStringWidth(text) - 1
-		val height: Int = resolution.scaledHeight - 3 * fontRendererObj.fontHeight - 1
-
-		fontRendererObj.drawString(text, width.toFloat(), height.toFloat(), 16724804, true)
+		val text = "ARMOR DURABILITY IS LOW!"
+		font.drawString(text, resolution.scaledWidth - font.getStringWidth(text) - 1f, resolution.scaledHeight - 3 * font.fontHeight - 1f, 16724804, true)
 	}
 
-	private fun isDurabilityLow(thePlayer: IEntityPlayerSP): Boolean
+	private fun isArmorDurabilityLow(thePlayer: IEntityPlayerSP): Boolean
 	{
-		return if (!durCooldown.attemptReset()) showWarning
+		return if (!durabilityWarningCooldown.attemptReset()) showWarning
 		else
 		{
-			val armorInventory: IWrappedArray<IItemStack?> = thePlayer.inventory.armorInventory
-
-			armorInventory.forEach { armor ->
+			thePlayer.inventory.armorInventory.forEach { armor ->
 				if (armor != null && (armor.itemDamage.toDouble() / armor.maxDamage.toDouble() > 0.85 || armor.maxDamage - armor.itemDamage < 15))
 				{
 					val id: Int = functions.getIdFromItem(armor.item!!)
 
-					if (id in 298..317) return@isDurabilityLow true.also { showWarning = it }
+					if (id in 298..317) return@isArmorDurabilityLow true.also { showWarning = it }
 				}
 			}
 
