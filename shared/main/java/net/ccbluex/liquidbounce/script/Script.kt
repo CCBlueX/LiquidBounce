@@ -46,7 +46,7 @@ class Script(val scriptFile: File) : MinecraftInstance()
 
 	init
 	{
-		val engineFlags = getMagicComment("engine_flags")?.split(",")?.toTypedArray() ?: emptyArray()
+		val engineFlags = getMagicComment("engine_flags")?.split(",")?.map(String::trim)?.toTypedArray() ?: emptyArray()
 		scriptEngine = NashornScriptEngineFactory().getScriptEngine(*engineFlags)
 
 		// Global classes

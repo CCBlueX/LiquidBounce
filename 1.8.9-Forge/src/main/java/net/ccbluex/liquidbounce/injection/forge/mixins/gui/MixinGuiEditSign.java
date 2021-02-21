@@ -12,6 +12,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiEditSign;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.ClickEvent.Action;
 import net.minecraft.tileentity.TileEntitySign;
@@ -89,7 +90,7 @@ public class MixinGuiEditSign extends GuiScreen
 	@Inject(method = "drawScreen", at = @At("RETURN"))
 	private void drawFields(final CallbackInfo callbackInfo)
 	{
-		fontRendererObj.drawString("\u00A7c\u00A7lCommands \u00A77(\u00A7f\u00A7l1.8\u00A77)", (width >> 1) - 100, height - 15 * 5, Color.WHITE.getRGB());
+		fontRendererObj.drawString("\u00A7c\u00A7lCommands \u00A77(\u00A7f\u00A7l1.8\u00A77)", (width >> 1) - 100, height - 75, Color.WHITE.getRGB());
 
 		signCommand1.drawTextBox();
 		signCommand2.drawTextBox();
@@ -113,7 +114,7 @@ public class MixinGuiEditSign extends GuiScreen
 	 * @reason
 	 */
 	@Overwrite
-	protected void keyTyped(final char typedChar, final int keyCode) throws IOException
+	protected void keyTyped(char typedChar, final int keyCode) throws IOException
 	{
 		signCommand1.textboxKeyTyped(typedChar, keyCode);
 		signCommand2.textboxKeyTyped(typedChar, keyCode);
@@ -132,6 +133,9 @@ public class MixinGuiEditSign extends GuiScreen
 		String s = tileSign.signText[editLine].getUnformattedText();
 		if (keyCode == 14 && !s.isEmpty())
 			s = s.substring(0, s.length() - 1);
+
+		if (enabled && typedChar == '&')
+			typedChar = '\u00A7';
 
 		if ((ChatAllowedCharacters.isAllowedCharacter(typedChar) || enabled && typedChar == '\u00A7') && fontRendererObj.getStringWidth(s + typedChar) <= 90)
 			s += typedChar;

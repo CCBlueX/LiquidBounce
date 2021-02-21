@@ -33,6 +33,7 @@ import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
+// TODO: BowAimbot support
 /**
  * A target hud
  */

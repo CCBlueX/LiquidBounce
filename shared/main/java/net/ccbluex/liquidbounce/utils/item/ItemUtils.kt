@@ -30,57 +30,47 @@ object ItemUtils : MinecraftInstance()
 	@JvmStatic
 	fun createItem(itemArguments: String): IItemStack?
 	{
-		var itemArgs = itemArguments
-
 		return try
 		{
-			itemArgs = itemArgs.replace('&', '\u00A7') // Translate Colorcodes
+			val fixedItemArguments = itemArguments.replace('&', '\u00A7') // Translate Colorcodes
 
 			var item: IItem? = classProvider.createItem()
-			var args: Array<String>? = null
+			var args: List<String>? = null
 
-			var mode = 0
-			val modeSize = min(12, itemArgs.length - 2)
-			while (mode <= modeSize)
+			val modeSize = min(12, fixedItemArguments.length - 2)
+
+			for (i in 0..modeSize)
 			{
-				args = itemArgs.substring(mode).split(Pattern.quote(" ")).toTypedArray()
-
-				val resourcelocation = classProvider.createResourceLocation(args[0])
-
-				item = functions.getObjectFromItemRegistry(resourcelocation)
-
+				args = fixedItemArguments.substring(i).split(" ")
+				item = functions.getObjectFromItemRegistry(classProvider.createResourceLocation(args[0]))
 				if (item != null) break
-
-				++mode
 			}
 
 			if (item == null)
 			{
-				logger.warn("Can't create the item with arguments \"${itemArgs.take(64)}\" - Can't find any item matches name")
+				logger.warn("Can't create the item with arguments \"${fixedItemArguments.take(64)}\" - Can't find any item matches name")
 				return null
 			}
 
-			var i = 1
+			val argsLength = (args ?: return null).size
 
-			if (args == null)
-			{
-				logger.warn("Can't create the item with arguments \"${itemArgs.take(64)}\" - args == null")
-				return null
-			}
+			// Item amount
+			var amount = 1
+			if (argsLength >= 2 && PATTERN.matcher(args[1]).matches()) amount = args[1].toInt()
 
-			if (args.size >= 2 && PATTERN.matcher(args[1]).matches()) i = args[1].toInt()
-
+			// Item meta
 			var meta = 0
+			if (argsLength >= 3 && PATTERN.matcher(args[2]).matches()) meta = args[2].toInt()
 
-			if (args.size >= 3 && PATTERN.matcher(args[2]).matches()) meta = args[2].toInt()
+			val itemstack = classProvider.createItemStack(item, amount, meta)
 
-			val itemstack = classProvider.createItemStack(item, i, meta)
-
-			if (args.size >= 4)
+			// Build NBT tag
+			if (argsLength >= 4)
 			{
 				val nbtBuilder = StringBuilder()
-				val argsLength = args.size
+
 				for (nbtcount in 3 until argsLength) nbtBuilder.append(" ").append(args[nbtcount])
+
 				itemstack.tagCompound = classProvider.jsonToNBTInstance.getTagFromJson("$nbtBuilder")
 			}
 
@@ -89,13 +79,13 @@ object ItemUtils : MinecraftInstance()
 		catch (e: Exception)
 		{
 			// noinspection StringConcatenationArgumentToLogCall
-			logger.error("Can't create the item with arguments \"$itemArgs\"", e)
+			logger.error("Can't create the item with arguments \"${itemArguments.take(64)}\"", e)
 			null
 		}
 	}
 
 	@JvmStatic
-	fun getEnchantment(itemStack: IItemStack?, enchantment: IEnchantment): Int = if (itemStack?.enchantmentTagList == null || itemStack.enchantmentTagList!!.hasNoTags()) 0 else ((0 until itemStack.enchantmentTagList!!.tagCount()).map(itemStack.enchantmentTagList!!::getCompoundTagAt).firstOrNull { it.hasKey("ench") && it.getShort("ench").toInt() == enchantment.effectId || it.hasKey("id") && it.getShort("id").toInt() == enchantment.effectId }?.let { tagCompound: INBTTagCompound -> tagCompound.getShort("lvl").toInt() }) ?: 0
+	fun getEnchantment(itemStack: IItemStack?, enchantment: IEnchantment): Int = if (itemStack?.enchantmentTagList == null || itemStack.enchantmentTagList!!.hasNoTags()) 0 else (0 until itemStack.enchantmentTagList!!.tagCount()).map(itemStack.enchantmentTagList!!::getCompoundTagAt).firstOrNull { it.hasKey("ench") && it.getShort("ench").toInt() == enchantment.effectId || it.hasKey("id") && it.getShort("id").toInt() == enchantment.effectId }?.let { tagCompound: INBTTagCompound -> tagCompound.getShort("lvl").toInt() } ?: 0
 
 	@JvmStatic
 	fun getEnchantmentCount(itemStack: IItemStack?): Int = if (itemStack?.enchantmentTagList == null || itemStack.enchantmentTagList!!.hasNoTags()) 0 else (0 until itemStack.enchantmentTagList!!.tagCount()).map(itemStack.enchantmentTagList!!::getCompoundTagAt).count { it.hasKey("ench") || it.hasKey("id") }
