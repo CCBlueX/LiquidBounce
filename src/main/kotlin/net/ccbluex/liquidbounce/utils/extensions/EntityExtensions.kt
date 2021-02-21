@@ -18,11 +18,14 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.stat.Stats
+import kotlin.math.cos
+import kotlin.math.sin
 
 val ClientPlayerEntity.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
@@ -42,4 +45,15 @@ fun ClientPlayerEntity.upwards(height: Float) {
 
     velocity.y = height.toDouble()
     velocityDirty = true
+}
+
+fun ClientPlayerEntity.downwards(motion: Float) {
+    velocity.y = motion.toDouble()
+    velocityDirty = true
+}
+
+fun ClientPlayerEntity.strafe(speed: Float) {
+    val angle = Math.toRadians(yaw.toDouble())
+    velocity.x = -sin(angle) * 0.4
+    velocity.z = cos(angle) * 0.4
 }

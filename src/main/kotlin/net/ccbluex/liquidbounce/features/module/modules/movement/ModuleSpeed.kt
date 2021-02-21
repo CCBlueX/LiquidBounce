@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.features.module.*
+import net.ccbluex.liquidbounce.utils.extensions.downwards
 import net.ccbluex.liquidbounce.utils.extensions.moving
-import java.lang.Math.toRadians
-import kotlin.math.cos
-import kotlin.math.sin
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.upwards
 
 object ModuleSpeed : Module("Speed", Category.COMBAT) {
 
@@ -35,13 +35,10 @@ object ModuleSpeed : Module("Speed", Category.COMBAT) {
 
         val tickHandler = sequenceHandler<EntityTickEvent> {
             if (player.isOnGround && player.moving) {
-                val angle = toRadians(player.yaw.toDouble())
-                val x = -sin(angle) * 0.4
-                val z = cos(angle) * 0.4
-
-                player.setVelocity(x, 0.42, z)
+                player.strafe(0.4f)
+                player.upwards(0.42f)
                 wait(1)
-                player.setVelocity(x, -1.0, z)
+                player.downwards(-1f)
             }
 
         }
