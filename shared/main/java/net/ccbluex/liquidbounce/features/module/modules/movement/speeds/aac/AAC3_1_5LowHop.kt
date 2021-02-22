@@ -23,8 +23,9 @@ class AAC3_1_5LowHop : SpeedMode("AAC3.1.5-LowHop") // Was AACLowHop
 
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
+
+		val thePlayer = mc.thePlayer ?: return
 
 		if (MovementUtils.isMoving(thePlayer))
 		{

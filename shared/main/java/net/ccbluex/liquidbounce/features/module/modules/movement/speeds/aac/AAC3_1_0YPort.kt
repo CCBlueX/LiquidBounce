@@ -16,8 +16,9 @@ class AAC3_1_0YPort : SpeedMode("AAC3.1.0-YPort") // Was AACYPort
 {
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
+
+		val thePlayer = mc.thePlayer ?: return
 
 		if (MovementUtils.isMoving(thePlayer) && !thePlayer.sneaking)
 		{

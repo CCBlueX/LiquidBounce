@@ -40,8 +40,9 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
+
+		val thePlayer = mc.thePlayer ?: return
 
 		val xDist = thePlayer.posX - thePlayer.prevPosX
 		val zDist = thePlayer.posZ - thePlayer.prevPosZ

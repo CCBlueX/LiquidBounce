@@ -127,19 +127,13 @@ class AutoSoup : Module()
 
 				var bowlMovable = false
 
-				@Suppress("LoopToCallChain") for (i in 9..36)
-				{
-					val itemStack = inventory.getStackInSlot(i)
-
-					if (itemStack == null)
-					{
-						bowlMovable = true
-						break
-					}
-					else if (itemStack.item == provider.getItemEnum(ItemType.BOWL) && itemStack.stackSize < 64)
-					{
-						bowlMovable = true
-						break
+				run {
+					(9..36).asSequence().map(inventory::getStackInSlot).forEach {
+						if (it == null || (it.item == provider.getItemEnum(ItemType.BOWL) && it.stackSize < 64))
+						{
+							bowlMovable = true
+							return@run
+						}
 					}
 				}
 

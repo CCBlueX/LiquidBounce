@@ -14,19 +14,26 @@ class SpectreBHop : SpeedMode("Spectre-BHop")
 {
 	override fun onMotion(eventState: EventState)
 	{
+		if (eventState != EventState.POST) return
+
 		val thePlayer = mc.thePlayer ?: return
-		if (eventState != EventState.PRE) return
+		if (thePlayer.movementInput.jump) return
 
-		if (!MovementUtils.isMoving(thePlayer) || thePlayer.movementInput.jump) return
-
-		if (thePlayer.onGround)
+		if (MovementUtils.isMoving(thePlayer))
 		{
-			MovementUtils.strafe(thePlayer, 1.1f)
-			thePlayer.motionY = 0.44
-			return
-		}
+			if (thePlayer.onGround)
+			{
+				MovementUtils.strafe(thePlayer, 1.1f)
+				thePlayer.motionY = 0.44
+			}
 
-		MovementUtils.strafe(thePlayer)
+			MovementUtils.strafe(thePlayer)
+		}
+		else
+		{
+			thePlayer.motionX = 0.0
+			thePlayer.motionZ = 0.0
+		}
 	}
 
 	override fun onUpdate()

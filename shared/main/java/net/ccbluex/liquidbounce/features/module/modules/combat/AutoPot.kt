@@ -289,9 +289,11 @@ class AutoPot : Module()
 
 			val itemPotion = stack.item!!.asItemPotion()
 
-			if (itemPotion.getEffects(stack).filter { it.potionID == provider.getPotionEnum(PotionType.HEAL).id }.any()) candidates.add(slotIndex)
+			val effects = itemPotion.getEffects(stack)
 
-			if (!thePlayer.isPotionActive(provider.getPotionEnum(PotionType.REGENERATION)) && itemPotion.getEffects(stack).filter { it.potionID == provider.getPotionEnum(PotionType.REGENERATION).id }.any()) candidates.add(slotIndex)
+			if (effects.any { it.potionID == provider.getPotionEnum(PotionType.HEAL).id }) candidates.add(slotIndex)
+
+			if (!thePlayer.isPotionActive(provider.getPotionEnum(PotionType.REGENERATION)) && effects.any { it.potionID == provider.getPotionEnum(PotionType.REGENERATION).id }) candidates.add(slotIndex)
 		}
 
 		return when

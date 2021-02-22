@@ -18,8 +18,9 @@ class Frame : SpeedMode("Frame")
 	private val tickTimer = TickTimer()
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
+
+		val thePlayer = mc.thePlayer ?: return
 
 		if (thePlayer.movementInput.moveForward > 0.0f || thePlayer.movementInput.moveStrafe > 0.0f)
 		{

@@ -16,8 +16,9 @@ class AAC3_0_3LowHop : SpeedMode("AAC3.0.3-LowHop") // Was AACBHop
 {
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
+
+		val thePlayer = mc.thePlayer ?: return
 
 		if (thePlayer.isInWater) return
 

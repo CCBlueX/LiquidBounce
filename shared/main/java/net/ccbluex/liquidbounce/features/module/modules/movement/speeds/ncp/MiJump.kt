@@ -14,8 +14,9 @@ class MiJump : SpeedMode("MiJump")
 {
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
+
+		val thePlayer = mc.thePlayer ?: return
 
 		if (!MovementUtils.isMoving(thePlayer)) return
 		if (thePlayer.onGround && !thePlayer.movementInput.jump)

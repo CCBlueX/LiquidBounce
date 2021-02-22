@@ -82,10 +82,8 @@ object MiniMapRegister : MinecraftInstance()
 		{
 			val rgbValues = texture.textureData
 
-			for (x in 0..15)
-			{
-				for (z in 0..15)
-				{
+			(0..15).forEach { x ->
+				(0..15).forEach { z ->
 					val bp = WBlockPos(x, chunk.getHeightValue(x, z) - 1, z)
 					val blockState = chunk.getBlockState(bp)
 

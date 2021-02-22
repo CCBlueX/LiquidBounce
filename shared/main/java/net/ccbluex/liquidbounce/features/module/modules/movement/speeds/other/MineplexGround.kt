@@ -23,18 +23,18 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
 
-		if (!MovementUtils.isMoving(thePlayer) || !thePlayer.onGround || thePlayer.inventory.getCurrentItemInHand() == null || thePlayer.isUsingItem) return
+		val thePlayer = mc.thePlayer ?: return
+
+		val inventory = thePlayer.inventory
+		if (!MovementUtils.isMoving(thePlayer) || !thePlayer.onGround || inventory.getCurrentItemInHand() == null || thePlayer.isUsingItem) return
+
 		spoofSlot = false
-		for (i in 36..44)
-		{
-			val itemStack = thePlayer.inventory.getStackInSlot(i)
-			if (itemStack != null) continue
-			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(i - 36))
+
+		(36..44).firstOrNull { inventory.getStackInSlot(it) == null }?.let {
+			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(it - 36))
 			spoofSlot = true
-			break
 		}
 	}
 

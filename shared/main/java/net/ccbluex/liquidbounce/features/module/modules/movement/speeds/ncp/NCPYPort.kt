@@ -18,8 +18,9 @@ class NCPYPort : SpeedMode("NCPYPort")
 
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
+
+		val thePlayer = mc.thePlayer ?: return
 
 		if (thePlayer.isOnLadder || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb || !MovementUtils.isMoving(thePlayer) || thePlayer.isInWater) return
 		if (jumps >= 4 && thePlayer.onGround) jumps = 0

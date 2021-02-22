@@ -15,8 +15,9 @@ class HypixelHop : SpeedMode("HypixelHop")
 {
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
+
+		val thePlayer = mc.thePlayer ?: return
 
 		if (MovementUtils.isMoving(thePlayer))
 		{

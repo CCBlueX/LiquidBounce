@@ -34,19 +34,11 @@ class GiveCommand : Command("give", "item", "i", "get")
 				return
 			}
 
-			var emptySlot = (36..44).firstOrNull { thePlayer.inventoryContainer.getSlot(it).stack == null } ?: -1
+			val inventoryContainer = thePlayer.inventoryContainer
 
-			if (emptySlot == -1)
-			{
-				for (i in 9..44)
-				{
-					if (thePlayer.inventoryContainer.getSlot(i).stack == null)
-					{
-						emptySlot = i
-						break
-					}
-				}
-			}
+			var emptySlot = (36..44).firstOrNull { inventoryContainer.getSlot(it).stack == null } ?: -1
+
+			if (emptySlot == -1) emptySlot = (9..44).firstOrNull { inventoryContainer.getSlot(it).stack == null } ?: -1
 
 			if (emptySlot != -1)
 			{
@@ -54,6 +46,7 @@ class GiveCommand : Command("give", "item", "i", "get")
 				chat(thePlayer, "\u00A77Given [\u00A78${itemStack.displayName}\u00A77] * \u00A78${itemStack.stackSize}\u00A77 to \u00A78${mc.session.username}\u00A77.")
 			}
 			else chat(thePlayer, "Your inventory is full.")
+
 			return
 		}
 

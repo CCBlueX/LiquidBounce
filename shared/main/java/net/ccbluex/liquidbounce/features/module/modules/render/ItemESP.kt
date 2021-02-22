@@ -21,7 +21,7 @@ import java.awt.Color
 @ModuleInfo(name = "ItemESP", description = "Allows you to see items through walls.", category = ModuleCategory.RENDER)
 class ItemESP : Module()
 {
-	private val modeValue = ListValue("Mode", arrayOf("Box", "ShaderOutline"), "Box")
+	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "ShaderOutline"), "Box")
 	private val colorRedValue = IntegerValue("R", 0, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 255, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 0, 0, 255)
@@ -34,11 +34,13 @@ class ItemESP : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
-		if (modeValue.get().equals("Box", ignoreCase = true))
+		val mode = modeValue.get().toLowerCase()
+		if (mode != "shaderoutline")
 		{
 			val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+			val drawOutline = mode == "box"
 
-			(mc.theWorld ?: return).loadedEntityList.asSequence().filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, true) }
+			(mc.theWorld ?: return).loadedEntityList.asSequence().filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, drawOutline) }
 		}
 	}
 

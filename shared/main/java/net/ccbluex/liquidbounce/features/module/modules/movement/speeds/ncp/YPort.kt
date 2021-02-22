@@ -30,14 +30,11 @@ class YPort : SpeedMode("YPort")
 
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
 
-		if (!safeJump && !mc.gameSettings.keyBindJump.isKeyDown && !thePlayer.isOnLadder && !thePlayer.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.WATER)) && !thePlayer.isInsideOfMaterial(
-				classProvider.getMaterialEnum(
-					MaterialType.LAVA
-				)
-			) && !thePlayer.isInWater && (!classProvider.isBlockAir(this.getBlock(-1.1)) && !classProvider.isBlockAir(this.getBlock(-1.1)) || !classProvider.isBlockAir(this.getBlock(-0.1)) && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && level == 3) thePlayer.motionY = -0.3994
+		val thePlayer = mc.thePlayer ?: return
+
+		if (!safeJump && !mc.gameSettings.keyBindJump.isKeyDown && !thePlayer.isOnLadder && !thePlayer.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.WATER)) && !thePlayer.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.LAVA)) && !thePlayer.isInWater && (!classProvider.isBlockAir(this.getBlock(-1.1)) && !classProvider.isBlockAir(this.getBlock(-1.1)) || !classProvider.isBlockAir(this.getBlock(-0.1)) && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && level == 3) thePlayer.motionY = -0.3994
 
 		val xDist = thePlayer.posX - thePlayer.prevPosX
 		val zDist = thePlayer.posZ - thePlayer.prevPosZ
@@ -147,11 +144,20 @@ class YPort : SpeedMode("YPort")
 
 	private fun getBlock(axisAlignedBB: IAxisAlignedBB): IBlock?
 	{
-		for (x in floor(axisAlignedBB.minX).toInt() until floor(axisAlignedBB.maxX).toInt() + 1) for (z in floor(axisAlignedBB.minZ).toInt() until floor(axisAlignedBB.maxZ).toInt() + 1) return (mc.theWorld ?: return null).getBlockState(
-			WBlockPos(
-				x, axisAlignedBB.minY.toInt(), z
-			)
-		).block
+		val theWorld = mc.theWorld ?: return null
+
+		val minX = floor(axisAlignedBB.minX).toInt()
+		val maxX = floor(axisAlignedBB.maxX).toInt() + 1
+		val minY = axisAlignedBB.minY.toInt()
+		val minZ = floor(axisAlignedBB.minZ).toInt()
+		val maxZ = floor(axisAlignedBB.maxZ).toInt() + 1
+
+		(minX until maxX).forEach { x ->
+			(minZ until maxZ).forEach { z ->
+				return@getBlock theWorld.getBlockState(WBlockPos(x, minY, z)).block
+			}
+		}
+
 		return null
 	}
 

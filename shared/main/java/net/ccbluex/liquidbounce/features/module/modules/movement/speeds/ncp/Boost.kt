@@ -16,8 +16,9 @@ class Boost : SpeedMode("Boost")
 	private var ground = 0f
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
+
+		val thePlayer = mc.thePlayer ?: return
 
 		var speed = 3.1981
 		var offset = 4.69

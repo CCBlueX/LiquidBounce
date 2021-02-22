@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.IScaledResolution
-import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
 import net.ccbluex.liquidbounce.api.util.IWrappedArray
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
@@ -21,6 +20,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.Maps
 import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
 import kotlin.math.*
@@ -31,11 +31,18 @@ class ExtendedTooltips : Module()
 	/**
 	 * Options
 	 */
-	private val attackDamage = BoolValue("AttackDamage", true)
-	private val enchantments = BoolValue("Enchantments", true)
+	private val attackDamageValue = BoolValue("AttackDamage", true)
+	private val attackDamageShadowValue = BoolValue("AttackDamageShadow", false)
+	private val attackDamageScaleValue = FloatValue("AttackDamageScale", 0.5F, 0.5F, 1F)
+
+	private val enchantmentsValue = BoolValue("Enchantments", true)
+	private val enchantmentsShadowValue = BoolValue("EnchantmentsShadow", false)
+	private val enchantmentsScaleValue = FloatValue("EnchantmentsScale", 0.5F, 0.5F, 1F)
 	private val itemDamageAndEnchantmentYPosValue = IntegerValue("AttackDamageAndEnchantYPos", 75, 50, 100)
 
-	private val heldItemCount = BoolValue("HeldItemCount", true)
+	private val heldItemCountValue = BoolValue("HeldItemCount", true)
+	private val heldItemCountShadowValue = BoolValue("HeldItemCountShadow", true)
+	private val heldItemCountScaleValue = FloatValue("HeldItemCountScale", 1F, 0.5F, 1F)
 	private val heldItemCountYPosValue = IntegerValue("HeldItemCountYPos", 46, 20, 100)
 
 	private val armorPotential = BoolValue("ArmorPotential", true)
@@ -71,52 +78,62 @@ class ExtendedTooltips : Module()
 		val dmgAndEnchYPos = itemDamageAndEnchantmentYPosValue.get()
 		val heldItemCountYPos = heldItemCountYPosValue.get()
 
+		val calcXPos = { string: String, scale: Float, recoverScale: Float ->
+			val stringWidth = font.getStringWidth(string) shr 1
+			(width - stringWidth * scale) * recoverScale * 0.5f - (stringWidth shr 1)
+		}
+
+		val isSurvivalOrAdventure = controller.shouldDrawHUD()
+
 		if (heldItemStack != null)
 		{
-			if (attackDamage.get())
+			if (attackDamageValue.get())
 			{
+				val scale = attackDamageScaleValue.get()
+				val recoverScale = 1 / scale
+
 				GL11.glPushMatrix()
-				GL11.glScalef(0.5f, 0.5f, 0.5f)
+				if (scale != 1.0F) GL11.glScalef(scale, scale, scale)
 
 				val attackDamage: String = getAttackDamageString(thePlayer, heldItemStack)
 
-				var y: Int = height - dmgAndEnchYPos
-				y += if (controller.shouldDrawHUD()) -1 else 14
-				y = y + fontHeight shl 0
-				y = y shl 1
-				y += fontHeight
+				font.drawString(attackDamage, calcXPos(attackDamage, scale, recoverScale), (height - dmgAndEnchYPos + (if (isSurvivalOrAdventure) -1 else 14) + fontHeight) * recoverScale, 13421772, attackDamageShadowValue.get())
 
-				font.drawString(attackDamage, width - (font.getStringWidth(attackDamage) shr 1), y, 13421772)
-
-				GL11.glScalef(2.0f, 2.0f, 2.0f)
+				if (scale != 1.0F) GL11.glScalef(recoverScale, recoverScale, recoverScale)
 				GL11.glPopMatrix()
 			}
 
-			if (enchantments.get())
+			if (enchantmentsValue.get())
 			{
 				val toDraw: String = if (classProvider.isItemPotion(heldItemStack.item)) getPotionEffectString(heldItemStack) else getEnchantmentString(heldItemStack)
+				val scale = enchantmentsScaleValue.get()
+				val recoverScale = 1 / scale
 
 				GL11.glPushMatrix()
-				GL11.glScalef(0.5f, 0.5f, 0.5f)
+				if (scale != 1.0F) GL11.glScalef(scale, scale, scale)
 
-				var y: Int = height - dmgAndEnchYPos
-				y += if (controller.shouldDrawHUD()) -2 else 14
-				y = y + fontHeight shl 0
-				y = y shl 1
+				font.drawString(toDraw, calcXPos(toDraw, scale, recoverScale), (height - dmgAndEnchYPos + if (isSurvivalOrAdventure) -2 else 14) * recoverScale, 13421772, enchantmentsShadowValue.get())
 
-				font.drawString(toDraw, width - (font.getStringWidth(toDraw) shr 1), y, 13421772)
-
-				GL11.glScalef(2.0f, 2.0f, 2.0f)
+				if (scale != 1.0F) GL11.glScalef(recoverScale, recoverScale, recoverScale)
 				GL11.glPopMatrix()
 			}
 		}
 
-		if (heldItemCount.get() && thePlayer.currentEquippedItem != null)
+		if (heldItemCountValue.get() && thePlayer.currentEquippedItem != null)
 		{
+			val scale = heldItemCountScaleValue.get()
+			val recoverScale = 1 / scale
+
 			val isHoldingBow = classProvider.isItemBow(thePlayer.currentEquippedItem!!.item)
 			val count = getHeldItemCount(thePlayer, isHoldingBow)
 
-			if (count > 1 || isHoldingBow && count > 0) font.drawString("$count", (width - font.getStringWidth("$count" + "") shr 1).toFloat(), (height - heldItemCountYPos - if (controller.currentGameType == IWorldSettings.WGameType.CREATIVE) 10 else 0).toFloat(), 16777215, true)
+			GL11.glPushMatrix()
+			if (scale != 1.0F) GL11.glScalef(scale, scale, scale)
+
+			if (count > 1 || isHoldingBow && count > 0) font.drawString("$count", calcXPos("$count", scale, recoverScale), (height - heldItemCountYPos - if (isSurvivalOrAdventure) 10 else 0) * recoverScale, 16777215, heldItemCountShadowValue.get())
+
+			if (scale != 1.0F) GL11.glScalef(recoverScale, recoverScale, recoverScale)
+			GL11.glPopMatrix()
 		}
 
 		val screen = mc.currentScreen
@@ -137,7 +154,7 @@ class ExtendedTooltips : Module()
 			attackDamageEntry = tooltipIterator.next()
 		} while (!attackDamageEntry.endsWith("Attack Damage"))
 
-		return attackDamageEntry.split(" ", limit = 2)[0].substring(2)
+		return "\u00A7l${attackDamageEntry.split(" ", limit = 2)[0].substring(2)}"
 	}
 
 	private fun getPotionEffectString(itemStack: IItemStack): String

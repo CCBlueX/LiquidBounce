@@ -14,8 +14,9 @@ class SlowHop : SpeedMode("SlowHop")
 {
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
+
+		val thePlayer = mc.thePlayer ?: return
 
 		if (thePlayer.isInWater) return
 		if (MovementUtils.isMoving(thePlayer))

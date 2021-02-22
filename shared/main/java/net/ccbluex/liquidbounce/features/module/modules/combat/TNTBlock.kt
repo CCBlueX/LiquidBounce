@@ -41,10 +41,10 @@ class TNTBlock : Module()
 					{
 						var slot = -1
 						var bestDamage = 1f
-						for (i in 0..8)
-						{
-							val itemStack = thePlayer.inventory.getStackInSlot(i)
 
+						val inventory = thePlayer.inventory
+
+						(0..8).map { it to inventory.getStackInSlot(it) }.forEach { (slotIndex, itemStack) ->
 							if (itemStack != null && classProvider.isItemSword(itemStack.item))
 							{
 								val itemDamage = itemStack.item!!.asItemSword().damageVsEntity + 4f
@@ -52,14 +52,14 @@ class TNTBlock : Module()
 								if (itemDamage > bestDamage)
 								{
 									bestDamage = itemDamage
-									slot = i
+									slot = slotIndex
 								}
 							}
 						}
 
-						if (slot != -1 && slot != thePlayer.inventory.currentItem)
+						if (slot != -1 && slot != inventory.currentItem)
 						{
-							thePlayer.inventory.currentItem = slot
+							inventory.currentItem = slot
 							mc.playerController.updateController()
 						}
 					}

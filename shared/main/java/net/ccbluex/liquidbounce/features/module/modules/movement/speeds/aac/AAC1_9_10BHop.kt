@@ -16,8 +16,9 @@ class AAC1_9_10BHop : SpeedMode("AAC1.9.10-BHop") // Was OldAACBHop
 {
 	override fun onMotion(eventState: EventState)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (eventState != EventState.PRE) return
+
+		val thePlayer = mc.thePlayer ?: return
 
 		if (MovementUtils.isMoving(thePlayer))
 		{
