@@ -193,7 +193,12 @@ class WebView(
         val dirtyBounds = surface.dirtyBounds()
         if (dirtyBounds.isValid) {
             val imageData = bitmap.lockPixels()
+
+            GL11.glPixelStorei(GL12.GL_UNPACK_SKIP_ROWS, 0)
+            GL11.glPixelStorei(GL12.GL_UNPACK_SKIP_PIXELS, 0)
+            GL11.glPixelStorei(GL12.GL_UNPACK_SKIP_IMAGES, 0)
             GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, bitmap.rowBytes().toInt() / 4)
+
             if (dirtyBounds.width() == width && dirtyBounds.height() == height) {
                 // Update full image
                 GL11.glTexImage2D(
@@ -207,7 +212,6 @@ class WebView(
                     GL12.GL_UNSIGNED_INT_8_8_8_8_REV,
                     imageData
                 )
-                GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, 0)
             } else {
                 // Update partial image
                 val x = dirtyBounds.x()
@@ -215,6 +219,7 @@ class WebView(
                 val dirtyWidth = dirtyBounds.width()
                 val dirtyHeight = dirtyBounds.height()
                 val startOffset = (y * bitmap.rowBytes() + x * 4).toInt()
+
                 GL11.glTexSubImage2D(
                     GL11.GL_TEXTURE_2D,
                     0,
@@ -224,6 +229,7 @@ class WebView(
                 )
             }
             GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, 0)
+
             bitmap.unlockPixels()
             surface.clearDirtyBounds()
         }
