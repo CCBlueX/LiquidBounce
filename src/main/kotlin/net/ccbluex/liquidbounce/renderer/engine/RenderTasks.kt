@@ -115,10 +115,6 @@ data class Point2f(val x: Float, val y: Float) {
     }
 }
 
-data class Vec4(val x: Float, val y: Float, val z: Float, val w: Float) {
-    constructor(vec: Vec3, w: Float) : this(vec.x, vec.y, vec.z, w)
-}
-
 data class Vec3(val x: Float, val y: Float, val z: Float) {
     constructor(x: Double, y: Double, z: Double) : this(x.toFloat(), y.toFloat(), z.toFloat())
     constructor(vec: Vec3d) : this(vec.x, vec.y, vec.z)
@@ -211,11 +207,6 @@ enum class PrimitiveType(val verticesPerPrimitive: Int, val mode: Int) {
      * Triangles; 3 vertices per primitive
      */
     Triangles(3, GL11.GL_TRIANGLES),
-
-    /**
-     * Points; 1 vertices per primitive
-     */
-    Points(1, GL11.GL_POINTS),
 
     /**
      * Triangle strip; 1 vertices per primitive

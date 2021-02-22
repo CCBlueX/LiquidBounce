@@ -46,9 +46,9 @@ object RenderEngine : Listenable {
     const val CAMERA_VIEW_LAYER = 0
 
     /**
-     * The actual screenspace
+     * Similar to [CAMERA_VIEW_LAYER]. Used for 2D-ESP, Nametags, etc., backface culling enabled
      */
-    const val SCREEN_SPACE_LAYER = 1
+    const val PSEUDO_2D_LAYER = 1
 
     /**
      * Projects the vertices on the screen. 1 unit = 1 px, backface culling enabled
@@ -80,17 +80,7 @@ object RenderEngine : Listenable {
      */
     val openGlVersionRegex = Pattern.compile("(\\d+)\\.(\\d+)(\\.(\\d+))?(.*)")
 
-    /**
-     * Contains the MVP matrix used by MC for the current frame. Always initialized when [LiquidBounceRenderEvent] is dispatched.
-     */
-    lateinit var cameraMvp: Mat4
-
     val renderHandler = handler<FlatRenderEvent> {
-        this.cameraMvp = (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
-            false,
-            it.tickDelta
-        ).toMat4()
-
         EventManager.callEvent(EngineRenderEvent(it.tickDelta))
 
         render(it.tickDelta)
@@ -189,17 +179,16 @@ object RenderEngine : Listenable {
     fun getSettingsForLayer(layer: Int, tickDelta: Float): LayerSettings {
         return when (layer) {
             CAMERA_VIEW_LAYER -> LayerSettings(
-                cameraMvp, true
+                (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
+                    false,
+                    tickDelta
+                ).toMat4(), true
             )
-            SCREEN_SPACE_LAYER -> LayerSettings(
-                Mat4.projectionMatrix(
-                    -1.0f,
-                    -1.0f,
-                    1.0f,
-                    1.0f,
-                    -1.0f,
-                    1.0f
-                ), true
+            PSEUDO_2D_LAYER -> LayerSettings(
+                (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
+                    false,
+                    tickDelta
+                ).toMat4(), true
             )
             HUD_LAYER -> LayerSettings(
                 Mat4.projectionMatrix(

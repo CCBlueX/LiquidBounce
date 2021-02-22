@@ -15,10 +15,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- */
-/**
+ *
+ * and
+ *
  * Ultralight Java - Java wrapper for the Ultralight web engine
- * (C) 2020 - 2021 LabyMedia and contributors
+ * Copyright (C) 2020 - 2021 LabyMedia and contributors
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,6 +44,7 @@ import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.bitmap.UltralightBitmapSurface
 import com.labymedia.ultralight.config.FontHinting
 import com.labymedia.ultralight.config.UltralightConfig
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.native.Natives
 import net.ccbluex.liquidbounce.renderer.ultralight.input.ClipboardAdapter
 import net.ccbluex.liquidbounce.renderer.ultralight.input.CursorAdapter
@@ -56,6 +58,8 @@ import net.ccbluex.liquidbounce.utils.mc
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL12
+import java.io.File
+import java.nio.ByteBuffer
 
 object WebPlatform {
 
@@ -180,69 +184,56 @@ class WebView(
         // As we are using the CPU renderer, draw with a bitmap (we did not set a custom surface)
         val surface = view.surface() as UltralightBitmapSurface
         val bitmap = surface.bitmap()
-        val width = bitmap.width().toInt()
-        val height = bitmap.height().toInt()
+        val width = view.width().toInt()
+        val height = view.height().toInt()
 
         // Prepare OpenGL for 2D textures and bind our texture
         GL11.glEnable(GL11.GL_TEXTURE_2D)
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, glTexture)
-
         val dirtyBounds = surface.dirtyBounds()
-
-
         if (dirtyBounds.isValid) {
             val imageData = bitmap.lockPixels()
-
-            GL11.glPixelStorei(GL12.GL_UNPACK_SKIP_ROWS, 0)
-            GL11.glPixelStorei(GL12.GL_UNPACK_SKIP_PIXELS, 0)
-            GL11.glPixelStorei(GL12.GL_UNPACK_SKIP_IMAGES, 0)
             GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, bitmap.rowBytes().toInt() / 4)
-
-//            if (dirtyBounds.width() == width && dirtyBounds.height() == height) {
-            // Update full image
-            GL11.glTexImage2D(
-                GL11.GL_TEXTURE_2D,
-                0,
-                GL11.GL_RGBA8,
-                width,
-                height,
-                0,
-                GL12.GL_BGRA,
-                GL12.GL_UNSIGNED_INT_8_8_8_8_REV,
-//                    GL12.GL_UNSIGNED_BYTE,
-                imageData
-            )
-
-            GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, 0)
-
-//            }
-//            else {
-//                // Update partial image
-//                val x = dirtyBounds.x()
-//                val y = dirtyBounds.y()
-//                val dirtyWidth = dirtyBounds.width()
-//                val dirtyHeight = dirtyBounds.height()
-//                val startOffset = (y * bitmap.rowBytes() + x * 4).toInt()
-//                GL11.glTexSubImage2D(
-//                    GL11.GL_TEXTURE_2D,
-//                    0,
-//                    x, y, dirtyWidth, dirtyHeight,
-//                    GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV,
-//                    imageData.position(startOffset) as ByteBuffer
-//                )
-//            }
+            if (dirtyBounds.width() == width && dirtyBounds.height() == height) {
+                // Update full image
+                GL11.glTexImage2D(
+                    GL11.GL_TEXTURE_2D,
+                    0,
+                    GL11.GL_RGBA8,
+                    width,
+                    height,
+                    0,
+                    GL12.GL_BGRA,
+                    GL12.GL_UNSIGNED_INT_8_8_8_8_REV,
+                    imageData
+                )
+                GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, 0)
+            } else {
+                // Update partial image
+                val x = dirtyBounds.x()
+                val y = dirtyBounds.y()
+                val dirtyWidth = dirtyBounds.width()
+                val dirtyHeight = dirtyBounds.height()
+                val startOffset = (y * bitmap.rowBytes() + x * 4).toInt()
+                GL11.glTexSubImage2D(
+                    GL11.GL_TEXTURE_2D,
+                    0,
+                    x, y, dirtyWidth, dirtyHeight,
+                    GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV,
+                    imageData.position(startOffset) as ByteBuffer
+                )
+            }
             GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, 0)
             bitmap.unlockPixels()
             surface.clearDirtyBounds()
         }
-
 
         // Set up the OpenGL state for rendering of a fullscreen quad
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT or GL11.GL_COLOR_BUFFER_BIT or GL11.GL_TRANSFORM_BIT)
         GL11.glMatrixMode(GL11.GL_PROJECTION)
         GL11.glPushMatrix()
         GL11.glLoadIdentity()
-        GL11.glOrtho(0.0, 1.0, 1.0, 0.0, -1.0, 1.0)
+        GL11.glOrtho(0.0, view.width().toDouble(), view.height().toDouble(), 0.0, -1.0, 1.0)
         GL11.glMatrixMode(GL11.GL_MODELVIEW)
         GL11.glPushMatrix()
 
@@ -265,15 +256,15 @@ class WebView(
 
         // Upper left corner
         GL11.glTexCoord2f(0f, 1f)
-        GL11.glVertex2f(0.0f, 1.0f)
+        GL11.glVertex2i(0, height)
 
         // Upper right corner
         GL11.glTexCoord2f(1f, 1f)
-        GL11.glVertex2f(1.0f, 1.0f)
+        GL11.glVertex2i(width, height)
 
         // Lower right corner
         GL11.glTexCoord2f(1f, 0f)
-        GL11.glVertex2f(1.0f, 0.0f)
+        GL11.glVertex2i(width, 0)
         GL11.glEnd()
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
 
