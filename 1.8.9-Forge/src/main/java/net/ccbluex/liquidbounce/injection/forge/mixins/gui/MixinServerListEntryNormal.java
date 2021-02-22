@@ -95,7 +95,7 @@ public abstract class MixinServerListEntryNormal
 			server.pingToServer = -2L;
 			server.serverMOTD = "";
 			server.populationInfo = "";
-			enhancedServerPinger.submit(() ->
+			enhancedServerPinger.execute(() ->
 			{
 				try
 				{

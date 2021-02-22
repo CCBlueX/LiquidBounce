@@ -11,7 +11,6 @@ import java.util.Optional;
 import javax.imageio.ImageIO;
 
 import net.ccbluex.liquidbounce.utils.WorkerUtils;
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.renderer.GlStateManager;
@@ -53,7 +52,7 @@ public abstract class MixinScreenShotHelper
 	}
 
 	/**
-	 * @reason Asynchronous screenshot
+	 * @reason Asynchronous screenshot save
 	 * @author OrangeMarshall & eric0210
 	 */
 	@Overwrite
@@ -98,6 +97,8 @@ public abstract class MixinScreenShotHelper
 			glPixelStorei(GL_PACK_ALIGNMENT, 1);
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 			pixelBuffer.clear();
+
+			// Read current screen into pixel buffer
 			if (OpenGlHelper.isFramebufferEnabled())
 			{
 				GlStateManager.bindTexture(buffer.framebufferTexture);
@@ -106,16 +107,14 @@ public abstract class MixinScreenShotHelper
 			else
 				glReadPixels(0, 0, width, height, 32993, 33639, pixelBuffer);
 
-			// Copy pixel buffer to pixel values
+			// Copy pixel buffer into array
 			pixelBuffer.get(pixelValues);
 
 			// Get the screenshot file name
 			final File screenshotFile = Optional.ofNullable(screenshotName).map(name -> new File(screenshotsFolder, name)).orElseGet(() -> getTimestampedPNGFileForDirectory(screenshotsFolder));
 
-			WorkerUtils.getWorkers().submit(() ->
+			WorkerUtils.getWorkers().execute(() ->
 			{
-				final long nanoTime = System.nanoTime();
-
 				// Process pixels
 				TextureUtil.processPixelValues(pixelValues, width, height);
 
@@ -144,11 +143,13 @@ public abstract class MixinScreenShotHelper
 					chatGUI.printChatMessage(new ChatComponentTranslation("screenshot.failure", t.getMessage()));
 				}
 
+				File _screenshotFile = screenshotFile;
+
 				// Write the screenshot file
 				if (screenShot != null)
 					try
 					{
-						ImageIO.write(screenShot, "png", screenshotFile);
+						ImageIO.write(screenShot, "png", _screenshotFile);
 					}
 					catch (final IOException e)
 					{
@@ -157,7 +158,8 @@ public abstract class MixinScreenShotHelper
 						// Try fallback strategy
 						try
 						{
-							ImageIO.write(screenShot, "png", new File(screenshotFile + ".bak"));
+							_screenshotFile = new File(_screenshotFile + ".bak");
+							ImageIO.write(screenShot, "png", new File(_screenshotFile + ".bak"));
 							logger.warn("Saved screenshot file asynchronously with fallback strategy", e);
 						}
 						catch (final IOException e2)
@@ -168,13 +170,13 @@ public abstract class MixinScreenShotHelper
 						}
 					}
 
-				chatGUI.printChatMessage(new ChatComponentText("Took " + TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime) + " to save '" + screenshotFile + "'."));
+				final IChatComponent successChat = new ChatComponentText(_screenshotFile.getName());
+				successChat.getChatStyle().setChatClickEvent(new ClickEvent(Action.OPEN_FILE, _screenshotFile.getAbsolutePath()));
+				successChat.getChatStyle().setUnderlined(true);
+				chatGUI.printChatMessage(new ChatComponentTranslation("screenshot.success", successChat));
 			});
 
-			final IChatComponent ichatcomponent = new ChatComponentText(screenshotFile.getName());
-			ichatcomponent.getChatStyle().setChatClickEvent(new ClickEvent(Action.OPEN_FILE, screenshotFile.getAbsolutePath()));
-			ichatcomponent.getChatStyle().setUnderlined(true);
-			return new ChatComponentTranslation("screenshot.success", ichatcomponent);
+			return new ChatComponentText("Saving screenshot as " + screenshotFile.getName() + "...");
 		}
 		catch (final RuntimeException e)
 		{

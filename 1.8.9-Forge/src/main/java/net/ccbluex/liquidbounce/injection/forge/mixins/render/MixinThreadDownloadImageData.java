@@ -59,7 +59,7 @@ public abstract class MixinThreadDownloadImageData
 	@Overwrite
 	protected void loadTextureFromServer()
 	{
-		downloaders.submit(() ->
+		downloaders.execute(() ->
 		{
 			logger.debug("Downloading http texture from url \"{}\" to cache file \"{}\"", imageUrl, cacheFile);
 
