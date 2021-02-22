@@ -286,7 +286,9 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	{
 		final boolean visible = !entitylivingbaseIn.isInvisible();
 		final TrueSight trueSight = (TrueSight) LiquidBounce.moduleManager.getModule(TrueSight.class);
-		final boolean semiVisible = !visible && (!entitylivingbaseIn.isInvisibleToPlayer(Minecraft.getMinecraft().thePlayer) || trueSight.getState() && trueSight.getEntitiesValue().get());
+
+		final boolean trueSightEntities = trueSight.getState() && trueSight.getEntitiesValue().get();
+		final boolean semiVisible = !visible && (!entitylivingbaseIn.isInvisibleToPlayer(Minecraft.getMinecraft().thePlayer) || trueSightEntities);
 
 		if (visible || semiVisible)
 		{
@@ -296,7 +298,8 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 			if (semiVisible)
 			{
 				GlStateManager.pushMatrix();
-				GlStateManager.color(1.0F, 1.0F, 1.0F, 0.15F);
+				final float alpha = trueSightEntities ? trueSight.getEntitiesAlphaValue().get() : 0.15F;
+				GlStateManager.color(1.0F, 1.0F, 1.0F, alpha);
 				GlStateManager.depthMask(false);
 				GL11.glEnable(GL11.GL_BLEND);
 				GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);

@@ -92,6 +92,7 @@ object OutlineUtils
 		GL11.glColor4d((color.red / 255.0f).toDouble(), (color.green / 255.0f).toDouble(), (color.blue / 255.0f).toDouble(), (color.alpha / 255.0f).toDouble())
 	}
 
+	@JvmStatic
 	fun checkSetupFBO()
 	{
 		val mc: IMinecraft = wrapper.minecraft
@@ -116,6 +117,7 @@ object OutlineUtils
 	 * @param fbo
 	 * Framebuffer
 	 */
+	@JvmStatic
 	private fun setupFBO(mc: IMinecraft, fbo: IFramebuffer)
 	{
 		// Deletes old render buffer extensions such as depth
