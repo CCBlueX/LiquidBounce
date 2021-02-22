@@ -80,14 +80,13 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 		val size = sizeValue.get()
 
-		if (!minimapValue.get())
-		{
-			RenderUtils.drawRect(0F, 0F, size, size, Color(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get()).rgb)
-		}
+		val minimap = minimapValue.get()
+		if (!minimap) RenderUtils.drawRect(0F, 0F, size, size, Color(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get()).rgb)
 
 		val viewDistance = viewDistanceValue.get() * 16.0F
 
-		val maxDisplayableDistanceSquare = ((viewDistance + fovSizeValue.get().toDouble()) * (viewDistance + fovSizeValue.get().toDouble()))
+		val fovSize = fovSizeValue.get()
+		val maxDisplayableDistanceSquare = ((viewDistance + fovSize.toDouble()) * (viewDistance + fovSize.toDouble()))
 		val halfSize = size * 0.5f
 
 		RenderUtils.makeScissorBox(x.toFloat(), y.toFloat(), x.toFloat() + ceil(size), y.toFloat() + ceil(size))
@@ -104,49 +103,48 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 		glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
-		if (minimapValue.get())
+		val renderX = renderViewEntity.posX
+		val renderZ = renderViewEntity.posZ
+		if (minimap)
 		{
 			glEnable(GL_TEXTURE_2D)
 
 			val chunkSizeOnScreen = size / viewDistanceValue.get()
 			val chunksToRender = max(1, ceil((SQRT_OF_TWO * (viewDistanceValue.get() * 0.5f))).toInt())
 
-			val currX = renderViewEntity.posX * 0.0625
-			val currZ = renderViewEntity.posZ * 0.0625
+			val currX = renderX * 0.0625
+			val currZ = renderZ * 0.0625
 
+			val glStateManager = classProvider.glStateManager
 			for (x in -chunksToRender..chunksToRender)
 			{
 				for (z in -chunksToRender..chunksToRender)
 				{
-					val currChunk = MiniMapRegister.getChunkTextureAt(floor(currX).toInt() + x, floor(currZ).toInt() + z)
+					val currChunk = MiniMapRegister.getChunkTextureAt(floor(currX).toInt() + x, floor(currZ).toInt() + z) ?: continue
 
-					if (currChunk != null)
-					{
-						val sc = chunkSizeOnScreen.toDouble()
+					val sc = chunkSizeOnScreen.toDouble()
 
-						val onScreenX = (currX - floor(currX).toLong() - 1 - x) * sc
-						val onScreenZ = (currZ - floor(currZ).toLong() - 1 - z) * sc
+					val onScreenX = (currX - floor(currX).toLong() - 1 - x) * sc
+					val onScreenZ = (currZ - floor(currZ).toLong() - 1 - z) * sc
 
-						classProvider.glStateManager.bindTexture(currChunk.texture.glTextureId)
+					glStateManager.bindTexture(currChunk.texture.glTextureId)
 
-						glBegin(GL_QUADS)
+					glBegin(GL_QUADS)
 
-						glTexCoord2f(0f, 0f)
-						glVertex2d(onScreenX, onScreenZ)
-						glTexCoord2f(0f, 1f)
-						glVertex2d(onScreenX, onScreenZ + chunkSizeOnScreen)
-						glTexCoord2f(1f, 1f)
-						glVertex2d(onScreenX + chunkSizeOnScreen, onScreenZ + chunkSizeOnScreen)
-						glTexCoord2f(1f, 0f)
-						glVertex2d(onScreenX + chunkSizeOnScreen, onScreenZ)
+					glTexCoord2f(0f, 0f)
+					glVertex2d(onScreenX, onScreenZ)
+					glTexCoord2f(0f, 1f)
+					glVertex2d(onScreenX, onScreenZ + chunkSizeOnScreen)
+					glTexCoord2f(1f, 1f)
+					glVertex2d(onScreenX + chunkSizeOnScreen, onScreenZ + chunkSizeOnScreen)
+					glTexCoord2f(1f, 0f)
+					glVertex2d(onScreenX + chunkSizeOnScreen, onScreenZ)
 
-						glEnd()
-					}
-
+					glEnd()
 				}
 			}
 
-			classProvider.glStateManager.bindTexture(0)
+			glStateManager.bindTexture(0)
 
 			glDisable(GL_TEXTURE_2D)
 		}
@@ -179,82 +177,79 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 			glPointSize(playerSize)
 		}
 
-		for (entity in mc.theWorld!!.loadedEntityList)
-		{
-			if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false))
+		val theWorld = mc.theWorld!!
+		val thePlayer = mc.thePlayer!!
+
+		val esp = LiquidBounce.moduleManager[ESP::class.java] as ESP
+		val useESPColors = useESPColorsValue.get()
+
+		theWorld.loadedEntityList.asSequence().filter { it != thePlayer && EntityUtils.isSelected(it, false) }.forEach { entity ->
+			val positionRelativeToPlayer = Vector2f((renderX - entity.posX).toFloat(), (renderZ - entity.posZ).toFloat())
+
+			if (maxDisplayableDistanceSquare < positionRelativeToPlayer.lengthSquared()) return@forEach
+
+			val transform = triangleMode || fovSize > 0F
+
+			val relX = positionRelativeToPlayer.x
+			val relY = positionRelativeToPlayer.y
+
+			if (transform)
 			{
-				val positionRelativeToPlayer = Vector2f((renderViewEntity.posX - entity.posX).toFloat(), (renderViewEntity.posZ - entity.posZ).toFloat())
+				glPushMatrix()
 
-				if (maxDisplayableDistanceSquare < positionRelativeToPlayer.lengthSquared()) continue
-
-				val transform = triangleMode || fovSizeValue.get() > 0F
-
-				if (transform)
-				{
-					glPushMatrix()
-
-					glTranslatef((positionRelativeToPlayer.x / viewDistance) * size, (positionRelativeToPlayer.y / viewDistance) * size, 0f)
-					glRotatef(entity.rotationYaw, 0f, 0f, 1f)
-				}
-
-				if (fovSizeValue.get() > 0F)
-				{
-					glPushMatrix()
-					glRotatef(180.0f, 0f, 0f, 1f)
-					val sc = (fovSizeValue.get() / viewDistance) * size
-					glScalef(sc, sc, sc)
-
-					glColor4f(1.0f, 1.0f, 1.0f, if (minimapValue.get()) 0.75f else 0.25f)
-
-					val vbo = fovMarkerVertexBuffer!!
-
-					vbo.bindBuffer()
-
-					glEnableClientState(GL_VERTEX_ARRAY)
-					glVertexPointer(3, GL_FLOAT, 12, 0L)
-
-					vbo.drawArrays(GL_TRIANGLE_FAN)
-					vbo.unbindBuffer()
-
-					glDisableClientState(GL_VERTEX_ARRAY)
-
-					glPopMatrix()
-				}
-
-				if (triangleMode)
-				{
-					if (useESPColorsValue.get())
-					{
-						val color = (LiquidBounce.moduleManager[ESP::class.java] as ESP).getColor(entity)
-
-						glColor4f(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f)
-					}
-					else
-					{
-						glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
-					}
-
-					glBegin(GL_TRIANGLES)
-
-					glVertex2f(-playerSize * 0.25f, playerSize * 0.5f)
-					glVertex2f(playerSize * 0.25f, playerSize * 0.5f)
-					glVertex2f(0f, -playerSize * 0.5f)
-
-					glEnd()
-				}
-				else
-				{
-					val color = (LiquidBounce.moduleManager[ESP::class.java] as ESP).getColor(entity)
-
-					worldRenderer.pos(((positionRelativeToPlayer.x / viewDistance) * size).toDouble(), ((positionRelativeToPlayer.y / viewDistance) * size).toDouble(), 0.0).color(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f).endVertex()
-				}
-
-				if (transform)
-				{
-					glPopMatrix()
-				}
-
+				glTranslatef((relX / viewDistance) * size, (relY / viewDistance) * size, 0f)
+				glRotatef(entity.rotationYaw, 0f, 0f, 1f)
 			}
+
+			if (fovSize > 0F)
+			{
+				glPushMatrix()
+				glRotatef(180.0f, 0f, 0f, 1f)
+				val sc = (fovSize / viewDistance) * size
+				glScalef(sc, sc, sc)
+
+				glColor4f(1.0f, 1.0f, 1.0f, if (minimap) 0.75f else 0.25f)
+
+				val vbo = fovMarkerVertexBuffer!!
+
+				vbo.bindBuffer()
+
+				glEnableClientState(GL_VERTEX_ARRAY)
+				glVertexPointer(3, GL_FLOAT, 12, 0L)
+
+				vbo.drawArrays(GL_TRIANGLE_FAN)
+				vbo.unbindBuffer()
+
+				glDisableClientState(GL_VERTEX_ARRAY)
+
+				glPopMatrix()
+			}
+
+			if (triangleMode)
+			{
+				if (useESPColors)
+				{
+					val color = esp.getColor(entity)
+					glColor4f(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f)
+				}
+				else glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+
+				glBegin(GL_TRIANGLES)
+
+				glVertex2f(-playerSize * 0.25f, playerSize * 0.5f)
+				glVertex2f(playerSize * 0.25f, playerSize * 0.5f)
+				glVertex2f(0f, -playerSize * 0.5f)
+
+				glEnd()
+			}
+			else
+			{
+				val color = esp.getColor(entity)
+
+				worldRenderer.pos(((relX / viewDistance) * size).toDouble(), ((relY / viewDistance) * size).toDouble(), 0.0).color(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f).endVertex()
+			}
+
+			if (transform) glPopMatrix()
 		}
 
 		if (!triangleMode) tessellator.draw()

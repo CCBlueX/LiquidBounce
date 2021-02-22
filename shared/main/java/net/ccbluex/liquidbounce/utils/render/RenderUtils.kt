@@ -413,7 +413,7 @@ object RenderUtils : MinecraftInstance()
 		for (i in 0..3)
 		{
 			val rot = (System.nanoTime() * 0.0000002 * i % 360).toInt()
-			drawCircle(x, y, (i * 10).toFloat(), rot - 180, rot)
+			drawCircle(x, y, i * 10f, rot - 180, rot)
 		}
 	}
 
@@ -462,11 +462,17 @@ object RenderUtils : MinecraftInstance()
 
 		val sections = 50
 		val dAngle = 2.0f * WMathHelper.PI / sections
+
+		val red = color.red / 255.00f
+		val green = color.green / 255.00f
+		val blue = color.blue / 255.00f
+		val alpha = color.alpha / 255.00f
+
 		for (i in 0 until sections)
 		{
 			val circleX = radius * sin(i * dAngle)
 			val circleY = radius * cos(i * dAngle)
-			GL11.glColor4f(color.red / 255.00f, color.green / 255.00f, color.blue / 255.00f, color.alpha / 255.00f)
+			GL11.glColor4f(red, green, blue, alpha)
 			GL11.glVertex2f(x + circleX, y + circleY)
 		}
 

@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -86,37 +87,31 @@ class Tracers : Module()
 			else -> Color(255, 255, 255, 150)
 		}
 
-		for (entity in theWorld.loadedEntityList)
-		{
-			if (!classProvider.isEntityLivingBase(entity) || !botValue.get() && AntiBot.isBot(entity.asEntityLivingBase())) continue
+		val bot = botValue.get()
+		val provider = classProvider
 
-			if (entity != thePlayer && EntityUtils.isSelected(entity, false))
+		theWorld.loadedEntityList.filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).filter { (bot || !AntiBot.isBot(it)) && it != thePlayer }.forEach { entity ->
+			val distance = (thePlayer.getDistanceToEntity(entity) * 2).toInt().coerceAtMost(255)
+
+			val lastTickPosX = entity.lastTickPosX
+			val lastTickPosY = entity.lastTickPosY
+			val lastTickPosZ = entity.lastTickPosZ
+
+			val x = (lastTickPosX + (entity.posX - lastTickPosX) * partialTicks - renderPosX)
+			val y = (lastTickPosY + (entity.posY - lastTickPosY) * partialTicks - renderPosY)
+			val z = (lastTickPosZ + (entity.posZ - lastTickPosZ) * partialTicks - renderPosZ)
+
+			RenderUtils.glColor(when
 			{
-				val dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt().coerceAtMost(255)
+				provider.isEntityPlayer(entity) && entity.asEntityPlayer().isClientFriend() -> Color(0, 0, 255, 150)
+				colorMode.equals("DistanceColor", ignoreCase = true) -> Color(255 - distance, distance, 0, 150)
+				else -> color
+			})
 
-				val lastTickPosX = entity.lastTickPosX
-				val lastTickPosY = entity.lastTickPosY
-				val lastTickPosZ = entity.lastTickPosZ
-
-				val x = (lastTickPosX + (entity.posX - lastTickPosX) * partialTicks - renderPosX)
-				val y = (lastTickPosY + (entity.posY - lastTickPosY) * partialTicks - renderPosY)
-				val z = (lastTickPosZ + (entity.posZ - lastTickPosZ) * partialTicks - renderPosZ)
-
-				RenderUtils.glColor(
-					when
-					{
-						classProvider.isEntityPlayer(entity) && entity.asEntityPlayer().isClientFriend() -> Color(0, 0, 255, 150)
-						colorMode.equals("DistanceColor", ignoreCase = true) -> Color(255 - dist, dist, 0, 150)
-						else -> color
-					}
-				)
-
-
-				GL11.glVertex3d(eyeX, eyeY, eyeZ)
-				GL11.glVertex3d(x, y, z)
-				GL11.glVertex3d(x, y, z)
-				GL11.glVertex3d(x, y + entity.height, z)
-			}
+			GL11.glVertex3d(eyeX, eyeY, eyeZ)
+			GL11.glVertex3d(x, y, z)
+			GL11.glVertex3d(x, y, z)
+			GL11.glVertex3d(x, y + entity.height, z)
 		}
 
 		GL11.glEnd()

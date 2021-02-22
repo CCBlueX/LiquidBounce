@@ -19,7 +19,7 @@ class GuiPasswordField(componentId: Int, fontrendererObj: FontRenderer, x: Int, 
 		val realText = text
 
 		val stringBuilder = StringBuilder()
-		for (i in text.indices) stringBuilder.append('*')
+		repeat (text.length) { stringBuilder.append('*') }
 		text = stringBuilder.toString()
 
 		super.drawTextBox()

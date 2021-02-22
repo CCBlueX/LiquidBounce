@@ -37,10 +37,14 @@ class ItemESP : Module()
 		val mode = modeValue.get().toLowerCase()
 		if (mode != "shaderoutline")
 		{
+			val theWorld = mc.theWorld ?: return
+
 			val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 			val drawOutline = mode == "box"
 
-			(mc.theWorld ?: return).loadedEntityList.asSequence().filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, drawOutline) }
+			val provider = classProvider
+
+			theWorld.loadedEntityList.asSequence().filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, drawOutline) }
 		}
 	}
 
@@ -51,11 +55,16 @@ class ItemESP : Module()
 
 		if (modeValue.get().equals("ShaderOutline", ignoreCase = true))
 		{
-			OutlineShader.INSTANCE.startDraw(event.partialTicks)
+			val partialTicks = event.partialTicks
+
+			OutlineShader.INSTANCE.startDraw(partialTicks)
+
+			val renderManager = mc.renderManager
+			val provider = classProvider
 
 			try
 			{
-				theWorld.loadedEntityList.asSequence().filter { classProvider.isEntityItem(it) || classProvider.isEntityArrow(it) }.forEach { mc.renderManager.renderEntityStatic(it, event.partialTicks, true) }
+				theWorld.loadedEntityList.asSequence().filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { renderManager.renderEntityStatic(it, partialTicks, true) }
 			}
 			catch (ex: Exception)
 			{

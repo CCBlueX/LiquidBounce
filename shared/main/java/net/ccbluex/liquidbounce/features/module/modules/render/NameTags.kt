@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -70,9 +71,10 @@ class NameTags : Module()
 
 		val theWorld = mc.theWorld ?: return
 
-		theWorld.loadedEntityList.asSequence().filterNot { !EntityUtils.isSelected(it, false) || AntiBot.isBot(it.asEntityLivingBase()) && !botValue.get() }.forEach { entity ->
-			val displayName = entity.displayName ?: return@forEach
-			renderNameTag(entity.asEntityLivingBase(), if (clearNamesValue.get()) ColorUtils.stripColor(displayName.unformattedText) ?: return@forEach else displayName.unformattedText)
+		val bot = botValue.get()
+		theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).filter { !AntiBot.isBot(it.asEntityLivingBase()) || bot }.forEach { entity ->
+			val name = (entity.displayName ?: return@forEach).unformattedText
+			renderNameTag(entity, if (clearNamesValue.get()) ColorUtils.stripColor(name) ?: return@forEach else name)
 		}
 
 		glPopMatrix()
@@ -197,16 +199,10 @@ class NameTags : Module()
 
 		if (armorValue.get() && provider.isEntityPlayer(entity))
 		{
-			mc.renderItem.zLevel = -147F
+			val renderItem = mc.renderItem
+			renderItem.zLevel = -147F
 
-			val indices: IntArray = if (Backend.MINECRAFT_VERSION_MINOR == 8) (0..4).toList().toIntArray() else intArrayOf(0, 1, 2, 3, 5, 4)
-
-			for (index in indices)
-			{
-				val equipmentInSlot = entity.getEquipmentInSlot(index) ?: continue
-
-				mc.renderItem.renderItemAndEffectIntoGUI(equipmentInSlot, -50 + index * 20, -22)
-			}
+			(if (Backend.MINECRAFT_VERSION_MINOR == 8) (0..4).toList().toIntArray() else intArrayOf(0, 1, 2, 3, 5, 4)).map { it to entity.getEquipmentInSlot(it) }.filterNot { (_, equipment) -> equipment == null }.forEach { (index, equipment) -> renderItem.renderItemAndEffectIntoGUI(equipment ?: return@forEach, -50 + index * 20, -22) }
 
 			val glStateManager = provider.glStateManager
 			glStateManager.enableAlpha()

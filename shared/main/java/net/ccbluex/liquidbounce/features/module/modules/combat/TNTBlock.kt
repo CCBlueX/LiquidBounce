@@ -29,50 +29,30 @@ class TNTBlock : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return
 
-		for (entity in theWorld.loadedEntityList)
+		val range = rangeValue.get()
+		val fuse = fuseValue.get()
+
+		if (theWorld.loadedEntityList.any { classProvider.isEntityTNTPrimed(it) && thePlayer.getDistanceToEntity(it) <= range && it.asEntityTNTPrimed().fuse <= fuse })
 		{
-			if (classProvider.isEntityTNTPrimed(entity) && thePlayer.getDistanceToEntity(entity) <= rangeValue.get())
+			if (autoSwordValue.get())
 			{
-				val tntPrimed = entity.asEntityTNTPrimed()
+				val inventory = thePlayer.inventory
+				val slot = (0..8).map { it to inventory.getStackInSlot(it) }.filter { (_, itemStack) -> itemStack != null && classProvider.isItemSword(itemStack.item) }.maxBy { (_, itemStack) -> itemStack?.item!!.asItemSword().damageVsEntity + 4f }?.first ?: -1
 
-				if (tntPrimed.fuse <= fuseValue.get())
+				if (slot != -1 && slot != inventory.currentItem)
 				{
-					if (autoSwordValue.get())
-					{
-						var slot = -1
-						var bestDamage = 1f
-
-						val inventory = thePlayer.inventory
-
-						(0..8).map { it to inventory.getStackInSlot(it) }.forEach { (slotIndex, itemStack) ->
-							if (itemStack != null && classProvider.isItemSword(itemStack.item))
-							{
-								val itemDamage = itemStack.item!!.asItemSword().damageVsEntity + 4f
-
-								if (itemDamage > bestDamage)
-								{
-									bestDamage = itemDamage
-									slot = slotIndex
-								}
-							}
-						}
-
-						if (slot != -1 && slot != inventory.currentItem)
-						{
-							inventory.currentItem = slot
-							mc.playerController.updateController()
-						}
-					}
-
-					if (thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem!!.item))
-					{
-						mc.gameSettings.keyBindUseItem.pressed = true
-						blocked = true
-					}
-
-					return
+					inventory.currentItem = slot
+					mc.playerController.updateController()
 				}
 			}
+
+			if (thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem!!.item))
+			{
+				mc.gameSettings.keyBindUseItem.pressed = true
+				blocked = true
+			}
+
+			return
 		}
 
 		if (blocked && !mc.gameSettings.isKeyDown(mc.gameSettings.keyBindUseItem))

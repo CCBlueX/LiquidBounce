@@ -185,8 +185,11 @@ object AntiBot : Module()
 	}
 
 	fun isBot(entity: IEntityLivingBase): Boolean
-	{ // Check if entity is a player
-		if (!classProvider.isEntityPlayer(entity)) return false
+	{
+		// Check if entity is a player
+		val provider = classProvider
+
+		if (!provider.isEntityPlayer(entity)) return false
 
 		val displayName: String? = entity.displayName?.formattedText
 
@@ -201,50 +204,47 @@ object AntiBot : Module()
 		// LivingTime
 		if (livingTimeValue.get() && entity.ticksExisted < livingTimeTicksValue.get()) return true
 
+		val entityID = entity.entityId
+
 		// Ground
-		if (groundValue.get() && !ground.contains(entity.entityId)) return true
+		if (groundValue.get() && !ground.contains(entityID)) return true
 
 		// Air
-		if (airValue.get() && !air.contains(entity.entityId)) return true
+		if (airValue.get() && !air.contains(entityID)) return true
 
 		// Swing
-		if (swingValue.get() && !swing.contains(entity.entityId)) return true
+		if (swingValue.get() && !swing.contains(entityID)) return true
 
 		// Health
 		if (healthValue.get() && entity.health > 20F) return true
 
 		// EntityID
-		if (entityIDValue.get() && (entity.entityId >= entityIDLimitValue.get() || entity.entityId <= -1)) return true
+		if (entityIDValue.get() && (entityID >= entityIDLimitValue.get() || entityID <= -1)) return true
 
 		// StaticEntityID
 		if (staticEntityIDValue.get() > 0)
 		{
 			val ids = arrayOf(staticEntityID1.get(), staticEntityID2.get(), staticEntityID3.get())
-			if ((0 until staticEntityIDValue.get()).map { ids[it] }.any { entity.entityId == it }) return true
+			if ((0 until staticEntityIDValue.get()).map { ids[it] }.any { entityID == it }) return true
 		}
 
 		// Invalid pitch (Derp)
 		if (invalidPitchValue.get() && (entity.rotationPitch > 90F || entity.rotationPitch < -90F)) return true
 
 		// Was Invisible
-		if (wasInvisibleValue.get() && invisible.contains(entity.entityId)) return true
+		if (wasInvisibleValue.get() && invisible.contains(entityID)) return true
 
 		// Armor
-		if (armorValue.get())
-		{
-			val player = entity.asEntityPlayer()
-
-			if (player.inventory.armorInventory.all { it == null }) return true
-		}
+		if (armorValue.get() && entity.asEntityPlayer().inventory.armorInventory.all { it == null }) return true
 
 		// Ping
 		if (pingValue.get() && mc.netHandler.getPlayerInfo(entity.asEntityPlayer().uniqueID)?.responseTime == 0) return true
 
 		// NeedHit
-		if (needHitValue.get() && !hitted.contains(entity.entityId)) return true
+		if (needHitValue.get() && !hitted.contains(entityID)) return true
 
 		// Invalid-Ground
-		if (invalidGroundValue.get() && invalidGround.getOrDefault(entity.entityId, 0) >= 10) return true
+		if (invalidGroundValue.get() && invalidGround.getOrDefault(entityID, 0) >= 10) return true
 
 		// Tab
 		if (tabValue.get())
@@ -257,11 +257,13 @@ object AntiBot : Module()
 			if (targetName != null && !checkTabList(targetName, displayNameMode, equals, tabStripColorsValue.get())) return true
 		}
 
+		val theWorld = mc.theWorld!!
+
 		// Duplicate in the world
-		if (duplicateInWorldValue.get() && mc.theWorld!!.loadedEntityList.filter { classProvider.isEntityPlayer(it) && it.asEntityPlayer().displayNameString == it.asEntityPlayer().displayNameString }.size > 1) return true
+		if (duplicateInWorldValue.get() && theWorld.loadedEntityList.count { provider.isEntityPlayer(it) && it.asEntityPlayer().displayNameString == it.asEntityPlayer().displayNameString } > 1) return true
 
 		// Duplicate in the tab
-		if (duplicateInTabValue.get() && mc.netHandler.playerInfoMap.filter {
+		if (duplicateInTabValue.get() && mc.netHandler.playerInfoMap.count {
 				var entityName = entity.name
 				if (duplicateInTabStripColorsValue.get()) entityName = stripColor(entityName)
 
@@ -269,26 +271,24 @@ object AntiBot : Module()
 				if (duplicateInTabStripColorsValue.get()) itName = stripColor(itName)!!
 
 				entityName == itName
-			}.size > 1) return true
+			} > 1) return true
 
 		// Always in radius
-		if (alwaysInRadiusValue.get() && !notAlwaysInRadius.contains(entity.entityId)) return true
+		if (alwaysInRadiusValue.get() && !notAlwaysInRadius.contains(entityID)) return true
 
 		// XZ Speed
-		if (speedValue.get() && xzspeed.containsKey(entity.entityId) && (!speedCountingSysValue.get() || xzspeed[entity.entityId]!! >= speedCountLimitValue.get())) return true
+		if (speedValue.get() && xzspeed.containsKey(entityID) && (!speedCountingSysValue.get() || xzspeed[entityID]!! >= speedCountLimitValue.get())) return true
 
 		// Y Speed
-		if (ySpeedValue.get() && yspeed.containsKey(entity.entityId) && (!ySpeedCountingSysValue.get() || yspeed[entity.entityId]!! >= ySpeedCountLimitValue.get())) return true
+		if (ySpeedValue.get() && yspeed.containsKey(entityID) && (!ySpeedCountingSysValue.get() || yspeed[entityID]!! >= ySpeedCountLimitValue.get())) return true
 
 		// Teleport Packet
-		if (teleportPacketValue.get() && teleportpacket_violation.containsKey(entity.entityId) && (!teleportPacketCountingSysValue.get() || teleportpacket_violation[entity.entityId]!! >= teleportPacketCountLimitValue.get())) return true
+		if (teleportPacketValue.get() && teleportpacket_violation.containsKey(entityID) && (!teleportPacketCountingSysValue.get() || teleportpacket_violation[entityID]!! >= teleportPacketCountLimitValue.get())) return true
 
 		// Spawned Position
-		if (spawnedpositionValue.get() && spawnedposition.contains(entity.entityId)) return true
+		if (spawnedpositionValue.get() && spawnedposition.contains(entityID)) return true
 
-		if (positionValue.get() && (position_violation.getOrDefault(entity.entityId, 0) >= positionExpectationDeltaCountLimitValue.get() || positionExpectationDeltaConsistencyValue.get() && position_consistency_violation.getOrDefault(
-				entity.entityId, 0
-			) >= positionExpectationDeltaConsistencyCountLimitValue.get())) return true
+		if (positionValue.get() && (position_violation.getOrDefault(entityID, 0) >= positionExpectationDeltaCountLimitValue.get() || positionExpectationDeltaConsistencyValue.get() && position_consistency_violation.getOrDefault(entityID, 0) >= positionExpectationDeltaConsistencyCountLimitValue.get())) return true
 
 		if (customNameValue.get() && entity.customNameTag == "") return true
 
@@ -296,9 +296,9 @@ object AntiBot : Module()
 
 		if (bedWarsNPCValue.get() && (displayName!!.isEmpty() || displayName[0] != '\u00A7') && displayName.endsWith("\u00A7r")) return true
 
-		if (gwenValue.get() && gwenBots.contains(entity.entityId)) return true
+		if (gwenValue.get() && gwenBots.contains(entityID)) return true
 
-		if (watchdogValue.get() && watchdogBots.contains(entity.entityId)) return true
+		if (watchdogValue.get() && watchdogBots.contains(entityID)) return true
 
 		return entity.name!!.isEmpty() || entity.name == mc.thePlayer!!.name
 	}

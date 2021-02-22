@@ -59,13 +59,7 @@ class ProphuntESP : Module()
 		val mode = modeValue.get().toLowerCase()
 		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
-		for (entity in theWorld.loadedEntityList)
-		{
-			if (mode != "box" || mode != "otherbox") break
-			if (!classProvider.isEntityFallingBlock(entity)) continue
-
-			RenderUtils.drawEntityBox(entity, color, mode == "box")
-		}
+		if (mode == "box" && mode == "otherbox") theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { RenderUtils.drawEntityBox(it, color, mode == "box") }
 
 		synchronized(blocks) {
 			val iterator: MutableIterator<Map.Entry<WBlockPos, Long>> = blocks.entries.iterator()

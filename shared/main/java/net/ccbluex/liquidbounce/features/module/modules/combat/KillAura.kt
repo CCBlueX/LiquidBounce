@@ -43,9 +43,7 @@ import kotlin.random.Random
 
 // TODO: Fix broken target searching algorithm
 // TODO: Visually start-stop blocking like as Xave
-@ModuleInfo(
-	name = "KillAura", description = "Automatically attacks targets around you.", category = ModuleCategory.COMBAT, keyBind = Keyboard.KEY_R
-)
+@ModuleInfo(name = "KillAura", description = "Automatically attacks targets around you.", category = ModuleCategory.COMBAT, keyBind = Keyboard.KEY_R)
 class KillAura : Module()
 {
 	/**
@@ -575,14 +573,12 @@ class KillAura : Module()
 		target ?: return
 
 		if (markValue.get() && !targetModeValue.get().equals("Multi", ignoreCase = true)) // Draw Mark
-			RenderUtils.drawPlatform(
-				target!!, if (hitable)
-				{
-					if (failedToHit) Color(0, 0, 255, 70)
-					else Color(0, 255, 0, 70)
-				}
-				else Color(255, 0, 0, 70)
-			)
+			RenderUtils.drawPlatform(target!!, if (hitable)
+			{
+				if (failedToHit) Color(0, 0, 255, 70)
+				else Color(0, 255, 0, 70)
+			}
+			else Color(255, 0, 0, 70))
 
 		if (currentTarget != null && attackTimer.hasTimePassed(attackDelay) && (currentTarget ?: return).hurtTime <= hurtTimeValue.get())
 		{
@@ -619,19 +615,21 @@ class KillAura : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return
 
+		val provider = classProvider
+
 		val distance = thePlayer.getDistanceToEntityBox(currentTarget!!)
 
 		// Settings
 		val failRate = failRateValue.get()
 		val swing = swingValue.get()
 		val multi = targetModeValue.get().equals("Multi", ignoreCase = true)
-		val openInventory = aacValue.get() && classProvider.isGuiContainer(mc.currentScreen)
+		val openInventory = aacValue.get() && provider.isGuiContainer(mc.currentScreen)
 
 		// FailRate
 		failedToHit = failRate > 0 && Random.nextInt(100) <= failRate
 
 		// Close inventory when open
-		if (openInventory) mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
+		if (openInventory) mc.netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
 		// Check is not hitable or check failrate
 		val fakeAttack = !hitable || failedToHit
@@ -642,7 +640,7 @@ class KillAura : Module()
 			// Stop Blocking before FAKE attack
 			if (thePlayer.isBlocking || serverSideBlockingStatus)
 			{
-				mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+				mc.netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 				serverSideBlockingStatus = false
 				clientSideBlockingStatus = false
 			}
@@ -661,17 +659,12 @@ class KillAura : Module()
 			{
 				var targets = 0
 
-				for (entity in theWorld.loadedEntityList)
-				{
-					val dist = thePlayer.getDistanceToEntityBox(entity)
-
-					if (classProvider.isEntityLivingBase(entity) && EntityUtils.isEnemy(entity, aacValue.get()) && dist <= getAttackRange(thePlayer, entity))
-					{
-						attackEntity(entity.asEntityLivingBase())
-
+				run {
+					theWorld.loadedEntityList.filter { EntityUtils.isEnemy(it, aacValue.get()) && thePlayer.getDistanceToEntityBox(it) <= getAttackRange(thePlayer, it) }.map(IEntity::asEntityLivingBase).forEach { entity ->
+						attackEntity(entity)
 						targets += 1
 
-						if (limitedMultiTargetsValue.get() != 0 && limitedMultiTargetsValue.get() <= targets) break
+						if (limitedMultiTargetsValue.get() != 0 && targets >= limitedMultiTargetsValue.get()) return@run
 					}
 				}
 			}
@@ -707,52 +700,51 @@ class KillAura : Module()
 		val targets = mutableListOf<IEntityLivingBase>()
 		val abTargets = mutableListOf<IEntityLivingBase>()
 
-		for (entity in theWorld.loadedEntityList)
-		{
-			if (!classProvider.isEntityLivingBase(entity) || !EntityUtils.isEnemy(entity, aacValue.get()) || switchMode && previouslySwitchedTargets.contains(entity.entityId)) continue
+		val provider = classProvider
 
+		theWorld.loadedEntityList.filter { entity ->
+			provider.isEntityLivingBase(entity) && EntityUtils.isEnemy(entity, aacValue.get()) && !(switchMode && previouslySwitchedTargets.contains(entity.entityId)) && run {
+
+				val entityFov = when (fovModeValue.get())
+				{
+					"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
+					else -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
+				}
+
+				fov == 180F || entityFov <= fov
+			}
+		}.forEach { entity ->
 			val distance = thePlayer.getDistanceToEntityBox(entity)
-			val entityFov = when (fovModeValue.get())
-			{
-				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
-				else -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
-			}
-
-			if (fov == 180F || entityFov <= fov)
-			{
-				if (distance <= blockRange && (!autoBlockHurtTimeCheckValue.get() || entity.asEntityLivingBase().hurtTime <= hurtTime)) abTargets.add(entity.asEntityLivingBase())
-				if (distance <= getAttackRange(thePlayer, entity) && entity.asEntityLivingBase().hurtTime <= hurtTime) targets.add(entity.asEntityLivingBase()) // Attack attack-ables first.
-			}
+			val target = entity.asEntityLivingBase()
+			if (distance <= blockRange && (!autoBlockHurtTimeCheckValue.get() || target.hurtTime <= hurtTime)) abTargets.add(target)
+			if (distance <= getAttackRange(thePlayer, entity) && target.hurtTime <= hurtTime) targets.add(target) // Attack attack-ables first.
 		}
 
-		if (targets.isEmpty()) for (entity in theWorld.loadedEntityList)  // If there is no attackable entities found, search about pre-aimable entities and pre-swingable entities instead.
-		{
-			if (!classProvider.isEntityLivingBase(entity) || !EntityUtils.isEnemy(entity, aacValue.get()) || switchMode && previouslySwitchedTargets.contains(entity.entityId)) continue
+		// If there is no attackable entities found, search about pre-aimable entities and pre-swingable entities instead.
+		if (targets.isEmpty()) theWorld.loadedEntityList.filter { entity ->
+			provider.isEntityLivingBase(entity) && EntityUtils.isEnemy(entity, aacValue.get()) && !(switchMode && previouslySwitchedTargets.contains(entity.entityId)) && run {
+				val entityFov = when (fovModeValue.get())
+				{
+					"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
+					else -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
+				}
 
-			val distance = thePlayer.getDistanceToEntityBox(entity)
-			val entityFov = when (fovModeValue.get())
-			{
-				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
-				else -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
+				(fov == 180F || entityFov <= fov) && thePlayer.getDistanceToEntityBox(entity) <= maxTargetRange && entity.asEntityLivingBase().hurtTime <= hurtTime
 			}
-
-			if ((fov == 180F || entityFov <= fov) && distance <= maxTargetRange && entity.asEntityLivingBase().hurtTime <= hurtTime) targets.add(entity.asEntityLivingBase())
-		}
+		}.forEach { targets.add(it.asEntityLivingBase()) }
 
 		// Sort targets by priority
 		when (priorityValue.get().toLowerCase())
 		{
 			"distance" ->
 			{
-
 				// Sort by distance
-				targets.sortBy(thePlayer::getDistanceToEntityBox) // Sort by distance
+				targets.sortBy(thePlayer::getDistanceToEntityBox)
 				abTargets.sortBy(thePlayer::getDistanceToEntityBox)
 			}
 
 			"health" ->
 			{
-
 				// Sort by health
 				targets.sortBy(IEntityLivingBase::health)
 				abTargets.sortBy(IEntityLivingBase::health)
@@ -760,7 +752,6 @@ class KillAura : Module()
 
 			"serverdirection" ->
 			{
-
 				// Sort by server-sided rotation difference
 				targets.sortBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
 				abTargets.sortBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
@@ -768,7 +759,6 @@ class KillAura : Module()
 
 			"clientdirection" ->
 			{
-
 				// Sort by client-sided rotation difference
 				targets.sortBy { RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
 				abTargets.sortBy { RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
@@ -776,7 +766,6 @@ class KillAura : Module()
 
 			"livingtime" ->
 			{
-
 				// Sort by existence
 				targets.sortBy { -it.ticksExisted }
 				abTargets.sortBy { -it.ticksExisted }
@@ -787,7 +776,8 @@ class KillAura : Module()
 
 		// Find best target
 		for (entity in targets)
-		{ // Update rotations to current target
+		{
+			// Update rotations to current target
 			if (thePlayer.getDistanceToEntityBox(entity) <= aimRange && !updateRotations(theWorld, thePlayer, entity)) continue
 
 			// Set target to current entity
@@ -1021,22 +1011,12 @@ class KillAura : Module()
 				{
 					val hitVec = movingObject.hitVec
 
-					mc.netHandler.addToSendQueue(
-						classProvider.createCPacketUseEntity(
-							interactEntity, WVec3(
-								hitVec.xCoord - interactEntity.posX, hitVec.yCoord - interactEntity.posY, hitVec.zCoord - interactEntity.posZ
-							)
-						)
-					)
+					mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(interactEntity, WVec3(hitVec.xCoord - interactEntity.posX, hitVec.yCoord - interactEntity.posY, hitVec.zCoord - interactEntity.posZ)))
 					mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(interactEntity, ICPacketUseEntity.WAction.INTERACT))
 				}
 			}
 
-			mc.netHandler.addToSendQueue(
-				classProvider.createCPacketPlayerBlockPlacement(
-					WBlockPos(-1, -1, -1), 255, (mc.thePlayer ?: return).inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F
-				)
-			)
+			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, (mc.thePlayer ?: return).inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F))
 			serverSideBlockingStatus = true
 		}
 

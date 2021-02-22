@@ -76,6 +76,8 @@ class ESP : Module()
 		val renderPosY = renderManager.renderPosY
 		val renderPosZ = renderManager.renderPosZ
 
+		val provider = classProvider
+
 		if (real2d)
 		{
 			GL11.glPushAttrib(GL11.GL_ENABLE_BIT)
@@ -92,7 +94,7 @@ class ESP : Module()
 			GL11.glDisable(GL11.GL_DEPTH_TEST)
 			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 
-			classProvider.glStateManager.enableTexture2D()
+			provider.glStateManager.enableTexture2D()
 
 			GL11.glDepthMask(true)
 			GL11.glLineWidth(real2DWidth.get())
@@ -162,7 +164,18 @@ class ESP : Module()
 			}
 		}
 
-		(mc.theWorld ?: return).loadedEntityList.asSequence().filter { classProvider.isEntityLivingBase(it) && !(!botValue.get() && AntiBot.isBot(it.asEntityLivingBase())) && it != mc.thePlayer && EntityUtils.isSelected(it, false) }.forEach { draw(it.asEntityLivingBase(), getColor(it.asEntityLivingBase())) }
+		val bot = botValue.get()
+		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
+		theWorld.loadedEntityList.asSequence().filter {
+			provider.isEntityLivingBase(it) && run {
+				val entity = it.asEntityLivingBase()
+				!(!bot && AntiBot.isBot(entity)) && it != thePlayer && EntityUtils.isSelected(it, false)
+			}
+		}.forEach {
+			val entity = it.asEntityLivingBase()
+			draw(entity, getColor(entity))
+		}
 
 		if (real2d)
 		{

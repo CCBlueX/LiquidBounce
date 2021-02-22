@@ -92,8 +92,7 @@ class AutoArmor : Module()
 		}.map { ArmorPiece(thePlayer.inventory.getStackInSlot(it), it) }.groupBy(ArmorPiece::armorType)
 
 		val bestArmor = arrayOfNulls<ArmorPiece>(4)
-
-		for ((key, value) in armorPieces) bestArmor[key] = value.maxWith(ARMOR_COMPARATOR)
+		for ((armorType, candidates) in armorPieces) bestArmor[armorType] = candidates.maxWith(ARMOR_COMPARATOR)
 
 		// Swap armor
 		if ((0..3).any { i ->

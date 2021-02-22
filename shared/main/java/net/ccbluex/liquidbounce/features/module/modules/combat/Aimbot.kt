@@ -208,9 +208,7 @@ class Aimbot : Module()
 		val minPlayerPredictSize = minPlayerPredictSizeValue.get()
 		val maxPlayerPredictSize = maxPlayerPredictSizeValue.get()
 
-		target = theWorld.loadedEntityList.asSequence().filter {
-			EntityUtils.isSelected(it, true) && (canAimThroughWalls || thePlayer.canEntityBeSeen(it)) && thePlayer.getDistanceToEntityBox(it) <= range && RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) <= fov
-		}.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
+		target = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) && (canAimThroughWalls || thePlayer.canEntityBeSeen(it)) && thePlayer.getDistanceToEntityBox(it) <= range && RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) <= fov }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
 
 		val entity = target ?: return
 

@@ -56,6 +56,7 @@ object EntityUtils : MinecraftInstance()
 						val teams = LiquidBounce.moduleManager[Teams::class.java] as Teams
 						return !teams.state || !teams.isInYourTeam(entityPlayer)
 					}
+
 					return true
 				}
 
@@ -106,19 +107,21 @@ object EntityUtils : MinecraftInstance()
 	@JvmStatic
 	fun getPlayerHealthFromScoreboard(playername: String?, isMineplex: Boolean): Int
 	{
-		val scoreboard: IScoreboard = mc.theWorld!!.scoreboard
-		for (entity in mc.theWorld!!.loadedEntityList) if (classProvider.isEntityPlayer(entity) && entity != mc.thePlayer)
-		{
+		val theWorld = mc.theWorld ?: return 0
+		val thePlayer = mc.thePlayer ?: return 0
+
+		val scoreboard: IScoreboard = theWorld.scoreboard
+		val provider = classProvider
+
+		val multiplier = if (isMineplex) 2 else 1
+
+		theWorld.loadedEntityList.filter { provider.isEntityPlayer(it) && it != thePlayer }.forEach { entity ->
 			val player = entity.asEntityPlayer()
-			val objectives = scoreboard.getObjectivesForEntity(player.gameProfile.name)
-			for (score in objectives.values) if (player.gameProfile.name.equals(playername, ignoreCase = true)) return score.scorePoints * if (isMineplex) 2 else 1
+			scoreboard.getObjectivesForEntity(player.gameProfile.name).values.filter { player.gameProfile.name.equals(playername, ignoreCase = true) }.forEach { return@getPlayerHealthFromScoreboard it.scorePoints * multiplier }
 		}
+
 		return 0
 	}
 
-	fun getPing(entityPlayer: IEntityLivingBase): Int
-	{
-		val networkPlayerInfo: INetworkPlayerInfo? = mc.netHandler.getPlayerInfo(entityPlayer.uniqueID)
-		return networkPlayerInfo?.let(INetworkPlayerInfo::responseTime) ?: -1
-	}
+	fun getPing(entityPlayer: IEntityLivingBase): Int = mc.netHandler.getPlayerInfo(entityPlayer.uniqueID)?.let(INetworkPlayerInfo::responseTime) ?: -1
 }

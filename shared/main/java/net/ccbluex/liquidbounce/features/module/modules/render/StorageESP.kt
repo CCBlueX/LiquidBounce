@@ -63,6 +63,9 @@ class StorageESP : Module()
 	private val shulkerBoxBlueValue = IntegerValue("ShulkerBox-B", 110, 0, 255)
 	private val shulkerBoxRainbowValue = BoolValue("ShulkerBox-Rainbow", false)
 
+	private val outlineWidthValue = FloatValue("Outline-Width", 3F, 0.5F, 3F)
+	private val wireFrameWidthValue = FloatValue("WireFrame-Width", 1.5F, 0.5F, 3F)
+
 	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
 
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
@@ -111,41 +114,45 @@ class StorageESP : Module()
 
 			val provider = classProvider
 
-			for (tileEntity in theWorld.loadedTileEntityList)
-			{
-				val color: Color = when
+			val outlineWidth = outlineWidthValue.get()
+			val wireFrameWidth = wireFrameWidthValue.get()
+
+			theWorld.loadedTileEntityList.map {
+				it to when
 				{
-					chest && provider.isTileEntityChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> chestColor
-					enderChest && provider.isTileEntityEnderChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> enderChestColor
-					furnace && provider.isTileEntityFurnace(tileEntity) -> furnaceColor
-					dispenser && provider.isTileEntityDispenser(tileEntity) -> dispenserColor
-					hopper && provider.isTileEntityHopper(tileEntity) -> hopperColor
-					shulkerBox && provider.isTileEntityShulkerBox(tileEntity) -> shulkerBoxColor.brighter()
+					chest && provider.isTileEntityChest(it) && !clickedBlocks.contains(it.pos) -> chestColor
+					enderChest && provider.isTileEntityEnderChest(it) && !clickedBlocks.contains(it.pos) -> enderChestColor
+					furnace && provider.isTileEntityFurnace(it) -> furnaceColor
+					dispenser && provider.isTileEntityDispenser(it) -> dispenserColor
+					hopper && provider.isTileEntityHopper(it) -> hopperColor
+					shulkerBox && provider.isTileEntityShulkerBox(it) -> shulkerBoxColor.brighter()
 					else -> null
-				} ?: continue
+				}
+			}.filterNot { (_, color) -> color == null }.forEach { (tileEntity, color) ->
+				val espColor = color ?: return@forEach
 
 				if (!(provider.isTileEntityChest(tileEntity) || provider.isTileEntityEnderChest(tileEntity)))
 				{
-					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box")
-					continue
+					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, espColor, mode == "box")
+					return@forEach
 				}
 
 				when (mode)
 				{
-					"otherbox", "box" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box")
+					"otherbox", "box" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, espColor, mode == "box")
 
-					"2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
+					"2d" -> RenderUtils.draw2D(tileEntity.pos, espColor.rgb, Color.BLACK.rgb)
 
 					"outline" ->
 					{
-						RenderUtils.glColor(color)
-						OutlineUtils.renderOne(3f)
+						RenderUtils.glColor(espColor)
+						OutlineUtils.renderOne(outlineWidth)
 						functions.renderTileEntity(tileEntity, partialTicks, -1)
 						OutlineUtils.renderTwo()
 						functions.renderTileEntity(tileEntity, partialTicks, -1)
 						OutlineUtils.renderThree()
 						functions.renderTileEntity(tileEntity, partialTicks, -1)
-						OutlineUtils.renderFour(color)
+						OutlineUtils.renderFour(espColor)
 						functions.renderTileEntity(tileEntity, partialTicks, -1)
 						OutlineUtils.renderFive()
 						OutlineUtils.setColor(Color.WHITE)
@@ -165,9 +172,8 @@ class StorageESP : Module()
 
 						functions.renderTileEntity(tileEntity, partialTicks, -1)
 
-						RenderUtils.glColor(color)
-
-						GL11.glLineWidth(1.5f)
+						RenderUtils.glColor(espColor)
+						GL11.glLineWidth(wireFrameWidth)
 
 						functions.renderTileEntity(tileEntity, partialTicks, -1)
 
@@ -177,36 +183,37 @@ class StorageESP : Module()
 				}
 			}
 
-			theWorld.loadedEntityList.forEach {
-				val color = when
+			theWorld.loadedEntityList.map {
+				it to when
 				{
 					provider.isEntityMinecartChest(it) -> chestColor
 					provider.isEntityMinecartFurnace(it) -> furnaceColor
 					provider.isEntityMinecartHopper(it) -> hopperColor
 					else -> null
-				} ?: return@forEach
-
+				}
+			}.filterNot { (_, color) -> color == null }.forEach { (entity, color) ->
+				val espColor = color ?: return@forEach
 
 				when (mode)
 				{
-					"otherbox", "box" -> RenderUtils.drawEntityBox(it, color, mode == "box")
+					"otherbox", "box" -> RenderUtils.drawEntityBox(entity, espColor, mode == "box")
 
-					"2d" -> RenderUtils.draw2D(it.position, color.rgb, Color.BLACK.rgb)
+					"2d" -> RenderUtils.draw2D(entity.position, espColor.rgb, Color.BLACK.rgb)
 
 					"outline" ->
 					{
 						val entityShadow: Boolean = gameSettings.entityShadows
 						gameSettings.entityShadows = false
 
-						RenderUtils.glColor(color)
-						OutlineUtils.renderOne(3f)
-						mc.renderManager.renderEntityStatic(it, partialTicks, true)
+						RenderUtils.glColor(espColor)
+						OutlineUtils.renderOne(outlineWidth)
+						mc.renderManager.renderEntityStatic(entity, partialTicks, true)
 						OutlineUtils.renderTwo()
-						mc.renderManager.renderEntityStatic(it, partialTicks, true)
+						mc.renderManager.renderEntityStatic(entity, partialTicks, true)
 						OutlineUtils.renderThree()
-						mc.renderManager.renderEntityStatic(it, partialTicks, true)
-						OutlineUtils.renderFour(color)
-						mc.renderManager.renderEntityStatic(it, partialTicks, true)
+						mc.renderManager.renderEntityStatic(entity, partialTicks, true)
+						OutlineUtils.renderFour(espColor)
+						mc.renderManager.renderEntityStatic(entity, partialTicks, true)
 						OutlineUtils.renderFive()
 						OutlineUtils.setColor(Color.WHITE)
 
@@ -228,15 +235,15 @@ class StorageESP : Module()
 						GL11.glEnable(GL11.GL_BLEND)
 						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 
-						RenderUtils.glColor(color)
+						RenderUtils.glColor(espColor)
 
-						mc.renderManager.renderEntityStatic(it, partialTicks, true)
+						mc.renderManager.renderEntityStatic(entity, partialTicks, true)
 
-						RenderUtils.glColor(color)
+						RenderUtils.glColor(espColor)
 
-						GL11.glLineWidth(1.5f)
+						GL11.glLineWidth(wireFrameWidth)
 
-						mc.renderManager.renderEntityStatic(it, partialTicks, true)
+						mc.renderManager.renderEntityStatic(entity, partialTicks, true)
 
 						GL11.glPopAttrib()
 						GL11.glPopMatrix()
@@ -307,9 +314,9 @@ class StorageESP : Module()
 					provider.isTileEntityDispenser(it) -> 4 // Dispenser (and Dropper)
 					provider.isTileEntityHopper(it) -> 5 // Hopper
 					provider.isTileEntityShulkerBox(it) -> 6 // Shulker box
-					else -> 999
+					else -> 7
 				}
-			}.filterNot { it.key == 999 }
+			}.filterNot { it.key == 7 }
 
 			val entityGroup = theWorld.loadedEntityList.groupBy {
 				when
@@ -317,9 +324,9 @@ class StorageESP : Module()
 					provider.isEntityMinecartChest(it) -> 1 // Minecart Chest
 					provider.isEntityMinecartFurnace(it) -> 2 // Minecart Furnace
 					provider.isEntityMinecartHopper(it) -> 3 // Minecart Hopper
-					else -> 999
+					else -> 4
 				}
-			}.filterNot { it.key == 999 }
+			}.filterNot { it.key == 4 }
 
 			val renderTileEntity = { type: Int ->
 				tileEntityGroup[type]?.forEach {

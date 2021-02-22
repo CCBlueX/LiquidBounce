@@ -29,10 +29,11 @@ object CapeAPI : MinecraftInstance()
 	 */
 	fun registerCapeService()
 	{
+		val logger = ClientUtils.logger
 
 		if (GuiDonatorCape.transferCode.startsWith("file:", true))
 		{
-			ClientUtils.logger.info("[Donator Cape] Offline cape registered.")
+			logger.info("[Donator Cape] Offline cape registered.")
 			return
 		}
 
@@ -48,7 +49,7 @@ object CapeAPI : MinecraftInstance()
 				val url = jsonObject.get("api").asJsonObject.get("url").asString
 
 				capeService = ServiceAPI(url)
-				ClientUtils.logger.info("Registered $url as '$serviceType' service type.")
+				logger.info("Registered $url as '$serviceType' service type.")
 			}
 
 			"list" ->
@@ -58,15 +59,15 @@ object CapeAPI : MinecraftInstance()
 				for ((key, value) in jsonObject.get("users").asJsonObject.entrySet())
 				{
 					users[key] = value.asString
-					ClientUtils.logger.info("Loaded user cape for '$key'.")
+					logger.info("Loaded user cape for '$key'.")
 				}
 
 				capeService = ServiceList(users)
-				ClientUtils.logger.info("Registered '$serviceType' service type.")
+				logger.info("Registered '$serviceType' service type.")
 			}
 		}
 
-		ClientUtils.logger.info("Loaded.")
+		logger.info("Loaded.")
 	}
 
 	/**

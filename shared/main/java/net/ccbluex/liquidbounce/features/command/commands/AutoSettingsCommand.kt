@@ -76,9 +76,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 			{
 				chat(thePlayer, "Loading settings...")
 
-				loadSettings(false) {
-					for (setting in it) chat(thePlayer, "> $setting")
-				}
+				loadSettings(false) { it.map { setting -> "> $setting" }.forEach { setting -> chat(thePlayer, setting) } }
 			}
 		}
 	}
@@ -97,9 +95,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
 				try
 				{
-					val json = JsonParser().parse(
-						HttpUtils["https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"]
-					)
+					val json = JsonParser().parse(HttpUtils["https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"])
 
 					val autoSettings: MutableList<String> = mutableListOf()
 

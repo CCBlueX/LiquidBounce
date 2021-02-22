@@ -6,6 +6,8 @@ import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.MaterialType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
@@ -127,9 +129,10 @@ class TpAura : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		currentTargets = targets
+		currentTargets = getTargets(theWorld, thePlayer)
 
 		if (attackTimer.hasTimePassed(attackDelay))
 		{
@@ -278,9 +281,11 @@ class TpAura : Module()
 		val pathFinderPath = pathfinder.path
 
 		pathFinderPath.forEachIndexed { i, currentPathFinderPath ->
-			if (i == 0 || i == pathFinderPath.size - 1) // If the current path node is start or end node
+			if (i == 0 || i == pathFinderPath.size - 1)
 			{
+				// If the current path node is start or end node
 				if (lastPath != null) path.add(lastPath!!.addVector(0.5, 0.0, 0.5))
+
 				path.add(currentPathFinderPath.addVector(0.5, 0.0, 0.5))
 				lastEndPath = currentPathFinderPath
 			}
@@ -332,10 +337,15 @@ class TpAura : Module()
 		return path
 	}
 
-	private val targets: MutableList<IEntityLivingBase>
-		get() = mc.theWorld!!.loadedEntityList.asSequence().filter(classProvider::isEntityLivingBase).map(IEntity::asEntityLivingBase).filter { entity: IEntityLivingBase -> mc.thePlayer!!.getDistanceToEntityBox(entity) <= rangeValue.get() && isEnemy(entity, false) && entity.hurtTime <= hurtTimeValue.get() }.sortedBy { it.getDistanceToEntity(mc.thePlayer!!) * 1000 }.toMutableList()
+	private fun getTargets(theWorld: IWorldClient, thePlayer: IEntityPlayerSP): MutableList<IEntityLivingBase>
+	{
+		val provider = classProvider
+		val range = rangeValue.get()
+		val hurtTime = hurtTimeValue.get()
+		return theWorld.loadedEntityList.asSequence().filter(provider::isEntityLivingBase).map(IEntity::asEntityLivingBase).filter { thePlayer.getDistanceToEntityBox(it) <= range && isEnemy(it, false) && it.hurtTime <= hurtTime }.sortedBy { it.getDistanceToEntity(thePlayer) * 1000 }.toMutableList()
+	}
 
-	fun isTarget(entity: IEntity?): Boolean = currentTargets.isNotEmpty() && (0 until if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size).any { i: Int -> currentTargets[i].isEntityEqual(entity) }
+	fun isTarget(entity: IEntity?): Boolean = currentTargets.isNotEmpty() && (0 until if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size).any { currentTargets[it].isEntityEqual(entity) }
 
 	override val tag: String
 		get() = "${maxDashDistanceValue.get()}"

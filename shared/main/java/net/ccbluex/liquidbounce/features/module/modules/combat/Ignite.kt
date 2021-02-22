@@ -63,11 +63,13 @@ class Ignite : Module()
 
 		val fireInHotbar = if (lighterInHotbar == -1) lavaInHotbar else lighterInHotbar
 
-		for (entity in theWorld.loadedEntityList) if (isSelected(entity, true) && !entity.burning)
-		{
+		theWorld.loadedEntityList.firstOrNull {
+			isSelected(it, true) && !it.burning && run {
+				val blockPos = it.position
+				thePlayer.getDistanceSq(blockPos) < 22.3 && isReplaceable(blockPos) && provider.isBlockAir(getBlock(theWorld, blockPos))
+			}
+		}?.let { entity ->
 			val blockPos = entity.position
-
-			if (thePlayer.getDistanceSq(blockPos) >= 22.3 || !isReplaceable(blockPos) || !provider.isBlockAir(getBlock(theWorld, blockPos))) continue
 
 			RotationUtils.keepCurrentRotation = true
 			mc.netHandler.addToSendQueue(provider.createCPacketHeldItemChange(fireInHotbar - 36))
@@ -115,7 +117,6 @@ class Ignite : Module()
 			RotationUtils.keepCurrentRotation = false
 			mc.netHandler.addToSendQueue(provider.createCPacketPlayerLook(thePlayer.rotationYaw, thePlayer.rotationPitch, thePlayer.onGround))
 			msTimer.reset()
-			break
 		}
 	}
 

@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.WorkerUtils
+import org.jetbrains.annotations.Contract
 import java.awt.Color
 import java.text.NumberFormat
 import java.util.regex.Pattern
