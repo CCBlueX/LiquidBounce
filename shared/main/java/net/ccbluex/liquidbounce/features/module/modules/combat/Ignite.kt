@@ -90,26 +90,27 @@ class Ignite : Module()
 
 				mc.playerController.sendUseItem(thePlayer, theWorld, itemStack)
 			}
-			else for (enumFacingType in EnumFacingType.values())
-			{
-				val side = provider.getEnumFacing(enumFacingType)
-				val neighbor = blockPos.offset(side)
+			else run {
+				EnumFacingType.values().map(provider::getEnumFacing).forEach { side ->
+					val neighbor = blockPos.offset(side)
 
-				if (!canBeClicked(theWorld, neighbor)) continue
+					if (!canBeClicked(theWorld, neighbor)) return@forEach
 
-				val diffX = neighbor.x + 0.5 - thePlayer.posX
-				val diffY = neighbor.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)
-				val diffZ = neighbor.z + 0.5 - thePlayer.posZ
-				val sqrt = hypot(diffX, diffZ)
+					val diffX = neighbor.x + 0.5 - thePlayer.posX
+					val diffY = neighbor.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)
+					val diffZ = neighbor.z + 0.5 - thePlayer.posZ
+					val sqrt = hypot(diffX, diffZ)
 
-				val yaw = WMathHelper.toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f
-				val pitch = -WMathHelper.toDegrees(StrictMath.atan2(diffY, sqrt).toFloat())
+					val yaw = WMathHelper.toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f
+					val pitch = -WMathHelper.toDegrees(StrictMath.atan2(diffY, sqrt).toFloat())
 
-				mc.netHandler.addToSendQueue(provider.createCPacketPlayerLook(thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround))
-				if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor, side.opposite, WVec3(side.directionVec)))
-				{
-					thePlayer.swingItem()
-					break
+					mc.netHandler.addToSendQueue(provider.createCPacketPlayerLook(thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround))
+
+					if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor, side.opposite, WVec3(side.directionVec)))
+					{
+						thePlayer.swingItem()
+						return@run
+					}
 				}
 			}
 

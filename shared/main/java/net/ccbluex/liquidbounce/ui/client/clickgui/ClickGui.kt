@@ -70,12 +70,12 @@ class ClickGui : WrappedGuiScreen()
 		}
 
 		// Draw Element Description
-		for (panel in panels) panel.elements.asSequence().filterIsInstance<ModuleElement>().filter { newMouseX != 0.0 && newMouseY != 0.0 && it.isHovering(newMouseXI, newMouseYI) && it.isVisible && it.y <= panel.y + panel.fade }.forEach { style.drawDescription(newMouseXI, newMouseYI, it.module.description) }
+		panels.forEach { panel -> panel.elements.asSequence().filterIsInstance<ModuleElement>().filter { newMouseX != 0.0 && newMouseY != 0.0 && it.isHovering(newMouseXI, newMouseYI) && it.isVisible && it.y <= panel.y + panel.fade }.forEach { style.drawDescription(newMouseXI, newMouseYI, it.module.description) } }
 
 		if (Mouse.hasWheel())
 		{
 			val wheel = Mouse.getDWheel()
-			@Suppress("LoopToCallChain") for (panel in panels) if (panel.handleScroll(newMouseXI, newMouseYI, wheel)) break
+			panels.any { it.handleScroll(newMouseXI, newMouseYI, wheel) }
 		}
 
 		classProvider.glStateManager.disableLighting()
@@ -105,6 +105,7 @@ class ClickGui : WrappedGuiScreen()
 		{
 			panel.mouseClicked(newMouseXI, newMouseYI, mouseButton)
 			panel.drag = false
+
 			if (mouseButton == 0 && panel.isHovering(newMouseXI, newMouseYI)) clickedPanel = panel
 		}
 
@@ -154,8 +155,7 @@ class ClickGui : WrappedGuiScreen()
 				}
 				else if (element.slowlyFade > 0) element.slowlyFade -= 20
 
-				if (element.slowlyFade > 255) element.slowlyFade = 255
-				if (element.slowlyFade < 0) element.slowlyFade = 0
+				element.slowlyFade = element.slowlyFade.coerceAtLeast(0).coerceAtMost(255)
 			}
 		}
 

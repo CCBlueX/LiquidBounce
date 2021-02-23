@@ -67,7 +67,9 @@ abstract class Panel(val name: String, x: Int, y: Int, width: Int, height: Int, 
 		{
 			element.setLocation(x, y)
 			element.width = width
+
 			if (y <= this.y + fade) element.drawScreen(mouseX, mouseY, button)
+
 			y += element.height + 1
 			element.isVisible = true
 		}
@@ -146,10 +148,8 @@ abstract class Panel(val name: String, x: Int, y: Int, width: Int, height: Int, 
 		var height = 0
 		var count = 0
 
-		for (element in elements)
-		{
-			if (count >= (LiquidBounce.moduleManager.getModule(ClickGUI::class.java) as ClickGUI).maxElementsValue.get()) continue
-
+		val maxElements = (LiquidBounce.moduleManager.getModule(ClickGUI::class.java) as ClickGUI).maxElementsValue.get()
+		elements.filter { count < maxElements }.forEach { element ->
 			height += element.height + 1
 			++count
 		}

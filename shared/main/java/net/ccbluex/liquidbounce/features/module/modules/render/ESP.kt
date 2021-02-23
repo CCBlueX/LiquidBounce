@@ -139,10 +139,7 @@ class ESP : Module()
 					var maxX = -1f
 					var maxY = -1f
 
-					for (boxVertex in boxVertices)
-					{
-						val screenPos = WorldToScreen.worldToScreen(Vector3f(boxVertex[0], boxVertex[1], boxVertex[2]), mvMatrix, projectionMatrix, displayWidth, displayHeight) ?: continue
-
+					boxVertices.mapNotNull { WorldToScreen.worldToScreen(Vector3f(it[0], it[1], it[2]), mvMatrix, projectionMatrix, displayWidth, displayHeight) }.forEach { screenPos ->
 						minX = min(screenPos.x, minX)
 						minY = min(screenPos.y, minY)
 						maxX = max(screenPos.x, maxX)

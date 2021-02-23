@@ -73,19 +73,14 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		var index = -1
 
-		// Find the current logged-on account and automatically select it
-		run {
-			for (i in LiquidBounce.fileManager.accountsConfig.accounts.indices)
-			{
-				val minecraftAccount = LiquidBounce.fileManager.accountsConfig.accounts[i]
+		val accountsConfig = LiquidBounce.fileManager.accountsConfig
 
-				if (minecraftAccount.password.isNullOrEmpty() && minecraftAccount.name == mc.session.username || minecraftAccount.accountName != null && minecraftAccount.accountName == mc.session.username)
-				{
-					index = i
-					return@run
-				}
-			}
-		}
+		// Find the current logged-on account and automatically select it
+		accountsConfig.accounts.indices.firstOrNull { i ->
+			val minecraftAccount = accountsConfig.accounts[i]
+
+			minecraftAccount.password.isNullOrEmpty() && minecraftAccount.name == mc.session.username || minecraftAccount.accountName != null && minecraftAccount.accountName == mc.session.username
+		}?.let { index = it }
 
 		altsList.elementClicked(index, false, 0, 0)
 		altsList.represented.scrollBy(index * altsList.represented.slotHeight)

@@ -107,9 +107,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			y += imageSize
 
 			Fonts.font40.drawString("@" + credit.name, x + infoOffset + 5.0f, 48f, Color.WHITE.rgb, true)
-			Fonts.font40.drawString(
-				"${credit.commits} commits \u00A7a${DECIMAL_FORMAT.format(credit.additions)}++ \u00A74${DECIMAL_FORMAT.format(credit.deletions)}--", x + infoOffset + 5.0f, (y - Fonts.font40.fontHeight).toFloat(), Color.WHITE.rgb, true
-			)
+			Fonts.font40.drawString("${credit.commits} commits \u00A7a${DECIMAL_FORMAT.format(credit.additions)}++ \u00A74${DECIMAL_FORMAT.format(credit.deletions)}--", x + infoOffset + 5.0f, (y - Fonts.font40.fontHeight).toFloat(), Color.WHITE.rgb, true)
 
 			for (s in credit.contributions)
 			{

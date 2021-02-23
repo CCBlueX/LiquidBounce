@@ -29,13 +29,9 @@ class ShortcutsConfig(file: File) : FileConfig(file)
 
 		if (jsonElement !is JsonArray) return
 
-		for (shortcutJson in jsonElement)
-		{
-			if (shortcutJson !is JsonObject) continue
+		val commandManager = LiquidBounce.commandManager
 
-			val name = shortcutJson.get("name")?.asString ?: continue
-			val scriptJson = shortcutJson.get("script")?.asJsonArray ?: continue
-
+		jsonElement.asSequence().filterIsInstance<JsonObject>().mapNotNull { (it["name"]?.asString ?: return@mapNotNull null) to (it["script"]?.asJsonArray ?: return@mapNotNull null) }.forEach { (name, scriptJson) ->
 			val script = mutableListOf<Pair<Command, Array<String>>>()
 
 			for (scriptCommand in scriptJson)
@@ -45,12 +41,12 @@ class ShortcutsConfig(file: File) : FileConfig(file)
 				val commandName = scriptCommand.get("name")?.asString ?: continue
 				val arguments = scriptCommand.get("arguments")?.asJsonArray ?: continue
 
-				val command = LiquidBounce.commandManager.getCommand(commandName) ?: continue
+				val command = commandManager.getCommand(commandName) ?: continue
 
 				script.add(command to arguments.map { it.asString }.toTypedArray())
 			}
 
-			LiquidBounce.commandManager.registerCommand(Shortcut(name, script))
+			commandManager.registerCommand(Shortcut(name, script))
 		}
 	}
 
@@ -63,10 +59,7 @@ class ShortcutsConfig(file: File) : FileConfig(file)
 	{
 		val jsonArray = JsonArray()
 
-		for (command in LiquidBounce.commandManager.commands)
-		{
-			if (command !is Shortcut) continue
-
+		LiquidBounce.commandManager.commands.filterIsInstance<Shortcut>().forEach { command ->
 			val jsonCommand = JsonObject()
 			jsonCommand.addProperty("name", command.command)
 

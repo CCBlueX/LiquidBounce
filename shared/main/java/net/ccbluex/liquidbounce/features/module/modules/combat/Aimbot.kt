@@ -212,7 +212,7 @@ class Aimbot : Module()
 
 		val entity = target ?: return
 
-		if (!lockValue.get() && RotationUtils.isFaced(target, range.toDouble())) return
+		if (!lockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, target, range.toDouble())) return
 
 		// Jitter
 		val jitterEnabled = jitterValue.get()

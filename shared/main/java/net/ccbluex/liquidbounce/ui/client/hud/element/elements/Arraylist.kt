@@ -359,19 +359,18 @@ class Arraylist(
 
 			if (modules.isEmpty()) return if (horizontalSide == Horizontal.LEFT) Border(0F, -1F, 20F, 20F) else Border(0F, -1F, -20F, 20F)
 
-			for (module in modules)
-			{
+			modules.map { it.slide.toInt() }.forEach { slide ->
 				when (horizontalSide)
 				{
 					Horizontal.RIGHT, Horizontal.MIDDLE ->
 					{
-						val xPos = -module.slide.toInt() - 2
+						val xPos = -slide - 2
 						if (x2 == Int.MIN_VALUE || xPos < x2) x2 = xPos
 					}
 
 					Horizontal.LEFT ->
 					{
-						val xPos = module.slide.toInt() + 14
+						val xPos = slide + 14
 						if (x2 == Int.MIN_VALUE || xPos > x2) x2 = xPos
 					}
 				}

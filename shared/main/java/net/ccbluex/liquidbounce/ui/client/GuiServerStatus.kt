@@ -52,9 +52,9 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		}
 		else
 		{
-			for (server in status.keys)
+			for (address in status.keys)
 			{
-				val color = status[server]
+				val color = status[address]
 				val text = "${
 					when (color?.toLowerCase())
 					{
@@ -63,7 +63,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 						"red" -> "\u00A7c"
 						else -> color
 					}
-				}$server: ${
+				}$address: ${
 					when (color?.toLowerCase())
 					{
 						"green" -> "Online and Stable"
@@ -91,11 +91,9 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		try
 		{
 			@Suppress("UNCHECKED_CAST")
-			val linkedTreeMaps = Gson().fromJson(
-				HttpUtils["https://status.mojang.com/check"], List::class.java
-			) as List<Map<String, String>>
+			val statusMaps = Gson().fromJson(HttpUtils["https://status.mojang.com/check"], List::class.java) as List<Map<String, String>>
 
-			for (linkedTreeMap in linkedTreeMaps) for ((key, value) in linkedTreeMap) status[key] = value
+			for (statusMap in statusMaps) for ((key, value) in statusMap) status[key] = value
 		}
 		catch (e: IOException)
 		{

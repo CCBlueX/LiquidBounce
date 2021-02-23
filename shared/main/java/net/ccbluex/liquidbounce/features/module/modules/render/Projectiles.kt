@@ -222,20 +222,17 @@ class Projectiles : Module()
 
 			for (x in chunkMinX..chunkMaxX) for (z in chunkMinZ..chunkMaxZ) theWorld.getChunkFromChunkCoords(x, z).getEntitiesWithinAABBForEntity(thePlayer, arrowBox, collidedEntities, null)
 
+			val sizeDouble = size.toDouble()
+
 			// Check all possible entities
-			for (possibleEntity in collidedEntities)
-			{
-				if (possibleEntity.canBeCollidedWith() && possibleEntity != thePlayer)
-				{
-					val sizeDouble = size.toDouble()
-					val possibleEntityBoundingBox = possibleEntity.entityBoundingBox.expand(sizeDouble, sizeDouble, sizeDouble)
+			collidedEntities.filter { it.canBeCollidedWith() && it != thePlayer }.forEach { possibleEntity ->
+				val possibleEntityBoundingBox = possibleEntity.entityBoundingBox.expand(sizeDouble, sizeDouble, sizeDouble)
 
-					val possibleEntityLanding = possibleEntityBoundingBox.calculateIntercept(posBefore, posAfter) ?: continue
+				val possibleEntityLanding = possibleEntityBoundingBox.calculateIntercept(posBefore, posAfter) ?: return@forEach
 
-					hitEntity = true
-					hasLanded = true
-					landingPosition = possibleEntityLanding
-				}
+				hitEntity = true
+				hasLanded = true
+				landingPosition = possibleEntityLanding
 			}
 
 			// Affect motions of arrow
@@ -277,7 +274,7 @@ class Projectiles : Module()
 		if (landingPosition != null)
 		{
 			// Switch rotation of hit cylinder of the hit axis
-			when (landingPosition.sideHit!!.axisOrdinal)
+			when (landingPosition!!.sideHit!!.axisOrdinal)
 			{
 				0 -> GL11.glRotatef(90F, 0F, 0F, 1F)
 				2 -> GL11.glRotatef(90F, 1F, 0F, 0F)

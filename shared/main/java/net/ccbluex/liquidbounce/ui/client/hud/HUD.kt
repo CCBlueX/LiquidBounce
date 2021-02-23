@@ -23,9 +23,7 @@ open class HUD : MinecraftInstance()
 	companion object
 	{
 
-		val elements = arrayOf(
-			Armor::class.java, Arraylist::class.java, Effects::class.java, Image::class.java, Model::class.java, Notifications::class.java, TabGUI::class.java, Text::class.java, ScoreboardElement::class.java, Target::class.java, Radar::class.java, SpeedGraph::class.java, NetGraph::class.java
-		)
+		val elements = arrayOf(Armor::class.java, Arraylist::class.java, Effects::class.java, Image::class.java, Model::class.java, Notifications::class.java, TabGUI::class.java, Text::class.java, ScoreboardElement::class.java, Target::class.java, Radar::class.java, SpeedGraph::class.java, NetGraph::class.java)
 
 		/**
 		 * Create default HUD
@@ -79,14 +77,10 @@ open class HUD : MinecraftInstance()
 
 		if (button == 0)
 		{
-			for (element in elements.reversed())
-			{
-				if (!element.isInBorder((mouseX / element.scale) - element.renderX, (mouseY / element.scale) - element.renderY)) continue
-
+			elements.reversed().firstOrNull { it.isInBorder((mouseX / it.scale) - it.renderX, (mouseY / it.scale) - it.renderY) }?.let { element ->
 				element.drag = true
 				elements.remove(element)
 				elements.add(element)
-				break
 			}
 		}
 	}

@@ -171,18 +171,13 @@ object AntiBot : Module()
 	private val lastRemoved = MSTimer()
 
 	@JvmStatic
-	fun checkTabList(targetName: String, displayName: Boolean, equals: Boolean, stripColors: Boolean): Boolean
-	{
-		for (networkPlayerInfo in mc.netHandler.playerInfoMap)
-		{
-			var networkName = networkPlayerInfo.getFullName(displayName)
-			if (stripColors) networkName = stripColor(networkName)!!
+	fun checkTabList(targetName: String, displayName: Boolean, equals: Boolean, stripColors: Boolean): Boolean = mc.netHandler.playerInfoMap.asSequence().map { networkPlayerInfo ->
+		var networkName = networkPlayerInfo.getFullName(displayName)
 
-			if (if (equals) targetName == networkName else targetName.contains(networkName)) return true
-		}
+		if (stripColors) networkName = stripColor(networkName)!!
 
-		return false
-	}
+		networkName
+	}.any { networkName -> if (equals) targetName == networkName else targetName.contains(networkName) }
 
 	fun isBot(entity: IEntityLivingBase): Boolean
 	{

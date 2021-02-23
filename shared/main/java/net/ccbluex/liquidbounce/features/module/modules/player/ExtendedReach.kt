@@ -175,6 +175,7 @@ class ExtendedReach : Module()
 	@EventTarget
 	fun onMotion(event: MotionEvent)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		val netHandler = mc.netHandler
@@ -182,7 +183,7 @@ class ExtendedReach : Module()
 
 		if (event.eventState == EventState.PRE)
 		{
-			val facedEntity = raycastEntity(combatReach.get().toDouble(), object : EntityFilter
+			val facedEntity = raycastEntity(theWorld, thePlayer, combatReach.get().toDouble(), object : EntityFilter
 			{
 				override fun canRaycast(entity: IEntity?): Boolean = classProvider.isEntityLivingBase(entity)
 			})

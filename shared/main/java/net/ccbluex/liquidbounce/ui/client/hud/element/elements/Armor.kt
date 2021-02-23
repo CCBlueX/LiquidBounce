@@ -33,22 +33,22 @@ class Armor(
 	{
 		if (mc.playerController.isNotCreative)
 		{
+			val thePlayer = mc.thePlayer!!
+
 			GL11.glPushMatrix()
 
 			val renderItem = mc.renderItem
 
 			// Prevents being conflicted with the bubbles
-			val preventConflict = preventConflictValue.get() && mc.thePlayer!!.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.WATER))
+			val preventConflict = preventConflictValue.get() && thePlayer.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.WATER))
 
 			var x = 1
 			var y = if (preventConflict) -10 else 0
 
 			val mode = modeValue.get()
 
-			for (index in 3 downTo 0)
-			{
-				val stack = mc.thePlayer!!.inventory.armorInventory[index] ?: continue
-
+			val armorInventory = thePlayer.inventory.armorInventory
+			(3 downTo 0).mapNotNull { armorInventory[it] }.forEach { stack ->
 				renderItem.renderItemIntoGUI(stack, x, y)
 				renderItem.renderItemOverlays(mc.fontRendererObj, stack, x, y)
 				if (mode.equals("Horizontal", true)) x += 18

@@ -38,21 +38,22 @@ class XRayConfig(file: File) : FileConfig(file)
 
 		xRay.xrayBlocks.clear()
 
-		for (jsonElement in jsonArray) try
-		{
-			val block = wrapper.functions.getBlockFromName(jsonElement.asString) ?: continue
-
-			if (xRay.xrayBlocks.contains(block))
+		val func = wrapper.functions
+		jsonArray.mapNotNull { func.getBlockFromName(it.asString) }.forEach { block ->
+			try
 			{
-				logger.error("[FileManager] Skipped xray block '{}' because the block is already added.", block.registryName)
-				continue
-			}
+				if (xRay.xrayBlocks.contains(block))
+				{
+					logger.warn("[FileManager] Skipped xray block '{}' because the block is already added.", block.registryName)
+					return@forEach
+				}
 
-			xRay.xrayBlocks.add(block)
-		}
-		catch (throwable: Throwable)
-		{
-			logger.error("[FileManager] Failed to add block to xray.", throwable)
+				xRay.xrayBlocks.add(block)
+			}
+			catch (throwable: Throwable)
+			{
+				logger.error("[FileManager] Failed to add block to xray.", throwable)
+			}
 		}
 	}
 
@@ -67,7 +68,10 @@ class XRayConfig(file: File) : FileConfig(file)
 		val xRay = LiquidBounce.moduleManager[XRay::class.java] as XRay
 		val jsonArray = JsonArray()
 
-		for (block in xRay.xrayBlocks) jsonArray.add(FileManager.PRETTY_GSON.toJsonTree(wrapper.functions.getIdFromBlock(block)))
+		val func = wrapper.functions
+		xRay.xrayBlocks.map(func::getIdFromBlock).forEach { blockID ->
+			jsonArray.add(FileManager.PRETTY_GSON.toJsonTree(blockID))
+		}
 
 		val writer = MiscUtils.createBufferedFileWriter(file)
 		writer.write(FileManager.PRETTY_GSON.toJson(jsonArray) + System.lineSeparator())

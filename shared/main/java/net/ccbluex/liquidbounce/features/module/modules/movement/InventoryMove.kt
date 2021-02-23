@@ -32,7 +32,14 @@ class InventoryMove : Module()
 
 	private fun tick()
 	{
-		if (!classProvider.isGuiChat(mc.currentScreen) && !classProvider.isGuiIngameMenu(mc.currentScreen) && (!undetectable.get() || !classProvider.isGuiContainer(mc.currentScreen))) for (affectedBinding in affectedBindings) affectedBinding.pressed = mc.gameSettings.isKeyDown(affectedBinding)
+		val provider = classProvider
+
+		val currentScreen = mc.currentScreen
+		val gameSettings = mc.gameSettings
+
+		val onlyInventory = undetectable.get()
+
+		if (!provider.isGuiChat(currentScreen) && !provider.isGuiIngameMenu(currentScreen) && (!onlyInventory || !provider.isGuiContainer(currentScreen))) for (affectedBinding in affectedBindings) affectedBinding.pressed = gameSettings.isKeyDown(affectedBinding)
 	}
 
 	@EventTarget

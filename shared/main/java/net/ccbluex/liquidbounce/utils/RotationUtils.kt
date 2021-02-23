@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.utils.RaycastUtils.EntityFilter
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import java.lang.Double.isNaN
-import java.util.Random
+import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -532,7 +532,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your reach
 		 * @return                    if crosshair is over target
 		 */
-		fun isFaced(targetEntity: IEntity?, blockReachDistance: Double): Boolean = raycastEntity(blockReachDistance, object : EntityFilter
+		fun isFaced(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetEntity: IEntity?, blockReachDistance: Double): Boolean = raycastEntity(theWorld, thePlayer, blockReachDistance, object : EntityFilter
 		{
 			override fun canRaycast(entity: IEntity?): Boolean = targetEntity != null && targetEntity == entity
 		}) != null

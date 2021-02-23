@@ -81,7 +81,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 	fun drawString(text: String, x: Double, y: Double, color: Int)
 	{
 		val scale = 0.25F
-		val reverse = 1 / scale
+		val reverse = 4F /* 1 / scale */
 
 		GL11.glPushMatrix()
 		GL11.glScalef(scale, scale, scale)

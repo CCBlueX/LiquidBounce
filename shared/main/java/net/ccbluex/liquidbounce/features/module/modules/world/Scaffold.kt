@@ -942,27 +942,38 @@ class Scaffold : Module()
 		val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
 		var placeRotation: PlaceRotation? = null
 
-		for (facingType in EnumFacingType.values())
-		{
-			val side = classProvider.getEnumFacing(facingType)
+		val provider = classProvider
+
+		val searchMinX = data.minX
+		val searchMaxX = data.maxX
+		val searchMinY = data.minY
+		val searchMaxY = data.maxY
+		val searchMinZ = data.minZ
+		val searchMaxZ = data.maxZ
+
+		EnumFacingType.values().map(provider::getEnumFacing).forEach { side ->
 			val neighbor = blockPosition.offset(side)
 
-			if (!canBeClicked(theWorld, neighbor)) continue
+			if (!canBeClicked(theWorld, neighbor)) return@forEach
 
 			val dirVec = WVec3(side.directionVec)
-			var xSearch = data.minX
-			while (xSearch <= data.maxX)
+			val dirX = dirVec.xCoord
+			val dirY = dirVec.yCoord
+			val dirZ = dirVec.zCoord
+
+			var xSearch = searchMinX
+			while (xSearch <= searchMaxX)
 			{
-				var ySearch = data.minY
-				while (ySearch <= data.maxY)
+				var ySearch = searchMinY
+				while (ySearch <= searchMaxY)
 				{
-					var zSearch = data.minZ
-					while (zSearch <= data.maxZ)
+					var zSearch = searchMinZ
+					while (zSearch <= searchMaxZ)
 					{
 						val posVec = WVec3(blockPosition).addVector(xSearch, ySearch, zSearch)
 						val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
-						val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
-						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null))
+						val hitVec = posVec.add(WVec3(dirX * 0.5, dirY * 0.5, dirZ * 0.5))
+						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null))
 						{
 							zSearch += data.zSteps
 							continue
@@ -978,6 +989,7 @@ class Scaffold : Module()
 							if (!side.isUp() && minDiffValue.get() > 0)
 							{
 								val diff: Double = abs(if (side.isNorth() || side.isSouth()) diffZ else diffX)
+
 								if (diff < minDiffValue.get() || diff > 0.3f) return@repeat
 							}
 
@@ -985,7 +997,7 @@ class Scaffold : Module()
 							val rotation = Rotation(wrapAngleTo180_float(WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90f + if (staticYaw) staticYawOffset else 0f), pitch)
 							val rotationVector = RotationUtils.getVectorForRotation(rotation)
 							val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
-							val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false, false, true)
+							val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, false, false, true)
 
 							if (rayTrace!!.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos!! != neighbor) return@repeat
 							if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation!!.rotation)) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
@@ -1020,29 +1032,30 @@ class Scaffold : Module()
 				tower.lockRotation = null // Prevents conflict
 				lockRotation = limitedRotation
 				facesBlock = false
-				for (facingType in EnumFacingType.values())
-				{
-					val side = classProvider.getEnumFacing(facingType)
-					val neighbor = blockPosition.offset(side)
 
-					if (!canBeClicked(theWorld, neighbor)) continue
+				run {
+					EnumFacingType.values().map(provider::getEnumFacing).forEach { side ->
+						val neighbor = blockPosition.offset(side)
 
-					val dirVec = WVec3(side.directionVec)
-					val posVec = WVec3(blockPosition).addVector(xSearchFace, ySearchFace, zSearchFace)
-					val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
-					val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
+						if (!canBeClicked(theWorld, neighbor)) return@forEach
 
-					if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) continue
+						val dirVec = WVec3(side.directionVec)
+						val posVec = WVec3(blockPosition).addVector(xSearchFace, ySearchFace, zSearchFace)
+						val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
+						val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
 
-					val rotationVector = RotationUtils.getVectorForRotation(limitedRotation!!)
-					val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
-					val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false, false, true)
+						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) return@forEach
 
-					if (!(rayTrace!!.typeOfHit == IMovingObjectPosition.WMovingObjectType.BLOCK && rayTrace.blockPos!! == neighbor)) continue
+						val rotationVector = RotationUtils.getVectorForRotation(limitedRotation!!)
+						val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
+						val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false, false, true)
 
-					facesBlock = true
+						if (!(rayTrace!!.typeOfHit == IMovingObjectPosition.WMovingObjectType.BLOCK && rayTrace.blockPos!! == neighbor)) return@forEach
 
-					break
+						facesBlock = true
+
+						return@run
+					}
 				}
 			}
 			else

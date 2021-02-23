@@ -84,9 +84,7 @@ class ClickGuiConfig(file: File) : FileConfig(file)
 			panelObject.addProperty("posX", panel.x)
 			panelObject.addProperty("posY", panel.y)
 
-			for (element in panel.elements)
-			{
-				if (element !is ModuleElement) continue
+			panel.elements.filterIsInstance<ModuleElement>().forEach { element ->
 				val elementObject = JsonObject()
 				elementObject.addProperty("Settings", element.isShowSettings)
 				panelObject.add(element.module.name, elementObject)

@@ -158,6 +158,7 @@ class InventoryCleaner : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val inventoryContainer = thePlayer.inventoryContainer
 
 		// Delay, openContainer Check
 		if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0) return
@@ -167,8 +168,8 @@ class InventoryCleaner : Module()
 		// Clean hotbar
 		if (hotbar && !classProvider.isGuiInventory(mc.currentScreen))
 		{
-			val hotbarItems = items(36, 45)
-			val garbageItemsHotbarSlots = hotbarItems.filter { !isUseful(thePlayer, it.key, it.value) }.keys.toMutableList()
+			val hotbarItems = items(36, 45, inventoryContainer)
+			val garbageItemsHotbarSlots = hotbarItems.filter { !isUseful(thePlayer, it.key, it.value, container = inventoryContainer) }.keys.toMutableList()
 
 			// Break if there is no garbage items in hotbar
 			if (garbageItemsHotbarSlots.isNotEmpty())
@@ -215,24 +216,22 @@ class InventoryCleaner : Module()
 		if (sortValue.get()) sortHotbar(thePlayer)
 
 		// Clean inventory
-		cleanInventory(end = if (hotbar) 45 else 36)
+		cleanInventory(end = if (hotbar) 45 else 36, container = inventoryContainer)
 	}
 
-	fun cleanInventory(
-		start: Int = 9, end: Int = 45, timer: MSTimer = InventoryUtils.CLICK_TIMER, container: IContainer = mc.thePlayer!!.inventoryContainer, delayResetFunc: Runnable = Runnable { delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get()) }
-	): Boolean
+	private fun cleanInventory(start: Int = 9, end: Int = 45, timer: MSTimer = InventoryUtils.CLICK_TIMER, container: IContainer, delayResetFunc: Runnable = Runnable { delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get()) }): Boolean
 	{
 		val thePlayer = mc.thePlayer ?: return true
 
 		var invItems = items(start, end, container)
-		var garbageItems = invItems.filter { !isUseful(thePlayer, it.key, it.value) }.keys.toMutableList()
+		var garbageItems = invItems.filter { !isUseful(thePlayer, it.key, it.value, container = container) }.keys.toMutableList()
 
 		if (garbageItems.isEmpty()) return true
 
 		while (timer.hasTimePassed(delay))
 		{
 			invItems = items(start, end, container)
-			garbageItems = invItems.filter { !isUseful(thePlayer, it.key, it.value) }.keys.toMutableList()
+			garbageItems = invItems.filter { !isUseful(thePlayer, it.key, it.value, container = container) }.keys.toMutableList()
 
 			// Return true if there is no remaining garbage items in the inventory
 			if (garbageItems.isEmpty()) return true
@@ -277,7 +276,7 @@ class InventoryCleaner : Module()
 	 * @param slot Slot id of the item.
 	 * @return Returns true when the item is useful
 	 */
-	fun isUseful(thePlayer: IEntityPlayerSP, slot: Int, itemStack: IItemStack, start: Int = 0, end: Int = 45, container: IContainer = thePlayer.inventoryContainer): Boolean
+	fun isUseful(thePlayer: IEntityPlayerSP, slot: Int, itemStack: IItemStack, start: Int = 0, end: Int = 45, container: IContainer): Boolean
 	{
 		return try
 		{
@@ -536,20 +535,13 @@ class InventoryCleaner : Module()
 	/**
 	 * Get items in inventory
 	 */
-	private fun items(start: Int = 0, end: Int = 45, container: IContainer = mc.thePlayer!!.inventoryContainer): Map<Int, IItemStack>
+	private fun items(start: Int = 0, end: Int = 45, container: IContainer): Map<Int, IItemStack>
 	{
 		val items = mutableMapOf<Int, IItemStack>()
 
-		for (i in end - 1 downTo start)
-		{
-			val itemStack = container.getSlot(i).stack ?: continue
+		val itemDelay = itemDelayValue.get()
 
-			if (ItemUtils.isStackEmpty(itemStack)) continue
-
-			if (i in 36..44 && type(i).equals("Ignore", ignoreCase = true)) continue
-
-			if (System.currentTimeMillis() - (itemStack).itemDelay >= itemDelayValue.get()) items[i] = itemStack
-		}
+		(end - 1 downTo start).mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { (i, itemStack) -> !ItemUtils.isStackEmpty(itemStack) && (i !in 36..44 || !type(i).equals("Ignore", ignoreCase = true)) && System.currentTimeMillis() - (itemStack).itemDelay >= itemDelay }.forEach { (i, itemStack) -> items[i] = itemStack }
 
 		return items
 	}

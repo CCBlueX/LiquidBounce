@@ -67,12 +67,8 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 	init
 	{
-		for (category in ModuleCategory.values())
-		{
-			val tab = Tab(category.displayName)
-
+		ModuleCategory.values().map { it to Tab(it.displayName) }.forEach { (category, tab) ->
 			LiquidBounce.moduleManager.modules.asSequence().filter { module: Module -> category == module.category }.forEach { tab.modules.add(it) }
-
 			tabs.add(tab)
 		}
 	}
@@ -207,14 +203,10 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 				}
 			}
 		}
-		else
+		else for (tab in tabs)
 		{
-			for (tab in tabs)
-			{
-				if (tab.textFade > 0) tab.textFade -= 0.05F * delta
-
-				if (tab.textFade < 0) tab.textFade = 0F
-			}
+			if (tab.textFade > 0) tab.textFade -= 0.05F * delta
+			if (tab.textFade < 0) tab.textFade = 0F
 		}
 	}
 

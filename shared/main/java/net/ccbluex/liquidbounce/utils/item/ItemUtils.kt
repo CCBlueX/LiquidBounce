@@ -68,7 +68,7 @@ object ItemUtils : MinecraftInstance()
 			{
 				val nbtBuilder = StringBuilder()
 
-				for (nbtcount in 3 until argsLength) nbtBuilder.append(" ").append(checkedArgs[nbtcount])
+				for (nbtcount in 3 until argsLength) nbtBuilder.append(" ${checkedArgs[nbtcount]}")
 
 				itemstack.tagCompound = classProvider.jsonToNBTInstance.getTagFromJson("$nbtBuilder")
 			}

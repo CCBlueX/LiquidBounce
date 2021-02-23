@@ -35,17 +35,14 @@ class ModulesConfig(file: File) : FileConfig(file)
 
 		if (jsonElement is JsonNull) return
 
-		for ((key, value) in jsonElement.asJsonObject.entrySet())
-		{
-			val module = LiquidBounce.moduleManager.getModule(key)
-			if (module != null)
-			{
-				val jsonModule = value as JsonObject
+		val moduleManager = LiquidBounce.moduleManager
 
-				module.state = jsonModule["State"].asBoolean
-				module.keyBind = jsonModule["KeyBind"].asInt
-				if (jsonModule.has("Array")) module.array = jsonModule["Array"].asBoolean
-			}
+		jsonElement.asJsonObject.entrySet().asSequence().filter { (_, jsonModule) -> jsonModule is JsonObject }.mapNotNull { (moduleName, jsonModule) -> (moduleManager.getModule(moduleName) ?: return@mapNotNull null) to jsonModule }.forEach { (module, jsonObj) ->
+			val jsonModule = jsonObj as JsonObject
+
+			module.state = jsonModule["State"].asBoolean
+			module.keyBind = jsonModule["KeyBind"].asInt
+			if (jsonModule.has("Array")) module.array = jsonModule["Array"].asBoolean
 		}
 	}
 

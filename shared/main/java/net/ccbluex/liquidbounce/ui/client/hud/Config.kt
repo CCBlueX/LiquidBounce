@@ -25,8 +25,7 @@ class Config
 
 	constructor(hud: HUD)
 	{
-		for (element in hud.elements)
-		{
+		hud.elements.map { element ->
 			val elementObject = JsonObject()
 			elementObject.addProperty("Type", element.name)
 			elementObject.addProperty("X", element.x)
@@ -36,9 +35,8 @@ class Config
 			elementObject.addProperty("VerticalFacing", element.side.vertical.sideName)
 
 			for (value in element.values) elementObject.add(value.name, value.toJson())
-
-			jsonArray.add(elementObject)
-		}
+			elementObject
+		}.forEach(jsonArray::add)
 	}
 
 	fun toJson(): String = GsonBuilder().setPrettyPrinting().create().toJson(jsonArray)
@@ -70,9 +68,7 @@ class Config
 							element.x = jsonObject["X"].asInt.toDouble()
 							element.y = jsonObject["Y"].asInt.toDouble()
 							element.scale = jsonObject["Scale"].asFloat
-							element.side = Side(
-								Side.Horizontal.getByName(jsonObject["HorizontalFacing"].asString)!!, Side.Vertical.getByName(jsonObject["VerticalFacing"].asString)!!
-							)
+							element.side = Side(Side.Horizontal.getByName(jsonObject["HorizontalFacing"].asString)!!, Side.Vertical.getByName(jsonObject["VerticalFacing"].asString)!!)
 
 							element.values.asSequence().filter { jsonObject.has(it.name) }.forEach { it.fromJson(jsonObject[it.name]) }
 

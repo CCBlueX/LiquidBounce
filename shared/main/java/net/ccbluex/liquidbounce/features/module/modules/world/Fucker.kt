@@ -224,22 +224,16 @@ object Fucker : Module()
 		var nearestBlockDistance = Double.MAX_VALUE
 		var nearestBlock: WBlockPos? = null
 
-		for (x in radius downTo -radius + 1)
-		{
-			for (y in radius downTo -radius + 1)
-			{
-				for (z in radius downTo -radius + 1)
-				{
-					val blockPos = WBlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z)
-					val block = getBlock(theWorld, blockPos)
+		val posXI = thePlayer.posX.toInt()
+		val posYI = thePlayer.posY.toInt()
+		val posZI = thePlayer.posZ.toInt()
 
-					if (functions.getIdFromBlock(block) != targetID) continue
-
-					val distance = getCenterDistance(thePlayer, blockPos)
-					if (distance > rangeValue.get()) continue
-					if (nearestBlockDistance < distance) continue
-					if (!isHitable(theWorld, thePlayer, blockPos) && !surroundingsValue.get()) continue
-
+		(radius downTo -radius + 1).forEach { x ->
+			(radius downTo -radius + 1).forEach { y ->
+				(radius downTo -radius + 1).map { z ->
+					val blockPos = WBlockPos(posXI + x, posYI + y, posZI + z)
+					blockPos to getCenterDistance(thePlayer, blockPos)
+				}.filter { (blockPos, distance) -> functions.getIdFromBlock(getBlock(theWorld, blockPos)) == targetID && distance <= rangeValue.get() && nearestBlockDistance >= distance && (isHitable(theWorld, thePlayer, blockPos) || surroundingsValue.get()) }.forEach { (blockPos, distance) ->
 					nearestBlockDistance = distance
 					nearestBlock = blockPos
 				}

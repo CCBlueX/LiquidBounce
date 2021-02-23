@@ -15,7 +15,6 @@ import org.objectweb.asm.tree.InsnList
  */
 object NodeUtils
 {
-
 	/**
 	 * Lazy.
 	 */
@@ -25,5 +24,4 @@ object NodeUtils
 		for (node in nodes) insnList.add(node)
 		return insnList
 	}
-
 }

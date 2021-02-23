@@ -88,27 +88,23 @@ class AccountsConfig(file: File) : FileConfig(file)
 
 		accounts.clear()
 
-		for (account in accountList)
-		{
-			val info = account.toString().split(slashPattern, 2)
-			if (info.isNotEmpty())
+		accountList.map { it.toString().split(slashPattern, 2) }.filter(List<String>::isNotEmpty).forEach { info ->
+			val information = info[0].split(":")
+			val serviceType = AltServiceType.getById(information[0]) ?: AltServiceType.MOJANG
+
+			val acc: MinecraftAccount = when (information.size)
 			{
-				val information = info[0].split(":")
-				val serviceType = AltServiceType.getById(information[0]) ?: AltServiceType.MOJANG
-
-				val acc: MinecraftAccount = when (information.size)
-				{
-					1 -> MinecraftAccount(AltServiceType.MOJANG, information[0])
-					2 -> MinecraftAccount(serviceType, information[1])
-					3 -> MinecraftAccount(serviceType, information[1], information[2])
-					else -> MinecraftAccount(serviceType, information[1], information[2], information[3])
-				}
-
-				if (info.size > 1) acc.bannedServers = deserializeOldBannedServers(info[1])
-
-				accounts.add(acc)
+				1 -> MinecraftAccount(AltServiceType.MOJANG, information[0])
+				2 -> MinecraftAccount(serviceType, information[1])
+				3 -> MinecraftAccount(serviceType, information[1], information[2])
+				else -> MinecraftAccount(serviceType, information[1], information[2], information[3])
 			}
+
+			if (info.size > 1) acc.bannedServers = deserializeOldBannedServers(info[1])
+
+			accounts.add(acc)
 		}
+
 		logger.info("[FileManager] Loaded old Accounts config...")
 
 		// Save the accounts into a new valid JSON file

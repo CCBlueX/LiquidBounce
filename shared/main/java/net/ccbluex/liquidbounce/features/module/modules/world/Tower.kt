@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.StatType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
@@ -409,12 +410,13 @@ class Tower : Module()
 
 		val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
 		var placeRotation: PlaceRotation? = null
-		for (facingType in EnumFacingType.values())
-		{
-			val side = classProvider.getEnumFacing(facingType)
+
+		val provider = classProvider
+
+		EnumFacingType.values().map(provider::getEnumFacing).forEach { side ->
 			val neighbor = blockPosition.offset(side)
 
-			if (!canBeClicked(theWorld, neighbor)) continue
+			if (!canBeClicked(theWorld, neighbor)) return@forEach
 
 			val dirVec = WVec3(side.directionVec)
 
@@ -452,7 +454,7 @@ class Tower : Module()
 							continue
 						}
 
-						if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation.rotation)) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
+						if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation!!.rotation)) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
 
 						zSearch += 0.1
 					}
@@ -465,12 +467,12 @@ class Tower : Module()
 		if (rotationsValue.get())
 		{
 			val scaffold = LiquidBounce.moduleManager[Scaffold::class.java] as Scaffold
-			RotationUtils.setTargetRotation(placeRotation.rotation, keepRotationTicks)
+			RotationUtils.setTargetRotation(placeRotation!!.rotation, keepRotationTicks)
 			RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
 			scaffold.lockRotation = null // Prevent to lockRotation confliction
-			lockRotation = placeRotation.rotation
+			lockRotation = placeRotation!!.rotation
 		}
-		placeInfo = placeRotation.placeInfo
+		placeInfo = placeRotation!!.placeInfo
 		return true
 	}
 
@@ -523,19 +525,11 @@ class Tower : Module()
 	 */
 	private fun getBlocksAmount(thePlayer: IEntityPlayerSP): Int
 	{
-		var amount = 0
+		val provider = classProvider
 
-		for (i in 36..44)
-		{
-			val itemStack = thePlayer.inventoryContainer.getSlot(i).stack
-			if (itemStack != null && classProvider.isItemBlock(itemStack.item))
-			{
-				val block = itemStack.item!!.asItemBlock().block
-				if (thePlayer.heldItem == itemStack || InventoryUtils.canAutoBlock(block)) amount += itemStack.stackSize
-			}
-		}
+		val inventoryContainer = thePlayer.inventoryContainer
 
-		return amount
+		return (36..44).mapNotNull { inventoryContainer.getSlot(it).stack }.filter { provider.isItemBlock(it) && (thePlayer.heldItem == it || InventoryUtils.canAutoBlock(it.item!!.asItemBlock().block)) }.sumBy(IItemStack::stackSize)
 	}
 
 	override val tag: String

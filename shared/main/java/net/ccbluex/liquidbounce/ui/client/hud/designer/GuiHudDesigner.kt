@@ -38,18 +38,8 @@ class GuiHudDesigner : WrappedGuiScreen()
 
 		editorPanel.drawPanel(mouseX, mouseY, wheel)
 
-		if (wheel != 0)
-		{
-			for (element in LiquidBounce.hud.elements)
-			{
-				if (element.isInBorder(
-						mouseX / element.scale - element.renderX, mouseY / element.scale - element.renderY
-					))
-				{
-					element.scale = element.scale + if (wheel > 0) 0.05f else -0.05f
-					break
-				}
-			}
+		if (wheel != 0) LiquidBounce.hud.elements.firstOrNull { element -> element.isInBorder(mouseX / element.scale - element.renderX, mouseY / element.scale - element.renderY) }?.let {
+			it.scale = it.scale + if (wheel > 0) 0.05f else -0.05f
 		}
 	}
 
@@ -71,17 +61,7 @@ class GuiHudDesigner : WrappedGuiScreen()
 			editorPanel.create = false
 		}
 
-		if (mouseButton == 0)
-		{
-			for (element in LiquidBounce.hud.elements)
-			{
-				if (element.isInBorder(mouseX / element.scale - element.renderX, mouseY / element.scale - element.renderY))
-				{
-					selectedElement = element
-					break
-				}
-			}
-		}
+		if (mouseButton == 0) LiquidBounce.hud.elements.firstOrNull { it.isInBorder(mouseX / it.scale - it.renderX, mouseY / it.scale - it.renderY) }?.let { selectedElement = it }
 	}
 
 	override fun mouseReleased(mouseX: Int, mouseY: Int, state: Int)

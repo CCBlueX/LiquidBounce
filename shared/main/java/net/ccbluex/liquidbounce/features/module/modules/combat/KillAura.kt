@@ -419,7 +419,7 @@ class KillAura : Module()
 			updateHitable(theWorld, thePlayer)
 
 			// Delayed-AutoBlock
-			if (autoBlockValue.get().equals("AfterTick", true) && canBlock && currentTarget != null) startBlocking(currentTarget, interactAutoBlockValue.get() && hitable)
+			if (autoBlockValue.get().equals("AfterTick", true) && canBlock && currentTarget != null) startBlocking(thePlayer, currentTarget, interactAutoBlockValue.get() && hitable)
 
 			return
 		}
@@ -494,7 +494,7 @@ class KillAura : Module()
 		updateTarget(theWorld, thePlayer)
 
 		// Pre-AutoBlock
-		if (autoBlockTarget != null && !autoBlockValue.get().equals("AfterTick", ignoreCase = true) && canBlock && (!autoBlockHitableCheckValue.get() || hitable)) startBlocking(autoBlockTarget, interactAutoBlockValue.get())
+		if (autoBlockTarget != null && !autoBlockValue.get().equals("AfterTick", ignoreCase = true) && canBlock && (!autoBlockHitableCheckValue.get() || hitable)) startBlocking(thePlayer, autoBlockTarget, interactAutoBlockValue.get())
 		else if (canBlock) stopBlocking()
 
 		target ?: return
@@ -649,7 +649,7 @@ class KillAura : Module()
 			if (swing && (failedToHit || (fakeSwingValue.get() && distance <= swingRange))) thePlayer.swingItem()
 
 			// Start blocking after FAKE attack
-			if ((thePlayer.isBlocking || (canBlock && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(currentTarget!!, interactAutoBlockValue.get())
+			if ((thePlayer.isBlocking || (canBlock && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, currentTarget!!, interactAutoBlockValue.get())
 		}
 		else
 		{
@@ -775,14 +775,13 @@ class KillAura : Module()
 		autoBlockTarget = abTargets.firstOrNull()
 
 		// Find best target
-		for (entity in targets)
-		{
+		targets.firstOrNull {
 			// Update rotations to current target
-			if (thePlayer.getDistanceToEntityBox(entity) <= aimRange && !updateRotations(theWorld, thePlayer, entity)) continue
-
+			thePlayer.getDistanceToEntityBox(it) > aimRange || updateRotations(theWorld, thePlayer, it)
+		}?.let { entity ->
 			// Set target to current entity
 			target = entity
-			return
+			return@updateTarget
 		}
 
 		// Cleanup previouslySwitchedTargets when no target found and try again
@@ -825,15 +824,17 @@ class KillAura : Module()
 
 		val crackSize = particles.get()
 		if (crackSize > 0) repeat(crackSize) {
+			val target = target ?: return@attackEntity
+
 			// Critical Effect
-			if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) && thePlayer.ridingEntity == null || criticals.state && criticals.canCritical(thePlayer)) thePlayer.onCriticalHit(target ?: return)
+			if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) && thePlayer.ridingEntity == null || criticals.state && criticals.canCritical(thePlayer)) thePlayer.onCriticalHit(target)
 
 			// Enchant Effect
-			if (functions.getModifierForCreature(thePlayer.heldItem, (target ?: return@attackEntity).creatureAttribute) > 0.0f || fakeSharpValue.get()) thePlayer.onEnchantmentCritical(target ?: return)
+			if (functions.getModifierForCreature(thePlayer.heldItem, target.creatureAttribute) > 0.0f || fakeSharpValue.get()) thePlayer.onEnchantmentCritical(target)
 		}
 
 		// Start blocking after attack
-		if ((thePlayer.isBlocking || (canBlock && thePlayer.getDistanceToEntityBox(entity) <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(entity, interactAutoBlockValue.get())
+		if ((thePlayer.isBlocking || (canBlock && thePlayer.getDistanceToEntityBox(entity) <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, entity, interactAutoBlockValue.get())
 
 		@Suppress("ConstantConditionIf") if (Backend.MINECRAFT_VERSION_MINOR != 8) thePlayer.resetCooldown()
 	}
@@ -948,7 +949,7 @@ class KillAura : Module()
 
 		if (raycastValue.get())
 		{
-			val raycastedEntity = RaycastUtils.raycastEntity(reach, fakeYaw, fakePitch, object : RaycastUtils.EntityFilter
+			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach, fakeYaw, fakePitch, object : RaycastUtils.EntityFilter
 			{
 				override fun canRaycast(entity: IEntity?): Boolean
 				{
@@ -964,16 +965,14 @@ class KillAura : Module()
 
 			hitable = currentTarget == raycastedEntity
 		}
-		else hitable = if (currentTarget != null) if (multiaura) thePlayer.getDistanceToEntityBox(currentTarget!!) <= (reach - 1) else RotationUtils.isFaced(currentTarget, reach) else false
+		else hitable = if (currentTarget != null) if (multiaura) thePlayer.getDistanceToEntityBox(currentTarget!!) <= (reach - 1) else RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach) else false
 	}
 
 	/**
 	 * Start blocking
 	 */
-	private fun startBlocking(interactEntity: IEntity?, interact: Boolean)
+	private fun startBlocking(thePlayer: IEntityPlayerSP, interactEntity: IEntity?, interact: Boolean)
 	{
-		val thePlayer = mc.thePlayer ?: return
-
 		val autoBlockMode = autoBlockValue.get()
 		val blockRate = blockRate.get()
 
@@ -989,7 +988,7 @@ class KillAura : Module()
 			// Interact block
 			if (interact && interactEntity != null)
 			{
-				val positionEye = mc.renderViewEntity?.getPositionEyes(1F)
+				val positionEye = thePlayer.getPositionEyes(1F)
 
 				val expandSize = interactEntity.collisionBorderSize.toDouble()
 				val boundingBox = interactEntity.entityBoundingBox.expand(expandSize, expandSize, expandSize)
@@ -1004,7 +1003,7 @@ class KillAura : Module()
 				val pitchSin = functions.sin(-pitchRadians)
 
 				val range = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(interactEntity)) + 1
-				val lookAt = positionEye!!.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
+				val lookAt = positionEye.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
 
 				val movingObject = boundingBox.calculateIntercept(positionEye, lookAt)
 				if (movingObject != null)
