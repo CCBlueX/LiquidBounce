@@ -35,30 +35,27 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 		initPath.add(startVec)
 		hubsToWork.add(Hub(startVec, null, initPath, startVec.squareDistanceTo(endVec), 0.0, 0.0))
 
-		search@ for (i in 0 until loops)
-		{
-			hubsToWork.sortWith(HubComparator())
+		run findLoop@{
+			repeat(loops) { _ ->
+				hubsToWork.sortWith(HubComparator())
 
-			if (hubsToWork.isEmpty()) break
+				if (hubsToWork.isEmpty()) return@findLoop
 
-			for ((index, hub) in ArrayList(hubsToWork).withIndex())
-			{
-				if (index + 1 > depth) break
-
-				hubsToWork.remove(hub)
-				hubs.add(hub)
-
-				@Suppress("LoopToCallChain") for (direction in flatCardinalDirections)
+				for ((index, hub) in ArrayList(hubsToWork).withIndex())
 				{
-					val loc = hub!!.position.add(direction).floor()
-					if (checkPositionValidity(loc, false) && addHub(hub, loc, 0.0)) break@search
+					if (index + 1 > depth) break
+
+					hubsToWork.remove(hub)
+					hubs.add(hub)
+
+					flatCardinalDirections.map { hub.position.add(it).floor() }.forEach { if (checkPositionValidity(it, false) && addHub(hub, it, 0.0)) return@findLoop }
+
+					val up = hub.position.addVector(0.0, 1.0, 0.0).floor()
+					if (checkPositionValidity(up, false) && addHub(hub, up, 0.0)) return@findLoop
+
+					val down = hub.position.addVector(0.0, -1.0, 0.0).floor()
+					if (checkPositionValidity(down, false) && addHub(hub, down, 0.0)) return@findLoop
 				}
-
-				val loc1 = hub!!.position.addVector(0.0, 1.0, 0.0).floor()
-				if (checkPositionValidity(loc1, false) && addHub(hub, loc1, 0.0)) break@search
-
-				val loc2 = hub.position.addVector(0.0, -1.0, 0.0).floor()
-				if (checkPositionValidity(loc2, false) && addHub(hub, loc2, 0.0)) break@search
 			}
 		}
 		hubs.sortWith(HubComparator())

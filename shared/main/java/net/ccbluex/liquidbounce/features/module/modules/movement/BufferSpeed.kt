@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -213,19 +214,23 @@ class BufferSpeed : Module()
 			{
 				when (wallModeValue.get().toLowerCase())
 				{
-					"aac3.2.1" -> if (thePlayer.isCollidedVertically && isNearBlock || !classProvider.isBlockAir(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))))
+					"aac3.2.1" -> if (thePlayer.isCollidedVertically && isNearBlock(theWorld, thePlayer) || !classProvider.isBlockAir(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))))
 					{
 						boost(thePlayer, wallBoostValue.get())
+
 						return
 					}
 
-					"aac3.3.8" -> if (isNearBlock && !thePlayer.movementInput.jump)
+					"aac3.3.8" -> if (isNearBlock(theWorld, thePlayer) && !thePlayer.movementInput.jump)
 					{
 						thePlayer.jump()
+
 						thePlayer.motionY = 0.08
 						thePlayer.motionX *= 0.99
 						thePlayer.motionZ *= 0.99
+
 						down = true
+
 						return
 					}
 				}
@@ -289,26 +294,18 @@ class BufferSpeed : Module()
 		if (speedLimitValue.get() && speed > maxSpeed) speed = maxSpeed
 	}
 
-	private val isNearBlock: Boolean
-		get()
-		{
-			val thePlayer = mc.thePlayer!!
-			val theWorld = mc.theWorld!!
-			val blocks = ArrayDeque<WBlockPos>(4)
+	private fun isNearBlock(theWorld: IWorldClient, thePlayer: IEntityPlayerSP): Boolean
+	{
+		val blocks = ArrayDeque<WBlockPos>(4)
 
-			blocks.add(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7))
-			blocks.add(WBlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ))
-			blocks.add(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ + 0.7))
-			blocks.add(WBlockPos(thePlayer.posX - 0.7, thePlayer.posY + 1, thePlayer.posZ))
+		blocks.add(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7))
+		blocks.add(WBlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ))
+		blocks.add(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ + 0.7))
+		blocks.add(WBlockPos(thePlayer.posX - 0.7, thePlayer.posY + 1, thePlayer.posZ))
 
-			for (blockPos in blocks)
-			{
-				val blockState = theWorld.getBlockState(blockPos)
-
-				val collisionBoundingBox = blockState.block.getCollisionBoundingBox(theWorld, blockPos, blockState)
-
-				if ((collisionBoundingBox == null || collisionBoundingBox.maxX == collisionBoundingBox.minY + 1) && !blockState.block.isTranslucent(blockState) && blockState.block == classProvider.getBlockEnum(BlockType.WATER) && !classProvider.isBlockSlab(blockState.block) || blockState.block == classProvider.getBlockEnum(BlockType.BARRIER)) return true
-			}
-			return false
-		}
+		return blocks.map { blockPos ->
+			val blockState = theWorld.getBlockState(blockPos)
+			blockState to blockState.block.getCollisionBoundingBox(theWorld, blockPos, blockState)
+		}.any { (blockState, collisionBoundingBox) -> (collisionBoundingBox == null || collisionBoundingBox.maxX == collisionBoundingBox.minY + 1) && !blockState.block.isTranslucent(blockState) && blockState.block == classProvider.getBlockEnum(BlockType.WATER) && !classProvider.isBlockSlab(blockState.block) || blockState.block == classProvider.getBlockEnum(BlockType.BARRIER) }
+	}
 }

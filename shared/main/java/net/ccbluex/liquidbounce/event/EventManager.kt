@@ -38,7 +38,7 @@ class EventManager
 	 */
 	fun unregisterListener(listenable: Listenable)
 	{
-		for ((key, targets) in registry) if (targets.removeIf { it.eventClass == listenable }) registry[key] = targets
+		registry.filter { (_, targets) -> targets.removeIf { it.eventClass == listenable } }.forEach { (key, targets) -> registry[key] = targets }
 	}
 
 	/**

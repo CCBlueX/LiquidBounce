@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.value.IntegerValue
 
 @ModuleInfo(name = "FastBow", description = "Turns your bow into a machine gun.", category = ModuleCategory.COMBAT)
@@ -39,7 +40,7 @@ class FastBow : Module()
 			val yaw = RotationUtils.targetRotation?.yaw ?: thePlayer.rotationYaw
 			val pitch = RotationUtils.targetRotation?.pitch ?: thePlayer.rotationPitch
 
-			repeat(packetsValue.get()) { mc.netHandler.addToSendQueue(provider.createCPacketPlayerLook(yaw, pitch, true)) }
+			WorkerUtils.workers.execute { repeat(packetsValue.get()) { mc.netHandler.addToSendQueue(provider.createCPacketPlayerLook(yaw, pitch, true)) } }
 
 			mc.netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 			thePlayer.itemInUseCount = currentItem.maxItemUseDuration - 1

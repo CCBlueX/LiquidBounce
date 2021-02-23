@@ -60,8 +60,7 @@ class FallingPlayer(private val theWorld: IWorldClient, private val thePlayer: I
 		val start = WVec3(x, y, z)
 		val end = WVec3(x, y, z)
 
-		for (i in 0 until ticks)
-		{
+		repeat(ticks) { i ->
 			calculateForTick()
 
 			var raytracedBlock: WBlockPos?

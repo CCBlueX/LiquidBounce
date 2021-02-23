@@ -39,37 +39,36 @@ object ItemUtils : MinecraftInstance()
 
 			val modeSize = min(12, fixedItemArguments.length - 2)
 
-			for (i in 0..modeSize)
-			{
-				args = fixedItemArguments.substring(i).split(" ")
-				item = functions.getObjectFromItemRegistry(classProvider.createResourceLocation(args[0]))
-				if (item != null) break
+
+			run {
+				repeat(modeSize) { i ->
+					args = fixedItemArguments.substring(i).split(" ")
+					item = functions.getObjectFromItemRegistry(classProvider.createResourceLocation((args ?: return@repeat)[0]))
+					if (item != null) return@run
+				}
 			}
 
-			if (item == null)
-			{
-				logger.warn("Can't create the item with arguments \"${fixedItemArguments.take(64)}\" - Can't find any item matches name")
-				return null
-			}
+			item ?: return null
 
-			val argsLength = (args ?: return null).size
+			val checkedArgs = args ?: return null
+			val argsLength = checkedArgs.size
 
 			// Item amount
 			var amount = 1
-			if (argsLength >= 2 && PATTERN.matcher(args[1]).matches()) amount = args[1].toInt()
+			if (argsLength >= 2 && PATTERN.matcher(checkedArgs[1]).matches()) amount = checkedArgs[1].toInt()
 
 			// Item meta
 			var meta = 0
-			if (argsLength >= 3 && PATTERN.matcher(args[2]).matches()) meta = args[2].toInt()
+			if (argsLength >= 3 && PATTERN.matcher(checkedArgs[2]).matches()) meta = checkedArgs[2].toInt()
 
-			val itemstack = classProvider.createItemStack(item, amount, meta)
+			val itemstack = classProvider.createItemStack(item!!, amount, meta)
 
 			// Build NBT tag
 			if (argsLength >= 4)
 			{
 				val nbtBuilder = StringBuilder()
 
-				for (nbtcount in 3 until argsLength) nbtBuilder.append(" ").append(args[nbtcount])
+				for (nbtcount in 3 until argsLength) nbtBuilder.append(" ").append(checkedArgs[nbtcount])
 
 				itemstack.tagCompound = classProvider.jsonToNBTInstance.getTagFromJson("$nbtBuilder")
 			}

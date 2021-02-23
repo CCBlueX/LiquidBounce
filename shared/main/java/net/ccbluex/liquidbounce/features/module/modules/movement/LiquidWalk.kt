@@ -46,7 +46,7 @@ class LiquidWalk : Module()
 
 		when (modeValue.get().toLowerCase())
 		{
-			"ncp", "vanilla" -> if (collideBlock(theWorld, thePlayer.entityBoundingBox, provider::isBlockLiquid) && thePlayer.isInsideOfMaterial(provider.getMaterialEnum(MaterialType.AIR)) && !thePlayer.sneaking) thePlayer.motionY = 0.08
+			"ncp", "vanilla" -> if (collideBlock(theWorld, thePlayer, thePlayer.entityBoundingBox, provider::isBlockLiquid) && thePlayer.isInsideOfMaterial(provider.getMaterialEnum(MaterialType.AIR)) && !thePlayer.sneaking) thePlayer.motionY = 0.08
 
 			"aac3.1.0" ->
 			{
@@ -122,7 +122,7 @@ class LiquidWalk : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (classProvider.isBlockLiquid(event.block) && !collideBlock(theWorld, thePlayer.entityBoundingBox, classProvider::isBlockLiquid) && !thePlayer.sneaking) when (modeValue.get().toLowerCase())
+		if (classProvider.isBlockLiquid(event.block) && !collideBlock(theWorld, thePlayer, thePlayer.entityBoundingBox, classProvider::isBlockLiquid) && !thePlayer.sneaking) when (modeValue.get().toLowerCase())
 		{
 			"ncp", "vanilla" ->
 			{
@@ -147,7 +147,7 @@ class LiquidWalk : Module()
 		{
 			val packetPlayer = event.packet.asCPacketPlayer()
 
-			if (collideBlock(theWorld, classProvider.createAxisAlignedBB(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ), classProvider::isBlockLiquid))
+			if (collideBlock(theWorld, thePlayer, classProvider.createAxisAlignedBB(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ), classProvider::isBlockLiquid))
 			{
 				nextTick = !nextTick
 				if (nextTick) packetPlayer.y -= 0.001

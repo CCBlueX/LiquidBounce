@@ -14,7 +14,7 @@ class SpectreBHop : SpeedMode("Spectre-BHop")
 {
 	override fun onMotion(eventState: EventState)
 	{
-		if (eventState != EventState.POST) return
+		if (eventState != EventState.PRE) return
 
 		val thePlayer = mc.thePlayer ?: return
 		if (thePlayer.movementInput.jump) return

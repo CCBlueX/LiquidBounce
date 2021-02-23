@@ -32,11 +32,10 @@ object StringUtils
 		val searchCharsLength = searchChars.length
 		val stringBuilder = StringBuilder(string)
 
-		for (i in 0 until stringLength)
-		{
-			val start = stringBuilder.indexOf(searchChars, i)
+		repeat(stringLength) {
+			val start = stringBuilder.indexOf(searchChars, it)
 
-			if (start == -1) return if (i == 0) string else "$stringBuilder"
+			if (start == -1) return@replace if (it == 0) string else "$stringBuilder"
 
 			stringBuilder.replace(start, start + searchCharsLength, fixedReplaceChars)
 		}

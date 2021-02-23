@@ -32,13 +32,10 @@ class OnGround : SpeedMode("OnGround")
 		if (thePlayer.onGround)
 		{
 			thePlayer.posY += 0.3993000090122223
-			thePlayer.motionY = 0.3993000090122223
-			thePlayer.distanceWalkedOnStepModified = 44.0f
 			thePlayer.motionX *= 1.590000033378601
 			thePlayer.motionZ *= 1.590000033378601
 
-			//			thePlayer.cameraPitch = 0.0f
-
+			thePlayer.motionY = 0.3993000090122223
 			LiquidBounce.eventManager.callEvent(JumpEvent(0.3993000090122223f))
 
 			timer.timerSpeed = 1.199f

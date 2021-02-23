@@ -32,8 +32,8 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 
 		spoofSlot = false
 
-		(36..44).firstOrNull { inventory.getStackInSlot(it) == null }?.let {
-			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(it - 36))
+		(0..8).firstOrNull { inventory.getStackInSlot(it) == null }?.let {
+			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(it))
 			spoofSlot = true
 		}
 	}
@@ -78,5 +78,6 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 	{
 		moveSpeed = 0f
 		mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange((mc.thePlayer ?: return).inventory.currentItem))
+		spoofSlot = false
 	}
 }

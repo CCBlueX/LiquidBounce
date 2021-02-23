@@ -704,8 +704,7 @@ class Scaffold : Module()
 		if (expand)
 		{
 			val horizontalFacing = functions.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
-			for (i in 0 until expandLengthValue.get())
-			{
+			repeat(expandLengthValue.get()) { i ->
 				if (search(theWorld, thePlayer, searchPosition.add(when (horizontalFacing)
 					{
 						provider.getEnumFacing(EnumFacingType.WEST)
@@ -718,7 +717,7 @@ class Scaffold : Module()
 						provider.getEnumFacing(EnumFacingType.SOUTH)
 						-> i
 						else -> 0
-					}), false, searchBounds)) return
+					}), false, searchBounds)) return@findBlock
 			}
 		}
 		else if (searchValue.get()) (-1..1).forEach { x ->
@@ -890,27 +889,29 @@ class Scaffold : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		for (i in 0 until if (modeValue.get().equals("Expand", true)) expandLengthValue.get() + 1 else 2)
-		{
-			val horizontalFacing = functions.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
-			val blockPos = WBlockPos(thePlayer.posX + when (horizontalFacing)
-			{
-				classProvider.getEnumFacing(EnumFacingType.WEST) -> -i.toDouble()
-				classProvider.getEnumFacing(EnumFacingType.EAST)
-				-> i.toDouble()
-				else -> 0.0
-			}, if (sameYValue.get() && launchY <= thePlayer.posY) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY > floor(thePlayer.posY).toInt()) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (horizontalFacing)
-			{
-				classProvider.getEnumFacing(EnumFacingType.NORTH) -> -i.toDouble()
-				classProvider.getEnumFacing(EnumFacingType.SOUTH)
-				-> i.toDouble()
-				else -> 0.0
-			})
-			val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
-			if (isReplaceable(blockPos) && placeInfo != null)
-			{
-				RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, Color(68, 117, 255, 100), false)
-				break
+		run {
+			repeat(if (modeValue.get().equals("Expand", true)) expandLengthValue.get() + 1 else 2) {
+				val horizontalFacing = functions.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
+				val blockPos = WBlockPos(thePlayer.posX + when (horizontalFacing)
+				{
+					classProvider.getEnumFacing(EnumFacingType.WEST) -> -it.toDouble()
+					classProvider.getEnumFacing(EnumFacingType.EAST)
+					-> it.toDouble()
+					else -> 0.0
+				}, if (sameYValue.get() && launchY <= thePlayer.posY) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY > floor(thePlayer.posY).toInt()) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (horizontalFacing)
+				{
+					classProvider.getEnumFacing(EnumFacingType.NORTH) -> -it.toDouble()
+					classProvider.getEnumFacing(EnumFacingType.SOUTH)
+					-> it.toDouble()
+					else -> 0.0
+				})
+
+				val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
+				if (isReplaceable(blockPos) && placeInfo != null)
+				{
+					RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, Color(68, 117, 255, 100), false)
+					return@run
+				}
 			}
 		}
 	}

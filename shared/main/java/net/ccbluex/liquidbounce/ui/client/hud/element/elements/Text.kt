@@ -189,10 +189,7 @@ class Text(
 				}
 				lastPercent = i
 			}
-			else if (lastPercent == -1)
-			{
-				result.append(str[i])
-			}
+			else if (lastPercent == -1) result.append(str[i])
 		}
 
 		if (lastPercent != -1)

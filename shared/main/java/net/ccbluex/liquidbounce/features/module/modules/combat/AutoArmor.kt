@@ -144,11 +144,7 @@ class AutoArmor : Module()
 
 			var full = isArmorSlot
 
-			if (full) for (iItemStack in thePlayer.inventory.mainInventory) if (ItemUtils.isStackEmpty(iItemStack))
-			{
-				full = false
-				break
-			}
+			if (full) full = thePlayer.inventory.mainInventory.none(ItemUtils::isStackEmpty)
 
 			if (full) mc.playerController.windowClick(thePlayer.inventoryContainer.windowId, item, 1, 4, thePlayer) else mc.playerController.windowClick(thePlayer.inventoryContainer.windowId, if (isArmorSlot) item else if (item < 9) item + 36 else item, 0, 1, thePlayer)
 

@@ -92,17 +92,9 @@ object BlockUtils : MinecraftInstance()
 	{
 		val blocks = mutableMapOf<WBlockPos, IBlock>()
 
-		for (x in radius downTo -radius + 1)
-		{
-			for (y in radius downTo -radius + 1)
-			{
-				for (z in radius downTo -radius + 1)
-				{
-					val blockPos = WBlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z)
-					val block = getBlock(theWorld, blockPos)
-
-					blocks[blockPos] = block
-				}
+		(radius downTo -radius + 1).forEach { x ->
+			(radius downTo -radius + 1).forEach { y ->
+				(radius downTo -radius + 1).asSequence().map { z -> WBlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z) }.forEach { pos -> blocks[pos] = getBlock(theWorld, pos) }
 			}
 		}
 
@@ -113,48 +105,18 @@ object BlockUtils : MinecraftInstance()
 	 * Check if [axisAlignedBB] has collidable blocks using custom [collide] check
 	 */
 	@JvmStatic
-	fun collideBlock(theWorld: IWorldClient, axisAlignedBB: IAxisAlignedBB, collide: Collidable): Boolean
-	{
-		val thePlayer = mc.thePlayer!!
-
-		for (x in floor(thePlayer.entityBoundingBox.minX).toInt() until floor(thePlayer.entityBoundingBox.maxX).toInt() + 1L)
-		{
-			for (z in floor(thePlayer.entityBoundingBox.minZ).toInt() until floor(thePlayer.entityBoundingBox.maxZ).toInt() + 1)
-			{
-				val block = getBlock(theWorld, WBlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble()))
-
-				if (!collide(block)) return false
-			}
-		}
-
-		return true
-	}
+	fun collideBlock(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, axisAlignedBB: IAxisAlignedBB, collide: Collidable): Boolean = (floor(thePlayer.entityBoundingBox.minX).toInt() until floor(thePlayer.entityBoundingBox.maxX).toInt() + 1).firstOrNull()?.let { x -> (floor(thePlayer.entityBoundingBox.minZ).toInt() until floor(thePlayer.entityBoundingBox.maxZ).toInt() + 1).none { z -> !collide(getBlock(theWorld, WBlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble()))) } } ?: true
 
 	/**
 	 * Check if [axisAlignedBB] has collidable blocks using custom [collide] check
 	 */
 	@JvmStatic
-	fun collideBlockIntersects(theWorld: IWorldClient, axisAlignedBB: IAxisAlignedBB, collide: Collidable): Boolean
-	{
-		val thePlayer = mc.thePlayer!!
-		val world = mc.theWorld!!
+	fun collideBlockIntersects(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, axisAlignedBB: IAxisAlignedBB, collide: Collidable): Boolean = (floor(thePlayer.entityBoundingBox.minX).toInt() until floor(thePlayer.entityBoundingBox.maxX).toInt() + 1).any { x ->
+		(floor(thePlayer.entityBoundingBox.minZ).toInt() until floor(thePlayer.entityBoundingBox.maxZ).toInt() + 1).any intersectCheck@{ z ->
+			val blockPos = WBlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble())
+			val block = getBlock(theWorld, blockPos)
 
-		for (x in floor(thePlayer.entityBoundingBox.minX).toInt() until floor(thePlayer.entityBoundingBox.maxX).toInt() + 1)
-		{
-			for (z in floor(thePlayer.entityBoundingBox.minZ).toInt() until floor(thePlayer.entityBoundingBox.maxZ).toInt() + 1)
-			{
-				val blockPos = WBlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble())
-				val block = getBlock(theWorld, blockPos)
-
-				if (collide(block))
-				{
-					val boundingBox = getState(blockPos)?.let { block.getCollisionBoundingBox(world, blockPos, it) } ?: continue
-
-					if (thePlayer.entityBoundingBox.intersectsWith(boundingBox)) return true
-				}
-			}
+			collide(block) && thePlayer.entityBoundingBox.intersectsWith(getState(blockPos)?.let { block.getCollisionBoundingBox(theWorld, blockPos, it) } ?: return@intersectCheck false)
 		}
-
-		return false
 	}
 }

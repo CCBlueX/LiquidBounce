@@ -410,10 +410,9 @@ object RenderUtils : MinecraftInstance()
 	@JvmStatic
 	fun drawLoadingCircle(x: Float, y: Float)
 	{
-		for (i in 0..3)
-		{
-			val rot = (System.nanoTime() * 0.0000002 * i % 360).toInt()
-			drawCircle(x, y, i * 10f, rot - 180, rot)
+		repeat(4) {
+			val rot = (System.nanoTime() * 0.0000002 * it % 360).toInt()
+			drawCircle(x, y, it * 10f, rot - 180, rot)
 		}
 	}
 
@@ -468,10 +467,9 @@ object RenderUtils : MinecraftInstance()
 		val blue = color.blue / 255.00f
 		val alpha = color.alpha / 255.00f
 
-		for (i in 0 until sections)
-		{
-			val circleX = radius * sin(i * dAngle)
-			val circleY = radius * cos(i * dAngle)
+		repeat(sections) {
+			val circleX = radius * sin(it * dAngle)
+			val circleY = radius * cos(it * dAngle)
 			GL11.glColor4f(red, green, blue, alpha)
 			GL11.glVertex2f(x + circleX, y + circleY)
 		}
