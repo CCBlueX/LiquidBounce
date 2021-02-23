@@ -44,7 +44,6 @@ import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.bitmap.UltralightBitmapSurface
 import com.labymedia.ultralight.config.FontHinting
 import com.labymedia.ultralight.config.UltralightConfig
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.native.Natives
 import net.ccbluex.liquidbounce.renderer.ultralight.input.ClipboardAdapter
 import net.ccbluex.liquidbounce.renderer.ultralight.input.CursorAdapter
@@ -58,12 +57,11 @@ import net.ccbluex.liquidbounce.utils.mc
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL12
-import java.io.File
 import java.nio.ByteBuffer
 
 object WebPlatform {
 
-    const val SCALE = 2.0
+    const val SCALE = 1.0
 
     var platform: UltralightPlatform
     var renderer: UltralightRenderer
