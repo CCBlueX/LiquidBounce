@@ -25,6 +25,11 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.block.CactusBlock
 import net.minecraft.util.shape.VoxelShapes
 
+/**
+ * A anti cactus module
+ *
+ * Prevents taking damage from cactus
+ */
 object ModuleAntiCactus : Module("AntiCactus", Category.PLAYER) {
 
     val shapeHandler = handler<BlockShapeEvent> { event ->
