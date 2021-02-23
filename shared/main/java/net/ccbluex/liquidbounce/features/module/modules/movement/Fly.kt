@@ -19,6 +19,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Damage
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing
+import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.MovementUtils.getDirection
@@ -41,38 +43,34 @@ class Fly : Module()
 	/**
 	 * Mode
 	 */
-	val modeValue = ListValue(
-		"Mode", arrayOf(
-			"Vanilla", "SmoothVanilla", "Teleport",
+	val modeValue = ListValue("Mode", arrayOf("Vanilla", "SmoothVanilla", "Teleport",
 
-			// NCP
-			"NCP", "OldNCP",
+		// NCP
+		"NCP", "OldNCP",
 
-			// AAC
-			"AAC1.9.10", "AAC3.0.5", "AAC3.1.6-Gomme", "AAC3.3.12", "AAC3.3.12-Glide", "AAC3.3.13",
+		// AAC
+		"AAC1.9.10", "AAC3.0.5", "AAC3.1.6-Gomme", "AAC3.3.12", "AAC3.3.12-Glide", "AAC3.3.13",
 
-			// CubeCraft
-			"CubeCraft",
+		// CubeCraft
+		"CubeCraft",
 
-			// Hypixel
-			"Hypixel", "FreeHypixel", // BoostHypixel mode is merged with Hypixel mode
+		// Hypixel
+		"Hypixel", "FreeHypixel", // BoostHypixel mode is merged with Hypixel mode
 
-			// Rewinside
-			"Rewinside", "TeleportRewinside",
+		// Rewinside
+		"Rewinside", "TeleportRewinside",
 
-			// Other server specific flys
-			"Mineplex", "NeruxVace", "Minesucht", "RedeSky", "MCCentral",
+		// Other server specific flys
+		"Mineplex", "NeruxVace", "Minesucht", "RedeSky", "MCCentral",
 
-			// Spartan
-			"Spartan185", "Spartan194", "BugSpartan",
+		// Spartan
+		"Spartan185", "Spartan194", "BugSpartan",
 
-			// Other anticheats
-			"MineSecure", "HawkEye", "HAC", "WatchCat", "ACP",
+		// Other anticheats
+		"MineSecure", "HawkEye", "HAC", "WatchCat", "ACP",
 
-			// Other
-			"Jetpack", "KeepAlive", "Flag"
-		), "Vanilla"
-	)
+		// Other
+		"Jetpack", "KeepAlive", "Flag"), "Vanilla")
 
 	/**
 	 * Damage on start
@@ -552,9 +550,7 @@ class Fly : Module()
 					val length = 9.9
 					val yawRadians = WMathHelper.toRadians(yaw)
 					val pitchRadians = WMathHelper.toRadians(pitch)
-					val vectorEnd = WVec3(
-						functions.sin(yawRadians) * functions.cos(pitchRadians) * length + vectorStart.xCoord, functions.sin(pitchRadians) * length + vectorStart.yCoord, functions.cos(yawRadians) * functions.cos(pitchRadians) * length + vectorStart.zCoord
-					)
+					val vectorEnd = WVec3(functions.sin(yawRadians) * functions.cos(pitchRadians) * length + vectorStart.xCoord, functions.sin(pitchRadians) * length + vectorStart.yCoord, functions.cos(yawRadians) * functions.cos(pitchRadians) * length + vectorStart.zCoord)
 					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(vectorEnd.xCoord, posY + 2, vectorEnd.zCoord, true))
 					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(vectorStart.xCoord, posY + 2, vectorStart.zCoord, true))
 					thePlayer.motionY = 0.0
@@ -904,6 +900,10 @@ class Fly : Module()
 			val blockOverlay = LiquidBounce.moduleManager[BlockOverlay::class.java] as BlockOverlay
 			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
 
+			val scaffold = LiquidBounce.moduleManager[Scaffold::class.java] as Scaffold
+			val tower = LiquidBounce.moduleManager[Tower::class.java] as Tower
+			if (scaffold.state && scaffold.counterDisplayValue.get() || tower.state && tower.counterDisplayValue.get()) GL11.glTranslatef(0f, 15f, 0f)
+
 			val remainingTicks = 80 - vanillaRemainingTime.tick.coerceAtMost(80)
 			val info = "You can fly ${if (remainingTicks <= 10) "\u00A7c" else ""}${remainingTicks}\u00A7r more ticks"
 			val scaledResolution = classProvider.createScaledResolution(mc)
@@ -1031,9 +1031,7 @@ class Fly : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val mode = modeValue.get()
-		if (classProvider.isBlockAir(event.block) && (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted || mode.equals("Rewinside", ignoreCase = true) || mode.equals("MCCentral", ignoreCase = true) || mode.equals(
-				"Mineplex", ignoreCase = true
-			) && thePlayer.inventory.getCurrentItemInHand() == null) && event.y < thePlayer.posY) event.boundingBox = classProvider.createAxisAlignedBB(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.0, thePlayer.posY, event.z + 1.0)
+		if (classProvider.isBlockAir(event.block) && (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted || mode.equals("Rewinside", ignoreCase = true) || mode.equals("MCCentral", ignoreCase = true) || mode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItemInHand() == null) && event.y < thePlayer.posY) event.boundingBox = classProvider.createAxisAlignedBB(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.0, thePlayer.posY, event.z + 1.0)
 	}
 
 	@EventTarget
@@ -1042,9 +1040,7 @@ class Fly : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val mode = modeValue.get()
-		if (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted || mode.equals("Rewinside", ignoreCase = true) || mode.equals("MCCentral", ignoreCase = true) || mode.equals(
-				"Mineplex", ignoreCase = true
-			) && thePlayer.inventory.getCurrentItemInHand() == null) e.cancelEvent()
+		if (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted || mode.equals("Rewinside", ignoreCase = true) || mode.equals("MCCentral", ignoreCase = true) || mode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItemInHand() == null) e.cancelEvent()
 	}
 
 	@EventTarget
@@ -1053,9 +1049,7 @@ class Fly : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val mode = modeValue.get()
-		if (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted || mode.equals("Rewinside", ignoreCase = true) || mode.equals("MCCentral", ignoreCase = true) || mode.equals(
-				"Mineplex", ignoreCase = true
-			) && thePlayer.inventory.getCurrentItemInHand() == null) e.stepHeight = 0f
+		if (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted || mode.equals("Rewinside", ignoreCase = true) || mode.equals("MCCentral", ignoreCase = true) || mode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItemInHand() == null) e.stepHeight = 0f
 	}
 
 	private fun handleVanillaKickBypass()

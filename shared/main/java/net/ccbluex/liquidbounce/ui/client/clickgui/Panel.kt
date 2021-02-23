@@ -52,7 +52,7 @@ abstract class Panel(val name: String, x: Int, y: Int, width: Int, height: Int, 
 			if (ny > -1) y = ny
 		}
 
-		elementsHeight = (getElementsHeight() - 1).toFloat()
+		elementsHeight = getElementsHeight() - 1f
 
 		val scrollbar = elements.size >= maxElements
 
@@ -87,7 +87,7 @@ abstract class Panel(val name: String, x: Int, y: Int, width: Int, height: Int, 
 			return
 		}
 
-		elements.asSequence().filter { it.y <= y + fade }.forEach { it.mouseClicked(mouseX, mouseY, mouseButton) }
+		elements.filter { it.y <= y + fade }.forEach { it.mouseClicked(mouseX, mouseY, mouseButton) }
 	}
 
 	fun mouseReleased(mouseX: Int, mouseY: Int, state: Int)
@@ -149,7 +149,8 @@ abstract class Panel(val name: String, x: Int, y: Int, width: Int, height: Int, 
 		var count = 0
 
 		val maxElements = (LiquidBounce.moduleManager.getModule(ClickGUI::class.java) as ClickGUI).maxElementsValue.get()
-		elements.filter { count < maxElements }.forEach { element ->
+		for (element in elements) if (count < maxElements)
+		{
 			height += element.height + 1
 			++count
 		}

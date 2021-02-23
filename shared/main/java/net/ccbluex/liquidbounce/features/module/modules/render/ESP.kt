@@ -164,15 +164,8 @@ class ESP : Module()
 		val bot = botValue.get()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
-		theWorld.loadedEntityList.asSequence().filter {
-			provider.isEntityLivingBase(it) && run {
-				val entity = it.asEntityLivingBase()
-				!(!bot && AntiBot.isBot(entity)) && it != thePlayer && EntityUtils.isSelected(it, false)
-			}
-		}.forEach {
-			val entity = it.asEntityLivingBase()
-			draw(entity, getColor(entity))
-		}
+
+		theWorld.loadedEntityList.asSequence().filter(provider::isEntityLivingBase).filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).filter { (bot || !AntiBot.isBot(it)) }.filter { it != thePlayer }.forEach { draw(it, getColor(it)) }
 
 		if (real2d)
 		{
@@ -190,6 +183,7 @@ class ESP : Module()
 	{
 		val mode = modeValue.get().toLowerCase()
 		val shader = (if (mode.equals("ShaderOutline", ignoreCase = true)) OutlineShader.INSTANCE else if (mode.equals("ShaderGlow", ignoreCase = true)) GlowShader.INSTANCE else null) ?: return
+		val renderPartialTicks = mc.timer.renderPartialTicks
 
 		shader.startDraw(event.partialTicks)
 
@@ -197,7 +191,7 @@ class ESP : Module()
 
 		try
 		{
-			(mc.theWorld ?: return).loadedEntityList.asSequence().filter { !(!botValue.get() && AntiBot.isBot(it.asEntityLivingBase())) && EntityUtils.isSelected(it, false) }.forEach { mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true) }
+			(mc.theWorld ?: return).loadedEntityList.filter { EntityUtils.isSelected(it, false) }.filter { (botValue.get() || !AntiBot.isBot(it.asEntityLivingBase())) }.forEach { mc.renderManager.renderEntityStatic(it, renderPartialTicks, true) }
 		}
 		catch (ex: Exception)
 		{

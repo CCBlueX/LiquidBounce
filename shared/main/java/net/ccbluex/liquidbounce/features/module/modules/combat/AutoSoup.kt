@@ -125,19 +125,7 @@ class AutoSoup : Module()
 			{
 				if (openInventoryValue.get() && !isGuiInventory) return
 
-				var bowlMovable = false
-
-				run {
-					(9..36).asSequence().map(inventory::getStackInSlot).forEach {
-						if (it == null || (it.item == provider.getItemEnum(ItemType.BOWL) && it.stackSize < 64))
-						{
-							bowlMovable = true
-							return@run
-						}
-					}
-				}
-
-				if (bowlMovable)
+				if ((9..36).map(inventory::getStackInSlot).any { it == null || (it.item == provider.getItemEnum(ItemType.BOWL) && it.stackSize < 64) })
 				{
 					val openInventory = !isGuiInventory && simulateInv
 
@@ -147,6 +135,7 @@ class AutoSoup : Module()
 
 					invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
 					invDelayTimer.reset()
+
 					return
 				}
 			}

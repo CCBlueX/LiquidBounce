@@ -284,7 +284,7 @@ class AutoPot : Module()
 		val healID = provider.getPotionEnum(PotionType.HEAL).id
 		val regenID = provider.getPotionEnum(PotionType.REGENERATION).id
 
-		(startSlot until endSlot).map { it to (thePlayer.inventoryContainer.getSlot(it).stack ?: return@map null) }.filterNotNull().filter { (_, stack) -> provider.isItemPotion(stack.item) && stack.isSplash() }.forEach { (slotIndex, stack) ->
+		(startSlot until endSlot).mapNotNull { it to (thePlayer.inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> provider.isItemPotion(stack.item) && stack.isSplash() }.forEach { (slotIndex, stack) ->
 			val effects = stack.item!!.asItemPotion().getEffects(stack)
 
 			if (effects.any { it.potionID == healID }) candidates.add(slotIndex)
@@ -346,8 +346,10 @@ class AutoPot : Module()
 			if (potionID == nightVisionID) playerNightVision = true
 		}
 
+		val itemDelay = itemDelayValue.get()
 		val candidates = mutableListOf<Int>()
-		(startSlot until endSlot).asSequence().map { it to (thePlayer.inventoryContainer.getSlot(it).stack ?: return@map null) }.filterNotNull().filter { (_, stack) -> System.currentTimeMillis() - stack.itemDelay >= itemDelayValue.get() && provider.isItemPotion(stack.item) && stack.isSplash() }.forEach { (i, stack) ->
+
+		(startSlot until endSlot).asSequence().mapNotNull { it to (thePlayer.inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> System.currentTimeMillis() - stack.itemDelay >= itemDelay }.filter { (_, stack) -> provider.isItemPotion(stack.item) }.filter { (_, stack) -> stack.isSplash() }.forEach { (i, stack) ->
 			var potionSpeed = -1
 			var potionJump = -1
 			var potionDigSpeed = -1

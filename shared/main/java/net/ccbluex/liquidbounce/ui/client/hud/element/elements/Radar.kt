@@ -183,7 +183,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		val esp = LiquidBounce.moduleManager[ESP::class.java] as ESP
 		val useESPColors = useESPColorsValue.get()
 
-		theWorld.loadedEntityList.asSequence().filter { it != thePlayer && EntityUtils.isSelected(it, false) }.forEach { entity ->
+		theWorld.loadedEntityList.filter { EntityUtils.isSelected(it, false) }.filter { it != thePlayer }.forEach { entity ->
 			val positionRelativeToPlayer = Vector2f((renderX - entity.posX).toFloat(), (renderZ - entity.posZ).toFloat())
 
 			if (maxDisplayableDistanceSquare < positionRelativeToPlayer.lengthSquared()) return@forEach

@@ -19,7 +19,7 @@ class PanicCommand : Command("panic")
 	{
 		val thePlayer = mc.thePlayer
 
-		var modules = LiquidBounce.moduleManager.modules.asSequence().filter(Module::state)
+		var modules = LiquidBounce.moduleManager.modules.filter(Module::state)
 		val msg: String
 
 		if (args.size > 1 && args[1].isNotEmpty())

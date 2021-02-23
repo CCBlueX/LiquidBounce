@@ -125,7 +125,7 @@ class Tower : Module()
 	private val suspendKillauraDuration = IntegerValue("SuspendKillauraDuration", 500, 250, 1000)
 
 	// Render
-	private val counterDisplayValue = BoolValue("Counter", true)
+	val counterDisplayValue = BoolValue("Counter", true)
 
 	/**
 	 * MODULE

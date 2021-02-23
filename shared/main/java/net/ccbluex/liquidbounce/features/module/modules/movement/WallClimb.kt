@@ -79,13 +79,14 @@ class WallClimb : Module()
 			"aac3.3.12" -> if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder)
 			{
 				aac3_3_12_steps++
-
-				if (aac3_3_12_steps == 1) thePlayer.motionY = 0.43
-				if (aac3_3_12_steps == 12) thePlayer.motionY = 0.43
-				if (aac3_3_12_steps == 23) thePlayer.motionY = 0.43
-				if (aac3_3_12_steps == 29) thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
-				if (aac3_3_12_steps >= 30) aac3_3_12_steps = 0
-
+				if (aac3_3_12_steps < 30) when (aac3_3_12_steps)
+				{
+					1 -> thePlayer.motionY = 0.43
+					12 -> thePlayer.motionY = 0.43
+					23 -> thePlayer.motionY = 0.43
+					29 -> thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
+				}
+				else aac3_3_12_steps = 0
 			}
 			else if (onGround) aac3_3_12_steps = 0
 

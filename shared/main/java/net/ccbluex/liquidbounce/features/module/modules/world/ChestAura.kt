@@ -10,7 +10,9 @@ import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -44,30 +46,35 @@ object ChestAura : Module()
 	@EventTarget
 	fun onMotion(event: MotionEvent)
 	{
-		if (LiquidBounce.moduleManager[Blink::class.java].state || (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).hasTarget) return
+		val moduleManager = LiquidBounce.moduleManager
+		if (moduleManager[Blink::class.java].state || (moduleManager[KillAura::class.java] as KillAura).hasTarget) return
 
 		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return
+
+		val provider = classProvider
+		val func = functions
 
 		when (event.eventState)
 		{
 			EventState.PRE ->
 			{
-				if (classProvider.isGuiContainer(mc.currentScreen)) timer.reset() // No delay re-randomize code here because the performance impact is more than your think.
+				if (provider.isGuiContainer(mc.currentScreen)) timer.reset() // No delay re-randomize code here because the performance impact is more than your think.
 
-				val radius = rangeValue.get() + 1
+				val chestID = chestValue.get()
+				val range = rangeValue.get()
+				val radius = range + 1
 				val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
 
-				currentBlock = BlockUtils.searchBlocks(theWorld, thePlayer, radius.toInt()).asSequence().filter {
-					functions.getIdFromBlock(it.value) == chestValue.get() && !clickedBlocks.contains(it.key) && BlockUtils.getCenterDistance(thePlayer, it.key) < rangeValue.get()
-				}.filter {
-					if (throughWallsValue.get()) return@filter true
+				val throughWalls = throughWallsValue.get()
 
-					val blockPos = it.key
-					val movingObjectPosition = theWorld.rayTraceBlocks(eyesPos, blockPos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
 
-					movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
-				}.minBy { BlockUtils.getCenterDistance(thePlayer, it.key) }?.key
+				currentBlock = BlockUtils.searchBlocks(theWorld, thePlayer, radius.toInt()).asSequence().filter { (_, block) -> func.getIdFromBlock(block) == chestID }.filter { (pos, _) -> !clickedBlocks.contains(pos) }.filter { (pos, _) -> BlockUtils.getCenterDistance(thePlayer, pos) < range }.filter { (pos, _) ->
+					throughWalls || run {
+						val movingObjectPosition = theWorld.rayTraceBlocks(eyesPos, pos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
+						movingObjectPosition != null && movingObjectPosition.blockPos == pos
+					}
+				}.minBy { (pos, _) -> BlockUtils.getCenterDistance(thePlayer, pos) }?.key
 
 				if (rotationsValue.get()) RotationUtils.setTargetRotation((RotationUtils.faceBlock(theWorld, thePlayer, currentBlock ?: return) ?: return).rotation)
 			}
@@ -75,10 +82,10 @@ object ChestAura : Module()
 			EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delay))
 			{
 				val currentBlock = currentBlock ?: return
-				if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentBlock, classProvider.getEnumFacing(EnumFacingType.DOWN), currentBlock.getVec()))
+				if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentBlock, provider.getEnumFacing(EnumFacingType.DOWN), currentBlock.getVec()))
 				{
 					if (visualSwing.get()) thePlayer.swingItem()
-					else mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
+					else mc.netHandler.addToSendQueue(provider.createCPacketAnimation())
 
 					clickedBlocks.add(currentBlock)
 					this.currentBlock = null

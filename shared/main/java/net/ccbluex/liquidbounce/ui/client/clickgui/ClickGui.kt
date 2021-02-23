@@ -70,7 +70,7 @@ class ClickGui : WrappedGuiScreen()
 		}
 
 		// Draw Element Description
-		panels.forEach { panel -> panel.elements.asSequence().filterIsInstance<ModuleElement>().filter { newMouseX != 0.0 && newMouseY != 0.0 && it.isHovering(newMouseXI, newMouseYI) && it.isVisible && it.y <= panel.y + panel.fade }.forEach { style.drawDescription(newMouseXI, newMouseYI, it.module.description) } }
+		panels.forEach { panel -> panel.elements.asSequence().filterIsInstance<ModuleElement>().filter { newMouseX != 0.0 && newMouseY != 0.0 }.filter { it.isHovering(newMouseXI, newMouseYI) }.filter(ModuleElement::isVisible).filter { it.y <= panel.y + panel.fade }.forEach { style.drawDescription(newMouseXI, newMouseYI, it.module.description) } }
 
 		if (Mouse.hasWheel())
 		{
@@ -181,7 +181,7 @@ class ClickGui : WrappedGuiScreen()
 			{
 				override fun setupItems()
 				{
-					LiquidBounce.moduleManager.modules.asSequence().filter { it.category == category }.mapTo(elements, ::ModuleElement)
+					LiquidBounce.moduleManager.modules.filter { it.category == category }.mapTo(elements, ::ModuleElement)
 				}
 			})
 

@@ -33,7 +33,7 @@ object SettingsUtils
 	{
 		val thePlayer = wrapper.minecraft.thePlayer
 
-		script.lines().asSequence().filter { it.isNotEmpty() && !it.startsWith('#') }.forEachIndexed { index, s ->
+		script.lines().filter(String::isNotEmpty).filter { !it.startsWith('#') }.forEachIndexed { index, s ->
 			val args = s.split(" ").toTypedArray()
 
 			if (args.size <= 1)
@@ -166,7 +166,7 @@ object SettingsUtils
 	{
 		val stringBuilder = StringBuilder()
 
-		LiquidBounce.moduleManager.modules.asSequence().filter {
+		LiquidBounce.moduleManager.modules.filter {
 			it.category != ModuleCategory.RENDER && it !is NameProtect && it !is Spammer
 		}.forEach {
 			if (values) it.values.forEach { value -> stringBuilder.append(it.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n") }

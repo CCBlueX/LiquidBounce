@@ -73,7 +73,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 		{
 			val candidates: MutableList<Int> = ArrayList(endSlot - startSlot)
 
-			(startSlot until endSlot).map { it to (container.getSlot(it).stack ?: return@map null) }.filterNotNull().filter { (_, stack) -> stack.item == item && stack.itemDelay >= itemDelay }.forEach { (i, _) -> candidates.add(i) }
+			(startSlot until endSlot).mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> stack.item == item && stack.itemDelay >= itemDelay }.forEach { (i, _) -> candidates.add(i) }
 
 			return when
 			{

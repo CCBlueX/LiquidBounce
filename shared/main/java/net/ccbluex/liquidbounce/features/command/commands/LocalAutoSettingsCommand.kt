@@ -152,7 +152,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 					{
 						val settings = getLocalSettings() ?: return emptyList()
 
-						return settings.asSequence().map { it.name }.filter { it.startsWith(args[1], true) }.toList()
+						return settings.map(File::getName).filter { it.startsWith(args[1], true) }.toList()
 					}
 				}
 				return emptyList()

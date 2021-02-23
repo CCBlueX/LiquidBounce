@@ -149,9 +149,7 @@ class BowAimbot : Module()
 
 	private fun getTarget(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, throughWalls: Boolean, priorityMode: String, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): IEntity?
 	{
-		val provider = classProvider
-
-		val targets = theWorld.loadedEntityList.asSequence().filter { provider.isEntityLivingBase(it) && EntityUtils.isSelected(it, true) && (throughWalls || thePlayer.canEntityBeSeen(it)) }
+		val targets = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { (throughWalls || thePlayer.canEntityBeSeen(it)) }
 
 		return when (priorityMode.toLowerCase())
 		{

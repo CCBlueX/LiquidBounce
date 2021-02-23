@@ -56,9 +56,9 @@ class Step : Module()
 
 	override fun onDisable()
 	{
-
 		// Change step height back to default (0.5 is default)
 		(mc.thePlayer ?: return).stepHeight = 0.5F
+		motionNCPNextStep = 0
 	}
 
 	@EventTarget
@@ -133,13 +133,13 @@ class Step : Module()
 				fakeJump(thePlayer)
 				thePlayer.motionY = 0.0
 				event.y = 0.41999998688698 // Jump step 1 (0.42)
-				motionNCPNextStep++
+				motionNCPNextStep = 1
 			}
 
 			motionNCPNextStep == 1 ->
 			{
 				event.y = 0.33319999363422 // Jump step 2 (0.333)
-				motionNCPNextStep++
+				motionNCPNextStep = 2
 			}
 
 			motionNCPNextStep == 2 ->
@@ -148,7 +148,7 @@ class Step : Module()
 
 				event.y = 0.248135998590947 // Jump step 3 (0.248)
 
-				if (motionNCPBoost > 0.0F)
+				if (motionNCPBoost > 0F)
 				{
 					event.x = (-functions.sin(yaw) * motionNCPBoost).toDouble()
 					event.z = (functions.cos(yaw) * motionNCPBoost).toDouble()

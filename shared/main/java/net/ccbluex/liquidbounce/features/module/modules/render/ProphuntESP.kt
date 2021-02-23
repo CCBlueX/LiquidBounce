@@ -83,6 +83,10 @@ class ProphuntESP : Module()
 	fun onRender2D(event: Render2DEvent)
 	{
 		val theWorld = mc.theWorld ?: return
+		val renderManager = mc.renderManager
+		val renderPartialTicks = mc.timer.renderPartialTicks
+
+		val provider = classProvider
 
 		val mode = modeValue.get().toLowerCase()
 		val shader = when (mode)
@@ -96,7 +100,8 @@ class ProphuntESP : Module()
 
 		try
 		{
-			theWorld.loadedEntityList.asSequence().filter(classProvider::isEntityFallingBlock).forEach { mc.renderManager.renderEntityStatic(it, mc.timer.renderPartialTicks, true) }
+
+			theWorld.loadedEntityList.filter(provider::isEntityFallingBlock).forEach { renderManager.renderEntityStatic(it, renderPartialTicks, true) }
 		}
 		catch (ex: Exception)
 		{

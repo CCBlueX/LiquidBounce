@@ -94,7 +94,7 @@ object BlockUtils : MinecraftInstance()
 
 		(radius downTo -radius + 1).forEach { x ->
 			(radius downTo -radius + 1).forEach { y ->
-				(radius downTo -radius + 1).asSequence().map { z -> WBlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z) }.forEach { pos -> blocks[pos] = getBlock(theWorld, pos) }
+				(radius downTo -radius + 1).map { z -> WBlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z) }.forEach { pos -> blocks[pos] = getBlock(theWorld, pos) }
 			}
 		}
 

@@ -80,10 +80,10 @@ class EnchantCommand : Command("enchant")
 	{
 		if (args.isEmpty()) return emptyList()
 
+		val prefix = args[0]
 		return when (args.size)
 		{
-			1 -> return functions.getEnchantments().asSequence().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[0], true) }.toList()
-
+			1 -> return functions.getEnchantments().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(prefix, true) }.toList()
 			else -> emptyList()
 		}
 	}

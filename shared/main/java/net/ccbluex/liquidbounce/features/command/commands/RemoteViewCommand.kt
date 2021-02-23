@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.features.command.Command
 
 class RemoteViewCommand : Command("remoteview", "rv")
@@ -43,9 +44,11 @@ class RemoteViewCommand : Command("remoteview", "rv")
 	{
 		if (args.isEmpty()) return emptyList()
 
+		val theWorld = mc.theWorld!!
+
 		return when (args.size)
 		{
-			1 -> return mc.theWorld!!.playerEntities.asSequence().filter { it.name != null && it.name!!.startsWith(args[0], true) }.map { it.name!! }.toList()
+			1 -> return theWorld.playerEntities.filter { it.name != null && it.name!!.startsWith(args[0], true) }.mapNotNull(IEntityPlayer::name).toList()
 			else -> emptyList()
 		}
 	}

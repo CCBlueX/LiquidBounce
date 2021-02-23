@@ -139,7 +139,7 @@ class ModuleManager : Listenable
 	 * Handle incoming key presses
 	 */
 	@EventTarget
-	private fun onKey(event: KeyEvent) = modules.asSequence().filter { it.keyBind == event.key }.forEach(Module::toggle)
+	private fun onKey(event: KeyEvent) = modules.filter { it.keyBind == event.key }.forEach(Module::toggle)
 
 	override fun handleEvents() = true
 }

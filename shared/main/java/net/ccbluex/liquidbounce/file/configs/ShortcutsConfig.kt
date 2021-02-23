@@ -31,7 +31,7 @@ class ShortcutsConfig(file: File) : FileConfig(file)
 
 		val commandManager = LiquidBounce.commandManager
 
-		jsonElement.asSequence().filterIsInstance<JsonObject>().mapNotNull { (it["name"]?.asString ?: return@mapNotNull null) to (it["script"]?.asJsonArray ?: return@mapNotNull null) }.forEach { (name, scriptJson) ->
+		jsonElement.filterIsInstance<JsonObject>().mapNotNull { (it["name"]?.asString ?: return@mapNotNull null) to (it["script"]?.asJsonArray ?: return@mapNotNull null) }.forEach { (name, scriptJson) ->
 			val script = mutableListOf<Pair<Command, Array<String>>>()
 
 			for (scriptCommand in scriptJson)

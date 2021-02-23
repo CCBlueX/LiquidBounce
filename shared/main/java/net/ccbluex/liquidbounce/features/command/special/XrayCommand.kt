@@ -127,15 +127,23 @@ class XrayCommand : Command("xray")
 	{
 		if (args.isEmpty()) return emptyList()
 
+		val func = functions
+
 		return when (args.size)
 		{
 			1 -> arrayOf("add", "remove", "list").filter { it.startsWith(args[0], ignoreCase = true) }
 
-			2 -> when (args[0].toLowerCase())
+			2 ->
 			{
-				"add" -> return functions.getBlockRegistryKeys().asSequence().map { it.resourcePath.toLowerCase() }.filter { functions.getBlockFromName(it.toLowerCase()) != null }.filter { !xRay.xrayBlocks.contains(functions.getBlockFromName(it.toLowerCase())) }.filter { it.startsWith(args[1], true) }.toList()
-				"remove" -> return functions.getBlockRegistryKeys().asSequence().map { it.resourcePath.toLowerCase() }.filter { xRay.xrayBlocks.contains(functions.getBlockFromName(it)) }.filter { it.startsWith(args[1], true) }.toList()
-				else -> emptyList()
+				val blockRegistryKeys = func.getBlockRegistryKeys()
+				val xrayBlocks = xRay.xrayBlocks
+
+				when (args[0].toLowerCase())
+				{
+					"add" -> return blockRegistryKeys.asSequence().map { it.resourcePath.toLowerCase() }.filter { func.getBlockFromName(it.toLowerCase()) != null }.filter { !xrayBlocks.contains(func.getBlockFromName(it.toLowerCase())) }.filter { it.startsWith(args[1], true) }.toList()
+					"remove" -> return blockRegistryKeys.asSequence().map { it.resourcePath.toLowerCase() }.filter { xrayBlocks.contains(func.getBlockFromName(it)) }.filter { it.startsWith(args[1], true) }.toList()
+					else -> emptyList()
+				}
 			}
 
 			else -> emptyList()

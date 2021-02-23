@@ -28,9 +28,7 @@ class HideCommand : Command("hide")
 				"list" ->
 				{
 					chat(thePlayer, "\u00A7c\u00A7lHidden")
-					LiquidBounce.moduleManager.modules.asSequence().filter { !it.array }.forEach {
-						ClientUtils.displayChatMessage(thePlayer, "\u00A76> \u00A7c${it.name}")
-					}
+					LiquidBounce.moduleManager.modules.filterNot(Module::array).forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A76> \u00A7c${it.name}") }
 					return
 				}
 
@@ -84,7 +82,7 @@ class HideCommand : Command("hide")
 
 		return when (args.size)
 		{
-			1 -> LiquidBounce.moduleManager.modules.asSequence().map(Module::name).filter { it.startsWith(moduleName, true) }.toList()
+			1 -> LiquidBounce.moduleManager.modules.map(Module::name).filter { it.startsWith(moduleName, true) }.toList()
 			else -> emptyList()
 		}
 	}

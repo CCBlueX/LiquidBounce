@@ -93,7 +93,7 @@ class AtAllProvider : Module()
 			if (message.contains("@a"))
 			{
 				synchronized(sendQueue) {
-					mc.netHandler.playerInfoMap.asSequence().map { it.gameProfile.name }.filter { it != thePlayer.name }.mapTo(sendQueue) { message.replace("@a", it) }
+					mc.netHandler.playerInfoMap.map { it.gameProfile.name }.filter { it != thePlayer.name }.mapTo(sendQueue) { message.replace("@a", it) }
 
 					if (retryValue.get())
 					{

@@ -44,7 +44,7 @@ class ItemESP : Module()
 
 			val provider = classProvider
 
-			theWorld.loadedEntityList.asSequence().filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, drawOutline) }
+			theWorld.loadedEntityList.filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, drawOutline) }
 		}
 	}
 
@@ -64,7 +64,7 @@ class ItemESP : Module()
 
 			try
 			{
-				theWorld.loadedEntityList.asSequence().filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { renderManager.renderEntityStatic(it, partialTicks, true) }
+				theWorld.loadedEntityList.filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { renderManager.renderEntityStatic(it, partialTicks, true) }
 			}
 			catch (ex: Exception)
 			{

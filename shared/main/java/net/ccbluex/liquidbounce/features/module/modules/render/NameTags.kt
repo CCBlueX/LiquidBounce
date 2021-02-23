@@ -72,7 +72,7 @@ class NameTags : Module()
 		val theWorld = mc.theWorld ?: return
 
 		val bot = botValue.get()
-		theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).filter { !AntiBot.isBot(it.asEntityLivingBase()) || bot }.forEach { entity ->
+		theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).filter { bot || !AntiBot.isBot(it) }.forEach { entity ->
 			val name = (entity.displayName ?: return@forEach).unformattedText
 			renderNameTag(entity, if (clearNamesValue.get()) ColorUtils.stripColor(name) ?: return@forEach else name)
 		}
@@ -202,7 +202,8 @@ class NameTags : Module()
 			val renderItem = mc.renderItem
 			renderItem.zLevel = -147F
 
-			(if (Backend.MINECRAFT_VERSION_MINOR == 8) (0..4).toList().toIntArray() else intArrayOf(0, 1, 2, 3, 5, 4)).map { it to entity.getEquipmentInSlot(it) }.filterNot { (_, equipment) -> equipment == null }.forEach { (index, equipment) -> renderItem.renderItemAndEffectIntoGUI(equipment ?: return@forEach, -50 + index * 20, -22) }
+			// Used workaround because of IntArray doesn't have .mapNotNull() extension
+			(if (Backend.MINECRAFT_VERSION_MINOR == 8) (0..4).toList().toIntArray() else intArrayOf(0, 1, 2, 3, 5, 4)).map { it to (entity.getEquipmentInSlot(it) ?: return@map null) }.filterNotNull().forEach { (index, equipment) -> renderItem.renderItemAndEffectIntoGUI(equipment ?: return@forEach, -50 + index * 20, -22) }
 
 			val glStateManager = provider.glStateManager
 			glStateManager.enableAlpha()

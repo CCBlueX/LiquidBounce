@@ -94,29 +94,20 @@ class CommandManager
 		{
 			val args = input.split(" ")
 
-			return if (args.size > 1)
+			return (if (args.size > 1)
 			{
 				val command = getCommand(args[0].substring(1))
 				val tabCompletions = command?.tabComplete(args.drop(1).toTypedArray())
 
-				tabCompletions?.toTypedArray()
+				tabCompletions
 			}
 			else
 			{
 				val rawInput = input.substring(1)
-				commands.asSequence().filter {
-					it.command.startsWith(rawInput, true) || it.alias.any { alias -> alias.startsWith(rawInput, true) }
-				}.map {
-					val alias: String = if (it.command.startsWith(rawInput, true)) it.command
-					else
-					{
-						it.alias.first { alias -> alias.startsWith(rawInput, true) }
-					}
-
-					prefix + alias
-				}.toList().toTypedArray()
-			}
+				commands.filter { it.command.startsWith(rawInput, true) || it.alias.any { alias -> alias.startsWith(rawInput, true) } }.map { prefix + if (it.command.startsWith(rawInput, true)) it.command else it.alias.first { alias -> alias.startsWith(rawInput, true) } }.toList()
+			})?.toTypedArray()
 		}
+
 		return null
 	}
 

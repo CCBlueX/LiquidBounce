@@ -55,13 +55,20 @@ class RollingArrayLongBuffer(length: Int)
 	{
 		var i = 0
 		val j = buffer.size
-		while (i < j)
+
+		try
 		{
-			if (buffer[if (bufferOffset < i) buffer.size - i + bufferOffset else bufferOffset - i] < l) return i
-			i++
+			while (i < j)
+			{
+				if (buffer[if (bufferOffset < i) buffer.size - i + bufferOffset else bufferOffset - i] < l) return i
+				i++
+			}
+		}
+		catch (_: ArrayIndexOutOfBoundsException)
+		{
 		}
 
-		// If every element is lower than l, return the array length
+		// If every element is lower than l (or Index Exception occurs), return the array length
 		return buffer.size
 	}
 }

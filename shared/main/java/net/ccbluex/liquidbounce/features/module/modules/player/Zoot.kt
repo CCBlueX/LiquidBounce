@@ -38,16 +38,10 @@ class Zoot : Module()
 
 		val netHandler = mc.netHandler
 
-		if (badEffectsValue.get())
-		{
-			val effect = thePlayer.activePotionEffects.asSequence().filter(::isBadEffect).maxBy(IPotionEffect::duration)
-
-			if (effect != null)
-			{
-				WorkerUtils.workers.execute {
-					repeat(effect.duration / 20) {
-						netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
-					}
+		if (badEffectsValue.get()) thePlayer.activePotionEffects.filter(::isBadEffect).maxBy(IPotionEffect::duration)?.let { effect ->
+			WorkerUtils.workers.execute {
+				repeat(effect.duration / 20) {
+					netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
 				}
 			}
 		}

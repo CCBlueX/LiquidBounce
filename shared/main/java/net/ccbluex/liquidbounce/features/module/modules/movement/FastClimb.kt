@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "FastClimb", description = "Allows you to climb up ladders and vines faster.", category = ModuleCategory.MOVEMENT)
@@ -22,6 +23,7 @@ class FastClimb : Module()
 {
 	val modeValue = ListValue("Mode", arrayOf("Vanilla", "Clip", "AAC3.0.0", "AAC3.0.5", "SAAC3.1.2", "AAC3.1.2"), "Vanilla")
 	private val speedValue = FloatValue("Speed", 0.2872F, 0.01F, 5F)
+	private val clipSearchHeight = IntegerValue("Clip-SearchHeight", 8, 8, 255)
 
 	@EventTarget
 	fun onMove(event: MoveEvent)
@@ -96,7 +98,7 @@ class FastClimb : Module()
 
 			"clip" -> if (thePlayer.isOnLadder && mc.gameSettings.keyBindForward.isKeyDown)
 			{
-				for (i in thePlayer.posY.toInt()..thePlayer.posY.toInt() + 8)
+				for (i in thePlayer.posY.toInt()..thePlayer.posY.toInt() + clipSearchHeight.get())
 				{
 					val block = getBlock(theWorld, WBlockPos(thePlayer.posX, i.toDouble(), thePlayer.posZ))
 

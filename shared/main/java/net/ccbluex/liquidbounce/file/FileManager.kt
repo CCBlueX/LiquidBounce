@@ -90,7 +90,7 @@ class FileManager : MinecraftInstance()
 	 */
 	fun saveAllConfigs()
 	{
-		javaClass.declaredFields.asSequence().filter { it.type == FileConfig::class.java }.forEach {
+		javaClass.declaredFields.filter { it.type == FileConfig::class.java }.forEach {
 			try
 			{
 				if (!it.isAccessible) it.isAccessible = true

@@ -248,6 +248,8 @@ class NoFall : Module()
 
 		val silentRotation = silentRotationValue.get()
 
+		val provider = classProvider
+
 		if (event.eventState == EventState.PRE)
 		{
 			currentMlgRotation = null
@@ -272,9 +274,11 @@ class NoFall : Module()
 
 				var mlgItemSlot = -1
 
+				val inventory = thePlayer.inventory
+
 				run {
-					(36..44).map { it to thePlayer.inventoryContainer.getSlot(it).stack }.filter { (_, itemStack) -> itemStack != null && (itemStack.item == classProvider.getItemEnum(ItemType.WATER_BUCKET) || classProvider.isItemBlock(itemStack.item) && (itemStack.item?.asItemBlock())?.block == classProvider.getBlockEnum(BlockType.WEB)) }.forEach { (slot, _) ->
-						mlgItemSlot = slot - 36
+					(0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, itemStack) -> itemStack.item == provider.getItemEnum(ItemType.WATER_BUCKET) || provider.isItemBlock(itemStack.item) && (itemStack.item?.asItemBlock())?.block == provider.getBlockEnum(BlockType.WEB) }.forEach { (slot, _) ->
+						mlgItemSlot = slot
 						if (thePlayer.inventory.currentItem == mlgItemSlot) return@run
 					}
 				}
@@ -284,7 +288,7 @@ class NoFall : Module()
 				currentMlgItemIndex = mlgItemSlot
 				currentMlgBlock = collision.pos
 
-				if (thePlayer.inventory.currentItem != mlgItemSlot) thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketHeldItemChange(mlgItemSlot))
+				if (thePlayer.inventory.currentItem != mlgItemSlot) thePlayer.sendQueue.addToSendQueue(provider.createCPacketHeldItemChange(mlgItemSlot))
 
 				currentMlgRotation = RotationUtils.faceBlock(theWorld, thePlayer, collision.pos)
 
@@ -296,7 +300,7 @@ class NoFall : Module()
 		{
 			val stack = thePlayer.inventory.getStackInSlot(currentMlgItemIndex + 36)
 
-			if (classProvider.isItemBucket(stack!!.item)) mc.playerController.sendUseItem(thePlayer, theWorld, stack)
+			if (provider.isItemBucket(stack!!.item)) mc.playerController.sendUseItem(thePlayer, theWorld, stack)
 			else
 			{
 
@@ -304,7 +308,7 @@ class NoFall : Module()
 
 				if (mc.playerController.sendUseItem(thePlayer, theWorld, stack)) mlgTimer.reset()
 			}
-			if (thePlayer.inventory.currentItem != currentMlgItemIndex) thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+			if (thePlayer.inventory.currentItem != currentMlgItemIndex) thePlayer.sendQueue.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 		}
 	}
 

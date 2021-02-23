@@ -67,8 +67,10 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 	init
 	{
-		ModuleCategory.values().map { it to Tab(it.displayName) }.forEach { (category, tab) ->
-			LiquidBounce.moduleManager.modules.asSequence().filter { module: Module -> category == module.category }.forEach { tab.modules.add(it) }
+		for (category in ModuleCategory.values())
+		{
+			val tab = Tab(category.displayName)
+			LiquidBounce.moduleManager.modules.filter { module: Module -> category == module.category }.forEach { tab.modules.add(it) }
 			tabs.add(tab)
 		}
 	}

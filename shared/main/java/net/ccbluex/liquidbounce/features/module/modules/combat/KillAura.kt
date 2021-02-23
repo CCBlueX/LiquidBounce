@@ -624,6 +624,8 @@ class KillAura : Module()
 		val swing = swingValue.get()
 		val multi = targetModeValue.get().equals("Multi", ignoreCase = true)
 		val openInventory = aacValue.get() && provider.isGuiContainer(mc.currentScreen)
+		val aac = aacValue.get()
+		val limitedMultiTargets = limitedMultiTargetsValue.get()
 
 		// FailRate
 		failedToHit = failRate > 0 && Random.nextInt(100) <= failRate
@@ -660,11 +662,11 @@ class KillAura : Module()
 				var targets = 0
 
 				run {
-					theWorld.loadedEntityList.filter { EntityUtils.isEnemy(it, aacValue.get()) && thePlayer.getDistanceToEntityBox(it) <= getAttackRange(thePlayer, it) }.map(IEntity::asEntityLivingBase).forEach { entity ->
+					theWorld.loadedEntityList.filter { EntityUtils.isEnemy(it, aac) && thePlayer.getDistanceToEntityBox(it) <= getAttackRange(thePlayer, it) }.map(IEntity::asEntityLivingBase).forEach { entity ->
 						attackEntity(entity)
 						targets += 1
 
-						if (limitedMultiTargetsValue.get() != 0 && targets >= limitedMultiTargetsValue.get()) return@run
+						if (limitedMultiTargets != 0 && targets >= limitedMultiTargets) return@run
 					}
 				}
 			}

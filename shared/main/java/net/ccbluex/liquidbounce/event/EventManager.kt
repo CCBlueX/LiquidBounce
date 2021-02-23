@@ -17,7 +17,7 @@ class EventManager
 	 */
 	fun registerListener(listener: Listenable)
 	{
-		listener.javaClass.declaredMethods.asSequence().filter { it.isAnnotationPresent(EventTarget::class.java) && it.parameterTypes.size == 1 }.forEach { method ->
+		listener.javaClass.declaredMethods.asSequence().filter { it.isAnnotationPresent(EventTarget::class.java) }.filter { it.parameterTypes.size == 1 }.forEach { method ->
 			if (!method.isAccessible) method.isAccessible = true
 
 			@Suppress("UNCHECKED_CAST")
@@ -50,7 +50,7 @@ class EventManager
 	{
 		val targets = registry[event.javaClass] ?: return
 
-		targets.asSequence().filterNot { !it.eventClass.handleEvents() && !it.isIgnoreCondition }.forEach {
+		targets.filter { it.isIgnoreCondition || it.eventClass.handleEvents() }.forEach {
 			try
 			{
 				it.method.invoke(it.eventClass, event)

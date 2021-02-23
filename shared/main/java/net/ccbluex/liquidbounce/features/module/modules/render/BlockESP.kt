@@ -104,7 +104,7 @@ class BlockESP : Module()
 			task = Runnable {
 				val blockList: MutableList<WBlockPos> = ArrayList()
 
-				(-radius until radius).forEach { x -> (-radius until radius).forEach { y -> (-radius until radius).asSequence().map { z -> WBlockPos(playerX + x, playerY + y, playerZ + z) }.filter { getBlock(theWorld, it) == selectedBlock && blockList.size < blockLimitValue.get() }.forEach { blockList.add(it) } } }
+				(-radius until radius).forEach { x -> (-radius until radius).forEach { y -> (-radius until radius).map { z -> WBlockPos(playerX + x, playerY + y, playerZ + z) }.filter { getBlock(theWorld, it) == selectedBlock && blockList.size < blockLimitValue.get() }.forEach { blockList.add(it) } } }
 
 				searchTimer.reset()
 

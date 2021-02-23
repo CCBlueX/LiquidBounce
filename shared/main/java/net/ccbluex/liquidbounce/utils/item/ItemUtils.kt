@@ -40,12 +40,11 @@ object ItemUtils : MinecraftInstance()
 			val modeSize = min(12, fixedItemArguments.length - 2)
 
 
-			run {
-				repeat(modeSize) { i ->
-					args = fixedItemArguments.substring(i).split(" ")
-					item = functions.getObjectFromItemRegistry(classProvider.createResourceLocation((args ?: return@repeat)[0]))
-					if (item != null) return@run
-				}
+			(0 until modeSize).any {
+				args = fixedItemArguments.substring(it).split(" ")
+				item = functions.getObjectFromItemRegistry(classProvider.createResourceLocation((args ?: return@any false)[0]))
+
+				item != null
 			}
 
 			item ?: return null

@@ -246,7 +246,7 @@ class TpAura : Module()
 				GL11.glBegin(GL11.GL_LINE_STRIP)
 				RenderUtils.glColor(color)
 
-				targetPath.asSequence().filterNotNull().forEach { GL11.glVertex3d(it.xCoord - viewerPosX, it.yCoord - viewerPosY, it.zCoord - viewerPosZ) }
+				for (path in targetPath) GL11.glVertex3d(path.xCoord - viewerPosX, path.yCoord - viewerPosY, path.zCoord - viewerPosZ)
 
 				GL11.glColor4d(1.0, 1.0, 1.0, 1.0)
 				GL11.glEnd()
@@ -342,7 +342,7 @@ class TpAura : Module()
 		val provider = classProvider
 		val range = rangeValue.get()
 		val hurtTime = hurtTimeValue.get()
-		return theWorld.loadedEntityList.asSequence().filter(provider::isEntityLivingBase).map(IEntity::asEntityLivingBase).filter { thePlayer.getDistanceToEntityBox(it) <= range && isEnemy(it, false) && it.hurtTime <= hurtTime }.sortedBy { it.getDistanceToEntity(thePlayer) * 1000 }.toMutableList()
+		return theWorld.loadedEntityList.asSequence().filter(provider::isEntityLivingBase).map(IEntity::asEntityLivingBase).filter { thePlayer.getDistanceToEntityBox(it) <= range }.filter { isEnemy(it, false) }.filter { it.hurtTime <= hurtTime }.sortedBy { it.getDistanceToEntity(thePlayer) * 1000 }.toMutableList()
 	}
 
 	fun isTarget(entity: IEntity?): Boolean = currentTargets.isNotEmpty() && (0 until if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size).any { currentTargets[it].isEntityEqual(entity) }

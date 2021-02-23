@@ -344,7 +344,7 @@ class InventoryCleaner : Module()
 	 */
 	private fun sortHotbar(thePlayer: IEntityPlayerSP)
 	{
-		(0..8).asSequence().map { it to (findBetterItem(thePlayer, it, thePlayer.inventory.getStackInSlot(it)) ?: return@map null) }.filterNotNull().firstOrNull { (index, bestItem) -> index != bestItem }?.let { (index, bestItem) ->
+		(0..8).mapNotNull { it to (findBetterItem(thePlayer, it, thePlayer.inventory.getStackInSlot(it)) ?: return@mapNotNull null) }.firstOrNull { (index, bestItem) -> index != bestItem }?.let { (index, bestItem) ->
 			val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
 
 			if (openInventory) mc.netHandler.addToSendQueue(createOpenInventoryPacket())

@@ -126,7 +126,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 			2 ->
 			{
 				if (args[0].equals("load", ignoreCase = true)) if (autoSettingFiles == null) loadSettings(true, 500) {}
-				else return autoSettingFiles!!.asSequence().filter { it.startsWith(args[1], true) }.toList()
+				else return autoSettingFiles!!.filter { it.startsWith(args[1], true) }.toList()
 
 				return emptyList()
 			}

@@ -171,7 +171,7 @@ object AntiBot : Module()
 	private val lastRemoved = MSTimer()
 
 	@JvmStatic
-	fun checkTabList(targetName: String, displayName: Boolean, equals: Boolean, stripColors: Boolean): Boolean = mc.netHandler.playerInfoMap.asSequence().map { networkPlayerInfo ->
+	fun checkTabList(targetName: String, displayName: Boolean, equals: Boolean, stripColors: Boolean): Boolean = mc.netHandler.playerInfoMap.map { networkPlayerInfo ->
 		var networkName = networkPlayerInfo.getFullName(displayName)
 
 		if (stripColors) networkName = stripColor(networkName)!!

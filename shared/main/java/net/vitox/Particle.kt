@@ -32,7 +32,7 @@ internal class Particle(var x: Float, var y: Float)
 
 	fun interpolation()
 	{
-		(0..64).asSequence().map { it * 0.015625f }.forEach { f ->
+		(0..64).map { it * 0.015625f }.forEach { f ->
 			val p1 = lint1(f)
 			val p2 = lint2(f)
 

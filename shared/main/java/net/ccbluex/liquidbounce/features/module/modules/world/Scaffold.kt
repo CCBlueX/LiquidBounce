@@ -245,7 +245,7 @@ class Scaffold : Module()
 	private val suspendKillauraDuration = IntegerValue("SuspendKillauraDuration", 300, 300, 1000)
 
 	// Visuals
-	private val counterDisplayValue = BoolValue("Counter", true)
+	val counterDisplayValue = BoolValue("Counter", true)
 	private val markValue = BoolValue("Mark", false)
 	private val searchDebug = BoolValue("SearchDebugChat", false)
 
@@ -889,7 +889,7 @@ class Scaffold : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		run {
+		run searchLoop@{
 			repeat(if (modeValue.get().equals("Expand", true)) expandLengthValue.get() + 1 else 2) {
 				val horizontalFacing = functions.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
 				val blockPos = WBlockPos(thePlayer.posX + when (horizontalFacing)
@@ -910,7 +910,7 @@ class Scaffold : Module()
 				if (isReplaceable(blockPos) && placeInfo != null)
 				{
 					RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, Color(68, 117, 255, 100), false)
-					return@run
+					return@searchLoop
 				}
 			}
 		}
@@ -1033,7 +1033,7 @@ class Scaffold : Module()
 				lockRotation = limitedRotation
 				facesBlock = false
 
-				run {
+				run searchLoop@{
 					EnumFacingType.values().map(provider::getEnumFacing).forEach { side ->
 						val neighbor = blockPosition.offset(side)
 
@@ -1054,7 +1054,7 @@ class Scaffold : Module()
 
 						facesBlock = true
 
-						return@run
+						return@searchLoop
 					}
 				}
 			}

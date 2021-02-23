@@ -45,8 +45,8 @@ class AutoWeapon : Module()
 			attackEnemy = false
 
 			// Find best weapon in hotbar (#Kotlin Style)
-			val (slot, _) = (0..8).asSequence().map { it to thePlayer.inventory.getStackInSlot(it) }.filter { it.second != null && (classProvider.isItemSword(it.second?.item) || classProvider.isItemTool(it.second?.item)) }.maxBy {
-				it.second!!.getAttributeModifier("generic.attackDamage").first().amount + 1.25 * ItemUtils.getEnchantment(it.second, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
+			val (slot, _) = (0..8).asSequence().mapNotNull { it to (thePlayer.inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, itemStack) -> classProvider.isItemSword(itemStack.item) || classProvider.isItemTool(itemStack.item) }.maxBy { (_, itemStack) ->
+				itemStack.getAttributeModifier("generic.attackDamage").first().amount + 1.25 * ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 			} ?: return
 
 			if (slot == thePlayer.inventory.currentItem) // If in hand no need to swap
