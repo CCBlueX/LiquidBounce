@@ -10,6 +10,7 @@
     "minecraft.client.MixinKeyboard",
     "minecraft.client.MixinMinecraftClient",
     "minecraft.entity.MixinClientPlayerEntity",
+    "minecraft.entity.MixinEntity",
     "minecraft.gui.MixinInGameHud",
     "minecraft.gui.MixinScreen",
     "minecraft.network.MixinClientConnection",

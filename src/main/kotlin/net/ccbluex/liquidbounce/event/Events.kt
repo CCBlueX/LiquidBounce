@@ -24,6 +24,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
 import net.minecraft.util.math.BlockPos
@@ -74,6 +75,11 @@ class ChatSendEvent(val message: String) : CancellableEvent()
  */
 @Nameable("blockShape")
 class BlockShapeEvent(val state: BlockState, val pos: BlockPos, var shape: VoxelShape) : Event()
+
+// Entity events
+
+@Nameable("entityMargin")
+class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 
 // Network events
 

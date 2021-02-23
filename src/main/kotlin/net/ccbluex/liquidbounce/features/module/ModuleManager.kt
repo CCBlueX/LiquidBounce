@@ -23,10 +23,7 @@ import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTrigger
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity
+import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiCactus
@@ -77,7 +74,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleBreadcrumbs,
             ModuleItemESP,
             ModuleCriticals,
-            ModuleAntiCactus
+            ModuleAntiCactus,
+            ModuleHitbox
         )
 
         // TODO: Figure out how to link modules list with configurable
