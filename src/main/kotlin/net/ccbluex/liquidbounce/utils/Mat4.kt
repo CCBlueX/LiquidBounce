@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
+import net.ccbluex.liquidbounce.renderer.engine.Vec4
 import net.minecraft.util.math.Matrix4f
 import net.minecraft.util.math.Quaternion
 import org.lwjgl.BufferUtils
@@ -215,6 +216,17 @@ $a30 $a31 $a32 $a33
         a33 = u
     }
 
+
+    operator fun times(vec: Vec4): Vec4 {
+        val x = this.a00 * vec.x + this.a01 * vec.y + this.a02 * vec.z + this.a03 * vec.w
+        val y = this.a10 * vec.x + this.a11 * vec.y + this.a12 * vec.z + this.a13 * vec.w
+        val z = this.a20 * vec.x + this.a21 * vec.y + this.a22 * vec.z + this.a23 * vec.w
+        val w = this.a30 * vec.x + this.a31 * vec.y + this.a32 * vec.z + this.a33 * vec.w
+
+        return Vec4(x, y, z, w)
+    }
+
+
     fun multiply(quaternion: Quaternion) {
         this.multiply(Mat4(quaternion))
     }
@@ -227,12 +239,20 @@ $a30 $a31 $a32 $a33
         GL20.glUniformMatrix4fv(uniformLocation, false, buffer)
     }
 
+    fun toBuffer(): FloatBuffer {
+        val floatBuffer = BufferUtils.createFloatBuffer(16)
+
+        this.writeToBuffer(floatBuffer)
+
+        return floatBuffer
+    }
+
     companion object {
         private inline fun pack(x: Int, y: Int): Int {
             return y * 4 + x
         }
 
-        fun projectionMatrix(
+        fun orthograpicProjectionMatrix(
             left: Float,
             top: Float,
             right: Float,

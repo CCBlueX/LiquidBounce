@@ -29,47 +29,43 @@ import net.ccbluex.liquidbounce.utils.Mat4
 import net.ccbluex.liquidbounce.utils.extensions.ping
 import net.ccbluex.liquidbounce.utils.extensions.shouldBeShown
 import net.ccbluex.liquidbounce.utils.extensions.stripMinecraftColorCodes
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.Quaternion
 import kotlin.math.roundToInt
 
 object ModuleNametags : Module("Nametags", Category.RENDER) {
 
-    private val healthValue = boolean("Health", true)
-    private val pingValue = boolean("Ping", true)
-    private val distanceValue = boolean("Distance", false)
-    private val armorValue = boolean("Armor", true)
-    private val clearNamesValue = boolean("ClearNames", false)
+    private val healthValue by boolean("Health", true)
+    private val pingValue by boolean("Ping", true)
+    private val distanceValue by boolean("Distance", false)
+    private val armorValue by boolean("Armor", true)
+    private val clearNamesValue by boolean("ClearNames", false)
 
-    private val borderValue = boolean("Border", true)
-    private val scaleValue = float("Scale", 2F, 1F..4F)
-    private val botValue = boolean("Bots", true)
+    private val borderValue by boolean("Border", true)
+    private val scaleValue by float("Scale", 2F, 1F..4F)
 
-    val renderHandler = handler<EngineRenderEvent> {
-        val filteredEntities = mc.world!!.entities
+    val renderHandler = handler<EngineRenderEvent> { event ->
+        val filteredEntities = mc.world!!.entities.filter(Entity::shouldBeShown)
 
+        val fontRenderer = Fonts.bodyFont
 
-        val rotMat = Mat4()
+        fontRenderer.begin()
 
-        rotMat.multiply(Quaternion(0.0f, -mc.player!!.yaw, 0.0f, true))
-        rotMat.multiply(Quaternion(mc.player!!.pitch, 0.0f, 0.0f, true))
+        // Two triangles per rect
+        val renderTask = ColoredPrimitiveRenderTask(filteredEntities.size * 2, PrimitiveType.Triangles)
+        val aspectRatio =
+            net.ccbluex.liquidbounce.utils.mc.window.width.toFloat() / net.ccbluex.liquidbounce.utils.mc.window.height.toFloat()
+
+        val borderRenderTask = if (this.borderValue) {
+            ColoredPrimitiveRenderTask(filteredEntities.size * 4, PrimitiveType.Lines)
+        } else {
+            null
+        }
 
         for (entity in filteredEntities) {
-            if (!entity.shouldBeShown())
-                continue
-
-            // if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
-
-            // Two triangles per rect
-            val rectRenderTask = ColoredPrimitiveRenderTask(2, PrimitiveType.Triangles)
-            val borderRenderTask = if (this.borderValue.value) {
-                ColoredPrimitiveRenderTask(4, PrimitiveType.LineLoop)
-            } else {
-                null
-            }
-
-            val tag = if (clearNamesValue.value)
+            val tag = if (clearNamesValue)
                 entity.displayName.asTruncatedString(100)?.stripMinecraftColorCodes() ?: continue
             else
                 entity.displayName.asTruncatedString(100) ?: continue
@@ -81,22 +77,20 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
 
             if (distance < 1.0f)
                 distance = 1.0f
+            else if (distance > 3.0f)
+                distance = 3.0f
 
-            val fontRenderer = Fonts.bodyFont
-
-            val scale = distance / (10f * fontRenderer.size) * scaleValue.value
-
-            fontRenderer.begin()
+            val scale = 1.0f / (25f * fontRenderer.size * distance) * scaleValue
 
             // Modify tag
-//            val bot = AntiBot.isBot(entity) // TODO Fix AntiBot
             val bot = false
             val nameColor = if (bot) "§3" else if (entity.isInvisible) "§6" else if (entity.isSneaking) "§4" else "§7"
             val ping = if (entity is PlayerEntity) entity.ping else 0
 
-            val distanceText = if (distanceValue.value) "§7${player.distanceTo(entity).roundToInt()}m " else ""
-            val pingText = if (pingValue.value && entity is PlayerEntity) (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms §7" else ""
-            val healthText =  if (healthValue.value && entity is LivingEntity) "§7§c ${entity.health.toInt()} HP" else ""
+            val distanceText = if (distanceValue) "§7${player.distanceTo(entity).roundToInt()}m " else ""
+            val pingText =
+                if (pingValue && entity is PlayerEntity) (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms §7" else ""
+            val healthText = if (healthValue && entity is LivingEntity) "§7§c ${entity.health.toInt()} HP" else ""
             val botText = if (bot) " §c§lBot" else ""
 
             val text = "$distanceText$pingText$nameColor$tag$healthText$botText"
@@ -110,46 +104,75 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
 
 
             val offset = Vec3(
-                boundingBoxCenter.x - entity.x + entity.lastRenderX + (entity.x - entity.lastRenderX) * it.tickDelta,
-                boundingBox.minY - entity.y + entity.lastRenderY + entity.standingEyeHeight + 0.55 + height * scale + (entity.y - entity.lastRenderY) * it.tickDelta,
-                boundingBoxCenter.z - entity.z + entity.lastRenderZ + (entity.z - entity.lastRenderZ) * it.tickDelta
+                boundingBoxCenter.x - entity.x + entity.lastRenderX + (entity.x - entity.lastRenderX) * event.tickDelta,
+                boundingBox.minY - entity.y + entity.lastRenderY + entity.standingEyeHeight + 0.55 + height * scale + (entity.y - entity.lastRenderY) * event.tickDelta,
+                boundingBoxCenter.z - entity.z + entity.lastRenderZ + (entity.z - entity.lastRenderZ) * event.tickDelta
             )
 
-            val p1 = Vec3(-width - 2F, -2f, 0.0f)
-            val p2 = Vec3(width + 4f, fontRenderer.height + 2F, 0.0f)
+            val p1 = Vec3(-width - 4F, -fontRenderer.height / 2.0f - 2f, 0.0f)
+            val p2 = Vec3(width + 6f, fontRenderer.height / 2.0f + 2F, 0.0f)
 
-            rectRenderTask.rect(
-                p1,
-                p2,
+            val vec = RenderEngine.cameraMvp * Vec4(offset, 1.0f)
+
+            if (vec.w < 0.0f)
+                continue
+
+            val factor = 1.0f / vec.w
+
+            val xWithoutAspectRatio = vec.x * factor
+
+            val screenSpaceVec = Vec3(xWithoutAspectRatio * aspectRatio, -vec.y * factor, 0.0f)
+
+            renderTask.rect(
+                screenSpaceVec + p1 * scale,
+                screenSpaceVec + p2 * scale,
                 Color4b(0, 0, 0, 127)
             )
-
             borderRenderTask?.rect(
-                p1,
-                p2,
+                screenSpaceVec + p1 * scale,
+                screenSpaceVec + p2 * scale,
                 Color4b(0, 0, 0, 127),
                 true
             )
 
-            Fonts.bodyFont.draw(text, (1F - width), 0.0f, Color4b.WHITE, true, z = 0.0f)
-
-            val matrix = Mat4()
-
-            matrix.multiply(Mat4.translate(offset.x, offset.y, offset.z))
-            matrix.multiply(rotMat)
-            matrix.multiply(Mat4.scale(-scale, -scale, -scale))
-
-            RenderEngine.enqueueForRendering(
-                RenderEngine.PSEUDO_2D_LAYER,
-                MVPRenderTask(
-                    if (borderRenderTask == null) arrayOf(rectRenderTask) else arrayOf<RenderTask>(
-                        rectRenderTask,
-                        borderRenderTask
-                    ) + Fonts.bodyFont.commit(), matrix
-                )
+            Fonts.bodyFont.draw(
+                text,
+                screenSpaceVec.x + (1F - width) * scale,
+                screenSpaceVec.y - fontRenderer.height / 2.0f * scale,
+                Color4b.WHITE,
+                true,
+                scale = scale
             )
+
+            if (armorValue && entity is PlayerEntity) {
+                val armorScale = 1.0f / distance * scaleValue
+
+                val pixelX = (xWithoutAspectRatio + 1.0f) / 2.0f * mc.window.scaledWidth
+                val pixelY = (screenSpaceVec.y + 1.0f) / 2.0f * mc.window.scaledHeight
+
+                val slotTypes = arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+
+                val renderTasks = slotTypes.withIndex().mapNotNull { (index, slot) ->
+                    val equipmentInSlot = entity.getEquippedStack(slot) ?: return@mapNotNull null
+
+                    ItemModelRenderTask(equipmentInSlot, -40 + index * 20, -22)
+                }
+
+                val mvpMatrix = Mat4.translate(pixelX, pixelY, 0.0f)
+
+                mvpMatrix.multiply(Mat4.scale(armorScale, armorScale, armorScale))
+
+                RenderEngine.enqueueForRendering(
+                    RenderEngine.MINECRAFT_INTERNAL_RENDER_TASK,
+                    MVPRenderTask(renderTasks.toTypedArray(), mvpMatrix)
+                )
+            }
+
         }
 
+        RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, renderTask)
+        borderRenderTask?.let { RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, it) }
+        RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, fontRenderer.commit())
     }
 
 }

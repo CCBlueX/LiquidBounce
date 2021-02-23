@@ -19,34 +19,34 @@
 
 package net.ccbluex.liquidbounce.renderer.engine
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNametags
+import net.ccbluex.liquidbounce.renderer.engine.utils.popMVP
+import net.ccbluex.liquidbounce.renderer.engine.utils.pushMVP
 import net.ccbluex.liquidbounce.utils.Mat4
-
+import net.ccbluex.liquidbounce.utils.mc
+import net.minecraft.item.ItemStack
+import org.lwjgl.opengl.GL11.GL_ALPHA_TEST
+import org.lwjgl.opengl.GL11.glEnable
 
 /**
- * A collection of render tasks that use an own MVP matrix besides the current MVP matrix. Can only be used for one type of render task.
- * The first task's initialize and cleanup methods are used for *all* tasks. The task has to be compatible with that
- *
- *
- * **Tested Compatible Tasks:**
- * - [ItemModelRenderTask]
- *
- * Other tasks might work too.
- *
- * @param matrix The matrix that will be multiplied with the base MVP matrix to get the final MVP matrix
+ * Renders an [ItemStack] to the screen. Primarily used by [ModuleNametags]
  */
-class MVPRenderTask(val renderTask: Array<RenderTask>, private val matrix: Mat4) : RenderTask() {
+class ItemModelRenderTask(val stack: ItemStack, val x: Int, val y: Int) : RenderTask() {
     override fun getBatchRenderer(): BatchRenderer? = null
 
     override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
-        val mvp = Mat4(mvpMatrix)
+        mc.itemRenderer.zOffset = -147F
 
-        mvp.multiply(this.matrix)
-
-        this.renderTask.first().initRendering(level, mvp)
+        pushMVP(mvpMatrix)
     }
 
-    override fun draw(level: OpenGLLevel) = renderTask.forEach { it.draw(level) }
+    override fun draw(level: OpenGLLevel) {
+        mc.itemRenderer.renderInGui(stack, x, y)
+    }
 
-    override fun cleanupRendering(level: OpenGLLevel) = this.renderTask.first().cleanupRendering(level)
+    override fun cleanupRendering(level: OpenGLLevel) {
+        popMVP()
 
+        glEnable(GL_ALPHA_TEST)
+    }
 }

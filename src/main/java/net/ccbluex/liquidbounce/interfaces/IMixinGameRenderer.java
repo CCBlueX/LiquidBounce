@@ -26,9 +26,8 @@ public interface IMixinGameRenderer {
     /**
      * Creates a matrix that renders the perspective of the camera
      *
-     * @param pseudo2D  Enabled Pseudo 2D Mode, useful for NameTags and 2D-ESP
      * @param tickDelta The count of ticks passed since the last time rendered
      */
-    Matrix4f getCameraMVPMatrix(boolean pseudo2D, float tickDelta);
+    Matrix4f getCameraMVPMatrix(float tickDelta);
 
 }

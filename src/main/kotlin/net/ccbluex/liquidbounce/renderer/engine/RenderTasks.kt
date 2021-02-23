@@ -115,9 +115,14 @@ data class Point2f(val x: Float, val y: Float) {
     }
 }
 
+data class Vec4(val x: Float, val y: Float, val z: Float, val w: Float) {
+    constructor(vec: Vec3, w: Float) : this(vec.x, vec.y, vec.z, w)
+}
+
 data class Vec3(val x: Float, val y: Float, val z: Float) {
     constructor(x: Double, y: Double, z: Double) : this(x.toFloat(), y.toFloat(), z.toFloat())
     constructor(vec: Vec3d) : this(vec.x, vec.y, vec.z)
+    constructor(vec: Vec4) : this(vec.x, vec.y, vec.z)
 
     fun writeToBuffer(idx: Int, buffer: ByteBuffer) {
         buffer.putFloat(idx, x)
@@ -218,4 +223,5 @@ enum class PrimitiveType(val verticesPerPrimitive: Int, val mode: Int) {
      */
     LineLoop(1, GL11.GL_LINE_LOOP),
     LineStrip(1, GL11.GL_LINE_STRIP),
+    Points(1, GL11.GL_POINTS)
 }

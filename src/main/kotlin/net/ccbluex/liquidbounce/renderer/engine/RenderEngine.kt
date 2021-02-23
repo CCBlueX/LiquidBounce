@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.renderer.Fonts
 import net.ccbluex.liquidbounce.renderer.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.utils.Mat4
 import net.ccbluex.liquidbounce.utils.logger
+import net.ccbluex.liquidbounce.utils.mc
 import net.ccbluex.liquidbounce.utils.toMat4
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.opengl.GL11
@@ -46,14 +47,19 @@ object RenderEngine : Listenable {
     const val CAMERA_VIEW_LAYER = 0
 
     /**
-     * Similar to [CAMERA_VIEW_LAYER]. Used for 2D-ESP, Nametags, etc., backface culling enabled
+     * Screen space, mirrored vertically
      */
-    const val PSEUDO_2D_LAYER = 1
+    const val SCREEN_SPACE_LAYER = 1
+
+    /**
+     * A layer to render minecraft-specific stuff, the render engine is barely used
+     */
+    const val MINECRAFT_INTERNAL_RENDER_TASK = 3
 
     /**
      * Projects the vertices on the screen. 1 unit = 1 px, backface culling enabled
      */
-    const val HUD_LAYER = 2
+    const val HUD_LAYER = 4
 
     /**
      * How many layers is the render engine supposed to render?
@@ -80,8 +86,19 @@ object RenderEngine : Listenable {
      */
     val openGlVersionRegex = Pattern.compile("(\\d+)\\.(\\d+)(\\.(\\d+))?(.*)")
 
+    /**
+     * Contains the MVP matrix used by MC for the current frame. Always initialized when [LiquidBounceRenderEvent] is dispatched.
+     */
+    lateinit var cameraMvp: Mat4
+
     val renderHandler = handler<FlatRenderEvent> {
+        this.cameraMvp = (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
+            it.tickDelta
+        ).toMat4()
+
         EventManager.callEvent(EngineRenderEvent(it.tickDelta))
+
+        GL11.glPointSize(6.0f)
 
         render(it.tickDelta)
 
@@ -180,18 +197,19 @@ object RenderEngine : Listenable {
         return when (layer) {
             CAMERA_VIEW_LAYER -> LayerSettings(
                 (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
-                    false,
                     tickDelta
                 ).toMat4(), true
             )
-            PSEUDO_2D_LAYER -> LayerSettings(
-                (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
-                    false,
-                    tickDelta
-                ).toMat4(), true
-            )
+            SCREEN_SPACE_LAYER -> {
+                val aspectRatio = mc.window.width.toFloat() / mc.window.height.toFloat()
+
+                LayerSettings(
+                    Mat4.orthograpicProjectionMatrix(-aspectRatio, -1.0f, aspectRatio, 1.0f, -1.0f, 1.0f),
+                    true
+                )
+            }
             HUD_LAYER -> LayerSettings(
-                Mat4.projectionMatrix(
+                Mat4.orthograpicProjectionMatrix(
                     0.0f,
                     0.0f,
                     MinecraftClient.getInstance().window.framebufferWidth.toFloat(),
@@ -200,6 +218,16 @@ object RenderEngine : Listenable {
                     1.0f
                 ),
                 true
+            )
+            MINECRAFT_INTERNAL_RENDER_TASK -> LayerSettings(
+                Mat4.orthograpicProjectionMatrix(
+                    0.0f,
+                    0.0f,
+                    MinecraftClient.getInstance().window.scaledWidth.toFloat(),
+                    MinecraftClient.getInstance().window.scaledHeight.toFloat(),
+                    -200.0f,
+                    200.0f
+                ), false
             )
             else -> throw UnsupportedOperationException("Unknown layer")
         }

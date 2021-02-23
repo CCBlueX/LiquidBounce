@@ -44,7 +44,8 @@ abstract class AbstractFontRenderer {
         y0: Float,
         defaultColor: Color4b,
         shadow: Boolean = false,
-        z: Float = 0.0f
+        z: Float = 0.0f,
+        scale: Float = 1.0f
     ): Float
 
     /**

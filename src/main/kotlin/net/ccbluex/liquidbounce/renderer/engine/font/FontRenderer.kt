@@ -144,16 +144,17 @@ class FontRenderer(
         y0: Float,
         defaultColor: Color4b,
         shadow: Boolean,
-        z: Float
+        z: Float,
+        scale: Float
     ): Float {
         var len = 0.0f
         // Create a common seed for rendering random fonts
         val seed = Random.nextLong()
 
         if (shadow)
-            len = drawInternal(text, x0 + 2.0f, y0 + 2.0f, Color4b(0, 0, 0, 150), true, seed, z)
+            len = drawInternal(text, x0 + 2.0f * scale, y0 + 2.0f * scale, Color4b(0, 0, 0, 150), true, seed, z, scale)
 
-        return max(len, drawInternal(text, x0, y0, defaultColor, false, seed, z))
+        return max(len, drawInternal(text, x0, y0, defaultColor, false, seed, z, scale))
     }
 
     /**
@@ -171,7 +172,8 @@ class FontRenderer(
         defaultColor: Color4b,
         shadow: Boolean,
         obfuscatedSeed: Long,
-        z: Float = 0.0f
+        z: Float,
+        scale: Float
     ): Float {
         if (text.isEmpty())
             return x0
@@ -180,7 +182,7 @@ class FontRenderer(
         val obfuscatedRandom = Random(obfuscatedSeed)
 
         var x = x0
-        var y = y0 + this.ascent
+        var y = y0 + this.ascent * scale
 
         var strikeThroughStart = 0.0f
         var underlineStart = 0.0f
@@ -285,18 +287,18 @@ class FontRenderer(
                     RenderedGlyph(
                         style,
                         glyph,
-                        x + glyph.glyphBounds.xMin,
-                        y + glyph.glyphBounds.yMin,
-                        x + (glyph.glyphBounds.xMin + glyph.atlasWidth),
-                        y + (glyph.glyphBounds.yMin + glyph.atlasHeight),
+                        x + glyph.glyphBounds.xMin * scale,
+                        y + glyph.glyphBounds.yMin * scale,
+                        x + (glyph.glyphBounds.xMin + glyph.atlasWidth) * scale,
+                        y + (glyph.glyphBounds.yMin + glyph.atlasHeight) * scale,
                         z,
                         currentColor
                     )
                 )
             }
 
-            x += glyph.advanceX
-            y += glyph.advanceY
+            x += glyph.advanceX * scale
+            y += glyph.advanceY * scale
         }
 
         if (underline) {

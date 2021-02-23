@@ -55,7 +55,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     protected abstract void bobView(MatrixStack matrixStack, float f);
 
     @Override
-    public Matrix4f getCameraMVPMatrix(boolean rotateYaw, float tickDelta) {
+    public Matrix4f getCameraMVPMatrix(float tickDelta) {
         MatrixStack matrixStack = new MatrixStack();
 
         matrixStack.peek().getModel().multiply(this.getBasicProjectionMatrix(this.camera, tickDelta, true));
@@ -83,7 +83,6 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
         }
 
         matrixStack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
-
         matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));
 
         Vec3d pos = this.camera.getPos();
