@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiCactus
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import org.lwjgl.glfw.GLFW
@@ -75,7 +76,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleNametags,
             ModuleBreadcrumbs,
             ModuleItemESP,
-            ModuleCriticals
+            ModuleCriticals,
+            ModuleAntiCactus
         )
 
         // TODO: Figure out how to link modules list with configurable
