@@ -122,7 +122,9 @@ class LiquidWalk : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (classProvider.isBlockLiquid(event.block) && !collideBlock(theWorld, thePlayer, thePlayer.entityBoundingBox, classProvider::isBlockLiquid) && !thePlayer.sneaking) when (modeValue.get().toLowerCase())
+		val provider = classProvider
+
+		if (provider.isBlockLiquid(event.block) && !collideBlock(theWorld, thePlayer, thePlayer.entityBoundingBox, provider::isBlockLiquid) && !thePlayer.sneaking) when (modeValue.get().toLowerCase())
 		{
 			"ncp", "vanilla" ->
 			{
@@ -130,7 +132,7 @@ class LiquidWalk : Module()
 				val y = event.y
 				val z = event.z
 
-				event.boundingBox = classProvider.createAxisAlignedBB(x.toDouble(), y.toDouble(), z.toDouble(), x + 1.0, y + 1.0, z + 1.0)
+				event.boundingBox = provider.createAxisAlignedBB(x.toDouble(), y.toDouble(), z.toDouble(), x + 1.0, y + 1.0, z + 1.0)
 			}
 		}
 	}
@@ -143,11 +145,13 @@ class LiquidWalk : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (classProvider.isCPacketPlayer(event.packet))
+		val provider = classProvider
+
+		if (provider.isCPacketPlayer(event.packet))
 		{
 			val packetPlayer = event.packet.asCPacketPlayer()
 
-			if (collideBlock(theWorld, thePlayer, classProvider.createAxisAlignedBB(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ), classProvider::isBlockLiquid))
+			if (collideBlock(theWorld, thePlayer, provider.createAxisAlignedBB(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ), provider::isBlockLiquid))
 			{
 				nextTick = !nextTick
 				if (nextTick) packetPlayer.y -= 0.001

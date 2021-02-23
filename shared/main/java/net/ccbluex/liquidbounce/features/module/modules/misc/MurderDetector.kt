@@ -34,7 +34,7 @@ class MurderDetector : Module()
 
 		val provider = classProvider
 
-		theWorld.loadedEntityList.asSequence().filter(provider::isEntityPlayer).filter { it != mc.thePlayer }.filter { it.asEntityPlayer().currentEquippedItem != null }.filter { it.asEntityPlayer().currentEquippedItem!!.item != null && isMurder(it.asEntityPlayer().currentEquippedItem!!.item!!) && !murders.contains(it) }.forEach {
+		theWorld.loadedEntityList.asSequence().filter(provider::isEntityPlayer).filter { it != thePlayer }.filter { it.asEntityPlayer().currentEquippedItem != null }.filter { it.asEntityPlayer().currentEquippedItem!!.item != null && isMurder(it.asEntityPlayer().currentEquippedItem!!.item!!) && !murders.contains(it) }.forEach {
 			murders.add(it.asEntityPlayer())
 			ClientUtils.displayChatMessage(thePlayer, "\u00A7a\u00A7l" + it.asEntityPlayer().name + "\u00A7r is the \u00A74\u00A7lmurderer\u00A7r!")
 		}
@@ -51,6 +51,11 @@ class MurderDetector : Module()
 
 	companion object
 	{
-		fun isMurder(item: IItem): Boolean = !classProvider.isItemMap(item) && !classProvider.isItemBow(item) && arrayOf("item.ingotGold", "item.arrow", "item.potion", "item.paper", "tile.tnt", "item.web", "item.bed", "item.compass", "item.comparator", "item.shovelWood").none { item.unlocalizedName.equals(it, ignoreCase = true) }
+		fun isMurder(item: IItem): Boolean
+		{
+			val provider = classProvider
+
+			return !provider.isItemMap(item) && !provider.isItemBow(item) && arrayOf("item.ingotGold", "item.arrow", "item.potion", "item.paper", "tile.tnt", "item.web", "item.bed", "item.compass", "item.comparator", "item.shovelWood").none { item.unlocalizedName.equals(it, ignoreCase = true) }
+		}
 	}
 }

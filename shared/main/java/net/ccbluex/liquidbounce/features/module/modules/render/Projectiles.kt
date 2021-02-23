@@ -138,9 +138,11 @@ class Projectiles : Module()
 		val yawRadians = WMathHelper.toRadians(yaw)
 		val pitchRadians = WMathHelper.toRadians(pitch)
 
-		val yawSin = functions.sin(yawRadians)
-		val yawCos = functions.cos(yawRadians)
-		val pitchCos = functions.cos(pitchRadians)
+		val func = functions
+
+		val yawSin = func.sin(yawRadians)
+		val yawCos = func.cos(yawRadians)
+		val pitchCos = func.cos(pitchRadians)
 
 		// Positions
 		var posX = renderPosX - yawCos * 0.16F
@@ -149,7 +151,7 @@ class Projectiles : Module()
 
 		// Motions
 		var motionX = -yawSin * pitchCos * motionMultiplier
-		var motionY = -functions.sin(WMathHelper.toRadians(pitch + if (isSplash) -20 else 0)) * motionMultiplier
+		var motionY = -func.sin(WMathHelper.toRadians(pitch + if (isSplash) -20 else 0)) * motionMultiplier
 		var motionZ = yawCos * pitchCos * motionMultiplier
 
 		val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
@@ -289,8 +291,8 @@ class Projectiles : Module()
 
 		val cylinder = object : Cylinder()
 		{
-			override fun sin(r: Float): Float = functions.sin(r)
-			override fun cos(r: Float): Float = functions.cos(r)
+			override fun sin(r: Float): Float = func.sin(r)
+			override fun cos(r: Float): Float = func.cos(r)
 		}
 		cylinder.drawStyle = GLU.GLU_LINE
 		cylinder.draw(0.2F, 0F, 0F, 60, 1)

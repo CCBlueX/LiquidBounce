@@ -83,7 +83,9 @@ object ColorUtils : MinecraftInstance()
 	@JvmStatic
 	fun getESPColor(entity: IEntity?, colorMode: String, customStaticColor: Color, healthMode: String, indicateHurt: Boolean, indicateTarget: Boolean, indicateFriend: Boolean, rainbowSaturation: Float, rainbowBrightness: Float): Color
 	{
-		if (classProvider.isEntityLivingBase(entity))
+		val provider = classProvider
+
+		if (provider.isEntityLivingBase(entity))
 		{
 			val entityLiving = entity!!.asEntityLivingBase()
 
@@ -137,7 +139,7 @@ object ColorUtils : MinecraftInstance()
 				{
 					var health = entityLiving.health
 					val maxHealth = entityLiving.maxHealth
-					if (classProvider.isEntityPlayer(entity) && (healthMode.equals("Mineplex", ignoreCase = true) || healthMode.equals("Hive", ignoreCase = true))) health = EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("mineplex", ignoreCase = true)).toFloat()
+					if (provider.isEntityPlayer(entity) && (healthMode.equals("Mineplex", ignoreCase = true) || healthMode.equals("Hive", ignoreCase = true))) health = EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("mineplex", ignoreCase = true)).toFloat()
 					return getHealthColor(health, maxHealth)
 				}
 			}

@@ -45,10 +45,11 @@ class Trigger : Module()
 	fun onRender(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		val objectMouseOver = mc.objectMouseOver
+		val gameSettings = mc.gameSettings
 
 		if (objectMouseOver != null && System.currentTimeMillis() - lastSwing >= delay && EntityUtils.isSelected(objectMouseOver.entityHit, true))
 		{
-			mc.gameSettings.keyBindAttack.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click handling
+			gameSettings.keyBindAttack.onTick(gameSettings.keyBindAttack.keyCode) // Minecraft Click handling
 
 			lastSwing = System.currentTimeMillis()
 			delay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())

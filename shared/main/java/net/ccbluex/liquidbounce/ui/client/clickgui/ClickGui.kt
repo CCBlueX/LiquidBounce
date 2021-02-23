@@ -42,7 +42,9 @@ class ClickGui : WrappedGuiScreen()
 		var newMouseX = mouseX.toDouble()
 		var newMouseY = mouseY.toDouble()
 
-		if (Mouse.isButtonDown(0) && newMouseX >= 5 && newMouseX <= 50 && newMouseY <= representedScreen.height - 5 && newMouseY >= representedScreen.height - 50) mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiHudDesigner()))
+		val provider = classProvider
+
+		if (Mouse.isButtonDown(0) && newMouseX >= 5 && newMouseX <= 50 && newMouseY <= representedScreen.height - 5 && newMouseY >= representedScreen.height - 50) mc.displayGuiScreen(provider.wrapGuiScreen(GuiHudDesigner()))
 
 		// Enable DisplayList optimization
 		assumeNonVolatile = true
@@ -78,7 +80,7 @@ class ClickGui : WrappedGuiScreen()
 			panels.any { it.handleScroll(newMouseXI, newMouseYI, wheel) }
 		}
 
-		classProvider.glStateManager.disableLighting()
+		provider.glStateManager.disableLighting()
 		functions.disableStandardItemLighting()
 
 		GL11.glScalef(1.0f, 1.0f, 1.0f)

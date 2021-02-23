@@ -23,6 +23,8 @@ class AutoWalk : Module()
 
 	override fun onDisable()
 	{
-		if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindForward)) mc.gameSettings.keyBindForward.pressed = false
+		val gameSettings = mc.gameSettings
+
+		if (!gameSettings.isKeyDown(gameSettings.keyBindForward)) gameSettings.keyBindForward.pressed = false
 	}
 }

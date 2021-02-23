@@ -98,8 +98,10 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
 	 */
 	private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: IEntityLivingBase)
 	{
-		classProvider.glStateManager.resetColor()
-		classProvider.glStateManager.enableColorMaterial()
+		val glStateManager = classProvider.glStateManager
+
+		glStateManager.resetColor()
+		glStateManager.enableColorMaterial()
 		GL11.glPushMatrix()
 		GL11.glTranslatef(0F, 0F, 50F)
 		GL11.glScalef(-50F, 50F, 50F)
@@ -111,8 +113,10 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
 		val prevRotationYawHead = entityLivingBase.prevRotationYawHead
 		val rotationYawHead = entityLivingBase.rotationYawHead
 
+		val func = functions
+
 		GL11.glRotatef(135F, 0F, 1F, 0F)
-		functions.enableStandardItemLighting()
+		func.enableStandardItemLighting()
 		GL11.glRotatef(-135F, 0F, 1F, 0F)
 		GL11.glRotatef(-atan(pitch * 0.025f) * 20.0F, 1F, 0F, 0F)
 
@@ -137,11 +141,11 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
 		entityLivingBase.rotationYawHead = rotationYawHead
 
 		GL11.glPopMatrix()
-		functions.disableStandardItemLighting()
-		classProvider.glStateManager.disableRescaleNormal()
-		functions.setActiveTextureLightMapTexUnit()
-		classProvider.glStateManager.disableTexture2D()
-		functions.setActiveTextureDefaultTexUnit()
-		classProvider.glStateManager.resetColor()
+		func.disableStandardItemLighting()
+		glStateManager.disableRescaleNormal()
+		func.setActiveTextureLightMapTexUnit()
+		glStateManager.disableTexture2D()
+		func.setActiveTextureDefaultTexUnit()
+		glStateManager.resetColor()
 	}
 }

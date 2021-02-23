@@ -52,7 +52,9 @@ class NoSlow : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val heldItem = thePlayer.heldItem ?: return
 
-		if (!classProvider.isItemSword(heldItem.item) || !MovementUtils.isMoving(thePlayer)) return
+		val provider = classProvider
+
+		if (!provider.isItemSword(heldItem.item) || !MovementUtils.isMoving(thePlayer)) return
 
 		val aura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
 		val tpaura = LiquidBounce.moduleManager[TpAura::class.java] as TpAura
@@ -65,8 +67,8 @@ class NoSlow : Module()
 
 			when (event.eventState)
 			{
-				EventState.PRE -> netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), classProvider.getEnumFacing(EnumFacingType.DOWN)))
-				EventState.POST -> netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, thePlayer.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F))
+				EventState.PRE -> netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), provider.getEnumFacing(EnumFacingType.DOWN)))
+				EventState.POST -> netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, thePlayer.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F))
 			}
 
 			ncpDelay.reset()

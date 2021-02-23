@@ -42,10 +42,11 @@ class FastUse : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val timer = mc.timer
 
 		if (usedTimer)
 		{
-			mc.timer.timerSpeed = 1F
+			timer.timerSpeed = 1F
 			usedTimer = false
 		}
 
@@ -57,7 +58,9 @@ class FastUse : Module()
 
 		val usingItem = thePlayer.itemInUse!!.item
 
-		if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem))
+		val provider = classProvider
+
+		if (provider.isItemFood(usingItem) || provider.isItemBucketMilk(usingItem) || provider.isItemPotion(usingItem))
 		{
 			val netHandler = mc.netHandler
 			val onGround = thePlayer.onGround
@@ -68,27 +71,27 @@ class FastUse : Module()
 				{
 					WorkerUtils.workers.execute {
 						repeat(35) {
-							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
+							netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 						}
 					}
 				}
 
 				"ncp" ->
 				{
-					mc.timer.timerSpeed = ncpTimerValue.get()
+					timer.timerSpeed = ncpTimerValue.get()
 					when (ncpModeValue.get().toLowerCase())
 					{
 						"atonce" -> if (thePlayer.itemInUseDuration > ncpWaitTicksValue.get())
 						{
 							WorkerUtils.workers.execute {
 								repeat(ncpPacketsValue.get()) {
-									netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
+									netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 								}
 							}
 						}
 
 						"constant" -> repeat(ncpConstantPacketsValue.get()) {
-							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
+							netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 						}
 					}
 
@@ -97,20 +100,20 @@ class FastUse : Module()
 
 				"aac" ->
 				{
-					mc.timer.timerSpeed = aacTimerValue.get()
+					timer.timerSpeed = aacTimerValue.get()
 					usedTimer = true
 				}
 
 				"custom" ->
 				{
-					mc.timer.timerSpeed = customTimer.get()
+					timer.timerSpeed = customTimer.get()
 					usedTimer = true
 
 					if (!msTimer.hasTimePassed(delayValue.get().toLong())) return
 
 					WorkerUtils.workers.execute {
 						repeat(customSpeedValue.get()) {
-							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
+							netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 						}
 					}
 
@@ -130,7 +133,9 @@ class FastUse : Module()
 
 		val usingItem = (thePlayer.itemInUse ?: return).item
 
-		if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem)) event.zero()
+		val provider = classProvider
+
+		if (provider.isItemFood(usingItem) || provider.isItemBucketMilk(usingItem) || provider.isItemPotion(usingItem)) event.zero()
 	}
 
 	override fun onDisable()

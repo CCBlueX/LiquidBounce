@@ -11,6 +11,8 @@ class PingCommand : Command("ping")
 {
 	override fun execute(args: Array<String>)
 	{
-		chat(mc.thePlayer, "\u00A73Your ping is \u00A7a${mc.netHandler.getPlayerInfo(mc.thePlayer!!.uniqueID)!!.responseTime}ms\u00A73.")
+		val thePlayer = mc.thePlayer ?: return
+
+		chat(thePlayer, "\u00A73Your ping is \u00A7a${mc.netHandler.getPlayerInfo(thePlayer.uniqueID)?.responseTime ?: 0}ms\u00A73.")
 	}
 }

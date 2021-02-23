@@ -19,6 +19,8 @@ class XrayCommand : Command("xray")
 
 		if (args.size > 1)
 		{
+			val func = functions
+
 			when (args[1].toLowerCase())
 			{
 				"add" ->
@@ -29,13 +31,13 @@ class XrayCommand : Command("xray")
 						{
 							val block = try
 							{
-								functions.getBlockById(args[2].toInt())
+								func.getBlockById(args[2].toInt())
 							}
 							catch (exception: NumberFormatException)
 							{
-								val tmpBlock = functions.getBlockFromName(args[2])
+								val tmpBlock = func.getBlockFromName(args[2])
 
-								if (tmpBlock == null || functions.getIdFromBlock(tmpBlock) <= 0)
+								if (tmpBlock == null || func.getIdFromBlock(tmpBlock) <= 0)
 								{
 									chat(thePlayer, "\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
 									return
@@ -75,13 +77,13 @@ class XrayCommand : Command("xray")
 						{
 							val block = try
 							{
-								functions.getBlockById(args[2].toInt())
+								func.getBlockById(args[2].toInt())
 							}
 							catch (exception: NumberFormatException)
 							{
-								val tmpBlock = functions.getBlockFromName(args[2])
+								val tmpBlock = func.getBlockFromName(args[2])
 
-								if (tmpBlock == null || functions.getIdFromBlock(tmpBlock) <= 0)
+								if (tmpBlock == null || func.getIdFromBlock(tmpBlock) <= 0)
 								{
 									chat(thePlayer, "\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
 									return
@@ -115,7 +117,7 @@ class XrayCommand : Command("xray")
 				"list" ->
 				{
 					chat(thePlayer, "\u00A78Xray blocks:")
-					xRay.xrayBlocks.forEach { chat(thePlayer, "\u00A78${it.localizedName} \u00A77-\u00A7c ${functions.getIdFromBlock(it)}") }
+					xRay.xrayBlocks.forEach { chat(thePlayer, "\u00A78${it.localizedName} \u00A77-\u00A7c ${func.getIdFromBlock(it)}") }
 					return
 				}
 			}

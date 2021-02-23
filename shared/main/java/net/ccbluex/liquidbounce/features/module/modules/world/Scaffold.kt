@@ -376,7 +376,7 @@ class Scaffold : Module()
 							0 ->
 							{
 								val blockPos = WBlockPos(thePlayer.posX - 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ)
-								val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
+								val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
 								if (isReplaceable(blockPos) && placeInfo != null)
 								{
 									var calcDif: Double = thePlayer.posX - blockPos.x
@@ -397,7 +397,7 @@ class Scaffold : Module()
 							1 ->
 							{
 								val blockPos = WBlockPos(thePlayer.posX + 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ)
-								val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
+								val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
 
 								if (isReplaceable(blockPos) && placeInfo != null)
 								{
@@ -417,7 +417,7 @@ class Scaffold : Module()
 							2 ->
 							{
 								val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ - 1.0)
-								val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
+								val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
 
 								if (isReplaceable(blockPos) && placeInfo != null)
 								{
@@ -437,7 +437,7 @@ class Scaffold : Module()
 							3 ->
 							{
 								val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ + 1.0)
-								val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
+								val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
 
 								if (isReplaceable(blockPos) && placeInfo != null)
 								{
@@ -459,10 +459,12 @@ class Scaffold : Module()
 
 				if (placedBlocksWithoutEagle >= blocksToEagleValue.get())
 				{
-					val shouldEagle: Boolean = theWorld.getBlockState(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)).block == (classProvider.getBlockEnum(BlockType.AIR)) || (dif < edgeDistanceValue.get() && eagleValue.get().equals("EdgeDistance", true))
+					val provider = classProvider
+
+					val shouldEagle: Boolean = theWorld.getBlockState(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)).block == (provider.getBlockEnum(BlockType.AIR)) || (dif < edgeDistanceValue.get() && eagleValue.get().equals("EdgeDistance", true))
 					if (eagleValue.get().equals("Silent", true) && !shouldGoDown)
 					{
-						if (eagleSneaking != shouldEagle) mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, if (shouldEagle) ICPacketEntityAction.WAction.START_SNEAKING else ICPacketEntityAction.WAction.STOP_SNEAKING))
+						if (eagleSneaking != shouldEagle) mc.netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, if (shouldEagle) ICPacketEntityAction.WAction.START_SNEAKING else ICPacketEntityAction.WAction.STOP_SNEAKING))
 						eagleSneaking = shouldEagle
 					}
 					else
@@ -479,9 +481,11 @@ class Scaffold : Module()
 			{
 				MovementUtils.strafe(thePlayer, zitterSpeed.get())
 
+				val func = functions
+
 				val yaw = WMathHelper.toRadians(thePlayer.rotationYaw + if (zitterDirection) 90.0F else -90.0F)
-				thePlayer.motionX = thePlayer.motionX - functions.sin(yaw) * zitterStrength.get()
-				thePlayer.motionZ = thePlayer.motionZ + functions.cos(yaw) * zitterStrength.get()
+				thePlayer.motionX = thePlayer.motionX - func.sin(yaw) * zitterStrength.get()
+				thePlayer.motionZ = thePlayer.motionZ + func.cos(yaw) * zitterStrength.get()
 				zitterDirection = !zitterDirection
 			}
 		}
@@ -531,7 +535,9 @@ class Scaffold : Module()
 
 	fun update(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
-		val isNotHeldItemBlock: Boolean = thePlayer.heldItem == null || !classProvider.isItemBlock(thePlayer.heldItem!!.item)
+		val provider = classProvider
+
+		val isNotHeldItemBlock: Boolean = thePlayer.heldItem == null || !provider.isItemBlock(thePlayer.heldItem!!.item)
 		if (if (autoBlockValue.get().equals("Off", true)) isNotHeldItemBlock else InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0) == -1 && isNotHeldItemBlock) return
 
 		val groundSearchDepth = 0.2
@@ -619,7 +625,9 @@ class Scaffold : Module()
 			sameY = true
 		}
 
-		val abCollisionBB = autoblockBlock.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, if (functions.isBlockEqualTo(groundBlock, autoblockBlock)) groundBlockState else autoblockBlock.defaultState!!)!!
+		val func = functions
+
+		val abCollisionBB = autoblockBlock.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, if (func.isBlockEqualTo(groundBlock, autoblockBlock)) groundBlockState else autoblockBlock.defaultState!!)!!
 		val gBB = provider.createAxisAlignedBB(groundBlock.getBlockBoundsMinX(), groundBlock.getBlockBoundsMinY(), groundBlock.getBlockBoundsMinZ(), groundBlock.getBlockBoundsMaxX(), groundBlock.getBlockBoundsMaxY(), groundBlock.getBlockBoundsMaxZ())
 
 		// These delta variable has in range 0.0625 ~ 1.0
@@ -703,7 +711,7 @@ class Scaffold : Module()
 		val ySearch = ySearchValue.get() || clutching
 		if (expand)
 		{
-			val horizontalFacing = functions.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
+			val horizontalFacing = func.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
 			repeat(expandLengthValue.get()) { i ->
 				if (search(theWorld, thePlayer, searchPosition.add(when (horizontalFacing)
 					{
@@ -748,6 +756,7 @@ class Scaffold : Module()
 		var itemStack: IItemStack? = thePlayer.heldItem
 		var switched = false
 
+		val controller = mc.playerController
 		val netHandler = mc.netHandler
 
 		val provider = classProvider
@@ -768,7 +777,7 @@ class Scaffold : Module()
 				"Pick" ->
 				{
 					thePlayer.inventory.currentItem = blockSlot - 36
-					mc.playerController.updateController()
+					controller.updateController()
 				}
 
 				"Spoof" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
@@ -790,7 +799,7 @@ class Scaffold : Module()
 		if (!switchTimer.hasTimePassed(switchDelay)) return
 
 		// Place block
-		if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack, targetPlace.blockPos, targetPlace.enumFacing, targetPlace.vec3))
+		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, targetPlace.blockPos, targetPlace.enumFacing, targetPlace.vec3))
 		{
 
 			// Reset delay
@@ -822,11 +831,13 @@ class Scaffold : Module()
 		val gameSettings = mc.gameSettings
 		val netHandler = mc.netHandler
 
+		val provider = classProvider
+
 		// Reset Seaking (Eagle)
 		if (!gameSettings.isKeyDown(gameSettings.keyBindSneak))
 		{
 			gameSettings.keyBindSneak.pressed = false
-			if (eagleSneaking) netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SNEAKING))
+			if (eagleSneaking) netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SNEAKING))
 		}
 
 		if (!gameSettings.isKeyDown(gameSettings.keyBindRight)) gameSettings.keyBindRight.pressed = false
@@ -840,7 +851,7 @@ class Scaffold : Module()
 		mc.timer.timerSpeed = 1f
 		shouldGoDown = false
 
-		if (slot != thePlayer.inventory.currentItem) netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+		if (slot != thePlayer.inventory.currentItem) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 	}
 
 	@EventTarget
@@ -867,14 +878,17 @@ class Scaffold : Module()
 
 			val blocksAmount = getBlocksAmount(thePlayer)
 			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}$blocksAmount"
-			val scaledResolution = classProvider.createScaledResolution(mc)
+
+			val provider = classProvider
+
+			val scaledResolution = provider.createScaledResolution(mc)
 
 			val middleScreenX = scaledResolution.scaledWidth shr 1
 			val middleScreenY = scaledResolution.scaledHeight shr 1
 
 			RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + 5.0f, middleScreenX + Fonts.font40.getStringWidth(info) + 2.0f, middleScreenY + 16.0f, 3f, Color.BLACK.rgb, Color.BLACK.rgb)
 
-			classProvider.glStateManager.resetColor()
+			provider.glStateManager.resetColor()
 
 			Fonts.font40.drawString(info, (scaledResolution.scaledWidth shr 1).toFloat(), middleScreenY + 7.0f, 0xffffff)
 			GL11.glPopMatrix()
@@ -889,24 +903,26 @@ class Scaffold : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
+		val provider = classProvider
+
 		run searchLoop@{
 			repeat(if (modeValue.get().equals("Expand", true)) expandLengthValue.get() + 1 else 2) {
 				val horizontalFacing = functions.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
 				val blockPos = WBlockPos(thePlayer.posX + when (horizontalFacing)
 				{
-					classProvider.getEnumFacing(EnumFacingType.WEST) -> -it.toDouble()
-					classProvider.getEnumFacing(EnumFacingType.EAST)
+					provider.getEnumFacing(EnumFacingType.WEST) -> -it.toDouble()
+					provider.getEnumFacing(EnumFacingType.EAST)
 					-> it.toDouble()
 					else -> 0.0
 				}, if (sameYValue.get() && launchY <= thePlayer.posY) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY > floor(thePlayer.posY).toInt()) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (horizontalFacing)
 				{
-					classProvider.getEnumFacing(EnumFacingType.NORTH) -> -it.toDouble()
-					classProvider.getEnumFacing(EnumFacingType.SOUTH)
+					provider.getEnumFacing(EnumFacingType.NORTH) -> -it.toDouble()
+					provider.getEnumFacing(EnumFacingType.SOUTH)
 					-> it.toDouble()
 					else -> 0.0
 				})
 
-				val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
+				val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
 				if (isReplaceable(blockPos) && placeInfo != null)
 				{
 					RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, Color(68, 117, 255, 100), false)

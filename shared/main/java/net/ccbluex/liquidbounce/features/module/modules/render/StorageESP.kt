@@ -76,6 +76,8 @@ class StorageESP : Module()
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
+		val gameSettings = mc.gameSettings
+		val renderManager = mc.renderManager
 
 		try
 		{
@@ -107,7 +109,6 @@ class StorageESP : Module()
 				OutlineUtils.checkSetupFBO()
 			}
 
-			val gameSettings = mc.gameSettings
 			val gamma = gameSettings.gammaSetting
 
 			gameSettings.gammaSetting = 100000.0f
@@ -135,6 +136,8 @@ class StorageESP : Module()
 					return@forEach
 				}
 
+				val func = functions
+
 				when (mode)
 				{
 					"otherbox", "box" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box")
@@ -145,13 +148,13 @@ class StorageESP : Module()
 					{
 						RenderUtils.glColor(color)
 						OutlineUtils.renderOne(outlineWidth)
-						functions.renderTileEntity(tileEntity, partialTicks, -1)
+						func.renderTileEntity(tileEntity, partialTicks, -1)
 						OutlineUtils.renderTwo()
-						functions.renderTileEntity(tileEntity, partialTicks, -1)
+						func.renderTileEntity(tileEntity, partialTicks, -1)
 						OutlineUtils.renderThree()
-						functions.renderTileEntity(tileEntity, partialTicks, -1)
+						func.renderTileEntity(tileEntity, partialTicks, -1)
 						OutlineUtils.renderFour(color)
-						functions.renderTileEntity(tileEntity, partialTicks, -1)
+						func.renderTileEntity(tileEntity, partialTicks, -1)
 						OutlineUtils.renderFive()
 						OutlineUtils.setColor(Color.WHITE)
 					}
@@ -168,12 +171,12 @@ class StorageESP : Module()
 						GL11.glEnable(GL11.GL_BLEND)
 						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 
-						functions.renderTileEntity(tileEntity, partialTicks, -1)
+						func.renderTileEntity(tileEntity, partialTicks, -1)
 
 						RenderUtils.glColor(color)
 						GL11.glLineWidth(wireFrameWidth)
 
-						functions.renderTileEntity(tileEntity, partialTicks, -1)
+						func.renderTileEntity(tileEntity, partialTicks, -1)
 
 						GL11.glPopAttrib()
 						GL11.glPopMatrix()
@@ -203,13 +206,13 @@ class StorageESP : Module()
 
 						RenderUtils.glColor(color)
 						OutlineUtils.renderOne(outlineWidth)
-						mc.renderManager.renderEntityStatic(entity, partialTicks, true)
+						renderManager.renderEntityStatic(entity, partialTicks, true)
 						OutlineUtils.renderTwo()
-						mc.renderManager.renderEntityStatic(entity, partialTicks, true)
+						renderManager.renderEntityStatic(entity, partialTicks, true)
 						OutlineUtils.renderThree()
-						mc.renderManager.renderEntityStatic(entity, partialTicks, true)
+						renderManager.renderEntityStatic(entity, partialTicks, true)
 						OutlineUtils.renderFour(color)
-						mc.renderManager.renderEntityStatic(entity, partialTicks, true)
+						renderManager.renderEntityStatic(entity, partialTicks, true)
 						OutlineUtils.renderFive()
 						OutlineUtils.setColor(Color.WHITE)
 
@@ -233,13 +236,13 @@ class StorageESP : Module()
 
 						RenderUtils.glColor(color)
 
-						mc.renderManager.renderEntityStatic(entity, partialTicks, true)
+						renderManager.renderEntityStatic(entity, partialTicks, true)
 
 						RenderUtils.glColor(color)
 
 						GL11.glLineWidth(wireFrameWidth)
 
-						mc.renderManager.renderEntityStatic(entity, partialTicks, true)
+						renderManager.renderEntityStatic(entity, partialTicks, true)
 
 						GL11.glPopAttrib()
 						GL11.glPopMatrix()
@@ -262,6 +265,10 @@ class StorageESP : Module()
 	fun onRender2D(event: Render2DEvent)
 	{
 		val theWorld = mc.theWorld ?: return
+		val renderManager = mc.renderManager
+		val renderPosX = renderManager.renderPosX
+		val renderPosY = renderManager.renderPosY
+		val renderPosZ = renderManager.renderPosZ
 
 		val mode = modeValue.get()
 
@@ -285,12 +292,6 @@ class StorageESP : Module()
 
 		val shader = (if (mode.equals("shaderoutline", ignoreCase = true)) OutlineShader.INSTANCE else if (mode.equals("shaderglow", ignoreCase = true)) GlowShader.INSTANCE else null) ?: return
 		val radius = if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f
-
-		val renderManager = mc.renderManager
-
-		val renderPosX = renderManager.renderPosX
-		val renderPosY = renderManager.renderPosY
-		val renderPosZ = renderManager.renderPosZ
 
 		val partialTicks = event.partialTicks
 

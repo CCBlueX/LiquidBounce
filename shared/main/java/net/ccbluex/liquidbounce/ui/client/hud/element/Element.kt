@@ -42,11 +42,16 @@ abstract class Element(
 		get() = info.name
 
 	var renderX: Double
-		get() = when (side.horizontal)
+		get()
 		{
-			Side.Horizontal.LEFT -> x
-			Side.Horizontal.MIDDLE -> (classProvider.createScaledResolution(mc).scaledWidth shr 1) - x
-			Side.Horizontal.RIGHT -> classProvider.createScaledResolution(mc).scaledWidth - x
+			val provider = classProvider
+
+			return when (side.horizontal)
+			{
+				Side.Horizontal.LEFT -> x
+				Side.Horizontal.MIDDLE -> (provider.createScaledResolution(mc).scaledWidth shr 1) - x
+				Side.Horizontal.RIGHT -> provider.createScaledResolution(mc).scaledWidth - x
+			}
 		}
 		set(value) = when (side.horizontal)
 		{
@@ -62,11 +67,16 @@ abstract class Element(
 		}
 
 	var renderY: Double
-		get() = when (side.vertical)
+		get()
 		{
-			Side.Vertical.UP -> y
-			Side.Vertical.MIDDLE -> (classProvider.createScaledResolution(mc).scaledHeight shr 1) - y
-			Side.Vertical.DOWN -> classProvider.createScaledResolution(mc).scaledHeight - y
+			val provider = classProvider
+
+			return when (side.vertical)
+			{
+				Side.Vertical.UP -> y
+				Side.Vertical.MIDDLE -> (provider.createScaledResolution(mc).scaledHeight shr 1) - y
+				Side.Vertical.DOWN -> provider.createScaledResolution(mc).scaledHeight - y
+			}
 		}
 		set(value) = when (side.vertical)
 		{

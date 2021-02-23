@@ -168,7 +168,9 @@ class ChestStealer : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!classProvider.isGuiChest(mc.currentScreen))
+		val provider = classProvider
+
+		if (!provider.isGuiChest(mc.currentScreen))
 		{
 			if (delayOnFirstValue.get() || itemDelayValue.get() > 0)
 			{
@@ -191,7 +193,7 @@ class ChestStealer : Module()
 		if (noCompassValue.get() && thePlayer.inventory.getCurrentItemInHand()?.item?.unlocalizedName == "item.compass") return
 
 		// Chest title
-		if (chestTitleValue.get() && (screen.lowerChestInventory == null || !screen.lowerChestInventory!!.name.contains(classProvider.createItemStack(functions.getObjectFromItemRegistry(classProvider.createResourceLocation("minecraft:chest"))!!).displayName))) return
+		if (chestTitleValue.get() && (screen.lowerChestInventory == null || !screen.lowerChestInventory!!.name.contains(provider.createItemStack(functions.getObjectFromItemRegistry(provider.createResourceLocation("minecraft:chest"))!!).displayName))) return
 
 		// inventory cleaner
 		val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner

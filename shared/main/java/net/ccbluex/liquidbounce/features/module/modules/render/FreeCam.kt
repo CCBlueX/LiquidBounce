@@ -105,7 +105,9 @@ class FreeCam : Module()
 	{
 		val packet = event.packet
 
-		if (classProvider.isCPacketPlayer(packet)) // To bypass FreeCam checks, we need to keep send normal packets.
+		val provider = classProvider
+
+		if (provider.isCPacketPlayer(packet)) // To bypass FreeCam checks, we need to keep send normal packets.
 		{
 			val movePacket = packet.asCPacketPlayer()
 
@@ -125,7 +127,7 @@ class FreeCam : Module()
 			}
 		}
 
-		if (classProvider.isCPacketEntityAction(packet)) event.cancelEvent()
+		if (provider.isCPacketEntityAction(packet)) event.cancelEvent()
 	}
 
 	override val tag: String

@@ -419,7 +419,7 @@ class KillAura : Module()
 			updateHitable(theWorld, thePlayer)
 
 			// Delayed-AutoBlock
-			if (autoBlockValue.get().equals("AfterTick", true) && canBlock && currentTarget != null) startBlocking(thePlayer, currentTarget, interactAutoBlockValue.get() && hitable)
+			if (autoBlockValue.get().equals("AfterTick", true) && getCanBlock(thePlayer) && currentTarget != null) startBlocking(thePlayer, currentTarget, interactAutoBlockValue.get() && hitable)
 
 			return
 		}
@@ -463,9 +463,11 @@ class KillAura : Module()
 						strafe *= f
 						forward *= f
 
+						val func = functions
+
 						val yawRadians = WMathHelper.toRadians(yaw)
-						val yawSin = functions.sin(yawRadians)
-						val yawCos = functions.cos(yawRadians)
+						val yawSin = func.sin(yawRadians)
+						val yawCos = func.cos(yawRadians)
 
 						thePlayer.motionX += strafe * yawCos - forward * yawSin
 						thePlayer.motionZ += forward * yawCos + strafe * yawSin
@@ -486,16 +488,15 @@ class KillAura : Module()
 
 	fun update(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
-
 		// CancelRun & NoInventory
-		if (cancelRun || (noInventoryAttackValue.get() && (classProvider.isGuiContainer(mc.currentScreen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))) return
+		if (shouldCancelRun(thePlayer) || (noInventoryAttackValue.get() && (classProvider.isGuiContainer(mc.currentScreen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))) return
 
 		// Update target
 		updateTarget(theWorld, thePlayer)
 
 		// Pre-AutoBlock
-		if (autoBlockTarget != null && !autoBlockValue.get().equals("AfterTick", ignoreCase = true) && canBlock && (!autoBlockHitableCheckValue.get() || hitable)) startBlocking(thePlayer, autoBlockTarget, interactAutoBlockValue.get())
-		else if (canBlock) stopBlocking()
+		if (autoBlockTarget != null && !autoBlockValue.get().equals("AfterTick", ignoreCase = true) && getCanBlock(thePlayer) && (!autoBlockHitableCheckValue.get() || hitable)) startBlocking(thePlayer, autoBlockTarget, interactAutoBlockValue.get())
+		else if (getCanBlock(thePlayer)) stopBlocking()
 
 		target ?: return
 
@@ -510,7 +511,9 @@ class KillAura : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
-		if (cancelRun)
+		val thePlayer = mc.thePlayer ?: return
+
+		if (shouldCancelRun(thePlayer))
 		{
 			target = null
 			currentTarget = null
@@ -519,23 +522,27 @@ class KillAura : Module()
 			return
 		}
 
+		val screen = mc.currentScreen
+
+		val provider = classProvider
+
 		attackRange = attackRangeValue.get()
 		aimRange = aimRangeValue.get()
 		swingRange = swingRangeValue.get()
 		blockRange = blockRangeValue.get()
 
-		if (noInventoryAttackValue.get() && (classProvider.isGuiContainer(mc.currentScreen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))
+		if (noInventoryAttackValue.get() && (provider.isGuiContainer(screen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))
 		{
 			target = null
 			currentTarget = null
 			hitable = false
-			if (classProvider.isGuiContainer(mc.currentScreen)) containerOpen = System.currentTimeMillis()
+			if (provider.isGuiContainer(screen)) containerOpen = System.currentTimeMillis()
 			return
 		}
 
 		target ?: return
 
-		if (target != null && currentTarget != null && (Backend.MINECRAFT_VERSION_MINOR == 8 || (mc.thePlayer ?: return).getCooledAttackStrength(0.0F) >= cooldownValue.get()))
+		if (target != null && currentTarget != null && (Backend.MINECRAFT_VERSION_MINOR == 8 || thePlayer.getCooledAttackStrength(0.0F) >= cooldownValue.get()))
 		{
 			while (clicks > 0)
 			{
@@ -551,7 +558,7 @@ class KillAura : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		if (cancelRun)
+		if (shouldCancelRun(mc.thePlayer ?: return))
 		{
 			target = null
 			currentTarget = null
@@ -560,13 +567,17 @@ class KillAura : Module()
 			return
 		}
 
+		val screen = mc.currentScreen
+
+		val provider = classProvider
+
 		// NoInventory
-		if (noInventoryAttackValue.get() && (classProvider.isGuiContainer(mc.currentScreen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))
+		if (noInventoryAttackValue.get() && (provider.isGuiContainer(screen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))
 		{
 			target = null
 			currentTarget = null
 			hitable = false
-			if (classProvider.isGuiContainer(mc.currentScreen)) containerOpen = System.currentTimeMillis()
+			if (provider.isGuiContainer(screen)) containerOpen = System.currentTimeMillis()
 			return
 		}
 
@@ -614,6 +625,7 @@ class KillAura : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return
+		val netHandler = mc.netHandler
 
 		val provider = classProvider
 
@@ -631,7 +643,7 @@ class KillAura : Module()
 		failedToHit = failRate > 0 && Random.nextInt(100) <= failRate
 
 		// Close inventory when open
-		if (openInventory) mc.netHandler.addToSendQueue(provider.createCPacketCloseWindow())
+		if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
 		// Check is not hitable or check failrate
 		val fakeAttack = !hitable || failedToHit
@@ -642,7 +654,7 @@ class KillAura : Module()
 			// Stop Blocking before FAKE attack
 			if (thePlayer.isBlocking || serverSideBlockingStatus)
 			{
-				mc.netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+				netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 				serverSideBlockingStatus = false
 				clientSideBlockingStatus = false
 			}
@@ -651,7 +663,7 @@ class KillAura : Module()
 			if (swing && (failedToHit || (fakeSwingValue.get() && distance <= swingRange))) thePlayer.swingItem()
 
 			// Start blocking after FAKE attack
-			if ((thePlayer.isBlocking || (canBlock && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, currentTarget!!, interactAutoBlockValue.get())
+			if ((thePlayer.isBlocking || (getCanBlock(thePlayer) && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, currentTarget!!, interactAutoBlockValue.get())
 		}
 		else
 		{
@@ -678,7 +690,7 @@ class KillAura : Module()
 		if (!fakeAttack && target == currentTarget) target = null
 
 		// Open inventory
-		if (openInventory) mc.netHandler.addToSendQueue(createOpenInventoryPacket())
+		if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
 	}
 
 	/**
@@ -800,11 +812,14 @@ class KillAura : Module()
 	private fun attackEntity(entity: IEntityLivingBase)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val netHandler = mc.netHandler
+
+		val provider = classProvider
 
 		// Stop blocking
 		if (thePlayer.isBlocking || serverSideBlockingStatus)
 		{
-			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+			netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 			serverSideBlockingStatus = false
 			clientSideBlockingStatus = false
 		}
@@ -815,7 +830,7 @@ class KillAura : Module()
 		// Attack target
 		if (swingValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8) thePlayer.swingItem()
 
-		mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(entity, ICPacketUseEntity.WAction.ATTACK))
+		netHandler.addToSendQueue(provider.createCPacketUseEntity(entity, ICPacketUseEntity.WAction.ATTACK))
 
 		if (swingValue.get() && Backend.MINECRAFT_VERSION_MINOR != 8) thePlayer.swingItem()
 
@@ -829,14 +844,14 @@ class KillAura : Module()
 			val target = target ?: return@attackEntity
 
 			// Critical Effect
-			if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) && thePlayer.ridingEntity == null || criticals.state && criticals.canCritical(thePlayer)) thePlayer.onCriticalHit(target)
+			if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(provider.getPotionEnum(PotionType.BLINDNESS)) && thePlayer.ridingEntity == null || criticals.state && criticals.canCritical(thePlayer)) thePlayer.onCriticalHit(target)
 
 			// Enchant Effect
 			if (functions.getModifierForCreature(thePlayer.heldItem, target.creatureAttribute) > 0.0f || fakeSharpValue.get()) thePlayer.onEnchantmentCritical(target)
 		}
 
 		// Start blocking after attack
-		if ((thePlayer.isBlocking || (canBlock && thePlayer.getDistanceToEntityBox(entity) <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, entity, interactAutoBlockValue.get())
+		if ((thePlayer.isBlocking || (getCanBlock(thePlayer) && thePlayer.getDistanceToEntityBox(entity) <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, entity, interactAutoBlockValue.get())
 
 		@Suppress("ConstantConditionIf") if (Backend.MINECRAFT_VERSION_MINOR != 8) thePlayer.resetCooldown()
 	}
@@ -986,6 +1001,9 @@ class KillAura : Module()
 
 		if (packet && !serverSideBlockingStatus)
 		{
+			val provider = classProvider
+
+			val netHandler = mc.netHandler
 
 			// Interact block
 			if (interact && interactEntity != null)
@@ -999,10 +1017,12 @@ class KillAura : Module()
 				val yawRadians = WMathHelper.toRadians(yaw)
 				val pitchRadians = WMathHelper.toRadians(pitch)
 
-				val yawCos = functions.cos(-yawRadians - WMathHelper.PI)
-				val yawSin = functions.sin(-yawRadians - WMathHelper.PI)
-				val pitchCos = -functions.cos(-pitchRadians)
-				val pitchSin = functions.sin(-pitchRadians)
+				val func = functions
+
+				val yawCos = func.cos(-yawRadians - WMathHelper.PI)
+				val yawSin = func.sin(-yawRadians - WMathHelper.PI)
+				val pitchCos = -func.cos(-pitchRadians)
+				val pitchSin = func.sin(-pitchRadians)
 
 				val range = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(interactEntity)) + 1
 				val lookAt = positionEye.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
@@ -1012,12 +1032,12 @@ class KillAura : Module()
 				{
 					val hitVec = movingObject.hitVec
 
-					mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(interactEntity, WVec3(hitVec.xCoord - interactEntity.posX, hitVec.yCoord - interactEntity.posY, hitVec.zCoord - interactEntity.posZ)))
-					mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(interactEntity, ICPacketUseEntity.WAction.INTERACT))
+					netHandler.addToSendQueue(provider.createCPacketUseEntity(interactEntity, WVec3(hitVec.xCoord - interactEntity.posX, hitVec.yCoord - interactEntity.posY, hitVec.zCoord - interactEntity.posZ)))
+					netHandler.addToSendQueue(provider.createCPacketUseEntity(interactEntity, ICPacketUseEntity.WAction.INTERACT))
 				}
 			}
 
-			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, (mc.thePlayer ?: return).inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F))
+			netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, (mc.thePlayer ?: return).inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F))
 			serverSideBlockingStatus = true
 		}
 
@@ -1031,7 +1051,9 @@ class KillAura : Module()
 	{
 		if (serverSideBlockingStatus)
 		{
-			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+			val provider = classProvider
+
+			mc.netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 			serverSideBlockingStatus = false
 		}
 		clientSideBlockingStatus = false
@@ -1040,18 +1062,16 @@ class KillAura : Module()
 	/**
 	 * Check if run should be cancelled
 	 */
-	private val cancelRun: Boolean
-		get()
-		{
-			val blink = LiquidBounce.moduleManager[Blink::class.java] as Blink
-			return mc.thePlayer!!.spectator || !EntityUtils.isAlive(mc.thePlayer!!, aacValue.get()) || blink.state || LiquidBounce.moduleManager[FreeCam::class.java].state || !suspendTimer.hasTimePassed(suspend)
-		}
+	private fun shouldCancelRun(thePlayer: IEntityPlayerSP): Boolean
+	{
+		val blink = LiquidBounce.moduleManager[Blink::class.java] as Blink
+		return thePlayer.spectator || !EntityUtils.isAlive(thePlayer, aacValue.get()) || blink.state || LiquidBounce.moduleManager[FreeCam::class.java].state || !suspendTimer.hasTimePassed(suspend)
+	}
 
 	/**
 	 * Check if player is able to block
 	 */
-	private val canBlock: Boolean
-		get() = mc.thePlayer!!.heldItem != null && classProvider.isItemSword(mc.thePlayer!!.heldItem!!.item) && Backend.MINECRAFT_VERSION_MINOR == 8
+	private fun getCanBlock(thePlayer: IEntityPlayerSP): Boolean = thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem?.item) && Backend.MINECRAFT_VERSION_MINOR == 8
 
 	/**
 	 * Range

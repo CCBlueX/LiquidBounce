@@ -133,7 +133,9 @@ class AutoPot : Module()
 	@EventTarget
 	fun onMotion(motionEvent: MotionEvent)
 	{
-		if (mc.playerController.isInCreativeMode) return
+		val controller = mc.playerController
+
+		if (controller.isInCreativeMode) return
 
 		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
 		if (killauraBypassValue.get().equals("WaitForKillauraEnd", true) && killAura.state && killAura.target != null) return
@@ -148,8 +150,10 @@ class AutoPot : Module()
 		val throwDirection = throwDirValue.get().toLowerCase()
 		val health = healthValue.get()
 
-		val containerOpen = classProvider.isGuiContainer(currentScreen)
-		val isNotInventory = !classProvider.isGuiInventory(currentScreen)
+		val provider = classProvider
+
+		val containerOpen = provider.isGuiContainer(currentScreen)
+		val isNotInventory = !provider.isGuiInventory(currentScreen)
 
 		when (motionEvent.eventState)
 		{
@@ -189,7 +193,7 @@ class AutoPot : Module()
 						potion = if (thePlayer.health <= health && healPotionInHotbar != -1) healPotionInHotbar else buffPotionInHotbar
 
 						// Swap hotbar slot to potion slot
-						netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(potion - 36))
+						netHandler.addToSendQueue(provider.createCPacketHeldItemChange(potion - 36))
 
 						val pitch = thePlayer.rotationPitch
 
@@ -238,9 +242,9 @@ class AutoPot : Module()
 
 						if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
 
-						mc.playerController.windowClick(0, slot, 0, 1, thePlayer)
+						controller.windowClick(0, slot, 0, 1, thePlayer)
 
-						if (openInventory) netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
+						if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
 						invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
 						invDelayTimer.reset()
@@ -263,7 +267,7 @@ class AutoPot : Module()
 					if (itemStack != null)
 					{
 						netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
-						netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+						netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
 						potThrowDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 						potThrowDelayTimer.reset()

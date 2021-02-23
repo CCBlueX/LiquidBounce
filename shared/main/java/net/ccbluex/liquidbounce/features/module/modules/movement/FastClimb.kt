@@ -32,10 +32,13 @@ class FastClimb : Module()
 
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
+		val gameSettings = mc.gameSettings
 
 		val speed = speedValue.get().toDouble()
 
 		val horizontalFacing = thePlayer.horizontalFacing
+
+		val provider = classProvider
 
 		when (mode)
 		{
@@ -64,15 +67,15 @@ class FastClimb : Module()
 
 				val block = getBlock(theWorld, WBlockPos(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z))
 
-				if (classProvider.isBlockLadder(block) || classProvider.isBlockVine(block))
+				if (provider.isBlockLadder(block) || provider.isBlockVine(block))
 				{
 					event.y = 0.5
 					thePlayer.motionY = 0.0
 				}
 			}
 
-			"aac3.0.5" -> if (mc.gameSettings.keyBindForward.isKeyDown && collideBlockIntersects(theWorld, thePlayer, thePlayer.entityBoundingBox) {
-					classProvider.isBlockLadder(it) || classProvider.isBlockVine(it)
+			"aac3.0.5" -> if (gameSettings.keyBindForward.isKeyDown && collideBlockIntersects(theWorld, thePlayer, thePlayer.entityBoundingBox) {
+					provider.isBlockLadder(it) || provider.isBlockVine(it)
 				})
 			{
 				event.x = 0.0
@@ -96,13 +99,13 @@ class FastClimb : Module()
 				thePlayer.motionY = 0.0
 			}
 
-			"clip" -> if (thePlayer.isOnLadder && mc.gameSettings.keyBindForward.isKeyDown)
+			"clip" -> if (thePlayer.isOnLadder && gameSettings.keyBindForward.isKeyDown)
 			{
 				for (i in thePlayer.posY.toInt()..thePlayer.posY.toInt() + clipSearchHeight.get())
 				{
 					val block = getBlock(theWorld, WBlockPos(thePlayer.posX, i.toDouble(), thePlayer.posZ))
 
-					if (!classProvider.isBlockLadder(block))
+					if (!provider.isBlockLadder(block))
 					{
 						var x = 0.0
 						var z = 0.0
@@ -136,7 +139,9 @@ class FastClimb : Module()
 
 		val eventBlock = event.block
 
-		if ((classProvider.isBlockLadder(eventBlock) || classProvider.isBlockVine(eventBlock)) && modeValue.get().equals("AAC3.0.5", ignoreCase = true) && thePlayer.isOnLadder) event.boundingBox = null
+		val provider = classProvider
+
+		if ((provider.isBlockLadder(eventBlock) || provider.isBlockVine(eventBlock)) && modeValue.get().equals("AAC3.0.5", ignoreCase = true) && thePlayer.isOnLadder) event.boundingBox = null
 	}
 
 	override val tag: String

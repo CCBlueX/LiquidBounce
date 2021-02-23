@@ -43,9 +43,11 @@ object RenderUtils : MinecraftInstance()
 		GL11.glLineWidth(1.0f)
 		GL11.glBegin(GL11.GL_POLYGON)
 
+		val func = functions
+
 		(0..360).map {
 			val radians = toRadians(it.toFloat())
-			functions.sin(radians) to functions.cos(radians)
+			func.sin(radians) to func.cos(radians)
 		}.forEach { GL11.glVertex2f(x + it.first * radius, y + it.second * radius) }
 
 		GL11.glEnd()

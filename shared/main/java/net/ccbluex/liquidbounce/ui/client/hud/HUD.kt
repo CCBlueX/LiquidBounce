@@ -98,9 +98,11 @@ open class HUD : MinecraftInstance()
 	 */
 	fun handleMouseMove(mouseX: Int, mouseY: Int)
 	{
-		if (!classProvider.isGuiHudDesigner(mc.currentScreen)) return
+		val provider = classProvider
 
-		val scaledResolution = classProvider.createScaledResolution(mc)
+		if (!provider.isGuiHudDesigner(mc.currentScreen)) return
+
+		val scaledResolution = provider.createScaledResolution(mc)
 
 		for (element in elements)
 		{

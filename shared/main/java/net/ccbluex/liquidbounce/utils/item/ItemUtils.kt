@@ -34,7 +34,9 @@ object ItemUtils : MinecraftInstance()
 		{
 			val fixedItemArguments = itemArguments.replace('&', '\u00A7') // Translate Colorcodes
 
-			var item: IItem? = classProvider.createItem()
+			val provider = classProvider
+
+			var item: IItem? = provider.createItem()
 			var args: List<String>? = null
 
 			val modeSize = min(12, fixedItemArguments.length - 2)
@@ -42,7 +44,7 @@ object ItemUtils : MinecraftInstance()
 
 			(0 until modeSize).any {
 				args = fixedItemArguments.substring(it).split(" ")
-				item = functions.getObjectFromItemRegistry(classProvider.createResourceLocation((args ?: return@any false)[0]))
+				item = functions.getObjectFromItemRegistry(provider.createResourceLocation((args ?: return@any false)[0]))
 
 				item != null
 			}
@@ -60,7 +62,7 @@ object ItemUtils : MinecraftInstance()
 			var meta = 0
 			if (argsLength >= 3 && PATTERN.matcher(checkedArgs[2]).matches()) meta = checkedArgs[2].toInt()
 
-			val itemstack = classProvider.createItemStack(item!!, amount, meta)
+			val itemstack = provider.createItemStack(item!!, amount, meta)
 
 			// Build NBT tag
 			if (argsLength >= 4)
@@ -69,7 +71,7 @@ object ItemUtils : MinecraftInstance()
 
 				for (nbtcount in 3 until argsLength) nbtBuilder.append(" ${checkedArgs[nbtcount]}")
 
-				itemstack.tagCompound = classProvider.jsonToNBTInstance.getTagFromJson("$nbtBuilder")
+				itemstack.tagCompound = provider.jsonToNBTInstance.getTagFromJson("$nbtBuilder")
 			}
 
 			itemstack

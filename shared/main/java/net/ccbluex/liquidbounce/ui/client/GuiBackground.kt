@@ -35,17 +35,20 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen()
 		val quarterScreen = representedScreen.height shr 2
 
 		val buttonList = representedScreen.buttonList
-		buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 55 + (25 shl 2) + 5, "Back"))
 
-		enabledButton = classProvider.createGuiButton(1, buttonX, quarterScreen + 35, "Enabled (${if (enabled) "On" else "Off"})")
+		val provider = classProvider
+
+		buttonList.add(provider.createGuiButton(0, buttonX, quarterScreen + 55 + (25 shl 2) + 5, "Back"))
+
+		enabledButton = provider.createGuiButton(1, buttonX, quarterScreen + 35, "Enabled (${if (enabled) "On" else "Off"})")
 		buttonList.add(enabledButton)
 
-		particlesButton = classProvider.createGuiButton(2, buttonX, quarterScreen + 50 + 25, "Particles (${if (particles) "On" else "Off"})")
+		particlesButton = provider.createGuiButton(2, buttonX, quarterScreen + 50 + 25, "Particles (${if (particles) "On" else "Off"})")
 		buttonList.add(particlesButton)
 
 		val buttonY = quarterScreen + (25 shl 1) + 50
-		buttonList.add(classProvider.createGuiButton(3, buttonX, buttonY, 98, 20, "Change wallpaper"))
-		buttonList.add(classProvider.createGuiButton(4, (representedScreen.width shr 1) + 2, buttonY, 98, 20, "Reset wallpaper"))
+		buttonList.add(provider.createGuiButton(3, buttonX, buttonY, 98, 20, "Change wallpaper"))
+		buttonList.add(provider.createGuiButton(4, (representedScreen.width shr 1) + 2, buttonY, 98, 20, "Reset wallpaper"))
 	}
 
 	override fun actionPerformed(button: IGuiButton)
@@ -73,12 +76,14 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen()
 				{
 					Files.copy(file.toPath(), FileOutputStream(LiquidBounce.fileManager.backgroundFile))
 
+					val provider = classProvider
+
 					val image = ImageIO.read(FileInputStream(LiquidBounce.fileManager.backgroundFile))
-					val location = classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png")
+					val location = provider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png")
 
 					LiquidBounce.background = location
 
-					mc.textureManager.loadTexture(location, classProvider.createDynamicTexture(image))
+					mc.textureManager.loadTexture(location, provider.createDynamicTexture(image))
 				}
 				catch (e: Exception)
 				{

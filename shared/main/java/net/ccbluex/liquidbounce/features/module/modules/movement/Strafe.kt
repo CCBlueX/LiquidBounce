@@ -36,12 +36,13 @@ class Strafe : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val gameSettings = mc.gameSettings
 
-		if (thePlayer.onGround && mc.gameSettings.keyBindJump.isKeyDown && allDirectionsJumpValue.get() && (thePlayer.movementInput.moveForward != 0F || thePlayer.movementInput.moveStrafe != 0F) && !(thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isInWeb))
+		if (thePlayer.onGround && gameSettings.keyBindJump.isKeyDown && allDirectionsJumpValue.get() && (thePlayer.movementInput.moveForward != 0F || thePlayer.movementInput.moveStrafe != 0F) && !(thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isInWeb))
 		{
-			if (mc.gameSettings.keyBindJump.isKeyDown)
+			if (gameSettings.keyBindJump.isKeyDown)
 			{
-				mc.gameSettings.keyBindJump.pressed = false
+				gameSettings.keyBindJump.pressed = false
 				wasDown = true
 			}
 			val yaw = thePlayer.rotationYaw
@@ -51,7 +52,7 @@ class Strafe : Module()
 			jump = true
 			if (wasDown)
 			{
-				mc.gameSettings.keyBindJump.pressed = true
+				gameSettings.keyBindJump.pressed = true
 				wasDown = false
 			}
 		}
@@ -84,10 +85,11 @@ class Strafe : Module()
 
 		if (!thePlayer.onGround || onGroundStrafeValue.get())
 		{
-			val yaw = WMathHelper.toRadians(getMoveYaw(thePlayer))
+			val func = functions
 
-			thePlayer.motionX = -functions.sin(yaw) * speed + motionX
-			thePlayer.motionZ = functions.cos(yaw) * speed + motionZ
+			val yaw = WMathHelper.toRadians(getMoveYaw(thePlayer))
+			thePlayer.motionX = -func.sin(yaw) * speed + motionX
+			thePlayer.motionZ = func.cos(yaw) * speed + motionZ
 		}
 	}
 

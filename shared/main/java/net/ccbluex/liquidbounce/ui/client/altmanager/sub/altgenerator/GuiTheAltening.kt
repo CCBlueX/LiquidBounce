@@ -60,27 +60,29 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		val middleScreen = representedScreen.width shr 1
 		val buttonList = representedScreen.buttonList
 
-		addAltAndLoginButton = classProvider.createGuiButton(4, middleScreen - 100, 75, 98, 20, "Add Alt and Login")
+		val provider = classProvider
+
+		addAltAndLoginButton = provider.createGuiButton(4, middleScreen - 100, 75, 98, 20, "Add Alt and Login")
 		buttonList.add(addAltAndLoginButton)
 
-		loginButton = classProvider.createGuiButton(2, middleScreen + 2, 75, 98, 20, "Just Login")
+		loginButton = provider.createGuiButton(2, middleScreen + 2, 75, 98, 20, "Just Login")
 		buttonList.add(loginButton)
 
 		// Generate button
-		generateButton = classProvider.createGuiButton(1, middleScreen - 100, 140, "Generate")
+		generateButton = provider.createGuiButton(1, middleScreen - 100, 140, "Generate")
 		buttonList.add(generateButton)
 
 		// Buy & Back buttons
-		buttonList.add(classProvider.createGuiButton(3, middleScreen - 100, representedScreen.height - 54, 98, 20, "Buy"))
-		buttonList.add(classProvider.createGuiButton(0, middleScreen + 2, representedScreen.height - 54, 98, 20, "Back"))
+		buttonList.add(provider.createGuiButton(3, middleScreen - 100, representedScreen.height - 54, 98, 20, "Buy"))
+		buttonList.add(provider.createGuiButton(0, middleScreen + 2, representedScreen.height - 54, 98, 20, "Back"))
 
 		// Token text field
-		tokenField = classProvider.createGuiTextField(666, Fonts.font40, middleScreen - 100, 50, 200, 20)
+		tokenField = provider.createGuiTextField(666, Fonts.font40, middleScreen - 100, 50, 200, 20)
 		tokenField.isFocused = true
 		tokenField.maxStringLength = Integer.MAX_VALUE
 
 		// Api key password field
-		apiKeyField = classProvider.createGuiPasswordField(1337, Fonts.font40, middleScreen - 100, 115, 200, 20)
+		apiKeyField = provider.createGuiPasswordField(1337, Fonts.font40, middleScreen - 100, 115, 200, 20)
 		apiKeyField.maxStringLength = 18
 		apiKeyField.text = apiKey
 		super.initGui()
@@ -117,6 +119,8 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 	{
 		if (!button.enabled) return
 
+		val provider = classProvider
+
 		when (button.id)
 		{
 			0 -> mc.displayGuiScreen(prevGui.representedScreen)
@@ -152,7 +156,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 						{
 							yggdrasilUserAuthentication.logIn()
 
-							mc.session = classProvider.createSession(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication.selectedProfile.id.toString(), yggdrasilUserAuthentication.authenticatedToken, "mojang")
+							mc.session = provider.createSession(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication.selectedProfile.id.toString(), yggdrasilUserAuthentication.authenticatedToken, "mojang")
 							LiquidBounce.eventManager.callEvent(SessionEvent())
 							MCLeaks.remove()
 
@@ -212,7 +216,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 							account.accountName = yggdrasilUserAuthentication.selectedProfile.name
 
-							mc.session = classProvider.createSession(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication.selectedProfile.id.toString(), yggdrasilUserAuthentication.authenticatedToken, "mojang")
+							mc.session = provider.createSession(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication.selectedProfile.id.toString(), yggdrasilUserAuthentication.authenticatedToken, "mojang")
 							LiquidBounce.eventManager.callEvent(SessionEvent())
 							MCLeaks.remove()
 

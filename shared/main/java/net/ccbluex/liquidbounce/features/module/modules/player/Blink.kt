@@ -95,10 +95,9 @@ class Blink : Module()
 
 		mc.thePlayer ?: return
 
-		//		if (classProvider.isCPacketPlayer(packet)) // Cancel all movement stuff
-		//			event.cancelEvent()
+		val provider = classProvider
 
-		if (classProvider.isCPacketPlayer(packet) || classProvider.isCPacketPlayerPosition(packet) || classProvider.isCPacketPlayerPosLook(packet) || blockPlacePackets.get() && classProvider.isCPacketPlayerBlockPlacement(packet) || swingPackets.get() && classProvider.isCPacketAnimation(packet) || entityActionPackets.get() && classProvider.isCPacketEntityAction(packet) || useEntityPackets.get() && classProvider.isCPacketUseEntity(packet))
+		if (provider.isCPacketPlayer(packet) || provider.isCPacketPlayerPosition(packet) || provider.isCPacketPlayerPosLook(packet) || blockPlacePackets.get() && provider.isCPacketPlayerBlockPlacement(packet) || swingPackets.get() && provider.isCPacketAnimation(packet) || entityActionPackets.get() && provider.isCPacketEntityAction(packet) || useEntityPackets.get() && provider.isCPacketUseEntity(packet))
 		{
 			event.cancelEvent()
 			packets.add(packet)

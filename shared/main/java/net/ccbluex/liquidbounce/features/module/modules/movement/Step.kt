@@ -85,9 +85,11 @@ class Step : Module()
 					fakeJump(thePlayer)
 					thePlayer.motionY += 0.620000001490116
 
+					val func = functions
+
 					val f = WMathHelper.toRadians(thePlayer.rotationYaw)
-					thePlayer.motionX -= functions.sin(f) * 0.2
-					thePlayer.motionZ += functions.cos(f) * 0.2
+					thePlayer.motionX -= func.sin(f) * 0.2
+					thePlayer.motionZ += func.cos(f) * 0.2
 					resetTimer()
 				}
 
@@ -150,8 +152,10 @@ class Step : Module()
 
 				if (motionNCPBoost > 0F)
 				{
-					event.x = (-functions.sin(yaw) * motionNCPBoost).toDouble()
-					event.z = (functions.cos(yaw) * motionNCPBoost).toDouble()
+					val func = functions
+
+					event.x = (-func.sin(yaw) * motionNCPBoost).toDouble()
+					event.z = (func.cos(yaw) * motionNCPBoost).toDouble()
 				}
 
 				motionNCPNextStep = 0
@@ -309,9 +313,11 @@ class Step : Module()
 
 	private fun couldStep(theWorld: IWorldClient, thePlayer: IEntityPlayerSP): Boolean
 	{
+		val func = functions
+
 		val yaw = MovementUtils.getDirection(thePlayer)
-		val x = -functions.sin(yaw) * 0.4
-		val z = functions.cos(yaw) * 0.4
+		val x = -func.sin(yaw) * 0.4
+		val z = func.cos(yaw) * 0.4
 
 		return theWorld.getCollisionBoxes(thePlayer.entityBoundingBox.offset(x, 1.001335979112147, z)).isEmpty()
 	}

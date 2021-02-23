@@ -32,16 +32,20 @@ object MovementUtils : MinecraftInstance()
 	{
 		if (!isMoving(thePlayer)) return
 
+		val func = functions
+
 		val dir = getDirection(thePlayer)
-		thePlayer.motionX = (-functions.sin(dir) * speed).toDouble()
-		thePlayer.motionZ = (functions.cos(dir) * speed).toDouble()
+		thePlayer.motionX = (-func.sin(dir) * speed).toDouble()
+		thePlayer.motionZ = (func.cos(dir) * speed).toDouble()
 	}
 
 	@JvmStatic
 	fun forward(thePlayer: IEntityPlayerSP, length: Double)
 	{
+		val func = functions
+
 		val yaw = WMathHelper.toRadians(thePlayer.rotationYaw)
-		thePlayer.setPosition(thePlayer.posX + -functions.sin(yaw) * length, thePlayer.posY, thePlayer.posZ + functions.cos(yaw) * length)
+		thePlayer.setPosition(thePlayer.posX + -func.sin(yaw) * length, thePlayer.posY, thePlayer.posZ + func.cos(yaw) * length)
 	}
 
 	@JvmStatic

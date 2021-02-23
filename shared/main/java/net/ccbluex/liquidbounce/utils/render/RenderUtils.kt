@@ -79,9 +79,11 @@ object RenderUtils : MinecraftInstance()
 	@JvmStatic
 	fun drawSelectionBoundingBox(boundingBox: IAxisAlignedBB)
 	{
-		val tessellator = classProvider.tessellatorInstance
+		val provider = classProvider
+
+		val tessellator = provider.tessellatorInstance
 		val worldrenderer = tessellator.worldRenderer
-		worldrenderer.begin(GL11.GL_LINE_STRIP, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
+		worldrenderer.begin(GL11.GL_LINE_STRIP, provider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
 
 		val minX = boundingBox.minX
 		val minY = boundingBox.minY
@@ -218,10 +220,12 @@ object RenderUtils : MinecraftInstance()
 	@JvmStatic
 	fun drawFilledBox(axisAlignedBB: IAxisAlignedBB)
 	{
-		val tessellator = classProvider.tessellatorInstance
+		val provider = classProvider
+
+		val tessellator = provider.tessellatorInstance
 		val worldRenderer = tessellator.worldRenderer
 
-		worldRenderer.begin(7, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
+		worldRenderer.begin(7, provider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
 		val minX = axisAlignedBB.minX
 		val minY = axisAlignedBB.minY
 		val minZ = axisAlignedBB.minZ
@@ -434,10 +438,12 @@ object RenderUtils : MinecraftInstance()
 		GL11.glBegin(GL11.GL_LINE_STRIP)
 
 		var current = end.toFloat()
+		val func = functions
+
 		while (current >= start)
 		{
 			val radians = toRadians(current)
-			GL11.glVertex2f(x + functions.cos(radians) * (radius * 1.001f), y + functions.sin(radians) * (radius * 1.001f))
+			GL11.glVertex2f(x + func.cos(radians) * (radius * 1.001f), y + func.sin(radians) * (radius * 1.001f))
 			current -= 360 / 90.0f
 		}
 
@@ -511,10 +517,12 @@ object RenderUtils : MinecraftInstance()
 	@JvmStatic
 	fun drawModalRectWithCustomSizedTexture(x: Float, y: Float, u: Float, v: Float, width: Float, height: Float, textureWidth: Float, textureHeight: Float)
 	{
-		val tessellator = classProvider.tessellatorInstance
+		val provider = classProvider
+
+		val tessellator = provider.tessellatorInstance
 		val worldrenderer = tessellator.worldRenderer
 
-		worldrenderer.begin(7, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX))
+		worldrenderer.begin(7, provider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX))
 
 		val xD = x.toDouble()
 		val yD = y.toDouble()
@@ -730,10 +738,12 @@ object RenderUtils : MinecraftInstance()
 	@JvmStatic
 	fun drawScaledCustomSizeModalRect(x: Int, y: Int, u: Float, v: Float, uWidth: Int, vHeight: Int, width: Int, height: Int, tileWidth: Float, tileHeight: Float)
 	{
-		val tessellator = classProvider.tessellatorInstance
+		val provider = classProvider
+
+		val tessellator = provider.tessellatorInstance
 		val worldrenderer = tessellator.worldRenderer
 
-		worldrenderer.begin(7, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX))
+		worldrenderer.begin(7, provider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX))
 
 		val xD = x.toDouble()
 		val yD = y.toDouble()

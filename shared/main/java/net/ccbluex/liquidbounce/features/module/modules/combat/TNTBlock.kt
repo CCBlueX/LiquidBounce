@@ -28,16 +28,19 @@ class TNTBlock : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return
+		val gameSettings = mc.gameSettings
 
 		val range = rangeValue.get()
 		val fuse = fuseValue.get()
 
-		if (theWorld.loadedEntityList.any { classProvider.isEntityTNTPrimed(it) && thePlayer.getDistanceToEntity(it) <= range && it.asEntityTNTPrimed().fuse <= fuse })
+		val provider = classProvider
+
+		if (theWorld.loadedEntityList.any { provider.isEntityTNTPrimed(it) && thePlayer.getDistanceToEntity(it) <= range && it.asEntityTNTPrimed().fuse <= fuse })
 		{
 			if (autoSwordValue.get())
 			{
 				val inventory = thePlayer.inventory
-				val slot = (0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, itemStack) -> classProvider.isItemSword(itemStack.item) }.maxBy { (_, itemStack) -> itemStack.item!!.asItemSword().damageVsEntity + 4f }?.first ?: -1
+				val slot = (0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, itemStack) -> provider.isItemSword(itemStack.item) }.maxBy { (_, itemStack) -> itemStack.item!!.asItemSword().damageVsEntity + 4f }?.first ?: -1
 
 				if (slot != -1 && slot != inventory.currentItem)
 				{
@@ -46,18 +49,18 @@ class TNTBlock : Module()
 				}
 			}
 
-			if (thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem!!.item))
+			if (thePlayer.heldItem != null && provider.isItemSword(thePlayer.heldItem!!.item))
 			{
-				mc.gameSettings.keyBindUseItem.pressed = true
+				gameSettings.keyBindUseItem.pressed = true
 				blocked = true
 			}
 
 			return
 		}
 
-		if (blocked && !mc.gameSettings.isKeyDown(mc.gameSettings.keyBindUseItem))
+		if (blocked && !gameSettings.isKeyDown(gameSettings.keyBindUseItem))
 		{
-			mc.gameSettings.keyBindUseItem.pressed = false
+			gameSettings.keyBindUseItem.pressed = false
 			blocked = false
 		}
 	}

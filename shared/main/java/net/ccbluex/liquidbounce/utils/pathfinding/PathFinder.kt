@@ -144,14 +144,18 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 			val state = getState(blockpos)
 			val block = state!!.block
 
-			return block.getMaterial(state)!!.blocksMovement() && block.isFullCube(state) || classProvider.isBlockSlab(block) || classProvider.isBlockStairs(block) || classProvider.isBlockCactus(block) || classProvider.isBlockChest(block) || classProvider.isBlockEnderChest(block) || classProvider.isBlockSkull(block) || classProvider.isBlockPane(block) || classProvider.isBlockFence(block) || classProvider.isBlockWall(block) || classProvider.isBlockGlass(block) || classProvider.isBlockPistonBase(block) || classProvider.isBlockPistonExtension(block) || classProvider.isBlockPistonMoving(block) || classProvider.isBlockStainedGlass(block) || classProvider.isBlockTrapDoor(block)
+			val provider = classProvider
+
+			return block.getMaterial(state)!!.blocksMovement() && block.isFullCube(state) || provider.isBlockSlab(block) || provider.isBlockStairs(block) || provider.isBlockCactus(block) || provider.isBlockChest(block) || provider.isBlockEnderChest(block) || provider.isBlockSkull(block) || provider.isBlockPane(block) || provider.isBlockFence(block) || provider.isBlockWall(block) || provider.isBlockGlass(block) || provider.isBlockPistonBase(block) || provider.isBlockPistonExtension(block) || provider.isBlockPistonMoving(block) || provider.isBlockStainedGlass(block) || provider.isBlockTrapDoor(block)
 		}
 
 		private fun isSafeToWalkOn(blockpos: WBlockPos): Boolean
 		{
 			val block = getState(blockpos)!!.block
 
-			return !classProvider.isBlockFence(block) && !classProvider.isBlockWall(block)
+			val provider = classProvider
+
+			return !provider.isBlockFence(block) && !provider.isBlockWall(block)
 		}
 	}
 }

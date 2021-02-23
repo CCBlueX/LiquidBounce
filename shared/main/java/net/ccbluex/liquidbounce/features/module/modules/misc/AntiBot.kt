@@ -232,8 +232,10 @@ object AntiBot : Module()
 		// Armor
 		if (armorValue.get() && entity.asEntityPlayer().inventory.armorInventory.all { it == null }) return true
 
+		val netHandler = mc.netHandler
+
 		// Ping
-		if (pingValue.get() && mc.netHandler.getPlayerInfo(entity.asEntityPlayer().uniqueID)?.responseTime == 0) return true
+		if (pingValue.get() && netHandler.getPlayerInfo(entity.asEntityPlayer().uniqueID)?.responseTime == 0) return true
 
 		// NeedHit
 		if (needHitValue.get() && !hitted.contains(entityID)) return true
@@ -258,7 +260,7 @@ object AntiBot : Module()
 		if (duplicateInWorldValue.get() && theWorld.loadedEntityList.count { provider.isEntityPlayer(it) && it.asEntityPlayer().displayNameString == it.asEntityPlayer().displayNameString } > 1) return true
 
 		// Duplicate in the tab
-		if (duplicateInTabValue.get() && mc.netHandler.playerInfoMap.count {
+		if (duplicateInTabValue.get() && netHandler.playerInfoMap.count {
 				var entityName = entity.name
 				if (duplicateInTabStripColorsValue.get()) entityName = stripColor(entityName)
 
@@ -312,12 +314,14 @@ object AntiBot : Module()
 
 		val packet = event.packet
 
-		if (classProvider.isSPacketEntity(packet))
+		val provider = classProvider
+
+		if (provider.isSPacketEntity(packet))
 		{
 			val packetEntity = packet.asSPacketEntity()
 			val entity = packetEntity.getEntity(theWorld)
 
-			if (classProvider.isEntityPlayer(entity) && entity != null)
+			if (provider.isEntityPlayer(entity) && entity != null)
 			{
 				val displayName: String? = entity.displayName?.formattedText
 				val customName: String = entity.asEntityPlayer().customNameTag
@@ -363,13 +367,15 @@ object AntiBot : Module()
 				val yaw = RotationUtils.serverRotation.yaw
 				val dir = WMathHelper.toRadians(yaw - 180.0F)
 
-				val expectedX = thePlayer.posX - functions.sin(dir) * positionBackValue.get()
-				val expectedY = thePlayer.posY + positionYValue.get()
-				val expectedZ = thePlayer.posZ + functions.cos(dir) * positionBackValue.get()
+				val func = functions
 
-				val expectedX2 = thePlayer.posX - functions.sin(dir) * positionBack2Value.get()
+				val expectedX = thePlayer.posX - func.sin(dir) * positionBackValue.get()
+				val expectedY = thePlayer.posY + positionYValue.get()
+				val expectedZ = thePlayer.posZ + func.cos(dir) * positionBackValue.get()
+
+				val expectedX2 = thePlayer.posX - func.sin(dir) * positionBack2Value.get()
 				val expectedY2 = thePlayer.posY + positionY2Value.get()
-				val expectedZ2 = thePlayer.posZ + functions.cos(dir) * positionBack2Value.get()
+				val expectedZ2 = thePlayer.posZ + func.cos(dir) * positionBack2Value.get()
 
 				val distances = doubleArrayOf(entity.getDistance(expectedX, expectedY, expectedZ), entity.getDistance(expectedX2, expectedY2, expectedZ2))
 				for (distance in distances)
@@ -441,12 +447,12 @@ object AntiBot : Module()
 			}
 		}
 
-		if (classProvider.isSPacketEntityTeleport(packet))
+		if (provider.isSPacketEntityTeleport(packet))
 		{
 			val packetEntityTeleport = packet.asSPacketEntityTeleport()
 			val entity: IEntity? = theWorld.getEntityByID(packetEntityTeleport.entityId)
 
-			if (entity != null && classProvider.isEntityPlayer(entity))
+			if (entity != null && provider.isEntityPlayer(entity))
 			{
 				val dX: Double = packetEntityTeleport.x * 0.03125
 				val dY: Double = packetEntityTeleport.y * 0.03125
@@ -460,15 +466,15 @@ object AntiBot : Module()
 			}
 		}
 
-		if (classProvider.isSPacketAnimation(packet))
+		if (provider.isSPacketAnimation(packet))
 		{
 			val packetAnimation = packet.asSPacketAnimation()
 			val entity = theWorld.getEntityByID(packetAnimation.entityID)
 
-			if (entity != null && classProvider.isEntityLivingBase(entity) && packetAnimation.animationType == 0 && !swing.contains(entity.entityId)) swing.add(entity.entityId)
+			if (entity != null && provider.isEntityLivingBase(entity) && packetAnimation.animationType == 0 && !swing.contains(entity.entityId)) swing.add(entity.entityId)
 		}
 
-		if (classProvider.isSPacketSpawnPlayer(packet))
+		if (provider.isSPacketSpawnPlayer(packet))
 		{
 			val packetPlayerSpawn = packet.asSPacketSpawnPlayer()
 			val entityX: Double = packetPlayerSpawn.x.toDouble()
@@ -506,8 +512,10 @@ object AntiBot : Module()
 			val y2 = positionY2Value.get()
 			val back2 = positionBack2Value.get()
 
-			val sin = -functions.sin(dir)
-			val cos = functions.cos(dir)
+			val func = functions
+
+			val sin = -func.sin(dir)
+			val cos = func.cos(dir)
 
 			val posX = thePlayer.lastTickPosX + (thePlayer.posX - thePlayer.lastTickPosX) * partialTicks
 			val posY = thePlayer.lastTickPosY + (thePlayer.posY - thePlayer.lastTickPosY) * partialTicks
@@ -530,8 +538,11 @@ object AntiBot : Module()
 
 			val width = 0.3 + deltaLimit
 			val height = 1.62 + deltaLimit
-			RenderUtils.drawAxisAlignedBB(classProvider.createAxisAlignedBB(expectedX - width - renderPosX, expectedY - renderPosY, expectedZ - width - renderPosZ, expectedX + width - renderPosX, expectedY + height - renderPosY, expectedZ + width - renderPosZ), Color(255, 0, 0, 60))
-			RenderUtils.drawAxisAlignedBB(classProvider.createAxisAlignedBB(expectedX2 - width - renderPosX, expectedY2 - deltaLimit - renderPosY, expectedZ2 - width - renderPosZ, expectedX2 + width - renderPosX, expectedY2 + height - renderPosY, expectedZ2 + width - renderPosZ), Color(0, 255, 0, 60))
+
+			val provider = classProvider
+
+			RenderUtils.drawAxisAlignedBB(provider.createAxisAlignedBB(expectedX - width - renderPosX, expectedY - renderPosY, expectedZ - width - renderPosZ, expectedX + width - renderPosX, expectedY + height - renderPosY, expectedZ + width - renderPosZ), Color(255, 0, 0, 60))
+			RenderUtils.drawAxisAlignedBB(provider.createAxisAlignedBB(expectedX2 - width - renderPosX, expectedY2 - deltaLimit - renderPosY, expectedZ2 - width - renderPosZ, expectedX2 + width - renderPosX, expectedY2 + height - renderPosY, expectedZ2 + width - renderPosZ), Color(0, 255, 0, 60))
 		}
 	}
 

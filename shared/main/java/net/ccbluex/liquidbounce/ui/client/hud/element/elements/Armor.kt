@@ -39,8 +39,10 @@ class Armor(
 
 			val renderItem = mc.renderItem
 
+			val provider = classProvider
+
 			// Prevents being conflicted with the bubbles
-			val preventConflict = preventConflictValue.get() && thePlayer.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.WATER))
+			val preventConflict = preventConflictValue.get() && thePlayer.isInsideOfMaterial(provider.getMaterialEnum(MaterialType.WATER))
 
 			var x = 1
 			var y = if (preventConflict) -10 else 0
@@ -55,10 +57,10 @@ class Armor(
 				else if (mode.equals("Vertical", true)) y += 18
 			}
 
-			classProvider.glStateManager.enableAlpha()
-			classProvider.glStateManager.disableBlend()
-			classProvider.glStateManager.disableLighting()
-			classProvider.glStateManager.disableCull()
+			provider.glStateManager.enableAlpha()
+			provider.glStateManager.disableBlend()
+			provider.glStateManager.disableLighting()
+			provider.glStateManager.disableCull()
 			GL11.glPopMatrix()
 		}
 

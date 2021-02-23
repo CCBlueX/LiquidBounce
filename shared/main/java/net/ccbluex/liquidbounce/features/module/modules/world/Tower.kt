@@ -138,7 +138,7 @@ class Tower : Module()
 	var lockRotation: Rotation? = null
 
 	// Mode stuff
-	private val timer = TickTimer()
+	private val delayTimer = TickTimer()
 	private val onJumpTimer = MSTimer()
 	private var jumpGround = 0.0
 
@@ -199,17 +199,19 @@ class Tower : Module()
 		if (eventState == EventState.PRE)
 		{
 			placeInfo = null
-			timer.update()
+			delayTimer.update()
 
-			val update = if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0) != -1 || thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
-			else thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
+			val provider = classProvider
+
+			val update = if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0) != -1 || thePlayer.heldItem != null && provider.isItemBlock(thePlayer.heldItem!!.item)
+			else thePlayer.heldItem != null && provider.isItemBlock(thePlayer.heldItem!!.item)
 
 			if (update)
 			{
-				if (!stopWhenBlockAbove.get() || classProvider.isBlockAir(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)))) move()
+				if (!stopWhenBlockAbove.get() || provider.isBlockAir(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)))) move()
 
 				val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)
-				if (classProvider.isBlockAir(theWorld.getBlockState(blockPos).block) && search(theWorld, blockPos) && rotationsValue.get())
+				if (provider.isBlockAir(theWorld.getBlockState(blockPos).block) && search(theWorld, blockPos) && rotationsValue.get())
 				{
 					val vecRotation = RotationUtils.faceBlock(theWorld, thePlayer, blockPos)
 					if (vecRotation != null)
@@ -246,14 +248,15 @@ class Tower : Module()
 		val posY = thePlayer.posY
 		val posZ = thePlayer.posZ
 		val onGround = thePlayer.onGround
+		val timer = mc.timer
 
 		when (modeValue.get().toLowerCase())
 		{
-			"jump" -> if (onGround && timer.hasTimePassed(jumpDelayValue.get()))
+			"jump" -> if (onGround && delayTimer.hasTimePassed(jumpDelayValue.get()))
 			{
 				fakeJump()
 				thePlayer.motionY = jumpMotionValue.get().toDouble()
-				timer.reset()
+				delayTimer.reset()
 			}
 
 			"motion" -> if (onGround)
@@ -270,28 +273,30 @@ class Tower : Module()
 			}
 			else if (thePlayer.motionY < 0.23) thePlayer.setPosition(posX, truncate(posY), posZ)
 
-			"packet" -> if (onGround && timer.hasTimePassed(2))
+			"packet" -> if (onGround && delayTimer.hasTimePassed(2))
 			{
 				val netHandler = mc.netHandler
 
 				fakeJump()
 
-				netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(posX, posY + 0.42, posZ, false))
-				netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(posX, posY + 0.753, posZ, false))
+				val provider = classProvider
+
+				netHandler.addToSendQueue(provider.createCPacketPlayerPosition(posX, posY + 0.42, posZ, false))
+				netHandler.addToSendQueue(provider.createCPacketPlayerPosition(posX, posY + 0.753, posZ, false))
 				thePlayer.setPosition(posX, posY + 1.0, posZ)
 
-				timer.reset()
+				delayTimer.reset()
 			}
 
 			"teleport" ->
 			{
 				if (teleportNoMotionValue.get()) thePlayer.motionY = 0.0
 
-				if ((onGround || !teleportGroundValue.get()) && timer.hasTimePassed(teleportDelayValue.get()))
+				if ((onGround || !teleportGroundValue.get()) && delayTimer.hasTimePassed(teleportDelayValue.get()))
 				{
 					fakeJump()
 					thePlayer.setPositionAndUpdate(posX, posY + teleportHeightValue.get(), posZ)
-					timer.reset()
+					delayTimer.reset()
 				}
 			}
 
@@ -323,13 +328,13 @@ class Tower : Module()
 					thePlayer.motionY = 0.4001
 				}
 
-				mc.timer.timerSpeed = 1f
+				timer.timerSpeed = 1f
 
 				if (thePlayer.motionY < 0)
 				{
 					// Fast down
 					thePlayer.motionY -= 0.00000945
-					mc.timer.timerSpeed = 1.6f
+					timer.timerSpeed = 1.6f
 				}
 			}
 
@@ -359,6 +364,7 @@ class Tower : Module()
 		if (scaffold.killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
 
 		val netHandler = mc.netHandler
+		val controller = mc.playerController
 
 		// AutoBlock
 		var itemStack = thePlayer.heldItem
@@ -377,7 +383,7 @@ class Tower : Module()
 				"Pick" ->
 				{
 					thePlayer.inventory.currentItem = blockSlot - 36
-					mc.playerController.updateController()
+					controller.updateController()
 				}
 
 				"Spoof" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
@@ -388,7 +394,7 @@ class Tower : Module()
 		}
 
 		// Place block
-		if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack!!, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3)) if (swingValue.get()) thePlayer.swingItem()
+		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack!!, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3)) if (swingValue.get()) thePlayer.swingItem()
 		else netHandler.addToSendQueue(provider.createCPacketAnimation())
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
@@ -500,13 +506,16 @@ class Tower : Module()
 
 			val blocksAmount = getBlocksAmount(thePlayer)
 			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}$blocksAmount"
-			val scaledResolution = classProvider.createScaledResolution(mc)
+
+			val provider = classProvider
+
+			val scaledResolution = provider.createScaledResolution(mc)
 
 			val middleScreenX = scaledResolution.scaledWidth shr 1
 			val middleScreenY = scaledResolution.scaledHeight shr 1
 			RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + 5.0f, ((scaledResolution.scaledWidth shr 1) + Fonts.font40.getStringWidth(info)) + 2.0f, middleScreenY + 16.0f, 3f, Color.BLACK.rgb, Color.BLACK.rgb)
 
-			classProvider.glStateManager.resetColor()
+			provider.glStateManager.resetColor()
 
 			Fonts.font40.drawString(info, middleScreenX.toFloat(), middleScreenY + 7.0f, 0xffffff)
 			GL11.glPopMatrix()

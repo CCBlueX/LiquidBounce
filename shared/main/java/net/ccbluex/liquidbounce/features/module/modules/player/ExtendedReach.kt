@@ -119,31 +119,33 @@ class ExtendedReach : Module()
 		val packet = event.packet
 		val networkManager = mc.netHandler.networkManager
 
-		if (classProvider.isCPacketPlayerBlockPlacement(packet))
+		val provider = classProvider
+
+		if (provider.isCPacketPlayerBlockPlacement(packet))
 		{
 			val blockPlacement = packet.asCPacketPlayerBlockPlacement()
 			val pos = blockPlacement.position
 			val stack = blockPlacement.stack
 			val distance = sqrt(thePlayer.getDistanceSq(pos))
 
-			if (distance > 6.0 && pos.y != -1 && (stack != null || classProvider.isBlockContainer(getState(pos)!!.block)))
+			if (distance > 6.0 && pos.y != -1 && (stack != null || provider.isBlockContainer(getState(pos)!!.block)))
 			{
 				val to = WVec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 				path = computePath(playerPosVec, to)
 
 				// Travel to the target block.
-				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+				for (pathElm in path) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 				pathESPTimer.reset()
 				networkManager.sendPacketWithoutEvent(packet)
 
 				// Go back to the home.
 				path.reverse()
-				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+				for (pathElm in path) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 				event.cancelEvent()
 			}
 		}
 
-		if (classProvider.isCPacketPlayerDigging(packet))
+		if (provider.isCPacketPlayerDigging(packet))
 		{
 			val digging = packet.asCPacketPlayerDigging()
 			val action = digging.status
@@ -157,15 +159,15 @@ class ExtendedReach : Module()
 				path = computePath(playerPosVec, to)
 
 				// Travel to the target.
-				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+				for (pathElm in path) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 				pathESPTimer.reset()
-				val end = classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, pos, face)
+				val end = provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, pos, face)
 				networkManager.sendPacketWithoutEvent(packet)
 				networkManager.sendPacketWithoutEvent(end)
 
 				// Go back to the home.
 				path.reverse()
-				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+				for (pathElm in path) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 				event.cancelEvent()
 			}
 			else if (action == ICPacketPlayerDigging.WAction.ABORT_DESTROY_BLOCK) event.cancelEvent()
@@ -183,9 +185,11 @@ class ExtendedReach : Module()
 
 		if (event.eventState == EventState.PRE)
 		{
+			val provider = classProvider
+
 			val facedEntity = raycastEntity(theWorld, thePlayer, combatReach.get().toDouble(), object : EntityFilter
 			{
-				override fun canRaycast(entity: IEntity?): Boolean = classProvider.isEntityLivingBase(entity)
+				override fun canRaycast(entity: IEntity?): Boolean = provider.isEntityLivingBase(entity)
 			})
 
 			var targetEntity: IEntityLivingBase? = null
@@ -201,14 +205,14 @@ class ExtendedReach : Module()
 				path = computePath(from, to)
 
 				// Travel to the target entity.
-				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+				for (pathElm in path) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 
 				pathESPTimer.reset()
 				thePlayer.swingItem()
 
 				// Make AutoWeapon compatible
 				var sendAttack = true
-				val attackPacket: IPacket = classProvider.createCPacketUseEntity(targetEntity, ICPacketUseEntity.WAction.ATTACK)
+				val attackPacket: IPacket = provider.createCPacketUseEntity(targetEntity, ICPacketUseEntity.WAction.ATTACK)
 
 				val autoWeapon = LiquidBounce.moduleManager[AutoWeapon::class.java] as AutoWeapon
 				if (autoWeapon.state)
@@ -225,7 +229,7 @@ class ExtendedReach : Module()
 
 				// Go back to the home.
 				path.reverse()
-				for (pathElm in path) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+				for (pathElm in path) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 			}
 		}
 	}
@@ -311,7 +315,10 @@ class ExtendedReach : Module()
 		{
 			val state = getState(WBlockPos(pos.x, pos.y, pos.z))
 			val block = state!!.block
-			return classProvider.getMaterialEnum(MaterialType.AIR) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.PLANTS) == block.getMaterial(state) || classProvider.getMaterialEnum(MaterialType.VINE) == block.getMaterial(state) || classProvider.getBlockEnum(BlockType.LADDER) == block || classProvider.getBlockEnum(BlockType.WATER) == block || classProvider.getBlockEnum(BlockType.FLOWING_WATER) == block || classProvider.getBlockEnum(BlockType.WALL_SIGN) == block || classProvider.getBlockEnum(BlockType.STANDING_SIGN) == block
+
+			val provider = classProvider
+
+			return provider.getMaterialEnum(MaterialType.AIR) == block.getMaterial(state) || provider.getMaterialEnum(MaterialType.PLANTS) == block.getMaterial(state) || provider.getMaterialEnum(MaterialType.VINE) == block.getMaterial(state) || provider.getBlockEnum(BlockType.LADDER) == block || provider.getBlockEnum(BlockType.WATER) == block || provider.getBlockEnum(BlockType.FLOWING_WATER) == block || provider.getBlockEnum(BlockType.WALL_SIGN) == block || provider.getBlockEnum(BlockType.STANDING_SIGN) == block
 		}
 	}
 }

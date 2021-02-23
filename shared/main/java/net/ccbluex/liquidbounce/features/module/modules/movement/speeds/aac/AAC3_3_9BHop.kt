@@ -19,8 +19,9 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop") // Was AAC5BHop
 	override fun onTick()
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val timer = mc.timer
 
-		mc.timer.timerSpeed = 1f
+		timer.timerSpeed = 1f
 
 		if (thePlayer.isInWater) return
 
@@ -53,10 +54,10 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop") // Was AAC5BHop
 				thePlayer.motionY < 0.0 ->
 				{
 					thePlayer.speedInAir = 0.0201f
-					mc.timer.timerSpeed = 1.02f
+					timer.timerSpeed = 1.02f
 				}
 
-				else -> mc.timer.timerSpeed = 1.01f
+				else -> timer.timerSpeed = 1.01f
 			}
 		}
 		else

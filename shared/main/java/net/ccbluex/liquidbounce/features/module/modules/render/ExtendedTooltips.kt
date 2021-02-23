@@ -65,7 +65,9 @@ class ExtendedTooltips : Module()
 
 		val heldItemStack: IItemStack? = thePlayer.inventory.getCurrentItemInHand()
 
-		val resolution = classProvider.createScaledResolution(mc)
+		val provider = classProvider
+
+		val resolution = provider.createScaledResolution(mc)
 
 		val width = resolution.scaledWidth
 		val height = resolution.scaledHeight
@@ -105,7 +107,7 @@ class ExtendedTooltips : Module()
 
 			if (enchantmentsValue.get())
 			{
-				val toDraw: String = if (classProvider.isItemPotion(heldItemStack.item)) getPotionEffectString(heldItemStack) else getEnchantmentString(heldItemStack)
+				val toDraw: String = if (provider.isItemPotion(heldItemStack.item)) getPotionEffectString(heldItemStack) else getEnchantmentString(heldItemStack)
 				val scale = enchantmentsScaleValue.get()
 				val recoverScale = 1 / scale
 
@@ -124,7 +126,7 @@ class ExtendedTooltips : Module()
 			val scale = heldItemCountScaleValue.get()
 			val recoverScale = 1 / scale
 
-			val isHoldingBow = classProvider.isItemBow(thePlayer.currentEquippedItem!!.item)
+			val isHoldingBow = provider.isItemBow(thePlayer.currentEquippedItem!!.item)
 			val count = getHeldItemCount(thePlayer, isHoldingBow)
 
 			GL11.glPushMatrix()
@@ -137,7 +139,7 @@ class ExtendedTooltips : Module()
 		}
 
 		val screen = mc.currentScreen
-		if (armorPotential.get() && classProvider.isGuiInventory(screen)) screen!!.drawString(font, getArmorPotential(thePlayer).also { lastArmorPotential = it }, 10, height - 16, 16777215)
+		if (armorPotential.get() && provider.isGuiInventory(screen)) screen!!.drawString(font, getArmorPotential(thePlayer).also { lastArmorPotential = it }, 10, height - 16, 16777215)
 
 		if (durabilityWarning.get() && isArmorDurabilityLow(thePlayer)) printArmorWarning(resolution, font)
 	}
@@ -194,18 +196,22 @@ class ExtendedTooltips : Module()
 		var armor = 0.0
 		var epf = 0
 
+		val provider = classProvider
+
 		thePlayer.inventory.armorInventory.forEach { itemStack ->
 			if (itemStack != null)
 			{
-				if (classProvider.isItemArmor(itemStack.item)) armor += itemStack.item!!.asItemArmor().damageReduceAmount.toDouble() * 0.04
+				if (provider.isItemArmor(itemStack.item)) armor += itemStack.item!!.asItemArmor().damageReduceAmount.toDouble() * 0.04
 
-				if (itemStack.isItemEnchanted) epf += getEffProtPoints(functions.getEnchantmentLevel(0, itemStack))
+				val func = functions
 
-				if (projectileProtection && itemStack.isItemEnchanted) epf += getEffProtPoints(functions.getEnchantmentLevel(4, itemStack))
+				if (itemStack.isItemEnchanted) epf += getEffProtPoints(func.getEnchantmentLevel(0, itemStack))
+
+				if (projectileProtection && itemStack.isItemEnchanted) epf += getEffProtPoints(func.getEnchantmentLevel(4, itemStack))
 			}
 		}
 
-		return roundDouble(addArmorProtResistance(armor, calcProtection(epf.coerceAtMost(25).toDouble()), thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.RESISTANCE))?.amplifier?.plus(1) ?: 0) * 100.0)
+		return roundDouble(addArmorProtResistance(armor, calcProtection(epf.coerceAtMost(25).toDouble()), thePlayer.getActivePotionEffect(provider.getPotionEnum(PotionType.RESISTANCE))?.amplifier?.plus(1) ?: 0) * 100.0)
 	}
 
 	private fun getEffProtPoints(level: Int, typeModifier: Double = 0.75): Int = if (level != 0) floor((6 + level * level).toDouble() * typeModifier / 3.0).toInt() else 0
@@ -225,12 +231,14 @@ class ExtendedTooltips : Module()
 
 	private fun getHeldItemCount(thePlayer: IEntityPlayerSP, bow: Boolean): Int
 	{
-		var itemID: Int = functions.getIdFromItem(thePlayer.currentEquippedItem!!.item!!)
+		val func = functions
+
+		var itemID: Int = func.getIdFromItem(thePlayer.currentEquippedItem!!.item!!)
 		var itemMeta: Int = thePlayer.currentEquippedItem!!.itemDamage
 
 		if (bow)
 		{
-			itemID = functions.getIdFromItem(classProvider.getItemEnum(ItemType.ARROW))
+			itemID = func.getIdFromItem(classProvider.getItemEnum(ItemType.ARROW))
 			itemMeta = 0
 		}
 
@@ -239,7 +247,7 @@ class ExtendedTooltips : Module()
 		val inventory: IWrappedArray<IItemStack?> = thePlayer.inventory.mainInventory
 		inventory.forEachIndexed { i, _ ->
 			val itemInSlot = inventory[i]
-			if (itemInSlot != null && functions.getIdFromItem(itemInSlot.item!!) == itemID && itemInSlot.itemDamage == itemMeta) totalItemCount += itemInSlot.stackSize
+			if (itemInSlot != null && func.getIdFromItem(itemInSlot.item!!) == itemID && itemInSlot.itemDamage == itemMeta) totalItemCount += itemInSlot.stackSize
 		}
 
 		return totalItemCount

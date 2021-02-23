@@ -34,9 +34,11 @@ class FallingPlayer(private val theWorld: IWorldClient, private val thePlayer: I
 			strafe *= v
 			forward *= v
 
+			val func = functions
+
 			val yawRadians = toRadians(yaw)
-			val sin = functions.sin(yawRadians)
-			val cos = functions.cos(yawRadians)
+			val sin = func.sin(yawRadians)
+			val cos = func.cos(yawRadians)
 			motionX += (strafe * cos - forward * sin).toDouble()
 			motionZ += (forward * cos + strafe * sin).toDouble()
 		}

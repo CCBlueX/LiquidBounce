@@ -120,9 +120,11 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 
 		if (moving)
 		{
+			val func = functions
+
 			val dir = MovementUtils.getDirection(thePlayer)
-			event.x = -functions.sin(dir) * moveSpeed
-			event.z = functions.cos(dir) * moveSpeed
+			event.x = -func.sin(dir) * moveSpeed
+			event.z = func.cos(dir) * moveSpeed
 
 			thePlayer.stepHeight = 0.5f
 		}

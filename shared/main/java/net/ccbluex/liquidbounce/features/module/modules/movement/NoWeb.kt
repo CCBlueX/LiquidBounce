@@ -22,6 +22,7 @@ class NoWeb : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val gameSettings = mc.gameSettings
 
 		if (!thePlayer.isInWeb) return
 
@@ -33,14 +34,14 @@ class NoWeb : Module()
 			{
 				thePlayer.jumpMovementFactor = 0.59f
 
-				if (!mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY = 0.0
+				if (!gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY = 0.0
 			}
 
 			"aac3.3.6-webwalk" ->
 			{
 				thePlayer.jumpMovementFactor = if (thePlayer.movementInput.moveStrafe != 0f) 1.0f else 1.21f
 
-				if (!mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY = 0.0
+				if (!gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY = 0.0
 
 				if (thePlayer.onGround) thePlayer.jump()
 			}

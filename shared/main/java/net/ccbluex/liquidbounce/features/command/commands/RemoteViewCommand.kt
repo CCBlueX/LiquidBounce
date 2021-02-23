@@ -20,9 +20,9 @@ class RemoteViewCommand : Command("remoteview", "rv")
 
 		if (args.size < 2)
 		{
-			if (mc.renderViewEntity != mc.thePlayer)
+			if (mc.renderViewEntity != thePlayer)
 			{
-				mc.renderViewEntity = mc.thePlayer
+				mc.renderViewEntity = thePlayer
 				return
 			}
 

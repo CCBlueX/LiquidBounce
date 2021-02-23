@@ -38,6 +38,8 @@ class Sneak : Module()
 
 		val netHandler = mc.netHandler
 
+		val provider = classProvider
+
 		when (modeValue.get().toLowerCase())
 		{
 			"legit" -> mc.gameSettings.keyBindSneak.pressed = true
@@ -46,7 +48,7 @@ class Sneak : Module()
 			{
 				if (sneaking) return
 
-				netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
+				netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
 			}
 
 			"switch" ->
@@ -55,14 +57,14 @@ class Sneak : Module()
 				{
 					EventState.PRE ->
 					{
-						netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
-						netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SNEAKING))
+						netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
+						netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SNEAKING))
 					}
 
 					EventState.POST ->
 					{
-						netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SNEAKING))
-						netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
+						netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SNEAKING))
+						netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
 					}
 				}
 			}
@@ -71,7 +73,7 @@ class Sneak : Module()
 			{
 				if (event.eventState == EventState.PRE) return
 
-				netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
+				netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SNEAKING))
 			}
 		}
 	}

@@ -44,11 +44,13 @@ class SkinDerp : Module()
 
 	override fun onDisable()
 	{
+		val gameSettings = mc.gameSettings
+
 		// Disable all current model parts
-		for (modelPart in mc.gameSettings.modelParts) mc.gameSettings.setModelPartEnabled(modelPart, false)
+		for (modelPart in gameSettings.modelParts) gameSettings.setModelPartEnabled(modelPart, false)
 
 		// Enable all old model parts
-		for (modelPart in prevModelParts) mc.gameSettings.setModelPartEnabled(modelPart, true)
+		for (modelPart in prevModelParts) gameSettings.setModelPartEnabled(modelPart, true)
 
 		super.onDisable()
 	}

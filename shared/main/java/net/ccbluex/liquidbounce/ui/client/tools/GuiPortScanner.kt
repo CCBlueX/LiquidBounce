@@ -48,20 +48,22 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		val buttonX = middleScreen - 100
 
-		hostField = classProvider.createGuiTextField(0, Fonts.font40, buttonX, 60, 200, 20).apply { isFocused = true }.apply { maxStringLength = Int.MAX_VALUE }.apply { text = "localhost" }
+		val provider = classProvider
 
-		minPortField = classProvider.createGuiTextField(1, Fonts.font40, buttonX, 90, 90, 20).apply { maxStringLength = 5 }.apply { text = "1" }
+		hostField = provider.createGuiTextField(0, Fonts.font40, buttonX, 60, 200, 20).apply { isFocused = true }.apply { maxStringLength = Int.MAX_VALUE }.apply { text = "localhost" }
 
-		maxPortField = classProvider.createGuiTextField(2, Fonts.font40, middleScreen + 10, 90, 90, 20).apply { maxStringLength = 5 }.apply { text = "65535" }
+		minPortField = provider.createGuiTextField(1, Fonts.font40, buttonX, 90, 90, 20).apply { maxStringLength = 5 }.apply { text = "1" }
 
-		threadsField = classProvider.createGuiTextField(3, Fonts.font40, buttonX, 120, 200, 20).apply { maxStringLength = Int.MAX_VALUE }.apply { text = "500" }
+		maxPortField = provider.createGuiTextField(2, Fonts.font40, middleScreen + 10, 90, 90, 20).apply { maxStringLength = 5 }.apply { text = "65535" }
+
+		threadsField = provider.createGuiTextField(3, Fonts.font40, buttonX, 120, 200, 20).apply { maxStringLength = Int.MAX_VALUE }.apply { text = "500" }
 
 		val quarterScreen = representedScreen.height shr 2
 
 		val buttonList = representedScreen.buttonList
-		buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 95, if (running) "Stop" else "Start").also { buttonToggle = it })
-		buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
-		buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 155, "Export"))
+		buttonList.add(provider.createGuiButton(1, buttonX, quarterScreen + 95, if (running) "Stop" else "Start").also { buttonToggle = it })
+		buttonList.add(provider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+		buttonList.add(provider.createGuiButton(2, buttonX, quarterScreen + 155, "Export"))
 
 		super.initGui()
 	}

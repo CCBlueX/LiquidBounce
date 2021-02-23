@@ -22,7 +22,9 @@ class AirLadder : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (classProvider.isBlockLadder(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))) && thePlayer.isCollidedHorizontally || classProvider.isBlockVine(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ))) || classProvider.isBlockVine(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))))
+		val provider = classProvider
+
+		if (provider.isBlockLadder(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))) && thePlayer.isCollidedHorizontally || provider.isBlockVine(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ))) || provider.isBlockVine(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))))
 		{
 			thePlayer.motionY = 0.15
 			thePlayer.motionX = 0.0

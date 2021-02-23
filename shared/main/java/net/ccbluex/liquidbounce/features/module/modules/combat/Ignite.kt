@@ -49,12 +49,15 @@ class Ignite : Module()
 
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
+		val netHandler = mc.netHandler
+		val controller = mc.playerController
+
 		val inventoryContainer = thePlayer.inventoryContainer
+
+		val provider = classProvider
 
 		val itemDelay = itemDelayValue.get()
 		val randomSlot = randomSlotValue.get()
-
-		val provider = classProvider
 
 		val lighterInHotbar = if (lighterValue.get()) InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.FLINT_AND_STEEL), itemDelay.toLong(), randomSlot) else -1
 		val lavaInHotbar = if (lavaBucketValue.get()) InventoryUtils.findItem(inventoryContainer, 26, 45, provider.getItemEnum(ItemType.LAVA_BUCKET), itemDelay.toLong(), randomSlot) else -1
@@ -72,7 +75,7 @@ class Ignite : Module()
 			val blockPos = entity.position
 
 			RotationUtils.keepCurrentRotation = true
-			mc.netHandler.addToSendQueue(provider.createCPacketHeldItemChange(fireInHotbar - 36))
+			netHandler.addToSendQueue(provider.createCPacketHeldItemChange(fireInHotbar - 36))
 
 			val itemStack = thePlayer.inventory.getStackInSlot(fireInHotbar)
 
@@ -86,9 +89,9 @@ class Ignite : Module()
 				val yaw = WMathHelper.toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f
 				val pitch = -WMathHelper.toDegrees(StrictMath.atan2(diffY, sqrt).toFloat())
 
-				mc.netHandler.addToSendQueue(provider.createCPacketPlayerLook(thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround))
+				netHandler.addToSendQueue(provider.createCPacketPlayerLook(thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround))
 
-				mc.playerController.sendUseItem(thePlayer, theWorld, itemStack)
+				controller.sendUseItem(thePlayer, theWorld, itemStack)
 			}
 			else run {
 				EnumFacingType.values().map(provider::getEnumFacing).forEach { side ->
@@ -104,9 +107,9 @@ class Ignite : Module()
 					val yaw = WMathHelper.toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f
 					val pitch = -WMathHelper.toDegrees(StrictMath.atan2(diffY, sqrt).toFloat())
 
-					mc.netHandler.addToSendQueue(provider.createCPacketPlayerLook(thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround))
+					netHandler.addToSendQueue(provider.createCPacketPlayerLook(thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround))
 
-					if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor, side.opposite, WVec3(side.directionVec)))
+					if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor, side.opposite, WVec3(side.directionVec)))
 					{
 						thePlayer.swingItem()
 						return@run
@@ -114,9 +117,9 @@ class Ignite : Module()
 				}
 			}
 
-			mc.netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+			netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 			RotationUtils.keepCurrentRotation = false
-			mc.netHandler.addToSendQueue(provider.createCPacketPlayerLook(thePlayer.rotationYaw, thePlayer.rotationPitch, thePlayer.onGround))
+			netHandler.addToSendQueue(provider.createCPacketPlayerLook(thePlayer.rotationYaw, thePlayer.rotationPitch, thePlayer.onGround))
 			msTimer.reset()
 		}
 	}

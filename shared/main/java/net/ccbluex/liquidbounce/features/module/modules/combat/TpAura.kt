@@ -119,7 +119,9 @@ class TpAura : Module()
 
 		if (serverSideBlockingStatus)
 		{
-			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+			val provider = classProvider
+
+			mc.netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 			serverSideBlockingStatus = false
 		}
 
@@ -131,6 +133,7 @@ class TpAura : Module()
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
+		val netHandler = mc.netHandler
 
 		currentTargets = getTargets(theWorld, thePlayer)
 
@@ -141,7 +144,7 @@ class TpAura : Module()
 			if (currentTargets.isNotEmpty())
 			{
 				targetPaths.clear()
-				if (canBlock() && (thePlayer.isBlocking || !autoBlockValue.get().equals("Off", ignoreCase = true))) clientSideBlockingStatus = true
+				if (canBlock(thePlayer) && (thePlayer.isBlocking || !autoBlockValue.get().equals("Off", ignoreCase = true))) clientSideBlockingStatus = true
 
 				val from = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 				var targetIndex = 0
@@ -159,12 +162,12 @@ class TpAura : Module()
 					// Unblock before attack
 					if (thePlayer.isBlocking || autoBlockValue.get().equals("Packet", ignoreCase = true) || serverSideBlockingStatus)
 					{
-						mc.netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+						netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 						serverSideBlockingStatus = false
 					}
 
 					// Travel to the target
-					for (path in currentPath) mc.netHandler.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
+					for (path in currentPath) netHandler.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
 
 					LiquidBounce.eventManager.callEvent(AttackEvent(currentTarget))
 					CPSCounter.registerClick(CPSCounter.MouseButton.LEFT)
@@ -181,18 +184,18 @@ class TpAura : Module()
 						autoWeapon.onPacket(packetEvent)
 						if (packetEvent.isCancelled) sendAttack = false
 					}
-					if (sendAttack) mc.netHandler.addToSendQueue(attackPacket)
+					if (sendAttack) netHandler.addToSendQueue(attackPacket)
 
 					// Block after attack
-					if (canBlock() && !serverSideBlockingStatus && (thePlayer.isBlocking || autoBlockValue.get().equals("Packet", ignoreCase = true)))
+					if (canBlock(thePlayer) && !serverSideBlockingStatus && (thePlayer.isBlocking || autoBlockValue.get().equals("Packet", ignoreCase = true)))
 					{
-						mc.netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(thePlayer.inventory.getCurrentItemInHand()))
+						netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(thePlayer.inventory.getCurrentItemInHand()))
 						serverSideBlockingStatus = true
 					}
 
 					// Travel back to the original position
 					currentPath.reverse()
-					for (path in currentPath) mc.netHandler.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
+					for (path in currentPath) netHandler.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
 					targetIndex++
 				}
 
@@ -203,7 +206,7 @@ class TpAura : Module()
 			{
 				if (serverSideBlockingStatus)
 				{
-					mc.netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 					serverSideBlockingStatus = false
 				}
 
@@ -352,7 +355,7 @@ class TpAura : Module()
 
 	companion object
 	{
-		private fun canBlock(): Boolean = mc.thePlayer != null && mc.thePlayer!!.heldItem != null && classProvider.isItemSword(mc.thePlayer!!.heldItem!!.item)
+		private fun canBlock(thePlayer: IEntityPlayerSP): Boolean = thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem?.item)
 
 		private fun canPassThrough(pos: WBlockPos): Boolean
 		{

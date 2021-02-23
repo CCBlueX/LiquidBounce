@@ -68,7 +68,9 @@ class BugUp : Module()
 		val posY = thePlayer.posY
 		val posZ = thePlayer.posZ
 
-		if (thePlayer.onGround && !classProvider.isBlockAir(BlockUtils.getBlock(theWorld, WBlockPos(posX, posY - 1.0, posZ))))
+		val provider = classProvider
+
+		if (thePlayer.onGround && !provider.isBlockAir(BlockUtils.getBlock(theWorld, WBlockPos(posX, posY - 1.0, posZ))))
 		{
 			prevX = thePlayer.prevPosX
 			prevY = thePlayer.prevPosY
@@ -120,12 +122,12 @@ class BugUp : Module()
 						thePlayer.fallDistance = 0F
 					}
 
-					"ongroundspoof" -> networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
+					"ongroundspoof" -> networkManager.sendPacketWithoutEvent(provider.createCPacketPlayer(true))
 
 					"motionteleport-flag" ->
 					{
 						thePlayer.setPositionAndUpdate(posX, posY + motionTPYMotion.get(), posZ)
-						networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY, posZ, true))
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY, posZ, true))
 						thePlayer.motionY = flagYMotion.get().toDouble()
 
 						MovementUtils.strafe(thePlayer)
@@ -169,7 +171,9 @@ class BugUp : Module()
 
 		RenderUtils.glColor(Color(255, 0, 0, 90))
 
-		RenderUtils.drawFilledBox(classProvider.createAxisAlignedBB(x - renderPosX, y + 1 - renderPosY, z - renderPosZ, x - renderPosX + 1.0, y + 1.2 - renderPosY, z - renderPosZ + 1.0))
+		val provider = classProvider
+
+		RenderUtils.drawFilledBox(provider.createAxisAlignedBB(x - renderPosX, y + 1 - renderPosY, z - renderPosZ, x - renderPosX + 1.0, y + 1.2 - renderPosY, z - renderPosZ + 1.0))
 
 		GL11.glEnable(GL11.GL_TEXTURE_2D)
 		GL11.glEnable(GL11.GL_DEPTH_TEST)
@@ -180,7 +184,7 @@ class BugUp : Module()
 
 		RenderUtils.renderNameTag("${fallDistance}m (~${max(0, fallDistance - 3)} damage)", x + 0.5, y + 1.7, z + 0.5)
 
-		classProvider.glStateManager.resetColor()
+		provider.glStateManager.resetColor()
 	}
 
 	@EventTarget

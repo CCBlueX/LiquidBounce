@@ -74,7 +74,9 @@ class NoFall : Module()
 
 		val entityBoundingBox = thePlayer.entityBoundingBox
 
-		if (collideBlock(theWorld, thePlayer, entityBoundingBox, classProvider::isBlockLiquid) || collideBlock(theWorld, thePlayer, classProvider.createAxisAlignedBB(entityBoundingBox.maxX, entityBoundingBox.maxY, entityBoundingBox.maxZ, entityBoundingBox.minX, entityBoundingBox.minY - 0.01, entityBoundingBox.minZ), classProvider::isBlockLiquid))
+		val provider = classProvider
+
+		if (collideBlock(theWorld, thePlayer, entityBoundingBox, provider::isBlockLiquid) || collideBlock(theWorld, thePlayer, provider.createAxisAlignedBB(entityBoundingBox.maxX, entityBoundingBox.maxY, entityBoundingBox.maxZ, entityBoundingBox.minX, entityBoundingBox.minY - 0.01, entityBoundingBox.minZ), provider::isBlockLiquid))
 		{
 			noSpoof = 0
 			return
@@ -95,7 +97,7 @@ class NoFall : Module()
 				val nospoofticks: Int = noSpoofTicks.get()
 				if (noSpoof >= nospoofticks)
 				{
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayer(true))
 					noSpoof = 0
 				}
 				noSpoof++
@@ -104,14 +106,14 @@ class NoFall : Module()
 			"cubecraft" -> if (fallDistance > thresholdFallDistance)
 			{
 				thePlayer.onGround = false
-				networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
+				networkManager.sendPacketWithoutEvent(provider.createCPacketPlayer(true))
 			}
 
 			"aac3.1.0" ->
 			{
 				if (fallDistance > thresholdFallDistance)
 				{
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayer(true))
 					currentState = 2
 				}
 				else if (currentState == 2 && fallDistance < 2)
@@ -148,13 +150,13 @@ class NoFall : Module()
 			{
 				thePlayer.motionZ = 0.0
 				thePlayer.motionX = thePlayer.motionZ
-				networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY - 10E-4, posZ, thePlayer.onGround))
-				networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
+				networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY - 10E-4, posZ, thePlayer.onGround))
+				networkManager.sendPacketWithoutEvent(provider.createCPacketPlayer(true))
 			}
 
 			"aac3.3.15" -> if (fallDistance > thresholdFallDistance)
 			{
-				if (!mc.isIntegratedServerRunning) networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, Double.NaN, posZ, false))
+				if (!mc.isIntegratedServerRunning) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, Double.NaN, posZ, false))
 				thePlayer.fallDistance = -9999.0F
 			}
 
@@ -163,8 +165,8 @@ class NoFall : Module()
 				spartanTimer.update()
 				if (fallDistance > thresholdFallDistance && spartanTimer.hasTimePassed(10))
 				{
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY + 10, posZ, true))
-					networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(posX, posY - 10, posZ, true))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY + 10, posZ, true))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY - 10, posZ, true))
 					spartanTimer.reset()
 				}
 			}
@@ -245,6 +247,7 @@ class NoFall : Module()
 
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
+		val controller = mc.playerController
 
 		val silentRotation = silentRotationValue.get()
 
@@ -262,11 +265,11 @@ class NoFall : Module()
 			{
 				val fallingPlayer = FallingPlayer(theWorld, thePlayer, thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
 
-				val maxDist: Double = mc.playerController.blockReachDistance + 1.5
+				val maxDist: Double = controller.blockReachDistance + 1.5
 
 				val collision = fallingPlayer.findCollision(ceil(1.0 / thePlayer.motionY * -maxDist).toInt()) ?: return
 
-				var ok: Boolean = WVec3(thePlayer.posX, thePlayer.posY + thePlayer.eyeHeight, thePlayer.posZ).distanceTo(WVec3(collision.pos).addVector(0.5, 0.5, 0.5)) < mc.playerController.blockReachDistance + sqrt(0.75)
+				var ok: Boolean = WVec3(thePlayer.posX, thePlayer.posY + thePlayer.eyeHeight, thePlayer.posZ).distanceTo(WVec3(collision.pos).addVector(0.5, 0.5, 0.5)) < controller.blockReachDistance + sqrt(0.75)
 
 				if (thePlayer.motionY < collision.pos.y + 1 - thePlayer.posY) ok = true
 
@@ -300,13 +303,13 @@ class NoFall : Module()
 		{
 			val stack = thePlayer.inventory.getStackInSlot(currentMlgItemIndex + 36)
 
-			if (provider.isItemBucket(stack!!.item)) mc.playerController.sendUseItem(thePlayer, theWorld, stack)
+			if (provider.isItemBucket(stack!!.item)) controller.sendUseItem(thePlayer, theWorld, stack)
 			else
 			{
 
 				//				val dirVec: WVec3i = classProvider.getEnumFacing(EnumFacingType.UP).directionVec
 
-				if (mc.playerController.sendUseItem(thePlayer, theWorld, stack)) mlgTimer.reset()
+				if (controller.sendUseItem(thePlayer, theWorld, stack)) mlgTimer.reset()
 			}
 			if (thePlayer.inventory.currentItem != currentMlgItemIndex) thePlayer.sendQueue.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 		}

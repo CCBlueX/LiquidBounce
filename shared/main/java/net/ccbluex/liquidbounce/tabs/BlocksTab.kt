@@ -48,7 +48,12 @@ class BlocksTab : WrappedCreativeTabs("Special blocks")
 	 *
 	 * @return icon item
 	 */
-	override fun getTabIconItem(): IItem = classProvider.createItemStack(classProvider.getBlockEnum(BlockType.COMMAND_BLOCK)).item!!
+	override fun getTabIconItem(): IItem
+	{
+		val provider = classProvider
+
+		return provider.createItemStack(provider.getBlockEnum(BlockType.COMMAND_BLOCK)).item!!
+	}
 
 	/**
 	 * Return name of tab

@@ -44,16 +44,19 @@ class GuiDirectLogin(gui: GuiAltManager) : WrappedGuiScreen()
 		val quarterScreen = representedScreen.height shr 2
 
 		val buttonList = representedScreen.buttonList
-		buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 72, "Login").also { loginButton = it })
-		buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 96, "Clipboard Login").also { clipboardLoginButton = it })
-		buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
 
-		username = classProvider.createGuiTextField(2, Fonts.font40, buttonX, 60, 200, 20).apply {
+		val provider = classProvider
+
+		buttonList.add(provider.createGuiButton(1, buttonX, quarterScreen + 72, "Login").also { loginButton = it })
+		buttonList.add(provider.createGuiButton(2, buttonX, quarterScreen + 96, "Clipboard Login").also { clipboardLoginButton = it })
+		buttonList.add(provider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+
+		username = provider.createGuiTextField(2, Fonts.font40, buttonX, 60, 200, 20).apply {
 			isFocused = true
 			maxStringLength = Int.MAX_VALUE
 		}
 
-		password = classProvider.createGuiPasswordField(3, Fonts.font40, buttonX, 85, 200, 20).apply { maxStringLength = Int.MAX_VALUE }
+		password = provider.createGuiPasswordField(3, Fonts.font40, buttonX, 85, 200, 20).apply { maxStringLength = Int.MAX_VALUE }
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)

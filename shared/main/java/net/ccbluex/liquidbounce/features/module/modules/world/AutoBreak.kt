@@ -27,6 +27,8 @@ class AutoBreak : Module()
 
 	override fun onDisable()
 	{
-		if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindAttack)) mc.gameSettings.keyBindAttack.pressed = false
+		val gameSettings = mc.gameSettings
+
+		if (!gameSettings.isKeyDown(gameSettings.keyBindAttack)) gameSettings.keyBindAttack.pressed = false
 	}
 }

@@ -97,9 +97,11 @@ class ScoreboardElement(
 
 		var maxWidth = fontRenderer.getStringWidth(objective.displayName)
 
+		val func = functions
+
 		scoreCollection.map { score ->
 			val playerName = score.playerName
-			"${functions.scoreboardFormatPlayerName(scoreboard.getPlayersTeam(playerName), playerName)}: ${WEnumChatFormatting.RED}${score.scorePoints}"
+			"${func.scoreboardFormatPlayerName(scoreboard.getPlayersTeam(playerName), playerName)}: ${WEnumChatFormatting.RED}${score.scorePoints}"
 		}.forEach { maxWidth = maxWidth.coerceAtLeast(fontRenderer.getStringWidth(it)) }
 
 		val maxHeight = scoreCollectionSize * fontHeight
@@ -111,7 +113,7 @@ class ScoreboardElement(
 			val playerName = score.playerName
 			val team = scoreboard.getPlayersTeam(playerName)
 
-			val formattedPlayerName = functions.scoreboardFormatPlayerName(team, playerName)
+			val formattedPlayerName = func.scoreboardFormatPlayerName(team, playerName)
 			val scorePoints = "${WEnumChatFormatting.RED}${score.scorePoints}"
 
 			val width = 5 - if (rectValue.get()) 4 else 0

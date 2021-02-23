@@ -54,15 +54,18 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		// Add buttons to screen
 		val buttonX = (representedScreen.width shr 1) - 100
 		val quarterScreen = representedScreen.height shr 2
-		stateButton = classProvider.createGuiButton(1, buttonX, 105, "Disable Cape")
+
+		val provider = classProvider
+
+		stateButton = provider.createGuiButton(1, buttonX, 105, "Disable Cape")
 
 		val buttonList = representedScreen.buttonList
 		buttonList.add(stateButton)
-		buttonList.add(classProvider.createGuiButton(2, buttonX, quarterScreen + 96, "Donate to get Cape"))
-		buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+		buttonList.add(provider.createGuiButton(2, buttonX, quarterScreen + 96, "Donate to get Cape"))
+		buttonList.add(provider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
 
 		// Add fields to screen
-		transferCodeField = classProvider.createGuiTextField(666, Fonts.font40, buttonX, 80, 200, 20)
+		transferCodeField = provider.createGuiTextField(666, Fonts.font40, buttonX, 80, 200, 20)
 		transferCodeField.isFocused = true
 		transferCodeField.maxStringLength = Integer.MAX_VALUE
 		transferCodeField.text = transferCode
@@ -130,9 +133,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 				}
 				else WorkerUtils.workers.execute {
 					val httpClient = HttpClients.createDefault()
-					val headers = arrayOf(
-						BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"), BasicHeader(HttpHeaders.AUTHORIZATION, transferCodeField.text)
-					)
+					val headers = arrayOf(BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"), BasicHeader(HttpHeaders.AUTHORIZATION, transferCodeField.text))
 					val request = if (capeEnabled)
 					{
 						HttpDelete("http://capes.liquidbounce.net/api/v1/cape/self")

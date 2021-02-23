@@ -26,6 +26,7 @@ class FastBow : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val netHandler = mc.netHandler
 
 		if (!thePlayer.isUsingItem) return
 
@@ -35,14 +36,14 @@ class FastBow : Module()
 
 		if (currentItem != null && provider.isItemBow(currentItem.item))
 		{
-			mc.netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos.ORIGIN, 255, currentItem, 0F, 0F, 0F))
+			netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos.ORIGIN, 255, currentItem, 0F, 0F, 0F))
 
 			val yaw = RotationUtils.targetRotation?.yaw ?: thePlayer.rotationYaw
 			val pitch = RotationUtils.targetRotation?.pitch ?: thePlayer.rotationPitch
 
 			WorkerUtils.workers.execute {
-				repeat(packetsValue.get()) { mc.netHandler.addToSendQueue(provider.createCPacketPlayerLook(yaw, pitch, true)) }
-				mc.netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+				repeat(packetsValue.get()) { netHandler.addToSendQueue(provider.createCPacketPlayerLook(yaw, pitch, true)) }
+				netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 				thePlayer.itemInUseCount = currentItem.maxItemUseDuration - 1
 			}
 		}

@@ -56,11 +56,15 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		/**
 		 * Damage-reduction Enchantments
 		 */
-		private val DAMAGE_REDUCTION_ENCHANTMENTS = arrayOf(classProvider.getEnchantmentEnum(EnchantmentType.PROTECTION), // PROTECTION
-			classProvider.getEnchantmentEnum(EnchantmentType.PROJECTILE_PROTECTION), // PROJECTILE_PROTECTION
-			classProvider.getEnchantmentEnum(EnchantmentType.FIRE_PROTECTION), // FIRE_PROTECTION
-			classProvider.getEnchantmentEnum(EnchantmentType.BLAST_PROTECTION) // BLAST_PROTECTION
-		)
+		private val DAMAGE_REDUCTION_ENCHANTMENTS = run {
+			val provider = classProvider
+
+			arrayOf(provider.getEnchantmentEnum(EnchantmentType.PROTECTION), // PROTECTION
+				provider.getEnchantmentEnum(EnchantmentType.PROJECTILE_PROTECTION), // PROJECTILE_PROTECTION
+				provider.getEnchantmentEnum(EnchantmentType.FIRE_PROTECTION), // FIRE_PROTECTION
+				provider.getEnchantmentEnum(EnchantmentType.BLAST_PROTECTION) // BLAST_PROTECTION
+			)
+		}
 
 		/**
 		 * Enchantments factor
@@ -83,12 +87,16 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		/**
 		 * Other Enchantments
 		 */
-		private val OTHER_ENCHANTMENTS = arrayOf(classProvider.getEnchantmentEnum(EnchantmentType.FEATHER_FALLING), //FEATHER_FALLING
-			classProvider.getEnchantmentEnum(EnchantmentType.THORNS), // THORNS
-			classProvider.getEnchantmentEnum(EnchantmentType.RESPIRATION), // RESPIRATION
-			classProvider.getEnchantmentEnum(EnchantmentType.AQUA_AFFINITY), // AQUA_AFFINITY
-			classProvider.getEnchantmentEnum(EnchantmentType.UNBREAKING) // UNBREAKING
-		)
+		private val OTHER_ENCHANTMENTS = run {
+			val provider = classProvider
+
+			arrayOf(provider.getEnchantmentEnum(EnchantmentType.FEATHER_FALLING), //FEATHER_FALLING
+				provider.getEnchantmentEnum(EnchantmentType.THORNS), // THORNS
+				provider.getEnchantmentEnum(EnchantmentType.RESPIRATION), // RESPIRATION
+				provider.getEnchantmentEnum(EnchantmentType.AQUA_AFFINITY), // AQUA_AFFINITY
+				provider.getEnchantmentEnum(EnchantmentType.UNBREAKING) // UNBREAKING
+			)
+		}
 
 		/**
 		 * Other Enchantments factor

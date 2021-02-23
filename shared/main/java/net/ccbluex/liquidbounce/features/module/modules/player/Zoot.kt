@@ -38,10 +38,12 @@ class Zoot : Module()
 
 		val netHandler = mc.netHandler
 
+		val provider = classProvider
+
 		if (badEffectsValue.get()) thePlayer.activePotionEffects.filter(::isBadEffect).maxBy(IPotionEffect::duration)?.let { effect ->
 			WorkerUtils.workers.execute {
 				repeat(effect.duration / 20) {
-					netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
+					netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 				}
 			}
 		}
@@ -51,7 +53,7 @@ class Zoot : Module()
 		{
 			WorkerUtils.workers.execute {
 				repeat(9) {
-					netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
+					netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 				}
 			}
 		}
@@ -60,17 +62,19 @@ class Zoot : Module()
 	// TODO: Check current potion
 	private fun isBadEffect(effect: IPotionEffect): Boolean
 	{
+		val provider = classProvider
+
 		return sequenceOf(
 
-			classProvider.getPotionEnum(PotionType.HUNGER), //
-			classProvider.getPotionEnum(PotionType.MOVE_SLOWDOWN), //
-			classProvider.getPotionEnum(PotionType.DIG_SLOWDOWN), //
-			classProvider.getPotionEnum(PotionType.HARM), //
-			classProvider.getPotionEnum(PotionType.CONFUSION), //
-			classProvider.getPotionEnum(PotionType.BLINDNESS),  //
-			classProvider.getPotionEnum(PotionType.WEAKNESS), //
-			classProvider.getPotionEnum(PotionType.WITHER), //
-			classProvider.getPotionEnum(PotionType.POISON) //
+			provider.getPotionEnum(PotionType.HUNGER), //
+			provider.getPotionEnum(PotionType.MOVE_SLOWDOWN), //
+			provider.getPotionEnum(PotionType.DIG_SLOWDOWN), //
+			provider.getPotionEnum(PotionType.HARM), //
+			provider.getPotionEnum(PotionType.CONFUSION), //
+			provider.getPotionEnum(PotionType.BLINDNESS),  //
+			provider.getPotionEnum(PotionType.WEAKNESS), //
+			provider.getPotionEnum(PotionType.WITHER), //
+			provider.getPotionEnum(PotionType.POISON) //
 		).any { effect.potionID == it.id }
 	}
 }

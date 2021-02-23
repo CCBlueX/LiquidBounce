@@ -16,9 +16,10 @@ class UsernameCommand : Command("username", "ign")
 	 */
 	override fun execute(args: Array<String>)
 	{
-		val username = mc.thePlayer!!.name
+		val thePlayer = mc.thePlayer ?: return
+		val username = thePlayer.name
 
-		chat(mc.thePlayer, "Username: $username")
+		chat(thePlayer, "Username: $username")
 
 		val stringSelection = StringSelection(username)
 		Toolkit.getDefaultToolkit().systemClipboard.setContents(stringSelection, stringSelection)

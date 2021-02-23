@@ -33,13 +33,15 @@ class Timer : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val timer = mc.timer
+
 		if (MovementUtils.isMoving(thePlayer) || !onMoveValue.get())
 		{
-			mc.timer.timerSpeed = speedValue.get()
+			timer.timerSpeed = speedValue.get()
 			return
 		}
 
-		mc.timer.timerSpeed = 1F
+		timer.timerSpeed = 1F
 	}
 
 	@EventTarget

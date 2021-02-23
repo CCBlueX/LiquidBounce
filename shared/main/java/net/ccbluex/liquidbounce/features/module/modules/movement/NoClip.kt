@@ -25,6 +25,7 @@ class NoClip : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val gameSettings = mc.gameSettings
 
 		thePlayer.noClip = true
 		thePlayer.fallDistance = 0f
@@ -40,8 +41,8 @@ class NoClip : Module()
 
 		thePlayer.jumpMovementFactor = speed
 
-		if (mc.gameSettings.keyBindJump.isKeyDown) thePlayer.motionY += speed.toDouble()
+		if (gameSettings.keyBindJump.isKeyDown) thePlayer.motionY += speed.toDouble()
 
-		if (mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY -= speed.toDouble()
+		if (gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY -= speed.toDouble()
 	}
 }

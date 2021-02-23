@@ -32,15 +32,17 @@ class GuiMainMenu : WrappedGuiScreen()
 		buttonList.add(provider.createGuiButton(101, buttonX1, defaultHeight + 48, 98, 20, "Server Status"))
 		buttonList.add(provider.createGuiButton(102, buttonX2, defaultHeight + 48, 98, 20, "Background"))
 
-		buttonList.add(provider.createGuiButton(1, buttonX1, defaultHeight, 98, 20, functions.formatI18n("menu.singleplayer")))
-		buttonList.add(provider.createGuiButton(2, buttonX2, defaultHeight, 98, 20, functions.formatI18n("menu.multiplayer")))
+		val func = functions
+
+		buttonList.add(provider.createGuiButton(1, buttonX1, defaultHeight, 98, 20, func.formatI18n("menu.singleplayer")))
+		buttonList.add(provider.createGuiButton(2, buttonX2, defaultHeight, 98, 20, func.formatI18n("menu.multiplayer")))
 
 		// Minecraft Realms
 		//		this.buttonList.add(new classProvider.createGuiButton(14, (this.width shr 1) - 100, j + (24 shl 1), I18n.format("menu.online", new Object[0])));
 
 		buttonList.add(provider.createGuiButton(108, buttonX1, defaultHeight + 72, "Contributors"))
-		buttonList.add(provider.createGuiButton(0, buttonX1, defaultHeight + 96, 98, 20, functions.formatI18n("menu.options")))
-		buttonList.add(provider.createGuiButton(4, buttonX2, defaultHeight + 96, 98, 20, functions.formatI18n("menu.quit")))
+		buttonList.add(provider.createGuiButton(0, buttonX1, defaultHeight + 96, 98, 20, func.formatI18n("menu.options")))
+		buttonList.add(provider.createGuiButton(4, buttonX2, defaultHeight + 96, 98, 20, func.formatI18n("menu.quit")))
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)

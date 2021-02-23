@@ -20,15 +20,17 @@ class PlaceInfo(val blockPos: WBlockPos, val enumFacing: IEnumFacing, var vec3: 
 		 * Allows you to find a specific place info for your [blockPos]
 		 */
 		@JvmStatic
-		fun get(theWorld: IWorldClient, blockPos: WBlockPos): PlaceInfo?
+		operator fun get(theWorld: IWorldClient, blockPos: WBlockPos): PlaceInfo?
 		{
+			val provider = classProvider
+
 			return when
 			{
-				BlockUtils.canBeClicked(theWorld, blockPos.add(0, -1, 0)) -> PlaceInfo(blockPos.add(0, -1, 0), classProvider.getEnumFacing(EnumFacingType.UP))
-				BlockUtils.canBeClicked(theWorld, blockPos.add(0, 0, 1)) -> PlaceInfo(blockPos.add(0, 0, 1), classProvider.getEnumFacing(EnumFacingType.NORTH))
-				BlockUtils.canBeClicked(theWorld, blockPos.add(-1, 0, 0)) -> PlaceInfo(blockPos.add(-1, 0, 0), classProvider.getEnumFacing(EnumFacingType.EAST))
-				BlockUtils.canBeClicked(theWorld, blockPos.add(0, 0, -1)) -> PlaceInfo(blockPos.add(0, 0, -1), classProvider.getEnumFacing(EnumFacingType.SOUTH))
-				BlockUtils.canBeClicked(theWorld, blockPos.add(1, 0, 0)) -> PlaceInfo(blockPos.add(1, 0, 0), classProvider.getEnumFacing(EnumFacingType.WEST))
+				BlockUtils.canBeClicked(theWorld, blockPos.add(0, -1, 0)) -> PlaceInfo(blockPos.add(0, -1, 0), provider.getEnumFacing(EnumFacingType.UP))
+				BlockUtils.canBeClicked(theWorld, blockPos.add(0, 0, 1)) -> PlaceInfo(blockPos.add(0, 0, 1), provider.getEnumFacing(EnumFacingType.NORTH))
+				BlockUtils.canBeClicked(theWorld, blockPos.add(-1, 0, 0)) -> PlaceInfo(blockPos.add(-1, 0, 0), provider.getEnumFacing(EnumFacingType.EAST))
+				BlockUtils.canBeClicked(theWorld, blockPos.add(0, 0, -1)) -> PlaceInfo(blockPos.add(0, 0, -1), provider.getEnumFacing(EnumFacingType.SOUTH))
+				BlockUtils.canBeClicked(theWorld, blockPos.add(1, 0, 0)) -> PlaceInfo(blockPos.add(1, 0, 0), provider.getEnumFacing(EnumFacingType.WEST))
 				else -> null
 			}
 		}

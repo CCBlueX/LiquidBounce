@@ -56,9 +56,12 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 		}
 
 		val blockPos = WBlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY - 1, thePlayer.posZ)
-		val vec = WVec3(blockPos).addVector(0.4, 0.4, 0.4).add(WVec3(classProvider.getEnumFacing(EnumFacingType.UP).directionVec))
 
-		mc.playerController.onPlayerRightClick(thePlayer, theWorld, null, blockPos, classProvider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
+		val provider = classProvider
+
+		val vec = WVec3(blockPos).addVector(0.4, 0.4, 0.4).add(WVec3(provider.getEnumFacing(EnumFacingType.UP).directionVec))
+
+		mc.playerController.onPlayerRightClick(thePlayer, theWorld, null, blockPos, provider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
 
 		val targetSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).mineplexGroundSpeedValue.get()
 
@@ -67,7 +70,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 
 		MovementUtils.strafe(thePlayer, moveSpeed)
 
-		if (!spoofSlot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+		if (!spoofSlot) mc.netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 	}
 
 	override fun onMove(event: MoveEvent)

@@ -118,6 +118,8 @@ class Effects(
 
 		assumeNonVolatile = true
 
+		val provider = classProvider
+
 		effects.forEachIndexed { index, effect ->
 			val potionID = effect.potionID
 			val potion = functions.getPotionById(potionID)
@@ -211,7 +213,7 @@ class Effects(
 						RenderUtils.drawRect(0F, yPos, xPos + width + xPosCorrection, yPos + textHeight, backgroundColor)
 					}
 
-					classProvider.glStateManager.resetColor()
+					provider.glStateManager.resetColor()
 
 					// Draw String
 					RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
@@ -236,7 +238,7 @@ class Effects(
 		}
 
 		// Draw border
-		if (classProvider.isGuiHudDesigner(mc.currentScreen))
+		if (provider.isGuiHudDesigner(mc.currentScreen))
 		{
 			x2 = Int.MIN_VALUE
 
@@ -285,7 +287,9 @@ class Effects(
 
 	private fun formatEffect(effect: IPotionEffect): String
 	{
-		val potion = functions.getPotionById(effect.potionID)
+		val func = functions
+
+		val potion = func.getPotionById(effect.potionID)
 
 		val amplifierString = when
 		{
@@ -302,7 +306,7 @@ class Effects(
 			else -> "I"
 		}
 
-		return "${functions.formatI18n(potion.name)} $amplifierString"
+		return "${func.formatI18n(potion.name)} $amplifierString"
 	}
 
 	private fun formatRemainingTime(effect: IPotionEffect): String

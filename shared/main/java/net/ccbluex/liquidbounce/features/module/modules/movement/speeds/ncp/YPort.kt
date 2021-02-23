@@ -33,7 +33,9 @@ class YPort : SpeedMode("YPort")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!safeJump && !thePlayer.movementInput.jump && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava && (!classProvider.isBlockAir(this.getBlock(thePlayer, -1.1)) && !classProvider.isBlockAir(this.getBlock(thePlayer, -1.1)) || !classProvider.isBlockAir(this.getBlock(thePlayer, -0.1)) && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && step == 3) thePlayer.motionY = -0.3994
+		val provider = classProvider
+
+		if (!safeJump && !thePlayer.movementInput.jump && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava && (!provider.isBlockAir(this.getBlock(thePlayer, -1.1)) && !provider.isBlockAir(this.getBlock(thePlayer, -1.1)) || !provider.isBlockAir(this.getBlock(thePlayer, -0.1)) && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && step == 3) thePlayer.motionY = -0.3994
 
 		lastSpeed = hypot(thePlayer.posX - thePlayer.prevPosX, thePlayer.posZ - thePlayer.prevPosZ)
 
@@ -116,9 +118,11 @@ class YPort : SpeedMode("YPort")
 
 		if (move)
 		{
+			val func = functions
+
 			val dir = MovementUtils.getDirection(thePlayer)
-			event.x = -functions.sin(dir) * moveSpeed
-			event.z = functions.cos(dir) * moveSpeed
+			event.x = -func.sin(dir) * moveSpeed
+			event.z = func.cos(dir) * moveSpeed
 
 			thePlayer.stepHeight = 0.5f
 		}

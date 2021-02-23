@@ -232,6 +232,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		Fonts.font35.drawString("H:", x + 2, y + height, Color.WHITE.rgb)
 		Fonts.font35.drawString(element.side.horizontal.sideName, x + 12, y + height, Color.GRAY.rgb)
 
+		val provider = classProvider
+
 		if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10)
 		{
 			val values = Side.Horizontal.values()
@@ -243,8 +245,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 			element.x = when (element.side.horizontal)
 			{
 				Side.Horizontal.LEFT -> x
-				Side.Horizontal.MIDDLE -> (classProvider.createScaledResolution(mc).scaledWidth shr 1) - x
-				Side.Horizontal.RIGHT -> classProvider.createScaledResolution(mc).scaledWidth - x
+				Side.Horizontal.MIDDLE -> (provider.createScaledResolution(mc).scaledWidth shr 1) - x
+				Side.Horizontal.RIGHT -> provider.createScaledResolution(mc).scaledWidth - x
 			}
 		}
 
@@ -266,8 +268,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 			element.y = when (element.side.vertical)
 			{
 				Side.Vertical.UP -> y
-				Side.Vertical.MIDDLE -> (classProvider.createScaledResolution(mc).scaledHeight shr 1) - y
-				Side.Vertical.DOWN -> classProvider.createScaledResolution(mc).scaledHeight - y
+				Side.Vertical.MIDDLE -> (provider.createScaledResolution(mc).scaledHeight shr 1) - y
+				Side.Vertical.DOWN -> provider.createScaledResolution(mc).scaledHeight - y
 			}
 
 		}

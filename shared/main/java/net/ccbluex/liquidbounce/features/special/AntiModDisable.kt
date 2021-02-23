@@ -28,7 +28,10 @@ class AntiModDisable : MinecraftInstance(), Listenable
 		if (enabled && !mc.isIntegratedServerRunning) try
 		{
 			if (blockFMLProxyPackets && "net.minecraftforge.fml.common.network.internal.FMLProxyPacket" == packet.javaClass.name) action(event, "FMLProxyPacket")
-			if (classProvider.isCPacketCustomPayload(packet))
+
+			val provider = classProvider
+
+			if (provider.isCPacketCustomPayload(packet))
 			{
 				val customPayload = packet.asCPacketCustomPayload()
 				val channelName = customPayload.channelName
@@ -36,7 +39,7 @@ class AntiModDisable : MinecraftInstance(), Listenable
 				// Block ClientBrandRetriever packets
 				if (blockClientBrandRetrieverPackets && "MC|Brand".equals(customPayload.channelName, ignoreCase = true))
 				{
-					customPayload.data = classProvider.createPacketBuffer(Unpooled.buffer()).writeString("vanilla")
+					customPayload.data = provider.createPacketBuffer(Unpooled.buffer()).writeString("vanilla")
 					action(event, "ClientBrandRetriever", cancelEvent = false)
 				}
 
@@ -55,7 +58,7 @@ class AntiModDisable : MinecraftInstance(), Listenable
 					blockPermissionsReplPayloads && channelName.equals("PERMISSIONSREPL", ignoreCase = true) -> action(event, "(?) ($channelName)")
 				}
 			}
-			else if (classProvider.isSPacketChat(packet))
+			else if (provider.isSPacketChat(packet))
 			{
 				val chat = packet.asSPacketChat()
 				val text = chat.chatComponent.unformattedText
@@ -71,7 +74,7 @@ class AntiModDisable : MinecraftInstance(), Listenable
 					text.startsWith("\u00A70\u00A70", ignoreCase = true) && text.endsWith("\u00A7e\u00A7f", ignoreCase = true) -> action(event, "CrackedVape Type G(type: startsWith \"&0&0\" and endsWith \"&E&F\", text: \"$text\")")
 				}
 			}
-			else if (classProvider.isSPacketCustomPayload(packet))
+			else if (provider.isSPacketCustomPayload(packet))
 			{
 				val customPayload = packet.asSPacketCustomPayload()
 				val channelName = customPayload.channelName

@@ -149,10 +149,11 @@ class SNCPBHop : SpeedMode("SNCPBHop")
 
 		if (move)
 		{
-			val dir = MovementUtils.getDirection(thePlayer)
+			val func = functions
 
-			event.x = -functions.sin(dir) * moveSpeed
-			event.z = functions.cos(dir) * moveSpeed
+			val dir = MovementUtils.getDirection(thePlayer)
+			event.x = -func.sin(dir) * moveSpeed
+			event.z = func.cos(dir) * moveSpeed
 
 			thePlayer.stepHeight = 0.5f
 		}

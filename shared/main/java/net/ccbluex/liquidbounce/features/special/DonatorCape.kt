@@ -27,16 +27,15 @@ class DonatorCape : Listenable, MinecraftInstance()
 	@EventTarget
 	fun onSession(@Suppress("UNUSED_PARAMETER") event: SessionEvent)
 	{
-		if (!GuiDonatorCape.capeEnabled || GuiDonatorCape.transferCode.isEmpty() || !UserUtils.isValidTokenOffline(mc.session.token)) return
+		val session = mc.session
+		if (!GuiDonatorCape.capeEnabled || GuiDonatorCape.transferCode.isEmpty() || !UserUtils.isValidTokenOffline(session.token)) return
 
 		WorkerUtils.workers.execute {
-			val uuid = mc.session.playerId
-			val username = mc.session.username
+			val uuid = session.playerId
+			val username = session.username
 
 			val httpClient = HttpClients.createDefault()
-			val headers = arrayOf(
-				BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"), BasicHeader(HttpHeaders.AUTHORIZATION, GuiDonatorCape.transferCode)
-			)
+			val headers = arrayOf(BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"), BasicHeader(HttpHeaders.AUTHORIZATION, GuiDonatorCape.transferCode))
 			val request = HttpPatch("http://capes.liquidbounce.net/api/v1/cape/self")
 			request.setHeaders(headers)
 
@@ -47,10 +46,8 @@ class DonatorCape : Listenable, MinecraftInstance()
 			val response = httpClient.execute(request)
 			val statusCode = response.statusLine.statusCode
 
-			ClientUtils.logger.info(
-				if (statusCode == HttpStatus.SC_NO_CONTENT) "[Donator Cape] Successfully transferred cape to $uuid ($username)"
-				else "[Donator Cape] Failed to transfer cape ($statusCode)"
-			)
+			ClientUtils.logger.info(if (statusCode == HttpStatus.SC_NO_CONTENT) "[Donator Cape] Successfully transferred cape to $uuid ($username)"
+			else "[Donator Cape] Failed to transfer cape ($statusCode)")
 		}
 	}
 

@@ -101,14 +101,17 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 		val buttonY = height - 54
 
 		val buttonList = representedScreen.buttonList
-		buttonList.add(classProvider.createGuiButton(1, buttonX, buttonY - 48, "Analyze").also { decodeButton = it })
-		buttonList.add(classProvider.createGuiButton(2, buttonX, buttonY - 24, "Clipboard").also { clipboardButton = it })
-		buttonList.add(classProvider.createGuiButton(3, buttonX, buttonY - 72, "Login").also { loginButton = it })
-		buttonList.add(classProvider.createGuiButton(0, buttonX, buttonY, "Back"))
+
+		val provider = classProvider
+
+		buttonList.add(provider.createGuiButton(1, buttonX, buttonY - 48, "Analyze").also { decodeButton = it })
+		buttonList.add(provider.createGuiButton(2, buttonX, buttonY - 24, "Clipboard").also { clipboardButton = it })
+		buttonList.add(provider.createGuiButton(3, buttonX, buttonY - 72, "Login").also { loginButton = it })
+		buttonList.add(provider.createGuiButton(0, buttonX, buttonY, "Back"))
 
 		val token = if (defaultSessionId != null && defaultSessionId.isNotEmpty()) defaultSessionId else mc.session.token
 
-		sessionIdField = classProvider.createGuiTextField(2, Fonts.font40, middleScreen - 300, 60, 600, 20).apply {
+		sessionIdField = provider.createGuiTextField(2, Fonts.font40, middleScreen - 300, 60, 600, 20).apply {
 			isFocused = true
 			maxStringLength = Int.MAX_VALUE
 			text = token

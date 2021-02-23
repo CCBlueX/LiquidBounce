@@ -105,6 +105,9 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 		val renderX = renderViewEntity.posX
 		val renderZ = renderViewEntity.posZ
+
+		val provider = classProvider
+
 		if (minimap)
 		{
 			glEnable(GL_TEXTURE_2D)
@@ -115,7 +118,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 			val currX = renderX * 0.0625
 			val currZ = renderZ * 0.0625
 
-			val glStateManager = classProvider.glStateManager
+			val glStateManager = provider.glStateManager
 			for (x in -chunksToRender..chunksToRender)
 			{
 				for (z in -chunksToRender..chunksToRender)
@@ -155,7 +158,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		val triangleMode = playerShapeValue.get().equals("triangle", true)
 		val circleMode = playerShapeValue.get().equals("circle", true)
 
-		val tessellator = classProvider.tessellatorInstance
+		val tessellator = provider.tessellatorInstance
 		val worldRenderer = tessellator.worldRenderer
 
 		if (circleMode)
@@ -173,7 +176,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		}
 		else
 		{
-			worldRenderer.begin(GL_POINTS, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
+			worldRenderer.begin(GL_POINTS, provider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
 			glPointSize(playerSize)
 		}
 
@@ -302,10 +305,13 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 	}
 
 	private fun createFovIndicator(angle: Float): IVertexBuffer
-	{ // Rendering
-		val worldRenderer = classProvider.tessellatorInstance.worldRenderer
+	{
+		val provider = classProvider
 
-		worldRenderer.begin(GL_TRIANGLE_FAN, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
+		// Rendering
+		val worldRenderer = provider.tessellatorInstance.worldRenderer
+
+		worldRenderer.begin(GL_TRIANGLE_FAN, provider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
 
 		val start = WMathHelper.toRadians(90.0f - angle * 0.5f)
 		val end = WMathHelper.toRadians(90.0f + angle * 0.5f)
@@ -315,16 +321,18 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 		worldRenderer.pos(0.0, 0.0, 0.0).endVertex()
 
+		val func = functions
+
 		while (curr >= start)
 		{
-			worldRenderer.pos(functions.cos(curr) * radius, functions.sin(curr) * radius, 0.0).endVertex()
+			worldRenderer.pos(func.cos(curr) * radius, func.sin(curr) * radius, 0.0).endVertex()
 
 			curr -= 0.15f
 		}
 
 		// Uploading to VBO
 
-		val safeVertexBuffer = classProvider.createSafeVertexBuffer(worldRenderer.vertexFormat)
+		val safeVertexBuffer = provider.createSafeVertexBuffer(worldRenderer.vertexFormat)
 
 		worldRenderer.finishDrawing()
 		worldRenderer.reset()

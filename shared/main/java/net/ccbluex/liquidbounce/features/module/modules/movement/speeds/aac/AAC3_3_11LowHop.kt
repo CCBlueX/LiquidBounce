@@ -18,8 +18,9 @@ class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 	override fun onUpdate()
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val timer = mc.timer
 
-		mc.timer.timerSpeed = 1f
+		timer.timerSpeed = 1f
 
 		if (thePlayer.isInWater) return
 		if (MovementUtils.isMoving(thePlayer))
@@ -47,7 +48,7 @@ class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.41f))
 			}
 
-			if (thePlayer.motionY < 0 && thePlayer.motionY > -0.2) mc.timer.timerSpeed = (1.2f + thePlayer.motionY).toFloat()
+			if (thePlayer.motionY < 0 && thePlayer.motionY > -0.2) timer.timerSpeed = (1.2f + thePlayer.motionY).toFloat()
 
 			thePlayer.speedInAir = 0.022151f
 		}

@@ -35,9 +35,12 @@ class GuiBannedServers(private val prevGui: IGuiScreen, private val account: Min
 		serversList.represented.registerScrollButtons(7, 8)
 
 		val buttonList = screen.buttonList
-		buttonList.add(classProvider.createGuiButton(1, width - 80, 46, 70, 20, "Add"))
-		buttonList.add(classProvider.createGuiButton(2, width - 80, 70, 70, 20, "Remove"))
-		buttonList.add(classProvider.createGuiButton(0, width - 80, height - 65, 70, 20, "Back"))
+
+		val provider = classProvider
+
+		buttonList.add(provider.createGuiButton(1, width - 80, 46, 70, 20, "Add"))
+		buttonList.add(provider.createGuiButton(2, width - 80, 70, 70, 20, "Remove"))
+		buttonList.add(provider.createGuiButton(0, width - 80, height - 65, 70, 20, "Back"))
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
@@ -182,10 +185,13 @@ class GuiBannedServers(private val prevGui: IGuiScreen, private val account: Min
 			val quarterScreen = height shr 2
 
 			val buttonList = screen.buttonList
-			buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 96, "Add " + (if (account.accountName == null) account.name else account.accountName) + "'s banned server"))
-			buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
 
-			name = classProvider.createGuiTextField(2, Fonts.font40, buttonX, 60, 200, 20).apply {
+			val provider = classProvider
+
+			buttonList.add(provider.createGuiButton(1, buttonX, quarterScreen + 96, "Add " + (if (account.accountName == null) account.name else account.accountName) + "'s banned server"))
+			buttonList.add(provider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+
+			name = provider.createGuiTextField(2, Fonts.font40, buttonX, 60, 200, 20).apply {
 				isFocused = true
 				text = ""
 				maxStringLength = 128

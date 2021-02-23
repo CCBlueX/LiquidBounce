@@ -34,7 +34,7 @@ class LoginCommand : Command("login")
 		{
 			if (mc.isIntegratedServerRunning) return
 
-			mc.theWorld!!.sendQuittingDisconnectingPacket()
+			mc.theWorld?.sendQuittingDisconnectingPacket()
 			ServerUtils.connectToLastServer()
 		}
 	}

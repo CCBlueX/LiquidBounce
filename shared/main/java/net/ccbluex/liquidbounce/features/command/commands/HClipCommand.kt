@@ -15,13 +15,13 @@ class HClipCommand : Command("hclip")
 	 */
 	override fun execute(args: Array<String>)
 	{
-		val thePlayer = mc.thePlayer
+		val thePlayer = mc.thePlayer ?: return
 
 		if (args.size > 1)
 		{
 			try
 			{
-				MovementUtils.forward(mc.thePlayer ?: return, args[1].toDouble())
+				MovementUtils.forward(thePlayer, args[1].toDouble())
 				chat(thePlayer, "You were teleported.")
 			}
 			catch (exception: NumberFormatException)

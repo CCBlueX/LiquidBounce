@@ -38,7 +38,9 @@ class CivBreak : Module()
 	{
 		val theWorld = mc.theWorld ?: return
 
-		if (classProvider.isBlockBedrock(event.clickedBlock?.let { BlockUtils.getBlock(theWorld, it) })) return
+		val provider = classProvider
+
+		if (provider.isBlockBedrock(event.clickedBlock?.let { BlockUtils.getBlock(theWorld, it) })) return
 
 		val netHandler = mc.netHandler
 
@@ -46,8 +48,8 @@ class CivBreak : Module()
 		enumFacing = event.WEnumFacing ?: return
 
 		// Break
-		netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, blockPos!!, enumFacing!!))
-		netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos!!, enumFacing!!))
+		netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, blockPos!!, enumFacing!!))
+		netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos!!, enumFacing!!))
 	}
 
 	@EventTarget

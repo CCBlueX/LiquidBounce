@@ -85,10 +85,12 @@ class AutoArmor : Module()
 
 		if (!InventoryUtils.CLICK_TIMER.hasTimePassed(nextDelay) || thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0) return
 
+		val provider = classProvider
+
 		// Find best armor
 		val armorPieces = (0 until 36).filter { i: Int ->
 			val itemStack = thePlayer.inventory.getStackInSlot(i)
-			itemStack != null && classProvider.isItemArmor(itemStack.item) && (i < 9 || System.currentTimeMillis() - itemStack.itemDelay >= itemDelayValue.get())
+			itemStack != null && provider.isItemArmor(itemStack.item) && (i < 9 || System.currentTimeMillis() - itemStack.itemDelay >= itemDelayValue.get())
 		}.map { ArmorPiece(thePlayer.inventory.getStackInSlot(it), it) }.groupBy(ArmorPiece::armorType)
 
 		val bestArmor = arrayOfNulls<ArmorPiece>(4)
@@ -100,7 +102,7 @@ class AutoArmor : Module()
 				val armorSlot = 3 - i
 				val oldArmor = ArmorPiece(thePlayer.inventory.armorItemInSlot(armorSlot), -1)
 
-				((ItemUtils.isStackEmpty(oldArmor.itemStack) || !classProvider.isItemArmor(oldArmor.itemStack?.item) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) && ((!ItemUtils.isStackEmpty(oldArmor.itemStack) && move(thePlayer, netHandler, 8 - armorSlot, true)) || ItemUtils.isStackEmpty(thePlayer.inventory.armorItemInSlot(armorSlot)) && move(thePlayer, netHandler, armorPiece.slot, false)))
+				((ItemUtils.isStackEmpty(oldArmor.itemStack) || !provider.isItemArmor(oldArmor.itemStack?.item) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) && ((!ItemUtils.isStackEmpty(oldArmor.itemStack) && move(thePlayer, netHandler, 8 - armorSlot, true)) || ItemUtils.isStackEmpty(thePlayer.inventory.armorItemInSlot(armorSlot)) && move(thePlayer, netHandler, armorPiece.slot, false)))
 			})
 		{
 			locked = true
@@ -123,9 +125,12 @@ class AutoArmor : Module()
 	 */
 	private fun move(thePlayer: IEntityPlayerSP, netHandler: IINetHandlerPlayClient, item: Int, isArmorSlot: Boolean): Boolean
 	{
+		val screen = mc.currentScreen
+		val controller = mc.playerController
+
 		val provider = classProvider
 
-		if (!isArmorSlot && item < 9 && hotbarValue.get() && !provider.isGuiInventory(mc.currentScreen))
+		if (!isArmorSlot && item < 9 && hotbarValue.get() && !provider.isGuiInventory(screen))
 		{
 			netHandler.addToSendQueue(provider.createCPacketHeldItemChange(item))
 			netHandler.addToSendQueue(createUseItemPacket(thePlayer.inventoryContainer.getSlot(item).stack, WEnumHand.MAIN_HAND))
@@ -136,9 +141,9 @@ class AutoArmor : Module()
 			return true
 		}
 
-		if (!(noMoveValue.get() && isMoving(thePlayer)) && (!invOpenValue.get() || provider.isGuiInventory(mc.currentScreen)) && item != -1)
+		if (!(noMoveValue.get() && isMoving(thePlayer)) && (!invOpenValue.get() || provider.isGuiInventory(screen)) && item != -1)
 		{
-			val openInventory = simulateInventory.get() && !provider.isGuiInventory(mc.currentScreen)
+			val openInventory = simulateInventory.get() && !provider.isGuiInventory(screen)
 
 			if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
 
@@ -146,7 +151,7 @@ class AutoArmor : Module()
 
 			if (full) full = thePlayer.inventory.mainInventory.none(ItemUtils::isStackEmpty)
 
-			if (full) mc.playerController.windowClick(thePlayer.inventoryContainer.windowId, item, 1, 4, thePlayer) else mc.playerController.windowClick(thePlayer.inventoryContainer.windowId, if (isArmorSlot) item else if (item < 9) item + 36 else item, 0, 1, thePlayer)
+			if (full) controller.windowClick(thePlayer.inventoryContainer.windowId, item, 1, 4, thePlayer) else controller.windowClick(thePlayer.inventoryContainer.windowId, if (isArmorSlot) item else if (item < 9) item + 36 else item, 0, 1, thePlayer)
 
 			nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 

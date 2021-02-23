@@ -87,8 +87,10 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 		GL11.glScalef(scale, scale, scale)
 		GL11.glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
 
+		val provider = classProvider
+
 		if (loadingScreen) GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
-		else classProvider.glStateManager.bindTexture(textureID)
+		else provider.glStateManager.bindTexture(textureID)
 
 		val red: Float = (color shr 16 and 0xff) / 255F
 		val green: Float = (color shr 8 and 0xff) / 255F
@@ -129,15 +131,17 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 			{
 				GL11.glEnd()
 
+				val mcfont = mc.fontRendererObj
+
 				// Ugly solution, because floating point numbers, but I think that shouldn't be that much of a problem
 				GL11.glScalef(reverse, reverse, reverse)
-				mc.fontRendererObj.drawString("$char", currX * scale + 1, 2f, color, false)
-				currX += mc.fontRendererObj.getStringWidth("$char") * reverse
+				mcfont.drawString("$char", currX * scale + 1, 2f, color, false)
+				currX += mcfont.getStringWidth("$char") * reverse
 
 				GL11.glScalef(scale, scale, scale)
 
 				if (loadingScreen) GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
-				else classProvider.glStateManager.bindTexture(textureID)
+				else provider.glStateManager.bindTexture(textureID)
 
 				GL11.glColor4f(red, green, blue, alpha)
 

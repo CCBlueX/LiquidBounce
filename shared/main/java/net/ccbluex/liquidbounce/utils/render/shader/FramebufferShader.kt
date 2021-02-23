@@ -26,9 +26,11 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
 
 	fun startDraw(partialTicks: Float)
 	{
-		classProvider.glStateManager.enableAlpha()
-		classProvider.glStateManager.pushMatrix()
-		classProvider.glStateManager.pushAttrib()
+		val glStateManager = classProvider.glStateManager
+
+		glStateManager.enableAlpha()
+		glStateManager.pushMatrix()
+		glStateManager.pushAttrib()
 
 		framebuffer = setupFrameBuffer(framebuffer).apply {
 			framebufferClear()
@@ -58,20 +60,25 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
 		this.radius = radius
 		this.quality = quality
 
-		mc.entityRenderer.disableLightmap()
+		val entityRenderer = mc.entityRenderer
+
+		entityRenderer.disableLightmap()
 		functions.disableStandardItemLighting()
 
 		startShader()
 
-		mc.entityRenderer.setupOverlayRendering()
+		entityRenderer.setupOverlayRendering()
 
 		drawFramebuffer(framebuffer)
 
 		stopShader()
 
-		mc.entityRenderer.disableLightmap()
-		classProvider.glStateManager.popMatrix()
-		classProvider.glStateManager.popAttrib()
+		entityRenderer.disableLightmap()
+
+		val glStateManager = classProvider.glStateManager
+
+		glStateManager.popMatrix()
+		glStateManager.popAttrib()
 	}
 
 	companion object

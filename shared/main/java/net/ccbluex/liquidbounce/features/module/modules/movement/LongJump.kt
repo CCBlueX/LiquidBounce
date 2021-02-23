@@ -155,10 +155,12 @@ class LongJump : Module()
 					{
 						if (thePlayer.fallDistance > 0.5f && canBoost && !boosted)
 						{
+							val func = functions
+
 							val teleportDistance = 3.0
 							val dir = getDirection(thePlayer)
-							val x = (-functions.sin(dir) * teleportDistance)
-							val z = (functions.cos(dir) * teleportDistance)
+							val x = (-func.sin(dir) * teleportDistance)
+							val z = (func.cos(dir) * teleportDistance)
 
 							thePlayer.setPosition(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z)
 							boosted = true
@@ -237,8 +239,10 @@ class LongJump : Module()
 					val dir = getDirection(thePlayer)
 					val teleportDistance = teleportDistanceValue.get()
 
-					event.x = (-functions.sin(dir) * teleportDistance).toDouble()
-					event.z = (functions.cos(dir) * teleportDistance).toDouble()
+					val func = functions
+
+					event.x = (-func.sin(dir) * teleportDistance).toDouble()
+					event.z = (func.cos(dir) * teleportDistance).toDouble()
 
 					canBoost = false
 					boosted = true

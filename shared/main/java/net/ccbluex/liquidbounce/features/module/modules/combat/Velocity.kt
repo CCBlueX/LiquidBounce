@@ -72,8 +72,10 @@ class Velocity : Module()
 
 				val yaw = WMathHelper.toRadians(thePlayer.rotationYaw)
 
-				thePlayer.motionX -= functions.sin(yaw) * 0.2
-				thePlayer.motionZ += functions.cos(yaw) * 0.2
+				val func = functions
+
+				thePlayer.motionX -= func.sin(yaw) * 0.2
+				thePlayer.motionZ += func.cos(yaw) * 0.2
 			}
 
 			"glitch" ->

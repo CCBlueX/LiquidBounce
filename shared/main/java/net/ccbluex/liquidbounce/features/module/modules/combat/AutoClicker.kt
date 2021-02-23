@@ -55,20 +55,21 @@ class AutoClicker : Module()
 	fun onRender(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val gameSettings = mc.gameSettings
 
 		// Left click
-		if (mc.gameSettings.keyBindAttack.isKeyDown && leftValue.get() && System.currentTimeMillis() - leftLastSwing >= leftDelay && mc.playerController.curBlockDamageMP == 0F)
+		if (gameSettings.keyBindAttack.isKeyDown && leftValue.get() && System.currentTimeMillis() - leftLastSwing >= leftDelay && mc.playerController.curBlockDamageMP == 0F)
 		{
-			mc.gameSettings.keyBindAttack.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
+			gameSettings.keyBindAttack.onTick(gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
 
 			leftLastSwing = System.currentTimeMillis()
 			leftDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
 		}
 
 		// Right click
-		if (mc.gameSettings.keyBindUseItem.isKeyDown && !thePlayer.isUsingItem && rightValue.get() && System.currentTimeMillis() - rightLastSwing >= rightDelay)
+		if (gameSettings.keyBindUseItem.isKeyDown && !thePlayer.isUsingItem && rightValue.get() && System.currentTimeMillis() - rightLastSwing >= rightDelay)
 		{
-			mc.gameSettings.keyBindAttack.onTick(mc.gameSettings.keyBindUseItem.keyCode) // Minecraft Click Handling
+			gameSettings.keyBindAttack.onTick(gameSettings.keyBindUseItem.keyCode) // Minecraft Click Handling
 
 			rightLastSwing = System.currentTimeMillis()
 			rightDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
@@ -79,8 +80,9 @@ class AutoClicker : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val gameSettings = mc.gameSettings
 
-		if (jitterValue.get() && (leftValue.get() && mc.gameSettings.keyBindAttack.isKeyDown && mc.playerController.curBlockDamageMP == 0F || rightValue.get() && mc.gameSettings.keyBindUseItem.isKeyDown && !thePlayer.isUsingItem))
+		if (jitterValue.get() && (leftValue.get() && gameSettings.keyBindAttack.isKeyDown && mc.playerController.curBlockDamageMP == 0F || rightValue.get() && gameSettings.keyBindUseItem.isKeyDown && !thePlayer.isUsingItem))
 		{
 			if (Random.nextBoolean()) thePlayer.rotationYaw += if (Random.nextBoolean()) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
 

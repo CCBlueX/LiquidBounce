@@ -31,10 +31,13 @@ class GuiChangeName(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		val quarterScreen = screen.height shr 2
 
 		val buttonList = screen.buttonList
-		buttonList.add(classProvider.createGuiButton(1, buttonX, quarterScreen + 96, "Change"))
-		buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
 
-		name = classProvider.createGuiTextField(2, Fonts.font40, buttonX, 60, 200, 20).apply {
+		val provider = classProvider
+
+		buttonList.add(provider.createGuiButton(1, buttonX, quarterScreen + 96, "Change"))
+		buttonList.add(provider.createGuiButton(0, buttonX, quarterScreen + 120, "Back"))
+
+		name = provider.createGuiTextField(2, Fonts.font40, buttonX, 60, 200, 20).apply {
 			isFocused = true
 			text = mc.session.username
 			maxStringLength = 16

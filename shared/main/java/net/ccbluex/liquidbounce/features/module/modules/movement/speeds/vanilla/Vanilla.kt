@@ -29,10 +29,12 @@ class Vanilla : SpeedMode("Vanilla")
 
 		if (MovementUtils.isMoving(thePlayer))
 		{
+			val func = functions
+
 			val moveSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).vanillaSpeedValue.get()
 			val dir = MovementUtils.getDirection(thePlayer)
-			event.x = (-functions.sin(dir) * moveSpeed).toDouble()
-			event.z = (functions.cos(dir) * moveSpeed).toDouble()
+			event.x = (-func.sin(dir) * moveSpeed).toDouble()
+			event.z = (func.cos(dir) * moveSpeed).toDouble()
 		}
 	}
 }

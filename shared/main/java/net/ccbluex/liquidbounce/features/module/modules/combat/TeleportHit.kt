@@ -36,9 +36,11 @@ class TeleportHit : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
+		val provider = classProvider
+
 		val facedEntity = raycastEntity(theWorld, thePlayer, 100.0, object : EntityFilter
 		{
-			override fun canRaycast(entity: IEntity?): Boolean = classProvider.isEntityLivingBase(entity)
+			override fun canRaycast(entity: IEntity?): Boolean = provider.isEntityLivingBase(entity)
 		})
 		if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true) && facedEntity!!.getDistanceSqToEntity(thePlayer) >= 1.0) targetEntity = facedEntity.asEntityLivingBase()
 
@@ -61,10 +63,10 @@ class TeleportHit : Module()
 				val y = currentTarget.position.y + 0.25
 				val z = thePlayer.posZ + rotationVector.zCoord * (thePlayer.getDistanceToEntity(currentTarget) - 1.0f)
 
-				findPath(thePlayer, x, y + 1.0, z, 4.0).forEach { pos: Vector3d -> netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)) }
+				findPath(thePlayer, x, y + 1.0, z, 4.0).forEach { pos: Vector3d -> netHandler.addToSendQueue(provider.createCPacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)) }
 
 				thePlayer.swingItem()
-				netHandler.addToSendQueue(classProvider.createCPacketUseEntity(currentTarget, ICPacketUseEntity.WAction.ATTACK))
+				netHandler.addToSendQueue(provider.createCPacketUseEntity(currentTarget, ICPacketUseEntity.WAction.ATTACK))
 				thePlayer.onCriticalHit(currentTarget)
 
 				shouldHit = false

@@ -24,7 +24,7 @@ class Derp : Module()
 	val rotation: FloatArray
 		get()
 		{
-			val derpRotations = floatArrayOf(mc.thePlayer!!.rotationYaw + (Random.nextFloat() * 360.0f - 180.0f), (Random.nextFloat() * 180.0f - 90.0f))
+			val derpRotations = floatArrayOf((mc.thePlayer?.rotationYaw ?: 0f) + (Random.nextFloat() * 360.0f - 180.0f), (Random.nextFloat() * 180.0f - 90.0f))
 
 			if (headlessValue.get()) derpRotations[1] = 180F
 

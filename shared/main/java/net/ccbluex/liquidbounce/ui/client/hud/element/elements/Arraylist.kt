@@ -167,6 +167,8 @@ class Arraylist(
 		val horizontalSide = side.horizontal
 		val verticalSide = side.vertical
 
+		val provider = classProvider
+
 		// Draw arraylist
 		when (horizontalSide)
 		{
@@ -203,7 +205,7 @@ class Arraylist(
 						RenderUtils.drawRect(xPos - xPosCorrection, yPos, x2Pos, yPos + textHeight, color)
 					}
 
-					classProvider.glStateManager.resetColor()
+					provider.glStateManager.resetColor()
 
 					// Draw Module Name
 					val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
@@ -294,7 +296,7 @@ class Arraylist(
 						RenderUtils.drawRect(0F, yPos, xPos + width + xPosCorrection, yPos + textHeight, color)
 					}
 
-					classProvider.glStateManager.resetColor()
+					provider.glStateManager.resetColor()
 
 					// Draw Module Name
 					val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
@@ -353,7 +355,7 @@ class Arraylist(
 		}
 
 		// Draw border
-		if (classProvider.isGuiHudDesigner(mc.currentScreen))
+		if (provider.isGuiHudDesigner(mc.currentScreen))
 		{
 			x2 = Int.MIN_VALUE
 

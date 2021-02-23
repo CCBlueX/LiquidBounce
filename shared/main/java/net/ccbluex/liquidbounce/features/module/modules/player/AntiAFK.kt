@@ -39,12 +39,13 @@ class AntiAFK : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val gameSettings = mc.gameSettings
 
 		when (modeValue.get().toLowerCase())
 		{
 			"old" ->
 			{
-				mc.gameSettings.keyBindForward.pressed = true
+				gameSettings.keyBindForward.pressed = true
 
 				if (delayTimer.hasTimePassed(500))
 				{
@@ -95,7 +96,7 @@ class AntiAFK : Module()
 
 			"custom" ->
 			{
-				if (moveValue.get()) mc.gameSettings.keyBindForward.pressed = true
+				if (moveValue.get()) gameSettings.keyBindForward.pressed = true
 
 				if (jumpValue.get() && thePlayer.onGround) thePlayer.jump()
 
@@ -116,17 +117,24 @@ class AntiAFK : Module()
 		}
 	}
 
-	private fun getRandomMoveKeyBind(): IKeyBinding? = when (RandomUtils.nextInt(0, 4))
+	private fun getRandomMoveKeyBind(): IKeyBinding?
 	{
-		0 -> mc.gameSettings.keyBindRight
-		1 -> mc.gameSettings.keyBindLeft
-		2 -> mc.gameSettings.keyBindBack
-		3 -> mc.gameSettings.keyBindForward
-		else -> null
+		val gameSettings = mc.gameSettings
+
+		return when (RandomUtils.nextInt(0, 4))
+		{
+			0 -> gameSettings.keyBindRight
+			1 -> gameSettings.keyBindLeft
+			2 -> gameSettings.keyBindBack
+			3 -> gameSettings.keyBindForward
+			else -> null
+		}
 	}
 
 	override fun onDisable()
 	{
-		if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindForward)) mc.gameSettings.keyBindForward.pressed = false
+		val gameSettings = mc.gameSettings
+
+		if (!gameSettings.isKeyDown(gameSettings.keyBindForward)) gameSettings.keyBindForward.pressed = false
 	}
 }

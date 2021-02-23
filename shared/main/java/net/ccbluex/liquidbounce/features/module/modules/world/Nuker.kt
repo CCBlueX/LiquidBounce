@@ -265,7 +265,12 @@ class Nuker : Module()
 	/**
 	 * Check if [block] is a valid block to break
 	 */
-	private fun validBlock(block: IBlock) = !classProvider.isBlockAir(block) && !classProvider.isBlockLiquid(block) && !classProvider.isBlockBedrock(block)
+	private fun validBlock(block: IBlock): Boolean
+	{
+		val provider = classProvider
+
+		return !provider.isBlockAir(block) && !provider.isBlockLiquid(block) && !provider.isBlockBedrock(block)
+	}
 
 	companion object
 	{

@@ -165,8 +165,12 @@ class InventoryCleaner : Module()
 
 		val hotbar = hotbarValue.get()
 
+		val provider = classProvider
+
+		val screen = mc.currentScreen
+
 		// Clean hotbar
-		if (hotbar && !classProvider.isGuiInventory(mc.currentScreen))
+		if (hotbar && !provider.isGuiInventory(screen))
 		{
 			val hotbarItems = items(36, 45, inventoryContainer)
 			val garbageItemsHotbarSlots = hotbarItems.filter { !isUseful(thePlayer, it.key, it.value, container = inventoryContainer) }.keys.toMutableList()
@@ -191,17 +195,17 @@ class InventoryCleaner : Module()
 
 				// Switch to the slot of garbage item
 
-				netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(garbageHotbarItem - 36))
+				netHandler.addToSendQueue(provider.createCPacketHeldItemChange(garbageHotbarItem - 36))
 
 				// Drop items
 				val amount = getAmount(garbageHotbarItem)
 				val action = if (amount > 1 || (amount == 1 && Math.random() > 0.8)) ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS else ICPacketPlayerDigging.WAction.DROP_ITEM
-				netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(action, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+				netHandler.addToSendQueue(provider.createCPacketPlayerDigging(action, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 
-				if (indicateClick.get() && classProvider.isGuiContainer(mc.currentScreen)) mc.currentScreen!!.asGuiContainer().highlight(garbageHotbarItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
+				if (indicateClick.get() && provider.isGuiContainer(screen)) screen!!.asGuiContainer().highlight(garbageHotbarItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
 
 				// Back to the original holding slot
-				netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+				netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
 				delay = TimeUtils.randomDelay(minHotbarDelayValue.get(), maxHotbarDelayValue.get())
 			}
@@ -210,7 +214,7 @@ class InventoryCleaner : Module()
 		// NoMove, AutoArmorLock Check
 		if (noMoveValue.get() && MovementUtils.isMoving(thePlayer) || (LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) return
 
-		if (!classProvider.isGuiInventory(mc.currentScreen) && invOpenValue.get()) return
+		if (!provider.isGuiInventory(screen) && invOpenValue.get()) return
 
 		// Sort hotbar
 		if (sortValue.get()) sortHotbar(thePlayer)
@@ -248,8 +252,10 @@ class InventoryCleaner : Module()
 				misclick = true
 			}
 
+			val provider = classProvider
+
 			// SimulateInventory
-			val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
+			val openInventory = !provider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
 			if (openInventory) mc.netHandler.addToSendQueue(createOpenInventoryPacket())
 
 			// Drop all useless items
@@ -257,12 +263,12 @@ class InventoryCleaner : Module()
 			if (amount > 1 || /* Click mistake simulation */ (amount == -1 && Random.nextBoolean())) mc.playerController.windowClick(thePlayer.openContainer!!.windowId, garbageItem, 1, 4, thePlayer)
 			else mc.playerController.windowClick(thePlayer.openContainer!!.windowId, garbageItem, 0, 4, thePlayer)
 
-			if (indicateClick.get() && classProvider.isGuiContainer(mc.currentScreen)) mc.currentScreen!!.asGuiContainer().highlight(garbageItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
+			if (indicateClick.get() && provider.isGuiContainer(mc.currentScreen)) mc.currentScreen!!.asGuiContainer().highlight(garbageItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
 
 			timer.reset() // For more compatibility with custom MSTimer(s)
 
 			// SimulateInventory
-			if (openInventory) mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
+			if (openInventory) mc.netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
 			delayResetFunc.run()
 		}
@@ -344,14 +350,17 @@ class InventoryCleaner : Module()
 	 */
 	private fun sortHotbar(thePlayer: IEntityPlayerSP)
 	{
-		(0..8).mapNotNull { it to (findBetterItem(thePlayer, it, thePlayer.inventory.getStackInSlot(it)) ?: return@mapNotNull null) }.firstOrNull { (index, bestItem) -> index != bestItem }?.let { (index, bestItem) ->
-			val openInventory = !classProvider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
+		val provider = classProvider
+		val netHandler = mc.netHandler
 
-			if (openInventory) mc.netHandler.addToSendQueue(createOpenInventoryPacket())
+		(0..8).mapNotNull { it to (findBetterItem(thePlayer, it, thePlayer.inventory.getStackInSlot(it)) ?: return@mapNotNull null) }.firstOrNull { (index, bestItem) -> index != bestItem }?.let { (index, bestItem) ->
+			val openInventory = !provider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
+
+			if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
 
 			mc.playerController.windowClick(0, if (bestItem < 9) bestItem + 36 else bestItem, index, 2, thePlayer)
 
-			if (openInventory) mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
+			if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
 			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 		}
@@ -360,6 +369,8 @@ class InventoryCleaner : Module()
 	private fun findBetterItem(thePlayer: IEntityPlayerSP, targetSlot: Int, slotStack: IItemStack?): Int?
 	{
 		val type = type(targetSlot)
+
+		val provider = classProvider
 
 		when (type.toLowerCase())
 		{
@@ -371,9 +382,9 @@ class InventoryCleaner : Module()
 				@Suppress("ConvertLambdaToReference")
 				val currentTypeChecker: ((IItem?) -> Boolean) = when
 				{
-					type.equals("Sword", ignoreCase = true) -> { item: IItem? -> classProvider.isItemSword(item) }
-					type.equals("Pickaxe", ignoreCase = true) -> { obj: IItem? -> classProvider.isItemPickaxe(obj) }
-					type.equals("Axe", ignoreCase = true) -> { obj: IItem? -> classProvider.isItemAxe(obj) }
+					type.equals("Sword", ignoreCase = true) -> { item: IItem? -> provider.isItemSword(item) }
+					type.equals("Pickaxe", ignoreCase = true) -> { obj: IItem? -> provider.isItemPickaxe(obj) }
+					type.equals("Axe", ignoreCase = true) -> { obj: IItem? -> provider.isItemAxe(obj) }
 					else -> return null
 				}
 
@@ -389,10 +400,10 @@ class InventoryCleaner : Module()
 						}
 						else
 						{
-							val currDamage = (itemStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
+							val currDamage = (itemStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 
 							val bestStack = thePlayer.inventory.getStackInSlot(bestWeapon) ?: return@forEachIndexed
-							val bestDamage = (bestStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(bestStack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
+							val bestDamage = (bestStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(bestStack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 
 							if (bestDamage < currDamage) bestWeapon = index
 						}
@@ -406,19 +417,19 @@ class InventoryCleaner : Module()
 			{
 				if (bowAndArrowValue.get())
 				{
-					var bestBow = if (classProvider.isItemBow(slotStack?.item)) targetSlot else -1
-					var bestPower = if (bestBow != -1) ItemUtils.getEnchantment(slotStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER))
+					var bestBow = if (provider.isItemBow(slotStack?.item)) targetSlot else -1
+					var bestPower = if (bestBow != -1) ItemUtils.getEnchantment(slotStack, provider.getEnchantmentEnum(EnchantmentType.POWER))
 					else 0
 
 					thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
-						if (classProvider.isItemBow(itemStack?.item) && !type(index).equals(type, ignoreCase = true))
+						if (provider.isItemBow(itemStack?.item) && !type(index).equals(type, ignoreCase = true))
 						{
 							if (bestBow == -1) bestBow = index
 							else
 							{
-								val power = ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER))
+								val power = ItemUtils.getEnchantment(itemStack, provider.getEnchantmentEnum(EnchantmentType.POWER))
 
-								if (ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER)) > bestPower)
+								if (ItemUtils.getEnchantment(itemStack, provider.getEnchantmentEnum(EnchantmentType.POWER)) > bestPower)
 								{
 									bestBow = index
 									bestPower = power
@@ -440,9 +451,9 @@ class InventoryCleaner : Module()
 						{
 							val item = stack.item
 
-							if (classProvider.isItemFood(item) && !classProvider.isItemAppleGold(item) && !type(index).equals("Food", ignoreCase = true))
+							if (provider.isItemFood(item) && !provider.isItemAppleGold(item) && !type(index).equals("Food", ignoreCase = true))
 							{
-								val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemFood(item)
+								val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !provider.isItemFood(item)
 
 								return@findBetterItem if (replaceCurr) index else null
 							}
@@ -458,9 +469,9 @@ class InventoryCleaner : Module()
 					{
 						val item = stack.item!!
 
-						if (classProvider.isItemBlock(item) && !InventoryUtils.AUTOBLOCK_BLACKLIST.contains(item.asItemBlock().block) && !type(index).equals("Block", ignoreCase = true))
+						if (provider.isItemBlock(item) && !InventoryUtils.AUTOBLOCK_BLACKLIST.contains(item.asItemBlock().block) && !type(index).equals("Block", ignoreCase = true))
 						{
-							val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemBlock(item)
+							val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !provider.isItemBlock(item)
 
 							return@findBetterItem if (replaceCurr) index else null
 						}
@@ -477,9 +488,9 @@ class InventoryCleaner : Module()
 						{
 							val item = stack.item!!
 
-							if (classProvider.isItemBucket(item) && item.asItemBucket().isFull == classProvider.getBlockEnum(BlockType.FLOWING_WATER) && !type(index).equals("Water", ignoreCase = true))
+							if (provider.isItemBucket(item) && item.asItemBucket().isFull == provider.getBlockEnum(BlockType.FLOWING_WATER) && !type(index).equals("Water", ignoreCase = true))
 							{
-								val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemBucket(item) || (item.asItemBucket()).isFull != classProvider.getBlockEnum(BlockType.FLOWING_WATER)
+								val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !provider.isItemBucket(item) || (item.asItemBucket()).isFull != provider.getBlockEnum(BlockType.FLOWING_WATER)
 
 								return@findBetterItem if (replaceCurr) index else null
 							}
@@ -497,9 +508,9 @@ class InventoryCleaner : Module()
 						{
 							val item = stack.item!!
 
-							if (classProvider.isItemAppleGold(item) && !type(index).equals("Gapple", ignoreCase = true))
+							if (provider.isItemAppleGold(item) && !type(index).equals("Gapple", ignoreCase = true))
 							{
-								val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemAppleGold(slotStack?.item)
+								val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !provider.isItemAppleGold(slotStack?.item)
 
 								return@findBetterItem if (replaceCurr) index else null
 							}
@@ -517,9 +528,9 @@ class InventoryCleaner : Module()
 						{
 							val item = stack.item
 
-							if (classProvider.isItemEnderPearl(item) && !type(index).equals("Pearl", ignoreCase = true))
+							if (provider.isItemEnderPearl(item) && !type(index).equals("Pearl", ignoreCase = true))
 							{
-								val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !classProvider.isItemEnderPearl(slotStack?.item)
+								val replaceCurr = ItemUtils.isStackEmpty(slotStack) || !provider.isItemEnderPearl(slotStack?.item)
 
 								return@findBetterItem if (replaceCurr) index else null
 							}

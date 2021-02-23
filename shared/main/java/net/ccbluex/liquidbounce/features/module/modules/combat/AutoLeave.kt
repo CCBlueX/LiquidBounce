@@ -26,14 +26,17 @@ class AutoLeave : Module()
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
+		val netHandler = mc.netHandler
 
 		if (thePlayer.health <= healthValue.get() && !thePlayer.capabilities.isCreativeMode && !mc.isIntegratedServerRunning)
 		{
+			val provider = classProvider
+
 			when (modeValue.get().toLowerCase())
 			{
 				"quit" -> theWorld.sendQuittingDisconnectingPacket()
-				"invalidpacket" -> mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !thePlayer.onGround))
-				"selfhurt" -> mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketUseEntity(thePlayer, ICPacketUseEntity.WAction.ATTACK))
+				"invalidpacket" -> netHandler.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !thePlayer.onGround))
+				"selfhurt" -> netHandler.networkManager.sendPacketWithoutEvent(provider.createCPacketUseEntity(thePlayer, ICPacketUseEntity.WAction.ATTACK))
 				"illegalchat" -> thePlayer.sendChatMessage("${Random.nextInt()}\u00A7\u00A7\u00A7${Random.nextInt()}")
 			}
 

@@ -39,6 +39,8 @@ object ServerUtils : MinecraftInstance()
 	@JvmStatic
 	fun connectToLastServer()
 	{
-		mc.displayGuiScreen(classProvider.createGuiConnecting(classProvider.createGuiMultiplayer(classProvider.wrapGuiScreen(GuiMainMenu())), mc, lastServerData ?: return))
+		val provider = classProvider
+
+		mc.displayGuiScreen(provider.createGuiConnecting(provider.createGuiMultiplayer(provider.wrapGuiScreen(GuiMainMenu())), mc, lastServerData ?: return))
 	}
 }

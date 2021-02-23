@@ -45,14 +45,16 @@ class KeepAlive : Module()
 
 				"soup" ->
 				{
-					val soupInHotbar = InventoryUtils.findItem(thePlayer.inventoryContainer, 36, 45, classProvider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelayValue.get().toLong(), randomSlotValue.get())
+					val provider = classProvider
+
+					val soupInHotbar = InventoryUtils.findItem(thePlayer.inventoryContainer, 36, 45, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelayValue.get().toLong(), randomSlotValue.get())
 
 					if (soupInHotbar != -1)
 					{
 
-						netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(soupInHotbar - 36))
+						netHandler.addToSendQueue(provider.createCPacketHeldItemChange(soupInHotbar - 36))
 						netHandler.addToSendQueue(createUseItemPacket(thePlayer.inventory.getStackInSlot(soupInHotbar), WEnumHand.MAIN_HAND))
-						netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+						netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 					}
 				}
 			}

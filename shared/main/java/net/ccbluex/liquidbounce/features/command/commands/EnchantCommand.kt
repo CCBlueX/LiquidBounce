@@ -14,7 +14,8 @@ class EnchantCommand : Command("enchant")
 	 */
 	override fun execute(args: Array<String>)
 	{
-		val thePlayer = mc.thePlayer
+		val thePlayer = mc.thePlayer ?: return
+		val netHandler = mc.netHandler
 
 		if (args.size > 2)
 		{
@@ -24,7 +25,7 @@ class EnchantCommand : Command("enchant")
 				return
 			}
 
-			val item = mc.thePlayer?.heldItem
+			val item = thePlayer.heldItem
 
 			if (item?.item == null)
 			{
@@ -32,13 +33,15 @@ class EnchantCommand : Command("enchant")
 				return
 			}
 
+			val func = functions
+
 			val enchantID: Int = try
 			{
 				args[1].toInt()
 			}
 			catch (e: NumberFormatException)
 			{
-				val enchantment = functions.getEnchantmentByLocation(args[1])
+				val enchantment = func.getEnchantmentByLocation(args[1])
 
 				if (enchantment == null)
 				{
@@ -49,7 +52,7 @@ class EnchantCommand : Command("enchant")
 				enchantment.effectId
 			}
 
-			val enchantment = functions.getEnchantmentById(enchantID)
+			val enchantment = func.getEnchantmentById(enchantID)
 
 			if (enchantment == null)
 			{
@@ -68,7 +71,7 @@ class EnchantCommand : Command("enchant")
 			}
 
 			item.addEnchantment(enchantment, level)
-			mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(36 + mc.thePlayer!!.inventory.currentItem, item))
+			netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(36 + thePlayer.inventory.currentItem, item))
 			chat(thePlayer, "${enchantment.getTranslatedName(level)} added to ${item.displayName}.")
 			return
 		}

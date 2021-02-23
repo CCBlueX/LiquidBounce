@@ -34,9 +34,12 @@ class AutoWeapon : Module()
 	@EventTarget
 	fun onPacket(event: PacketEvent)
 	{
-		if (!classProvider.isCPacketUseEntity(event.packet)) return
+		val provider = classProvider
+
+		if (!provider.isCPacketUseEntity(event.packet)) return
 
 		val thePlayer = mc.thePlayer ?: return
+		val netHandler = mc.netHandler
 
 		val packet = event.packet.asCPacketUseEntity()
 
@@ -45,8 +48,8 @@ class AutoWeapon : Module()
 			attackEnemy = false
 
 			// Find best weapon in hotbar (#Kotlin Style)
-			val (slot, _) = (0..8).asSequence().mapNotNull { it to (thePlayer.inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, itemStack) -> classProvider.isItemSword(itemStack.item) || classProvider.isItemTool(itemStack.item) }.maxBy { (_, itemStack) ->
-				itemStack.getAttributeModifier("generic.attackDamage").first().amount + 1.25 * ItemUtils.getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
+			val (slot, _) = (0..8).asSequence().mapNotNull { it to (thePlayer.inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, itemStack) -> provider.isItemSword(itemStack.item) || provider.isItemTool(itemStack.item) }.maxBy { (_, itemStack) ->
+				itemStack.getAttributeModifier("generic.attackDamage").first().amount + 1.25 * ItemUtils.getEnchantment(itemStack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 			} ?: return
 
 			if (slot == thePlayer.inventory.currentItem) // If in hand no need to swap
@@ -55,7 +58,7 @@ class AutoWeapon : Module()
 			// Switch to best weapon
 			if (silentValue.get())
 			{
-				mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(slot))
+				netHandler.addToSendQueue(provider.createCPacketHeldItemChange(slot))
 				spoofedSlot = ticksValue.get()
 			}
 			else
@@ -65,7 +68,7 @@ class AutoWeapon : Module()
 			}
 
 			// Resend attack packet
-			mc.netHandler.addToSendQueue(packet)
+			netHandler.addToSendQueue(packet)
 			event.cancelEvent()
 		}
 	}

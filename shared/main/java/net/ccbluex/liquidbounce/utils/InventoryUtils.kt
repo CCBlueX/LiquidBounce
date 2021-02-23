@@ -30,14 +30,16 @@ class InventoryUtils : MinecraftInstance(), Listenable
 	{
 		val packet = event.packet
 
-		if (classProvider.isCPacketPlayerDigging(packet))
+		val provider = classProvider
+
+		if (provider.isCPacketPlayerDigging(packet))
 		{
 			val digging = packet.asCPacketPlayerDigging()
 
-			if ((digging.status == ICPacketPlayerDigging.WAction.DROP_ITEM || digging.status == ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS) && digging.position == ORIGIN && classProvider.getEnumFacing(EnumFacingType.DOWN) == digging.facing) CLICK_TIMER.reset() // Drop (all) item(s) in hotbar with Q (Ctrl+Q)
+			if ((digging.status == ICPacketPlayerDigging.WAction.DROP_ITEM || digging.status == ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS) && digging.position == ORIGIN && provider.getEnumFacing(EnumFacingType.DOWN) == digging.facing) CLICK_TIMER.reset() // Drop (all) item(s) in hotbar with Q (Ctrl+Q)
 		}
 
-		if (classProvider.isCPacketPlayerBlockPlacement(packet)) CLICK_TIMER.reset()
+		if (provider.isCPacketPlayerBlockPlacement(packet)) CLICK_TIMER.reset()
 	}
 
 	override fun handleEvents(): Boolean = true
@@ -89,9 +91,11 @@ class InventoryUtils : MinecraftInstance(), Listenable
 		{
 			val hotbarSlots: MutableList<Int> = ArrayList(9)
 
+			val provider = classProvider
+
 			(36..44).forEach { i ->
 				val itemStack = container.getSlot(i).stack
-				if (itemStack != null && classProvider.isItemBlock(itemStack.item) && itemStack.stackSize > 0)
+				if (itemStack != null && provider.isItemBlock(itemStack.item) && itemStack.stackSize > 0)
 				{
 					val itemBlock = itemStack.item!!.asItemBlock()
 					val block = itemBlock.block
@@ -119,7 +123,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 			{
 				(36..44).forEach { i ->
 					val itemStack = container.getSlot(i).stack
-					if (itemStack != null && classProvider.isItemBlock(itemStack.item) && itemStack.stackSize > 0)
+					if (itemStack != null && provider.isItemBlock(itemStack.item) && itemStack.stackSize > 0)
 					{
 						val itemBlock = itemStack.item!!.asItemBlock()
 						val block = itemBlock.block
@@ -145,7 +149,12 @@ class InventoryUtils : MinecraftInstance(), Listenable
 			return -1
 		}
 
-		fun canAutoBlock(block: IBlock?): Boolean = block !in AUTOBLOCK_BLACKLIST && !classProvider.isBlockBush(block) && !classProvider.isBlockRailBase(block) && !classProvider.isBlockSign(block) && !classProvider.isBlockDoor(block)
+		fun canAutoBlock(block: IBlock?): Boolean
+		{
+			val provider = classProvider
+
+			return block !in AUTOBLOCK_BLACKLIST && !provider.isBlockBush(block) && !provider.isBlockRailBase(block) && !provider.isBlockSign(block) && !provider.isBlockDoor(block)
+		}
 
 		fun firstEmpty(container: IContainer, startSlot: Int, endSlot: Int, randomSlot: Boolean): Int
 		{

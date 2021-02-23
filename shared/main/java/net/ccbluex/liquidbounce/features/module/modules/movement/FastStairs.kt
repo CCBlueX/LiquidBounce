@@ -45,7 +45,9 @@ class FastStairs : Module()
 
 		val blockPos = WBlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)
 
-		if (classProvider.isBlockStairs(getBlock(theWorld, blockPos)) && !walkingDown)
+		val provider = classProvider
+
+		if (provider.isBlockStairs(getBlock(theWorld, blockPos)) && !walkingDown)
 		{
 			thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
 
@@ -61,7 +63,7 @@ class FastStairs : Module()
 			thePlayer.motionZ *= motion
 		}
 
-		if (classProvider.isBlockStairs(getBlock(theWorld, blockPos.down())))
+		if (provider.isBlockStairs(getBlock(theWorld, blockPos.down())))
 		{
 			if (walkingDown)
 			{

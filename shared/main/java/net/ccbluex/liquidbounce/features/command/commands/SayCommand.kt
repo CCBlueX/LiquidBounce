@@ -15,11 +15,11 @@ class SayCommand : Command("say")
 	 */
 	override fun execute(args: Array<String>)
 	{
-		val thePlayer = mc.thePlayer
+		val thePlayer = mc.thePlayer ?: return
 
 		if (args.size > 1)
 		{
-			mc.thePlayer!!.sendChatMessage(StringUtils.toCompleteString(args, 1))
+			thePlayer.sendChatMessage(StringUtils.toCompleteString(args, 1))
 			chat(thePlayer, "Message was sent to the chat.")
 			return
 		}

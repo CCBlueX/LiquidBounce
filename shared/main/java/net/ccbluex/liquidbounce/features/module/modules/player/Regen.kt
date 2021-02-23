@@ -33,7 +33,9 @@ class Regen : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
-		if (resetTimer) mc.timer.timerSpeed = 1F
+		val timer = mc.timer
+
+		if (resetTimer) timer.timerSpeed = 1F
 		resetTimer = false
 
 		val thePlayer = mc.thePlayer ?: return
@@ -42,7 +44,9 @@ class Regen : Module()
 
 		if ((!noAirValue.get() || onGround) && !thePlayer.capabilities.isCreativeMode && thePlayer.foodStats.foodLevel > foodValue.get() && thePlayer.entityAlive && thePlayer.health < healthValue.get())
 		{
-			if (potionEffectValue.get() && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.REGENERATION))) return
+			val provider = classProvider
+
+			if (potionEffectValue.get() && !thePlayer.isPotionActive(provider.getPotionEnum(PotionType.REGENERATION))) return
 
 			when (modeValue.get().toLowerCase())
 			{
@@ -50,7 +54,7 @@ class Regen : Module()
 				{
 					WorkerUtils.workers.execute {
 						repeat(speedValue.get()) {
-							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
+							netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 						}
 					}
 				}
@@ -61,11 +65,11 @@ class Regen : Module()
 
 					WorkerUtils.workers.execute {
 						repeat(9) {
-							netHandler.addToSendQueue(classProvider.createCPacketPlayer(onGround))
+							netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 						}
 					}
 
-					mc.timer.timerSpeed = 0.45F
+					timer.timerSpeed = 0.45F
 					resetTimer = true
 				}
 			}

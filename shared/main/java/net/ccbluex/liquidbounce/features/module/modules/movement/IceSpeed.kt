@@ -25,8 +25,10 @@ class IceSpeed : Module()
 	{
 		if (modeValue.get().equals("NCP", ignoreCase = true))
 		{
-			classProvider.getBlockEnum(BlockType.ICE).slipperiness = 0.39f
-			classProvider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.39f
+			val provider = classProvider
+
+			provider.getBlockEnum(BlockType.ICE).slipperiness = 0.39f
+			provider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.39f
 		}
 		super.onEnable()
 	}
@@ -93,7 +95,9 @@ class IceSpeed : Module()
 
 	override fun onDisable()
 	{
-		classProvider.getBlockEnum(BlockType.ICE).slipperiness = 0.98f
-		classProvider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.98f
+		val provider = classProvider
+
+		provider.getBlockEnum(BlockType.ICE).slipperiness = 0.98f
+		provider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.98f
 	}
 }

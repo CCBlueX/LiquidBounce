@@ -38,11 +38,13 @@ object EntityUtils : MinecraftInstance()
 	@JvmStatic
 	fun isSelected(entity: IEntity?, canAttackCheck: Boolean): Boolean
 	{
-		if (classProvider.isEntityLivingBase(entity) && (targetDead || entity!!.entityAlive) && entity != null && entity != mc.thePlayer)
+		val provider = classProvider
+
+		if (provider.isEntityLivingBase(entity) && (targetDead || entity!!.entityAlive) && entity != null && entity != mc.thePlayer)
 		{
 			if (targetInvisible || !entity.invisible)
 			{
-				if (targetPlayer && classProvider.isEntityPlayer(entity))
+				if (targetPlayer && provider.isEntityPlayer(entity))
 				{
 					val entityPlayer = entity.asEntityPlayer()
 
@@ -81,11 +83,13 @@ object EntityUtils : MinecraftInstance()
 	@JvmStatic
 	fun isEnemy(entity: IEntity?, aac: Boolean): Boolean
 	{
-		if (classProvider.isEntityLivingBase(entity) && entity != null && (targetDead || isAlive(entity.asEntityLivingBase(), aac)) && entity != mc.thePlayer)
+		val provider = classProvider
+
+		if (provider.isEntityLivingBase(entity) && entity != null && (targetDead || isAlive(entity.asEntityLivingBase(), aac)) && entity != mc.thePlayer)
 		{
 			if (!targetInvisible && entity.invisible) return false
 
-			if (targetPlayer && classProvider.isEntityPlayer(entity))
+			if (targetPlayer && provider.isEntityPlayer(entity))
 			{
 				val player = entity.asEntityPlayer()
 

@@ -57,7 +57,10 @@ class ClickGUI : Module()
 	fun onPacket(event: PacketEvent)
 	{
 		val packet = event.packet
-		if (classProvider.isSPacketCloseWindow(packet) && classProvider.isClickGui(mc.currentScreen)) event.cancelEvent()
+
+		val provider = classProvider
+
+		if (provider.isSPacketCloseWindow(packet) && provider.isClickGui(mc.currentScreen)) event.cancelEvent()
 	}
 
 	companion object

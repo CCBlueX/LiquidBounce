@@ -22,7 +22,10 @@ class InventoryMove : Module()
 	val aacAdditionProValue = BoolValue("AACAdditionPro", false) // TODO: Add NoSprint option
 	private val noMoveClicksValue = BoolValue("NoMoveClicks", false)
 
-	private val affectedBindings = arrayOf(mc.gameSettings.keyBindForward, mc.gameSettings.keyBindBack, mc.gameSettings.keyBindRight, mc.gameSettings.keyBindLeft, mc.gameSettings.keyBindJump, mc.gameSettings.keyBindSprint)
+	private val affectedBindings = run {
+		val gameSettings = mc.gameSettings
+		arrayOf(gameSettings.keyBindForward, gameSettings.keyBindBack, gameSettings.keyBindRight, gameSettings.keyBindLeft, gameSettings.keyBindJump, gameSettings.keyBindSprint)
+	}
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
