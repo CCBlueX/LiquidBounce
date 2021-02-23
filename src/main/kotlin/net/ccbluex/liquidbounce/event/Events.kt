@@ -20,11 +20,14 @@ package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.Nameable
+import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.shape.VoxelShape
 
 // Game events
 
@@ -63,6 +66,14 @@ class ScreenEvent(val screen: Screen?) : Event()
 
 @Nameable("chatSend")
 class ChatSendEvent(val message: String) : CancellableEvent()
+
+// World events
+
+/**
+ * Block Shape hooked at CACTUS_BLOCK, FLUID_BLOCK to reduce performance impact and headache
+ */
+@Nameable("blockShape")
+class BlockShapeEvent(val state: BlockState, val pos: BlockPos, var shape: VoxelShape) : Event()
 
 // Network events
 

@@ -5,14 +5,16 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [],
   "client": [
-    "minecraft.network.MixinClientConnection",
+    "minecraft.block.MixinCactusBlock",
+    "minecraft.block.MixinFluidBlock",
     "minecraft.client.MixinKeyboard",
     "minecraft.client.MixinMinecraftClient",
     "minecraft.entity.MixinClientPlayerEntity",
     "minecraft.gui.MixinInGameHud",
     "minecraft.gui.MixinScreen",
-    "minecraft.render.MixinGameRenderer",
-    "minecraft.network.MixinClientPlayerInteractionManager"
+    "minecraft.network.MixinClientConnection",
+    "minecraft.network.MixinClientPlayerInteractionManager",
+    "minecraft.render.MixinGameRenderer"
   ],
   "server": [],
   "injectors": {
