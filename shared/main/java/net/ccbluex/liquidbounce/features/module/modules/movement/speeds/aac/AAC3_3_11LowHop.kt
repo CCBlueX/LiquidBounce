@@ -28,16 +28,22 @@ class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 			{
 				if (firstLegitJump)
 				{
-					thePlayer.motionY = 0.4
+
 					MovementUtils.strafe(thePlayer, 0.15f)
+
 					thePlayer.onGround = false
+
+					thePlayer.motionY = 0.4
 					LiquidBounce.eventManager.callEvent(JumpEvent(0.4f))
+
 					firstLegitJump = false
+
 					return
 				}
 
-				thePlayer.motionY = 0.41
 				MovementUtils.strafe(thePlayer, 0.47458485f)
+
+				thePlayer.motionY = 0.41
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.41f))
 			}
 

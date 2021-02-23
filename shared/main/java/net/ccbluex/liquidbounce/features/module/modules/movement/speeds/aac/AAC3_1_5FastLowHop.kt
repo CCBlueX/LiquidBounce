@@ -32,21 +32,24 @@ class AAC3_1_5FastLowHop : SpeedMode("AAC3.1.5-FastLowHop") // Was AACLowHop2
 		if (eventState != EventState.PRE) return
 
 		val thePlayer = mc.thePlayer ?: return
+		val timer = mc.timer
 
-		mc.timer.timerSpeed = 1f
+		timer.timerSpeed = 1f
 
 		if (thePlayer.isInWater) return
 
 		if (MovementUtils.isMoving(thePlayer))
 		{
-			mc.timer.timerSpeed = 1.09f
+			timer.timerSpeed = 1.09f
 
 			if (thePlayer.onGround)
 			{
 				if (firstLegitJump)
 				{
 					jump(thePlayer)
+
 					firstLegitJump = false
+
 					return
 				}
 

@@ -22,9 +22,6 @@ class AAC3_2_2YPort : SpeedMode("AAC3.2.2-YPort") // Was AACYPort2
 
 		if (MovementUtils.isMoving(thePlayer))
 		{
-
-			//			thePlayer.cameraPitch = 0f
-
 			if (thePlayer.onGround)
 			{
 				jump(thePlayer)

@@ -260,7 +260,7 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				}
 			}
 
-			for (i in 0 until threads) threadPool.execute(task)
+			repeat(threads) { threadPool.execute(task) }
 
 			running = true
 		}

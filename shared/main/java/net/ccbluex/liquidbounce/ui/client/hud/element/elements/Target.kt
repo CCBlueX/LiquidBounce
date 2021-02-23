@@ -191,15 +191,14 @@ class Target : Element()
 			if (armor.get())
 			{
 				val equipmentY = 35
-				for (index in 0..4)
-				{
+				repeat(5) { index ->
 					val isHeldItem = index == 0
 
 					val equipmentX = 100 + (4 - index) * 20 + if (isHeldItem) 5 else 0
 
 					RenderUtils.drawRect(equipmentX, equipmentY, equipmentX + 16, equipmentY + 16, Color.darkGray.rgb)
 
-					val armor = targetPlayer.getEquipmentInSlot(index) ?: continue
+					val armor = targetPlayer.getEquipmentInSlot(index) ?: return@repeat
 
 					RenderUtils.glColor(Color.white) // Reset Color
 					renderItem.zLevel = -147F

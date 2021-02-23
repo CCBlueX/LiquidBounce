@@ -35,7 +35,9 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop") // Was AAC5BHop
 					if (firstLegitJump)
 					{
 						jump(thePlayer)
+
 						firstLegitJump = false
+
 						return
 					}
 

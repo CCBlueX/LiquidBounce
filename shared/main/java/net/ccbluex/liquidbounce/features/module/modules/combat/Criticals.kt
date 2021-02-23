@@ -110,7 +110,7 @@ class Criticals : Module()
 				{
 					val ystep = arrayOf(customYStep1Value.get(), customYStep2Value.get(), customYStep3Value.get(), customYStep4Value.get(), customYStep5Value.get(), customYStep6Value.get())
 
-					for (i in 0 until customStepsValue.get()) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + ystep[i], z, false))
+					repeat(customStepsValue.get()) { networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + ystep[it], z, false)) }
 
 					thePlayer.onCriticalHit(targetEntity)
 				}

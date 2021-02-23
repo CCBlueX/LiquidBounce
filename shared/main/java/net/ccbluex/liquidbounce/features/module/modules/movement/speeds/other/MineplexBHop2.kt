@@ -26,25 +26,35 @@ class MineplexBHop2 : SpeedMode("Mineplex-BHop2")
 	override fun onUpdate()
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val timer = mc.timer
 
-		var speed = 0.15f
-		if (thePlayer.isCollidedHorizontally || !isMoving(thePlayer)) mineplex = -2
-		if (thePlayer.onGround && isMoving(thePlayer))
+		val move = isMoving(thePlayer)
+
+		var moveSpeed = 0.15f
+
+		if (thePlayer.isCollidedHorizontally || !move) mineplex = -2
+
+		if (thePlayer.onGround && move)
 		{
 			stage = 0
+
 			thePlayer.motionY = 0.42
+
 			if (mineplex < 0) mineplex++
 			if (thePlayer.posY != round(thePlayer.posY)) mineplex = -1
-			mc.timer.timerSpeed = 2.001f
+
+			timer.timerSpeed = 2.001f
 		}
 		else
 		{
-			if (mc.timer.timerSpeed == 2.001f) mc.timer.timerSpeed = 1.0F
-			speed = 0.62f - stage / 300.0f + mineplex * 0.2f
+			if (timer.timerSpeed == 2.001f) timer.timerSpeed = 1.0F
+
+			moveSpeed = 0.62f - stage / 300.0f + mineplex * 0.2f
+
 			stage++
 		}
 
-		strafe(thePlayer, speed)
+		strafe(thePlayer, moveSpeed)
 	}
 
 	override fun onMove(event: MoveEvent)

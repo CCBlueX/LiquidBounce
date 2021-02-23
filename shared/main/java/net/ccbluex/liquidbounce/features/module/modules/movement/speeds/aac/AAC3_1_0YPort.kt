@@ -22,9 +22,6 @@ class AAC3_1_0YPort : SpeedMode("AAC3.1.0-YPort") // Was AACYPort
 
 		if (MovementUtils.isMoving(thePlayer) && !thePlayer.sneaking)
 		{
-
-			//			thePlayer.cameraPitch = 0f
-
 			if (thePlayer.onGround)
 			{
 				thePlayer.motionX *= 1.5893

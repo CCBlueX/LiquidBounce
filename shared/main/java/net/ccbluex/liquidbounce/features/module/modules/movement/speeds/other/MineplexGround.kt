@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 class MineplexGround : SpeedMode("Mineplex-Ground")
 {
 	private var spoofSlot = false
-	private var speed = 0f
+	private var moveSpeed = 0f
 
 	override fun onMotion(eventState: EventState)
 	{
@@ -40,11 +40,12 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 
 	override fun onUpdate()
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (!MovementUtils.isMoving(thePlayer) || !thePlayer.onGround || thePlayer.isUsingItem)
 		{
-			speed = 0f
+			moveSpeed = 0f
 			return
 		}
 
@@ -57,14 +58,14 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 		val blockPos = WBlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY - 1, thePlayer.posZ)
 		val vec = WVec3(blockPos).addVector(0.4, 0.4, 0.4).add(WVec3(classProvider.getEnumFacing(EnumFacingType.UP).directionVec))
 
-		mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld ?: return, null, blockPos, classProvider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
+		mc.playerController.onPlayerRightClick(thePlayer, theWorld, null, blockPos, classProvider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
 
-		val targetSpeed = ((LiquidBounce.moduleManager[Speed::class.java] as Speed?) ?: return).mineplexGroundSpeedValue.get()
+		val targetSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).mineplexGroundSpeedValue.get()
 
-		if (targetSpeed > speed) speed += targetSpeed * 0.125f
-		if (speed >= targetSpeed) speed = targetSpeed
+		if (targetSpeed > moveSpeed) moveSpeed += targetSpeed * 0.125f
+		if (moveSpeed >= targetSpeed) moveSpeed = targetSpeed
 
-		MovementUtils.strafe(thePlayer, speed)
+		MovementUtils.strafe(thePlayer, moveSpeed)
 
 		if (!spoofSlot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 	}
@@ -75,7 +76,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 
 	override fun onDisable()
 	{
-		speed = 0f
+		moveSpeed = 0f
 		mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange((mc.thePlayer ?: return).inventory.currentItem))
 	}
 }

@@ -270,25 +270,21 @@ class NoFall : Module()
 
 				if (!ok) return
 
-				var index = -1
+				var mlgItemSlot = -1
 
-				for (i in 36..44)
-				{
-					val itemStack = thePlayer.inventoryContainer.getSlot(i).stack
-
-					if (itemStack != null && (itemStack.item == classProvider.getItemEnum(ItemType.WATER_BUCKET) || classProvider.isItemBlock(itemStack.item) && (itemStack.item?.asItemBlock())?.block == classProvider.getBlockEnum(BlockType.WEB)))
-					{
-						index = i - 36
-
-						if (thePlayer.inventory.currentItem == index) break
+				run {
+					(36..44).map { it to thePlayer.inventoryContainer.getSlot(it).stack }.filter { (_, itemStack) -> itemStack != null && (itemStack.item == classProvider.getItemEnum(ItemType.WATER_BUCKET) || classProvider.isItemBlock(itemStack.item) && (itemStack.item?.asItemBlock())?.block == classProvider.getBlockEnum(BlockType.WEB)) }.forEach { (slot, _) ->
+						mlgItemSlot = slot - 36
+						if (thePlayer.inventory.currentItem == mlgItemSlot) return@run
 					}
 				}
-				if (index == -1) return
 
-				currentMlgItemIndex = index
+				if (mlgItemSlot == -1) return
+
+				currentMlgItemIndex = mlgItemSlot
 				currentMlgBlock = collision.pos
 
-				if (thePlayer.inventory.currentItem != index) thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketHeldItemChange(index))
+				if (thePlayer.inventory.currentItem != mlgItemSlot) thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketHeldItemChange(mlgItemSlot))
 
 				currentMlgRotation = RotationUtils.faceBlock(theWorld, thePlayer, collision.pos)
 

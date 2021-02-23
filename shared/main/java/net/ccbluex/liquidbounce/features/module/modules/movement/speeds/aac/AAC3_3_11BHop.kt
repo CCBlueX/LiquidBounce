@@ -21,9 +21,11 @@ class AAC3_3_11BHop : SpeedMode("AAC3.3.11-BHop") // Was AAC7BHop
 		if (thePlayer.onGround)
 		{
 			jump(thePlayer)
-			thePlayer.motionY = 0.405
+
 			thePlayer.motionX *= 1.004
+			thePlayer.motionY = 0.405
 			thePlayer.motionZ *= 1.004
+
 			return
 		}
 

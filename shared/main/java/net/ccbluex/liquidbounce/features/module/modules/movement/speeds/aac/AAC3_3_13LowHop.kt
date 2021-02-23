@@ -29,6 +29,7 @@ class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 		{
 			// Jump with y 0.405F, boost 0.202F
 			val dir = MovementUtils.getDirection(thePlayer)
+
 			thePlayer.motionX -= functions.sin(dir) * 0.202f
 			thePlayer.motionZ += functions.cos(dir) * 0.202f
 
@@ -44,6 +45,7 @@ class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 
 			// Motion XZ
 			thePlayer.jumpMovementFactor = if (thePlayer.moveStrafing == 0f) 0.027f else 0.021f
+
 			thePlayer.motionX *= 1.001
 			thePlayer.motionZ *= 1.001
 

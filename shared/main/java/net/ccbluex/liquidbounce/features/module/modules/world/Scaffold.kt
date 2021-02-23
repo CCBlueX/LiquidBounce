@@ -370,86 +370,88 @@ class Scaffold : Module()
 				var dif = 0.5
 				if (eagleValue.get().equals("EdgeDistance", true) && !shouldGoDown)
 				{
-					for (i in 0..3) when (i)
-					{
-						0 ->
+					repeat(4) {
+						when (it)
 						{
-							val blockPos = WBlockPos(thePlayer.posX - 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ)
-							val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
-							if (isReplaceable(blockPos) && placeInfo != null)
+							0 ->
 							{
-								var calcDif: Double = thePlayer.posX - blockPos.x
-								calcDif -= 0.5
-
-								if (calcDif < 0)
+								val blockPos = WBlockPos(thePlayer.posX - 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ)
+								val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
+								if (isReplaceable(blockPos) && placeInfo != null)
 								{
-									calcDif *= -1.0
+									var calcDif: Double = thePlayer.posX - blockPos.x
 									calcDif -= 0.5
-								}
-								if (calcDif < dif)
-								{
-									dif = calcDif
+
+									if (calcDif < 0)
+									{
+										calcDif *= -1.0
+										calcDif -= 0.5
+									}
+									if (calcDif < dif)
+									{
+										dif = calcDif
+									}
 								}
 							}
-						}
 
-						1 ->
-						{
-							val blockPos = WBlockPos(thePlayer.posX + 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ)
-							val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
-
-							if (isReplaceable(blockPos) && placeInfo != null)
+							1 ->
 							{
-								var calcDif: Double = thePlayer.posX - blockPos.x
-								calcDif -= 0.5
+								val blockPos = WBlockPos(thePlayer.posX + 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ)
+								val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
 
-								if (calcDif < 0)
+								if (isReplaceable(blockPos) && placeInfo != null)
 								{
-									calcDif *= -1.0
+									var calcDif: Double = thePlayer.posX - blockPos.x
 									calcDif -= 0.5
-								}
 
-								if (calcDif < dif) dif = calcDif
+									if (calcDif < 0)
+									{
+										calcDif *= -1.0
+										calcDif -= 0.5
+									}
+
+									if (calcDif < dif) dif = calcDif
+								}
 							}
-						}
 
-						2 ->
-						{
-							val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ - 1.0)
-							val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
-
-							if (isReplaceable(blockPos) && placeInfo != null)
+							2 ->
 							{
-								var calcDif: Double = thePlayer.posZ - blockPos.z
-								calcDif -= 0.5
+								val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ - 1.0)
+								val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
 
-								if (calcDif < 0)
+								if (isReplaceable(blockPos) && placeInfo != null)
 								{
-									calcDif *= -1.0
+									var calcDif: Double = thePlayer.posZ - blockPos.z
 									calcDif -= 0.5
-								}
 
-								if (calcDif < dif) dif = calcDif
+									if (calcDif < 0)
+									{
+										calcDif *= -1.0
+										calcDif -= 0.5
+									}
+
+									if (calcDif < dif) dif = calcDif
+								}
 							}
-						}
 
-						3 ->
-						{
-							val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ + 1.0)
-							val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
-
-							if (isReplaceable(blockPos) && placeInfo != null)
+							3 ->
 							{
-								var calcDif: Double = thePlayer.posZ - blockPos.z
-								calcDif -= 0.5
+								val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ + 1.0)
+								val placeInfo: PlaceInfo? = PlaceInfo.get(theWorld, blockPos)
 
-								if (calcDif < 0)
+								if (isReplaceable(blockPos) && placeInfo != null)
 								{
-									calcDif *= -1
+									var calcDif: Double = thePlayer.posZ - blockPos.z
 									calcDif -= 0.5
-								}
 
-								if (calcDif < dif) dif = calcDif
+									if (calcDif < 0)
+									{
+										calcDif *= -1
+										calcDif -= 0.5
+									}
+
+									if (calcDif < dif) dif = calcDif
+								}
 							}
 						}
 					}
@@ -966,8 +968,7 @@ class Scaffold : Module()
 						}
 
 						// Face block
-						for (i in 0 until if (staticYaw) 2 else 1)
-						{
+						repeat(if (staticYaw) 2 else 1) { i ->
 							val diffX: Double = if (staticYaw && i == 0) 0.0 else hitVec.xCoord - eyesPos.xCoord
 							val diffY = hitVec.yCoord - eyesPos.yCoord
 							val diffZ: Double = if (staticYaw && i == 1) 0.0 else hitVec.zCoord - eyesPos.zCoord
@@ -976,20 +977,23 @@ class Scaffold : Module()
 							if (!side.isUp() && minDiffValue.get() > 0)
 							{
 								val diff: Double = abs(if (side.isNorth() || side.isSouth()) diffZ else diffX)
-								if (diff < minDiffValue.get() || diff > 0.3f) continue
+								if (diff < minDiffValue.get() || diff > 0.3f) return@repeat
 							}
+
 							val pitch = if (staticPitch) staticPitchOffset else wrapAngleTo180_float((-WMathHelper.toDegrees(atan2(diffY, diffXZ).toFloat())))
 							val rotation = Rotation(wrapAngleTo180_float(WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90f + if (staticYaw) staticYawOffset else 0f), pitch)
 							val rotationVector = RotationUtils.getVectorForRotation(rotation)
 							val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
 							val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false, false, true)
-							if (rayTrace!!.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos!! != neighbor) continue
-							if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation.rotation)) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
+
+							if (rayTrace!!.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos!! != neighbor) return@repeat
+							if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation!!.rotation)) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
 
 							xSearchFace = xSearch
 							ySearchFace = ySearch
 							zSearchFace = zSearch
 						}
+
 						zSearch += data.zSteps
 					}
 					ySearch += data.ySteps
@@ -1010,7 +1014,7 @@ class Scaffold : Module()
 
 			if (minTurnSpeedValue.get() < 180)
 			{
-				limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, placeRotation.rotation, (Random.nextFloat() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()), 0.0F) // TODO: Apply some settings here too
+				limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, placeRotation!!.rotation, (Random.nextFloat() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()), 0.0F) // TODO: Apply some settings here too
 				setRotation(thePlayer, limitedRotation!!, keepRotationTicks)
 				tower.lockRotation = null // Prevents conflict
 				lockRotation = limitedRotation
@@ -1042,14 +1046,14 @@ class Scaffold : Module()
 			}
 			else
 			{
-				setRotation(thePlayer, placeRotation.rotation, keepRotationTicks)
+				setRotation(thePlayer, placeRotation!!.rotation, keepRotationTicks)
 				tower.lockRotation = null // Prevents conflict
-				lockRotation = placeRotation.rotation
+				lockRotation = placeRotation!!.rotation
 				facesBlock = true
 			}
 		}
 
-		targetPlace = placeRotation.placeInfo
+		targetPlace = placeRotation!!.placeInfo
 		return true
 	}
 

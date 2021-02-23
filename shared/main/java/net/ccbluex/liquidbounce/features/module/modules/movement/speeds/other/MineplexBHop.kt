@@ -10,8 +10,6 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import kotlin.math.hypot
-import kotlin.math.max
-import kotlin.math.min
 
 class MineplexBHop : SpeedMode("Mineplex-BHop")
 {
@@ -25,13 +23,14 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		val x = thePlayer.posX - thePlayer.prevPosX
-		val z = thePlayer.posZ - thePlayer.prevPosZ
-		val distance = hypot(x, z).toFloat()
+		val speed = hypot(thePlayer.posX - thePlayer.prevPosX, thePlayer.posZ - thePlayer.prevPosZ).toFloat()
+
 		if (MovementUtils.isMoving(thePlayer) && thePlayer.onGround)
 		{
 			thePlayer.motionY = 0.4052393
+
 			wfg = true
+
 			speed2 = speed1
 			speed1 = 0f
 		}
@@ -39,16 +38,18 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
 		{
 			if (wfg)
 			{
-				speed1 = (speed2 + (0.46532f * min(fallDistance, 1f)))
+				speed1 = (speed2 + (0.46532f * fallDistance.coerceAtMost(1f)))
 				wfg = false
 			}
-			else speed1 = distance * 0.936f
+			else speed1 = speed * 0.936f
+
 			fallDistance = thePlayer.fallDistance
 		}
+
 		var minimum = 0f
 		if (!wfg) minimum = 0.399900111f
-		val strafe = max(min(speed1, 2f), minimum)
-		MovementUtils.strafe(thePlayer, strafe)
+
+		MovementUtils.strafe(thePlayer, speed1.coerceAtLeast(minimum).coerceAtMost(2f))
 	}
 
 	override fun onMotion(eventState: EventState)
@@ -63,7 +64,9 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
 	{
 		speed1 = 0f
 		speed2 = 0f
+
 		wfg = false
+
 		fallDistance = 0f
 	}
 }

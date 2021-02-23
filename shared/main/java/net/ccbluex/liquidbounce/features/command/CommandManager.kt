@@ -67,10 +67,7 @@ class CommandManager
 	fun executeCommands(input: String)
 	{
 		val args = input.split(" ").toTypedArray()
-
-		commands.firstOrNull { args[0].equals("$prefix" + it.command, ignoreCase = true) || it.alias.any { alias -> args[0].equals("$prefix" + alias, ignoreCase = true) } }?.execute(args)
-
-		ClientUtils.displayChatMessage(wrapper.minecraft.thePlayer, "\u00A7cCommand not found. Type ${prefix}help to view all commands.")
+		commands.firstOrNull { args[0].equals("$prefix" + it.command, ignoreCase = true) || it.alias.any { alias -> args[0].equals("$prefix" + alias, ignoreCase = true) } }?.execute(args) ?: ClientUtils.displayChatMessage(wrapper.minecraft.thePlayer, "\u00A7cCommand not found. Type ${prefix}help to view all commands.")
 	}
 
 	/**

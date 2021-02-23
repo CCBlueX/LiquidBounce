@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -13,41 +14,43 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 class Boost : SpeedMode("Boost")
 {
 	private var motionDelay = 0
-	private var ground = 0f
+	private var groundTimes = 0
 	override fun onMotion(eventState: EventState)
 	{
 		if (eventState != EventState.PRE) return
 
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		var speed = 3.1981
+		var moveSpeed = 3.1981
 		var offset = 4.69
-		var shouldOffset = true
 
-		if ((mc.theWorld ?: return).getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(thePlayer.motionX / offset, 0.0, thePlayer.motionZ / offset)).isNotEmpty()) shouldOffset = false
+		val shouldOffset = theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(thePlayer.motionX / offset, 0.0, thePlayer.motionZ / offset)).isEmpty()
 
-		if (thePlayer.onGround && ground < 1.0f) ground += 0.2f
-		if (!thePlayer.onGround) ground = 0.0f
+		if (thePlayer.onGround)
+		{
+			if (groundTimes < 5) groundTimes++
+		}
+		else groundTimes = 0
 
-		if (ground == 1.0f && shouldSpeedUp())
+		if (groundTimes == 5 && shouldSpeedUp(thePlayer))
 		{
 			if (!thePlayer.sprinting) offset += 0.8
 
 			if (thePlayer.moveStrafing != 0f)
 			{
-				speed -= 0.1
+				moveSpeed -= 0.1
 				offset += 0.5
 			}
-			if (thePlayer.isInWater) speed -= 0.1
 
+			if (thePlayer.isInWater) moveSpeed -= 0.1
 
-			motionDelay += 1
-			when (motionDelay)
+			when (motionDelay++)
 			{
 				1 ->
 				{
-					thePlayer.motionX *= speed
-					thePlayer.motionZ *= speed
+					thePlayer.motionX *= moveSpeed
+					thePlayer.motionZ *= moveSpeed
 				}
 
 				2 ->
@@ -73,9 +76,5 @@ class Boost : SpeedMode("Boost")
 	{
 	}
 
-	private fun shouldSpeedUp(): Boolean
-	{
-		val thePlayer = mc.thePlayer ?: return false
-		return !thePlayer.isInLava && !thePlayer.isOnLadder && !thePlayer.sneaking && MovementUtils.isMoving(thePlayer)
-	}
+	private fun shouldSpeedUp(thePlayer: IEntityPlayerSP): Boolean = !thePlayer.isInLava && !thePlayer.isOnLadder && !thePlayer.sneaking && MovementUtils.isMoving(thePlayer)
 }

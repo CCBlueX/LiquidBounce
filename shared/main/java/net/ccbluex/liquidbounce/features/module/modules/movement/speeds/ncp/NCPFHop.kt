@@ -15,14 +15,12 @@ class NCPFHop : SpeedMode("NCPFHop")
 	override fun onEnable()
 	{
 		mc.timer.timerSpeed = 1.0866f
-		super.onEnable()
 	}
 
 	override fun onDisable()
 	{
 		(mc.thePlayer ?: return).speedInAir = 0.02f
 		mc.timer.timerSpeed = 1f
-		super.onDisable()
 	}
 
 	override fun onMotion(eventState: EventState)
@@ -38,11 +36,15 @@ class NCPFHop : SpeedMode("NCPFHop")
 			if (thePlayer.onGround)
 			{
 				jump(thePlayer)
+
 				thePlayer.motionX *= 1.01
 				thePlayer.motionZ *= 1.01
+
 				thePlayer.speedInAir = 0.0223f
 			}
-			thePlayer.motionY -= 0.00099999
+
+			thePlayer.motionY -= 0.00099999 // Fast Fall
+
 			MovementUtils.strafe(thePlayer)
 		}
 		else

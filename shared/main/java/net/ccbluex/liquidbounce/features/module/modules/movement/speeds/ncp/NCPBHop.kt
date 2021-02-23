@@ -38,8 +38,10 @@ class NCPBHop : SpeedMode("NCPBHop")
 			if (thePlayer.onGround)
 			{
 				jump(thePlayer)
+
 				thePlayer.speedInAir = 0.0223f
 			}
+
 			MovementUtils.strafe(thePlayer)
 		}
 		else

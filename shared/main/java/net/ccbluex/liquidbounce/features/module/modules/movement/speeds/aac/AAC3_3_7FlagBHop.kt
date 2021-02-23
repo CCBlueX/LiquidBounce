@@ -25,7 +25,9 @@ class AAC3_3_7FlagBHop : SpeedMode("AAC3.3.7-FlagBHop") // Was AAC4BHop
 				if (thePlayer.onGround)
 				{
 					jump(thePlayer)
+
 					thePlayer.onGround = false
+
 					firstLegitJump = false
 				}
 				return
@@ -34,8 +36,11 @@ class AAC3_3_7FlagBHop : SpeedMode("AAC3.3.7-FlagBHop") // Was AAC4BHop
 			if (thePlayer.onGround)
 			{
 				thePlayer.onGround = false
+
 				MovementUtils.strafe(thePlayer, 0.375f)
+
 				jump(thePlayer)
+
 				thePlayer.motionY = 0.41
 			}
 			else thePlayer.speedInAir = 0.0211f

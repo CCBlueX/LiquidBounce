@@ -12,6 +12,7 @@ import kotlin.math.hypot
 
 object MovementUtils : MinecraftInstance()
 {
+	@JvmStatic
 	fun getSpeed(thePlayer: IEntityPlayerSP): Float
 	{
 		val mX = thePlayer.motionX
@@ -22,6 +23,7 @@ object MovementUtils : MinecraftInstance()
 	@JvmStatic
 	fun isMoving(thePlayer: IEntityPlayerSP): Boolean = thePlayer.movementInput.moveForward != 0f || thePlayer.movementInput.moveStrafe != 0f
 
+	@JvmStatic
 	fun hasMotion(thePlayer: IEntityPlayerSP): Boolean = thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && thePlayer.motionY != 0.0
 
 	@JvmStatic
@@ -64,6 +66,9 @@ object MovementUtils : MinecraftInstance()
 		return rotationYaw
 	}
 
+	/**
+	 * @return The amplifier of Speed potion effect which applied on thePlayer (1~) (If thePlayer doesn't have Speed potion effect, it returns 0)
+	 */
 	@JvmStatic
 	fun getSpeedEffectAmplifier(thePlayer: IEntityPlayerSP) = thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))?.amplifier?.plus(1) ?: 0
 }

@@ -34,7 +34,9 @@ class AAC3_1_5LowHop : SpeedMode("AAC3.1.5-LowHop") // Was AACLowHop
 				if (firstLegitJump)
 				{
 					jump(thePlayer)
+
 					firstLegitJump = false
+
 					return
 				}
 

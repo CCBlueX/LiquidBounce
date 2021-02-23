@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spartan
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
+import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class SpartanYPort : SpeedMode("Spartan-YPort")
 {
@@ -19,20 +20,23 @@ class SpartanYPort : SpeedMode("Spartan-YPort")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (mc.gameSettings.keyBindForward.isKeyDown && !mc.gameSettings.keyBindJump.isKeyDown)
+		if (MovementUtils.isMoving(thePlayer) && !thePlayer.movementInput.jump)
 		{
 			if (thePlayer.onGround)
 			{
 				jump(thePlayer)
+
 				airTicks = 0
 			}
 			else
 			{
 				mc.timer.timerSpeed = 1.08f
 
-				if (airTicks >= 3) thePlayer.jumpMovementFactor = 0.0275f
+				val airticks = airTicks
 
-				if (airTicks >= 4 && airTicks % 2.0 == 0.0)
+				if (airticks >= 3) thePlayer.jumpMovementFactor = 0.0275f
+
+				if (airticks >= 4 && airticks % 2.0 == 0.0)
 				{
 					thePlayer.motionY = -0.32f - 0.009 * Math.random()
 					thePlayer.jumpMovementFactor = 0.0238f

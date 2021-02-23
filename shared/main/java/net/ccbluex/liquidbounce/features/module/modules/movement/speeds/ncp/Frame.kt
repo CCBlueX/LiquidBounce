@@ -16,27 +16,32 @@ class Frame : SpeedMode("Frame")
 	private var motionTicks = 0
 	private var move = false
 	private val tickTimer = TickTimer()
+
 	override fun onMotion(eventState: EventState)
 	{
 		if (eventState != EventState.PRE) return
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer.movementInput.moveForward > 0.0f || thePlayer.movementInput.moveStrafe > 0.0f)
+		if (MovementUtils.isMoving(thePlayer))
 		{
 			val speed = 4.25
+
 			if (thePlayer.onGround)
 			{
 				jump(thePlayer)
+
 				if (motionTicks == 1)
 				{
 					tickTimer.reset()
+
 					if (move)
 					{
 						thePlayer.motionX = 0.0
 						thePlayer.motionZ = 0.0
 						move = false
 					}
+
 					motionTicks = 0
 				}
 				else motionTicks = 1
@@ -45,9 +50,12 @@ class Frame : SpeedMode("Frame")
 			{
 				thePlayer.motionX *= speed
 				thePlayer.motionZ *= speed
+
 				move = true
 			}
+
 			if (!thePlayer.onGround) MovementUtils.strafe(thePlayer)
+
 			tickTimer.update()
 		}
 	}

@@ -20,13 +20,14 @@ class OnGround : SpeedMode("OnGround")
 
 		if (eventState != EventState.PRE || !MovementUtils.isMoving(thePlayer) || thePlayer.fallDistance > 3.994 || thePlayer.isInWater || thePlayer.isOnLadder || thePlayer.isCollidedHorizontally) return
 
+		val timer = mc.timer
+
 		thePlayer.posY -= 0.3993000090122223
 		thePlayer.motionY = -1000.0
 
-		//		thePlayer.cameraPitch = 0.3f
-
 		thePlayer.distanceWalkedModified = 44.0f
-		mc.timer.timerSpeed = 1f
+
+		timer.timerSpeed = 1f
 
 		if (thePlayer.onGround)
 		{
@@ -40,7 +41,7 @@ class OnGround : SpeedMode("OnGround")
 
 			LiquidBounce.eventManager.callEvent(JumpEvent(0.3993000090122223f))
 
-			mc.timer.timerSpeed = 1.199f
+			timer.timerSpeed = 1.199f
 		}
 	}
 

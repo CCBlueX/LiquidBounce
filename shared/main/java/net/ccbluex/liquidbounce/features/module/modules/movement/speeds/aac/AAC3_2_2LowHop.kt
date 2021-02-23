@@ -35,7 +35,9 @@ class AAC3_2_2LowHop : SpeedMode("AAC3.2.2-LowHop") // Was AAC3BHop
 					if (firstLegitJump)
 					{
 						jump(thePlayer)
+
 						firstLegitJump = false
+
 						return
 					}
 

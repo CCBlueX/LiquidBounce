@@ -25,12 +25,12 @@ class AAC3_0_5BHop : SpeedMode("AAC3.0.5-BHop") // Was AAC2BHop
 			if (thePlayer.onGround)
 			{
 				jump(thePlayer)
+
 				thePlayer.motionX *= 1.02
 				thePlayer.motionZ *= 1.02
 			}
 			else if (thePlayer.motionY > -0.2)
 			{
-				thePlayer.jumpMovementFactor = 0.08f
 				thePlayer.motionY += 0.0143099999999999999999999999999
 				thePlayer.jumpMovementFactor = 0.07f
 			}
