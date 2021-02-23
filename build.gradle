@@ -17,13 +17,13 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import net.fabricmc.loom.task.RemapJarTask
-
 plugins {
     id "fabric-loom"
     id "org.jetbrains.kotlin.jvm"
     id "com.github.johnrengelman.shadow" version "6.1.0"
 }
+
+import net.fabricmc.loom.task.RemapJarTask
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
