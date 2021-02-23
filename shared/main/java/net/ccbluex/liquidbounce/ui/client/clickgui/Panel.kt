@@ -41,7 +41,7 @@ abstract class Panel(val name: String, x: Int, y: Int, width: Int, height: Int, 
 	{
 		if (!isVisible) return
 
-		val maxElements = (LiquidBounce.moduleManager.getModule(ClickGUI::class.java) as ClickGUI).maxElementsValue.get()
+		val maxElements = (LiquidBounce.moduleManager[ClickGUI::class.java] as ClickGUI).maxElementsValue.get()
 
 		// Drag
 		if (drag)
@@ -103,7 +103,7 @@ abstract class Panel(val name: String, x: Int, y: Int, width: Int, height: Int, 
 
 	fun handleScroll(mouseX: Int, mouseY: Int, wheel: Int): Boolean
 	{
-		val maxElements = (LiquidBounce.moduleManager.getModule(ClickGUI::class.java) as ClickGUI).maxElementsValue.get()
+		val maxElements = (LiquidBounce.moduleManager[ClickGUI::class.java] as ClickGUI).maxElementsValue.get()
 
 		if (mouseX >= x && mouseX <= x + 100 && mouseY >= y && mouseY <= y + 19 + elementsHeight)
 		{
@@ -148,7 +148,7 @@ abstract class Panel(val name: String, x: Int, y: Int, width: Int, height: Int, 
 		var height = 0
 		var count = 0
 
-		val maxElements = (LiquidBounce.moduleManager.getModule(ClickGUI::class.java) as ClickGUI).maxElementsValue.get()
+		val maxElements = (LiquidBounce.moduleManager[ClickGUI::class.java] as ClickGUI).maxElementsValue.get()
 		for (element in elements) if (count < maxElements)
 		{
 			height += element.height + 1

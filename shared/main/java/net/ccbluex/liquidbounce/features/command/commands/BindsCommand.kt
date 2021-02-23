@@ -19,11 +19,13 @@ class BindsCommand : Command("binds")
 	{
 		val thePlayer = mc.thePlayer
 
+		val modules = LiquidBounce.moduleManager.modules
+
 		if (args.size > 1)
 		{
 			if (args[1].equals("clear", true))
 			{
-				for (module in LiquidBounce.moduleManager.modules) module.keyBind = Keyboard.KEY_NONE
+				for (module in modules) module.keyBind = Keyboard.KEY_NONE
 
 				chat(thePlayer, "Removed all binds.")
 				return
@@ -32,7 +34,7 @@ class BindsCommand : Command("binds")
 
 		chat(thePlayer, "\u00A7c\u00A7lBinds")
 
-		LiquidBounce.moduleManager.modules.filter { it.keyBind != Keyboard.KEY_NONE }.forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A76> \u00A7c${it.name}: \u00A7a\u00A7l${Keyboard.getKeyName(it.keyBind)}") }
+		modules.filter { it.keyBind != Keyboard.KEY_NONE }.forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A76> \u00A7c${it.name}: \u00A7a\u00A7l${Keyboard.getKeyName(it.keyBind)}") }
 
 		chatSyntax(thePlayer, "binds clear")
 	}

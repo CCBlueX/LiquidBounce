@@ -358,8 +358,10 @@ class Tower : Module()
 	{
 		if (placeInfo == null) return
 
-		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-		val scaffold = LiquidBounce.moduleManager[Scaffold::class.java] as Scaffold
+		val moduleManager = LiquidBounce.moduleManager
+
+		val killAura = moduleManager[KillAura::class.java] as KillAura
+		val scaffold = moduleManager[Scaffold::class.java] as Scaffold
 
 		if (scaffold.killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
 

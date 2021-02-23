@@ -56,8 +56,10 @@ class NoSlow : Module()
 
 		if (!provider.isItemSword(heldItem.item) || !MovementUtils.isMoving(thePlayer)) return
 
-		val aura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-		val tpaura = LiquidBounce.moduleManager[TpAura::class.java] as TpAura
+		val moduleManager = LiquidBounce.moduleManager
+
+		val aura = moduleManager[KillAura::class.java] as KillAura
+		val tpaura = moduleManager[TpAura::class.java] as TpAura
 
 		if (!thePlayer.isBlocking && !aura.serverSideBlockingStatus && !tpaura.serverSideBlockingStatus) return
 

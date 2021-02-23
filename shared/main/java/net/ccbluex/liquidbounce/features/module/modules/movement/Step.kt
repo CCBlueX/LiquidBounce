@@ -166,8 +166,10 @@ class Step : Module()
 	@EventTarget
 	fun onStep(event: StepEvent)
 	{
+		val moduleManager = LiquidBounce.moduleManager
+
 		// Phase  should disable step
-		if (LiquidBounce.moduleManager[Phase::class.java].state)
+		if (moduleManager[Phase::class.java].state)
 		{
 			event.stepHeight = 0F
 			return
@@ -176,7 +178,7 @@ class Step : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		// Some fly modes should disable step
-		val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
+		val fly = moduleManager[Fly::class.java] as Fly
 
 		if (fly.state)
 		{

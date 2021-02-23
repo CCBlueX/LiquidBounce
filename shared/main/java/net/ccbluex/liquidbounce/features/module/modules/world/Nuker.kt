@@ -59,9 +59,10 @@ class Nuker : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
+		val moduleManager = LiquidBounce.moduleManager
 
 		// Block hit delay
-		if (blockHitDelay > 0 && !LiquidBounce.moduleManager[FastBreak::class.java].state)
+		if (blockHitDelay > 0 && !moduleManager[FastBreak::class.java].state)
 		{
 			blockHitDelay--
 			return
@@ -160,7 +161,7 @@ class Nuker : Module()
 				attackedBlocks.add(blockPos)
 
 				// Call auto tool
-				val autoTool = LiquidBounce.moduleManager[AutoTool::class.java] as AutoTool
+				val autoTool = moduleManager[AutoTool::class.java] as AutoTool
 				if (autoTool.state) autoTool.switchSlot(blockPos)
 
 				val hitDelay = hitDelayValue.get()

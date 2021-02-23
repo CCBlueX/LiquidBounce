@@ -87,7 +87,9 @@ object CapeAPI : MinecraftInstance()
 		{
 			if (uuid != mc.session.profile.id) return null
 
-			var capeFile = File(LiquidBounce.fileManager.dir, GuiDonatorCape.transferCode.substring(5))
+			val fileManagerDir = LiquidBounce.fileManager.dir
+
+			var capeFile = File(fileManagerDir, GuiDonatorCape.transferCode.substring(5))
 			ClientUtils.logger.info("[Donator Cape] Loading offline cape from file ${capeFile.toPath()}")
 
 			resourceLocation = provider.createResourceLocation("offline-capes/%s".format("$capeFile"))
@@ -95,7 +97,7 @@ object CapeAPI : MinecraftInstance()
 			if (!capeFile.exists())
 			{
 				// Fallback strategy
-				capeFile = File(LiquidBounce.fileManager.dir, GuiDonatorCape.transferCode.substring(5) + ".png")
+				capeFile = File(fileManagerDir, GuiDonatorCape.transferCode.substring(5) + ".png")
 
 				ClientUtils.logger.info("[Donator Cape] Loaded offline cape from file (using fallback strategy) ${capeFile.toPath()}")
 				if (!capeFile.exists())

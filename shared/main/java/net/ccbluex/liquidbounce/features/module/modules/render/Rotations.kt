@@ -47,12 +47,14 @@ class Rotations : Module()
 	{
 		if (!onlyWhileRotatingValue.get()) return true
 
-		val bowAimbot = LiquidBounce.moduleManager[BowAimbot::class.java] as BowAimbot
-		val fucker = LiquidBounce.moduleManager[Fucker::class.java] as Fucker
-		val civBreak = LiquidBounce.moduleManager[CivBreak::class.java] as CivBreak
-		val nuker = LiquidBounce.moduleManager[Nuker::class.java] as Nuker
-		val chestAura = LiquidBounce.moduleManager[ChestAura::class.java] as ChestAura
-		val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
+		val moduleManager = LiquidBounce.moduleManager
+
+		val bowAimbot = moduleManager[BowAimbot::class.java] as BowAimbot
+		val fucker = moduleManager[Fucker::class.java] as Fucker
+		val civBreak = moduleManager[CivBreak::class.java] as CivBreak
+		val nuker = moduleManager[Nuker::class.java] as Nuker
+		val chestAura = moduleManager[ChestAura::class.java] as ChestAura
+		val fly = moduleManager[Fly::class.java] as Fly
 
 		val scaffoldState = getState(Scaffold::class.java)
 		val towerState = getState(Tower::class.java)

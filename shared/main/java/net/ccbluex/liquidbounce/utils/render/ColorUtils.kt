@@ -89,10 +89,12 @@ object ColorUtils : MinecraftInstance()
 		{
 			val entityLiving = entity!!.asEntityLivingBase()
 
-			val aimBot = LiquidBounce.moduleManager[Aimbot::class.java] as Aimbot
-			val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-			val tpAura = LiquidBounce.moduleManager[TpAura::class.java] as TpAura
-			val murderDetector = LiquidBounce.moduleManager[MurderDetector::class.java] as MurderDetector
+			val moduleManager = LiquidBounce.moduleManager
+
+			val aimBot = moduleManager[Aimbot::class.java] as Aimbot
+			val killAura = moduleManager[KillAura::class.java] as KillAura
+			val tpAura = moduleManager[TpAura::class.java] as TpAura
+			val murderDetector = moduleManager[MurderDetector::class.java] as MurderDetector
 
 			// Indicate Hurt
 			if (indicateHurt && entityLiving.hurtTime > 0 || indicateTarget && (entity.isEntityEqual(aimBot.target) || entity.isEntityEqual(killAura.target) || tpAura.isTarget(entityLiving))) return Color.RED

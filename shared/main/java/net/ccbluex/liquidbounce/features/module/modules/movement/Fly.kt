@@ -931,11 +931,13 @@ class Fly : Module()
 
 			GL11.glPushMatrix()
 
-			val blockOverlay = LiquidBounce.moduleManager[BlockOverlay::class.java] as BlockOverlay
+			val moduleManager = LiquidBounce.moduleManager
+
+			val blockOverlay = moduleManager[BlockOverlay::class.java] as BlockOverlay
 			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
 
-			val scaffold = LiquidBounce.moduleManager[Scaffold::class.java] as Scaffold
-			val tower = LiquidBounce.moduleManager[Tower::class.java] as Tower
+			val scaffold = moduleManager[Scaffold::class.java] as Scaffold
+			val tower = moduleManager[Tower::class.java] as Tower
 			if (scaffold.state && scaffold.counterDisplayValue.get() || tower.state && tower.counterDisplayValue.get()) GL11.glTranslatef(0f, 15f, 0f)
 
 			val remainingTicks = 80 - vanillaRemainingTime.tick.coerceAtMost(80)
@@ -1218,6 +1220,6 @@ class Fly : Module()
 	override val tag: String
 		get() = modeValue.get()
 
-	val disableNoFall: Boolean
+	val shouldDisableNoFall: Boolean
 		get() = waitForDamage || modeValue.get().equals("AAC1.9.10", ignoreCase = true)
 }

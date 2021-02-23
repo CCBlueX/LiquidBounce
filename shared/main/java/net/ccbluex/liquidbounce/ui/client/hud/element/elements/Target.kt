@@ -78,8 +78,10 @@ class Target : Element()
 		val netHandler = mc.netHandler
 		val textureManager = mc.textureManager
 
-		val tpAura = LiquidBounce.moduleManager[TpAura::class.java] as TpAura
-		val targetEntity = if (tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null) tpAura.currentTarget else ((LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target ?: (LiquidBounce.moduleManager[Aimbot::class.java] as Aimbot).target)
+		val moduleManager = LiquidBounce.moduleManager
+
+		val tpAura = moduleManager[TpAura::class.java] as TpAura
+		val targetEntity = if (tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null) tpAura.currentTarget else ((moduleManager[KillAura::class.java] as KillAura).target ?: (moduleManager[Aimbot::class.java] as Aimbot).target)
 
 		if (classProvider.isEntityPlayer(targetEntity) && targetEntity!!.asEntityPlayer().entityAlive)
 		{

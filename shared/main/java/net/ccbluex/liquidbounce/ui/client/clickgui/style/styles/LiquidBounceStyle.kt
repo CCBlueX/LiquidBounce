@@ -44,8 +44,10 @@ class LiquidBounceStyle : Style()
 
 		if (panel.scrollbar && panel.fade > 0)
 		{
+			val maxElements = (LiquidBounce.moduleManager[ClickGUI::class.java] as ClickGUI).maxElementsValue.get()
+
 			drawRect(panel.x - 2f, panel.y + 21f, panel.x.toFloat(), panel.y + 16f + panel.fade, Int.MAX_VALUE)
-			drawRect(panel.x - 2f, panel.y + 30f + (panel.fade - 24.0f) / (panel.elements.size - (LiquidBounce.moduleManager.getModule(ClickGUI::class.java) as ClickGUI).maxElementsValue.get()) * panel.dragged - 10.0f, xF, panel.y + 40 + (panel.fade - 24.0f) / (panel.elements.size - (LiquidBounce.moduleManager.getModule(ClickGUI::class.java) as ClickGUI).maxElementsValue.get()) * panel.dragged, Int.MIN_VALUE)
+			drawRect(panel.x - 2f, panel.y + 30f + (panel.fade - 24.0f) / (panel.elements.size - maxElements) * panel.dragged - 10.0f, xF, panel.y + 40 + (panel.fade - 24.0f) / (panel.elements.size - maxElements) * panel.dragged, Int.MIN_VALUE)
 		}
 	}
 

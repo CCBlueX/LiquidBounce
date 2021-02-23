@@ -95,9 +95,11 @@ object EntityUtils : MinecraftInstance()
 
 				if (player.spectator || isBot(player)) return false
 
-				if (player.isClientFriend() && !LiquidBounce.moduleManager[NoFriends::class.java].state) return false
+				val moduleManager = LiquidBounce.moduleManager
 
-				val teams = LiquidBounce.moduleManager[Teams::class.java] as Teams
+				if (player.isClientFriend() && !moduleManager[NoFriends::class.java].state) return false
+
+				val teams = moduleManager[Teams::class.java] as Teams
 
 				return !teams.state || !teams.isInYourTeam(entity.asEntityLivingBase())
 			}

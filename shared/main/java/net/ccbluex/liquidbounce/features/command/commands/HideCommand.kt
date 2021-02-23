@@ -23,18 +23,21 @@ class HideCommand : Command("hide")
 
 		if (args.size > 1)
 		{
+			val moduleManager = LiquidBounce.moduleManager
+			val modules = moduleManager.modules
+
 			when (args[1].toLowerCase())
 			{
 				"list" ->
 				{
 					chat(thePlayer, "\u00A7c\u00A7lHidden")
-					LiquidBounce.moduleManager.modules.filterNot(Module::array).forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A76> \u00A7c${it.name}") }
+					modules.filterNot(Module::array).forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A76> \u00A7c${it.name}") }
 					return
 				}
 
 				"clear" ->
 				{
-					for (module in LiquidBounce.moduleManager.modules) module.array = true
+					for (module in modules) module.array = true
 
 					chat(thePlayer, "Cleared hidden modules.")
 					return
@@ -42,7 +45,7 @@ class HideCommand : Command("hide")
 
 				"reset" ->
 				{
-					for (module in LiquidBounce.moduleManager.modules) module.array = module::class.java.getAnnotation(ModuleInfo::class.java).array
+					for (module in modules) module.array = module::class.java.getAnnotation(ModuleInfo::class.java).array
 
 					chat(thePlayer, "Reset hidden modules.")
 					return
@@ -50,9 +53,8 @@ class HideCommand : Command("hide")
 
 				else ->
 				{
-
 					// Get module by name
-					val module = LiquidBounce.moduleManager.getModule(args[1])
+					val module = moduleManager.getModule(args[1])
 
 					if (module == null)
 					{

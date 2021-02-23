@@ -1064,8 +1064,8 @@ class KillAura : Module()
 	 */
 	private fun shouldCancelRun(thePlayer: IEntityPlayerSP): Boolean
 	{
-		val blink = LiquidBounce.moduleManager[Blink::class.java] as Blink
-		return thePlayer.spectator || !EntityUtils.isAlive(thePlayer, aacValue.get()) || blink.state || LiquidBounce.moduleManager[FreeCam::class.java].state || !suspendTimer.hasTimePassed(suspend)
+		val moduleManager = LiquidBounce.moduleManager
+		return thePlayer.spectator || !EntityUtils.isAlive(thePlayer, aacValue.get()) || (moduleManager[Blink::class.java] as Blink).state || moduleManager[FreeCam::class.java].state || !suspendTimer.hasTimePassed(suspend)
 	}
 
 	/**

@@ -115,7 +115,9 @@ class ClientRichPresence : MinecraftInstance()
 
 			// Set display infos
 			builder.setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else serverData.serverIP}")
-			builder.setState("Enabled ${LiquidBounce.moduleManager.modules.count(Module::state)} of ${LiquidBounce.moduleManager.modules.size} modules")
+
+			val moduleManager = LiquidBounce.moduleManager
+			builder.setState("Enabled ${moduleManager.modules.count(Module::state)} of ${moduleManager.modules.size} modules")
 		}
 
 		// Check ipc client is connected and send rpc

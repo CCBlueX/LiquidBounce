@@ -65,9 +65,11 @@ object Fucker : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
+		val moduleManager = LiquidBounce.moduleManager
+
 		if (noHitValue.get())
 		{
-			val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
+			val killAura = moduleManager[KillAura::class.java] as KillAura
 
 			if (killAura.state && killAura.target != null) return
 		}
@@ -135,7 +137,7 @@ object Fucker : Module()
 			{
 
 				// Auto Tool
-				val autoTool = LiquidBounce.moduleManager[AutoTool::class.java] as AutoTool
+				val autoTool = moduleManager[AutoTool::class.java] as AutoTool
 				val netHandler = mc.netHandler
 
 				if (autoTool.state) autoTool.switchSlot(currentPos)

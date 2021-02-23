@@ -196,10 +196,10 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		val credits = ArrayList<Credit>(gitHubContributors.size)
 
-		for (gitHubContributor in gitHubContributors)
+		for ((_, weeks, author) in gitHubContributors)
 		{
 			var contributorInformation: ContributorInformation? = null
-			val jsonElement = additionalInformation[gitHubContributor.author.id.toString()]
+			val jsonElement = additionalInformation[author.id.toString()]
 
 			if (jsonElement != null) contributorInformation = gson.fromJson(jsonElement, ContributorInformation::class.java)
 
@@ -207,14 +207,14 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			var deletions = 0
 			var commits = 0
 
-			for (week in gitHubContributor.weeks)
+			for ((_, weekAdditions, weekDeletions, weekCommits) in weeks)
 			{
-				additions += week.additions
-				deletions += week.deletions
-				commits += week.commits
+				additions += weekAdditions
+				deletions += weekDeletions
+				commits += weekCommits
 			}
 
-			credits.add(Credit(gitHubContributor.author.name, gitHubContributor.author.avatarUrl, null, additions, deletions, commits, contributorInformation?.teamMember ?: false, contributorInformation?.contributions ?: Collections.emptyList()))
+			credits.add(Credit(author.name, author.avatarUrl, null, additions, deletions, commits, contributorInformation?.teamMember ?: false, contributorInformation?.contributions ?: Collections.emptyList()))
 		}
 
 		credits.sortWith(object : Comparator<Credit>
@@ -236,7 +236,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		{
 			try
 			{
-				HttpUtils.requestStream("${credit.avatarUrl}?s=${representedScreen.fontRendererObj.fontHeight shl 2}", "GET").use { credit.avatar = CustomTexture(ImageIO.read(it)!!) }
+				HttpUtils.requestStream("${credit.avatarUrl}?s=${representedScreen.fontRendererObj.fontHeight shl 2}", "GET").use { credit.avatar = run { CustomTexture(ImageIO.read(it) ?: return@run null) } }
 			}
 			catch (e: Exception)
 			{
@@ -252,15 +252,14 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 	internal class ContributorInformation(val name: String, val teamMember: Boolean, val contributions: List<String>)
 
-	internal class GitHubContributor(@SerializedName("total") val totalContributions: Int, val weeks: List<GitHubWeek>, val author: GitHubAuthor)
-	internal class GitHubWeek(@SerializedName("w") val timestamp: Long, @SerializedName("a") val additions: Int, @SerializedName("d") val deletions: Int, @SerializedName("c") val commits: Int)
-	internal class GitHubAuthor(@SerializedName("login") val name: String, val id: Int, @SerializedName("avatar_url") val avatarUrl: String)
+	internal data class GitHubContributor(@SerializedName("total") val totalContributions: Int, val weeks: List<GitHubWeek>, val author: GitHubAuthor)
+	internal data class GitHubWeek(@SerializedName("w") val timestamp: Long, @SerializedName("a") val additions: Int, @SerializedName("d") val deletions: Int, @SerializedName("c") val commits: Int)
+	internal data class GitHubAuthor(@SerializedName("login") val name: String, val id: Int, @SerializedName("avatar_url") val avatarUrl: String)
 
 	internal class Credit(val name: String, val avatarUrl: String, var avatar: CustomTexture?, val additions: Int, val deletions: Int, val commits: Int, val isTeamMember: Boolean, val contributions: List<String>)
 
 	private inner class GuiList(gui: IGuiScreen) : WrappedGuiSlot(mc, gui.width shr 2, gui.height, 40, gui.height - 40, 15)
 	{
-
 		init
 		{
 			represented.setListWidth(gui.width * 3 / 13)

@@ -87,8 +87,10 @@ class LongJump : Module()
 
 		if (autoDisableScaffoldValue.get())
 		{
-			val scaffold = LiquidBounce.moduleManager[Scaffold::class.java]
-			val tower = LiquidBounce.moduleManager[Tower::class.java]
+			val moduleManager = LiquidBounce.moduleManager
+
+			val scaffold = moduleManager[Scaffold::class.java]
+			val tower = moduleManager[Tower::class.java]
 
 			if (scaffold.state) scaffold.state = false
 			if (tower.state) tower.state = false
