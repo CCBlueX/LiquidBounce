@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.IScaledResolution
-import net.ccbluex.liquidbounce.api.util.IWrappedArray
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -244,11 +243,7 @@ class ExtendedTooltips : Module()
 
 		var totalItemCount = 0
 
-		val inventory: IWrappedArray<IItemStack?> = thePlayer.inventory.mainInventory
-		inventory.forEachIndexed { i, _ ->
-			val itemInSlot = inventory[i]
-			if (itemInSlot != null && func.getIdFromItem(itemInSlot.item!!) == itemID && itemInSlot.itemDamage == itemMeta) totalItemCount += itemInSlot.stackSize
-		}
+		thePlayer.inventory.mainInventory.filterNotNull().filter { func.getIdFromItem(it.item!!) == itemID }.filter { it.itemDamage == itemMeta }.forEach { stack -> totalItemCount += stack.stackSize }
 
 		return totalItemCount
 	}

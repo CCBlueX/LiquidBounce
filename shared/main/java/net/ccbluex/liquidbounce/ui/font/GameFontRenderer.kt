@@ -108,9 +108,7 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 			var strikeThrough = false
 			var underline = false
 
-			parts.forEachIndexed { index, part ->
-				if (part.isEmpty()) return@forEachIndexed
-
+			parts.withIndex().filter { it.value.isNotEmpty() }.forEach { (index, part) ->
 				if (index == 0)
 				{
 					currentFont.drawString(part, width, 0.0, currentColor)
@@ -213,9 +211,7 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 			var bold = false
 			var italic = false
 
-			parts.forEachIndexed { index, part ->
-				if (part.isEmpty()) return@forEachIndexed
-
+			parts.withIndex().filter { it.value.isNotEmpty() }.forEach { (index, part) ->
 				if (index == 0) width += currentFont.getStringWidth(part)
 				else
 				{

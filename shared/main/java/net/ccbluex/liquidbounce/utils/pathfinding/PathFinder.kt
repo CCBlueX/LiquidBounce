@@ -41,20 +41,21 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 
 				if (hubsToWork.isEmpty()) return@findLoop
 
-				for ((index, hub) in ArrayList(hubsToWork).withIndex())
-				{
-					if (index + 1 > depth) break
+				run hubLoop@{
+					ArrayList(hubsToWork).forEachIndexed { index, hub ->
+						if (index + 1 > depth) return@hubLoop
 
-					hubsToWork.remove(hub)
-					hubs.add(hub)
+						hubsToWork.remove(hub)
+						hubs.add(hub)
 
-					flatCardinalDirections.map { hub.position.add(it).floor() }.forEach { if (checkPositionValidity(it, false) && addHub(hub, it, 0.0)) return@findLoop }
+						flatCardinalDirections.map { hub.position.add(it).floor() }.forEach { if (checkPositionValidity(it, false) && addHub(hub, it, 0.0)) return@findLoop }
 
-					val up = hub.position.addVector(0.0, 1.0, 0.0).floor()
-					if (checkPositionValidity(up, false) && addHub(hub, up, 0.0)) return@findLoop
+						val up = hub.position.addVector(0.0, 1.0, 0.0).floor()
+						if (checkPositionValidity(up, false) && addHub(hub, up, 0.0)) return@findLoop
 
-					val down = hub.position.addVector(0.0, -1.0, 0.0).floor()
-					if (checkPositionValidity(down, false) && addHub(hub, down, 0.0)) return@findLoop
+						val down = hub.position.addVector(0.0, -1.0, 0.0).floor()
+						if (checkPositionValidity(down, false) && addHub(hub, down, 0.0)) return@findLoop
+					}
 				}
 			}
 		}
