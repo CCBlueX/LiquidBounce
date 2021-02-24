@@ -45,14 +45,14 @@ class AutoWeapon : Module()
 
 		if (packet.action == ICPacketUseEntity.WAction.ATTACK && attackEnemy)
 		{
+			val inventory = thePlayer.inventory
+
 			attackEnemy = false
 
 			// Find best weapon in hotbar (#Kotlin Style)
-			val (slot, _) = (0..8).asSequence().mapNotNull { it to (thePlayer.inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, itemStack) -> provider.isItemSword(itemStack.item) || provider.isItemTool(itemStack.item) }.maxBy { (_, itemStack) ->
-				itemStack.getAttributeModifier("generic.attackDamage").first().amount + 1.25 * ItemUtils.getEnchantment(itemStack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
-			} ?: return
+			val (slot, _) = (0..8).asSequence().mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> provider.isItemSword(stack.item) || provider.isItemTool(stack.item) }.maxBy { (_, stack) -> (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 2.0) + 1.25 * ItemUtils.getEnchantment(stack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)) } ?: return
 
-			if (slot == thePlayer.inventory.currentItem) // If in hand no need to swap
+			if (slot == inventory.currentItem) // If in hand no need to swap
 				return
 
 			// Switch to best weapon
@@ -63,7 +63,7 @@ class AutoWeapon : Module()
 			}
 			else
 			{
-				thePlayer.inventory.currentItem = slot
+				inventory.currentItem = slot
 				mc.playerController.updateController()
 			}
 

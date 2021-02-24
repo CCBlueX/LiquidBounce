@@ -227,7 +227,7 @@ class Projectiles : Module()
 			val sizeDouble = size.toDouble()
 
 			// Check all possible entities
-			collidedEntities.filter { it.canBeCollidedWith() && it != thePlayer }.forEach { possibleEntity ->
+			collidedEntities.filter(IEntity::canBeCollidedWith).filter { it != thePlayer }.forEach { possibleEntity ->
 				val possibleEntityBoundingBox = possibleEntity.entityBoundingBox.expand(sizeDouble, sizeDouble, sizeDouble)
 
 				val possibleEntityLanding = possibleEntityBoundingBox.calculateIntercept(posBefore, posAfter) ?: return@forEach

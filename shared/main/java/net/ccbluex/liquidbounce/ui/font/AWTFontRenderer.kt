@@ -236,11 +236,11 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 		graphics2D.fillRect(0, 0, textureWidth, textureHeight)
 		graphics2D.color = Color.white
 
-		(startChar until stopChar).filter { fontImages[it] != null && charLocations[it] != null }.forEach { graphics2D.drawImage(fontImages[it], charLocations[it]!!.x, charLocations[it]!!.y, null) }
+		(startChar until stopChar).filter { fontImages[it] != null }.filter { charLocations[it] != null }.forEach { graphics2D.drawImage(fontImages[it], charLocations[it]!!.x, charLocations[it]!!.y, null) }
 
 		val textureUtil = classProvider.textureUtil
 
-		textureID = textureUtil.uploadTextureImageAllocate(textureUtil.glGenTextures(), bufferedImage, true, true)
+		textureID = textureUtil.uploadTextureImageAllocate(textureUtil.glGenTextures(), bufferedImage, textureBlur = true, textureClamp = true)
 	}
 
 	/**

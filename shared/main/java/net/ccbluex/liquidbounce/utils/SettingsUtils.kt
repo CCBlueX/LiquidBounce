@@ -166,9 +166,7 @@ object SettingsUtils
 	{
 		val stringBuilder = StringBuilder()
 
-		LiquidBounce.moduleManager.modules.filter {
-			it.category != ModuleCategory.RENDER && it !is NameProtect && it !is Spammer
-		}.forEach {
+		LiquidBounce.moduleManager.modules.filter { it.category != ModuleCategory.RENDER }.filter { it !is NameProtect }.filter { it !is Spammer }.forEach {
 			if (values) it.values.forEach { value -> stringBuilder.append(it.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n") }
 
 			if (states) stringBuilder.append(it.name).append(" toggle ").append(it.state).append("\n")

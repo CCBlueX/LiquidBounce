@@ -366,7 +366,7 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 			accounts = ArrayList(defaultValue.size)
 
-			LiquidBounce.fileManager.accountsConfig.accounts.filter { it.name.contains(search, ignoreCase = true) || it.accountName != null && it.accountName!!.contains(search, ignoreCase = true) }.forEach { accounts.add(it) }
+			LiquidBounce.fileManager.accountsConfig.accounts.filter { it.name.contains(search, ignoreCase = true) || it.accountName?.contains(search, ignoreCase = true) ?: false }.forEach { accounts.add(it) }
 		}
 
 		override fun isSelected(id: Int): Boolean = selectedSlot == id
@@ -584,9 +584,9 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		@JvmStatic
 		fun toggleMarkBanned(serverIp: String)
 		{
-			val sessionProfile = mc.session.profile
+			val sessionProfileName = mc.session.profile.name
 
-			LiquidBounce.fileManager.accountsConfig.accounts.filter { sessionProfile.name.equals(it.name, ignoreCase = true) || sessionProfile.name.equals(it.accountName, ignoreCase = true) }.forEach { account ->
+			LiquidBounce.fileManager.accountsConfig.accounts.filter { it.name.equals(sessionProfileName, ignoreCase = true) || it.accountName.equals(sessionProfileName, ignoreCase = true) }.forEach { account ->
 				val canMarkAsBanned = canMarkBannedCurrent(serverIp)
 
 				if (canMarkAsBanned) account.bannedServers.add(serverIp) else account.bannedServers.remove(serverIp)

@@ -177,30 +177,15 @@ class RotationUtils : MinecraftInstance(), Listenable
 			val targetPosY = target.posY
 			val targetPosZ = target.posZ
 
-			val xDelta = (targetPosX - target.lastTickPosX) * 0.4
-			val yDelta = (targetPosY - target.lastTickPosY) * 0.4
-			val zDelta = (targetPosZ - target.lastTickPosZ) * 0.4
-
 			var distance = thePlayer.getDistanceToEntity(target).toDouble()
 			distance -= distance % 0.8
 
 			val sprinting = target.sprinting
-			val xPrediction = distance / 0.8 * xDelta * if (sprinting) 1.25f else 1f
-			val yPrediction = distance / 0.8 * yDelta
-			val zPrediction = distance / 0.8 * zDelta * if (sprinting) 1.25f else 1f
 
 			// Calculate the (predicted) target position
-			val xTargetPredict = if (enemyPrediction) xPrediction else 0.0
-			val yTargetPredict = if (enemyPrediction) yPrediction else 0.0
-			val zTargetPredict = if (enemyPrediction) zPrediction else 0.0
-
-			val xPlayerPredict = thePlayer.posX + if (playerPrediction) (thePlayer.posX - thePlayer.prevPosX) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize) else 0.0
-			val yPlayerPredict = thePlayer.entityBoundingBox.minY + if (playerPrediction) (thePlayer.posY - thePlayer.prevPosY) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize) else 0.0
-			val zPlayerPredict = thePlayer.posZ + if (playerPrediction) (thePlayer.posZ - thePlayer.prevPosZ) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize) else 0.0
-
-			val posX = targetPosX + xTargetPredict - xPlayerPredict
-			val posY = target.entityBoundingBox.minY + yTargetPredict + target.eyeHeight - 0.15 - yPlayerPredict - thePlayer.eyeHeight
-			val posZ = targetPosZ + zTargetPredict - zPlayerPredict
+			val posX = targetPosX + (if (enemyPrediction) distance / 0.8 * ((targetPosX - target.lastTickPosX) * 0.4) * if (sprinting) 1.25f else 1f else 0.0) - (thePlayer.posX + if (playerPrediction) (thePlayer.posX - thePlayer.prevPosX) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize) else 0.0)
+			val posY = target.entityBoundingBox.minY + (if (enemyPrediction) distance / 0.8 * ((targetPosY - target.lastTickPosY) * 0.4) else 0.0) + target.eyeHeight - 0.15 - (thePlayer.entityBoundingBox.minY + if (playerPrediction) (thePlayer.posY - thePlayer.prevPosY) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize) else 0.0) - thePlayer.eyeHeight
+			val posZ = targetPosZ + (if (enemyPrediction) distance / 0.8 * ((targetPosZ - target.lastTickPosZ) * 0.4) * if (sprinting) 1.25f else 1f else 0.0) - (thePlayer.posZ + if (playerPrediction) (thePlayer.posZ - thePlayer.prevPosZ) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize) else 0.0)
 
 			// Bow Power Calculation
 			val fastBow = LiquidBounce.moduleManager[FastBow::class.java] as FastBow

@@ -185,8 +185,10 @@ class InventoryCleaner : Module()
 
 				var misclick = false
 
+				val misclickRate = misclicksRateValue.get()
+
 				// Simulate Click Mistakes to bypass some anti-cheats
-				if (allowMisclicksValue.get() && misclicksRateValue.get() > 0 && Random.nextInt(100) <= misclicksRateValue.get())
+				if (allowMisclicksValue.get() && misclickRate > 0 && Random.nextInt(100) <= misclickRate)
 				{
 					val firstEmpty: Int = firstEmpty(hotbarItems, randomSlot)
 					if (firstEmpty != -1) garbageHotbarItem = firstEmpty
@@ -228,14 +230,14 @@ class InventoryCleaner : Module()
 		val thePlayer = mc.thePlayer ?: return true
 
 		var invItems = items(start, end, container)
-		var garbageItems = invItems.filter { !isUseful(thePlayer, it.key, it.value, container = container) }.keys.toMutableList()
+		var garbageItems = invItems.filterNot { isUseful(thePlayer, it.key, it.value, container = container) }.keys.toMutableList()
 
 		if (garbageItems.isEmpty()) return true
 
 		while (timer.hasTimePassed(delay))
 		{
 			invItems = items(start, end, container)
-			garbageItems = invItems.filter { !isUseful(thePlayer, it.key, it.value, container = container) }.keys.toMutableList()
+			garbageItems = invItems.filterNot { isUseful(thePlayer, it.key, it.value, container = container) }.keys.toMutableList()
 
 			// Return true if there is no remaining garbage items in the inventory
 			if (garbageItems.isEmpty()) return true
@@ -552,7 +554,7 @@ class InventoryCleaner : Module()
 
 		val itemDelay = itemDelayValue.get()
 
-		(end - 1 downTo start).mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { (i, itemStack) -> !ItemUtils.isStackEmpty(itemStack) && (i !in 36..44 || !type(i).equals("Ignore", ignoreCase = true)) && System.currentTimeMillis() - (itemStack).itemDelay >= itemDelay }.forEach { (i, itemStack) -> items[i] = itemStack }
+		(end - 1 downTo start).mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { (slot, stack) -> !ItemUtils.isStackEmpty(stack) && (slot !in 36..44 || !type(slot).equals("Ignore", ignoreCase = true)) && System.currentTimeMillis() - (stack).itemDelay >= itemDelay }.forEach { (i, itemStack) -> items[i] = itemStack }
 
 		return items
 	}

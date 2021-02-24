@@ -606,10 +606,12 @@ class Scaffold : Module()
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
-			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0)
+			val inventoryContainer = thePlayer.inventoryContainer
+
+			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(theWorld, inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0)
 			if (autoBlockSlot == -1) return
 
-			autoblock = thePlayer.inventoryContainer.getSlot(autoBlockSlot).stack
+			autoblock = inventoryContainer.getSlot(autoBlockSlot).stack
 		}
 
 		val autoblockBlock = autoblock!!.item!!.asItemBlock().block
@@ -1099,14 +1101,11 @@ class Scaffold : Module()
 	{
 		var amount = 0
 
+		val provider = classProvider
+
 		val inventoryContainer = thePlayer.inventoryContainer
 
-		(36..44).map { inventoryContainer.getSlot(it).stack }.filter {
-			val heldItem: IItemStack? = thePlayer.heldItem
-			classProvider.isItemBlock(it?.item) && (heldItem != null && heldItem == it || InventoryUtils.canAutoBlock(((it?.item!!).asItemBlock()).block))
-		}.forEach {
-			amount += (it ?: return@forEach).stackSize
-		}
+		(36..44).map { inventoryContainer.getSlot(it).stack }.filter { provider.isItemBlock(it?.item) }.filter { (thePlayer.heldItem ?: return@filter false) == it || InventoryUtils.canAutoBlock(((it?.item!!).asItemBlock()).block) }.forEach { amount += (it ?: return@forEach).stackSize }
 
 		return amount
 	}

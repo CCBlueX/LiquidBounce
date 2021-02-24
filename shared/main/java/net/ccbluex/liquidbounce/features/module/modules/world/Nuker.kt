@@ -89,6 +89,9 @@ class Nuker : Module()
 
 		val radius = radiusValue.get()
 		val throughWalls = throughWallsValue.get()
+		val nukeEnabled = nukeValue.get()
+		val priority = priorityValue.get()
+		val layer = layerValue.get()
 
 		val provider = classProvider
 
@@ -97,35 +100,22 @@ class Nuker : Module()
 
 			// Default nuker
 
-			val validBlocks = searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filter { (pos, block) ->
-				if (getCenterDistance(thePlayer, pos) <= radius && validBlock(block))
-				{
-					if (layerValue.get() && pos.y < thePlayer.posY)
-					{
-						// Layer: Break all blocks above you
-						return@filter false
-					}
+			val validBlocks = searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filterValues(::validBlock).filterKeys { getCenterDistance(thePlayer, it) <= radius }.filterKeys { !layer || it.y >= thePlayer.posY }.filterKeys { pos ->
+				throughWalls || run {
+					// ThroughWalls: Just break blocks in your sight
+					// Raytrace player eyes to block position (through walls check)
+					val eyesPos = WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ)
+					val blockVec = WVec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
+					val rayTrace = theWorld.rayTraceBlocks(eyesPos, blockVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
 
-					if (!throughWalls)
-					{
-						// ThroughWalls: Just break blocks in your sight
-						// Raytrace player eyes to block position (through walls check)
-						val eyesPos = WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ)
-						val blockVec = WVec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
-						val rayTrace = theWorld.rayTraceBlocks(eyesPos, blockVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
-
-						// Check if block is visible
-						rayTrace != null && rayTrace.blockPos == pos
-					}
-					else true // Done
+					// Check if block is visible
+					rayTrace != null && rayTrace.blockPos == pos
 				}
-				else false // Bad block
 			}.toMutableMap()
 
-			val nukeEnabled = nukeValue.get()
 			do
 			{
-				val (blockPos, block) = when (priorityValue.get())
+				val (blockPos, block) = when (priority)
 				{
 					"Distance" -> validBlocks.minBy { (pos, _) ->
 						val distance = getCenterDistance(thePlayer, pos)
@@ -213,29 +203,17 @@ class Nuker : Module()
 			if (provider.isItemSword(thePlayer.heldItem?.item)) return
 
 			// Search for new blocks to break
-			searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filter { (pos, block) ->
-				if (getCenterDistance(thePlayer, pos) <= radius && validBlock(block))
-				{
-					if (layerValue.get() && pos.y < thePlayer.posY)
-					{
-						// Layer: Break all blocks above you
-						return@filter false
-					}
+			searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filterValues(::validBlock).filterKeys { getCenterDistance(thePlayer, it) <= radius }.filterKeys { !layer || it.y >= thePlayer.posY }.filterKeys { pos ->
+				throughWalls || run {
+					// ThroughWalls: Just break blocks in your sight
+					// Raytrace player eyes to block position (through walls check)
+					val eyesPos = WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ)
+					val blockVec = WVec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
+					val rayTrace = theWorld.rayTraceBlocks(eyesPos, blockVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
 
-					if (!throughWalls)
-					{
-						// ThroughWalls: Just break blocks in your sight
-						// Raytrace player eyes to block position (through walls check)
-						val eyesPos = WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ)
-						val blockVec = WVec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
-						val rayTrace = theWorld.rayTraceBlocks(eyesPos, blockVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
-
-						// Check if block is visible
-						rayTrace != null && rayTrace.blockPos == pos
-					}
-					else true // Done
+					// Check if block is visible
+					rayTrace != null && rayTrace.blockPos == pos
 				}
-				else false // Bad block
 			}.forEach { (pos, _) -> // Instant break block
 				netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, pos, provider.getEnumFacing(EnumFacingType.DOWN)))
 				thePlayer.swingItem()

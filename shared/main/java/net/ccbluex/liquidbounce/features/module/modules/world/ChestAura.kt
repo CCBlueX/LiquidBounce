@@ -69,12 +69,12 @@ object ChestAura : Module()
 				val throughWalls = throughWallsValue.get()
 
 
-				currentBlock = BlockUtils.searchBlocks(theWorld, thePlayer, radius.toInt()).asSequence().filter { (_, block) -> func.getIdFromBlock(block) == chestID }.filter { (pos, _) -> !clickedBlocks.contains(pos) }.filter { (pos, _) -> BlockUtils.getCenterDistance(thePlayer, pos) < range }.filter { (pos, _) ->
+				currentBlock = BlockUtils.searchBlocks(theWorld, thePlayer, radius.toInt()).asSequence().filter { func.getIdFromBlock(it.value) == chestID }.filter { !clickedBlocks.contains(it.key) }.filter { BlockUtils.getCenterDistance(thePlayer, it.key) < range }.filter { (pos, _) ->
 					throughWalls || run {
 						val movingObjectPosition = theWorld.rayTraceBlocks(eyesPos, pos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
 						movingObjectPosition != null && movingObjectPosition.blockPos == pos
 					}
-				}.minBy { (pos, _) -> BlockUtils.getCenterDistance(thePlayer, pos) }?.key
+				}.minBy { BlockUtils.getCenterDistance(thePlayer, it.key) }?.key
 
 				if (rotationsValue.get()) RotationUtils.setTargetRotation((RotationUtils.faceBlock(theWorld, thePlayer, currentBlock ?: return) ?: return).rotation)
 			}

@@ -101,10 +101,11 @@ class BlockESP : Module()
 			val playerY = thePlayer.posY.toInt()
 			val playerZ = thePlayer.posZ.toInt()
 
+			val blockLimit = blockLimitValue.get()
 			task = Runnable {
 				val blockList: MutableList<WBlockPos> = ArrayList()
 
-				(-radius until radius).forEach { x -> (-radius until radius).forEach { y -> (-radius until radius).map { z -> WBlockPos(playerX + x, playerY + y, playerZ + z) }.filter { getBlock(theWorld, it) == selectedBlock && blockList.size < blockLimitValue.get() }.forEach { blockList.add(it) } } }
+				(-radius until radius).forEach { x -> (-radius until radius).forEach { y -> (-radius until radius).map { z -> WBlockPos(playerX + x, playerY + y, playerZ + z) }.filter { blockList.size < blockLimit }.filter { getBlock(theWorld, it) == selectedBlock }.forEach { blockList.add(it) } } }
 
 				searchTimer.reset()
 

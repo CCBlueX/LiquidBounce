@@ -221,7 +221,12 @@ object Fucker : Module()
 	 */
 	private fun find(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetID: Int): WBlockPos?
 	{
-		val radius = rangeValue.get().toInt() + 1
+		val func = functions
+
+		val surroundings = surroundingsValue.get()
+		val range = rangeValue.get()
+
+		val radius = range.toInt() + 1
 
 		var nearestBlockDistance = Double.MAX_VALUE
 		var nearestBlock: WBlockPos? = null
@@ -232,12 +237,9 @@ object Fucker : Module()
 
 		(radius downTo -radius + 1).forEach { x ->
 			(radius downTo -radius + 1).forEach { y ->
-				(radius downTo -radius + 1).map { z ->
-					val blockPos = WBlockPos(posXI + x, posYI + y, posZI + z)
-					blockPos to getCenterDistance(thePlayer, blockPos)
-				}.filter { (blockPos, distance) -> functions.getIdFromBlock(getBlock(theWorld, blockPos)) == targetID && distance <= rangeValue.get() && nearestBlockDistance >= distance && (isHitable(theWorld, thePlayer, blockPos) || surroundingsValue.get()) }.forEach { (blockPos, distance) ->
-					nearestBlockDistance = distance
-					nearestBlock = blockPos
+				(radius downTo -radius + 1).asSequence().map { z -> WBlockPos(posXI + x, posYI + y, posZI + z) }.filter { blockPos -> func.getIdFromBlock(getBlock(theWorld, blockPos)) == targetID }.map { it to getCenterDistance(thePlayer, it) }.filter { it.second <= range }.filter { it.second <= nearestBlockDistance }.filter { surroundings || isHitable(theWorld, thePlayer, it.first) }.toList().forEach {
+					nearestBlockDistance = it.second
+					nearestBlock = it.first
 				}
 			}
 		}
@@ -255,7 +257,7 @@ object Fucker : Module()
 			"raycast" ->
 			{
 				val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
-				val movingObjectPosition = mc.theWorld!!.rayTraceBlocks(eyesPos, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
+				val movingObjectPosition = theWorld.rayTraceBlocks(eyesPos, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
 
 				movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
 			}

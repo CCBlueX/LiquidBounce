@@ -142,8 +142,8 @@ class XrayCommand : Command("xray")
 
 				when (args[0].toLowerCase())
 				{
-					"add" -> return blockRegistryKeys.asSequence().map { it.resourcePath.toLowerCase() }.filter { func.getBlockFromName(it.toLowerCase()) != null }.filter { !xrayBlocks.contains(func.getBlockFromName(it.toLowerCase())) }.filter { it.startsWith(args[1], true) }.toList()
-					"remove" -> return blockRegistryKeys.asSequence().map { it.resourcePath.toLowerCase() }.filter { xrayBlocks.contains(func.getBlockFromName(it)) }.filter { it.startsWith(args[1], true) }.toList()
+					"add" -> return blockRegistryKeys.asSequence().map { it.resourcePath.toLowerCase() }.filter { !xrayBlocks.contains((func.getBlockFromName(it) ?: return@filter false)) }.filter { it.startsWith(args[1], true) }.toList()
+					"remove" -> return blockRegistryKeys.asSequence().map { it.resourcePath.toLowerCase() }.filter { xrayBlocks.contains(func.getBlockFromName(it) ?: return@filter false) }.filter { it.startsWith(args[1], true) }.toList()
 					else -> emptyList()
 				}
 			}

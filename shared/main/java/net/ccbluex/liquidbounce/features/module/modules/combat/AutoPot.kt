@@ -8,7 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.WEnumHand
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
+import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.event.EventState.POST
 import net.ccbluex.liquidbounce.event.EventState.PRE
@@ -142,9 +144,11 @@ class AutoPot : Module()
 
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
-
-		val currentScreen = mc.currentScreen
+		val screen = mc.currentScreen
 		val netHandler = mc.netHandler
+
+		val inventoryContainer = thePlayer.inventoryContainer
+		val activePotionEffects = thePlayer.activePotionEffects
 
 		val randomSlot = randomSlotValue.get()
 		val throwDirection = throwDirValue.get().toLowerCase()
@@ -152,8 +156,8 @@ class AutoPot : Module()
 
 		val provider = classProvider
 
-		val containerOpen = provider.isGuiContainer(currentScreen)
-		val isNotInventory = !provider.isGuiInventory(currentScreen)
+		val containerOpen = provider.isGuiContainer(screen)
+		val isNotInventory = !provider.isGuiInventory(screen)
 
 		when (motionEvent.eventState)
 		{
@@ -163,9 +167,8 @@ class AutoPot : Module()
 				{
 
 					// Hotbar Potion
-					val healPotionInHotbar = findHealPotion(thePlayer, 36, 45, randomSlot)
-					val buffPotionInHotbar = findBuffPotion(thePlayer, 36, 45, randomSlot)
-
+					val healPotionInHotbar = findHealPotion(thePlayer, 36, 45, inventoryContainer, randomSlot)
+					val buffPotionInHotbar = findBuffPotion(activePotionEffects, 36, 45, inventoryContainer, randomSlot)
 
 					if (thePlayer.health <= health && healPotionInHotbar != -1 || buffPotionInHotbar != -1)
 					{
@@ -220,10 +223,9 @@ class AutoPot : Module()
 				val currentContainer = thePlayer.openContainer
 				if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(currentContainer != null && currentContainer.windowId != 0))
 				{
-
 					// Move Potion Inventory -> Hotbar
-					val healPotionInInventory = findHealPotion(thePlayer, 9, 36, randomSlot)
-					val buffPotionInInventory = findBuffPotion(thePlayer, 9, 36, randomSlot)
+					val healPotionInInventory = findHealPotion(thePlayer, 9, 36, inventoryContainer, randomSlot)
+					val buffPotionInInventory = findBuffPotion(activePotionEffects, 9, 36, inventoryContainer, randomSlot)
 
 					if ((healPotionInInventory != -1 || buffPotionInInventory != -1) && InventoryUtils.hasSpaceHotbar(thePlayer.inventory))
 					{
@@ -231,8 +233,10 @@ class AutoPot : Module()
 
 						var slot = if (healPotionInInventory != -1) healPotionInInventory else buffPotionInInventory
 
+						val misclickRate = misClickRateValue.get()
+
 						// Simulate Click Mistakes to bypass some (geek) anti-cheat's click accuracy checks
-						if (misClickValue.get() && misClickRateValue.get() > 0 && Random.nextInt(100) <= misClickRateValue.get())
+						if (misClickValue.get() && misclickRate > 0 && Random.nextInt(100) <= misclickRate)
 						{
 							val firstEmpty = InventoryUtils.firstEmpty(thePlayer.inventoryContainer, 9, 36, randomSlot)
 							if (firstEmpty != -1) slot = firstEmpty
@@ -279,7 +283,7 @@ class AutoPot : Module()
 		}
 	}
 
-	private fun findHealPotion(thePlayer: IEntityPlayerSP, startSlot: Int, endSlot: Int, random: Boolean): Int
+	private fun findHealPotion(thePlayer: IEntityPlayerSP, startSlot: Int, endSlot: Int, inventoryContainer: IContainer, random: Boolean): Int
 	{
 		val provider = classProvider
 
@@ -288,8 +292,8 @@ class AutoPot : Module()
 		val healID = provider.getPotionEnum(PotionType.HEAL).id
 		val regenID = provider.getPotionEnum(PotionType.REGENERATION).id
 
-		(startSlot until endSlot).mapNotNull { it to (thePlayer.inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> provider.isItemPotion(stack.item) && stack.isSplash() }.forEach { (slotIndex, stack) ->
-			val effects = stack.item!!.asItemPotion().getEffects(stack)
+		(startSlot until endSlot).mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { provider.isItemPotion(it.second.item) }.filter { it.second.isSplash() }.forEach { (slotIndex, stack) ->
+			val effects = (stack.item ?: return@forEach).asItemPotion().getEffects(stack)
 
 			if (effects.any { it.potionID == healID }) candidates.add(slotIndex)
 			if (!thePlayer.isPotionActive(provider.getPotionEnum(PotionType.REGENERATION)) && effects.any { it.potionID == regenID }) candidates.add(slotIndex)
@@ -303,12 +307,14 @@ class AutoPot : Module()
 		}
 	}
 
-	private fun findBuffPotion(thePlayer: IEntityPlayerSP, startSlot: Int, endSlot: Int, random: Boolean): Int
+	private fun findBuffPotion(activePotionEffects: Collection<IPotionEffect>, startSlot: Int, endSlot: Int, inventoryContainer: IContainer, random: Boolean): Int
 	{
 		val provider = classProvider
 
 		val jumpPot = jumpBoostPotValue.get()
 		val invisPot = invisPotValue.get()
+		val itemDelay = itemDelayValue.get()
+		val jumpPotionAmplifierLimit = jumpPotAmpLimitValue.get()
 
 		var playerSpeed = -1
 		var playerJump = -1
@@ -335,7 +341,7 @@ class AutoPot : Module()
 		val invisID = provider.getPotionEnum(PotionType.INVISIBILITY).id
 		val nightVisionID = provider.getPotionEnum(PotionType.NIGHT_VISION).id
 
-		thePlayer.activePotionEffects.map { it.potionID to it.amplifier }.forEach { (potionID, amplifier) ->
+		activePotionEffects.map { it.potionID to it.amplifier }.forEach { (potionID, amplifier) ->
 			if (potionID == speedID) playerSpeed = amplifier
 			if (jumpPot && potionID == jumpID) playerJump = amplifier
 			if (potionID == hasteID) playerDigSpeed = amplifier
@@ -350,10 +356,9 @@ class AutoPot : Module()
 			if (potionID == nightVisionID) playerNightVision = true
 		}
 
-		val itemDelay = itemDelayValue.get()
 		val candidates = mutableListOf<Int>()
 
-		(startSlot until endSlot).asSequence().mapNotNull { it to (thePlayer.inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> System.currentTimeMillis() - stack.itemDelay >= itemDelay }.filter { (_, stack) -> provider.isItemPotion(stack.item) }.filter { (_, stack) -> stack.isSplash() }.forEach { (i, stack) ->
+		(startSlot until endSlot).asSequence().mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { System.currentTimeMillis() - it.second.itemDelay >= itemDelay }.filter { provider.isItemPotion(it.second.item) }.filter { it.second.isSplash() }.forEach { (i, stack) ->
 			var potionSpeed = -1
 			var potionJump = -1
 			var potionDigSpeed = -1
@@ -369,7 +374,7 @@ class AutoPot : Module()
 
 			(stack.item ?: return@forEach).asItemPotion().getEffects(stack).map { it.potionID to it.amplifier }.forEach { (potionID, amplifier) ->
 				if (potionID == speedID) potionSpeed = amplifier
-				if (jumpPot && potionID == jumpID && amplifier <= jumpPotAmpLimitValue.get()) potionJump = amplifier
+				if (jumpPot && potionID == jumpID && amplifier <= jumpPotionAmplifierLimit) potionJump = amplifier
 				if (potionID == hasteID) potionDigSpeed = amplifier
 				if (potionID == strengthID) potionDamageBoost = amplifier
 				if (potionID == fireResisID) potionFireResis = amplifier

@@ -540,7 +540,7 @@ class Tower : Module()
 
 		val inventoryContainer = thePlayer.inventoryContainer
 
-		return (36..44).mapNotNull { inventoryContainer.getSlot(it).stack }.filter { provider.isItemBlock(it) && (thePlayer.heldItem == it || InventoryUtils.canAutoBlock(it.item!!.asItemBlock().block)) }.sumBy(IItemStack::stackSize)
+		return (36..44).mapNotNull { inventoryContainer.getSlot(it).stack }.filter { provider.isItemBlock(it.item) }.filter { thePlayer.heldItem == it || InventoryUtils.canAutoBlock(it.item!!.asItemBlock().block) }.sumBy(IItemStack::stackSize)
 	}
 
 	override val tag: String

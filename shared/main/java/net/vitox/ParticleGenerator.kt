@@ -42,7 +42,7 @@ class ParticleGenerator(amount: Int)
 			val particleX = particle.x
 			val particleY = particle.y
 
-			if (mouseOver) particles.filter { it.x > particleX && it.x - particleX < range && particleX - it.x < range && (it.y > particleY && it.y - particleY < range || particleY > it.y && particleY - it.y < range) }.forEach { particle.connect(it.x, it.y) }
+			if (mouseOver) particles.filter { it.x > particleX }.filter { it.x - particleX < range }.filter { particleX - it.x < range }.filter { it.y > particleY && it.y - particleY < range || particleY > it.y && particleY - it.y < range }.forEach { particle.connect(it.x, it.y) }
 
 			RenderUtils.drawCircle(particleX, particleY, particle.size, -0x1)
 		}

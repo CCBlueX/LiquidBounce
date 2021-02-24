@@ -342,10 +342,9 @@ class TpAura : Module()
 
 	private fun getTargets(theWorld: IWorldClient, thePlayer: IEntityPlayerSP): MutableList<IEntityLivingBase>
 	{
-		val provider = classProvider
 		val range = rangeValue.get()
 		val hurtTime = hurtTimeValue.get()
-		return theWorld.loadedEntityList.asSequence().filter(provider::isEntityLivingBase).map(IEntity::asEntityLivingBase).filter { thePlayer.getDistanceToEntityBox(it) <= range }.filter { isEnemy(it, false) }.filter { it.hurtTime <= hurtTime }.sortedBy { it.getDistanceToEntity(thePlayer) * 1000 }.toMutableList()
+		return theWorld.loadedEntityList.asSequence().filter { isEnemy(it, false) }.map(IEntity::asEntityLivingBase).filter { it.hurtTime <= hurtTime }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.sortedBy { it.getDistanceToEntity(thePlayer) * 1000 }.toMutableList()
 	}
 
 	fun isTarget(entity: IEntity?): Boolean = currentTargets.isNotEmpty() && (0 until if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size).any { currentTargets[it].isEntityEqual(entity) }

@@ -48,7 +48,7 @@ class RemoteViewCommand : Command("remoteview", "rv")
 
 		return when (args.size)
 		{
-			1 -> return theWorld.playerEntities.filter { it.name != null && it.name!!.startsWith(args[0], true) }.mapNotNull(IEntityPlayer::name).toList()
+			1 -> return theWorld.playerEntities.mapNotNull(IEntityPlayer::name).filter { it.startsWith(args[0], true) }.toList()
 			else -> emptyList()
 		}
 	}

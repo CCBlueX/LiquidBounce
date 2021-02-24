@@ -25,7 +25,6 @@ class EventManager
 			val eventTarget = method.getAnnotation(EventTarget::class.java)
 
 			val invokableEventTargets = registry.getOrDefault(eventClass, ArrayList())
-
 			invokableEventTargets.add(EventHook(listener, method, eventTarget))
 			registry[eventClass] = invokableEventTargets
 		}
@@ -38,7 +37,7 @@ class EventManager
 	 */
 	fun unregisterListener(listenable: Listenable)
 	{
-		registry.filter { (_, targets) -> targets.removeIf { it.eventClass == listenable } }.forEach { (key, targets) -> registry[key] = targets }
+		registry.filter { it.value.removeIf { hook -> hook.eventClass == listenable } }.forEach { registry[it.key] = it.value }
 	}
 
 	/**
@@ -55,9 +54,9 @@ class EventManager
 			{
 				it.method.invoke(it.eventClass, event)
 			}
-			catch (throwable: Throwable)
+			catch (t: Throwable)
 			{
-				throwable.printStackTrace()
+				t.printStackTrace()
 			}
 		}
 	}

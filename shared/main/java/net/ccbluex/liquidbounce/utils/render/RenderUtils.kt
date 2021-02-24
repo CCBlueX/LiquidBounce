@@ -696,7 +696,7 @@ object RenderUtils : MinecraftInstance()
 	@JvmStatic
 	fun resetCaps()
 	{
-		glCapMap.forEach { (obj: Int?, cap: Boolean) -> setGlState(obj, cap) }
+		glCapMap.forEach { setGlState(it.key, it.value) }
 	}
 
 	@JvmStatic

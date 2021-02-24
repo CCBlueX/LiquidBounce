@@ -281,8 +281,8 @@ class NoFall : Module()
 				val inventory = thePlayer.inventory
 
 				run {
-					(0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, itemStack) -> itemStack.item == provider.getItemEnum(ItemType.WATER_BUCKET) || provider.isItemBlock(itemStack.item) && (itemStack.item?.asItemBlock())?.block == provider.getBlockEnum(BlockType.WEB) }.forEach { (slot, _) ->
-						mlgItemSlot = slot
+					(0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> stack.item == provider.getItemEnum(ItemType.WATER_BUCKET) || provider.isItemBlock(stack.item) && (stack.item?.asItemBlock())?.block == provider.getBlockEnum(BlockType.WEB) }.forEach {
+						mlgItemSlot = it.first
 						if (thePlayer.inventory.currentItem == mlgItemSlot) return@run
 					}
 				}

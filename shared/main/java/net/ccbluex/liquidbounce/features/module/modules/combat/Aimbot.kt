@@ -6,9 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.Render2DEvent
-import net.ccbluex.liquidbounce.event.StrafeEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -187,8 +185,10 @@ class Aimbot : Module()
 	var target: IEntity? = null
 
 	@EventTarget
-	fun onStrafe(@Suppress("UNUSED_PARAMETER") event: StrafeEvent)
+	fun onStrafe(@Suppress("UNUSED_PARAMETER") event: MotionEvent)
 	{
+		if (event.eventState != EventState.PRE) return
+
 		if (mc.gameSettings.keyBindAttack.isKeyDown) clickTimer.reset()
 
 		if (onClickValue.get() && clickTimer.hasTimePassed(onClickKeepValue.get().toLong()))
@@ -208,7 +208,7 @@ class Aimbot : Module()
 		val minPlayerPredictSize = minPlayerPredictSizeValue.get()
 		val maxPlayerPredictSize = maxPlayerPredictSizeValue.get()
 
-		target = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { (canAimThroughWalls || thePlayer.canEntityBeSeen(it)) }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) <= fov }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
+		target = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) <= fov }.filter { (canAimThroughWalls || thePlayer.canEntityBeSeen(it)) }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
 
 		val entity = target ?: return
 
@@ -227,6 +227,7 @@ class Aimbot : Module()
 		// Apply predict to target box
 
 		var targetBB = entity.entityBoundingBox
+
 		if (predictValue.get())
 		{
 			val minPredictSize = minPredictSizeValue.get()
@@ -250,12 +251,12 @@ class Aimbot : Module()
 		// TurnSpeed
 		val maxTurnSpeed = maxTurnSpeedValue.get()
 		val minTurnSpeed = minTurnSpeedValue.get()
-		val turnSpeed = Random.nextFloat() * (maxTurnSpeed - minTurnSpeed) + minTurnSpeed
+		val turnSpeed = if (minTurnSpeed < 180f) minTurnSpeed + (maxTurnSpeed - minTurnSpeed) * Random.nextFloat() else 180f
 
 		// Acceleration
-		val maxAccelerationRatio = maxAccelerationRatioValue.get()
-		val minAccelerationRatio = minAccelerationRatioValue.get()
-		val acceleration = Random.nextFloat() * (maxAccelerationRatio - minAccelerationRatio) + minAccelerationRatio
+		val maxAcceleration = maxAccelerationRatioValue.get()
+		val minAcceleration = minAccelerationRatioValue.get()
+		val acceleration = if (maxAcceleration > 0f) minAcceleration + (maxAcceleration - minAcceleration) * Random.nextFloat() else 0f
 
 		// Limit by TurnSpeed any apply
 		RotationUtils.limitAngleChange(currentRotation, targetRotation, turnSpeed, acceleration).applyRotationToPlayer(thePlayer)

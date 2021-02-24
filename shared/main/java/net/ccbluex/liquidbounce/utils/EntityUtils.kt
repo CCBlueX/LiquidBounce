@@ -121,9 +121,10 @@ object EntityUtils : MinecraftInstance()
 
 		val multiplier = if (isMineplex) 2 else 1
 
-		theWorld.loadedEntityList.filter { provider.isEntityPlayer(it) && it != thePlayer }.forEach { entity ->
-			val player = entity.asEntityPlayer()
-			scoreboard.getObjectivesForEntity(player.gameProfile.name).values.filter { player.gameProfile.name.equals(playername, ignoreCase = true) }.forEach { return@getPlayerHealthFromScoreboard it.scorePoints * multiplier }
+		theWorld.loadedEntityList.filter(provider::isEntityPlayer).filter { it != thePlayer }.forEach { entity ->
+			val profileName = entity.asEntityPlayer().gameProfile.name
+
+			scoreboard.getObjectivesForEntity(profileName).values.filter { playername.equals(profileName, ignoreCase = true) }.forEach { return@getPlayerHealthFromScoreboard it.scorePoints * multiplier }
 		}
 
 		return 0

@@ -183,7 +183,11 @@ class ESP : Module()
 	{
 		val mode = modeValue.get().toLowerCase()
 		val shader = (if (mode.equals("ShaderOutline", ignoreCase = true)) OutlineShader.INSTANCE else if (mode.equals("ShaderGlow", ignoreCase = true)) GlowShader.INSTANCE else null) ?: return
+
 		val renderPartialTicks = mc.timer.renderPartialTicks
+		val renderManager = mc.renderManager
+
+		val bot = botValue.get()
 
 		shader.startDraw(event.partialTicks)
 
@@ -191,7 +195,7 @@ class ESP : Module()
 
 		try
 		{
-			(mc.theWorld ?: return).loadedEntityList.filter { EntityUtils.isSelected(it, false) }.filter { (botValue.get() || !AntiBot.isBot(it.asEntityLivingBase())) }.forEach { mc.renderManager.renderEntityStatic(it, renderPartialTicks, true) }
+			(mc.theWorld ?: return).loadedEntityList.filter { EntityUtils.isSelected(it, false) }.filter { (bot || !AntiBot.isBot(it.asEntityLivingBase())) }.forEach { renderManager.renderEntityStatic(it, renderPartialTicks, true) }
 		}
 		catch (ex: Exception)
 		{

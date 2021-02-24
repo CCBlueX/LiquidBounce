@@ -163,6 +163,7 @@ class StorageESP : Module()
 					{
 						GL11.glPushMatrix()
 						GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
+
 						GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE)
 						GL11.glDisable(GL11.GL_TEXTURE_2D)
 						GL11.glDisable(GL11.GL_LIGHTING)
@@ -170,6 +171,8 @@ class StorageESP : Module()
 						GL11.glEnable(GL11.GL_LINE_SMOOTH)
 						GL11.glEnable(GL11.GL_BLEND)
 						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
+
+						GL11.glLineWidth(0.5F)
 
 						func.renderTileEntity(tileEntity, partialTicks, -1)
 
@@ -187,9 +190,9 @@ class StorageESP : Module()
 			theWorld.loadedEntityList.mapNotNull {
 				it to (when
 				{
-					provider.isEntityMinecartChest(it) -> chestColor
-					provider.isEntityMinecartFurnace(it) -> furnaceColor
-					provider.isEntityMinecartHopper(it) -> hopperColor
+					chest && provider.isEntityMinecartChest(it) -> chestColor
+					furnace && provider.isEntityMinecartFurnace(it) -> furnaceColor
+					hopper && provider.isEntityMinecartHopper(it) -> hopperColor
 					else -> null
 				} ?: return@mapNotNull null)
 			}.forEach { (entity, color) ->
