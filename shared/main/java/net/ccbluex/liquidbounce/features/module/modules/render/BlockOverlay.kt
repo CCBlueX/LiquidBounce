@@ -38,6 +38,7 @@ class BlockOverlay : Module()
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
+	private val drawHydraESPValue = BoolValue("HydraESP", false)
 	val infoValue = BoolValue("Info", false)
 
 	fun getCurrentBlock(theWorld: IWorldClient): WBlockPos?
@@ -87,7 +88,7 @@ class BlockOverlay : Module()
 		val boxExpandSize = 0.002
 		val axisAlignedBB = block.getSelectedBoundingBox(theWorld, theWorld.getBlockState(blockPos), blockPos).expand(boxExpandSize, boxExpandSize, boxExpandSize).offset(-x, -y, -z)
 
-		RenderUtils.drawSelectionBoundingBox(axisAlignedBB)
+		RenderUtils.drawSelectionBoundingBox(axisAlignedBB, drawHydraESPValue.get())
 		RenderUtils.drawFilledBox(axisAlignedBB)
 		GL11.glDepthMask(true)
 

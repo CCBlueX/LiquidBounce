@@ -111,7 +111,7 @@ class ESP : Module()
 
 			when (mode)
 			{
-				"box", "otherbox" -> RenderUtils.drawEntityBox(entityLiving, color, mode == "box")
+				"box", "otherbox" -> RenderUtils.drawEntityBox(entityLiving, color, mode == "box", false)
 
 				"2d" ->
 				{

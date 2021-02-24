@@ -94,7 +94,7 @@ class CivBreak : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		RenderUtils.drawBlockBox(mc.theWorld ?: return, mc.thePlayer ?: return, blockPos ?: return, Color.RED, true)
+		RenderUtils.drawBlockBox(mc.theWorld ?: return, mc.thePlayer ?: return, blockPos ?: return, Color.RED, outline = false, drawHydraESP = false)
 	}
 
 	override val tag: String

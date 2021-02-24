@@ -71,6 +71,8 @@ class StorageESP : Module()
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
+	private val drawHydraESPValue = BoolValue("HydraESP", false)
+
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
 	{
@@ -117,6 +119,7 @@ class StorageESP : Module()
 
 			val outlineWidth = outlineWidthValue.get()
 			val wireFrameWidth = wireFrameWidthValue.get()
+			val drawHydraESP = drawHydraESPValue.get()
 
 			theWorld.loadedTileEntityList.mapNotNull {
 				it to (when
@@ -132,7 +135,7 @@ class StorageESP : Module()
 			}.forEach { (tileEntity, color) ->
 				if (!(provider.isTileEntityChest(tileEntity) || provider.isTileEntityEnderChest(tileEntity)))
 				{
-					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box")
+					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box", drawHydraESP)
 					return@forEach
 				}
 
@@ -140,7 +143,7 @@ class StorageESP : Module()
 
 				when (mode)
 				{
-					"otherbox", "box" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box")
+					"otherbox", "box" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box", drawHydraESP)
 
 					"2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
 
@@ -198,7 +201,7 @@ class StorageESP : Module()
 			}.forEach { (entity, color) ->
 				when (mode)
 				{
-					"otherbox", "box" -> RenderUtils.drawEntityBox(entity, color, mode == "box")
+					"otherbox", "box" -> RenderUtils.drawEntityBox(entity, color, mode == "box", drawHydraESP)
 
 					"2d" -> RenderUtils.draw2D(entity.position, color.rgb, Color.BLACK.rgb)
 

@@ -49,6 +49,8 @@ class BlockESP : Module()
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
+	private val drawHydraESPValue = BoolValue("HydraESP", false)
+
 	private val searchTimer = MSTimer()
 	private val posList: MutableCollection<WBlockPos> = ConcurrentLinkedQueue()
 
@@ -122,13 +124,18 @@ class BlockESP : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val alpha = colorAlphaValue.get()
+		val drawHydraESP = drawHydraESPValue.get()
 		val color = if (colorRainbow.get()) rainbow(alpha = alpha, speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
 
 		for (blockPos in posList)
 		{
 			when (val mode = modeValue.get().toLowerCase())
 			{
-				"box", "otherbox" -> RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, color, mode == "box")
+				"box", "otherbox" ->
+				{
+					RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, color, mode == "box", drawHydraESP)
+				}
+
 				"2d" -> RenderUtils.draw2D(blockPos, color.rgb, Color.BLACK.rgb)
 			}
 		}

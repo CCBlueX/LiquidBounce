@@ -40,6 +40,8 @@ class ProphuntESP : Module()
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
+	private val drawHydraESPValue = BoolValue("HydraESP", false)
+
 	/**
 	 * Variables
 	 */
@@ -57,9 +59,10 @@ class ProphuntESP : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val mode = modeValue.get().toLowerCase()
+		val drawHydraESP = drawHydraESPValue.get()
 		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
-		if (mode == "box" && mode == "otherbox") theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { RenderUtils.drawEntityBox(it, color, mode == "box") }
+		if (mode == "box" && mode == "otherbox") theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { RenderUtils.drawEntityBox(it, color, mode == "box", drawHydraESP) }
 
 		synchronized(blocks) {
 			val iterator: MutableIterator<Map.Entry<WBlockPos, Long>> = blocks.entries.iterator()
@@ -74,7 +77,7 @@ class ProphuntESP : Module()
 					continue
 				}
 
-				RenderUtils.drawBlockBox(theWorld, thePlayer, entry.key, color, mode == "box")
+				RenderUtils.drawBlockBox(theWorld, thePlayer, entry.key, color, mode == "box", drawHydraESP)
 			}
 		}
 	}

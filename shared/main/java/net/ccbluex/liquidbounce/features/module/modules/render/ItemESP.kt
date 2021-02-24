@@ -31,6 +31,8 @@ class ItemESP : Module()
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
+	private val drawHydraESPValue = BoolValue("HydraESP", false)
+
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
@@ -44,7 +46,9 @@ class ItemESP : Module()
 
 			val provider = classProvider
 
-			theWorld.loadedEntityList.filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, drawOutline) }
+			val drawHydraESP = drawHydraESPValue.get()
+
+			theWorld.loadedEntityList.filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, drawOutline, drawHydraESP) }
 		}
 	}
 

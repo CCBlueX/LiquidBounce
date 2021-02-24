@@ -33,7 +33,7 @@ object RenderUtils : MinecraftInstance()
 	var deltaTime = 0
 
 	@JvmStatic
-	fun drawBlockBox(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPos: WBlockPos, color: Color, outline: Boolean)
+	fun drawBlockBox(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPos: WBlockPos, color: Color, outline: Boolean, drawHydraESP: Boolean)
 	{
 		val renderPartialTicks = mc.timer.renderPartialTicks
 
@@ -63,12 +63,9 @@ object RenderUtils : MinecraftInstance()
 		if (outline)
 		{
 			GL11.glLineWidth(1.00f)
-
 			enableGlCap(GL11.GL_LINE_SMOOTH)
-
 			glColor(color)
-
-			drawSelectionBoundingBox(axisAlignedBB)
+			drawSelectionBoundingBox(axisAlignedBB, drawHydraESP)
 		}
 
 		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
@@ -77,7 +74,7 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawSelectionBoundingBox(boundingBox: IAxisAlignedBB)
+	fun drawSelectionBoundingBox(boundingBox: IAxisAlignedBB, drawHydraESP: Boolean)
 	{
 		val provider = classProvider
 
@@ -113,11 +110,71 @@ object RenderUtils : MinecraftInstance()
 		worldrenderer.pos(maxX, maxY, maxZ).endVertex()
 		worldrenderer.pos(maxX, maxY, minZ).endVertex()
 		worldrenderer.pos(maxX, minY, minZ).endVertex()
+
+		if (drawHydraESP)
+		{
+			tessellator.draw()
+
+			worldrenderer.begin(GL11.GL_LINE_STRIP, provider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
+
+			// TODO: Optimize it (한붓그리기하듯이 가능한 한 적은 pos콜로 Hydra-like BlockESP 구현하기) -> 중복 콜 최대한 없애보기
+
+			// From min, min, min
+			worldrenderer.pos(minX, minY, minZ).endVertex()
+			worldrenderer.pos(maxX, maxY, minZ).endVertex()
+			worldrenderer.pos(minX, minY, minZ).endVertex()
+			worldrenderer.pos(minX, maxY, maxZ).endVertex()
+			worldrenderer.pos(minX, minY, minZ).endVertex()
+			worldrenderer.pos(maxX, maxY, maxZ).endVertex()
+			worldrenderer.pos(minX, minY, minZ).endVertex()
+			worldrenderer.pos(maxX, minY, maxZ).endVertex()
+			worldrenderer.pos(minX, minY, minZ).endVertex()
+
+			// From max, min, min
+			worldrenderer.pos(maxX, minY, minZ).endVertex()
+			worldrenderer.pos(minX, maxY, minZ).endVertex()
+			worldrenderer.pos(maxX, minY, minZ).endVertex()
+			worldrenderer.pos(maxX, maxY, maxZ).endVertex()
+			worldrenderer.pos(maxX, minY, minZ).endVertex()
+			worldrenderer.pos(minX, minY, maxZ).endVertex()
+			worldrenderer.pos(maxX, minY, minZ).endVertex()
+			worldrenderer.pos(minX, maxY, maxZ).endVertex()
+			worldrenderer.pos(maxX, minY, minZ).endVertex()
+
+			// From min, min, max
+			worldrenderer.pos(minX, minY, maxZ).endVertex()
+			worldrenderer.pos(minX, maxY, minZ).endVertex()
+			worldrenderer.pos(minX, minY, maxZ).endVertex()
+			worldrenderer.pos(maxX, maxY, maxZ).endVertex()
+			worldrenderer.pos(minX, minY, maxZ).endVertex()
+			worldrenderer.pos(maxX, minY, minZ).endVertex()
+			worldrenderer.pos(minX, minY, maxZ).endVertex()
+			worldrenderer.pos(maxX, maxY, minZ).endVertex()
+			worldrenderer.pos(minX, minY, maxZ).endVertex()
+
+			// From max, min, max
+			worldrenderer.pos(maxX, minY, maxZ).endVertex()
+			worldrenderer.pos(minX, maxY, maxZ).endVertex()
+			worldrenderer.pos(maxX, minY, maxZ).endVertex()
+			worldrenderer.pos(maxX, maxY, minZ).endVertex()
+			worldrenderer.pos(maxX, minY, maxZ).endVertex()
+			worldrenderer.pos(minX, minY, minZ).endVertex()
+			worldrenderer.pos(maxX, minY, maxZ).endVertex()
+			worldrenderer.pos(minX, maxY, minZ).endVertex()
+			worldrenderer.pos(maxX, minY, maxZ).endVertex()
+
+			// From min, max, min
+			worldrenderer.pos(minX, maxY, minZ).endVertex()
+			worldrenderer.pos(maxX, maxY, maxZ).endVertex()
+			worldrenderer.pos(maxX, maxY, minZ).endVertex()
+			worldrenderer.pos(minX, maxY, maxZ).endVertex()
+		}
+
 		tessellator.draw()
 	}
 
 	@JvmStatic
-	fun drawEntityBox(entity: IEntity, color: Color, outline: Boolean)
+	fun drawEntityBox(entity: IEntity, color: Color, outline: Boolean, drawHydraESP: Boolean)
 	{
 		val renderManager = mc.renderManager
 		val renderPartialTicks = mc.timer.renderPartialTicks
@@ -152,7 +209,7 @@ object RenderUtils : MinecraftInstance()
 			GL11.glLineWidth(1.00f)
 			enableGlCap(GL11.GL_LINE_SMOOTH)
 			glColor(red, green, blue, 95)
-			drawSelectionBoundingBox(axisAlignedBB)
+			drawSelectionBoundingBox(axisAlignedBB, drawHydraESP)
 		}
 
 		glColor(red, green, blue, if (outline) 26 else 35)
