@@ -257,7 +257,7 @@ class InventoryCleaner : Module()
 			val provider = classProvider
 
 			// SimulateInventory
-			val openInventory = !provider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
+			val openInventory = simulateInventory.get() && !provider.isGuiInventory(mc.currentScreen)
 			if (openInventory) mc.netHandler.addToSendQueue(createOpenInventoryPacket())
 
 			// Drop all useless items

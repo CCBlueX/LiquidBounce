@@ -22,12 +22,11 @@ class HypixelHop : SpeedMode("HypixelHop")
 		{
 			if (thePlayer.onGround)
 			{
+				thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 9.1314E-4, thePlayer.posZ)// #344
+
 				jump(thePlayer)
 
-				var speed = if (MovementUtils.getSpeed(thePlayer) < 0.56f) MovementUtils.getSpeed(thePlayer) * 1.045f else 0.56f
-				if (thePlayer.onGround) speed *= 1.0F + 0.13f * MovementUtils.getSpeedEffectAmplifier(thePlayer)
-
-				MovementUtils.strafe(thePlayer, speed)
+				MovementUtils.strafe(thePlayer, (if (MovementUtils.getSpeed(thePlayer) < 0.56f) MovementUtils.getSpeed(thePlayer) * 1.045f else 0.56f) * (1.0F + 0.13f * MovementUtils.getSpeedEffectAmplifier(thePlayer)))
 
 				return
 			}

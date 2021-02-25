@@ -87,7 +87,7 @@ public abstract class MixinBlock
 
 		if (xray.getState())
 			// noinspection ConstantConditions
-			callbackInfoReturnable.setReturnValue(xray.getXrayBlocks().contains(BlockImplKt.wrap((Block) (Object) this)));
+			callbackInfoReturnable.setReturnValue(xray.getXrayBlocks().contains(BlockImplKt.wrap((Block) (Object) this))); // #298 Bugfix
 	}
 
 	@Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)

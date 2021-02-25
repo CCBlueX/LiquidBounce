@@ -25,7 +25,7 @@ public class MixinTileEntityRendererDispatcher
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
-		if (xray.getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(tileentityIn.getBlockType())))
+		if (xray.getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(tileentityIn.getBlockType()))) // #298 Bugfix
 			callbackInfo.cancel();
 	}
 }
