@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -52,8 +51,13 @@ class HighJump : Module()
 			val scaffold = moduleManager[Scaffold::class.java]
 			val tower = moduleManager[Tower::class.java]
 
-			if (scaffold.state) scaffold.state = false
-			if (tower.state) tower.state = false
+			val disableScaffold = scaffold.state
+			val disableTower = tower.state
+
+			if (disableScaffold) scaffold.state = false
+			if (disableTower) tower.state = false
+
+			if (disableScaffold || disableTower) LiquidBounce.hud.addNotification("HighJump", "Disabled ${if (disableScaffold && disableTower) "Scaffold and Tower" else if (disableScaffold) "Scaffold" else "Tower"}", Color.yellow, 1000)
 		}
 
 		if (modeValue.get().equals("mineplex", ignoreCase = true)) ClientUtils.displayChatMessage(mc.thePlayer, "\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cWalk off an island to highjump.")
@@ -65,7 +69,9 @@ class HighJump : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer.onGround && jumped)
+		val onGround = thePlayer.onGround
+
+		if (onGround && jumped)
 		{
 			jumped = false
 			if (autodisable.get()) state = false
@@ -75,19 +81,19 @@ class HighJump : Module()
 
 		when (modeValue.get().toLowerCase())
 		{
-			"damage" -> if (thePlayer.hurtTime > 0 && thePlayer.onGround)
+			"damage" -> if (thePlayer.hurtTime > 0 && onGround)
 			{
 				thePlayer.motionY += 0.42f * heightValue.get()
 				jumped = true
 			}
 
-			"aac3.0.1" -> if (!thePlayer.onGround)
+			"aac3.0.1" -> if (!onGround)
 			{
 				thePlayer.motionY += 0.059
 				jumped = true
 			}
 
-			"dac" -> if (!thePlayer.onGround)
+			"dac" -> if (!onGround)
 			{
 				thePlayer.motionY += 0.049999
 				jumped = true
@@ -95,7 +101,7 @@ class HighJump : Module()
 
 			"mineplex" -> mineplexHighJump(theWorld, thePlayer)
 
-			"oldmineplex" -> if (!thePlayer.onGround) strafe(thePlayer, 0.35f)
+			"oldmineplex" -> if (!onGround) strafe(thePlayer, 0.35f)
 		}
 	}
 
@@ -103,49 +109,35 @@ class HighJump : Module()
 	{
 		val networkManager = mc.netHandler.networkManager
 
-		val posX = thePlayer.posX
-		val posY = thePlayer.posZ
-		val posZ = thePlayer.posY
-
-		val forward = thePlayer.movementInput.moveForward.toDouble()
-		val strafe = thePlayer.movementInput.moveStrafe.toDouble()
-		val dist = 1.0 // .1
+		val posY = thePlayer.posY
 
 		val func = functions
 
-		val yawRadians = WMathHelper.toRadians((thePlayer.rotationYaw + 90.0f))
-		val cos = func.cos(yawRadians)
-		val sin = func.sin(yawRadians)
-		val nextX = posX + (forward * 0.45 * cos + strafe * 0.45 * sin) * dist
-		val nextZ = posY + (forward * 0.45 * sin - strafe * 0.45 * cos) * dist
+		val dir = MovementUtils.getDirection(thePlayer)
+		val nextX = thePlayer.posX - func.sin(dir) * 0.45f
+		val nextZ = thePlayer.posZ + func.cos(dir) * 0.45f
 
 		val provider = classProvider
-
-		val bb = provider.createAxisAlignedBB(nextX - 0.3, posZ, nextZ - 0.3, nextX + 0.3, posZ + 2, nextZ + 0.3)
-		val should = theWorld.getCollidingBoundingBoxes(thePlayer, bb.offset(0.0, -1.0, 0.0)).isEmpty()
 
 		if (jumped) if (!thePlayer.onGround)
 		{
 			if (!isMoving(thePlayer)) strafe(thePlayer, 0.05f)
-			var speed = 0.55f - mineplexStage / 650.0f
-			if (speed < MovementUtils.getSpeed(thePlayer)) speed = MovementUtils.getSpeed(thePlayer)
-			strafe(thePlayer, speed)
+
+			strafe(thePlayer, (0.55f - mineplexStage / 650.0f).coerceAtLeast(MovementUtils.getSpeed(thePlayer)))
 			mineplexStage++
 		}
 
-		if (should && thePlayer.onGround)
+		if (thePlayer.onGround && theWorld.getCollidingBoundingBoxes(thePlayer, provider.createAxisAlignedBB(nextX - 0.3, posY - 1.0, nextZ - 0.3, nextX + 0.3, posY + 1.0, nextZ + 0.3)).isEmpty())
 		{
-			val a: Double = getBestMineplexExploit(theWorld, thePlayer, nextX, posZ, nextZ)
-			if (a != 11.0)
+			val noCollisionYOffset: Double = findNoCollisionYOffset(theWorld, thePlayer, nextX, posY, nextZ)
+			if (noCollisionYOffset != 0.0)
 			{
 				mineplexStage = 1
 				jumped = true
-				networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(nextX, posZ, nextZ, true))
-				networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(nextX, posZ + a, nextZ, true))
-				thePlayer.setPosition(nextX, posZ, nextZ)
+				networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(nextX, posY, nextZ, true))
+				networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(nextX, posY + noCollisionYOffset, nextZ, true))
+				thePlayer.setPosition(nextX, posY, nextZ)
 
-				// em.setX(nextX);
-				// em.setZ(nextZ);
 				thePlayer.motionY = mineplexHeightValue.get().toDouble()
 			}
 		}
@@ -164,6 +156,7 @@ class HighJump : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		if (glassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
+
 		if (!thePlayer.onGround && modeValue.get().equals("oldmineplex", ignoreCase = true)) thePlayer.motionY += if (thePlayer.fallDistance == 0.0f) 0.0499 else 0.05
 	}
 
@@ -174,9 +167,10 @@ class HighJump : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		if (glassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
+
 		when (modeValue.get().toLowerCase())
 		{
-			"vanilla" -> event.motion = event.motion * heightValue.get()
+			"vanilla" -> event.motion *= heightValue.get()
 			"oldmineplex" -> event.motion = 0.47f
 		}
 	}
@@ -184,19 +178,20 @@ class HighJump : Module()
 	@EventTarget
 	fun onPacket(event: PacketEvent)
 	{
-		val thePlayer = mc.thePlayer ?: return
 		if (classProvider.isSPacketPlayerPosLook(event.packet) && modeValue.get().equals("mineplex", ignoreCase = true) && jumped)
 		{
+			val thePlayer = mc.thePlayer ?: return
+
 			state = false
 			thePlayer.motionX = 0.0
 			thePlayer.motionZ = 0.0
 			thePlayer.jumpMovementFactor = 0.02F
 
-			LiquidBounce.hud.addNotification("Mineplex Highjump", "Teleport detected. Highjump interrupted to prevent kick.", Color.red, 1000L)
+			LiquidBounce.hud.addNotification("Mineplex HighJump", "A teleport has been detected. Disabled HighJump to prevent kick.", Color.red, 1000L)
 		}
 	}
 
-	private fun getBestMineplexExploit(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, x: Double, y: Double, z: Double): Double
+	private fun findNoCollisionYOffset(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, x: Double, y: Double, z: Double): Double
 	{
 		var yOff = -1.5
 		var bb: IAxisAlignedBB
@@ -208,7 +203,7 @@ class HighJump : Module()
 			yOff -= 0.5
 		} while (theWorld.getCollidingBoundingBoxes(thePlayer, bb).isEmpty())
 
-		return 11.0
+		return 0.0
 	}
 
 	override val tag: String

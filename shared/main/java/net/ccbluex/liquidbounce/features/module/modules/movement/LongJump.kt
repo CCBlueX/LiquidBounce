@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.getDirection
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.*
+import java.awt.Color
 
 @ModuleInfo(name = "LongJump", description = "Allows you to jump further.", category = ModuleCategory.MOVEMENT)
 class LongJump : Module()
@@ -92,8 +93,13 @@ class LongJump : Module()
 			val scaffold = moduleManager[Scaffold::class.java]
 			val tower = moduleManager[Tower::class.java]
 
-			if (scaffold.state) scaffold.state = false
-			if (tower.state) tower.state = false
+			val disableScaffold = scaffold.state
+			val disableTower = tower.state
+
+			if (disableScaffold) scaffold.state = false
+			if (disableTower) tower.state = false
+
+			if (disableScaffold || disableTower) LiquidBounce.hud.addNotification("LongJump", "Disabled ${if (disableScaffold && disableTower) "Scaffold and Tower" else if (disableScaffold) "Scaffold" else "Tower"}", Color.yellow, 1000)
 		}
 	}
 

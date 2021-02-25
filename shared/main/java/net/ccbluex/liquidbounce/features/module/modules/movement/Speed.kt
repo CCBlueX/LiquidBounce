@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -22,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import java.awt.Color
 import java.util.*
 
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
@@ -94,6 +96,8 @@ class Speed : Module()
 	// Mineplex Ground speed
 	val mineplexGroundSpeedValue = FloatValue("MineplexGround-Speed", 0.5f, 0.1f, 1f)
 
+	val disableOnFlagValue = BoolValue("DisableOnFlag", true)
+
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
@@ -129,6 +133,22 @@ class Speed : Module()
 		if ((mc.thePlayer ?: return).sneaking) return
 
 		mode?.onTick()
+	}
+
+	@EventTarget
+	fun onPacket(event: PacketEvent)
+	{
+		if (classProvider.isSPacketPlayerPosLook(event.packet) && disableOnFlagValue.get())
+		{
+			val thePlayer = mc.thePlayer ?: return
+
+			state = false
+			thePlayer.motionX = 0.0
+			thePlayer.motionZ = 0.0
+			thePlayer.jumpMovementFactor = 0.02F
+
+			LiquidBounce.hud.addNotification("Speed", "A teleport has been detected. Disabled Speed to prevent more flags.", Color.red, 1000L)
+		}
 	}
 
 	override fun onEnable()

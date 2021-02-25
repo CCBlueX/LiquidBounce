@@ -179,7 +179,7 @@ class Fly : Module()
 	 * Hypixel
 	 */
 	private var hypixelFlyStarted = false
-	private var hypixelDamageBoostInterrupted = false
+	private var hypixelDamageBoostFailed = false
 	private var canPerformHypixelDamageFly = false
 	private var hypixelBoostStep = 1
 	private var hypixelBoostSpeed = 0.0
@@ -282,7 +282,7 @@ class Fly : Module()
 								hypixelBoostStep = 1
 								hypixelBoostSpeed = 0.1
 								lastDistance = 0.0
-								hypixelDamageBoostInterrupted = false
+								hypixelDamageBoostFailed = false
 								hypixelFlyStarted = true
 								hypixelFlyTimer.reset()
 							}
@@ -778,7 +778,7 @@ class Fly : Module()
 							hypixelBoostStep = 1
 							hypixelBoostSpeed = 0.1
 							lastDistance = 0.0
-							hypixelDamageBoostInterrupted = false
+							hypixelDamageBoostFailed = false
 							hypixelFlyStarted = true
 							hypixelFlyTimer.reset()
 							waitForDamage = false
@@ -880,7 +880,7 @@ class Fly : Module()
 						}
 					}
 
-					if (!hypixelDamageBoostInterrupted) thePlayer.motionY = 0.0
+					if (!hypixelDamageBoostFailed) thePlayer.motionY = 0.0
 				}
 
 				EventState.POST ->
@@ -970,10 +970,10 @@ class Fly : Module()
 			if (mode.equals("NCP", ignoreCase = true) || mode.equals("Rewinside", ignoreCase = true) || mode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItemInHand() == null) packetPlayer.onGround = true
 			if (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted) packetPlayer.onGround = hypixelOnGroundValue.get()
 		}
-		else if (provider.isSPacketPlayerPosLook(event.packet) && mode.equals("Hypixel", ignoreCase = true) && canPerformHypixelDamageFly && hypixelFlyStarted && !hypixelDamageBoostInterrupted)
+		else if (provider.isSPacketPlayerPosLook(event.packet) && mode.equals("Hypixel", ignoreCase = true) && canPerformHypixelDamageFly && hypixelFlyStarted && !hypixelDamageBoostFailed)
 		{
-			hypixelDamageBoostInterrupted = true
-			LiquidBounce.hud.addNotification("Hypixel Damage Boost Fly", "Teleport detected. Boost interrupted.", Color.red, 1000L)
+			hypixelDamageBoostFailed = true
+			LiquidBounce.hud.addNotification("Hypixel Damage-Boost Fly", "A teleport has been detected. Disabled Damage-Boost to prevent more flags.", Color.red, 1000L)
 		}
 	}
 
@@ -1018,7 +1018,7 @@ class Fly : Module()
 					return
 				}
 
-				if (hypixelDamageBoostInterrupted) return
+				if (hypixelDamageBoostFailed) return
 
 				val step1Speed = if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) 1.56 else 2.034
 				val speedEffectAffect = 1 + 0.2 * MovementUtils.getSpeedEffectAmplifier(thePlayer)

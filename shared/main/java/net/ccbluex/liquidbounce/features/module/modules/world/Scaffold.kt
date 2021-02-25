@@ -345,22 +345,27 @@ class Scaffold : Module()
 			// Smooth Zitter
 			if (zitterValue.get() && zitterModeValue.get().equals("Smooth", true))
 			{
-				if (!gameSettings.isKeyDown(gameSettings.keyBindRight)) gameSettings.keyBindRight.pressed = false
-				if (!gameSettings.isKeyDown(gameSettings.keyBindLeft)) gameSettings.keyBindLeft.pressed = false
+				val keyBindRight = gameSettings.keyBindRight
+				val keyBindLeft = gameSettings.keyBindLeft
+
+				if (!gameSettings.isKeyDown(keyBindRight)) keyBindRight.pressed = false
+				if (!gameSettings.isKeyDown(keyBindLeft)) keyBindLeft.pressed = false
+
 				if (zitterTimer.hasTimePassed(100))
 				{
 					zitterDirection = !zitterDirection
 					zitterTimer.reset()
 				}
+
 				if (zitterDirection)
 				{
-					gameSettings.keyBindRight.pressed = true
-					gameSettings.keyBindLeft.pressed = false
+					keyBindRight.pressed = true
+					keyBindLeft.pressed = false
 				}
 				else
 				{
-					gameSettings.keyBindRight.pressed = false
-					gameSettings.keyBindLeft.pressed = true
+					keyBindRight.pressed = false
+					keyBindLeft.pressed = true
 				}
 			}
 
@@ -621,7 +626,7 @@ class Scaffold : Module()
 		var pos = WBlockPos(thePlayer)
 
 		var sameY = false
-		if (sameYValue.get() && launchY != -999)
+		if (sameYValue.get() && launchY != -999) // TODO: Fix Broken SameY Option
 		{
 			pos = WBlockPos(thePlayer.posX, launchY - 1.0, thePlayer.posZ)
 			sameY = true
@@ -1103,9 +1108,10 @@ class Scaffold : Module()
 
 		val provider = classProvider
 
-		val inventoryContainer = thePlayer.inventoryContainer
+		val inventory = thePlayer.inventory
+		val heldItem = thePlayer.heldItem
 
-		(36..44).map { inventoryContainer.getSlot(it).stack }.filter { provider.isItemBlock(it?.item) }.filter { (thePlayer.heldItem ?: return@filter false) == it || InventoryUtils.canAutoBlock(((it?.item!!).asItemBlock()).block) }.forEach { amount += (it ?: return@forEach).stackSize }
+		(0..8).map(inventory::getStackInSlot).filter { provider.isItemBlock(it?.item) }.map { it to (it?.item!!.asItemBlock()) }.filter { heldItem == it || InventoryUtils.canAutoBlock(it.second.block) }.forEach { amount += (it.first ?: return@forEach).stackSize }
 
 		return amount
 	}
