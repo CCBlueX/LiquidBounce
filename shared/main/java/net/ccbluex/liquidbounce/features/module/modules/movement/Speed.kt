@@ -96,7 +96,7 @@ class Speed : Module()
 	// Mineplex Ground speed
 	val mineplexGroundSpeedValue = FloatValue("MineplexGround-Speed", 0.5f, 0.1f, 1f)
 
-	val disableOnFlagValue = BoolValue("DisableOnFlag", true)
+	private val disableOnFlagValue = BoolValue("DisableOnFlag", true)
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
@@ -121,10 +121,10 @@ class Speed : Module()
 	}
 
 	@EventTarget
-	fun onMove(event: MoveEvent?)
+	fun onMove(event: MoveEvent)
 	{
-		if (mc.thePlayer!!.sneaking) return
-		mode?.onMove(event!!)
+		if ((mc.thePlayer ?: return).sneaking) return
+		mode?.onMove(event)
 	}
 
 	@EventTarget

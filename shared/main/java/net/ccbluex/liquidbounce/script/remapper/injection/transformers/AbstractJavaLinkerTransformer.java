@@ -64,5 +64,4 @@ public class AbstractJavaLinkerTransformer implements IClassTransformer
 
 		return basicClass;
 	}
-
 }

@@ -83,7 +83,7 @@ class InventoryCleaner : Module()
 	private val noMoveValue = BoolValue("NoMove", false)
 
 	// Hotbar
-	val hotbarValue = BoolValue("Hotbar", true)
+	private val hotbarValue = BoolValue("Hotbar", true)
 
 	// Bypass
 	private val randomSlotValue = BoolValue("RandomSlot", false)
