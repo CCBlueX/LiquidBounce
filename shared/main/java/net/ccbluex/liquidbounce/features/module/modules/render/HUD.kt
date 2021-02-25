@@ -21,6 +21,7 @@ class HUD : Module()
 	val inventoryParticle = BoolValue("InventoryParticle", false)
 	private val blurValue = BoolValue("Blur", false)
 	val alertsValue = BoolValue("Alerts", true)
+	val teleportAlertsValue = BoolValue("TeleportAlerts", true)
 	val fontChatValue = BoolValue("FontChat", false)
 	val chatFontValue = FontValue("FontChatFont", Fonts.font40)
 

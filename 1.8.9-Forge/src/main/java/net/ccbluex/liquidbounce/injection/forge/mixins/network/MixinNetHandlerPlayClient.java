@@ -74,11 +74,12 @@ public abstract class MixinNetHandlerPlayClient
 	@Shadow
 	private boolean doneLoadingTerrain;
 
+	@SuppressWarnings({"ThrowCaughtLocally", "IfCanBeAssertion"})
 	@Inject(method = "handleResourcePack", at = @At("HEAD"), cancellable = true)
-	private void handleResourcePack(final S48PacketResourcePackSend p_handleResourcePack_1_, final CallbackInfo callbackInfo)
+	private void handleResourcePack(final S48PacketResourcePackSend packetResourcePack, final CallbackInfo callbackInfo)
 	{
-		final String url = p_handleResourcePack_1_.getURL();
-		final String hash = p_handleResourcePack_1_.getHash();
+		final String url = packetResourcePack.getURL();
+		final String hash = packetResourcePack.getHash();
 
 		try
 		{
@@ -140,6 +141,7 @@ public abstract class MixinNetHandlerPlayClient
 	@Overwrite
 	public void handlePlayerPosLook(final S08PacketPlayerPosLook packetIn)
 	{
+		//noinspection CastToIncompatibleInterface
 		PacketThreadUtil.checkThreadAndEnqueue(packetIn, (INetHandlerPlayClient) this, gameController);
 		final EntityPlayer entityplayer = gameController.thePlayer;
 
@@ -183,10 +185,13 @@ public abstract class MixinNetHandlerPlayClient
 
 		final float newYaw = yaw % 360.0F;
 
-		final DecimalFormat coordFormat = new DecimalFormat("0.000");
+		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
+		if (hud.getTeleportAlertsValue().get()) {
+			final DecimalFormat coordFormat = new DecimalFormat("0.000");
 
-		LiquidBounce.hud.clearNotifications();
-		LiquidBounce.hud.addNotification("Setback check", "(" + coordFormat.format(prevPosX) + ", " + coordFormat.format(prevPosY) + ", " + coordFormat.format(prevPosZ) + ") -> (" + coordFormat.format(x) + ", " + coordFormat.format(y) + ", " + coordFormat.format(z) + ")", Color.yellow, 500L);
+			if (LiquidBounce.hud.getNotifications().size() <= 2)
+				LiquidBounce.hud.addNotification("Teleport", "(" + coordFormat.format(prevPosX) + ", " + coordFormat.format(prevPosY) + ", " + coordFormat.format(prevPosZ) + ") -> (" + coordFormat.format(x) + ", " + coordFormat.format(y) + ", " + coordFormat.format(z) + ")", Color.yellow, 500L);
+		}
 
 		if (noRotateSet.getState() && !(noRotateSet.getNoZeroValue().get() && !relativeYaw && yaw == 0.0f && !relativePitch && pitch == 0.0f))
 		{
@@ -219,6 +224,7 @@ public abstract class MixinNetHandlerPlayClient
 	@Overwrite
 	public void handleExplosion(final S27PacketExplosion packetIn)
 	{
+		//noinspection CastToIncompatibleInterface
 		PacketThreadUtil.checkThreadAndEnqueue(packetIn, (INetHandlerPlayClient) this, gameController);
 		final Explosion explosion = new Explosion(gameController.theWorld, null, packetIn.getX(), packetIn.getY(), packetIn.getZ(), packetIn.getStrength(), packetIn.getAffectedBlockPositions());
 		explosion.doExplosionB(true);
@@ -275,6 +281,7 @@ public abstract class MixinNetHandlerPlayClient
 	@Overwrite
 	public void handleChat(final S02PacketChat packetIn)
 	{
+		//noinspection CastToIncompatibleInterface
 		PacketThreadUtil.checkThreadAndEnqueue(packetIn, (INetHandlerPlayClient) this, gameController);
 
 		final String text = packetIn.getChatComponent().getUnformattedText().toLowerCase();
@@ -288,25 +295,25 @@ public abstract class MixinNetHandlerPlayClient
 			if (text.contains("ground items will be removed in"))
 			{
 				final String message = text.substring(text.lastIndexOf("in "));
-				LiquidBounce.hud.addNotification("ClearLag", "Clearlag " + message, null, 500L);
+				LiquidBounce.hud.addNotification("ClearLag", "Clearlag " + message, 500L);
 			}
 
 			if (text.contains("removed ") && text.contains("entities"))
 			{
 				final String message = text.substring(text.lastIndexOf("removed "));
-				LiquidBounce.hud.addNotification("ClearLag", message, null, 500L);
+				LiquidBounce.hud.addNotification("ClearLag", message, 500L);
 			}
 
 			if (text.contains("you are now in "))
 			{
 				final String message = text.substring(text.lastIndexOf("in ") + 3);
-				LiquidBounce.hud.addNotification("Faction Warning", "Chunk: " + message, null, 500L);
+				LiquidBounce.hud.addNotification("Faction Warning", "Chunk: " + message, 500L);
 			}
 
 			if (text.contains("now entering"))
 			{
 				final String message = text.substring(text.lastIndexOf(": ") + 4);
-				LiquidBounce.hud.addNotification("Faction", "Chunk: " + message, null, 500L);
+				LiquidBounce.hud.addNotification("Faction", "Chunk: " + message, 500L);
 			}
 		}
 
@@ -320,7 +327,7 @@ public abstract class MixinNetHandlerPlayClient
 			gameController.ingameGUI.getChatGUI().printChatMessage(message);
 	}
 
-	private boolean isHackerChat(final String text)
+	private static boolean isHackerChat(final String text)
 	{
 		return hackerChats.parallelStream().anyMatch(text::contains) && text.contains(Minecraft.getMinecraft().thePlayer.getName().toLowerCase()) && hackerChatWhitelists.parallelStream().noneMatch(text::contains);
 	}

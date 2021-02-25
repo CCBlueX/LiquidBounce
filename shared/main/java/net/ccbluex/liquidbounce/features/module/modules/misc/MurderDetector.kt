@@ -1,5 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -9,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import java.awt.Color
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
@@ -34,9 +37,10 @@ class MurderDetector : Module()
 
 		val provider = classProvider
 
-		theWorld.loadedEntityList.asSequence().filter(provider::isEntityPlayer).filter { it != thePlayer }.filter { it.asEntityPlayer().currentEquippedItem != null }.filter { it.asEntityPlayer().currentEquippedItem!!.item != null && isMurder(it.asEntityPlayer().currentEquippedItem!!.item!!) && !murders.contains(it) }.forEach {
+		theWorld.loadedEntityList.asSequence().filter(provider::isEntityPlayer).map(IEntity::asEntityPlayer).filter { it != thePlayer }.filter { it.currentEquippedItem != null }.filter { it.currentEquippedItem?.item != null }.filter { !murders.contains(it) }.filter { isMurder(it.currentEquippedItem?.item!!) }.forEach {
 			murders.add(it.asEntityPlayer())
 			ClientUtils.displayChatMessage(thePlayer, "\u00A7a\u00A7l" + it.asEntityPlayer().name + "\u00A7r is the \u00A74\u00A7lmurderer\u00A7r!")
+			LiquidBounce.hud.addNotification("Murder Detector", "${it.name}", Color(153, 0, 153), 5000L)
 		}
 	}
 

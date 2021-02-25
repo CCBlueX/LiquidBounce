@@ -185,6 +185,4 @@ open class HUD : MinecraftInstance()
 
 	// TODO: Convert it to kotlin optional argument when all class converted to kotlin
 	fun addNotification(header: String, message: String, stayTime: Long): Boolean = addNotification(header, message, null, stayTime)
-
-	fun clearNotifications() = notifications.clear()
 }

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import java.awt.Color
 
 @ModuleInfo(name = "HighJump", description = "Allows you to jump higher.", category = ModuleCategory.MOVEMENT)
 class HighJump : Module()
@@ -187,10 +188,11 @@ class HighJump : Module()
 		if (classProvider.isSPacketPlayerPosLook(event.packet) && modeValue.get().equals("mineplex", ignoreCase = true) && jumped)
 		{
 			state = false
-			thePlayer.motionX *= 0
-			thePlayer.motionZ *= 0
+			thePlayer.motionX = 0.0
+			thePlayer.motionZ = 0.0
 			thePlayer.jumpMovementFactor = 0.02F
-			ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cSetback detected. Disabled highjump.")
+
+			LiquidBounce.hud.addNotification("Mineplex Highjump", "Teleport detected. Highjump interrupted to prevent kick.", Color.red, 1000L)
 		}
 	}
 

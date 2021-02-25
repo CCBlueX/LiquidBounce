@@ -970,10 +970,10 @@ class Fly : Module()
 			if (mode.equals("NCP", ignoreCase = true) || mode.equals("Rewinside", ignoreCase = true) || mode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItemInHand() == null) packetPlayer.onGround = true
 			if (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted) packetPlayer.onGround = hypixelOnGroundValue.get()
 		}
-		else if (provider.isSPacketPlayerPosLook(event.packet) && mode.equals("Hypixel", ignoreCase = true) && canPerformHypixelDamageFly && hypixelFlyStarted)
+		else if (provider.isSPacketPlayerPosLook(event.packet) && mode.equals("Hypixel", ignoreCase = true) && canPerformHypixelDamageFly && hypixelFlyStarted && !hypixelDamageBoostInterrupted)
 		{
 			hypixelDamageBoostInterrupted = true
-			ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A7c\u00A7lHypixel-\u00A7a\u00A7lFly\u00A78] \u00A7cSetback detected.")
+			LiquidBounce.hud.addNotification("Hypixel Damage Boost Fly", "Teleport detected. Boost interrupted.", Color.red, 1000L)
 		}
 	}
 
