@@ -86,5 +86,4 @@ class ShortcutsConfig(file: File) : FileConfig(file)
 
 		file.writeText(FileManager.PRETTY_GSON.toJson(jsonArray))
 	}
-
 }

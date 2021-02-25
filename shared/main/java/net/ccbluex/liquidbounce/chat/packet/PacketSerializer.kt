@@ -49,5 +49,4 @@ class PacketSerializer : JsonSerializer<Packet>
 
 		return Gson().toJsonTree(serializedPacket)
 	}
-
 }

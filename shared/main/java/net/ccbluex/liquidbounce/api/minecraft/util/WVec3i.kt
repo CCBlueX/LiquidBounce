@@ -8,9 +8,7 @@ package net.ccbluex.liquidbounce.api.minecraft.util
 
 import kotlin.math.floor
 
-open class WVec3i(
-	val x: Int, val y: Int, val z: Int
-)
+open class WVec3i(val x: Int, val y: Int, val z: Int)
 {
 	constructor(x: Double, y: Double, z: Double) : this(floor(x).toInt(), floor(y).toInt(), floor(z).toInt())
 
@@ -35,5 +33,4 @@ open class WVec3i(
 		result = 31 * result + z
 		return result
 	}
-
 }

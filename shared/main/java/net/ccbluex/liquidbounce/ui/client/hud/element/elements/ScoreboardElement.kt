@@ -23,9 +23,7 @@ import kotlin.math.min
  * Allows to move and customize minecraft scoreboard
  */
 @ElementInfo(name = "Scoreboard", force = true)
-class ScoreboardElement(
-	x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.MIDDLE)
-) : Element(x, y, scale, side)
+class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.MIDDLE)) : Element(x, y, scale, side)
 {
 
 	private val textRedValue = IntegerValue("Text-R", 255, 0, 255)
@@ -151,5 +149,4 @@ class ScoreboardElement(
 	private fun backgroundColor() = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get())
 
 	private fun textColor() = Color(textRedValue.get(), textGreenValue.get(), textBlueValue.get())
-
 }

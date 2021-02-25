@@ -20,7 +20,6 @@ class CPacketCustomPayloadImpl<out T : C17PacketCustomPayload>(wrapped: T) : Pac
 		}
 	override val channelName: String
 		get() = wrapped.channelName
-
 }
 
 fun ICPacketCustomPayload.unwrap(): C17PacketCustomPayload = (this as CPacketCustomPayloadImpl<*>).wrapped

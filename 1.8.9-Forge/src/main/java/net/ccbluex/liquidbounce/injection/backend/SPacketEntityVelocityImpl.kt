@@ -31,7 +31,6 @@ class SPacketEntityVelocityImpl<out T : S12PacketEntityVelocity>(wrapped: T) : P
 		}
 	override val entityID: Int
 		get() = wrapped.entityID
-
 }
 
 fun ISPacketEntityVelocity.unwrap(): S12PacketEntityVelocity = (this as SPacketEntityVelocityImpl<*>).wrapped

@@ -35,5 +35,4 @@ object GlStateManagerImpl : IGlStateManager
 	override fun popMatrix() = GlStateManager.popMatrix()
 
 	override fun popAttrib() = GlStateManager.popAttrib()
-
 }

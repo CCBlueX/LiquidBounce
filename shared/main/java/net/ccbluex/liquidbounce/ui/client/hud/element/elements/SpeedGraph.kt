@@ -21,9 +21,7 @@ import kotlin.math.hypot
  * Allows to draw custom text
  */
 @ElementInfo(name = "SpeedGraph")
-class SpeedGraph(
-	x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)
-) : Element(x, y, scale, side)
+class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side)
 {
 	private val widthValue = IntegerValue("Width", 150, 100, 300)
 	private val heightValue = IntegerValue("Height", 50, 30, 300)

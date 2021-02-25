@@ -120,11 +120,6 @@ object MCLeaks
 	}
 }
 
-interface Callback<in T>
-{
-	fun done(responce: T)
-}
-
 data class RedeemResponse internal constructor(val username: String, val token: String)
 
 data class Session(val username: String, val token: String)

@@ -26,5 +26,4 @@ class GuiPasswordField(componentId: Int, fontrendererObj: FontRenderer, x: Int, 
 		super.drawTextBox()
 		text = realText
 	}
-
 }

@@ -649,5 +649,4 @@ object ClassProviderImpl : IClassProvider
 	override fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*> = Backend.BACKEND_UNSUPPORTED()
 
 	override fun isTileEntityShulkerBox(obj: Any?): Boolean = false
-
 }

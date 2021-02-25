@@ -15,7 +15,6 @@ interface CapeService
 	 * @return url of cape
 	 */
 	fun getCape(uuid: UUID): String?
-
 }
 
 class ServiceAPI(private val baseURL: String) : CapeService
@@ -26,7 +25,6 @@ class ServiceAPI(private val baseURL: String) : CapeService
 	 * @return url of cape
 	 */
 	override fun getCape(uuid: UUID) = String.format(baseURL, uuid)
-
 }
 
 class ServiceList(private val users: Map<String, String>) : CapeService
@@ -37,5 +35,4 @@ class ServiceList(private val users: Map<String, String>) : CapeService
 	 * @return url of cape
 	 */
 	override fun getCape(uuid: UUID) = users["$uuid".replace("-", "")]
-
 }

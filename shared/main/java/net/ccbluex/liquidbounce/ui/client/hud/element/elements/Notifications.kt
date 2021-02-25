@@ -23,9 +23,7 @@ import kotlin.math.max
  * TODO: Vertical animation
  */
 @ElementInfo(name = "Notifications", single = true)
-class Notifications(
-	x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)
-) : Element(x, y, scale, side)
+class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side)
 {
 	companion object
 	{
@@ -96,7 +94,6 @@ class Notifications(
 
 		return null
 	}
-
 }
 
 class Notification(private val header: String, private val message: String, private val rectColor: Color? = null, private val stayTime: Long = 0L)
@@ -112,7 +109,12 @@ class Notification(private val header: String, private val message: String, priv
 	 * Fade state for animation
 	 */
 	enum class FadeState
-	{ IN, STAY, OUT, END }
+	{
+		IN,
+		STAY,
+		OUT,
+		END
+	}
 
 	init
 	{

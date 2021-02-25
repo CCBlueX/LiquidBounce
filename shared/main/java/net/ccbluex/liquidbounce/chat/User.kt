@@ -14,8 +14,6 @@ import java.util.*
  * @param name of user
  * @param uuid of user
  */
-data class User(
-	@SerializedName("name") val name: String,
+data class User(@SerializedName("name") val name: String,
 
-	@SerializedName("uuid") val uuid: UUID
-)
+	@SerializedName("uuid") val uuid: UUID)

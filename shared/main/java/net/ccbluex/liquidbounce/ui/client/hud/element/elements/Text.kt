@@ -30,9 +30,7 @@ import kotlin.math.hypot
  * Allows to draw custom text
  */
 @ElementInfo(name = "Text")
-class Text(
-	x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = Side.default()
-) : Element(x, y, scale, side)
+class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = Side.default()) : Element(x, y, scale, side)
 {
 
 	companion object
@@ -57,7 +55,6 @@ class Text(
 
 			return text
 		}
-
 	}
 
 	private val displayString = TextValue("DisplayText", "")

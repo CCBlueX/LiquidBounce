@@ -121,5 +121,4 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		super.keyTyped(typedChar, keyCode)
 	}
-
 }

@@ -24,9 +24,7 @@ import kotlin.math.roundToInt
  * Shows a list of active potion effects
  */
 @ElementInfo(name = "Effects")
-class Effects(
-	x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)
-) : Element(x, y, scale, side)
+class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side)
 {
 	private val colorModeValue = ListValue("ColorMode", arrayOf("PotionColor", "Custom", "Rainbow", "RainbowShader"), "PotionColor")
 	private val redValue = IntegerValue("Red", 255, 0, 255)

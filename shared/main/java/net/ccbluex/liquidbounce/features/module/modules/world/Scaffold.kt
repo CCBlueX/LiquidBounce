@@ -722,15 +722,13 @@ class Scaffold : Module()
 			repeat(expandLengthValue.get()) { i ->
 				if (search(theWorld, thePlayer, searchPosition.add(when (horizontalFacing)
 					{
-						provider.getEnumFacing(EnumFacingType.WEST)
-						-> -i
+						provider.getEnumFacing(EnumFacingType.WEST) -> -i
 						provider.getEnumFacing(EnumFacingType.EAST) -> i
 						else -> 0
 					}, 0, when (horizontalFacing)
 					{
 						provider.getEnumFacing(EnumFacingType.NORTH) -> -i
-						provider.getEnumFacing(EnumFacingType.SOUTH)
-						-> i
+						provider.getEnumFacing(EnumFacingType.SOUTH) -> i
 						else -> 0
 					}), false, searchBounds)) return@findBlock
 			}
@@ -918,14 +916,12 @@ class Scaffold : Module()
 				val blockPos = WBlockPos(thePlayer.posX + when (horizontalFacing)
 				{
 					provider.getEnumFacing(EnumFacingType.WEST) -> -it.toDouble()
-					provider.getEnumFacing(EnumFacingType.EAST)
-					-> it.toDouble()
+					provider.getEnumFacing(EnumFacingType.EAST) -> it.toDouble()
 					else -> 0.0
 				}, if (sameYValue.get() && launchY <= thePlayer.posY) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY > floor(thePlayer.posY).toInt()) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (horizontalFacing)
 				{
 					provider.getEnumFacing(EnumFacingType.NORTH) -> -it.toDouble()
-					provider.getEnumFacing(EnumFacingType.SOUTH)
-					-> it.toDouble()
+					provider.getEnumFacing(EnumFacingType.SOUTH) -> it.toDouble()
 					else -> 0.0
 				})
 

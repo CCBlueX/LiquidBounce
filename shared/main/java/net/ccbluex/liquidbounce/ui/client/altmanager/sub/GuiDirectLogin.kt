@@ -193,5 +193,4 @@ class GuiDirectLogin(gui: GuiAltManager) : WrappedGuiScreen()
 		Keyboard.enableRepeatEvents(false)
 		super.onGuiClosed()
 	}
-
 }

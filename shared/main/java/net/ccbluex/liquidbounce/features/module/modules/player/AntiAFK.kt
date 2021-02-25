@@ -88,7 +88,6 @@ class AntiAFK : Module()
 					{
 						if (thePlayer.rotationPitch <= -90 || thePlayer.rotationPitch >= 90) thePlayer.rotationPitch = 0F
 						thePlayer.rotationPitch += RandomUtils.nextFloat(-10.0F, 10.0F)
-
 					}
 				}
 				delayTimer.reset()

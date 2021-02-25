@@ -68,7 +68,13 @@ class MinecraftAccount
 
 	enum class AltServiceType(val id: String, private val parent: AltServiceType?)
 	{
-		MOJANG("Mojang", null), MOJANG_INVALID("Mojang(Invalid)", MOJANG), MOJANG_MIGRATED("Mojang(Migrated)", MOJANG), MCLEAKS("MCLeaks", null), MCLEAKS_INVALID("MCLeaks(Invalid)", MCLEAKS), THEALTENING("TheAltening", null), THEALTENING_INVALID("TheAltening(Invalid)", THEALTENING);
+		MOJANG("Mojang", null),
+		MOJANG_INVALID("Mojang(Invalid)", MOJANG),
+		MOJANG_MIGRATED("Mojang(Migrated)", MOJANG),
+		MCLEAKS("MCLeaks", null),
+		MCLEAKS_INVALID("MCLeaks(Invalid)", MCLEAKS),
+		THEALTENING("TheAltening", null),
+		THEALTENING_INVALID("TheAltening(Invalid)", THEALTENING);
 
 		fun equals(other: AltServiceType?): Boolean = other != null && (this == other || parent != null && other == parent || this == other.parent)
 

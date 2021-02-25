@@ -48,7 +48,6 @@ class MidClick : Module()
 					FileManager.saveConfig(friendsConfig)
 					ClientUtils.displayChatMessage(thePlayer, "\u00A7a\u00A7l$playerName\u00A7c was removed from your friends.")
 				}
-
 			}
 			else ClientUtils.displayChatMessage(thePlayer, "\u00A7c\u00A7lError: \u00A7aYou need to select a player.")
 		}

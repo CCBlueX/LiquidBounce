@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
 import kotlin.math.max
@@ -86,27 +87,27 @@ class ExtendedReach : Module()
 			val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 			val color = if (colorRainbow.get()) ColorUtils.rainbow(speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else customColor
 
-			GL11.glPushMatrix()
-			GL11.glDisable(GL11.GL_TEXTURE_2D)
-			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-			GL11.glEnable(GL11.GL_LINE_SMOOTH)
-			GL11.glEnable(GL11.GL_BLEND)
-			GL11.glDisable(GL11.GL_DEPTH_TEST)
+			glPushMatrix()
+			glDisable(GL_TEXTURE_2D)
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+			glEnable(GL_LINE_SMOOTH)
+			glEnable(GL_BLEND)
+			glDisable(GL_DEPTH_TEST)
 			mc.entityRenderer.disableLightmap()
 
-			GL11.glBegin(GL11.GL_LINE_STRIP)
+			glBegin(GL_LINE_STRIP)
 			RenderUtils.glColor(color)
 
-			for (path in path) GL11.glVertex3d(path.xCoord - viewerPosX, path.yCoord - viewerPosY, path.zCoord - viewerPosZ)
+			for (path in path) glVertex3d(path.xCoord - viewerPosX, path.yCoord - viewerPosY, path.zCoord - viewerPosZ)
 
-			GL11.glColor4d(1.0, 1.0, 1.0, 1.0)
-			GL11.glEnd()
+			glColor4d(1.0, 1.0, 1.0, 1.0)
+			glEnd()
 
-			GL11.glEnable(GL11.GL_DEPTH_TEST)
-			GL11.glDisable(GL11.GL_LINE_SMOOTH)
-			GL11.glDisable(GL11.GL_BLEND)
-			GL11.glEnable(GL11.GL_TEXTURE_2D)
-			GL11.glPopMatrix()
+			glEnable(GL_DEPTH_TEST)
+			glDisable(GL_LINE_SMOOTH)
+			glDisable(GL_BLEND)
+			glEnable(GL_TEXTURE_2D)
+			glPopMatrix()
 		}
 	}
 

@@ -9,9 +9,7 @@ package net.ccbluex.liquidbounce.api.minecraft.util
 import kotlin.math.floor
 import kotlin.math.sqrt
 
-class WVec3(
-	val xCoord: Double, val yCoord: Double, val zCoord: Double
-)
+class WVec3(val xCoord: Double, val yCoord: Double, val zCoord: Double)
 {
 	fun addVector(x: Double, y: Double, z: Double): WVec3 = WVec3(xCoord + x, yCoord + y, zCoord + z)
 
@@ -80,5 +78,4 @@ class WVec3(
 	}
 
 	constructor(blockPos: WVec3i) : this(blockPos.x.toDouble(), blockPos.y.toDouble(), blockPos.z.toDouble())
-
 }

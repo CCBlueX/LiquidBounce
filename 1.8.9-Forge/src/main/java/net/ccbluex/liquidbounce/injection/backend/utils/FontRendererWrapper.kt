@@ -11,11 +11,9 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.FontRenderer
 import net.minecraft.util.ResourceLocation
 
-class FontRendererWrapper(val wrapped: IWrappedFontRenderer) : FontRenderer(
-	Minecraft.getMinecraft().gameSettings, ResourceLocation("textures/font/ascii.png"), //        if (ClassUtils.hasForge()) null else
+class FontRendererWrapper(val wrapped: IWrappedFontRenderer) : FontRenderer(Minecraft.getMinecraft().gameSettings, ResourceLocation("textures/font/ascii.png"), //        if (ClassUtils.hasForge()) null else
 	// TODO: Fix this
-	Minecraft.getMinecraft().textureManager, false
-)
+	Minecraft.getMinecraft().textureManager, false)
 {
 
 	override fun drawString(text: String?, x: Int, y: Int, color: Int): Int = wrapped.drawString(text, x.toFloat(), y.toFloat(), color)

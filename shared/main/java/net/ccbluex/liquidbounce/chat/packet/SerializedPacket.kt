@@ -14,8 +14,6 @@ import net.ccbluex.liquidbounce.chat.packet.packets.Packet
  * @param packetName name of packet
  * @param packetContent content of packet
  */
-data class SerializedPacket(
-	@SerializedName("m") val packetName: String,
+data class SerializedPacket(@SerializedName("m") val packetName: String,
 
-	@SerializedName("c") val packetContent: Packet?
-)
+	@SerializedName("c") val packetContent: Packet?)

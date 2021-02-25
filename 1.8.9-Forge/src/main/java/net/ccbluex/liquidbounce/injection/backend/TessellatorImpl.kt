@@ -18,5 +18,4 @@ class TessellatorImpl(val wrapped: Tessellator) : ITessellator
 	override fun draw() = wrapped.draw()
 
 	override fun equals(other: Any?): Boolean = other is TessellatorImpl && other.wrapped == wrapped
-
 }

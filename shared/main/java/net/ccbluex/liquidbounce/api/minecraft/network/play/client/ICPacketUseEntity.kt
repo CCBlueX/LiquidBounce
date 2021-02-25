@@ -14,7 +14,8 @@ interface ICPacketUseEntity : IPacket
 
 	enum class WAction
 	{
-		INTERACT, ATTACK, INTERACT_AT
+		INTERACT,
+		ATTACK,
+		INTERACT_AT
 	}
-
 }

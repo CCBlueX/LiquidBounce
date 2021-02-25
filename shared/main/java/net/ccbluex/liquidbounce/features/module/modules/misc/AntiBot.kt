@@ -17,7 +17,10 @@ import net.ccbluex.liquidbounce.utils.extensions.getFullName
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.hypot
@@ -377,33 +380,43 @@ object AntiBot : Module()
 				val expectedY2 = thePlayer.posY + positionY2Value.get()
 				val expectedZ2 = thePlayer.posZ + func.cos(dir) * positionBack2Value.get()
 
+				val positionExpectationDeltaLimit = positionExpectationDeltaLimitValue.get()
+				val positionExpectationDeltaCountSys = positionExpectationDeltaCountSysValue.get()
+				val positionRequiredExpectationDeltaToCheckConsistency = positionRequiredExpectationDeltaToCheckConsistencyValue.get()
+				val positionExpectationDeltaConsistencyDeltaLimit = positionExpectationDeltaConsistencyDeltaLimitValue.get()
+				val positionExpectationDeltaConsistencyCountSys = positionExpectationDeltaConsistencyCountSysValue.get()
+
 				val distances = doubleArrayOf(entity.getDistance(expectedX, expectedY, expectedZ), entity.getDistance(expectedX2, expectedY2, expectedZ2))
+
 				for (distance in distances)
 				{
 					// Position Delta
-					if (distance <= positionExpectationDeltaLimitValue.get()) position_violation[entity.entityId] = position_violation.getOrDefault(entity.entityId, 0) + 1
-					else if (positionExpectationDeltaCountSysValue.get())
+					if (distance <= positionExpectationDeltaLimit) position_violation[entity.entityId] = position_violation.getOrDefault(entity.entityId, 0) + 1
+					else if (positionExpectationDeltaCountSys)
 					{
 						val currentVL = position_violation.getOrDefault(entity.entityId, 0) shr 1
 						if (currentVL <= 0) position_violation.remove(entity.entityId) else position_violation[entity.entityId] = currentVL
 					}
 
 					// Position Delta Consistency
-					if (distance <= positionRequiredExpectationDeltaToCheckConsistencyValue.get())
+					if (distance <= positionRequiredExpectationDeltaToCheckConsistency)
 					{
 						val lastdistance = position_consistency_lastdistancedelta.getOrDefault(entity.entityId, Double.MAX_VALUE)
 						val consistency = abs(lastdistance - distance)
-						if (consistency <= positionExpectationDeltaConsistencyDeltaLimitValue.get()) position_consistency_violation[entity.entityId] = position_consistency_violation.getOrDefault(entity.entityId, 0) + 1
-						else if (positionExpectationDeltaConsistencyCountSysValue.get())
+
+						if (consistency <= positionExpectationDeltaConsistencyDeltaLimit) position_consistency_violation[entity.entityId] = position_consistency_violation.getOrDefault(entity.entityId, 0) + 1
+						else if (positionExpectationDeltaConsistencyCountSys)
 						{
 							val currentVL = position_consistency_violation.getOrDefault(entity.entityId, 0) shr 1
 							if (currentVL <= 0) position_consistency_violation.remove(entity.entityId) else position_consistency_violation[entity.entityId] = currentVL
 						}
+
 						position_consistency_lastdistancedelta[entity.entityId] = distance
 					}
 					else
 					{
 						val currentVL = position_consistency_violation.getOrDefault(entity.entityId, 0) shr 1
+
 						if (currentVL <= 0) position_consistency_violation.remove(entity.entityId) else position_consistency_violation[entity.entityId] = currentVL
 					}
 				}

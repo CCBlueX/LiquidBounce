@@ -35,7 +35,6 @@ class ChatStyleImpl(val wrapped: ChatStyle) : IChatStyle
 		}
 
 	override fun equals(other: Any?): Boolean = other is ChatStyleImpl && other.wrapped == wrapped
-
 }
 
 fun IChatStyle.unwrap(): ChatStyle = (this as ChatStyleImpl).wrapped

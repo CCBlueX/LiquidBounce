@@ -44,5 +44,4 @@ interface ClientListener
 	 * Handle error
 	 */
 	fun onError(cause: Throwable)
-
 }

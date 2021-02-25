@@ -13,5 +13,4 @@ class ItemSwordImpl(wrapped: ItemSword) : ItemImpl<ItemSword>(wrapped), IItemSwo
 {
 	override val damageVsEntity: Float
 		get() = wrapped.damageVsEntity
-
 }

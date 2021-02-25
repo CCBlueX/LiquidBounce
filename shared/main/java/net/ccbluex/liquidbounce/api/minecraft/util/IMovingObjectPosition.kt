@@ -18,6 +18,8 @@ interface IMovingObjectPosition
 
 	enum class WMovingObjectType
 	{
-		MISS, ENTITY, BLOCK
+		MISS,
+		ENTITY,
+		BLOCK
 	}
 }

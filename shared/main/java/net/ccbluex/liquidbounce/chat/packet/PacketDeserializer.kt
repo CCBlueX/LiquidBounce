@@ -53,7 +53,5 @@ class PacketDeserializer : JsonDeserializer<Packet>
 		if (!packetObject.has("c")) packetObject.add("c", JsonObject())
 
 		return Gson().fromJson(packetObject.get("c"), packetRegistry[packetName])
-
 	}
-
 }

@@ -43,7 +43,6 @@ class Image : Element()
 
 			return image
 		}
-
 	}
 
 	private val image: TextValue = object : TextValue("Image", "")
@@ -64,7 +63,6 @@ class Image : Element()
 
 			setImage(get())
 		}
-
 	}
 
 	private val resourceLocation = classProvider.createResourceLocation(RandomUtils.randomNumber(128))
@@ -136,5 +134,4 @@ class Image : Element()
 
 		return this
 	}
-
 }

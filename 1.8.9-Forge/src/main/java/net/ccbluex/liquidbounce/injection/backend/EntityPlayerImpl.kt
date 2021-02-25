@@ -106,7 +106,6 @@ open class EntityPlayerImpl<out T : EntityPlayer>(wrapped: T) : EntityLivingBase
 	override fun getCooledAttackStrength(fl: Float): Float = Backend.BACKEND_UNSUPPORTED()
 
 	override fun resetCooldown() = Backend.BACKEND_UNSUPPORTED()
-
 }
 
 fun IEntityPlayer.unwrap(): EntityPlayer = (this as EntityPlayerImpl<*>).wrapped

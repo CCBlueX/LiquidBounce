@@ -198,8 +198,7 @@ class FriendsConfig(file: File) : FileConfig(file)
 		/**
 		 * @return alias of friend
 		 */
-		val alias: String
-	)
+		val alias: String)
 
 	companion object
 	{

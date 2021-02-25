@@ -271,7 +271,6 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 				Side.Vertical.MIDDLE -> (provider.createScaledResolution(mc).scaledHeight shr 1) - y
 				Side.Vertical.DOWN -> provider.createScaledResolution(mc).scaledHeight - y
 			}
-
 		}
 
 		height += 10
@@ -454,5 +453,4 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		}
 		else drag = false
 	}
-
 }

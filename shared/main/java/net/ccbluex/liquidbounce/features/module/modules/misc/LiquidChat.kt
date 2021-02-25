@@ -320,5 +320,4 @@ class LiquidChat : Module()
 
 		return component
 	}
-
 }

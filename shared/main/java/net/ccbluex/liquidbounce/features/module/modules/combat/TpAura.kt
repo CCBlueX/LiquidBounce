@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
@@ -134,6 +134,7 @@ class TpAura : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 		val netHandler = mc.netHandler
+		val networkManager = netHandler.networkManager
 
 		currentTargets = getTargets(theWorld, thePlayer)
 
@@ -167,7 +168,7 @@ class TpAura : Module()
 					}
 
 					// Travel to the target
-					for (path in currentPath) netHandler.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
+					for (path in currentPath) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
 
 					LiquidBounce.eventManager.callEvent(AttackEvent(currentTarget))
 					CPSCounter.registerClick(CPSCounter.MouseButton.LEFT)
@@ -195,7 +196,7 @@ class TpAura : Module()
 
 					// Travel back to the original position
 					currentPath.reverse()
-					for (path in currentPath) netHandler.networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
+					for (path in currentPath) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
 					targetIndex++
 				}
 
@@ -238,27 +239,27 @@ class TpAura : Module()
 			targetPaths.forEachIndexed { index, targetPath ->
 				val color = if (rainbow) ColorUtils.rainbow(offset = index * rainbowOffsetVal, speed = rainbowSpeed, saturation = saturation, brightness = brightness) else customColor
 
-				GL11.glPushMatrix()
-				GL11.glDisable(GL11.GL_TEXTURE_2D)
-				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-				GL11.glEnable(GL11.GL_LINE_SMOOTH)
-				GL11.glEnable(GL11.GL_BLEND)
-				GL11.glDisable(GL11.GL_DEPTH_TEST)
+				glPushMatrix()
+				glDisable(GL_TEXTURE_2D)
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+				glEnable(GL_LINE_SMOOTH)
+				glEnable(GL_BLEND)
+				glDisable(GL_DEPTH_TEST)
 				entityRenderer.disableLightmap()
 
-				GL11.glBegin(GL11.GL_LINE_STRIP)
+				glBegin(GL_LINE_STRIP)
 				RenderUtils.glColor(color)
 
-				for (path in targetPath) GL11.glVertex3d(path.xCoord - viewerPosX, path.yCoord - viewerPosY, path.zCoord - viewerPosZ)
+				for (path in targetPath) glVertex3d(path.xCoord - viewerPosX, path.yCoord - viewerPosY, path.zCoord - viewerPosZ)
 
-				GL11.glColor4d(1.0, 1.0, 1.0, 1.0)
-				GL11.glEnd()
+				glColor4d(1.0, 1.0, 1.0, 1.0)
+				glEnd()
 
-				GL11.glEnable(GL11.GL_DEPTH_TEST)
-				GL11.glDisable(GL11.GL_LINE_SMOOTH)
-				GL11.glDisable(GL11.GL_BLEND)
-				GL11.glEnable(GL11.GL_TEXTURE_2D)
-				GL11.glPopMatrix()
+				glEnable(GL_DEPTH_TEST)
+				glDisable(GL_LINE_SMOOTH)
+				glDisable(GL_BLEND)
+				glEnable(GL_TEXTURE_2D)
+				glPopMatrix()
 			}
 
 			if (attackTimer.hasTimePassed(pathEspTime.get().toLong()))

@@ -36,7 +36,9 @@ object CPSCounter
 
 	enum class MouseButton(val index: Int)
 	{
-		LEFT(0), MIDDLE(1), RIGHT(2);
+		LEFT(0),
+		MIDDLE(1),
+		RIGHT(2);
 	}
 
 	init

@@ -14,7 +14,10 @@ import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityOtherPlayerMP
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.*
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.render.ITessellator
@@ -40,10 +43,12 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
-import net.ccbluex.liquidbounce.api.util.*
+import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
+import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
+import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
+import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
 import net.ccbluex.liquidbounce.injection.backend.ClassProviderImpl.createCPacketTryUseItem
 import net.ccbluex.liquidbounce.injection.backend.PacketImpl
-import org.jetbrains.annotations.Contract
 import java.awt.image.BufferedImage
 import java.io.File
 import java.security.PublicKey

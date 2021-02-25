@@ -12,7 +12,9 @@ interface ICPacketResourcePackStatus : IPacket
 {
 	enum class WAction
 	{
-		SUCCESSFULLY_LOADED, DECLINED, FAILED_DOWNLOAD, ACCEPTED;
+		SUCCESSFULLY_LOADED,
+		DECLINED,
+		FAILED_DOWNLOAD,
+		ACCEPTED;
 	}
-
 }

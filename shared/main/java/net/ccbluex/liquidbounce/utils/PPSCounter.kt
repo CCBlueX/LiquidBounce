@@ -28,7 +28,8 @@ object PPSCounter
 
 	enum class BoundType(val index: Int)
 	{
-		INBOUND(0), OUTBOUND(1);
+		INBOUND(0),
+		OUTBOUND(1);
 	}
 
 	init

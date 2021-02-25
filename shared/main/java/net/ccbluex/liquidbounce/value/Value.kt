@@ -55,7 +55,6 @@ abstract class Value<T>(val name: String, protected var value: T)
 	protected open fun onChanged(oldValue: T, newValue: T)
 	{
 	}
-
 }
 
 /**
@@ -70,7 +69,6 @@ open class BoolValue(name: String, value: Boolean) : Value<Boolean>(name, value)
 	{
 		if (element.isJsonPrimitive) value = element.asBoolean || element.asString.equals("true", ignoreCase = true)
 	}
-
 }
 
 /**
@@ -90,7 +88,6 @@ open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maxi
 	{
 		if (element.isJsonPrimitive) value = element.asInt
 	}
-
 }
 
 /**
@@ -110,7 +107,6 @@ open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val m
 	{
 		if (element.isJsonPrimitive) value = element.asFloat
 	}
-
 }
 
 /**

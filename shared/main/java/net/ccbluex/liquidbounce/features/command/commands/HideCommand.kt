@@ -88,5 +88,4 @@ class HideCommand : Command("hide")
 			else -> emptyList()
 		}
 	}
-
 }

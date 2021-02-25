@@ -10,7 +10,10 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityOtherPlayerMP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.Render3DEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -21,7 +24,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
@@ -136,27 +139,27 @@ class Blink : Module()
 		val entityRenderer = mc.entityRenderer
 
 		synchronized(positions) {
-			GL11.glPushMatrix()
-			GL11.glDisable(GL11.GL_TEXTURE_2D)
-			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-			GL11.glEnable(GL11.GL_LINE_SMOOTH)
-			GL11.glEnable(GL11.GL_BLEND)
-			GL11.glDisable(GL11.GL_DEPTH_TEST)
+			glPushMatrix()
+			glDisable(GL_TEXTURE_2D)
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+			glEnable(GL_LINE_SMOOTH)
+			glEnable(GL_BLEND)
+			glDisable(GL_DEPTH_TEST)
 			entityRenderer.disableLightmap()
 
-			GL11.glBegin(GL11.GL_LINE_STRIP)
+			glBegin(GL_LINE_STRIP)
 			RenderUtils.glColor(color)
 
-			for (pos in positions) GL11.glVertex3d(pos[0] - viewerPosX, pos[1] - viewerPosY, pos[2] - viewerPosZ)
+			for (pos in positions) glVertex3d(pos[0] - viewerPosX, pos[1] - viewerPosY, pos[2] - viewerPosZ)
 
-			GL11.glColor4d(1.0, 1.0, 1.0, 1.0)
-			GL11.glEnd()
+			glColor4d(1.0, 1.0, 1.0, 1.0)
+			glEnd()
 
-			GL11.glEnable(GL11.GL_DEPTH_TEST)
-			GL11.glDisable(GL11.GL_LINE_SMOOTH)
-			GL11.glDisable(GL11.GL_BLEND)
-			GL11.glEnable(GL11.GL_TEXTURE_2D)
-			GL11.glPopMatrix()
+			glEnable(GL_DEPTH_TEST)
+			glDisable(GL_LINE_SMOOTH)
+			glDisable(GL_BLEND)
+			glEnable(GL_TEXTURE_2D)
+			glPopMatrix()
 		}
 	}
 

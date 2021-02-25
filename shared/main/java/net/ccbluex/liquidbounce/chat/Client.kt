@@ -94,7 +94,6 @@ abstract class Client : ClientListener, MinecraftInstance()
 
 				pipeline.addLast(HttpClientCodec(), HttpObjectAggregator(8192), handler)
 			}
-
 		})
 
 		channel = bootstrap.connect(uri.host, uri.port).sync().channel()

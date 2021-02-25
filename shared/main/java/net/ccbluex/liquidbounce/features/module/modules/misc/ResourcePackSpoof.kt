@@ -52,5 +52,4 @@ class ResourcePackSpoof : Module()
 			}
 		}
 	}
-
 }

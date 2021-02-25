@@ -39,25 +39,19 @@ open class WorldImpl<out T : World>(val wrapped: T) : IWorld
 
 	override fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: (IEntity?) -> Boolean): Collection<IEntity>
 	{
-		return WrappedCollection(
-			wrapped.getEntitiesInAABBexcluding(entityIn?.unwrap(), boundingBox.unwrap()) { predicate(it?.wrap()) }, IEntity::unwrap, Entity::wrap
-		)
+		return WrappedCollection(wrapped.getEntitiesInAABBexcluding(entityIn?.unwrap(), boundingBox.unwrap()) { predicate(it?.wrap()) }, IEntity::unwrap, Entity::wrap)
 	}
 
 	override fun getBlockState(blockPos: WBlockPos): IIBlockState = wrapped.getBlockState(blockPos.unwrap()).wrap()
 
 	override fun getEntitiesWithinAABBExcludingEntity(entity: IEntity?, bb: IAxisAlignedBB): Collection<IEntity>
 	{
-		return WrappedCollection(
-			wrapped.getEntitiesWithinAABBExcludingEntity(entity?.unwrap(), bb.unwrap()), IEntity::unwrap, Entity::wrap
-		)
+		return WrappedCollection(wrapped.getEntitiesWithinAABBExcludingEntity(entity?.unwrap(), bb.unwrap()), IEntity::unwrap, Entity::wrap)
 	}
 
 	override fun getCollidingBoundingBoxes(entity: IEntity, bb: IAxisAlignedBB): Collection<IAxisAlignedBB>
 	{
-		return WrappedCollection(
-			wrapped.getCollidingBoundingBoxes(entity.unwrap(), bb.unwrap()), IAxisAlignedBB::unwrap, AxisAlignedBB::wrap
-		)
+		return WrappedCollection(wrapped.getCollidingBoundingBoxes(entity.unwrap(), bb.unwrap()), IAxisAlignedBB::unwrap, AxisAlignedBB::wrap)
 	}
 
 	override fun checkBlockCollision(aabb: IAxisAlignedBB): Boolean = wrapped.checkBlockCollision(aabb.unwrap())

@@ -30,7 +30,6 @@ class GuiSlotImpl(val wrapped: GuiSlot) : IGuiSlot
 	override fun setListWidth(width: Int) = (wrapped as IMixinGuiSlot).setListWidth(width)
 
 	override fun setEnableScissor(flag: Boolean) = (wrapped as IMixinGuiSlot).setEnableScissor(flag)
-
 }
 
 fun IGuiSlot.unwrap(): GuiSlot = (this as GuiSlotImpl).wrapped

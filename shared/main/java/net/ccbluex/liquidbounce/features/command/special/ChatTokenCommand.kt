@@ -77,5 +77,4 @@ class ChatTokenCommand : Command("chattoken")
 			else -> emptyList()
 		}
 	}
-
 }

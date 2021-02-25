@@ -37,8 +37,8 @@ class SlowlyStyle : Style()
 
 		if (panel.fade > 0)
 		{
-			drawBorderedRect(panel.x.toFloat(), panel.y.toFloat() + 17, panel.x.toFloat() + panel.width, (panel.y + 19 + panel.fade).toFloat(), 3f, Color(54, 71, 96).rgb, Color(54, 71, 96).rgb)
-			drawBorderedRect(panel.x.toFloat(), (panel.y + 17 + panel.fade).toFloat(), panel.x.toFloat() + panel.width, (panel.y + 19 + panel.fade + 5).toFloat(), 3f, Color(42, 57, 79).rgb, Color(42, 57, 79).rgb)
+			drawBorderedRect(panel.x.toFloat(), panel.y.toFloat() + 17, panel.x.toFloat() + panel.width, (panel.y + 19 + panel.fade), 3f, Color(54, 71, 96).rgb, Color(54, 71, 96).rgb)
+			drawBorderedRect(panel.x.toFloat(), (panel.y + 17 + panel.fade), panel.x.toFloat() + panel.width, (panel.y + 19 + panel.fade + 5), 3f, Color(42, 57, 79).rgb, Color(42, 57, 79).rgb)
 		}
 
 		classProvider.glStateManager.resetColor()
@@ -87,7 +87,7 @@ class SlowlyStyle : Style()
 
 		// Draw settings
 		val moduleValues = moduleElement.module.values
-		if (!moduleValues.isEmpty())
+		if (moduleValues.isNotEmpty())
 		{
 			Fonts.font35.drawString(">", moduleElement.x + moduleElement.width - 8, moduleElement.y + 5, Color.WHITE.rgb)
 

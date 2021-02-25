@@ -321,12 +321,17 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 			modules.forEachIndexed { index, module -> fontRenderer.drawString(if (upperCase) module.name.toUpperCase() else module.name, x + 2F, y + tabHeight * index + textPositionY.get(), if (module.state) 0xffffff else Color(205, 205, 205).rgb, textShadow.get()) }
 		}
-
 	}
 
 	/**
 	 * TabGUI Action
 	 */
 	enum class Action
-	{ UP, DOWN, LEFT, RIGHT, TOGGLE }
+	{
+		UP,
+		DOWN,
+		LEFT,
+		RIGHT,
+		TOGGLE
+	}
 }

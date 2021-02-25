@@ -24,9 +24,7 @@ class ShortcutCommand : Command("shortcut")
 			{
 				try
 				{
-					LiquidBounce.commandManager.registerShortcut(
-						args[2], StringUtils.toCompleteString(args, 3)
-					)
+					LiquidBounce.commandManager.registerShortcut(args[2], StringUtils.toCompleteString(args, 3))
 
 					chat(thePlayer, "Successfully added shortcut.")
 				}

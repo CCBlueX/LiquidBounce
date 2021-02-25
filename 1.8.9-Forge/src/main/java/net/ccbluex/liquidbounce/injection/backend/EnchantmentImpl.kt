@@ -15,7 +15,6 @@ class EnchantmentImpl(val wrapped: Enchantment) : IEnchantment
 		get() = wrapped.effectId
 
 	override fun getTranslatedName(level: Int): String = wrapped.getTranslatedName(level)
-
 }
 
 fun IEnchantment.unwrap(): Enchantment = (this as EnchantmentImpl).wrapped

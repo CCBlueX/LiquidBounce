@@ -17,9 +17,7 @@ class ItemPotionImpl(wrapped: ItemPotion) : ItemImpl<ItemPotion>(wrapped), IItem
 {
 	override fun getEffects(stack: IItemStack): Collection<IPotionEffect>
 	{
-		return WrappedCollection(
-			wrapped.getEffects(stack.unwrap()), IPotionEffect::unwrap, PotionEffect::wrap
-		)
+		return WrappedCollection(wrapped.getEffects(stack.unwrap()), IPotionEffect::unwrap, PotionEffect::wrap)
 	}
 }
 

@@ -23,7 +23,6 @@ class SPacketPosLookImpl<out T : S08PacketPlayerPosLook>(wrapped: T) : PacketImp
 		{
 			wrapped.pitch = value
 		}
-
 }
 
 fun ISPacketPosLook.unwrap(): S08PacketPlayerPosLook = (this as SPacketPosLookImpl<*>).wrapped

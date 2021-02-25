@@ -37,7 +37,6 @@ class WorldClientImpl(wrapped: WorldClient) : WorldImpl<WorldClient>(wrapped), I
 	{
 		wrapped.removeEntityFromWorld(entityId)
 	}
-
 }
 
 fun IWorldClient.unwrap(): WorldClient = (this as WorldClientImpl).wrapped

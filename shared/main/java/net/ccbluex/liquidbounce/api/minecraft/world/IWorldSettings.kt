@@ -11,7 +11,10 @@ interface IWorldSettings
 
 	enum class WGameType
 	{
-		NOT_SET, SURVIVAL, CREATIVE, ADVENTUR, SPECTATOR
+		NOT_SET,
+		SURVIVAL,
+		CREATIVE,
+		ADVENTUR,
+		SPECTATOR
 	}
-
 }

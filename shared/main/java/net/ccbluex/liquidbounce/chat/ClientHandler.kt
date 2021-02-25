@@ -85,7 +85,6 @@ class ClientHandler(val client: Client, private val handshaker: WebSocketClientH
 			{
 				handshaker.finishHandshake(channel, msg as FullHttpResponse)
 				handshakeFuture.setSuccess()
-
 			}
 			catch (exception: WebSocketHandshakeException)
 			{

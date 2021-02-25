@@ -84,7 +84,6 @@ class ClientRichPresence : MinecraftInstance()
 				{
 					running = false
 				}
-
 			})
 			ipcClient?.connect()
 		}
@@ -92,7 +91,6 @@ class ClientRichPresence : MinecraftInstance()
 		{
 			ClientUtils.logger.error("Failed to setup Discord RPC.", e)
 		}
-
 	}
 
 	/**

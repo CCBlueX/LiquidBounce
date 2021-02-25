@@ -14,9 +14,7 @@ import kotlin.math.min
 /**
  * CustomHUD element
  */
-abstract class Element(
-	var x: Double = 2.0, var y: Double = 2.0, scale: Float = 1F, var side: Side = Side.default()
-) : MinecraftInstance()
+abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 1F, var side: Side = Side.default()) : MinecraftInstance()
 {
 	val info = javaClass.getAnnotation(ElementInfo::class.java) ?: throw IllegalArgumentException("Passed element with missing element info")
 
@@ -159,7 +157,6 @@ abstract class Element(
 	open fun handleKey(c: Char, keyCode: Int)
 	{
 	}
-
 }
 
 /**
@@ -183,7 +180,6 @@ class Side(var horizontal: Horizontal, var vertical: Vertical)
 		 * Default element side
 		 */
 		fun default() = Side(Horizontal.LEFT, Vertical.UP)
-
 	}
 
 	/**
@@ -192,16 +188,16 @@ class Side(var horizontal: Horizontal, var vertical: Vertical)
 	enum class Horizontal(val sideName: String)
 	{
 
-		LEFT("Left"), MIDDLE("Middle"), RIGHT("Right");
+		LEFT("Left"),
+		MIDDLE("Middle"),
+		RIGHT("Right");
 
 		companion object
 		{
 
 			@JvmStatic
 			fun getByName(name: String) = values().find { it.sideName == name }
-
 		}
-
 	}
 
 	/**
@@ -210,18 +206,17 @@ class Side(var horizontal: Horizontal, var vertical: Vertical)
 	enum class Vertical(val sideName: String)
 	{
 
-		UP("Up"), MIDDLE("Middle"), DOWN("Down");
+		UP("Up"),
+		MIDDLE("Middle"),
+		DOWN("Down");
 
 		companion object
 		{
 
 			@JvmStatic
 			fun getByName(name: String) = values().find { it.sideName == name }
-
 		}
-
 	}
-
 }
 
 /**
@@ -231,5 +226,4 @@ data class Border(val x: Float, val y: Float, val x2: Float, val y2: Float)
 {
 
 	fun draw() = RenderUtils.drawBorderedRect(x, y, x2, y2, 3F, Int.MIN_VALUE, 0)
-
 }

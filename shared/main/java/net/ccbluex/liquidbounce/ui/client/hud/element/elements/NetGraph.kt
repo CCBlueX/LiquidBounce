@@ -22,9 +22,7 @@ import java.util.*
  * Allows to draw custom text
  */
 @ElementInfo(name = "NetGraph")
-class NetGraph(
-	x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)
-) : Element(x, y, scale, side)
+class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side)
 {
 	private val widthValue = IntegerValue("Width", 150, 100, 300)
 	private val heightValue = IntegerValue("Height", 50, 30, 300)

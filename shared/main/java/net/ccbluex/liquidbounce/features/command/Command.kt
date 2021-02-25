@@ -44,7 +44,9 @@ abstract class Command(val command: String, vararg val alias: String) : Minecraf
 	{
 		ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A79\u00A7l${LiquidBounce.CLIENT_NAME}\u00A78] \u00A73Syntax:")
 
-		for (syntax in syntaxes) ClientUtils.displayChatMessage(thePlayer, "\u00A78> \u00A77${LiquidBounce.commandManager.prefix}$command ${syntax.toLowerCase()}")
+		val commandPrefix = LiquidBounce.commandManager.prefix
+
+		syntaxes.map(String::toLowerCase).forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A78> \u00A77$commandPrefix$command $it") }
 	}
 
 	/**

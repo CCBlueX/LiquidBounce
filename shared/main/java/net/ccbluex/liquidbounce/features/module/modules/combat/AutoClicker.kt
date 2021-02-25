@@ -28,7 +28,6 @@ class AutoClicker : Module()
 			val minCPS = minCPSValue.get()
 			if (minCPS > newValue) set(minCPS)
 		}
-
 	}
 
 	private val minCPSValue: IntegerValue = object : IntegerValue("MinCPS", 5, 1, 20)
@@ -39,7 +38,6 @@ class AutoClicker : Module()
 			val maxCPS = maxCPSValue.get()
 			if (maxCPS < newValue) set(maxCPS)
 		}
-
 	}
 
 	private val rightValue = BoolValue("Right", true)
@@ -97,6 +95,6 @@ class AutoClicker : Module()
 		}
 	}
 
-	override val tag: String?
+	override val tag: String
 		get() = "${minCPSValue.get()} ~ ${maxCPSValue.get()}"
 }

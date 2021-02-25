@@ -33,7 +33,10 @@ class RotationUtils : MinecraftInstance(), Listenable
 {
 	enum class SearchCenterMode
 	{
-		SEARCH_GOOD_CENTER, LOCK_CENTER, OUT_BORDER, RANDOM_GOOD_CENTER
+		SEARCH_GOOD_CENTER,
+		LOCK_CENTER,
+		OUT_BORDER,
+		RANDOM_GOOD_CENTER
 	}
 
 	data class JitterData(val yawRate: Int, val pitchRate: Int, val minYaw: Float, val maxYaw: Float, val minPitch: Float, val maxPitch: Float)

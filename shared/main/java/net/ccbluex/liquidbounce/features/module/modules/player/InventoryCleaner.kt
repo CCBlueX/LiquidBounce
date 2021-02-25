@@ -300,7 +300,7 @@ class InventoryCleaner : Module()
 
 					if (slot >= 36 && findBetterItem(thePlayer, slot - 36, thePlayer.inventory.getStackInSlot(slot - 36)) == slot - 36) return true
 
-					repeat(9) { if ((type(it).equals("sword", true) && provider.isItemSword(item) || type(it).equals("pickaxe", true) && provider.isItemPickaxe(item) || type(it).equals("axe", true) && provider.isItemAxe(item)) && findBetterItem(thePlayer, it, thePlayer.inventory.getStackInSlot(it)) == null) return true }
+					repeat(9) { if ((type(it).equals("sword", true) && provider.isItemSword(item) || type(it).equals("pickaxe", true) && provider.isItemPickaxe(item) || type(it).equals("axe", true) && provider.isItemAxe(item)) && findBetterItem(thePlayer, it, thePlayer.inventory.getStackInSlot(it)) == null) return@isUseful true }
 
 					val damage = (itemStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 

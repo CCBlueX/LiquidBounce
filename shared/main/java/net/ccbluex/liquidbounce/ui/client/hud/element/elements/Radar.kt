@@ -340,5 +340,4 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 		return safeVertexBuffer
 	}
-
 }

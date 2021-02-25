@@ -203,7 +203,7 @@ class NameTags : Module()
 			renderItem.zLevel = -147F
 
 			// Used workaround because of IntArray doesn't have .mapNotNull() extension
-			(if (Backend.MINECRAFT_VERSION_MINOR == 8) (0..4).toList().toIntArray() else intArrayOf(0, 1, 2, 3, 5, 4)).map { it to (entity.getEquipmentInSlot(it) ?: return@map null) }.filterNotNull().forEach { (index, equipment) -> renderItem.renderItemAndEffectIntoGUI(equipment ?: return@forEach, -50 + index * 20, -22) }
+			(if (Backend.MINECRAFT_VERSION_MINOR == 8) (0..4).toList().toIntArray() else intArrayOf(0, 1, 2, 3, 5, 4)).map { it to (entity.getEquipmentInSlot(it) ?: return@map null) }.filterNotNull().forEach { (index, equipment) -> renderItem.renderItemAndEffectIntoGUI(equipment, -50 + index * 20, -22) }
 
 			val glStateManager = provider.glStateManager
 			glStateManager.enableAlpha()
