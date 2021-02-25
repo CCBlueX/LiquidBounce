@@ -118,8 +118,10 @@ class AutoSoup : Module()
 
 		if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0))
 		{
+			val bowl = provider.getItemEnum(ItemType.BOWL)
+
 			// Move empty bowls to inventory
-			val bowlInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.BOWL), itemDelay, random)
+			val bowlInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, bowl, itemDelay, random)
 
 			val isGuiInventory = provider.isGuiInventory(screen)
 			val simulateInv = simulateInventoryValue.get()
@@ -128,7 +130,7 @@ class AutoSoup : Module()
 			{
 				if (openInventoryValue.get() && !isGuiInventory) return
 
-				if ((9..36).map(inventory::getStackInSlot).any { it == null || (it.item == provider.getItemEnum(ItemType.BOWL) && it.stackSize < 64) })
+				if ((9..36).map(inventory::getStackInSlot).any { it == null || it.item == bowl && it.stackSize < 64 })
 				{
 					val openInventory = !isGuiInventory && simulateInv
 

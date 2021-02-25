@@ -97,13 +97,14 @@ class AutoArmor : Module()
 		for ((armorType, candidates) in armorPieces) bestArmor[armorType] = candidates.maxWith(ARMOR_COMPARATOR)
 
 		// Swap armor
-		if ((0..3).any { i ->
-				val armorPiece = bestArmor[i] ?: return@any false
+		// TODO: Check it work correctly
+		if ((0..3).mapNotNull { i ->
 				val armorSlot = 3 - i
-				val oldArmor = ArmorPiece(inventory.armorItemInSlot(armorSlot), -1)
-
-				((ItemUtils.isStackEmpty(oldArmor.itemStack) || !provider.isItemArmor(oldArmor.itemStack?.item) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) && ((!ItemUtils.isStackEmpty(oldArmor.itemStack) && move(thePlayer, netHandler, 8 - armorSlot, true)) || ItemUtils.isStackEmpty(inventory.armorItemInSlot(armorSlot)) && move(thePlayer, netHandler, armorPiece.slot, false)))
-			})
+				Triple(bestArmor[i] ?: return@mapNotNull null, armorSlot, ArmorPiece(inventory.armorItemInSlot(armorSlot), -1))
+			}.filter { (armorPiece, _, oldArmor) ->
+				val oldArmorStack = oldArmor.itemStack
+				ItemUtils.isStackEmpty(oldArmorStack) || !provider.isItemArmor(oldArmorStack?.item) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0
+			}.any { (armorPiece, armorSlot, oldArmor) -> if (ItemUtils.isStackEmpty(oldArmor.itemStack)) move(thePlayer, netHandler, armorPiece.slot, false) else move(thePlayer, netHandler, 8 - armorSlot, true) })
 		{
 			locked = true
 			return

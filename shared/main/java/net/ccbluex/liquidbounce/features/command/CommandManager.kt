@@ -67,7 +67,7 @@ class CommandManager
 	fun executeCommands(input: String)
 	{
 		val args = input.split(" ").toTypedArray()
-		commands.firstOrNull { args[0].equals("$prefix" + it.command, ignoreCase = true) || it.alias.any { alias -> args[0].equals("$prefix" + alias, ignoreCase = true) } }?.execute(args) ?: ClientUtils.displayChatMessage(wrapper.minecraft.thePlayer, "\u00A7cCommand not found. Type ${prefix}help to view all commands.")
+		commands.firstOrNull { command -> args[0].equals("$prefix" + command.command, ignoreCase = true) || command.alias.any { args[0].equals("$prefix" + it, ignoreCase = true) } }?.execute(args) ?: ClientUtils.displayChatMessage(wrapper.minecraft.thePlayer, "\u00A7cCommand not found. Type ${prefix}help to view all commands.")
 	}
 
 	/**
@@ -104,7 +104,7 @@ class CommandManager
 			else
 			{
 				val rawInput = input.substring(1)
-				commands.filter { it.command.startsWith(rawInput, true) || it.alias.any { alias -> alias.startsWith(rawInput, true) } }.map { prefix + if (it.command.startsWith(rawInput, true)) it.command else it.alias.first { alias -> alias.startsWith(rawInput, true) } }.toList()
+				commands.filter { command -> command.command.startsWith(rawInput, true) || command.alias.any { it.startsWith(rawInput, true) } }.map { prefix + if (it.command.startsWith(rawInput, true)) it.command else it.alias.first { alias -> alias.startsWith(rawInput, true) } }.toList()
 			})?.toTypedArray()
 		}
 
@@ -114,12 +114,7 @@ class CommandManager
 	/**
 	 * Get command instance by given [name]
 	 */
-	fun getCommand(name: String): Command?
-	{
-		return commands.find {
-			it.command.equals(name, ignoreCase = true) || it.alias.any { alias -> alias.equals(name, true) }
-		}
-	}
+	fun getCommand(name: String): Command? = commands.find { command -> command.command.equals(name, ignoreCase = true) || command.alias.any { it.equals(name, true) } }
 
 	/**
 	 * Register [command] by just adding it to the commands registry

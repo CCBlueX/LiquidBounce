@@ -324,7 +324,11 @@ class Step : Module()
 		return theWorld.getCollisionBoxes(thePlayer.entityBoundingBox.offset(x, 1.001335979112147, z)).isEmpty()
 	}
 
-	fun canAirStep(): Boolean = sequenceOf("Vanilla", "NCP", "OldNCP", "AAC3.1.5", "Spartan127", "Rewinside").any { modeValue.get().equals(it, ignoreCase = true) }
+	fun canAirStep(): Boolean
+	{
+		val mode = modeValue.get()
+		return sequenceOf("Vanilla", "NCP", "OldNCP", "AAC3.1.5", "Spartan127", "Rewinside").any { mode.equals(it, ignoreCase = true) }
+	}
 
 	override val tag: String
 		get() = modeValue.get()

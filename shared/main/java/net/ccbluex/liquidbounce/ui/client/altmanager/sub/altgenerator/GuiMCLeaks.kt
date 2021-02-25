@@ -103,9 +103,9 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					if (button.id == 4)
 					{
 						var moreMessage = ""
-						if (LiquidBounce.fileManager.accountsConfig.accounts.any { acc: MinecraftAccount ->
-								account.name.equals(acc.name, true) && account.accountName.equals(acc.accountName ?: "", true)
-							}) moreMessage = " But the account has already been added."
+						val mcleaksAccountName = account.name
+						val mcleaksAccountNickName = account.accountName
+						if (LiquidBounce.fileManager.accountsConfig.accounts.filter { acc -> mcleaksAccountName.equals(acc.name, true) }.any { acc -> mcleaksAccountNickName.equals(acc.accountName ?: "", true) }) moreMessage = " But the account has already been added."
 						else
 						{
 							LiquidBounce.fileManager.accountsConfig.accounts.add(account)

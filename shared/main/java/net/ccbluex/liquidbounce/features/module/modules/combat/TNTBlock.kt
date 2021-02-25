@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -35,7 +36,7 @@ class TNTBlock : Module()
 
 		val provider = classProvider
 
-		if (theWorld.loadedEntityList.any { provider.isEntityTNTPrimed(it) && thePlayer.getDistanceToEntity(it) <= range && it.asEntityTNTPrimed().fuse <= fuse })
+		if (theWorld.loadedEntityList.asSequence().filter(provider::isEntityTNTPrimed).map(IEntity::asEntityTNTPrimed).filter { thePlayer.getDistanceToEntity(it) <= range }.any { it.fuse <= fuse })
 		{
 			if (autoSwordValue.get())
 			{

@@ -46,7 +46,7 @@ class AntiModDisable : MinecraftInstance(), Listenable
 				if (blockFMLPackets)
 				{
 					var fmlChannelName: String? = null
-					if (arrayOf("FML", "FORGE", "REGISTER").any { anotherString: String? -> channelName.equals(anotherString, ignoreCase = true) }) fmlChannelName = channelName
+					if (FMLChannelNames.any { channelName.equals(it, ignoreCase = true) }) fmlChannelName = channelName
 					if (fmlChannelName != null) action(event, "FML packet ($fmlChannelName)")
 				}
 
@@ -102,6 +102,7 @@ class AntiModDisable : MinecraftInstance(), Listenable
 	companion object
 	{
 		private val CHATCOLOR_RESET_PATTERN = Pattern.compile("\u00A7r", Pattern.LITERAL)
+		private val FMLChannelNames = arrayOf("FML", "FORGE", "REGISTER")
 
 		var enabled = true
 

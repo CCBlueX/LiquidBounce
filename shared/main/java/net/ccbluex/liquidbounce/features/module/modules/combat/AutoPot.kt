@@ -127,8 +127,9 @@ class AutoPot : Module()
 		@JvmStatic
 		fun isPotionUseful(item: IItemStack): Boolean
 		{
-			if (!classProvider.isItemPotion(item.item)) return false
-			return item.item!!.asItemPotion().getEffects(item).any { goodEffects.contains(it.potionID) }
+			val potionItem = item.item
+			if (!classProvider.isItemPotion(potionItem)) return false
+			return potionItem!!.asItemPotion().getEffects(item).any { goodEffects.contains(it.potionID) }
 		}
 	}
 
@@ -289,14 +290,27 @@ class AutoPot : Module()
 
 		val candidates = mutableListOf<Int>()
 
+		val regenPotion = provider.getPotionEnum(PotionType.REGENERATION)
+
 		val healID = provider.getPotionEnum(PotionType.HEAL).id
-		val regenID = provider.getPotionEnum(PotionType.REGENERATION).id
+		val regenID = regenPotion.id
+
+		val playerRegen = thePlayer.isPotionActive(regenPotion)
 
 		(startSlot until endSlot).mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { provider.isItemPotion(it.second.item) }.filter { it.second.isSplash() }.forEach { (slotIndex, stack) ->
-			val effects = (stack.item ?: return@forEach).asItemPotion().getEffects(stack)
+			var heal = false
+			var regen = false
 
-			if (effects.any { it.potionID == healID }) candidates.add(slotIndex)
-			if (!thePlayer.isPotionActive(provider.getPotionEnum(PotionType.REGENERATION)) && effects.any { it.potionID == regenID }) candidates.add(slotIndex)
+			(stack.item ?: return@forEach).asItemPotion().getEffects(stack).map(IPotionEffect::potionID).forEach { potionID ->
+				if (potionID == healID) heal = true
+				if (potionID == regenID) regen = true
+			}
+
+			if (!candidates.contains(slotIndex))
+			{
+				if (heal) candidates.add(slotIndex)
+				if (!playerRegen && regen) candidates.add(slotIndex)
+			}
 		}
 
 		return when
@@ -320,12 +334,12 @@ class AutoPot : Module()
 		var playerJump = -1
 		var playerDigSpeed = -1
 		var playerDamageBoost = -1
-		var playerFireResis = -1
 		var playerResis = -1
 		var playerAbsorp = -1
 		var playerHealthBoost = -1
 		var playerWaterBreath = -1
 
+		var playerFireResis = false
 		var playerInvis = false
 		var playerNightVision = false
 
@@ -346,29 +360,29 @@ class AutoPot : Module()
 			if (jumpPot && potionID == jumpID) playerJump = amplifier
 			if (potionID == hasteID) playerDigSpeed = amplifier
 			if (potionID == strengthID) playerDamageBoost = amplifier
-			if (potionID == fireResisID) playerFireResis = amplifier
 			if (potionID == resisID) playerResis = amplifier
 			if (potionID == absorptionID) playerAbsorp = amplifier
 			if (potionID == healthBoostID) playerHealthBoost = amplifier
 			if (potionID == waterBreathID) playerWaterBreath = amplifier
 
+			if (potionID == fireResisID) playerFireResis = true
 			if (invisPot && potionID == invisID) playerInvis = true
 			if (potionID == nightVisionID) playerNightVision = true
 		}
 
 		val candidates = mutableListOf<Int>()
 
-		(startSlot until endSlot).asSequence().mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { System.currentTimeMillis() - it.second.itemDelay >= itemDelay }.filter { provider.isItemPotion(it.second.item) }.filter { it.second.isSplash() }.forEach { (i, stack) ->
+		(startSlot until endSlot).asSequence().mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { System.currentTimeMillis() - it.second.itemDelay >= itemDelay }.filter { provider.isItemPotion(it.second.item) }.filter { it.second.isSplash() }.forEach { (slotIndex, stack) ->
 			var potionSpeed = -1
 			var potionJump = -1
 			var potionDigSpeed = -1
 			var potionDamageBoost = -1
-			var potionFireResis = -1
 			var potionResis = -1
 			var potionAbsorp = -1
 			var potionHealthboost = -1
 			var potionWaterBreath = -1
 
+			var potionFireResis = false
 			var potionInvis = false
 			var potionNightVision = false
 
@@ -377,51 +391,51 @@ class AutoPot : Module()
 				if (jumpPot && potionID == jumpID && amplifier <= jumpPotionAmplifierLimit) potionJump = amplifier
 				if (potionID == hasteID) potionDigSpeed = amplifier
 				if (potionID == strengthID) potionDamageBoost = amplifier
-				if (potionID == fireResisID) potionFireResis = amplifier
 				if (potionID == resisID) potionResis = amplifier
 				if (potionID == absorptionID) potionAbsorp = amplifier
 				if (potionID == healthBoostID) potionHealthboost = amplifier
 				if (potionID == waterBreathID) potionWaterBreath = amplifier
 
+				if (potionID == fireResisID) potionFireResis = true
 				if (invisPot && potionID == invisID) potionInvis = true
 				if (potionID == nightVisionID) potionNightVision = true
 			}
 			//</editor-fold>
 
-			if (!candidates.contains(i))
+			if (!candidates.contains(slotIndex))
 			{
 				// Speed Splash Potion
-				if (potionSpeed > -1 && playerSpeed < potionSpeed) candidates.add(i)
+				if (potionSpeed > -1 && playerSpeed < potionSpeed) candidates.add(slotIndex)
 
 				// Strength(damage boost) Splash Potion
-				if (potionDamageBoost > -1 && potionDamageBoost > playerDamageBoost) candidates.add(i)
+				if (potionDamageBoost > -1 && potionDamageBoost > playerDamageBoost) candidates.add(slotIndex)
 
 				// Resistance Splash Potion
-				if (potionResis > -1 && potionResis > playerResis) candidates.add(i)
-
-				// Fire Resistance Splash Potion
-				if (potionFireResis > -1 && potionFireResis > playerFireResis) candidates.add(i)
+				if (potionResis > -1 && potionResis > playerResis) candidates.add(slotIndex)
 
 				// DigSpeed Potion
-				if (potionDigSpeed > -1 && potionDigSpeed > playerDigSpeed) candidates.add(i)
+				if (potionDigSpeed > -1 && potionDigSpeed > playerDigSpeed) candidates.add(slotIndex)
 
 				// Absorption Splash Potion
-				if (potionAbsorp > -1 && potionAbsorp > playerAbsorp) candidates.add(i)
+				if (potionAbsorp > -1 && potionAbsorp > playerAbsorp) candidates.add(slotIndex)
 
 				// Health Boost Splash Potion
-				if (potionHealthboost > -1 && potionHealthboost > playerHealthBoost) candidates.add(i)
+				if (potionHealthboost > -1 && potionHealthboost > playerHealthBoost) candidates.add(slotIndex)
 
 				// Night Vision Splash Potion
-				if (potionNightVision && !playerNightVision) candidates.add(i)
+				if (potionNightVision && !playerNightVision) candidates.add(slotIndex)
 
 				// Water Breathing Splash Potion
-				if (potionWaterBreath > -1 && potionWaterBreath > playerWaterBreath) candidates.add(i)
+				if (potionWaterBreath > -1 && potionWaterBreath > playerWaterBreath) candidates.add(slotIndex)
+
+				// Fire Resistance Splash Potion
+				if (potionFireResis && !playerFireResis) candidates.add(slotIndex)
 
 				// Jump Boost Splash Potion
-				if (jumpPot && potionJump > -1 && potionJump > playerJump) candidates.add(i)
+				if (jumpPot && potionJump > -1 && potionJump > playerJump) candidates.add(slotIndex)
 
 				// Invisibility Splash Potion
-				if (invisPot && potionInvis && !playerInvis) candidates.add(i)
+				if (invisPot && potionInvis && !playerInvis) candidates.add(slotIndex)
 			}
 		}
 

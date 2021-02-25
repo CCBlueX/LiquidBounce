@@ -226,9 +226,9 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 							if (button.id == 4)
 							{
 								var moreMessage = ""
-								if (LiquidBounce.fileManager.accountsConfig.accounts.any { acc: MinecraftAccount ->
-										account.name.equals(acc.name, true) && account.accountName.equals(acc.accountName ?: "", true)
-									}) moreMessage = " But the account has already been added."
+								val alteningAccountName = account.name
+								val alteningAccountNickName = account.accountName
+								if (LiquidBounce.fileManager.accountsConfig.accounts.filter { acc -> alteningAccountName.equals(acc.name, true) }.any { acc -> alteningAccountNickName.equals(acc.accountName ?: "", true) }) moreMessage = " But the account has already been added."
 								else
 								{
 									LiquidBounce.fileManager.accountsConfig.accounts.add(account)

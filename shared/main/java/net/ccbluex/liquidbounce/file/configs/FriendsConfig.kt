@@ -174,7 +174,7 @@ class FriendsConfig(file: File) : FileConfig(file)
 	 * of friend
 	 * @return            is friend
 	 */
-	fun isFriend(playerName: String): Boolean = friends.any { friend: Friend -> friend.playerName == playerName }
+	fun isFriend(playerName: String): Boolean = friends.any { it.playerName == playerName }
 
 	/**
 	 * Clear all friends from config

@@ -40,7 +40,7 @@ class Zoot : Module()
 
 		val provider = classProvider
 
-		if (badEffectsValue.get()) thePlayer.activePotionEffects.filter(::isBadEffect).maxBy(IPotionEffect::duration)?.let { effect ->
+		if (badEffectsValue.get()) thePlayer.activePotionEffects.filter { isBadEffect(it.potionID) }.maxBy(IPotionEffect::duration)?.let { effect ->
 			WorkerUtils.workers.execute {
 				repeat(effect.duration / 20) {
 					netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
@@ -60,21 +60,25 @@ class Zoot : Module()
 	}
 
 	// TODO: Check current potion
-	private fun isBadEffect(effect: IPotionEffect): Boolean
+	private fun isBadEffect(potionID: Int): Boolean = badEffectsArray.any { potionID == it }
+
+	companion object
 	{
-		val provider = classProvider
+		val badEffectsArray = arrayListOf<Int>()
 
-		return sequenceOf(
+		init
+		{
+			val provider = classProvider
 
-			provider.getPotionEnum(PotionType.HUNGER), //
-			provider.getPotionEnum(PotionType.MOVE_SLOWDOWN), //
-			provider.getPotionEnum(PotionType.DIG_SLOWDOWN), //
-			provider.getPotionEnum(PotionType.HARM), //
-			provider.getPotionEnum(PotionType.CONFUSION), //
-			provider.getPotionEnum(PotionType.BLINDNESS),  //
-			provider.getPotionEnum(PotionType.WEAKNESS), //
-			provider.getPotionEnum(PotionType.WITHER), //
-			provider.getPotionEnum(PotionType.POISON) //
-		).any { effect.potionID == it.id }
+			badEffectsArray.add(provider.getPotionEnum(PotionType.HUNGER).id)
+			badEffectsArray.add(provider.getPotionEnum(PotionType.MOVE_SLOWDOWN).id)
+			badEffectsArray.add(provider.getPotionEnum(PotionType.DIG_SLOWDOWN).id)
+			badEffectsArray.add(provider.getPotionEnum(PotionType.HARM).id)
+			badEffectsArray.add(provider.getPotionEnum(PotionType.CONFUSION).id)
+			badEffectsArray.add(provider.getPotionEnum(PotionType.BLINDNESS).id)
+			badEffectsArray.add(provider.getPotionEnum(PotionType.WEAKNESS).id)
+			badEffectsArray.add(provider.getPotionEnum(PotionType.WITHER).id)
+			badEffectsArray.add(provider.getPotionEnum(PotionType.POISON).id)
+		}
 	}
 }

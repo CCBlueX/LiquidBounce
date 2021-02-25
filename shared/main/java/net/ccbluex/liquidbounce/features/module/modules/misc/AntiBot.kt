@@ -220,7 +220,7 @@ object AntiBot : Module()
 		if (staticEntityIDValue.get() > 0)
 		{
 			val ids = arrayOf(staticEntityID1.get(), staticEntityID2.get(), staticEntityID3.get())
-			if ((0 until staticEntityIDValue.get()).map { ids[it] }.any { entityID == it }) return true
+			if ((0 until staticEntityIDValue.get()).map(ids::get).any { entityID == it }) return true
 		}
 
 		// Invalid pitch (Derp)

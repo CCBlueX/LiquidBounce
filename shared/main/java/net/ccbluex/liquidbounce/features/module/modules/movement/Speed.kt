@@ -149,7 +149,11 @@ class Speed : Module()
 		mode?.onDisable()
 	}
 
-	fun allowSprintBoost(): Boolean = sequenceOf("AAC3.3.11-Ground", "AAC3.3.11-Ground2", "AACPort", "ACP").any { modeValue.get().equals(it, ignoreCase = true) }
+	fun allowSprintBoost(): Boolean
+	{
+		val mode = modeValue.get()
+		return sequenceOf("AAC3.3.11-Ground", "AAC3.3.11-Ground2", "AACPort", "ACP").any { mode.equals(it, ignoreCase = true) }
+	}
 
 	override val tag: String
 		get() = modeValue.get()

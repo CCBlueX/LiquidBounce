@@ -310,6 +310,9 @@ class BufferSpeed : Module()
 		return blocks.map { blockPos ->
 			val blockState = theWorld.getBlockState(blockPos)
 			blockState to blockState.block.getCollisionBoundingBox(theWorld, blockPos, blockState)
-		}.any { (blockState, collisionBoundingBox) -> (collisionBoundingBox == null || collisionBoundingBox.maxX == collisionBoundingBox.minY + 1) && !blockState.block.isTranslucent(blockState) && blockState.block == provider.getBlockEnum(BlockType.WATER) && !provider.isBlockSlab(blockState.block) || blockState.block == provider.getBlockEnum(BlockType.BARRIER) }
+		}.any { (blockState, collisionBoundingBox) ->
+			val block = blockState.block
+			block == provider.getBlockEnum(BlockType.BARRIER) || (collisionBoundingBox == null || collisionBoundingBox.maxX == collisionBoundingBox.minY + 1) && !block.isTranslucent(blockState) && block == provider.getBlockEnum(BlockType.WATER) && !provider.isBlockSlab(block)
+		}
 	}
 }
