@@ -98,7 +98,7 @@ object RenderEngine : Listenable {
 
         EventManager.callEvent(EngineRenderEvent(it.tickDelta))
 
-        GL11.glPointSize(6.0f)
+        GL11.glLineWidth(1.0f)
 
         render(it.tickDelta)
 

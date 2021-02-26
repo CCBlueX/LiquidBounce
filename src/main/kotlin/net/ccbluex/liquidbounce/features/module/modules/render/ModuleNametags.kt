@@ -47,7 +47,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     private val scaleValue by float("Scale", 2F, 1F..4F)
 
     val renderHandler = handler<EngineRenderEvent> { event ->
-        val filteredEntities = mc.world!!.entities.filter(Entity::shouldBeShown)
+        val filteredEntities = mc.world!!.entities.filter(ModuleNametags::shouldRenderNametag)
 
         val fontRenderer = Fonts.bodyFont
 
@@ -131,7 +131,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
             borderRenderTask?.rect(
                 screenSpaceVec + p1 * scale,
                 screenSpaceVec + p2 * scale,
-                Color4b(0, 0, 0, 127),
+                Color4b(0, 0, 0, 255),
                 true
             )
 
@@ -155,7 +155,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                 val renderTasks = slotTypes.withIndex().mapNotNull { (index, slot) ->
                     val equipmentInSlot = entity.getEquippedStack(slot) ?: return@mapNotNull null
 
-                    ItemModelRenderTask(equipmentInSlot, -40 + index * 20, -22)
+                    ItemModelRenderTask(equipmentInSlot, -40 + index * 20, -23)
                 }
 
                 val mvpMatrix = Mat4.translate(pixelX, pixelY, 0.0f)
@@ -175,4 +175,9 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
         RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, fontRenderer.commit())
     }
 
+    /**
+     * Should [ModuleNametags] render nametags above this [entity]?
+     */
+    @JvmStatic
+    fun shouldRenderNametag(entity: Entity): Boolean = entity.shouldBeShown()
 }
