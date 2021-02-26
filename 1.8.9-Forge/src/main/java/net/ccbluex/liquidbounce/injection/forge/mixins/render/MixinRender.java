@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.RenderEntityEvent;
 import net.ccbluex.liquidbounce.injection.backend.EntityImplKt;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 

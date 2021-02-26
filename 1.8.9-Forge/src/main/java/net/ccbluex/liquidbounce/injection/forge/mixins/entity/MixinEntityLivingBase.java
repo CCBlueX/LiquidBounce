@@ -21,6 +21,8 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.INetHandlerPlayClient;
 import net.minecraft.network.play.server.S0BPacketAnimation;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
@@ -204,7 +206,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 				isSwingInProgress = true;
 
 				final Entity entity = (Entity) (Object) this;
-				final S0BPacketAnimation packetAnimation = new S0BPacketAnimation(entity, 0);
+				final Packet<INetHandlerPlayClient> packetAnimation = new S0BPacketAnimation(entity, 0);
 
 				if (worldObj instanceof WorldServer)
 					((WorldServer) worldObj).getEntityTracker().sendToAllTrackingEntity(entity, packetAnimation);

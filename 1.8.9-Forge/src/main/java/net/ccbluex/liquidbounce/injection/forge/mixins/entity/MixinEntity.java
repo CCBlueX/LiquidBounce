@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
-import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 

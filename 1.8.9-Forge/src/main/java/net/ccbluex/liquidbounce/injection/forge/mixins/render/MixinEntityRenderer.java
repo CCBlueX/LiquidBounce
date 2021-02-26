@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import java.util.List;
-import java.util.Objects;
 
 import com.google.common.base.Predicates;
 

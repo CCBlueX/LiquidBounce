@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
-import java.util.Objects;
-
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.minecraft.block.BlockSoulSand;

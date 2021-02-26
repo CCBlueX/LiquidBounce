@@ -113,7 +113,7 @@ public abstract class MixinGuiNewChat
 									final int xPos = 0;
 									final int yPos = -currentLine * 9;
 
-									Gui.drawRect(xPos, yPos - 9, xPos + chatWidthRatio + 4, yPos, (currentLineOpacity >> 1) << 24);
+									Gui.drawRect(xPos, yPos - 9, xPos + chatWidthRatio + 4, yPos, currentLineOpacity >> 1 << 24);
 
 									final String formattedText = lvt_10_1_.getChatComponent().getFormattedText();
 

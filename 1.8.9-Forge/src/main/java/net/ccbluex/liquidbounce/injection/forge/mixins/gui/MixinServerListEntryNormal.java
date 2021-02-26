@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -30,7 +30,7 @@ public abstract class MixinServerListEntryNormal
 	/**
 	 * The default server pinger executor pool has only 5-thread support. Improved to use all available threads.
 	 */
-	private static final ExecutorService enhancedServerPinger = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setNameFormat("Server Pinger #%d").setDaemon(true).build());
+	private static final Executor enhancedServerPinger = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setNameFormat("Server Pinger #%d").setDaemon(true).build());
 
 	@Shadow
 	@Final

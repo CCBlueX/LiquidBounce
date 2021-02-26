@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
-import java.util.List;
-
 import com.mojang.authlib.GameProfile;
 
 import net.ccbluex.liquidbounce.LiquidBounce;

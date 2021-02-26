@@ -34,6 +34,7 @@ public class MixinServerListEntryLanScan
 		switch ((int) (Minecraft.getSystemTime() / 200L % 22L))
 		{
 			case 0:
+			// noinspection DefaultNotLastCaseInSwitch
 			default:
 				text = "Liquidbounce";
 				break;
@@ -82,6 +83,6 @@ public class MixinServerListEntryLanScan
 				break;
 		}
 
-		mc.fontRendererObj.drawString(text, middleWidth - (mc.fontRendererObj.getStringWidth(text) >> 1), ypos + mc.fontRendererObj.FONT_HEIGHT, ColorUtils.rainbow(10, 1.0f, 1.0f).getRGB()/*8421504*/);
+		mc.fontRendererObj.drawString(text, middleWidth - (mc.fontRendererObj.getStringWidth(text) >> 1), ypos + mc.fontRendererObj.FONT_HEIGHT, ColorUtils.rainbow(10, 1.0f, 1.0f).getRGB()/* 8421504 */);
 	}
 }
