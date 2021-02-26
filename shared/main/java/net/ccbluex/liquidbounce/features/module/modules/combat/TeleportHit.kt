@@ -42,11 +42,12 @@ class TeleportHit : Module()
 		{
 			override fun canRaycast(entity: IEntity?): Boolean = provider.isEntityLivingBase(entity)
 		})
-		if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true) && facedEntity!!.getDistanceSqToEntity(thePlayer) >= 1.0) targetEntity = facedEntity.asEntityLivingBase()
 
-		if (targetEntity != null)
+		if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true) && facedEntity?.getDistanceSqToEntity(thePlayer) ?: 0.0 >= 1.0) targetEntity = facedEntity?.asEntityLivingBase()
+
+		val currentTarget = targetEntity
+		if (currentTarget != null)
 		{
-			val currentTarget = targetEntity!!
 			val netHandler = mc.netHandler
 
 			if (!shouldHit)

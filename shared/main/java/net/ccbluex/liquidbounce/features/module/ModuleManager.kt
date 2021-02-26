@@ -124,7 +124,7 @@ class ModuleManager : Listenable
 	 */
 	fun getModule(clazz: Class<*>) = get(clazz)
 
-	operator fun get(clazz: Class<*>) = moduleClassMap[clazz]!!
+	operator fun get(clazz: Class<*>) = moduleClassMap[clazz] ?: throw ClassNotFoundException("Module ${clazz.simpleName} is not registered")
 
 	/**
 	 * Get module by [moduleName]

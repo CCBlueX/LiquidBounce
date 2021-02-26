@@ -26,25 +26,30 @@ class Teams : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return false
 
-		// Scoreboard Team
-		if (scoreboardValue.get() && thePlayer.team != null && entity.team != null && thePlayer.team!!.isSameTeam(entity.team!!)) return true
+		val playerTeam = thePlayer.team
+		val targetTeam = entity.team
 
-		val displayName = thePlayer.displayName!!.formattedText
-		val entityDisplayName = entity.displayName!!.formattedText
+		// Scoreboard Team
+		if (scoreboardValue.get() && playerTeam != null && targetTeam != null && playerTeam.isSameTeam(targetTeam)) return true
+
+		val displayName = thePlayer.displayName.formattedText
+		val entityDisplayName = entity.displayName.formattedText
 
 		// GommeSkywars
-		if (gommeSWValue.get() && entity.displayName != null)
+		if (gommeSWValue.get())
 		{
 			val targetName = entityDisplayName.replace("\u00A7r", "")
 			val clientName = displayName.replace("\u00A7r", "")
+
 			if (targetName.startsWith("T") && clientName.startsWith("T")) if (targetName[1].isDigit() && clientName[1].isDigit()) return targetName[1] == clientName[1]
 		}
 
 		// Color
-		if (colorValue.get() && entity.displayName != null)
+		if (colorValue.get())
 		{
 			val targetName = entityDisplayName.replace("\u00A7r", "")
 			val clientName = displayName.replace("\u00A7r", "")
+
 			return targetName.startsWith("\u00A7${clientName[1]}")
 		}
 

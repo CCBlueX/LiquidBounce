@@ -44,11 +44,11 @@ class RemoteViewCommand : Command("remoteview", "rv")
 	{
 		if (args.isEmpty()) return emptyList()
 
-		val theWorld = mc.theWorld!!
+		val theWorld = mc.theWorld ?: return emptyList()
 
 		return when (args.size)
 		{
-			1 -> return theWorld.playerEntities.mapNotNull(IEntityPlayer::name).filter { it.startsWith(args[0], true) }.toList()
+			1 -> return theWorld.playerEntities.map(IEntityPlayer::name).filter { it.startsWith(args[0], true) }.toList()
 			else -> emptyList()
 		}
 	}

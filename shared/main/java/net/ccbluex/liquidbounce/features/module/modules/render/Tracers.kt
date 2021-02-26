@@ -18,7 +18,10 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
@@ -90,7 +93,7 @@ class Tracers : Module()
 		val bot = botValue.get()
 		val provider = classProvider
 
-		theWorld.loadedEntityList.filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).filter { (bot || !AntiBot.isBot(it)) && it != thePlayer }.forEach { entity ->
+		theWorld.loadedEntityList.filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).filter { (bot || !AntiBot.isBot(theWorld, thePlayer, it)) && it != thePlayer }.forEach { entity ->
 			val distance = (thePlayer.getDistanceToEntity(entity) * 2).toInt().coerceAtMost(255)
 
 			val lastTickPosX = entity.lastTickPosX

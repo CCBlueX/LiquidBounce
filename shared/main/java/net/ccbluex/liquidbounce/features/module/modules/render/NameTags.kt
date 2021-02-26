@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -70,11 +72,12 @@ class NameTags : Module()
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
 		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
 
 		val bot = botValue.get()
-		theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).filter { bot || !AntiBot.isBot(it) }.forEach { entity ->
-			val name = (entity.displayName ?: return@forEach).unformattedText
-			renderNameTag(entity, if (clearNamesValue.get()) ColorUtils.stripColor(name) ?: return@forEach else name)
+		theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).filter { bot || !AntiBot.isBot(theWorld, thePlayer, it) }.forEach { entity ->
+			val name = entity.displayName.unformattedText
+			renderNameTag(theWorld, thePlayer, entity, if (clearNamesValue.get()) ColorUtils.stripColor(name) else name)
 		}
 
 		glPopMatrix()
@@ -84,10 +87,8 @@ class NameTags : Module()
 		glColor4f(1F, 1F, 1F, 1F)
 	}
 
-	private fun renderNameTag(entity: IEntityLivingBase, tag: String)
+	private fun renderNameTag(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, entity: IEntityLivingBase, tag: String)
 	{
-		val thePlayer = mc.thePlayer ?: return
-
 		val fontRenderer = fontValue.get()
 
 		val murderDetector = LiquidBounce.moduleManager[MurderDetector::class.java] as MurderDetector
@@ -100,7 +101,7 @@ class NameTags : Module()
 		}
 		else ""
 
-		val bot = AntiBot.isBot(entity)
+		val bot = AntiBot.isBot(theWorld, thePlayer, entity)
 		val nameColor = when
 		{
 			bot -> "\u00A74\u00A7m" // DARK_RED + BOLD

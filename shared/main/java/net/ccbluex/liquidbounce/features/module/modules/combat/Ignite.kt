@@ -80,7 +80,7 @@ class Ignite : Module()
 
 			val itemStack = thePlayer.inventory.getStackInSlot(fireInHotbar)
 
-			if (provider.isItemBucket(itemStack!!.item))
+			if (itemStack != null && provider.isItemBucket(itemStack.item))
 			{
 				val diffX = blockPos.x + 0.5 - thePlayer.posX
 				val diffY = blockPos.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)

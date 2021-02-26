@@ -127,9 +127,11 @@ class AutoPot : Module()
 		@JvmStatic
 		fun isPotionUseful(item: IItemStack): Boolean
 		{
-			val potionItem = item.item
+			val potionItem = item.item ?: return false
+
 			if (!classProvider.isItemPotion(potionItem)) return false
-			return potionItem!!.asItemPotion().getEffects(item).any { goodEffects.contains(it.potionID) }
+
+			return potionItem.asItemPotion().getEffects(item).any { goodEffects.contains(it.potionID) }
 		}
 	}
 

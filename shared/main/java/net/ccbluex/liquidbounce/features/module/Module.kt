@@ -45,7 +45,7 @@ open class Module : MinecraftInstance(), Listenable
 
 	init
 	{
-		val moduleInfo = javaClass.getAnnotation(ModuleInfo::class.java)!!
+		val moduleInfo = javaClass.getAnnotation(ModuleInfo::class.java) ?: throw Exception("Module ${javaClass.simpleName} doesn't have ModuleInfo annotation")
 
 		name = moduleInfo.name
 		description = moduleInfo.description

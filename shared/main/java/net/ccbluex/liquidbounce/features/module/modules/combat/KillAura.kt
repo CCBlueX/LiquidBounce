@@ -581,10 +581,10 @@ class KillAura : Module()
 			return
 		}
 
-		target ?: return
+		val target = target ?: return
 
 		if (markValue.get() && !targetModeValue.get().equals("Multi", ignoreCase = true)) // Draw Mark
-			RenderUtils.drawPlatform(target!!, if (hitable)
+			RenderUtils.drawPlatform(target, if (hitable)
 			{
 				if (failedToHit) Color(0, 0, 255, 70)
 				else Color(0, 255, 0, 70)
@@ -629,7 +629,9 @@ class KillAura : Module()
 
 		val provider = classProvider
 
-		val distance = thePlayer.getDistanceToEntityBox(currentTarget!!)
+		val currentTarget = currentTarget ?: return
+
+		val distance = thePlayer.getDistanceToEntityBox(currentTarget)
 
 		// Settings
 		val failRate = failRateValue.get()
@@ -665,7 +667,7 @@ class KillAura : Module()
 				thePlayer.swingItem()
 
 				// Start blocking after FAKE attack
-				if ((isBlocking || (getCanBlock(thePlayer) && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, currentTarget!!, interactAutoBlockValue.get())
+				if ((isBlocking || (getCanBlock(thePlayer) && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, currentTarget, interactAutoBlockValue.get())
 			}
 		}
 		else
@@ -684,10 +686,10 @@ class KillAura : Module()
 					}
 				}
 			}
-			else attackEntity(currentTarget!!)
+			else attackEntity(currentTarget)
 		}
 
-		previouslySwitchedTargets.add(if (aac) (target ?: return).entityId else (currentTarget ?: return).entityId)
+		previouslySwitchedTargets.add(if (aac) (target ?: return).entityId else currentTarget.entityId)
 
 		if (!fakeAttack && target == currentTarget) target = null
 
@@ -964,20 +966,24 @@ class KillAura : Module()
 		val livingRaycast = livingRaycastValue.get()
 		val raycastIgnored = raycastIgnoredValue.get()
 
-		val reach = min(getMaxAttackRange().toDouble(), thePlayer.getDistanceToEntityBox(target!!)) + 1
+		val reach = min(getMaxAttackRange().toDouble(), thePlayer.getDistanceToEntityBox(target ?: return)) + 1
+
+		val currentTarget = currentTarget
 
 		if (raycastValue.get())
 		{
+			val provider = classProvider
+
 			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach, fakeYaw, fakePitch, object : RaycastUtils.EntityFilter
 			{
-				override fun canRaycast(entity: IEntity?): Boolean = (!livingRaycast || (classProvider.isEntityLivingBase(entity) && !classProvider.isEntityArmorStand(entity))) && (EntityUtils.isEnemy(entity, aac) || raycastIgnored || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity!!.entityBoundingBox).isNotEmpty())
+				override fun canRaycast(entity: IEntity?): Boolean = (!livingRaycast || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (EntityUtils.isEnemy(entity, aac) || raycastIgnored || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity!!.entityBoundingBox).isNotEmpty())
 			})
 
-			if (raycastedEntity != null && classProvider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !classProvider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) currentTarget = raycastedEntity.asEntityLivingBase()
+			if (raycastedEntity != null && provider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !provider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) this.currentTarget = raycastedEntity.asEntityLivingBase()
 
-			hitable = currentTarget == raycastedEntity
+			hitable = this.currentTarget == raycastedEntity
 		}
-		else hitable = if (currentTarget != null) if (multiaura) thePlayer.getDistanceToEntityBox(currentTarget!!) <= (reach - 1) else RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach) else false
+		else hitable = if (currentTarget != null) if (multiaura) thePlayer.getDistanceToEntityBox(currentTarget) <= (reach - 1) else RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach) else false
 	}
 
 	/**

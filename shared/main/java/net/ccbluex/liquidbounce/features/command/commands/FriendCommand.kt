@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.file.configs.FriendsConfig
@@ -98,7 +99,7 @@ class FriendCommand : Command("friend", "friends")
 	{
 		if (args.isEmpty()) return emptyList()
 
-		val theWorld = mc.theWorld!!
+		val theWorld = mc.theWorld ?: return emptyList()
 
 		return when (args.size)
 		{
@@ -109,8 +110,7 @@ class FriendCommand : Command("friend", "friends")
 				val prefix = args[1]
 				when (args[0].toLowerCase())
 				{
-					"add" -> return theWorld.playerEntities.filter { (it.name?.startsWith(prefix, true) ?: false) }.map { it.name!! }.toList()
-
+					"add" -> return theWorld.playerEntities.map(IEntityPlayer::name).filter { it.startsWith(prefix, true) }.toList()
 					"remove" -> return LiquidBounce.fileManager.friendsConfig.friends.map(FriendsConfig.Friend::playerName).filter { it.startsWith(prefix, true) }.toList()
 				}
 

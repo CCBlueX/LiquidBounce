@@ -31,9 +31,9 @@ class MidClick : Module()
 			val entity = (mc.objectMouseOver ?: return).entityHit
 			val thePlayer = mc.thePlayer ?: return
 
-			if (classProvider.isEntityPlayer(entity))
+			if (entity != null && classProvider.isEntityPlayer(entity))
 			{
-				val playerName = stripColor(entity!!.name) ?: return
+				val playerName = stripColor(entity.name)
 				val friendsConfig = LiquidBounce.fileManager.friendsConfig
 
 				if (!friendsConfig.isFriend(playerName))

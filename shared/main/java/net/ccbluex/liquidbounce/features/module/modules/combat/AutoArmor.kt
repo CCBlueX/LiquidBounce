@@ -64,18 +64,23 @@ class AutoArmor : Module()
 	private var cachedInfo: String? = null
 
 	val advancedInformations: String
-		get() = if (cachedInfo == null || infoUpdateCooldown.attemptReset()) (if (!state) "AutoArmor is not active"
-		else
+		get()
 		{
-			val minDelay = minDelayValue.get()
-			val maxDelay = maxDelayValue.get()
-			val noMove = noMoveValue.get()
-			val hotbar = hotbarValue.get()
-			val itemDelay = itemDelayValue.get()
+			val cache = cachedInfo
 
-			"AutoArmor active [delay: ($minDelay ~ $maxDelay), itemdelay: $itemDelay, nomove: $noMove, hotbar: $hotbar]"
-		}).apply { cachedInfo = this }
-		else cachedInfo!!
+			return if (cache == null || infoUpdateCooldown.attemptReset()) (if (!state) "AutoArmor is not active"
+			else
+			{
+				val minDelay = minDelayValue.get()
+				val maxDelay = maxDelayValue.get()
+				val noMove = noMoveValue.get()
+				val hotbar = hotbarValue.get()
+				val itemDelay = itemDelayValue.get()
+
+				"AutoArmor active [delay: ($minDelay ~ $maxDelay), itemdelay: $itemDelay, nomove: $noMove, hotbar: $hotbar]"
+			}).apply { cachedInfo = this }
+			else cache
+		}
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
@@ -83,8 +88,9 @@ class AutoArmor : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val netHandler = mc.netHandler
 		val inventory = thePlayer.inventory
+		val openContainer = thePlayer.openContainer
 
-		if (!InventoryUtils.CLICK_TIMER.hasTimePassed(nextDelay) || thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0) return
+		if (!InventoryUtils.CLICK_TIMER.hasTimePassed(nextDelay) || openContainer != null && openContainer.windowId != 0) return
 
 		val provider = classProvider
 

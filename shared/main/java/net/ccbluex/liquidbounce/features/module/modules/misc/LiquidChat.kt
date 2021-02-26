@@ -202,7 +202,9 @@ class LiquidChat : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") updateEvent: UpdateEvent)
 	{
-		if (client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
+		val currentLoginThread = loginThread
+
+		if (client.isConnected() || (currentLoginThread != null && currentLoginThread.isAlive)) return
 
 		if (connectTimer.hasTimePassed(5000))
 		{
@@ -213,7 +215,9 @@ class LiquidChat : Module()
 
 	private fun connect()
 	{
-		if (client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
+		val currentLoginThread = loginThread
+
+		if (client.isConnected() || (currentLoginThread != null && currentLoginThread.isAlive)) return
 
 		val thePlayer = mc.thePlayer
 

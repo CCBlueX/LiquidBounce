@@ -144,7 +144,9 @@ class BowAimbot : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		if (target != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get()) RenderUtils.drawPlatform(target!!, Color(37, 126, 255, 70))
+		val currentTarget = target
+
+		if (currentTarget != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get()) RenderUtils.drawPlatform(currentTarget, Color(37, 126, 255, 70))
 	}
 
 	private fun getTarget(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, throughWalls: Boolean, priorityMode: String, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): IEntity?
@@ -161,5 +163,10 @@ class BowAimbot : Module()
 		}
 	}
 
-	fun hasTarget(thePlayer: IEntityPlayerSP) = target != null && thePlayer.canEntityBeSeen(target!!)
+	fun hasTarget(thePlayer: IEntityPlayerSP): Boolean
+	{
+		val currentTarget = target
+
+		return currentTarget != null && thePlayer.canEntityBeSeen(currentTarget)
+	}
 }

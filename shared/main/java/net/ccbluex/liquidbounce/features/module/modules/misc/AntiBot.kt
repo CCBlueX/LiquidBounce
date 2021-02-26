@@ -7,6 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
@@ -177,19 +179,19 @@ object AntiBot : Module()
 	fun checkTabList(targetName: String, displayName: Boolean, equals: Boolean, stripColors: Boolean): Boolean = mc.netHandler.playerInfoMap.map { networkPlayerInfo ->
 		var networkName = networkPlayerInfo.getFullName(displayName)
 
-		if (stripColors) networkName = stripColor(networkName)!!
+		if (stripColors) networkName = stripColor(networkName)
 
 		networkName
 	}.any { networkName -> if (equals) targetName == networkName else targetName.contains(networkName) }
 
-	fun isBot(entity: IEntityLivingBase): Boolean
+	fun isBot(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, entity: IEntityLivingBase): Boolean
 	{
 		// Check if entity is a player
 		val provider = classProvider
 
 		if (!provider.isEntityPlayer(entity)) return false
 
-		val displayName: String? = entity.displayName?.formattedText
+		val displayName: String = entity.displayName.formattedText
 
 		// Check if anti bot is enabled
 		if (!state) return false
@@ -197,7 +199,7 @@ object AntiBot : Module()
 		// Anti Bot checks
 
 		// NoColor
-		if (colorValue.get() && !entity.displayName!!.formattedText.replace("\u00A7r", "").contains("\u00A7")) return true
+		if (colorValue.get() && !displayName.replace("\u00A7r", "").contains("\u00A7")) return true
 
 		// LivingTime
 		if (livingTimeValue.get() && entity.ticksExisted < livingTimeTicksValue.get()) return true
@@ -251,13 +253,15 @@ object AntiBot : Module()
 		{
 			val equals = tabModeValue.get().equals("Equals", ignoreCase = true)
 			val displayNameMode: Boolean = tabNameModeValue.get().equals("DisplayName", ignoreCase = true)
-			var targetName = if (displayNameMode) entity.displayName?.formattedText else entity.asEntityPlayer().gameProfile.name
-			if (tabStripColorsValue.get()) targetName = stripColor(targetName)
+			var targetName = if (displayNameMode) displayName else entity.asEntityPlayer().gameProfile.name
 
-			if (targetName != null && !checkTabList(targetName, displayNameMode, equals, tabStripColorsValue.get())) return true
+			if (targetName != null)
+			{
+				if (tabStripColorsValue.get()) targetName = stripColor(targetName)
+
+				if (!checkTabList(targetName, displayNameMode, equals, tabStripColorsValue.get())) return true
+			}
 		}
-
-		val theWorld = mc.theWorld!!
 
 		// Duplicate in the world
 		if (duplicateInWorldValue.get() && theWorld.loadedEntityList.count { provider.isEntityPlayer(it) && it.asEntityPlayer().displayNameString == it.asEntityPlayer().displayNameString } > 1) return true
@@ -265,10 +269,12 @@ object AntiBot : Module()
 		// Duplicate in the tab
 		if (duplicateInTabValue.get() && netHandler.playerInfoMap.count {
 				var entityName = entity.name
+
 				if (duplicateInTabStripColorsValue.get()) entityName = stripColor(entityName)
 
 				var itName = it.getFullName(duplicateInTabNameModeValue.get().equals("DisplayName", true))
-				if (duplicateInTabStripColorsValue.get()) itName = stripColor(itName)!!
+
+				if (duplicateInTabStripColorsValue.get()) itName = stripColor(itName)
 
 				entityName == itName
 			} > 1) return true
@@ -277,13 +283,13 @@ object AntiBot : Module()
 		if (alwaysInRadiusValue.get() && !notAlwaysInRadius.contains(entityID)) return true
 
 		// XZ Speed
-		if (speedValue.get() && xzspeed.containsKey(entityID) && (!speedCountingSysValue.get() || xzspeed[entityID]!! >= speedCountLimitValue.get())) return true
+		if (speedValue.get() && xzspeed.containsKey(entityID) && (!speedCountingSysValue.get() || xzspeed[entityID] ?: 0 >= speedCountLimitValue.get())) return true
 
 		// Y Speed
-		if (ySpeedValue.get() && yspeed.containsKey(entityID) && (!ySpeedCountingSysValue.get() || yspeed[entityID]!! >= ySpeedCountLimitValue.get())) return true
+		if (ySpeedValue.get() && yspeed.containsKey(entityID) && (!ySpeedCountingSysValue.get() || yspeed[entityID] ?: 0 >= ySpeedCountLimitValue.get())) return true
 
 		// Teleport Packet
-		if (teleportPacketValue.get() && teleportpacket_violation.containsKey(entityID) && (!teleportPacketCountingSysValue.get() || teleportpacket_violation[entityID]!! >= teleportPacketCountLimitValue.get())) return true
+		if (teleportPacketValue.get() && teleportpacket_violation.containsKey(entityID) && (!teleportPacketCountingSysValue.get() || teleportpacket_violation[entityID] ?: 0 >= teleportPacketCountLimitValue.get())) return true
 
 		// Spawned Position
 		if (spawnedpositionValue.get() && spawnedposition.contains(entityID)) return true
@@ -292,15 +298,15 @@ object AntiBot : Module()
 
 		if (customNameValue.get() && entity.customNameTag == "") return true
 
-		if (npcValue.get() && (entity.displayName?.formattedText?.contains("\u00A78[NPC]") == true)) return true
+		if (npcValue.get() && displayName.contains("\u00A78[NPC]")) return true
 
-		if (bedWarsNPCValue.get() && (displayName!!.isEmpty() || displayName[0] != '\u00A7') && displayName.endsWith("\u00A7r")) return true
+		if (bedWarsNPCValue.get() && (displayName.isEmpty() || displayName[0] != '\u00A7') && displayName.endsWith("\u00A7r")) return true
 
 		if (gwenValue.get() && gwenBots.contains(entityID)) return true
 
 		if (watchdogValue.get() && watchdogBots.contains(entityID)) return true
 
-		return entity.name!!.isEmpty() || entity.name == mc.thePlayer!!.name
+		return entity.name.isEmpty() || entity.name == thePlayer.name
 	}
 
 	override fun onDisable()
@@ -324,9 +330,9 @@ object AntiBot : Module()
 			val packetEntity = packet.asSPacketEntity()
 			val entity = packetEntity.getEntity(theWorld)
 
-			if (provider.isEntityPlayer(entity) && entity != null)
+			if (entity != null && provider.isEntityPlayer(entity))
 			{
-				val displayName: String? = entity.displayName?.formattedText
+				val displayName: String = entity.displayName.formattedText
 				val customName: String = entity.asEntityPlayer().customNameTag
 
 				// Ground
@@ -425,7 +431,7 @@ object AntiBot : Module()
 				if (thePlayer.ticksExisted > 40 && entity.asEntityPlayer().customNameTag == "" && !gwenBots.contains(entity.entityId)) gwenBots.add(entity.entityId)
 
 				// invisible + display name isn't red but ends with color reset char (\u00A7r) + displayname equals customname + entity is near than 3 block horizontally + y delta between entity and player is 10~13 = Watchdog Bot
-				if (entity.invisible && displayName?.startsWith("\u00A7c") == false && displayName.endsWith("\u00A7r") && displayName == customName)
+				if (entity.invisible && !displayName.startsWith("\u00A7c") && displayName.endsWith("\u00A7r") && displayName == customName)
 				{
 					val deltaX = abs(entity.posX - thePlayer.posX)
 					val deltaY = abs(entity.posY - thePlayer.posY)
@@ -456,7 +462,7 @@ object AntiBot : Module()
 				}
 
 				// display name isn't red + custom name isn't empty = watchdog bot
-				if (displayName?.contains("\u00A7c") == false && customName.isNotEmpty()) watchdogBots.add(entity.entityId)
+				if (!displayName.contains("\u00A7c") && customName.isNotEmpty()) watchdogBots.add(entity.entityId)
 			}
 		}
 

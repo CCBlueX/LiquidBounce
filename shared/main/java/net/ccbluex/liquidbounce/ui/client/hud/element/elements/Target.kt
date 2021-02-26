@@ -109,7 +109,7 @@ class Target : Element()
 
 			val healthColor = ColorUtils.getHealthColor(easingHealth, targetMaxHealth)
 
-			val width = (100.0F + Fonts.font60.getStringWidth(targetPlayer.name!!)).coerceAtLeast(250.0F)
+			val width = (100.0F + Fonts.font60.getStringWidth(targetPlayer.name)).coerceAtLeast(250.0F)
 
 			// Draw Body Rect
 			RenderUtils.drawBorderedRect(0F, 0F, width, 110F, borderWidth.get(), Color(borderColorRed.get(), borderColorGreen.get(), borderColorBlue.get()).rgb, Color.black.rgb)

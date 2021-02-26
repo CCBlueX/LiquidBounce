@@ -49,10 +49,7 @@ object ColorUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun stripColor(input: String?): String?
-	{
-		return COLOR_PATTERN.matcher(input ?: return null).replaceAll("")
-	}
+	fun stripColor(input: String): String = COLOR_PATTERN.matcher(input).replaceAll("")
 
 	@JvmStatic
 	fun translateAlternateColorCodes(textToTranslate: String): String
@@ -111,7 +108,7 @@ object ColorUtils : MinecraftInstance()
 
 				"team" ->
 				{
-					val chars = entity.displayName!!.formattedText.toCharArray()
+					val chars = entity.displayName.formattedText.toCharArray()
 					val charsSize = chars.size
 
 					var color = Int.MAX_VALUE

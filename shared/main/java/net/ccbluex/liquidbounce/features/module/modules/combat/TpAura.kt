@@ -154,8 +154,11 @@ class TpAura : Module()
 
 				while (targetIndex < targetCount)
 				{
-					currentTarget = currentTargets[targetIndex]
-					val to = WVec3(currentTarget!!.posX, currentTarget!!.posY, currentTarget!!.posZ)
+					val currentTarget = currentTargets[targetIndex]
+
+					this.currentTarget = currentTarget
+
+					val to = WVec3(currentTarget.posX, currentTarget.posY, currentTarget.posZ)
 
 					currentPath = computePath(from, to)
 					targetPaths.add(currentPath) // Used for path esp
@@ -176,7 +179,7 @@ class TpAura : Module()
 
 					// Make AutoWeapon compatible
 					var sendAttack = true
-					val attackPacket: IPacket = provider.createCPacketUseEntity(currentTarget!!, ICPacketUseEntity.WAction.ATTACK)
+					val attackPacket: IPacket = provider.createCPacketUseEntity(currentTarget, ICPacketUseEntity.WAction.ATTACK)
 					val autoWeapon = LiquidBounce.moduleManager[AutoWeapon::class.java] as AutoWeapon
 
 					if (autoWeapon.state)
@@ -288,7 +291,7 @@ class TpAura : Module()
 			if (i == 0 || i == pathFinderPath.size - 1)
 			{
 				// If the current path node is start or end node
-				if (lastPath != null) path.add(lastPath!!.addVector(0.5, 0.0, 0.5))
+				if (lastPath != null) path.add((lastPath ?: return@forEachIndexed).addVector(0.5, 0.0, 0.5))
 
 				path.add(currentPathFinderPath.addVector(0.5, 0.0, 0.5))
 				lastEndPath = currentPathFinderPath
@@ -297,7 +300,7 @@ class TpAura : Module()
 			{
 				var canContinueSearching = true
 				val maxDashDistance = maxDashDistanceValue.get().toFloat()
-				val lastEndPathChecked = lastEndPath!!
+				val lastEndPathChecked = lastEndPath ?: return@forEachIndexed
 
 				if (currentPathFinderPath.squareDistanceTo(lastEndPathChecked) > maxDashDistance * maxDashDistance) canContinueSearching = false
 				else
@@ -332,7 +335,7 @@ class TpAura : Module()
 
 				if (!canContinueSearching)
 				{
-					path.add(lastPath!!.addVector(0.5, 0.0, 0.5))
+					path.add((lastPath ?: return@forEachIndexed).addVector(0.5, 0.0, 0.5))
 					lastEndPath = lastPath
 				}
 			}
@@ -359,8 +362,8 @@ class TpAura : Module()
 
 		private fun canPassThrough(pos: WBlockPos): Boolean
 		{
-			val state = getState(WBlockPos(pos.x, pos.y, pos.z))
-			val block = state!!.block
+			val state = getState(WBlockPos(pos.x, pos.y, pos.z)) ?: return true
+			val block = state.block
 
 			val provider = classProvider
 

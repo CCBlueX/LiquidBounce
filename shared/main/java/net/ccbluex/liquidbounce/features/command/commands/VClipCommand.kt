@@ -22,7 +22,7 @@ class VClipCommand : Command("vclip")
 			{
 				val y = args[1].toDouble()
 
-				val entity = if (thePlayer.isRiding) thePlayer.ridingEntity!! else thePlayer
+				val entity = thePlayer.ridingEntity ?: thePlayer
 
 				entity.setPosition(entity.posX, entity.posY + y, entity.posZ)
 				chat(thePlayer, "You were teleported.")

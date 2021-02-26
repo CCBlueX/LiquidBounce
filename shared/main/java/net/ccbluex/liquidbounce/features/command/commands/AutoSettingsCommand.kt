@@ -83,13 +83,15 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
 	private fun loadSettings(useCached: Boolean, join: Long? = null, callback: (List<String>) -> Unit)
 	{
+		val autoSettingFiles = autoSettingFiles
+
 		val thread = thread {
 
 			// Prevent the settings from being loaded twice
 			synchronized(loadingLock) {
 				if (useCached && autoSettingFiles != null)
 				{
-					callback(autoSettingFiles!!)
+					callback(autoSettingFiles)
 					return@thread
 				}
 
@@ -103,7 +105,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
 					callback(autoSettings)
 
-					autoSettingFiles = autoSettings
+					this.autoSettingFiles = autoSettings
 				}
 				catch (e: Exception)
 				{
@@ -125,8 +127,13 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
 			2 ->
 			{
-				if (args[0].equals("load", ignoreCase = true)) if (autoSettingFiles == null) loadSettings(true, 500) {}
-				else return autoSettingFiles!!.filter { it.startsWith(args[1], true) }.toList()
+				if (args[0].equals("load", ignoreCase = true))
+				{
+					val autoSettingFiles = autoSettingFiles
+
+					if (autoSettingFiles == null) loadSettings(true, 500) {}
+					else return autoSettingFiles.filter { it.startsWith(args[1], true) }.toList()
+				}
 
 				return emptyList()
 			}

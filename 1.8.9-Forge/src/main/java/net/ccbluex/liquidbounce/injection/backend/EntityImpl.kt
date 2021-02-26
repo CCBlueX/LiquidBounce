@@ -7,7 +7,10 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.block.material.IMaterial
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.*
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityTNTPrimed
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
@@ -183,11 +186,11 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		}
 	override val entityId: Int
 		get() = wrapped.entityId
-	override val displayName: IIChatComponent?
+	override val displayName: IIChatComponent
 		get() = wrapped.displayName.wrap()
 	override val uniqueID: UUID
 		get() = wrapped.uniqueID
-	override val name: String?
+	override val name: String
 		get() = wrapped.name
 	override val ticksExisted: Int
 		get() = wrapped.ticksExisted

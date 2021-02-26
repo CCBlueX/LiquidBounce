@@ -15,10 +15,16 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
+import net.ccbluex.liquidbounce.utils.createUseItemPacket
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import kotlin.random.Random
 
 @ModuleInfo(name = "AutoSoup", description = "Makes you automatically eat soup whenever your health is low.", category = ModuleCategory.COMBAT)
@@ -90,6 +96,7 @@ class AutoSoup : Module()
 		val controller = mc.playerController
 		val screen = mc.currentScreen
 
+		val openContainer = thePlayer.openContainer
 		val inventory = thePlayer.inventory
 		val inventoryContainer = thePlayer.inventoryContainer
 
@@ -116,7 +123,7 @@ class AutoSoup : Module()
 			}
 		}
 
-		if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(thePlayer.openContainer != null && thePlayer.openContainer!!.windowId != 0))
+		if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(openContainer != null && openContainer.windowId != 0))
 		{
 			val bowl = provider.getItemEnum(ItemType.BOWL)
 

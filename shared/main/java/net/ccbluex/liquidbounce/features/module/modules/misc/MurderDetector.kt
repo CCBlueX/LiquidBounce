@@ -37,10 +37,10 @@ class MurderDetector : Module()
 
 		val provider = classProvider
 
-		theWorld.loadedEntityList.asSequence().filter(provider::isEntityPlayer).map(IEntity::asEntityPlayer).filter { it != thePlayer }.filter { it.currentEquippedItem != null }.filter { it.currentEquippedItem?.item != null }.filter { !murders.contains(it) }.filter { isMurder(it.currentEquippedItem?.item!!) }.forEach {
+		theWorld.loadedEntityList.asSequence().filter(provider::isEntityPlayer).map(IEntity::asEntityPlayer).filter { it != thePlayer }.filter { it.currentEquippedItem?.item != null }.filter { !murders.contains(it) }.filter { isMurder(it.currentEquippedItem?.item!!) }.forEach {
 			murders.add(it.asEntityPlayer())
-			ClientUtils.displayChatMessage(thePlayer, "\u00A7a\u00A7l" + it.asEntityPlayer().name + "\u00A7r is the \u00A74\u00A7lmurderer\u00A7r!")
-			LiquidBounce.hud.addNotification("Murder Detector", "${it.name}", Color(153, 0, 153), 5000L)
+			ClientUtils.displayChatMessage(thePlayer, "\u00A7a\u00A7l${it.asEntityPlayer().name}\u00A7r is the \u00A74\u00A7lmurderer\u00A7r!")
+			LiquidBounce.hud.addNotification("Murder Detector", it.name, Color(153, 0, 153), 5000L)
 		}
 	}
 
@@ -51,7 +51,7 @@ class MurderDetector : Module()
 	}
 
 	override val tag: String?
-		get() = if (murders.isEmpty()) null else murders[0].name.toString()
+		get() = if (murders.isEmpty()) null else murders[0].name
 
 	companion object
 	{

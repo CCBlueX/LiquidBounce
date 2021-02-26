@@ -40,6 +40,9 @@ object EntityUtils : MinecraftInstance()
 	{
 		val provider = classProvider
 
+		val theWorld = mc.theWorld ?: return false
+		val thePlayer = mc.thePlayer ?: return false
+
 		if (provider.isEntityLivingBase(entity) && (targetDead || entity!!.entityAlive) && entity != null && entity != mc.thePlayer)
 		{
 			if (targetInvisible || !entity.invisible)
@@ -50,7 +53,7 @@ object EntityUtils : MinecraftInstance()
 
 					if (canAttackCheck)
 					{
-						if (isBot(entityPlayer)) return false
+						if (isBot(theWorld, thePlayer, entityPlayer)) return false
 
 						if (isFriend(entityPlayer)) return false
 
@@ -85,6 +88,9 @@ object EntityUtils : MinecraftInstance()
 	{
 		val provider = classProvider
 
+		val theWorld = mc.theWorld ?: return false
+		val thePlayer = mc.thePlayer ?: return false
+
 		if (provider.isEntityLivingBase(entity) && entity != null && (targetDead || isAlive(entity.asEntityLivingBase(), aac)) && entity != mc.thePlayer)
 		{
 			if (!targetInvisible && entity.invisible) return false
@@ -93,7 +99,7 @@ object EntityUtils : MinecraftInstance()
 			{
 				val player = entity.asEntityPlayer()
 
-				if (player.spectator || isBot(player)) return false
+				if (player.spectator || isBot(theWorld, thePlayer, player)) return false
 
 				val moduleManager = LiquidBounce.moduleManager
 

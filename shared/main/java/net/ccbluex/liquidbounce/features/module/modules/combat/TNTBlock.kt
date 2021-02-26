@@ -41,7 +41,7 @@ class TNTBlock : Module()
 			if (autoSwordValue.get())
 			{
 				val inventory = thePlayer.inventory
-				val slot = (0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { provider.isItemSword(it.second.item) }.maxBy { it.second.item!!.asItemSword().damageVsEntity + 4f }?.first ?: -1
+				val slot = (0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { provider.isItemSword(it.second.item) }.maxBy { it.second.item?.asItemSword()?.damageVsEntity ?: 0f + 4f }?.first ?: -1
 
 				if (slot != -1 && slot != inventory.currentItem)
 				{
@@ -50,7 +50,9 @@ class TNTBlock : Module()
 				}
 			}
 
-			if (thePlayer.heldItem != null && provider.isItemSword(thePlayer.heldItem!!.item))
+			val heldItem = thePlayer.heldItem
+
+			if (provider.isItemSword(heldItem?.item))
 			{
 				gameSettings.keyBindUseItem.pressed = true
 				blocked = true

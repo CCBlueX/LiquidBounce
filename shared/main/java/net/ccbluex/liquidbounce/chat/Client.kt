@@ -128,7 +128,12 @@ abstract class Client : ClientListener, MinecraftInstance()
 		jwt = true
 	}
 
-	fun isConnected() = channel != null && channel!!.isOpen
+	fun isConnected(): Boolean
+	{
+		val channel = channel
+
+		return channel != null && channel.isOpen
+	}
 
 	/**
 	 * Handle incoming message of websocket

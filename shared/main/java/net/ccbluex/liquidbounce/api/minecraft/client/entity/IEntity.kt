@@ -70,9 +70,9 @@ interface IEntity
 	var rotationYaw: Float
 	var rotationPitch: Float
 	val entityId: Int
-	val displayName: IIChatComponent?
+	val displayName: IIChatComponent
 	val uniqueID: UUID
-	val name: String?
+	val name: String
 
 	val prevRotationYaw: Float
 

@@ -30,7 +30,7 @@ class ShortcutCommand : Command("shortcut")
 				}
 				catch (e: IllegalArgumentException)
 				{
-					chat(thePlayer, e.message!!)
+					chat(thePlayer, "${e.message}")
 				}
 			}
 

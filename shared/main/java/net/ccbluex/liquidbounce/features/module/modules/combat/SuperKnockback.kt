@@ -23,9 +23,11 @@ class SuperKnockback : Module()
 	{
 		val provider = classProvider
 
-		if (provider.isEntityLivingBase(event.targetEntity))
+		val targetEntity = event.targetEntity
+
+		if (targetEntity != null && provider.isEntityLivingBase(targetEntity))
 		{
-			if (event.targetEntity!!.asEntityLivingBase().hurtTime > hurtTimeValue.get()) return
+			if (targetEntity.asEntityLivingBase().hurtTime > hurtTimeValue.get()) return
 
 			val thePlayer = mc.thePlayer ?: return
 			val netHandler = mc.netHandler
