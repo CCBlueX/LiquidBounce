@@ -121,6 +121,7 @@ interface IClassProvider
 	fun createCPacketAnimation(): ICPacketAnimation
 	fun createCPacketKeepAlive(): ICPacketKeepAlive
 	fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket
+	fun createCPacketChatMessage(message: String): ICPacketChatMessage
 
 	/**
 	 * Only available for 1.8.9, can be replaced with [createCPacketTryUseItem] in later versions

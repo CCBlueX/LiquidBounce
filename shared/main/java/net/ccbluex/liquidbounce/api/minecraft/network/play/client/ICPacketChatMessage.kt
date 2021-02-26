@@ -6,7 +6,9 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.network.play.client
 
-interface ICPacketChatMessage
+import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
+
+interface ICPacketChatMessage : IPacket
 {
 	var message: String
 }
