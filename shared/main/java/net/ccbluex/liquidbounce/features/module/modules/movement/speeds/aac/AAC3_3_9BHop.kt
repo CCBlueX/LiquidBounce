@@ -64,8 +64,7 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop") // Was AAC5BHop
 		{
 			firstLegitJump = true
 
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
+			MovementUtils.zeroXZ(thePlayer)
 		}
 	}
 

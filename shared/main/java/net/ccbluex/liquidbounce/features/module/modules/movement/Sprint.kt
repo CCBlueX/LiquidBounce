@@ -35,7 +35,7 @@ class Sprint : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val blindCheck = blindnessValue.get() && thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS))
-		val foodCheck = foodValue.get() && !(thePlayer.foodStats.foodLevel > 6.0f || thePlayer.capabilities.allowFlying)
+		val foodCheck = foodValue.get() && thePlayer.foodStats.foodLevel <= 6.0f && !thePlayer.capabilities.allowFlying
 		val serversideCheck = checkServerSide.get() && (thePlayer.onGround || !checkServerSideGround.get()) && !allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch)) > 30
 
 		if (!isMoving(thePlayer) || thePlayer.sneaking || blindCheck || foodCheck || serversideCheck)

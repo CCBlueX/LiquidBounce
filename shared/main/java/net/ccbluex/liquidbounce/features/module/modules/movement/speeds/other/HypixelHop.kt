@@ -34,11 +34,7 @@ class HypixelHop : SpeedMode("HypixelHop")
 
 			MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * 1.01889f)
 		}
-		else
-		{
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
-		}
+		else MovementUtils.zeroXZ(thePlayer)
 	}
 
 	override fun onUpdate()

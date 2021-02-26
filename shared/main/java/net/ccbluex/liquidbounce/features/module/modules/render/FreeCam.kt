@@ -70,9 +70,7 @@ class FreeCam : Module()
 		theWorld.removeEntityFromWorld(fakePlayer.entityId)
 		this.fakePlayer = null
 
-		thePlayer.motionX = 0.0
-		thePlayer.motionY = 0.0
-		thePlayer.motionZ = 0.0
+		MovementUtils.zeroXYZ(thePlayer)
 	}
 
 	@EventTarget
@@ -88,9 +86,7 @@ class FreeCam : Module()
 		{
 			val value = speedValue.get()
 
-			thePlayer.motionY = 0.0
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
+			MovementUtils.zeroXYZ(thePlayer)
 
 			val gameSettings = mc.gameSettings
 			if (gameSettings.keyBindJump.isKeyDown) thePlayer.motionY += value

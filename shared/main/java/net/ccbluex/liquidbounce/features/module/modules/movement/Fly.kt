@@ -329,12 +329,7 @@ class Fly : Module()
 		hypixelFlyStarted = false
 		canPerformHypixelDamageFly = false
 
-		if (resetMotionOnDisable.get())
-		{
-			thePlayer.motionX = 0.0
-			thePlayer.motionY = 0.0
-			thePlayer.motionZ = 0.0
-		}
+		if (resetMotionOnDisable.get()) MovementUtils.zeroXYZ(thePlayer)
 
 		if (isRedeSkyMode) redeskyPacketHClip(thePlayer, 0.0)
 
@@ -376,9 +371,9 @@ class Fly : Module()
 				"vanilla" ->
 				{
 					thePlayer.capabilities.isFlying = false
-					thePlayer.motionY = 0.0
-					thePlayer.motionX = 0.0
-					thePlayer.motionZ = 0.0
+
+					MovementUtils.zeroXYZ(thePlayer)
+
 					if (jumpKeyDown) thePlayer.motionY += vanillaSpeed
 					if (sneakKeyDown) thePlayer.motionY -= vanillaSpeed
 					MovementUtils.strafe(thePlayer, vanillaSpeed)
@@ -394,9 +389,7 @@ class Fly : Module()
 				"teleport" ->
 				{
 					thePlayer.sprinting = true
-					thePlayer.motionX = 0.0
-					thePlayer.motionY = 0.0
-					thePlayer.motionZ = 0.0
+					MovementUtils.zeroXYZ(thePlayer)
 					val isMoving = isMoving(thePlayer)
 					if ((isMoving || jumpKeyDown || sneakKeyDown) && teleportTimer.hasTimePassed(teleportDelayValue.get().toLong()))
 					{
@@ -497,9 +490,8 @@ class Fly : Module()
 					networkManager.sendPacketWithoutEvent(provider.createCPacketKeepAlive())
 
 					thePlayer.capabilities.isFlying = false
-					thePlayer.motionY = 0.0
-					thePlayer.motionX = 0.0
-					thePlayer.motionZ = 0.0
+
+					MovementUtils.zeroXYZ(thePlayer)
 
 					if (jumpKeyDown) thePlayer.motionY += vanillaSpeed
 					if (sneakKeyDown) thePlayer.motionY -= vanillaSpeed
@@ -513,8 +505,7 @@ class Fly : Module()
 
 					if (!sneakKeyDown) thePlayer.motionY = -0.01
 
-					thePlayer.motionX = 0.0
-					thePlayer.motionZ = 0.0
+					MovementUtils.zeroXZ(thePlayer)
 
 					MovementUtils.strafe(thePlayer, vanillaSpeed)
 
@@ -808,9 +799,8 @@ class Fly : Module()
 				"bugspartan" ->
 				{
 					thePlayer.capabilities.isFlying = false
-					thePlayer.motionX = 0.0
-					thePlayer.motionY = 0.0
-					thePlayer.motionZ = 0.0
+
+					MovementUtils.zeroXYZ(thePlayer)
 
 					if (jumpKeyDown) thePlayer.motionY += vanillaSpeed
 					if (sneakKeyDown) thePlayer.motionY -= vanillaSpeed
@@ -839,16 +829,14 @@ class Fly : Module()
 
 					if (jumpKeyDown)
 					{
-						thePlayer.motionX = 0.0
+						MovementUtils.zeroXZ(thePlayer)
 						thePlayer.motionY = 0.42
-						thePlayer.motionZ = 0.0
 					}
 
 					if (sneakKeyDown)
 					{
-						thePlayer.motionX = 0.0
+						MovementUtils.zeroXZ(thePlayer)
 						thePlayer.motionY = -0.42
-						thePlayer.motionZ = 0.0
 					}
 				}
 			}

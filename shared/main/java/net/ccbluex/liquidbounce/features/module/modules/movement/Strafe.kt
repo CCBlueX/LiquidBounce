@@ -2,10 +2,14 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.JumpEvent
+import net.ccbluex.liquidbounce.event.StrafeEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import kotlin.math.hypot
@@ -38,18 +42,22 @@ class Strafe : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val gameSettings = mc.gameSettings
 
-		if (thePlayer.onGround && gameSettings.keyBindJump.isKeyDown && allDirectionsJumpValue.get() && (thePlayer.movementInput.moveForward != 0F || thePlayer.movementInput.moveStrafe != 0F) && !(thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isInWeb))
+		if (thePlayer.onGround && gameSettings.keyBindJump.isKeyDown && allDirectionsJumpValue.get() && MovementUtils.isMoving(thePlayer) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isOnLadder && !thePlayer.isInWeb)
 		{
 			if (gameSettings.keyBindJump.isKeyDown)
 			{
 				gameSettings.keyBindJump.pressed = false
 				wasDown = true
 			}
+
 			val yaw = thePlayer.rotationYaw
+
 			thePlayer.rotationYaw = getMoveYaw(thePlayer)
 			thePlayer.jump()
 			thePlayer.rotationYaw = yaw
+
 			jump = true
+
 			if (wasDown)
 			{
 				gameSettings.keyBindJump.pressed = true
@@ -72,14 +80,9 @@ class Strafe : Module()
 		val motionX = thePlayer.motionX * (1 - strength)
 		val motionZ = thePlayer.motionZ * (1 - strength)
 
-		if (!(thePlayer.movementInput.moveForward != 0F || thePlayer.movementInput.moveStrafe != 0F))
+		if (!MovementUtils.isMoving(thePlayer))
 		{
-			if (noMoveStopValue.get())
-			{
-				thePlayer.motionX = 0.0
-				thePlayer.motionZ = 0.0
-			}
-
+			if (noMoveStopValue.get()) MovementUtils.zeroXZ(thePlayer)
 			return
 		}
 

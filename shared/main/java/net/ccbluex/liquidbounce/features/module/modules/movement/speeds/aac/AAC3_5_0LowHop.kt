@@ -58,11 +58,7 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 				waitForGround = true
 			}
 		}
-		else
-		{
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
-		}
+		else MovementUtils.zeroXZ(thePlayer)
 
 		MovementUtils.strafe(thePlayer)
 	}

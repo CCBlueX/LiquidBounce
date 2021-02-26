@@ -23,11 +23,7 @@ class SlowHop : SpeedMode("SlowHop")
 		{
 			if (thePlayer.onGround) jump(thePlayer) else MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * 1.011f)
 		}
-		else
-		{
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
-		}
+		else MovementUtils.zeroXZ(thePlayer)
 	}
 
 	override fun onUpdate()

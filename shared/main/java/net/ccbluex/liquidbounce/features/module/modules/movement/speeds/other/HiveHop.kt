@@ -45,8 +45,7 @@ class HiveHop : SpeedMode("HiveHop")
 		}
 		else
 		{
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
+			MovementUtils.zeroXZ(thePlayer)
 
 			thePlayer.speedInAir = 0.02f
 

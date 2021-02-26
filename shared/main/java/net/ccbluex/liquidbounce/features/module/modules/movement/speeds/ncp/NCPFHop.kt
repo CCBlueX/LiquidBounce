@@ -47,11 +47,7 @@ class NCPFHop : SpeedMode("NCPFHop")
 
 			MovementUtils.strafe(thePlayer)
 		}
-		else
-		{
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
-		}
+		else MovementUtils.zeroXZ(thePlayer)
 	}
 
 	override fun onMove(event: MoveEvent)

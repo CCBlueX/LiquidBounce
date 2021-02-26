@@ -29,11 +29,7 @@ class SpectreBHop : SpeedMode("Spectre-BHop")
 
 			MovementUtils.strafe(thePlayer)
 		}
-		else
-		{
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
-		}
+		else MovementUtils.zeroXZ(thePlayer)
 	}
 
 	override fun onUpdate()

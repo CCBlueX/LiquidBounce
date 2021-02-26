@@ -143,8 +143,8 @@ class Speed : Module()
 			val thePlayer = mc.thePlayer ?: return
 
 			state = false
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
+
+			MovementUtils.zeroXZ(thePlayer)
 			thePlayer.jumpMovementFactor = 0.02F
 
 			LiquidBounce.hud.addNotification("Speed", "A teleport has been detected. Disabled Speed to prevent more flags.", Color.red, 1000L)

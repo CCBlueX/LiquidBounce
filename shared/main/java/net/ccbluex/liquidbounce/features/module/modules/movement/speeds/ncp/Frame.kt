@@ -37,8 +37,7 @@ class Frame : SpeedMode("Frame")
 
 					if (move)
 					{
-						thePlayer.motionX = 0.0
-						thePlayer.motionZ = 0.0
+						MovementUtils.zeroXZ(thePlayer)
 						move = false
 					}
 

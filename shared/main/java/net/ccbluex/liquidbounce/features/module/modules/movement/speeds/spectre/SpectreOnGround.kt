@@ -32,8 +32,7 @@ class SpectreOnGround : SpeedMode("Spectre-OnGround")
 		{
 			if (thePlayer.onGround)
 			{
-				thePlayer.motionX = 0.0
-				thePlayer.motionZ = 0.0
+				MovementUtils.zeroXZ(thePlayer)
 				speedUp = 0
 			}
 			return

@@ -50,8 +50,7 @@ class AAC3_1_5LowHop : SpeedMode("AAC3.1.5-LowHop") // Was AACLowHop
 		{
 			firstLegitJump = true
 
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
+			MovementUtils.zeroXZ(thePlayer)
 		}
 	}
 

@@ -456,7 +456,7 @@ class Tower : Module()
 						val rotationVector = RotationUtils.getVectorForRotation(rotation)
 						val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
 						val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
-						if (!(rayTrace!!.typeOfHit == IMovingObjectPosition.WMovingObjectType.BLOCK && rayTrace.blockPos == neighbor))
+						if (rayTrace!!.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)
 						{
 							zSearch += 0.1
 							continue

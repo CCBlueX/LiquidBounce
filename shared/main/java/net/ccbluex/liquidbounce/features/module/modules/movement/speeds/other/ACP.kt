@@ -49,11 +49,7 @@ class ACP : SpeedMode("ACP")
 
 			strafe(thePlayer, moveSpeed)
 		}
-		else
-		{
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
-		}
+		else MovementUtils.zeroXZ(thePlayer)
 	}
 
 	override fun onUpdate()

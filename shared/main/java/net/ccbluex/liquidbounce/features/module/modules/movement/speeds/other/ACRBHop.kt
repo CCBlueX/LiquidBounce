@@ -37,12 +37,7 @@ class ACRBHop : SpeedMode("ACR-BHop")
 
 			MovementUtils.strafe(thePlayer)
 		}
-		else
-		{
-			thePlayer.jumpMovementFactor = 0.02F
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
-		}
+		else MovementUtils.zeroXZ(thePlayer)
 	}
 
 	override fun onUpdate()

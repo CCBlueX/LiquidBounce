@@ -36,11 +36,7 @@ class PACBHop : SpeedMode("PAC-BHop")
 
 			MovementUtils.strafe(thePlayer)
 		}
-		else
-		{
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
-		}
+		else MovementUtils.zeroXZ(thePlayer)
 	}
 
 	override fun onUpdate()

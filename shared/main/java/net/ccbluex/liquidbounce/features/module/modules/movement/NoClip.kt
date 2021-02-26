@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.MovementUtils
 
 @ModuleInfo(name = "NoClip", description = "Allows you to freely move through walls (A sandblock has to fall on your head).", category = ModuleCategory.MOVEMENT)
 class NoClip : Module()
@@ -32,9 +33,8 @@ class NoClip : Module()
 		thePlayer.onGround = false
 
 		thePlayer.capabilities.isFlying = false
-		thePlayer.motionX = 0.0
-		thePlayer.motionY = 0.0
-		thePlayer.motionZ = 0.0
+
+		MovementUtils.zeroXYZ(thePlayer)
 
 		val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
 		val speed = fly.vanillaSpeedValue.get()

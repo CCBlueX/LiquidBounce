@@ -31,11 +31,7 @@ class AAC1_9_10BHop : SpeedMode("AAC1.9.10-BHop") // Was OldAACBHop
 			}
 			else MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * if (thePlayer.fallDistance > 0.4f) 1.0f else 1.01f)
 		}
-		else
-		{
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
-		}
+		else MovementUtils.zeroXZ(thePlayer)
 	}
 
 	override fun onUpdate()

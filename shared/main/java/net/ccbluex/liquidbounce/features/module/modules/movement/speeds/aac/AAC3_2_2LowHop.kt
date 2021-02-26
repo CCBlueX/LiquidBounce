@@ -63,8 +63,7 @@ class AAC3_2_2LowHop : SpeedMode("AAC3.2.2-LowHop") // Was AAC3BHop
 		{
 			firstLegitJump = true
 
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
+			MovementUtils.zeroXZ(thePlayer)
 		}
 	}
 

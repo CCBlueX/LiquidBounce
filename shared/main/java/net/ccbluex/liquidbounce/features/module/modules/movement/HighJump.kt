@@ -183,8 +183,8 @@ class HighJump : Module()
 			val thePlayer = mc.thePlayer ?: return
 
 			state = false
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
+
+			MovementUtils.zeroXZ(thePlayer)
 			thePlayer.jumpMovementFactor = 0.02F
 
 			LiquidBounce.hud.addNotification("Mineplex HighJump", "A teleport has been detected. Disabled HighJump to prevent kick.", Color.red, 1000L)

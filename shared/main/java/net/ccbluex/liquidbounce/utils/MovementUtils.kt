@@ -45,6 +45,7 @@ object MovementUtils : MinecraftInstance()
 		val func = functions
 
 		val yaw = WMathHelper.toRadians(thePlayer.rotationYaw)
+
 		thePlayer.setPosition(thePlayer.posX + -func.sin(yaw) * length, thePlayer.posY, thePlayer.posZ + func.cos(yaw) * length)
 	}
 
@@ -54,20 +55,24 @@ object MovementUtils : MinecraftInstance()
 	@JvmStatic
 	fun getDirectionDegrees(thePlayer: IEntityPlayerSP): Float
 	{
-		var rotationYaw = thePlayer.rotationYaw
+		var yaw = thePlayer.rotationYaw % 360f
+
+		val moveForward = thePlayer.moveForward
+		val moveStrafing = thePlayer.moveStrafing
+
 		var forward = 1f
 
-		if (thePlayer.moveForward < 0f)
+		if (moveForward < 0f)
 		{
-			rotationYaw += 180f
+			yaw += 180f
 			forward = -0.5f
 		}
-		else if (thePlayer.moveForward > 0f) forward = 0.5f
+		else if (moveForward > 0f) forward = 0.5f
 
-		if (thePlayer.moveStrafing > 0f) rotationYaw -= 90f * forward
-		if (thePlayer.moveStrafing < 0f) rotationYaw += 90f * forward
+		if (moveStrafing > 0f) yaw -= 90f * forward
+		if (moveStrafing < 0f) yaw += 90f * forward
 
-		return rotationYaw
+		return yaw
 	}
 
 	/**
@@ -75,4 +80,18 @@ object MovementUtils : MinecraftInstance()
 	 */
 	@JvmStatic
 	fun getSpeedEffectAmplifier(thePlayer: IEntityPlayerSP) = thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))?.amplifier?.plus(1) ?: 0
+
+	@JvmStatic
+	fun zeroXZ(thePlayer: IEntityPlayerSP)
+	{
+		thePlayer.motionX = 0.0
+		thePlayer.motionZ = 0.0
+	}
+
+	@JvmStatic
+	fun zeroXYZ(thePlayer: IEntityPlayerSP)
+	{
+		zeroXZ(thePlayer)
+		thePlayer.motionY = 0.0
+	}
 }

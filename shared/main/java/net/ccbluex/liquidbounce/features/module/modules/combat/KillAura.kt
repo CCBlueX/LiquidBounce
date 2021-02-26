@@ -735,7 +735,7 @@ class KillAura : Module()
 		}
 
 		// If there is no attackable entities found, search about pre-aimable entities and pre-swingable entities instead.
-		if (targets.isEmpty()) theWorld.loadedEntityList.asSequence().filter { EntityUtils.isEnemy(it, aac) }.filter { !(switchMode && previouslySwitchedTargets.contains(it.entityId)) }.map(IEntity::asEntityLivingBase).filter { it.hurtTime <= hurtTime }.filter { entity ->
+		if (targets.isEmpty()) theWorld.loadedEntityList.asSequence().filter { EntityUtils.isEnemy(it, aac) }.filterNot { switchMode && previouslySwitchedTargets.contains(it.entityId) }.map(IEntity::asEntityLivingBase).filter { it.hurtTime <= hurtTime }.filter { entity ->
 			fov == 180f || when (fovMode)
 			{
 				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
@@ -973,7 +973,7 @@ class KillAura : Module()
 				override fun canRaycast(entity: IEntity?): Boolean = (!livingRaycast || (classProvider.isEntityLivingBase(entity) && !classProvider.isEntityArmorStand(entity))) && (EntityUtils.isEnemy(entity, aac) || raycastIgnored || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity!!.entityBoundingBox).isNotEmpty())
 			})
 
-			if (raycastedEntity != null && classProvider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !(classProvider.isEntityPlayer(raycastedEntity) && raycastedEntity.asEntityPlayer().isClientFriend()))) currentTarget = raycastedEntity.asEntityLivingBase()
+			if (raycastedEntity != null && classProvider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !classProvider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) currentTarget = raycastedEntity.asEntityLivingBase()
 
 			hitable = currentTarget == raycastedEntity
 		}
@@ -989,7 +989,7 @@ class KillAura : Module()
 		val blockRate = blockRate.get()
 
 		// BlockRate check
-		if (!(blockRate > 0 && Random.nextInt(100) <= blockRate)) return
+		if (blockRate <= 0 || Random.nextInt(100) > blockRate) return
 
 		val visual = !autoBlockMode.equals("Off", true) // Fake, Packet, AfterTick
 		val packet = visual && !autoBlockMode.equals("Fake", true) // Packet, AfterTick

@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -78,13 +79,9 @@ class FastClimb : Module()
 					provider.isBlockLadder(it) || provider.isBlockVine(it)
 				})
 			{
-				event.x = 0.0
+				event.zeroXZ()
 				event.y = 0.5
-				event.z = 0.0
-
-				thePlayer.motionX = 0.0
-				thePlayer.motionY = 0.0
-				thePlayer.motionZ = 0.0
+				MovementUtils.zeroXYZ(thePlayer)
 			}
 
 			"saac3.1.2" -> if (thePlayer.isCollidedHorizontally && thePlayer.isOnLadder)

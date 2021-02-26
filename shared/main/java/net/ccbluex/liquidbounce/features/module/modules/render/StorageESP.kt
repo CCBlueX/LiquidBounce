@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
 import net.ccbluex.liquidbounce.value.*
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
 @ModuleInfo(name = "StorageESP", description = "Allows you to see chests, dispensers, etc. through walls.", category = ModuleCategory.RENDER)
@@ -122,18 +122,29 @@ class StorageESP : Module()
 			val drawHydraESP = drawHydraESPValue.get()
 
 			theWorld.loadedTileEntityList.mapNotNull {
-				it to (when
+				val type = when
 				{
-					chest && provider.isTileEntityChest(it) && !clickedBlocks.contains(it.pos) -> chestColor
-					enderChest && provider.isTileEntityEnderChest(it) && !clickedBlocks.contains(it.pos) -> enderChestColor
-					furnace && provider.isTileEntityFurnace(it) -> furnaceColor
-					dispenser && provider.isTileEntityDispenser(it) -> dispenserColor
-					hopper && provider.isTileEntityHopper(it) -> hopperColor
-					shulkerBox && provider.isTileEntityShulkerBox(it) -> shulkerBoxColor.brighter()
+					chest && provider.isTileEntityChest(it) && !clickedBlocks.contains(it.pos) -> 1
+					enderChest && provider.isTileEntityEnderChest(it) && !clickedBlocks.contains(it.pos) -> 2
+					furnace && provider.isTileEntityFurnace(it) -> 3
+					dispenser && provider.isTileEntityDispenser(it) -> 4
+					hopper && provider.isTileEntityHopper(it) -> 5
+					shulkerBox && provider.isTileEntityShulkerBox(it) -> 6
+					else -> null
+				} ?: return@mapNotNull null
+
+				Triple(it, type, when (type)
+				{
+					1 -> chestColor
+					2 -> enderChestColor
+					3 -> furnaceColor
+					4 -> dispenserColor
+					5 -> hopperColor
+					6 -> shulkerBoxColor.brighter()
 					else -> null
 				} ?: return@mapNotNull null)
-			}.forEach { (tileEntity, color) ->
-				if (!(provider.isTileEntityChest(tileEntity) || provider.isTileEntityEnderChest(tileEntity)))
+			}.forEach { (tileEntity, type, color) ->
+				if (type > 2) // Not chest or enderchest
 				{
 					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box", drawHydraESP)
 					return@forEach
@@ -164,28 +175,28 @@ class StorageESP : Module()
 
 					"wireframe" ->
 					{
-						GL11.glPushMatrix()
-						GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
+						glPushMatrix()
+						glPushAttrib(GL_ALL_ATTRIB_BITS)
 
-						GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE)
-						GL11.glDisable(GL11.GL_TEXTURE_2D)
-						GL11.glDisable(GL11.GL_LIGHTING)
-						GL11.glDisable(GL11.GL_DEPTH_TEST)
-						GL11.glEnable(GL11.GL_LINE_SMOOTH)
-						GL11.glEnable(GL11.GL_BLEND)
-						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
+						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+						glDisable(GL_TEXTURE_2D)
+						glDisable(GL_LIGHTING)
+						glDisable(GL_DEPTH_TEST)
+						glEnable(GL_LINE_SMOOTH)
+						glEnable(GL_BLEND)
+						glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-						GL11.glLineWidth(0.5F)
+						glLineWidth(0.5F)
 
 						func.renderTileEntity(tileEntity, partialTicks, -1)
 
 						RenderUtils.glColor(color)
-						GL11.glLineWidth(wireFrameWidth)
+						glLineWidth(wireFrameWidth)
 
 						func.renderTileEntity(tileEntity, partialTicks, -1)
 
-						GL11.glPopAttrib()
-						GL11.glPopMatrix()
+						glPopAttrib()
+						glPopMatrix()
 					}
 				}
 			}
@@ -230,15 +241,15 @@ class StorageESP : Module()
 						val entityShadow: Boolean = gameSettings.entityShadows
 						gameSettings.entityShadows = false
 
-						GL11.glPushMatrix()
-						GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
-						GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE)
-						GL11.glDisable(GL11.GL_TEXTURE_2D)
-						GL11.glDisable(GL11.GL_LIGHTING)
-						GL11.glDisable(GL11.GL_DEPTH_TEST)
-						GL11.glEnable(GL11.GL_LINE_SMOOTH)
-						GL11.glEnable(GL11.GL_BLEND)
-						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
+						glPushMatrix()
+						glPushAttrib(GL_ALL_ATTRIB_BITS)
+						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+						glDisable(GL_TEXTURE_2D)
+						glDisable(GL_LIGHTING)
+						glDisable(GL_DEPTH_TEST)
+						glEnable(GL_LINE_SMOOTH)
+						glEnable(GL_BLEND)
+						glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
 						RenderUtils.glColor(color)
 
@@ -246,12 +257,12 @@ class StorageESP : Module()
 
 						RenderUtils.glColor(color)
 
-						GL11.glLineWidth(wireFrameWidth)
+						glLineWidth(wireFrameWidth)
 
 						renderManager.renderEntityStatic(entity, partialTicks, true)
 
-						GL11.glPopAttrib()
-						GL11.glPopMatrix()
+						glPopAttrib()
+						glPopMatrix()
 
 						gameSettings.entityShadows = entityShadow
 					}

@@ -121,11 +121,7 @@ class LongJump : Module()
 				jumped = false
 				canMineplexBoost = false
 
-				if (mode.equals("NCP", ignoreCase = true))
-				{
-					thePlayer.motionX = 0.0
-					thePlayer.motionZ = 0.0
-				}
+				if (mode.equals("NCP", ignoreCase = true)) MovementUtils.zeroXZ(thePlayer)
 
 				if (boosted && autoDisable) state = false
 				return
@@ -262,9 +258,8 @@ class LongJump : Module()
 
 			if (!isMoving(thePlayer) && mode == "ncp")
 			{
-				thePlayer.motionX = 0.0
-				thePlayer.motionZ = 0.0
 				event.zeroXZ()
+				MovementUtils.zeroXZ(thePlayer)
 			}
 		}
 	}
