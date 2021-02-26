@@ -76,12 +76,11 @@ class AutoWeapon : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") update: UpdateEvent)
 	{
-
 		// Switch back to old item after some time
-		if (spoofedSlot > 0)
+		if (spoofedSlot > 0 && --spoofedSlot <= 0)
 		{
-			if (spoofedSlot == 1) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(mc.thePlayer!!.inventory.currentItem))
-			spoofedSlot--
+			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange((mc.thePlayer ?: return).inventory.currentItem))
+			spoofedSlot = 0
 		}
 	}
 

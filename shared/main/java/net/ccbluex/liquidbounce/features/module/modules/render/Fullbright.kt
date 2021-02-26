@@ -63,4 +63,7 @@ class Fullbright : Module()
 	{
 		onDisable()
 	}
+
+	override val tag: String
+		get() = modeValue.get()
 }

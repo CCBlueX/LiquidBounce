@@ -25,7 +25,7 @@ import java.awt.Color
 @ModuleInfo(name = "StorageESP", description = "Allows you to see chests, dispensers, etc. through walls.", category = ModuleCategory.RENDER)
 class StorageESP : Module()
 {
-	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Outline", "ShaderOutline", "ShaderGlow", "2D", "WireFrame"), "Outline")
+	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Hydra", "Outline", "ShaderOutline", "ShaderGlow", "2D", "WireFrame"), "Outline")
 
 	private val chestValue = BoolValue("Chest", true)
 	private val chestRedValue = IntegerValue("Chest-R", 0, 0, 255)
@@ -70,8 +70,6 @@ class StorageESP : Module()
 
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
-
-	private val drawHydraESPValue = BoolValue("HydraESP", false)
 
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
@@ -119,7 +117,9 @@ class StorageESP : Module()
 
 			val outlineWidth = outlineWidthValue.get()
 			val wireFrameWidth = wireFrameWidthValue.get()
-			val drawHydraESP = drawHydraESPValue.get()
+
+			val hydraESP = mode == "hydra"
+			val drawOutline = mode == "box" || hydraESP
 
 			theWorld.loadedTileEntityList.mapNotNull {
 				val type = when
@@ -146,7 +146,7 @@ class StorageESP : Module()
 			}.forEach { (tileEntity, type, color) ->
 				if (type > 2) // Not chest or enderchest
 				{
-					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box", drawHydraESP)
+					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, drawOutline, hydraESP)
 					return@forEach
 				}
 
@@ -154,7 +154,7 @@ class StorageESP : Module()
 
 				when (mode)
 				{
-					"otherbox", "box" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, mode == "box", drawHydraESP)
+					"otherbox", "box", "hydra" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, drawOutline, hydraESP)
 
 					"2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
 
@@ -212,7 +212,7 @@ class StorageESP : Module()
 			}.forEach { (entity, color) ->
 				when (mode)
 				{
-					"otherbox", "box" -> RenderUtils.drawEntityBox(entity, color, mode == "box", drawHydraESP)
+					"otherbox", "box", "hydra" -> RenderUtils.drawEntityBox(entity, color, drawOutline, hydraESP)
 
 					"2d" -> RenderUtils.draw2D(entity.position, color.rgb, Color.BLACK.rgb)
 

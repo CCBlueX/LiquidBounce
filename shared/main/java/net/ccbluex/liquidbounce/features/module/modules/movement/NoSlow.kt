@@ -10,7 +10,10 @@ import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.SlowDownEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -36,9 +39,9 @@ class NoSlow : Module()
 	private val bowForwardMultiplier = FloatValue("BowForwardMultiplier", 1.0F, 0.2F, 1.0F)
 	private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1.0F, 0.2F, 1.0F)
 
-	// NCP mode
-	private val ncpValue = BoolValue("Packet", true)
-	private val ncpPacketsDelayValue = IntegerValue("Packet-PacketsDelay", 0, 0, 3)
+	// Bypass for NCP
+	private val packetValue = BoolValue("Packet", true)
+	private val packetSpamDelayValue = IntegerValue("Packet-PacketsDelay", 0, 0, 3)
 
 	// Blocks
 	val soulsandValue = BoolValue("Soulsand", true)
@@ -63,7 +66,7 @@ class NoSlow : Module()
 
 		if (!thePlayer.isBlocking && !aura.serverSideBlockingStatus && !tpaura.serverSideBlockingStatus) return
 
-		if (ncpValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8 && ncpDelay.hasTimePassed(ncpPacketsDelayValue.get()))
+		if (packetValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8 && ncpDelay.hasTimePassed(packetSpamDelayValue.get()))
 		{
 			val netHandler = mc.netHandler
 
@@ -99,4 +102,7 @@ class NoSlow : Module()
 			else -> 0.2F
 		}
 	}
+
+	override val tag: String?
+		get() = if (packetValue.get()) "Packet" else null
 }

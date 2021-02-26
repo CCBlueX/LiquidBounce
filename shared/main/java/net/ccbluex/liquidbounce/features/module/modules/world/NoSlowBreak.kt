@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
+import java.util.*
 
 @ModuleInfo(name = "NoSlowBreak", description = "Automatically adjusts breaking speed when using modules that influence it.", category = ModuleCategory.WORLD)
 class NoSlowBreak : Module()
@@ -17,11 +18,12 @@ class NoSlowBreak : Module()
 	val waterValue = BoolValue("Water", false)
 
 	override val tag: String
-		get() = if (airValue.get() && waterValue.get()) "Both"
-		else when
+		get()
 		{
-			airValue.get() -> "Air"
-			waterValue.get() -> "Water"
-			else -> "Off"
+			val tagBuilder = StringJoiner(" and ")
+			if (airValue.get()) tagBuilder.add("Air")
+			if (waterValue.get()) tagBuilder.add("Water")
+
+			return "$tagBuilder"
 		}
 }

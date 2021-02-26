@@ -15,13 +15,16 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import java.awt.Color
 
 @ModuleInfo(name = "ItemESP", description = "Allows you to see items through walls.", category = ModuleCategory.RENDER)
 class ItemESP : Module()
 {
-	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "ShaderOutline"), "Box")
+	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Hydra", "ShaderOutline"), "Box")
 	private val colorRedValue = IntegerValue("R", 0, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 255, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 0, 0, 255)
@@ -30,8 +33,6 @@ class ItemESP : Module()
 
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
-
-	private val drawHydraESPValue = BoolValue("HydraESP", false)
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
@@ -42,13 +43,14 @@ class ItemESP : Module()
 			val theWorld = mc.theWorld ?: return
 
 			val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
-			val drawOutline = mode == "box"
+
+			val hydraESP = mode == "hydra"
+			val drawOutline = mode == "box" || hydraESP
 
 			val provider = classProvider
 
-			val drawHydraESP = drawHydraESPValue.get()
 
-			theWorld.loadedEntityList.filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, drawOutline, drawHydraESP) }
+			theWorld.loadedEntityList.filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, drawOutline, hydraESP) }
 		}
 	}
 
@@ -78,4 +80,7 @@ class ItemESP : Module()
 			OutlineShader.INSTANCE.stopDraw(if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), 1f, 1f)
 		}
 	}
+
+	override val tag: String
+		get() = modeValue.get()
 }

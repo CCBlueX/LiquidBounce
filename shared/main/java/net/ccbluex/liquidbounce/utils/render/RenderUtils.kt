@@ -9,7 +9,10 @@ import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
-import net.ccbluex.liquidbounce.api.minecraft.util.*
+import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
+import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
+import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.cos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.sin
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.toRadians
@@ -33,7 +36,7 @@ object RenderUtils : MinecraftInstance()
 	var deltaTime = 0
 
 	@JvmStatic
-	fun drawBlockBox(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPos: WBlockPos, color: Color, outline: Boolean, drawHydraESP: Boolean)
+	fun drawBlockBox(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPos: WBlockPos, color: Color, outline: Boolean, hydraESP: Boolean)
 	{
 		val renderPartialTicks = mc.timer.renderPartialTicks
 
@@ -65,7 +68,7 @@ object RenderUtils : MinecraftInstance()
 			GL11.glLineWidth(1.00f)
 			enableGlCap(GL11.GL_LINE_SMOOTH)
 			glColor(color)
-			drawSelectionBoundingBox(axisAlignedBB, drawHydraESP)
+			drawSelectionBoundingBox(axisAlignedBB, hydraESP)
 		}
 
 		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
@@ -74,7 +77,7 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawSelectionBoundingBox(boundingBox: IAxisAlignedBB, drawHydraESP: Boolean)
+	fun drawSelectionBoundingBox(boundingBox: IAxisAlignedBB, hydraESP: Boolean)
 	{
 		val provider = classProvider
 
@@ -111,7 +114,7 @@ object RenderUtils : MinecraftInstance()
 		worldrenderer.pos(maxX, maxY, minZ).endVertex()
 		worldrenderer.pos(maxX, minY, minZ).endVertex()
 
-		if (drawHydraESP)
+		if (hydraESP)
 		{
 			tessellator.draw()
 

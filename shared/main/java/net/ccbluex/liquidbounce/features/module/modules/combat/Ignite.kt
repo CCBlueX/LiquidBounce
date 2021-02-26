@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import java.util.*
 import kotlin.math.hypot
 
 @ModuleInfo(name = "Ignite", description = "Automatically sets targets around you on fire.", category = ModuleCategory.COMBAT)
@@ -127,12 +128,10 @@ class Ignite : Module()
 	override val tag: String
 		get()
 		{
-			return if (lighterValue.get() && lavaBucketValue.get()) "Both"
-			else when
-			{
-				lighterValue.get() -> "Lighter"
-				lavaBucketValue.get() -> "Lava"
-				else -> "Off"
-			}
+			val tagBuilder = StringJoiner(" and ")
+			if (lighterValue.get()) tagBuilder.add("Lighter")
+			if (lavaBucketValue.get()) tagBuilder.add("Lava")
+
+			return "$tagBuilder"
 		}
 }

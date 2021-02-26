@@ -17,7 +17,10 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import java.awt.Color
 import java.util.*
 
@@ -27,7 +30,7 @@ class ProphuntESP : Module()
 	/**
 	 * Options
 	 */
-	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "ShaderOutline", "ShaderGlow"), "OtherBox")
+	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Hydra", "ShaderOutline", "ShaderGlow"), "OtherBox")
 
 	private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
 	private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
@@ -39,8 +42,6 @@ class ProphuntESP : Module()
 	private val colorRainbow = BoolValue("Rainbow", false)
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
-
-	private val drawHydraESPValue = BoolValue("HydraESP", false)
 
 	/**
 	 * Variables
@@ -59,10 +60,13 @@ class ProphuntESP : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val mode = modeValue.get().toLowerCase()
-		val drawHydraESP = drawHydraESPValue.get()
+
+		val hydraESP = mode == "hydra"
+		val drawOutline = mode == "box" || hydraESP
+
 		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
-		if (mode == "box" && mode == "otherbox") theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { RenderUtils.drawEntityBox(it, color, mode == "box", drawHydraESP) }
+		if (drawOutline || mode == "otherbox") theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { RenderUtils.drawEntityBox(it, color, drawOutline, hydraESP) }
 
 		synchronized(blocks) {
 			val iterator: MutableIterator<Map.Entry<WBlockPos, Long>> = blocks.entries.iterator()
@@ -77,7 +81,7 @@ class ProphuntESP : Module()
 					continue
 				}
 
-				RenderUtils.drawBlockBox(theWorld, thePlayer, entry.key, color, mode == "box", drawHydraESP)
+				RenderUtils.drawBlockBox(theWorld, thePlayer, entry.key, color, drawOutline, hydraESP)
 			}
 		}
 	}

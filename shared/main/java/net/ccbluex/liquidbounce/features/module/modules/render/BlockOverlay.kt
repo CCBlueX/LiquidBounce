@@ -38,7 +38,8 @@ class BlockOverlay : Module()
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
-	private val drawHydraESPValue = BoolValue("HydraESP", false)
+	private val drawHydraESPValue = BoolValue("Hydra", false)
+
 	val infoValue = BoolValue("Info", false)
 
 	fun getCurrentBlock(theWorld: IWorldClient): WBlockPos?

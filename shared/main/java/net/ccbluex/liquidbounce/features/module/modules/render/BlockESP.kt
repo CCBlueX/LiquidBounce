@@ -20,7 +20,10 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import java.awt.Color
-import java.util.concurrent.*
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 // TODO: Improve performance
 @ModuleInfo(name = "BlockESP", description = "Allows you to see a selected block through walls.", category = ModuleCategory.RENDER)
@@ -31,7 +34,7 @@ class BlockESP : Module()
 		private val workerPool: ThreadPoolExecutor = ThreadPoolExecutor(1, 1, 1L, TimeUnit.MINUTES, LinkedBlockingQueue()) // To re-use worker thread
 	}
 
-	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "2D"), "Box")
+	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Hydra", "2D"), "Box")
 
 	private val blockValue = BlockValue("Block", 168)
 	private val radiusValue = IntegerValue("Radius", 40, 5, 120)
@@ -48,8 +51,6 @@ class BlockESP : Module()
 	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
-
-	private val drawHydraESPValue = BoolValue("HydraESP", false)
 
 	private val searchTimer = MSTimer()
 	private val posList: MutableCollection<WBlockPos> = ConcurrentLinkedQueue()
@@ -124,18 +125,18 @@ class BlockESP : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val alpha = colorAlphaValue.get()
-		val drawHydraESP = drawHydraESPValue.get()
+		val mode = modeValue.get().toLowerCase()
+
+		val hydraESP = mode == "hydra"
+		val drawOutline = mode == "box" || hydraESP
+
 		val color = if (colorRainbow.get()) rainbow(alpha = alpha, speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
 
 		for (blockPos in posList)
 		{
-			when (val mode = modeValue.get().toLowerCase())
+			when (mode)
 			{
-				"box", "otherbox" ->
-				{
-					RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, color, mode == "box", drawHydraESP)
-				}
-
+				"box", "otherbox", "hydra" -> RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, color, drawOutline, hydraESP)
 				"2d" -> RenderUtils.draw2D(blockPos, color.rgb, Color.BLACK.rgb)
 			}
 		}

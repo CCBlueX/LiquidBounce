@@ -84,5 +84,5 @@ class Rotations : Module()
 	}
 
 	override val tag: String
-		get() = if (bodyValue.get()) "Body and Head" else "Head only"
+		get() = if (bodyValue.get()) "Body and Head" else "Head"
 }

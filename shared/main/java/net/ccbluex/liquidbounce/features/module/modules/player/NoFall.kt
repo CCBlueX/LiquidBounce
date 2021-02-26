@@ -304,14 +304,8 @@ class NoFall : Module()
 		{
 			val stack = thePlayer.inventory.getStackInSlot(currentMlgItemIndex + 36)
 
-			if (provider.isItemBucket(stack!!.item)) controller.sendUseItem(thePlayer, theWorld, stack)
-			else
-			{
+			if (provider.isItemBucket(stack?.item)) controller.sendUseItem(thePlayer, theWorld, stack!!) else if (controller.sendUseItem(thePlayer, theWorld, stack!!)) mlgTimer.reset()
 
-				//				val dirVec: WVec3i = classProvider.getEnumFacing(EnumFacingType.UP).directionVec
-
-				if (controller.sendUseItem(thePlayer, theWorld, stack)) mlgTimer.reset()
-			}
 			if (thePlayer.inventory.currentItem != currentMlgItemIndex) thePlayer.sendQueue.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 		}
 	}
@@ -323,5 +317,5 @@ class NoFall : Module()
 	}
 
 	override val tag: String
-		get() = "${modeValue.get()}${if (modeValue.get().equals("SpoofGround", ignoreCase = true) || modeValue.get().equals("Packet", ignoreCase = true)) ", ${noSpoofTicks.get()}" else ""}"
+		get() = "${modeValue.get()}${if (modeValue.get().equals("SpoofGround", ignoreCase = true) || modeValue.get().equals("Packet", ignoreCase = true)) "-${noSpoofTicks.get()}" else ""}"
 }

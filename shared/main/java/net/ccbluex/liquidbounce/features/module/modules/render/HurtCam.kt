@@ -21,4 +21,7 @@ class HurtCam : Module()
 	val customHurtEffectG = IntegerValue("CustomHurtEffectColor-Green", 0, 0, 255)
 	val customHurtEffectB = IntegerValue("CustomHurtEffectColor-Blue", 0, 0, 255)
 	val customHurtEffectAlpha = IntegerValue("CustomHurtEffectColor-Alpha", 77, 0, 255)
+
+	override val tag: String?
+		get() = if (noHurtCam.get()) "NoHurtCam" else null
 }

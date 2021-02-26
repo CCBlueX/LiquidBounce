@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
+import java.util.*
 
 @ModuleInfo(name = "NoRotateSet", description = "Prevents the server from rotating your head.", category = ModuleCategory.MISC)
 class NoRotateSet : Module()
@@ -39,4 +40,14 @@ class NoRotateSet : Module()
 	//			packet.pitch = thePlayer.rotationPitch
 	//		}
 	//	}
+
+	override val tag: String?
+		get()
+		{
+			val tagBuilder = StringJoiner(", ")
+			if (confirmValue.get()) tagBuilder.add("Confirm${if (confirmIllegalRotationValue.get()) "(Allow illegal)" else ""}")
+			if (noZeroValue.get()) tagBuilder.add("NoZero")
+
+			return "$tagBuilder"
+		}
 }
