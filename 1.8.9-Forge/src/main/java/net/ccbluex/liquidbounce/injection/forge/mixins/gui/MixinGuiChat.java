@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 import java.awt.*;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
@@ -102,7 +103,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen
 
 			final String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
 
-			if (full.toLowerCase().endsWith(latestAutoComplete[latestAutoComplete.length - 1].toLowerCase()))
+			if (full.toLowerCase(Locale.ENGLISH).endsWith(latestAutoComplete[latestAutoComplete.length - 1].toLowerCase(Locale.ENGLISH)))
 				return;
 
 			onAutocompleteResponse(latestAutoComplete);

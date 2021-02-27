@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ComponentOnHover;
@@ -169,7 +170,7 @@ public abstract class MixinGuiScreen extends Gui
 		final ClickEvent clickEvent = chatStyle.getChatClickEvent();
 		final HoverEvent hoverEvent = chatStyle.getChatHoverEvent();
 
-		drawHoveringText(Collections.singletonList("\u00A7c\u00A7l" + clickEvent.getAction().getCanonicalName().toUpperCase() + ": \u00A7a" + clickEvent.getValue()), x, y - (hoverEvent != null ? 17 : 0));
+		drawHoveringText(Collections.singletonList("\u00A7c\u00A7l" + clickEvent.getAction().getCanonicalName().toUpperCase(Locale.ENGLISH) + ": \u00A7a" + clickEvent.getValue()), x, y - (hoverEvent != null ? 17 : 0));
 	}
 
 	/**

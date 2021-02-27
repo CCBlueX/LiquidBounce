@@ -239,7 +239,7 @@ public abstract class MixinNetHandlerPlayClient
 			final Velocity velocity = (Velocity) LiquidBounce.moduleManager.get(Velocity.class);
 			velocity.getVelocityTimer().reset();
 
-			switch (velocity.getModeValue().get().toLowerCase())
+			switch (velocity.getModeValue().get().toLowerCase(Locale.ENGLISH))
 			{
 				case "simple":
 					final float horizontal = velocity.getHorizontalValue().get();
@@ -284,7 +284,7 @@ public abstract class MixinNetHandlerPlayClient
 		//noinspection CastToIncompatibleInterface
 		PacketThreadUtil.checkThreadAndEnqueue(packetIn, (INetHandlerPlayClient) this, gameController);
 
-		final String text = packetIn.getChatComponent().getUnformattedText().toLowerCase();
+		final String text = packetIn.getChatComponent().getUnformattedText().toLowerCase(Locale.ENGLISH);
 		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
 		final boolean alerts = hud.getAlertsValue().get();
 		if (alerts)
@@ -329,7 +329,7 @@ public abstract class MixinNetHandlerPlayClient
 
 	private static boolean isHackerChat(final String text)
 	{
-		return hackerChats.parallelStream().anyMatch(text::contains) && text.contains(Minecraft.getMinecraft().thePlayer.getName().toLowerCase()) && hackerChatWhitelists.parallelStream().noneMatch(text::contains);
+		return hackerChats.stream().anyMatch(text::contains) && text.contains(Minecraft.getMinecraft().thePlayer.getName().toLowerCase(Locale.ENGLISH)) && hackerChatWhitelists.stream().noneMatch(text::contains);
 	}
 
 	private static final Collection<String> hackerChats = new ArrayDeque<>(20);

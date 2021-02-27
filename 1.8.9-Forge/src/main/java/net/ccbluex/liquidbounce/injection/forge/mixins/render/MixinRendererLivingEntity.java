@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import java.awt.*;
 import java.nio.FloatBuffer;
+import java.util.Locale;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
@@ -316,7 +317,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 				final float gamma = mc.gameSettings.gammaSetting;
 				mc.gameSettings.gammaSetting = 100000.0F;
 
-				switch (esp.getModeValue().get().toLowerCase())
+				switch (esp.getModeValue().get().toLowerCase(Locale.ENGLISH))
 				{
 					case "wireframe":
 						GL11.glPushMatrix();

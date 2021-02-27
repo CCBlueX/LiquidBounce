@@ -36,6 +36,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Locale;
+
 @SuppressWarnings(
 {
 		"WeakerAccess", "MethodMayBeStatic", "DesignForExtension", "NumericCastThatLosesPrecision"
@@ -136,7 +138,7 @@ public abstract class MixinItemRenderer
 			{
 				final float fixedSwingProgress;
 
-				switch ((isSwing ? swingAnimation.getSwingSqSmoothingMethod() : swingAnimation.getBlockSqSwingSmoothingMethod()).get().toLowerCase())
+				switch ((isSwing ? swingAnimation.getSwingSqSmoothingMethod() : swingAnimation.getBlockSqSwingSmoothingMethod()).get().toLowerCase(Locale.ENGLISH))
 				{
 					case "sqrt":
 						fixedSwingProgress = MathHelper.sqrt_float(swingProgress);
@@ -165,7 +167,7 @@ public abstract class MixinItemRenderer
 		{
 			final float fixedSwingProgress;
 
-			switch ((isSwing ? swingAnimation.getSwingSqrtSmoothingMethod() : swingAnimation.getBlockSqrtSwingSmoothingMethod()).get().toLowerCase())
+			switch ((isSwing ? swingAnimation.getSwingSqrtSmoothingMethod() : swingAnimation.getBlockSqrtSwingSmoothingMethod()).get().toLowerCase(Locale.ENGLISH))
 			{
 				case "sqrt":
 					fixedSwingProgress = MathHelper.sqrt_float(swingProgress);
@@ -276,6 +278,7 @@ public abstract class MixinItemRenderer
 							applyCustomBlockAnimation(swingAnimation, swingProgress, equipProgress, interpolatedEquipProgress);
 						else
 						{
+							// Default block animation
 							transformFirstPersonItem(equipProgress, swingProgress);
 							doBlockTransformations();
 						}
@@ -321,7 +324,7 @@ public abstract class MixinItemRenderer
 		final float yEquipProgressTranslationAffectness = -swingAnimation.getEquipProgressAnimationTranslationAffectnessY().get();
 		final float zEquipProgressTranslationAffectness = -swingAnimation.getEquipProgressAnimationTranslationAffectnessZ().get();
 
-		switch (swingAnimation.getAnimationMode().get().toLowerCase()) {
+		switch (swingAnimation.getAnimationMode().get().toLowerCase(Locale.ENGLISH)) {
 			case "liquidbounce": {
 				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
 				doBlockTransformations();
@@ -452,15 +455,6 @@ public abstract class MixinItemRenderer
 				GL11.glTranslatef(-0.05F, mc.thePlayer.isSneaking() ? -0.2F : 0.0F, 0.1F);
 				break;
 			}
-			case "tea": {
-				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
-				doBlockTransformations();
-
-				GlStateManager.translate(-equipProgressAffect * 0.5F, 0.4F, 0.0F);
-				GlStateManager.rotate(-equipProgressAffect * sqrt * 50.0F, -10.0F, 5.0F, 9.0F);
-				GlStateManager.rotate(-equipProgressAffect * sqrt * 70.0F, 1.0F, -0.4F, -0.0F);
-				break;
-			}
 			case "luna": {
 				transformFirstPersonItemBlock(equipProgress, 0.0F, equipProgressAffect);
 				doBlockTransformations();
@@ -468,15 +462,6 @@ public abstract class MixinItemRenderer
 				GlStateManager.translate(0.0F, 0.4F, 0.3F);
 				GlStateManager.rotate(-equipProgressAffect * sqrt * 35.0f, -8.0F, -0.0F, 9.0F);
 				GlStateManager.rotate(-equipProgressAffect * sqrt * 10.0F, 1.0F, -0.4F, -0.5F);
-				break;
-			}
-			case "protocol": {
-				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
-				doBlockTransformations();
-
-				GL11.glTranslatef(-0.5F, 0.2F, 0.0F);
-				GL11.glRotatef(-5.0F, 5.0F, 1.0F, 5.0F);
-				GL11.glTranslatef(-0.05F, 0.0F, 0.1F);
 				break;
 			}
 			case "hooded":
@@ -488,19 +473,6 @@ public abstract class MixinItemRenderer
 				GlStateManager.rotate(-equipProgressAffect * sqrt * 50.0F, 0.0F, 0.0F, 15.0F);
 				GlStateManager.rotate(-equipProgressAffect * sqrt * 70.0F, 1.0F, -0.4F, -0.0F);
 				GL11.glTranslatef(-0.05F, -0.6F, 0.1F);
-				break;
-			}
-			case "smooth":
-			{
-				GlStateManager.translate(0.56F, -0.52F, -0.72F);
-				GlStateManager.translate(0.0F, 0.24f, 0.0F);
-				GlStateManager.rotate(45.0F, 0.0F, 0.2F, 0.0F);
-
-				GlStateManager.rotate(-equipProgressAffect * sq * 32.8F, 0.0F, 1.0F, 0.0F);
-				GlStateManager.rotate(-equipProgressAffect * sqrt * 32.8F, 0.0F, 0.0F, 1.0F);
-				GlStateManager.rotate(-equipProgressAffect * sqrt * 90.0F, 0.2F, 0.0F, 0.0F);
-				GlStateManager.scale(0.4F, 0.4F, 0.4F);
-				doBlockTransformations();
 				break;
 			}
 			case "bump":
@@ -535,7 +507,7 @@ public abstract class MixinItemRenderer
 		}
 
 		double smooth;
-		switch (swingAnimation.getXRTranslationSmoothingMethod().get().toLowerCase())
+		switch (swingAnimation.getXRTranslationSmoothingMethod().get().toLowerCase(Locale.ENGLISH))
 		{
 			case "sqrt":
 				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
@@ -560,7 +532,7 @@ public abstract class MixinItemRenderer
 		}
 
 		final double x = 0.56 + swingAnimation.getXTranslation().get() + smooth * swingAnimation.getXRTranslation().get();
-		switch (swingAnimation.getYRTranslationSmoothingMethod().get().toLowerCase())
+		switch (swingAnimation.getYRTranslationSmoothingMethod().get().toLowerCase(Locale.ENGLISH))
 		{
 			case "sqrt":
 				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
@@ -585,7 +557,7 @@ public abstract class MixinItemRenderer
 		}
 
 		final double y = -0.52 + swingAnimation.getYTranslation().get() + smooth * swingAnimation.getYRTranslation().get();
-		switch (swingAnimation.getZRTranslationSmoothingMethod().get().toLowerCase())
+		switch (swingAnimation.getZRTranslationSmoothingMethod().get().toLowerCase(Locale.ENGLISH))
 		{
 			case "sqrt":
 				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
@@ -623,7 +595,7 @@ public abstract class MixinItemRenderer
 		}
 
 		double smooth;
-		switch (swingAnimation.getBlockXRTranslationSmoothingMethod().get().toLowerCase())
+		switch (swingAnimation.getBlockXRTranslationSmoothingMethod().get().toLowerCase(Locale.ENGLISH))
 		{
 			case "sqrt":
 				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
@@ -648,7 +620,7 @@ public abstract class MixinItemRenderer
 		}
 
 		final double x = 0.56 + swingAnimation.getBlockXTranslation().get() + smooth * swingAnimation.getBlockXRTranslation().get();
-		switch (swingAnimation.getBlockYRTranslationSmoothingMethod().get().toLowerCase())
+		switch (swingAnimation.getBlockYRTranslationSmoothingMethod().get().toLowerCase(Locale.ENGLISH))
 		{
 			case "sqrt":
 				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
@@ -673,7 +645,7 @@ public abstract class MixinItemRenderer
 		}
 
 		final double y = -0.52 + swingAnimation.getBlockYTranslation().get() + smooth * swingAnimation.getBlockYRTranslation().get();
-		switch (swingAnimation.getBlockZRTranslationSmoothingMethod().get().toLowerCase())
+		switch (swingAnimation.getBlockZRTranslationSmoothingMethod().get().toLowerCase(Locale.ENGLISH))
 		{
 			case "sqrt":
 				smooth = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
