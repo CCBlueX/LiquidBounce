@@ -82,9 +82,9 @@ object ColorUtils : MinecraftInstance()
 	{
 		val provider = classProvider
 
-		if (provider.isEntityLivingBase(entity))
+		if (entity != null && provider.isEntityLivingBase(entity))
 		{
-			val entityLiving = entity!!.asEntityLivingBase()
+			val entityLiving = entity.asEntityLivingBase()
 
 			val moduleManager = LiquidBounce.moduleManager
 

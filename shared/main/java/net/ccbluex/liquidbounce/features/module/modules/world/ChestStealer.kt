@@ -142,26 +142,31 @@ class ChestStealer : Module()
 	private var cachedInfo: String? = null
 
 	val advancedInformations: String
-		get() = if (cachedInfo == null || infoUpdateCooldown.attemptReset()) (if (!state) "ChestStealer is not active"
-		else
+		get()
 		{
-			val minStartDelay = minStartDelay.get()
-			val maxStartDelay = maxStartDelay.get()
-			val minDelay = minDelayValue.get()
-			val maxDelay = maxDelayValue.get()
-			val invCleanerState = LiquidBounce.moduleManager[InventoryCleaner::class.java].state
-			val random = takeRandomizedValue.get()
-			val autoClose = autoCloseValue.get()
-			val minAutoClose = autoCloseMinDelayValue.get()
-			val maxAutoClose = autoCloseMaxDelayValue.get()
-			val itemDelay = itemDelayValue.get()
-			val misclick = allowMisclicksValue.get()
-			val misclickRate = misclicksRateValue.get()
-			val maxmisclick = maxAllowedMisclicksPerChestValue.get()
+			val cache = cachedInfo
 
-			"ChestStealer active [startdelay: ($minStartDelay ~ $maxStartDelay), delay: ($minDelay ~ $maxDelay), itemdelay: $itemDelay, random: $random, onlyuseful: $invCleanerState${if (misclick) ", misclick($misclickRate%, max $maxmisclick per chest)" else ""}${if (autoClose) ", autoclose($minAutoClose ~ $maxAutoClose)" else ""}]"
-		}).apply { cachedInfo = this }
-		else cachedInfo!!
+			return if (cache == null || infoUpdateCooldown.attemptReset()) (if (!state) "ChestStealer is not active"
+			else
+			{
+				val minStartDelay = minStartDelay.get()
+				val maxStartDelay = maxStartDelay.get()
+				val minDelay = minDelayValue.get()
+				val maxDelay = maxDelayValue.get()
+				val invCleanerState = LiquidBounce.moduleManager[InventoryCleaner::class.java].state
+				val random = takeRandomizedValue.get()
+				val autoClose = autoCloseValue.get()
+				val minAutoClose = autoCloseMinDelayValue.get()
+				val maxAutoClose = autoCloseMaxDelayValue.get()
+				val itemDelay = itemDelayValue.get()
+				val misclick = allowMisclicksValue.get()
+				val misclickRate = misclicksRateValue.get()
+				val maxmisclick = maxAllowedMisclicksPerChestValue.get()
+
+				"ChestStealer active [startdelay: ($minStartDelay ~ $maxStartDelay), delay: ($minDelay ~ $maxDelay), itemdelay: $itemDelay, random: $random, onlyuseful: $invCleanerState${if (misclick) ", misclick($misclickRate%, max $maxmisclick per chest)" else ""}${if (autoClose) ", autoclose($minAutoClose ~ $maxAutoClose)" else ""}]"
+			}).apply { cachedInfo = this }
+			else cache
+		}
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
@@ -188,12 +193,13 @@ class ChestStealer : Module()
 		}
 
 		val screen = (mc.currentScreen ?: return).asGuiChest()
+		val lowerChestInventory = screen.lowerChestInventory
 
 		// No Compass
 		if (noCompassValue.get() && thePlayer.inventory.getCurrentItemInHand()?.item?.unlocalizedName == "item.compass") return
 
 		// Chest title
-		if (chestTitleValue.get() && (screen.lowerChestInventory == null || !screen.lowerChestInventory!!.name.contains(provider.createItemStack(functions.getObjectFromItemRegistry(provider.createResourceLocation("minecraft:chest"))!!).displayName))) return
+		if (chestTitleValue.get() && (lowerChestInventory == null || !lowerChestInventory.name.contains(functions.getObjectFromItemRegistry(provider.createResourceLocation("minecraft:chest"))?.let { provider.createItemStack(it).displayName } ?: "Chest"))) return
 
 		// inventory cleaner
 		val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
@@ -294,9 +300,9 @@ class ChestStealer : Module()
 	private fun isEmpty(thePlayer: IEntityPlayerSP, chest: IGuiChest): Boolean
 	{
 		val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
-
-		val container = chest.inventorySlots!!
+		val container = chest.inventorySlots ?: return false
 		val end = chest.inventoryRows * 9
+
 		return (0 until end).map(container::getSlot).none { shouldTake(thePlayer, it.stack, it.slotNumber, inventoryCleaner, end, container) }
 	}
 

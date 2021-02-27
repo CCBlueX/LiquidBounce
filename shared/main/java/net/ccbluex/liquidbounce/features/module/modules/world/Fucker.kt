@@ -76,7 +76,9 @@ object Fucker : Module()
 
 		val targetId = blockValue.get()
 
-		if (currentPos == null || functions.getIdFromBlock(getBlock(theWorld, currentPos!!)) != targetId || getCenterDistance(thePlayer, currentPos!!) > rangeValue.get()) currentPos = find(theWorld, thePlayer, targetId)
+		val currentPos = currentPos
+
+		if (currentPos == null || functions.getIdFromBlock(getBlock(theWorld, currentPos)) != targetId || getCenterDistance(thePlayer, currentPos) > rangeValue.get()) this.currentPos = find(theWorld, thePlayer, targetId)
 
 		// Reset current breaking when there is no target block
 		if (currentPos == null)
@@ -85,8 +87,8 @@ object Fucker : Module()
 			return
 		}
 
-		var currentPos = currentPos ?: return
-		var rotations = RotationUtils.faceBlock(theWorld, thePlayer, currentPos) ?: return
+		var newPos = currentPos
+		var rotations = RotationUtils.faceBlock(theWorld, thePlayer, newPos) ?: return
 
 		// Surroundings
 		var surroundings = false
@@ -100,22 +102,22 @@ object Fucker : Module()
 
 			if (blockPos != null && !provider.isBlockAir(blockPos))
 			{
-				if (currentPos.x != blockPos.x || currentPos.y != blockPos.y || currentPos.z != blockPos.z) surroundings = true
+				if (newPos.x != blockPos.x || newPos.y != blockPos.y || newPos.z != blockPos.z) surroundings = true
 
 				this.currentPos = blockPos
-				currentPos = this.currentPos ?: return
-				rotations = RotationUtils.faceBlock(theWorld, thePlayer, currentPos) ?: return
+				newPos = currentPos
+				rotations = RotationUtils.faceBlock(theWorld, thePlayer, newPos) ?: return
 			}
 		}
 
 		// Reset switch timer when position changed
-		if (oldPos != null && oldPos != currentPos)
+		if (currentPos != newPos)
 		{
 			currentDamage = 0F
 			switchTimer.reset()
 		}
 
-		oldPos = currentPos
+		this.currentPos = newPos
 
 		if (!switchTimer.hasTimePassed(switchValue.get().toLong())) return
 
@@ -140,32 +142,32 @@ object Fucker : Module()
 				val autoTool = moduleManager[AutoTool::class.java] as AutoTool
 				val netHandler = mc.netHandler
 
-				if (autoTool.state) autoTool.switchSlot(currentPos)
+				if (autoTool.state) autoTool.switchSlot(newPos)
 
 				// Break block
 				if (instantValue.get())
 				{
 					// CivBreak style block breaking
-					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, currentPos, provider.getEnumFacing(EnumFacingType.DOWN)))
+					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, newPos, provider.getEnumFacing(EnumFacingType.DOWN)))
 
 					if (swingValue.get()) thePlayer.swingItem()
 
-					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, currentPos, provider.getEnumFacing(EnumFacingType.DOWN)))
+					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, newPos, provider.getEnumFacing(EnumFacingType.DOWN)))
 					currentDamage = 0F
 					return
 				}
 
 				// Minecraft block breaking
-				val block = currentPos.getBlock(theWorld)
+				val block = newPos.getBlock(theWorld)
 
 				if (currentDamage == 0F)
 				{
-					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, currentPos, provider.getEnumFacing(EnumFacingType.DOWN)))
+					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, newPos, provider.getEnumFacing(EnumFacingType.DOWN)))
 
-					if (thePlayer.capabilities.isCreativeMode || block.getPlayerRelativeBlockHardness(thePlayer, theWorld, this.currentPos!!) >= 1.0F)
+					if (thePlayer.capabilities.isCreativeMode || block.getPlayerRelativeBlockHardness(thePlayer, theWorld, currentPos) >= 1.0F)
 					{
 						if (swingValue.get()) thePlayer.swingItem()
-						mc.playerController.onPlayerDestroyBlock(this.currentPos!!, provider.getEnumFacing(EnumFacingType.DOWN))
+						mc.playerController.onPlayerDestroyBlock(currentPos, provider.getEnumFacing(EnumFacingType.DOWN))
 
 						currentDamage = 0F
 						this.currentPos = null
@@ -175,13 +177,13 @@ object Fucker : Module()
 
 				if (swingValue.get()) thePlayer.swingItem()
 
-				currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, theWorld, currentPos)
-				theWorld.sendBlockBreakProgress(thePlayer.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
+				currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, theWorld, newPos)
+				theWorld.sendBlockBreakProgress(thePlayer.entityId, newPos, (currentDamage * 10F).toInt() - 1)
 
 				if (currentDamage >= 1F)
 				{
-					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, currentPos, provider.getEnumFacing(EnumFacingType.DOWN)))
-					mc.playerController.onPlayerDestroyBlock(currentPos, provider.getEnumFacing(EnumFacingType.DOWN))
+					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, newPos, provider.getEnumFacing(EnumFacingType.DOWN)))
+					mc.playerController.onPlayerDestroyBlock(newPos, provider.getEnumFacing(EnumFacingType.DOWN))
 					blockHitDelay = 4
 					currentDamage = 0F
 					this.currentPos = null
@@ -189,7 +191,7 @@ object Fucker : Module()
 			}
 
 			// Use block
-			actionValue.get().equals("use", true) -> if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem!!, this.currentPos!!, provider.getEnumFacing(EnumFacingType.DOWN), WVec3(currentPos.x.toDouble(), currentPos.y.toDouble(), currentPos.z.toDouble())))
+			actionValue.get().equals("use", true) -> if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentPos, provider.getEnumFacing(EnumFacingType.DOWN), WVec3(newPos.x.toDouble(), newPos.y.toDouble(), newPos.z.toDouble())))
 			{
 				if (swingValue.get()) thePlayer.swingItem()
 

@@ -71,9 +71,9 @@ class Target : Element()
 	private var easingArmor: Float = 0F
 	private var lastTarget: IEntity? = null
 
-	override fun drawElement(): Border
+	override fun drawElement(): Border?
 	{
-		val thePlayer = mc.thePlayer!!
+		val thePlayer = mc.thePlayer ?: return null
 		val renderItem = mc.renderItem
 		val netHandler = mc.netHandler
 		val textureManager = mc.textureManager
@@ -83,7 +83,7 @@ class Target : Element()
 		val tpAura = moduleManager[TpAura::class.java] as TpAura
 		val targetEntity = if (tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null) tpAura.currentTarget else ((moduleManager[KillAura::class.java] as KillAura).target ?: (moduleManager[Aimbot::class.java] as Aimbot).target)
 
-		if (classProvider.isEntityPlayer(targetEntity) && targetEntity!!.asEntityPlayer().entityAlive)
+		if (targetEntity != null && classProvider.isEntityPlayer(targetEntity) && targetEntity.asEntityPlayer().entityAlive)
 		{
 			val targetPlayer: IEntityPlayer = targetEntity.asEntityPlayer()
 

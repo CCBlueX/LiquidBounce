@@ -128,7 +128,7 @@ class ExtendedReach : Module()
 			val stack = blockPlacement.stack
 			val distance = sqrt(thePlayer.getDistanceSq(pos))
 
-			if (distance > 6.0 && pos.y != -1 && (stack != null || provider.isBlockContainer(getState(pos)!!.block)))
+			if (distance > 6.0 && pos.y != -1 && (stack != null || provider.isBlockContainer(getState(pos)?.block)))
 			{
 				val to = WVec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 				path = computePath(playerPosVec, to)
@@ -195,7 +195,7 @@ class ExtendedReach : Module()
 			var targetEntity: IEntityLivingBase? = null
 			val from = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 
-			if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true) && thePlayer.getDistanceSqToEntity(facedEntity!!) >= 1) targetEntity = facedEntity.asEntityLivingBase()
+			if (mc.gameSettings.keyBindAttack.isKeyDown && facedEntity != null && isSelected(facedEntity, true) && thePlayer.getDistanceSqToEntity(facedEntity) >= 1) targetEntity = facedEntity.asEntityLivingBase()
 
 			if (targetEntity != null)
 			{
@@ -251,7 +251,7 @@ class ExtendedReach : Module()
 		pathFinderPath.forEachIndexed { i, pathElm ->
 			if (i == 0 || i == pathFinderPath.size - 1)
 			{
-				if (lastPos != null) path.add(lastPos!!.addVector(0.5, 0.0, 0.5))
+				if (lastPos != null) path.add((lastPos ?: return@forEachIndexed).addVector(0.5, 0.0, 0.5))
 
 				path.add(pathElm.addVector(0.5, 0.0, 0.5))
 				lastDashPos = pathElm
@@ -260,7 +260,7 @@ class ExtendedReach : Module()
 			{
 				var stop = false
 				val maxDashDistance = maxDashDistanceValue.get().toFloat()
-				val lastDashPosChecked = lastDashPos!!
+				val lastDashPosChecked = lastDashPos ?: return@forEachIndexed
 
 				if (pathElm.squareDistanceTo(lastDashPosChecked) > maxDashDistance * maxDashDistance) stop = true
 				else
@@ -296,7 +296,7 @@ class ExtendedReach : Module()
 
 				if (stop)
 				{
-					path.add(lastPos!!.addVector(0.5, 0.0, 0.5))
+					path.add((lastPos ?: return@forEachIndexed).addVector(0.5, 0.0, 0.5))
 					lastDashPos = lastPos
 				}
 			}
@@ -313,8 +313,8 @@ class ExtendedReach : Module()
 	{
 		private fun canPassThrough(pos: WBlockPos): Boolean
 		{
-			val state = getState(WBlockPos(pos.x, pos.y, pos.z))
-			val block = state!!.block
+			val state = getState(WBlockPos(pos.x, pos.y, pos.z)) ?: return true
+			val block = state.block
 
 			val provider = classProvider
 

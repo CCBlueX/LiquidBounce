@@ -148,8 +148,12 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 		if (accesstoken != null) Fonts.font35.drawCenteredString(if (accesstokenChecked) (if (accesstokenInvalidMessage == null) "\u00A7a" else "\u00A7c") + "Access Token: " + accesstoken + " \u00A78(" + (accesstokenInvalidMessage?.let { "\u00A7c$it" } ?: "\u00A7aValid") + "\u00A78)" else "\u00A78Access Token: $accesstoken \u00A78(Checking...)", middleScreen, 175f, Color.GREEN.rgb)
 		if (uuid != null) Fonts.font35.drawCenteredString(if (nickname != null) "\u00A7aUUID: $uuid \u00A78(\u00A7a$nickname\u00A78)" else (if (nicknameChecked) "\u00A7c" else "\u00A78") + "UUID: " + uuid + " \u00A78(Unknown)", middleScreen, 195f, Color.GREEN.rgb)
 		if (issuer != null) Fonts.font35.drawCenteredString("Issuer: $issuer", middleScreen, 215f, 0xffffff)
-		if (issuedAt != null) Fonts.font35.drawCenteredString("Issued at: " + SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.ENGLISH).format(Date(issuedAt!!.toLong() * 1000L)), middleScreen, 235f, 0xffffff)
-		if (expiredAt != null) Fonts.font35.drawCenteredString("Expiration: " + SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.ENGLISH).format(Date(expiredAt!!.toLong() * 1000L)), middleScreen, 255f, 0xffffff)
+
+		val issuedAt = issuedAt
+		if (issuedAt != null) Fonts.font35.drawCenteredString("Issued at: " + SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.ENGLISH).format(Date(issuedAt.toLong() * 1000L)), middleScreen, 235f, 0xffffff)
+
+		val expiredAt = expiredAt
+		if (expiredAt != null) Fonts.font35.drawCenteredString("Expiration: " + SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.ENGLISH).format(Date(expiredAt.toLong() * 1000L)), middleScreen, 255f, 0xffffff)
 
 		// Verify Signature
 		if (verifySig != null) Fonts.font35.drawCenteredString("Verify Signature: $verifySig", middleScreen, 295f, 0xffffff)

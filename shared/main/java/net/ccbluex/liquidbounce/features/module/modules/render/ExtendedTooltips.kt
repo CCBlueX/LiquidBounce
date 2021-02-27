@@ -53,9 +53,9 @@ class ExtendedTooltips : Module()
 	private var lastArmorPotential = ""
 
 	private val armorPotentialCooldown: Cooldown = Cooldown.getNewCooldownMiliseconds(300)
-	private val durabilityWarningCooldown: Cooldown = Cooldown.getNewCooldownMiliseconds(1000)
+	private val armorDurabilityWarningCooldown: Cooldown = Cooldown.getNewCooldownMiliseconds(1000)
 
-	private var showWarning = false
+	private var showArmorDurabilityWarning = false
 
 	@EventTarget
 	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
@@ -79,9 +79,9 @@ class ExtendedTooltips : Module()
 		val dmgAndEnchYPos = itemDamageAndEnchantmentYPosValue.get()
 		val heldItemCountYPos = heldItemCountYPosValue.get()
 
-		val calcXPos = { string: String, scale: Float, recoverScale: Float ->
+		val calcXPos = { string: String, scale: Float, reverseScale: Float ->
 			val stringWidth = font.getStringWidth(string) shr 1
-			(width - stringWidth * scale) * recoverScale * 0.5f - (stringWidth shr 1)
+			(width - stringWidth * scale) * reverseScale * 0.5f - (stringWidth shr 1)
 		}
 
 		val isSurvivalOrAdventure = controller.shouldDrawHUD()
@@ -91,16 +91,16 @@ class ExtendedTooltips : Module()
 			if (attackDamageValue.get())
 			{
 				val scale = attackDamageScaleValue.get()
-				val recoverScale = 1 / scale
+				val reverseScale = 1 / scale
 
 				GL11.glPushMatrix()
 				if (scale != 1.0F) GL11.glScalef(scale, scale, scale)
 
 				val attackDamage: String = getAttackDamageString(thePlayer, heldItemStack)
 
-				font.drawString(attackDamage, calcXPos(attackDamage, scale, recoverScale), (height - dmgAndEnchYPos + (if (isSurvivalOrAdventure) -1 else 14) + fontHeight) * recoverScale, 13421772, attackDamageShadowValue.get())
+				font.drawString(attackDamage, calcXPos(attackDamage, scale, reverseScale), (height - dmgAndEnchYPos + (if (isSurvivalOrAdventure) -1 else 14) + fontHeight) * reverseScale, 13421772, attackDamageShadowValue.get())
 
-				if (scale != 1.0F) GL11.glScalef(recoverScale, recoverScale, recoverScale)
+				if (scale != 1.0F) GL11.glScalef(reverseScale, reverseScale, reverseScale)
 				GL11.glPopMatrix()
 			}
 
@@ -108,37 +108,40 @@ class ExtendedTooltips : Module()
 			{
 				val toDraw: String = if (provider.isItemPotion(heldItemStack.item)) getPotionEffectString(heldItemStack) else getEnchantmentString(heldItemStack)
 				val scale = enchantmentsScaleValue.get()
-				val recoverScale = 1 / scale
+				val reverseScale = 1 / scale
 
 				GL11.glPushMatrix()
 				if (scale != 1.0F) GL11.glScalef(scale, scale, scale)
 
-				font.drawString(toDraw, calcXPos(toDraw, scale, recoverScale), (height - dmgAndEnchYPos + if (isSurvivalOrAdventure) -2 else 14) * recoverScale, 13421772, enchantmentsShadowValue.get())
+				font.drawString(toDraw, calcXPos(toDraw, scale, reverseScale), (height - dmgAndEnchYPos + if (isSurvivalOrAdventure) -2 else 14) * reverseScale, 13421772, enchantmentsShadowValue.get())
 
-				if (scale != 1.0F) GL11.glScalef(recoverScale, recoverScale, recoverScale)
+				if (scale != 1.0F) GL11.glScalef(reverseScale, reverseScale, reverseScale)
 				GL11.glPopMatrix()
 			}
 		}
 
-		if (heldItemCountValue.get() && thePlayer.currentEquippedItem != null)
+		val currentEquippedItem = thePlayer.currentEquippedItem
+
+		if (heldItemCountValue.get() && currentEquippedItem != null)
 		{
 			val scale = heldItemCountScaleValue.get()
-			val recoverScale = 1 / scale
+			val reverseScale = 1 / scale
 
-			val isHoldingBow = provider.isItemBow(thePlayer.currentEquippedItem!!.item)
-			val count = getHeldItemCount(thePlayer, isHoldingBow)
+			val bow = provider.isItemBow(currentEquippedItem.item)
+
+			val count = getHeldItemCount(thePlayer, currentEquippedItem, bow)
 
 			GL11.glPushMatrix()
 			if (scale != 1.0F) GL11.glScalef(scale, scale, scale)
 
-			if (count > 1 || isHoldingBow && count > 0) font.drawString("$count", calcXPos("$count", scale, recoverScale), (height - heldItemCountYPos - if (isSurvivalOrAdventure) 10 else 0) * recoverScale, 16777215, heldItemCountShadowValue.get())
+			if (count > 1 || bow && count > 0) font.drawString("$count", calcXPos("$count", scale, reverseScale), (height - heldItemCountYPos - if (isSurvivalOrAdventure) 10 else 0) * reverseScale, 16777215, heldItemCountShadowValue.get())
 
-			if (scale != 1.0F) GL11.glScalef(recoverScale, recoverScale, recoverScale)
+			if (scale != 1.0F) GL11.glScalef(reverseScale, reverseScale, reverseScale)
 			GL11.glPopMatrix()
 		}
 
 		val screen = mc.currentScreen
-		if (armorPotential.get() && provider.isGuiInventory(screen)) screen!!.drawString(font, getArmorPotential(thePlayer).also { lastArmorPotential = it }, 10, height - 16, 16777215)
+		if (armorPotential.get() && screen != null && provider.isGuiInventory(screen)) screen.drawString(font, getArmorPotential(thePlayer).also { lastArmorPotential = it }, 10, height - 16, 16777215)
 
 		if (durabilityWarning.get() && isArmorDurabilityLow(thePlayer)) printArmorWarning(resolution, font)
 	}
@@ -158,11 +161,11 @@ class ExtendedTooltips : Module()
 		return "\u00A7l${attackDamageEntry.split(" ", limit = 2)[0].substring(2)}"
 	}
 
-	private fun getPotionEffectString(itemStack: IItemStack): String
+	private fun getPotionEffectString(potionItem: IItemStack): String
 	{
 		val potionBuilder = StringBuilder()
 
-		itemStack.item!!.asItemPotion().getEffects(itemStack).forEach { effect ->
+		potionItem.item?.asItemPotion()?.getEffects(potionItem)?.forEach { effect ->
 			val durationInSeconds: Int = effect.duration / 20
 			potionBuilder.append("\u00A7l${Maps.POTION_SHORT_NAME[effect.potionID]}*${effect.amplifier + 1}(${durationInSeconds / 60}${String.format(":%02d", durationInSeconds % 60)}) ")
 		}
@@ -200,7 +203,9 @@ class ExtendedTooltips : Module()
 		thePlayer.inventory.armorInventory.forEach { itemStack ->
 			if (itemStack != null)
 			{
-				if (provider.isItemArmor(itemStack.item)) armor += itemStack.item!!.asItemArmor().damageReduceAmount.toDouble() * 0.04
+				val item = itemStack.item
+
+				if (item != null && provider.isItemArmor(item)) armor += item.asItemArmor().damageReduceAmount.toDouble() * 0.04
 
 				val func = functions
 
@@ -228,16 +233,17 @@ class ExtendedTooltips : Module()
 
 	private fun roundDouble(number: Double): Double = (number * 10000.0).roundToLong().toDouble() * 0.0001f
 
-	private fun getHeldItemCount(thePlayer: IEntityPlayerSP, bow: Boolean): Int
+	private fun getHeldItemCount(thePlayer: IEntityPlayerSP, currentEquippedItem: IItemStack, bow: Boolean): Int
 	{
+		val provider = classProvider
 		val func = functions
 
-		var itemID: Int = func.getIdFromItem(thePlayer.currentEquippedItem!!.item!!)
-		var itemMeta: Int = thePlayer.currentEquippedItem!!.itemDamage
+		var itemID: Int = func.getIdFromItem(currentEquippedItem.item!!)
+		var itemMeta: Int = currentEquippedItem.itemDamage
 
 		if (bow)
 		{
-			itemID = func.getIdFromItem(classProvider.getItemEnum(ItemType.ARROW))
+			itemID = func.getIdFromItem(provider.getItemEnum(ItemType.ARROW))
 			itemMeta = 0
 		}
 
@@ -256,19 +262,19 @@ class ExtendedTooltips : Module()
 
 	private fun isArmorDurabilityLow(thePlayer: IEntityPlayerSP): Boolean
 	{
-		return if (!durabilityWarningCooldown.attemptReset()) showWarning
+		return if (!armorDurabilityWarningCooldown.attemptReset()) showArmorDurabilityWarning
 		else
 		{
 			thePlayer.inventory.armorInventory.forEach { armor ->
 				if (armor != null && (armor.itemDamage.toDouble() / armor.maxDamage.toDouble() > 0.85 || armor.maxDamage - armor.itemDamage < 15))
 				{
-					val id: Int = functions.getIdFromItem(armor.item!!)
+					val id: Int = functions.getIdFromItem(armor.item ?: return@forEach)
 
-					if (id in 298..317) return@isArmorDurabilityLow true.also { showWarning = it }
+					if (id in 298..317) return@isArmorDurabilityLow true.also { showArmorDurabilityWarning = it }
 				}
 			}
 
-			false.also { showWarning = it }
+			false.also { showArmorDurabilityWarning = it }
 		}
 	}
 }

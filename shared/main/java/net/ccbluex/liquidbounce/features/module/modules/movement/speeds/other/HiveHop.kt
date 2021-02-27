@@ -14,13 +14,13 @@ class HiveHop : SpeedMode("HiveHop")
 {
 	override fun onEnable()
 	{
-		mc.thePlayer!!.speedInAir = 0.0425f
+		(mc.thePlayer ?: return).speedInAir = 0.0425f
 		mc.timer.timerSpeed = 1.04f
 	}
 
 	override fun onDisable()
 	{
-		mc.thePlayer!!.speedInAir = 0.02f
+		(mc.thePlayer ?: return).speedInAir = 0.02f
 		mc.timer.timerSpeed = 1f
 	}
 

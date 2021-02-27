@@ -149,7 +149,7 @@ class NameTags : Module()
 		val murderText = if (murderDetector.state && murderDetector.murders.contains(entity)) "\u00A75\u00A7l[MURDER]\u00A7r " else ""
 
 		var text = "$murderText$entityIDText$distanceText$pingText\u00A77$nameColor$tag$healthText$botText"
-		if (stripColorsValue.get()) text = ColorUtils.stripColor(text)!!
+		if (stripColorsValue.get()) text = ColorUtils.stripColor(text)
 
 		// Push
 		glPushMatrix()

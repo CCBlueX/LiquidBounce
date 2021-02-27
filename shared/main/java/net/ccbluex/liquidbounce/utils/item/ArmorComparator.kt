@@ -39,8 +39,8 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 				if (enchantmentCountCmp != 0) return enchantmentCountCmp
 
 				// Then durability...
-				val o1a = stack.item!!.asItemArmor()
-				val o2a = otherStack.item!!.asItemArmor()
+				val o1a = stack.item?.asItemArmor() ?: return -1
+				val o2a = otherStack.item?.asItemArmor() ?: return 1
 				val durabilityCmp = o1a.armorMaterial.getDurability(o1a.armorType).compareTo(o2a.armorMaterial.getDurability(o2a.armorType))
 
 				// Last comparision: Enchantability

@@ -294,17 +294,22 @@ class NoFall : Module()
 
 				if (thePlayer.inventory.currentItem != mlgItemSlot) thePlayer.sendQueue.addToSendQueue(provider.createCPacketHeldItemChange(mlgItemSlot))
 
-				currentMlgRotation = RotationUtils.faceBlock(theWorld, thePlayer, collision.pos)
+				val currentMlgRotation = RotationUtils.faceBlock(theWorld, thePlayer, collision.pos)
 
-				if (silentRotation) RotationUtils.setTargetRotation(currentMlgRotation!!.rotation, if (keepRotationValue.get()) keepRotationLengthValue.get() else 0)
-				else currentMlgRotation!!.rotation.applyRotationToPlayer(thePlayer)
+				this.currentMlgRotation = currentMlgRotation
+
+				if (currentMlgRotation != null)
+				{
+					if (silentRotation) RotationUtils.setTargetRotation(currentMlgRotation.rotation, if (keepRotationValue.get()) keepRotationLengthValue.get() else 0)
+					else currentMlgRotation.rotation.applyRotationToPlayer(thePlayer)
+				}
 			}
 		}
 		else if (currentMlgRotation != null)
 		{
 			val stack = thePlayer.inventory.getStackInSlot(currentMlgItemIndex + 36)
 
-			if (provider.isItemBucket(stack?.item)) controller.sendUseItem(thePlayer, theWorld, stack!!) else if (controller.sendUseItem(thePlayer, theWorld, stack!!)) mlgTimer.reset()
+			if (stack != null) if (provider.isItemBucket(stack.item)) controller.sendUseItem(thePlayer, theWorld, stack) else if (controller.sendUseItem(thePlayer, theWorld, stack)) mlgTimer.reset()
 
 			if (thePlayer.inventory.currentItem != currentMlgItemIndex) thePlayer.sendQueue.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 		}

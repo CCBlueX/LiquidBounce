@@ -40,7 +40,7 @@ object BlockUtils : MinecraftInstance()
 	fun isReplaceable(bs: IIBlockState?): Boolean
 	{
 		bs ?: return true
-		return bs.block.getMaterial(bs)!!.isReplaceable && !(classProvider.isBlockSnow(bs.block) && bs.block.getBlockBoundsMaxY() > .125)
+		return (bs.block.getMaterial(bs)?.isReplaceable ?: return false) && !(classProvider.isBlockSnow(bs.block) && bs.block.getBlockBoundsMaxY() > .125)
 	}
 
 	/**
@@ -65,7 +65,7 @@ object BlockUtils : MinecraftInstance()
 	 * Get block name by [id]
 	 */
 	@JvmStatic
-	fun getBlockName(id: Int): String = functions.getBlockById(id)!!.localizedName
+	fun getBlockName(id: Int): String = functions.getBlockById(id)?.localizedName ?: ""
 
 	/**
 	 * Check if block is full block

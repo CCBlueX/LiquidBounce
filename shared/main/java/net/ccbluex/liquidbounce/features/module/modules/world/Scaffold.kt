@@ -525,8 +525,10 @@ class Scaffold : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
+		val currentLockRotation = lockRotation
+
 		// Lock Rotation
-		if (!rotationModeValue.get().equals("Off", true) && keepRotationValue.get() && lockRotationValue.get() && lockRotation != null) setRotation(thePlayer, lockRotation!!)
+		if (!rotationModeValue.get().equals("Off", true) && keepRotationValue.get() && lockRotationValue.get() && currentLockRotation != null) setRotation(thePlayer, currentLockRotation)
 
 		// Place block
 		if ((facesBlock || rotationModeValue.get().equals("Off", true)) && placeModeValue.get().equals(eventState.stateName, true)) place(theWorld, thePlayer)
@@ -542,7 +544,9 @@ class Scaffold : Module()
 	{
 		val provider = classProvider
 
-		val isNotHeldItemBlock: Boolean = thePlayer.heldItem == null || !provider.isItemBlock(thePlayer.heldItem!!.item)
+		val heldItem = thePlayer.heldItem
+		val isNotHeldItemBlock: Boolean = heldItem == null || !provider.isItemBlock(heldItem.item)
+
 		if (if (autoBlockValue.get().equals("Off", true)) isNotHeldItemBlock else InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0) == -1 && isNotHeldItemBlock) return
 
 		val groundSearchDepth = 0.2
@@ -603,11 +607,11 @@ class Scaffold : Module()
 		val groundBlock: IBlock = groundBlockState.block
 
 		// get the block that will be automatically placed
-		var autoblock: IItemStack? = thePlayer.heldItem
+		var autoBlock: IItemStack? = thePlayer.heldItem
 
 		val provider = classProvider
 
-		if (autoblock == null || !provider.isItemBlock(autoblock.item) || autoblock.stackSize <= 0 || !InventoryUtils.canAutoBlock(autoblock.item!!.asItemBlock().block))
+		if (autoBlock == null || !provider.isItemBlock(autoBlock.item) || autoBlock.stackSize <= 0 || autoBlock.item?.let { !InventoryUtils.canAutoBlock(it.asItemBlock().block) } != false)
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
@@ -616,10 +620,10 @@ class Scaffold : Module()
 			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(theWorld, inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0)
 			if (autoBlockSlot == -1) return
 
-			autoblock = inventoryContainer.getSlot(autoBlockSlot).stack
+			autoBlock = inventoryContainer.getSlot(autoBlockSlot).stack
 		}
 
-		val autoblockBlock = autoblock!!.item!!.asItemBlock().block
+		val autoBlockBlock = (autoBlock?.item ?: return).asItemBlock().block
 
 		// Configure place-position
 		val searchPosition: WBlockPos
@@ -634,7 +638,7 @@ class Scaffold : Module()
 
 		val func = functions
 
-		val abCollisionBB = autoblockBlock.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, if (func.isBlockEqualTo(groundBlock, autoblockBlock)) groundBlockState else autoblockBlock.defaultState!!)!!
+		val abCollisionBB = autoBlockBlock.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, if (func.isBlockEqualTo(groundBlock, autoBlockBlock)) groundBlockState else autoBlockBlock.defaultState ?: return) ?: return
 		val gBB = provider.createAxisAlignedBB(groundBlock.getBlockBoundsMinX(), groundBlock.getBlockBoundsMinY(), groundBlock.getBlockBoundsMinZ(), groundBlock.getBlockBoundsMaxX(), groundBlock.getBlockBoundsMaxY(), groundBlock.getBlockBoundsMaxZ())
 
 		// These delta variable has in range 0.0625 ~ 1.0
@@ -766,7 +770,7 @@ class Scaffold : Module()
 
 		val provider = classProvider
 
-		if (itemStack == null || !provider.isItemBlock(itemStack.item) || provider.isBlockBush(itemStack.item!!.asItemBlock().block) || thePlayer.heldItem!!.stackSize <= 0)
+		if (itemStack == null || !provider.isItemBlock(itemStack.item) || !InventoryUtils.canAutoBlock(itemStack.item?.asItemBlock()?.block) || thePlayer.heldItem?.stackSize ?: 0 <= 0)
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
@@ -789,6 +793,7 @@ class Scaffold : Module()
 
 				"Switch" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
 			}
+
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
 		}
 
@@ -1018,7 +1023,7 @@ class Scaffold : Module()
 							val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
 							val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, false, false, true)
 
-							if (rayTrace!!.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos!! != neighbor) return@repeat
+							if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)) return@repeat
 							if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation!!.rotation)) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
 
 							xSearchFace = xSearch
@@ -1063,13 +1068,13 @@ class Scaffold : Module()
 						val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
 						val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
 
-						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || mc.theWorld!!.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) return@forEach
+						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) return@forEach
 
 						val rotationVector = RotationUtils.getVectorForRotation(limitedRotation!!)
 						val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
-						val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, vector, false, false, true)
+						val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, false, false, true)
 
-						if (!(rayTrace!!.typeOfHit == IMovingObjectPosition.WMovingObjectType.BLOCK && rayTrace.blockPos!! == neighbor)) return@forEach
+						if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)) return@forEach
 
 						facesBlock = true
 
@@ -1107,7 +1112,7 @@ class Scaffold : Module()
 		val inventory = thePlayer.inventory
 		val heldItem = thePlayer.heldItem
 
-		(0..8).map(inventory::getStackInSlot).filter { provider.isItemBlock(it?.item) }.map { it to (it?.item!!.asItemBlock()) }.filter { heldItem == it || InventoryUtils.canAutoBlock(it.second.block) }.forEach { amount += (it.first ?: return@forEach).stackSize }
+		(0..8).map(inventory::getStackInSlot).filter { provider.isItemBlock(it?.item) }.mapNotNull { it to (it?.item ?: return@mapNotNull null).asItemBlock() }.filter { heldItem == it.first || InventoryUtils.canAutoBlock(it.second.block) }.forEach { amount += (it.first ?: return@forEach).stackSize }
 
 		return amount
 	}

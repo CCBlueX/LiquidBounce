@@ -6,7 +6,10 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.api.enums.MaterialType
-import net.ccbluex.liquidbounce.ui.client.hud.element.*
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.opengl.GL11
@@ -27,11 +30,11 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F, side: Side = 
 	/**
 	 * Draw element
 	 */
-	override fun drawElement(): Border
+	override fun drawElement(): Border?
 	{
 		if (mc.playerController.isNotCreative)
 		{
-			val thePlayer = mc.thePlayer!!
+			val thePlayer = mc.thePlayer ?: return null
 
 			GL11.glPushMatrix()
 

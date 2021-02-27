@@ -6,7 +6,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.Render3DEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -16,7 +19,10 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import kotlin.math.abs
@@ -83,13 +89,17 @@ class BugUp : Module()
 		{
 			val fallingPlayer = FallingPlayer(theWorld, thePlayer, posX, posY, posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
 
-			detectedLocation = fallingPlayer.findCollision(60)?.pos
+			val fallDistance = thePlayer.fallDistance
 
-			if (detectedLocation != null && (onlyCatchVoid.get() || abs(posY - detectedLocation!!.y) + thePlayer.fallDistance <= maxFallDistance.get())) lastFound = thePlayer.fallDistance
+			val detectedLocation = fallingPlayer.findCollision(60)?.pos
 
-			if (detectedLocation == null && thePlayer.fallDistance <= maxVoidFallDistance.get()) lastFound = thePlayer.fallDistance
+			this.detectedLocation = detectedLocation
 
-			if (thePlayer.fallDistance - lastFound > maxDistanceWithoutGround.get())
+			if (detectedLocation != null && (onlyCatchVoid.get() || abs(posY - detectedLocation.y) + fallDistance <= maxFallDistance.get())) lastFound = fallDistance
+
+			if (detectedLocation == null && fallDistance <= maxVoidFallDistance.get()) lastFound = fallDistance
+
+			if (fallDistance - lastFound > maxDistanceWithoutGround.get())
 			{
 				when (modeValue.get().toLowerCase())
 				{

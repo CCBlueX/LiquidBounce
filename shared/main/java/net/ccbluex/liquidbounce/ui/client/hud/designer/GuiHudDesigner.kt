@@ -83,7 +83,12 @@ class GuiHudDesigner : WrappedGuiScreen()
 	{
 		when (keyCode)
 		{
-			Keyboard.KEY_DELETE -> if (Keyboard.KEY_DELETE == keyCode && selectedElement != null) LiquidBounce.hud.removeElement(selectedElement!!)
+			Keyboard.KEY_DELETE ->
+			{
+				val selectedElement = selectedElement
+
+				if (Keyboard.KEY_DELETE == keyCode && selectedElement != null) LiquidBounce.hud.removeElement(selectedElement)
+			}
 
 			Keyboard.KEY_ESCAPE ->
 			{

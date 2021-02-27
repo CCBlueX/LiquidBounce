@@ -13,7 +13,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "AntiAFK", description = "Prevents you from getting kicked for being AFK.", category = ModuleCategory.PLAYER)
 class AntiAFK : Module()
@@ -56,7 +59,7 @@ class AntiAFK : Module()
 
 			"random" ->
 			{
-				getRandomMoveKeyBind()!!.pressed = shouldMove
+				getRandomMoveKeyBind().pressed = shouldMove
 
 				if (!delayTimer.hasTimePassed(randomTimerDelay)) return
 				shouldMove = false
@@ -116,7 +119,7 @@ class AntiAFK : Module()
 		}
 	}
 
-	private fun getRandomMoveKeyBind(): IKeyBinding?
+	private fun getRandomMoveKeyBind(): IKeyBinding
 	{
 		val gameSettings = mc.gameSettings
 
@@ -125,8 +128,7 @@ class AntiAFK : Module()
 			0 -> gameSettings.keyBindRight
 			1 -> gameSettings.keyBindLeft
 			2 -> gameSettings.keyBindBack
-			3 -> gameSettings.keyBindForward
-			else -> null
+			else -> gameSettings.keyBindForward
 		}
 	}
 

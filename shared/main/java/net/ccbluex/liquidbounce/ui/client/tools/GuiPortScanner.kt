@@ -192,7 +192,7 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		{
 			host = hostField.text
 
-			if (host!!.isEmpty())
+			if (host.isNullOrEmpty())
 			{
 				status = "\u00A7cInvalid host"
 				return

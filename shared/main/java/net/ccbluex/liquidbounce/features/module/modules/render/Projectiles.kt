@@ -276,7 +276,7 @@ class Projectiles : Module()
 		if (landingPosition != null)
 		{
 			// Switch rotation of hit cylinder of the hit axis
-			when (landingPosition!!.sideHit!!.axisOrdinal)
+			when (landingPosition?.sideHit?.axisOrdinal ?: -1)
 			{
 				0 -> GL11.glRotatef(90F, 0F, 0F, 1F)
 				2 -> GL11.glRotatef(90F, 1F, 0F, 0F)

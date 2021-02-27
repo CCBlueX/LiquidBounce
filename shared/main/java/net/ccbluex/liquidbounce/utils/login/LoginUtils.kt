@@ -102,7 +102,8 @@ object LoginUtils : MinecraftInstance()
 				ClientUtils.logger.error("Failed to switch back alt service.", e)
 			}
 
-			val message = exception.message!!
+			val message = exception.message ?: return LoginResult.AUTHENTICATION_FAILURE
+
 			when
 			{
 				(MinecraftAccount.AltServiceType.THEALTENING.equals(serviceType)) -> LoginResult.THEALTENING_INVALID

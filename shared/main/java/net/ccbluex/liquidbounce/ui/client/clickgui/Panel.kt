@@ -160,9 +160,11 @@ abstract class Panel(val name: String, x: Int, y: Int, width: Int, height: Int, 
 
 	fun isHovering(mouseX: Int, mouseY: Int): Boolean
 	{
-		val textWidth = mc.fontRendererObj.getStringWidth(stripControlCodes(name)!!) - 100.0f
+		val font = mc.fontRendererObj
+		val colorStrippedName = stripControlCodes(name)
+		val textWidth = font.getStringWidth(colorStrippedName) - 100.0f
 
-		return mouseX >= x - textWidth * 0.5f - 19.0f && mouseX <= x - textWidth * 0.5f + mc.fontRendererObj.getStringWidth(stripControlCodes(name)!!) + 19.0f && mouseY >= y && mouseY <= y + height - if (open) 2 else 0
+		return mouseX >= x - textWidth * 0.5f - 19.0f && mouseX <= x - textWidth * 0.5f + font.getStringWidth(colorStrippedName) + 19.0f && mouseY >= y && mouseY <= y + height - if (open) 2 else 0
 	}
 
 	init

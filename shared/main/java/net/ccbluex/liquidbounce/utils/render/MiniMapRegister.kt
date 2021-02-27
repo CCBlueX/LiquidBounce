@@ -80,6 +80,8 @@ object MiniMapRegister : MinecraftInstance()
 
 		fun updateChunkData(chunk: IChunk)
 		{
+			val theWorld = mc.theWorld ?: return
+
 			val rgbValues = texture.textureData
 
 			(0..15).forEach { x ->
@@ -87,7 +89,7 @@ object MiniMapRegister : MinecraftInstance()
 					val bp = WBlockPos(x, chunk.getHeightValue(x, z) - 1, z)
 					val blockState = chunk.getBlockState(bp)
 
-					rgbValues[rgbValues.size - ((z shl 4) + x + 1)] = blockState.block.getMapColor(blockState, mc.theWorld!!, bp) or (0xFF shl 24)
+					rgbValues[rgbValues.size - ((z shl 4) + x + 1)] = blockState.block.getMapColor(blockState, theWorld, bp) or (0xFF shl 24)
 				}
 			}
 

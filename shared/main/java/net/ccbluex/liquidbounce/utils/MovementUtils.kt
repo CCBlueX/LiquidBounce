@@ -79,7 +79,10 @@ object MovementUtils : MinecraftInstance()
 	 * @return The amplifier of Speed potion effect which applied on thePlayer (1~) (If thePlayer doesn't have Speed potion effect, it returns 0)
 	 */
 	@JvmStatic
-	fun getSpeedEffectAmplifier(thePlayer: IEntityPlayerSP) = thePlayer.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))?.amplifier?.plus(1) ?: 0
+	fun getSpeedEffectAmplifier(thePlayer: IEntityPlayerSP) = getEffectAmplifier(thePlayer, PotionType.MOVE_SPEED)
+
+	@JvmStatic
+	fun getEffectAmplifier(thePlayer: IEntityPlayerSP, potionType: PotionType) = thePlayer.getActivePotionEffect(classProvider.getPotionEnum(potionType))?.amplifier?.plus(1) ?: 0
 
 	@JvmStatic
 	fun zeroXZ(thePlayer: IEntityPlayerSP)

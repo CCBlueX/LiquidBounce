@@ -18,7 +18,10 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.toDegrees
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.toRadians
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.wrapAngleTo180_float
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RaycastUtils.EntityFilter
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
@@ -452,7 +455,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * rotation
 		 * @return        difference between rotation
 		 */
-		private fun getRotationDifference(first: Rotation, second: Rotation?): Double = StrictMath.hypot(getAngleDifference(first.yaw, second!!.yaw).toDouble(), (first.pitch - second.pitch).toDouble())
+		private fun getRotationDifference(first: Rotation, second: Rotation): Double = StrictMath.hypot(getAngleDifference(first.yaw, second.yaw).toDouble(), (first.pitch - second.pitch).toDouble())
 
 		/**
 		 * Limit your rotation using a turn speed
@@ -465,9 +468,9 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your turn speed
 		 * @return                 limited rotation
 		 */
-		fun limitAngleChange(currentRotation: Rotation?, targetRotation: Rotation, turnSpeed: Float, acceleration: Float): Rotation
+		fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float, acceleration: Float): Rotation
 		{
-			var yawDelta = getAngleDifference(targetRotation.yaw, currentRotation!!.yaw)
+			var yawDelta = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
 			var pitchDelta = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
 			val accel = acceleration.coerceAtMost(1.0f)
 
@@ -528,11 +531,11 @@ class RotationUtils : MinecraftInstance(), Listenable
 		/**
 		 * Allows you to check if your enemy is behind a wall
 		 */
-		private fun isVisible(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, vec3: WVec3?): Boolean
+		private fun isVisible(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, vec3: WVec3): Boolean
 		{
 			val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
 
-			return theWorld.rayTraceBlocks(eyesPos, vec3!!) == null
+			return theWorld.rayTraceBlocks(eyesPos, vec3) == null
 		}
 
 		/**
@@ -577,20 +580,17 @@ class RotationUtils : MinecraftInstance(), Listenable
 
 			val goalRotation = Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch)
 
-			if (minResetTurnSpeed >= 180 || getAngleDifference(targetRotation ?: return, goalRotation) <= minResetTurnSpeed)
+			val targetRotation = targetRotation ?: return
+
+			if (minResetTurnSpeed >= 180 || getAngleDifference(targetRotation, goalRotation) <= minResetTurnSpeed)
 			{
-				targetRotation = null
+				this.targetRotation = null
 
 				// Reset the resetTurnSpeed
 				minResetTurnSpeed = 180.0f
 				maxResetTurnSpeed = 180.0f
 			}
-			else
-			{
-				val limited = limitAngleChange(targetRotation, goalRotation, if (maxResetTurnSpeed - minResetTurnSpeed > 0) nextFloat(minResetTurnSpeed, maxResetTurnSpeed) else maxResetTurnSpeed, 0f)
-				limited.fixedSensitivity(mc.gameSettings.mouseSensitivity)
-				targetRotation = limited
-			}
+			else this.targetRotation = limitAngleChange(targetRotation, goalRotation, if (maxResetTurnSpeed - minResetTurnSpeed > 0) nextFloat(minResetTurnSpeed, maxResetTurnSpeed) else maxResetTurnSpeed, 0f).apply { fixedSensitivity(mc.gameSettings.mouseSensitivity) }
 		}
 	}
 }

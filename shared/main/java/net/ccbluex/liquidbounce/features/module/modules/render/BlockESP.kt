@@ -70,9 +70,11 @@ class BlockESP : Module()
 			workerPool.submit {
 				while (moduleState)
 				{
-					if (task != null)
+					val currentTask = task
+
+					if (currentTask != null)
 					{
-						task!!.run()
+						currentTask.run()
 						task = null
 					}
 

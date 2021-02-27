@@ -18,9 +18,10 @@ class Parkour : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 		val gameSettings = mc.gameSettings
 
-		if (MovementUtils.isMoving(thePlayer) && thePlayer.onGround && !thePlayer.sneaking && !gameSettings.keyBindSneak.isKeyDown && !gameSettings.keyBindJump.isKeyDown && mc.theWorld!!.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)).isEmpty()) thePlayer.jump()
+		if (MovementUtils.isMoving(thePlayer) && thePlayer.onGround && !thePlayer.sneaking && !gameSettings.keyBindSneak.isKeyDown && !gameSettings.keyBindJump.isKeyDown && theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)).isEmpty()) thePlayer.jump()
 	}
 }

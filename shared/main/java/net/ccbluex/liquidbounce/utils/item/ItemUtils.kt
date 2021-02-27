@@ -49,7 +49,7 @@ object ItemUtils : MinecraftInstance()
 				item != null
 			}
 
-			item ?: return null
+			val createdItem = item ?: return null
 
 			val checkedArgs = args ?: return null
 			val argsLength = checkedArgs.size
@@ -62,7 +62,7 @@ object ItemUtils : MinecraftInstance()
 			var meta = 0
 			if (argsLength >= 3 && PATTERN.matcher(checkedArgs[2]).matches()) meta = checkedArgs[2].toInt()
 
-			val itemstack = provider.createItemStack(item!!, amount, meta)
+			val itemstack = provider.createItemStack(createdItem, amount, meta)
 
 			// Build NBT tag
 			if (argsLength >= 4)
@@ -85,10 +85,20 @@ object ItemUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun getEnchantment(itemStack: IItemStack?, enchantment: IEnchantment): Int = if (itemStack?.enchantmentTagList == null || itemStack.enchantmentTagList!!.hasNoTags()) 0 else (0 until itemStack.enchantmentTagList!!.tagCount()).map(itemStack.enchantmentTagList!!::getCompoundTagAt).firstOrNull { it.hasKey("ench") && it.getShort("ench").toInt() == enchantment.effectId || it.hasKey("id") && it.getShort("id").toInt() == enchantment.effectId }?.let { tagCompound: INBTTagCompound -> tagCompound.getShort("lvl").toInt() } ?: 0
+	fun getEnchantment(itemStack: IItemStack?, enchantment: IEnchantment): Int
+	{
+		val enchTagList = itemStack?.enchantmentTagList
+
+		return if (enchTagList == null || enchTagList.hasNoTags()) 0 else (0 until enchTagList.tagCount()).map(enchTagList::getCompoundTagAt).firstOrNull { it.hasKey("ench") && it.getShort("ench").toInt() == enchantment.effectId || it.hasKey("id") && it.getShort("id").toInt() == enchantment.effectId }?.let { tagCompound: INBTTagCompound -> tagCompound.getShort("lvl").toInt() } ?: 0
+	}
 
 	@JvmStatic
-	fun getEnchantmentCount(itemStack: IItemStack?): Int = if (itemStack?.enchantmentTagList == null || itemStack.enchantmentTagList!!.hasNoTags()) 0 else (0 until itemStack.enchantmentTagList!!.tagCount()).map(itemStack.enchantmentTagList!!::getCompoundTagAt).count { it.hasKey("ench") || it.hasKey("id") }
+	fun getEnchantmentCount(itemStack: IItemStack?): Int
+	{
+		val enchTagList = itemStack?.enchantmentTagList
+
+		return if (enchTagList == null || enchTagList.hasNoTags()) 0 else (0 until enchTagList.tagCount()).map(enchTagList::getCompoundTagAt).count { it.hasKey("ench") || it.hasKey("id") }
+	}
 
 	@JvmStatic
 	fun isStackEmpty(stack: IItemStack?): Boolean = stack == null || classProvider.isItemAir(stack.item)

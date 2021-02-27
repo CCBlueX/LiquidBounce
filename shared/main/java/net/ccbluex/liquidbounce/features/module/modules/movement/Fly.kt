@@ -614,7 +614,7 @@ class Fly : Module()
 					val blockPos = WBlockPos(posX, thePlayer.entityBoundingBox.minY - 1, posZ)
 					val vec: WVec3 = WVec3(blockPos).addVector(0.4, 0.4, 0.4).add(WVec3(provider.getEnumFacing(EnumFacingType.UP).directionVec))
 
-					mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.inventory.getCurrentItemInHand()!!, blockPos, provider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
+					mc.playerController.onPlayerRightClick(thePlayer, theWorld, null, blockPos, provider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
 
 					MovementUtils.strafe(thePlayer, 0.27f)
 
@@ -1184,7 +1184,7 @@ class Fly : Module()
 		val provider = classProvider
 
 		val blockAbove = BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ))
-		val normalJumpY = 0.42 + if (thePlayer.isPotionActive(provider.getPotionEnum(PotionType.JUMP))) (thePlayer.getActivePotionEffect(provider.getPotionEnum(PotionType.JUMP))!!.amplifier + 1) * 0.1f else 0f
+		val normalJumpY = 0.42 + MovementUtils.getEffectAmplifier(thePlayer, PotionType.JUMP) * 0.1f
 		val jumpY = if (provider.isBlockAir(blockAbove)) normalJumpY else min(0.2 + blockAbove.getBlockBoundsMinY(), normalJumpY)
 
 		// Simulate Vanilla Player Jump

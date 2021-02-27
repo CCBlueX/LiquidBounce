@@ -62,7 +62,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 	private var fovMarkerVertexBuffer: IVertexBuffer? = null
 	private var lastFov = 0f
 
-	override fun drawElement(): Border
+	override fun drawElement(): Border?
 	{
 		MiniMapRegister.updateChunks()
 
@@ -76,7 +76,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 			lastFov = fovAngle
 		}
 
-		val renderViewEntity = mc.renderViewEntity!!
+		val renderViewEntity = mc.renderViewEntity ?: return null
 
 		val size = sizeValue.get()
 
@@ -180,8 +180,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 			glPointSize(playerSize)
 		}
 
-		val theWorld = mc.theWorld!!
-		val thePlayer = mc.thePlayer!!
+		val theWorld = mc.theWorld ?: return null
+		val thePlayer = mc.thePlayer ?: return null
 
 		val esp = LiquidBounce.moduleManager[ESP::class.java] as ESP
 		val useESPColors = useESPColorsValue.get()
@@ -213,15 +213,15 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 				glColor4f(1.0f, 1.0f, 1.0f, if (minimap) 0.75f else 0.25f)
 
-				val vbo = fovMarkerVertexBuffer!!
+				fovMarkerVertexBuffer?.let { vbo ->
+					vbo.bindBuffer()
 
-				vbo.bindBuffer()
+					glEnableClientState(GL_VERTEX_ARRAY)
+					glVertexPointer(3, GL_FLOAT, 12, 0L)
 
-				glEnableClientState(GL_VERTEX_ARRAY)
-				glVertexPointer(3, GL_FLOAT, 12, 0L)
-
-				vbo.drawArrays(GL_TRIANGLE_FAN)
-				vbo.unbindBuffer()
+					vbo.drawArrays(GL_TRIANGLE_FAN)
+					vbo.unbindBuffer()
+				}
 
 				glDisableClientState(GL_VERTEX_ARRAY)
 

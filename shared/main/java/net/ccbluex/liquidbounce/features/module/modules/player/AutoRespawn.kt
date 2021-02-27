@@ -28,7 +28,7 @@ class AutoRespawn : Module()
 		if (thePlayer == null || LiquidBounce.moduleManager[Ghost::class.java].state) return
 
 		val screen = mc.currentScreen
-		if (if (instantValue.get()) thePlayer.health == 0F || thePlayer.isDead else classProvider.isGuiGameOver(screen) && (screen!!.asGuiGameOver()).enableButtonsTimer >= 20)
+		if (if (instantValue.get()) thePlayer.health == 0F || thePlayer.isDead else screen != null && classProvider.isGuiGameOver(screen) && (screen.asGuiGameOver()).enableButtonsTimer >= 20)
 		{
 			thePlayer.respawnPlayer()
 			mc.displayGuiScreen(null)

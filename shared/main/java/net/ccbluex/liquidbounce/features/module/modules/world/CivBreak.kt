@@ -44,12 +44,12 @@ class CivBreak : Module()
 
 		val netHandler = mc.netHandler
 
-		blockPos = event.clickedBlock ?: return
-		enumFacing = event.WEnumFacing ?: return
+		val enumFacing = (event.WEnumFacing ?: return).also { enumFacing = it }
+		val blockPos = (event.clickedBlock ?: return).also { blockPos = it }
 
 		// Break
-		netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, blockPos!!, enumFacing!!))
-		netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos!!, enumFacing!!))
+		netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, blockPos, enumFacing))
+		netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos, enumFacing))
 	}
 
 	@EventTarget
@@ -78,7 +78,7 @@ class CivBreak : Module()
 
 			EventState.POST ->
 			{
-				val facing = enumFacing!!
+				val facing = enumFacing ?: return
 
 				if (visualSwingValue.get()) thePlayer.swingItem()
 				else netHandler.addToSendQueue(provider.createCPacketAnimation())

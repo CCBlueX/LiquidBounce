@@ -69,8 +69,5 @@ object StringUtils
 
 	@Contract("null -> null; !null ->!null")
 	@JvmStatic
-	fun stripControlCodes(text: String?): String?
-	{
-		return patternControlCode.matcher(text ?: return null).replaceAll("")
-	}
+	fun stripControlCodes(text: String): String = patternControlCode.matcher(text).replaceAll("")
 }

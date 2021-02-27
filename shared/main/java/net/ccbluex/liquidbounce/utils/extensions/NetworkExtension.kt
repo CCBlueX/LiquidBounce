@@ -4,9 +4,11 @@ import net.ccbluex.liquidbounce.api.minecraft.client.network.INetworkPlayerInfo
 
 fun INetworkPlayerInfo.getFullName(useDisplayNameIfPresent: Boolean): String
 {
-	if (useDisplayNameIfPresent && displayName != null) return displayName!!.formattedText
+	val displayName = displayName
 
-	val team = playerTeam
+	if (useDisplayNameIfPresent && displayName != null) return displayName.formattedText
+
 	val name = gameProfile.name
-	return team?.formatString(name) ?: name
+
+	return playerTeam?.formatString(name) ?: name
 }

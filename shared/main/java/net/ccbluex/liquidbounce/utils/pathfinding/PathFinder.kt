@@ -63,7 +63,7 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 		path = hubs[0].path
 	}
 
-	private fun isHubExisting(pos: WVec3): Hub? = hubs.firstOrNull { it.position.xCoord == pos.xCoord && it.position.yCoord == pos.yCoord && it.position.zCoord == pos.zCoord } ?: hubsToWork.firstOrNull { hub: Hub? -> hub!!.position.xCoord == pos.xCoord && hub.position.yCoord == pos.yCoord && hub.position.zCoord == pos.zCoord }
+	private fun isHubExisting(pos: WVec3): Hub? = hubs.firstOrNull { it.position.xCoord == pos.xCoord && it.position.yCoord == pos.yCoord && it.position.zCoord == pos.zCoord } ?: hubsToWork.firstOrNull { hub -> hub.position.xCoord == pos.xCoord && hub.position.yCoord == pos.yCoord && hub.position.zCoord == pos.zCoord }
 
 	private fun addHub(parent: Hub?, loc: WVec3, cost: Double): Boolean
 	{
@@ -142,17 +142,17 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 
 		private fun isBlockSolid(blockpos: WBlockPos): Boolean
 		{
-			val state = getState(blockpos)
-			val block = state!!.block
+			val state = getState(blockpos) ?: return true
+			val block = state.block
 
 			val provider = classProvider
 
-			return block.getMaterial(state)!!.blocksMovement() && block.isFullCube(state) || provider.isBlockSlab(block) || provider.isBlockStairs(block) || provider.isBlockCactus(block) || provider.isBlockChest(block) || provider.isBlockEnderChest(block) || provider.isBlockSkull(block) || provider.isBlockPane(block) || provider.isBlockFence(block) || provider.isBlockWall(block) || provider.isBlockGlass(block) || provider.isBlockPistonBase(block) || provider.isBlockPistonExtension(block) || provider.isBlockPistonMoving(block) || provider.isBlockStainedGlass(block) || provider.isBlockTrapDoor(block)
+			return (block.getMaterial(state)?.blocksMovement() ?: true) && block.isFullCube(state) || provider.isBlockSlab(block) || provider.isBlockStairs(block) || provider.isBlockCactus(block) || provider.isBlockChest(block) || provider.isBlockEnderChest(block) || provider.isBlockSkull(block) || provider.isBlockPane(block) || provider.isBlockFence(block) || provider.isBlockWall(block) || provider.isBlockGlass(block) || provider.isBlockPistonBase(block) || provider.isBlockPistonExtension(block) || provider.isBlockPistonMoving(block) || provider.isBlockStainedGlass(block) || provider.isBlockTrapDoor(block)
 		}
 
 		private fun isSafeToWalkOn(blockpos: WBlockPos): Boolean
 		{
-			val block = getState(blockpos)!!.block
+			val block = getState(blockpos)?.block
 
 			val provider = classProvider
 

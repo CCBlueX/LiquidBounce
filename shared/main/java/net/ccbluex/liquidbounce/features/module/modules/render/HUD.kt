@@ -57,7 +57,13 @@ class HUD : Module()
 
 		val screen = event.guiScreen
 
-		if (state && blurValue.get() && !entityRenderer.isShaderActive() && screen != null && !provider.isGuiChat(screen) && !provider.isGuiHudDesigner(screen)) entityRenderer.loadShader(provider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json")) else if (entityRenderer.shaderGroup != null && entityRenderer.shaderGroup!!.shaderGroupName.contains("liquidbounce/blur.json")) entityRenderer.stopUseShader()
+		if (state && blurValue.get() && !entityRenderer.isShaderActive() && screen != null && !provider.isGuiChat(screen) && !provider.isGuiHudDesigner(screen)) entityRenderer.loadShader(provider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json"))
+		else
+		{
+			val shaderGroup = entityRenderer.shaderGroup
+
+			if (shaderGroup != null && shaderGroup.shaderGroupName.contains("liquidbounce/blur.json")) entityRenderer.stopUseShader()
+		}
 	}
 
 	init

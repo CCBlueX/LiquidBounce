@@ -5,7 +5,10 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud
 
-import com.google.gson.*
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.elements
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -68,7 +71,7 @@ class Config
 							element.x = jsonObject["X"].asInt.toDouble()
 							element.y = jsonObject["Y"].asInt.toDouble()
 							element.scale = jsonObject["Scale"].asFloat
-							element.side = Side(Side.Horizontal.getByName(jsonObject["HorizontalFacing"].asString)!!, Side.Vertical.getByName(jsonObject["VerticalFacing"].asString)!!)
+							element.side = Side(Side.Horizontal.getByName(jsonObject["HorizontalFacing"].asString) ?: Side.Horizontal.LEFT, Side.Vertical.getByName(jsonObject["VerticalFacing"].asString) ?: Side.Vertical.UP)
 
 							element.values.filter { jsonObject.has(it.name) }.forEach { it.fromJson(jsonObject[it.name]) }
 

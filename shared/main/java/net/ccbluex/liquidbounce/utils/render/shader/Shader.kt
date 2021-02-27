@@ -51,7 +51,7 @@ abstract class Shader(fragmentShader: String) : MinecraftInstance()
 		setUniform(uniformName, GL20.glGetUniformLocation(programId, uniformName))
 	}
 
-	fun getUniform(uniformName: String): Int = uniformsMap?.get(uniformName)!!
+	fun getUniform(uniformName: String): Int = uniformsMap?.get(uniformName) ?: -1
 
 	companion object
 	{

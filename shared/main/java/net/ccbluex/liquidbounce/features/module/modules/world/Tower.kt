@@ -203,10 +203,9 @@ class Tower : Module()
 
 			val provider = classProvider
 
-			val update = if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0) != -1 || thePlayer.heldItem != null && provider.isItemBlock(thePlayer.heldItem!!.item)
-			else thePlayer.heldItem != null && provider.isItemBlock(thePlayer.heldItem!!.item)
+			val heldItem = thePlayer.heldItem
 
-			if (update)
+			if (if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0) != -1 || heldItem != null && provider.isItemBlock(heldItem.item) else heldItem != null && provider.isItemBlock(heldItem.item))
 			{
 				if (!stopWhenBlockAbove.get() || provider.isBlockAir(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)))) move()
 
@@ -219,7 +218,7 @@ class Tower : Module()
 						RotationUtils.setTargetRotation(vecRotation.rotation, keepRotationTicks)
 						RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
 
-						placeInfo!!.vec3 = vecRotation.vec
+						placeInfo!!.vec3 = vecRotation.vec // Is this redundant?
 					}
 				}
 			}
@@ -356,7 +355,7 @@ class Tower : Module()
 	 */
 	private fun place(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
-		if (placeInfo == null) return
+		val placeInfo = placeInfo ?: return
 
 		val moduleManager = LiquidBounce.moduleManager
 
@@ -392,17 +391,17 @@ class Tower : Module()
 
 				"Switch" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
 			}
+
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
 		}
 
 		// Place block
-		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack!!, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3)) if (swingValue.get()) thePlayer.swingItem()
-		else netHandler.addToSendQueue(provider.createCPacketAnimation())
+		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, placeInfo.blockPos, placeInfo.enumFacing, placeInfo.vec3)) if (swingValue.get()) thePlayer.swingItem() else netHandler.addToSendQueue(provider.createCPacketAnimation())
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
 		if (autoBlockValue.get().equals("Switch", true) && slot != thePlayer.inventory.currentItem) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
-		placeInfo = null
+		this.placeInfo = null
 	}
 
 	/**
@@ -456,7 +455,8 @@ class Tower : Module()
 						val rotationVector = RotationUtils.getVectorForRotation(rotation)
 						val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
 						val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
-						if (rayTrace!!.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)
+
+						if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor))
 						{
 							zSearch += 0.1
 							continue
@@ -480,7 +480,9 @@ class Tower : Module()
 			scaffold.lockRotation = null // Prevent to lockRotation confliction
 			lockRotation = placeRotation!!.rotation
 		}
+
 		placeInfo = placeRotation!!.placeInfo
+
 		return true
 	}
 
@@ -540,7 +542,7 @@ class Tower : Module()
 
 		val inventoryContainer = thePlayer.inventoryContainer
 
-		return (36..44).mapNotNull { inventoryContainer.getSlot(it).stack }.filter { provider.isItemBlock(it.item) }.filter { thePlayer.heldItem == it || InventoryUtils.canAutoBlock(it.item!!.asItemBlock().block) }.sumBy(IItemStack::stackSize)
+		return (36..44).mapNotNull { inventoryContainer.getSlot(it).stack }.filter { provider.isItemBlock(it.item) }.filter { thePlayer.heldItem == it || InventoryUtils.canAutoBlock(it.item?.asItemBlock()?.block) }.sumBy(IItemStack::stackSize)
 	}
 
 	override val tag: String

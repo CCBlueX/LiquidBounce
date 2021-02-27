@@ -9,7 +9,10 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.opengl.GL11
-import java.awt.*
+import java.awt.Color
+import java.awt.Font
+import java.awt.Graphics2D
+import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 
 /**
@@ -236,7 +239,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 		graphics2D.fillRect(0, 0, textureWidth, textureHeight)
 		graphics2D.color = Color.white
 
-		(startChar until stopChar).filter { fontImages[it] != null }.filter { charLocations[it] != null }.forEach { graphics2D.drawImage(fontImages[it], charLocations[it]!!.x, charLocations[it]!!.y, null) }
+		(startChar until stopChar).mapNotNull { (fontImages[it] ?: return@mapNotNull null) to (charLocations[it] ?: return@mapNotNull null) }.forEach { (fontImage, charLocation) -> graphics2D.drawImage(fontImage, charLocation.x, charLocation.y, null) }
 
 		val textureUtil = classProvider.textureUtil
 
@@ -282,12 +285,10 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 	 */
 	fun getStringWidth(text: String): Int
 	{
-		val width = text.toCharArray().map {
+		return text.toCharArray().map {
 			charLocations[if (it.toInt() < charLocations.size) it.toInt()
 			else '\u0003'.toInt()]
-		}.sumBy { it!!.width - 8 }
-
-		return width shr 1
+		}.sumBy { it?.width?.minus(8) ?: 0 } shr 1
 	}
 
 	fun delete()

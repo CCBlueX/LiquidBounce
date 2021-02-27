@@ -18,7 +18,11 @@ object ServerUtils : MinecraftInstance()
 
 	@JvmStatic
 	val lastServerIp: String?
-		get() = if (lastServerData != null && !mc.isIntegratedServerRunning) lastServerData!!.serverIP else null
+		get()
+		{
+			val lastServerData = lastServerData
+			return if (lastServerData != null && !mc.isIntegratedServerRunning) lastServerData.serverIP else null
+		}
 
 	@JvmStatic
 	val remoteIp: String

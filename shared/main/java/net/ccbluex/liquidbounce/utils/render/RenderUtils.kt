@@ -697,7 +697,7 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun renderNameTag(nameTag: String?, x: Double, y: Double, z: Double)
+	fun renderNameTag(nameTag: String, x: Double, y: Double, z: Double)
 	{
 		val renderManager = mc.renderManager
 
@@ -714,7 +714,7 @@ object RenderUtils : MinecraftInstance()
 
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 
-		val width = Fonts.font35.getStringWidth(nameTag!!) shr 1
+		val width = Fonts.font35.getStringWidth(nameTag) shr 1
 
 		drawRect(-width - 1, -1, width + 1, Fonts.font35.fontHeight, Int.MIN_VALUE)
 		Fonts.font35.drawString(nameTag, -width.toFloat(), 1.5f, Color.WHITE.rgb, true)
