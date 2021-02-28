@@ -41,7 +41,7 @@ class NoRotateSet : Module()
 	//		}
 	//	}
 
-	override val tag: String?
+	override val tag: String
 		get()
 		{
 			val tagBuilder = StringJoiner(", ")

@@ -9,7 +9,10 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
-import net.ccbluex.liquidbounce.api.minecraft.util.*
+import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
+import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
+import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.api.minecraft.world.IChunk
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.api.minecraft.world.border.IWorldBorder
@@ -37,22 +40,13 @@ open class WorldImpl<out T : World>(val wrapped: T) : IWorld
 
 	override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean, ignoreBlockWithoutBoundingBox: Boolean, returnLastUncollidableBlock: Boolean): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock)?.wrap()
 
-	override fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: (IEntity?) -> Boolean): Collection<IEntity>
-	{
-		return WrappedCollection(wrapped.getEntitiesInAABBexcluding(entityIn?.unwrap(), boundingBox.unwrap()) { predicate(it?.wrap()) }, IEntity::unwrap, Entity::wrap)
-	}
+	override fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: (IEntity?) -> Boolean): Collection<IEntity> = WrappedCollection(wrapped.getEntitiesInAABBexcluding(entityIn?.unwrap(), boundingBox.unwrap()) { predicate(it?.wrap()) }, IEntity::unwrap, Entity::wrap)
 
 	override fun getBlockState(blockPos: WBlockPos): IIBlockState = wrapped.getBlockState(blockPos.unwrap()).wrap()
 
-	override fun getEntitiesWithinAABBExcludingEntity(entity: IEntity?, bb: IAxisAlignedBB): Collection<IEntity>
-	{
-		return WrappedCollection(wrapped.getEntitiesWithinAABBExcludingEntity(entity?.unwrap(), bb.unwrap()), IEntity::unwrap, Entity::wrap)
-	}
+	override fun getEntitiesWithinAABBExcludingEntity(entity: IEntity?, bb: IAxisAlignedBB): Collection<IEntity> = WrappedCollection(wrapped.getEntitiesWithinAABBExcludingEntity(entity?.unwrap(), bb.unwrap()), IEntity::unwrap, Entity::wrap)
 
-	override fun getCollidingBoundingBoxes(entity: IEntity, bb: IAxisAlignedBB): Collection<IAxisAlignedBB>
-	{
-		return WrappedCollection(wrapped.getCollidingBoundingBoxes(entity.unwrap(), bb.unwrap()), IAxisAlignedBB::unwrap, AxisAlignedBB::wrap)
-	}
+	override fun getCollidingBoundingBoxes(entity: IEntity, bb: IAxisAlignedBB): Collection<IAxisAlignedBB> = WrappedCollection(wrapped.getCollidingBoundingBoxes(entity.unwrap(), bb.unwrap()), IAxisAlignedBB::unwrap, AxisAlignedBB::wrap)
 
 	override fun checkBlockCollision(aabb: IAxisAlignedBB): Boolean = wrapped.checkBlockCollision(aabb.unwrap())
 

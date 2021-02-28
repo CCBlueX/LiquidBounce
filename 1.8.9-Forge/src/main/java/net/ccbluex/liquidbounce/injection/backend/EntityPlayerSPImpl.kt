@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovementInput
 import net.minecraft.client.entity.EntityPlayerSP
 
-open class EntityPlayerSPImpl<T : EntityPlayerSP>(wrapped: T) : AbstractClientPlayerImpl<T>(wrapped), IEntityPlayerSP
+open class EntityPlayerSPImpl<out T : EntityPlayerSP>(wrapped: T) : AbstractClientPlayerImpl<T>(wrapped), IEntityPlayerSP
 {
 	override var horseJumpPowerCounter: Int
 		get() = wrapped.horseJumpPowerCounter

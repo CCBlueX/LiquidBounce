@@ -228,7 +228,7 @@ public abstract class MixinEntityRenderer
 			Vec3 interceptPos = null;
 
 			final float expandSize = 1.0F;
-			final List<Entity> entitiesInRay = mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(look.xCoord * blockReach, look.yCoord * blockReach, look.zCoord * blockReach).expand(expandSize, expandSize, expandSize), Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith()));
+			final List<Entity> entitiesInRay = mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(look.xCoord * blockReach, look.yCoord * blockReach, look.zCoord * blockReach).expand(expandSize, expandSize, expandSize), Predicates.and(EntitySelectors.NOT_SPECTATING, e -> e != null && e.canBeCollidedWith()));
 			double interceptPosDistance = hitvecDistance;
 
 			for (final Entity entityInRay : entitiesInRay)

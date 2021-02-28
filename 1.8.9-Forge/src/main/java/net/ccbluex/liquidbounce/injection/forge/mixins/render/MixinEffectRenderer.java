@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.particle.EntityParticleEmitter;
@@ -39,8 +40,7 @@ public abstract class MixinEffectRenderer
 	{
 		try
 		{
-			for (int i = 0; i < 4; ++i)
-				updateEffectLayer(i);
+			IntStream.range(0, 4).forEach(this::updateEffectLayer);
 
 			final Iterator<EntityParticleEmitter> it = particleEmitters.iterator();
 

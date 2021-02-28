@@ -162,7 +162,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			{
 				final Action action = sprinting ? Action.START_SPRINTING : Action.STOP_SPRINTING;
 
-				sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, action));
+				//noinspection ConstantConditions
+				sendQueue.addToSendQueue(new C0BPacketEntityAction((Entity) (Object) this, action));
 
 				serverSprintState = sprinting;
 			}
@@ -173,7 +174,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			{
 				final Action action = sneaking ? Action.START_SNEAKING : Action.STOP_SNEAKING;
 
-				sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, action));
+				//noinspection ConstantConditions
+				sendQueue.addToSendQueue(new C0BPacketEntityAction((Entity) (Object) this, action));
 
 				serverSneakState = sneaking;
 			}

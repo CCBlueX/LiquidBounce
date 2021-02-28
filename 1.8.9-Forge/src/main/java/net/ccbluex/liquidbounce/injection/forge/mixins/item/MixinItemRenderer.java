@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.item;
 
+import java.util.Locale;
+
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
@@ -36,12 +38,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Locale;
-
-@SuppressWarnings(
-{
-		"WeakerAccess", "MethodMayBeStatic", "DesignForExtension", "NumericCastThatLosesPrecision"
-})
+@SuppressWarnings({"WeakerAccess", "MethodMayBeStatic", "DesignForExtension"})
 @Mixin(ItemRenderer.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinItemRenderer

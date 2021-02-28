@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
+import java.util.stream.IntStream;
+
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.Render2DEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
@@ -65,11 +67,11 @@ public abstract class MixinGuiIngame
 			final int hotbarItemXPos = (sr.getScaledWidth() >> 1) - 90 + 2;
 			final int hotbarItemYPos = sr.getScaledHeight() - 16 - 3;
 
-			for (int j = 0; j < 9; ++j)
+			IntStream.range(0, 9).forEach(index ->
 			{
-				final int k = hotbarItemXPos + j * 20;
-				renderHotbarItem(j, k, hotbarItemYPos, partialTicks, entityPlayer);
-			}
+				final int xPos = hotbarItemXPos + index * 20;
+				renderHotbarItem(index, xPos, hotbarItemYPos, partialTicks, entityPlayer);
+			});
 
 			RenderHelper.disableStandardItemLighting();
 			GlStateManager.disableRescaleNormal();
