@@ -25,7 +25,7 @@ abstract class Shader(fragmentShader: String) : MinecraftInstance()
 
 		if (uniformsMap == null)
 		{
-			uniformsMap = HashMap()
+			uniformsMap = hashMapOf()
 			setupUniforms()
 		}
 

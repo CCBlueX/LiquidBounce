@@ -57,7 +57,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 	private var fontHeight = -1
 	private val charLocations = arrayOfNulls<CharLocation>(stopChar)
 
-	private val cachedStrings: HashMap<String, CachedFont> = HashMap()
+	private val cachedStrings = hashMapOf<String, CachedFont>()
 
 	private var textureID = -1
 	private var textureWidth = 0

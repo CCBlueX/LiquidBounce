@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import java.awt.Color
-import java.util.*
 
 @ModuleInfo(name = "ProphuntESP", description = "Allows you to see disguised players in PropHunt.", category = ModuleCategory.RENDER)
 class ProphuntESP : Module()
@@ -46,7 +45,7 @@ class ProphuntESP : Module()
 	/**
 	 * Variables
 	 */
-	val blocks: MutableMap<WBlockPos, Long> = HashMap()
+	val blocks = hashMapOf<WBlockPos, Long>()
 
 	override fun onDisable()
 	{

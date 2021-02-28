@@ -23,11 +23,10 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL14
 import java.awt.Color
-import java.util.*
 
 object RenderUtils : MinecraftInstance()
 {
-	private val glCapMap: MutableMap<Int, Boolean> = HashMap()
+	private val glCapMap = hashMapOf<Int, Boolean>()
 	private val DISPLAY_LISTS_2D = IntArray(4)
 
 	val ICONS: IResourceLocation = classProvider.createResourceLocation("textures/gui/icons.png")
