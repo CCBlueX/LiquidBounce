@@ -53,7 +53,7 @@ object CommandHelp {
                 // Max page
                 val maxPage = ceil(commands.size / 8.0).roundToInt()
                 if (page > maxPage) {
-                    throw CommandException("The page number you have entered exceeds the maximum number of help pages, it may at most be $maxPage.")
+                    throw CommandException("The page number you have entered exceeds the maximum number of available help pages, it may at most be $maxPage.")
                 }
 
                 // Print out help page
