@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
+import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -30,7 +31,7 @@ class Velocity : Module() {
      */
     private val horizontalValue = FloatValue("Horizontal", 0F, 0F, 1F)
     private val verticalValue = FloatValue("Vertical", 0F, 0F, 1F)
-    private val modeValue = ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero",
+    private val modeValue = ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "AACv4",
             "Reverse", "SmoothReverse", "Jump", "Glitch"), "Simple")
 
     // Reverse
@@ -40,6 +41,9 @@ class Velocity : Module() {
     // AAC Push
     private val aacPushXZReducerValue = FloatValue("AACPushXZReducer", 2F, 1F, 3F)
     private val aacPushYReducerValue = BoolValue("AACPushYReducer", true)
+
+    // AAc v4
+    private val aacv4MotionReducerValue = FloatValue("AACv4MotionReducer", 0.62F,0F,1F)
 
     /**
      * VALUES
@@ -119,6 +123,14 @@ class Velocity : Module() {
                 thePlayer.motionZ *= horizontalValue.get()
                 //mc.thePlayer.motionY *= verticalValue.get() ?
                 velocityInput = false
+            }
+
+            "aacv4" -> {
+                if (thePlayer.hurtTime>0 && !thePlayer.onGround){
+                    val reduce=aacv4MotionReducerValue.get();
+                    thePlayer.motionX *= reduce
+                    thePlayer.motionZ *= reduce
+                }
             }
 
             "aacpush" -> {
