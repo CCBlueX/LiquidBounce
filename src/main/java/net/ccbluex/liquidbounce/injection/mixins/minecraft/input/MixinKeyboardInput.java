@@ -49,8 +49,8 @@ public class MixinKeyboardInput extends Input {
             this.jumping = (ModuleInventoryMove.INSTANCE.getJump() ? (isKeyDown(this.settings.keyJump.getDefaultKey().getCode()) || this.settings.keyJump.isPressed()) : this.settings.keyJump.isPressed());
             this.sneaking = (ModuleInventoryMove.INSTANCE.getSneak() ? (isKeyDown(this.settings.keySneak.getDefaultKey().getCode()) || this.settings.keySneak.isPressed()) : this.settings.keySneak.isPressed());
             if (slowDown) {
-                this.movementSideways = (float)((double)this.movementSideways * 0.3D);
-                this.movementForward = (float)((double)this.movementForward * 0.3D);
+                this.movementSideways = (float)((double)this.movementSideways * 0.3);
+                this.movementForward = (float)((double)this.movementForward * 0.3);
             }
         } else {
             this.pressingForward = this.settings.keyForward.isPressed();
@@ -62,8 +62,8 @@ public class MixinKeyboardInput extends Input {
             this.jumping = this.settings.keyJump.isPressed();
             this.sneaking = this.settings.keySneak.isPressed();
             if (slowDown) {
-                this.movementSideways = (float)((double)this.movementSideways * 0.3D);
-                this.movementForward = (float)((double)this.movementForward * 0.3D);
+                this.movementSideways = (float)((double)this.movementSideways * 0.3);
+                this.movementForward = (float)((double)this.movementForward * 0.3);
             }
         }
     }
