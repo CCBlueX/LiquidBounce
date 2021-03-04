@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiCactus
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
 import net.ccbluex.liquidbounce.features.module.modules.render.*
@@ -66,6 +66,7 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleHud,
             ModuleClickGui,
             ModuleFly,
+            ModuleInventoryMove,
             ModuleVelocity,
             ModuleSpeed,
             ModuleAutoRespawn,
@@ -76,8 +77,7 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleItemESP,
             ModuleCriticals,
             ModuleAntiCactus,
-            ModuleHitbox,
-            ModuleInventoryMove
+            ModuleHitbox
         )
 
         // TODO: Figure out how to link modules list with configurable
