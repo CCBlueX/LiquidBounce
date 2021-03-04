@@ -75,7 +75,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleItemESP,
             ModuleCriticals,
             ModuleAntiCactus,
-            ModuleHitbox
+            ModuleHitbox,
+            ModuleInventoryMove
         )
 
         // TODO: Figure out how to link modules list with configurable
