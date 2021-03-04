@@ -403,12 +403,10 @@ class RotationUtils : MinecraftInstance(), Listenable
 			// Apply Jitter
 			if (vecRotation != null && jitter)
 			{
-				vecRotation.rotation.yaw = vecRotation.rotation.yaw + yawJitterAmount
+				vecRotation.rotation.yaw += yawJitterAmount
 
 				// Enforce pitch to 90 ~ -90
-				var pitch = vecRotation.rotation.pitch + pitchJitterAmount
-				if (pitch > 90) pitch = 90f else if (pitch < -90) pitch = -90f
-				vecRotation.rotation.pitch = pitch
+				vecRotation.rotation.pitch = (vecRotation.rotation.pitch + pitchJitterAmount).coerceAtLeast(-90f).coerceAtMost(90f)
 			}
 
 			return vecRotation

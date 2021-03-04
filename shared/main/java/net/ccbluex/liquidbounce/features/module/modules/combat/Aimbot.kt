@@ -229,9 +229,9 @@ class Aimbot : Module()
 			val minPredictSize = minPredictSizeValue.get()
 			val maxPredictSize = maxPredictSizeValue.get()
 
-			val xPredict = (entity.posX - entity.prevPosX - (thePlayer.posX - thePlayer.prevPosX)) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
-			val yPredict = (entity.posY - entity.prevPosY - (thePlayer.posY - thePlayer.prevPosY)) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
-			val zPredict = (entity.posZ - entity.prevPosZ - (thePlayer.posZ - thePlayer.prevPosZ)) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
+			val xPredict = (entity.posX - entity.prevPosX) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
+			val yPredict = (entity.posY - entity.prevPosY) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
+			val zPredict = (entity.posZ - entity.prevPosZ) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
 
 			targetBB = targetBB.offset(xPredict, yPredict, zPredict)
 		}

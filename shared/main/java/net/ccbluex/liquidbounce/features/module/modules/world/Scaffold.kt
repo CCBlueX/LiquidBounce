@@ -545,9 +545,9 @@ class Scaffold : Module()
 		val provider = classProvider
 
 		val heldItem = thePlayer.heldItem
-		val isNotHeldItemBlock: Boolean = heldItem == null || !provider.isItemBlock(heldItem.item)
+		val heldItemIsNotBlock: Boolean = heldItem == null || !provider.isItemBlock(heldItem.item)
 
-		if (if (autoBlockValue.get().equals("Off", true)) isNotHeldItemBlock else InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0) == -1 && isNotHeldItemBlock) return
+		if (if (autoBlockValue.get().equals("Off", true)) heldItemIsNotBlock else InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get()) == -1 && heldItemIsNotBlock) return
 
 		val groundSearchDepth = 0.2
 
@@ -617,7 +617,7 @@ class Scaffold : Module()
 
 			val inventoryContainer = thePlayer.inventoryContainer
 
-			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(theWorld, inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0)
+			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(theWorld, inventoryContainer, autoBlockFullCubeOnlyValue.get())
 			if (autoBlockSlot == -1) return
 
 			autoBlock = inventoryContainer.getSlot(autoBlockSlot).stack

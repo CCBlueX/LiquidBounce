@@ -87,7 +87,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 		fun hasSpaceHotbar(inventory: IInventoryPlayer): Boolean = (36..44).map(inventory::getStackInSlot).any { it == null }
 
-		fun findAutoBlockBlock(theWorld: IWorldClient, container: IContainer, autoblockFullcubeOnly: Boolean, boundingBoxYLimit: Double): Int
+		fun findAutoBlockBlock(theWorld: IWorldClient, container: IContainer, autoblockFullcubeOnly: Boolean, boundingBoxYLimit: Double = 0.0): Int
 		{
 			val hotbarSlots: MutableList<Int> = ArrayList(9)
 
@@ -104,7 +104,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 				}
 			}
 
-			val pred = if (boundingBoxYLimit == 0.0) hotbarSlots.firstOrNull()
+			(if (boundingBoxYLimit == 0.0) hotbarSlots.firstOrNull()
 			else hotbarSlots.filter {
 				val block = container.getSlot(it).stack?.item!!.asItemBlock().block
 				val box = block.getCollisionBoundingBox(theWorld, ORIGIN, block.defaultState!!)
@@ -113,14 +113,12 @@ class InventoryUtils : MinecraftInstance(), Listenable
 			}.maxBy {
 				val block = container.getSlot(it).stack?.item!!.asItemBlock().block
 				block.getBlockBoundsMaxY() - block.getBlockBoundsMinY()
-			}
-
-			if (pred != null) return pred
-
-			hotbarSlots.clear() // Reuse list
+			})?.let { return@findAutoBlockBlock it }
 
 			if (!autoblockFullcubeOnly)
 			{
+				hotbarSlots.clear() // Reuse list
+
 				(36..44).forEach { i ->
 					val itemStack = container.getSlot(i).stack
 					if (itemStack != null && provider.isItemBlock(itemStack.item) && itemStack.stackSize > 0)
@@ -132,7 +130,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 					}
 				}
 
-				val pred2 = if (boundingBoxYLimit == 0.0) hotbarSlots.firstOrNull()
+				(if (boundingBoxYLimit == 0.0) hotbarSlots.firstOrNull()
 				else hotbarSlots.filter {
 					val block = container.getSlot(it).stack?.item!!.asItemBlock().block
 					val box = block.getCollisionBoundingBox(theWorld, ORIGIN, block.defaultState!!)
@@ -141,9 +139,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 				}.maxBy {
 					val block = container.getSlot(it).stack?.item!!.asItemBlock().block
 					block.getBlockBoundsMaxY() - block.getBlockBoundsMinY()
-				}
-
-				if (pred2 != null) return pred2
+				})?.let { return@findAutoBlockBlock it }
 			}
 
 			return -1

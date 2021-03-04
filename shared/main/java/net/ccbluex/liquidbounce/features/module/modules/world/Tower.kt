@@ -174,6 +174,7 @@ class Tower : Module()
 
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
+		val timer = mc.timer
 
 		// OnJump
 		if (onJumpValue.get() && !mc.gameSettings.keyBindJump.isKeyDown)
@@ -188,8 +189,8 @@ class Tower : Module()
 
 		active = true
 
+		if (!modeValue.get().equals("AAC3.3.9", ignoreCase = true)) timer.timerSpeed = timerValue.get()
 
-		mc.timer.timerSpeed = timerValue.get()
 		val eventState = event.eventState
 
 		// Place
@@ -205,7 +206,7 @@ class Tower : Module()
 
 			val heldItem = thePlayer.heldItem
 
-			if (if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0) != -1 || heldItem != null && provider.isItemBlock(heldItem.item) else heldItem != null && provider.isItemBlock(heldItem.item))
+			if (if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get()) != -1 || heldItem != null && provider.isItemBlock(heldItem.item) else heldItem != null && provider.isItemBlock(heldItem.item))
 			{
 				if (!stopWhenBlockAbove.get() || provider.isBlockAir(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)))) move()
 
@@ -329,7 +330,7 @@ class Tower : Module()
 
 				timer.timerSpeed = 1f
 
-				if (thePlayer.motionY < 0)
+				if (thePlayer.motionY < 0.0)
 				{
 					// Fast down
 					thePlayer.motionY -= 0.00000945
@@ -337,15 +338,19 @@ class Tower : Module()
 				}
 			}
 
-			"aac3.6.4" -> if (thePlayer.ticksExisted % 4 == 1)
+			"aac3.6.4" -> when (thePlayer.ticksExisted % 4)
 			{
-				thePlayer.motionY = 0.4195464
-				thePlayer.setPosition(posX - 0.035, posY, posZ)
-			}
-			else if (thePlayer.ticksExisted % 4 == 0)
-			{
-				thePlayer.motionY = -0.5
-				thePlayer.setPosition(posX + 0.035, posY, posZ)
+				0 ->
+				{
+					thePlayer.motionY = -0.5
+					thePlayer.setPosition(posX + 0.035, posY, posZ)
+				}
+
+				1 ->
+				{
+					thePlayer.motionY = 0.4195464
+					thePlayer.setPosition(posX - 0.035, posY, posZ)
+				}
 			}
 		}
 	}
@@ -376,7 +381,7 @@ class Tower : Module()
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 
-			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), 0.0)
+			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get())
 			if (blockSlot == -1) return
 
 			when (autoBlockValue.get())

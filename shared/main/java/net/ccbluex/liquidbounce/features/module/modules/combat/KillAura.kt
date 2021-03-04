@@ -743,7 +743,7 @@ class KillAura : Module()
 				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
 				else -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
 			} <= fov
-		}.filter { thePlayer.getDistanceToEntityBox(it) <= getMaxTargetRange() }.toList().forEach { targets.add(it) }
+		}.filter { thePlayer.getDistanceToEntityBox(it) <= maxTargetRange }.toList().forEach { targets.add(it) }
 
 		// Sort targets by priority
 		when (priorityValue.get().toLowerCase())
@@ -870,9 +870,9 @@ class KillAura : Module()
 			val minPredictSize = minPredictSizeValue.get()
 			val maxPredictSize = maxPredictSizeValue.get()
 
-			val xPredict = (entity.posX - entity.prevPosX - (thePlayer.posX - thePlayer.prevPosX)) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
-			val yPredict = (entity.posY - entity.prevPosY - (thePlayer.posY - thePlayer.prevPosY)) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
-			val zPredict = (entity.posZ - entity.prevPosZ - (thePlayer.posZ - thePlayer.prevPosZ)) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
+			val xPredict = (entity.posX - entity.prevPosX) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
+			val yPredict = (entity.posY - entity.prevPosY) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
+			val zPredict = (entity.posZ - entity.prevPosZ) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
 
 			targetBox = targetBox.offset(xPredict, yPredict, zPredict)
 		}
@@ -895,7 +895,7 @@ class KillAura : Module()
 			else -> 0
 		}
 
-		if (jitterValue.get() && (thePlayer.getDistanceToEntityBox(entity) <= min(getMaxAttackRange(), if (fakeSwingValue.get()) swingRange else Float.MAX_VALUE))) flags = flags or RotationUtils.JITTER
+		if (jitterValue.get() && (thePlayer.getDistanceToEntityBox(entity) <= max(maxAttackRange, if (fakeSwingValue.get()) swingRange else Float.MIN_VALUE))) flags = flags or RotationUtils.JITTER
 		if (playerPredictValue.get()) flags = flags or RotationUtils.PLAYER_PREDICT
 		if (thePlayer.getDistanceToEntityBox(entity) <= throughWallsRangeValue.get()) flags = flags or RotationUtils.SKIP_VISIBLE_CHECK
 
@@ -960,7 +960,7 @@ class KillAura : Module()
 		val livingRaycast = livingRaycastValue.get()
 		val raycastIgnored = raycastIgnoredValue.get()
 
-		val reach = min(getMaxAttackRange().toDouble(), thePlayer.getDistanceToEntityBox(target ?: return)) + 1
+		val reach = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(target ?: return)) + 1
 
 		val currentTarget = currentTarget
 
@@ -1019,7 +1019,7 @@ class KillAura : Module()
 				val pitchCos = -func.cos(-pitchRadians)
 				val pitchSin = func.sin(-pitchRadians)
 
-				val range = min(getMaxAttackRange().toDouble(), thePlayer.getDistanceToEntityBox(interactEntity)) + 1
+				val range = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(interactEntity)) + 1
 				val lookAt = positionEye.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
 
 				val movingObject = boundingBox.calculateIntercept(positionEye, lookAt)
@@ -1071,9 +1071,11 @@ class KillAura : Module()
 	/**
 	 * Range
 	 */
-	private fun getMaxAttackRange(): Float = max(attackRange, throughWallsRangeValue.get())
+	private val maxAttackRange: Float
+		get() = max(attackRange, throughWallsRangeValue.get())
 
-	private fun getMaxTargetRange(): Float = max(aimRange, max(getMaxAttackRange(), if (fakeSwingValue.get()) swingRange else 0f))
+	private val maxTargetRange: Float
+		get() = max(aimRange, max(maxAttackRange, if (fakeSwingValue.get()) swingRange else 0f))
 
 	private fun getAttackRange(thePlayer: IEntityPlayerSP, entity: IEntity): Float
 	{

@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import kotlin.math.ceil
 
 @ModuleInfo(name = "Eagle", description = "Makes you eagle (a.k.a. FastBridge).", category = ModuleCategory.PLAYER)
 class Eagle : Module()
@@ -22,7 +23,7 @@ class Eagle : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		mc.gameSettings.keyBindSneak.pressed = theWorld.getBlockState(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)).block == classProvider.getBlockEnum(BlockType.AIR)
+		mc.gameSettings.keyBindSneak.pressed = theWorld.getBlockState(WBlockPos(thePlayer.posX, ceil(thePlayer.posY) - 1.0, thePlayer.posZ)).block == classProvider.getBlockEnum(BlockType.AIR)
 	}
 
 	override fun onDisable()
