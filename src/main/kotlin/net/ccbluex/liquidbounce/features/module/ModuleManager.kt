@@ -67,6 +67,7 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleClickGui,
             ModuleFly,
             ModuleInventoryMove,
+            ModuleLiquidWalk,
             ModuleVelocity,
             ModuleSpeed,
             ModuleAutoRespawn,
