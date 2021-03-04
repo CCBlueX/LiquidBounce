@@ -1,0 +1,64 @@
+package net.ccbluex.liquidbounce.injection.forge.mixins.movement;
+
+import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.MovementInputFromOptions;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.input.Keyboard;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import net.minecraft.util.MovementInput;
+import net.minecraft.client.gui.GuiChat;
+import net.minecraft.client.settings.GameSettings;
+
+@Mixin(MovementInputFromOptions.class)
+@SideOnly(Side.CLIENT)
+public abstract class MixinMovementInputFromOptions extends MovementInput {
+    @Shadow
+    @Final
+    private GameSettings gameSettings;
+
+    @Overwrite
+    public void updatePlayerMoveState()
+    {
+        if (LiquidBounce.moduleManager.getModule(InventoryMove.class).getState() && !(Minecraft.getMinecraft().currentScreen instanceof GuiChat)) {
+            this.moveStrafe = 0.0f;
+            this.moveForward = 0.0f;
+            if (Keyboard.isKeyDown(this.gameSettings.keyBindForward.getKeyCode()) || this.gameSettings.keyBindForward.isKeyDown())
+                this.moveForward += 1.0f;
+            if (Keyboard.isKeyDown(this.gameSettings.keyBindBack.getKeyCode()) || this.gameSettings.keyBindBack.isKeyDown())
+                this.moveForward -= 1.0f;
+            if (Keyboard.isKeyDown(this.gameSettings.keyBindLeft.getKeyCode()) || this.gameSettings.keyBindLeft.isKeyDown())
+                this.moveStrafe += 1.0f;
+            if (Keyboard.isKeyDown(this.gameSettings.keyBindRight.getKeyCode()) || this.gameSettings.keyBindRight.isKeyDown())
+                this.moveStrafe -= 1.0f;
+            this.jump = Keyboard.isKeyDown(this.gameSettings.keyBindJump.getKeyCode()) || this.gameSettings.keyBindJump.isKeyDown();
+            this.sneak = this.gameSettings.keyBindSneak.isKeyDown();
+            if (this.sneak) {
+                this.moveStrafe = (float) ((double) this.moveStrafe * 0.3);
+                this.moveForward = (float) ((double) this.moveForward * 0.3);
+            }
+        } else {
+            this.moveStrafe = 0.0f;
+            this.moveForward = 0.0f;
+            if (this.gameSettings.keyBindForward.isKeyDown())
+                this.moveForward += 1.0f;
+            if (this.gameSettings.keyBindBack.isKeyDown())
+                this.moveForward -= 1.0f;
+            if (this.gameSettings.keyBindLeft.isKeyDown())
+                this.moveStrafe += 1.0f;
+            if (this.gameSettings.keyBindRight.isKeyDown())
+                this.moveStrafe -= 1.0f;
+            this.jump = this.gameSettings.keyBindJump.isKeyDown();
+            this.sneak = this.gameSettings.keyBindSneak.isKeyDown();
+            if (this.sneak) {
+                this.moveStrafe = (float) ((double) this.moveStrafe * 0.3);
+                this.moveForward = (float) ((double) this.moveForward * 0.3);
+            }
+        }
+    }
+}
