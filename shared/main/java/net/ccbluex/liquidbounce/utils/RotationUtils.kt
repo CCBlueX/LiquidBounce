@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition.WMovingObjectType
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.PI
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.cos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.sin
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.toDegrees
@@ -34,14 +35,6 @@ import kotlin.math.sqrt
 
 class RotationUtils : MinecraftInstance(), Listenable
 {
-	enum class SearchCenterMode
-	{
-		SEARCH_GOOD_CENTER,
-		LOCK_CENTER,
-		OUT_BORDER,
-		RANDOM_GOOD_CENTER
-	}
-
 	data class JitterData(val yawRate: Int, val pitchRate: Int, val minYaw: Float, val maxYaw: Float, val minPitch: Float, val maxPitch: Float)
 
 	/**
@@ -100,6 +93,19 @@ class RotationUtils : MinecraftInstance(), Listenable
 
 	companion object
 	{
+		// Flag constants for searchCenter() and faceBow()
+		const val LOCK_CENTER = 0b1
+		const val OUT_BORDER = 0b10
+		const val RANDOM_CENTER = 0b100
+
+		const val JITTER = 0b1000
+		const val SKIP_VISIBLE_CHECK = 0b10000
+
+		const val PLAYER_PREDICT = 0b100000
+		const val ENEMY_PREDICT = 0b1000000
+
+		const val SILENT_ROTATION = 0b10000000
+
 		private val random = Random()
 		private var keepLength = 0
 		private var minResetTurnSpeed = 180.0f
@@ -177,7 +183,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * @param playerPrediction
 		 * enemyPrediction new player position
 		 */
-		fun faceBow(thePlayer: IEntityPlayerSP, target: IEntity, minTurnSpeed: Float, maxTurnSpeed: Float, minSmoothingRatio: Float, maxSmoothingRatio: Float, minPlayerPredictSize: Float, maxPlayerPredictSize: Float, enemyPrediction: Boolean, playerPrediction: Boolean, silentRotation: Boolean)
+		fun faceBow(thePlayer: IEntityPlayerSP, target: IEntity, minTurnSpeed: Float, maxTurnSpeed: Float, minSmoothingRatio: Float, maxSmoothingRatio: Float, minPlayerPredictSize: Float, maxPlayerPredictSize: Float, flags: Int)
 		{
 			val targetPosX = target.posX
 			val targetPosY = target.posY
@@ -187,6 +193,9 @@ class RotationUtils : MinecraftInstance(), Listenable
 			distance -= distance % 0.8
 
 			val sprinting = target.sprinting
+
+			val playerPrediction = flags and PLAYER_PREDICT != 0
+			val enemyPrediction = flags and ENEMY_PREDICT != 0
 
 			// Calculate the (predicted) target position
 			val posX = targetPosX + (if (enemyPrediction) distance / 0.8 * ((targetPosX - target.lastTickPosX) * 0.4) * if (sprinting) 1.25f else 1f else 0.0) - (thePlayer.posX + if (playerPrediction) (thePlayer.posX - thePlayer.prevPosX) * nextFloat(minPlayerPredictSize, maxPlayerPredictSize) else 0.0)
@@ -205,7 +214,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 			val limitedRotation = limitAngleChange(Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch), rotation, nextFloat(min(minTurnSpeed, maxTurnSpeed), max(minTurnSpeed, maxTurnSpeed)), nextFloat(min(minSmoothingRatio, maxSmoothingRatio), max(minSmoothingRatio, maxSmoothingRatio)))
 
 			// Apply Rotation
-			if (silentRotation)
+			if (flags and SILENT_ROTATION != 0)
 			{
 				setTargetRotation(limitedRotation)
 				setNextResetTurnSpeed(minTurnSpeed, maxTurnSpeed)
@@ -282,7 +291,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * count of step to search the good center. (*Warning If you set this value too low, it will make your minecraft SO SLOW AND SLOW.*) default is 0.2D
 		 * @return                   center
 		 */
-		fun searchCenter(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetBox: IAxisAlignedBB, mode: SearchCenterMode, jitter: Boolean, jitterData: JitterData, playerPredict: Boolean, minPlayerPredict: Float, maxPlayerPredict: Float, shouldAttackThroughWalls: Boolean, distance: Float, hitboxDecrement: Double, searchSensitivity: Double): VecRotation?
+		fun searchCenter(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetBox: IAxisAlignedBB, flags: Int, jitterData: JitterData, minPlayerPredict: Float, maxPlayerPredict: Float, distance: Float, hitboxDecrement: Double, searchSensitivity: Double): VecRotation?
 		{
 			val randomVec: WVec3
 			val eyes = thePlayer.getPositionEyes(1.0f)
@@ -295,15 +304,17 @@ class RotationUtils : MinecraftInstance(), Listenable
 			val minZ = targetBox.minZ
 			val maxZ = targetBox.maxZ
 
-			when (mode)
+			val playerPredict = flags and PLAYER_PREDICT != 0
+
+			when
 			{
-				SearchCenterMode.LOCK_CENTER ->
+				flags and LOCK_CENTER != 0 ->
 				{
 					randomVec = getCenter(targetBox)
 					return VecRotation(randomVec, toRotation(thePlayer, randomVec, minPlayerPredict, maxPlayerPredict, playerPredict))
 				}
 
-				SearchCenterMode.OUT_BORDER ->
+				flags and OUT_BORDER != 0 ->
 				{
 					randomVec = WVec3(minX + (maxX - minX) * (x * 0.3 + 1.0), minY + (maxY - minY) * (y * 0.3 + 1.0), minZ + (maxZ - minZ) * (z * 0.3 + 1.0))
 					return VecRotation(randomVec, toRotation(thePlayer, randomVec, minPlayerPredict, maxPlayerPredict, playerPredict))
@@ -319,6 +330,8 @@ class RotationUtils : MinecraftInstance(), Listenable
 			val randomRotation = toRotation(thePlayer, randomVec, minPlayerPredict, maxPlayerPredict, playerPredict)
 			var yawJitterAmount = 0f
 			var pitchJitterAmount = 0f
+
+			val jitter = flags and JITTER != 0
 
 			// Calculate jitter amount
 			if (jitter)
@@ -352,6 +365,9 @@ class RotationUtils : MinecraftInstance(), Listenable
 
 			val fixedHitboxDecrement = hitboxDecrement.coerceAtLeast(0.0).coerceAtMost(1.0) // Last Fail-safe
 
+			val skipVisibleCheck = flags and SKIP_VISIBLE_CHECK != 0
+			val randomCenter = flags and RANDOM_CENTER != 0
+
 			var xSearch = fixedHitboxDecrement
 			while (xSearch < 1 - fixedHitboxDecrement)
 			{
@@ -370,12 +386,12 @@ class RotationUtils : MinecraftInstance(), Listenable
 							continue
 						}
 
-						if (shouldAttackThroughWalls || isVisible(theWorld, thePlayer, vec3))
+						if (skipVisibleCheck || isVisible(theWorld, thePlayer, vec3))
 						{
 							val rotation = toRotation(thePlayer, vec3, minPlayerPredict, maxPlayerPredict, playerPredict)
 							val currentVec = VecRotation(vec3, rotation)
 
-							if (vecRotation == null || (if (mode == SearchCenterMode.RANDOM_GOOD_CENTER) getRotationDifference(currentVec.rotation, randomRotation) < getRotationDifference(vecRotation.rotation, randomRotation) else getRotationDifference(currentVec.rotation) < getRotationDifference(vecRotation.rotation))) vecRotation = currentVec
+							if (vecRotation == null || (if (randomCenter) getRotationDifference(currentVec.rotation, randomRotation) < getRotationDifference(vecRotation.rotation, randomRotation) else getRotationDifference(currentVec.rotation) < getRotationDifference(vecRotation.rotation))) vecRotation = currentVec
 						}
 						zSearch += searchSensitivity
 					}
@@ -505,8 +521,8 @@ class RotationUtils : MinecraftInstance(), Listenable
 			val yawRadians = toRadians(rotation.yaw)
 			val pitchRadians = toRadians(rotation.pitch)
 
-			val yawCos = cos(-yawRadians - Math.PI.toFloat())
-			val yawSin = sin(-yawRadians - Math.PI.toFloat())
+			val yawCos = cos(-yawRadians - PI)
+			val yawSin = sin(-yawRadians - PI)
 
 			val pitchCos = -cos(-pitchRadians)
 			val pitchSin = sin(-pitchRadians)

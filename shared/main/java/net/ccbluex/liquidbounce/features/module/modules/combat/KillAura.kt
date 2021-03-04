@@ -877,36 +877,30 @@ class KillAura : Module()
 			targetBox = targetBox.offset(xPredict, yPredict, zPredict)
 		}
 
-		// Rotation Mode
-		val mode = when
-		{
-			lockCenterValue.get() -> RotationUtils.SearchCenterMode.LOCK_CENTER
-			outborderValue.get() && !attackTimer.hasTimePassed(attackDelay shr 1) -> RotationUtils.SearchCenterMode.OUT_BORDER
-			randomCenterValue.get() -> RotationUtils.SearchCenterMode.RANDOM_GOOD_CENTER
-			else -> RotationUtils.SearchCenterMode.SEARCH_GOOD_CENTER
-		}
-
 		// Jitter
-		val jitterEnabled = jitterValue.get() && (thePlayer.getDistanceToEntityBox(entity) <= min(getMaxAttackRange(), if (fakeSwingValue.get()) swingRange else Float.MAX_VALUE))
-		val jitterYawRate = jitterRateYaw.get()
-		val jitterPitchRate = jitterRatePitch.get()
-		val jitterMinYaw = minYawJitterStrengthValue.get()
-		val jitterMaxYaw = maxYawJitterStrengthValue.get()
-		val jitterMinPitch = minPitchJitterStrengthValue.get()
-		val jitterMaxPitch = maxPitchJitterStrengthValue.get()
-		val jitterData = RotationUtils.JitterData(jitterYawRate, jitterPitchRate, jitterMinYaw, jitterMaxYaw, jitterMinPitch, jitterMaxPitch)
+		val jitterData = RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get())
 
-		val canAttackThroughWalls = thePlayer.getDistanceToEntityBox(entity) <= throughWallsRangeValue.get()
 		val hitboxDecrement = hitboxDecrementValue.get().toDouble()
 		val searchSensitivity = centerSearchSensitivityValue.get().toDouble()
 
-		// Player Predict
-		val playerPrediction = playerPredictValue.get()
-		val minPlayerPredictSize = minPlayerPredictSizeValue.get()
-		val maxPlayerPredictSize = maxPlayerPredictSizeValue.get()
+		// Build the bit mask
+		var flags = 0
+
+		// Apply rotation mode to flags
+		flags = flags or when
+		{
+			lockCenterValue.get() -> RotationUtils.LOCK_CENTER
+			outborderValue.get() && !attackTimer.hasTimePassed(attackDelay shr 1) -> RotationUtils.OUT_BORDER
+			randomCenterValue.get() -> RotationUtils.RANDOM_CENTER
+			else -> 0
+		}
+
+		if (jitterValue.get() && (thePlayer.getDistanceToEntityBox(entity) <= min(getMaxAttackRange(), if (fakeSwingValue.get()) swingRange else Float.MAX_VALUE))) flags = flags or RotationUtils.JITTER
+		if (playerPredictValue.get()) flags = flags or RotationUtils.PLAYER_PREDICT
+		if (thePlayer.getDistanceToEntityBox(entity) <= throughWallsRangeValue.get()) flags = flags or RotationUtils.SKIP_VISIBLE_CHECK
 
 		// Search
-		val (_, rotation) = RotationUtils.searchCenter(theWorld, thePlayer, targetBox, mode, jitterEnabled, jitterData, playerPrediction, minPlayerPredictSize, maxPlayerPredictSize, canAttackThroughWalls, if (isAttackRotation) attackRange else aimRange, hitboxDecrement, searchSensitivity) ?: return false
+		val (_, rotation) = RotationUtils.searchCenter(theWorld, thePlayer, targetBox, flags, jitterData, minPlayerPredictSizeValue.get(), maxPlayerPredictSizeValue.get(), if (isAttackRotation) attackRange else aimRange, hitboxDecrement, searchSensitivity) ?: return false
 
 		fakeYaw = rotation.yaw
 		fakePitch = rotation.pitch

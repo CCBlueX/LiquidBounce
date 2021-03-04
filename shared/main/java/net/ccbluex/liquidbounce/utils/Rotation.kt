@@ -150,8 +150,9 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
 			calcStrafe *= speed
 			calcForward *= speed
 
-			val yawSin = WMathHelper.sin(WMathHelper.toRadians(yaw))
-			val yawCos = WMathHelper.cos(WMathHelper.toRadians(yaw))
+			val yawRadians = WMathHelper.toRadians(yaw)
+			val yawSin = WMathHelper.sin(yawRadians)
+			val yawCos = WMathHelper.cos(yawRadians)
 
 			thePlayer.motionX += calcStrafe * yawCos - calcForward * yawSin
 			thePlayer.motionZ += calcForward * yawCos + calcStrafe * yawSin

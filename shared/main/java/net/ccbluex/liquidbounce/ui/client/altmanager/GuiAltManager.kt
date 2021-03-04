@@ -191,10 +191,13 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					status = "\u00A7cThe list is empty."
 					return
 				}
+
 				val randomInteger = Random().nextInt(altsList.accounts.size)
 				if (randomInteger < altsList.getSize()) altsList.selectedSlot = randomInteger
+
 				loginButton.enabled = false
 				randomButton.enabled = false
+
 				workers.execute {
 					try
 					{
@@ -506,39 +509,24 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					"\u00A7aYour name is now \u00A7b\u00A7l$userName\u00A7c."
 				}
 
-				LoginResult.AUTHENTICATION_FAILURE ->
-				{
-					"\u00A7cAuthentication failed. Please check e-mail and password."
-				}
+				LoginResult.AUTHENTICATION_FAILURE -> "\u00A7cAuthentication failed. Please check e-mail and password."
 
-				LoginResult.AUTHENTICATION_UNAVAILABLE ->
-				{
-					"\u00A7cCannot contact authentication server."
-				}
+				LoginResult.AUTHENTICATION_UNAVAILABLE -> "\u00A7cCannot contact authentication server."
 
-				LoginResult.INVALID_ACCOUNT_DATA ->
+				LoginResult.INVALID_ACCOUNT_DATA -> when (minecraftAccount.serviceType)
 				{
-					when (minecraftAccount.serviceType)
+					AltServiceType.MCLEAKS, AltServiceType.MCLEAKS_INVALID ->
 					{
-						AltServiceType.MCLEAKS ->
-						{
-							minecraftAccount.serviceType = AltServiceType.MCLEAKS_INVALID
-							saveConfig()
-							"\u00A7cThe MCLeaks token has to be 16 characters long!"
-						}
+						minecraftAccount.serviceType = AltServiceType.MCLEAKS_INVALID
+						saveConfig()
+						"\u00A7cThe MCLeaks token has to be 16 characters long!"
+					}
 
-						AltServiceType.MCLEAKS_INVALID ->
-						{
-							saveConfig()
-							"\u00A7cThe MCLeaks token has to be 16 characters long!"
-						}
-
-						else ->
-						{
-							minecraftAccount.serviceType = AltServiceType.MOJANG_INVALID
-							saveConfig()
-							"\u00A7cInvalid username or wrong password or the account is get mojang-banned."
-						}
+					else ->
+					{
+						minecraftAccount.serviceType = AltServiceType.MOJANG_INVALID
+						saveConfig()
+						"\u00A7cInvalid username or wrong password or the account is get mojang-banned."
 					}
 				}
 

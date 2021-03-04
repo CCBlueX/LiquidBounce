@@ -6,7 +6,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -120,7 +123,7 @@ class Aimbot : Module()
 	/**
 	 * Should we aim through walls?
 	 */
-	private val aimThroughWallsValue = BoolValue("ThroughWalls", false)
+	private val throughWallsValue = BoolValue("ThroughWalls", false)
 
 	/**
 	 * Lock Center
@@ -202,27 +205,20 @@ class Aimbot : Module()
 
 		val range = rangeValue.get()
 		val fov = fovValue.get()
-		val canAimThroughWalls = aimThroughWallsValue.get()
+		val throughWalls = throughWallsValue.get()
 
 		val playerPredict = playerPredictValue.get()
 		val minPlayerPredictSize = minPlayerPredictSizeValue.get()
 		val maxPlayerPredictSize = maxPlayerPredictSizeValue.get()
 
-		target = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) <= fov }.filter { (canAimThroughWalls || thePlayer.canEntityBeSeen(it)) }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
+		target = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) <= fov }.filter { (throughWalls || thePlayer.canEntityBeSeen(it)) }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
 
 		val entity = target ?: return
 
 		if (!lockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, target, range.toDouble())) return
 
 		// Jitter
-		val jitterEnabled = jitterValue.get()
-		val jitterYawRate = jitterRateYaw.get()
-		val jitterPitchRate = jitterRatePitch.get()
-		val jitterMinYaw = minYawJitterStrengthValue.get()
-		val jiterMaxYaw = maxYawJitterStrengthValue.get()
-		val jiterMinPitch = minPitchJitterStrengthValue.get()
-		val jitterMaxPitch = maxPitchJitterStrengthValue.get()
-		val jitterData = RotationUtils.JitterData(jitterYawRate, jitterPitchRate, jitterMinYaw, jiterMaxYaw, jiterMinPitch, jitterMaxPitch)
+		val jitterData = RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get())
 
 		// Apply predict to target box
 
@@ -242,11 +238,19 @@ class Aimbot : Module()
 
 		// Search rotation
 		val currentRotation = Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch)
-		val searchMode = if (centerValue.get()) RotationUtils.SearchCenterMode.LOCK_CENTER else RotationUtils.SearchCenterMode.SEARCH_GOOD_CENTER
 		val hitboxDecrement = hitboxDecrementValue.get().toDouble()
 		val searchSensitivity = centerSearchSensitivityValue.get().toDouble()
 
-		val targetRotation = (RotationUtils.searchCenter(theWorld, thePlayer, targetBB, searchMode, jitterEnabled, jitterData, playerPredict, minPlayerPredictSize, maxPlayerPredictSize, canAimThroughWalls, range, hitboxDecrement, searchSensitivity) ?: return).rotation
+		// Build the bit mask
+		var flags = 0
+
+		if (centerValue.get()) flags = flags or RotationUtils.LOCK_CENTER
+		if (jitterValue.get()) flags = flags or RotationUtils.JITTER
+		if (throughWalls) flags = flags or RotationUtils.SKIP_VISIBLE_CHECK
+		if (playerPredict) flags = flags or RotationUtils.PLAYER_PREDICT
+		if (predictValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT
+
+		val targetRotation = (RotationUtils.searchCenter(theWorld, thePlayer, targetBB, flags, jitterData, minPlayerPredictSize, maxPlayerPredictSize, range, hitboxDecrement, searchSensitivity) ?: return).rotation
 
 		// TurnSpeed
 		val maxTurnSpeed = maxTurnSpeedValue.get()
@@ -270,7 +274,9 @@ class Aimbot : Module()
 	@EventTarget
 	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
-		if (fovValue.get() < 180) RenderUtils.drawFoVCircle(fovValue.get())
+		val fov = fovValue.get()
+
+		if (fov < 180) RenderUtils.drawFoVCircle(fov)
 	}
 
 	override val tag: String

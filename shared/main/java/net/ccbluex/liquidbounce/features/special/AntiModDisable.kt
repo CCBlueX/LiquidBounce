@@ -46,7 +46,7 @@ class AntiModDisable : MinecraftInstance(), Listenable
 				if (blockFMLPackets)
 				{
 					var fmlChannelName: String? = null
-					if (FMLChannelNames.any { channelName.equals(it, ignoreCase = true) }) fmlChannelName = channelName
+					if (FML_CHANNEL_NAMES.any { channelName.equals(it, ignoreCase = true) }) fmlChannelName = channelName
 					if (fmlChannelName != null) action(event, "FML packet ($fmlChannelName)")
 				}
 
@@ -68,9 +68,9 @@ class AntiModDisable : MinecraftInstance(), Listenable
 					text.contains("\u00A7c \u00A7r\u00A75 \u00A7r\u00A71 \u00A7r\u00A7f", ignoreCase = true) -> action(event, "CrackedVape Type A(type: \"&C &R &5 &R &1 &R &F\", text: \"$text\")")
 					CHATCOLOR_RESET_PATTERN.matcher(text).replaceAll(Matcher.quoteReplacement("")).contains("\u00A73 \u00A76 \u00A73 \u00A76 \u00A73 \u00A76 \u00A7d", ignoreCase = true) -> action(event, "CrackedVape Type B(type: \"&3 &6 &3 &6 &3 &6 &D\", text: \"$text\")")
 					text.contains("\u00A70\u00A71") && text.contains("\u00A7f\u00A7f", ignoreCase = true) -> action(event, "CrackedVape Type C(type: \"&0&1\" and \"&F&F\"; text: \"$text\")")
-					text.contains("\u00A70\u00A72\u00A70\u00A70\u00A7e\u00A7f", ignoreCase = true) -> action(event, "CrackedVape Type D(text: \"&0&2&0&0&E&F\", text: \"$text\")")
-					text.contains("\u00A70\u00A72\u00A71\u00A70\u00A7e\u00A7f", ignoreCase = true) -> action(event, "CrackedVape Type E(text: \"&0&2&1&0&E&F\", text: \"$text\")")
-					text.contains("\u00A70\u00A72\u00A71\u00A71\u00A7e\u00A7f", ignoreCase = true) -> action(event, "CrackedVape Type F(text: \"&0&2&1&1&E&F\", text: \"$text\")")
+					text.contains("\u00A70\u00A72\u00A70\u00A70\u00A7e\u00A7f", ignoreCase = true) -> action(event, "CrackedVape Type D(type: \"&0&2&0&0&E&F\", text: \"$text\")")
+					text.contains("\u00A70\u00A72\u00A71\u00A70\u00A7e\u00A7f", ignoreCase = true) -> action(event, "CrackedVape Type E(type: \"&0&2&1&0&E&F\", text: \"$text\")")
+					text.contains("\u00A70\u00A72\u00A71\u00A71\u00A7e\u00A7f", ignoreCase = true) -> action(event, "CrackedVape Type F(type: \"&0&2&1&1&E&F\", text: \"$text\")")
 					text.startsWith("\u00A70\u00A70", ignoreCase = true) && text.endsWith("\u00A7e\u00A7f", ignoreCase = true) -> action(event, "CrackedVape Type G(type: startsWith \"&0&0\" and endsWith \"&E&F\", text: \"$text\")")
 				}
 			}
@@ -102,7 +102,7 @@ class AntiModDisable : MinecraftInstance(), Listenable
 	companion object
 	{
 		private val CHATCOLOR_RESET_PATTERN = Pattern.compile("\u00A7r", Pattern.LITERAL)
-		private val FMLChannelNames = arrayOf("FML", "FORGE", "REGISTER")
+		private val FML_CHANNEL_NAMES = arrayOf("FML", "FORGE", "REGISTER")
 
 		var enabled = true
 

@@ -121,23 +121,22 @@ class BowAimbot : Module()
 
 		if (classProvider.isItemBow(thePlayer.itemInUse?.item))
 		{
-			val throughWalls = throughWallsValue.get()
-			val priorityMode = priorityValue.get()
-			val silentRotation = silentRotationValue.get()
-			val predict = predictValue.get()
-			val playerPredict = playerPredictValue.get()
+			// Build the bit mask
+			var flags = 0
+
+			if (throughWallsValue.get()) flags = flags or RotationUtils.SKIP_VISIBLE_CHECK
+			if (predictValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT
+			if (playerPredictValue.get()) flags = flags or RotationUtils.PLAYER_PREDICT
+			if (silentRotationValue.get()) flags = flags or RotationUtils.SILENT_ROTATION
+
 			val minPlayerPredictSize = minPlayerPredictSizeValue.get()
 			val maxPlayerPredictSize = maxPlayerPredictSizeValue.get()
-			val minTurnSpeed = minTurnSpeedValue.get()
-			val maxTurnSpeed = maxTurnSpeedValue.get()
-			val minSmoothingRatio = minAccelerationRatioValue.get()
-			val maxSmoothingRatio = maxAccelerationRatioValue.get()
 
-			val entity = getTarget(theWorld, thePlayer, throughWalls, priorityMode, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) ?: return
+			val entity = getTarget(theWorld, thePlayer, priorityValue.get(), minPlayerPredictSize, maxPlayerPredictSize, flags) ?: return
 
 			target = entity
 
-			RotationUtils.faceBow(thePlayer, entity, minTurnSpeed, maxTurnSpeed, minSmoothingRatio, maxSmoothingRatio, minPlayerPredictSize, maxPlayerPredictSize, predict, playerPredict, silentRotation)
+			RotationUtils.faceBow(thePlayer, entity, minTurnSpeedValue.get(), maxTurnSpeedValue.get(), minAccelerationRatioValue.get(), maxAccelerationRatioValue.get(), minPlayerPredictSize, maxPlayerPredictSize, flags)
 		}
 	}
 
@@ -149,16 +148,21 @@ class BowAimbot : Module()
 		if (currentTarget != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get()) RenderUtils.drawPlatform(currentTarget, Color(37, 126, 255, 70))
 	}
 
-	private fun getTarget(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, throughWalls: Boolean, priorityMode: String, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): IEntity?
+	private fun getTarget(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, priorityMode: String, minPlayerPredictSize: Float, maxPlayerPredictSize: Float, flags: Int): IEntity?
 	{
-		val targets = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { (throughWalls || thePlayer.canEntityBeSeen(it)) }
+		val ignoreVisibleCheck = flags and RotationUtils.SKIP_VISIBLE_CHECK != 0
+
+		// The Target Candidates
+		val targetCandidates = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { (ignoreVisibleCheck || thePlayer.canEntityBeSeen(it)) }
+
+		val playerPredict = flags and RotationUtils.PLAYER_PREDICT != 0
 
 		return when (priorityMode.toLowerCase())
 		{
-			"distance" -> targets.minBy(thePlayer::getDistanceToEntity)
-			"serverdirection" -> targets.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
-			"clientdirection" -> targets.minBy { RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
-			"health" -> targets.minBy { it.asEntityLivingBase().health }
+			"distance" -> targetCandidates.minBy(thePlayer::getDistanceToEntity)
+			"serverdirection" -> targetCandidates.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
+			"clientdirection" -> targetCandidates.minBy { RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
+			"health" -> targetCandidates.minBy { it.asEntityLivingBase().health }
 			else -> null
 		}
 	}
