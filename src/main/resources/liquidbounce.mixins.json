@@ -13,6 +13,7 @@
     "minecraft.entity.MixinEntity",
     "minecraft.gui.MixinInGameHud",
     "minecraft.gui.MixinScreen",
+    "minecraft.input.MixinKeyboardInput",
     "minecraft.network.MixinClientConnection",
     "minecraft.network.MixinClientPlayerInteractionManager",
     "minecraft.render.MixinEntityRenderer",
