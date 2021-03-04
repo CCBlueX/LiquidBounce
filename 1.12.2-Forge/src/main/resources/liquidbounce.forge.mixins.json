@@ -19,6 +19,7 @@
     "entity.MixinEntityPlayer",
     "entity.MixinEntityPlayerSP",
     "entity.MixinPlayerControllerMP",
+    "movement.MixinMovementInputFromOptions",
     "gui.MixinGui",
     "gui.MixinGuiButton",
     "gui.MixinGuiButtonExt",
