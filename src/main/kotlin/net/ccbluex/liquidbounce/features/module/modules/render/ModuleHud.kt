@@ -27,9 +27,11 @@ import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
 
 object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
-    private val webView = WebView(width = { mc.window.width }, height = { mc.window.height })
+    private lateinit var webView: WebView
 
-    init {
+    override fun init() {
+        this.webView = WebView(width = { mc.window.width }, height = { mc.window.height })
+
         webView.loadPage(ThemeManager.defaultTheme.page("hud"))
     }
 

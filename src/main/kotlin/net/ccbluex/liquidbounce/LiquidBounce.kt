@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.tabs.Tabs
 import net.ccbluex.liquidbounce.native.Natives
 import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
 import net.ccbluex.liquidbounce.renderer.ultralight.WebPlatform
-import net.ccbluex.liquidbounce.renderer.ultralight.WebView
 import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.extensions.globalEnemyConfigurable
@@ -91,7 +90,7 @@ object LiquidBounce : Listenable {
         Tabs
 
         // Load up web platform
-        WebPlatform
+        WebPlatform.init()
 
         moduleManager.registerInbuilt()
         scriptManager.loadScripts()

@@ -83,14 +83,19 @@ open class Module(name: String, // name parameter in configurable
         get() = mc.networkHandler!!
 
     /**
-     * Execute when module is turned on
+     * Called when module is turned on
      */
-    open fun enable() { }
+    open fun enable() {}
 
     /**
-     * Execute when module is turned off
+     * Called when module is turned off
      */
-    open fun disable() { }
+    open fun disable() {}
+
+    /**
+     * Called when the module is added to the module manager
+     */
+    open fun init() {}
 
     /**
      * Events should be handled when module is enabled

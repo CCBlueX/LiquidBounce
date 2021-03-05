@@ -27,7 +27,7 @@ import kotlin.reflect.full.findAnnotation
  */
 object EventManager {
 
-    private val registry = mutableMapOf<Class<out Event>, MutableList<EventHook<in Event>>>()
+    private val registry = mutableMapOf<Class<out Event>, HashSet<EventHook<in Event>>>()
 
     val mappedEvents = arrayOf(
         GameTickEvent::class,
@@ -44,7 +44,7 @@ object EventManager {
         ClientStartEvent::class,
         ClientShutdownEvent::class,
         ToggleModuleEvent::class
-    ).map { Pair(it.findAnnotation<Nameable>()?.name, it) }
+    ).map { Pair(it.findAnnotation<Nameable>()!!.name, it) }
 
     /**
      * Registers an event hook for events of type [T]
@@ -60,8 +60,15 @@ object EventManager {
     /**
      * Used by [handler]
      */
-    fun <T: Event> registerEventHook(eventClass: Class<out Event>, eventHook: EventHook<T>) {
-        registry.computeIfAbsent(eventClass) { mutableListOf() }.add(eventHook as EventHook<in Event>)
+    fun <T : Event> registerEventHook(eventClass: Class<out Event>, eventHook: EventHook<T>) {
+        registry.computeIfAbsent(eventClass) { HashSet() }.add(eventHook as EventHook<in Event>)
+    }
+
+    /**
+     * Unregisters a handler.
+     */
+    fun <T : Event> unregisterEventHook(eventClass: Class<out Event>, eventHook: EventHook<T>) {
+        registry[eventClass]?.remove(eventHook as EventHook<in Event>)
     }
 
     /**

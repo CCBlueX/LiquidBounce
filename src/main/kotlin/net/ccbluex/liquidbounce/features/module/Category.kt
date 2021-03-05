@@ -28,6 +28,15 @@ enum class Category(val readableName: String) {
     WORLD("World"),
     MISC("Misc"),
     EXPLOIT("Exploit"),
-    FUN("Fun")
+    FUN("Fun");
+
+    companion object {
+        /**
+         * Gets an enum by it's readable name
+         */
+        fun fromReadableName(name: String): Category? {
+            return values().find { name.equals(it.name, true) }
+        }
+    }
 
 }

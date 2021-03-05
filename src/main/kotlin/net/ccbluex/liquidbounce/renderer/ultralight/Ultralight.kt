@@ -37,10 +37,7 @@
  */
 package net.ccbluex.liquidbounce.renderer.ultralight
 
-import com.labymedia.ultralight.UltralightJava
-import com.labymedia.ultralight.UltralightPlatform
-import com.labymedia.ultralight.UltralightRenderer
-import com.labymedia.ultralight.UltralightView
+import com.labymedia.ultralight.*
 import com.labymedia.ultralight.bitmap.UltralightBitmapSurface
 import com.labymedia.ultralight.config.FontHinting
 import com.labymedia.ultralight.config.UltralightConfig
@@ -49,9 +46,12 @@ import net.ccbluex.liquidbounce.renderer.ultralight.input.ClipboardAdapter
 import net.ccbluex.liquidbounce.renderer.ultralight.input.CursorAdapter
 import net.ccbluex.liquidbounce.renderer.ultralight.listener.ViewListener
 import net.ccbluex.liquidbounce.renderer.ultralight.listener.ViewLoadListener
+import net.ccbluex.liquidbounce.renderer.ultralight.support.ViewContextProvider
 import net.ccbluex.liquidbounce.renderer.ultralight.support.ViewFileSystem
 import net.ccbluex.liquidbounce.renderer.ultralight.support.ViewLogger
 import net.ccbluex.liquidbounce.renderer.ultralight.theme.Page
+import net.ccbluex.liquidbounce.script.ultralight.bindings.ClientJSWrapper
+import net.ccbluex.liquidbounce.utils.SingleThreadTaskScheduler
 import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
 import org.lwjgl.glfw.GLFW.*
@@ -63,35 +63,45 @@ object WebPlatform {
 
     const val SCALE = 1.0
 
-    var platform: UltralightPlatform
-    var renderer: UltralightRenderer
+    /**
+     * This is the thread that has also write access to the Ultralight instance
+     */
+    val contextThread = SingleThreadTaskScheduler()
 
-    init {
-        logger.info("Loading ultralight...")
+    lateinit var platform: UltralightPlatform
+    lateinit var renderer: UltralightRenderer
 
-        // Load natives from native directory inside root folder
-        logger.debug("Loading ultralight natives")
-        UltralightJava.load(Natives.nativesRoot.toPath())
+    /**
+     * Initializes the platform
+     */
+    fun init() {
+        contextThread.scheduleBlocking {
+            logger.info("Loading ultralight...")
 
-        // Setup platform
-        logger.debug("Setting up ultralight platform")
-        platform = UltralightPlatform.instance()
-        platform.setConfig(
-            UltralightConfig()
-                .resourcePath("./resources/")
-                .fontHinting(FontHinting.NORMAL)
-                .deviceScale(SCALE)
-        )
-        platform.usePlatformFontLoader()
-        platform.setFileSystem(ViewFileSystem())
-        platform.setLogger(ViewLogger())
-        platform.setClipboard(ClipboardAdapter())
+            // Load natives from native directory inside root folder
+            logger.debug("Loading ultralight natives")
+            UltralightJava.load(Natives.nativesRoot.toPath())
 
-        // Setup renderer
-        logger.debug("Setting up ultralight renderer")
-        renderer = UltralightRenderer.create()
+            // Setup platform
+            logger.debug("Setting up ultralight platform")
+            platform = UltralightPlatform.instance()
+            platform.setConfig(
+                UltralightConfig()
+                    .resourcePath("./resources/")
+                    .fontHinting(FontHinting.NORMAL)
+                    .deviceScale(SCALE)
+            )
+            platform.usePlatformFontLoader()
+            platform.setFileSystem(ViewFileSystem())
+            platform.setLogger(ViewLogger())
+            platform.setClipboard(ClipboardAdapter())
 
-        logger.info("Successfully loaded ultralight!")
+            // Setup renderer
+            logger.debug("Setting up ultralight renderer")
+            renderer = UltralightRenderer.create()
+
+            logger.info("Successfully loaded ultralight!")
+        }
     }
 
 }
@@ -101,19 +111,44 @@ class WebView(
     var width: () -> Int,
     var height: () -> Int
 ) {
-
-    var renderer = WebPlatform.renderer
-    var view: UltralightView
+    lateinit var renderer: UltralightRenderer
+    private lateinit var view: UltralightView
     var currentPage: Page? = null
 
     private var glTexture = -1
-    val textureScale: Float = WebPlatform.SCALE.toFloat()
+    var textureScale: Float = 1.0f
+
+    lateinit var jsWrapper: ClientJSWrapper
+
+    lateinit var databind: Databind
 
     init {
         // Setup view
-        view = renderer.createView(width().toLong() * textureScale.toLong(), height().toLong() * textureScale.toLong(), true)
-        view.setViewListener(ViewListener(CursorAdapter(window)))
-        view.setLoadListener(ViewLoadListener(view))
+        WebPlatform.contextThread.scheduleBlocking {
+            // Load up web platform
+            WebPlatform
+
+            textureScale = WebPlatform.SCALE.toFloat()
+            renderer = WebPlatform.renderer
+
+            view = renderer.createView(
+                width().toLong() * textureScale.toLong(),
+                height().toLong() * textureScale.toLong(),
+                true
+            )
+
+            this.databind = Databind(
+                DatabindConfiguration
+                    .builder()
+                    .contextProviderFactory(ViewContextProvider.Factory(view))
+                    .build()
+            )
+            this.jsWrapper = ClientJSWrapper(ViewContextProvider(view), this)
+
+            view.setViewListener(ViewListener(CursorAdapter(window)))
+            view.setLoadListener(ViewLoadListener(this))
+        }
+
         logger.debug("Created new view $this")
     }
 
@@ -121,32 +156,37 @@ class WebView(
      * Loads the specified [url]
      */
     fun loadPage(page: Page) {
-        if (currentPage != page && currentPage != null) {
-            page.close()
-        }
+        WebPlatform.contextThread.scheduleBlocking {
+            if (currentPage != page && currentPage != null) {
+                page.close()
+            }
 
-        view.loadURL(page.viewableFile)
-        currentPage = page
-        logger.debug("Loaded page on $this")
+            view.loadURL(page.viewableFile)
+            currentPage = page
+            logger.debug("Loaded page on $this")
+        }
     }
 
     /**
      * Updates and renders the renderer
      */
     fun update() {
-        val width = width()
-        val height = height()
-        if (width.toLong() * textureScale.toLong() != view.width() || height.toLong() * textureScale.toLong() != view.height()) {
-            resize(width, height)
-        }
+        WebPlatform.contextThread.scheduleBlocking {
+            val width = width()
+            val height = height()
+            if (width.toLong() * textureScale.toLong() != view.width() || height.toLong() * textureScale.toLong() != view.height()) {
+                resize(width, height)
+            }
 
-        val page = currentPage
-        if (page?.hasUpdate() == true) {
-            loadPage(page)
-        }
+            val page = currentPage
 
-        renderer.update()
-        renderer.render()
+            if (page?.hasUpdate() == true) {
+                loadPage(page)
+            }
+
+            renderer.update()
+            renderer.render()
+        }
     }
 
     /**
@@ -155,20 +195,32 @@ class WebView(
      * @param width  The new view width
      * @param height The new view height
      */
-    fun resize(width: Int, height: Int) {
-        logger.debug("Resizied $this to (w: $width h: $height)")
-        view.resize(width.toLong() * textureScale.toLong(), height.toLong() * textureScale.toLong())
+    private fun resize(width: Int, height: Int) {
+        WebPlatform.contextThread.scheduleBlocking {
+            view.resize(width.toLong() * textureScale.toLong(), height.toLong() * textureScale.toLong())
+        }
+
+        logger.debug("Resized $this to (w: $width h: $height)")
     }
 
     /**
      * Closes view (very important!)
      */
     fun close() {
-        view.unfocus()
-        view.stop()
-        currentPage?.close()
+        this.jsWrapper.unregisterEvents()
+
+        WebPlatform.contextThread.scheduleBlocking {
+            view.unfocus()
+            view.stop()
+            currentPage?.close()
+        }
+
         GL11.glDeleteTextures(glTexture)
         glTexture = -1
+    }
+
+    fun <T> lockWebView(runnable: (UltralightView) -> T): T {
+        return WebPlatform.contextThread.scheduleBlocking { runnable(this.view) }
     }
 
     /**
@@ -188,7 +240,9 @@ class WebView(
         // Prepare OpenGL for 2D textures and bind our texture
         GL11.glEnable(GL11.GL_TEXTURE_2D)
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, glTexture)
+
         val dirtyBounds = surface.dirtyBounds()
+
         if (dirtyBounds.isValid) {
             val imageData = bitmap.lockPixels()
 

@@ -18,31 +18,13 @@
  */
 package net.ccbluex.liquidbounce.renderer.ultralight.screen
 
-import com.labymedia.ultralight.input.UltralightMouseEvent
-import com.labymedia.ultralight.input.UltralightMouseEventButton
-import com.labymedia.ultralight.input.UltralightMouseEventType
+import com.labymedia.ultralight.input.*
 import net.ccbluex.liquidbounce.renderer.ultralight.WebView
 import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.extensions.asText
+import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.math.MatrixStack
-import org.lwjgl.glfw.GLFW
-import com.labymedia.ultralight.input.UltralightKey
-
-import com.labymedia.ultralight.input.UltralightInputModifier
-
-import com.labymedia.ultralight.input.UltralightScrollEventType
-
-import com.labymedia.ultralight.input.UltralightScrollEvent
-
-import java.nio.DoubleBuffer
-
-import org.lwjgl.system.MemoryStack
-
-import com.labymedia.ultralight.input.UltralightKeyEventType
-
-import com.labymedia.ultralight.input.UltralightKeyEvent
-import net.ccbluex.liquidbounce.utils.mc
 import org.lwjgl.glfw.GLFW.*
 
 
@@ -89,13 +71,23 @@ class UltralightScreen(name: String) : Screen(name.asText()) {
 
         // Translate the mouse state to the event
         when (GLFW_PRESS) {
-            glfwGetMouseButton(mc.window.handle, GLFW_MOUSE_BUTTON_LEFT) -> event.button(UltralightMouseEventButton.LEFT)
-            glfwGetMouseButton(mc.window.handle, GLFW_MOUSE_BUTTON_MIDDLE) -> event.button(UltralightMouseEventButton.MIDDLE)
-            glfwGetMouseButton(mc.window.handle, GLFW_MOUSE_BUTTON_RIGHT) -> event.button(UltralightMouseEventButton.RIGHT)
+            glfwGetMouseButton(
+                mc.window.handle,
+                GLFW_MOUSE_BUTTON_LEFT
+            ) -> event.button(UltralightMouseEventButton.LEFT)
+            glfwGetMouseButton(
+                mc.window.handle,
+                GLFW_MOUSE_BUTTON_MIDDLE
+            ) -> event.button(UltralightMouseEventButton.MIDDLE)
+            glfwGetMouseButton(
+                mc.window.handle,
+                GLFW_MOUSE_BUTTON_RIGHT
+            ) -> event.button(UltralightMouseEventButton.RIGHT)
         }
 
         // Fire the event
-        webView.view.fireMouseEvent(event)
+        webView.lockWebView { it.fireMouseEvent(event) }
+
         super.mouseMoved(mouseX, mouseY)
     }
 
@@ -109,6 +101,10 @@ class UltralightScreen(name: String) : Screen(name.asText()) {
         return super.keyReleased(keyCode, scanCode, modifiers)
     }
 
+    override fun isPauseScreen(): Boolean {
+        return false
+    }
+
     override fun charTyped(chr: Char, keyCode: Int): Boolean {
         // Convert the unicode code point to a UTF-16 string
         val text = chr.toString()
@@ -120,7 +116,9 @@ class UltralightScreen(name: String) : Screen(name.asText()) {
             .unmodifiedText(text)
 
         // Fire the event
-        webView.view.fireKeyEvent(event)
+
+        webView.lockWebView { it.fireKeyEvent(event) }
+
         return super.charTyped(chr, keyCode)
     }
 
@@ -132,7 +130,8 @@ class UltralightScreen(name: String) : Screen(name.asText()) {
             .type(UltralightScrollEventType.BY_PIXEL)
 
         // Fire the event
-        webView.view.fireScrollEvent(event)
+        webView.lockWebView { it.fireScrollEvent(event) }
+
         return super.mouseScrolled(mouseX, mouseY, amount)
     }
 
@@ -148,7 +147,8 @@ class UltralightScreen(name: String) : Screen(name.asText()) {
             .modifiers(glfwToUltralightModifiers(mods))
 
         // Send the event
-        webView.view.fireKeyEvent(event)
+        webView.lockWebView { it.fireKeyEvent(event) }
+
         if ((action == GLFW_PRESS || action == GLFW_REPEAT) && (key == GLFW_KEY_ENTER || key == GLFW_KEY_TAB)) {
             // These keys need to be translated specially
             val text = if (key == GLFW_KEY_ENTER) "\r" else "\t"
@@ -158,7 +158,7 @@ class UltralightScreen(name: String) : Screen(name.asText()) {
                 .unmodifiedText(text)
 
             // Fire the event
-            webView.view.fireKeyEvent(extraEvent)
+            webView.lockWebView { it.fireKeyEvent(extraEvent) }
         }
     }
 
@@ -175,7 +175,7 @@ class UltralightScreen(name: String) : Screen(name.asText()) {
         }
 
         // Fire the event
-        webView.view.fireMouseEvent(event)
+        webView.lockWebView { it.fireMouseEvent(event) }
     }
 
     private fun glfwToUltralightModifiers(modifiers: Int): Int {

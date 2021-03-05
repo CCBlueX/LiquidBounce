@@ -61,7 +61,7 @@ object ModuleManager : Iterable<Module>, Listenable {
      * Register inbuilt client modules
      */
     fun registerInbuilt() {
-        modules += arrayOf(
+        val builtin = arrayOf(
             ModuleHud,
             ModuleClickGui,
             ModuleFly,
@@ -78,12 +78,23 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleHitbox
         )
 
+        builtin.forEach(this::addModule)
+
         // TODO: Figure out how to link modules list with configurable
         ConfigSystem.root("modules", modules)
     }
 
     fun addModule(module: Module) {
+        module.init()
+
         modules += module
+    }
+
+    /**
+     * Allow `ModuleManager += Module` syntax
+     */
+    operator fun plusAssign(module: Module) {
+        addModule(module)
     }
 
     override fun iterator() = modules.iterator()

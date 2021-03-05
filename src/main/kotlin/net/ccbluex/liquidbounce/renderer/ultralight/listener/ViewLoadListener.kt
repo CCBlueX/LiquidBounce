@@ -37,21 +37,10 @@
  */
 package net.ccbluex.liquidbounce.renderer.ultralight.listener
 
-import com.labymedia.ultralight.Databind
-import com.labymedia.ultralight.DatabindConfiguration
-import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.plugin.loading.UltralightLoadListener
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.renderer.ultralight.support.ViewContextProvider
+import net.ccbluex.liquidbounce.renderer.ultralight.WebView
 
-class ViewLoadListener(private val view: UltralightView) : UltralightLoadListener {
-
-    private val databind = Databind(
-        DatabindConfiguration
-            .builder()
-            .contextProviderFactory(ViewContextProvider.Factory(view))
-            .build()
-    )
+class ViewLoadListener(private val webView: WebView) : UltralightLoadListener {
 
     /**
      * Helper function to construct a name for a frame from a given set of parameters.
@@ -117,13 +106,17 @@ class ViewLoadListener(private val view: UltralightView) : UltralightLoadListene
      * @param url         The url that the frame currently contains
      */
     override fun onWindowObjectReady(frameId: Long, isMainFrame: Boolean, url: String) {
-        view.lockJavascriptContext().use { lock ->
-            val context = lock.context
-            val globalContext = context.globalContext
-            val globalObject = globalContext.globalObject
+        webView.lockWebView {
+            it.lockJavascriptContext().use { lock ->
+                val context = lock.context
+                val globalContext = context.globalContext
+                val globalObject = globalContext.globalObject
 
-            globalObject.setProperty("client",
-                databind.conversionUtils.toJavascript(context, LiquidBounce), 0)
+                globalObject.setProperty(
+                    "client",
+                    webView.databind.conversionUtils.toJavascript(context, webView.jsWrapper), 0
+                )
+            }
         }
     }
 

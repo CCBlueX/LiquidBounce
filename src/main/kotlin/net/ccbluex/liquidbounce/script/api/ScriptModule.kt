@@ -20,7 +20,8 @@ package net.ccbluex.liquidbounce.script.api
 
 import jdk.nashorn.api.scripting.JSObject
 import net.ccbluex.liquidbounce.config.Value
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventHook
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.logger
@@ -28,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.logger
 @Suppress("unused")
 class ScriptModule(private val moduleObject: JSObject) : Module(
     name = moduleObject.getMember("name") as String,
-    category = Category.values().find { (moduleObject.getMember("category") as String).equals(it.name, true) }!!
+    category = Category.fromReadableName(moduleObject.getMember("category") as String)!!
 ) {
 
     private val events = HashMap<String, JSObject>()
