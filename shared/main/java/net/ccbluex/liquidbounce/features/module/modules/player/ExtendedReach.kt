@@ -3,7 +3,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.MaterialType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
@@ -16,7 +15,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoWeapon
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
-import net.ccbluex.liquidbounce.utils.RaycastUtils.EntityFilter
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder
@@ -187,10 +185,7 @@ class ExtendedReach : Module()
 		{
 			val provider = classProvider
 
-			val facedEntity = raycastEntity(theWorld, thePlayer, combatReach.get().toDouble(), object : EntityFilter
-			{
-				override fun canRaycast(entity: IEntity?): Boolean = provider.isEntityLivingBase(entity)
-			})
+			val facedEntity = raycastEntity(theWorld, thePlayer, combatReach.get().toDouble(), provider::isEntityLivingBase)
 
 			var targetEntity: IEntityLivingBase? = null
 			val from = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)

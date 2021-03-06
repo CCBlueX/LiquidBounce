@@ -110,5 +110,5 @@ class SwingAnimation : Module()
 	val blockStaticSwingProgressValue = FloatValue("Block-StaticSwingProgress", .64f, .11f, .99f)
 
 	override val tag: String
-		get() = "${animationMode.get()}${if (staticSwingProgress.get()) " static-" + staticSwingProgressValue.get() else ""}${if (blockStaticSwingProgress.get()) " blockstatic-" + blockStaticSwingProgressValue.get() else ""}"
+		get() = "${animationMode.get()}${if (staticSwingProgress.get()) " static_" + staticSwingProgressValue.get() else ""}${if (blockStaticSwingProgress.get()) " blockstatic_" + blockStaticSwingProgressValue.get() else ""}"
 }

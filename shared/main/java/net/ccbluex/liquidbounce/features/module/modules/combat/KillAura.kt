@@ -971,35 +971,30 @@ class KillAura : Module()
 	 */
 	private fun updateHitable(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
-		if (!rotationsValue.get() || maxTurnSpeedValue.get() <= 0F) // Disable hitable check if turn speed is zero
+		val currentTarget = currentTarget
+		val reach = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(target ?: return)) + 1
+
+		if (!rotationsValue.get() || maxTurnSpeedValue.get() <= 0F || targetModeValue.get().equals("Multi", ignoreCase = true)) // Disable hitable check if turn speed is zero
 		{
-			hitable = true
+			hitable = if (currentTarget != null) thePlayer.getDistanceToEntityBox(currentTarget) <= (reach - 1) else false
 			return
 		}
 
-		val multiaura = targetModeValue.get().equals("Multi", ignoreCase = true)
 		val aac = aacValue.get()
 		val livingRaycast = livingRaycastValue.get()
 		val raycastIgnored = raycastIgnoredValue.get()
-
-		val reach = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(target ?: return)) + 1
-
-		val currentTarget = currentTarget
 
 		if (raycastValue.get())
 		{
 			val provider = classProvider
 
-			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach, fakeYaw, fakePitch, object : RaycastUtils.EntityFilter
-			{
-				override fun canRaycast(entity: IEntity?): Boolean = entity != null && (!livingRaycast || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (EntityUtils.isEnemy(entity, aac) || raycastIgnored || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty())
-			})
+			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach, fakeYaw, fakePitch) { entity -> entity != null && (!livingRaycast || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (EntityUtils.isEnemy(entity, aac) || raycastIgnored || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
 
 			if (raycastedEntity != null && provider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !provider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) this.currentTarget = raycastedEntity.asEntityLivingBase()
 
 			hitable = this.currentTarget == raycastedEntity
 		}
-		else hitable = if (currentTarget != null) if (multiaura) thePlayer.getDistanceToEntityBox(currentTarget) <= (reach - 1) else RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach) else false
+		else hitable = if (currentTarget != null) RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach) else false
 	}
 
 	/**

@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
 import net.ccbluex.liquidbounce.event.EventState
@@ -16,7 +15,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.PathUtils.findPath
-import net.ccbluex.liquidbounce.utils.RaycastUtils.EntityFilter
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils
@@ -38,10 +36,7 @@ class TeleportHit : Module()
 
 		val provider = classProvider
 
-		val facedEntity = raycastEntity(theWorld, thePlayer, 100.0, object : EntityFilter
-		{
-			override fun canRaycast(entity: IEntity?): Boolean = provider.isEntityLivingBase(entity)
-		})
+		val facedEntity = raycastEntity(theWorld, thePlayer, 100.0, provider::isEntityLivingBase)
 
 		if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true) && facedEntity?.getDistanceSqToEntity(thePlayer) ?: 0.0 >= 1.0) targetEntity = facedEntity?.asEntityLivingBase()
 

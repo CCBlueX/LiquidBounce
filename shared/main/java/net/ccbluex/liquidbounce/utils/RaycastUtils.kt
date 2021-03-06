@@ -14,10 +14,10 @@ object RaycastUtils : MinecraftInstance()
 {
 
 	@JvmStatic
-	fun raycastEntity(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, range: Double, entityFilter: EntityFilter) = raycastEntity(theWorld, thePlayer, range, RotationUtils.serverRotation.yaw, RotationUtils.serverRotation.pitch, entityFilter)
+	fun raycastEntity(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, range: Double, entityFilter: (IEntity?) -> Boolean) = raycastEntity(theWorld, thePlayer, range, RotationUtils.serverRotation.yaw, RotationUtils.serverRotation.pitch, entityFilter)
 
 	@JvmStatic
-	fun raycastEntity(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, range: Double, yaw: Float, pitch: Float, entityFilter: EntityFilter): IEntity?
+	fun raycastEntity(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, range: Double, yaw: Float, pitch: Float, entityFilter: (IEntity?) -> Boolean): IEntity?
 	{
 		val func = functions
 
@@ -44,7 +44,7 @@ object RaycastUtils : MinecraftInstance()
 
 		var pointedEntity: IEntity? = null
 
-		entityList.filter(entityFilter::canRaycast).forEach { entity ->
+		entityList.filter(entityFilter::invoke).forEach { entity ->
 			val collisionBorderSize = entity.collisionBorderSize.toDouble()
 			val collisionBorder = entity.entityBoundingBox.expand(collisionBorderSize, collisionBorderSize, collisionBorderSize)
 
@@ -75,10 +75,5 @@ object RaycastUtils : MinecraftInstance()
 		}
 
 		return pointedEntity
-	}
-
-	interface EntityFilter
-	{
-		fun canRaycast(entity: IEntity?): Boolean
 	}
 }

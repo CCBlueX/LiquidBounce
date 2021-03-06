@@ -322,5 +322,5 @@ class NoFall : Module()
 	}
 
 	override val tag: String
-		get() = "${modeValue.get()}${if (modeValue.get().equals("SpoofGround", ignoreCase = true) || modeValue.get().equals("Packet", ignoreCase = true)) "-${noSpoofTicks.get()}" else ""}"
+		get() = "${modeValue.get()}${if (modeValue.get().equals("SpoofGround", ignoreCase = true) || modeValue.get().equals("Packet", ignoreCase = true)) " ${noSpoofTicks.get()}" else ""}"
 }
