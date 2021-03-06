@@ -28,7 +28,7 @@ object ColorUtils : MinecraftInstance()
 
 	fun isAllowedCharacter(character: Char): Boolean = character.toInt() != 167 && character.toInt() >= 32 && character.toInt() != 127
 
-	private val COLOR_PATTERN = Pattern.compile("(?i)\u00A7[0-9A-FK-OR]")
+	private val COLOR_PATTERN = Pattern.compile("\u00A7[0-9A-FK-OR]", Pattern.CASE_INSENSITIVE)
 
 	@JvmField
 	val hexColors = IntArray(16)
@@ -138,7 +138,9 @@ object ColorUtils : MinecraftInstance()
 				{
 					var health = entityLiving.health
 					val maxHealth = entityLiving.maxHealth
+
 					if (provider.isEntityPlayer(entity) && (healthMode.equals("Mineplex", ignoreCase = true) || healthMode.equals("Hive", ignoreCase = true))) health = EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("mineplex", ignoreCase = true)).toFloat()
+
 					return getHealthColor(health, maxHealth)
 				}
 			}
@@ -183,9 +185,12 @@ object ColorUtils : MinecraftInstance()
 		return if (fractions.size == colors.size)
 		{
 			val indices = getFractionIndices(fractions, progress)
+
 			if (indices[0] < 0 || indices[0] >= fractions.size || indices[1] < 0 || indices[1] >= fractions.size) return colors[0]
+
 			val range = floatArrayOf(fractions[indices[0]], fractions[indices[1]])
 			val colorRange = arrayOf(colors[indices[0]], colors[indices[1]])
+
 			blend(colorRange[0], colorRange[1], 1.0 - ((progress - range[0]) / (range[1] - range[0])))
 		}
 		else throw IllegalArgumentException("Fractions and colours must have equal number of elements")
@@ -233,10 +238,8 @@ object ColorUtils : MinecraftInstance()
 	@JvmStatic
 	fun getHealthColor(health: Float, maxHealth: Float): Color = blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), health / maxHealth).brighter()
 
+	// val color = Color(rgb)
+	// return Color(color.red, color.green, color.blue, alpha).rgb
 	@JvmStatic
-	fun applyAlphaChannel(rgb: Int, alpha: Int): Int
-	{
-		val color = Color(rgb)
-		return Color(color.red, color.green, color.blue, alpha).rgb
-	}
+	fun applyAlphaChannel(rgb: Int, alpha: Int): Int = alpha and 0xFF shl 24 or rgb
 }
