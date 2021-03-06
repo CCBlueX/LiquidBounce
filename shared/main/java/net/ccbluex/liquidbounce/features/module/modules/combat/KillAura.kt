@@ -326,6 +326,8 @@ class KillAura : Module()
 	private val fakeSharpValue = BoolValue("FakeSharp", true)
 	private val particles = IntegerValue("Particles", 1, 0, 10)
 
+	private val disableOnDeathValue = BoolValue("DisableOnDeath", true)
+
 	/**
 	 * MODULE
 	 */
@@ -399,6 +401,26 @@ class KillAura : Module()
 		attackTimer.reset()
 		clicks = 0
 		stopBlocking()
+	}
+
+	@EventTarget
+	fun onWorldChange(event: WorldEvent)
+	{
+		if (disableOnDeathValue.get())
+		{
+			state = false
+			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due world change", Color.red, 1000L)
+		}
+	}
+
+	@EventTarget
+	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent?)
+	{
+		if (mc.thePlayer == null || mc.theWorld == null)
+		{
+			state = false
+			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due world change", Color.red, 1000L)
+		}
 	}
 
 	/**
@@ -1060,7 +1082,16 @@ class KillAura : Module()
 	private fun shouldCancelRun(thePlayer: IEntityPlayerSP): Boolean
 	{
 		val moduleManager = LiquidBounce.moduleManager
-		return thePlayer.spectator || !EntityUtils.isAlive(thePlayer, aacValue.get()) || (moduleManager[Blink::class.java] as Blink).state || moduleManager[FreeCam::class.java].state || !suspendTimer.hasTimePassed(suspend)
+
+		val shouldDisableOnDeath = thePlayer.spectator || !EntityUtils.isAlive(thePlayer, aacValue.get())
+
+		if (shouldDisableOnDeath && disableOnDeathValue.get())
+		{
+			state = false
+			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due player death", Color.red, 1000L)
+		}
+
+		return shouldDisableOnDeath || (moduleManager[Blink::class.java] as Blink).state || moduleManager[FreeCam::class.java].state || !suspendTimer.hasTimePassed(suspend)
 	}
 
 	/**

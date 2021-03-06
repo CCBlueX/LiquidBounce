@@ -8,7 +8,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "SwingAnimation", description = "Customize swing animation.", category = ModuleCategory.RENDER)
 class SwingAnimation : Module()
@@ -81,7 +84,7 @@ class SwingAnimation : Module()
 	val blockSqrtSmoothingSin = BoolValue("BlockAnimationSqrtSmoothingBack", true)
 
 	// Sword Block Animation
-	val animationMode = ListValue("BlockSwingAnimation", arrayOf("LiquidBounce", "1.8", "1.7", "Push", "Tap", "Tap2", "Avatar", "Sigma", "Slide", "Exhibobo", "Lucid", "Tea", "Luna", "Protocol", "Hooded", "Smooth", "Bump", "Slap"), "LiquidBounce")
+	val animationMode = ListValue("BlockSwingAnimation", arrayOf("LiquidBounce", "1.8", "1.7", "Push", "Tap", "Tap2", "Avatar", "Sigma", "Slide", "Exhibobo", "Lucid", "Luna", "Hooded", "Bump", "Slap"), "LiquidBounce")
 
 	// Sword Block Animation Options
 	val slideAngleX = FloatValue("Slide-AngleX", 40f, -30f, 80f)

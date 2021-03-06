@@ -32,6 +32,10 @@ class StorageESP : Module()
 	private val chestGreenValue = IntegerValue("Chest-G", 66, 0, 255)
 	private val chestBlueValue = IntegerValue("Chest-B", 255, 0, 255)
 	private val chestRainbowValue = BoolValue("Chest-Rainbow", false)
+	private val trappedChestRedValue = IntegerValue("TrappedChest-R", 0, 0, 255)
+	private val trappedChestGreenValue = IntegerValue("TrappedChest-G", 66, 0, 255)
+	private val trappedChestBlueValue = IntegerValue("TrappedChest-B", 255, 0, 255)
+	private val trappedChestRainbowValue = BoolValue("TrappedChest-Rainbow", false)
 
 	private val enderChestValue = BoolValue("EnderChest", true)
 	private val enderChestRedValue = IntegerValue("EnderChest-R", 255, 0, 255)
@@ -95,6 +99,7 @@ class StorageESP : Module()
 			val rainbow = ColorUtils.rainbow(alpha = 1.0f, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 
 			val chestColor = if (chestRainbowValue.get()) rainbow else Color(chestRedValue.get(), chestGreenValue.get(), chestBlueValue.get())
+			val trappedChestColor = if (trappedChestRainbowValue.get()) rainbow else Color(trappedChestRedValue.get(), trappedChestGreenValue.get(), trappedChestBlueValue.get())
 			val enderChestColor = if (enderChestRainbowValue.get()) rainbow else Color(enderChestRedValue.get(), enderChestGreenValue.get(), enderChestBlueValue.get())
 			val furnaceColor = if (furnaceRainbowValue.get()) rainbow else Color(furnaceRedValue.get(), furnaceGreenValue.get(), furnaceBlueValue.get())
 			val dispenserColor = if (dispenserRainbowValue.get()) rainbow else Color(dispenserRedValue.get(), dispenserGreenValue.get(), dispenserBlueValue.get())
@@ -124,27 +129,28 @@ class StorageESP : Module()
 			theWorld.loadedTileEntityList.mapNotNull {
 				val type = when
 				{
-					chest && provider.isTileEntityChest(it) && !clickedBlocks.contains(it.pos) -> 1
-					enderChest && provider.isTileEntityEnderChest(it) && !clickedBlocks.contains(it.pos) -> 2
-					furnace && provider.isTileEntityFurnace(it) -> 3
-					dispenser && provider.isTileEntityDispenser(it) -> 4
-					hopper && provider.isTileEntityHopper(it) -> 5
-					shulkerBox && provider.isTileEntityShulkerBox(it) -> 6
+					chest && provider.isTileEntityChest(it) && !clickedBlocks.contains(it.pos) -> if (it.asTileEntityChest().chestType == 1) 2 else 1
+					enderChest && provider.isTileEntityEnderChest(it) && !clickedBlocks.contains(it.pos) -> 3
+					furnace && provider.isTileEntityFurnace(it) -> 4
+					dispenser && provider.isTileEntityDispenser(it) -> 5
+					hopper && provider.isTileEntityHopper(it) -> 6
+					shulkerBox && provider.isTileEntityShulkerBox(it) -> 7
 					else -> null
 				} ?: return@mapNotNull null
 
 				Triple(it, type, when (type)
 				{
 					1 -> chestColor
-					2 -> enderChestColor
-					3 -> furnaceColor
-					4 -> dispenserColor
-					5 -> hopperColor
-					6 -> shulkerBoxColor.brighter()
+					2 -> trappedChestColor
+					3 -> enderChestColor
+					4 -> furnaceColor
+					5 -> dispenserColor
+					6 -> hopperColor
+					7 -> shulkerBoxColor.brighter()
 					else -> null
 				} ?: return@mapNotNull null)
 			}.forEach { (tileEntity, type, color) ->
-				if (type > 2) // Not chest or enderchest
+				if (type > 3) // Not chest or enderchest
 				{
 					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, drawOutline, hydraESP)
 					return@forEach
@@ -299,8 +305,10 @@ class StorageESP : Module()
 		val saturation = saturationValue.get()
 		val brightness = brightnessValue.get()
 		val rainbowSpeed = rainbowSpeedValue.get()
+
 		val rainbow = ColorUtils.rainbow(alpha = 1.0f, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 		val chestColor = if (chestRainbowValue.get()) rainbow else Color(chestRedValue.get(), chestGreenValue.get(), chestBlueValue.get())
+		val trappedChestColor = if (trappedChestRainbowValue.get()) rainbow else Color(trappedChestRedValue.get(), trappedChestGreenValue.get(), trappedChestBlueValue.get())
 		val enderChestColor = if (enderChestRainbowValue.get()) rainbow else Color(enderChestRedValue.get(), enderChestGreenValue.get(), enderChestBlueValue.get())
 		val furnaceColor = if (furnaceRainbowValue.get()) rainbow else Color(furnaceRedValue.get(), furnaceGreenValue.get(), furnaceBlueValue.get())
 		val dispenserColor = if (dispenserRainbowValue.get()) rainbow else Color(dispenserRedValue.get(), dispenserGreenValue.get(), dispenserBlueValue.get())
@@ -322,15 +330,15 @@ class StorageESP : Module()
 			val tileEntityGroup = theWorld.loadedTileEntityList.groupBy {
 				when
 				{
-					provider.isTileEntityChest(it) -> 1 // Chest
-					provider.isTileEntityEnderChest(it) -> 2 // Ender Chest
-					provider.isTileEntityFurnace(it) -> 3 // Furnace
-					provider.isTileEntityDispenser(it) -> 4 // Dispenser (and Dropper)
-					provider.isTileEntityHopper(it) -> 5 // Hopper
-					provider.isTileEntityShulkerBox(it) -> 6 // Shulker box
-					else -> 7
+					provider.isTileEntityChest(it) -> if (it.asTileEntityChest().chestType == 1) 2 else 1 // Chest or Trapped Chest
+					provider.isTileEntityEnderChest(it) -> 3 // Ender Chest
+					provider.isTileEntityFurnace(it) -> 4 // Furnace
+					provider.isTileEntityDispenser(it) -> 5 // Dispenser (and Dropper)
+					provider.isTileEntityHopper(it) -> 6 // Hopper
+					provider.isTileEntityShulkerBox(it) -> 7 // Shulker box
+					else -> 0
 				}
-			}.filterNot { it.key == 7 }
+			}.filterNot { it.key == 0 }
 
 			val entityGroup = theWorld.loadedEntityList.groupBy {
 				when
@@ -338,9 +346,9 @@ class StorageESP : Module()
 					provider.isEntityMinecartChest(it) -> 1 // Minecart Chest
 					provider.isEntityMinecartFurnace(it) -> 2 // Minecart Furnace
 					provider.isEntityMinecartHopper(it) -> 3 // Minecart Hopper
-					else -> 4
+					else -> 0
 				}
-			}.filterNot { it.key == 4 }
+			}.filterNot { it.key == 0 }
 
 			val renderTileEntity = { type: Int ->
 				tileEntityGroup[type]?.forEach {
@@ -360,41 +368,43 @@ class StorageESP : Module()
 				stopDraw(color)
 			}
 
-			// Draw Chest and MinecartChest
+			// Draw Chest and MinecartChest and Trapped Chest
 			if (chest)
 			{
 				startDraw()
-				renderTileEntity(1) // TileEntityChest
+				renderTileEntity(1) // TileEntityChest (Regular)
 				renderMinecart(1) // EntityMinecartChest
 				stopDraw(chestColor)
+
+				renderTileEntityOnly(2, trappedChestColor) // TileEntityChest (Trapped)
 			}
 
 			// Draw EnderChest
-			if (enderChest) renderTileEntityOnly(2, enderChestColor) // TileEntityEnderChest
+			if (enderChest) renderTileEntityOnly(3, enderChestColor) // TileEntityEnderChest
 
 			// Draw Furnace and MinecartFurnace
 			if (furnace)
 			{
 				startDraw()
-				renderTileEntity(3) // TileEntityFurnace
+				renderTileEntity(4) // TileEntityFurnace
 				renderMinecart(2) // EntityMinecartFurnace
 				stopDraw(furnaceColor)
 			}
 
 			// Draw Dispenser
-			if (dispenser) renderTileEntityOnly(4, dispenserColor) // TileEntityDispenser
+			if (dispenser) renderTileEntityOnly(5, dispenserColor) // TileEntityDispenser
 
 			// Draw Hopper and MinecartHopper
 			if (hopper)
 			{
 				startDraw()
-				renderTileEntity(5) // TileEntityHopper
+				renderTileEntity(6) // TileEntityHopper
 				renderMinecart(3) // EntityMinecartHopper
 				stopDraw(hopperColor)
 			}
 
 			// Draw Shulker box
-			if (shulkerBox) renderTileEntityOnly(6, shulkerBoxColor) // TileEntityShulkerBox
+			if (shulkerBox) renderTileEntityOnly(7, shulkerBoxColor) // TileEntityShulkerBox
 		}
 		catch (ex: Exception)
 		{

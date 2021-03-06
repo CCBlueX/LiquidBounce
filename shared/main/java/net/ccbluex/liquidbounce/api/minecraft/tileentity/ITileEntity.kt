@@ -11,4 +11,6 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 interface ITileEntity
 {
 	val pos: WBlockPos
+
+	fun asTileEntityChest(): ITileEntityChest
 }
