@@ -37,7 +37,7 @@ class ClientJSWrapper(private val viewContextProvider: ViewContextProvider, val 
     /**
      * Contains all events that are registered in the current context
      */
-    private val registeredEvents = HashMap<Class<out Event>, EventHook<*>>()
+    private val registeredEvents = HashMap<Class<out Event>, ArrayList<EventHook<*>>>()
 
     val moduleManager = ModuleManager
 
@@ -80,9 +80,10 @@ class ClientJSWrapper(private val viewContextProvider: ViewContextProvider, val 
                     )
                 }
             }
+
         }, false)
         // Put the event hook in the map, if there was one previously, unregister it.
-        registeredEvents.put(eventClass, eventHook)?.let { EventManager.unregisterEventHook(eventClass, eventHook) }
+        registeredEvents.computeIfAbsent(eventClass) { ArrayList() }.add(eventHook)
 
         // Register the event hook
         EventManager.registerEventHook(eventClass, eventHook)
@@ -92,8 +93,10 @@ class ClientJSWrapper(private val viewContextProvider: ViewContextProvider, val 
      * Unregisters all events that are registered by this wrapper
      */
     fun unregisterEvents() {
-        for ((clazz, hook) in this.registeredEvents) {
-            EventManager.unregisterEventHook(clazz, hook)
+        for ((clazz, hooks) in this.registeredEvents) {
+            for (hook in hooks) {
+                EventManager.unregisterEventHook(clazz, hook)
+            }
         }
     }
 }
