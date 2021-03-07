@@ -97,3 +97,11 @@ class ClientShutdownEvent : Event()
 @Nameable("toggleModule")
 class ToggleModuleEvent(val module: Module, val newState: Boolean) : Event()
 
+@Nameable("notification")
+class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event() {
+    enum class Severity {
+        INFO,
+        SUCCESS,
+        ERROR
+    }
+}

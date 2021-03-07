@@ -43,7 +43,8 @@ object EventManager {
         PacketEvent::class,
         ClientStartEvent::class,
         ClientShutdownEvent::class,
-        ToggleModuleEvent::class
+        ToggleModuleEvent::class,
+        NotificationEvent::class,
     ).map { Pair(it.findAnnotation<Nameable>()!!.name, it) }
 
     /**

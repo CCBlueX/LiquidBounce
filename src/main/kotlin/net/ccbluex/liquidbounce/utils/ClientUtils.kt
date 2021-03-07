@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.NotificationEvent
 import net.ccbluex.liquidbounce.utils.extensions.asText
 import net.ccbluex.liquidbounce.utils.extensions.outputString
 import net.minecraft.client.MinecraftClient
@@ -57,6 +59,9 @@ fun chat(vararg texts: Text, prefix: Boolean = true) {
 }
 
 fun chat(text: String) = chat(text.asText())
+
+fun notification(title: String, message: String, severity: NotificationEvent.Severity) =
+    EventManager.callEvent(NotificationEvent(title, message, severity))
 
 /**
  * Find resource

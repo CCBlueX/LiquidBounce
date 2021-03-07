@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.Exclude
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.logger
+import net.ccbluex.liquidbounce.utils.notification
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
@@ -54,6 +55,9 @@ open class Module(name: String, // name parameter in configurable
             if (disableActivation) {
                 error("module disabled activation")
             }
+
+            notification(if (new) "Enabled" else "Disabled", this.name, NotificationEvent.Severity.INFO)
+
             // Call out module event
             EventManager.callEvent(ToggleModuleEvent(this, new))
         }.onFailure {
