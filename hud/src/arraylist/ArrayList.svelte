@@ -1,4 +1,6 @@
 <script>
+    import { flip } from "svelte/animate";
+    import { fly } from "svelte/transition";
     import Module from "./Module.svelte";
 
     function getTextWidth(s) {
@@ -59,15 +61,17 @@
 
 
 <div class="arraylist">
-    {#each modules as aModule}
-        <Module name={aModule.name} />
+    {#each modules as aModule (aModule)}
+        <div animate:flip={{ duration: 200 }} in:fly={{ x: 10, duration: 200 }} out:fly={{ x:10, duration: 200 }}>
+            <Module name={aModule.name} /> 
+        </div>
     {/each}
 </div>
 
 <style>
     .arraylist {
         font-family: "Montserrat", sans-serif;
-
+        
         position: fixed;
         top: 0;
         right: -10px;

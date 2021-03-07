@@ -16,5 +16,6 @@
         border-left: solid 4px #4677FF;
         text-align: right;
         width: max-content;
+        font-weight: 500;
     }
 </style>
