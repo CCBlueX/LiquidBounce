@@ -1,17 +1,19 @@
 <script>
     import Module from "./Module.svelte";
 
-    function getTextWidth(text, font) {
-        const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
-        const context = canvas.getContext("2d");
-        context.font = font;
-        const metrics = context.measureText(text);
+    function getTextWidth(s) {
+        if (getTextWidth.ruler === undefined) {
+            getTextWidth.ruler = document.getElementById("ruler");
+        }
 
-        return metrics.width;
+        const ruler = getTextWidth.ruler;
+        ruler.innerText = s;
+
+        return ruler.offsetWidth;
     }
 
     function sortModules() {
-        modules = modules.sort((a, b) => getTextWidth(b.name, "Montserrat") - getTextWidth(a.name, "Montserrat"));
+        modules = modules.sort((a, b) => getTextWidth(b.name) - getTextWidth(a.name));
     }
 
     function handleToggleModule(event) {

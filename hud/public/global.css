@@ -9,3 +9,9 @@
 *:focus {
     outline: none;
 }
+
+.ruler {
+    opacity: 0;
+    display: fixed;
+    font-family: "Montserrat", sans-serif;
+}

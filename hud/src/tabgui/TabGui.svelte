@@ -1,4 +1,5 @@
 <script>
+    import { fly } from "svelte/transition";
     import Category from "./Category.svelte";
     import Module from "./Module.svelte";
 
@@ -69,8 +70,9 @@
                 break;
             }
             case "key.keyboard.right": {
-                activeModule = 0;
+                activeModules = [];
                 activeModules = getActiveModules();
+                activeModule = 0;
 
                 break;
             }
@@ -114,7 +116,7 @@
     </div>
 
     {#if activeModules.length > 0}
-        <div class="modules">
+        <div class="modules" in:fly="{{ x: -10, duration: 200 }}" out:fly="{{ x: -10, duration: 200 }}">
             {#each activeModules as aModule, i}
                 <Module
                     name={aModule.name}
@@ -138,13 +140,16 @@
     }
 
     .categories {
+        background-clip: content-box;
         display: flex;
         flex-direction: column;
         border-radius: 5px;
         overflow: hidden;
+        border: solid 1px rgba(0, 0, 0, 0.68);
     }
 
     .modules {
+        background-clip: content-box;
         background-color: rgba(0, 0, 0, 0.5);
         margin-left: 6px;
         border-radius: 5px;
@@ -152,5 +157,6 @@
         min-width: 100px;
         display: flex;
         flex-direction: column;
+        border: solid 1px rgba(0, 0, 0, 0.68);
     }
 </style>
