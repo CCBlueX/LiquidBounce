@@ -90,6 +90,7 @@ object WebPlatform {
                     .resourcePath("./resources/")
                     .fontHinting(FontHinting.NORMAL)
                     .deviceScale(SCALE)
+                    .fontHinting(FontHinting.SMOOTH)
             )
             platform.usePlatformFontLoader()
             platform.setFileSystem(ViewFileSystem())
