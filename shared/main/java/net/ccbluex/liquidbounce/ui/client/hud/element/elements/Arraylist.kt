@@ -89,7 +89,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 		val tagSpace = tagSpaceValue.get()
 
 		// Slide animation - update every render
-		val slideAnimationSpeed = 21F - animationSpeedValue.get().coerceAtLeast(0.01F).coerceAtMost(20F)
+		val slideAnimationSpeed = 21F - animationSpeedValue.get().coerceIn(0.01f, 20f)
 		val deltaTime = RenderUtils.deltaTime
 		LiquidBounce.moduleManager.modules.filter(Module::array).filter { it.state || it.slide != 0F }.forEach { module ->
 			var moduleName = module.name

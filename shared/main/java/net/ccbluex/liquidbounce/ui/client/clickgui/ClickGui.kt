@@ -157,7 +157,7 @@ class ClickGui : WrappedGuiScreen()
 				}
 				else if (element.slowlyFade > 0) element.slowlyFade -= 20
 
-				element.slowlyFade = element.slowlyFade.coerceAtLeast(0).coerceAtMost(255)
+				element.slowlyFade = element.slowlyFade.coerceIn(0, 255)
 			}
 		}
 

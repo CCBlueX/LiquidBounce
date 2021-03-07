@@ -283,7 +283,7 @@ class SlowlyStyle : Style()
 	{
 		fun drawSlider(value: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, color: Color): Float
 		{
-			val displayValue = value.coerceAtLeast(min).coerceAtMost(max)
+			val displayValue = value.coerceIn(min, max)
 
 			drawRect(x, y, x + width, y + 2, Int.MAX_VALUE)
 

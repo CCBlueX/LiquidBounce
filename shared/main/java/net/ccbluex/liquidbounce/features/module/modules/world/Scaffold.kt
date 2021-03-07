@@ -670,9 +670,9 @@ class Scaffold : Module()
 		var clutching = false
 		if (fallStartY - thePlayer.posY > 2) // Clutch while falling
 		{
-			val mx = thePlayer.motionX.coerceAtLeast(-2.5).coerceAtMost(2.5)
-			val my = thePlayer.motionY.coerceAtLeast(-2.5).coerceAtMost(0.0)
-			val mz = thePlayer.motionZ.coerceAtLeast(-2.5).coerceAtMost(2.5)
+			val mx = thePlayer.motionX.coerceIn(-2.5, 2.5)
+			val my = thePlayer.motionY.coerceIn(-2.5, 0.0)
+			val mz = thePlayer.motionZ.coerceIn(-2.5, 2.5)
 
 			searchPosition = WBlockPos(thePlayer.posX + mx, thePlayer.entityBoundingBox.minY + my, thePlayer.posZ + mz).down() // Predict position and clutch
 			state = "Clutch based at motion $mx $my $mz"

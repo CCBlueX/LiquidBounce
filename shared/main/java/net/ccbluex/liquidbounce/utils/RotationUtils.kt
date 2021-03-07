@@ -359,7 +359,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 			// Search boundingbox center
 			var vecRotation: VecRotation? = null
 
-			val fixedHitboxDecrement = hitboxDecrement.coerceAtLeast(0.0).coerceAtMost(1.0) // Last Fail-safe
+			val fixedHitboxDecrement = hitboxDecrement.coerceIn(0.0, 1.0) // Last Fail-safe
 
 			val skipVisibleCheck = flags and SKIP_VISIBLE_CHECK != 0
 			val randomCenter = flags and RANDOM_CENTER != 0
@@ -402,7 +402,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 				vecRotation.rotation.yaw += yawJitterAmount
 
 				// Enforce pitch to 90 ~ -90
-				vecRotation.rotation.pitch = (vecRotation.rotation.pitch + pitchJitterAmount).coerceAtLeast(-90f).coerceAtMost(90f)
+				vecRotation.rotation.pitch = (vecRotation.rotation.pitch + pitchJitterAmount).coerceIn(-90f, 90f)
 			}
 
 			return vecRotation

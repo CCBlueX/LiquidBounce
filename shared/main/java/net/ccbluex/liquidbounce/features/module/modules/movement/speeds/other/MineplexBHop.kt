@@ -49,7 +49,7 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
 		var minimum = 0f
 		if (!wfg) minimum = 0.399900111f
 
-		MovementUtils.strafe(thePlayer, speed1.coerceAtLeast(minimum).coerceAtMost(2f))
+		MovementUtils.strafe(thePlayer, speed1.coerceIn(minimum, 2f))
 	}
 
 	override fun onMotion(eventState: EventState)

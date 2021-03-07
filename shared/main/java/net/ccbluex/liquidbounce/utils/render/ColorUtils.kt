@@ -152,14 +152,14 @@ object ColorUtils : MinecraftInstance()
 	@JvmStatic
 	fun rainbow(speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color
 	{
-		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + 400000L) / 10F.pow(9 + (11 - speed.coerceAtLeast(1).coerceAtMost(10))) % 1, saturation, brightness))
+		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + 400000L) / 10F.pow(9 + (11 - speed.coerceIn(1, 10))) % 1, saturation, brightness))
 		return Color(currentColor.red / 255F * 1F, currentColor.green / 255f * 1F, currentColor.blue / 255F * 1F, currentColor.alpha / 255F)
 	}
 
 	@JvmStatic
 	fun rainbow(offset: Long, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color
 	{
-		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(9 + (11 - speed.coerceAtLeast(1).coerceAtMost(10))) % 1, saturation, brightness))
+		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(9 + (11 - speed.coerceIn(1, 10))) % 1, saturation, brightness))
 		return Color(currentColor.red / 255F * 1F, currentColor.green / 255F * 1F, currentColor.blue / 255F * 1F, currentColor.alpha / 255F)
 	}
 
@@ -175,7 +175,7 @@ object ColorUtils : MinecraftInstance()
 	@JvmStatic
 	fun rainbow(offset: Long, alpha: Float, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color
 	{
-		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(9 + (11 - speed.coerceAtLeast(1).coerceAtMost(10))) % 1, saturation, brightness))
+		val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(9 + (11 - speed.coerceIn(1, 10))) % 1, saturation, brightness))
 		return Color(currentColor.red / 255F, currentColor.green / 255F, currentColor.blue / 255F, alpha)
 	}
 
@@ -217,9 +217,9 @@ object ColorUtils : MinecraftInstance()
 		val rgb2 = FloatArray(3)
 		color1.getColorComponents(rgb1)
 		color2.getColorComponents(rgb2)
-		val red = (rgb1[0] * r + rgb2[0] * ir).coerceAtLeast(0F).coerceAtMost(1F)
-		val green = (rgb1[1] * r + rgb2[1] * ir).coerceAtLeast(0F).coerceAtMost(1F)
-		val blue = (rgb1[2] * r + rgb2[2] * ir).coerceAtLeast(0F).coerceAtMost(1F)
+		val red = (rgb1[0] * r + rgb2[0] * ir).coerceIn(0F, 1F)
+		val green = (rgb1[1] * r + rgb2[1] * ir).coerceIn(0F, 1F)
+		val blue = (rgb1[2] * r + rgb2[2] * ir).coerceIn(0F, 1F)
 
 		return try
 		{

@@ -40,7 +40,12 @@ open class HUD : MinecraftInstance()
 		elements.sortedBy { -it.info.priority }.forEach {
 			GL11.glPushMatrix()
 
-			if (!it.info.disableScale) GL11.glScalef(it.scale, it.scale, it.scale)
+			if (!it.info.disableScale)
+			{
+				val scale = it.scale
+
+				GL11.glScalef(scale, scale, scale)
+			}
 
 			GL11.glTranslated(it.renderX, it.renderY, 0.0)
 
