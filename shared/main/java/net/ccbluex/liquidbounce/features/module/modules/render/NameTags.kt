@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -75,9 +74,9 @@ class NameTags : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val bot = botValue.get()
-		theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).filter { bot || !AntiBot.isBot(theWorld, thePlayer, it) }.forEach { entity ->
+		theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).map { it to AntiBot.isBot(theWorld, thePlayer, it) }.run { if (bot) this else filterNot(Pair<IEntityLivingBase, Boolean>::second) }.forEach { (entity, isBot) ->
 			val name = entity.displayName.unformattedText
-			renderNameTag(theWorld, thePlayer, entity, if (clearNamesValue.get()) ColorUtils.stripColor(name) else name)
+			renderNameTag(thePlayer, entity, if (clearNamesValue.get()) ColorUtils.stripColor(name) else name, isBot)
 		}
 
 		glPopMatrix()
@@ -87,24 +86,17 @@ class NameTags : Module()
 		glColor4f(1F, 1F, 1F, 1F)
 	}
 
-	private fun renderNameTag(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, entity: IEntityLivingBase, tag: String)
+	private fun renderNameTag(thePlayer: IEntityPlayerSP, entity: IEntityLivingBase, tag: String, isBot: Boolean)
 	{
 		val fontRenderer = fontValue.get()
 
 		val murderDetector = LiquidBounce.moduleManager[MurderDetector::class.java] as MurderDetector
 
-		val entityIDText = if (entityIDValue.get())
-		{
-			val entityID = entity.entityId
+		val entityIDText = if (entityIDValue.get()) "#${entity.entityId} " else ""
 
-			"#$entityID "
-		}
-		else ""
-
-		val bot = AntiBot.isBot(theWorld, thePlayer, entity)
 		val nameColor = when
 		{
-			bot -> "\u00A74\u00A7m" // DARK_RED + BOLD
+			isBot -> "\u00A74\u00A7m" // DARK_RED + BOLD
 			entity.invisible -> "\u00A78\u00A7o" // DARK_GRAY + ITALIC
 			entity.sneaking -> "\u00A7o" // ITALIC
 			else -> ""
@@ -145,7 +137,7 @@ class NameTags : Module()
 		}
 		else ""
 
-		val botText = if (bot) " \u00A7c\u00A7l[BOT]" else ""
+		val botText = if (isBot) " \u00A7c\u00A7l[BOT]" else ""
 		val murderText = if (murderDetector.state && murderDetector.murders.contains(entity)) "\u00A75\u00A7l[MURDER]\u00A7r " else ""
 
 		var text = "$murderText$entityIDText$distanceText$pingText\u00A77$nameColor$tag$healthText$botText"

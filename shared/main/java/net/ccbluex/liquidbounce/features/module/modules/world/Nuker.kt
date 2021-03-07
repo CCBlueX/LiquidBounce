@@ -24,7 +24,10 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import java.awt.Color
 import kotlin.math.roundToInt
 
@@ -100,8 +103,9 @@ class Nuker : Module()
 
 			// Default nuker
 
-			val validBlocks = searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filterValues(::validBlock).filterKeys { getCenterDistance(thePlayer, it) <= radius }.filterKeys { !layer || it.y >= thePlayer.posY }.filterKeys { pos ->
-				throughWalls || run {
+			val validBlocks = searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filterValues(::validBlock).filterKeys { getCenterDistance(thePlayer, it) <= radius }.run { if (layer) filterKeys { it.y >= thePlayer.posY } else this }.run {
+				if (throughWalls) this
+				else filterKeys { pos ->
 					// ThroughWalls: Just break blocks in your sight
 					// Raytrace player eyes to block position (through walls check)
 					val eyesPos = WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ)
@@ -203,16 +207,15 @@ class Nuker : Module()
 			if (provider.isItemSword(thePlayer.heldItem?.item)) return
 
 			// Search for new blocks to break
-			searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filterValues(::validBlock).filterKeys { getCenterDistance(thePlayer, it) <= radius }.filterKeys { !layer || it.y >= thePlayer.posY }.filterKeys { pos ->
-				throughWalls || run {
+			searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filterValues(::validBlock).filterKeys { getCenterDistance(thePlayer, it) <= radius }.filterKeys { !layer || it.y >= thePlayer.posY }.run {
+				if (throughWalls) this
+				else filterKeys { pos ->
 					// ThroughWalls: Just break blocks in your sight
 					// Raytrace player eyes to block position (through walls check)
-					val eyesPos = WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ)
-					val blockVec = WVec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
-					val rayTrace = theWorld.rayTraceBlocks(eyesPos, blockVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
 
 					// Check if block is visible
-					rayTrace != null && rayTrace.blockPos == pos
+
+					(theWorld.rayTraceBlocks(WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ), WVec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) ?: return@filterKeys false).blockPos == pos
 				}
 			}.forEach { (pos, _) -> // Instant break block
 				netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, pos, provider.getEnumFacing(EnumFacingType.DOWN)))

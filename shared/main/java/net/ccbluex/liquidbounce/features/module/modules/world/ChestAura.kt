@@ -23,7 +23,10 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.extensions.getVec
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BlockValue
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
 object ChestAura : Module()
@@ -69,11 +72,9 @@ object ChestAura : Module()
 				val throughWalls = throughWallsValue.get()
 
 
-				currentBlock = BlockUtils.searchBlocks(theWorld, thePlayer, radius.toInt()).asSequence().filter { func.getIdFromBlock(it.value) == chestID }.filter { !clickedBlocks.contains(it.key) }.filter { BlockUtils.getCenterDistance(thePlayer, it.key) < range }.filter { (pos, _) ->
-					throughWalls || run {
-						val movingObjectPosition = theWorld.rayTraceBlocks(eyesPos, pos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
-						movingObjectPosition != null && movingObjectPosition.blockPos == pos
-					}
+				currentBlock = BlockUtils.searchBlocks(theWorld, thePlayer, radius.toInt()).asSequence().filter { func.getIdFromBlock(it.value) == chestID }.filter { !clickedBlocks.contains(it.key) }.filter { BlockUtils.getCenterDistance(thePlayer, it.key) < range }.run {
+					if (throughWalls) this
+					else filter { (pos, _) -> (theWorld.rayTraceBlocks(eyesPos, pos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) ?: return@filter false).blockPos == pos }
 				}.minBy { BlockUtils.getCenterDistance(thePlayer, it.key) }?.key
 
 				if (rotationsValue.get()) RotationUtils.setTargetRotation((RotationUtils.faceBlock(theWorld, thePlayer, currentBlock ?: return) ?: return).rotation)

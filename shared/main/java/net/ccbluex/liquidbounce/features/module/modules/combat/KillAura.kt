@@ -744,17 +744,22 @@ class KillAura : Module()
 
 		val autoBlockHurtTimeCheck = autoBlockHurtTimeCheckValue.get()
 
-		val entityList = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, maxTargetRange + 2.0).filter { EntityUtils.isEnemy(it, aac) }.filterNot { switchMode && previouslySwitchedTargets.contains(it.entityId) }.filter { entity ->
-			fov == 180f || when (fovMode)
-			{
-				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
-				else -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
-			} <= fov
+		val entityList = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, maxTargetRange + 2.0).filter { EntityUtils.isEnemy(it, aac) }.filterNot { switchMode && previouslySwitchedTargets.contains(it.entityId) }.run {
+			if (fov < 180f) filter { entity ->
+				when (fovMode)
+				{
+					"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
+					else -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
+				} <= fov
+			}
+			else this
 		}.map { it.asEntityLivingBase() to thePlayer.getDistanceToEntityBox(it) }
 
 		entityList.forEach { (entity, distance) ->
-			if (distance <= blockRange && (!autoBlockHurtTimeCheck || entity.hurtTime <= hurtTime)) abTargets.add(entity)
-			if (distance <= getAttackRange(thePlayer, entity) && entity.hurtTime <= hurtTime) targets.add(entity)
+			val entityHurtTime = entity.hurtTime
+
+			if (distance <= blockRange && (!autoBlockHurtTimeCheck || entityHurtTime <= hurtTime)) abTargets.add(entity)
+			if (distance <= getAttackRange(thePlayer, entity) && entityHurtTime <= hurtTime) targets.add(entity)
 		}
 
 		// If there is no attackable entities found, search about pre-aimable entities and pre-swingable entities instead.
