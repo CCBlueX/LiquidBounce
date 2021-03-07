@@ -62,11 +62,18 @@ class ClientJSWrapper(private val viewContextProvider: ViewContextProvider, val 
         // Do we know an event that has this name? What is the event class behind this name?
         val eventClass = EVENT_MAP[name] ?: throw IllegalArgumentException("Unknown event: $name")
 
+
+        // Get the list of the current event type
+        val hookList = registeredEvents.computeIfAbsent(eventClass) { ArrayList() }
+
+        // The event function is stored in this property
+        val propertyName = "engine__${name}__${hookList.size}"
+
         // Make a property with the name engine__ plus the name of the event. This is made to
         // make the function accessible for the event handler
         WebPlatform.contextThread.scheduleBlocking {
             viewContextProvider.syncWithJavascript {
-                it.context.globalObject.setProperty("engine__$name", handler, JavascriptPropertyAttributes.NONE)
+                it.context.globalObject.setProperty(propertyName, handler, JavascriptPropertyAttributes.NONE)
             }
         }
 
@@ -74,7 +81,7 @@ class ClientJSWrapper(private val viewContextProvider: ViewContextProvider, val 
         val eventHook = EventHook<Event>(this, { event ->
             WebPlatform.contextThread.scheduleBlocking {
                 viewContextProvider.syncWithJavascript {
-                    it.context.globalObject.getProperty("engine__$name").toObject().callAsFunction(
+                    it.context.globalObject.getProperty(propertyName).toObject().callAsFunction(
                         it.context.globalObject,
                         webView.databind.conversionUtils.toJavascript(it.context, event)
                     )
@@ -82,8 +89,9 @@ class ClientJSWrapper(private val viewContextProvider: ViewContextProvider, val 
             }
 
         }, false)
-        // Put the event hook in the map, if there was one previously, unregister it.
-        registeredEvents.computeIfAbsent(eventClass) { ArrayList() }.add(eventHook)
+
+        // Add the event hook to the list
+        hookList.add(eventHook)
 
         // Register the event hook
         EventManager.registerEventHook(eventClass, eventHook)

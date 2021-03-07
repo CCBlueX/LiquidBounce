@@ -47,11 +47,16 @@ class SingleThreadTaskScheduler : AutoCloseable {
                     if (size > 0) {
                         val task = this.queue.poll()!!
 
-                        val result = task.runnable()
+                        val result = try {
+                            task.runnable()
+                        } catch (e: Throwable) {
+                            RuntimeException("Task failed execution", e).printStackTrace()
+
+                            null
+                        }
 
                         synchronized(task) {
-                            task.done = true
-                            task.setValueByAny(result)
+                            task.done(result)
                         }
 
                         // Wake waiting threads up
@@ -142,15 +147,15 @@ private class ExecutionPromise<T>(val runnable: ScheduledRunnable<T>) : Future<T
 
     override fun isDone(): Boolean = synchronized(this) { this.done }
 
-    override fun get(): T {
-        var value: T
+    override fun get(): T? {
+        var value: T?
 
         run {
             while (true) {
                 // Check if the task finished, if it is break...
                 synchronized(this) {
                     if (this.done) {
-                        value = this.value!!
+                        value = this.value
 
                         return@run
                     }
@@ -170,8 +175,9 @@ private class ExecutionPromise<T>(val runnable: ScheduledRunnable<T>) : Future<T
         throw NotImplementedError("Not supported")
     }
 
-    fun setValueByAny(any: Any?) {
-        this.value = any as T
+    fun done(any: Any?) {
+        this.done = true
+        this.value = any as T?
     }
 
 }
