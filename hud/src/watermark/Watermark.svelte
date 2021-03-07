@@ -4,6 +4,6 @@
     .watermark {
         position: absolute;
         top: 15px;
-        left: 55px;
+        left: 15px;
     }
 </style>

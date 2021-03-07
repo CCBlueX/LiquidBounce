@@ -5,7 +5,7 @@
 </script>
 
 <div class="module {active ? 'active' : ''} {enabled ? 'enabled' : ''}">
-    <div class="unskew">{name}</div>
+    {name}
 </div>
 
 <style>
@@ -14,10 +14,6 @@
         color: #CBD1E3;
         font-size: 12px;
         padding: 5px 10px;
-    }
-
-    .unskew {
-        transform: skew(5deg, 0);
     }
 
     .module.active {

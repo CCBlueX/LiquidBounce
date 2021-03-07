@@ -12,7 +12,7 @@
         {/if}
     </div>
     <div class="category-name">
-        <div class="unskew">{name}</div>
+        {name}
     </div>
 </div>
 
@@ -32,7 +32,8 @@
         background: linear-gradient(to left, rgba(0, 0, 0, 0.5) 50%, #4677ff 50%);
         background-size: 200% 100%;
         background-position: right bottom;
-        transition: background .2s ease-out;
+        will-change: background-position;
+        transition: background-position .2s ease-out;
         overflow: hidden;
     }
 
@@ -53,11 +54,5 @@
         left: 0;
         right: 0;
         margin: auto;
-        transform: skew(5deg, 0);
-    }
-
-    .unskew {
-        transform: skew(5deg, 0);
-        text-transform: capitalize;
     }
 </style>

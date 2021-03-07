@@ -132,9 +132,7 @@
 
         position: absolute;
         top: 85px;
-        left: 35px;
-
-        transform: skew(-5deg, 0);
+        left: 15px;
         display: flex;
         flex-direction: row;
     }
