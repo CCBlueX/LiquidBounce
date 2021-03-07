@@ -25,7 +25,6 @@
         width: 300px;
         overflow: hidden;
         padding: 10px;
-        margin-top: 10px;
     }
 
     .icon {
