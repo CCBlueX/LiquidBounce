@@ -26,6 +26,7 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.util.glu.Cylinder
 import org.lwjgl.util.glu.GLU
 import java.awt.Color
+import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.sqrt
 
@@ -213,11 +214,11 @@ class Projectiles : Module()
 			// Set arrow box
 			val arrowBox = provider.createAxisAlignedBB(posX - size, posY - size, posZ - size, posX + size, posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
 
-			val chunkMinX = floor((arrowBox.minX - 2.0) * 0.0625).toInt()
-			val chunkMaxX = floor((arrowBox.maxX + 2.0) * 0.0625).toInt()
+			val chunkMinX = floor((arrowBox.minX - 2) * 0.0625).toInt()
+			val chunkMaxX = ceil((arrowBox.maxX + 2) * 0.0625).toInt()
 
-			val chunkMinZ = floor((arrowBox.minZ - 2.0) * 0.0625).toInt()
-			val chunkMaxZ = floor((arrowBox.maxZ + 2.0) * 0.0625).toInt()
+			val chunkMinZ = floor((arrowBox.minZ - 2) * 0.0625).toInt()
+			val chunkMaxZ = ceil((arrowBox.maxZ + 2) * 0.0625).toInt()
 
 			// Check which entities colliding with the arrow
 			val collidedEntities = mutableListOf<IEntity>()

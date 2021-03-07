@@ -17,6 +17,7 @@ interface IChunk
 {
 	val x: Int
 	val z: Int
+	val isLoaded: Boolean
 
 	fun getEntitiesWithinAABBForEntity(thePlayer: IEntityPlayerSP, arrowBox: IAxisAlignedBB, collidedEntities: MutableList<IEntity>, predicate: Predicate<IEntity>?)
 	fun getHeightValue(x: Int, z: Int): Int

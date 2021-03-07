@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.CPSCounter
+import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils.isEnemy
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
@@ -346,12 +347,12 @@ class TpAura : Module()
 
 	private fun getTargets(theWorld: IWorldClient, thePlayer: IEntityPlayerSP): MutableList<IEntityLivingBase>
 	{
-		val range = rangeValue.get()
+		val range = rangeValue.get().toDouble()
 		val hurtTime = hurtTimeValue.get()
-		return theWorld.loadedEntityList.asSequence().filter { isEnemy(it, false) }.map(IEntity::asEntityLivingBase).filter { it.hurtTime <= hurtTime }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.sortedBy { it.getDistanceToEntity(thePlayer) * 1000 }.toMutableList()
+		return EntityUtils.getEntitiesInRadius(theWorld, thePlayer, range).asSequence().filter { isEnemy(it, false) }.map(IEntity::asEntityLivingBase).filter { it.hurtTime <= hurtTime }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.sortedBy { it.getDistanceToEntity(thePlayer) * 1000 }.toMutableList()
 	}
 
-	fun isTarget(entity: IEntity?): Boolean = currentTargets.isNotEmpty() && (0 until if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size).any { currentTargets[it].isEntityEqual(entity) }
+	fun isTarget(entity: IEntity?): Boolean = currentTargets.isNotEmpty() && (0 until if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size).any { currentTargets[it] == entity }
 
 	override val tag: String
 		get() = "${maxDashDistanceValue.get()}"

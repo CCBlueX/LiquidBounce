@@ -84,9 +84,11 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		if (!minimap) RenderUtils.drawRect(0F, 0F, size, size, Color(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get()).rgb)
 
 		val viewDistance = viewDistanceValue.get() * 16.0F
-
 		val fovSize = fovSizeValue.get()
-		val maxDisplayableDistanceSquare = ((viewDistance + fovSize.toDouble()) * (viewDistance + fovSize.toDouble()))
+
+		val maxViewDistance = viewDistance + fovSize.toDouble()
+		val maxDisplayableDistanceSquare = maxViewDistance * maxViewDistance
+
 		val halfSize = size * 0.5f
 
 		RenderUtils.makeScissorBox(x.toFloat(), y.toFloat(), x.toFloat() + ceil(size), y.toFloat() + ceil(size))
@@ -186,7 +188,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		val esp = LiquidBounce.moduleManager[ESP::class.java] as ESP
 		val useESPColors = useESPColorsValue.get()
 
-		theWorld.loadedEntityList.filter { EntityUtils.isSelected(it, false) }.filter { it != thePlayer }.forEach { entity ->
+		EntityUtils.getEntitiesInRadius(theWorld, thePlayer, maxViewDistance + 2.0).filter { EntityUtils.isSelected(it, false) }.filterNot { it == thePlayer }.forEach { entity ->
 			val positionRelativeToPlayer = Vector2f((renderX - entity.posX).toFloat(), (renderZ - entity.posZ).toFloat())
 
 			if (maxDisplayableDistanceSquare < positionRelativeToPlayer.lengthSquared()) return@forEach

@@ -404,7 +404,7 @@ class KillAura : Module()
 	}
 
 	@EventTarget
-	fun onWorldChange(event: WorldEvent)
+	fun onWorldChange(@Suppress("UNUSED_PARAMETER") event: WorldEvent)
 	{
 		if (disableOnDeathValue.get())
 		{
@@ -700,7 +700,7 @@ class KillAura : Module()
 				var targets = 0
 
 				run {
-					theWorld.loadedEntityList.filter { EntityUtils.isEnemy(it, aac) }.filter { thePlayer.getDistanceToEntityBox(it) <= getAttackRange(thePlayer, it) }.map(IEntity::asEntityLivingBase).forEach { entity ->
+					EntityUtils.getEntitiesInRadius(theWorld, thePlayer, maxAttackRange + 2.0).filter { EntityUtils.isEnemy(it, aac) }.filter { thePlayer.getDistanceToEntityBox(it) <= getAttackRange(thePlayer, it) }.map(IEntity::asEntityLivingBase).forEach { entity ->
 						attackEntity(entity)
 						targets += 1
 
@@ -744,28 +744,21 @@ class KillAura : Module()
 
 		val autoBlockHurtTimeCheck = autoBlockHurtTimeCheckValue.get()
 
-		theWorld.loadedEntityList.asSequence().filter { EntityUtils.isEnemy(it, aac) }.filterNot { switchMode && previouslySwitchedTargets.contains(it.entityId) }.filter { entity ->
+		val entityList = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, maxTargetRange + 2.0).filter { EntityUtils.isEnemy(it, aac) }.filterNot { switchMode && previouslySwitchedTargets.contains(it.entityId) }.filter { entity ->
 			fov == 180f || when (fovMode)
 			{
 				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
 				else -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
 			} <= fov
-		}.forEach { entity ->
-			val distance = thePlayer.getDistanceToEntityBox(entity)
-			val target = entity.asEntityLivingBase()
+		}.map { it.asEntityLivingBase() to thePlayer.getDistanceToEntityBox(it) }
 
-			if (distance <= blockRange && (!autoBlockHurtTimeCheck || target.hurtTime <= hurtTime)) abTargets.add(target)
-			if (distance <= getAttackRange(thePlayer, entity) && target.hurtTime <= hurtTime) targets.add(target)
+		entityList.forEach { (entity, distance) ->
+			if (distance <= blockRange && (!autoBlockHurtTimeCheck || entity.hurtTime <= hurtTime)) abTargets.add(entity)
+			if (distance <= getAttackRange(thePlayer, entity) && entity.hurtTime <= hurtTime) targets.add(entity)
 		}
 
 		// If there is no attackable entities found, search about pre-aimable entities and pre-swingable entities instead.
-		if (targets.isEmpty()) theWorld.loadedEntityList.asSequence().filter { EntityUtils.isEnemy(it, aac) }.filterNot { switchMode && previouslySwitchedTargets.contains(it.entityId) }.map(IEntity::asEntityLivingBase).filter { it.hurtTime <= hurtTime }.filter { entity ->
-			fov == 180f || when (fovMode)
-			{
-				"ServerRotation" -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
-				else -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)
-			} <= fov
-		}.filter { thePlayer.getDistanceToEntityBox(it) <= maxTargetRange }.toList().forEach { targets.add(it) }
+		if (targets.isEmpty()) entityList.filter { it.second <= maxTargetRange }.forEach { targets.add(it.first) }
 
 		// Sort targets by priority
 		when (priorityValue.get().toLowerCase())
@@ -899,8 +892,10 @@ class KillAura : Module()
 			targetBox = targetBox.offset(xPredict, yPredict, zPredict)
 		}
 
+		val jitter = jitterValue.get()
+
 		// Jitter
-		val jitterData = RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get())
+		val jitterData = if (jitter) RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get()) else null
 
 		val hitboxDecrement = hitboxDecrementValue.get().toDouble()
 		val searchSensitivity = centerSearchSensitivityValue.get().toDouble()
@@ -917,7 +912,7 @@ class KillAura : Module()
 			else -> 0
 		}
 
-		if (jitterValue.get() && (thePlayer.getDistanceToEntityBox(entity) <= max(maxAttackRange, if (fakeSwingValue.get()) swingRange else Float.MIN_VALUE))) flags = flags or RotationUtils.JITTER
+		if (jitter && (thePlayer.getDistanceToEntityBox(entity) <= max(maxAttackRange, if (fakeSwingValue.get()) swingRange else Float.MIN_VALUE))) flags = flags or RotationUtils.JITTER
 		if (playerPredictValue.get()) flags = flags or RotationUtils.PLAYER_PREDICT
 		if (thePlayer.getDistanceToEntityBox(entity) <= throughWallsRangeValue.get()) flags = flags or RotationUtils.SKIP_VISIBLE_CHECK
 

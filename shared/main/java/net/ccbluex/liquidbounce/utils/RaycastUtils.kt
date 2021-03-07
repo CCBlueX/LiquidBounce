@@ -62,7 +62,7 @@ object RaycastUtils : MinecraftInstance()
 			{
 				val hitDistance = rayStartPos.distanceTo(rayIntercept.hitVec)
 
-				if (hitDistance < reach || reach == 0.0) if (entity.isEntityEqual(ridingEntity) && !canRiderInteract)
+				if (hitDistance < reach || reach == 0.0) if (entity == ridingEntity && !canRiderInteract)
 				{
 					if (reach == 0.0) pointedEntity = entity
 				}

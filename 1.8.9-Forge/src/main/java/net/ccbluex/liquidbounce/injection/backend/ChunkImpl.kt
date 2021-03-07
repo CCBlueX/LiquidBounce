@@ -25,6 +25,8 @@ class ChunkImpl(val wrapped: Chunk) : IChunk
 		get() = wrapped.xPosition
 	override val z: Int
 		get() = wrapped.zPosition
+	override val isLoaded: Boolean
+		get() = wrapped.isLoaded
 
 	override fun getEntitiesWithinAABBForEntity(thePlayer: IEntityPlayerSP, arrowBox: IAxisAlignedBB, collidedEntities: MutableList<IEntity>, predicate: Predicate<IEntity>?) = wrapped.getEntitiesWithinAABBForEntity(thePlayer.unwrap(), arrowBox.unwrap(), WrappedMutableList(collidedEntities, Entity::wrap, IEntity::unwrap), predicate?.let { WrappedPredicate(it, Entity::wrap) })
 

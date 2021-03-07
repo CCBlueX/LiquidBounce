@@ -108,5 +108,5 @@ interface IEntity
 	fun copyLocationAndAnglesFrom(player: IEntityPlayerSP)
 	fun setPositionAndRotation(oldX: Double, oldY: Double, oldZ: Double, rotationYaw: Float, rotationPitch: Float)
 
-	fun isEntityEqual(other: IEntity?): Boolean
+	override operator fun equals(other: Any?): Boolean
 }

@@ -211,14 +211,16 @@ class Aimbot : Module()
 		val minPlayerPredictSize = minPlayerPredictSizeValue.get()
 		val maxPlayerPredictSize = maxPlayerPredictSizeValue.get()
 
-		target = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) <= fov }.filter { (throughWalls || thePlayer.canEntityBeSeen(it)) }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
+		val jitter = jitterValue.get()
+
+		target = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, range + 2.0).asSequence().filter { EntityUtils.isSelected(it, true) }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.run { if (fov < 180F) filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) <= fov } else this }.run { if (throughWalls) this else filter { throughWalls || thePlayer.canEntityBeSeen(it) } }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
 
 		val entity = target ?: return
 
 		if (!lockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, target, range.toDouble())) return
 
 		// Jitter
-		val jitterData = RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get())
+		val jitterData = if (jitter) RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get()) else null
 
 		// Apply predict to target box
 
@@ -245,7 +247,7 @@ class Aimbot : Module()
 		var flags = 0
 
 		if (centerValue.get()) flags = flags or RotationUtils.LOCK_CENTER
-		if (jitterValue.get()) flags = flags or RotationUtils.JITTER
+		if (jitter) flags = flags or RotationUtils.JITTER
 		if (throughWalls) flags = flags or RotationUtils.SKIP_VISIBLE_CHECK
 		if (playerPredict) flags = flags or RotationUtils.PLAYER_PREDICT
 		if (predictValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT

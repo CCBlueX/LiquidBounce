@@ -94,7 +94,7 @@ object ColorUtils : MinecraftInstance()
 			val murderDetector = moduleManager[MurderDetector::class.java] as MurderDetector
 
 			// Indicate Hurt
-			if (indicateHurt && entityLiving.hurtTime > 0 || indicateTarget && (entity.isEntityEqual(aimBot.target) || entity.isEntityEqual(killAura.target) || tpAura.isTarget(entityLiving))) return Color.RED
+			if (indicateHurt && entityLiving.hurtTime > 0 || indicateTarget && (entity == aimBot.target || entity == killAura.target || tpAura.isTarget(entityLiving))) return Color.RED
 
 			// Indicate Friend
 			if (indicateFriend && EntityUtils.isFriend(entityLiving)) return Color.BLUE

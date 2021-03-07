@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.ItemType
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.wrapAngleTo180_float
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
@@ -15,6 +16,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
@@ -67,14 +69,7 @@ class Ignite : Module()
 
 		val fireInHotbar = if (lighterInHotbar == -1) lavaInHotbar else lighterInHotbar
 
-		theWorld.loadedEntityList.firstOrNull {
-			isSelected(it, true) && !it.burning && run {
-				val blockPos = it.position
-				thePlayer.getDistanceSq(blockPos) < 22.3 && isReplaceable(blockPos) && provider.isBlockAir(getBlock(theWorld, blockPos))
-			}
-		}?.let { entity ->
-			val blockPos = entity.position
-
+		EntityUtils.getEntitiesInRadius(theWorld, thePlayer, 8.0).filterNot(IEntity::burning).filter { isSelected(it, true) }.map(IEntity::position).filter { thePlayer.getDistanceSq(it) < 22.3 }.filter(::isReplaceable).firstOrNull { provider.isBlockAir(getBlock(theWorld, it)) }?.let { blockPos ->
 			RotationUtils.keepCurrentRotation = true
 			netHandler.addToSendQueue(provider.createCPacketHeldItemChange(fireInHotbar - 36))
 

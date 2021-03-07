@@ -96,13 +96,10 @@ class RotationUtils : MinecraftInstance(), Listenable
 		const val LOCK_CENTER = 0b1
 		const val OUT_BORDER = 0b10
 		const val RANDOM_CENTER = 0b100
-
 		const val JITTER = 0b1000
 		const val SKIP_VISIBLE_CHECK = 0b10000
-
 		const val PLAYER_PREDICT = 0b100000
 		const val ENEMY_PREDICT = 0b1000000
-
 		const val SILENT_ROTATION = 0b10000000
 
 		private val random = Random()
@@ -290,7 +287,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * count of step to search the good center. (*Warning If you set this value too low, it will make your minecraft SO SLOW AND SLOW.*) default is 0.2D
 		 * @return                   center
 		 */
-		fun searchCenter(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetBox: IAxisAlignedBB, flags: Int, jitterData: JitterData, minPlayerPredict: Float, maxPlayerPredict: Float, distance: Float, hitboxDecrement: Double, searchSensitivity: Double): VecRotation?
+		fun searchCenter(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetBox: IAxisAlignedBB, flags: Int, jitterData: JitterData?, minPlayerPredict: Float, maxPlayerPredict: Float, distance: Float, hitboxDecrement: Double, searchSensitivity: Double): VecRotation?
 		{
 			val randomVec: WVec3
 			val eyes = thePlayer.getPositionEyes(1.0f)
@@ -333,7 +330,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 			val jitter = flags and JITTER != 0
 
 			// Calculate jitter amount
-			if (jitter)
+			if (jitter && jitterData != null)
 			{
 				val yawJitter = jitterData.yawRate > 0 && random.nextInt(100) <= jitterData.yawRate
 				val pitchJitter = jitterData.pitchRate > 0 && random.nextInt(100) <= jitterData.pitchRate
@@ -418,11 +415,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your entity
 		 * @return        difference between rotation
 		 */
-		fun getClientRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double
-		{
-			val rotation = toRotation(thePlayer, getCenter(entity.entityBoundingBox), minPlayerPredictSize, maxPlayerPredictSize, playerPredict)
-			return getRotationDifference(rotation, Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch))
-		}
+		fun getClientRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double = getRotationDifference(toRotation(thePlayer, getCenter(entity.entityBoundingBox), minPlayerPredictSize, maxPlayerPredictSize, playerPredict), Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch))
 
 		/**
 		 * Calculate difference between the "server-sided rotation" and your entity
@@ -431,11 +424,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your entity
 		 * @return        difference between rotation
 		 */
-		fun getServerRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double
-		{
-			val rotation = toRotation(thePlayer, getCenter(entity.entityBoundingBox), minPlayerPredictSize, maxPlayerPredictSize, playerPredict)
-			return getRotationDifference(rotation, serverRotation)
-		}
+		fun getServerRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double = getRotationDifference(toRotation(thePlayer, getCenter(entity.entityBoundingBox), minPlayerPredictSize, maxPlayerPredictSize, playerPredict), serverRotation)
 
 		// /**
 		//  * Calculate difference between the client rotation and your entity
@@ -518,13 +507,9 @@ class RotationUtils : MinecraftInstance(), Listenable
 			val yawRadians = toRadians(rotation.yaw)
 			val pitchRadians = toRadians(rotation.pitch)
 
-			val yawCos = cos(-yawRadians - PI)
-			val yawSin = sin(-yawRadians - PI)
-
 			val pitchCos = -cos(-pitchRadians)
-			val pitchSin = sin(-pitchRadians)
 
-			return WVec3((yawSin * pitchCos).toDouble(), pitchSin.toDouble(), (yawCos * pitchCos).toDouble())
+			return WVec3((sin(-yawRadians - PI) * pitchCos).toDouble(), sin(-pitchRadians).toDouble(), (cos(-yawRadians - PI) * pitchCos).toDouble())
 		}
 
 		/**
@@ -532,21 +517,16 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 *
 		 * @param  targetEntity
 		 * your target entity
-		 * @param  blockReachDistance
+		 * @param  reachDistance
 		 * your reach
 		 * @return                    if crosshair is over target
 		 */
-		fun isFaced(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetEntity: IEntity?, blockReachDistance: Double): Boolean = raycastEntity(theWorld, thePlayer, blockReachDistance) { entity -> targetEntity != null && targetEntity == entity } != null
+		fun isFaced(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetEntity: IEntity?, reachDistance: Double): Boolean = raycastEntity(theWorld, thePlayer, reachDistance) { entity -> targetEntity != null && targetEntity == entity } != null
 
 		/**
 		 * Allows you to check if your enemy is behind a wall
 		 */
-		private fun isVisible(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, vec3: WVec3): Boolean
-		{
-			val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
-
-			return theWorld.rayTraceBlocks(eyesPos, vec3) == null
-		}
+		private fun isVisible(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, vec3: WVec3): Boolean = theWorld.rayTraceBlocks(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ), vec3) == null
 
 		/**
 		 * Set your target rotation
@@ -557,8 +537,9 @@ class RotationUtils : MinecraftInstance(), Listenable
 		fun setTargetRotation(rotation: Rotation?, keepLength: Int)
 		{
 			if (rotation != null && (isNaN(rotation.yaw.toDouble()) || isNaN(rotation.pitch.toDouble()) || rotation.pitch > 90 || rotation.pitch < -90)) return
-			rotation?.fixedSensitivity(mc.gameSettings.mouseSensitivity)
-			targetRotation = rotation
+
+			targetRotation = rotation?.apply { fixedSensitivity(mc.gameSettings.mouseSensitivity) }
+
 			Companion.keepLength = keepLength
 		}
 

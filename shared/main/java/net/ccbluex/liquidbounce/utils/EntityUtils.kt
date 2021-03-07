@@ -8,14 +8,19 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.network.INetworkPlayerInfo
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
+import net.ccbluex.liquidbounce.api.minecraft.world.IChunk
 import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.isAnimal
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.extensions.isMob
+import kotlin.math.ceil
+import kotlin.math.floor
 
 object EntityUtils : MinecraftInstance()
 {
@@ -134,6 +139,26 @@ object EntityUtils : MinecraftInstance()
 		}
 
 		return 0
+	}
+
+	@JvmStatic
+	fun getEntitiesInRadius(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, radius: Double = 16.0): List<IEntity>
+	{
+		val box = thePlayer.entityBoundingBox.expand(radius, radius, radius)
+
+		val chunkMinX = floor(box.minX * 0.0625).toInt()
+		val chunkMaxX = ceil(box.maxX * 0.0625).toInt()
+
+		val chunkMinZ = floor(box.minZ * 0.0625).toInt()
+		val chunkMaxZ = ceil(box.maxZ * 0.0625).toInt()
+
+		val entities = mutableListOf<IEntity>()
+
+		(chunkMinX..chunkMaxX).forEach { x ->
+			(chunkMinZ..chunkMaxZ).asSequence().map { z -> theWorld.getChunkFromChunkCoords(x, z) }.filter(IChunk::isLoaded).forEach { it.getEntitiesWithinAABBForEntity(thePlayer, box, entities, null) }
+		}
+
+		return entities
 	}
 
 	fun getPing(entityPlayer: IEntityLivingBase): Int = mc.netHandler.getPlayerInfo(entityPlayer.uniqueID)?.let(INetworkPlayerInfo::responseTime) ?: -1

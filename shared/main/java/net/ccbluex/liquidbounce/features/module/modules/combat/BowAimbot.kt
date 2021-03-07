@@ -153,7 +153,7 @@ class BowAimbot : Module()
 		val ignoreVisibleCheck = flags and RotationUtils.SKIP_VISIBLE_CHECK != 0
 
 		// The Target Candidates
-		val targetCandidates = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { (ignoreVisibleCheck || thePlayer.canEntityBeSeen(it)) }
+		val targetCandidates = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { ignoreVisibleCheck || thePlayer.canEntityBeSeen(it) }
 
 		val playerPredict = flags and RotationUtils.PLAYER_PREDICT != 0
 
