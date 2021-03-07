@@ -156,6 +156,9 @@ class WebView(
      * Loads the specified [url]
      */
     fun loadPage(page: Page) {
+        // Unregister old listeners
+        this.jsWrapper.unregisterEvents()
+
         WebPlatform.contextThread.scheduleBlocking {
             if (currentPage != page && currentPage != null) {
                 page.close()

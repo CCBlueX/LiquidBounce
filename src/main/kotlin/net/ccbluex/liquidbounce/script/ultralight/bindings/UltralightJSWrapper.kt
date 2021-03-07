@@ -106,5 +106,7 @@ class ClientJSWrapper(private val viewContextProvider: ViewContextProvider, val 
                 EventManager.unregisterEventHook(clazz, hook)
             }
         }
+
+        this.registeredEvents.clear()
     }
 }
