@@ -5,7 +5,7 @@
     export let active;
 </script>
 
-<div class="category" class:active={active}>
+<div class="category {active ? 'active' : ''}">
     <div class="category-icon">
         {#if (active)}
             <img in:fade="{{ duration: 200 }}" out:fade="{{ duration: 200 }}" src="img/tabgui/{name.toLowerCase()}-active.svg" alt="icon">

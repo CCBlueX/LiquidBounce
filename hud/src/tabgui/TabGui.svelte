@@ -103,6 +103,7 @@
         client.on("key", handleKeydown);
         client.on("toggleModule", handleToggleModule);
     } catch (err) {
+        window.addEventListener("keydown", handleKeydown);
         console.log(err);
     }
 </script>
