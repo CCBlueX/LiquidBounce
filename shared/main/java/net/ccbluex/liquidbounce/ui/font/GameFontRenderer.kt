@@ -186,7 +186,7 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 
 		provider.glStateManager.disableBlend()
 		GL11.glTranslated(-(x - 1.5), -(y + 0.5), 0.0)
-		GL11.glColor4f(1f, 1f, 1f, 1f)
+		RenderUtils.resetColor()
 
 		return (x + getStringWidth(text)).toInt()
 	}

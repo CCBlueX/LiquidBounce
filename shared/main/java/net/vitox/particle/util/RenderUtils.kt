@@ -2,6 +2,8 @@ package net.vitox.particle.util
 
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.toRadians
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetColor
 import org.lwjgl.opengl.GL11
 
 object RenderUtils : MinecraftInstance()
@@ -21,7 +23,7 @@ object RenderUtils : MinecraftInstance()
 		GL11.glVertex2f(xTwo, yTwo)
 		GL11.glEnd()
 
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		resetColor()
 		GL11.glDisable(GL11.GL_LINE_SMOOTH)
 		GL11.glEnable(GL11.GL_TEXTURE_2D)
 		GL11.glPopMatrix()
@@ -29,12 +31,7 @@ object RenderUtils : MinecraftInstance()
 
 	fun drawCircle(x: Float, y: Float, radius: Float, color: Int)
 	{
-		val alpha = (color shr 24 and 0xFF) / 255.0f
-		val red = (color shr 16 and 0xFF) / 255.0f
-		val green = (color shr 8 and 0xFF) / 255.0f
-		val blue = (color and 0xFF) / 255.0f
-
-		GL11.glColor4f(red, green, blue, alpha)
+		glColor(color)
 		GL11.glEnable(GL11.GL_BLEND)
 		GL11.glDisable(GL11.GL_TEXTURE_2D)
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
@@ -54,6 +51,6 @@ object RenderUtils : MinecraftInstance()
 		GL11.glPopMatrix()
 		GL11.glEnable(GL11.GL_TEXTURE_2D)
 		GL11.glDisable(GL11.GL_LINE_SMOOTH)
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		resetColor()
 	}
 }

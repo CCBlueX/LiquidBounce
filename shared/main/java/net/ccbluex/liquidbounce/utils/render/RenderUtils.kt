@@ -70,7 +70,7 @@ object RenderUtils : MinecraftInstance()
 			drawSelectionBoundingBox(axisAlignedBB, hydraESP)
 		}
 
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		resetColor()
 		GL11.glDepthMask(true)
 		resetCaps()
 	}
@@ -218,7 +218,7 @@ object RenderUtils : MinecraftInstance()
 
 		drawFilledBox(axisAlignedBB)
 
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		resetColor()
 		GL11.glDepthMask(true)
 
 		resetCaps()
@@ -237,7 +237,7 @@ object RenderUtils : MinecraftInstance()
 		glColor(color)
 		drawFilledBox(axisAlignedBB)
 
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		resetColor()
 		GL11.glEnable(GL11.GL_TEXTURE_2D)
 		GL11.glEnable(GL11.GL_DEPTH_TEST)
 		GL11.glDepthMask(true)
@@ -527,19 +527,15 @@ object RenderUtils : MinecraftInstance()
 		val sections = 50
 		val dAngle = 2.0f * WMathHelper.PI / sections
 
-		val red = color.red / 255.00f
-		val green = color.green / 255.00f
-		val blue = color.blue / 255.00f
-		val alpha = color.alpha / 255.00f
+		glColor(color)
 
 		repeat(sections) {
 			val circleX = radius * sin(it * dAngle)
 			val circleY = radius * cos(it * dAngle)
-			GL11.glColor4f(red, green, blue, alpha)
 			GL11.glVertex2f(x + circleX, y + circleY)
 		}
 
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		resetColor()
 
 		GL11.glEnd()
 
@@ -554,7 +550,7 @@ object RenderUtils : MinecraftInstance()
 		GL11.glDepthMask(false)
 		GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
 
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		resetColor()
 
 		mc.textureManager.bindTexture(image)
 
@@ -614,6 +610,12 @@ object RenderUtils : MinecraftInstance()
 	fun glColor(hex: Int)
 	{
 		glColor(hex shr 16 and 0xFF, hex shr 8 and 0xFF, hex and 0xFF, hex shr 24 and 0xFF)
+	}
+
+	@JvmStatic
+	fun resetColor()
+	{
+		glColor(255, 255, 255, 255)
 	}
 
 	@JvmStatic
@@ -719,7 +721,7 @@ object RenderUtils : MinecraftInstance()
 		Fonts.font35.drawString(nameTag, -width.toFloat(), 1.5f, -1, true)
 
 		resetCaps()
-		GL11.glColor4f(1.00f, 1.00f, 1.00f, 1.00f)
+		resetColor()
 		GL11.glPopMatrix()
 	}
 

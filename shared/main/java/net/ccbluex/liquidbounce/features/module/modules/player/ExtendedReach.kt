@@ -98,7 +98,7 @@ class ExtendedReach : Module()
 
 			for (path in path) glVertex3d(path.xCoord - viewerPosX, path.yCoord - viewerPosY, path.zCoord - viewerPosZ)
 
-			glColor4d(1.0, 1.0, 1.0, 1.0)
+			RenderUtils.resetColor()
 			glEnd()
 
 			glEnable(GL_DEPTH_TEST)

@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
-import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -228,7 +227,7 @@ class Target : Element()
 
 	private fun drawHead(textureManager: ITextureManager, skin: IResourceLocation, width: Int, height: Int)
 	{
-		GL11.glColor4f(1F, 1F, 1F, 1F)
+		RenderUtils.resetColor()
 
 		textureManager.bindTexture(skin)
 		RenderUtils.drawScaledCustomSizeModalRect(4, 4, 8F, 8F, 8, 8, width, height, 64F, 64F)

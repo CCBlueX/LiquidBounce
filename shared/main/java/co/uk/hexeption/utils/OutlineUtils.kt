@@ -4,6 +4,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.api.IExtractedFunctions
 import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft
 import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.opengl.EXTFramebufferObject
@@ -60,7 +61,7 @@ object OutlineUtils
 	{
 		val functions: IExtractedFunctions = wrapper.functions
 
-		setColor(color)
+		RenderUtils.glColor(color)
 		GL11.glDepthMask(false)
 		GL11.glDisable(GL11.GL_DEPTH_TEST)
 		GL11.glEnable(GL11.GL_POLYGON_OFFSET_LINE)
@@ -84,12 +85,6 @@ object OutlineUtils
 		GL11.glEnable(GL11.GL_TEXTURE_2D)
 		GL11.glEnable(GL11.GL_ALPHA_TEST)
 		GL11.glPopAttrib()
-	}
-
-	@JvmStatic
-	fun setColor(color: Color)
-	{
-		GL11.glColor4d((color.red / 255.0f).toDouble(), (color.green / 255.0f).toDouble(), (color.blue / 255.0f).toDouble(), (color.alpha / 255.0f).toDouble())
 	}
 
 	@JvmStatic

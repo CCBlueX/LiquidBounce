@@ -194,7 +194,7 @@ class Notification(private val header: String, private val message: String, priv
 		}
 
 		// Reset Color
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		RenderUtils.resetColor()
 
 		// Animation
 		val delta = RenderUtils.deltaTime

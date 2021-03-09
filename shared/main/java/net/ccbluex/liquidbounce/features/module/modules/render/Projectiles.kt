@@ -301,6 +301,6 @@ class Projectiles : Module()
 		GL11.glPopMatrix()
 		GL11.glDepthMask(true)
 		RenderUtils.resetCaps()
-		GL11.glColor4f(1F, 1F, 1F, 1F)
+		RenderUtils.resetColor()
 	}
 }

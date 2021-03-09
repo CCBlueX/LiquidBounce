@@ -173,7 +173,7 @@ class StorageESP : Module()
 						OutlineUtils.renderFour(color)
 						func.renderTileEntity(tileEntity, partialTicks, -1)
 						OutlineUtils.renderFive()
-						OutlineUtils.setColor(Color.WHITE)
+						RenderUtils.glColor(Color.WHITE)
 					}
 
 					"wireframe" ->
@@ -234,7 +234,7 @@ class StorageESP : Module()
 						OutlineUtils.renderFour(color)
 						renderManager.renderEntityStatic(entity, partialTicks, true)
 						OutlineUtils.renderFive()
-						OutlineUtils.setColor(Color.WHITE)
+						RenderUtils.glColor(Color.WHITE)
 
 						gameSettings.entityShadows = entityShadow
 					}

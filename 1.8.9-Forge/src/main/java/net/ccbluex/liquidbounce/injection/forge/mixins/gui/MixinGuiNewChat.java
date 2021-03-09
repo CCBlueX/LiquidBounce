@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
+import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.renderer.GlStateManager;
@@ -118,7 +119,7 @@ public abstract class MixinGuiNewChat
 									final String formattedText = lvt_10_1_.getChatComponent().getFormattedText();
 
 									font.drawStringWithShadow(formattedText, xPos + 2, yPos - 8, 0xffffff + (currentLineOpacity << 24));
-									GL11.glColor4f(1, 1, 1, 1);
+									RenderUtils.resetColor();
 									GlStateManager.resetColor();
 								}
 							}

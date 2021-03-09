@@ -118,7 +118,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 			RenderUtils.drawRect(1F, 1 + tabY - 1, width, tabY + tabHeight.get(), rectColor)
 		}
 
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		RenderUtils.resetColor()
 
 		var y = 1F
 		tabs.forEachIndexed { index, tab ->
@@ -321,7 +321,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 				RenderUtils.drawRect(x - 1.0f, y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight - 1, color)
 			}
 
-			GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+			RenderUtils.resetColor()
 
 			modules.forEachIndexed { index, module -> fontRenderer.drawString(if (upperCase) module.name.toUpperCase() else module.name, x + 2F, y + tabHeight * index + textPositionY.get(), if (module.state) 0xffffff else 0xcdcdcd, textShadow.get()) }
 		}

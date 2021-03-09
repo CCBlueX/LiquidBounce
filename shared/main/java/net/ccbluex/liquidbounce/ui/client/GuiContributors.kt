@@ -79,7 +79,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				glStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
 				glStateManager.enableTexture2D()
 
-				GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+				RenderUtils.resetColor()
 
 				glStateManager.bindTexture(avatar.textureId)
 
@@ -116,7 +116,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				y += Fonts.font40.fontHeight + 2
 
 				glStateManager.disableTexture2D()
-				GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+				RenderUtils.resetColor()
 				GL11.glBegin(GL11.GL_LINES)
 
 				val middleFont = Fonts.font40.fontHeight shr 1

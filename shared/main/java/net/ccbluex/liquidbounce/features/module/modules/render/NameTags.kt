@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
 import net.ccbluex.liquidbounce.value.*
@@ -82,7 +83,7 @@ class NameTags : Module()
 		glPopAttrib()
 
 		// Reset color
-		glColor4f(1F, 1F, 1F, 1F)
+		RenderUtils.resetColor()
 	}
 
 	private fun renderNameTag(thePlayer: IEntityPlayerSP, entity: IEntityLivingBase, tag: String, isBot: Boolean)

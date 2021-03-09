@@ -152,7 +152,7 @@ class Blink : Module()
 
 			for (pos in positions) glVertex3d(pos[0] - viewerPosX, pos[1] - viewerPosY, pos[2] - viewerPosZ)
 
-			glColor4d(1.0, 1.0, 1.0, 1.0)
+			RenderUtils.resetColor()
 			glEnd()
 
 			glEnable(GL_DEPTH_TEST)

@@ -120,7 +120,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 			val width = 5 - if (rectValue.get()) 4 else 0
 			val height = maxHeight - index * fontHeight.toFloat()
 
-			GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+			RenderUtils.resetColor()
 
 			fontRenderer.drawString(formattedPlayerName, backgroundXPos.toFloat(), height, textColor, shadowValue.get())
 			fontRenderer.drawString(scorePoints, (width - fontRenderer.getStringWidth(scorePoints)).toFloat(), height, textColor, shadowValue.get())
@@ -129,7 +129,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 			{
 				val displayName = objective.displayName
 
-				GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+				RenderUtils.resetColor()
 
 				fontRenderer.drawString(displayName, (backgroundXPos + (maxWidth shr 1) - (fontRenderer.getStringWidth(displayName) shr 1)).toFloat(), (height - fontHeight), textColor, shadowValue.get())
 			}

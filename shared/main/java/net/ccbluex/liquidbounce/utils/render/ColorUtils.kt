@@ -83,7 +83,7 @@ object ColorUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun getESPColor(entity: IEntity?, colorMode: String, customStaticColor: Color, healthMode: String, indicateHurt: Boolean, indicateTarget: Boolean, indicateFriend: Boolean, rainbowSaturation: Float, rainbowBrightness: Float): Color
+	fun getESPColor(entity: IEntity?, colorMode: String, customStaticColor: Color, healthMode: String, indicateHurt: Boolean, indicateTarget: Boolean, indicateFriend: Boolean, rainbowSaturation: Float, rainbowBrightness: Float, alpha: Int = 255): Color
 	{
 		val provider = classProvider
 
@@ -136,7 +136,7 @@ object ColorUtils : MinecraftInstance()
 						color = hexColors[index]
 						break
 					}
-					return Color(color)
+					return Color(applyAlphaChannel(color, alpha))
 				}
 
 				"health" ->
@@ -146,12 +146,12 @@ object ColorUtils : MinecraftInstance()
 
 					if (provider.isEntityPlayer(entity) && (healthMode.equals("Mineplex", ignoreCase = true) || healthMode.equals("Hive", ignoreCase = true))) health = EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("mineplex", ignoreCase = true)).toFloat()
 
-					return getHealthColor(health, maxHealth)
+					return applyAlphaChannel(getHealthColor(health, maxHealth), alpha)
 				}
 			}
 		}
 
-		return if (colorMode.equals("Rainbow", ignoreCase = true)) rainbow(saturation = rainbowSaturation, brightness = rainbowBrightness) else customStaticColor
+		return applyAlphaChannel(if (colorMode.equals("Rainbow", ignoreCase = true)) rainbow(saturation = rainbowSaturation, brightness = rainbowBrightness) else customStaticColor, alpha)
 	}
 
 	@JvmStatic
@@ -221,6 +221,9 @@ object ColorUtils : MinecraftInstance()
 	// return Color(color.red, color.green, color.blue, alpha).rgb
 	@JvmStatic
 	fun applyAlphaChannel(rgb: Int, alpha: Int): Int = alpha and 0xFF shl 24 or rgb
+
+	@JvmStatic
+	fun applyAlphaChannel(color: Color, alpha: Int): Color = Color(applyAlphaChannel(color.rgb, alpha))
 
 	@JvmStatic
 	fun createRGB(red: Int, green: Int, blue: Int, alpha: Int): Int = (alpha.coerceIn(0, 255) and 0xFF shl 24) or (red.coerceIn(0, 255) and 0xFF shl 16) or (green.coerceIn(0, 255) and 0xFF shl 8) or (blue.coerceIn(0, 255) and 0xFF shl 0)

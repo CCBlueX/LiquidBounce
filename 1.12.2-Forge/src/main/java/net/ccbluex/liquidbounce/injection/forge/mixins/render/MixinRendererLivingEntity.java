@@ -130,21 +130,21 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 						GlStateManager.resetColor();
 
 						final Color color = esp.getColor(EntityLivingBaseImplKt.wrap(entitylivingbaseIn));
-						OutlineUtils.setColor(color);
+						RenderUtils.glColor(color);
 						OutlineUtils.renderOne(esp.outlineWidth.get());
 						this.mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
-						OutlineUtils.setColor(color);
+						RenderUtils.glColor(color);
 						OutlineUtils.renderTwo();
 						this.mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
-						OutlineUtils.setColor(color);
+						RenderUtils.glColor(color);
 						OutlineUtils.renderThree();
 						this.mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
-						OutlineUtils.setColor(color);
+						RenderUtils.glColor(color);
 						OutlineUtils.renderFour(color);
 						this.mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
-						OutlineUtils.setColor(color);
+						RenderUtils.glColor(color);
 						OutlineUtils.renderFive();
-						OutlineUtils.setColor(Color.WHITE);
+						RenderUtils.glColor(Color.WHITE);
 				}
 				mc.gameSettings.fancyGraphics = fancyGraphics;
 				mc.gameSettings.gammaSetting = gamma;

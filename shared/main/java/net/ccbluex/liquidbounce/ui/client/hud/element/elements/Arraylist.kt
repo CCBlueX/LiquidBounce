@@ -387,7 +387,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 
 		AWTFontRenderer.assumeNonVolatile = false
 
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		RenderUtils.resetColor()
 
 		return null
 	}

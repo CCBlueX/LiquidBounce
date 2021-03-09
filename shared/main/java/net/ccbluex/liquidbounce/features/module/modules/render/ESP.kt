@@ -50,6 +50,7 @@ class ESP : Module()
 	private val colorRedValue = IntegerValue("R", 255, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 255, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+	private val colorAlphaValue = IntegerValue("Alpha", 255, 0, 255)
 
 	private val botValue = BoolValue("Bots", true)
 	private val friendValue = BoolValue("Friends", true)
@@ -151,7 +152,7 @@ class ESP : Module()
 
 					if (minX > 0 || minY > 0 || maxX <= displayWidth || maxY <= displayWidth)
 					{
-						GL11.glColor4f(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f)
+						RenderUtils.glColor(color)
 
 						GL11.glBegin(GL11.GL_LINE_LOOP)
 						GL11.glVertex2f(minX, minY)
@@ -213,7 +214,7 @@ class ESP : Module()
 		shader.stopDraw(getColor(null), if (mode.equals("ShaderOutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("ShaderGlow", ignoreCase = true)) shaderGlowRadius.get() else 1f, 1f)
 	}
 
-	fun getColor(entity: IEntity?): Color = ColorUtils.getESPColor(entity = entity, colorMode = colorValue.get(), customStaticColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), healthMode = healthModeValue.get(), indicateHurt = hurtValue.get(), indicateTarget = targetValue.get(), indicateFriend = friendValue.get(), rainbowSaturation = saturationValue.get(), rainbowBrightness = brightnessValue.get())
+	fun getColor(entity: IEntity?): Color = ColorUtils.getESPColor(entity = entity, colorMode = colorValue.get(), customStaticColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), healthMode = healthModeValue.get(), indicateHurt = hurtValue.get(), indicateTarget = targetValue.get(), indicateFriend = friendValue.get(), rainbowSaturation = saturationValue.get(), rainbowBrightness = brightnessValue.get(), alpha = colorAlphaValue.get())
 
 	override val tag: String
 		get() = modeValue.get()

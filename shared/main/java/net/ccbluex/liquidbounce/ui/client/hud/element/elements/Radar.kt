@@ -103,7 +103,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		glEnable(GL_BLEND)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		RenderUtils.resetColor()
 
 		val renderX = renderViewEntity.posX
 		val renderZ = renderViewEntity.posZ
@@ -232,12 +232,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 			if (triangleMode)
 			{
-				if (useESPColors)
-				{
-					val color = esp.getColor(entity)
-					glColor4f(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f)
-				}
-				else glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+				if (useESPColors) RenderUtils.glColor(ColorUtils.applyAlphaChannel(esp.getColor(entity), 255)) else RenderUtils.resetColor()
 
 				glBegin(GL_TRIANGLES)
 
@@ -301,7 +296,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 			glDisable(GL_LINE_SMOOTH)
 		}
 
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		RenderUtils.resetColor()
 
 		return Border(0F, 0F, size, size)
 	}

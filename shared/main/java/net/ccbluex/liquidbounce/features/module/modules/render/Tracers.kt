@@ -121,6 +121,6 @@ class Tracers : Module()
 		GL11.glEnable(GL11.GL_DEPTH_TEST)
 		GL11.glDepthMask(true)
 		GL11.glDisable(GL11.GL_BLEND)
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+		RenderUtils.resetColor()
 	}
 }
