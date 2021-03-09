@@ -4,7 +4,7 @@
     export let enabled;
 </script>
 
-<div class="module {active ? 'active' : ''} {enabled ? 'enabled' : ''}">
+<div class="module" class:active={active} class:enabled={enabled}>
     {name}
 </div>
 

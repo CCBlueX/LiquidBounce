@@ -6,7 +6,7 @@
 
 
 <div class="notification">
-    <div class="icon {severity === "INFO" ? "info" : severity === "ERROR" ? "error" : "success"}"></div>
+    <div class:info={severity === "INFO"} class:error={severity === "ERROR"} class:success={severity === "SUCCESS"}></div>
     <div class="title">{title}</div>
     <div class="content">{content}</div>
 </div>
