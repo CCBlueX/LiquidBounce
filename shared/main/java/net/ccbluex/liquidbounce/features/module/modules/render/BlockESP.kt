@@ -139,7 +139,7 @@ class BlockESP : Module()
 			when (mode)
 			{
 				"box", "otherbox", "hydra" -> RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, color, drawOutline, hydraESP)
-				"2d" -> RenderUtils.draw2D(blockPos, color.rgb, Color.BLACK.rgb)
+				"2d" -> RenderUtils.draw2D(blockPos, color.rgb, -16777216)
 			}
 		}
 	}

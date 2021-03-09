@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -137,12 +138,12 @@ class Notification(private val header: String, private val message: String, priv
 		val messageFont = Notifications.messageFontValue.get()
 
 		val bodyColorMode = Notifications.bodyColorModeValue.get()
-		val bodyCustomColor = Color(Notifications.bodyRedValue.get(), Notifications.bodyGreenValue.get(), Notifications.bodyBlueValue.get(), Notifications.bodyAlphaValue.get()).rgb
+		val bodyCustomColor = createRGB(Notifications.bodyRedValue.get(), Notifications.bodyGreenValue.get(), Notifications.bodyBlueValue.get(), Notifications.bodyAlphaValue.get())
 
 		val rect = Notifications.rectValue.get()
 		val rectColorMode = Notifications.rectColorModeValue.get()
 		val rectColorAlpha = Notifications.rectAlphaValue.get()
-		val rectCustomColor = Color(Notifications.rectRedValue.get(), Notifications.rectGreenValue.get(), Notifications.rectBlueValue.get(), rectColorAlpha).rgb
+		val rectCustomColor = createRGB(Notifications.rectRedValue.get(), Notifications.rectGreenValue.get(), Notifications.rectBlueValue.get(), rectColorAlpha)
 
 		val rainbowShaderX = if (Notifications.rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / Notifications.rainbowShaderXValue.get()
 		val rainbowShaderY = if (Notifications.rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / Notifications.rainbowShaderYValue.get()
@@ -168,7 +169,7 @@ class Notification(private val header: String, private val message: String, priv
 
 		// Draw remaining time line
 		val remainingTimePercentage = stayTimer.hasTimeLeft(stayTime).coerceAtLeast(0).toFloat() / stayTime.toFloat()
-		val color = (ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), remainingTimePercentage)).brighter()
+		val color = ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), remainingTimePercentage).brighter()
 		RenderUtils.drawRect(-x + 8 + textLength, -28F, -x - 2 + (10 + textLength) * (1 - remainingTimePercentage), -30F, color)
 
 

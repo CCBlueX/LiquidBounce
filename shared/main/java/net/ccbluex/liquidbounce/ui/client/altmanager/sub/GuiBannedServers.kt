@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import org.lwjgl.input.Keyboard
-import java.awt.Color
 import java.io.IOException
 
 class GuiBannedServers(private val prevGui: IGuiScreen, private val account: MinecraftAccount) : WrappedGuiScreen()
@@ -160,7 +159,7 @@ class GuiBannedServers(private val prevGui: IGuiScreen, private val account: Min
 			val server = account.bannedServers[id]
 			val middleScreen = (represented.width shr 1).toFloat()
 
-			Fonts.font40.drawCenteredString(server, middleScreen, y + 1f, Color.RED.rgb, true)
+			Fonts.font40.drawCenteredString(server, middleScreen, y + 1f, -65536, true)
 		}
 
 		override fun drawBackground()

@@ -14,7 +14,6 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL20.glUseProgram
-import java.awt.Color
 import java.awt.Font
 
 class GameFontRenderer(font: Font) : IWrappedFontRenderer
@@ -61,7 +60,7 @@ class GameFontRenderer(font: Font) : IWrappedFontRenderer
 		{
 			glUseProgram(0)
 
-			drawText(currentText, x + 1f, currY + 1f, Color(0, 0, 0, 150).rgb, true)
+			drawText(currentText, x + 1f, currY + 1f, -1778384896, true)
 		}
 
 		return drawText(currentText, x, currY, color, false, rainbow)

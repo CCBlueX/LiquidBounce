@@ -12,13 +12,14 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.applyAlphaChannel
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
-import java.awt.Color
 import kotlin.math.roundToInt
 
 /**
@@ -83,20 +84,20 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 		val fontRenderer = fontValue.get()
 
 		val colorMode = colorModeValue.get()
-		val customColor = Color(redValue.get(), greenValue.get(), blueValue.get(), 1).rgb
+		val customColor = createRGB(redValue.get(), greenValue.get(), blueValue.get(), 1)
 
 		val timeDistance = timeSpaceValue.get()
 		val timeColorMode = timeColorModeValue.get()
-		val timeCustomColor = Color(timeRedValue.get(), timeGreenValue.get(), timeBlueValue.get(), 1).rgb
+		val timeCustomColor = createRGB(timeRedValue.get(), timeGreenValue.get(), timeBlueValue.get(), 1)
 
 		val backgroundColorMode = backgroundColorModeValue.get()
 		val backgroundColorAlpha = backgroundColorAlphaValue.get()
-		val backgroundCustomColor = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha).rgb
+		val backgroundCustomColor = createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha)
 
 		val rectMode = rectValue.get()
 		val rectColorMode = rectColorModeValue.get()
 		val rectColorAlpha = rectColorBlueAlpha.get()
-		val rectCustomColor = Color(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha).rgb
+		val rectCustomColor = createRGB(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha)
 
 		val space = spaceValue.get()
 		val textHeight = textHeightValue.get()
@@ -146,7 +147,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 				else -> customColor
 			}
 
-			val timeColor = if (timeHighlightValue.get() && effect.duration <= 300) Color.red.rgb
+			val timeColor = if (timeHighlightValue.get() && effect.duration <= 300) -65536
 			else when
 			{
 				timeRainbowShader -> 0

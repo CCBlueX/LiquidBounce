@@ -84,7 +84,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		}
 
 		// Draw panel
-		RenderUtils.drawRect(x, y + 12, x + width, y + realHeight, Color(27, 34, 40).rgb)
+		RenderUtils.drawRect(x, y + 12, x + width, y + realHeight, -14999000)
 		when
 		{
 			create -> drawCreate(mouseX, currMouseY)
@@ -95,10 +95,10 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		// Scrolling end
 		if (shouldScroll)
 		{
-			RenderUtils.drawRect(x + width - 5, y + 15, x + width - 2, y + 197, Color(41, 41, 41).rgb)
+			RenderUtils.drawRect(x + width - 5, y + 15, x + width - 2, y + 197, -14079703)
 
 			val v = 197 * (-scroll / (realHeight - 170F))
-			RenderUtils.drawRect(x + width - 5F, y + 15 + v, x + width - 2F, y + 20 + v, Color(37, 126, 255).rgb)
+			RenderUtils.drawRect(x + width - 5F, y + 15 + v, x + width - 2F, y + 20 + v, -14319873)
 
 			GL11.glDisable(GL11.GL_SCISSOR_TEST)
 			GL11.glPopMatrix()
@@ -125,7 +125,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
 			val name = info.name
 
-			Fonts.font35.drawString(name, x + 2.0f, y + height.toFloat(), Color.WHITE.rgb)
+			Fonts.font35.drawString(name, x + 2.0f, y + height.toFloat(), -1)
 
 			val stringWidth = Fonts.font35.getStringWidth(name)
 			if (width < stringWidth + 8) width = stringWidth + 8
@@ -154,7 +154,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		}
 
 		RenderUtils.drawRect(x, y, x + width, y + 12, ClickGUI.generateColor().rgb)
-		Fonts.font35.drawString("\u00A7lCreate element", x + 2F, y + 3.5F, Color.WHITE.rgb)
+		Fonts.font35.drawString("\u00A7lCreate element", x + 2F, y + 3.5F, -1)
 	}
 
 	/**
@@ -166,25 +166,25 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		realHeight = 15
 		width = 120
 
-		Fonts.font35.drawString("\u00A7lCreate element", x + 2.0f, y.toFloat() + height, Color.WHITE.rgb)
+		Fonts.font35.drawString("\u00A7lCreate element", x + 2.0f, y.toFloat() + height, -1)
 		if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10) create = true
 
 		height += 10
 		realHeight += 10
 
-		Fonts.font35.drawString("\u00A7lReset", x + 2f, y.toFloat() + height, Color.WHITE.rgb)
+		Fonts.font35.drawString("\u00A7lReset", x + 2f, y.toFloat() + height, -1)
 		if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10) LiquidBounce.hud = createDefault()
 
 		height += 15
 		realHeight += 15
 
-		Fonts.font35.drawString("\u00A7lAvailable Elements", x + 2.0f, y + height.toFloat(), Color.WHITE.rgb)
+		Fonts.font35.drawString("\u00A7lAvailable Elements", x + 2.0f, y + height.toFloat(), -1)
 		height += 10
 		realHeight += 10
 
 		for (element in LiquidBounce.hud.elements)
 		{
-			Fonts.font35.drawString(element.name, x + 2, y + height, Color.WHITE.rgb)
+			Fonts.font35.drawString(element.name, x + 2, y + height, -1)
 
 			val stringWidth = Fonts.font35.getStringWidth(element.name)
 			if (width < stringWidth + 8) width = stringWidth + 8
@@ -197,7 +197,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
 		RenderUtils.drawRect(x, y, x + width, y + 12, ClickGUI.generateColor().rgb)
 		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
-		Fonts.font35.drawString("\u00A7lEditor", x + 2F, y + 3.5f, Color.WHITE.rgb)
+		Fonts.font35.drawString("\u00A7lEditor", x + 2F, y + 3.5f, -1)
 	}
 
 	/**
@@ -214,22 +214,22 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		val element = currentElement ?: return
 
 		// X
-		Fonts.font35.drawString("X: ${"%.2f".format(element.renderX)} (${"%.2f".format(element.x)})", x + 2, y + height, Color.WHITE.rgb)
+		Fonts.font35.drawString("X: ${"%.2f".format(element.renderX)} (${"%.2f".format(element.x)})", x + 2, y + height, -1)
 		height += 10
 		realHeight += 10
 
 		// Y
-		Fonts.font35.drawString("Y: ${"%.2f".format(element.renderY)} (${"%.2f".format(element.y)})", x + 2, y + height, Color.WHITE.rgb)
+		Fonts.font35.drawString("Y: ${"%.2f".format(element.renderY)} (${"%.2f".format(element.y)})", x + 2, y + height, -1)
 		height += 10
 		realHeight += 10
 
 		// Scale
-		Fonts.font35.drawString("Scale: ${"%.2f".format(element.scale)}", x + 2, y + height, Color.WHITE.rgb)
+		Fonts.font35.drawString("Scale: ${"%.2f".format(element.scale)}", x + 2, y + height, -1)
 		height += 10
 		realHeight += 10
 
 		// Horizontal
-		Fonts.font35.drawString("H:", x + 2, y + height, Color.WHITE.rgb)
+		Fonts.font35.drawString("H:", x + 2, y + height, -1)
 		Fonts.font35.drawString(element.side.horizontal.sideName, x + 12, y + height, Color.GRAY.rgb)
 
 		val provider = classProvider
@@ -254,7 +254,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		realHeight += 10
 
 		// Vertical
-		Fonts.font35.drawString("V:", x + 2, y + height, Color.WHITE.rgb)
+		Fonts.font35.drawString("V:", x + 2, y + height, -1)
 		Fonts.font35.drawString(element.side.vertical.sideName, x + 12, y + height, Color.GRAY.rgb)
 
 		if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10)
@@ -284,7 +284,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 				is BoolValue ->
 				{
 					// Title
-					Fonts.font35.drawString(value.name, x + 2, y + height, if (value.get()) Color.WHITE.rgb else Color.GRAY.rgb)
+					Fonts.font35.drawString(value.name, x + 2, y + height, if (value.get()) -1 else Color.GRAY.rgb)
 
 					val stringWidth = Fonts.font35.getStringWidth(value.name)
 					if (width < stringWidth + 8) width = stringWidth + 8
@@ -306,13 +306,13 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 					// Title
 					val text = "${value.name}: \u00A7c${"%.2f".format(current)}"
 
-					Fonts.font35.drawString(text, x + 2, y + height, Color.WHITE.rgb)
+					Fonts.font35.drawString(text, x + 2, y + height, -1)
 
 					val stringWidth = Fonts.font35.getStringWidth(text)
 					if (width < stringWidth + 8) width = stringWidth + 8
 
 					// Slider
-					RenderUtils.drawRect(x + 8F, y + height + 12F, x + prevWidth - 8F, y + height + 13F, Color.WHITE)
+					RenderUtils.drawRect(x + 8F, y + height + 12F, x + prevWidth - 8F, y + height + 13F, -1)
 
 					// Slider mark
 					val sliderValue = x + ((prevWidth - 18F) * (current - min) / (max - min))
@@ -340,7 +340,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 					// Title
 					val text = "${value.name}: \u00A7c$current"
 
-					Fonts.font35.drawString(text, x + 2, y + height, Color.WHITE.rgb)
+					Fonts.font35.drawString(text, x + 2, y + height, -1)
 
 					val stringWidth = Fonts.font35.getStringWidth(text)
 					if (width < stringWidth + 8) width = stringWidth + 8
@@ -350,7 +350,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
 					// Slider mark
 					val sliderValue = x + ((prevWidth - 18F) * (current - min) / (max - min))
-					RenderUtils.drawRect(8F + sliderValue, y + height + 9F, sliderValue + 11F, y + height + 15F, Color(37, 126, 255).rgb)
+					RenderUtils.drawRect(8F + sliderValue, y + height + 9F, sliderValue + 11F, y + height + 15F, -14319873)
 
 					// Slider changer
 					if (mouseX >= x + 8 && mouseX <= x + prevWidth && mouseY >= y + height + 9 && mouseY <= y + height + 15 && Mouse.isButtonDown(0))
@@ -368,7 +368,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 				is ListValue ->
 				{
 					// Title
-					Fonts.font35.drawString(value.name, x + 2, y + height, Color.WHITE.rgb)
+					Fonts.font35.drawString(value.name, x + 2, y + height, -1)
 
 					height += 10
 					realHeight += 10
@@ -378,7 +378,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 					{
 						// Value title
 						val text = "\u00A7c> \u00A7r$s"
-						Fonts.font35.drawString(text, x + 2, y + height, if (s == value.get()) Color.WHITE.rgb else Color.GRAY.rgb)
+						Fonts.font35.drawString(text, x + 2, y + height, if (s == value.get()) -1 else Color.GRAY.rgb)
 
 						val stringWidth = Fonts.font35.getStringWidth(text)
 						if (width < stringWidth + 8) width = stringWidth + 8
@@ -404,7 +404,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 						else -> "Font: Unknown"
 					}
 
-					Fonts.font35.drawString(text, x + 2, y + height, Color.WHITE.rgb)
+					Fonts.font35.drawString(text, x + 2, y + height, -1)
 
 					val stringWidth = Fonts.font35.getStringWidth(text)
 					if (width < stringWidth + 8) width = stringWidth + 8
@@ -423,13 +423,13 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
 		// Header
 		RenderUtils.drawRect(x, y, x + width, y + 12, ClickGUI.generateColor().rgb)
-		Fonts.font35.drawString("\u00A7l${element.name}", x + 2F, y + 3.5F, Color.WHITE.rgb)
+		Fonts.font35.drawString("\u00A7l${element.name}", x + 2F, y + 3.5F, -1)
 
 		// Delete button
 		if (!element.info.force)
 		{
 			val deleteWidth = x + width - Fonts.font35.getStringWidth("\u00A7lDelete") - 2F
-			Fonts.font35.drawString("\u00A7lDelete", deleteWidth, y + 3.5F, Color.WHITE.rgb)
+			Fonts.font35.drawString("\u00A7lDelete", deleteWidth, y + 3.5F, -1)
 			if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= deleteWidth && mouseX <= x + width && mouseY >= y && mouseY <= y + 10) LiquidBounce.hud.removeElement(element)
 		}
 	}

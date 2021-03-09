@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
@@ -97,8 +98,8 @@ class Target : Element()
 			val targetMaxHealth = targetPlayer.maxHealth /* + ptargetHealthBoost + ptargetAbsorption */ + targetPlayer.absorptionAmount
 			val targetMaxHealthInt = targetMaxHealth.roundToInt()
 
-			val damageColor = Color(damageAnimationColorRed.get(), damageAnimationColorGreen.get(), damageAnimationColorBlue.get())
-			val healColor = Color(healAnimationColorRed.get(), healAnimationColorGreen.get(), healAnimationColorBlue.get())
+			val damageColor = createRGB(damageAnimationColorRed.get(), damageAnimationColorGreen.get(), damageAnimationColorBlue.get(), 255)
+			val healColor = createRGB(healAnimationColorRed.get(), healAnimationColorGreen.get(), healAnimationColorBlue.get(), 255)
 
 			if (targetPlayer != lastTarget)
 			{
@@ -112,33 +113,33 @@ class Target : Element()
 			val width = (100.0F + Fonts.font60.getStringWidth(targetPlayer.name)).coerceAtLeast(250.0F)
 
 			// Draw Body Rect
-			RenderUtils.drawBorderedRect(0F, 0F, width, 110F, borderWidth.get(), Color(borderColorRed.get(), borderColorGreen.get(), borderColorBlue.get()).rgb, Color.black.rgb)
+			RenderUtils.drawBorderedRect(0F, 0F, width, 110F, borderWidth.get(), ColorUtils.createRGB(borderColorRed.get(), borderColorGreen.get(), borderColorBlue.get(), 255), -16777216)
 
 			// Draw Head Box
-			RenderUtils.drawRect(2F, 2F, 96F, 96F, Color.darkGray.rgb)
+			RenderUtils.drawRect(2F, 2F, 96F, 96F, -12566464)
 
 			// Draw Absorption
-			RenderUtils.drawRect(((easingHealth / targetMaxHealth) * width) - ((/* ptargetAbsorption */ easingAbsorption / targetMaxHealth) * width) + 1, 103F, (easingHealth / targetMaxHealth) * width, 104F, Color.yellow.rgb)
+			RenderUtils.drawRect(((easingHealth / targetMaxHealth) * width) - ((/* ptargetAbsorption */ easingAbsorption / targetMaxHealth) * width) + 1, 103F, (easingHealth / targetMaxHealth) * width, 104F, -256)
 
 			// Draw Damage animation
-			if (easingHealth > targetHealth) RenderUtils.drawRect(0F, 105F, (easingHealth / targetMaxHealth) * width, 107F, damageColor.rgb)
+			if (easingHealth > targetHealth) RenderUtils.drawRect(0F, 105F, (easingHealth / targetMaxHealth) * width, 107F, damageColor)
 
 			// Draw Health bar
 			RenderUtils.drawRect(0F, 105F, (targetHealth / targetMaxHealth) * width, 107F, healthColor.rgb)
 
 			// Draw Heal animation
-			if (easingHealth < targetHealth) RenderUtils.drawRect((easingHealth / targetMaxHealth) * width, 105F, (targetHealth / targetMaxHealth) * width, 107F, healColor.rgb)
+			if (easingHealth < targetHealth) RenderUtils.drawRect((easingHealth / targetMaxHealth) * width, 105F, (targetHealth / targetMaxHealth) * width, 107F, healColor)
 
 			// Draw Health Gradations
 			val healthGradationGap = width / targetMaxHealthInt
-			for (index in 1..targetMaxHealthInt) RenderUtils.drawRect(healthGradationGap * index, 103F, healthGradationGap * index + 1, 107F, Color.black.rgb)
+			for (index in 1..targetMaxHealthInt) RenderUtils.drawRect(healthGradationGap * index, 103F, healthGradationGap * index + 1, 107F, -16777216)
 
 			// Draw Total Armor bar
-			RenderUtils.drawRect(0F, 109F, easingArmor * width * 0.05f, 110F, Color.cyan.rgb)
+			RenderUtils.drawRect(0F, 109F, easingArmor * width * 0.05f, 110F, -16711681)
 
 			// Draw Armor Gradations
 			val armorGradationGap = width * 0.05f
-			for (index in 1..20) RenderUtils.drawRect(armorGradationGap * index, 109F, armorGradationGap * index + 1, 110F, Color.black.rgb)
+			for (index in 1..20) RenderUtils.drawRect(armorGradationGap * index, 109F, armorGradationGap * index + 1, 110F, -16777216)
 
 			easingHealth += ((targetHealth - easingHealth) / 2.0F.pow(10.0F - healthFadeSpeed.get())) * RenderUtils.deltaTime
 			easingAbsorption += ((targetPlayer.absorptionAmount - easingAbsorption) / 2.0F.pow(10.0F - absorptionFadeSpeed.get())) * RenderUtils.deltaTime
@@ -198,7 +199,7 @@ class Target : Element()
 
 					val equipmentX = 100 + (4 - index) * 20 + if (isHeldItem) 5 else 0
 
-					RenderUtils.drawRect(equipmentX, equipmentY, equipmentX + 16, equipmentY + 16, Color.darkGray.rgb)
+					RenderUtils.drawRect(equipmentX, equipmentY, equipmentX + 16, equipmentY + 16, -12566464)
 
 					val armor = targetPlayer.getEquipmentInSlot(index) ?: return@repeat
 

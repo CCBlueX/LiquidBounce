@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 
 class GuiWelcome : WrappedGuiScreen()
 {
@@ -53,7 +52,7 @@ class GuiWelcome : WrappedGuiScreen()
 
 		// Title
 		GL11.glScalef(2F, 2F, 2F)
-		Fonts.font40.drawCenteredString("Welcome!", (representedScreen.width shr 2).toFloat(), (buttonY shr 1) + 20f, Color(0, 140, 255).rgb, true)
+		Fonts.font40.drawCenteredString("Welcome!", (representedScreen.width shr 2).toFloat(), (buttonY shr 1) + 20f, -16741121, true)
 	}
 
 	override fun keyTyped(typedChar: Char, keyCode: Int)

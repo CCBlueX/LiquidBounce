@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import org.apache.commons.io.IOUtils
 import org.lwjgl.input.Keyboard
-import java.awt.Color
 import java.awt.Desktop
 import java.io.File
 import java.io.FileOutputStream
@@ -233,8 +232,8 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 			val middleScreen = (representedScreen.width shr 1).toFloat()
 
-			Fonts.font40.drawCenteredString("\u00A79" + script.scriptName + " \u00A77v" + script.scriptVersion, middleScreen, y + 2.0f, Color.LIGHT_GRAY.rgb)
-			Fonts.font40.drawCenteredString("by \u00A7c" + script.scriptAuthors.joinToString(", "), middleScreen, y + 15.0f, Color.LIGHT_GRAY.rgb).coerceAtLeast(x)
+			Fonts.font40.drawCenteredString("\u00A79" + script.scriptName + " \u00A77v" + script.scriptVersion, middleScreen, y + 2.0f, -4144960)
+			Fonts.font40.drawCenteredString("by \u00A7c" + script.scriptAuthors.joinToString(", "), middleScreen, y + 15.0f, -4144960).coerceAtLeast(x)
 		}
 
 		override fun drawBackground()

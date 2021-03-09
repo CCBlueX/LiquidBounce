@@ -108,8 +108,8 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 			y += imageSize
 
-			Fonts.font40.drawString("@" + credit.name, x + infoOffset + 5.0f, 48f, Color.WHITE.rgb, true)
-			Fonts.font40.drawString("${credit.commits} commits \u00A7a${DECIMAL_FORMAT.format(credit.additions)}++ \u00A74${DECIMAL_FORMAT.format(credit.deletions)}--", x + infoOffset + 5.0f, (y - Fonts.font40.fontHeight).toFloat(), Color.WHITE.rgb, true)
+			Fonts.font40.drawString("@" + credit.name, x + infoOffset + 5.0f, 48f, -1, true)
+			Fonts.font40.drawString("${credit.commits} commits \u00A7a${DECIMAL_FORMAT.format(credit.additions)}++ \u00A74${DECIMAL_FORMAT.format(credit.deletions)}--", x + infoOffset + 5.0f, (y - Fonts.font40.fontHeight).toFloat(), -1, true)
 
 			for (s in credit.contributions)
 			{
@@ -125,7 +125,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 				GL11.glEnd()
 
-				Fonts.font40.drawString(s, x + 5f, y.toFloat(), Color.WHITE.rgb, true)
+				Fonts.font40.drawString(s, x + 5f, y.toFloat(), -1, true)
 			}
 		}
 
@@ -143,7 +143,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			}
 			else
 			{
-				Fonts.font40.drawCenteredString("Loading...", posX, posY, Color.WHITE.rgb)
+				Fonts.font40.drawCenteredString("Loading...", posX, posY, -1)
 				RenderUtils.drawLoadingCircle(posX, (representedScreen.height shr 1) - 40.0f)
 			}
 		}
@@ -283,7 +283,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		{
 			val credit = credits[id]
 
-			Fonts.font40.drawCenteredString(credit.name, (represented.width shr 1).toFloat(), y + 2F, Color.WHITE.rgb, true)
+			Fonts.font40.drawCenteredString(credit.name, (represented.width shr 1).toFloat(), y + 2F, -1, true)
 		}
 
 		override fun drawBackground()

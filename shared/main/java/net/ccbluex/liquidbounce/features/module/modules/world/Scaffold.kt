@@ -896,7 +896,7 @@ class Scaffold : Module()
 			val middleScreenX = scaledResolution.scaledWidth shr 1
 			val middleScreenY = scaledResolution.scaledHeight shr 1
 
-			RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + 5.0f, middleScreenX + Fonts.font40.getStringWidth(info) + 2.0f, middleScreenY + 16.0f, 3f, Color.BLACK.rgb, Color.BLACK.rgb)
+			RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + 5.0f, middleScreenX + Fonts.font40.getStringWidth(info) + 2.0f, middleScreenY + 16.0f, 3f, -16777216, -16777216)
 
 			provider.glStateManager.resetColor()
 

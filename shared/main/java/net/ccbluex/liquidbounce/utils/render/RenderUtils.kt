@@ -454,11 +454,11 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun quickDrawBorderedRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, color1: Int, color2: Int)
+	fun quickDrawBorderedRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, borderColor: Int, rectColor: Int)
 	{
-		quickDrawRect(x, y, x2, y2, color2)
+		quickDrawRect(x, y, x2, y2, rectColor)
 
-		glColor(color1)
+		glColor(borderColor)
 
 		GL11.glLineWidth(width)
 
@@ -601,7 +601,7 @@ object RenderUtils : MinecraftInstance()
 	@JvmStatic
 	fun glColor(red: Int, green: Int, blue: Int, alpha: Int)
 	{
-		GL11.glColor4f(red / 255.00f, green / 255.00f, blue / 255.00f, alpha / 255.00f)
+		GL11.glColor4f(red / 255F, green / 255F, blue / 255F, alpha / 255F)
 	}
 
 	@JvmStatic
@@ -716,7 +716,7 @@ object RenderUtils : MinecraftInstance()
 		val width = Fonts.font35.getStringWidth(nameTag) shr 1
 
 		drawRect(-width - 1, -1, width + 1, Fonts.font35.fontHeight, Int.MIN_VALUE)
-		Fonts.font35.drawString(nameTag, -width.toFloat(), 1.5f, Color.WHITE.rgb, true)
+		Fonts.font35.drawString(nameTag, -width.toFloat(), 1.5f, -1, true)
 
 		resetCaps()
 		GL11.glColor4f(1.00f, 1.00f, 1.00f, 1.00f)

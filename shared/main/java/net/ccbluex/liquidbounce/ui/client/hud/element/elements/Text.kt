@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
@@ -210,11 +211,11 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		val rectColorMode = rectColorModeValue.get()
 		val backgroundColorMode = backgroundColorModeValue.get()
 		val colorAlpha = alphaValue.get()
-		val customColor = Color(redValue.get(), greenValue.get(), blueValue.get(), colorAlpha).rgb
+		val customColor = createRGB(redValue.get(), greenValue.get(), blueValue.get(), colorAlpha)
 		val rectColorAlpha = rectColorAlphaValue.get()
-		val rectCustomColor = Color(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha).rgb
+		val rectCustomColor = createRGB(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha)
 		val backgroundColorAlpha = backgroundColorAlphaValue.get()
-		val backgroundCustomColor = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha).rgb
+		val backgroundCustomColor = createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha)
 		val fontRenderer = fontValue.get()
 		val rainbowSpeed = rainbowSpeedValue.get()
 		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()

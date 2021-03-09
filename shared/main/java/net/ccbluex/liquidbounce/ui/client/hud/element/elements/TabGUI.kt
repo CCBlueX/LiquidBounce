@@ -9,15 +9,21 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.ui.client.hud.element.*
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.FontValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 
 @ElementInfo(name = "TabGUI")
 class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
@@ -85,16 +91,14 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 		val rectangleRainbowEnabled = rectangleRainbow.get()
 
-		val backgroundColor = Color(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get())
-
-		val borderColor = if (!borderRainbow.get()) Color(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get())
-		else Color.black
+		val backgroundColor = createRGB(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get())
+		val borderColor = if (!borderRainbow.get()) createRGB(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get()) else -16777216
 
 		val width = width.get()
 		val guiHeight = tabs.size * tabHeight.get()
 
 		// Draw
-		RenderUtils.drawRect(1F, 0F, width, guiHeight, backgroundColor.rgb)
+		RenderUtils.drawRect(1F, 0F, width, guiHeight, backgroundColor)
 
 		val rainbowShaderX = if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get()
 		val rainbowShaderY = if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get()
@@ -103,12 +107,12 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 		if (borderValue.get())
 		{
 			RainbowShader.begin(borderRainbow.get(), rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-				RenderUtils.drawBorder(1F, 0F, width, guiHeight, borderStrength.get(), borderColor.rgb)
+				RenderUtils.drawBorder(1F, 0F, width, guiHeight, borderStrength.get(), borderColor)
 			}
 		}
 
 		// Color
-		val rectColor = if (!rectangleRainbowEnabled) Color(redValue.get(), greenValue.get(), blueValue.get(), alphaValue.get()) else Color.black
+		val rectColor = if (!rectangleRainbowEnabled) createRGB(redValue.get(), greenValue.get(), blueValue.get(), alphaValue.get()) else -16777216
 
 		RainbowShader.begin(rectangleRainbowEnabled, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 			RenderUtils.drawRect(1F, 1 + tabY - 1, width, tabY + tabHeight.get(), rectColor)
@@ -125,7 +129,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 			else tab.textFade + 5
 			val textY = y + textPositionY.get()
 
-			val textColor = if (selectedCategory == index) 0xffffff else Color(210, 210, 210).rgb
+			val textColor = if (selectedCategory == index) 0xffffff else 13816530
 
 			fontRenderer.drawString(tabName, textX, textY, textColor, textShadow.get())
 
@@ -140,7 +144,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 				val tabX = if (side.horizontal == Side.Horizontal.RIGHT) 1F - tab.menuWidth
 				else width + 5
 
-				tab.drawTab(tabX, y, rectColor.rgb, backgroundColor.rgb, borderColor.rgb, borderStrength.get(), upperCaseValue.get(), fontRenderer, borderRainbow.get(), rectangleRainbowEnabled)
+				tab.drawTab(tabX, y, rectColor, backgroundColor, borderColor, borderStrength.get(), upperCaseValue.get(), fontRenderer, borderRainbow.get(), rectangleRainbowEnabled)
 			}
 
 			y += tabHeight.get()
@@ -319,7 +323,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 			GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
-			modules.forEachIndexed { index, module -> fontRenderer.drawString(if (upperCase) module.name.toUpperCase() else module.name, x + 2F, y + tabHeight * index + textPositionY.get(), if (module.state) 0xffffff else Color(205, 205, 205).rgb, textShadow.get()) }
+			modules.forEachIndexed { index, module -> fontRenderer.drawString(if (upperCase) module.name.toUpperCase() else module.name, x + 2F, y + tabHeight * index + textPositionY.get(), if (module.state) 0xffffff else 0xcdcdcd, textShadow.get()) }
 		}
 	}
 

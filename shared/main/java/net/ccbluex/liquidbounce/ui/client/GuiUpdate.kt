@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 
 class GuiUpdate : WrappedGuiScreen()
 {
@@ -42,7 +41,7 @@ class GuiUpdate : WrappedGuiScreen()
 
 		// Title
 		GL11.glScalef(2F, 2F, 2F)
-		Fonts.font35.drawCenteredString("New update available!", (representedScreen.width shr 2).toFloat(), (representedScreen.height shr 4) + 20f, Color(255, 0, 0).rgb)
+		Fonts.font35.drawCenteredString("New update available!", (representedScreen.width shr 2).toFloat(), (representedScreen.height shr 4) + 20f, -65536)
 	}
 
 	override fun actionPerformed(button: IGuiButton)

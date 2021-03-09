@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.misc.MiscUtils.saveFileChooser
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils.showErrorPopup
 import net.mcleaks.MCLeaks
 import org.lwjgl.input.Keyboard
-import java.awt.Color
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.io.IOException
@@ -415,20 +414,20 @@ class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			val isInvalid = serviceType == AltServiceType.MOJANG_INVALID || serviceType == AltServiceType.MOJANG_MIGRATED || serviceType == AltServiceType.MCLEAKS_INVALID || serviceType == AltServiceType.THEALTENING_INVALID
 
 			// Draw account name
-			Fonts.font40.drawCenteredString((accName ?: account.name), middleScreen, y + 2f, Color.WHITE.rgb, true)
+			Fonts.font40.drawCenteredString((accName ?: account.name), middleScreen, y + 2f, -1, true)
 
 			val serviceTypeText = if (cracked) "Cracked" else serviceType.id
 			val serviceTypeColor = when
 			{
-				cracked -> Color.GRAY // Cracked
-				accName == null -> Color.LIGHT_GRAY // Unchecked
-				isInvalid -> Color.RED // Premium (Invalid)
-				else -> Color.GREEN // Premium
-			}.rgb
+				cracked -> -8355712 // Cracked
+				accName == null -> -4144960 // Unchecked
+				isInvalid -> -65536 // Premium (Invalid)
+				else -> -16711936 // Premium
+			}
 
 			Fonts.font40.drawCenteredString(serviceTypeText, middleScreen, y + 10f, serviceTypeColor, true)
 
-			if (account.bannedServers.isNotEmpty()) Fonts.font35.drawCenteredString("Banned on " + account.serializeBannedServers(), middleScreen, y + 20f, Color.RED.rgb, true)
+			if (account.bannedServers.isNotEmpty()) Fonts.font35.drawCenteredString("Banned on " + account.serializeBannedServers(), middleScreen, y + 20f, -65536, true)
 		}
 
 		override fun drawBackground()

@@ -62,7 +62,7 @@ object ColorUtils : MinecraftInstance()
 		val chars = textToTranslate.toCharArray()
 
 		repeat(chars.size - 1) { i ->
-			if (chars[i] == '&' && "0123456789AaBbCcDdEeFfKkLlMmNnOoRr".contains(chars[i + 1], true))
+			if (chars[i] == '&' && "0123456789abcdefklmnor".contains(chars[i + 1], true))
 			{
 				chars[i] = '\u00A7'
 				chars[i + 1] = Character.toLowerCase(chars[i + 1])
@@ -221,4 +221,7 @@ object ColorUtils : MinecraftInstance()
 	// return Color(color.red, color.green, color.blue, alpha).rgb
 	@JvmStatic
 	fun applyAlphaChannel(rgb: Int, alpha: Int): Int = alpha and 0xFF shl 24 or rgb
+
+	@JvmStatic
+	fun createRGB(red: Int, green: Int, blue: Int, alpha: Int): Int = (alpha.coerceIn(0, 255) and 0xFF shl 24) or (red.coerceIn(0, 255) and 0xFF shl 16) or (green.coerceIn(0, 255) and 0xFF shl 8) or (blue.coerceIn(0, 255) and 0xFF shl 0)
 }

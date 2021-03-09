@@ -33,28 +33,28 @@ class SlowlyStyle : Style()
 
 	override fun drawPanel(mouseX: Int, mouseY: Int, panel: Panel)
 	{
-		drawBorderedRect(panel.x.toFloat(), panel.y.toFloat() - 3, panel.x.toFloat() + panel.width, panel.y.toFloat() + 17, 3f, Color(42, 57, 79).rgb, Color(42, 57, 79).rgb)
+		drawBorderedRect(panel.x.toFloat(), panel.y.toFloat() - 3, panel.x.toFloat() + panel.width, panel.y.toFloat() + 17, 3f, -14010033, -14010033)
 
 		if (panel.fade > 0)
 		{
-			drawBorderedRect(panel.x.toFloat(), panel.y.toFloat() + 17, panel.x.toFloat() + panel.width, (panel.y + 19 + panel.fade), 3f, Color(54, 71, 96).rgb, Color(54, 71, 96).rgb)
-			drawBorderedRect(panel.x.toFloat(), (panel.y + 17 + panel.fade), panel.x.toFloat() + panel.width, (panel.y + 19 + panel.fade + 5), 3f, Color(42, 57, 79).rgb, Color(42, 57, 79).rgb)
+			drawBorderedRect(panel.x.toFloat(), panel.y.toFloat() + 17, panel.x.toFloat() + panel.width, (panel.y + 19 + panel.fade), 3f, -13220000, -13220000)
+			drawBorderedRect(panel.x.toFloat(), (panel.y + 17 + panel.fade), panel.x.toFloat() + panel.width, (panel.y + 19 + panel.fade + 5), 3f, -14010033, -14010033)
 		}
 
 		classProvider.glStateManager.resetColor()
 
 		val textWidth = Fonts.font35.getStringWidth("\u00A7f" + stripControlCodes(panel.name)).toFloat()
-		Fonts.font35.drawString(panel.name, (panel.x - (textWidth - 100.0f) * 0.5).toInt(), panel.y + 7 - 3, Color.WHITE.rgb)
+		Fonts.font35.drawString(panel.name, (panel.x - (textWidth - 100.0f) * 0.5).toInt(), panel.y + 7 - 3, -1)
 	}
 
 	override fun drawDescription(mouseX: Int, mouseY: Int, text: String)
 	{
 		val textWidth = Fonts.font35.getStringWidth(text)
-		drawBorderedRect((mouseX + 9).toFloat(), mouseY.toFloat(), (mouseX + textWidth + 14).toFloat(), (mouseY + Fonts.font35.fontHeight + 3).toFloat(), 3.0f, Color(42, 57, 79).rgb, Color(42, 57, 79).rgb)
+		drawBorderedRect((mouseX + 9).toFloat(), mouseY.toFloat(), (mouseX + textWidth + 14).toFloat(), (mouseY + Fonts.font35.fontHeight + 3).toFloat(), 3.0f, -14010033, -14010033)
 
 		classProvider.glStateManager.resetColor()
 
-		Fonts.font35.drawString(text, mouseX + 12, mouseY + (Fonts.font35.fontHeight shr 1), Color.WHITE.rgb)
+		Fonts.font35.drawString(text, mouseX + 12, mouseY + (Fonts.font35.fontHeight shr 1), -1)
 	}
 
 	override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
@@ -63,7 +63,7 @@ class SlowlyStyle : Style()
 
 		classProvider.glStateManager.resetColor()
 
-		Fonts.font35.drawString(buttonElement.displayName, buttonElement.x + 5, buttonElement.y + 5, Color.WHITE.rgb)
+		Fonts.font35.drawString(buttonElement.displayName, buttonElement.x + 5, buttonElement.y + 5, -1)
 	}
 
 	/*
@@ -83,17 +83,17 @@ class SlowlyStyle : Style()
 		val glStateManager = classProvider.glStateManager
 		glStateManager.resetColor()
 
-		Fonts.font35.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 5, Color.WHITE.rgb)
+		Fonts.font35.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 5, -1)
 
 		// Draw settings
 		val moduleValues = moduleElement.module.values
 		if (moduleValues.isNotEmpty())
 		{
-			Fonts.font35.drawString(">", moduleElement.x + moduleElement.width - 8, moduleElement.y + 5, Color.WHITE.rgb)
+			Fonts.font35.drawString(">", moduleElement.x + moduleElement.width - 8, moduleElement.y + 5, -1)
 
 			if (moduleElement.isShowSettings)
 			{
-				if (moduleElement.settingsWidth > 0.0f && moduleElement.slowlySettingsYPos > moduleElement.y + 6) drawBorderedRect((moduleElement.x + moduleElement.width + 4).toFloat(), (moduleElement.y + 6).toFloat(), moduleElement.x + moduleElement.width + moduleElement.settingsWidth, (moduleElement.slowlySettingsYPos + 2).toFloat(), 3.0f, Color(54, 71, 96).rgb, Color(54, 71, 96).rgb)
+				if (moduleElement.settingsWidth > 0.0f && moduleElement.slowlySettingsYPos > moduleElement.y + 6) drawBorderedRect((moduleElement.x + moduleElement.width + 4).toFloat(), (moduleElement.y + 6).toFloat(), moduleElement.x + moduleElement.width + moduleElement.settingsWidth, (moduleElement.slowlySettingsYPos + 2).toFloat(), 3.0f, -13220000,-13220000)
 				moduleElement.slowlySettingsYPos = moduleElement.y + 6
 
 				val sliderColor = Color(7, 152, 252)
@@ -117,7 +117,7 @@ class SlowlyStyle : Style()
 							mc.soundHandler.playSound("gui.button.press", 1.0f)
 						}
 
-						Fonts.font35.drawString(text, moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 2, if (value.get()) Color.WHITE.rgb else Int.MAX_VALUE)
+						Fonts.font35.drawString(text, moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 2, if (value.get()) -1 else Int.MAX_VALUE)
 
 						moduleElement.slowlySettingsYPos += 11
 					}
@@ -153,7 +153,7 @@ class SlowlyStyle : Style()
 									mc.soundHandler.playSound("gui.button.press", 1.0f)
 								}
 								glStateManager.resetColor()
-								Fonts.font35.drawString("> $valueOfList", moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 2, if (value.get().equals(valueOfList, ignoreCase = true)) Color.WHITE.rgb else Int.MAX_VALUE)
+								Fonts.font35.drawString("> $valueOfList", moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 2, if (value.get().equals(valueOfList, ignoreCase = true)) -1 else Int.MAX_VALUE)
 								moduleElement.slowlySettingsYPos += Fonts.font35.fontHeight + 1
 							}
 						}
@@ -207,7 +207,7 @@ class SlowlyStyle : Style()
 							if (objects != null) displayString = objects.name + if (objects.fontSize == -1) "" else " - " + objects.fontSize
 						}
 
-						Fonts.font35.drawString(displayString, moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 2, Color.WHITE.rgb)
+						Fonts.font35.drawString(displayString, moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 2, -1)
 
 						val stringWidth = Fonts.font35.getStringWidth(displayString)
 

@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
@@ -126,22 +127,22 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 
 		// Color
 		val colorMode = colorModeValue.get()
-		val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 1).rgb
+		val customColor = createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255)
 
 		// Rect Mode & Color
 		val rectMode = rectValue.get()
 		val rectColorMode = rectColorModeValue.get()
 		val rectColorAlpha = rectColorBlueAlpha.get()
-		val rectCustomColor = Color(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha).rgb
+		val rectCustomColor = createRGB(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha)
 
 		// Background Color
 		val backgroundColorMode = backgroundColorModeValue.get()
 		val backgroundColorAlpha = backgroundColorAlphaValue.get()
-		val backgroundCustomColor = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha).rgb
+		val backgroundCustomColor = createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha)
 
 		// Tag Mode & Color
 		val tagColorMode = tagColorModeValue.get()
-		val customTagColor = Color(tagColorRedValue.get(), tagColorGreenValue.get(), tagColorBlueValue.get(), 1).rgb
+		val customTagColor = createRGB(tagColorRedValue.get(), tagColorGreenValue.get(), tagColorBlueValue.get(), 1)
 
 		// Text Shadow
 		val textShadow = shadow.get()

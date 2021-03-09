@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
-import java.awt.Color
 import java.text.DecimalFormat
 import kotlin.math.ceil
 
@@ -181,8 +180,7 @@ class NameTags : Module()
 
 		val fontHeight = fontRenderer.fontHeight
 
-		if (borderValue.get()) quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontHeight + 2F, 2F, Color(255, 255, 255, 90).rgb, Color(0, 0, 0, borderOpacityValue.get()).rgb)
-		else quickDrawRect(-width - 2F, -2F, width + 4F, fontHeight + 2F, Color(0, 0, 0, opacityValue.get()).rgb)
+		if (borderValue.get()) quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontHeight + 2F, 2F, ColorUtils.applyAlphaChannel(0xFFFFFF, borderOpacityValue.get()), ColorUtils.applyAlphaChannel(0, opacityValue.get())) else quickDrawRect(-width - 2F, -2F, width + 4F, fontHeight + 2F, ColorUtils.applyAlphaChannel(0, opacityValue.get()))
 
 		glEnable(GL_TEXTURE_2D)
 

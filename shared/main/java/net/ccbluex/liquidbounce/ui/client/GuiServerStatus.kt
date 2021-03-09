@@ -48,7 +48,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		if (status.isEmpty())
 		{
-			Fonts.font40.drawCenteredString("Loading...", middleScreen, quarterScreen + 40, Color.WHITE.rgb)
+			Fonts.font40.drawCenteredString("Loading...", middleScreen, quarterScreen + 40, -1)
 		}
 		else
 		{
@@ -73,7 +73,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					}
 				}"
 
-				Fonts.font40.drawCenteredString(text, middleScreen, i.toFloat(), Color.WHITE.rgb)
+				Fonts.font40.drawCenteredString(text, middleScreen, i.toFloat(), -1)
 
 				i += Fonts.font40.fontHeight
 			}

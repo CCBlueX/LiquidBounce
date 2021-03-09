@@ -122,7 +122,7 @@ class ESP : Module()
 					val y = lastTickPosY + (posY - lastTickPosY) * renderPartialTicks - renderPosY
 					val z = lastTickPosZ + (posZ - lastTickPosZ) * renderPartialTicks - renderPosZ
 
-					RenderUtils.draw2D(entityLiving, x, y, z, color.rgb, Color.BLACK.rgb)
+					RenderUtils.draw2D(entityLiving, x, y, z, color.rgb, -16777216)
 				}
 
 				"real2d" ->

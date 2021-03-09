@@ -18,7 +18,6 @@ import net.ccbluex.liquidbounce.utils.login.UserUtils.getUsername
 import net.ccbluex.liquidbounce.utils.login.UserUtils.isValidTokenStatus
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import org.lwjgl.input.Keyboard
-import java.awt.Color
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.UnsupportedFlavorException
@@ -145,8 +144,8 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 
 		// Payload
 		if (subject != null) Fonts.font35.drawCenteredString("Subject: $subject", middleScreen, 155f, 0xffffff)
-		if (accesstoken != null) Fonts.font35.drawCenteredString(if (accesstokenChecked) (if (accesstokenInvalidMessage == null) "\u00A7a" else "\u00A7c") + "Access Token: " + accesstoken + " \u00A78(" + (accesstokenInvalidMessage?.let { "\u00A7c$it" } ?: "\u00A7aValid") + "\u00A78)" else "\u00A78Access Token: $accesstoken \u00A78(Checking...)", middleScreen, 175f, Color.GREEN.rgb)
-		if (uuid != null) Fonts.font35.drawCenteredString(if (nickname != null) "\u00A7aUUID: $uuid \u00A78(\u00A7a$nickname\u00A78)" else (if (nicknameChecked) "\u00A7c" else "\u00A78") + "UUID: " + uuid + " \u00A78(Unknown)", middleScreen, 195f, Color.GREEN.rgb)
+		if (accesstoken != null) Fonts.font35.drawCenteredString(if (accesstokenChecked) (if (accesstokenInvalidMessage == null) "\u00A7a" else "\u00A7c") + "Access Token: " + accesstoken + " \u00A78(" + (accesstokenInvalidMessage?.let { "\u00A7c$it" } ?: "\u00A7aValid") + "\u00A78)" else "\u00A78Access Token: $accesstoken \u00A78(Checking...)", middleScreen, 175f, -16711936)
+		if (uuid != null) Fonts.font35.drawCenteredString(if (nickname != null) "\u00A7aUUID: $uuid \u00A78(\u00A7a$nickname\u00A78)" else (if (nicknameChecked) "\u00A7c" else "\u00A78") + "UUID: " + uuid + " \u00A78(Unknown)", middleScreen, 195f, -16711936)
 		if (issuer != null) Fonts.font35.drawCenteredString("Issuer: $issuer", middleScreen, 215f, 0xffffff)
 
 		val issuedAt = issuedAt

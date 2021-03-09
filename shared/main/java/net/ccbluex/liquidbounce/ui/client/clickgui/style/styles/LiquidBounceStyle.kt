@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.value.*
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.input.Mouse
-import java.awt.Color
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -37,7 +36,7 @@ class LiquidBounceStyle : Style()
 	{
 		val xF = panel.x.toFloat()
 		val yF = panel.y.toFloat()
-		drawBorderedRect(xF - if (panel.scrollbar) 4 else 0, yF, xF + panel.width, yF + 19 + panel.fade, 1.0f, Color(255, 255, 255, 90).rgb, Int.MIN_VALUE)
+		drawBorderedRect(xF - if (panel.scrollbar) 4 else 0, yF, xF + panel.width, yF + 19 + panel.fade, 1.0f, 1526726655, Int.MIN_VALUE)
 
 		val textWidth = Fonts.font35.getStringWidth("\u00A7f" + stripControlCodes(panel.name))
 		Fonts.font35.drawString("\u00A7f" + panel.name, (panel.x - (textWidth - 100f) * 0.5f).toInt(), panel.y + 7, -16777216)
@@ -54,7 +53,7 @@ class LiquidBounceStyle : Style()
 	override fun drawDescription(mouseX: Int, mouseY: Int, text: String)
 	{
 		val textWidth = Fonts.font35.getStringWidth(text)
-		drawBorderedRect(mouseX + 9f, mouseY.toFloat(), mouseX + textWidth + 14f, mouseY + Fonts.font35.fontHeight + 3f, 1f, Color(255, 255, 255, 90).rgb, Int.MIN_VALUE)
+		drawBorderedRect(mouseX + 9f, mouseY.toFloat(), mouseX + textWidth + 14f, mouseY + Fonts.font35.fontHeight + 3f, 1f, 1526726655, Int.MIN_VALUE)
 
 		classProvider.glStateManager.resetColor()
 
@@ -86,7 +85,7 @@ class LiquidBounceStyle : Style()
 		if (moduleValues.isNotEmpty())
 		{
 
-			Fonts.font35.drawString("+", elementX + elementWidth - 8, elementY + (elementHeight shr 1), Color.WHITE.rgb)
+			Fonts.font35.drawString("+", elementX + elementWidth - 8, elementY + (elementHeight shr 1), -1)
 			if (moduleElement.isShowSettings)
 			{
 				var yPos = elementY + 4
@@ -235,7 +234,7 @@ class LiquidBounceStyle : Style()
 							if (fontInfo != null) displayString = fontInfo.name + if (fontInfo.fontSize == -1) "" else " - " + fontInfo.fontSize
 						}
 
-						Fonts.font35.drawString(displayString, elementX + elementWidth + 6, yPos + 4, Color.WHITE.rgb)
+						Fonts.font35.drawString(displayString, elementX + elementWidth + 6, yPos + 4, -1)
 
 						val stringWidth = Fonts.font35.getStringWidth(displayString)
 

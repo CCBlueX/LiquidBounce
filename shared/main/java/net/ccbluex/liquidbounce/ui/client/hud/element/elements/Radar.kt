@@ -15,13 +15,13 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector2f
-import java.awt.Color
 import kotlin.math.*
 
 @ElementInfo(name = "Radar", disableScale = true, priority = 1)
@@ -81,7 +81,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		val size = sizeValue.get()
 
 		val minimap = minimapValue.get()
-		if (!minimap) RenderUtils.drawRect(0F, 0F, size, size, Color(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get()).rgb)
+		if (!minimap) RenderUtils.drawRect(0F, 0F, size, size, ColorUtils.createRGB(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get()))
 
 		val viewDistance = viewDistanceValue.get() * 16.0F
 		val fovSize = fovSizeValue.get()
@@ -276,7 +276,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
 		RainbowShader.begin(borderRainbowValue.get(), rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-			RenderUtils.drawBorder(0F, 0F, size, size, borderStrengthValue.get(), Color(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get()).rgb)
+			RenderUtils.drawBorder(0F, 0F, size, size, borderStrengthValue.get(), ColorUtils.createRGB(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get()))
 
 			glEnable(GL_BLEND)
 			glDisable(GL_TEXTURE_2D)

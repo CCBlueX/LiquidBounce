@@ -75,7 +75,7 @@ class NullStyle : Style()
 
 		if (moduleValues.isNotEmpty())
 		{
-			Fonts.font35.drawString("+", moduleElement.x + moduleElement.width - 8, moduleElement.y + (moduleElement.height shr 1), Color.WHITE.rgb)
+			Fonts.font35.drawString("+", moduleElement.x + moduleElement.width - 8, moduleElement.y + (moduleElement.height shr 1), -1)
 
 			if (moduleElement.isShowSettings)
 			{
@@ -228,7 +228,7 @@ class NullStyle : Style()
 							if (objects != null) displayString = objects.name + if (objects.fontSize == -1) "" else " - " + objects.fontSize
 						}
 
-						Fonts.font35.drawString(displayString, moduleElement.x + moduleElement.width + 6, yPos + 4, Color.WHITE.rgb)
+						Fonts.font35.drawString(displayString, moduleElement.x + moduleElement.width + 6, yPos + 4, -1)
 
 						val stringWidth = Fonts.font35.getStringWidth(displayString)
 

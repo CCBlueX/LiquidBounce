@@ -159,7 +159,7 @@ class StorageESP : Module()
 				{
 					"otherbox", "box", "hydra" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, drawOutline, hydraESP)
 
-					"2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
+					"2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, -16777216)
 
 					"outline" ->
 					{
@@ -217,7 +217,7 @@ class StorageESP : Module()
 				{
 					"otherbox", "box", "hydra" -> RenderUtils.drawEntityBox(entity, color, drawOutline, hydraESP)
 
-					"2d" -> RenderUtils.draw2D(entity.position, color.rgb, Color.BLACK.rgb)
+					"2d" -> RenderUtils.draw2D(entity.position, color.rgb, -16777216)
 
 					"outline" ->
 					{

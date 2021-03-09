@@ -14,10 +14,10 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 import kotlin.math.min
 
 /**
@@ -63,11 +63,11 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 		val fontRenderer = fontValue.get()
 		val fontHeight = fontRenderer.fontHeight
 
-		val textColor = textColor().rgb
-		val backColor = backgroundColor().rgb
+		val textColor = createRGB(textRedValue.get(), textGreenValue.get(), textBlueValue.get(), 255)
+		val backColor = createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get())
 
 		val rectColorMode = rectColorModeValue.get()
-		val rectCustomColor = Color(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorBlueAlpha.get()).rgb
+		val rectCustomColor = createRGB(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorBlueAlpha.get())
 
 		val saturation = saturationValue.get()
 		val brightness = brightnessValue.get()
@@ -148,8 +148,4 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 
 		return Border(-maxWidth - 5.0f - if (rectValue.get()) 3 else 0, -2F, 5F, maxHeight + fontHeight.toFloat())
 	}
-
-	private fun backgroundColor() = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get())
-
-	private fun textColor() = Color(textRedValue.get(), textGreenValue.get(), textBlueValue.get())
 }
