@@ -62,9 +62,6 @@ class Tracers : Module()
 		val colorGreen = colorGreenValue.get()
 		val greenBlue = colorBlueValue.get()
 
-		val saturation = saturationValue.get()
-		val brightness = brightnessValue.get()
-
 		val colorMode = colorMode.get().toLowerCase()
 
 		val partialTicks = mc.timer.renderPartialTicks
@@ -86,7 +83,7 @@ class Tracers : Module()
 		val color = when
 		{
 			colorMode.equals("Custom", ignoreCase = true) -> Color(colorRed, colorGreen, greenBlue, 150)
-			colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(saturation = saturation, brightness = brightness)
+			colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get())
 			else -> Color(255, 255, 255, 150)
 		}
 

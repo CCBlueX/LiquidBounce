@@ -8,7 +8,10 @@ package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreObjective
 import net.ccbluex.liquidbounce.api.minecraft.util.WEnumChatFormatting
 import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard
-import net.ccbluex.liquidbounce.ui.client.hud.element.*
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -135,7 +138,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 			{
 				val rectColor = when
 				{
-					rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(400000000L * index, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+					rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(offset = 400000000L * index, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 					else -> rectCustomColor
 				}
 

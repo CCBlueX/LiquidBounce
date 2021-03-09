@@ -6,7 +6,10 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.ui.client.hud.element.*
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -156,7 +159,7 @@ class Notification(private val header: String, private val message: String, priv
 			val color = when
 			{
 				bodyRainbowShader -> 0
-				bodyColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				bodyColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 				else -> bodyCustomColor
 			}
 
@@ -181,7 +184,7 @@ class Notification(private val header: String, private val message: String, priv
 				val rectColor = rectColor?.rgb ?: when
 				{
 					rectRainbowShader -> 0
-					rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+					rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 					else -> rectCustomColor
 				}
 

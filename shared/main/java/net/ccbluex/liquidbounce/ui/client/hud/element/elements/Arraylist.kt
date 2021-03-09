@@ -7,7 +7,10 @@ package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.ui.client.hud.element.*
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Horizontal
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Vertical
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
@@ -195,7 +198,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 						val color = when
 						{
 							backgroundRainbowShader -> -16777216
-							backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(offset = currentRainbowOffset, alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+							backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = backgroundColorAlpha, offset = currentRainbowOffset, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 							backgroundColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 							else -> backgroundCustomColor
 						}
@@ -212,7 +215,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 						val color = when
 						{
 							textRainbowShader -> 0
-							colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(offset = currentRainbowOffset, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+							colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(offset = currentRainbowOffset, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 							colorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 							else -> customColor
 						}
@@ -229,7 +232,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 							val color = when
 							{
 								tagRainbowShader -> 0
-								tagColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(offset = currentRainbowOffset, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+								tagColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(offset = currentRainbowOffset, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 								tagColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 								else -> customTagColor
 							}
@@ -246,7 +249,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 							val rectColor = when
 							{
 								rectRainbowShader -> 0
-								rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(offset = currentRainbowOffset, alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+								rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = rectColorAlpha, offset = currentRainbowOffset, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 								rectColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 								else -> rectCustomColor
 							}
@@ -286,7 +289,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 						val color = when
 						{
 							backgroundRainbowShader -> 0
-							backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(offset = currentRainbowOffset, alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+							backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = backgroundColorAlpha, offset = currentRainbowOffset, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 							backgroundColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 							else -> backgroundCustomColor
 						}
@@ -302,7 +305,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 						val color = when
 						{
 							textRainbowShader -> 0
-							colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(offset = currentRainbowOffset, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+							colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(offset = currentRainbowOffset, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 							colorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 							else -> customColor
 						}
@@ -318,7 +321,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 							val color = when
 							{
 								tagRainbowShader -> 0
-								tagColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(offset = currentRainbowOffset, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+								tagColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(offset = currentRainbowOffset, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 								tagColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 								else -> customTagColor
 							}
@@ -336,7 +339,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 							val rectColor = when
 							{
 								rectColorRainbowShader -> 0
-								rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(offset = currentRainbowOffset, alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+								rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = rectColorAlpha, offset = currentRainbowOffset, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 								rectColorMode.equals("Random", ignoreCase = true) -> moduleRandomColor
 								else -> rectCustomColor
 							}

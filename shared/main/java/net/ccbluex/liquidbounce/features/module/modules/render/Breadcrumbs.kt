@@ -26,6 +26,7 @@ class Breadcrumbs : Module()
 	val colorRedValue = IntegerValue("R", 255, 0, 255)
 	val colorGreenValue = IntegerValue("G", 179, 0, 255)
 	val colorBlueValue = IntegerValue("B", 72, 0, 255)
+	val colorAlphaValue = IntegerValue("Alpha", 255, 0, 255)
 
 	val colorRainbow = BoolValue("Rainbow", false)
 	val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
@@ -36,7 +37,7 @@ class Breadcrumbs : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
-		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+		val color = if (colorRainbow.get()) rainbow(colorAlphaValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
 		val renderManager = mc.renderManager
 		val renderPosX = renderManager.viewerPosX

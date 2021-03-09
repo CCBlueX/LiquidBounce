@@ -128,7 +128,7 @@ class Blink : Module()
 	{
 		// The color settings are depended on BreadCrumb's
 		val breadcrumbs = LiquidBounce.moduleManager[Breadcrumbs::class.java] as Breadcrumbs
-		val color = if (breadcrumbs.colorRainbow.get()) rainbow(saturation = breadcrumbs.saturationValue.get(), brightness = breadcrumbs.brightnessValue.get()) else Color(breadcrumbs.colorRedValue.get(), breadcrumbs.colorGreenValue.get(), breadcrumbs.colorBlueValue.get())
+		val color = if (breadcrumbs.colorRainbow.get()) rainbow(breadcrumbs.colorAlphaValue.get(), saturation = breadcrumbs.saturationValue.get(), brightness = breadcrumbs.brightnessValue.get()) else Color(breadcrumbs.colorRedValue.get(), breadcrumbs.colorGreenValue.get(), breadcrumbs.colorBlueValue.get())
 
 		// Draw the positions
 		val renderManager = mc.renderManager

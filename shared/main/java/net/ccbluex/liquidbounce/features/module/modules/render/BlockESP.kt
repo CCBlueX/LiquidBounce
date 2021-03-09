@@ -132,7 +132,7 @@ class BlockESP : Module()
 		val hydraESP = mode == "hydra"
 		val drawOutline = mode == "box" || hydraESP
 
-		val color = if (colorRainbow.get()) rainbow(alpha = alpha, speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
+		val color = if (colorRainbow.get()) rainbow(alpha, speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
 
 		for (blockPos in posList)
 		{

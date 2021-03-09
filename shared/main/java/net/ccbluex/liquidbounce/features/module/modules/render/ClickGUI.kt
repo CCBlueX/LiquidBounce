@@ -15,11 +15,12 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.LiquidBounceStyl
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.NullStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.input.Keyboard
 import java.awt.Color
-import kotlin.math.max
-import kotlin.math.min
 
 @ModuleInfo(name = "ClickGUI", description = "Opens the ClickGUI.", category = ModuleCategory.RENDER, keyBind = Keyboard.KEY_RSHIFT, canEnable = false)
 class ClickGUI : Module()
@@ -74,6 +75,6 @@ class ClickGUI : Module()
 		private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
 		@JvmStatic
-		fun generateColor(): Color = if (colorRainbowValue.get()) rainbow(11 - min(max(rainbowSpeedValue.get(), 1), 10), saturationValue.get(), brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+		fun generateColor(): Color = if (colorRainbowValue.get()) rainbow(speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 	}
 }

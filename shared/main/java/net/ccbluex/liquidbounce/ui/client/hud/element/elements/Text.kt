@@ -6,7 +6,10 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.ui.client.hud.element.*
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.PPSCounter
@@ -233,21 +236,21 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		val backgroundColor = when
 		{
 			backgroundRainbowShader -> 0
-			backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+			backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 			else -> backgroundCustomColor
 		}
 
 		val rectColor = when
 		{
 			rectRainbowShader -> 0
-			rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+			rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 			else -> rectCustomColor
 		}
 
 		val textColor = when
 		{
 			textRainbowShader -> 0
-			colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(alpha = colorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+			colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = colorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 			else -> customColor
 		}
 

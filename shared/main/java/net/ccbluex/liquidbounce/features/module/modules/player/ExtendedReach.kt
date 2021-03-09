@@ -52,6 +52,7 @@ class ExtendedReach : Module()
 
 	private val colorRainbow = BoolValue("PathESP-Rainbow", false)
 	private val rainbowSpeedValue = IntegerValue("PathESP-RainbowSpeed", 10, 1, 10)
+	private val pathEspAlphaValue = IntegerValue("PathESP-Alpha", 255, 0, 255)
 	private val saturationValue = FloatValue("PathESP-RainbowHSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("PathESP-RainbowHSB-Brightness", 1.0f, 0.0f, 1.0f)
 
@@ -82,7 +83,7 @@ class ExtendedReach : Module()
 		if (pathEspValue.get() && path.isNotEmpty() && !pathESPTimer.hasTimePassed(pathEspTime.get().toLong()))
 		{
 			val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
-			val color = if (colorRainbow.get()) ColorUtils.rainbow(speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else customColor
+			val color = if (colorRainbow.get()) ColorUtils.rainbow(pathEspAlphaValue.get(), speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else customColor
 
 			glPushMatrix()
 			glDisable(GL_TEXTURE_2D)

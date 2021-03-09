@@ -6,11 +6,14 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
-import net.ccbluex.liquidbounce.ui.client.hud.element.*
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.applyAlphaChannel
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
@@ -130,7 +133,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 			val backgroundColor = when
 			{
 				backgroundRainbowShader -> 0
-				backgroundColorMode.equals("Rainbow", ignoreCase = true) -> rainbow(alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				backgroundColorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB(alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 				backgroundColorMode.equals("PotionColor", ignoreCase = true) -> applyAlphaChannel(potionColor, backgroundColorAlpha)
 				else -> backgroundCustomColor
 			}
@@ -138,7 +141,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 			val textColor = when
 			{
 				textRainbowShader -> 0
-				colorMode.equals("Rainbow", ignoreCase = true) -> rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				colorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB(speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 				colorMode.equals("PotionColor", ignoreCase = true) -> potionColor
 				else -> customColor
 			}
@@ -147,7 +150,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 			else when
 			{
 				timeRainbowShader -> 0
-				timeColorMode.equals("Rainbow", ignoreCase = true) -> rainbow(speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				timeColorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB(speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 				timeColorMode.equals("PotionColor", ignoreCase = true) -> potionColor
 				else -> timeCustomColor
 			}
@@ -155,7 +158,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 			val rectColor = when
 			{
 				rectRainbowShader -> 0
-				rectColorMode.equals("Rainbow", ignoreCase = true) -> rainbow(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness).rgb
+				rectColorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 				rectColorMode.equals("PotionColor", ignoreCase = true) -> applyAlphaChannel(potionColor, rectColorAlpha)
 				else -> rectCustomColor
 			}

@@ -86,6 +86,7 @@ class TpAura : Module()
 	private val colorRainbow = BoolValue("PathESP-Rainbow", false)
 	private val rainbowSpeedValue = IntegerValue("PathESP-RainbowSpeed", 10, 1, 10)
 	private val rainbowOffsetValue = IntegerValue("PathESP-RainbowIndexOffset", 0, -100, 100)
+	private val pathEspAlphaValue = IntegerValue("PathESP-Alpha", 255, 0, 255)
 	private val saturationValue = FloatValue("PathESP-RainbowHSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("PathESP-RainbowHSB-Brightness", 1.0f, 0.0f, 1.0f)
 
@@ -234,6 +235,7 @@ class TpAura : Module()
 			val rainbow = colorRainbow.get()
 			val saturation = saturationValue.get()
 			val brightness = brightnessValue.get()
+			val pathEspAlpha = pathEspAlphaValue.get()
 			val rainbowOffsetVal = 400000000L + 40000000L * rainbowOffsetValue.get()
 			val rainbowSpeed = rainbowSpeedValue.get()
 			val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
@@ -241,7 +243,7 @@ class TpAura : Module()
 			val entityRenderer = mc.entityRenderer
 
 			targetPaths.forEachIndexed { index, targetPath ->
-				val color = if (rainbow) ColorUtils.rainbow(offset = index * rainbowOffsetVal, speed = rainbowSpeed, saturation = saturation, brightness = brightness) else customColor
+				val color = if (rainbow) ColorUtils.rainbow(pathEspAlpha, index * rainbowOffsetVal, rainbowSpeed, saturation, brightness) else customColor
 
 				glPushMatrix()
 				glDisable(GL_TEXTURE_2D)

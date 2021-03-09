@@ -86,9 +86,6 @@ class StorageESP : Module()
 		try
 		{
 			val mode = modeValue.get().toLowerCase()
-			val saturation = saturationValue.get()
-			val brightness = brightnessValue.get()
-			val rainbowSpeed = rainbowSpeedValue.get()
 			val chest = chestValue.get()
 			val enderChest = enderChestValue.get()
 			val furnace = furnaceValue.get()
@@ -96,7 +93,7 @@ class StorageESP : Module()
 			val hopper = hopperValue.get()
 			val shulkerBox = shulkerBoxValue.get()
 
-			val rainbow = ColorUtils.rainbow(alpha = 1.0f, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+			val rainbow = ColorUtils.rainbow(speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get())
 
 			val chestColor = if (chestRainbowValue.get()) rainbow else Color(chestRedValue.get(), chestGreenValue.get(), chestBlueValue.get())
 			val trappedChestColor = if (trappedChestRainbowValue.get()) rainbow else Color(trappedChestRedValue.get(), trappedChestGreenValue.get(), trappedChestBlueValue.get())
@@ -302,11 +299,7 @@ class StorageESP : Module()
 		val hopper = hopperValue.get()
 		val shulkerBox = shulkerBoxValue.get()
 
-		val saturation = saturationValue.get()
-		val brightness = brightnessValue.get()
-		val rainbowSpeed = rainbowSpeedValue.get()
-
-		val rainbow = ColorUtils.rainbow(alpha = 1.0f, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+		val rainbow = ColorUtils.rainbow(speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get())
 		val chestColor = if (chestRainbowValue.get()) rainbow else Color(chestRedValue.get(), chestGreenValue.get(), chestBlueValue.get())
 		val trappedChestColor = if (trappedChestRainbowValue.get()) rainbow else Color(trappedChestRedValue.get(), trappedChestGreenValue.get(), trappedChestBlueValue.get())
 		val enderChestColor = if (enderChestRainbowValue.get()) rainbow else Color(enderChestRedValue.get(), enderChestGreenValue.get(), enderChestBlueValue.get())
