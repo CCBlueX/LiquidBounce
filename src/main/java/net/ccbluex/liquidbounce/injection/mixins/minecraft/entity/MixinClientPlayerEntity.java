@@ -41,9 +41,12 @@ public class MixinClientPlayerEntity {
     /**
      * Hook push out function tick at HEAD and call out push out event, which is able to stop the cancel the execution.
      */
-    @Inject(method = "pushOutOfBlocks", at = @At("HEAD"))
+    @Inject(method = "pushOutOfBlocks", at = @At("HEAD"), cancellable = true)
     private void hookPushOut(CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new PlayerPushOutEvent());
+        final PlayerPushOutEvent pushOutEvent = new PlayerPushOutEvent();
+        EventManager.INSTANCE.callEvent(pushOutEvent);
+        if (pushOutEvent.isCancelled())
+            callbackInfo.cancel();
     }
 
     /**
