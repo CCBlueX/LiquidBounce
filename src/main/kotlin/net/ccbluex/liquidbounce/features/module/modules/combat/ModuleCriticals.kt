@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.EntityTickEvent
+import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.*
 import net.ccbluex.liquidbounce.utils.extensions.exactPosition
@@ -63,7 +63,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         // Jump crit should just be active until an enemy is in your reach to be attacked
         val range by float("Range", 4f, 1f..6f)
 
-        val tickHandler = handler<EntityTickEvent> {
+        val tickHandler = handler<PlayerTickEvent> {
             val (_, _) = world.findEnemy(range) ?: return@handler
 
             if (player.isOnGround) {

@@ -31,9 +31,12 @@ object EventManager {
 
     val mappedEvents = arrayOf(
         GameTickEvent::class,
-        EntityTickEvent::class,
+        PlayerTickEvent::class,
+        PlayerNetworkMovementTickEvent::class,
+        PlayerPushOutEvent::class,
+        PlayerMoveEvent::class,
         EngineRenderEvent::class,
-        FlatRenderEvent::class,
+        OverlayRenderEvent::class,
         InputHandleEvent::class,
         KeyEvent::class,
         AttackEvent::class,

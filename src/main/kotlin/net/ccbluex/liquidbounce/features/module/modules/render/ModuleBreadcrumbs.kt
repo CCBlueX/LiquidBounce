@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.event.EngineRenderEvent
+import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -64,7 +64,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         }
     }
 
-    val updateHandler = handler<EntityTickEvent> {
+    val updateHandler = handler<PlayerTickEvent> {
         if (player.x == lastPosX && player.y == lastPosY && player.z == lastPosZ) {
             return@handler
         }

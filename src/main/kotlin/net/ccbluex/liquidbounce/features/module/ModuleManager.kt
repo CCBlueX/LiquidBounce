@@ -19,13 +19,14 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.event.EntityTickEvent
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiCactus
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
 import net.ccbluex.liquidbounce.features.module.modules.render.*
@@ -51,7 +52,7 @@ object ModuleManager : Iterable<Module>, Listenable {
     /**
      * Tick sequences
      */
-    val entityTickHandler = handler<EntityTickEvent>(false) {
+    val entityTickHandler = handler<PlayerTickEvent>(false) {
         for (sequence in sequences) {
             sequence.tick()
         }
@@ -75,7 +76,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleItemESP,
             ModuleCriticals,
             ModuleAntiCactus,
-            ModuleHitbox
+            ModuleHitbox,
+            ModuleStrafe
         )
 
         builtin.forEach(this::addModule)

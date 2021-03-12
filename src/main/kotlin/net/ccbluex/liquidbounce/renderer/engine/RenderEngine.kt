@@ -91,7 +91,7 @@ object RenderEngine : Listenable {
      */
     lateinit var cameraMvp: Mat4
 
-    val renderHandler = handler<FlatRenderEvent> {
+    val renderHandler = handler<OverlayRenderEvent> {
         this.cameraMvp = (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
             it.tickDelta
         ).toMat4()

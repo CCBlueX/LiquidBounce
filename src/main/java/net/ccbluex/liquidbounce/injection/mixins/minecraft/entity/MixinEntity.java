@@ -15,7 +15,7 @@ public class MixinEntity {
      * Hook entity margin modification event
      */
     @Inject(method = "getTargetingMargin", at = @At("RETURN"), cancellable = true)
-    private void hookMargin(final CallbackInfoReturnable<Float> callback) {
+    private void hookMargin(CallbackInfoReturnable<Float> callback) {
         final EntityMarginEvent marginEvent = new EntityMarginEvent((Entity) (Object) this, callback.getReturnValue());
         EventManager.INSTANCE.callEvent(marginEvent);
         callback.setReturnValue(marginEvent.getMargin());

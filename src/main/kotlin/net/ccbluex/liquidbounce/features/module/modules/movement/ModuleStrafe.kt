@@ -18,37 +18,27 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.PlayerTickEvent
-import net.ccbluex.liquidbounce.features.module.*
-import net.ccbluex.liquidbounce.utils.extensions.downwards
-import net.ccbluex.liquidbounce.utils.extensions.moving
+import net.ccbluex.liquidbounce.event.PlayerMoveEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.extensions.directionYaw
 import net.ccbluex.liquidbounce.utils.extensions.strafe
-import net.ccbluex.liquidbounce.utils.extensions.upwards
+import net.minecraft.entity.MovementType
 
-object ModuleSpeed : Module("Speed", Category.COMBAT) {
+/**
+ * A strafe module
+ *
+ * Strafe into different directions while your mid-air
+ */
+object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
 
-    private object SpeedChoiceConfigurable : ChoiceConfigurable(this, "Mode", "YPort", {
-        SpeedYPort
-    })
-
-    private object SpeedYPort : Choice("YPort", SpeedChoiceConfigurable) {
-
-        val tickHandler = sequenceHandler<PlayerTickEvent> {
-            if (player.isOnGround && player.moving) {
-                player.strafe(speed = 0.4)
-                player.upwards(0.42f)
-                wait(1)
-                player.downwards(-1f)
-            }
-
+    val moveHandler = handler<PlayerMoveEvent> { event ->
+        // Might just strafe when player controls itself
+        if (event.type == MovementType.SELF) {
+            val movement = event.movement
+            movement.strafe(player.directionYaw)
         }
-
-    }
-
-    init {
-        SpeedChoiceConfigurable.initialize()
-        tree(SpeedChoiceConfigurable)
     }
 
 }
-

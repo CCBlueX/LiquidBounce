@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.FlatRenderEvent
+import net.ccbluex.liquidbounce.event.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -35,7 +35,7 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
         webView.loadPage(ThemeManager.defaultTheme.page("hud"))
     }
 
-    val renderHandler = handler<FlatRenderEvent> {
+    val renderHandler = handler<OverlayRenderEvent> {
         webView.update()
         webView.render()
     }

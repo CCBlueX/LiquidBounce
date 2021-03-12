@@ -1,8 +1,9 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import net.ccbluex.liquidbounce.event.EntityTickEvent;
-import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.*;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.MovementType;
+import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,7 +19,39 @@ public class MixinClientPlayerEntity {
      */
     @Inject(method = "tick", at = @At("HEAD"))
     private void hookTickEvent(CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new EntityTickEvent());
+        EventManager.INSTANCE.callEvent(new PlayerTickEvent());
+    }
+
+    /**
+     * Hook entity movement tick event at HEAD and call out PRE tick movement event
+     */
+    @Inject(method = "sendMovementPackets", at = @At("HEAD"))
+    private void hookMovementPre(CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new PlayerNetworkMovementTickEvent(EventState.PRE));
+    }
+
+    /**
+     * Hook entity movement tick event at RETURN and call out POST tick movement event
+     */
+    @Inject(method = "sendMovementPackets", at = @At("RETURN"))
+    private void hookMovementPost(CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new PlayerNetworkMovementTickEvent(EventState.POST));
+    }
+
+    /**
+     * Hook push out function tick at HEAD and call out push out event, which is able to stop the cancel the execution.
+     */
+    @Inject(method = "pushOutOfBlocks", at = @At("HEAD"))
+    private void hookPushOut(CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new PlayerPushOutEvent());
+    }
+
+    /**
+     * Hook push out function tick at HEAD and call out push out event, which is able to stop the cancel the execution.
+     */
+    @Inject(method = "move", at = @At("HEAD"))
+    private void hookPushOut(MovementType type, Vec3d movement, CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new PlayerMoveEvent(type, movement));
     }
 
 }

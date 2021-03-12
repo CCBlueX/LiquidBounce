@@ -26,8 +26,10 @@ import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.MovementType
 import net.minecraft.network.Packet
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShape
 
 // Game events
@@ -35,16 +37,13 @@ import net.minecraft.util.shape.VoxelShape
 @Nameable("gameTick")
 class GameTickEvent : Event()
 
-@Nameable("entityTick")
-class EntityTickEvent : Event()
-
 // Render events
 
 @Nameable("engineRender")
 class EngineRenderEvent(val tickDelta: Float) : Event()
 
-@Nameable("flatRender")
-class FlatRenderEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
+@Nameable("overlayRender")
+class OverlayRenderEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
 
 // Input events
 
@@ -80,6 +79,21 @@ class BlockShapeEvent(val state: BlockState, val pos: BlockPos, var shape: Voxel
 
 @Nameable("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
+
+
+// Entity events bound to client-user entity
+
+@Nameable("playerTick")
+class PlayerTickEvent : Event()
+
+@Nameable("playerNetworkMovementTick")
+class PlayerNetworkMovementTickEvent(val state: EventState) : Event()
+
+@Nameable("playerPushOut")
+class PlayerPushOutEvent : CancellableEvent()
+
+@Nameable("playerMove")
+class PlayerMoveEvent(val type: MovementType, val movement: Vec3d) : Event()
 
 // Network events
 
