@@ -50,7 +50,7 @@ public class MixinClientPlayerEntity {
      * Hook push out function tick at HEAD and call out push out event, which is able to stop the cancel the execution.
      */
     @Inject(method = "move", at = @At("HEAD"))
-    private void hookPushOut(MovementType type, Vec3d movement, CallbackInfo callbackInfo) {
+    private void hookMove(MovementType type, Vec3d movement, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new PlayerMoveEvent(type, movement));
     }
 
