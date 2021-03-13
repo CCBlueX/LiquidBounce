@@ -38,10 +38,10 @@ class RollingArrayLongBuffer(length: Int)
 	 * @param l
 	 * The element to be added
 	 */
-	fun add(l: Long)
+	fun add()
 	{
 		bufferOffset = (bufferOffset + 1) % buffer.size
-		buffer[bufferOffset] = l
+		buffer[bufferOffset] = System.currentTimeMillis()
 	}
 
 	/**

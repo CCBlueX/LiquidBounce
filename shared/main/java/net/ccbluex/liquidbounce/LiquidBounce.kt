@@ -14,7 +14,10 @@ import net.ccbluex.liquidbounce.event.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.special.*
+import net.ccbluex.liquidbounce.features.special.AntiModDisable
+import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
+import net.ccbluex.liquidbounce.features.special.ClientRichPresence
+import net.ccbluex.liquidbounce.features.special.DonatorCape
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.script.ScriptManager
@@ -27,8 +30,11 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
+import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 
 // TODO: Replace all redundant netHandler.addToSendQueue calls to networkManager.sendPacketWithoutEvent (to reduce event-call overhead)
@@ -71,7 +77,7 @@ object LiquidBounce
 	lateinit var wrapper: Wrapper
 
 	@JvmStatic
-	val title: String = "$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR | Backend version $MINECRAFT_VERSION${if (IN_DEV) " | DEVELOPMENT BUILD" else ""}" // TODO: Add more details
+	val title: String = "$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR | Backend version $MINECRAFT_VERSION | Forked version | Repo: github.com/hsheric0210/LiquidBounce ${if (IN_DEV) " | DEVELOPMENT BUILD" else ""}" // TODO: Add more details
 
 	/**
 	 * Execute if client will be started

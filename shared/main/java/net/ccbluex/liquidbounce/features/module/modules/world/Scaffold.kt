@@ -887,7 +887,7 @@ class Scaffold : Module()
 			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
 
 			val blocksAmount = getBlocksAmount(thePlayer)
-			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}$blocksAmount"
+			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}$blocksAmount${if (downValue.get() && blocksAmount <= 1) " (You need at least 2 blocks to go down)" else ""}"
 
 			val provider = classProvider
 

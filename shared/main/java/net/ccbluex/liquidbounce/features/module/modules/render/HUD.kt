@@ -22,6 +22,7 @@ class HUD : Module()
 	private val blurValue = BoolValue("Blur", false)
 	val alertsValue = BoolValue("Alerts", true)
 	val teleportAlertsValue = BoolValue("TeleportAlerts", true)
+	val worldChangeAlertsValue = BoolValue("WorldChangeAlerts", true)
 	val fontChatValue = BoolValue("FontChat", false)
 	val chatFontValue = FontValue("FontChatFont", Fonts.font40)
 

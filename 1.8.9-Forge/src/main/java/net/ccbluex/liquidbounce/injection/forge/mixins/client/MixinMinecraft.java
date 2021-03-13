@@ -5,6 +5,9 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
+import static net.ccbluex.liquidbounce.LiquidBounce.wrapper;
+
+import java.awt.*;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 
@@ -15,6 +18,7 @@ import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.MultiActions;
+import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.features.module.modules.world.FastPlace;
 import net.ccbluex.liquidbounce.injection.backend.EnumFacingImplKt;
 import net.ccbluex.liquidbounce.injection.backend.GuiScreenImplKt;
@@ -25,6 +29,7 @@ import net.ccbluex.liquidbounce.injection.forge.SplashProgressLock;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
 import net.ccbluex.liquidbounce.ui.client.GuiUpdate;
 import net.ccbluex.liquidbounce.ui.client.GuiWelcome;
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notifications;
 import net.ccbluex.liquidbounce.utils.CPSCounter;
 import net.ccbluex.liquidbounce.utils.CPSCounter.MouseButton;
 import net.ccbluex.liquidbounce.utils.render.IconUtils;
@@ -57,8 +62,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import static net.ccbluex.liquidbounce.LiquidBounce.wrapper;
 
 @Mixin(Minecraft.class)
 @SideOnly(Side.CLIENT)
@@ -273,6 +276,11 @@ public abstract class MixinMinecraft
 
 		// Trigger WorldEvent
 		LiquidBounce.eventManager.callEvent(new WorldEvent(Optional.ofNullable(world).map(WorldClientImplKt::wrap).orElse(null)));
+
+		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
+
+		if (hud.getWorldChangeAlertsValue().get() && LiquidBounce.hud.getNotifications().size() <= Notifications.Companion.getMaxRendered().get())
+			LiquidBounce.hud.addNotification("World Change", "(" + theWorld + ") -> (" + world + ")", Color.yellow, 2000L);
 	}
 
 	/**

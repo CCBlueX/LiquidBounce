@@ -22,7 +22,7 @@ object CPSCounter
 	@JvmStatic
 	fun registerClick(button: MouseButton)
 	{
-		TIMESTAMP_BUFFERS[button.index]?.add(System.currentTimeMillis())
+		TIMESTAMP_BUFFERS[button.index]?.add()
 	}
 
 	/**

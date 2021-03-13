@@ -202,7 +202,7 @@ public abstract class MixinNetHandlerPlayClient
 			final DecimalFormat coordFormat = new DecimalFormat("0.000");
 
 			if (LiquidBounce.hud.getNotifications().size() <= Notifications.Companion.getMaxRendered().get())
-				LiquidBounce.hud.addNotification("Teleport", "(" + coordFormat.format(prevPosX) + ", " + coordFormat.format(prevPosY) + ", " + coordFormat.format(prevPosZ) + ") -> (" + coordFormat.format(x) + ", " + coordFormat.format(y) + ", " + coordFormat.format(z) + ")", Color.yellow, 500L);
+				LiquidBounce.hud.addNotification("Teleport", "(" + coordFormat.format(prevPosX) + ", " + coordFormat.format(prevPosY) + ", " + coordFormat.format(prevPosZ) + ") -> (" + coordFormat.format(x) + ", " + coordFormat.format(y) + ", " + coordFormat.format(z) + ")", Color.yellow, 2000L);
 		}
 
 		if (noRotateSet.getState() && !(noRotateSet.getNoZeroValue().get() && !relativeYaw && yaw == 0.0f && !relativePitch && pitch == 0.0f))
@@ -310,19 +310,19 @@ public abstract class MixinNetHandlerPlayClient
 			WorkerUtils.getWorkers().execute(() ->
 			{
 				if (isHackerChat(text))
-					LiquidBounce.hud.addNotification("Chat", "Someone called you a hacker.", Color.yellow, 500L);
+					LiquidBounce.hud.addNotification("Chat", "Someone called you a hacker.", Color.yellow, 2000L);
 
 				if (text.contains("ground items will be removed in"))
-					LiquidBounce.hud.addNotification("ClearLag", "ClearLag " + text.substring(text.lastIndexOf("in ")), 500L);
+					LiquidBounce.hud.addNotification("ClearLag", "ClearLag " + text.substring(text.lastIndexOf("in ")), 2000L);
 
 				if (text.contains("removed ") && text.contains("entities"))
-					LiquidBounce.hud.addNotification("ClearLag", text.substring(text.lastIndexOf("removed ")), 500L);
+					LiquidBounce.hud.addNotification("ClearLag", text.substring(text.lastIndexOf("removed ")), 2000L);
 
 				if (text.contains("you are now in "))
-					LiquidBounce.hud.addNotification("Faction Warning", "Chunk: " + text.substring(text.lastIndexOf("in ") + 3), 500L);
+					LiquidBounce.hud.addNotification("Faction Warning", "Chunk: " + text.substring(text.lastIndexOf("in ") + 3), 2000L);
 
 				if (text.contains("now entering"))
-					LiquidBounce.hud.addNotification("Faction", "Chunk: " + text.substring(text.lastIndexOf(": ") + 4), 500L);
+					LiquidBounce.hud.addNotification("Faction", "Chunk: " + text.substring(text.lastIndexOf(": ") + 4), 2000L);
 			});
 
 		final IChatComponent message = ForgeEventFactory.onClientChat(messageType, messageComponent);

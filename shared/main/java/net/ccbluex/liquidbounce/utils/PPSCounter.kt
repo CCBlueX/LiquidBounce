@@ -14,7 +14,7 @@ object PPSCounter
 	@JvmStatic
 	fun registerPacket(boundType: BoundType)
 	{
-		TIMESTAMP_BUFFERS[boundType.index]?.add(System.currentTimeMillis())
+		TIMESTAMP_BUFFERS[boundType.index]?.add()
 	}
 
 	/**
