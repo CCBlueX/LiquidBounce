@@ -22,58 +22,39 @@ import net.minecraft.entity.Entity
 import net.minecraft.util.math.AxisAlignedBB
 import net.minecraft.world.World
 
-open class WorldImpl<T : World>(val wrapped: T) : IWorld {
-    override val isRemote: Boolean
-        get() = wrapped.isRemote
-    override val scoreboard: IScoreboard
-        get() = wrapped.scoreboard.wrap()
+open class WorldImpl<out T : World>(val wrapped: T) : IWorld
+{
+	override val isRemote: Boolean
+		get() = wrapped.isRemote
+	override val scoreboard: IScoreboard
+		get() = wrapped.scoreboard.wrap()
 
-    override val worldBorder: IWorldBorder
-        get() = wrapped.worldBorder.wrap()
+	override val worldBorder: IWorldBorder
+		get() = wrapped.worldBorder.wrap()
 
-    override fun getEntityByID(id: Int): IEntity? = wrapped.getEntityByID(id)?.wrap()
+	override fun getEntityByID(id: Int): IEntity? = wrapped.getEntityByID(id)?.wrap()
 
-    override fun rayTraceBlocks(start: WVec3, end: WVec3): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap())?.wrap()
+	override fun rayTraceBlocks(start: WVec3, end: WVec3): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap())?.wrap()
 
-    override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid)?.wrap()
+	override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid)?.wrap()
 
-    override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean, ignoreBlockWithoutBoundingBox: Boolean, returnLastUncollidableBlock: Boolean): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock)?.wrap()
+	override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean, ignoreBlockWithoutBoundingBox: Boolean, returnLastUncollidableBlock: Boolean): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock)?.wrap()
 
-    override fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: (IEntity?) -> Boolean): Collection<IEntity> {
-        return WrappedCollection(
-                wrapped.getEntitiesInAABBexcluding(entityIn?.unwrap(), boundingBox.unwrap()) { predicate(it?.wrap()) },
-                IEntity::unwrap,
-                Entity::wrap
-        )
-    }
+	override fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: (IEntity?) -> Boolean): Collection<IEntity> = WrappedCollection(wrapped.getEntitiesInAABBexcluding(entityIn?.unwrap(), boundingBox.unwrap()) { predicate(it?.wrap()) }, IEntity::unwrap, Entity::wrap)
 
-    override fun getBlockState(blockPos: WBlockPos): IIBlockState = wrapped.getBlockState(blockPos.unwrap()).wrap()
+	override fun getBlockState(blockPos: WBlockPos): IIBlockState = wrapped.getBlockState(blockPos.unwrap()).wrap()
 
-    override fun getEntitiesWithinAABBExcludingEntity(entity: IEntity?, bb: IAxisAlignedBB): Collection<IEntity> {
-        return WrappedCollection(
-                wrapped.getEntitiesWithinAABBExcludingEntity(entity?.unwrap(), bb.unwrap()),
-                IEntity::unwrap,
-                Entity::wrap
-        )
-    }
+	override fun getEntitiesWithinAABBExcludingEntity(entity: IEntity?, bb: IAxisAlignedBB): Collection<IEntity> = WrappedCollection(wrapped.getEntitiesWithinAABBExcludingEntity(entity?.unwrap(), bb.unwrap()), IEntity::unwrap, Entity::wrap)
 
-    override fun getCollidingBoundingBoxes(entity: IEntity, bb: IAxisAlignedBB): Collection<IAxisAlignedBB> {
-        return WrappedCollection(
-                wrapped.getCollisionBoxes(entity.unwrap(), bb.unwrap()),
-                IAxisAlignedBB::unwrap,
-                AxisAlignedBB::wrap
-        )
-    }
+	override fun getCollidingBoundingBoxes(entity: IEntity, bb: IAxisAlignedBB): Collection<IAxisAlignedBB> = WrappedCollection(wrapped.getCollisionBoxes(entity.unwrap(), bb.unwrap()), IAxisAlignedBB::unwrap, AxisAlignedBB::wrap)
 
-    override fun checkBlockCollision(aabb: IAxisAlignedBB): Boolean = wrapped.checkBlockCollision(aabb.unwrap())
+	override fun checkBlockCollision(aabb: IAxisAlignedBB): Boolean = wrapped.checkBlockCollision(aabb.unwrap())
 
-    override fun getCollisionBoxes(bb: IAxisAlignedBB): Collection<IAxisAlignedBB> = WrappedCollection(wrapped.getCollisionBoxes(null, bb.unwrap()), IAxisAlignedBB::unwrap, AxisAlignedBB::wrap)
-    override fun getChunkFromChunkCoords(x: Int, z: Int): IChunk = wrapped.getChunkFromChunkCoords(x, z).wrap()
+	override fun getCollisionBoxes(bb: IAxisAlignedBB): Collection<IAxisAlignedBB> = WrappedCollection(wrapped.getCollisionBoxes(null, bb.unwrap()), IAxisAlignedBB::unwrap, AxisAlignedBB::wrap)
+	override fun getChunkFromChunkCoords(x: Int, z: Int): IChunk = wrapped.getChunkFromChunkCoords(x, z).wrap()
 
-    override fun equals(other: Any?): Boolean {
-        return other is WorldImpl<*> && other.wrapped == this.wrapped
-    }
+	override fun equals(other: Any?): Boolean = other is WorldImpl<*> && other.wrapped == wrapped
 }
 
- fun IWorld.unwrap(): World = (this as WorldImpl<*>).wrapped
- fun World.wrap(): IWorld = WorldImpl(this)
+fun IWorld.unwrap(): World = (this as WorldImpl<*>).wrapped
+fun World.wrap(): IWorld = WorldImpl(this)

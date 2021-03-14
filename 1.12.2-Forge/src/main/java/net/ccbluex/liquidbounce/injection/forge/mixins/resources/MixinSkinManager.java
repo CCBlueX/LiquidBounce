@@ -7,6 +7,7 @@ import java.util.Objects;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
+import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
 import net.minecraft.client.Minecraft;
@@ -22,12 +23,12 @@ public class MixinSkinManager
 {
 
 	@Inject(method = "loadSkinFromCache", cancellable = true, at = @At("HEAD"))
-	private void injectSkinProtect(GameProfile gameProfile, CallbackInfoReturnable<Map<MinecraftProfileTexture.Type, MinecraftProfileTexture>> cir)
+	private void injectSkinProtect(final GameProfile gameProfile, final CallbackInfoReturnable<Map<Type, MinecraftProfileTexture>> cir)
 	{
 		if (gameProfile == null)
 			return;
 
-		NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.get(NameProtect.class);
+		final NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.get(NameProtect.class);
 
 		if (nameProtect.getState() && nameProtect.skinProtectValue.get())
 		{

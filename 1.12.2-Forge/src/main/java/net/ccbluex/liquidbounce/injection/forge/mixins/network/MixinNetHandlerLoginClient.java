@@ -50,17 +50,17 @@ public class MixinNetHandlerLoginClient
 	private NetworkManager networkManager;
 
 	@Inject(method = "handleEncryptionRequest", at = @At("HEAD"), cancellable = true)
-	private void handleEncryptionRequest(SPacketEncryptionRequest packetIn, CallbackInfo callbackInfo)
+	private void handleEncryptionRequest(final SPacketEncryptionRequest packetIn, final CallbackInfo callbackInfo)
 	{
 		if (MCLeaks.isAltActive())
 		{
 			final SecretKey secretkey = CryptManager.createNewSharedKey();
-			String s = packetIn.getServerId();
-			PublicKey publickey = packetIn.getPublicKey();
-			String s1 = (new BigInteger(CryptManager.getServerIdHash(s, publickey, secretkey))).toString(16);
+			final String s = packetIn.getServerId();
+			final PublicKey publickey = packetIn.getPublicKey();
+			final String s1 = new BigInteger(CryptManager.getServerIdHash(s, publickey, secretkey)).toString(16);
 
 			final Session session = MCLeaks.getSession();
-			final String server = ((InetSocketAddress) this.networkManager.getRemoteAddress()).getHostName() + ":" + ((InetSocketAddress) this.networkManager.getRemoteAddress()).getPort();
+			final String server = ((InetSocketAddress) networkManager.getRemoteAddress()).getHostName() + ":" + ((InetSocketAddress) networkManager.getRemoteAddress()).getPort();
 
 			try
 			{
@@ -90,7 +90,7 @@ public class MixinNetHandlerLoginClient
 
 				if (!jsonElement.isJsonObject() || !jsonElement.getAsJsonObject().has("success"))
 				{
-					this.networkManager.closeChannel(new TextComponentString("Invalid response from MCLeaks API"));
+					networkManager.closeChannel(new TextComponentString("Invalid response from MCLeaks API"));
 					callbackInfo.cancel();
 					return;
 				}
@@ -102,14 +102,14 @@ public class MixinNetHandlerLoginClient
 					if (jsonElement.getAsJsonObject().has("errorMessage"))
 						errorMessage = jsonElement.getAsJsonObject().get("errorMessage").getAsString();
 
-					this.networkManager.closeChannel(new TextComponentString(errorMessage));
+					networkManager.closeChannel(new TextComponentString(errorMessage));
 					callbackInfo.cancel();
 					return;
 				}
 			}
 			catch (final Exception e)
 			{
-				this.networkManager.closeChannel(new TextComponentString("Error whilst contacting MCLeaks API: " + e.toString()));
+				networkManager.closeChannel(new TextComponentString("Error whilst contacting MCLeaks API: " + e));
 				callbackInfo.cancel();
 				return;
 			}

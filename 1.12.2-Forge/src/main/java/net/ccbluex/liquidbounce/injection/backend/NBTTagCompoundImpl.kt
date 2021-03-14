@@ -10,17 +10,18 @@ import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTBase
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagCompound
 import net.minecraft.nbt.NBTTagCompound
 
-class NBTTagCompoundImpl(wrapped: NBTTagCompound) : NBTBaseImpl<NBTTagCompound>(wrapped), INBTTagCompound {
-    override fun hasKey(name: String): Boolean = wrapped.hasKey(name)
+class NBTTagCompoundImpl(wrapped: NBTTagCompound) : NBTBaseImpl<NBTTagCompound>(wrapped), INBTTagCompound
+{
+	override fun hasKey(name: String): Boolean = wrapped.hasKey(name)
 
-    override fun getShort(name: String): Short = wrapped.getShort(name)
+	override fun getShort(name: String): Short = wrapped.getShort(name)
 
-    override fun setString(key: String, value: String) = wrapped.setString(key, value)
+	override fun setString(key: String, value: String) = wrapped.setString(key, value)
 
-    override fun setTag(key: String, tag: INBTBase) = wrapped.setTag(key, tag.unwrap())
+	override fun setTag(key: String, tag: INBTBase) = wrapped.setTag(key, tag.unwrap())
 
-    override fun setInteger(key: String, value: Int) = wrapped.setInteger(key, value)
+	override fun setInteger(key: String, value: Int) = wrapped.setInteger(key, value)
 }
 
- fun INBTTagCompound.unwrap(): NBTTagCompound = (this as NBTTagCompoundImpl).wrapped
- fun NBTTagCompound.wrap(): INBTTagCompound = NBTTagCompoundImpl(this)
+fun INBTTagCompound.unwrap(): NBTTagCompound = (this as NBTTagCompoundImpl).wrapped
+fun NBTTagCompound.wrap(): INBTTagCompound = NBTTagCompoundImpl(this)

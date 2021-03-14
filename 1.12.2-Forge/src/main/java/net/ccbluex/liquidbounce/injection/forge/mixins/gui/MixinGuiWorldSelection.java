@@ -12,7 +12,7 @@ public abstract class MixinGuiWorldSelection extends MixinGuiScreen
 {
 
 	@Inject(method = "drawScreen", at = @At("HEAD"))
-	private void injectDrawDefaultBackground(int mouseX, int mouseY, float partialTicks, CallbackInfo ci)
+	private void injectDrawDefaultBackground(final int mouseX, final int mouseY, final float partialTicks, final CallbackInfo ci)
 	{
 		drawDefaultBackground();
 	}

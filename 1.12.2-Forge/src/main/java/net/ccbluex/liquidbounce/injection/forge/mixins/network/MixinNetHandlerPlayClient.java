@@ -25,6 +25,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.PacketThreadUtil;
 import net.minecraft.network.play.client.CPacketCustomPayload;
 import net.minecraft.network.play.client.CPacketResourcePackStatus;
+import net.minecraft.network.play.client.CPacketResourcePackStatus.Action;
 import net.minecraft.network.play.server.SPacketEntity;
 import net.minecraft.network.play.server.SPacketJoinGame;
 import net.minecraft.network.play.server.SPacketResourcePackSend;
@@ -73,37 +74,37 @@ public abstract class MixinNetHandlerPlayClient
 		catch (final URISyntaxException e)
 		{
 			ClientUtils.getLogger().error("Failed to handle resource pack", e);
-			netManager.sendPacket(new CPacketResourcePackStatus(CPacketResourcePackStatus.Action.FAILED_DOWNLOAD));
+			netManager.sendPacket(new CPacketResourcePackStatus(Action.FAILED_DOWNLOAD));
 			callbackInfo.cancel();
 		}
 	}
 
 	@Inject(method = "handleJoinGame", at = @At("HEAD"), cancellable = true)
-	private void handleJoinGameWithAntiForge(SPacketJoinGame packetIn, final CallbackInfo callbackInfo)
+	private void handleJoinGameWithAntiForge(final SPacketJoinGame packetIn, final CallbackInfo callbackInfo)
 	{
 		if (!AntiForge.enabled || !AntiForge.blockFML || Minecraft.getMinecraft().isIntegratedServerRunning())
 			return;
 
 		PacketThreadUtil.checkThreadAndEnqueue(packetIn, (NetHandlerPlayClient) (Object) this, gameController);
-		this.gameController.playerController = new PlayerControllerMP(gameController, (NetHandlerPlayClient) (Object) this);
-		this.clientWorldController = new WorldClient((NetHandlerPlayClient) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), this.gameController.mcProfiler);
-		this.gameController.gameSettings.difficulty = packetIn.getDifficulty();
-		this.gameController.loadWorld(this.clientWorldController);
-		this.gameController.player.dimension = packetIn.getDimension();
-		this.gameController.displayGuiScreen(new GuiDownloadTerrain());
-		this.gameController.player.setEntityId(packetIn.getPlayerId());
-		this.currentServerMaxPlayers = packetIn.getMaxPlayers();
-		this.gameController.player.setReducedDebug(packetIn.isReducedDebugInfo());
-		this.gameController.playerController.setGameType(packetIn.getGameType());
-		this.gameController.gameSettings.sendSettingsToServer();
-		this.netManager.sendPacket(new CPacketCustomPayload("MC|Brand", (new PacketBuffer(Unpooled.buffer())).writeString(ClientBrandRetriever.getClientModName())));
+		gameController.playerController = new PlayerControllerMP(gameController, (NetHandlerPlayClient) (Object) this);
+		clientWorldController = new WorldClient((NetHandlerPlayClient) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);
+		gameController.gameSettings.difficulty = packetIn.getDifficulty();
+		gameController.loadWorld(clientWorldController);
+		gameController.player.dimension = packetIn.getDimension();
+		gameController.displayGuiScreen(new GuiDownloadTerrain());
+		gameController.player.setEntityId(packetIn.getPlayerId());
+		currentServerMaxPlayers = packetIn.getMaxPlayers();
+		gameController.player.setReducedDebug(packetIn.isReducedDebugInfo());
+		gameController.playerController.setGameType(packetIn.getGameType());
+		gameController.gameSettings.sendSettingsToServer();
+		netManager.sendPacket(new CPacketCustomPayload("MC|Brand", new PacketBuffer(Unpooled.buffer()).writeString(ClientBrandRetriever.getClientModName())));
 		callbackInfo.cancel();
 	}
 
 	@Inject(method = "handleEntityMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;onGround:Z"))
-	private void handleEntityMovementEvent(SPacketEntity packetIn, final CallbackInfo callbackInfo)
+	private void handleEntityMovementEvent(final SPacketEntity packetIn, final CallbackInfo callbackInfo)
 	{
-		final Entity entity = packetIn.getEntity(this.clientWorldController);
+		final Entity entity = packetIn.getEntity(clientWorldController);
 
 		if (entity != null)
 			LiquidBounce.eventManager.callEvent(new EntityMovementEvent(EntityImplKt.wrap(entity)));

@@ -26,223 +26,258 @@ import net.minecraft.util.text.TextFormatting
 import net.minecraft.util.text.event.ClickEvent
 import net.minecraft.world.GameType
 
- fun WVec3.unwrap(): Vec3d = Vec3d(this.xCoord, this.yCoord, this.zCoord)
- fun WVec3i.unwrap(): Vec3i = Vec3i(this.x, this.y, this.z)
- fun WBlockPos.unwrap(): BlockPos = BlockPos(this.x, this.y, this.z)
+fun WVec3.unwrap(): Vec3d = Vec3d(xCoord, yCoord, zCoord)
+fun WVec3i.unwrap(): Vec3i = Vec3i(x, y, z)
+fun WBlockPos.unwrap(): BlockPos = BlockPos(x, y, z)
 
- fun BlockPos.wrap(): WBlockPos = WBlockPos(this.x, this.y, this.z)
- fun Vec3d.wrap(): WVec3 = WVec3(this.x, this.y, this.z)
- fun Vec3i.wrap(): WVec3i = WVec3i(this.x, this.y, this.z)
+fun BlockPos.wrap(): WBlockPos = WBlockPos(x, y, z)
+fun Vec3d.wrap(): WVec3 = WVec3(x, y, z)
+fun Vec3i.wrap(): WVec3i = WVec3i(x, y, z)
 
- fun RayTraceResult.Type.wrap(): IMovingObjectPosition.WMovingObjectType {
-    return when (this) {
-        RayTraceResult.Type.MISS -> IMovingObjectPosition.WMovingObjectType.MISS
-        RayTraceResult.Type.BLOCK -> IMovingObjectPosition.WMovingObjectType.BLOCK
-        RayTraceResult.Type.ENTITY -> IMovingObjectPosition.WMovingObjectType.ENTITY
-    }
+fun RayTraceResult.Type.wrap(): IMovingObjectPosition.WMovingObjectType
+{
+	return when (this)
+	{
+		RayTraceResult.Type.MISS -> IMovingObjectPosition.WMovingObjectType.MISS
+		RayTraceResult.Type.BLOCK -> IMovingObjectPosition.WMovingObjectType.BLOCK
+		RayTraceResult.Type.ENTITY -> IMovingObjectPosition.WMovingObjectType.ENTITY
+	}
 }
 
- fun WEnumPlayerModelParts.unwrap(): EnumPlayerModelParts {
-    return when (this) {
-        WEnumPlayerModelParts.CAPE -> EnumPlayerModelParts.CAPE
-        WEnumPlayerModelParts.JACKET -> EnumPlayerModelParts.JACKET
-        WEnumPlayerModelParts.LEFT_SLEEVE -> EnumPlayerModelParts.LEFT_SLEEVE
-        WEnumPlayerModelParts.RIGHT_SLEEVE -> EnumPlayerModelParts.RIGHT_SLEEVE
-        WEnumPlayerModelParts.LEFT_PANTS_LEG -> EnumPlayerModelParts.LEFT_PANTS_LEG
-        WEnumPlayerModelParts.RIGHT_PANTS_LEG -> EnumPlayerModelParts.RIGHT_PANTS_LEG
-        WEnumPlayerModelParts.HAT -> EnumPlayerModelParts.HAT
-    }
+fun WEnumPlayerModelParts.unwrap(): EnumPlayerModelParts
+{
+	return when (this)
+	{
+		WEnumPlayerModelParts.CAPE -> EnumPlayerModelParts.CAPE
+		WEnumPlayerModelParts.JACKET -> EnumPlayerModelParts.JACKET
+		WEnumPlayerModelParts.LEFT_SLEEVE -> EnumPlayerModelParts.LEFT_SLEEVE
+		WEnumPlayerModelParts.RIGHT_SLEEVE -> EnumPlayerModelParts.RIGHT_SLEEVE
+		WEnumPlayerModelParts.LEFT_PANTS_LEG -> EnumPlayerModelParts.LEFT_PANTS_LEG
+		WEnumPlayerModelParts.RIGHT_PANTS_LEG -> EnumPlayerModelParts.RIGHT_PANTS_LEG
+		WEnumPlayerModelParts.HAT -> EnumPlayerModelParts.HAT
+	}
 }
 
- fun EnumPlayerModelParts.wrap(): WEnumPlayerModelParts {
-    return when (this) {
-        EnumPlayerModelParts.CAPE -> WEnumPlayerModelParts.CAPE
-        EnumPlayerModelParts.JACKET -> WEnumPlayerModelParts.JACKET
-        EnumPlayerModelParts.LEFT_SLEEVE -> WEnumPlayerModelParts.LEFT_SLEEVE
-        EnumPlayerModelParts.RIGHT_SLEEVE -> WEnumPlayerModelParts.RIGHT_SLEEVE
-        EnumPlayerModelParts.LEFT_PANTS_LEG -> WEnumPlayerModelParts.LEFT_PANTS_LEG
-        EnumPlayerModelParts.RIGHT_PANTS_LEG -> WEnumPlayerModelParts.RIGHT_PANTS_LEG
-        EnumPlayerModelParts.HAT -> WEnumPlayerModelParts.HAT
-    }
+fun EnumPlayerModelParts.wrap(): WEnumPlayerModelParts
+{
+	return when (this)
+	{
+		EnumPlayerModelParts.CAPE -> WEnumPlayerModelParts.CAPE
+		EnumPlayerModelParts.JACKET -> WEnumPlayerModelParts.JACKET
+		EnumPlayerModelParts.LEFT_SLEEVE -> WEnumPlayerModelParts.LEFT_SLEEVE
+		EnumPlayerModelParts.RIGHT_SLEEVE -> WEnumPlayerModelParts.RIGHT_SLEEVE
+		EnumPlayerModelParts.LEFT_PANTS_LEG -> WEnumPlayerModelParts.LEFT_PANTS_LEG
+		EnumPlayerModelParts.RIGHT_PANTS_LEG -> WEnumPlayerModelParts.RIGHT_PANTS_LEG
+		EnumPlayerModelParts.HAT -> WEnumPlayerModelParts.HAT
+	}
 }
 
- fun TextFormatting.wrap(): WEnumChatFormatting {
-    return when (this) {
-        TextFormatting.BLACK -> WEnumChatFormatting.BLACK
-        TextFormatting.DARK_BLUE -> WEnumChatFormatting.DARK_BLUE
-        TextFormatting.DARK_GREEN -> WEnumChatFormatting.DARK_GREEN
-        TextFormatting.DARK_AQUA -> WEnumChatFormatting.DARK_AQUA
-        TextFormatting.DARK_RED -> WEnumChatFormatting.DARK_RED
-        TextFormatting.DARK_PURPLE -> WEnumChatFormatting.DARK_PURPLE
-        TextFormatting.GOLD -> WEnumChatFormatting.GOLD
-        TextFormatting.GRAY -> WEnumChatFormatting.GRAY
-        TextFormatting.DARK_GRAY -> WEnumChatFormatting.DARK_GRAY
-        TextFormatting.BLUE -> WEnumChatFormatting.BLUE
-        TextFormatting.GREEN -> WEnumChatFormatting.GREEN
-        TextFormatting.AQUA -> WEnumChatFormatting.AQUA
-        TextFormatting.RED -> WEnumChatFormatting.RED
-        TextFormatting.LIGHT_PURPLE -> WEnumChatFormatting.LIGHT_PURPLE
-        TextFormatting.YELLOW -> WEnumChatFormatting.YELLOW
-        TextFormatting.WHITE -> WEnumChatFormatting.WHITE
-        TextFormatting.OBFUSCATED -> WEnumChatFormatting.OBFUSCATED
-        TextFormatting.BOLD -> WEnumChatFormatting.BOLD
-        TextFormatting.STRIKETHROUGH -> WEnumChatFormatting.STRIKETHROUGH
-        TextFormatting.UNDERLINE -> WEnumChatFormatting.UNDERLINE
-        TextFormatting.ITALIC -> WEnumChatFormatting.ITALIC
-        TextFormatting.RESET -> WEnumChatFormatting.RESET
-    }
+fun TextFormatting.wrap(): WEnumChatFormatting
+{
+	return when (this)
+	{
+		TextFormatting.BLACK -> WEnumChatFormatting.BLACK
+		TextFormatting.DARK_BLUE -> WEnumChatFormatting.DARK_BLUE
+		TextFormatting.DARK_GREEN -> WEnumChatFormatting.DARK_GREEN
+		TextFormatting.DARK_AQUA -> WEnumChatFormatting.DARK_AQUA
+		TextFormatting.DARK_RED -> WEnumChatFormatting.DARK_RED
+		TextFormatting.DARK_PURPLE -> WEnumChatFormatting.DARK_PURPLE
+		TextFormatting.GOLD -> WEnumChatFormatting.GOLD
+		TextFormatting.GRAY -> WEnumChatFormatting.GRAY
+		TextFormatting.DARK_GRAY -> WEnumChatFormatting.DARK_GRAY
+		TextFormatting.BLUE -> WEnumChatFormatting.BLUE
+		TextFormatting.GREEN -> WEnumChatFormatting.GREEN
+		TextFormatting.AQUA -> WEnumChatFormatting.AQUA
+		TextFormatting.RED -> WEnumChatFormatting.RED
+		TextFormatting.LIGHT_PURPLE -> WEnumChatFormatting.LIGHT_PURPLE
+		TextFormatting.YELLOW -> WEnumChatFormatting.YELLOW
+		TextFormatting.WHITE -> WEnumChatFormatting.WHITE
+		TextFormatting.OBFUSCATED -> WEnumChatFormatting.OBFUSCATED
+		TextFormatting.BOLD -> WEnumChatFormatting.BOLD
+		TextFormatting.STRIKETHROUGH -> WEnumChatFormatting.STRIKETHROUGH
+		TextFormatting.UNDERLINE -> WEnumChatFormatting.UNDERLINE
+		TextFormatting.ITALIC -> WEnumChatFormatting.ITALIC
+		TextFormatting.RESET -> WEnumChatFormatting.RESET
+	}
 }
 
- fun WEnumChatFormatting.unwrap(): TextFormatting {
-    return when (this) {
-        WEnumChatFormatting.BLACK -> TextFormatting.BLACK
-        WEnumChatFormatting.DARK_BLUE -> TextFormatting.DARK_BLUE
-        WEnumChatFormatting.DARK_GREEN -> TextFormatting.DARK_GREEN
-        WEnumChatFormatting.DARK_AQUA -> TextFormatting.DARK_AQUA
-        WEnumChatFormatting.DARK_RED -> TextFormatting.DARK_RED
-        WEnumChatFormatting.DARK_PURPLE -> TextFormatting.DARK_PURPLE
-        WEnumChatFormatting.GOLD -> TextFormatting.GOLD
-        WEnumChatFormatting.GRAY -> TextFormatting.GRAY
-        WEnumChatFormatting.DARK_GRAY -> TextFormatting.DARK_GRAY
-        WEnumChatFormatting.BLUE -> TextFormatting.BLUE
-        WEnumChatFormatting.GREEN -> TextFormatting.GREEN
-        WEnumChatFormatting.AQUA -> TextFormatting.AQUA
-        WEnumChatFormatting.RED -> TextFormatting.RED
-        WEnumChatFormatting.LIGHT_PURPLE -> TextFormatting.LIGHT_PURPLE
-        WEnumChatFormatting.YELLOW -> TextFormatting.YELLOW
-        WEnumChatFormatting.WHITE -> TextFormatting.WHITE
-        WEnumChatFormatting.OBFUSCATED -> TextFormatting.OBFUSCATED
-        WEnumChatFormatting.BOLD -> TextFormatting.BOLD
-        WEnumChatFormatting.STRIKETHROUGH -> TextFormatting.STRIKETHROUGH
-        WEnumChatFormatting.UNDERLINE -> TextFormatting.UNDERLINE
-        WEnumChatFormatting.ITALIC -> TextFormatting.ITALIC
-        WEnumChatFormatting.RESET -> TextFormatting.RESET
-    }
+fun WEnumChatFormatting.unwrap(): TextFormatting
+{
+	return when (this)
+	{
+		WEnumChatFormatting.BLACK -> TextFormatting.BLACK
+		WEnumChatFormatting.DARK_BLUE -> TextFormatting.DARK_BLUE
+		WEnumChatFormatting.DARK_GREEN -> TextFormatting.DARK_GREEN
+		WEnumChatFormatting.DARK_AQUA -> TextFormatting.DARK_AQUA
+		WEnumChatFormatting.DARK_RED -> TextFormatting.DARK_RED
+		WEnumChatFormatting.DARK_PURPLE -> TextFormatting.DARK_PURPLE
+		WEnumChatFormatting.GOLD -> TextFormatting.GOLD
+		WEnumChatFormatting.GRAY -> TextFormatting.GRAY
+		WEnumChatFormatting.DARK_GRAY -> TextFormatting.DARK_GRAY
+		WEnumChatFormatting.BLUE -> TextFormatting.BLUE
+		WEnumChatFormatting.GREEN -> TextFormatting.GREEN
+		WEnumChatFormatting.AQUA -> TextFormatting.AQUA
+		WEnumChatFormatting.RED -> TextFormatting.RED
+		WEnumChatFormatting.LIGHT_PURPLE -> TextFormatting.LIGHT_PURPLE
+		WEnumChatFormatting.YELLOW -> TextFormatting.YELLOW
+		WEnumChatFormatting.WHITE -> TextFormatting.WHITE
+		WEnumChatFormatting.OBFUSCATED -> TextFormatting.OBFUSCATED
+		WEnumChatFormatting.BOLD -> TextFormatting.BOLD
+		WEnumChatFormatting.STRIKETHROUGH -> TextFormatting.STRIKETHROUGH
+		WEnumChatFormatting.UNDERLINE -> TextFormatting.UNDERLINE
+		WEnumChatFormatting.ITALIC -> TextFormatting.ITALIC
+		WEnumChatFormatting.RESET -> TextFormatting.RESET
+	}
 }
 
-
- fun IWorldSettings.WGameType.unwrap(): GameType {
-    return when (this) {
-        IWorldSettings.WGameType.NOT_SET -> GameType.NOT_SET
-        IWorldSettings.WGameType.SURVIVAL -> GameType.SURVIVAL
-        IWorldSettings.WGameType.CREATIVE -> GameType.CREATIVE
-        IWorldSettings.WGameType.ADVENTUR -> GameType.ADVENTURE
-        IWorldSettings.WGameType.SPECTATOR -> GameType.SPECTATOR
-    }
+fun IWorldSettings.WGameType.unwrap(): GameType
+{
+	return when (this)
+	{
+		IWorldSettings.WGameType.NOT_SET -> GameType.NOT_SET
+		IWorldSettings.WGameType.SURVIVAL -> GameType.SURVIVAL
+		IWorldSettings.WGameType.CREATIVE -> GameType.CREATIVE
+		IWorldSettings.WGameType.ADVENTUR -> GameType.ADVENTURE
+		IWorldSettings.WGameType.SPECTATOR -> GameType.SPECTATOR
+	}
 }
 
- fun GameType.wrap(): IWorldSettings.WGameType {
-    return when (this) {
-        GameType.NOT_SET -> IWorldSettings.WGameType.NOT_SET
-        GameType.SURVIVAL -> IWorldSettings.WGameType.SURVIVAL
-        GameType.CREATIVE -> IWorldSettings.WGameType.CREATIVE
-        GameType.ADVENTURE -> IWorldSettings.WGameType.ADVENTUR
-        GameType.SPECTATOR -> IWorldSettings.WGameType.SPECTATOR
-    }
+fun GameType.wrap(): IWorldSettings.WGameType
+{
+	return when (this)
+	{
+		GameType.NOT_SET -> IWorldSettings.WGameType.NOT_SET
+		GameType.SURVIVAL -> IWorldSettings.WGameType.SURVIVAL
+		GameType.CREATIVE -> IWorldSettings.WGameType.CREATIVE
+		GameType.ADVENTURE -> IWorldSettings.WGameType.ADVENTUR
+		GameType.SPECTATOR -> IWorldSettings.WGameType.SPECTATOR
+	}
 }
 
- fun CPacketUseEntity.Action.wrap(): ICPacketUseEntity.WAction {
-    return when (this) {
-        CPacketUseEntity.Action.INTERACT -> ICPacketUseEntity.WAction.INTERACT
-        CPacketUseEntity.Action.ATTACK -> ICPacketUseEntity.WAction.ATTACK
-        CPacketUseEntity.Action.INTERACT_AT -> ICPacketUseEntity.WAction.INTERACT_AT
-    }
+fun CPacketUseEntity.Action.wrap(): ICPacketUseEntity.WAction
+{
+	return when (this)
+	{
+		CPacketUseEntity.Action.INTERACT -> ICPacketUseEntity.WAction.INTERACT
+		CPacketUseEntity.Action.ATTACK -> ICPacketUseEntity.WAction.ATTACK
+		CPacketUseEntity.Action.INTERACT_AT -> ICPacketUseEntity.WAction.INTERACT_AT
+	}
 }
 
- fun ICPacketUseEntity.WAction.unwrap(): CPacketUseEntity.Action {
-    return when (this) {
-        ICPacketUseEntity.WAction.INTERACT -> CPacketUseEntity.Action.INTERACT
-        ICPacketUseEntity.WAction.ATTACK -> CPacketUseEntity.Action.ATTACK
-        ICPacketUseEntity.WAction.INTERACT_AT -> CPacketUseEntity.Action.INTERACT_AT
-    }
+fun ICPacketUseEntity.WAction.unwrap(): CPacketUseEntity.Action
+{
+	return when (this)
+	{
+		ICPacketUseEntity.WAction.INTERACT -> CPacketUseEntity.Action.INTERACT
+		ICPacketUseEntity.WAction.ATTACK -> CPacketUseEntity.Action.ATTACK
+		ICPacketUseEntity.WAction.INTERACT_AT -> CPacketUseEntity.Action.INTERACT_AT
+	}
 }
 
- fun IClickEvent.WAction.unwrap(): ClickEvent.Action {
-    return when (this) {
-        IClickEvent.WAction.OPEN_URL -> ClickEvent.Action.OPEN_URL
-    }
+fun IClickEvent.WAction.unwrap(): ClickEvent.Action
+{
+	return when (this)
+	{
+		IClickEvent.WAction.OPEN_URL -> ClickEvent.Action.OPEN_URL
+	}
 }
 
- fun ICPacketClientStatus.WEnumState.unwrap(): CPacketClientStatus.State {
-    return when (this) {
-        ICPacketClientStatus.WEnumState.PERFORM_RESPAWN -> CPacketClientStatus.State.PERFORM_RESPAWN
-        ICPacketClientStatus.WEnumState.REQUEST_STATS -> CPacketClientStatus.State.REQUEST_STATS
-        ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT -> BACKEND_UNSUPPORTED()
-    }
+fun ICPacketClientStatus.WEnumState.unwrap(): CPacketClientStatus.State
+{
+	return when (this)
+	{
+		ICPacketClientStatus.WEnumState.PERFORM_RESPAWN -> CPacketClientStatus.State.PERFORM_RESPAWN
+		ICPacketClientStatus.WEnumState.REQUEST_STATS -> CPacketClientStatus.State.REQUEST_STATS
+		ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT -> BACKEND_UNSUPPORTED()
+	}
 }
 
- fun ICPacketPlayerDigging.WAction.unwrap(): CPacketPlayerDigging.Action {
-    return when (this) {
-        ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK -> CPacketPlayerDigging.Action.START_DESTROY_BLOCK
-        ICPacketPlayerDigging.WAction.ABORT_DESTROY_BLOCK -> CPacketPlayerDigging.Action.ABORT_DESTROY_BLOCK
-        ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK -> CPacketPlayerDigging.Action.STOP_DESTROY_BLOCK
-        ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS -> CPacketPlayerDigging.Action.DROP_ALL_ITEMS
-        ICPacketPlayerDigging.WAction.DROP_ITEM -> CPacketPlayerDigging.Action.DROP_ITEM
-        ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM -> CPacketPlayerDigging.Action.RELEASE_USE_ITEM
-    }
+fun ICPacketPlayerDigging.WAction.unwrap(): CPacketPlayerDigging.Action
+{
+	return when (this)
+	{
+		ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK -> CPacketPlayerDigging.Action.START_DESTROY_BLOCK
+		ICPacketPlayerDigging.WAction.ABORT_DESTROY_BLOCK -> CPacketPlayerDigging.Action.ABORT_DESTROY_BLOCK
+		ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK -> CPacketPlayerDigging.Action.STOP_DESTROY_BLOCK
+		ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS -> CPacketPlayerDigging.Action.DROP_ALL_ITEMS
+		ICPacketPlayerDigging.WAction.DROP_ITEM -> CPacketPlayerDigging.Action.DROP_ITEM
+		ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM -> CPacketPlayerDigging.Action.RELEASE_USE_ITEM
+	}
 }
 
- fun ICPacketResourcePackStatus.WAction.unwrap(): CPacketResourcePackStatus.Action {
-    return when (this) {
-        ICPacketResourcePackStatus.WAction.SUCCESSFULLY_LOADED -> CPacketResourcePackStatus.Action.SUCCESSFULLY_LOADED
-        ICPacketResourcePackStatus.WAction.DECLINED -> CPacketResourcePackStatus.Action.DECLINED
-        ICPacketResourcePackStatus.WAction.FAILED_DOWNLOAD -> CPacketResourcePackStatus.Action.FAILED_DOWNLOAD
-        ICPacketResourcePackStatus.WAction.ACCEPTED -> CPacketResourcePackStatus.Action.ACCEPTED
-    }
+fun ICPacketResourcePackStatus.WAction.unwrap(): CPacketResourcePackStatus.Action
+{
+	return when (this)
+	{
+		ICPacketResourcePackStatus.WAction.SUCCESSFULLY_LOADED -> CPacketResourcePackStatus.Action.SUCCESSFULLY_LOADED
+		ICPacketResourcePackStatus.WAction.DECLINED -> CPacketResourcePackStatus.Action.DECLINED
+		ICPacketResourcePackStatus.WAction.FAILED_DOWNLOAD -> CPacketResourcePackStatus.Action.FAILED_DOWNLOAD
+		ICPacketResourcePackStatus.WAction.ACCEPTED -> CPacketResourcePackStatus.Action.ACCEPTED
+	}
 }
 
- fun ICPacketEntityAction.WAction.unwrap(): CPacketEntityAction.Action {
-    return when (this) {
-        ICPacketEntityAction.WAction.START_SNEAKING -> CPacketEntityAction.Action.START_SNEAKING
-        ICPacketEntityAction.WAction.STOP_SNEAKING -> CPacketEntityAction.Action.STOP_SNEAKING
-        ICPacketEntityAction.WAction.STOP_SLEEPING -> CPacketEntityAction.Action.STOP_SLEEPING
-        ICPacketEntityAction.WAction.START_SPRINTING -> CPacketEntityAction.Action.START_SPRINTING
-        ICPacketEntityAction.WAction.STOP_SPRINTING -> CPacketEntityAction.Action.STOP_SPRINTING
-        ICPacketEntityAction.WAction.OPEN_INVENTORY -> CPacketEntityAction.Action.OPEN_INVENTORY
-    }
+fun ICPacketEntityAction.WAction.unwrap(): CPacketEntityAction.Action
+{
+	return when (this)
+	{
+		ICPacketEntityAction.WAction.START_SNEAKING -> CPacketEntityAction.Action.START_SNEAKING
+		ICPacketEntityAction.WAction.STOP_SNEAKING -> CPacketEntityAction.Action.STOP_SNEAKING
+		ICPacketEntityAction.WAction.STOP_SLEEPING -> CPacketEntityAction.Action.STOP_SLEEPING
+		ICPacketEntityAction.WAction.START_SPRINTING -> CPacketEntityAction.Action.START_SPRINTING
+		ICPacketEntityAction.WAction.STOP_SPRINTING -> CPacketEntityAction.Action.STOP_SPRINTING
+		ICPacketEntityAction.WAction.OPEN_INVENTORY -> CPacketEntityAction.Action.OPEN_INVENTORY
+	}
 }
 
- fun Int.toEntityEquipmentSlot(): EntityEquipmentSlot {
-    return when (this) {
-        0 -> EntityEquipmentSlot.FEET
-        1 -> EntityEquipmentSlot.LEGS
-        2 -> EntityEquipmentSlot.CHEST
-        3 -> EntityEquipmentSlot.HEAD
-        4 -> EntityEquipmentSlot.MAINHAND
-        5 -> EntityEquipmentSlot.OFFHAND
-        else -> throw IllegalArgumentException("Invalid armorType $this")
-    }
+fun Int.toEntityEquipmentSlot(): EntityEquipmentSlot
+{
+	return when (this)
+	{
+		0 -> EntityEquipmentSlot.FEET
+		1 -> EntityEquipmentSlot.LEGS
+		2 -> EntityEquipmentSlot.CHEST
+		3 -> EntityEquipmentSlot.HEAD
+		4 -> EntityEquipmentSlot.MAINHAND
+		5 -> EntityEquipmentSlot.OFFHAND
+		else -> throw IllegalArgumentException("Invalid armorType $this")
+	}
 }
 
- fun Int.toClickType(): ClickType {
-    return when (this) {
-        0 -> ClickType.PICKUP
-        1 -> ClickType.QUICK_MOVE
-        2 -> ClickType.SWAP
-        3 -> ClickType.CLONE
-        4 -> ClickType.THROW
-        5 -> ClickType.QUICK_CRAFT
-        6 -> ClickType.PICKUP_ALL
-        else -> throw IllegalArgumentException("Invalid mode $this")
-    }
+fun Int.toClickType(): ClickType
+{
+	return when (this)
+	{
+		0 -> ClickType.PICKUP
+		1 -> ClickType.QUICK_MOVE
+		2 -> ClickType.SWAP
+		3 -> ClickType.CLONE
+		4 -> ClickType.THROW
+		5 -> ClickType.QUICK_CRAFT
+		6 -> ClickType.PICKUP_ALL
+		else -> throw IllegalArgumentException("Invalid mode $this")
+	}
 }
 
- fun ClickType.toInt(): Int {
-    return when (this) {
-        ClickType.PICKUP -> 0
-        ClickType.QUICK_MOVE -> 1
-        ClickType.SWAP -> 2
-        ClickType.CLONE -> 3
-        ClickType.THROW -> 4
-        ClickType.QUICK_CRAFT -> 5
-        ClickType.PICKUP_ALL -> 6
-        else -> throw IllegalArgumentException("Invalid mode $this")
-    }
+fun ClickType.toInt(): Int
+{
+	return when (this)
+	{
+		ClickType.PICKUP -> 0
+		ClickType.QUICK_MOVE -> 1
+		ClickType.SWAP -> 2
+		ClickType.CLONE -> 3
+		ClickType.THROW -> 4
+		ClickType.QUICK_CRAFT -> 5
+		ClickType.PICKUP_ALL -> 6
+		else -> throw IllegalArgumentException("Invalid mode $this")
+	}
 }
 
- fun WEnumHand.unwrap(): EnumHand {
-    return when (this) {
-        WEnumHand.MAIN_HAND -> EnumHand.MAIN_HAND
-        WEnumHand.OFF_HAND -> EnumHand.OFF_HAND
-    }
+fun WEnumHand.unwrap(): EnumHand
+{
+	return when (this)
+	{
+		WEnumHand.MAIN_HAND -> EnumHand.MAIN_HAND
+		WEnumHand.OFF_HAND -> EnumHand.OFF_HAND
+	}
 }

@@ -12,36 +12,37 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
 import net.minecraft.util.math.AxisAlignedBB
 
-class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB {
-    override fun addCoord(x: Double, y: Double, z: Double): IAxisAlignedBB = wrapped.expand(x, y, z).wrap()
+class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB
+{
+	override val minX: Double
+		get() = wrapped.minX
+	override val minY: Double
+		get() = wrapped.minY
+	override val minZ: Double
+		get() = wrapped.minZ
+	override val maxX: Double
+		get() = wrapped.maxX
+	override val maxY: Double
+		get() = wrapped.maxY
+	override val maxZ: Double
+		get() = wrapped.maxZ
 
-    override fun expand(x: Double, y: Double, z: Double): IAxisAlignedBB = wrapped.grow(x, y, z).wrap()
+	override fun addCoord(x: Double, y: Double, z: Double): IAxisAlignedBB = wrapped.expand(x, y, z).wrap()
 
-    override fun calculateIntercept(from: WVec3, to: WVec3): IMovingObjectPosition? = wrapped.calculateIntercept(from.unwrap(), to.unwrap())?.wrap()
+	override fun expand(x: Double, y: Double, z: Double): IAxisAlignedBB = wrapped.grow(x, y, z).wrap()
 
-    override fun isVecInside(vec: WVec3): Boolean = wrapped.contains(vec.unwrap())
+	override fun calculateIntercept(from: WVec3, to: WVec3): IMovingObjectPosition? = wrapped.calculateIntercept(from.unwrap(), to.unwrap())?.wrap()
 
-    override fun offset(sx: Double, sy: Double, sz: Double): IAxisAlignedBB = wrapped.offset(sx, sy, sz).wrap()
+	override fun isVecInside(vec: WVec3): Boolean = wrapped.contains(vec.unwrap())
 
-    override fun intersectsWith(boundingBox: IAxisAlignedBB): Boolean = wrapped.intersects(boundingBox.unwrap())
+	override fun offset(sx: Double, sy: Double, sz: Double): IAxisAlignedBB = wrapped.offset(sx, sy, sz).wrap()
 
-    override val minX: Double
-        get() = wrapped.minX
-    override val minY: Double
-        get() = wrapped.minY
-    override val minZ: Double
-        get() = wrapped.minZ
-    override val maxX: Double
-        get() = wrapped.maxX
-    override val maxY: Double
-        get() = wrapped.maxY
-    override val maxZ: Double
-        get() = wrapped.maxZ
+	override fun intersectsWith(boundingBox: IAxisAlignedBB): Boolean = wrapped.intersects(boundingBox.unwrap())
 
-    override fun equals(other: Any?): Boolean {
-        return other is AxisAlignedBBImpl && other.wrapped == this.wrapped
-    }
+	override fun toString(): String = "$wrapped"
+
+	override fun equals(other: Any?): Boolean = other is AxisAlignedBBImpl && other.wrapped == wrapped
 }
 
- fun IAxisAlignedBB.unwrap(): AxisAlignedBB = (this as AxisAlignedBBImpl).wrapped
- fun AxisAlignedBB.wrap(): IAxisAlignedBB = AxisAlignedBBImpl(this)
+fun IAxisAlignedBB.unwrap(): AxisAlignedBB = (this as AxisAlignedBBImpl).wrapped
+fun AxisAlignedBB.wrap(): IAxisAlignedBB = AxisAlignedBBImpl(this)

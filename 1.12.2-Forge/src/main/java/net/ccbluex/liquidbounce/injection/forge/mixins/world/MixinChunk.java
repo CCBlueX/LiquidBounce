@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.world;
 
-import java.util.Objects;
-
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.ProphuntESP;
 import net.ccbluex.liquidbounce.injection.backend.ChunkImplKt;
@@ -38,14 +36,14 @@ public class MixinChunk
 	public int z;
 
 	@Inject(method = "setBlockState", at = @At("HEAD"))
-	private void setProphuntBlock(BlockPos pos, IBlockState state, final CallbackInfoReturnable callbackInfo)
+	private void setProphuntBlock(final BlockPos pos, final IBlockState state, final CallbackInfoReturnable callbackInfo)
 	{
 		// noinspection ConstantConditions
-		MiniMapRegister.INSTANCE.updateChunk(ChunkImplKt.wrap((Chunk) ((Object) this)));
+		MiniMapRegister.INSTANCE.updateChunk(ChunkImplKt.wrap((Chunk) (Object) this));
 
 		final ProphuntESP prophuntESP = (ProphuntESP) LiquidBounce.moduleManager.get(ProphuntESP.class);
 
-		if ((prophuntESP).getState())
+		if (prophuntESP.getState())
 		{
 			synchronized (prophuntESP.getBlocks())
 			{
@@ -55,15 +53,15 @@ public class MixinChunk
 	}
 
 	@Inject(method = "onUnload", at = @At("HEAD"))
-	private void injectFillChunk(CallbackInfo ci)
+	private void injectFillChunk(final CallbackInfo ci)
 	{
-		MiniMapRegister.INSTANCE.unloadChunk(this.x, this.z);
+		MiniMapRegister.INSTANCE.unloadChunk(x, z);
 	}
 
 	@Inject(method = "read", at = @At("RETURN"))
-	private void injectFillChunk(PacketBuffer buf, int availableSections, boolean groundUpContinuous, CallbackInfo ci)
+	private void injectFillChunk(final PacketBuffer buf, final int availableSections, final boolean groundUpContinuous, final CallbackInfo ci)
 	{
 		// noinspection ConstantConditions
-		MiniMapRegister.INSTANCE.updateChunk(ChunkImplKt.wrap((Chunk) ((Object) this)));
+		MiniMapRegister.INSTANCE.updateChunk(ChunkImplKt.wrap((Chunk) (Object) this));
 	}
 }

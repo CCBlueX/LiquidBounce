@@ -13,11 +13,12 @@ import net.ccbluex.liquidbounce.injection.backend.utils.toClickType
 import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiContainer
 import net.minecraft.client.gui.inventory.GuiContainer
 
-open class GuiContainerImpl<T : GuiContainer>(wrapped: T) : GuiScreenImpl<T>(wrapped), IGuiContainer {
-    override fun handleMouseClick(slot: ISlot, slotNumber: Int, clickedButton: Int, clickType: Int) = (wrapped as IMixinGuiContainer).publicHandleMouseClick(slot.unwrap(), slotNumber, clickedButton, clickType.toClickType())
-    override val inventorySlots: IContainer?
-        get() = wrapped.inventorySlots?.wrap()
+open class GuiContainerImpl<T : GuiContainer>(wrapped: T) : GuiScreenImpl<T>(wrapped), IGuiContainer
+{
+	override fun handleMouseClick(slot: ISlot, slotNumber: Int, clickedButton: Int, clickType: Int) = (wrapped as IMixinGuiContainer).publicHandleMouseClick(slot.unwrap(), slotNumber, clickedButton, clickType.toClickType())
+	override val inventorySlots: IContainer?
+		get() = wrapped.inventorySlots?.wrap()
 }
 
- fun IGuiContainer.unwrap(): GuiContainer = (this as GuiContainerImpl<*>).wrapped
- fun GuiContainer.wrap(): IGuiContainer = GuiContainerImpl(this)
+fun IGuiContainer.unwrap(): GuiContainer = (this as GuiContainerImpl<*>).wrapped
+fun GuiContainer.wrap(): IGuiContainer = GuiContainerImpl(this)

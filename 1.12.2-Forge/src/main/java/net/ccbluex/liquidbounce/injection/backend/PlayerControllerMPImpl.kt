@@ -95,9 +95,7 @@ class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControlle
         }
     }
 
-    override fun onPlayerRightClick(playerSP: IEntityPlayerSP, wWorld: IWorldClient, wItemStack: IItemStack?, wPosition: WBlockPos, wSideOpposite: IEnumFacing, wHitVec: WVec3): Boolean {
-        return wrapped.processRightClickBlock(playerSP.unwrap(), wWorld.unwrap(), wPosition.unwrap(), wSideOpposite.unwrap(), wHitVec.unwrap(), EnumHand.MAIN_HAND) == EnumActionResult.SUCCESS
-    }
+    override fun onPlayerRightClick(playerSP: IEntityPlayerSP, wWorld: IWorldClient, wItemStack: IItemStack?, wPosition: WBlockPos, wSideOpposite: IEnumFacing, wHitVec: WVec3): Boolean = wrapped.processRightClickBlock(playerSP.unwrap(), wWorld.unwrap(), wPosition.unwrap(), wSideOpposite.unwrap(), wHitVec.unwrap(), EnumHand.MAIN_HAND) == EnumActionResult.SUCCESS
 
     override fun onStoppedUsingItem(thePlayer: IEntityPlayerSP) = wrapped.onStoppedUsingItem(thePlayer.unwrap())
 
@@ -106,9 +104,7 @@ class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControlle
     override fun onPlayerDestroyBlock(blockPos: WBlockPos, enumFacing: IEnumFacing): Boolean = wrapped.onPlayerDestroyBlock(blockPos.unwrap())
 
 
-    override fun equals(other: Any?): Boolean {
-        return other is PlayerControllerMPImpl && other.wrapped == this.wrapped
-    }
+    override fun equals(other: Any?): Boolean = other is PlayerControllerMPImpl && other.wrapped == wrapped
 }
 
  fun IPlayerControllerMP.unwrap(): PlayerControllerMP = (this as PlayerControllerMPImpl).wrapped

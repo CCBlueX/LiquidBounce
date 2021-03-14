@@ -20,7 +20,7 @@ public class MixinProfiler
 {
 
 	@Inject(method = "startSection(Ljava/lang/String;)V", at = @At("HEAD"))
-	private void startSection(String name, CallbackInfo callbackInfo)
+	private void startSection(final String name, final CallbackInfo callbackInfo)
 	{
 		if (name.equals("bossHealth") && ClassUtils.hasClass("net.labymod.api.LabyModAPI"))
 		{

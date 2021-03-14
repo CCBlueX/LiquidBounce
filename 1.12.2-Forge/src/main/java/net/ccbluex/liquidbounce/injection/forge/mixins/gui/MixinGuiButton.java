@@ -62,7 +62,7 @@ public abstract class MixinGuiButton extends Gui
 		if (visible)
 		{
 			final FontRenderer fontRenderer = mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRenderer : ((FontRendererImpl) Fonts.font35).getWrapped();
-			hovered = (mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height);
+			hovered = mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
 
 			final int delta = RenderUtils.deltaTime;
 
@@ -91,14 +91,14 @@ public abstract class MixinGuiButton extends Gui
 					alpha = 120;
 			}
 
-			Gui.drawRect(this.x + (int) this.cut, this.y, this.x + this.width - (int) this.cut, this.y + this.height, this.enabled ? new Color(0F, 0F, 0F, this.alpha / 255F).getRGB() : new Color(0.5F, 0.5F, 0.5F, 0.5F).getRGB());
+			Gui.drawRect(x + (int) cut, y, x + width - (int) cut, y + height, enabled ? new Color(0F, 0F, 0F, alpha / 255F).getRGB() : new Color(0.5F, 0.5F, 0.5F, 0.5F).getRGB());
 
 			mc.getTextureManager().bindTexture(BUTTON_TEXTURES);
 			mouseDragged(mc, mouseX, mouseY);
 
 			AWTFontRenderer.Companion.setAssumeNonVolatile(true);
 
-			fontRenderer.drawStringWithShadow(displayString, (float) ((this.x + (this.width >> 1)) - fontRenderer.getStringWidth(displayString) >> 1)), this.y + (this.height - 5) * 0.5f, 14737632);
+			fontRenderer.drawStringWithShadow(displayString, (float) (x + (width >> 1) - fontRenderer.getStringWidth(displayString) >> 1)), y + (height - 5) * 0.5f, 14737632)
 
 			AWTFontRenderer.Companion.setAssumeNonVolatile(false);
 

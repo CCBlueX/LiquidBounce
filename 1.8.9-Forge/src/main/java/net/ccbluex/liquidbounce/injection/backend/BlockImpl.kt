@@ -53,13 +53,6 @@ class BlockImpl(val wrapped: Block) : IBlock
 
 	override fun getUnlocalizedName(): String = wrapped.unlocalizedName
 
-	override fun getBlockBoundsMaxX(): Double = wrapped.blockBoundsMaxX
-	override fun getBlockBoundsMinX(): Double = wrapped.blockBoundsMinX
-	override fun getBlockBoundsMaxY(): Double = wrapped.blockBoundsMaxY
-	override fun getBlockBoundsMinY(): Double = wrapped.blockBoundsMinY
-	override fun getBlockBoundsMaxZ(): Double = wrapped.blockBoundsMaxZ
-	override fun getBlockBoundsMinZ(): Double = wrapped.blockBoundsMinZ
-
 	override fun equals(other: Any?): Boolean = other is BlockImpl && other.wrapped == wrapped
 }
 

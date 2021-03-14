@@ -14,6 +14,7 @@ import com.mojang.authlib.Agent;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
 import com.thealtening.AltService;
+import com.thealtening.AltService.EnumAltService;
 import com.thealtening.api.TheAltening;
 import com.thealtening.api.data.AccountData;
 
@@ -53,22 +54,22 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 	private int reconnectTimer;
 
 	@Inject(method = "initGui", at = @At("RETURN"))
-	private void initGui(CallbackInfo callbackInfo)
+	private void initGui(final CallbackInfo callbackInfo)
 	{
 		reconnectTimer = 0;
-		buttonList.add(reconnectButton = new GuiButton(1, (this.width >> 1) - 100, (this.height >> 1) + (textHeight >> 1) + this.fontRenderer.FONT_HEIGHT + 22, 98, 20, "Reconnect"));
+		buttonList.add(reconnectButton = new GuiButton(1, (width >> 1) - 100, (height >> 1) + (textHeight >> 1) + fontRenderer.FONT_HEIGHT + 22, 98, 20, "Reconnect"));
 
-		this.drawReconnectDelaySlider();
+		drawReconnectDelaySlider();
 
-		buttonList.add(new GuiButton(3, (this.width >> 1) - 100, (this.height >> 1) + (textHeight >> 1) + this.fontRenderer.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
-		buttonList.add(new GuiButton(4, (this.width >> 1) + 2, (this.height >> 1) + (textHeight >> 1) + this.fontRenderer.FONT_HEIGHT + 44, 98, 20, "Random username"));
-		buttonList.add(forgeBypassButton = new GuiButton(5, (this.width >> 1) - 100, (this.height >> 1) + (textHeight >> 1) + this.fontRenderer.FONT_HEIGHT + 66, "Bypass AntiForge: " + (AntiForge.enabled ? "On" : "Off")));
+		buttonList.add(new GuiButton(3, (width >> 1) - 100, (height >> 1) + (textHeight >> 1) + fontRenderer.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
+		buttonList.add(new GuiButton(4, (width >> 1) + 2, (height >> 1) + (textHeight >> 1) + fontRenderer.FONT_HEIGHT + 44, 98, 20, "Random username"));
+		buttonList.add(forgeBypassButton = new GuiButton(5, (width >> 1) - 100, (height >> 1) + (textHeight >> 1) + fontRenderer.FONT_HEIGHT + 66, "Bypass AntiForge: " + (AntiForge.enabled ? "On" : "Off")));
 
 		updateSliderText();
 	}
 
 	@Inject(method = "actionPerformed", at = @At("HEAD"))
-	private void actionPerformed(GuiButton button, CallbackInfo callbackInfo)
+	private void actionPerformed(final GuiButton button, final CallbackInfo callbackInfo)
 	{
 		switch (button.id)
 		{
@@ -84,7 +85,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 					try
 					{
 						final AccountData account = theAltening.getAccountData();
-						GuiAltManager.altService.switchService(AltService.EnumAltService.THEALTENING);
+						GuiAltManager.altService.switchService(EnumAltService.THEALTENING);
 
 						final YggdrasilUserAuthentication yggdrasilUserAuthentication = new YggdrasilUserAuthentication(new YggdrasilAuthenticationService(Proxy.NO_PROXY, ""), Agent.MINECRAFT);
 						yggdrasilUserAuthentication.setUsername(account.getToken());
@@ -134,38 +135,38 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
 	}
 
 	@Inject(method = "drawScreen", at = @At("RETURN"))
-	private void drawScreen(CallbackInfo callbackInfo)
+	private void drawScreen(final CallbackInfo callbackInfo)
 	{
 		if (AutoReconnect.INSTANCE.isEnabled())
 		{
-			this.updateReconnectButton();
+			updateReconnectButton();
 		}
 	}
 
 	private void drawReconnectDelaySlider()
 	{
-		buttonList.add(autoReconnectDelaySlider = new GuiSlider(2, (this.width >> 1) + 2, (this.height >> 1) + (textHeight >> 1) + this.fontRenderer.FONT_HEIGHT + 22, 98, 20, "AutoReconnect: ", "ms", AutoReconnect.MIN, AutoReconnect.MAX, AutoReconnect.INSTANCE.getDelay(), false, true, guiSlider ->
+		buttonList.add(autoReconnectDelaySlider = new GuiSlider(2, (width >> 1) + 2, (height >> 1) + (textHeight >> 1) + fontRenderer.FONT_HEIGHT + 22, 98, 20, "AutoReconnect: ", "ms", AutoReconnect.MIN, AutoReconnect.MAX, AutoReconnect.INSTANCE.getDelay(), false, true, guiSlider ->
 		{
 			AutoReconnect.INSTANCE.setDelay(guiSlider.getValueInt());
 
-			this.reconnectTimer = 0;
-			this.updateReconnectButton();
-			this.updateSliderText();
+			reconnectTimer = 0;
+			updateReconnectButton();
+			updateSliderText();
 		}));
 	}
 
 	private void updateSliderText()
 	{
-		if (this.autoReconnectDelaySlider == null)
+		if (autoReconnectDelaySlider == null)
 			return;
 
 		if (!AutoReconnect.INSTANCE.isEnabled())
 		{
-			this.autoReconnectDelaySlider.displayString = "AutoReconnect: Off";
+			autoReconnectDelaySlider.displayString = "AutoReconnect: Off";
 		}
 		else
 		{
-			this.autoReconnectDelaySlider.displayString = "AutoReconnect: " + DECIMAL_FORMAT.format(AutoReconnect.INSTANCE.getDelay() * 0.001f) + "s";
+			autoReconnectDelaySlider.displayString = "AutoReconnect: " + DECIMAL_FORMAT.format(AutoReconnect.INSTANCE.getDelay() * 0.001f) + "s";
 		}
 	}
 

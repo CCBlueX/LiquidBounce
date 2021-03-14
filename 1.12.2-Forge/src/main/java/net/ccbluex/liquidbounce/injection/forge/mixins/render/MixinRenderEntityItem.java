@@ -20,7 +20,7 @@ public class MixinRenderEntityItem
 {
 
 	@Inject(method = "doRender", at = @At("HEAD"))
-	private void injectChamsPre(CallbackInfo callbackInfo)
+	private void injectChamsPre(final CallbackInfo callbackInfo)
 	{
 		final Chams chams = (Chams) LiquidBounce.moduleManager.get(Chams.class);
 
@@ -32,7 +32,7 @@ public class MixinRenderEntityItem
 	}
 
 	@Inject(method = "doRender", at = @At("RETURN"))
-	private void injectChamsPost(CallbackInfo callbackInfo)
+	private void injectChamsPost(final CallbackInfo callbackInfo)
 	{
 		final Chams chams = (Chams) LiquidBounce.moduleManager.get(Chams.class);
 

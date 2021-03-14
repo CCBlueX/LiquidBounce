@@ -31,7 +31,7 @@ public abstract class MixinEffectRenderer
 
 	@Shadow
 	@Final
-	private final Queue<ParticleEmitter> particleEmitters = Queues.<ParticleEmitter>newArrayDeque();
+	private final Queue<ParticleEmitter> particleEmitters = Queues.newArrayDeque();
 	@Shadow
 	@Final
 	private Queue<Particle> queue;
@@ -52,14 +52,14 @@ public abstract class MixinEffectRenderer
 		{
 			for (int i = 0; i < 4; ++i)
 			{
-				this.updateEffectLayer(i);
+				updateEffectLayer(i);
 			}
 
-			if (!this.particleEmitters.isEmpty())
+			if (!particleEmitters.isEmpty())
 			{
-				List<ParticleEmitter> list = Lists.newArrayList();
+				final List<ParticleEmitter> list = Lists.newArrayList();
 
-				for (ParticleEmitter particleemitter : this.particleEmitters)
+				for (final ParticleEmitter particleemitter : particleEmitters)
 				{
 					particleemitter.onUpdate();
 
@@ -69,26 +69,26 @@ public abstract class MixinEffectRenderer
 					}
 				}
 
-				this.particleEmitters.removeAll(list);
+				particleEmitters.removeAll(list);
 			}
 
-			if (!this.queue.isEmpty())
+			if (!queue.isEmpty())
 			{
-				for (Particle particle = this.queue.poll(); particle != null; particle = this.queue.poll())
+				for (Particle particle = queue.poll(); particle != null; particle = queue.poll())
 				{
-					int j = particle.getFXLayer();
-					int k = particle.shouldDisableDepth() ? 0 : 1;
+					final int j = particle.getFXLayer();
+					final int k = particle.shouldDisableDepth() ? 0 : 1;
 
-					if (this.fxLayers[j][k].size() >= 16384)
+					if (fxLayers[j][k].size() >= 16384)
 					{
-						this.fxLayers[j][k].removeFirst();
+						fxLayers[j][k].removeFirst();
 					}
 
-					this.fxLayers[j][k].add(particle);
+					fxLayers[j][k].add(particle);
 				}
 			}
 		}
-		catch (ConcurrentModificationException ignored)
+		catch (final ConcurrentModificationException ignored)
 		{
 		}
 	}

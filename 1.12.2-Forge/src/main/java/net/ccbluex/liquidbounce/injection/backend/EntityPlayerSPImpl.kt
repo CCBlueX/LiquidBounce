@@ -12,37 +12,41 @@ import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovementInput
 import net.minecraft.client.entity.EntityPlayerSP
 
-open class EntityPlayerSPImpl<T : EntityPlayerSP>(wrapped: T) : AbstractClientPlayerImpl<T>(wrapped), IEntityPlayerSP {
-    override var horseJumpPowerCounter: Int
-        get() = wrapped.horseJumpPowerCounter
-        set(value) {
-            wrapped.horseJumpPowerCounter = value
-        }
-    override var horseJumpPower: Float
-        get() = wrapped.horseJumpPower
-        set(value) {
-            wrapped.horseJumpPower = value
-        }
-    override val sendQueue: IINetHandlerPlayClient
-        get() = wrapped.connection.wrap()
-    override val movementInput: IMovementInput
-        get() = wrapped.movementInput.wrap()
-    override val sneaking: Boolean
-        get() = wrapped.isSneaking
-    override var serverSprintState: Boolean
-        get() = wrapped.serverSprintState
-        set(value) {
-            wrapped.serverSprintState = value
-        }
+open class EntityPlayerSPImpl<T : EntityPlayerSP>(wrapped: T) : AbstractClientPlayerImpl<T>(wrapped), IEntityPlayerSP
+{
+	override var horseJumpPowerCounter: Int
+		get() = wrapped.horseJumpPowerCounter
+		set(value)
+		{
+			wrapped.horseJumpPowerCounter = value
+		}
+	override var horseJumpPower: Float
+		get() = wrapped.horseJumpPower
+		set(value)
+		{
+			wrapped.horseJumpPower = value
+		}
+	override val sendQueue: IINetHandlerPlayClient
+		get() = wrapped.connection.wrap()
+	override val movementInput: IMovementInput
+		get() = wrapped.movementInput.wrap()
+	override val sneaking: Boolean
+		get() = wrapped.isSneaking
+	override var serverSprintState: Boolean
+		get() = wrapped.serverSprintState
+		set(value)
+		{
+			wrapped.serverSprintState = value
+		}
 
-    override fun sendChatMessage(msg: String) = wrapped.sendChatMessage(msg)
+	override fun sendChatMessage(msg: String) = wrapped.sendChatMessage(msg)
 
-    override fun respawnPlayer() = wrapped.respawnPlayer()
+	override fun respawnPlayer() = wrapped.respawnPlayer()
 
-    override fun addChatMessage(component: IIChatComponent) = wrapped.sendMessage(component.unwrap())
+	override fun addChatMessage(component: IIChatComponent) = wrapped.sendMessage(component.unwrap())
 
-    override fun closeScreen() = wrapped.closeScreen()
+	override fun closeScreen() = wrapped.closeScreen()
 }
 
- fun IEntityPlayerSP.unwrap(): EntityPlayerSP = (this as EntityPlayerSPImpl<*>).wrapped
- fun EntityPlayerSP.wrap(): IEntityPlayerSP = EntityPlayerSPImpl(this)
+fun IEntityPlayerSP.unwrap(): EntityPlayerSP = (this as EntityPlayerSPImpl<*>).wrapped
+fun EntityPlayerSP.wrap(): IEntityPlayerSP = EntityPlayerSPImpl(this)

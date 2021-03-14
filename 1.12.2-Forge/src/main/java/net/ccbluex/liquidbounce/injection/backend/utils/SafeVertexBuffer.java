@@ -15,7 +15,7 @@ import net.minecraft.client.renderer.vertex.VertexFormat;
 public class SafeVertexBuffer extends VertexBuffer
 {
 
-	public SafeVertexBuffer(VertexFormat vertexFormatIn)
+	public SafeVertexBuffer(final VertexFormat vertexFormatIn)
 	{
 		super(vertexFormatIn);
 	}
@@ -23,6 +23,6 @@ public class SafeVertexBuffer extends VertexBuffer
 	@Override
 	protected void finalize() throws Throwable
 	{
-		this.deleteGlBuffers();
+		deleteGlBuffers();
 	}
 }

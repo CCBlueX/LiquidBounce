@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketTabComplete
 import net.minecraft.network.play.server.SPacketTabComplete
 
-class SPacketTabCompleteImpl<T : SPacketTabComplete>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketTabComplete {
+class SPacketTabCompleteImpl<out T : SPacketTabComplete>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketTabComplete {
     override val completions: Array<String>
         get() = wrapped.matches
 }

@@ -11,6 +11,7 @@ import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
 import org.spongepowered.asm.launch.MixinBootstrap;
 import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.MixinEnvironment.Side;
 import org.spongepowered.asm.mixin.Mixins;
 
 public class MixinLoader implements IFMLLoadingPlugin
@@ -22,7 +23,7 @@ public class MixinLoader implements IFMLLoadingPlugin
 
 		MixinBootstrap.init();
 		Mixins.addConfiguration("liquidbounce.forge.mixins.json");
-		MixinEnvironment.getDefaultEnvironment().setSide(MixinEnvironment.Side.CLIENT);
+		MixinEnvironment.getDefaultEnvironment().setSide(Side.CLIENT);
 	}
 
 	@Override
@@ -44,7 +45,7 @@ public class MixinLoader implements IFMLLoadingPlugin
 	}
 
 	@Override
-	public void injectData(Map<String, Object> data)
+	public void injectData(final Map<String, Object> data)
 	{
 	}
 

@@ -41,11 +41,11 @@ public class MixinResourcePackRepository
 	{
 		try
 		{
-			List<File> resourcePacksInFolder = Lists.newArrayList(FileUtils.listFiles(this.dirServerResourcepacks, TrueFileFilter.TRUE, null));
+			final List<File> resourcePacksInFolder = Lists.newArrayList(FileUtils.listFiles(dirServerResourcepacks, TrueFileFilter.TRUE, null));
 			resourcePacksInFolder.sort(LastModifiedFileComparator.LASTMODIFIED_REVERSE);
 			int count = 0;
 
-			for (File resourcePackFile : resourcePacksInFolder)
+			for (final File resourcePackFile : resourcePacksInFolder)
 			{
 				if (count++ >= 10)
 				{
@@ -54,7 +54,7 @@ public class MixinResourcePackRepository
 					{
 						resourcePackFile.delete();
 					}
-					catch (Throwable ignored)
+					catch (final Throwable ignored)
 					{
 					}
 				}

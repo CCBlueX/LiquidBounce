@@ -34,11 +34,4 @@ interface IBlock
 	fun getMaterial(state: IIBlockState): IMaterial?
 	fun isFullCube(state: IIBlockState): Boolean
 	fun getUnlocalizedName(): String
-
-	fun getBlockBoundsMaxX(): Double
-	fun getBlockBoundsMinX(): Double
-	fun getBlockBoundsMaxY(): Double
-	fun getBlockBoundsMinY(): Double
-	fun getBlockBoundsMaxZ(): Double
-	fun getBlockBoundsMinZ(): Double
 }

@@ -10,25 +10,27 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.minecraft.network.PacketBuffer
 
-class PacketBufferImpl(val wrapped: PacketBuffer) : IPacketBuffer {
-    override fun writeBytes(payload: ByteArray) {
-        wrapped.writeBytes(payload)
-    }
+class PacketBufferImpl(val wrapped: PacketBuffer) : IPacketBuffer
+{
+	override fun writeBytes(payload: ByteArray)
+	{
+		wrapped.writeBytes(payload)
+	}
 
-    override fun writeItemStackToBuffer(itemStack: IItemStack) {
-        wrapped.writeItemStack(itemStack.unwrap())
-    }
+	override fun writeItemStackToBuffer(itemStack: IItemStack)
+	{
+		wrapped.writeItemStack(itemStack.unwrap())
+	}
 
-    override fun writeString(vanilla: String): IPacketBuffer {
-        wrapped.writeString(vanilla)
+	override fun writeString(vanilla: String): IPacketBuffer
+	{
+		wrapped.writeString(vanilla)
 
-        return this
-    }
+		return this
+	}
 
-    override fun equals(other: Any?): Boolean {
-        return other is PacketBufferImpl && other.wrapped == this.wrapped
-    }
+	override fun equals(other: Any?): Boolean = other is PacketBufferImpl && other.wrapped == wrapped
 }
 
- fun IPacketBuffer.unwrap(): PacketBuffer = (this as PacketBufferImpl).wrapped
- fun PacketBuffer.wrap(): IPacketBuffer = PacketBufferImpl(this)
+fun IPacketBuffer.unwrap(): PacketBuffer = (this as PacketBufferImpl).wrapped
+fun PacketBuffer.wrap(): IPacketBuffer = PacketBufferImpl(this)

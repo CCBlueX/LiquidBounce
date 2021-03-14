@@ -34,7 +34,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
 	private CapeInfo capeInfo;
 
 	@Inject(method = "getLocationCape", at = @At("HEAD"), cancellable = true)
-	private void getCape(CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable)
+	private void getCape(final CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable)
 	{
 		if (!CapeAPI.INSTANCE.hasCapeService())
 			return;
@@ -47,27 +47,27 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
 	}
 
 	@Inject(method = "getFovModifier", at = @At("HEAD"), cancellable = true)
-	private void getFovModifier(CallbackInfoReturnable<Float> callbackInfoReturnable)
+	private void getFovModifier(final CallbackInfoReturnable<Float> callbackInfoReturnable)
 	{
 		final NoFOV fovModule = (NoFOV) LiquidBounce.moduleManager.get(NoFOV.class);
 
-		if ((fovModule).getState())
+		if (fovModule.getState())
 		{
 			float newFOV = fovModule.getFovValue().get();
 
-			if (!this.isHandActive())
+			if (!isHandActive())
 			{
 				callbackInfoReturnable.setReturnValue(newFOV);
 				return;
 			}
 
-			if (this.getActiveItemStack().getItem() != Items.BOW)
+			if (getActiveItemStack().getItem() != Items.BOW)
 			{
 				callbackInfoReturnable.setReturnValue(newFOV);
 				return;
 			}
 
-			int i = this.getItemInUseCount();
+			final int i = getItemInUseCount();
 			float f1 = i * 0.05f;
 			f1 = f1 > 1.0f ? 1.0f : f1 * f1;
 			newFOV *= 1.0f - f1 * 0.15f;
@@ -76,11 +76,11 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
 	}
 
 	@Inject(method = "getLocationSkin()Lnet/minecraft/util/ResourceLocation;", at = @At("HEAD"), cancellable = true)
-	private void getSkin(CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable)
+	private void getSkin(final CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable)
 	{
 		final NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.get(NameProtect.class);
 
-		if ((nameProtect).getState() && nameProtect.skinProtectValue.get())
+		if (nameProtect.getState() && nameProtect.skinProtectValue.get())
 		{
 			if (!nameProtect.allPlayersValue.get() && !Objects.equals(getGameProfile().getName(), Minecraft.getMinecraft().player.getGameProfile().getName()))
 				return;

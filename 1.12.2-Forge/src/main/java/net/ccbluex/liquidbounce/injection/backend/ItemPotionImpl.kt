@@ -14,14 +14,9 @@ import net.minecraft.item.ItemPotion
 import net.minecraft.potion.PotionEffect
 import net.minecraft.potion.PotionUtils
 
-class ItemPotionImpl(wrapped: ItemPotion) : ItemImpl<ItemPotion>(wrapped), IItemPotion {
-    override fun getEffects(stack: IItemStack): Collection<IPotionEffect> {
-        return WrappedCollection(
-                PotionUtils.getEffectsFromStack(stack.unwrap()),
-                IPotionEffect::unwrap,
-                PotionEffect::wrap
-        )
-    }
+class ItemPotionImpl(wrapped: ItemPotion) : ItemImpl<ItemPotion>(wrapped), IItemPotion
+{
+	override fun getEffects(stack: IItemStack): Collection<IPotionEffect> = WrappedCollection(PotionUtils.getEffectsFromStack(stack.unwrap()), IPotionEffect::unwrap, PotionEffect::wrap)
 }
 
 

@@ -55,7 +55,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 	@Shadow
 	protected boolean visible;
 	private int listWidth = 220;
-	private boolean enableScissor = false;
+	private boolean enableScissor;
 
 	@Shadow
 	protected abstract void drawBackground();
@@ -88,80 +88,80 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 	 * @author CCBlueX
 	 */
 	@Overwrite
-	public void drawScreen(int mouseXIn, int mouseYIn, float partialTicks)
+	public void drawScreen(final int mouseXIn, final int mouseYIn, final float partialTicks)
 	{
-		if (this.visible)
+		if (visible)
 		{
-			this.mouseX = mouseXIn;
-			this.mouseY = mouseYIn;
-			this.drawBackground();
-			int i = this.getScrollBarX();
-			int j = i + 6;
-			this.bindAmountScrolled();
+			mouseX = mouseXIn;
+			mouseY = mouseYIn;
+			drawBackground();
+			final int i = getScrollBarX();
+			final int j = i + 6;
+			bindAmountScrolled();
 			GlStateManager.disableLighting();
 			GlStateManager.disableFog();
-			Tessellator tessellator = Tessellator.getInstance();
-			BufferBuilder bufferbuilder = tessellator.getBuffer();
+			final Tessellator tessellator = Tessellator.getInstance();
+			final BufferBuilder bufferbuilder = tessellator.getBuffer();
 			// Forge: background rendering moved into separate method.
 //            this.drawContainerBackground(tessellator);
-			int k = this.left + (this.width >> 1) - (this.getListWidth() >> 1) + 2;
-			int l = this.top + 4 - (int) this.amountScrolled;
+			final int k = left + (width >> 1) - (getListWidth() >> 1) + 2;
+			final int l = top + 4 - (int) amountScrolled;
 
-			if (this.hasListHeader)
+			if (hasListHeader)
 			{
-				this.drawListHeader(k, l, tessellator);
+				drawListHeader(k, l, tessellator);
 			}
 
 			RenderUtils.makeScissorBox(left, top, right, bottom);
 
 			GL11.glEnable(GL11.GL_SCISSOR_TEST);
 
-			this.drawSelectionBox(k, l, mouseXIn, mouseYIn, partialTicks);
+			drawSelectionBox(k, l, mouseXIn, mouseYIn, partialTicks);
 
 			GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
-			ScaledResolution scaledResolution = new ScaledResolution(mc);
+			final ScaledResolution scaledResolution = new ScaledResolution(mc);
 
 			GlStateManager.disableDepth();
-			Gui.drawRect(0, 0, scaledResolution.getScaledWidth(), this.top, Integer.MIN_VALUE);
-			Gui.drawRect(0, this.bottom, scaledResolution.getScaledWidth(), this.height, Integer.MIN_VALUE);
+			Gui.drawRect(0, 0, scaledResolution.getScaledWidth(), top, Integer.MIN_VALUE);
+			Gui.drawRect(0, bottom, scaledResolution.getScaledWidth(), height, Integer.MIN_VALUE);
 
 			GL11.glEnable(GL11.GL_BLEND);
 			GlStateManager.tryBlendFuncSeparate(770, 771, 0, 1);
 			GlStateManager.disableAlpha();
 			GlStateManager.shadeModel(7425);
 			GlStateManager.disableTexture2D();
-			int i1 = 4;
+			final int i1 = 4;
 			bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR);
-			bufferbuilder.pos(this.left, this.top + i1, 0.0D).color(0, 0, 0, 0).endVertex();
-			bufferbuilder.pos(this.right, this.top + i1, 0.0D).color(0, 0, 0, 0).endVertex();
-			bufferbuilder.pos(this.right, this.top, 0.0D).color(0, 0, 0, 255).endVertex();
-			bufferbuilder.pos(this.left, this.top, 0.0D).color(0, 0, 0, 255).endVertex();
+			bufferbuilder.pos(left, top + i1, 0.0D).color(0, 0, 0, 0).endVertex();
+			bufferbuilder.pos(right, top + i1, 0.0D).color(0, 0, 0, 0).endVertex();
+			bufferbuilder.pos(right, top, 0.0D).color(0, 0, 0, 255).endVertex();
+			bufferbuilder.pos(left, top, 0.0D).color(0, 0, 0, 255).endVertex();
 			tessellator.draw();
 			bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR);
-			bufferbuilder.pos(this.left, this.bottom, 0.0D).color(0, 0, 0, 255).endVertex();
-			bufferbuilder.pos(this.right, this.bottom, 0.0D).color(0, 0, 0, 255).endVertex();
-			bufferbuilder.pos(this.right, this.bottom - i1, 0.0D).color(0, 0, 0, 0).endVertex();
-			bufferbuilder.pos(this.left, this.bottom - i1, 0.0D).color(0, 0, 0, 0).endVertex();
+			bufferbuilder.pos(left, bottom, 0.0D).color(0, 0, 0, 255).endVertex();
+			bufferbuilder.pos(right, bottom, 0.0D).color(0, 0, 0, 255).endVertex();
+			bufferbuilder.pos(right, bottom - i1, 0.0D).color(0, 0, 0, 0).endVertex();
+			bufferbuilder.pos(left, bottom - i1, 0.0D).color(0, 0, 0, 0).endVertex();
 			tessellator.draw();
-			int j1 = this.getMaxScroll();
+			final int j1 = getMaxScroll();
 
 			if (j1 > 0)
 			{
-				int k1 = (this.bottom - this.top) * (this.bottom - this.top) / this.getContentHeight();
-				k1 = MathHelper.clamp(k1, 32, this.bottom - this.top - 8);
-				int l1 = (int) this.amountScrolled * (this.bottom - this.top - k1) / j1 + this.top;
+				int k1 = (bottom - top) * (bottom - top) / getContentHeight();
+				k1 = MathHelper.clamp(k1, 32, bottom - top - 8);
+				int l1 = (int) amountScrolled * (bottom - top - k1) / j1 + top;
 
-				if (l1 < this.top)
+				if (l1 < top)
 				{
-					l1 = this.top;
+					l1 = top;
 				}
 
 				bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-				bufferbuilder.pos(i, this.bottom, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 255).endVertex();
-				bufferbuilder.pos(j, this.bottom, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 255).endVertex();
-				bufferbuilder.pos(j, this.top, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 255).endVertex();
-				bufferbuilder.pos(i, this.top, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 255).endVertex();
+				bufferbuilder.pos(i, bottom, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 255).endVertex();
+				bufferbuilder.pos(j, bottom, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 255).endVertex();
+				bufferbuilder.pos(j, top, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 255).endVertex();
+				bufferbuilder.pos(i, top, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 255).endVertex();
 				tessellator.draw();
 				bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
 				bufferbuilder.pos(i, l1 + k1, 0.0D).tex(0.0D, 1.0D).color(128, 128, 128, 255).endVertex();
@@ -177,7 +177,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 				tessellator.draw();
 			}
 
-			this.renderDecorations(mouseXIn, mouseYIn);
+			renderDecorations(mouseXIn, mouseYIn);
 			GlStateManager.enableTexture2D();
 			GlStateManager.shadeModel(7424);
 			GlStateManager.enableAlpha();
@@ -286,11 +286,11 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 	@Overwrite
 	protected int getScrollBarX()
 	{
-		return this.width - 5;
+		return width - 5;
 	}
 
 	@Override
-	public void setEnableScissor(boolean enableScissor)
+	public void setEnableScissor(final boolean enableScissor)
 	{
 		this.enableScissor = enableScissor;
 	}
@@ -301,11 +301,11 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot
 	@Overwrite
 	public int getListWidth()
 	{
-		return this.listWidth;
+		return listWidth;
 	}
 
 	@Override
-	public void setListWidth(int listWidth)
+	public void setListWidth(final int listWidth)
 	{
 		this.listWidth = listWidth;
 	}

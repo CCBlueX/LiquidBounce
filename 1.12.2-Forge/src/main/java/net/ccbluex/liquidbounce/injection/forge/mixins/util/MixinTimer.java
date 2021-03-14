@@ -30,22 +30,22 @@ public class MixinTimer implements IMixinTimer
 	@Overwrite
 	public void updateTimer()
 	{
-		long i = Minecraft.getSystemTime();
-		this.elapsedPartialTicks = (i - this.lastSyncSysClock) / this.tickLength * this.timerSpeed;
-		this.lastSyncSysClock = i;
-		this.renderPartialTicks += this.elapsedPartialTicks;
-		this.elapsedTicks = (int) this.renderPartialTicks;
-		this.renderPartialTicks -= (float) this.elapsedTicks;
+		final long i = Minecraft.getSystemTime();
+		elapsedPartialTicks = (i - lastSyncSysClock) / tickLength * timerSpeed;
+		lastSyncSysClock = i;
+		renderPartialTicks += elapsedPartialTicks;
+		elapsedTicks = (int) renderPartialTicks;
+		renderPartialTicks -= (float) elapsedTicks;
 	}
 
 	@Override
 	public float getTimerSpeed()
 	{
-		return this.timerSpeed;
+		return timerSpeed;
 	}
 
 	@Override
-	public void setTimerSpeed(float timerSpeed)
+	public void setTimerSpeed(final float timerSpeed)
 	{
 		this.timerSpeed = timerSpeed;
 	}

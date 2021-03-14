@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
-import java.util.Objects;
-
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.FastClimb;
 import net.minecraft.block.BlockLadder;
@@ -52,12 +50,12 @@ public abstract class MixinBlockLadder extends MixinBlock
 	 * @author CCBlueX
 	 */
 	@Overwrite
-	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos)
+	public AxisAlignedBB getBoundingBox(final IBlockState state, final IBlockAccess source, final BlockPos pos)
 	{
 		if (state.getBlock() instanceof BlockLadder)
 		{
 			final FastClimb fastClimb = (FastClimb) LiquidBounce.moduleManager.getModule(FastClimb.class);
-			boolean fastLadder = ((fastClimb).getState() && fastClimb.getModeValue().get().equalsIgnoreCase("AAC3.0.0"));
+			final boolean fastLadder = fastClimb.getState() && fastClimb.getModeValue().get().equalsIgnoreCase("AAC3.0.0");
 			final float f = 0.99f;
 
 			if (fastLadder)

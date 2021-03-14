@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
-import java.util.Objects;
-
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
 import net.ccbluex.liquidbounce.injection.backend.BlockImplKt;
@@ -27,20 +25,20 @@ public class MixinBlockModelRenderer
 {
 
 	@Inject(method = "renderModelSmooth", at = @At("HEAD"), cancellable = true)
-	public void renderModelSmooth(IBlockAccess worldIn, IBakedModel modelIn, IBlockState stateIn, BlockPos posIn, BufferBuilder buffer, boolean checkSides, long rand, CallbackInfoReturnable<Boolean> cir)
+	public void renderModelSmooth(final IBlockAccess worldIn, final IBakedModel modelIn, final IBlockState stateIn, final BlockPos posIn, final BufferBuilder buffer, final boolean checkSides, final long rand, final CallbackInfoReturnable<Boolean> cir)
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
-		if ((xray).getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(stateIn.getBlock())))
+		if (xray.getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(stateIn.getBlock())))
 			cir.setReturnValue(false);
 	}
 
 	@Inject(method = "renderModelFlat", at = @At("HEAD"), cancellable = true)
-	private void renderModelStandard(IBlockAccess worldIn, IBakedModel modelIn, IBlockState stateIn, BlockPos posIn, BufferBuilder buffer, boolean checkSides, long rand, final CallbackInfoReturnable<Boolean> booleanCallbackInfoReturnable)
+	private void renderModelStandard(final IBlockAccess worldIn, final IBakedModel modelIn, final IBlockState stateIn, final BlockPos posIn, final BufferBuilder buffer, final boolean checkSides, final long rand, final CallbackInfoReturnable<Boolean> booleanCallbackInfoReturnable)
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
-		if ((xray).getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(stateIn.getBlock())))
+		if (xray.getState() && !xray.getXrayBlocks().contains(BlockImplKt.wrap(stateIn.getBlock())))
 			booleanCallbackInfoReturnable.setReturnValue(false);
 	}
 }

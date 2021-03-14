@@ -11,22 +11,21 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.FontRenderer
 import net.minecraft.util.ResourceLocation
 
-class FontRendererWrapper(val wrapped: IWrappedFontRenderer) : FontRenderer(Minecraft.getMinecraft().gameSettings,
-        ResourceLocation("textures/font/ascii.png"),
+class FontRendererWrapper(val wrapped: IWrappedFontRenderer) : FontRenderer(Minecraft.getMinecraft().gameSettings, ResourceLocation("textures/font/ascii.png"),
 //        if (ClassUtils.hasForge()) null else
-        // TODO: Fix this
-        Minecraft.getMinecraft().textureManager
-        , false) {
+	// TODO: Fix this
+	Minecraft.getMinecraft().textureManager, false)
+{
 
-    override fun drawString(text: String?, x: Int, y: Int, color: Int): Int = wrapped.drawString(text, x.toFloat(), y.toFloat(), color)
+	override fun drawString(text: String?, x: Int, y: Int, color: Int): Int = wrapped.drawString(text, x.toFloat(), y.toFloat(), color)
 
-    override fun drawString(text: String?, x: Float, y: Float, color: Int, dropShadow: Boolean): Int = wrapped.drawString(text, x, y, color, dropShadow)
+	override fun drawString(text: String?, x: Float, y: Float, color: Int, dropShadow: Boolean): Int = wrapped.drawString(text, x, y, color, dropShadow)
 
-    override fun drawStringWithShadow(text: String?, x: Float, y: Float, color: Int): Int = wrapped.drawStringWithShadow(text, x, y, color)
+	override fun drawStringWithShadow(text: String?, x: Float, y: Float, color: Int): Int = wrapped.drawStringWithShadow(text, x, y, color)
 
-    override fun getColorCode(character: Char): Int = wrapped.getColorCode(character)
+	override fun getColorCode(character: Char): Int = wrapped.getColorCode(character)
 
-    override fun getStringWidth(text: String?): Int = wrapped.getStringWidth(text)
+	override fun getStringWidth(text: String?): Int = wrapped.getStringWidth(text)
 
-    override fun getCharWidth(character: Char): Int = wrapped.getCharWidth(character)
+	override fun getCharWidth(character: Char): Int = wrapped.getCharWidth(character)
 }

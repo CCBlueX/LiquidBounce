@@ -133,11 +133,11 @@ public abstract class MixinGuiScreen
 	}
 
 	@Inject(method = "sendChatMessage(Ljava/lang/String;Z)V", at = @At("HEAD"), cancellable = true)
-	private void messageSend(String msg, boolean addToChat, final CallbackInfo callbackInfo)
+	private void messageSend(final String msg, final boolean addToChat, final CallbackInfo callbackInfo)
 	{
 		if (msg.startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix())) && addToChat)
 		{
-			this.mc.ingameGUI.getChatGUI().addToSentMessages(msg);
+			mc.ingameGUI.getChatGUI().addToSentMessages(msg);
 
 			LiquidBounce.commandManager.executeCommands(msg);
 			callbackInfo.cancel();
@@ -145,7 +145,7 @@ public abstract class MixinGuiScreen
 	}
 
 	@Inject(method = "handleComponentHover", at = @At("HEAD"))
-	private void handleHoverOverComponent(ITextComponent component, int x, int y, final CallbackInfo callbackInfo)
+	private void handleHoverOverComponent(final ITextComponent component, final int x, final int y, final CallbackInfo callbackInfo)
 	{
 		if (component == null || component.getStyle().getClickEvent() == null || !LiquidBounce.moduleManager.getModule(ComponentOnHover.class).getState())
 			return;
@@ -163,12 +163,12 @@ public abstract class MixinGuiScreen
 	 * @reason Making it possible for other mixins to receive actions
 	 */
 	@Overwrite
-	protected void actionPerformed(GuiButton button) throws IOException
+	protected void actionPerformed(final GuiButton button) throws IOException
 	{
-		this.injectedActionPerformed(button);
+		injectedActionPerformed(button);
 	}
 
-	protected void injectedActionPerformed(GuiButton button)
+	protected void injectedActionPerformed(final GuiButton button)
 	{
 
 	}

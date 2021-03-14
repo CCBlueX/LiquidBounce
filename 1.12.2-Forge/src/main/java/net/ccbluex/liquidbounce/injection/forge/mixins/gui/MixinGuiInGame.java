@@ -17,6 +17,8 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.GlStateManager.DestFactor;
+import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -48,38 +50,38 @@ public abstract class MixinGuiInGame extends MixinGui
 	protected abstract void renderHotbarItem(int xPos, int yPos, float partialTicks, EntityPlayer player, ItemStack stack);
 
 	@Inject(method = "renderScoreboard", at = @At("HEAD"), cancellable = true)
-	private void renderScoreboard(CallbackInfo callbackInfo)
+	private void renderScoreboard(final CallbackInfo callbackInfo)
 	{
 		if (LiquidBounce.moduleManager.get(HUD.class).getState() || NoScoreboard.INSTANCE.getState())
 			callbackInfo.cancel();
 	}
 
 	@Inject(method = "renderHotbar", at = @At("HEAD"), cancellable = true)
-	private void renderTooltip(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo)
+	private void renderTooltip(final ScaledResolution sr, final float partialTicks, final CallbackInfo callbackInfo)
 	{
 		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
 
 		if (Minecraft.getMinecraft().getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.getBlackHotbarValue().get())
 		{
-			EntityPlayer entityPlayer = (EntityPlayer) this.mc.getRenderViewEntity();
+			final EntityPlayer entityPlayer = (EntityPlayer) mc.getRenderViewEntity();
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-			ItemStack offHandItemStack = entityPlayer.getHeldItemOffhand();
-			EnumHandSide enumhandside = entityPlayer.getPrimaryHand().opposite();
-			int middleScreen = sr.getScaledWidth() >> 1;
-			float f = this.zLevel;
-			int j = 182;
-			int k = 91;
-			this.zLevel = -90.0F;
+			final ItemStack offHandItemStack = entityPlayer.getHeldItemOffhand();
+			final EnumHandSide enumhandside = entityPlayer.getPrimaryHand().opposite();
+			final int middleScreen = sr.getScaledWidth() >> 1;
+			final float f = zLevel;
+			final int j = 182;
+			final int k = 91;
+			zLevel = -90.0F;
 
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-			GuiIngame.drawRect(middleScreen - 91, sr.getScaledHeight() - 24, middleScreen + 90, sr.getScaledHeight(), Integer.MIN_VALUE);
-			GuiIngame.drawRect(middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
+			Gui.drawRect(middleScreen - 91, sr.getScaledHeight() - 24, middleScreen + 90, sr.getScaledHeight(), Integer.MIN_VALUE);
+			Gui.drawRect(middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
 
-			this.mc.getTextureManager().bindTexture(WIDGETS_TEX_PATH);
+			mc.getTextureManager().bindTexture(WIDGETS_TEX_PATH);
 
 			if (!offHandItemStack.isEmpty())
 			{
-				int x;
+				final int x;
 
 				if (enumhandside == EnumHandSide.LEFT)
 				{
@@ -90,44 +92,44 @@ public abstract class MixinGuiInGame extends MixinGui
 					x = middleScreen + 91;
 				}
 
-				int y = sr.getScaledHeight() - 23;
-				GuiIngame.drawRect(x, y, x + 29, y + 24, Integer.MIN_VALUE);
+				final int y = sr.getScaledHeight() - 23;
+				Gui.drawRect(x, y, x + 29, y + 24, Integer.MIN_VALUE);
 			}
 
-			this.zLevel = f;
+			zLevel = f;
 			GlStateManager.enableRescaleNormal();
 			GlStateManager.enableBlend();
-			GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+			GlStateManager.tryBlendFuncSeparate(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA, SourceFactor.ONE, DestFactor.ZERO);
 			RenderHelper.enableGUIStandardItemLighting();
 
 			for (int l = 0; l < 9; ++l)
 			{
-				int i1 = middleScreen - 90 + l * 20 + 2;
-				int j1 = sr.getScaledHeight() - 16 - 3;
-				this.renderHotbarItem(i1, j1, partialTicks, entityPlayer, entityPlayer.inventory.mainInventory.get(l));
+				final int i1 = middleScreen - 90 + l * 20 + 2;
+				final int j1 = sr.getScaledHeight() - 16 - 3;
+				renderHotbarItem(i1, j1, partialTicks, entityPlayer, entityPlayer.inventory.mainInventory.get(l));
 			}
 
 			if (!offHandItemStack.isEmpty())
 			{
-				int l1 = sr.getScaledHeight() - 16 - 3;
+				final int l1 = sr.getScaledHeight() - 16 - 3;
 
 				if (enumhandside == EnumHandSide.LEFT)
 				{
-					this.renderHotbarItem(middleScreen - 91 - 26, l1, partialTicks, entityPlayer, offHandItemStack);
+					renderHotbarItem(middleScreen - 91 - 26, l1, partialTicks, entityPlayer, offHandItemStack);
 				}
 				else
 				{
-					this.renderHotbarItem(middleScreen + 91 + 10, l1, partialTicks, entityPlayer, offHandItemStack);
+					renderHotbarItem(middleScreen + 91 + 10, l1, partialTicks, entityPlayer, offHandItemStack);
 				}
 			}
 
-			if (this.mc.gameSettings.attackIndicator == 2)
+			if (mc.gameSettings.attackIndicator == 2)
 			{
-				float f1 = this.mc.player.getCooledAttackStrength(0.0F);
+				final float f1 = mc.player.getCooledAttackStrength(0.0F);
 
 				if (f1 < 1.0F)
 				{
-					int i2 = sr.getScaledHeight() - 20;
+					final int i2 = sr.getScaledHeight() - 20;
 					int j2 = middleScreen + 91 + 6;
 
 					if (enumhandside == EnumHandSide.RIGHT)
@@ -135,11 +137,11 @@ public abstract class MixinGuiInGame extends MixinGui
 						j2 = middleScreen - 91 - 22;
 					}
 
-					this.mc.getTextureManager().bindTexture(Gui.ICONS);
-					int k1 = (int) (f1 * 19.0F);
+					mc.getTextureManager().bindTexture(Gui.ICONS);
+					final int k1 = (int) (f1 * 19.0F);
 					GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-					this.drawTexturedModalRect(j2, i2, 0, 94, 18, 18);
-					this.drawTexturedModalRect(j2, i2 + 18 - k1, 18, 112 - k1, 18, k1);
+					drawTexturedModalRect(j2, i2, 0, 94, 18, 18);
+					drawTexturedModalRect(j2, i2 + 18 - k1, 18, 112 - k1, 18, k1);
 				}
 			}
 
@@ -153,12 +155,12 @@ public abstract class MixinGuiInGame extends MixinGui
 	}
 
 	@Inject(method = "renderHotbar", at = @At("RETURN"))
-	private void renderTooltipPost(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo)
+	private void renderTooltipPost(final ScaledResolution sr, final float partialTicks, final CallbackInfo callbackInfo)
 	{
 		callRender2DEvent(partialTicks);
 	}
 
-	private void callRender2DEvent(float partialTicks)
+	private void callRender2DEvent(final float partialTicks)
 	{
 		if (!ClassUtils.hasClass("net.labymod.api.LabyModAPI"))
 		{

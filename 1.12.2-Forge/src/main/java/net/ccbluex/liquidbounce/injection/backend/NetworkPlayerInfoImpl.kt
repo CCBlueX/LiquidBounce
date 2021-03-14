@@ -25,9 +25,7 @@ class NetworkPlayerInfoImpl(val wrapped: NetworkPlayerInfo) : INetworkPlayerInfo
     override val displayName: IIChatComponent?
         get() = wrapped.displayName?.wrap()
 
-    override fun equals(other: Any?): Boolean {
-        return other is NetworkPlayerInfoImpl && other.wrapped == this.wrapped
-    }
+    override fun equals(other: Any?): Boolean = other is NetworkPlayerInfoImpl && other.wrapped == wrapped
 }
 
  fun INetworkPlayerInfo.unwrap(): NetworkPlayerInfo = (this as NetworkPlayerInfoImpl).wrapped

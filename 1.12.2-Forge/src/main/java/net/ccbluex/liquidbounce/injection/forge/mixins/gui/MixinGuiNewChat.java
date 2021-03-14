@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayer.EnumChatVisibility;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
@@ -63,29 +64,29 @@ public abstract class MixinGuiNewChat
 	public abstract void scroll(int p_scroll_1_);
 
 	@Inject(method = "drawChat", at = @At("HEAD"), cancellable = true)
-	private void drawChat(int p_drawChat_1_, final CallbackInfo callbackInfo)
+	private void drawChat(final int p_drawChat_1_, final CallbackInfo callbackInfo)
 	{
 		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
 
 		if (hud.getState() && hud.getFontChatValue().get())
 		{
 			callbackInfo.cancel();
-			if (this.mc.gameSettings.chatVisibility != EntityPlayer.EnumChatVisibility.HIDDEN)
+			if (mc.gameSettings.chatVisibility != EnumChatVisibility.HIDDEN)
 			{
-				int lvt_2_1_ = this.getLineCount();
+				final int lvt_2_1_ = getLineCount();
 				boolean lvt_3_1_ = false;
 				int lvt_4_1_ = 0;
-				int lvt_5_1_ = this.drawnChatLines.size();
-				float lvt_6_1_ = this.mc.gameSettings.chatOpacity * 0.9F + 0.1F;
+				final int lvt_5_1_ = drawnChatLines.size();
+				final float lvt_6_1_ = mc.gameSettings.chatOpacity * 0.9F + 0.1F;
 				if (lvt_5_1_ > 0)
 				{
-					if (this.getChatOpen())
+					if (getChatOpen())
 					{
 						lvt_3_1_ = true;
 					}
 
-					float lvt_7_1_ = this.getChatScale();
-					int lvt_8_1_ = MathHelper.ceil((float) this.getChatWidth() / lvt_7_1_);
+					final float lvt_7_1_ = getChatScale();
+					final int lvt_8_1_ = MathHelper.ceil((float) getChatWidth() / lvt_7_1_);
 					GlStateManager.pushMatrix();
 					GlStateManager.translate(2.0F, 20.0F, 0.0F);
 					GlStateManager.scale(lvt_7_1_, lvt_7_1_, 1.0F);
@@ -93,9 +94,9 @@ public abstract class MixinGuiNewChat
 					int lvt_9_1_;
 					int lvt_11_1_;
 					int lvt_14_1_;
-					for (lvt_9_1_ = 0; lvt_9_1_ + this.scrollPos < this.drawnChatLines.size() && lvt_9_1_ < lvt_2_1_; ++lvt_9_1_)
+					for (lvt_9_1_ = 0; lvt_9_1_ + scrollPos < drawnChatLines.size() && lvt_9_1_ < lvt_2_1_; ++lvt_9_1_)
 					{
-						ChatLine lvt_10_1_ = this.drawnChatLines.get(lvt_9_1_ + this.scrollPos);
+						final ChatLine lvt_10_1_ = drawnChatLines.get(lvt_9_1_ + scrollPos);
 						if (lvt_10_1_ != null)
 						{
 							lvt_11_1_ = p_drawChat_1_ - lvt_10_1_.getUpdatedCounter();
@@ -116,11 +117,11 @@ public abstract class MixinGuiNewChat
 								++lvt_4_1_;
 								if (lvt_14_1_ > 3)
 								{
-									int lvt_15_1_ = 0;
-									int lvt_16_1_ = -lvt_9_1_ * 9;
-									Gui.drawRect(lvt_15_1_, lvt_16_1_ - 9, lvt_15_1_ + lvt_8_1_ + 4, lvt_16_1_, (lvt_14_1_ >> 1) << 24);
-									String lvt_17_1_ = lvt_10_1_.getChatComponent().getFormattedText();
-									Fonts.font40.drawStringWithShadow(lvt_17_1_, lvt_15_1_ + 2, (lvt_16_1_ - 8), 16777215 + (lvt_14_1_ << 24));
+									final int lvt_15_1_ = 0;
+									final int lvt_16_1_ = -lvt_9_1_ * 9;
+									Gui.drawRect(lvt_15_1_, lvt_16_1_ - 9, lvt_15_1_ + lvt_8_1_ + 4, lvt_16_1_, lvt_14_1_ >> 1 << 24);
+									final String lvt_17_1_ = lvt_10_1_.getChatComponent().getFormattedText();
+									Fonts.font40.drawStringWithShadow(lvt_17_1_, lvt_15_1_ + 2, lvt_16_1_ - 8, 16777215 + (lvt_14_1_ << 24));
 									GL11.glColor4f(1, 1, 1, 1);
 									GlStateManager.resetColor();
 								}
@@ -132,14 +133,14 @@ public abstract class MixinGuiNewChat
 					{
 						lvt_9_1_ = Fonts.font40.getFontHeight();
 						GlStateManager.translate(-3.0F, 0.0F, 0.0F);
-						int lvt_10_2_ = lvt_5_1_ * lvt_9_1_ + lvt_5_1_;
+						final int lvt_10_2_ = lvt_5_1_ * lvt_9_1_ + lvt_5_1_;
 						lvt_11_1_ = lvt_4_1_ * lvt_9_1_ + lvt_4_1_;
-						int lvt_12_2_ = this.scrollPos * lvt_11_1_ / lvt_5_1_;
-						int lvt_13_1_ = lvt_11_1_ * lvt_11_1_ / lvt_10_2_;
+						final int lvt_12_2_ = scrollPos * lvt_11_1_ / lvt_5_1_;
+						final int lvt_13_1_ = lvt_11_1_ * lvt_11_1_ / lvt_10_2_;
 						if (lvt_10_2_ != lvt_11_1_)
 						{
 							lvt_14_1_ = lvt_12_2_ > 0 ? 170 : 96;
-							int lvt_15_2_ = this.isScrolled ? 13382451 : 3355562;
+							final int lvt_15_2_ = isScrolled ? 13382451 : 3355562;
 							Gui.drawRect(0, -lvt_12_2_, 2, -lvt_12_2_ - lvt_13_1_, lvt_15_2_ + (lvt_14_1_ << 24));
 							Gui.drawRect(2, -lvt_12_2_, 1, -lvt_12_2_ - lvt_13_1_, 13421772 + (lvt_14_1_ << 24));
 						}
@@ -174,33 +175,33 @@ public abstract class MixinGuiNewChat
 	 */
 
 	@Inject(method = "getChatComponent", at = @At("HEAD"), cancellable = true)
-	private void getChatComponent(int p_getChatComponent_1_, int p_getChatComponent_2_, final CallbackInfoReturnable<ITextComponent> callbackInfo)
+	private void getChatComponent(final int p_getChatComponent_1_, final int p_getChatComponent_2_, final CallbackInfoReturnable<ITextComponent> callbackInfo)
 	{
 		final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
 
 		if (hud.getState() && hud.getFontChatValue().get())
 		{
-			if (this.getChatOpen())
+			if (getChatOpen())
 			{
-				ScaledResolution lvt_3_1_ = new ScaledResolution(this.mc);
-				int lvt_4_1_ = lvt_3_1_.getScaleFactor();
-				float lvt_5_1_ = this.getChatScale();
+				final ScaledResolution lvt_3_1_ = new ScaledResolution(mc);
+				final int lvt_4_1_ = lvt_3_1_.getScaleFactor();
+				final float lvt_5_1_ = getChatScale();
 				int lvt_6_1_ = p_getChatComponent_1_ / lvt_4_1_ - 3;
 				int lvt_7_1_ = p_getChatComponent_2_ / lvt_4_1_ - 27;
 				lvt_6_1_ = MathHelper.floor((float) lvt_6_1_ / lvt_5_1_);
 				lvt_7_1_ = MathHelper.floor((float) lvt_7_1_ / lvt_5_1_);
 				if (lvt_6_1_ >= 0 && lvt_7_1_ >= 0)
 				{
-					int lvt_8_1_ = Math.min(this.getLineCount(), this.drawnChatLines.size());
-					if (lvt_6_1_ <= MathHelper.floor((float) this.getChatWidth() / this.getChatScale()) && lvt_7_1_ < Fonts.font40.getFontHeight() * lvt_8_1_ + lvt_8_1_)
+					final int lvt_8_1_ = Math.min(getLineCount(), drawnChatLines.size());
+					if (lvt_6_1_ <= MathHelper.floor((float) getChatWidth() / getChatScale()) && lvt_7_1_ < Fonts.font40.getFontHeight() * lvt_8_1_ + lvt_8_1_)
 					{
-						int lvt_9_1_ = lvt_7_1_ / Fonts.font40.getFontHeight() + this.scrollPos;
-						if (lvt_9_1_ >= 0 && lvt_9_1_ < this.drawnChatLines.size())
+						final int lvt_9_1_ = lvt_7_1_ / Fonts.font40.getFontHeight() + scrollPos;
+						if (lvt_9_1_ >= 0 && lvt_9_1_ < drawnChatLines.size())
 						{
-							ChatLine lvt_10_1_ = this.drawnChatLines.get(lvt_9_1_);
+							final ChatLine lvt_10_1_ = drawnChatLines.get(lvt_9_1_);
 							int lvt_11_1_ = 0;
 
-							for (ITextComponent lvt_13_1_ : lvt_10_1_.getChatComponent())
+							for (final ITextComponent lvt_13_1_ : lvt_10_1_.getChatComponent())
 							{
 								if (lvt_13_1_ instanceof TextComponentString)
 								{

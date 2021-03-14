@@ -18,9 +18,7 @@ class ScaledResolutionImpl(val wrapped: ScaledResolution) : IScaledResolution {
         get() = wrapped.scaleFactor
 
 
-    override fun equals(other: Any?): Boolean {
-        return other is ScaledResolutionImpl && other.wrapped == this.wrapped
-    }
+    override fun equals(other: Any?): Boolean = other is ScaledResolutionImpl && other.wrapped == wrapped
 }
 
  fun IScaledResolution.unwrap(): ScaledResolution = (this as ScaledResolutionImpl).wrapped

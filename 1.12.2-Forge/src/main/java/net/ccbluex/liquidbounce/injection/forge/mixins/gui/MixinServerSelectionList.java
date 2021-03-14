@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 public abstract class MixinServerSelectionList extends GuiSlot
 {
 
-	public MixinServerSelectionList(Minecraft mcIn, int width, int height, int topIn, int bottomIn, int slotHeightIn)
+	public MixinServerSelectionList(final Minecraft mcIn, final int width, final int height, final int topIn, final int bottomIn, final int slotHeightIn)
 	{
 		super(mcIn, width, height, topIn, bottomIn, slotHeightIn);
 	}
@@ -24,9 +24,10 @@ public abstract class MixinServerSelectionList extends GuiSlot
 	/**
 	 * @author CCBlueX
 	 */
+	@Override
 	@Overwrite
 	protected int getScrollBarX()
 	{
-		return this.width - 5;
+		return width - 5;
 	}
 }

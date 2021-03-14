@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketEntityVelocity
 import net.minecraft.network.play.server.SPacketEntityVelocity
 
-class SPacketEntityVelocityImpl<T : SPacketEntityVelocity>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketEntityVelocity {
+class SPacketEntityVelocityImpl<out T : SPacketEntityVelocity>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketEntityVelocity {
     override var motionX: Int
         get() = wrapped.motionX
         set(value) {

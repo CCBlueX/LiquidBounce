@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.IDynamicTexture
 import net.minecraft.client.renderer.texture.DynamicTexture
 
-class DynamicTextureImpl<T : DynamicTexture>(wrapped: T) : AbstractTextureImpl<T>(wrapped), IDynamicTexture
+class DynamicTextureImpl<out T : DynamicTexture>(wrapped: T) : AbstractTextureImpl<T>(wrapped), IDynamicTexture
 
- fun IDynamicTexture.unwrap(): DynamicTexture = (this as DynamicTextureImpl<*>).wrapped
- fun DynamicTexture.wrap(): IDynamicTexture = DynamicTextureImpl(this)
+fun IDynamicTexture.unwrap(): DynamicTexture = (this as DynamicTextureImpl<*>).wrapped
+fun DynamicTexture.wrap(): IDynamicTexture = DynamicTextureImpl(this)

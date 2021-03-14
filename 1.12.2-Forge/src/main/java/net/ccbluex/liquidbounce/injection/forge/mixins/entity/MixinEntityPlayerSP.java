@@ -49,7 +49,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.network.play.client.CPacketAnimation;
 import net.minecraft.network.play.client.CPacketEntityAction;
+import net.minecraft.network.play.client.CPacketEntityAction.Action;
 import net.minecraft.network.play.client.CPacketPlayer;
+import net.minecraft.network.play.client.CPacketPlayer.Position;
+import net.minecraft.network.play.client.CPacketPlayer.PositionRotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -135,6 +138,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	@Shadow
 	public abstract boolean isRidingHorse();
 
+	@Override
 	@Shadow
 	public abstract boolean isSneaking();
 
@@ -144,6 +148,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	@Shadow
 	public abstract void closeScreen();
 
+	@Override
 	@Shadow
 	public abstract boolean isHandActive();
 
@@ -163,51 +168,51 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.get(InventoryMove.class);
 		final Sneak sneak = (Sneak) LiquidBounce.moduleManager.get(Sneak.class);
-		final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
+		final boolean fakeSprint = inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure");
 
-		boolean clientSprintState = this.isSprinting() && !fakeSprint;
+		final boolean clientSprintState = isSprinting() && !fakeSprint;
 
-		if (clientSprintState != this.serverSprintState)
+		if (clientSprintState != serverSprintState)
 		{
 			if (clientSprintState)
 			{
-				this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.START_SPRINTING));
+				connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, Action.START_SPRINTING));
 			}
 			else
 			{
-				this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.STOP_SPRINTING));
+				connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, Action.STOP_SPRINTING));
 			}
 
-			this.serverSprintState = clientSprintState;
+			serverSprintState = clientSprintState;
 		}
 
-		boolean flag1 = this.isSneaking();
+		final boolean flag1 = isSneaking();
 
-		if (flag1 != this.serverSneakState && (!sneak.getState() || sneak.modeValue.get().equalsIgnoreCase("Legit")))
+		if (flag1 != serverSneakState && (!sneak.getState() || sneak.modeValue.get().equalsIgnoreCase("Legit")))
 		{
 			if (flag1)
 			{
-				this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.START_SNEAKING));
+				connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, Action.START_SNEAKING));
 			}
 			else
 			{
-				this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.STOP_SNEAKING));
+				connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, Action.STOP_SNEAKING));
 			}
 
-			this.serverSneakState = flag1;
+			serverSneakState = flag1;
 		}
 
-		if (this.isCurrentViewEntity())
+		if (isCurrentViewEntity())
 		{
 			float yaw = rotationYaw;
 			float pitch = rotationPitch;
-			float lastReportedYaw = RotationUtils.serverRotation.getYaw();
-			float lastReportedPitch = RotationUtils.serverRotation.getPitch();
+			final float lastReportedYaw = RotationUtils.serverRotation.getYaw();
+			final float lastReportedPitch = RotationUtils.serverRotation.getPitch();
 
 			final Derp derp = (Derp) LiquidBounce.moduleManager.get(Derp.class);
 			if (derp.getState())
 			{
-				float[] rot = derp.getRotation();
+				final float[] rot = derp.getRotation();
 				yaw = rot[0];
 				pitch = rot[1];
 			}
@@ -218,63 +223,63 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				pitch = RotationUtils.targetRotation.getPitch();
 			}
 
-			AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
-			double xDiff = this.posX - this.lastReportedPosX;
-			double yDiff = axisalignedbb.minY - this.lastReportedPosY;
-			double zDiff = this.posZ - this.lastReportedPosZ;
-			double yawDiff = yaw - lastReportedYaw;
-			double pitchDiff = pitch - lastReportedPitch;
+			final AxisAlignedBB axisalignedbb = getEntityBoundingBox();
+			final double xDiff = posX - lastReportedPosX;
+			final double yDiff = axisalignedbb.minY - lastReportedPosY;
+			final double zDiff = posZ - lastReportedPosZ;
+			final double yawDiff = yaw - lastReportedYaw;
+			final double pitchDiff = pitch - lastReportedPitch;
 
-			++this.positionUpdateTicks;
+			++positionUpdateTicks;
 
-			boolean flag2 = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || this.positionUpdateTicks >= 20;
-			boolean flag3 = yawDiff != 0.0D || pitchDiff != 0.0D;
+			boolean flag2 = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || positionUpdateTicks >= 20;
+			final boolean flag3 = yawDiff != 0.0D || pitchDiff != 0.0D;
 
-			if (this.isRiding())
+			if (isRiding())
 			{
-				this.connection.sendPacket(new CPacketPlayer.PositionRotation(this.motionX, -999.0D, this.motionZ, this.rotationYaw, this.rotationPitch, this.onGround));
+				connection.sendPacket(new PositionRotation(motionX, -999.0D, motionZ, rotationYaw, rotationPitch, onGround));
 				flag2 = false;
 			}
 			else if (flag2 && flag3)
 			{
-				this.connection.sendPacket(new CPacketPlayer.PositionRotation(this.posX, axisalignedbb.minY, this.posZ, this.rotationYaw, this.rotationPitch, this.onGround));
+				connection.sendPacket(new PositionRotation(posX, axisalignedbb.minY, posZ, rotationYaw, rotationPitch, onGround));
 			}
 			else if (flag2)
 			{
-				this.connection.sendPacket(new CPacketPlayer.Position(this.posX, axisalignedbb.minY, this.posZ, this.onGround));
+				connection.sendPacket(new Position(posX, axisalignedbb.minY, posZ, onGround));
 			}
 			else if (flag3)
 			{
-				this.connection.sendPacket(new CPacketPlayer.Rotation(this.rotationYaw, this.rotationPitch, this.onGround));
+				connection.sendPacket(new CPacketPlayer.Rotation(rotationYaw, rotationPitch, onGround));
 			}
-			else if (this.prevOnGround != this.onGround)
+			else if (prevOnGround != onGround)
 			{
-				this.connection.sendPacket(new CPacketPlayer(this.onGround));
+				connection.sendPacket(new CPacketPlayer(onGround));
 			}
 
 			if (flag2)
 			{
-				this.lastReportedPosX = this.posX;
-				this.lastReportedPosY = axisalignedbb.minY;
-				this.lastReportedPosZ = this.posZ;
-				this.positionUpdateTicks = 0;
+				lastReportedPosX = posX;
+				lastReportedPosY = axisalignedbb.minY;
+				lastReportedPosZ = posZ;
+				positionUpdateTicks = 0;
 			}
 
 			if (flag3)
 			{
-				this.lastReportedYaw = this.rotationYaw;
-				this.lastReportedPitch = this.rotationPitch;
+				this.lastReportedYaw = rotationYaw;
+				this.lastReportedPitch = rotationPitch;
 			}
 
-			this.prevOnGround = this.onGround;
-			this.autoJumpEnabled = this.mc.gameSettings.autoJump;
+			prevOnGround = onGround;
+			autoJumpEnabled = mc.gameSettings.autoJump;
 		}
 
 		LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST));
 	}
 
 	@Inject(method = "swingArm", at = @At("HEAD"), cancellable = true)
-	private void swingItem(EnumHand hand, CallbackInfo callbackInfo)
+	private void swingItem(final EnumHand hand, final CallbackInfo callbackInfo)
 	{
 		final NoSwing noSwing = (NoSwing) LiquidBounce.moduleManager.get(NoSwing.class);
 
@@ -283,15 +288,15 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			callbackInfo.cancel();
 
 			if (!noSwing.getServerSideValue().get())
-				this.connection.sendPacket(new CPacketAnimation(hand));
+				connection.sendPacket(new CPacketAnimation(hand));
 		}
 	}
 
 	@Inject(method = "pushOutOfBlocks", at = @At("HEAD"), cancellable = true)
-	private void onPushOutOfBlocks(CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	private void onPushOutOfBlocks(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
-		PushOutEvent event = new PushOutEvent();
-		if (this.noClip)
+		final PushOutEvent event = new PushOutEvent();
+		if (noClip)
 			event.cancelEvent();
 		LiquidBounce.eventManager.callEvent(event);
 
@@ -302,6 +307,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	/**
 	 * @author CCBlueX (superblaubeere27)
 	 */
+	@Override
 	@Overwrite
 	public void onLivingUpdate()
 	{
@@ -309,255 +315,256 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 		{
 			LiquidBounce.eventManager.callEvent(new UpdateEvent());
 		}
-		catch (Throwable e)
+		catch (final Throwable e)
 		{
 			e.printStackTrace();
 		}
 
-		++this.sprintingTicksLeft;
+		++sprintingTicksLeft;
 
-		if (this.sprintToggleTimer > 0)
+		if (sprintToggleTimer > 0)
 		{
-			--this.sprintToggleTimer;
+			--sprintToggleTimer;
 		}
 
-		this.prevTimeInPortal = this.timeInPortal;
+		prevTimeInPortal = timeInPortal;
 
-		if (this.inPortal)
+		if (inPortal)
 		{
-			if (this.mc.currentScreen != null && !this.mc.currentScreen.doesGuiPauseGame() && !LiquidBounce.moduleManager.get(PortalMenu.class).getState())
+			if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !LiquidBounce.moduleManager.get(PortalMenu.class).getState())
 			{
-				if (this.mc.currentScreen instanceof GuiContainer)
+				if (mc.currentScreen instanceof GuiContainer)
 				{
-					this.closeScreen();
+					closeScreen();
 				}
 
-				this.mc.displayGuiScreen(null);
+				mc.displayGuiScreen(null);
 			}
 
-			if (this.timeInPortal == 0.0F)
+			if (timeInPortal == 0.0F)
 			{
-				this.mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_PORTAL_TRIGGER, this.rand.nextFloat() * 0.4F + 0.8F));
+				mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_PORTAL_TRIGGER, rand.nextFloat() * 0.4F + 0.8F));
 			}
 
-			this.timeInPortal += 0.0125F;
+			timeInPortal += 0.0125F;
 
-			if (this.timeInPortal >= 1.0F)
+			if (timeInPortal >= 1.0F)
 			{
-				this.timeInPortal = 1.0F;
+				timeInPortal = 1.0F;
 			}
 
-			this.inPortal = false;
+			inPortal = false;
 		}
-		else if (this.isPotionActive(MobEffects.NAUSEA) && this.getActivePotionEffect(MobEffects.NAUSEA).getDuration() > 60)
+		else if (isPotionActive(MobEffects.NAUSEA) && getActivePotionEffect(MobEffects.NAUSEA).getDuration() > 60)
 		{
-			this.timeInPortal += 0.006666667F;
+			timeInPortal += 0.006666667F;
 
-			if (this.timeInPortal > 1.0F)
+			if (timeInPortal > 1.0F)
 			{
-				this.timeInPortal = 1.0F;
+				timeInPortal = 1.0F;
 			}
 		}
 		else
 		{
-			if (this.timeInPortal > 0.0F)
+			if (timeInPortal > 0.0F)
 			{
-				this.timeInPortal -= 0.05F;
+				timeInPortal -= 0.05F;
 			}
 
-			if (this.timeInPortal < 0.0F)
+			if (timeInPortal < 0.0F)
 			{
-				this.timeInPortal = 0.0F;
+				timeInPortal = 0.0F;
 			}
 		}
 
-		if (this.timeUntilPortal > 0)
+		if (timeUntilPortal > 0)
 		{
-			--this.timeUntilPortal;
+			--timeUntilPortal;
 		}
 
-		boolean flag = this.movementInput.jump;
-		boolean flag1 = this.movementInput.sneak;
-		float f = 0.8F;
-		boolean flag2 = this.movementInput.moveForward >= 0.8F;
-		this.movementInput.updatePlayerMoveState();
+		final boolean flag = movementInput.jump;
+		final boolean flag1 = movementInput.sneak;
+		final float f = 0.8F;
+		final boolean flag2 = movementInput.moveForward >= 0.8F;
+		movementInput.updatePlayerMoveState();
 		final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
 		final KillAura killAura = (KillAura) LiquidBounce.moduleManager.getModule(KillAura.class);
 
-		ForgeHooksClient.onInputUpdate((EntityPlayerSP) (Object) this, this.movementInput);
-		this.mc.getTutorial().handleMovement(this.movementInput);
+		ForgeHooksClient.onInputUpdate((EntityPlayerSP) (Object) this, movementInput);
+		mc.getTutorial().handleMovement(movementInput);
 
-		if (this.isHandActive() || (getHeldItem(EnumHand.MAIN_HAND).getItem() instanceof ItemSword && killAura.getBlockingStatus()) && !this.isRiding())
+		if (isHandActive() || getHeldItem(EnumHand.MAIN_HAND).getItem() instanceof ItemSword && killAura.getBlockingStatus() && !isRiding())
 		{
 			final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
 			LiquidBounce.eventManager.callEvent(slowDownEvent);
-			this.movementInput.moveStrafe *= slowDownEvent.getStrafe();
-			this.movementInput.moveForward *= slowDownEvent.getForward();
-			this.sprintToggleTimer = 0;
+			movementInput.moveStrafe *= slowDownEvent.getStrafe();
+			movementInput.moveForward *= slowDownEvent.getForward();
+			sprintToggleTimer = 0;
 		}
 
 		boolean flag3 = false;
 
-		if (this.autoJumpTime > 0)
+		if (autoJumpTime > 0)
 		{
-			--this.autoJumpTime;
+			--autoJumpTime;
 			flag3 = true;
-			this.movementInput.jump = true;
+			movementInput.jump = true;
 		}
 
-		AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
-		PlayerSPPushOutOfBlocksEvent event = new PlayerSPPushOutOfBlocksEvent((EntityPlayerSP) (Object) this, axisalignedbb);
+		AxisAlignedBB axisalignedbb = getEntityBoundingBox();
+		final PlayerSPPushOutOfBlocksEvent event = new PlayerSPPushOutOfBlocksEvent((EntityPlayerSP) (Object) this, axisalignedbb);
 		if (!MinecraftForge.EVENT_BUS.post(event))
 		{
 			axisalignedbb = event.getEntityBoundingBox();
-			this.pushOutOfBlocks(this.posX - (double) this.width * 0.35D, axisalignedbb.minY + 0.5D, this.posZ + (double) this.width * 0.35D);
-			this.pushOutOfBlocks(this.posX - (double) this.width * 0.35D, axisalignedbb.minY + 0.5D, this.posZ - (double) this.width * 0.35D);
-			this.pushOutOfBlocks(this.posX + (double) this.width * 0.35D, axisalignedbb.minY + 0.5D, this.posZ - (double) this.width * 0.35D);
-			this.pushOutOfBlocks(this.posX + (double) this.width * 0.35D, axisalignedbb.minY + 0.5D, this.posZ + (double) this.width * 0.35D);
+			pushOutOfBlocks(posX - (double) width * 0.35D, axisalignedbb.minY + 0.5D, posZ + (double) width * 0.35D);
+			pushOutOfBlocks(posX - (double) width * 0.35D, axisalignedbb.minY + 0.5D, posZ - (double) width * 0.35D);
+			pushOutOfBlocks(posX + (double) width * 0.35D, axisalignedbb.minY + 0.5D, posZ - (double) width * 0.35D);
+			pushOutOfBlocks(posX + (double) width * 0.35D, axisalignedbb.minY + 0.5D, posZ + (double) width * 0.35D);
 		}
 		final Sprint sprint = (Sprint) LiquidBounce.moduleManager.getModule(Sprint.class);
 
-		boolean flag4 = !sprint.foodValue.get() || (float) this.getFoodStats().getFoodLevel() > 6.0F || this.capabilities.allowFlying;
+		final boolean flag4 = !sprint.foodValue.get() || (float) getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
 
-		if (this.onGround && !flag1 && !flag2 && this.movementInput.moveForward >= 0.8F && !this.isSprinting() && flag4 && !this.isHandActive() && !this.isPotionActive(MobEffects.BLINDNESS))
+		if (onGround && !flag1 && !flag2 && movementInput.moveForward >= 0.8F && !isSprinting() && flag4 && !isHandActive() && !isPotionActive(MobEffects.BLINDNESS))
 		{
-			if (this.sprintToggleTimer <= 0 && !this.mc.gameSettings.keyBindSprint.isKeyDown())
+			if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown())
 			{
-				this.sprintToggleTimer = 7;
+				sprintToggleTimer = 7;
 			}
 			else
 			{
-				this.setSprinting(true);
+				setSprinting(true);
 			}
 		}
 
-		if (!this.isSprinting() && this.movementInput.moveForward >= 0.8F && flag4 && (noSlow.getState() || !this.isHandActive()) && !this.isPotionActive(MobEffects.BLINDNESS) && this.mc.gameSettings.keyBindSprint.isKeyDown())
+		if (!isSprinting() && movementInput.moveForward >= 0.8F && flag4 && (noSlow.getState() || !isHandActive()) && !isPotionActive(MobEffects.BLINDNESS) && mc.gameSettings.keyBindSprint.isKeyDown())
 		{
-			this.setSprinting(true);
+			setSprinting(true);
 		}
 
 		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.getModule(Scaffold.class);
 
-		if ((scaffold.getState() && !scaffold.sprintValue.get()) || (sprint.getState() && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.player.rotationYaw, mc.player.rotationPitch)) > 30))
-			this.setSprinting(false);
+		if (scaffold.getState() && !scaffold.sprintValue.get() || sprint.getState() && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.player.rotationYaw, mc.player.rotationPitch)) > 30)
+			setSprinting(false);
 
-		if (this.isSprinting() && (this.movementInput.moveForward < 0.8F || this.collidedHorizontally || !flag4))
+		if (isSprinting() && (movementInput.moveForward < 0.8F || collidedHorizontally || !flag4))
 		{
-			this.setSprinting(false);
+			setSprinting(false);
 		}
 
-		if (this.capabilities.allowFlying)
+		if (capabilities.allowFlying)
 		{
-			if (this.mc.playerController.isSpectatorMode())
+			if (mc.playerController.isSpectatorMode())
 			{
-				if (!this.capabilities.isFlying)
+				if (!capabilities.isFlying)
 				{
-					this.capabilities.isFlying = true;
-					this.sendPlayerAbilities();
+					capabilities.isFlying = true;
+					sendPlayerAbilities();
 				}
 			}
-			else if (!flag && this.movementInput.jump && !flag3)
+			else if (!flag && movementInput.jump && !flag3)
 			{
-				if (this.flyToggleTimer == 0)
+				if (flyToggleTimer == 0)
 				{
-					this.flyToggleTimer = 7;
+					flyToggleTimer = 7;
 				}
 				else
 				{
-					this.capabilities.isFlying = !this.capabilities.isFlying;
-					this.sendPlayerAbilities();
-					this.flyToggleTimer = 0;
+					capabilities.isFlying = !capabilities.isFlying;
+					sendPlayerAbilities();
+					flyToggleTimer = 0;
 				}
 			}
 		}
 
-		if (this.movementInput.jump && !flag && !this.onGround && this.motionY < 0.0D && !this.isElytraFlying() && !this.capabilities.isFlying)
+		if (movementInput.jump && !flag && !onGround && motionY < 0.0D && !isElytraFlying() && !capabilities.isFlying)
 		{
-			ItemStack itemstack = this.getItemStackFromSlot(EntityEquipmentSlot.CHEST);
+			final ItemStack itemstack = getItemStackFromSlot(EntityEquipmentSlot.CHEST);
 
 			if (itemstack.getItem() == Items.ELYTRA && ItemElytra.isUsable(itemstack))
 			{
-				this.connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, CPacketEntityAction.Action.START_FALL_FLYING));
+				connection.sendPacket(new CPacketEntityAction((EntityPlayerSP) (Object) this, Action.START_FALL_FLYING));
 			}
 		}
 
-		this.wasFallFlying = this.isElytraFlying();
+		wasFallFlying = isElytraFlying();
 
-		if (this.capabilities.isFlying && this.isCurrentViewEntity())
+		if (capabilities.isFlying && isCurrentViewEntity())
 		{
-			if (this.movementInput.sneak)
+			if (movementInput.sneak)
 			{
-				this.movementInput.moveStrafe = (float) ((double) this.movementInput.moveStrafe / 0.3D);
-				this.movementInput.moveForward = (float) ((double) this.movementInput.moveForward / 0.3D);
-				this.motionY -= this.capabilities.getFlySpeed() * 3.0F;
+				movementInput.moveStrafe = (float) ((double) movementInput.moveStrafe / 0.3D);
+				movementInput.moveForward = (float) ((double) movementInput.moveForward / 0.3D);
+				motionY -= capabilities.getFlySpeed() * 3.0F;
 			}
 
-			if (this.movementInput.jump)
+			if (movementInput.jump)
 			{
-				this.motionY += this.capabilities.getFlySpeed() * 3.0F;
+				motionY += capabilities.getFlySpeed() * 3.0F;
 			}
 		}
 
-		if (this.isRidingHorse())
+		if (isRidingHorse())
 		{
-			IJumpingMount ijumpingmount = (IJumpingMount) this.getRidingEntity();
+			final IJumpingMount ijumpingmount = (IJumpingMount) getRidingEntity();
 
-			if (this.horseJumpPowerCounter < 0)
+			if (horseJumpPowerCounter < 0)
 			{
-				++this.horseJumpPowerCounter;
+				++horseJumpPowerCounter;
 
-				if (this.horseJumpPowerCounter == 0)
+				if (horseJumpPowerCounter == 0)
 				{
-					this.horseJumpPower = 0.0F;
+					horseJumpPower = 0.0F;
 				}
 			}
 
-			if (flag && !this.movementInput.jump)
+			if (flag && !movementInput.jump)
 			{
-				this.horseJumpPowerCounter = -10;
-				ijumpingmount.setJumpPower(MathHelper.floor(this.getHorseJumpPower() * 100.0F));
-				this.sendHorseJump();
+				horseJumpPowerCounter = -10;
+				ijumpingmount.setJumpPower(MathHelper.floor(getHorseJumpPower() * 100.0F));
+				sendHorseJump();
 			}
-			else if (!flag && this.movementInput.jump)
+			else if (!flag && movementInput.jump)
 			{
-				this.horseJumpPowerCounter = 0;
-				this.horseJumpPower = 0.0F;
+				horseJumpPowerCounter = 0;
+				horseJumpPower = 0.0F;
 			}
 			else if (flag)
 			{
-				++this.horseJumpPowerCounter;
+				++horseJumpPowerCounter;
 
-				if (this.horseJumpPowerCounter < 10)
+				if (horseJumpPowerCounter < 10)
 				{
-					this.horseJumpPower = (float) this.horseJumpPowerCounter * 0.1F;
+					horseJumpPower = (float) horseJumpPowerCounter * 0.1F;
 				}
 				else
 				{
-					this.horseJumpPower = 0.8F + 2.0F / (float) (this.horseJumpPowerCounter - 9) * 0.1F;
+					horseJumpPower = 0.8F + 2.0F / (float) (horseJumpPowerCounter - 9) * 0.1F;
 				}
 			}
 		}
 		else
 		{
-			this.horseJumpPower = 0.0F;
+			horseJumpPower = 0.0F;
 		}
 
 		super.onLivingUpdate();
 
-		if (this.onGround && this.capabilities.isFlying && !this.mc.playerController.isSpectatorMode())
+		if (onGround && capabilities.isFlying && !mc.playerController.isSpectatorMode())
 		{
-			this.capabilities.isFlying = false;
-			this.sendPlayerAbilities();
+			capabilities.isFlying = false;
+			sendPlayerAbilities();
 		}
 	}
 
 	/**
 	 * @author CCBlueX (superblaubeere27)
 	 */
+	@Override
 	@Overwrite
-	public void move(MoverType type, double x, double y, double z)
+	public void move(final MoverType type, double x, double y, double z)
 	{
-		MoveEvent moveEvent = new MoveEvent(x, y, z);
+		final MoveEvent moveEvent = new MoveEvent(x, y, z);
 		LiquidBounce.eventManager.callEvent(moveEvent);
 
 		if (moveEvent.isCancelled())
@@ -567,29 +574,29 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 		y = moveEvent.getY();
 		z = moveEvent.getZ();
 
-		if (this.noClip)
+		if (noClip)
 		{
-			this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, y, z));
-			this.resetPositionToBB();
+			setEntityBoundingBox(getEntityBoundingBox().offset(x, y, z));
+			resetPositionToBB();
 		}
 		else
 		{
 			if (type == MoverType.PISTON)
 			{
-				long i = this.world.getTotalWorldTime();
+				final long i = world.getTotalWorldTime();
 
-				if (i != this.pistonDeltasGameTime)
+				if (i != pistonDeltasGameTime)
 				{
-					Arrays.fill(this.pistonDeltas, 0.0D);
-					this.pistonDeltasGameTime = i;
+					Arrays.fill(pistonDeltas, 0.0D);
+					pistonDeltasGameTime = i;
 				}
 
 				if (x != 0.0D)
 				{
-					int j = EnumFacing.Axis.X.ordinal();
-					double d0 = MathHelper.clamp(x + this.pistonDeltas[j], -0.51D, 0.51D);
-					x = d0 - this.pistonDeltas[j];
-					this.pistonDeltas[j] = d0;
+					final int j = EnumFacing.Axis.X.ordinal();
+					final double d0 = MathHelper.clamp(x + pistonDeltas[j], -0.51D, 0.51D);
+					x = d0 - pistonDeltas[j];
+					pistonDeltas[j] = d0;
 
 					if (Math.abs(x) <= 9.999999747378752E-6D)
 					{
@@ -598,10 +605,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 				else if (y != 0.0D)
 				{
-					int l4 = EnumFacing.Axis.Y.ordinal();
-					double d12 = MathHelper.clamp(y + this.pistonDeltas[l4], -0.51D, 0.51D);
-					y = d12 - this.pistonDeltas[l4];
-					this.pistonDeltas[l4] = d12;
+					final int l4 = EnumFacing.Axis.Y.ordinal();
+					final double d12 = MathHelper.clamp(y + pistonDeltas[l4], -0.51D, 0.51D);
+					y = d12 - pistonDeltas[l4];
+					pistonDeltas[l4] = d12;
 
 					if (Math.abs(y) <= 9.999999747378752E-6D)
 					{
@@ -615,10 +622,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 						return;
 					}
 
-					int i5 = EnumFacing.Axis.Z.ordinal();
-					double d13 = MathHelper.clamp(z + this.pistonDeltas[i5], -0.51D, 0.51D);
-					z = d13 - this.pistonDeltas[i5];
-					this.pistonDeltas[i5] = d13;
+					final int i5 = EnumFacing.Axis.Z.ordinal();
+					final double d13 = MathHelper.clamp(z + pistonDeltas[i5], -0.51D, 0.51D);
+					z = d13 - pistonDeltas[i5];
+					pistonDeltas[i5] = d13;
 
 					if (Math.abs(z) <= 9.999999747378752E-6D)
 					{
@@ -627,30 +634,30 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 			}
 
-			this.world.profiler.startSection("move");
-			double d10 = this.posX;
-			double d11 = this.posY;
-			double d1 = this.posZ;
+			world.profiler.startSection("move");
+			final double d10 = posX;
+			final double d11 = posY;
+			final double d1 = posZ;
 
-			if (this.isInWeb)
+			if (isInWeb)
 			{
-				this.isInWeb = false;
+				isInWeb = false;
 				x *= 0.25D;
 				y *= 0.05000000074505806D;
 				z *= 0.25D;
-				this.motionX = 0.0D;
-				this.motionY = 0.0D;
-				this.motionZ = 0.0D;
+				motionX = 0.0D;
+				motionY = 0.0D;
+				motionZ = 0.0D;
 			}
 
 			double d2 = x;
-			double d3 = y;
+			final double d3 = y;
 			double d4 = z;
 
 			// noinspection ConstantConditions
-			if ((type == MoverType.SELF || type == MoverType.PLAYER) && (this.onGround && this.isSneaking() || moveEvent.isSafeWalk()) && ((Object) this) instanceof EntityPlayer)
+			if ((type == MoverType.SELF || type == MoverType.PLAYER) && (onGround && isSneaking() || moveEvent.isSafeWalk()) && (Object) this instanceof EntityPlayer)
 			{
-				for (double d5 = 0.05D; x != 0.0D && this.world.getCollisionBoxes((EntityPlayerSP) (Object) this, this.getEntityBoundingBox().offset(x, -this.stepHeight, 0.0D)).isEmpty(); d2 = x)
+				for (final double d5 = 0.05D; x != 0.0D && world.getCollisionBoxes((EntityPlayerSP) (Object) this, getEntityBoundingBox().offset(x, -stepHeight, 0.0D)).isEmpty(); d2 = x)
 				{
 					if (x < 0.05D && x >= -0.05D)
 					{
@@ -666,7 +673,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 					}
 				}
 
-				for (; z != 0.0D && this.world.getCollisionBoxes((EntityPlayerSP) (Object) this, this.getEntityBoundingBox().offset(0.0D, -this.stepHeight, z)).isEmpty(); d4 = z)
+				for (; z != 0.0D && world.getCollisionBoxes((EntityPlayerSP) (Object) this, getEntityBoundingBox().offset(0.0D, -stepHeight, z)).isEmpty(); d4 = z)
 				{
 					if (z < 0.05D && z >= -0.05D)
 					{
@@ -682,7 +689,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 					}
 				}
 
-				for (; x != 0.0D && z != 0.0D && this.world.getCollisionBoxes((EntityPlayerSP) (Object) this, this.getEntityBoundingBox().offset(x, -this.stepHeight, z)).isEmpty(); d4 = z)
+				for (; x != 0.0D && z != 0.0D && world.getCollisionBoxes((EntityPlayerSP) (Object) this, getEntityBoundingBox().offset(x, -stepHeight, z)).isEmpty(); d4 = z)
 				{
 					if (x < 0.05D && x >= -0.05D)
 					{
@@ -714,33 +721,33 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 			}
 
-			List<AxisAlignedBB> list1 = this.world.getCollisionBoxes((EntityPlayerSP) (Object) this, this.getEntityBoundingBox().expand(x, y, z));
-			AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
+			final List<AxisAlignedBB> list1 = world.getCollisionBoxes((EntityPlayerSP) (Object) this, getEntityBoundingBox().expand(x, y, z));
+			final AxisAlignedBB axisalignedbb = getEntityBoundingBox();
 
 			if (y != 0.0D)
 			{
 				int k = 0;
 
-				for (int l = list1.size(); k < l; ++k)
+				for (final int l = list1.size(); k < l; ++k)
 				{
-					y = list1.get(k).calculateYOffset(this.getEntityBoundingBox(), y);
+					y = list1.get(k).calculateYOffset(getEntityBoundingBox(), y);
 				}
 
-				this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
+				setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
 			}
 
 			if (x != 0.0D)
 			{
 				int j5 = 0;
 
-				for (int l5 = list1.size(); j5 < l5; ++j5)
+				for (final int l5 = list1.size(); j5 < l5; ++j5)
 				{
-					x = list1.get(j5).calculateXOffset(this.getEntityBoundingBox(), x);
+					x = list1.get(j5).calculateXOffset(getEntityBoundingBox(), x);
 				}
 
 				if (x != 0.0D)
 				{
-					this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, 0.0D, 0.0D));
+					setEntityBoundingBox(getEntityBoundingBox().offset(x, 0.0D, 0.0D));
 				}
 			}
 
@@ -748,37 +755,37 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			{
 				int k5 = 0;
 
-				for (int i6 = list1.size(); k5 < i6; ++k5)
+				for (final int i6 = list1.size(); k5 < i6; ++k5)
 				{
-					z = list1.get(k5).calculateZOffset(this.getEntityBoundingBox(), z);
+					z = list1.get(k5).calculateZOffset(getEntityBoundingBox(), z);
 				}
 
 				if (z != 0.0D)
 				{
-					this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, 0.0D, z));
+					setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, 0.0D, z));
 				}
 			}
 
-			boolean flag = this.onGround || d3 != y && d3 < 0.0D;
+			final boolean flag = onGround || d3 != y && d3 < 0.0D;
 
-			if (this.stepHeight > 0.0F && flag && (d2 != x || d4 != z))
+			if (stepHeight > 0.0F && flag && (d2 != x || d4 != z))
 			{
-				StepEvent stepEvent = new StepEvent(this.stepHeight);
+				final StepEvent stepEvent = new StepEvent(stepHeight);
 				LiquidBounce.eventManager.callEvent(stepEvent);
 
-				double d14 = x;
-				double d6 = y;
-				double d7 = z;
-				AxisAlignedBB axisalignedbb1 = this.getEntityBoundingBox();
-				this.setEntityBoundingBox(axisalignedbb);
+				final double d14 = x;
+				final double d6 = y;
+				final double d7 = z;
+				final AxisAlignedBB axisalignedbb1 = getEntityBoundingBox();
+				setEntityBoundingBox(axisalignedbb);
 				y = stepEvent.getStepHeight();
-				List<AxisAlignedBB> list = this.world.getCollisionBoxes((EntityPlayerSP) (Object) this, this.getEntityBoundingBox().expand(d2, y, d4));
-				AxisAlignedBB axisalignedbb2 = this.getEntityBoundingBox();
-				AxisAlignedBB axisalignedbb3 = axisalignedbb2.expand(d2, 0.0D, d4);
+				final List<AxisAlignedBB> list = world.getCollisionBoxes((EntityPlayerSP) (Object) this, getEntityBoundingBox().expand(d2, y, d4));
+				AxisAlignedBB axisalignedbb2 = getEntityBoundingBox();
+				final AxisAlignedBB axisalignedbb3 = axisalignedbb2.expand(d2, 0.0D, d4);
 				double d8 = y;
 				int j1 = 0;
 
-				for (int k1 = list.size(); j1 < k1; ++j1)
+				for (final int k1 = list.size(); j1 < k1; ++j1)
 				{
 					d8 = list.get(j1).calculateYOffset(axisalignedbb3, d8);
 				}
@@ -787,7 +794,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				double d18 = d2;
 				int l1 = 0;
 
-				for (int i2 = list.size(); l1 < i2; ++l1)
+				for (final int i2 = list.size(); l1 < i2; ++l1)
 				{
 					d18 = list.get(l1).calculateXOffset(axisalignedbb2, d18);
 				}
@@ -796,17 +803,17 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				double d19 = d4;
 				int j2 = 0;
 
-				for (int k2 = list.size(); j2 < k2; ++j2)
+				for (final int k2 = list.size(); j2 < k2; ++j2)
 				{
 					d19 = list.get(j2).calculateZOffset(axisalignedbb2, d19);
 				}
 
 				axisalignedbb2 = axisalignedbb2.offset(0.0D, 0.0D, d19);
-				AxisAlignedBB axisalignedbb4 = this.getEntityBoundingBox();
+				AxisAlignedBB axisalignedbb4 = getEntityBoundingBox();
 				double d20 = y;
 				int l2 = 0;
 
-				for (int i3 = list.size(); l2 < i3; ++l2)
+				for (final int i3 = list.size(); l2 < i3; ++l2)
 				{
 					d20 = list.get(l2).calculateYOffset(axisalignedbb4, d20);
 				}
@@ -815,7 +822,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				double d21 = d2;
 				int j3 = 0;
 
-				for (int k3 = list.size(); j3 < k3; ++j3)
+				for (final int k3 = list.size(); j3 < k3; ++j3)
 				{
 					d21 = list.get(j3).calculateXOffset(axisalignedbb4, d21);
 				}
@@ -824,45 +831,45 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				double d22 = d4;
 				int l3 = 0;
 
-				for (int i4 = list.size(); l3 < i4; ++l3)
+				for (final int i4 = list.size(); l3 < i4; ++l3)
 				{
 					d22 = list.get(l3).calculateZOffset(axisalignedbb4, d22);
 				}
 
 				axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, d22);
-				double d23 = d18 * d18 + d19 * d19;
-				double d9 = d21 * d21 + d22 * d22;
+				final double d23 = d18 * d18 + d19 * d19;
+				final double d9 = d21 * d21 + d22 * d22;
 
 				if (d23 > d9)
 				{
 					x = d18;
 					z = d19;
 					y = -d8;
-					this.setEntityBoundingBox(axisalignedbb2);
+					setEntityBoundingBox(axisalignedbb2);
 				}
 				else
 				{
 					x = d21;
 					z = d22;
 					y = -d20;
-					this.setEntityBoundingBox(axisalignedbb4);
+					setEntityBoundingBox(axisalignedbb4);
 				}
 
 				int j4 = 0;
 
-				for (int k4 = list.size(); j4 < k4; ++j4)
+				for (final int k4 = list.size(); j4 < k4; ++j4)
 				{
-					y = list.get(j4).calculateYOffset(this.getEntityBoundingBox(), y);
+					y = list.get(j4).calculateYOffset(getEntityBoundingBox(), y);
 				}
 
-				this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
+				setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
 
 				if (d14 * d14 + d7 * d7 >= x * x + z * z)
 				{
 					x = d14;
 					y = d6;
 					z = d7;
-					this.setEntityBoundingBox(axisalignedbb1);
+					setEntityBoundingBox(axisalignedbb1);
 				}
 				else
 				{
@@ -870,24 +877,24 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 			}
 
-			this.world.profiler.endSection();
-			this.world.profiler.startSection("rest");
-			this.resetPositionToBB();
-			this.collidedHorizontally = d2 != x || d4 != z;
-			this.collidedVertically = d3 != y;
-			this.onGround = this.collidedVertically && d3 < 0.0D;
-			this.collided = this.collidedHorizontally || this.collidedVertically;
-			int j6 = MathHelper.floor(this.posX);
-			int i1 = MathHelper.floor(this.posY - 0.20000000298023224D);
-			int k6 = MathHelper.floor(this.posZ);
+			world.profiler.endSection();
+			world.profiler.startSection("rest");
+			resetPositionToBB();
+			collidedHorizontally = d2 != x || d4 != z;
+			collidedVertically = d3 != y;
+			onGround = collidedVertically && d3 < 0.0D;
+			collided = collidedHorizontally || collidedVertically;
+			final int j6 = MathHelper.floor(posX);
+			final int i1 = MathHelper.floor(posY - 0.20000000298023224D);
+			final int k6 = MathHelper.floor(posZ);
 			BlockPos blockpos = new BlockPos(j6, i1, k6);
-			IBlockState iblockstate = this.world.getBlockState(blockpos);
+			IBlockState iblockstate = world.getBlockState(blockpos);
 
 			if (iblockstate.getMaterial() == Material.AIR)
 			{
-				BlockPos blockpos1 = blockpos.down();
-				IBlockState iblockstate1 = this.world.getBlockState(blockpos1);
-				Block block1 = iblockstate1.getBlock();
+				final BlockPos blockpos1 = blockpos.down();
+				final IBlockState iblockstate1 = world.getBlockState(blockpos1);
+				final Block block1 = iblockstate1.getBlock();
 
 				if (block1 instanceof BlockFence || block1 instanceof BlockWall || block1 instanceof BlockFenceGate)
 				{
@@ -896,52 +903,52 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 			}
 
-			this.updateFallState(y, this.onGround, iblockstate, blockpos);
+			updateFallState(y, onGround, iblockstate, blockpos);
 
 			if (d2 != x)
 			{
-				this.motionX = 0.0D;
+				motionX = 0.0D;
 			}
 
 			if (d4 != z)
 			{
-				this.motionZ = 0.0D;
+				motionZ = 0.0D;
 			}
 
-			Block block = iblockstate.getBlock();
+			final Block block = iblockstate.getBlock();
 
 			if (d3 != y)
 			{
-				block.onLanded(this.world, (EntityPlayerSP) (Object) this);
+				block.onLanded(world, (EntityPlayerSP) (Object) this);
 			}
 
-			if (this.canTriggerWalking() && (!this.onGround || !this.isSneaking() || !(((Object) this) instanceof EntityPlayer)) && !this.isRiding())
+			if (canTriggerWalking() && (!onGround || !isSneaking() || !((Object) this instanceof EntityPlayer)) && !isRiding())
 			{
-				double d15 = this.posX - d10;
-				double d16 = this.posY - d11;
-				double d17 = this.posZ - d1;
+				final double d15 = posX - d10;
+				double d16 = posY - d11;
+				final double d17 = posZ - d1;
 
 				if (block != Blocks.LADDER)
 				{
 					d16 = 0.0D;
 				}
 
-				if (block != null && this.onGround)
+				if (block != null && onGround)
 				{
-					block.onEntityWalk(this.world, blockpos, (EntityPlayerSP) (Object) this);
+					block.onEntityWalk(world, blockpos, (EntityPlayerSP) (Object) this);
 				}
 
-				this.distanceWalkedModified = (float) ((double) this.distanceWalkedModified + (double) MathHelper.sqrt(d15 * d15 + d17 * d17) * 0.6D);
-				this.distanceWalkedOnStepModified = (float) ((double) this.distanceWalkedOnStepModified + (double) MathHelper.sqrt(d15 * d15 + d16 * d16 + d17 * d17) * 0.6D);
+				distanceWalkedModified = (float) ((double) distanceWalkedModified + (double) MathHelper.sqrt(d15 * d15 + d17 * d17) * 0.6D);
+				distanceWalkedOnStepModified = (float) ((double) distanceWalkedOnStepModified + (double) MathHelper.sqrt(d15 * d15 + d16 * d16 + d17 * d17) * 0.6D);
 
-				if (this.distanceWalkedOnStepModified > (float) this.nextStepDistance && iblockstate.getMaterial() != Material.AIR)
+				if (distanceWalkedOnStepModified > (float) nextStepDistance && iblockstate.getMaterial() != Material.AIR)
 				{
-					this.nextStepDistance = (int) this.distanceWalkedOnStepModified + 1;
+					nextStepDistance = (int) distanceWalkedOnStepModified + 1;
 
-					if (this.isInWater())
+					if (isInWater())
 					{
-						Entity entity = this.isBeingRidden() && this.getControllingPassenger() != null ? this.getControllingPassenger() : (EntityPlayerSP) (Object) this;
-						float f = entity == (Object) this ? 0.35F : 0.4F;
+						final Entity entity = isBeingRidden() && getControllingPassenger() != null ? getControllingPassenger() : (EntityPlayerSP) (Object) this;
+						final float f = entity == (Object) this ? 0.35F : 0.4F;
 						float f1 = MathHelper.sqrt(entity.motionX * entity.motionX * 0.20000000298023224D + entity.motionY * entity.motionY + entity.motionZ * entity.motionZ * 0.20000000298023224D) * f;
 
 						if (f1 > 1.0F)
@@ -949,61 +956,61 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 							f1 = 1.0F;
 						}
 
-						this.playSound(this.getSwimSound(), f1, 1.0F + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.4F);
+						playSound(getSwimSound(), f1, 1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
 					}
 					else
 					{
-						this.playStepSound(blockpos, block);
+						playStepSound(blockpos, block);
 					}
 				}
-				else if (this.distanceWalkedOnStepModified > this.nextFlap && this.makeFlySound() && iblockstate.getMaterial() == Material.AIR)
+				else if (distanceWalkedOnStepModified > nextFlap && makeFlySound() && iblockstate.getMaterial() == Material.AIR)
 				{
-					this.nextFlap = this.playFlySound(this.distanceWalkedOnStepModified);
+					nextFlap = playFlySound(distanceWalkedOnStepModified);
 				}
 			}
 
 			try
 			{
-				this.doBlockCollisions();
+				doBlockCollisions();
 			}
-			catch (Throwable throwable)
+			catch (final Throwable throwable)
 			{
-				CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Checking entity block collision");
-				CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity being checked for collision");
-				this.addEntityCrashInfo(crashreportcategory);
+				final CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Checking entity block collision");
+				final CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity being checked for collision");
+				addEntityCrashInfo(crashreportcategory);
 				throw new ReportedException(crashreport);
 			}
 
-			boolean flag1 = this.isWet();
+			final boolean flag1 = isWet();
 
-			if (this.world.isFlammableWithin(this.getEntityBoundingBox().shrink(0.001D)))
+			if (world.isFlammableWithin(getEntityBoundingBox().shrink(0.001D)))
 			{
-				this.dealFireDamage(1);
+				dealFireDamage(1);
 
 				if (!flag1)
 				{
-					++this.fire;
+					++fire;
 
-					if (this.fire == 0)
+					if (fire == 0)
 					{
-						this.setFire(8);
+						setFire(8);
 					}
 				}
 			}
-			else if (this.fire <= 0)
+			else if (fire <= 0)
 			{
-				this.fire = -this.getFireImmuneTicks();
+				fire = -getFireImmuneTicks();
 			}
 
-			if (flag1 && this.isBurning())
+			if (flag1 && isBurning())
 			{
-				this.playSound(SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, 0.7F, 1.6F + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.4F);
-				this.fire = -this.getFireImmuneTicks();
+				playSound(SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, 0.7F, 1.6F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
+				fire = -getFireImmuneTicks();
 			}
 
-			this.world.profiler.endSection();
+			world.profiler.endSection();
 		}
 
-		this.updateAutoJump((float) (this.posX - this.posX), (float) (this.posZ - this.posZ));
+		updateAutoJump((float) (posX - posX), (float) (posZ - posZ));
 	}
 }

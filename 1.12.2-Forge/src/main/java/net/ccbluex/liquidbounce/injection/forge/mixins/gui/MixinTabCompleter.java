@@ -9,6 +9,7 @@ import net.minecraft.util.TabCompleter;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -28,7 +29,7 @@ public abstract class MixinTabCompleter
 	public abstract void setCompletions(String... p_setCompletions_1_);
 
 	@Inject(method = "complete", at = @At("HEAD"))
-	private void complete(CallbackInfo ci)
+	private void complete(final CallbackInfo ci)
 	{
 		completions.sort(Comparator.comparing(s -> !LiquidBounce.fileManager.friendsConfig.isFriend(s)));
 	}
@@ -39,18 +40,18 @@ public abstract class MixinTabCompleter
 	 * @author NurMarvin
 	 */
 	@Inject(method = "requestCompletions", at = @At("HEAD"), cancellable = true)
-	private void handleClientCommandCompletion(String prefix, CallbackInfo callbackInfo)
+	private void handleClientCommandCompletion(final String prefix, final CallbackInfo callbackInfo)
 	{
 		if (LiquidBounce.commandManager.autoComplete(prefix))
 		{
 			requestedCompletions = true;
 
-			String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
+			final String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
 
 			if (prefix.toLowerCase().endsWith(latestAutoComplete[latestAutoComplete.length - 1].toLowerCase()))
 				return;
 
-			this.setCompletions(latestAutoComplete);
+			setCompletions(latestAutoComplete);
 
 			callbackInfo.cancel();
 		}
@@ -61,8 +62,8 @@ public abstract class MixinTabCompleter
 	 *
 	 * @author derech1e
 	 */
-	@Inject(method = "setCompletions", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/TabCompleter;complete()V", shift = At.Shift.BEFORE), cancellable = true)
-	private void onAutocompleteResponse(String[] autoCompleteResponse, CallbackInfo callbackInfo)
+	@Inject(method = "setCompletions", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/TabCompleter;complete()V", shift = Shift.BEFORE), cancellable = true)
+	private void onAutocompleteResponse(final String[] autoCompleteResponse, final CallbackInfo callbackInfo)
 	{
 		if (LiquidBounce.commandManager.getLatestAutoComplete().length != 0)
 			callbackInfo.cancel();

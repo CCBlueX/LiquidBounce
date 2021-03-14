@@ -27,9 +27,7 @@ class MovingObjectPositionImpl(val wrapped: RayTraceResult) : IMovingObjectPosit
         get() = wrapped.typeOfHit.wrap()
 
 
-    override fun equals(other: Any?): Boolean {
-        return other is MovingObjectPositionImpl && other.wrapped == this.wrapped
-    }
+    override fun equals(other: Any?): Boolean = other is MovingObjectPositionImpl && other.wrapped == wrapped
 }
 
  fun IMovingObjectPosition.unwrap(): RayTraceResult = (this as MovingObjectPositionImpl).wrapped

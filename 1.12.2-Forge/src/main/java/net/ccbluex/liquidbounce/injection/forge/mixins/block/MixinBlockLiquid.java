@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
-import java.util.Objects;
-
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.world.Liquids;
 import net.minecraft.block.BlockLiquid;
@@ -24,9 +22,9 @@ public class MixinBlockLiquid
 {
 
 	@Inject(method = "canCollideCheck", at = @At("HEAD"), cancellable = true)
-	private void onCollideCheck(CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	private void onCollideCheck(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
-		if ((LiquidBounce.moduleManager.get(Liquids.class)).getState())
+		if (LiquidBounce.moduleManager.get(Liquids.class).getState())
 			callbackInfoReturnable.setReturnValue(true);
 	}
 }

@@ -12,14 +12,12 @@ import net.minecraft.client.audio.SoundHandler
 import net.minecraft.util.ResourceLocation
 import net.minecraft.util.SoundEvent
 
-class SoundHandlerImpl(val wrapped: SoundHandler) : ISoundHandler {
-    override fun playSound(name: String, pitch: Float) = wrapped.playSound(PositionedSoundRecord.getRecord(SoundEvent(ResourceLocation(name)), pitch, 1.0f))
+class SoundHandlerImpl(val wrapped: SoundHandler) : ISoundHandler
+{
+	override fun playSound(name: String, pitch: Float) = wrapped.playSound(PositionedSoundRecord.getRecord(SoundEvent(ResourceLocation(name)), pitch, 1.0f))
 
-
-    override fun equals(other: Any?): Boolean {
-        return other is SoundHandlerImpl && other.wrapped == this.wrapped
-    }
+	override fun equals(other: Any?): Boolean = other is SoundHandlerImpl && other.wrapped == wrapped
 }
 
- fun ISoundHandler.unwrap(): SoundHandler = (this as SoundHandlerImpl).wrapped
- fun SoundHandler.wrap(): ISoundHandler = SoundHandlerImpl(this)
+fun ISoundHandler.unwrap(): SoundHandler = (this as SoundHandlerImpl).wrapped
+fun SoundHandler.wrap(): ISoundHandler = SoundHandlerImpl(this)

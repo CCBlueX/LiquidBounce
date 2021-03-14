@@ -8,12 +8,12 @@ class SPacketEntityTeleportImpl<out T : S18PacketEntityTeleport>(wrapped: T) : P
 	override val entityId: Int
 		get() = wrapped.entityId
 
-	override val x: Int
-		get() = wrapped.x
-	override val y: Int
-		get() = wrapped.y
-	override val z: Int
-		get() = wrapped.z
+	override val x: Double
+		get() = wrapped.x * 0.03125
+	override val y: Double
+		get() = wrapped.y * 0.03125
+	override val z: Double
+		get() = wrapped.z * 0.03125
 }
 
 fun ISPacketEntityTeleport.unwrap(): S18PacketEntityTeleport = (this as SPacketEntityTeleportImpl<*>).wrapped

@@ -23,7 +23,7 @@ public class MixinNetworkManager
 {
 
 	@Inject(method = "channelRead0", at = @At("HEAD"), cancellable = true)
-	private void read(ChannelHandlerContext context, Packet<?> packet, CallbackInfo callback)
+	private void read(final ChannelHandlerContext context, final Packet<?> packet, final CallbackInfo callback)
 	{
 		final PacketEvent event = new PacketEvent(PacketImplKt.wrap(packet));
 		LiquidBounce.eventManager.callEvent(event);
@@ -33,7 +33,7 @@ public class MixinNetworkManager
 	}
 
 	@Inject(method = "sendPacket(Lnet/minecraft/network/Packet;)V", at = @At("HEAD"), cancellable = true)
-	private void send(Packet<?> packet, CallbackInfo callback)
+	private void send(final Packet<?> packet, final CallbackInfo callback)
 	{
 		final PacketEvent event = new PacketEvent(PacketImplKt.wrap(packet));
 		LiquidBounce.eventManager.callEvent(event);

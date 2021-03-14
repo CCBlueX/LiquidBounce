@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketCustom
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.minecraft.network.play.client.CPacketCustomPayload
 
-class CPacketCustomPayloadImpl<T : CPacketCustomPayload>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketCustomPayload {
+class CPacketCustomPayloadImpl<out T : CPacketCustomPayload>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketCustomPayload {
     override var data: IPacketBuffer
         get() = wrapped.data.wrap()
         set(value) {

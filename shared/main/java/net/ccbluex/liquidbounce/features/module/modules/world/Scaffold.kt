@@ -553,11 +553,11 @@ class Scaffold : Module()
 
 		val pos = WBlockPos(thePlayer.posX, thePlayer.posY - groundSearchDepth, thePlayer.posZ)
 		val bs: IIBlockState = theWorld.getBlockState(pos)
-		if ( /* (this.lastGroundBlockState == null || !pos.equals(this.lastGroundBlockPos)) && */!isReplaceable(bs))
+		if ( /* (this.lastGroundBlockState == null || !pos.equals(this.lastGroundBlockPos)) && */!isReplaceable(theWorld, bs))
 		{
 			lastGroundBlockState = bs
 			lastGroundBlockPos = pos
-			lastGroundBlockBB = bs.block.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, bs)
+			lastGroundBlockBB = BlockUtils.getBlockCollisionBox(theWorld, bs)
 		}
 
 		if (!thePlayer.onGround && thePlayer.motionY < 0)
@@ -638,13 +638,17 @@ class Scaffold : Module()
 
 		val func = functions
 
-		val abCollisionBB = autoBlockBlock.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, if (func.isBlockEqualTo(groundBlock, autoBlockBlock)) groundBlockState else autoBlockBlock.defaultState ?: return) ?: return
-		val gBB = provider.createAxisAlignedBB(groundBlock.getBlockBoundsMinX(), groundBlock.getBlockBoundsMinY(), groundBlock.getBlockBoundsMinZ(), groundBlock.getBlockBoundsMaxX(), groundBlock.getBlockBoundsMaxY(), groundBlock.getBlockBoundsMaxZ())
+		val abCollisionBB = BlockUtils.getBlockCollisionBox(theWorld, if (func.isBlockEqualTo(groundBlock, autoBlockBlock)) groundBlockState else autoBlockBlock.defaultState ?: return) ?: return
+
+		val groundMinX = groundBlockBB.minX
+		val groundMinY = groundBlockBB.minY
+		val groundMaxY = groundBlockBB.maxY
+		val groundMinZ = groundBlockBB.minZ
 
 		// These delta variable has in range 0.0625 ~ 1.0
-		val deltaX = gBB.maxX - gBB.minX
-		val deltaY = gBB.maxY - gBB.minY
-		val deltaZ = gBB.maxZ - gBB.minZ
+		val deltaX = groundBlockBB.maxX - groundMinX
+		val deltaY = groundMaxY - groundMinY
+		val deltaZ = groundBlockBB.maxZ - groundMinZ
 
 		// Search Ranges
 		val xzRange = xzRangeValue.get()
@@ -654,12 +658,12 @@ class Scaffold : Module()
 		val ySteps = calcStepSize(yRange) * deltaY
 		val zSteps = calcStepSize(xzRange) * deltaZ
 
-		val sMinX = (0.5 - xzRange * 0.05) * deltaX + gBB.minX
-		val sMaxX = (0.5 + xzRange * 0.5) * deltaX + gBB.minX
-		val sMinY = (0.5 - yRange * 0.5) * deltaY + gBB.minY
-		val sMaxY = (0.5 + yRange * 0.5) * deltaY + gBB.minY
-		val sMinZ = (0.5 - xzRange * 0.5) * deltaZ + gBB.minZ
-		val sMaxZ = (0.5 + xzRange * 0.5) * deltaZ + gBB.minZ
+		val sMinX = (0.5 - xzRange * 0.05) * deltaX + groundMinX
+		val sMaxX = (0.5 + xzRange * 0.5) * deltaX + groundMinX
+		val sMinY = (0.5 - yRange * 0.5) * deltaY + groundMinY
+		val sMaxY = (0.5 + yRange * 0.5) * deltaY + groundMinY
+		val sMinZ = (0.5 - xzRange * 0.5) * deltaZ + groundMinZ
+		val sMaxZ = (0.5 + xzRange * 0.5) * deltaZ + groundMinZ
 
 		val searchBounds = SearchBounds(sMinX, sMaxX, xSteps, sMinY, sMaxY, ySteps, sMinZ, sMaxZ, zSteps)
 
@@ -678,7 +682,7 @@ class Scaffold : Module()
 			state = "Clutch based at motion $mx $my $mz"
 			clutching = true
 		}
-		else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundBlockBB.maxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY < groundBlockBB.maxY - groundBlockBB.minY)
+		else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundMaxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY < groundMaxY - groundMinY)
 		{
 			searchPosition = pos
 
@@ -691,7 +695,7 @@ class Scaffold : Module()
 
 			state = "Non-Fullblock-SlabCorrection"
 		}
-		else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundBlockBB.maxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY == groundBlockBB.maxY - groundBlockBB.minY)
+		else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundMaxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY == groundMaxY - groundMinY)
 		{
 			searchPosition = pos
 			state = "Non-Fullblock"
@@ -775,7 +779,7 @@ class Scaffold : Module()
 			if (autoBlockValue.get().equals("Off", true)) return
 
 			// Auto-Block
-			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let { BlockUtils.getBlock(theWorld, it) }?.getBlockBoundsMaxY() ?: 0.0) // Default boundingBoxYLimit it 0.0
+			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let { BlockUtils.getBlockCollisionBox(theWorld, it)?.maxY } ?: 0.0) // Default boundingBoxYLimit it 0.0
 
 			// If there is no autoblock-able blocks in your inventory, we can't continue.
 			if (blockSlot == -1) return

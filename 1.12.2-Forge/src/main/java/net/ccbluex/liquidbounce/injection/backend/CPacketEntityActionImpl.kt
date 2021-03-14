@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketEntityAction
 import net.minecraft.network.play.client.CPacketEntityAction
 
-class CPacketEntityActionImpl<T : CPacketEntityAction>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketEntityAction
+class CPacketEntityActionImpl<out T : CPacketEntityAction>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketEntityAction
 
  fun ICPacketEntityAction.unwrap(): CPacketEntityAction = (this as CPacketEntityActionImpl<*>).wrapped
  fun CPacketEntityAction.wrap(): ICPacketEntityAction = CPacketEntityActionImpl(this)

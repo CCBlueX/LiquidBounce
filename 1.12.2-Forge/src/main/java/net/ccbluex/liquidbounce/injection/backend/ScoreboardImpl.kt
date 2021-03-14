@@ -14,17 +14,16 @@ import net.ccbluex.liquidbounce.api.util.WrappedCollection
 import net.minecraft.scoreboard.Score
 import net.minecraft.scoreboard.Scoreboard
 
-class ScoreboardImpl(val wrapped: Scoreboard) : IScoreboard {
-    override fun getPlayersTeam(name: String?): ITeam? = wrapped.getPlayersTeam(name)?.wrap()
+class ScoreboardImpl(val wrapped: Scoreboard) : IScoreboard
+{
+	override fun getPlayersTeam(name: String?): ITeam? = wrapped.getPlayersTeam(name)?.wrap()
 
-    override fun getObjectiveInDisplaySlot(index: Int): IScoreObjective? = wrapped.getObjectiveInDisplaySlot(index)?.wrap()
+	override fun getObjectiveInDisplaySlot(index: Int): IScoreObjective? = wrapped.getObjectiveInDisplaySlot(index)?.wrap()
 
-    override fun getSortedScores(objective: IScoreObjective): Collection<IScore> = WrappedCollection(wrapped.getSortedScores(objective.unwrap()), IScore::unwrap, Score::wrap)
+	override fun getSortedScores(objective: IScoreObjective): Collection<IScore> = WrappedCollection(wrapped.getSortedScores(objective.unwrap()), IScore::unwrap, Score::wrap)
 
-    override fun equals(other: Any?): Boolean {
-        return other is ScoreboardImpl && other.wrapped == this.wrapped
-    }
+	override fun equals(other: Any?): Boolean = other is ScoreboardImpl && other.wrapped == wrapped
 }
 
- fun IScoreboard.unwrap(): Scoreboard = (this as ScoreboardImpl).wrapped
- fun Scoreboard.wrap(): IScoreboard = ScoreboardImpl(this)
+fun IScoreboard.unwrap(): Scoreboard = (this as ScoreboardImpl).wrapped
+fun Scoreboard.wrap(): IScoreboard = ScoreboardImpl(this)

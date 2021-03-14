@@ -120,7 +120,7 @@ interface IClassProvider
 	fun createCPacketTabComplete(text: String): IPacket
 	fun createCPacketAnimation(): ICPacketAnimation
 	fun createCPacketKeepAlive(): ICPacketKeepAlive
-	fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket
+	fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, verifyToken: ByteArray): IPacket
 	fun createCPacketChatMessage(message: String): ICPacketChatMessage
 
 	/**

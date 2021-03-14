@@ -11,9 +11,7 @@ import net.minecraft.entity.EnumCreatureAttribute
 
 class EnumCreatureAttributeImpl(val wrapped: EnumCreatureAttribute) : IEnumCreatureAttribute {
 
-    override fun equals(other: Any?): Boolean {
-        return other is EnumCreatureAttributeImpl && other.wrapped == this.wrapped
-    }
+    override fun equals(other: Any?): Boolean = other is EnumCreatureAttributeImpl && other.wrapped == wrapped
 }
 
  fun IEnumCreatureAttribute.unwrap(): EnumCreatureAttribute = (this as EnumCreatureAttributeImpl).wrapped

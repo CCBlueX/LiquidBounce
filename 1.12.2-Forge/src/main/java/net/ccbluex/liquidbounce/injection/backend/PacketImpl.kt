@@ -15,39 +15,54 @@ import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.client.*
 import net.minecraft.network.play.server.*
 
-open class PacketImpl<T : Packet<*>>(val wrapped: T) : IPacket {
-    override fun asSPacketAnimation(): ISPacketAnimation = SPacketAnimationImpl(wrapped as SPacketAnimation)
+open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
+{
+	// Server-sided
+	override fun asSPacketAnimation(): ISPacketAnimation = SPacketAnimationImpl(wrapped as SPacketAnimation)
 
-    override fun asSPacketEntity(): ISPacketEntity = SPacketEntityImpl(wrapped as SPacketEntity)
+	override fun asSPacketEntity(): ISPacketEntity = SPacketEntityImpl(wrapped as SPacketEntity)
 
-    override fun asCPacketPlayer(): ICPacketPlayer = CPacketPlayerImpl(wrapped as CPacketPlayer)
+	override fun asSPacketEntityVelocity(): ISPacketEntityVelocity = SPacketEntityVelocityImpl(wrapped as SPacketEntityVelocity)
 
-    override fun asCPacketUseEntity(): ICPacketUseEntity = CPacketUseEntityImpl(wrapped as CPacketUseEntity)
+	override fun asSPacketCloseWindow(): ISPacketCloseWindow = SPacketCloseWindowImpl(wrapped as SPacketCloseWindow)
 
-    override fun asSPacketEntityVelocity(): ISPacketEntityVelocity = SPacketEntityVelocityImpl(wrapped as SPacketEntityVelocity)
+	override fun asSPacketTabComplete(): ISPacketTabComplete = SPacketTabCompleteImpl(wrapped as SPacketTabComplete)
 
-    override fun asCPacketChatMessage(): ICPacketChatMessage = CPacketChatMessageImpl(wrapped as CPacketChatMessage)
+	override fun asSPacketPosLook(): ISPacketPosLook = SPacketPosLookImpl(wrapped as SPacketPlayerPosLook)
 
-    override fun asSPacketCloseWindow(): ISPacketCloseWindow = SPacketCloseWindowImpl(wrapped as SPacketCloseWindow)
+	override fun asSPacketResourcePackSend(): ISPacketResourcePackSend = SPacketResourcePackSendImpl(wrapped as SPacketResourcePackSend)
 
-    override fun asSPacketTabComplete(): ISPacketTabComplete = SPacketTabCompleteImpl(wrapped as SPacketTabComplete)
+	override fun asSPacketWindowItems(): ISPacketWindowItems = SPacketWindowItemsImpl(wrapped as SPacketWindowItems)
 
-    override fun asSPacketPosLook(): ISPacketPosLook = SPacketPosLookImpl(wrapped as SPacketPlayerPosLook)
+	override fun asSPacketChat(): ISPacketChat = SPacketChatImpl(wrapped as SPacketChat)
 
-    override fun asSPacketResourcePackSend(): ISPacketResourcePackSend = SPacketResourcePackSendImpl(wrapped as SPacketResourcePackSend)
+	override fun asSPacketCustomPayload(): ISPacketCustomPayload = SPacketCustomPayloadImpl(wrapped as SPacketCustomPayload)
 
-    override fun asCPacketHeldItemChange(): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(wrapped as CPacketHeldItemChange)
+	override fun asSPacketSpawnPlayer(): ISPacketPlayerSpawn = SPacketPlayerSpawnImpl(wrapped as SPacketSpawnPlayer)
 
-    override fun asSPacketWindowItems(): ISPacketWindowItems = SPacketWindowItemsImpl(wrapped as SPacketWindowItems)
+	override fun asSPacketEntityTeleport(): ISPacketEntityTeleport = SPacketEntityTeleportImpl(wrapped as SPacketEntityTeleport)
 
-    override fun asCPacketCustomPayload(): ICPacketCustomPayload = CPacketCustomPayloadImpl(wrapped as CPacketCustomPayload)
+	override fun asSPacketTitle(): ISPacketTitle = SPacketTitleImpl(wrapped as SPacketTitle)
 
-    override fun asCPacketHandshake(): ICPacketHandshake = CPacketHandshakeImpl(wrapped as C00Handshake)
+	// Client-sided
+	override fun asCPacketPlayer(): ICPacketPlayer = CPacketPlayerImpl(wrapped as CPacketPlayer)
 
-    override fun equals(other: Any?): Boolean {
-        return other is PacketImpl<*> && other.wrapped == this.wrapped
-    }
+	override fun asCPacketUseEntity(): ICPacketUseEntity = CPacketUseEntityImpl(wrapped as CPacketUseEntity)
+
+	override fun asCPacketChatMessage(): ICPacketChatMessage = CPacketChatMessageImpl(wrapped as CPacketChatMessage)
+
+	override fun asCPacketHeldItemChange(): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(wrapped as CPacketHeldItemChange)
+
+	override fun asCPacketCustomPayload(): ICPacketCustomPayload = CPacketCustomPayloadImpl(wrapped as CPacketCustomPayload)
+
+	override fun asCPacketHandshake(): ICPacketHandshake = CPacketHandshakeImpl(wrapped as C00Handshake)
+
+	override fun asCPacketPlayerDigging(): ICPacketPlayerDigging = CPacketPlayerDiggingImpl(wrapped as CPacketPlayerDigging)
+
+	override fun asCPacketPlayerBlockPlacement(): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(wrapped as net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock)
+
+	override fun equals(other: Any?): Boolean = other is PacketImpl<*> && other.wrapped == wrapped
 }
 
- fun IPacket.unwrap(): Packet<*> = (this as PacketImpl<*>).wrapped
- fun Packet<*>.wrap(): IPacket = PacketImpl(this)
+fun IPacket.unwrap(): Packet<*> = (this as PacketImpl<*>).wrapped
+fun Packet<*>.wrap(): IPacket = PacketImpl(this)

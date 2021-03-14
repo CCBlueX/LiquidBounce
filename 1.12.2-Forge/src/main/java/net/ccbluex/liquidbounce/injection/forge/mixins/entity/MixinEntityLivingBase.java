@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
-import java.util.Objects;
-
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.JumpEvent;
 import net.ccbluex.liquidbounce.event.StrafeEvent;
@@ -27,6 +25,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
+import net.minecraftforge.common.ForgeHooks;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -65,6 +64,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	{
 	}
 
+	@Override
 	@Shadow
 	protected abstract void updateFallState(double y, boolean onGroundIn, IBlockState state, BlockPos pos);
 
@@ -92,70 +92,70 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	@Overwrite
 	protected void jump()
 	{
-		final JumpEvent jumpEvent = new JumpEvent(this.getJumpUpwardsMotion());
+		final JumpEvent jumpEvent = new JumpEvent(getJumpUpwardsMotion());
 		LiquidBounce.eventManager.callEvent(jumpEvent);
 		if (jumpEvent.isCancelled())
 			return;
 
-		this.motionY = jumpEvent.getMotion();
+		motionY = jumpEvent.getMotion();
 
-		if (this.isPotionActive(MobEffects.JUMP_BOOST))
-			this.motionY += (float) (this.getActivePotionEffect(MobEffects.JUMP_BOOST).getAmplifier() + 1) * 0.1F;
+		if (isPotionActive(MobEffects.JUMP_BOOST))
+			motionY += (float) (getActivePotionEffect(MobEffects.JUMP_BOOST).getAmplifier() + 1) * 0.1F;
 
-		if (this.isSprinting())
+		if (isSprinting())
 		{
-			float f = this.rotationYaw * 0.017453292F;
-			this.motionX -= MathHelper.sin(f) * 0.2F;
-			this.motionZ += MathHelper.cos(f) * 0.2F;
+			final float f = rotationYaw * 0.017453292F;
+			motionX -= MathHelper.sin(f) * 0.2F;
+			motionZ += MathHelper.cos(f) * 0.2F;
 		}
 
-		this.isAirBorne = true;
-		net.minecraftforge.common.ForgeHooks.onLivingJump((EntityLivingBase) (Object) this);
+		isAirBorne = true;
+		ForgeHooks.onLivingJump((EntityLivingBase) (Object) this);
 	}
 
 	@Inject(method = "onLivingUpdate", at = @At("HEAD"))
-	private void headLiving(CallbackInfo callbackInfo)
+	private void headLiving(final CallbackInfo callbackInfo)
 	{
-		if ((LiquidBounce.moduleManager.get(NoJumpDelay.class)).getState())
+		if (LiquidBounce.moduleManager.get(NoJumpDelay.class).getState())
 			jumpTicks = 0;
 	}
 
 	@Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;isJumping:Z", ordinal = 1))
-	private void onJumpSection(CallbackInfo callbackInfo)
+	private void onJumpSection(final CallbackInfo callbackInfo)
 	{
-		if ((LiquidBounce.moduleManager.get(AirJump.class)).getState() && isJumping && this.jumpTicks == 0)
+		if (LiquidBounce.moduleManager.get(AirJump.class).getState() && isJumping && jumpTicks == 0)
 		{
-			this.jump();
-			this.jumpTicks = 10;
+			jump();
+			jumpTicks = 10;
 		}
 
 		final LiquidWalk liquidWalk = (LiquidWalk) LiquidBounce.moduleManager.get(LiquidWalk.class);
 
-		if ((liquidWalk).getState() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getModeValue().get().equalsIgnoreCase("Swim"))
+		if (liquidWalk.getState() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getModeValue().get().equalsIgnoreCase("Swim"))
 		{
-			this.handleJumpWater();
+			handleJumpWater();
 		}
 	}
 
 	@Inject(method = "getLook", at = @At("HEAD"), cancellable = true)
-	private void getLook(CallbackInfoReturnable<Vec3d> callbackInfoReturnable)
+	private void getLook(final CallbackInfoReturnable<Vec3d> callbackInfoReturnable)
 	{
 		// noinspection ConstantConditions
-		if (((EntityLivingBase) (Object) this) instanceof EntityPlayerSP)
-			callbackInfoReturnable.setReturnValue(getVectorForRotation(this.rotationPitch, this.rotationYaw));
+		if ((EntityLivingBase) (Object) this instanceof EntityPlayerSP)
+			callbackInfoReturnable.setReturnValue(getVectorForRotation(rotationPitch, rotationYaw));
 	}
 
 	@Inject(method = "isPotionActive(Lnet/minecraft/potion/Potion;)Z", at = @At("HEAD"), cancellable = true)
-	private void isPotionActive(Potion p_isPotionActive_1_, final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	private void isPotionActive(final Potion p_isPotionActive_1_, final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
 		final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.get(AntiBlind.class);
 
-		if ((p_isPotionActive_1_ == MobEffects.NAUSEA || p_isPotionActive_1_ == MobEffects.BLINDNESS) && (antiBlind).getState() && antiBlind.getConfusionEffect().get())
+		if ((p_isPotionActive_1_ == MobEffects.NAUSEA || p_isPotionActive_1_ == MobEffects.BLINDNESS) && antiBlind.getState() && antiBlind.getConfusionEffect().get())
 			callbackInfoReturnable.setReturnValue(false);
 	}
 
 	@Inject(method = "moveRelative", at = @At("HEAD"), cancellable = true)
-	private void handleRotations(float strafe, float up, float forward, float friction, final CallbackInfo callbackInfo)
+	private void handleRotations(final float strafe, final float up, final float forward, final float friction, final CallbackInfo callbackInfo)
 	{
 		// noinspection ConstantConditions
 		if ((Object) this != Minecraft.getMinecraft().player)

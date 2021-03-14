@@ -6,7 +6,7 @@ interface ISPacketEntityTeleport : IPacket
 {
 	val entityId: Int
 
-	val x: Int
-	val y: Int
-	val z: Int
+	val x: Double
+	val y: Double
+	val z: Double
 }

@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
 import net.ccbluex.liquidbounce.api.minecraft.tileentity.ITileEntity
+import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing
 import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
@@ -33,79 +34,100 @@ import net.minecraft.init.Items
 import net.minecraft.item.Item
 import net.minecraft.potion.Potion
 import net.minecraft.scoreboard.ScorePlayerTeam
+import net.minecraft.util.EnumFacing
 import net.minecraft.util.ResourceLocation
+import net.minecraft.util.math.MathHelper
 import net.minecraft.util.text.ITextComponent
 import java.lang.reflect.Field
 
-object ExtractedFunctionsImpl : IExtractedFunctions {
-    private var fastRenderField: Field? = null
+object ExtractedFunctionsImpl : IExtractedFunctions
+{
+	private var fastRenderField: Field? = null
 
-    init {
-        try {
-            val declaredField = GameSettings::class.java.getDeclaredField("ofFastRender")
+	init
+	{
+		try
+		{
+			val declaredField = GameSettings::class.java.getDeclaredField("ofFastRender")
 
-            fastRenderField = declaredField
+			fastRenderField = declaredField
 
-            if (!declaredField.isAccessible)
-                declaredField.isAccessible = true
-        } catch (ignored: NoSuchFieldException) {
-        }
-    }
+			if (!declaredField.isAccessible) declaredField.isAccessible = true
+		}
+		catch (ignored: NoSuchFieldException)
+		{
+		}
+	}
 
-    override fun getBlockById(id: Int): IBlock? = Block.getBlockById(id)?.let(::BlockImpl)
+	override fun getBlockById(id: Int): IBlock? = Block.getBlockById(id)?.let(::BlockImpl)
 
-    override fun getIdFromBlock(block: IBlock): Int = Block.getIdFromBlock(block.unwrap())
+	override fun getIdFromBlock(block: IBlock): Int = Block.getIdFromBlock(block.unwrap())
 
-    override fun getModifierForCreature(heldItem: IItemStack?, creatureAttribute: IEnumCreatureAttribute): Float = EnchantmentHelper.getModifierForCreature(heldItem?.unwrap(), creatureAttribute.unwrap())
+	override fun getModifierForCreature(heldItem: IItemStack?, creatureAttribute: IEnumCreatureAttribute): Float = EnchantmentHelper.getModifierForCreature(heldItem?.unwrap(), creatureAttribute.unwrap())
 
-    override fun getObjectFromItemRegistry(res: IResourceLocation): IItem? = Item.REGISTRY.getObject(res.unwrap())?.wrap()
+	override fun getObjectFromItemRegistry(res: IResourceLocation): IItem? = Item.REGISTRY.getObject(res.unwrap())?.wrap()
 
-    override fun renderTileEntity(tileEntity: ITileEntity, partialTicks: Float, destroyStage: Int) = TileEntityRendererDispatcher.instance.render(tileEntity.unwrap(), partialTicks, destroyStage)
+	override fun renderTileEntity(tileEntity: ITileEntity, partialTicks: Float, destroyStage: Int) = TileEntityRendererDispatcher.instance.render(tileEntity.unwrap(), partialTicks, destroyStage)
 
-    override fun getBlockFromName(name: String): IBlock? = Block.getBlockFromName(name)?.wrap()
+	override fun getBlockFromName(name: String): IBlock? = Block.getBlockFromName(name)?.wrap()
 
-    override fun getItemByName(name: String): IItem? = (Items::class.java.getField(name).get(null) as Item).wrap()
+	override fun getItemByName(name: String): IItem? = (Items::class.java.getField(name).get(null) as Item).wrap()
 
-    override fun getEnchantmentByLocation(location: String): IEnchantment? = Enchantment.getEnchantmentByLocation(location)?.wrap()
+	override fun getEnchantmentByLocation(location: String): IEnchantment? = Enchantment.getEnchantmentByLocation(location)?.wrap()
 
-    override fun getEnchantmentById(enchantID: Int): IEnchantment? = Enchantment.getEnchantmentByID(enchantID)?.wrap()
+	override fun getEnchantmentById(enchantID: Int): IEnchantment? = Enchantment.getEnchantmentByID(enchantID)?.wrap()
 
-    override fun getEnchantments(): Collection<IResourceLocation> = WrappedCollection(Enchantment.REGISTRY.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
+	override fun getEnchantments(): Collection<IResourceLocation> = WrappedCollection(Enchantment.REGISTRY.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
 
-    override fun getItemRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Item.REGISTRY.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
+	override fun getItemRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Item.REGISTRY.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
 
-    override fun getBlockRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Block.REGISTRY.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
+	override fun getBlockRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Block.REGISTRY.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
 
-    override fun disableStandardItemLighting() = RenderHelper.disableStandardItemLighting()
+	override fun disableStandardItemLighting() = RenderHelper.disableStandardItemLighting()
 
-    override fun formatI18n(key: String, vararg values: String): String = I18n.format(key, values)
+	override fun formatI18n(key: String, vararg values: String): String = I18n.format(key, values)
 
-    override fun sessionServiceJoinServer(profile: GameProfile, token: String, sessionHash: String) = Minecraft.getMinecraft().sessionService.joinServer(profile, token, sessionHash)
+	override fun sessionServiceJoinServer(profile: GameProfile, token: String, sessionHash: String) = Minecraft.getMinecraft().sessionService.joinServer(profile, token, sessionHash)
 
-    override fun getPotionById(potionID: Int): IPotion = Potion.getPotionById(potionID)!!.wrap()
+	override fun getPotionById(potionID: Int): IPotion = Potion.getPotionById(potionID)!!.wrap()
 
-    override fun enableStandardItemLighting() = RenderHelper.enableStandardItemLighting()
+	override fun enableStandardItemLighting() = RenderHelper.enableStandardItemLighting()
 
-    override fun scoreboardFormatPlayerName(scorePlayerTeam: ITeam?, playerName: String): String = ScorePlayerTeam.formatPlayerName(scorePlayerTeam?.unwrap(), playerName)
+	override fun scoreboardFormatPlayerName(scorePlayerTeam: ITeam?, playerName: String): String = ScorePlayerTeam.formatPlayerName(scorePlayerTeam?.unwrap(), playerName)
 
-    override fun disableFastRender() {
-        try {
-            val fastRenderer = fastRenderField
+	override fun disableFastRender()
+	{
+		try
+		{
+			val fastRenderer = fastRenderField
 
-            if (fastRenderer != null) {
-                if (!fastRenderer.isAccessible)
-                    fastRenderer.isAccessible = true
+			if (fastRenderer != null)
+			{
+				if (!fastRenderer.isAccessible) fastRenderer.isAccessible = true
 
-                fastRenderer.setBoolean(Minecraft.getMinecraft().gameSettings, false)
-            }
-        } catch (ignored: IllegalAccessException) {
-        }
-    }
+				fastRenderer.setBoolean(Minecraft.getMinecraft().gameSettings, false)
+			}
+		}
+		catch (ignored: IllegalAccessException)
+		{
+		}
+	}
 
-    override fun jsonToComponent(toString: String): IIChatComponent = ITextComponent.Serializer.jsonToComponent(toString)!!.wrap()
-    override fun setActiveTextureLightMapTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
+	override fun jsonToComponent(toString: String): IIChatComponent = ITextComponent.Serializer.jsonToComponent(toString)!!.wrap()
+	override fun setActiveTextureLightMapTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
 
-    override fun setActiveTextureDefaultTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
+	override fun setActiveTextureDefaultTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
 
+	override fun getHorizontalFacing(yaw: Float): IEnumFacing = EnumFacing.getHorizontal(MathHelper.floor((yaw * 4.0 / 360.0) + 0.5) and 3).wrap()
+	override fun getLightMapTexUnit(): Int = OpenGlHelper.lightmapTexUnit
+	override fun setLightmapTextureCoords(target: Int, j: Float, k: Float) = OpenGlHelper.setLightmapTextureCoords(target, j, k)
 
+	override fun cos(radians: Float): Float = MathHelper.cos(radians)
+	override fun sin(radians: Float): Float = MathHelper.sin(radians)
+
+	override fun getEnchantments(item: IItemStack): Map<Int, Int> = EnchantmentHelper.getEnchantments(item.unwrap()).mapKeys { (ench, _) -> Enchantment.getEnchantmentID(ench) }
+	override fun getIdFromItem(item: IItem): Int = Item.getIdFromItem(item.unwrap())
+	override fun getEnchantmentLevel(enchId: Int, stack: IItemStack): Int = EnchantmentHelper.getEnchantmentLevel(Enchantment.getEnchantmentByID(enchId), stack.unwrap())
+	override fun translateToLocal(key: String): String = net.minecraft.util.text.translation.I18n.translateToLocal(key)
+	override fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean = Block.isEqualTo(block1?.unwrap(), block2?.unwrap())
 }

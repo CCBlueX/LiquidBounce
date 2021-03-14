@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketResourcePackSend
 import net.minecraft.network.play.server.SPacketResourcePackSend
 
-class SPacketResourcePackSendImpl<T : SPacketResourcePackSend>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketResourcePackSend {
+class SPacketResourcePackSendImpl<out T : SPacketResourcePackSend>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketResourcePackSend {
     override val url: String
         get() = wrapped.url
     override val hash: String

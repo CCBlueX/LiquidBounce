@@ -15,8 +15,8 @@ public abstract class MixinGuiContainer implements IMixinGuiContainer
 	protected abstract void handleMouseClick(Slot p_handleMouseClick_1_, int p_handleMouseClick_2_, int p_handleMouseClick_3_, ClickType p_handleMouseClick_4_);
 
 	@Override
-	public void publicHandleMouseClick(Slot slot, int slotNumber, int clickedButton, ClickType clickType)
+	public void publicHandleMouseClick(final Slot slot, final int slotNumber, final int clickedButton, final ClickType clickType)
 	{
-		this.handleMouseClick(slot, slotNumber, clickedButton, clickType);
+		handleMouseClick(slot, slotNumber, clickedButton, clickType);
 	}
 }

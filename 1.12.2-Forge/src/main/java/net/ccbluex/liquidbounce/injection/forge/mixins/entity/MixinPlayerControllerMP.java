@@ -31,20 +31,20 @@ public class MixinPlayerControllerMP
 {
 
 	@Inject(method = "attackEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;syncCurrentPlayItem()V"))
-	private void attackEntity(EntityPlayer entityPlayer, Entity targetEntity, CallbackInfo callbackInfo)
+	private void attackEntity(final EntityPlayer entityPlayer, final Entity targetEntity, final CallbackInfo callbackInfo)
 	{
 		LiquidBounce.eventManager.callEvent(new AttackEvent(EntityImplKt.wrap(targetEntity)));
 	}
 
 	@Inject(method = "getIsHittingBlock", at = @At("HEAD"), cancellable = true)
-	private void getIsHittingBlock(CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	private void getIsHittingBlock(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
 		if (LiquidBounce.moduleManager.get(AbortBreaking.class).getState())
 			callbackInfoReturnable.setReturnValue(false);
 	}
 
 	@Inject(method = "windowClick", at = @At("HEAD"), cancellable = true)
-	private void windowClick(int windowId, int slotId, int mouseButton, ClickType type, EntityPlayer player, CallbackInfoReturnable<ItemStack> callbackInfo)
+	private void windowClick(final int windowId, final int slotId, final int mouseButton, final ClickType type, final EntityPlayer player, final CallbackInfoReturnable<ItemStack> callbackInfo)
 	{
 		final ClickWindowEvent event = new ClickWindowEvent(windowId, slotId, mouseButton, BackendExtentionsKt.toInt(type));
 		LiquidBounce.eventManager.callEvent(event);

@@ -32,11 +32,11 @@ public class MixinC00Handshake
 	 * @author CCBlueX
 	 */
 	@Overwrite
-	public void writePacketData(PacketBuffer buf)
+	public void writePacketData(final PacketBuffer buf)
 	{
-		buf.writeVarInt(this.protocolVersion);
-		buf.writeString(this.ip + "\0FML\0");
-		buf.writeShort(this.port);
-		buf.writeVarInt(this.requestedState.getId());
+		buf.writeVarInt(protocolVersion);
+		buf.writeString(ip + "\0FML\0");
+		buf.writeShort(port);
+		buf.writeVarInt(requestedState.getId());
 	}
 }

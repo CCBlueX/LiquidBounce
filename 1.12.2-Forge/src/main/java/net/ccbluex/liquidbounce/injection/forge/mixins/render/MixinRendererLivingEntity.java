@@ -42,7 +42,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	protected ModelBase mainModel;
 
 	@Inject(method = "doRender", at = @At("HEAD"))
-	private <T extends EntityLivingBase> void injectChamsPre(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo)
+	private <T extends EntityLivingBase> void injectChamsPre(final T entity, final double x, final double y, final double z, final float entityYaw, final float partialTicks, final CallbackInfo callbackInfo)
 	{
 		final Chams chams = (Chams) LiquidBounce.moduleManager.get(Chams.class);
 
@@ -54,7 +54,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	}
 
 	@Inject(method = "doRender", at = @At("RETURN"))
-	private <T extends EntityLivingBase> void injectChamsPost(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo)
+	private <T extends EntityLivingBase> void injectChamsPost(final T entity, final double x, final double y, final double z, final float entityYaw, final float partialTicks, final CallbackInfo callbackInfo)
 	{
 		final Chams chams = (Chams) LiquidBounce.moduleManager.get(Chams.class);
 
@@ -66,9 +66,9 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	}
 
 	@Inject(method = "canRenderName", at = @At("HEAD"), cancellable = true)
-	private <T extends EntityLivingBase> void canRenderName(T entity, CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	private <T extends EntityLivingBase> void canRenderName(final T entity, final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
-		if (!ESP.renderNameTags || (LiquidBounce.moduleManager.get(NameTags.class).getState() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false)))
+		if (!ESP.renderNameTags || LiquidBounce.moduleManager.get(NameTags.class).getState() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
 			callbackInfoReturnable.setReturnValue(false);
 	}
 
@@ -76,15 +76,15 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	 * @author CCBlueX
 	 */
 	@Overwrite
-	protected <T extends EntityLivingBase> void renderModel(T entitylivingbaseIn, float p_77036_2_, float p_77036_3_, float p_77036_4_, float p_77036_5_, float p_77036_6_, float scaleFactor)
+	protected <T extends EntityLivingBase> void renderModel(final T entitylivingbaseIn, final float p_77036_2_, final float p_77036_3_, final float p_77036_4_, final float p_77036_5_, final float p_77036_6_, final float scaleFactor)
 	{
-		boolean visible = !entitylivingbaseIn.isInvisible();
+		final boolean visible = !entitylivingbaseIn.isInvisible();
 		final TrueSight trueSight = (TrueSight) LiquidBounce.moduleManager.get(TrueSight.class);
-		boolean semiVisible = !visible && (!entitylivingbaseIn.isInvisibleToPlayer(Minecraft.getMinecraft().player) || (trueSight.getState() && trueSight.getEntitiesValue().get()));
+		final boolean semiVisible = !visible && (!entitylivingbaseIn.isInvisibleToPlayer(Minecraft.getMinecraft().player) || trueSight.getState() && trueSight.getEntitiesValue().get());
 
 		if (visible || semiVisible)
 		{
-			if (!this.bindEntityTexture(entitylivingbaseIn))
+			if (!bindEntityTexture(entitylivingbaseIn))
 				return;
 
 			if (semiVisible)
@@ -100,11 +100,11 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 			final ESP esp = (ESP) LiquidBounce.moduleManager.get(ESP.class);
 			if (esp.getState() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entitylivingbaseIn), false))
 			{
-				Minecraft mc = Minecraft.getMinecraft();
-				boolean fancyGraphics = mc.gameSettings.fancyGraphics;
+				final Minecraft mc = Minecraft.getMinecraft();
+				final boolean fancyGraphics = mc.gameSettings.fancyGraphics;
 				mc.gameSettings.fancyGraphics = false;
 
-				float gamma = mc.gameSettings.gammaSetting;
+				final float gamma = mc.gameSettings.gammaSetting;
 				mc.gameSettings.gammaSetting = 100000F;
 
 				switch (esp.modeValue.get().toLowerCase())
@@ -121,7 +121,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 						RenderUtils.glColor(esp.getColor(EntityLivingBaseImplKt.wrap(entitylivingbaseIn)));
 						GL11.glLineWidth(esp.wireframeWidth.get());
-						this.mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
+						mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
 						GL11.glPopAttrib();
 						GL11.glPopMatrix();
 						break;
@@ -132,16 +132,16 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 						final Color color = esp.getColor(EntityLivingBaseImplKt.wrap(entitylivingbaseIn));
 						RenderUtils.glColor(color);
 						OutlineUtils.renderOne(esp.outlineWidth.get());
-						this.mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
+						mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
 						RenderUtils.glColor(color);
 						OutlineUtils.renderTwo();
-						this.mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
+						mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
 						RenderUtils.glColor(color);
 						OutlineUtils.renderThree();
-						this.mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
+						mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
 						RenderUtils.glColor(color);
 						OutlineUtils.renderFour(color);
-						this.mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
+						mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
 						RenderUtils.glColor(color);
 						OutlineUtils.renderFive();
 						RenderUtils.glColor(Color.WHITE);
@@ -150,7 +150,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 				mc.gameSettings.gammaSetting = gamma;
 			}
 
-			this.mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
+			mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
 
 			if (semiVisible)
 			{

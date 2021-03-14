@@ -37,10 +37,10 @@ object BlockUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun isReplaceable(bs: IIBlockState?): Boolean
+	fun isReplaceable(theWorld: IWorldClient, bs: IIBlockState?): Boolean
 	{
 		bs ?: return true
-		return (bs.block.getMaterial(bs)?.isReplaceable ?: return false) && !(classProvider.isBlockSnow(bs.block) && bs.block.getBlockBoundsMaxY() > .125)
+		return (bs.block.getMaterial(bs)?.isReplaceable ?: return false) && !(classProvider.isBlockSnow(bs.block) && getBlockCollisionBox(theWorld, bs)!!.maxY > .125)
 	}
 
 	/**
@@ -122,4 +122,17 @@ object BlockUtils : MinecraftInstance()
 			}.filter { collide(it.second) }.any intersectCheck@{ (blockPos, block) -> box.intersectsWith(getState(blockPos)?.let { block.getCollisionBoundingBox(theWorld, blockPos, it) } ?: return@intersectCheck false) }
 		}
 	}
+
+	@JvmStatic
+	fun getBlockCollisionBox(theWorld: IWorldClient, blockPos: WBlockPos): IAxisAlignedBB?
+	{
+		val state = theWorld.getBlockState(blockPos)
+		return state.block.getCollisionBoundingBox(theWorld, blockPos, state)
+	}
+
+	@JvmStatic
+	fun getBlockCollisionBox(theWorld: IWorldClient, state: IIBlockState): IAxisAlignedBB? = state.block.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, state)
+
+	@JvmStatic
+	fun getDefaultBlockCollisionBox(theWorld: IWorldClient, block: IBlock): IAxisAlignedBB? = block.defaultState?.let { block.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, it) }
 }

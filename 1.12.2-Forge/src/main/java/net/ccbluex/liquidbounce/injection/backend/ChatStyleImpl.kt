@@ -13,28 +13,29 @@ import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
 import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.util.text.Style
 
-class ChatStyleImpl(val wrapped: Style) : IChatStyle {
-    override var chatClickEvent: IClickEvent?
-        get() = wrapped.clickEvent?.wrap()
-        set(value) {
-            wrapped.clickEvent = value?.unwrap()
-        }
-    override var underlined: Boolean
-        get() = wrapped.underlined
-        set(value) {
-            wrapped.underlined = value
-        }
-    override var color: WEnumChatFormatting?
-        get() = wrapped.color?.wrap()
-        set(value) {
-            wrapped.color = value?.unwrap()
-        }
+class ChatStyleImpl(val wrapped: Style) : IChatStyle
+{
+	override var chatClickEvent: IClickEvent?
+		get() = wrapped.clickEvent?.wrap()
+		set(value)
+		{
+			wrapped.clickEvent = value?.unwrap()
+		}
+	override var underlined: Boolean
+		get() = wrapped.underlined
+		set(value)
+		{
+			wrapped.underlined = value
+		}
+	override var color: WEnumChatFormatting?
+		get() = wrapped.color?.wrap()
+		set(value)
+		{
+			wrapped.color = value?.unwrap()
+		}
 
-    override fun equals(other: Any?): Boolean {
-        return other is ChatStyleImpl && other.wrapped == this.wrapped
-    }
-
+	override fun equals(other: Any?): Boolean = other is ChatStyleImpl && other.wrapped == wrapped
 }
 
- fun IChatStyle.unwrap(): Style = (this as ChatStyleImpl).wrapped
- fun Style.wrap(): IChatStyle = ChatStyleImpl(this)
+fun IChatStyle.unwrap(): Style = (this as ChatStyleImpl).wrapped
+fun Style.wrap(): IChatStyle = ChatStyleImpl(this)

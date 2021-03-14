@@ -37,9 +37,11 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase
 	@Shadow
 	public abstract GameProfile getGameProfile();
 
+	@Override
 	@Shadow
 	protected abstract boolean canTriggerWalking();
 
+	@Override
 	@Shadow
 	protected abstract SoundEvent getSwimSound();
 

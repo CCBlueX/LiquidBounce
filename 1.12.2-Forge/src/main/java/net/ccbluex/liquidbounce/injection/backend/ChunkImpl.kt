@@ -17,24 +17,21 @@ import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
 import net.minecraft.entity.Entity
 import net.minecraft.world.chunk.Chunk
 
-class ChunkImpl(val wrapped: Chunk) : IChunk {
-    override val x: Int
-        get() = wrapped.x
-    override val z: Int
-        get() = wrapped.z
+class ChunkImpl(val wrapped: Chunk) : IChunk
+{
+	override val x: Int
+		get() = wrapped.x
+	override val z: Int
+		get() = wrapped.z
 
-    override fun getEntitiesWithinAABBForEntity(thePlayer: IEntityPlayerSP, arrowBox: IAxisAlignedBB, collidedEntities: MutableList<IEntity>, nothing: Nothing?) {
-        return wrapped.getEntitiesWithinAABBForEntity(thePlayer.unwrap(), arrowBox.unwrap(), WrappedMutableList(collidedEntities, Entity::wrap, IEntity::unwrap), null)
-    }
+	override fun getEntitiesWithinAABBForEntity(thePlayer: IEntityPlayerSP, arrowBox: IAxisAlignedBB, collidedEntities: MutableList<IEntity>, nothing: Nothing?) = wrapped.getEntitiesWithinAABBForEntity(thePlayer.unwrap(), arrowBox.unwrap(), WrappedMutableList(collidedEntities, Entity::wrap, IEntity::unwrap), null)
 
-    override fun getHeightValue(x: Int, z: Int): Int = wrapped.getHeightValue(x, z)
+	override fun getHeightValue(x: Int, z: Int): Int = wrapped.getHeightValue(x, z)
 
-    override fun getBlockState(blockPos: WBlockPos): IIBlockState = wrapped.getBlockState(blockPos.unwrap()).wrap()
+	override fun getBlockState(blockPos: WBlockPos): IIBlockState = wrapped.getBlockState(blockPos.unwrap()).wrap()
 
-    override fun equals(other: Any?): Boolean {
-        return other is ChunkImpl && other.wrapped == this.wrapped
-    }
+	override fun equals(other: Any?): Boolean = other is ChunkImpl && other.wrapped == wrapped
 }
 
- fun IChunk.unwrap(): Chunk = (this as ChunkImpl).wrapped
- fun Chunk.wrap(): IChunk = ChunkImpl(this)
+fun IChunk.unwrap(): Chunk = (this as ChunkImpl).wrapped
+fun Chunk.wrap(): IChunk = ChunkImpl(this)

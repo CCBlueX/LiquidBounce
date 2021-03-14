@@ -20,9 +20,7 @@ class PlayerCapabilitiesImpl(val wrapped: PlayerCapabilities) : IPlayerCapabilit
     override val isCreativeMode: Boolean
         get() = wrapped.isCreativeMode
 
-    override fun equals(other: Any?): Boolean {
-        return other is PlayerCapabilitiesImpl && other.wrapped == this.wrapped
-    }
+    override fun equals(other: Any?): Boolean = other is PlayerCapabilitiesImpl && other.wrapped == wrapped
 }
 
  fun IPlayerCapabilities.unwrap(): PlayerCapabilities = (this as PlayerCapabilitiesImpl).wrapped

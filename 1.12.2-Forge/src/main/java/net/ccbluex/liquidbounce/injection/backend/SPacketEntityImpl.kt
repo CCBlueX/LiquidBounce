@@ -11,12 +11,13 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketEntity
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.minecraft.network.play.server.SPacketEntity
 
-class SPacketEntityImpl<T : SPacketEntity>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketEntity {
-    override val onGround: Boolean
-        get() = wrapped.onGround
+class SPacketEntityImpl<out T : SPacketEntity>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketEntity
+{
+	override val onGround: Boolean
+		get() = wrapped.onGround
 
-    override fun getEntity(world: IWorld): IEntity? = wrapped.getEntity(world.unwrap())?.wrap()
+	override fun getEntity(world: IWorld): IEntity? = wrapped.getEntity(world.unwrap()).wrap()
 }
 
- fun ISPacketEntity.unwrap(): SPacketEntity = (this as SPacketEntityImpl<*>).wrapped
- fun SPacketEntity.wrap(): ISPacketEntity = SPacketEntityImpl(this)
+fun ISPacketEntity.unwrap(): SPacketEntity = (this as SPacketEntityImpl<*>).wrapped
+fun SPacketEntity.wrap(): ISPacketEntity = SPacketEntityImpl(this)

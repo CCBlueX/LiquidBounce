@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketHeldItemChange
 import net.minecraft.network.play.client.CPacketHeldItemChange
 
-class CPacketHeldItemChangeImpl<T : CPacketHeldItemChange>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketHeldItemChange {
+class CPacketHeldItemChangeImpl<out T : CPacketHeldItemChange>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketHeldItemChange {
     override val slotId: Int
         get() = wrapped.slotId
 }

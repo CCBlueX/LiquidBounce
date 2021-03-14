@@ -473,9 +473,9 @@ object AntiBot : Module()
 
 			if (entity != null && provider.isEntityPlayer(entity))
 			{
-				val dX: Double = packetEntityTeleport.x * 0.03125
-				val dY: Double = packetEntityTeleport.y * 0.03125
-				val dZ: Double = packetEntityTeleport.z * 0.03125
+				val dX: Double = packetEntityTeleport.x
+				val dY: Double = packetEntityTeleport.y
+				val dZ: Double = packetEntityTeleport.z
 				if (entity.asEntityPlayer().getDistanceSq(dX, dY, dZ) <= teleportThresholdDistance.get() * teleportThresholdDistance.get()) teleportpacket_violation[entity.entityId] = teleportpacket_violation.getOrDefault(entity.entityId, 0) + 1
 				else if (teleportPacketCountDecremSysValue.get())
 				{

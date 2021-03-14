@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketCloseWindow
 import net.minecraft.network.play.client.CPacketCloseWindow
 
-class CPacketCloseWindowImpl<T : CPacketCloseWindow>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketCloseWindow
+class CPacketCloseWindowImpl<out T : CPacketCloseWindow>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketCloseWindow
 
  fun ICPacketCloseWindow.unwrap(): CPacketCloseWindow = (this as CPacketCloseWindowImpl<*>).wrapped
  fun CPacketCloseWindow.wrap(): ICPacketCloseWindow = CPacketCloseWindowImpl(this)
