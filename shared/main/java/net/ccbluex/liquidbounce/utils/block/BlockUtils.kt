@@ -124,13 +124,6 @@ object BlockUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun getBlockCollisionBox(theWorld: IWorldClient, blockPos: WBlockPos): IAxisAlignedBB?
-	{
-		val state = theWorld.getBlockState(blockPos)
-		return state.block.getCollisionBoundingBox(theWorld, blockPos, state)
-	}
-
-	@JvmStatic
 	fun getBlockCollisionBox(theWorld: IWorldClient, state: IIBlockState): IAxisAlignedBB? = state.block.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, state)
 
 	@JvmStatic

@@ -779,7 +779,7 @@ class Scaffold : Module()
 			if (autoBlockValue.get().equals("Off", true)) return
 
 			// Auto-Block
-			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let { BlockUtils.getBlockCollisionBox(theWorld, it)?.maxY } ?: 0.0) // Default boundingBoxYLimit it 0.0
+			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let(BlockUtils::getState)?.let { state -> BlockUtils.getBlockCollisionBox(theWorld, state)?.maxY } ?: 0.0) // Default boundingBoxYLimit it 0.0
 
 			// If there is no autoblock-able blocks in your inventory, we can't continue.
 			if (blockSlot == -1) return

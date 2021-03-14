@@ -1183,11 +1183,10 @@ class Fly : Module()
 	{
 		val provider = classProvider
 
-		val blockAbovePos = WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)
-		val blockAboveState = BlockUtils.getState(blockAbovePos)
+		val blockAboveState = BlockUtils.getState(WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ))
 		val blockAbove = blockAboveState?.block
 		val normalJumpY = 0.42 + MovementUtils.getEffectAmplifier(thePlayer, PotionType.JUMP) * 0.1f
-		val jumpY = if (provider.isBlockAir(blockAbove)) normalJumpY else min(BlockUtils.getBlockCollisionBox(theWorld, blockAbovePos)?.minY?.plus(0.2) ?: normalJumpY, normalJumpY)
+		val jumpY = if (provider.isBlockAir(blockAbove)) normalJumpY else min(blockAboveState?.let { BlockUtils.getBlockCollisionBox(theWorld, it)?.minY?.plus(0.2) } ?: normalJumpY, normalJumpY)
 
 		// Simulate Vanilla Player Jump
 		thePlayer.setPosition(thePlayer.posX, thePlayer.posY + jumpY, thePlayer.posZ)
