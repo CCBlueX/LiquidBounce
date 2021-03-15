@@ -127,5 +127,5 @@ object BlockUtils : MinecraftInstance()
 	fun getBlockCollisionBox(theWorld: IWorldClient, state: IIBlockState): IAxisAlignedBB? = state.block.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, state)
 
 	@JvmStatic
-	fun getDefaultBlockCollisionBox(theWorld: IWorldClient, block: IBlock): IAxisAlignedBB? = block.defaultState?.let { block.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, it) }
+	fun getBlockDefaultCollisionBox(theWorld: IWorldClient, block: IBlock): IAxisAlignedBB? = block.defaultState?.let { block.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, it) }
 }

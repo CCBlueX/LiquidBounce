@@ -112,7 +112,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 				box != null && box.maxY - box.minY <= boundingBoxYLimit
 			}.maxBy {
-				val bb = BlockUtils.getDefaultBlockCollisionBox(theWorld, container.getSlot(it).stack?.item!!.asItemBlock().block)
+				val bb = BlockUtils.getBlockDefaultCollisionBox(theWorld, container.getSlot(it).stack?.item!!.asItemBlock().block)
 				bb?.let { box -> box.maxY - box.minY } ?: 1.0
 			})?.let { return@findAutoBlockBlock it }
 
@@ -138,7 +138,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 					box != null && box.maxY - box.minY <= boundingBoxYLimit
 				}.maxBy {
-					val bb = BlockUtils.getDefaultBlockCollisionBox(theWorld, container.getSlot(it).stack?.item!!.asItemBlock().block)
+					val bb = BlockUtils.getBlockDefaultCollisionBox(theWorld, container.getSlot(it).stack?.item!!.asItemBlock().block)
 					bb?.let { box -> box.maxY - box.minY } ?: 1.0
 				})?.let { return@findAutoBlockBlock it }
 			}
