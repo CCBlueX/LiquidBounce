@@ -27,7 +27,6 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
-import net.minecraft.world.World
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -81,7 +80,7 @@ open class Module(name: String, // name parameter in configurable
         get() = net.ccbluex.liquidbounce.utils.mc
     protected val player: ClientPlayerEntity
         get() = mc.player!!
-    protected val world: World
+    protected val world: ClientWorld
         get() = mc.world!!
     protected val network: ClientPlayNetworkHandler
         get() = mc.networkHandler!!

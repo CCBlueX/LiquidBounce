@@ -47,7 +47,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     private val scaleValue by float("Scale", 2F, 1F..4F)
 
     val renderHandler = handler<EngineRenderEvent> { event ->
-        val filteredEntities = mc.world!!.entities.filter(ModuleNametags::shouldRenderNametag)
+        val filteredEntities = world.entities.filter(ModuleNametags::shouldRenderNametag)
 
         val fontRenderer = Fonts.bodyFont
 
@@ -55,8 +55,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
 
         // Two triangles per rect
         val renderTask = ColoredPrimitiveRenderTask(filteredEntities.size * 2, PrimitiveType.Triangles)
-        val aspectRatio =
-            net.ccbluex.liquidbounce.utils.mc.window.width.toFloat() / net.ccbluex.liquidbounce.utils.mc.window.height.toFloat()
+        val aspectRatio = mc.window.width.toFloat() / mc.window.height.toFloat()
 
         val borderRenderTask = if (this.borderValue) {
             ColoredPrimitiveRenderTask(filteredEntities.size * 4, PrimitiveType.Lines)
@@ -69,8 +68,6 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                 entity.displayName.asTruncatedString(100)?.stripMinecraftColorCodes() ?: continue
             else
                 entity.displayName.asTruncatedString(100) ?: continue
-
-            val player = mc.player ?: continue
 
             // Scale
             var distance = player.distanceTo(entity) * 0.25f
@@ -178,6 +175,6 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     /**
      * Should [ModuleNametags] render nametags above this [entity]?
      */
-    @JvmStatic
-    fun shouldRenderNametag(entity: Entity): Boolean = entity.shouldBeShown()
+    fun shouldRenderNametag(entity: Entity) = entity.shouldBeShown()
+
 }
