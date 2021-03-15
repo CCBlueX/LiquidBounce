@@ -14,21 +14,21 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.util.math.RayTraceResult
 
-class MovingObjectPositionImpl(val wrapped: RayTraceResult) : IMovingObjectPosition {
-    override val entityHit: IEntity?
-        get() = wrapped.entityHit?.wrap()
-    override val blockPos: WBlockPos?
-        get() = wrapped.blockPos?.wrap()
-    override val sideHit: IEnumFacing?
-        get() = wrapped.sideHit?.wrap()
-    override val hitVec: WVec3
-        get() = wrapped.hitVec.wrap()
-    override val typeOfHit: IMovingObjectPosition.WMovingObjectType
-        get() = wrapped.typeOfHit.wrap()
+class MovingObjectPositionImpl(val wrapped: RayTraceResult) : IMovingObjectPosition
+{
+	override val entityHit: IEntity?
+		get() = wrapped.entityHit?.wrap()
+	override val blockPos: WBlockPos?
+		get() = wrapped.blockPos.wrap()
+	override val sideHit: IEnumFacing?
+		get() = wrapped.sideHit?.wrap()
+	override val hitVec: WVec3
+		get() = wrapped.hitVec.wrap()
+	override val typeOfHit: IMovingObjectPosition.WMovingObjectType
+		get() = wrapped.typeOfHit.wrap()
 
-
-    override fun equals(other: Any?): Boolean = other is MovingObjectPositionImpl && other.wrapped == wrapped
+	override fun equals(other: Any?): Boolean = other is MovingObjectPositionImpl && other.wrapped == wrapped
 }
 
- fun IMovingObjectPosition.unwrap(): RayTraceResult = (this as MovingObjectPositionImpl).wrapped
- fun RayTraceResult.wrap(): IMovingObjectPosition = MovingObjectPositionImpl(this)
+fun IMovingObjectPosition.unwrap(): RayTraceResult = (this as MovingObjectPositionImpl).wrapped
+fun RayTraceResult.wrap(): IMovingObjectPosition = MovingObjectPositionImpl(this)

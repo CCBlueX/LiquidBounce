@@ -7,6 +7,7 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
 import net.ccbluex.liquidbounce.api.minecraft.entity.ai.attributes.IAttributeModifier
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
@@ -16,6 +17,7 @@ import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagCompound
 import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagList
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
+import net.minecraft.client.util.ITooltipFlag
 import net.minecraft.entity.ai.attributes.AttributeModifier
 import net.minecraft.init.Items
 import net.minecraft.inventory.EntityEquipmentSlot
@@ -34,6 +36,8 @@ class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 	override fun getAttributeModifier(key: String): Collection<IAttributeModifier> = WrappedCollection(wrapped.getAttributeModifiers(EntityEquipmentSlot.MAINHAND)[key], IAttributeModifier::unwrap, AttributeModifier::wrap)
 	override fun isSplash(): Boolean = wrapped.item == Items.SPLASH_POTION
 
+	override val isItemEnchanted: Boolean
+		get() = wrapped.isItemEnchanted
 	override val displayName: String
 		get() = wrapped.displayName
 
@@ -41,7 +45,7 @@ class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 		get() = wrapped.unlocalizedName
 	override val maxItemUseDuration: Int
 		get() = wrapped.maxItemUseDuration
-	override val enchantmentTagList: INBTTagList?
+	override val enchantmentTagList: INBTTagList
 		get() = wrapped.enchantmentTagList.wrap()
 	override var tagCompound: INBTTagCompound?
 		get() = wrapped.tagCompound?.wrap()
@@ -57,10 +61,14 @@ class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 		{
 			wrapped.itemDamage = value
 		}
-	override val item: IItem?
+	override val item: IItem
 		get() = wrapped.item.wrap()
 	override val itemDelay: Long
 		get() = (wrapped as IMixinItemStack).itemDelay
+	override val maxDamage: Int
+		get() = wrapped.maxDamage
+
+	override fun getTooltip(thePlayer: IEntityPlayer, advanced: Boolean): List<String> = wrapped.getTooltip(thePlayer.unwrap(), if (advanced) ITooltipFlag.TooltipFlags.ADVANCED else ITooltipFlag.TooltipFlags.NORMAL)
 }
 
 fun IItemStack.unwrap(): ItemStack = (this as ItemStackImpl).wrapped

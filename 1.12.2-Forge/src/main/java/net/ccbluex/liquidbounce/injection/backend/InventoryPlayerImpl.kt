@@ -25,11 +25,11 @@ class InventoryPlayerImpl(val wrapped: InventoryPlayer) : IInventoryPlayer
 			wrapped.currentItem = value
 		}
 
-	override fun getStackInSlot(slot: Int): IItemStack? = wrapped.getStackInSlot(slot).wrap()
+	override fun getStackInSlot(slot: Int): IItemStack = wrapped.getStackInSlot(slot).wrap()
 
-	override fun armorItemInSlot(slot: Int): IItemStack? = wrapped.armorItemInSlot(3 - slot).wrap()
+	override fun armorItemInSlot(slot: Int): IItemStack = wrapped.armorItemInSlot(3 - slot).wrap()
 
-	override fun getCurrentItemInHand(): IItemStack? = wrapped.getCurrentItem().wrap()
+	override fun getCurrentItemInHand(): IItemStack = wrapped.getCurrentItem().wrap()
 
 	override fun equals(other: Any?): Boolean = other is InventoryPlayerImpl && other.wrapped == wrapped
 }

@@ -28,84 +28,94 @@ import net.minecraft.world.GameType
 import net.minecraftforge.common.ForgeHooks
 import net.minecraftforge.event.ForgeEventFactory
 
-class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControllerMP {
-    override val isNotCreative: Boolean
-        get() = wrapped.isNotCreative
-    override val blockReachDistance: Float
-        get() = wrapped.blockReachDistance
-    override val currentGameType: IWorldSettings.WGameType
-        get() = wrapped.currentGameType.wrap()
-    override val isInCreativeMode: Boolean
-        get() = wrapped.isInCreativeMode
-    override var curBlockDamageMP: Float
-        get() = wrapped.curBlockDamageMP
-        set(value) {
-            wrapped.curBlockDamageMP = value
-        }
-    override var blockHitDelay: Int
-        get() = wrapped.blockHitDelay
-        set(value) {
-            wrapped.blockHitDelay = value
-        }
+class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControllerMP
+{
+	override val isNotCreative: Boolean
+		get() = wrapped.isNotCreative
+	override val blockReachDistance: Float
+		get() = wrapped.blockReachDistance
+	override val currentGameType: IWorldSettings.WGameType
+		get() = wrapped.currentGameType.wrap()
+	override val isInCreativeMode: Boolean
+		get() = wrapped.isInCreativeMode
+	override var curBlockDamageMP: Float
+		get() = wrapped.curBlockDamageMP
+		set(value)
+		{
+			wrapped.curBlockDamageMP = value
+		}
+	override var blockHitDelay: Int
+		get() = wrapped.blockHitDelay
+		set(value)
+		{
+			wrapped.blockHitDelay = value
+		}
 
-    override fun windowClick(windowId: Int, slot: Int, mouseButton: Int, mode: Int, player: IEntityPlayerSP) {
-        wrapped.windowClick(windowId, slot, mouseButton, mode.toClickType(), player.unwrap())
-    }
+	override fun windowClick(windowId: Int, slot: Int, mouseButton: Int, mode: Int, player: IEntityPlayerSP)
+	{
+		wrapped.windowClick(windowId, slot, mouseButton, mode.toClickType(), player.unwrap())
+	}
 
-    override fun updateController() = wrapped.updateController()
+	override fun updateController() = wrapped.updateController()
 
+	// This method is not present in 1.12.2 like it was in 1.8.9
+	override fun sendUseItem(wPlayer: IEntityPlayer, wWorld: IWorld, wItemStack: IItemStack): Boolean
+	{
+		val player = wPlayer.unwrap()
+		val world = wWorld.unwrap()
+		val itemStack = wItemStack.unwrap()
 
-    // This method is not present in 1.12.2 like it was in 1.8.9
-    override fun sendUseItem(wPlayer: IEntityPlayer, wWorld: IWorld, wItemStack: IItemStack): Boolean {
-        val player = wPlayer.unwrap()
-        val world = wWorld.unwrap()
-        val itemStack = wItemStack.unwrap()
+		if (wrapped.currentGameType == GameType.SPECTATOR)
+		{
+			return false
+		}
+		else
+		{
+			wrapped.syncCurrentPlayItem()
 
-        if (wrapped.currentGameType == GameType.SPECTATOR) {
-            return false
-        } else {
-            wrapped.syncCurrentPlayItem()
+			Minecraft.getMinecraft().connection!!.sendPacket(CPacketPlayerTryUseItem(EnumHand.MAIN_HAND))
 
-            Minecraft.getMinecraft().connection!!.sendPacket(CPacketPlayerTryUseItem(EnumHand.MAIN_HAND))
+			if (player.cooldownTracker.hasCooldown(itemStack.item))
+			{
+				return false
+			}
+			else
+			{
+				val cancelResult = ForgeHooks.onItemRightClick(player, EnumHand.MAIN_HAND)
 
-            if (player.cooldownTracker.hasCooldown(itemStack.item)) {
-                return false
-            } else {
-                val cancelResult = ForgeHooks.onItemRightClick(player, EnumHand.MAIN_HAND)
+				if (cancelResult != null) return cancelResult == EnumActionResult.SUCCESS
 
-                if (cancelResult != null)
-                    return cancelResult == EnumActionResult.SUCCESS
+				val i = itemStack.count
 
-                val i = itemStack.count
+				val result = itemStack.useItemRightClick(world, player, EnumHand.MAIN_HAND)
 
-                val result = itemStack.useItemRightClick(world, player, EnumHand.MAIN_HAND)
+				val resultStack = result.result
 
-                val resultStack = result.result
+				if (resultStack != itemStack || resultStack.count != i)
+				{
+					player.setHeldItem(EnumHand.MAIN_HAND, resultStack)
 
-                if (resultStack != itemStack || resultStack.count != i) {
-                    player.setHeldItem(EnumHand.MAIN_HAND, resultStack)
+					if (resultStack.isEmpty)
+					{
+						ForgeEventFactory.onPlayerDestroyItem(player, itemStack, EnumHand.MAIN_HAND)
+					}
+				}
 
-                    if (resultStack.isEmpty) {
-                        ForgeEventFactory.onPlayerDestroyItem(player, itemStack, EnumHand.MAIN_HAND)
-                    }
-                }
+				return result.type == EnumActionResult.SUCCESS
+			}
+		}
+	}
 
-                return result.type == EnumActionResult.SUCCESS
-            }
-        }
-    }
+	override fun onPlayerRightClick(playerSP: IEntityPlayerSP, wWorld: IWorldClient, wItemStack: IItemStack?, wPosition: WBlockPos, wSideOpposite: IEnumFacing, wHitVec: WVec3): Boolean = wrapped.processRightClickBlock(playerSP.unwrap(), wWorld.unwrap(), wPosition.unwrap(), wSideOpposite.unwrap(), wHitVec.unwrap(), EnumHand.MAIN_HAND) == EnumActionResult.SUCCESS
 
-    override fun onPlayerRightClick(playerSP: IEntityPlayerSP, wWorld: IWorldClient, wItemStack: IItemStack?, wPosition: WBlockPos, wSideOpposite: IEnumFacing, wHitVec: WVec3): Boolean = wrapped.processRightClickBlock(playerSP.unwrap(), wWorld.unwrap(), wPosition.unwrap(), wSideOpposite.unwrap(), wHitVec.unwrap(), EnumHand.MAIN_HAND) == EnumActionResult.SUCCESS
+	override fun onStoppedUsingItem(thePlayer: IEntityPlayerSP) = wrapped.onStoppedUsingItem(thePlayer.unwrap())
 
-    override fun onStoppedUsingItem(thePlayer: IEntityPlayerSP) = wrapped.onStoppedUsingItem(thePlayer.unwrap())
+	override fun clickBlock(blockPos: WBlockPos, enumFacing: IEnumFacing) = wrapped.clickBlock(blockPos.unwrap(), enumFacing.unwrap())
 
-    override fun clickBlock(blockPos: WBlockPos, enumFacing: IEnumFacing) = wrapped.clickBlock(blockPos.unwrap(), enumFacing.unwrap())
+	override fun onPlayerDestroyBlock(blockPos: WBlockPos, enumFacing: IEnumFacing): Boolean = wrapped.onPlayerDestroyBlock(blockPos.unwrap())
 
-    override fun onPlayerDestroyBlock(blockPos: WBlockPos, enumFacing: IEnumFacing): Boolean = wrapped.onPlayerDestroyBlock(blockPos.unwrap())
-
-
-    override fun equals(other: Any?): Boolean = other is PlayerControllerMPImpl && other.wrapped == wrapped
+	override fun equals(other: Any?): Boolean = other is PlayerControllerMPImpl && other.wrapped == wrapped
 }
 
- fun IPlayerControllerMP.unwrap(): PlayerControllerMP = (this as PlayerControllerMPImpl).wrapped
- fun PlayerControllerMP.wrap(): IPlayerControllerMP = PlayerControllerMPImpl(this)
+fun IPlayerControllerMP.unwrap(): PlayerControllerMP = (this as PlayerControllerMPImpl).wrapped
+fun PlayerControllerMP.wrap(): IPlayerControllerMP = PlayerControllerMPImpl(this)

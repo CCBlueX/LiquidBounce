@@ -202,6 +202,21 @@ fun ICPacketPlayerDigging.WAction.unwrap(): CPacketPlayerDigging.Action
 		ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS -> CPacketPlayerDigging.Action.DROP_ALL_ITEMS
 		ICPacketPlayerDigging.WAction.DROP_ITEM -> CPacketPlayerDigging.Action.DROP_ITEM
 		ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM -> CPacketPlayerDigging.Action.RELEASE_USE_ITEM
+		ICPacketPlayerDigging.WAction.SWAP_HELD_ITEMS -> CPacketPlayerDigging.Action.SWAP_HELD_ITEMS
+	}
+}
+
+fun CPacketPlayerDigging.Action.wrap(): ICPacketPlayerDigging.WAction
+{
+	return when (this)
+	{
+		CPacketPlayerDigging.Action.START_DESTROY_BLOCK -> ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK
+		CPacketPlayerDigging.Action.ABORT_DESTROY_BLOCK -> ICPacketPlayerDigging.WAction.ABORT_DESTROY_BLOCK
+		CPacketPlayerDigging.Action.STOP_DESTROY_BLOCK -> ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK
+		CPacketPlayerDigging.Action.DROP_ALL_ITEMS -> ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS
+		CPacketPlayerDigging.Action.DROP_ITEM -> ICPacketPlayerDigging.WAction.DROP_ITEM
+		CPacketPlayerDigging.Action.RELEASE_USE_ITEM -> ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM
+		CPacketPlayerDigging.Action.SWAP_HELD_ITEMS -> ICPacketPlayerDigging.WAction.SWAP_HELD_ITEMS
 	}
 }
 

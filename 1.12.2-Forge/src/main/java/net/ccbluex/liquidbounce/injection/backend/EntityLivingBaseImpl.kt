@@ -77,7 +77,7 @@ open class EntityLivingBaseImpl<out T : EntityLivingBase>(wrapped: T) : EntityIm
 			wrapped.rotationYawHead = value
 		}
 
-    /////////////////
+	/////////////////
 
 	override var customNameTag: String
 		get() = wrapped.customNameTag

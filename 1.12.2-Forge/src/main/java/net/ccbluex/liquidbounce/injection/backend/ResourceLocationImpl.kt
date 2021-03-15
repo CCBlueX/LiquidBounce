@@ -9,13 +9,13 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.minecraft.util.ResourceLocation
 
-class ResourceLocationImpl(val wrapped: ResourceLocation) : IResourceLocation {
-    override val resourcePath: String
-        get() = wrapped.resourcePath
+class ResourceLocationImpl(val wrapped: ResourceLocation) : IResourceLocation
+{
+	override val resourcePath: String
+		get() = wrapped.resourcePath
 
-
-    override fun equals(other: Any?): Boolean = other is ResourceLocationImpl && other.wrapped == wrapped
+	override fun equals(other: Any?): Boolean = other is ResourceLocationImpl && other.wrapped == wrapped
 }
 
- fun IResourceLocation.unwrap(): ResourceLocation = (this as ResourceLocationImpl).wrapped
- fun ResourceLocation.wrap(): IResourceLocation = ResourceLocationImpl(this)
+fun IResourceLocation.unwrap(): ResourceLocation = (this as ResourceLocationImpl).wrapped
+fun ResourceLocation.wrap(): IResourceLocation = ResourceLocationImpl(this)

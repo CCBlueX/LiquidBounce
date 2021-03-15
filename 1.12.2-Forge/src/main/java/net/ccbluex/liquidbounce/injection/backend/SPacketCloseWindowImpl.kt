@@ -9,10 +9,11 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ISPacketCloseWindow
 import net.minecraft.network.play.server.SPacketCloseWindow
 
-class SPacketCloseWindowImpl<out T : SPacketCloseWindow>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketCloseWindow {
-    override val windowId: Int
-        get() = wrapped.windowId
+class SPacketCloseWindowImpl<out T : SPacketCloseWindow>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketCloseWindow
+{
+	override val windowId: Int
+		get() = wrapped.windowId
 }
 
- fun ISPacketCloseWindow.unwrap(): SPacketCloseWindow = (this as SPacketCloseWindowImpl<*>).wrapped
- fun SPacketCloseWindow.wrap(): ISPacketCloseWindow = SPacketCloseWindowImpl(this)
+fun ISPacketCloseWindow.unwrap(): SPacketCloseWindow = (this as SPacketCloseWindowImpl<*>).wrapped
+fun SPacketCloseWindow.wrap(): ISPacketCloseWindow = SPacketCloseWindowImpl(this)

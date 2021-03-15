@@ -10,10 +10,11 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEnt
 import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.network.play.client.CPacketUseEntity
 
-class CPacketUseEntityImpl<out T : CPacketUseEntity>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketUseEntity {
-    override val action: ICPacketUseEntity.WAction
-        get() = wrapped.action.wrap()
+class CPacketUseEntityImpl<out T : CPacketUseEntity>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketUseEntity
+{
+	override val action: ICPacketUseEntity.WAction
+		get() = wrapped.action.wrap()
 }
 
- fun ICPacketUseEntity.unwrap(): CPacketUseEntity = (this as CPacketUseEntityImpl<*>).wrapped
- fun CPacketUseEntity.wrap(): ICPacketUseEntity = CPacketUseEntityImpl(this)
+fun ICPacketUseEntity.unwrap(): CPacketUseEntity = (this as CPacketUseEntityImpl<*>).wrapped
+fun CPacketUseEntity.wrap(): ICPacketUseEntity = CPacketUseEntityImpl(this)

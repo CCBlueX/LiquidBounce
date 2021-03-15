@@ -10,6 +10,12 @@ import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.IDynamicText
 import net.minecraft.client.renderer.texture.DynamicTexture
 
 class DynamicTextureImpl<out T : DynamicTexture>(wrapped: T) : AbstractTextureImpl<T>(wrapped), IDynamicTexture
+{
+	override val textureData: IntArray
+		get() = wrapped.textureData
+
+	override fun updateDynamicTexture() = wrapped.updateDynamicTexture()
+}
 
 fun IDynamicTexture.unwrap(): DynamicTexture = (this as DynamicTextureImpl<*>).wrapped
 fun DynamicTexture.wrap(): IDynamicTexture = DynamicTextureImpl(this)

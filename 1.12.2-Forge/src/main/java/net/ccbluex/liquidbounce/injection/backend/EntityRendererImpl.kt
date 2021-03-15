@@ -13,7 +13,7 @@ import net.minecraft.client.renderer.EntityRenderer
 
 class EntityRendererImpl(val wrapped: EntityRenderer) : IEntityRenderer
 {
-	override val shaderGroup: IShaderGroup?
+	override val shaderGroup: IShaderGroup
 		get() = wrapped.shaderGroup.wrap()
 
 	override fun disableLightmap() = wrapped.disableLightmap()

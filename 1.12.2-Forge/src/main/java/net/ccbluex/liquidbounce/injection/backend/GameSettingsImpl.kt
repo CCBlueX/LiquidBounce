@@ -51,6 +51,10 @@ class GameSettingsImpl(val wrapped: GameSettings) : IGameSettings
 		get() = wrapped.keyBindLeft.wrap()
 	override val keyBindSprint: IKeyBinding
 		get() = wrapped.keyBindSprint.wrap()
+	override val thirdPersonView: Int
+		get() = wrapped.thirdPersonView
+	override val fovSettings: Float
+		get() = wrapped.fovSetting
 
 	override fun isKeyDown(key: IKeyBinding): Boolean = GameSettings.isKeyDown(key.unwrap())
 

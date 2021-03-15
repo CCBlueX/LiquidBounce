@@ -23,6 +23,7 @@ interface ICPacketPlayerDigging : IPacket
 		STOP_DESTROY_BLOCK,
 		DROP_ALL_ITEMS,
 		DROP_ITEM,
-		RELEASE_USE_ITEM;
+		RELEASE_USE_ITEM,
+		SWAP_HELD_ITEMS;
 	}
 }

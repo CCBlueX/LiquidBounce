@@ -9,12 +9,13 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketAnimation
 import net.minecraft.network.play.server.SPacketAnimation
 
-class SPacketAnimationImpl<out T : SPacketAnimation>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketAnimation {
-    override val animationType: Int
-        get() = wrapped.animationType
-    override val entityID: Int
-        get() = wrapped.entityID
+class SPacketAnimationImpl<out T : SPacketAnimation>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketAnimation
+{
+	override val animationType: Int
+		get() = wrapped.animationType
+	override val entityID: Int
+		get() = wrapped.entityID
 }
 
- fun ISPacketAnimation.unwrap(): SPacketAnimation = (this as SPacketAnimationImpl<*>).wrapped
- fun SPacketAnimation.wrap(): ISPacketAnimation = SPacketAnimationImpl(this)
+fun ISPacketAnimation.unwrap(): SPacketAnimation = (this as SPacketAnimationImpl<*>).wrapped
+fun SPacketAnimation.wrap(): ISPacketAnimation = SPacketAnimationImpl(this)

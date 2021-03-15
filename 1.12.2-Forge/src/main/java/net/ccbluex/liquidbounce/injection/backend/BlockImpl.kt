@@ -27,7 +27,7 @@ class BlockImpl(val wrapped: Block) : IBlock
 		{
 			wrapped.slipperiness = value
 		}
-	override val defaultState: IIBlockState?
+	override val defaultState: IIBlockState
 		get() = IBlockStateImpl(wrapped.defaultState)
 	override val localizedName: String
 		get() = wrapped.localizedName
@@ -46,7 +46,7 @@ class BlockImpl(val wrapped: Block) : IBlock
 	override fun isTranslucent(blockState: IIBlockState): Boolean = wrapped.isTranslucent(blockState.unwrap())
 	override fun getMapColor(blockState: IIBlockState, theWorld: IWorldClient, bp: WBlockPos): Int = wrapped.getMapColor(blockState.unwrap(), theWorld.unwrap(), bp.unwrap()).colorValue
 
-	override fun getMaterial(state: IIBlockState): IMaterial? = wrapped.getMaterial(state.unwrap()).wrap()
+	override fun getMaterial(state: IIBlockState): IMaterial = wrapped.getMaterial(state.unwrap()).wrap()
 	override fun isFullCube(state: IIBlockState): Boolean = wrapped.isFullCube(state.unwrap())
 
 	override fun getUnlocalizedName(): String = wrapped.unlocalizedName

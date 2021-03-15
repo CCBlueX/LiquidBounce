@@ -59,6 +59,11 @@ open class GuiScreenImpl<out T : GuiScreen>(wrapped: T) : GuiImpl<T>(wrapped), I
 		}
 
 	override fun equals(other: Any?): Boolean = other is GuiScreenImpl<*> && other.wrapped == wrapped
+
+	override fun drawString(fontRendererObj: IFontRenderer, message: String, x: Int, y: Int, color: Int)
+	{
+		wrapped.drawString(fontRendererObj.unwrap(), message, x, y, color)
+	}
 }
 
 fun IGuiScreen.unwrap(): GuiScreen = (this as GuiScreenImpl<*>).wrapped

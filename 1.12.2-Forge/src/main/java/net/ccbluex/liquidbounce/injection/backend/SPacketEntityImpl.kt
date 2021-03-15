@@ -16,7 +16,7 @@ class SPacketEntityImpl<out T : SPacketEntity>(wrapped: T) : PacketImpl<T>(wrapp
 	override val onGround: Boolean
 		get() = wrapped.onGround
 
-	override fun getEntity(world: IWorld): IEntity? = wrapped.getEntity(world.unwrap()).wrap()
+	override fun getEntity(world: IWorld): IEntity = wrapped.getEntity(world.unwrap()).wrap()
 }
 
 fun ISPacketEntity.unwrap(): SPacketEntity = (this as SPacketEntityImpl<*>).wrapped

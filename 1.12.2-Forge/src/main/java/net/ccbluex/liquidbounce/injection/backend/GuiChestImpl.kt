@@ -9,9 +9,10 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IIInventory
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
+import net.ccbluex.liquidbounce.api.minecraft.inventory.ISlot
 import net.minecraft.client.gui.inventory.GuiChest
 
-class GuiChestImpl<T : GuiChest>(wrapped: T) : GuiContainerImpl<T>(wrapped), IGuiChest
+class GuiChestImpl<out T : GuiChest>(wrapped: T) : GuiContainerImpl<T>(wrapped), IGuiChest
 {
 	override val inventoryRows: Int
 		get() = wrapped.inventoryRows
@@ -19,6 +20,12 @@ class GuiChestImpl<T : GuiChest>(wrapped: T) : GuiContainerImpl<T>(wrapped), IGu
 		get() = wrapped.lowerChestInventory?.wrap()
 	override val inventorySlots: IContainer?
 		get() = wrapped.inventorySlots?.wrap()
+
+	override fun handleMouseClick(slot: ISlot, slotNumber: Int, clickedButton: Int, clickType: Int) = wrapped.handleMouseClick(slot.unwrap(), slotNumber, clickedButton, clickType)
+	override fun highlight(slotNumber: Int, length: Long, color: Int)
+	{
+		asGuiContainer().highlight(slotNumber, length, color)
+	}
 }
 
 fun IGuiChest.unwrap(): GuiChest = (this as GuiChestImpl<*>).wrapped
