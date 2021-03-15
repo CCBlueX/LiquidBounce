@@ -175,6 +175,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     /**
      * Should [ModuleNametags] render nametags above this [entity]?
      */
+    @JvmStatic
     fun shouldRenderNametag(entity: Entity) = entity.shouldBeShown()
 
 }
