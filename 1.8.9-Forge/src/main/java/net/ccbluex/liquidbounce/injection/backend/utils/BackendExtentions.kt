@@ -192,7 +192,7 @@ fun ICPacketPlayerDigging.WAction.unwrap(): C07PacketPlayerDigging.Action
 		ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK -> C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK
 		ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS -> C07PacketPlayerDigging.Action.DROP_ALL_ITEMS
 		ICPacketPlayerDigging.WAction.DROP_ITEM -> C07PacketPlayerDigging.Action.DROP_ITEM
-		ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM -> C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
+		else -> C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
 	}
 }
 
