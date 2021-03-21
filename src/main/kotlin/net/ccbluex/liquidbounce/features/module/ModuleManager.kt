@@ -24,7 +24,10 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClip
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleKick
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiCactus
@@ -79,7 +82,10 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleAntiCactus,
             ModuleHitbox,
             ModuleStrafe,
-            ModuleEagle
+            ModuleEagle,
+            ModuleFreeze,
+            ModuleKick,
+            ModuleClip
         )
 
         builtin.forEach(this::addModule)
