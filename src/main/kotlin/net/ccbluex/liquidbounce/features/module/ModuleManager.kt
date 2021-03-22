@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiCactus
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import org.lwjgl.glfw.GLFW
 
@@ -83,7 +84,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleStrafe,
             ModuleEagle,
             ModuleKick,
-            ModuleClip
+            ModuleClip,
+            ModuleNoFall
         )
 
         builtin.forEach(this::addModule)
