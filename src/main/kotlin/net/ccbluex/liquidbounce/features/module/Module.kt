@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.notification
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
 import org.lwjgl.glfw.GLFW
 
@@ -84,6 +85,8 @@ open class Module(name: String, // name parameter in configurable
         get() = mc.world!!
     protected val network: ClientPlayNetworkHandler
         get() = mc.networkHandler!!
+    protected val interaction: ClientPlayerInteractionManager
+        get() = mc.interactionManager!!
 
     /**
      * Called when module is turned on
