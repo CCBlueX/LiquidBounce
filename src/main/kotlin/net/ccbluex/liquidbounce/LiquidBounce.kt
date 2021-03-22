@@ -31,8 +31,7 @@ import net.ccbluex.liquidbounce.renderer.ultralight.WebPlatform
 import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.extensions.globalEnemyConfigurable
-import net.ccbluex.liquidbounce.utils.extensions.loginAltening
-import net.ccbluex.liquidbounce.utils.mc
+
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -97,8 +96,6 @@ object LiquidBounce : Listenable {
         moduleManager.registerInbuilt()
         scriptManager.loadScripts()
         configSystem.load()
-
-        println(mc.sessionService.loginAltening("lm766-l2trt@alt.com"))
 
         chat.connect()
     }
