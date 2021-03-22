@@ -23,6 +23,9 @@ accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket onGro
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changePosition Z
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changeLook Z
 
+accessible field net/minecraft/client/network/ClientPlayerInteractionManager currentBreakingProgress F
+accessible field net/minecraft/client/network/ClientPlayerInteractionManager blockBreakingCooldown I
+
 accessible field net/minecraft/util/math/Matrix4f a00 F
 accessible field net/minecraft/util/math/Matrix4f a01 F
 accessible field net/minecraft/util/math/Matrix4f a02 F
