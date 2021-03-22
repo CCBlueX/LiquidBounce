@@ -13,6 +13,16 @@ mutable field net/minecraft/util/math/Vec3d x D
 mutable field net/minecraft/util/math/Vec3d y D
 mutable field net/minecraft/util/math/Vec3d z D
 
+
+accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket x D
+accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket y D
+accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket z D
+accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket yaw F
+accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket pitch F
+accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket onGround Z
+accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changePosition Z
+accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changeLook Z
+
 accessible field net/minecraft/util/math/Matrix4f a00 F
 accessible field net/minecraft/util/math/Matrix4f a01 F
 accessible field net/minecraft/util/math/Matrix4f a02 F
