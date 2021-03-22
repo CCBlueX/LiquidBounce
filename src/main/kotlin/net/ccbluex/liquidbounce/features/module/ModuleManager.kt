@@ -85,7 +85,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleEagle,
             ModuleKick,
             ModuleClip,
-            ModuleNoFall
+            ModuleNoFall,
+            ModuleAutoLeave
         )
 
         builtin.forEach(this::addModule)
