@@ -86,6 +86,7 @@ private fun MinecraftSessionService.login(username: String, password: String = "
         val message = exception.message ?: return LoginResult.UNKNOWN_ISSUE
 
         when {
+            message.contains("The provided token is invalid", ignoreCase = true) -> LoginResult.INVALID_GENERATOR_TOKEN
             message.contains("invalid username or password.", ignoreCase = true) -> LoginResult.INVALID_ACCOUNT_DATA
             message.contains("account migrated", ignoreCase = true) -> LoginResult.MIGRATED
             else -> LoginResult.UNAVAILABLE_SERVICE
@@ -110,5 +111,6 @@ enum class LoginResult(val readable: String) {
     UNAVAILABLE_SERVICE("Authentication service unavailable"),
     INVALID_ACCOUNT_DATA("Invalid username or password"),
     MIGRATED("Account migrated"),
-    UNKNOWN_ISSUE("Unknown issue")
+    UNKNOWN_ISSUE("Unknown issue"),
+    INVALID_GENERATOR_TOKEN("Invalid account token")
 }
