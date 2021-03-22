@@ -19,11 +19,11 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import net.ccbluex.liquidbounce.event.AttackEvent;
+import net.ccbluex.liquidbounce.event.CancelBlockBreakingEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -43,6 +43,18 @@ public class MixinClientPlayerInteractionManager {
         if (target instanceof LivingEntity) {
             EventManager.INSTANCE.callEvent(new AttackEvent((LivingEntity) target));
         }
+    }
+
+    /**
+     * Hook into cancel block breaking at HEAD and call cancel block breaking event, which is able to cancel the execution.
+     */
+    @Inject(method = "cancelBlockBreaking", at = @At("HEAD"), cancellable = true)
+    private void hookCancelBlockBreaking(CallbackInfo callbackInfo) {
+        final CancelBlockBreakingEvent cancelEvent = new CancelBlockBreakingEvent();
+        EventManager.INSTANCE.callEvent(cancelEvent);
+
+        if (cancelEvent.isCancelled())
+            callbackInfo.cancel();
     }
 
 }

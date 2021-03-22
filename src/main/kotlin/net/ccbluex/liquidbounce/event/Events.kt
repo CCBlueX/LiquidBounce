@@ -95,6 +95,9 @@ class PlayerPushOutEvent : CancellableEvent()
 @Nameable("playerMove")
 class PlayerMoveEvent(val type: MovementType, val movement: Vec3d) : Event()
 
+@Nameable("cancelBlockBreaking")
+class CancelBlockBreakingEvent : CancellableEvent()
+
 // Network events
 
 @Nameable("packet")
