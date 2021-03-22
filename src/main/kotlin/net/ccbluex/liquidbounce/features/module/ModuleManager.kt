@@ -24,12 +24,15 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClip
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleKick
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiCactus
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import org.lwjgl.glfw.GLFW
 
@@ -79,7 +82,11 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleAntiCactus,
             ModuleHitbox,
             ModuleStrafe,
-            ModuleEagle
+            ModuleEagle,
+            ModuleKick,
+            ModuleClip,
+            ModuleNoFall,
+            ModuleAutoLeave
         )
 
         builtin.forEach(this::addModule)
