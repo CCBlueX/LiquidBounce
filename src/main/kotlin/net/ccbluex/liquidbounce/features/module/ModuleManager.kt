@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClip
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleKick
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiCactus
@@ -83,7 +82,6 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleHitbox,
             ModuleStrafe,
             ModuleEagle,
-            ModuleFreeze,
             ModuleKick,
             ModuleClip
         )
