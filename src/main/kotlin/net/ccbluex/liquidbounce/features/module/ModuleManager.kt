@@ -89,7 +89,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleAbortBreaking,
             ModuleMoreCarry,
             ModuleNoPitchLimit,
-            ModulePortalMenu
+            ModulePortalMenu,
+            ModuleVehicleOneHit
         )
 
         builtin.forEach(this::addModule)

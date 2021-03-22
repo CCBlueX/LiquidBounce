@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.CancelBlockBreakingEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -39,10 +38,7 @@ public class MixinClientPlayerInteractionManager {
     @Inject(method = "attackEntity", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;syncSelectedSlot()V", shift = At.Shift.AFTER))
     private void hookAttack(PlayerEntity player, Entity target, CallbackInfo callbackInfo) {
-        // Check for living entity because we're also able to attack non-living entities like item frames
-        if (target instanceof LivingEntity) {
-            EventManager.INSTANCE.callEvent(new AttackEvent((LivingEntity) target));
-        }
+        EventManager.INSTANCE.callEvent(new AttackEvent(target));
     }
 
     /**

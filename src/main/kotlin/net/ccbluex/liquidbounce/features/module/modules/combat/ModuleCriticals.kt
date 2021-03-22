@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.*
 import net.ccbluex.liquidbounce.utils.extensions.exactPosition
 import net.ccbluex.liquidbounce.utils.extensions.findEnemy
 import net.ccbluex.liquidbounce.utils.extensions.upwards
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -43,6 +44,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     private object PacketCrit : Choice("Packet", CritChoiceConfigurable) {
 
         val attackHandler = handler<AttackEvent> { event ->
+            if (event.enemy !is LivingEntity)
+                return@handler
+
             val (x, y, z) = player.exactPosition
 
             network.sendPacket(PlayerMoveC2SPacket.PositionOnly(x, y + 0.11, z, false))
@@ -82,6 +86,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val magicParticles by int("MagicParticles", 0, 0..20)
 
         val attackHandler = handler<AttackEvent> { event ->
+            if (event.enemy !is LivingEntity)
+                return@handler
+
             repeat(critParticles) {
                 player.addCritParticles(event.enemy)
             }
