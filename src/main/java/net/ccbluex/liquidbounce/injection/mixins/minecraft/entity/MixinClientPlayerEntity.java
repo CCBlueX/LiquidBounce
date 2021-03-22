@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.util.math.Vec3d;
@@ -55,6 +56,14 @@ public class MixinClientPlayerEntity {
     @Inject(method = "move", at = @At("HEAD"))
     private void hookMove(MovementType type, Vec3d movement, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new PlayerMoveEvent(type, movement));
+    }
+
+    @Inject(method = "updateNausea", at = @At(value = "FIELD", target =
+            "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;"), cancellable = true)
+    private void hookNetherClosingScreen(CallbackInfo callbackInfo) {
+        if (ModulePortalMenu.INSTANCE.getEnabled()) {
+            callbackInfo.cancel();
+        }
     }
 
 }
