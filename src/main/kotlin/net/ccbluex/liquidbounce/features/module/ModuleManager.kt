@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.*
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -90,7 +91,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleMoreCarry,
             ModuleNoPitchLimit,
             ModulePortalMenu,
-            ModuleVehicleOneHit
+            ModuleVehicleOneHit,
+            ModuleFastPlace
         )
 
         builtin.forEach(this::addModule)

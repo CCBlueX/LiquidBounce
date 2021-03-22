@@ -66,6 +66,9 @@ class ScreenEvent(val screen: Screen?) : Event()
 @Nameable("chatSend")
 class ChatSendEvent(val message: String) : CancellableEvent()
 
+@Nameable("useCooldown")
+class UseCooldownEvent(var cooldown: Int) : Event()
+
 // World events
 
 /**

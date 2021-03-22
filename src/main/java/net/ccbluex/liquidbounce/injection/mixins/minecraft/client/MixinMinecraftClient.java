@@ -67,6 +67,8 @@ public abstract class MixinMinecraftClient {
     @Shadow
     public abstract void openScreen(Screen screen);
 
+    @Shadow private int itemUseCooldown;
+
     /**
      * Entry point of our hacked client
      *
@@ -170,6 +172,16 @@ public abstract class MixinMinecraftClient {
     @Inject(method = "tick", at = @At("RETURN"))
     private void hookHandleInputEvent(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new InputHandleEvent());
+    }
+
+    /**
+     * Hook item use cooldown
+     */
+    @Inject(method = "doItemUse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;itemUseCooldown:I", shift = At.Shift.AFTER))
+    private void hookItemUseCooldown(CallbackInfo callbackInfo) {
+        final UseCooldownEvent useCooldownEvent = new UseCooldownEvent(itemUseCooldown);
+        EventManager.INSTANCE.callEvent(useCooldownEvent);
+        itemUseCooldown = useCooldownEvent.getCooldown();
     }
 
 }
