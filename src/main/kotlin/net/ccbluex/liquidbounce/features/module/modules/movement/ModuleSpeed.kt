@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.utils.extensions.moving
 import net.ccbluex.liquidbounce.utils.extensions.strafe
 import net.ccbluex.liquidbounce.utils.extensions.upwards
 
-object ModuleSpeed : Module("Speed", Category.COMBAT) {
+object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     private object SpeedChoiceConfigurable : ChoiceConfigurable(this, "Mode", "YPort", {
         SpeedYPort
