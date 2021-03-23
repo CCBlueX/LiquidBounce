@@ -36,7 +36,7 @@ class UltralightScreen(name: String) : Screen(name.asText()) {
     val page = theme.page(name)
 
     override fun init() {
-        webView = WebView(width = { width }, height = { height })
+        webView = WebView(width = { mc.window.width }, height = { mc.window.height })
         webView.loadPage(page)
         super.init()
     }
@@ -53,20 +53,20 @@ class UltralightScreen(name: String) : Screen(name.asText()) {
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        mouseButtonCallback(mouseX, mouseY, button, GLFW_PRESS)
+        mouseButtonCallback(mc.mouse.x, mc.mouse.y, button, GLFW_PRESS)
         return super.mouseClicked(mouseX, mouseY, button)
     }
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        mouseButtonCallback(mouseX, mouseY, button, GLFW_RELEASE)
+        mouseButtonCallback(mc.mouse.x, mc.mouse.y, button, GLFW_RELEASE)
         return super.mouseReleased(mouseX, mouseY, button)
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
         // Create the event
         val event = UltralightMouseEvent()
-            .x(mouseX.toInt())
-            .y(mouseY.toInt())
+            .x(mc.mouse.x.toInt())
+            .y(mc.mouse.y.toInt())
             .type(UltralightMouseEventType.MOVED)
 
         // Translate the mouse state to the event
@@ -165,8 +165,8 @@ class UltralightScreen(name: String) : Screen(name.asText()) {
     fun mouseButtonCallback(mouseX: Double, mouseY: Double, button: Int, action: Int) {
         // Create the event
         val event = UltralightMouseEvent()
-            .x(mouseX.toInt())
-            .y(mouseY.toInt())
+            .x(mc.mouse.x.toInt())
+            .y(mc.mouse.y.toInt())
             .type(if (action == GLFW_PRESS) UltralightMouseEventType.DOWN else UltralightMouseEventType.UP)
         when (button) {
             GLFW_MOUSE_BUTTON_LEFT -> event.button(UltralightMouseEventButton.LEFT)
