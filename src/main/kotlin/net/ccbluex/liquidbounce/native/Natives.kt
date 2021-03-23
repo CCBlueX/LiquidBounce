@@ -21,19 +21,28 @@ package net.ccbluex.liquidbounce.native
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.*
 import java.io.File
+import kotlin.system.exitProcess
 
 object Natives {
 
     val nativesRoot = File(LiquidBounce.configSystem.rootFolder, "natives")
+    private const val LIBRARY_VERSION = 0.36
 
     /**
      * Download required natives
      */
     fun downloadNatives() {
-        if (nativesRoot.exists())
-            return
-
         runCatching {
+            val versionsFile = File(nativesRoot, "VERSION")
+
+            if (versionsFile.exists() && versionsFile.readText().toDoubleOrNull() == LIBRARY_VERSION) {
+                return
+            }
+
+            if (nativesRoot.exists()) {
+                nativesRoot.deleteRecursively()
+            }
+
             val os = when {
                 IS_WINDOWS -> "win"
                 IS_MAC -> "mac"
@@ -41,8 +50,8 @@ object Natives {
                 else -> error("unsupported operating system")
             }
 
-            logger.info("Download natives... (os: $os)")
-            val nativeUrl = "https://cloud.liquidbounce.net/LiquidBounce/natives/$os-x64.zip"
+            logger.info("Downloading v$LIBRARY_VERSION natives... (os: $os)")
+            val nativeUrl = "https://cloud.liquidbounce.net/LiquidBounce/natives/$LIBRARY_VERSION/$os-x64.zip"
 
             nativesRoot.mkdir()
             val pkgNatives = File(nativesRoot, "natives.zip").apply {
@@ -52,12 +61,18 @@ object Natives {
 
             logger.info("Extracting natives...")
             extractZip(pkgNatives, nativesRoot)
+            versionsFile.createNewFile()
+            versionsFile.writeText(LIBRARY_VERSION.toString())
 
             logger.debug("Deleting natives bundle...")
             pkgNatives.delete()
+
+            logger.info("Successfully loaded natives.")
         }.onFailure {
             logger.error("Unable to download natives", it)
             nativesRoot.delete()
+
+            exitProcess(-1)
         }
     }
 
