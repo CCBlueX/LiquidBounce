@@ -16,14 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
-package net.ccbluex.liquidbounce.features.module.modules.movement
+package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.repeatableSequence
 
-object ModuleAutoWalk : Module("AutoWalk", Category.MOVEMENT) {
+/**
+ * A autowalk module
+ *
+ * Automatically makes you walk.
+ */
+object ModuleAutoWalk : Module("AutoWalk", Category.PLAYER) {
 
     val repeatable = repeatableSequence {
         mc.options.keyForward.isPressed = true
@@ -32,4 +36,5 @@ object ModuleAutoWalk : Module("AutoWalk", Category.MOVEMENT) {
     override fun disable() {
         mc.options.keyForward.isPressed = false
     }
+
 }
