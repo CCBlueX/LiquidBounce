@@ -19,11 +19,15 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.repeatableSequence
+import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.extensions.moving
 import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
 
@@ -43,6 +47,14 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
             mc.options.keyJump.isPressed -> speed
             mc.options.keySneak.isPressed -> -speed
             else -> 0.0
+        }
+    }
+
+    val packetHandler = handler<PacketEvent> { event ->
+        // Setback detection
+        if (event.packet is PlayerPositionLookS2CPacket) {
+            chat("You have been setback by the server! Make sure you're standing in a block.")
+            enabled = false
         }
     }
 
