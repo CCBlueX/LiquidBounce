@@ -88,6 +88,9 @@ class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 @Nameable("playerTick")
 class PlayerTickEvent : Event()
 
+@Nameable("playerMovementTick")
+class PlayerMovementTickEvent : Event()
+
 @Nameable("playerNetworkMovementTick")
 class PlayerNetworkMovementTickEvent(val state: EventState) : Event()
 

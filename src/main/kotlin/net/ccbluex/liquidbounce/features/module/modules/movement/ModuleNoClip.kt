@@ -19,30 +19,37 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.event.PlayerMovementTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatableSequence
+import net.ccbluex.liquidbounce.utils.extensions.moving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
 
 object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
+
+    val speed by float("Speed", 0.32f, 0.1f..0.4f)
+
+    val moveHandler = handler<PlayerMovementTickEvent> {
+        player.noClip = true
+        player.fallDistance = 0f
+        player.isOnGround = false
+
+        val speed = speed.toDouble()
+        if (player.moving) {
+            player.strafe(speed = speed)
+        }
+
+        player.velocity.y = when {
+            mc.options.keyJump.isPressed -> speed
+            mc.options.keySneak.isPressed -> -speed
+            else -> 0.0
+        }
+    }
+
     override fun disable() {
         player.noClip = false
     }
 
-    val repeatable = repeatableSequence {
-        player.noClip = true
-        player.fallDistance = 0f
-        player.isOnGround = false
-        player.abilities.flying = false
-        player.setVelocity(0.0, 0.0, 0.0)
-        val speed = 0.32f
-        player.flyingSpeed = speed
-
-        if(mc.options.keyJump.isPressed) {
-            player.setVelocity(player.velocity.x, player.velocity.z + speed, player.velocity.z)
-        }
-        if(mc.options.keySneak.isPressed) {
-            player.setVelocity(player.velocity.x, player.velocity.z - speed, player.velocity.z)
-        }
-    }
 }
 

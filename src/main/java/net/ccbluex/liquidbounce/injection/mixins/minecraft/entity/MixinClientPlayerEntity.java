@@ -14,13 +14,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinClientPlayerEntity {
 
     /**
-     * Hook entity tick event at HEAD
-     *
-     * Not useful to check for loaded chunk, PRE tick, next step is movement packet
+     * Hook entity tick event
      */
-    @Inject(method = "tick", at = @At("HEAD"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;tick()V", shift = At.Shift.AFTER))
     private void hookTickEvent(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new PlayerTickEvent());
+    }
+
+    /**
+     * Hook entity movement tick event
+     */
+    @Inject(method = "tickMovement", at = @At("HEAD"))
+    private void hookMovementTickEvent(CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new PlayerMovementTickEvent());
     }
 
     /**
