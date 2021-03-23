@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
@@ -55,7 +55,7 @@ object ModuleManager : Iterable<Module>, Listenable {
     /**
      * Tick sequences
      */
-    val entityTickHandler = handler<PlayerTickEvent>(false) {
+    val entityTickHandler = handler<PlayerMovementTickEvent>(false) {
         for (sequence in sequences) {
             sequence.tick()
         }

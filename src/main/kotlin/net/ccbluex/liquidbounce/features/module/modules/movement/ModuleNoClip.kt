@@ -19,10 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.PlayerMovementTickEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.repeatableSequence
 import net.ccbluex.liquidbounce.utils.extensions.moving
 import net.ccbluex.liquidbounce.utils.extensions.strafe
 
@@ -30,7 +29,7 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
 
     val speed by float("Speed", 0.32f, 0.1f..0.4f)
 
-    val moveHandler = handler<PlayerMovementTickEvent> {
+    val repeatable = repeatableSequence {
         player.noClip = true
         player.fallDistance = 0f
         player.isOnGround = false
