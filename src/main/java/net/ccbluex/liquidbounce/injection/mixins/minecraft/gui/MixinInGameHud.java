@@ -33,7 +33,7 @@ public class MixinInGameHud {
     /**
      * Hook render hud event at the top layer
      */
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderStatusEffectOverlay(Lnet/minecraft/client/util/math/MatrixStack;)V", shift = At.Shift.AFTER))
     private void hookRenderEvent(MatrixStack matrices, float tickDelta, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new OverlayRenderEvent(matrices, tickDelta));
     }
