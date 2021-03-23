@@ -97,7 +97,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleDamage,
             ModuleAutoWalk,
             ModuleNoClip,
-            ModuleAntiLevitation
+            ModuleAntiLevitation,
+            ModuleBoatFly
         )
 
         builtin.forEach(this::addModule)
