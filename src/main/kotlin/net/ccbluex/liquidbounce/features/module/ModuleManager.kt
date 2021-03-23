@@ -28,6 +28,8 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAutoWalk
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiCactus
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
@@ -94,7 +96,11 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModulePortalMenu,
             ModuleVehicleOneHit,
             ModuleFastPlace,
-            ModuleFastBreak
+            ModuleFastBreak,
+            ModuleGodMode,
+            ModuleDamage,
+            ModuleAutoWalk,
+            ModuleNoClip
         )
 
         builtin.forEach(this::addModule)
