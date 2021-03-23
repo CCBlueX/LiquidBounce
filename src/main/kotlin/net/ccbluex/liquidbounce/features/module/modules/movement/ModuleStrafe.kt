@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.extensions.directionYaw
+import net.ccbluex.liquidbounce.utils.extensions.moving
 import net.ccbluex.liquidbounce.utils.extensions.strafe
 import net.minecraft.entity.MovementType
 
@@ -35,7 +36,7 @@ object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
         // Might just strafe when player controls itself
-        if (event.type == MovementType.SELF) {
+        if (event.type == MovementType.SELF && player.moving) {
             val movement = event.movement
             movement.strafe(player.directionYaw)
         }
