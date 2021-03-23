@@ -61,8 +61,6 @@ import java.nio.ByteBuffer
 
 object WebPlatform {
 
-    const val SCALE = 1.0
-
     /**
      * This is the thread that has also write access to the Ultralight instance
      */
@@ -89,7 +87,7 @@ object WebPlatform {
                 UltralightConfig()
                     .resourcePath("./resources/")
                     .fontHinting(FontHinting.NORMAL)
-                    .deviceScale(SCALE)
+                    .deviceScale(1.0)
                     .fontHinting(FontHinting.SMOOTH)
             )
             platform.usePlatformFontLoader()
@@ -117,7 +115,6 @@ class WebView(
     var currentPage: Page? = null
 
     private var glTexture = -1
-    var textureScale: Float = 1.0f
 
     private var lastJavascriptGarbageCollections = 0L
 
@@ -131,14 +128,9 @@ class WebView(
             // Load up web platform
             WebPlatform
 
-            textureScale = WebPlatform.SCALE.toFloat()
             renderer = WebPlatform.renderer
 
-            view = renderer.createView(
-                width().toLong() * textureScale.toLong(),
-                height().toLong() * textureScale.toLong(),
-                true
-            )
+            view = renderer.createView(width().toLong(), height().toLong(), true)
 
             this.databind = Databind(
                 DatabindConfiguration
@@ -180,7 +172,7 @@ class WebView(
         WebPlatform.contextThread.scheduleBlocking {
             val width = width()
             val height = height()
-            if (width.toLong() * textureScale.toLong() != view.width() || height.toLong() * textureScale.toLong() != view.height()) {
+            if (width.toLong() != view.width() || height.toLong() != view.height()) {
                 resize(width, height)
             }
 
@@ -213,7 +205,7 @@ class WebView(
      */
     private fun resize(width: Int, height: Int) {
         WebPlatform.contextThread.scheduleBlocking {
-            view.resize(width.toLong() * textureScale.toLong(), height.toLong() * textureScale.toLong())
+            view.resize(width.toLong(), height.toLong())
         }
 
         logger.debug("Resized $this to (w: $width h: $height)")
