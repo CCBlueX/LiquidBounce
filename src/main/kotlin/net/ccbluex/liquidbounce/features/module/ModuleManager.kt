@@ -26,12 +26,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiCactus
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoFall
+import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastBreak
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
@@ -94,7 +92,11 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModulePortalMenu,
             ModuleVehicleOneHit,
             ModuleFastPlace,
-            ModuleFastBreak
+            ModuleFastBreak,
+            ModuleGodMode,
+            ModuleDamage,
+            ModuleAutoWalk,
+            ModuleNoClip
         )
 
         builtin.forEach(this::addModule)
