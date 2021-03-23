@@ -119,6 +119,8 @@ class WebView(
     private var glTexture = -1
     var textureScale: Float = 1.0f
 
+    private var lastJavascriptGarbageCollections = 0L
+
     lateinit var jsWrapper: ClientJSWrapper
 
     lateinit var databind: Databind
@@ -190,6 +192,16 @@ class WebView(
 
             renderer.update()
             renderer.render()
+
+            if (lastJavascriptGarbageCollections == 0L) {
+                lastJavascriptGarbageCollections = System.currentTimeMillis()
+            } else if (System.currentTimeMillis() - lastJavascriptGarbageCollections > 1000) {
+                logger.debug("Garbage collecting Ultralight Javascript...")
+                view.lockJavascriptContext().use { lock ->
+                    lock.context.garbageCollect()
+                }
+                lastJavascriptGarbageCollections = System.currentTimeMillis()
+            }
         }
     }
 
