@@ -54,6 +54,7 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
     }
 
     val repeatable = repeatableSequence {
+        tick++
         if(tick >= ticks) {
             if (hat)
                 mc.options.setPlayerModelPart(PlayerModelPart.HAT, Random.nextBoolean())
