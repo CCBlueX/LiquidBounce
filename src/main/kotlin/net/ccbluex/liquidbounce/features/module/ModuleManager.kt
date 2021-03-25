@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
@@ -99,7 +100,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleFreeze,
             ModuleBedGodMode,
             ModuleParkour,
-            ModuleSuperKnockback
+            ModuleSuperKnockback,
+            ModuleSkinDerp
         )
 
         builtin.forEach(this::addModule)
