@@ -96,6 +96,12 @@ tasks.withType(Test) {
     useJUnitPlatform()
 }
 
+compileKotlin {
+    kotlinOptions.suppressWarnings = true
+    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.useIR = true
+}
+
 // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
 // if it is present.
 // If you remove this task, sources will not be generated.
@@ -138,6 +144,4 @@ task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
 
 build.dependsOn packageDefaultTheme
 build.dependsOn remapShadow
-
-compileKotlin.kotlinOptions.jvmTarget = "1.8"
 
