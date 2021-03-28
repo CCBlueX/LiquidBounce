@@ -2,15 +2,20 @@
     export let name;
     export let enabled;
     export let hasSettings;
+    export let setEnabled;
+
+    function handleToggle(e) {
+        setEnabled(!enabled);
+    }
 </script>
 
-<div class="module">{name}</div>
+<div on:click={handleToggle} class:enabled={enabled} class="module">{name}</div>
 
 <style>
     .module {
-        color: rgba(255, 255, 255, 0.5);
+        color: #CBD1E3;
         text-align: center;
-        font-weight: 500;
+        font-weight: 600;
         font-size: 12px;
         padding: 10px;
         transition: ease background-color 0.2s, ease color 0.2s;

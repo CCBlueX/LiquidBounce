@@ -5,14 +5,14 @@
 
     export let category;
     export let modules;
-    export let expanded;
+
+    let expanded = localStorage.getItem(`clickgui.panel.${category}.expanded`) === "true" || localStorage.getItem(`clickgui.panel.${category}.expanded`) === null;
 
     let renderedModules = modules;
 
-    let top = 0;
-    let left = 0;
+    let top = parseInt(localStorage.getItem(`clickgui.panel.${category}.top`)) || 0;
+    let left = parseInt(localStorage.getItem(`clickgui.panel.${category}.left`)) || 0;
     let moving = false;
-
     let prevX = 0;
     let prevY = 0;
 
@@ -32,6 +32,8 @@
 	
 	function onMouseUp() {
 		moving = false;
+        localStorage.setItem(`clickgui.panel.${category}.top`, top);
+        localStorage.setItem(`clickgui.panel.${category}.left`, left);
 	}
 
     function toggleExpanded() {
@@ -42,10 +44,24 @@
             expanded = true;
             renderedModules = modules;
         }
+        localStorage.setItem(`clickgui.panel.${category}.expanded`, expanded);
     }
 
     window.addEventListener("mouseup", onMouseUp);
     window.addEventListener("mousemove", onMouseMove);
+
+    function handleToggleModule(event) {
+        modules.find(m => m.name === event.getModule().getName()).enabled = event.getNewState();
+        if (expanded) {
+            renderedModules = modules;
+        }
+    }
+
+    try {
+        client.on("toggleModule", handleToggleModule);
+    } catch (err) {
+        console.log(err);
+    }
 </script>
 
 <div class="panel" style="left: {left}px; top: {top}px;">
@@ -59,7 +75,7 @@
     <div class="modules">
         {#each renderedModules as m}
             <div transition:slide|local={{duration: 200, easing: sineInOut}}>
-                <Module name={m.name} />
+                <Module name={m.name} enabled={m.enabled} setEnabled={m.setEnabled} />
             </div>
         {/each}
     </div>
