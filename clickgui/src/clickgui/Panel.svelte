@@ -57,6 +57,12 @@
         }
     }
 
+    function handleToggleClick(event) {
+        if (event.button === 2) {
+            toggleExpanded();
+        }
+    }
+
     try {
         client.on("toggleModule", handleToggleModule);
     } catch (err) {
@@ -64,7 +70,7 @@
     }
 </script>
 
-<div class="panel" style="left: {left}px; top: {top}px;">
+<div on:mousedown={handleToggleClick} class="panel" style="left: {left}px; top: {top}px;">
     <div on:mousedown={onMouseDown} class="title-wrapper">
         <img class="icon" src="img/{category.toLowerCase()}.svg" alt="icon" />
         <div class="title">{category}</div>
