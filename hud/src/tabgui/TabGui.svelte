@@ -133,7 +133,7 @@
         font-family: "Montserrat", sans-serif;
 
         position: absolute;
-        top: 85px;
+        top: 80px;
         left: 15px;
         display: flex;
         flex-direction: row;

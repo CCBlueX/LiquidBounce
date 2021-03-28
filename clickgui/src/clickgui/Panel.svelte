@@ -1,0 +1,140 @@
+<script>
+    import { sineInOut } from "svelte/easing";
+    import { slide } from "svelte/transition";
+    import Module from "./Module.svelte";
+
+    export let category;
+    export let modules;
+    export let expanded;
+
+    let renderedModules = modules;
+
+    let top = 0;
+    let left = 0;
+    let moving = false;
+
+    let prevX = 0;
+    let prevY = 0;
+
+	function onMouseDown() {
+		moving = true;
+	}
+	
+	function onMouseMove(e) {
+		if (moving) {
+			left += e.screenX - prevX;
+			top += e.screenY - prevY;
+		}
+
+        prevX = e.screenX;
+        prevY = e.screenY;
+	}
+	
+	function onMouseUp() {
+		moving = false;
+	}
+
+    function toggleExpanded() {
+        if (expanded) {
+            expanded = false;
+            renderedModules = [];
+        } else {
+            expanded = true;
+            renderedModules = modules;
+        }
+    }
+
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("mousemove", onMouseMove);
+</script>
+
+<div class="panel" style="left: {left}px; top: {top}px;">
+    <div on:mousedown={onMouseDown} class="title-wrapper">
+        <img class="icon" src="img/{category.toLowerCase()}.svg" alt="icon" />
+        <div class="title">{category}</div>
+        <div on:click={toggleExpanded} class="visibility-toggle" class:expanded={expanded}>
+
+        </div>
+    </div>
+    <div class="modules">
+        {#each renderedModules as m}
+            <div transition:slide|local={{duration: 200, easing: sineInOut}}>
+                <Module name={m.name} />
+            </div>
+        {/each}
+    </div>
+</div>
+
+<style>
+    .panel {
+        border-radius: 5px;
+        overflow: hidden;
+        width: 225px;
+        border: solid 1px rgba(0, 0, 0, 0.68);
+        position: absolute;
+    }
+
+    .title-wrapper {
+        display: grid;
+        grid-template-columns: max-content auto max-content;
+        align-items: center;
+        column-gap: 12px;
+        background-color: rgba(0, 0, 0, 0.68);
+        border-bottom: solid 2px #4677ff;
+        padding: 10px 15px;
+    }
+
+    .title {
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .modules {
+        background-color: rgba(0, 0, 0, 0.5);
+        max-height: 545px;
+        overflow: auto;
+    }
+
+    .visibility-toggle {
+        height: 12px;
+        width: 12px;
+        position: relative;
+    }
+
+    .visibility-toggle::before,
+    .visibility-toggle::after {
+        content: "";
+        position: absolute;
+        background-color: white;
+        transition: transform 0.25s ease-out;
+    }
+
+    .visibility-toggle::before {
+        top: 0;
+        left: 50%;
+        width: 2px;
+        height: 100%;
+        margin-left: -1px;
+    }
+
+    .visibility-toggle::after {
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        margin-top: -1px;
+    }
+
+    .visibility-toggle.expanded::before {
+        transform: rotate(90deg);
+    }
+
+    .visibility-toggle.expanded::after {
+        transform: rotate(180deg);
+    }
+
+    ::-webkit-scrollbar {
+        width: 0;
+    }
+</style>
