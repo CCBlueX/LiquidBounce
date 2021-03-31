@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
 import net.ccbluex.liquidbounce.renderer.ultralight.WebPlatform
 import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
+import net.ccbluex.liquidbounce.utils.extensions.RotationManager
 import net.ccbluex.liquidbounce.utils.extensions.globalEnemyConfigurable
 import org.apache.logging.log4j.LogManager
 
@@ -75,6 +76,7 @@ object LiquidBounce : Listenable {
         CommandManager
         ThemeManager
         ScriptManager
+        RotationManager
         Tabs
         Chat
 

@@ -96,7 +96,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleGodMode,
             ModuleDamage,
             ModuleAutoWalk,
-            ModuleNoClip
+            ModuleNoClip,
+            ModuleKillAura
         )
 
         builtin.forEach(this::addModule)
