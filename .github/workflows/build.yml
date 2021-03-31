@@ -23,5 +23,7 @@ jobs:
           node-version: '14'
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+      - name: Grant all permissions for theme
+        run: sudo chmod -R 777 theme
       - name: Build with Gradle
         run: ./gradlew build
