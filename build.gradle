@@ -70,18 +70,20 @@ def buildTask = tasks.register("buildGui", Zip) {
 
 for (folder in file(".").listFiles()) {
     if (folder.isDirectory() && folder.listFiles().any { (it.name == "public") }) {
+        def copiedFolder = file("$folder") // copy variable (!important!)
+
         def iTask = tasks.register("install$folder.name", NpmTask) {
             dependsOn npmSetup
 
             args = ["i"]
-            workingDir = file("$folder") // file() is because of a bug in gradle
+            workingDir = copiedFolder
         }
 
         def bTask = tasks.register("build$folder.name", NpmTask) {
             dependsOn iTask
 
             args = ["run", "build"]
-            workingDir = file("$folder") // file() is because of a bug in gradle
+            workingDir = copiedFolder
         }
 
         tasks.buildGui.dependsOn(bTask)
