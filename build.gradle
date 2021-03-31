@@ -1,0 +1,54 @@
+plugins {
+    id "java"
+    id "com.github.node-gradle.node" version "3.0.1"
+}
+
+def buildTask = tasks.register("buildGui", Zip) {
+    for (folder in file(".").listFiles()) {
+        if (!folder.listFiles().any { (it.name == "public") }) {
+            continue
+        }
+
+        copy {
+            from file("$folder/public")
+            into file("$buildDir/tmp/theme/$folder.name")
+        }
+    }
+
+    archiveFileName = "default_theme.zip"
+    destinationDirectory = file("$buildDir/resources/main/assets/liquidbounce")
+
+    from file("$buildDir/tmp/theme")
+}
+
+for (folder in file(".").listFiles()) {
+    if (!folder.listFiles().any { (it.name == "src") }) {
+        continue
+    }
+
+    def iTask = tasks.register("install$folder.name", NpmTask) {
+        args = ["i"]
+        workingDir = folder
+    }
+
+    def bTask = tasks.register("build$folder.name", NpmTask) {
+        dependsOn iTask
+
+        args = ["run", "build"]
+        workingDir = folder
+    }
+
+    tasks.buildGui.dependsOn(bTask)
+}
+
+sourceSets {
+    java {
+        main {
+            resources {
+                srcDir "$buildDir/main/resources"
+            }
+        }
+    }
+}
+
+processResources.dependsOn(buildTask)
