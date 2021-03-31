@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.network.ClientPlayerEntity
@@ -30,7 +30,6 @@ import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -81,7 +80,7 @@ class EnemyConfigurable : Configurable("enemies") {
     }
 
     init {
-        LiquidBounce.configSystem.root(this)
+        ConfigSystem.root(this)
     }
 
     /**

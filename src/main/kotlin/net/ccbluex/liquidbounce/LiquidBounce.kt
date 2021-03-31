@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.chat.Chat
-import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
@@ -31,7 +30,6 @@ import net.ccbluex.liquidbounce.renderer.ultralight.WebPlatform
 import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.extensions.globalEnemyConfigurable
-
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -54,22 +52,7 @@ object LiquidBounce : Listenable {
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
 
     /**
-     * Client feature managers
-     */
-    val eventManager = EventManager
-    val configSystem = ConfigSystem
-    val moduleManager = ModuleManager
-    val commandManager = CommandManager
-    val scriptManager = ScriptManager
-    val themeManager = ThemeManager
-    val chat = Chat()
-
-
-    /**
      * Client logger to print out console messages
-     *
-     * TODO: Figure out something better to keep track of errors and other useful debug stuff, especially in case of errors.
-     *  It would be useful to also log client messages into own logs or in case of a unsuccessful start to show up a panic/error screen
      */
     val logger = LogManager.getLogger(CLIENT_NAME)!!
 
@@ -77,34 +60,55 @@ object LiquidBounce : Listenable {
      * Should be executed to start the client.
      */
     val startHandler = handler<ClientStartEvent> {
+        logger.info("Launching $CLIENT_NAME v$CLIENT_VERSION by $CLIENT_AUTHOR")
+        logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
+
+        // Initialize client features
+        EventManager
+
+        // Config
+        ConfigSystem
+        globalEnemyConfigurable
+
+        // Features
+        ModuleManager
+        CommandManager
+        ThemeManager
+        ScriptManager
+        Tabs
+        Chat
+
+        // Download natives
         Natives.downloadNatives()
 
-        commandManager.registerInbuilt()
-        // Initialize the executor
-        CommandExecutor
-        // Initialize the enemy configurable
-        globalEnemyConfigurable
         // Initialize the render engine
         RenderEngine.init()
-
-        // Register tabs
-        Tabs
 
         // Load up web platform
         WebPlatform.init()
 
-        moduleManager.registerInbuilt()
-        scriptManager.loadScripts()
-        configSystem.load()
+        // Register commands and modules
+        CommandManager.registerInbuilt()
+        ModuleManager.registerInbuilt()
 
-        chat.connect()
+        // Load user scripts
+        ScriptManager.loadScripts()
+
+        // Load config system from disk
+        ConfigSystem.load()
+
+        // Connect to chat server
+        Chat.connect()
+
+        logger.info("Successfully loaded client!")
     }
 
     /**
      * Should be executed to stop the client.
      */
     val shutdownHandler = handler<ClientShutdownEvent> {
-        configSystem.store()
+        logger.info("Shutting down client...")
+        ConfigSystem.store()
     }
 
 }

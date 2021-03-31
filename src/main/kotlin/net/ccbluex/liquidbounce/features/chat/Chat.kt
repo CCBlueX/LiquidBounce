@@ -1,12 +1,10 @@
 package net.ccbluex.liquidbounce.features.chat
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.Configurable
-
-import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.chat.client.Client
 import net.ccbluex.liquidbounce.features.chat.client.ClientListener
 import net.ccbluex.liquidbounce.features.chat.client.packet.User
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.ListenableConfigurable
@@ -15,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.extensions.asText
 import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
 
-class Chat : ListenableConfigurable(null, "chat", true), ClientListener {
+object Chat : ListenableConfigurable(null, "chat", true), ClientListener {
 
     private var jwtLogin by boolean("JWT", false)
     private var jwtToken by text("JWTToken")
@@ -39,8 +37,8 @@ class Chat : ListenableConfigurable(null, "chat", true), ClientListener {
         .build()
 
     init {
-        LiquidBounce.configSystem.root(this)
-        LiquidBounce.commandManager.addCommand(createCommand())
+        ConfigSystem.root(this)
+        CommandManager.addCommand(createCommand())
     }
 
     fun connect() {
