@@ -20,15 +20,26 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.repeatableSequence
 
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
-    override fun enable() {
-        player.abilities!!.flying = true
-    }
+    val mode by list("Mode", "Creative", arrayOf("Creative", "Jetpack"))
 
     override fun disable() {
         player.abilities!!.flying = false
     }
 
+    val repeatable = repeatableSequence {
+        when(mode) {
+            "Creative" -> player.abilities.flying = true
+            "Jetpack" -> {
+                if (mc.options.keyJump.isPressed) {
+                    player.velocity.x *= 1.1
+                    player.velocity.y += 0.15
+                    player.velocity.z *= 1.1
+                }
+            }
+        }
+    }
 }
