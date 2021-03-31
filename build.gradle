@@ -3,6 +3,53 @@ plugins {
     id "com.github.node-gradle.node" version "3.0.1"
 }
 
+node {
+    // Whether to download and install a specific Node.js version or not
+    // If false, it will use the globally installed Node.js
+    // If true, it will download node using above parameters
+    // Note that npm is bundled with Node.js
+    download = true
+
+    // Version of node to download and install (only used if download is true)
+    // It will be unpacked in the workDir
+    version = "12.18.3"
+
+    // Version of npm to use
+    // If specified, installs it in the npmWorkDir
+    // If empty, the plugin will use the npm command bundled with Node.js
+    npmVersion = ""
+
+    // Version of Yarn to use
+    // Any Yarn task first installs Yarn in the yarnWorkDir
+    // It uses the specified version if defined and the latest version otherwise (by default)
+    yarnVersion = ""
+
+    // Base URL for fetching node distributions
+    // Only used if download is true
+    // Change it if you want to use a mirror
+    // Or set to null if you want to add the repository on your own.
+    distBaseUrl = "https://nodejs.org/dist"
+
+    // The npm command executed by the npmInstall task
+    // By default it is install but it can be changed to ci
+    npmInstallCommand = "install"
+
+    // The directory where Node.js is unpacked (when download is true)
+    workDir = file("${project.projectDir}/.gradle/nodejs")
+
+    // The directory where npm is installed (when a specific version is defined)
+    npmWorkDir = file("${project.projectDir}/.gradle/npm")
+
+    // The directory where yarn is installed (when a Yarn task is used)
+    yarnWorkDir = file("${project.projectDir}/.gradle/yarn")
+
+    // Whether the plugin automatically should add the proxy configuration to npm and yarn commands
+    // according the proxy configuration defined for Gradle
+    // Disable this option if you want to configure the proxy for npm or yarn on your own
+    // (in the .npmrc file for instance)
+    nodeProxySettings = ProxySettings.SMART
+}
+
 def buildTask = tasks.register("buildGui", Zip) {
     for (folder in file(".").listFiles()) {
         if (!folder.listFiles().any { (it.name == "public") }) {
@@ -22,23 +69,23 @@ def buildTask = tasks.register("buildGui", Zip) {
 }
 
 for (folder in file(".").listFiles()) {
-    if (!folder.listFiles().any { (it.name == "src") }) {
-        continue
+    if (folder.isDirectory() && folder.listFiles().any { (it.name == "public") }) {
+        def iTask = tasks.register("install$folder.name", NpmTask) {
+            dependsOn npmSetup
+
+            args = ["i"]
+            workingDir = file("$folder") // file() is because of a bug in gradle
+        }
+
+        def bTask = tasks.register("build$folder.name", NpmTask) {
+            dependsOn iTask
+
+            args = ["run", "build"]
+            workingDir = file("$folder") // file() is because of a bug in gradle
+        }
+
+        tasks.buildGui.dependsOn(bTask)
     }
-
-    def iTask = tasks.register("install$folder.name", NpmTask) {
-        args = ["i"]
-        workingDir = folder
-    }
-
-    def bTask = tasks.register("build$folder.name", NpmTask) {
-        dependsOn iTask
-
-        args = ["run", "build"]
-        workingDir = folder
-    }
-
-    tasks.buildGui.dependsOn(bTask)
 }
 
 sourceSets {
