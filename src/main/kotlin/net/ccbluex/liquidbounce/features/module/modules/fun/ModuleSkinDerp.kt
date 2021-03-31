@@ -27,7 +27,7 @@ import kotlin.random.Random
 
 object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
 
-    val ticks by int("Ticks", 0, 0..20)
+    val delay by int("Delay", 0, 0..20)
     private val hat by boolean("Hat", true)
     private val jacket by boolean("Jacket", true)
     private val leftpants by boolean("LeftPants", true)
@@ -37,40 +37,34 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
     private val cape by boolean("Cape", true)
     private var prevmodelparts = emptySet<PlayerModelPart>()
 
-    private var tick = 0
     override fun enable() {
-
         prevmodelparts = mc.options.enabledPlayerModelParts
     }
 
     override fun disable() {
-
-        for(modelpart in PlayerModelPart.values()) {
+        for (modelpart in PlayerModelPart.values()) {
             mc.options.setPlayerModelPart(modelpart, false)
         }
-        for(modelpart in prevmodelparts) {
+        for (modelpart in prevmodelparts) {
             mc.options.setPlayerModelPart(modelpart, true)
         }
     }
 
     val repeatable = repeatableSequence {
-        tick++
-        if(tick >= ticks) {
-            if (hat)
-                mc.options.setPlayerModelPart(PlayerModelPart.HAT, Random.nextBoolean())
-            if (jacket)
-                mc.options.setPlayerModelPart(PlayerModelPart.JACKET, Random.nextBoolean())
-            if (leftpants)
-                mc.options.setPlayerModelPart(PlayerModelPart.LEFT_PANTS_LEG, Random.nextBoolean())
-            if (rightpants)
-                mc.options.setPlayerModelPart(PlayerModelPart.RIGHT_PANTS_LEG, Random.nextBoolean())
-            if (leftsleeve)
-                mc.options.setPlayerModelPart(PlayerModelPart.LEFT_SLEEVE, Random.nextBoolean())
-            if (rightsleeve)
-                mc.options.setPlayerModelPart(PlayerModelPart.RIGHT_SLEEVE, Random.nextBoolean())
-            if(cape)
-                mc.options.setPlayerModelPart(PlayerModelPart.CAPE, Random.nextBoolean())
-            tick = 0
-        }
+        wait(delay)
+        if (hat)
+            mc.options.setPlayerModelPart(PlayerModelPart.HAT, Random.nextBoolean())
+        if (jacket)
+            mc.options.setPlayerModelPart(PlayerModelPart.JACKET, Random.nextBoolean())
+        if (leftpants)
+            mc.options.setPlayerModelPart(PlayerModelPart.LEFT_PANTS_LEG, Random.nextBoolean())
+        if (rightpants)
+            mc.options.setPlayerModelPart(PlayerModelPart.RIGHT_PANTS_LEG, Random.nextBoolean())
+        if (leftsleeve)
+            mc.options.setPlayerModelPart(PlayerModelPart.LEFT_SLEEVE, Random.nextBoolean())
+        if (rightsleeve)
+            mc.options.setPlayerModelPart(PlayerModelPart.RIGHT_SLEEVE, Random.nextBoolean())
+        if (cape)
+            mc.options.setPlayerModelPart(PlayerModelPart.CAPE, Random.nextBoolean())
     }
 }
