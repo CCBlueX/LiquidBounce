@@ -32,7 +32,7 @@ object ModuleAutoLeave : Module("AutoLeave", Category.COMBAT) {
 
     private val health by float("Health", 8f, 0f..20f)
     private val delay by int("Delay", 0, 0..60) // min 0 ticks to 60 ticks (20 ticks == 1 second)
-    private val mode by list("Mode", "Quit", arrayOf("Quit, InvalidPacket", "SelfHurt", "IllegalChat"))
+    private val mode by chooseList("Mode", "Quit", arrayOf("Quit, InvalidPacket", "SelfHurt", "IllegalChat"))
 
     val tickRepeatable = repeatableSequence {
         if(player.health <= health && !player.abilities.creativeMode && !mc.isIntegratedServerRunning) {

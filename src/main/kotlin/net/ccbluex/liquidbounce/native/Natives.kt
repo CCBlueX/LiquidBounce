@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.native
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.utils.*
 import java.io.File
 import kotlin.system.exitProcess
 
 object Natives {
 
-    val nativesRoot = File(LiquidBounce.configSystem.rootFolder, "natives")
+    val nativesRoot = File(ConfigSystem.rootFolder, "natives")
     private const val LIBRARY_VERSION = 0.36
 
     /**

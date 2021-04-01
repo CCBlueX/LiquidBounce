@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.dot
 import net.ccbluex.liquidbounce.utils.regular
@@ -43,7 +43,7 @@ object CommandToggle {
                 .build())
             .handler { args ->
                 val name = args[0] as String
-                val module = LiquidBounce.moduleManager.find { it.name.equals(name, true) }
+                val module = ModuleManager.find { it.name.equals(name, true) }
                     ?: throw CommandException("Module §b§l${args[0]}§c not found.")
 
                 val newState = !module.enabled

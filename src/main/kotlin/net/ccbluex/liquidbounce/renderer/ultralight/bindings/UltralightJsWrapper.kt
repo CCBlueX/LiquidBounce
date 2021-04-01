@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.script.ultralight.bindings
+package net.ccbluex.liquidbounce.renderer.ultralight.bindings
 
 import com.labymedia.ultralight.javascript.JavascriptObject
 import com.labymedia.ultralight.javascript.JavascriptPropertyAttributes
@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.renderer.ultralight.support.ViewContextProvider
 /**
  * Referenced by JS as `client`
  */
-class ClientJSWrapper(private val viewContextProvider: ViewContextProvider, val webView: WebView) : Listenable {
+class UltralightJsWrapper(private val viewContextProvider: ViewContextProvider, val webView: WebView) : Listenable {
     /**
      * Contains all events that are registered in the current context
      */

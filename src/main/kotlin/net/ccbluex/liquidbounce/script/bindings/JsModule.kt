@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.script.api
+package net.ccbluex.liquidbounce.script.bindings
 
 import jdk.nashorn.api.scripting.JSObject
 import net.ccbluex.liquidbounce.config.Value
@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.logger
 
 @Suppress("unused")
-class ScriptModule(private val moduleObject: JSObject) : Module(
+class JsModule(private val moduleObject: JSObject) : Module(
     name = moduleObject.getMember("name") as String,
     category = Category.fromReadableName(moduleObject.getMember("category") as String)!!
 ) {
