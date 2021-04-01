@@ -46,7 +46,6 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
     }
 
     init {
-        SpeedChoiceConfigurable.initialize()
         tree(SpeedChoiceConfigurable)
     }
 

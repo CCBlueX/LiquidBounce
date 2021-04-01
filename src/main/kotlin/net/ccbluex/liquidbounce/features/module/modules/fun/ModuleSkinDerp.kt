@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatableSequence
+import net.ccbluex.liquidbounce.features.module.repeatable
 import net.minecraft.client.render.entity.PlayerModelPart
 import kotlin.random.Random
 
@@ -50,7 +50,7 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
         }
     }
 
-    val repeatable = repeatableSequence {
+    val repeatable = repeatable {
         wait(delay)
         if (hat)
             mc.options.setPlayerModelPart(PlayerModelPart.HAT, Random.nextBoolean())

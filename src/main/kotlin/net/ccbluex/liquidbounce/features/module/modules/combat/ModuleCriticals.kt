@@ -101,7 +101,6 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     init {
-        CritChoiceConfigurable.initialize()
         tree(CritChoiceConfigurable)
         tree(VisualsConfigurable)
     }

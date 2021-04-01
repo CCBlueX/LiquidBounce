@@ -154,10 +154,36 @@ open class Choice(name: String, @Exclude private val configurable: ChoiceConfigu
     protected val network: ClientPlayNetworkHandler
         get() = mc.networkHandler!!
 
+    val handler = handler<ToggleModuleEvent>(ignoreCondition = true) { event ->
+        if (configurable.module == event.module && configurable.active.equals(name, true)) {
+            println(event.newState)
+            if (event.newState) {
+                enable()
+            } else {
+                disable()
+            }
+        }
+    }
+
+    /**
+     * Called when module is turned on
+     */
+    open fun enable() {}
+
+    /**
+     * Called when module is turned off
+     */
+    open fun disable() {}
+
     /**
      * Events should be handled when mode is enabled
      */
     override fun handleEvents() = configurable.module.enabled && configurable.active.equals(name, true)
+
+    /**
+     * Required for repeatable sequence
+     */
+    override fun hook() = configurable.module
 
 }
 
@@ -171,17 +197,17 @@ inline fun <reified T : Event> Listenable.sequenceHandler(ignoreCondition: Boole
 /**
  * Registers a repeatable sequence which continues to execute until the module is turned off
  */
-inline fun Listenable.repeatableSequence(module: Listenable = this, noinline eventHandler: SuspendableHandler<ToggleModuleEvent>) {
+fun Listenable.repeatable(eventHandler: SuspendableHandler<ToggleModuleEvent>) {
     var sequence: Sequence<ToggleModuleEvent>? = null
-    handler<ToggleModuleEvent>(true) { event ->
-        if (event.module != module)
-            return@handler
 
-        sequence = if (event.newState) {
-            Sequence(eventHandler, event, loop = true)
-        } else {
-            sequence?.cancel()
-            null
+    handler<ToggleModuleEvent>(ignoreCondition = true) { event ->
+        if (event.module == hook()) {
+            sequence = if (event.newState) {
+                Sequence(eventHandler, event, loop = true)
+            } else {
+                sequence?.cancel()
+                null
+            }
         }
     }
 }

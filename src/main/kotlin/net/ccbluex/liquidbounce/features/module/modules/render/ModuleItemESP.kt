@@ -42,7 +42,6 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
     })
 
     init {
-        ModeConfigurable.initialize()
         tree(ModeConfigurable)
     }
 

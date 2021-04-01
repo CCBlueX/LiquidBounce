@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.config
 
 import com.google.gson.annotations.SerializedName
+import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
 import net.ccbluex.liquidbounce.renderer.engine.Color4b
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.block.Block
@@ -73,6 +74,10 @@ class ChooseListValue(name: String, selected: String, @Exclude val selectables: 
 open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf()): Value<MutableList<Value<*>>>(name, value = value) {
 
     protected fun <T: Configurable> tree(configurable: T): T {
+        if (configurable is ChoiceConfigurable) {
+            configurable.initialize()
+        }
+
         value.add(configurable)
         return configurable
     }
