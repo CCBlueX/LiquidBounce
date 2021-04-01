@@ -156,7 +156,6 @@ open class Choice(name: String, @Exclude private val configurable: ChoiceConfigu
 
     val handler = handler<ToggleModuleEvent>(ignoreCondition = true) { event ->
         if (configurable.module == event.module && configurable.active.equals(name, true)) {
-            println(event.newState)
             if (event.newState) {
                 enable()
             } else {
