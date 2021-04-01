@@ -21,15 +21,15 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatableSequence
+import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.extensions.moving
 
 object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
-    val repeatable = repeatableSequence {
+    val repeatable = repeatable {
         if (player.moving && player.isOnGround && !player.isSneaking && !mc.options.keySneak.isPressed && !mc.options.keyJump.isPressed) {
             if (world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)).findAny().isPresent)
-                return@repeatableSequence
+                return@repeatable
 
             player.jump()
         }

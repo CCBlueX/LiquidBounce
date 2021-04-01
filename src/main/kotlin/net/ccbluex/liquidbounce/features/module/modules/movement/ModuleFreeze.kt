@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatableSequence
+import net.ccbluex.liquidbounce.features.module.repeatable
 
 object ModuleFreeze : Module("Module", Category.MOVEMENT) {
 
-    val repeatable = repeatableSequence {
+    val repeatable = repeatable {
 
         // player.isDead = true
         player.yaw = player.renderYaw
