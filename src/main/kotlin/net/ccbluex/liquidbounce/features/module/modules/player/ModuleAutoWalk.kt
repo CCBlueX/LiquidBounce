@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatableSequence
+import net.ccbluex.liquidbounce.features.module.repeatable
 
 /**
  * A autowalk module
@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.repeatableSequence
  */
 object ModuleAutoWalk : Module("AutoWalk", Category.PLAYER) {
 
-    val repeatable = repeatableSequence {
+    val repeatable = repeatable {
         mc.options.keyForward.isPressed = true
     }
 
