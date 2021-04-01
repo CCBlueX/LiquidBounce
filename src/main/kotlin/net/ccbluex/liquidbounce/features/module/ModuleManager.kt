@@ -23,10 +23,12 @@ import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastBreak
@@ -95,13 +97,7 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleDamage,
             ModuleAutoWalk,
             ModuleNoClip,
-            ModuleAntiLevitation,
-            ModuleVehicleFly,
-            ModuleFreeze,
-            ModuleBedGodMode,
-            ModuleParkour,
-            ModuleSuperKnockback,
-            ModuleSkinDerp
+            ModuleKillAura
         )
 
         builtin.forEach(this::addModule)

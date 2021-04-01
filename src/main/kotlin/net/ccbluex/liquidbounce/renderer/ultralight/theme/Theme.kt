@@ -18,8 +18,9 @@
  */
 package net.ccbluex.liquidbounce.renderer.ultralight.theme
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.utils.extractZip
+import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.resource
 import java.io.File
 import java.nio.file.StandardWatchEventKinds.*
@@ -28,7 +29,7 @@ import java.nio.file.StandardWatchEventKinds.*
 
 object ThemeManager {
 
-    val themesFolder = File(LiquidBounce.configSystem.rootFolder, "themes")
+    val themesFolder = File(ConfigSystem.rootFolder, "themes")
     val defaultTheme = Theme.default()
 
 }
@@ -43,12 +44,21 @@ class Theme(val name: String) {
     companion object {
 
         fun default() = Theme("default").apply {
-            if (exists) {
-                themeFolder.delete()
+            runCatching {
+                val stream = resource("/assets/liquidbounce/default_theme.zip")
+
+                if (exists) {
+                    themeFolder.delete()
+                }
+
+                extractZip(stream, themeFolder)
+                themeFolder.deleteOnExit()
+            }.onFailure {
+                logger.error("Unable to extract default theme", it)
+            }.onSuccess {
+                logger.info("Successfully extracted default theme")
             }
 
-            extractZip(resource("/assets/liquidbounce/default_theme.zip"), themeFolder)
-            themeFolder.deleteOnExit()
         }
 
     }

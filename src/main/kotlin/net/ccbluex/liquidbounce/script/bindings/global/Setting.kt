@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.script.api.global
+package net.ccbluex.liquidbounce.script.bindings.global
 
 import jdk.nashorn.api.scripting.JSObject
 import jdk.nashorn.api.scripting.ScriptUtils
-import net.ccbluex.liquidbounce.config.ListValue
+import net.ccbluex.liquidbounce.config.ChooseListValue
 import net.ccbluex.liquidbounce.config.RangedValue
 import net.ccbluex.liquidbounce.config.Value
 import net.minecraft.block.Block
@@ -106,12 +106,12 @@ object Setting {
      */
     @JvmStatic
     @Suppress("UNCHECKED_CAST")
-    fun list(settingInfo: JSObject): ListValue {
+    fun list(settingInfo: JSObject): ChooseListValue {
         val name = settingInfo.getMember("name") as String
         val values = ScriptUtils.convert(settingInfo.getMember("values"), Array<String>::class.java) as Array<String>
         val default = settingInfo.getMember("default") as String
 
-        return ListValue(name, selected = default, selectables = values)
+        return ChooseListValue(name, selected = default, selectables = values)
     }
 
 }

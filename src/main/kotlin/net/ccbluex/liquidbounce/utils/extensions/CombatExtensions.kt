@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
@@ -28,12 +31,17 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.projectile.ProjectileUtil
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
-import kotlin.math.abs
-import kotlin.math.pow
+import net.minecraft.world.RaycastContext
+import kotlin.math.atan2
+import kotlin.math.hypot
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 val globalEnemyConfigurable = EnemyConfigurable()
 
@@ -81,7 +89,7 @@ class EnemyConfigurable : Configurable("enemies") {
     }
 
     init {
-        LiquidBounce.configSystem.root(this)
+        ConfigSystem.root(this)
     }
 
     /**
@@ -115,6 +123,300 @@ class EnemyConfigurable : Configurable("enemies") {
 
 }
 
+/**
+ * Configurable to configure the dynamic rotation engine
+ */
+class RotationsConfigurable : Configurable("rotations") {
+
+    val turnSpeed by curve("TurnSpeed", arrayOf(4f, 7f, 10f, 3f, 2f, 0.7f))
+
+    val outborderOffset = floatRange("Offset")
+
+    val predict by boolean("Predict", true)
+
+}
+
+/**
+ * A target tracker to choose the best enemy to attack
+ */
+class TargetTracker : Configurable("target"), Iterable<Entity> {
+
+    var possibleTargets: Array<Entity> = emptyArray()
+    var lockedOnTarget: Entity? = null
+
+    val priority by chooseList("Priority", "Health", arrayOf("Health", "Distance", "Direction", "Age"))
+    val lockOnTarget by boolean("LockOnTarget", false)
+    val sortOut by boolean("SortOut", true)
+    val delayableSwitch by intRange("DelayableSwitch", 10..20, 0..40)
+
+    /**
+     * Update should be called to always pick the best target out of the current world context
+     */
+    fun update(enemyConf: EnemyConfigurable = globalEnemyConfigurable) {
+        possibleTargets = emptyArray()
+
+        val entities = mc.world!!.entities
+            .filter { it.shouldBeAttacked(enemyConf) }
+
+        // default
+        entities.sortedBy { -mc.player!!.boxedDistanceTo(it) } // Sort by distance
+        when {
+            priority.equals("health", true) -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health
+            // priority.equals("direction", true) -> entities.sortedBy { RotationUtils.getRotationDifference(it) } // Sort by FOV
+            priority.equals("age", true) -> entities.sortedBy { -it.age } // Sort by existence
+        }
+
+        possibleTargets = entities.toTypedArray()
+    }
+
+    fun cleanup() {
+        possibleTargets = emptyArray()
+        lockedOnTarget = null
+    }
+
+    fun lock(entity: Entity) {
+        lockedOnTarget = entity
+    }
+
+    override fun iterator() = possibleTargets.iterator()
+
+}
+
+/**
+ * A rotation manager to
+ */
+object RotationManager : Listenable {
+
+    var targetRotation: Rotation? = null
+    var serverRotation: Rotation? = null
+
+    // rotation engine
+    private var activeConfigurable: RotationsConfigurable? = null
+    var currRotation: Rotation? = null
+
+    private var ticksUntilReset = -1
+
+    // useful for something like autopot
+    var deactivateManipulation = false
+
+    private var x = Random.nextDouble()
+    private var y = Random.nextDouble()
+    private var z = Random.nextDouble()
+
+    /**
+     * Find the best spot of a box to aim at.
+     */
+    fun raytraceBox(eyes: Vec3d, box: Box, throughWalls: Boolean, range: Double): VecRotation? {
+        val preferredSpot = Vec3d(box.minX + (box.maxX - box.minX) * x * 0.8,box.minY + (box.maxY - box.minY) * y * 0.8,
+            box.minZ + (box.maxZ - box.minZ) * z * 0.8)
+        val preferredRotation = makeRotation(eyes, preferredSpot)
+
+        var bestRotation: VecRotation? = null
+
+        for (x in 0.1..0.9 step 0.1) {
+            for (y in 0.1..0.9 step 0.1) {
+                for (z in 0.1..0.9 step 0.1) {
+                    val vec3 = Vec3d(box.minX + (box.maxX - box.minX) * x,box.minY + (box.maxY - box.minY) * y,
+                        box.minZ + (box.maxZ - box.minZ) * z)
+
+                    // skip because of out of range
+                    if (eyes.distanceTo(vec3) > range)
+                        continue
+
+                    // todo: prefer visible spots even when through walls is turned on
+                    if (isVisible(eyes, vec3) || throughWalls) {
+                        val rotation = makeRotation(vec3, eyes)
+
+                        // Calculate next spot to preferred spot
+                        if (bestRotation == null || rotationDifference(rotation, preferredRotation) < rotationDifference(bestRotation.rotation, preferredRotation)) {
+                            bestRotation = VecRotation(rotation, vec3)
+                        }
+                    }
+                }
+            }
+        }
+
+        return bestRotation
+    }
+
+    fun outborder(box: Box): Vec3d? {
+        return null
+    }
+
+    fun aimAt(vec: Vec3d, eyes: Vec3d, ticks: Int = 5, configurable: RotationsConfigurable)
+        = aimAt(makeRotation(vec, eyes), ticks, configurable)
+
+    fun aimAt(rotation: Rotation, ticks: Int = 5, configurable: RotationsConfigurable) {
+        activeConfigurable = configurable
+        rotation.fixedSensitivity() // todo: move directly into rotation
+        targetRotation = rotation
+        ticksUntilReset = ticks
+    }
+
+    private fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
+        val diffX = vec.x - eyes.x
+        val diffY = vec.y - eyes.y
+        val diffZ = vec.z - eyes.z
+
+        return Rotation(
+            MathHelper.wrapDegrees(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f),
+            MathHelper.wrapDegrees((-Math.toDegrees(atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ)))).toFloat())
+        )
+    }
+
+    /**
+     * Update current rotation to new rotation step
+     */
+    private fun update() {
+        // Update how long the rotation should last
+        if (ticksUntilReset > 0) {
+            ticksUntilReset--
+
+            if (ticksUntilReset == 0) {
+                targetRotation = null
+            }
+        }
+
+        if (Random.nextDouble() > 0.6) {
+            x = Random.nextDouble()
+        }
+        if (Random.nextDouble() > 0.6) {
+            y = Random.nextDouble()
+        }
+        if (Random.nextDouble() > 0.6) {
+            z = Random.nextDouble()
+        }
+
+        // todo: update curr rotation to target rotation and check for active configurable
+        currRotation = targetRotation
+    }
+
+    fun needsUpdate(lastYaw: Float, lastPitch: Float): Boolean {
+        // Update current rotation
+        update()
+
+        // Check if something changed
+        val (currYaw, currPitch) = currRotation ?: return false
+
+        return lastYaw != currYaw || lastPitch != currPitch
+    }
+
+    /**
+     * Allows you to check if a point is behind a wall
+     */
+    private fun isVisible(eyes: Vec3d, vec3: Vec3d)
+        = mc.world?.raycast(RaycastContext(eyes, vec3, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player))?.type == HitResult.Type.MISS
+
+    /**
+     * Allows you to check if your enemy is behind a wall
+     */
+    fun facingEnemy(enemy: Entity, range: Double): Boolean {
+        return raycastEntity(range, serverRotation ?: return false) { it == enemy } != null
+    }
+
+    /**
+     * Calculate difference between the server rotation and your rotation
+     */
+    fun rotationDifference(rotation: Rotation): Double {
+        return if (serverRotation == null) 0.0 else rotationDifference(rotation, serverRotation!!)
+    }
+
+    /**
+     * Calculate difference between two rotations
+     */
+    fun rotationDifference(a: Rotation, b: Rotation)
+        = hypot(angleDifference(a.yaw, b.yaw).toDouble(), (a.pitch - b.pitch).toDouble())
+
+    /**
+     * Limit your rotations
+     */
+    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float): Rotation {
+        val yawDifference = angleDifference(targetRotation.yaw, currentRotation.yaw)
+        val pitchDifference = angleDifference(targetRotation.pitch, currentRotation.pitch)
+
+        return Rotation(
+            currentRotation.yaw + if (yawDifference > turnSpeed) turnSpeed else yawDifference.coerceAtLeast(-turnSpeed),
+            currentRotation.pitch + if (pitchDifference > turnSpeed) turnSpeed else pitchDifference.coerceAtLeast(-turnSpeed)
+        )
+    }
+
+    /**
+     * Calculate difference between two angle points
+     */
+    private fun angleDifference(a: Float, b: Float) = ((a - b) % 360f + 540f) % 360f - 180f
+
+    private val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
+
+        if (packet is PlayerMoveC2SPacket) {
+            if (!deactivateManipulation) {
+                currRotation?.run {
+                    val (serverYaw, serverPitch) = serverRotation ?: Rotation(0f, 0f)
+
+                    if (yaw != serverYaw || pitch != serverPitch) {
+                        packet.yaw = yaw
+                        packet.pitch = pitch
+                        packet.changeLook = true
+                    }
+                }
+            }
+
+            // Update current rotation
+            if (packet.changeLook) {
+                serverRotation = Rotation(packet.yaw, packet.pitch)
+            }
+        }
+    }
+
+}
+
+data class Rotation(var yaw: Float, var pitch: Float) {
+
+    val rotationVec: Vec3d
+        get() {
+            val yawCos = MathHelper.cos(-yaw * 0.017453292f)
+            val yawSin = MathHelper.sin(-yaw * 0.017453292f)
+            val pitchCos = MathHelper.cos(pitch * 0.017453292f)
+            val pitchSin = MathHelper.sin(pitch * 0.017453292f)
+            return Vec3d((yawSin * pitchCos).toDouble(), (-pitchSin).toDouble(), (yawCos * pitchCos).toDouble())
+        }
+
+    /**
+     * Set rotations to [player]
+     */
+    fun toPlayer(player: PlayerEntity) {
+        if (yaw.isNaN() || pitch.isNaN())
+            return
+
+        player.yaw = yaw
+        player.pitch = pitch
+    }
+
+    /**
+     * Patch GCD aiming
+     */
+    fun fixedSensitivity(sensitivity: Float = mc.options.mouseSensitivity.toFloat()) {
+        val f = sensitivity * 0.6F + 0.2F
+        val gcd = f * f * f * 1.2F
+
+        // get previous rotation
+        val rotation = RotationManager.serverRotation ?: return
+
+        // fix yaw
+        var deltaYaw = yaw - rotation.yaw
+        deltaYaw -= deltaYaw % gcd
+        yaw = rotation.yaw + deltaYaw
+
+        // fix pitch
+        var deltaPitch = pitch - rotation.pitch
+        deltaPitch -= deltaPitch % gcd
+        pitch = rotation.pitch + deltaPitch
+    }
+
+}
+
+data class VecRotation(val rotation: Rotation, val vec: Vec3d)
+
 // Extensions
 
 fun Entity.shouldBeShown(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isEnemy(this)
@@ -131,33 +433,16 @@ fun ClientWorld.findEnemy(range: Float, player: Entity = mc.player!!, enemyConf:
         .filter { (_, distance) -> distance <= range }
         .minByOrNull { (_, distance) -> distance }
 
-/**
- * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
- */
-fun Entity.boxedDistanceTo(entity: Entity): Double {
-    val eyes = entity.getCameraPosVec(1F)
-    val pos = getNearestPoint(eyes, boundingBox)
-    val xDist = abs(pos.x - eyes.x)
-    val yDist = abs(pos.y - eyes.y)
-    val zDist = abs(pos.z - eyes.z)
-    return sqrt(xDist.pow(2) + yDist.pow(2) + zDist.pow(2))
-}
+fun raycastEntity(range: Double, rotation: Rotation, filter: (Entity) -> Boolean): Entity? {
+    val entity: Entity = mc.cameraEntity ?: return null
 
-/**
- * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
- */
-fun getNearestPoint(eye: Vec3d, box: Box): Vec3d {
-    val origin = doubleArrayOf(eye.x, eye.y, eye.z)
-    val destMins = doubleArrayOf(box.minX, box.minY, box.minZ)
-    val destMaxs = doubleArrayOf(box.maxX, box.maxY, box.maxZ)
+    val cameraVec = entity.getCameraPosVec(1f)
+    val rotationVec = rotation.rotationVec
 
-    // It loops through every coordinate of the double arrays and picks the nearest point
-    for (i in 0..2) {
-        if (origin[i] > destMaxs[i])
-            origin[i] = destMaxs[i]
-        else if (origin[i] < destMins[i])
-            origin[i] = destMins[i]
-    }
+    val vec3d3 = cameraVec.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
+    val box = entity.boundingBox.stretch(rotationVec.multiply(range)).expand(1.0, 1.0, 1.0)
 
-    return Vec3d(origin[0], origin[1], origin[2])
+    val entityHitResult = ProjectileUtil.raycast(entity, cameraVec, vec3d3, box, { !it.isSpectator && it.collides() && filter(it) }, range * range)
+
+    return entityHitResult?.entity
 }

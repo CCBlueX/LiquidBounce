@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.command
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.ChatSendEvent
 import net.ccbluex.liquidbounce.event.Listenable
@@ -101,7 +101,10 @@ object CommandManager : Iterable<Command> {
     }
 
     init {
-        LiquidBounce.configSystem.root(Options)
+        ConfigSystem.root(Options)
+
+        // Initialize the executor
+        CommandExecutor
     }
 
     fun registerInbuilt() {

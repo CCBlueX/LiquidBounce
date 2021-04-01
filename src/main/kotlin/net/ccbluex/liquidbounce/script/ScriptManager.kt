@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.utils.logger
 import java.io.File
 import java.io.FileFilter
@@ -31,7 +31,7 @@ object ScriptManager {
     val loadedScripts = mutableListOf<Script>()
 
     // Store all of your scripts into this folder to get loaded
-    val scriptsRoot = File(LiquidBounce.configSystem.rootFolder, "scripts").apply {
+    val scriptsRoot = File(ConfigSystem.rootFolder, "scripts").apply {
         if (!exists())
             mkdir()
     }

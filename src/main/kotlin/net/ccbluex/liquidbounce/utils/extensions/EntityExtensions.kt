@@ -23,10 +23,9 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.stat.Stats
+import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
+import kotlin.math.*
 
 val ClientPlayerEntity.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
@@ -92,4 +91,38 @@ fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed) {
     val angle = Math.toRadians(yaw.toDouble())
     x = -sin(angle) * speed
     z = cos(angle) * speed
+}
+
+val ClientPlayerEntity.eyesPos: Vec3d
+    get() = Vec3d(pos.x, boundingBox.minY + getEyeHeight(pose), pos.z)
+
+/**
+ * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
+ */
+fun Entity.boxedDistanceTo(entity: Entity): Double {
+    val eyes = entity.getCameraPosVec(1F)
+    val pos = getNearestPoint(eyes, boundingBox)
+    val xDist = abs(pos.x - eyes.x)
+    val yDist = abs(pos.y - eyes.y)
+    val zDist = abs(pos.z - eyes.z)
+    return sqrt(xDist.pow(2) + yDist.pow(2) + zDist.pow(2))
+}
+
+/**
+ * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
+ */
+fun getNearestPoint(eyes: Vec3d, box: Box): Vec3d {
+    val origin = doubleArrayOf(eyes.x, eyes.y, eyes.z)
+    val destMins = doubleArrayOf(box.minX, box.minY, box.minZ)
+    val destMaxs = doubleArrayOf(box.maxX, box.maxY, box.maxZ)
+
+    // It loops through every coordinate of the double arrays and picks the nearest point
+    for (i in 0..2) {
+        if (origin[i] > destMaxs[i])
+            origin[i] = destMaxs[i]
+        else if (origin[i] < destMins[i])
+            origin[i] = destMins[i]
+    }
+
+    return Vec3d(origin[0], origin[1], origin[2])
 }

@@ -19,12 +19,10 @@
 package net.ccbluex.liquidbounce.config
 
 import com.google.gson.annotations.SerializedName
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
 import net.ccbluex.liquidbounce.renderer.engine.Color4b
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
-import java.awt.Color
 import kotlin.reflect.KProperty
 import kotlin.reflect.jvm.isAccessible
 
@@ -69,7 +67,7 @@ open class Value<T>(@SerializedName("name")
 class RangedValue<T>(name: String, value: T, @Exclude val range: ClosedRange<*>, change: (T, T) -> Unit = { _, _ -> })
     : Value<T>(name, value, change)
 
-class ListValue(name: String, selected: String, @Exclude val selectables: Array<String>, change: (String, String) -> Unit = { _, _ -> })
+class ChooseListValue(name: String, selected: String, @Exclude val selectables: Array<String>, change: (String, String) -> Unit = { _, _ -> })
     : Value<String>(name, selected, change)
 
 open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf()): Value<MutableList<Value<*>>>(name, value = value) {
@@ -100,8 +98,11 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
     protected fun text(name: String, default: String = "", change: (String, String) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun list(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
-        = ListValue(name, selected = default, selectables = array, change = change).apply { this@Configurable.value.add(this) }
+    protected fun chooseList(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
+        = ChooseListValue(name, selected = default, selectables = array, change = change).apply { this@Configurable.value.add(this) }
+
+    protected fun curve(name: String, default: Array<Float>, change: (Array<Float>, Array<Float>) -> Unit = { _, _ -> })
+        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
     protected fun color(name: String, color: Color4b = Color4b(255, 255, 255, 255), change: (Color4b, Color4b) -> Unit = { _, _ -> })
         = Value(name, value = color, change = change).apply { this@Configurable.value.add(this) }

@@ -22,13 +22,14 @@ import jdk.internal.dynalink.beans.StaticClass
 import jdk.nashorn.api.scripting.JSObject
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory
 import jdk.nashorn.api.scripting.ScriptUtils
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.script.api.ScriptModule
-import net.ccbluex.liquidbounce.script.api.global.Chat
-import net.ccbluex.liquidbounce.script.api.global.Item
-import net.ccbluex.liquidbounce.script.api.global.Setting
+import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.script.bindings.JsClient
+import net.ccbluex.liquidbounce.script.bindings.JsModule
+import net.ccbluex.liquidbounce.script.bindings.global.Chat
+import net.ccbluex.liquidbounce.script.bindings.global.Item
+import net.ccbluex.liquidbounce.script.bindings.global.Setting
 import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
 import java.io.File
@@ -63,7 +64,7 @@ class Script(val scriptFile: File) {
 
         // Global instances
         scriptEngine.put("mc", mc)
-        scriptEngine.put("client", LiquidBounce)
+        scriptEngine.put("client", JsClient)
 
         // Global functions
         scriptEngine.put("registerScript", RegisterScript())
@@ -100,13 +101,13 @@ class Script(val scriptFile: File) {
      * Registers a new script module
      *
      * @param moduleObject JavaScript object containing information about the module.
-     * @param callback JavaScript function to which the corresponding instance of [ScriptModule] is passed.
-     * @see ScriptModule
+     * @param callback JavaScript function to which the corresponding instance of [JsModule] is passed.
+     * @see JsModule
      */
     @Suppress("unused")
     fun registerModule(moduleObject: JSObject, callback: JSObject) {
-        val module = ScriptModule(moduleObject)
-        LiquidBounce.moduleManager.addModule(module)
+        val module = JsModule(moduleObject)
+        ModuleManager.addModule(module)
         registeredModules += module
         callback.call(moduleObject, module)
     }
@@ -168,7 +169,7 @@ class Script(val scriptFile: File) {
      * @param scriptFile Path to the file to be imported.
      */
     fun import(scriptFile: String) {
-        val scriptText = File(LiquidBounce.scriptManager.scriptsRoot, scriptFile).readText()
+        val scriptText = File(ScriptManager.scriptsRoot, scriptFile).readText()
 
         scriptEngine.eval(scriptText)
     }

@@ -42,6 +42,7 @@ import com.labymedia.ultralight.bitmap.UltralightBitmapSurface
 import com.labymedia.ultralight.config.FontHinting
 import com.labymedia.ultralight.config.UltralightConfig
 import net.ccbluex.liquidbounce.native.Natives
+import net.ccbluex.liquidbounce.renderer.ultralight.bindings.UltralightJsWrapper
 import net.ccbluex.liquidbounce.renderer.ultralight.input.ClipboardAdapter
 import net.ccbluex.liquidbounce.renderer.ultralight.input.CursorAdapter
 import net.ccbluex.liquidbounce.renderer.ultralight.listener.ViewListener
@@ -50,7 +51,6 @@ import net.ccbluex.liquidbounce.renderer.ultralight.support.ViewContextProvider
 import net.ccbluex.liquidbounce.renderer.ultralight.support.ViewFileSystem
 import net.ccbluex.liquidbounce.renderer.ultralight.support.ViewLogger
 import net.ccbluex.liquidbounce.renderer.ultralight.theme.Page
-import net.ccbluex.liquidbounce.script.ultralight.bindings.ClientJSWrapper
 import net.ccbluex.liquidbounce.utils.SingleThreadTaskScheduler
 import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
@@ -118,7 +118,7 @@ class WebView(
 
     private var lastJavascriptGarbageCollections = 0L
 
-    lateinit var jsWrapper: ClientJSWrapper
+    lateinit var jsWrapper: UltralightJsWrapper
 
     lateinit var databind: Databind
 
@@ -138,7 +138,7 @@ class WebView(
                     .contextProviderFactory(ViewContextProvider.Factory(view))
                     .build()
             )
-            this.jsWrapper = ClientJSWrapper(ViewContextProvider(view), this)
+            this.jsWrapper = UltralightJsWrapper(ViewContextProvider(view), this)
 
             view.setViewListener(ViewListener(CursorAdapter(window)))
             view.setLoadListener(ViewLoadListener(this))
