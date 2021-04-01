@@ -41,6 +41,9 @@ import com.labymedia.ultralight.*
 import com.labymedia.ultralight.bitmap.UltralightBitmapSurface
 import com.labymedia.ultralight.config.FontHinting
 import com.labymedia.ultralight.config.UltralightConfig
+import com.labymedia.ultralight.config.UltralightViewConfig
+import com.labymedia.ultralight.databind.Databind
+import com.labymedia.ultralight.databind.DatabindConfiguration
 import net.ccbluex.liquidbounce.native.Natives
 import net.ccbluex.liquidbounce.renderer.ultralight.bindings.UltralightJsWrapper
 import net.ccbluex.liquidbounce.renderer.ultralight.input.ClipboardAdapter
@@ -87,7 +90,6 @@ object WebPlatform {
                 UltralightConfig()
                     .resourcePath("./resources/")
                     .fontHinting(FontHinting.NORMAL)
-                    .deviceScale(1.0)
                     .fontHinting(FontHinting.SMOOTH)
             )
             platform.usePlatformFontLoader()
@@ -130,7 +132,12 @@ class WebView(
 
             renderer = WebPlatform.renderer
 
-            view = renderer.createView(width().toLong(), height().toLong(), true)
+            view = renderer.createView(
+                width().toLong(), height().toLong(),
+                UltralightViewConfig()
+                    .isTransparent(true)
+                    .initialDeviceScale(1.0)
+            )
 
             this.databind = Databind(
                 DatabindConfiguration

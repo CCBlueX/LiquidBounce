@@ -26,7 +26,7 @@ import kotlin.system.exitProcess
 object Natives {
 
     val nativesRoot = File(ConfigSystem.rootFolder, "natives")
-    private const val LIBRARY_VERSION = 0.36
+    private const val LIBRARY_VERSION = 0.41
 
     /**
      * Download required natives
