@@ -102,7 +102,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleParkour,
             ModuleSuperKnockback,
             ModuleSkinDerp,
-            ModuleKillAura
+            ModuleKillAura,
+            ModulePingSpoof
         )
 
         builtin.forEach(this::addModule)
