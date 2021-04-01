@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastBreak
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleTimer
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -104,6 +105,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleSkinDerp,
             ModuleKillAura,
             ModulePingSpoof
+            ModuleKillAura,
+            ModuleTimer
         )
 
         builtin.forEach(this::addModule)

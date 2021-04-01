@@ -16,7 +16,8 @@
     "minecraft.network.MixinClientConnection",
     "minecraft.network.MixinClientPlayerInteractionManager",
     "minecraft.render.MixinEntityRenderer",
-    "minecraft.render.MixinGameRenderer"
+    "minecraft.render.MixinGameRenderer",
+    "minecraft.render.MixinRenderTickCounter"
   ],
   "server": [],
   "injectors": {
