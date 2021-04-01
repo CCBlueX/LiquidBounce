@@ -76,6 +76,7 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
 
     fun initConfigurable() {
         value.filterIsInstance<ChoiceConfigurable>().forEach {
+            println("init?")
             it.initialize(it)
         }
     }
@@ -122,7 +123,7 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
     protected fun Module.choices(name: String, active: String, initialize: (ChoiceConfigurable) -> Unit)
-        = ChoiceConfigurable(this, name, active, initialize).apply { tree(this) }
+        = ChoiceConfigurable(this, name, active, initialize).apply { this@Configurable.value.add(this) }
 
     /**
      * Overwrite current configurable and their existing values from [configurable].
