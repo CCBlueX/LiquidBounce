@@ -76,7 +76,6 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
 
     fun initConfigurable() {
         value.filterIsInstance<ChoiceConfigurable>().forEach {
-            println("init?")
             it.initialize(it)
         }
     }
