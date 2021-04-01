@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatableSequence
+import net.ccbluex.liquidbounce.features.module.repeatable
 
 /**
  * FastBreak module
@@ -31,7 +31,7 @@ object ModuleFastBreak : Module("FastBreak", Category.WORLD) {
 
     private val breakDamage by float("BreakDamage", 0.8f, 0.1f..1f)
 
-    val repeatable = repeatableSequence {
+    val repeatable = repeatable {
         interaction.blockBreakingCooldown = 0
 
         if (interaction.currentBreakingProgress > breakDamage)

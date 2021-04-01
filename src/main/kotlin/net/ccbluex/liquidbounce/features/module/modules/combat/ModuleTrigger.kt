@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatableSequence
+import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.extensions.shouldBeAttacked
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.EntityHitResult
@@ -36,7 +36,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
     val cps by intRange("CPS", 5..8, 1..20)
     val cooldown by boolean("Cooldown", true)
 
-    val tickRepeatable = repeatableSequence {
+    val tickRepeatable = repeatable {
         waitUntil { player.getAttackCooldownProgress(0.0f) >= 1.0f }
 
         val crosshair = mc.crosshairTarget

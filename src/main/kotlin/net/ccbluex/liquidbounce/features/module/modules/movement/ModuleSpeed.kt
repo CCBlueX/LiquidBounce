@@ -19,7 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.PlayerTickEvent
-import net.ccbluex.liquidbounce.features.module.*
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Choice
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.sequenceHandler
 import net.ccbluex.liquidbounce.utils.extensions.downwards
 import net.ccbluex.liquidbounce.utils.extensions.moving
 import net.ccbluex.liquidbounce.utils.extensions.strafe
@@ -27,11 +30,11 @@ import net.ccbluex.liquidbounce.utils.extensions.upwards
 
 object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
-    private object SpeedChoiceConfigurable : ChoiceConfigurable(this, "Mode", "YPort", {
+    private val modes = choices("Mode", "YPort") {
         SpeedYPort
-    })
+    }
 
-    private object SpeedYPort : Choice("YPort", SpeedChoiceConfigurable) {
+    private object SpeedYPort : Choice("YPort", modes) {
 
         val tickHandler = sequenceHandler<PlayerTickEvent> {
             if (player.isOnGround && player.moving) {
@@ -43,11 +46,6 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
         }
 
-    }
-
-    init {
-        SpeedChoiceConfigurable.initialize()
-        tree(SpeedChoiceConfigurable)
     }
 
 }

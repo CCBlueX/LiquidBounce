@@ -25,6 +25,11 @@ interface Listenable {
      */
     fun handleEvents() = true
 
+    /**
+     * Required for repeatable sequence
+     */
+    fun hook() = this
+
 }
 
 inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, noinline handler: Handler<T>) {
