@@ -38,8 +38,8 @@
 package net.ccbluex.liquidbounce.renderer.ultralight.support
 
 import com.labymedia.ultralight.UltralightView
-import com.labymedia.ultralight.context.ContextProvider
-import com.labymedia.ultralight.context.ContextProviderFactory
+import com.labymedia.ultralight.databind.context.ContextProvider
+import com.labymedia.ultralight.databind.context.ContextProviderFactory
 import com.labymedia.ultralight.javascript.JavascriptContextLock
 import com.labymedia.ultralight.javascript.JavascriptValue
 import java.util.function.Consumer
