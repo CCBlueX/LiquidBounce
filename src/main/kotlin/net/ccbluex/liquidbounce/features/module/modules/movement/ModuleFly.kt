@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.repeatableSequence
 
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
-    val mode by list("Mode", "Creative", arrayOf("Creative", "Jetpack"))
+    val mode by chooseList("Mode", "Creative", arrayOf("Creative", "Jetpack"))
 
     override fun disable() {
         player.abilities!!.flying = false
