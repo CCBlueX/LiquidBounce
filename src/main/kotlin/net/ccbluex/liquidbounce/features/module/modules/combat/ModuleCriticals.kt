@@ -35,13 +35,13 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  */
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
-    private object CritChoiceConfigurable : ChoiceConfigurable(this, "Mode", "Packet", {
-        NoneChoice(CritChoiceConfigurable)
+    private val modes = choices("Mode", "Packet") {
+        NoneChoice(it)
         PacketCrit
         JumpCrit
-    })
+    }
 
-    private object PacketCrit : Choice("Packet", CritChoiceConfigurable) {
+    private object PacketCrit : Choice("Packet", modes) {
 
         val attackHandler = handler<AttackEvent> { event ->
             if (event.enemy !is LivingEntity)
@@ -56,7 +56,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     }
 
-    private object JumpCrit : Choice("Jump", CritChoiceConfigurable) {
+    private object JumpCrit : Choice("Jump", modes) {
 
         // There are diffrent possible jump heights to crit enemy
         //   Hop: 0.1 (like in Wurst-Client)
@@ -101,7 +101,6 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     init {
-        tree(CritChoiceConfigurable)
         tree(VisualsConfigurable)
     }
 

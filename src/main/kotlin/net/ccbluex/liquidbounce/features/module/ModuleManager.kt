@@ -113,7 +113,7 @@ object ModuleManager : Iterable<Module>, Listenable {
 
     fun addModule(module: Module) {
         module.init()
-
+        module.initConfigurable()
         modules += module
     }
 

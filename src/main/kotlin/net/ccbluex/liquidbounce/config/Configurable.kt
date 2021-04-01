@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.config
 
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.renderer.engine.Color4b
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.block.Block
@@ -73,11 +74,13 @@ class ChooseListValue(name: String, selected: String, @Exclude val selectables: 
 
 open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf()): Value<MutableList<Value<*>>>(name, value = value) {
 
-    protected fun <T: Configurable> tree(configurable: T): T {
-        if (configurable is ChoiceConfigurable) {
-            configurable.initialize()
+    fun initConfigurable() {
+        value.filterIsInstance<ChoiceConfigurable>().forEach {
+            it.initialize(it)
         }
+    }
 
+    protected fun <T: Configurable> tree(configurable: T): T {
         value.add(configurable)
         return configurable
     }
@@ -117,6 +120,9 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
 
     protected fun blocks(name: String, default: MutableList<Block> = mutableListOf(), change: (MutableList<Block>, MutableList<Block>) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+
+    protected fun Module.choices(name: String, active: String, initialize: (ChoiceConfigurable) -> Unit)
+        = ChoiceConfigurable(this, name, active, initialize).apply { tree(this) }
 
     /**
      * Overwrite current configurable and their existing values from [configurable].
