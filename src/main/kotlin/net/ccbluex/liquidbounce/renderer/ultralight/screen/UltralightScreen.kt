@@ -168,10 +168,12 @@ class UltralightScreen(name: String) : Screen(name.asText()) {
             .x(mc.mouse.x.toInt())
             .y(mc.mouse.y.toInt())
             .type(if (action == GLFW_PRESS) UltralightMouseEventType.DOWN else UltralightMouseEventType.UP)
+
         when (button) {
             GLFW_MOUSE_BUTTON_LEFT -> event.button(UltralightMouseEventButton.LEFT)
             GLFW_MOUSE_BUTTON_MIDDLE -> event.button(UltralightMouseEventButton.MIDDLE)
             GLFW_MOUSE_BUTTON_RIGHT -> event.button(UltralightMouseEventButton.RIGHT)
+            else -> throw IllegalStateException("wtf?")
         }
 
         // Fire the event
