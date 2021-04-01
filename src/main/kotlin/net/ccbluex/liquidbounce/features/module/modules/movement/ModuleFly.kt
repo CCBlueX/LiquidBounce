@@ -18,15 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.features.module.*
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Choice
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.repeatable
 
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
-    private object FlyChoiceConfigurable : ChoiceConfigurable(this, "Mode", "Vanilla", {
+    private val modes = choices("Mode", "Vanilla") {
         Vanilla
-    })
+    }
 
-    private object Vanilla : Choice("Vanilla", FlyChoiceConfigurable) {
+    private object Vanilla : Choice("Vanilla", modes) {
 
         val repeatable = repeatable {
             player.abilities.flying = true
@@ -36,10 +39,6 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             player.abilities.flying = false
         }
 
-    }
-
-    init {
-        tree(FlyChoiceConfigurable)
     }
 
 }
