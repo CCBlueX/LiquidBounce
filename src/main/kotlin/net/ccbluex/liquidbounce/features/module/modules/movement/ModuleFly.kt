@@ -18,28 +18,28 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.features.module.*
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.repeatable
 
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
-    private object FlyChoiceConfigurable : ChoiceConfigurable(this, "Mode", "Vanilla", {
-        Vanilla
-    })
+    val mode by chooseList("Mode", "Creative", arrayOf("Creative", "Jetpack"))
 
-    private object Vanilla : Choice("Vanilla", FlyChoiceConfigurable) {
-
-        val repeatable = repeatable {
-            player.abilities.flying = true
-        }
-
-        override fun disable() {
-            player.abilities.flying = false
-        }
-
+    override fun disable() {
+        player.abilities.flying = false
     }
 
-    init {
-        tree(FlyChoiceConfigurable)
+    val repeatable = repeatable {
+        when (mode) {
+            "Creative" -> player.abilities.flying = true
+            "Jetpack" -> {
+                if (mc.options.keyJump.isPressed) {
+                    player.velocity.x *= 1.1
+                    player.velocity.y += 0.15
+                    player.velocity.z *= 1.1
+                }
+            }
+        }
     }
-
 }
