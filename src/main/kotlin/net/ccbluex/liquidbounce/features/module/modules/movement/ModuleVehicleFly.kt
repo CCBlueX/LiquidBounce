@@ -17,26 +17,23 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.exploit
+package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.repeatable
 
-object ModuleVehicleFly : Module("VehicleFly", Category.EXPLOIT) {
+object ModuleVehicleFly : Module("VehicleFly", Category.MOVEMENT) {
 
-    val speed by float("speed", 0.32f, 0.1f..0.4f)
+    val speed by float("Speed", 0.32f, 0.1f..0.4f)
+
     val repeatable = repeatable {
+        val vehicle = player.vehicle ?: return@repeatable
 
-        if (!player.hasVehicle())
-            return@repeatable
-
-        val vehicle = player.vehicle
-        val velocity = vehicle!!.velocity
-
-        velocity.y = when {
+        vehicle.velocity.y = when {
             mc.options.keyJump.isPressed -> speed.toDouble()
             else -> 0.0
         }
     }
+
 }
