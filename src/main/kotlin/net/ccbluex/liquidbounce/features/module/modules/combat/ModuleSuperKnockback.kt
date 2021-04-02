@@ -26,21 +26,28 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
+/**
+ * SuperKnockback module
+ *
+ * Increases knockback dealt to other entities.
+ */
 object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
-    val hurttime by int("HurtTime", 10, 0..10)
+    val hurtTime by int("HurtTime", 10, 0..10)
 
     val attackHandler = handler<AttackEvent> { event ->
-        if (event.enemy is LivingEntity)
-            if (event.enemy.hurtTime > hurttime)
-                return@handler
+        val enemy = event.enemy
 
-        if (player.isSprinting)
+        if (enemy is LivingEntity && enemy.hurtTime <= hurtTime) {
+            if (player.isSprinting)
+                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
+
+            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SPRINTING))
             network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
-
-        network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SPRINTING))
-        network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
-        network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SPRINTING))
-        player.isSprinting = true
+            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SPRINTING))
+            player.isSprinting = true
+            player.lastSprinting = true
+        }
     }
+
 }
