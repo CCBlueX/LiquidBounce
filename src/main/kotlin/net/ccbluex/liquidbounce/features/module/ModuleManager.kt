@@ -104,7 +104,6 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleSuperKnockback,
             ModuleSkinDerp,
             ModuleKillAura,
-            ModulePingSpoof,
             ModuleKillAura,
             ModuleTimer
         )
