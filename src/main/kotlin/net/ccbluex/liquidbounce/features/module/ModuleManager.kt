@@ -25,15 +25,10 @@ import net.ccbluex.liquidbounce.event.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSpeed
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
+import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.render.*
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastBreak
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleTimer
+import net.ccbluex.liquidbounce.features.module.modules.world.*
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -99,7 +94,10 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleAutoWalk,
             ModuleNoClip,
             ModuleKillAura,
-            ModuleTimer
+            ModuleTimer,
+			ModuleDisabler,
+			ModulePingSpoof,
+			ModuleBlink
         )
 
         builtin.forEach(this::addModule)
