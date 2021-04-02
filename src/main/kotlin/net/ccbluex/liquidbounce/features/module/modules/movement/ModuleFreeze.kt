@@ -19,20 +19,31 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.PlayerMoveEvent
+import net.ccbluex.liquidbounce.event.TransferOrigin
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 
-object ModuleFreeze : Module("Module", Category.MOVEMENT) {
+/**
+ * Freeze module
+ *
+ * Allows you to freeze yourself without the server knowing.
+ */
+object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
 
-    val repeatable = repeatable {
-
-        // player.isDead = true
-        player.yaw = player.renderYaw
-        player.pitch = player.renderPitch
+    val moveHandler = handler<PlayerMoveEvent> { event ->
+        // Just set motion to zero
+        event.movement.x = 0.0
+        event.movement.y = 0.0
+        event.movement.z = 0.0
     }
 
-    override fun disable() {
-        // player.isDead = false
+    val packetHandler = handler<PacketEvent> { event ->
+        if (event.origin == TransferOrigin.SEND) {
+            event.cancelEvent()
+        }
     }
+
 }
