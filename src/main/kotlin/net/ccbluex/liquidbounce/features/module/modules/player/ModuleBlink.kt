@@ -8,7 +8,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.renderer.engine.*
 import net.ccbluex.liquidbounce.renderer.utils.rainbow
-import net.ccbluex.liquidbounce.utils.MSTimer
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.play.*
@@ -21,18 +20,17 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
     private var disablelogger = false
     private val positions = mutableListOf<Double>()
     private val pulse by boolean("Pulse", false)
-    private val pulsedelay by int("PulseDelay", 1000, 500..5000)
+    private val delay by int("Delay", 20, 10..100)
     private val breadcrumbs by boolean("Breadcrumbs", false)
     private val breadcrumbscolor by color("BreadcrumbsColor", Color4b(255, 179, 72, 255))
     private val breadcrumbsrainbow by boolean("BreadcrumbsRainbow", false)
-    private val pulsetimer = MSTimer()
 
     override fun enable() {
         if (!pulse) {
             val faker = OtherClientPlayerEntity(world, player.gameProfile)
 
             faker.headYaw = player.headYaw
-            //faker.renderYawOffset = player.renderYawOffset
+            // faker.renderYawOffset = player.renderYawOffset
             faker.copyPositionAndRotation(player)
             faker.headYaw = player.headYaw
             world.addEntity(-1337, faker)
@@ -43,7 +41,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
             positions.addAll(listOf(player.x, player.eyeY, player.z))
             positions.addAll(listOf(player.x, player.y, player.z))
         }
-        pulsetimer.reset()
+        // some 0 timer set values here? maybe, maybe not
     }
 
     val renderHandler = handler<EngineRenderEvent> {
@@ -102,9 +100,9 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
     val repeatable = repeatable {
         synchronized(positions) { positions.addAll(listOf(player.x, player.y, player.z)) }
-        if (pulse && pulsetimer.hasTimePassed(pulsedelay.toLong())) {
+        if (pulse) {
+            wait(delay)
             blink()
-            pulsetimer.reset()
         }
     }
 
