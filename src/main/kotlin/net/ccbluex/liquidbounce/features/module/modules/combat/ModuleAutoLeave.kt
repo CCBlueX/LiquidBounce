@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleKick
-import net.ccbluex.liquidbounce.features.module.repeatableSequence
+import net.ccbluex.liquidbounce.features.module.repeatable
 
 /**
  * AutoLeave module
@@ -34,7 +34,7 @@ object ModuleAutoLeave : Module("AutoLeave", Category.COMBAT) {
     private val delay by int("Delay", 0, 0..60) // min 0 ticks to 60 ticks (20 ticks == 1 second)
     private val mode by chooseList("Mode", "Quit", arrayOf("Quit, InvalidPacket", "SelfHurt", "IllegalChat"))
 
-    val tickRepeatable = repeatableSequence {
+    val tickRepeatable = repeatable {
         if(player.health <= health && !player.abilities.creativeMode && !mc.isIntegratedServerRunning) {
             // Delay to bypass anti cheat or combat log detections
             wait(delay)

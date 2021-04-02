@@ -16,29 +16,32 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement
+package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Choice
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.repeatable
+import net.ccbluex.liquidbounce.utils.extensions.moving
+import net.ccbluex.liquidbounce.utils.extensions.timer
 
-object ModuleFly : Module("Fly", Category.MOVEMENT) {
+/**
+ * Changes the speed of the entire game.
+ */
+object ModuleTimer : Module("Timer", Category.WORLD) {
 
-    private val modes = choices("Mode", "Vanilla") {
-        Vanilla
+    val speed by float("Speed", 2f, 0.1f..10f)
+    val onMove by boolean("OnMove", false)
+
+    val repeatable = repeatable {
+        mc.timer.timerSpeed = if (!onMove || player.moving) {
+            speed
+        } else {
+            1f
+        }
     }
 
-    private object Vanilla : Choice("Vanilla", modes) {
-
-        val repeatable = repeatable {
-            player.abilities.flying = true
-        }
-
-        override fun disable() {
-            player.abilities.flying = false
-        }
-
+    override fun disable() {
+        mc.timer.timerSpeed = 1f
     }
 
 }

@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatableSequence
+import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.minecraft.block.Blocks
 
@@ -31,7 +31,7 @@ import net.minecraft.block.Blocks
  */
 object ModuleEagle : Module("Eagle", Category.PLAYER) {
 
-    val repeatable = repeatableSequence {
+    val repeatable = repeatable {
         // Check if player is on the edge and is NOT flying
         val nothing = player.blockPos.down().getBlock() == Blocks.AIR && player.canFly()
 

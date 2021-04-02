@@ -16,29 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement
+package net.ccbluex.liquidbounce.utils.extensions
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Choice
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
+import net.minecraft.client.MinecraftClient
 
-object ModuleFly : Module("Fly", Category.MOVEMENT) {
-
-    private val modes = choices("Mode", "Vanilla") {
-        Vanilla
-    }
-
-    private object Vanilla : Choice("Vanilla", modes) {
-
-        val repeatable = repeatable {
-            player.abilities.flying = true
-        }
-
-        override fun disable() {
-            player.abilities.flying = false
-        }
-
-    }
-
+// Global minecraft timer
+object Timer {
+    var timerSpeed = 1f
 }
+
+val MinecraftClient.timer
+    get() = Timer

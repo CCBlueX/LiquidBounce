@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatableSequence
+import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.extensions.moving
 import net.ccbluex.liquidbounce.utils.extensions.strafe
@@ -33,7 +33,7 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
 
     val speed by float("Speed", 0.32f, 0.1f..0.4f)
 
-    val repeatable = repeatableSequence {
+    val repeatable = repeatable {
         player.noClip = true
         player.fallDistance = 0f
         player.isOnGround = false
