@@ -41,7 +41,7 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (event.origin == TransferOrigin.SEND) {
+        if (mc.world != null && event.origin == TransferOrigin.SEND) {
             event.cancelEvent()
         }
     }
