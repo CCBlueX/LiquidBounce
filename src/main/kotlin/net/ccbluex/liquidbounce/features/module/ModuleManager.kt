@@ -98,7 +98,7 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleNoClip,
             ModuleVehicleFly,
             ModuleFreeze,
-            ModuleBedGodMode,
+            ModuleBedWalk,
             ModuleParkour,
             ModuleSuperKnockback,
             ModuleSkinDerp,
