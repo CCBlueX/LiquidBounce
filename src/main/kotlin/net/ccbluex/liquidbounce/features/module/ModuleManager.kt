@@ -104,7 +104,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleSkinDerp,
             ModuleKillAura,
             ModuleTimer,
-            ModuleAntiLevitation
+            ModuleAntiLevitation,
+            ModuleFullBright
         )
 
         builtin.forEach(this::addModule)
