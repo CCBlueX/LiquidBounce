@@ -32,7 +32,7 @@ import net.minecraft.entity.effect.StatusEffects
  * Allows you to see in the dark
  */
 object ModuleFullBright : Module("FullBright", Category.RENDER) {
-    private val modes = choices("Mode", "Night Vision") {
+    private val modes = choices("Mode", "Gamma") {
         FullBrightGamma
         FullBrightNightVision
     }
