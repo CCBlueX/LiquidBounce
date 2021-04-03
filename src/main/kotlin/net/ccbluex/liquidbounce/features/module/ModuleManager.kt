@@ -104,6 +104,9 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleSkinDerp,
             ModuleKillAura,
             ModuleTimer,
+            ModuleDisabler,
+            ModulePingSpoof,
+            ModuleBlink,
             ModuleAntiLevitation,
             ModuleFullBright
         )
