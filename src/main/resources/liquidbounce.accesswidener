@@ -8,6 +8,7 @@ mutable field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/au
 mutable field net/minecraft/item/ItemGroup GROUPS [Lnet/minecraft/item/ItemGroup;
 
 accessible method net/minecraft/entity/LivingEntity tickActiveItemStack ()V
+accessible field net/minecraft/client/network/ClientPlayerEntity lastSprinting Z
 
 mutable field net/minecraft/util/math/Vec3d x D
 mutable field net/minecraft/util/math/Vec3d y D
