@@ -31,8 +31,6 @@ import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.extensions.RotationManager
 import net.ccbluex.liquidbounce.utils.extensions.globalEnemyConfigurable
-import net.ccbluex.liquidbounce.utils.extensions.loginAltening
-import net.ccbluex.liquidbounce.utils.mc
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -104,7 +102,6 @@ object LiquidBounce : Listenable {
         // Connect to chat server
         Chat.connect()
 
-        mc.sessionService.loginAltening("mg7l8-ndz1o@alt.com")
 
         logger.info("Successfully loaded client!")
     }
