@@ -16,8 +16,10 @@
     "minecraft.gui.MixinScreen",
     "minecraft.network.MixinClientConnection",
     "minecraft.network.MixinClientPlayerInteractionManager",
+    "minecraft.render.MixinBackgroundRenderer",
     "minecraft.render.MixinEntityRenderer",
     "minecraft.render.MixinGameRenderer",
+    "minecraft.render.MixinInGameOverlayRenderer",
     "minecraft.render.MixinRenderTickCounter"
   ],
   "server": [],
