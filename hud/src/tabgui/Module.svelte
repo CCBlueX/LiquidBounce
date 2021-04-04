@@ -1,10 +1,20 @@
 <script>
+    import { afterUpdate } from 'svelte';
+
     export let name;
     export let active;
     export let enabled;
+
+    let el;
+
+    afterUpdate(() => {
+        if (active) {
+            el.scrollIntoView({block: "start", behavior: "smooth"});
+        }
+    });
 </script>
 
-<div class="module {active ? 'active' : ''} {enabled ? 'enabled' : ''}">
+<div bind:this={el} class="module {active ? 'active' : ''} {enabled ? 'enabled' : ''}">
     <div class="name">{name}</div>
 </div>
 
@@ -13,7 +23,7 @@
         font-weight: 600;
         color: #CBD1E3;
         font-size: 12px;
-        padding: 5px 15px 5px 10px;
+        padding: 6px 15px 6px 10px;
         transition: ease color .2s;
     }
 

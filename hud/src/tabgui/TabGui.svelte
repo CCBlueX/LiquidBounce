@@ -3,7 +3,16 @@
     import Category from "./Category.svelte";
     import Module from "./Module.svelte";
 
-    const categories = ["Movement", "Combat", "Render", "Exploit", "Player", "World", "Misc", "Fun"];
+    const categories = [
+        "Movement",
+        "Combat",
+        "Render",
+        "Exploit",
+        "Player",
+        "World",
+        "Misc",
+        "Fun",
+    ];
     const modules = [];
 
     try {
@@ -15,7 +24,7 @@
                 name: m.getName(),
                 category: m.getCategory().getReadableName(),
                 enabled: m.getEnabled(),
-                setEnabled: m.setEnabled
+                setEnabled: m.setEnabled,
             });
         }
     } catch (err) {
@@ -23,15 +32,15 @@
     }
 
     function getActiveModules() {
-        return modules.filter(
-            m => m.category === categories[activeCategory]
-        );
+        return modules.filter((m) => m.category === categories[activeCategory]);
     }
-    
+
     let activeModules = [];
 
     let activeModule = 0;
     let activeCategory = 0;
+
+    let elCategories = document.createElement("div");
 
     function handleKeydown(event) {
         if (event.getAction() !== 1) {
@@ -89,11 +98,13 @@
 
                 break;
             }
-        } 
+        }
     }
 
     function handleToggleModule(event) {
-        modules.find(m => m.name === event.getModule().getName()).enabled = event.getNewState();
+        modules.find(
+            (m) => m.name === event.getModule().getName()
+        ).enabled = event.getNewState();
         if (activeModules.length > 0) {
             activeModules = getActiveModules();
         }
@@ -109,19 +120,24 @@
 </script>
 
 <div class="tabgui">
-    <div class="categories">
+    <div class="categories" bind:this={elCategories}>
         {#each categories as category, i}
             <Category name={category} active={i === activeCategory} />
         {/each}
     </div>
 
     {#if activeModules.length > 0}
-        <div class="modules" in:fly="{{ x: -10, duration: 200 }}" out:fly="{{ x: -10, duration: 200 }}">
+        <div
+            style="height: {elCategories.offsetHeight}px"
+            class="modules"
+            in:fly={{ x: -10, duration: 200 }}
+            out:fly={{ x: -10, duration: 200 }}
+        >
             {#each activeModules as aModule, i}
                 <Module
                     name={aModule.name}
                     enabled={aModule.enabled}
-                    active={activeModule == i} 
+                    active={activeModule === i}
                 />
             {/each}
         </div>
@@ -158,5 +174,10 @@
         display: flex;
         flex-direction: column;
         border: solid 1px rgba(0, 0, 0, 0.68);
+        overflow: auto;
+    }
+
+    ::-webkit-scrollbar {
+        width: 0;
     }
 </style>
