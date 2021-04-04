@@ -16,52 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Choice
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.repeatable
 
-/**
- * Fly module
- *
- * Allows you to fly.
- */
-object ModuleFly : Module("Fly", Category.MOVEMENT) {
+object ModuleVehicleFly : Module("VehicleFly", Category.MOVEMENT) {
 
-    private val modes = choices("Mode", "Vanilla") {
-        Vanilla
-        Jetpack
-    }
+    val speed by float("Speed", 0.32f, 0.1f..0.4f)
 
-    private object Vanilla : Choice("Vanilla", modes) {
+    val repeatable = repeatable {
+        val vehicle = player.vehicle ?: return@repeatable
 
-        override fun enable() {
-            player.abilities.flying = true
+        vehicle.velocity.y = when {
+            mc.options.keyJump.isPressed -> speed.toDouble()
+            else -> 0.0
         }
-
-        val repeatable = repeatable {
-            // Just to make sure it stays enabled
-            player.abilities.flying = true
-        }
-
-        override fun disable() {
-            player.abilities.flying = false
-        }
-
-    }
-
-    private object Jetpack : Choice("Jetpack", modes) {
-
-        val repeatable = repeatable {
-            if (mc.options.keyJump.isPressed) {
-                player.velocity.x *= 1.1
-                player.velocity.y += 0.15
-                player.velocity.z *= 1.1
-            }
-        }
-
     }
 
 }

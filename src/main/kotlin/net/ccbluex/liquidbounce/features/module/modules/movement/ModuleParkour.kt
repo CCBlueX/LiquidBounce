@@ -16,52 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Choice
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.repeatable
+import net.ccbluex.liquidbounce.utils.extensions.moving
 
-/**
- * Fly module
- *
- * Allows you to fly.
- */
-object ModuleFly : Module("Fly", Category.MOVEMENT) {
+object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
-    private val modes = choices("Mode", "Vanilla") {
-        Vanilla
-        Jetpack
+    val repeatable = repeatable {
+        if (player.moving && player.isOnGround && !player.isSneaking && !mc.options.keySneak.isPressed && !mc.options.keyJump.isPressed) {
+            if (world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.5, 0.0)
+                    .expand(-0.001, 0.0, -0.001)).count() > 0)
+                return@repeatable
+
+            player.jump()
+        }
     }
-
-    private object Vanilla : Choice("Vanilla", modes) {
-
-        override fun enable() {
-            player.abilities.flying = true
-        }
-
-        val repeatable = repeatable {
-            // Just to make sure it stays enabled
-            player.abilities.flying = true
-        }
-
-        override fun disable() {
-            player.abilities.flying = false
-        }
-
-    }
-
-    private object Jetpack : Choice("Jetpack", modes) {
-
-        val repeatable = repeatable {
-            if (mc.options.keyJump.isPressed) {
-                player.velocity.x *= 1.1
-                player.velocity.y += 0.15
-                player.velocity.z *= 1.1
-            }
-        }
-
-    }
-
 }

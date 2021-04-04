@@ -8,11 +8,27 @@ mutable field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/au
 mutable field net/minecraft/item/ItemGroup GROUPS [Lnet/minecraft/item/ItemGroup;
 
 accessible method net/minecraft/entity/LivingEntity tickActiveItemStack ()V
+accessible field net/minecraft/client/network/ClientPlayerEntity lastSprinting Z
 
 mutable field net/minecraft/util/math/Vec3d x D
 mutable field net/minecraft/util/math/Vec3d y D
 mutable field net/minecraft/util/math/Vec3d z D
 
+accessible field net/minecraft/network/packet/c2s/play/KeepAliveC2SPacket id J
+
+accessible field net/minecraft/client/network/ClientPlayerEntity lastX D
+accessible field net/minecraft/client/network/ClientPlayerEntity lastBaseY D
+accessible field net/minecraft/client/network/ClientPlayerEntity lastZ D
+accessible field net/minecraft/client/network/ClientPlayerEntity lastYaw F
+accessible field net/minecraft/client/network/ClientPlayerEntity lastPitch F
+accessible field net/minecraft/client/network/ClientPlayerEntity lastOnGround Z
+accessible field net/minecraft/client/network/ClientPlayerEntity inSneakingPose Z
+accessible field net/minecraft/client/network/ClientPlayerEntity lastSneaking Z
+accessible field net/minecraft/client/network/ClientPlayerEntity lastSprinting Z
+accessible field net/minecraft/client/network/ClientPlayerEntity ticksSinceLastPositionPacketSent I
+accessible field net/minecraft/client/network/ClientPlayerEntity usingItem Z
+accessible field net/minecraft/client/network/ClientPlayerEntity riding Z
+accessible field net/minecraft/client/network/ClientPlayerEntity activeHand Lnet/minecraft/util/Hand;
 
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket x D
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket y D

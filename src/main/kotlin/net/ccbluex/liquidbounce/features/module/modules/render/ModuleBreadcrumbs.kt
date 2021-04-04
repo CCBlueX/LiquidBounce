@@ -54,14 +54,28 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         val color = if (colorRainbow) rainbow() else color
 
         synchronized(positions) {
-            val renderTask = ColoredPrimitiveRenderTask(this.positions.size, PrimitiveType.LineStrip)
-
-            for (i in 0 until this.positions.size / 3) {
-                renderTask.index(renderTask.vertex(Vec3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]), color))
-            }
-
-            RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, renderTask)
+            RenderEngine.enqueueForRendering(
+                RenderEngine.CAMERA_VIEW_LAYER, createBreadcrumbsRenderTask(
+                    color,
+                    positions
+                )
+            )
         }
+    }
+
+    @JvmStatic
+    internal fun createBreadcrumbsRenderTask(color: Color4b, positions: List<Double>): ColoredPrimitiveRenderTask {
+        val renderTask = ColoredPrimitiveRenderTask(positions.size, PrimitiveType.LineStrip)
+
+        for (i in 0 until positions.size / 3) {
+            renderTask.index(
+                renderTask.vertex(
+                    Vec3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]),
+                    color
+                )
+            )
+        }
+        return renderTask
     }
 
     val updateHandler = handler<PlayerTickEvent> {
