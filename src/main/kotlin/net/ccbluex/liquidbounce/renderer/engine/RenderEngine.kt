@@ -134,7 +134,7 @@ object RenderEngine : Listenable {
 
         val majorVersion = matcher.group(1).toInt()
         val minorVersion = matcher.group(2).toInt()
-        val patchVersion = if (matcher.groupCount() >= 5) matcher.group(4).toInt() else null
+        val patchVersion = if (matcher.groupCount() >= 5) matcher.group(4)?.toInt() else null
 
         openglLevel = OpenGLLevel.getBestLevelFor(majorVersion, minorVersion)
 
