@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.minecraft.client.gui.hud.InGameOverlayRenderer;
 import net.minecraft.client.render.VertexConsumer;
@@ -35,6 +35,6 @@ public abstract class MixinInGameOverlayRenderer implements IMixinGameRenderer {
         return vertexConsumer.color(red,
                                     green,
                                     blue,
-                                    AntiBlind.INSTANCE.getEnabled() ? AntiBlind.INSTANCE.getFireOpacity() * alpha : alpha);
+                                    ModuleAntiBlind.INSTANCE.getEnabled() ? ModuleAntiBlind.INSTANCE.getFireOpacity() * alpha : alpha);
     }
 }

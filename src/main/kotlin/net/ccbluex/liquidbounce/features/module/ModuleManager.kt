@@ -109,7 +109,7 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleBlink,
             ModuleAntiLevitation,
             ModuleFullBright,
-            AntiBlind
+            ModuleAntiBlind
         )
 
         builtin.forEach(this::addModule)
