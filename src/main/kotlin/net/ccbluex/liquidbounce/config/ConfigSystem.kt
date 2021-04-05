@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
 import java.io.File
-import java.lang.reflect.Type
 
 /**
  * A config system which uses configurables
@@ -54,7 +53,7 @@ object ConfigSystem {
      * Create a new root configurable
      */
     fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()) {
-        configurables.add(Configurable(name, tree.toMutableList()))
+        configurables.add(Configurable(name, tree as MutableList<Value<*>>))
     }
 
     /**
