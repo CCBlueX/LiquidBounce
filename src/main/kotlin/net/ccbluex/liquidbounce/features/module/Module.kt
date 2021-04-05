@@ -125,6 +125,7 @@ open class ListenableConfigurable(@Exclude val module: Module? = null, name: Str
  * Allows to configure and manage modes
  */
 open class ChoiceConfigurable(@Exclude val module: Module, name: String, val active: String, @Exclude val initialize: (ChoiceConfigurable) -> Unit) : Configurable(name) {
+    @Exclude
     val choices: MutableList<Choice> = mutableListOf()
 }
 
