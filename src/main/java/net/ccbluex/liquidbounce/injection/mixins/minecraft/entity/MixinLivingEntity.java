@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiLevitation;
-import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
@@ -49,7 +49,7 @@ public class MixinLivingEntity {
 
     @Inject(method = "hasStatusEffect", at = @At("HEAD"), cancellable = true)
     private void injectAntiNausea(StatusEffect effect, CallbackInfoReturnable<Boolean> cir) {
-        if (effect == StatusEffects.NAUSEA && AntiBlind.INSTANCE.getEnabled() && AntiBlind.INSTANCE.getAntiNausea()) {
+        if (effect == StatusEffects.NAUSEA && ModuleAntiBlind.INSTANCE.getEnabled() && ModuleAntiBlind.INSTANCE.getAntiNausea()) {
             cir.setReturnValue(false);
             cir.cancel();
         }
