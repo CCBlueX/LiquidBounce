@@ -42,6 +42,10 @@ object ModuleManager : Iterable<Module>, Listenable {
 
     private val modules = mutableListOf<Module>()
 
+    init {
+        ConfigSystem.root("modules", modules)
+    }
+
     /**
      * Handle key input for module binds
      */
@@ -111,13 +115,13 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleAntiLevitation,
             ModuleFullBright,
             AntiBlind,
-            ModuleScaffold
+            ModuleScaffold,
+            ModuleAntiBlind
         )
 
         builtin.forEach(this::addModule)
 
-        // TODO: Figure out how to link modules list with configurable
-        ConfigSystem.root("modules", modules)
+
     }
 
     fun addModule(module: Module) {

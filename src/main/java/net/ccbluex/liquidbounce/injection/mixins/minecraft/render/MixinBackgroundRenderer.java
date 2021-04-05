@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.entity.LivingEntity;
@@ -33,7 +33,7 @@ public abstract class MixinBackgroundRenderer implements IMixinGameRenderer {
 
     @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", ordinal = 1))
     private static boolean injectAntiBlind(LivingEntity livingEntity, StatusEffect effect) {
-        if (AntiBlind.INSTANCE.getEnabled() && AntiBlind.INSTANCE.getAntiBlind())
+        if (ModuleAntiBlind.INSTANCE.getEnabled() && ModuleAntiBlind.INSTANCE.getAntiBlind())
             return false;
 
         return livingEntity.hasStatusEffect(effect);

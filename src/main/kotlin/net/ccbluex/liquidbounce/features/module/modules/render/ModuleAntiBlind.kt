@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
-object AntiBlind : Module("AntiBlind", Category.RENDER) {
+object ModuleAntiBlind : Module("AntiBlind", Category.RENDER) {
     val antiBlind by boolean("DisableBlindingEffect", true)
     val antiNausea by boolean("DisableNauseaEffect", true)
     val fireOpacity by float("FireOpacity", 1.0F, 0.0F..1.0F)
