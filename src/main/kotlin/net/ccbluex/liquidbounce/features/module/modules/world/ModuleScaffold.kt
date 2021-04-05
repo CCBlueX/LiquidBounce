@@ -23,12 +23,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val timer by float("Timer", 1f, 0.1f..3f)
     private val rotations = RotationsConfigurable()
 
-    private var oldslot = -1
+    private var oldSlot = -1
     private var slot = -1
 
     private var yaw = 0f
     private var pitch = 0f
-    private var bothrotations: Rotation? = null
+    private var bothRotations: Rotation? = null
     private var keepRotation = false
 
     val repeatable = repeatable {
@@ -38,18 +38,18 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         // Gipsy KeepRotation
         if(keepRotation)
-            RotationManager.aimAt(bothrotations!!, configurable = rotations)
+            RotationManager.aimAt(bothRotations!!, configurable = rotations)
 
         if (!mc.world!!.getBlockState(blockpos).material.isReplaceable)
             return@repeatable
 
         // If there isn't any block detected
-        if (findblock() == -1)
+        if (findBlock() == -1)
             return@repeatable
 
         // Change slot
-        oldslot = player.inventory.selectedSlot
-        slot = findblock()
+        oldSlot = player.inventory.selectedSlot
+        slot = findBlock()
         player.inventory.selectedSlot = slot
         mc.interactionManager!!.tick()
 
@@ -57,7 +57,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         place(blockpos)
 
         // Reset slot
-        player.inventory.selectedSlot = oldslot
+        player.inventory.selectedSlot = oldSlot
     }
 
     private fun place(blockPos: BlockPos) {
@@ -71,15 +71,15 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 continue
 
             // Could've done a for loop xyz 0.1..0.9 here, didn't want to, because basics first
-            val hitvec = Vec3d.ofCenter(neighbor).add(Vec3d.of(opposite.vector).multiply(0.5))
+            val hitVec = Vec3d.ofCenter(neighbor).add(Vec3d.of(opposite.vector).multiply(0.5))
 
-            if (eyes.squaredDistanceTo(hitvec) > 18)
+            if (eyes.squaredDistanceTo(hitVec) > 18)
                 continue
 
             // Make yaw + pitch based on hitvec and eyes
-            val diffX = hitvec.x - eyes.x
-            val diffY = hitvec.y - eyes.y
-            val diffZ = hitvec.z - eyes.z
+            val diffX = hitVec.x - eyes.x
+            val diffY = hitVec.y - eyes.y
+            val diffZ = hitVec.z - eyes.z
 
             val rotation = Rotation(
                 (Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f),
@@ -93,14 +93,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             // Save yaw + pitch to variables to make KeepRotation the gipsy way
             yaw = rotation.yaw
             pitch = rotation.pitch
-            bothrotations = rotation
+            bothRotations = rotation
 
             // Send right click
             mc.interactionManager!!.interactBlock(
                 player,
                 world,
                 Hand.MAIN_HAND,
-                BlockHitResult(hitvec, direction, blockPos, false)
+                BlockHitResult(hitVec, direction, blockPos, false)
             )
 
             if (swing)
@@ -111,12 +111,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     // Simple hot bar block detection
-    private fun findblock(): Int {
+    private fun findBlock(): Int {
         for (i in 0..8) {
-            val itemstack = player.inventory.getStack(i).item
-            if (itemstack is BlockItem) {
-                val blocktype = itemstack.block
-                if (blocktype !is FallingBlock || blocktype !is GrassBlock) {
+            val itemStack = player.inventory.getStack(i).item
+            if (itemStack is BlockItem) {
+                val blockType = itemStack.block
+                if (blockType !is FallingBlock || blockType !is GrassBlock) {
                     return i
                 }
             }
