@@ -109,14 +109,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     // Simple hot bar block detection
     private fun findBlock(): Int {
-        for (i in 0..8) {
-            val itemStack = player.inventory.getStack(i).item
-            if (itemStack is BlockItem) {
-                val blockType = itemStack.block
-                if (blockType !is FallingBlock || blockType !is GrassBlock)
-                    return i
-            }
-        }
-        return -1
+        return (0..8)
+            .map { Pair(it, player.inventory.getStack(it).item) }
+            .find {
+                val second = it.second
+                second is BlockItem && second.block !is FallingBlock && second.block !is GrassBlock
+            }?.first ?: -1
     }
 }
