@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2020 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 plugins {
     id "java"
     id "com.github.node-gradle.node" version "3.0.1"
@@ -43,28 +62,34 @@ node {
     // The directory where yarn is installed (when a Yarn task is used)
     yarnWorkDir = file("${project.projectDir}/.gradle/yarn")
 
-    // Whether the plugin automatically should add the proxy configuration to npm and yarn commands
-    // according the proxy configuration defined for Gradle
-    // Disable this option if you want to configure the proxy for npm or yarn on your own
-    // (in the .npmrc file for instance)
-    nodeProxySettings = ProxySettings.SMART
 }
 
-def buildTask = tasks.register("buildGui", Zip) {
+def importGui = tasks.register("importGui", Copy) {
+    // Depend on zipping gui
+    dependsOn zipGui
+
+    // Export to resources
+    from file("$buildDir/tmp/output/")
+    into file("$buildDir/tmp/resources/")
+}
+
+def zipGui = tasks.register("zipGui", Zip) {
     for (folder in file(".").listFiles()) {
+        // Check if folder is theme
         if (!folder.listFiles().any { (it.name == "public") }) {
             continue
         }
 
-        delete(file("$buildDir/tmp/theme/$folder.name"))
+        // Copy public folder to correct folder structure
         copy {
             from file("$folder/public")
             into file("$buildDir/tmp/theme/$folder.name")
         }
     }
 
+    // Zip default theme
     archiveFileName = "default_theme.zip"
-    destinationDirectory = file("$buildDir/resources/main/assets/liquidbounce")
+    destinationDirectory = file("$buildDir/tmp/output/assets/liquidbounce/")
 
     from file("$buildDir/tmp/theme")
 }
@@ -87,7 +112,7 @@ for (folder in file(".").listFiles()) {
             workingDir = copiedFolder
         }
 
-        tasks.buildGui.dependsOn(bTask)
+        tasks.zipGui.dependsOn(bTask)
     }
 }
 
@@ -95,10 +120,8 @@ sourceSets {
     java {
         main {
             resources {
-                srcDir "$buildDir/main/resources"
+                srcDir(importGui)
             }
         }
     }
 }
-
-processResources.dependsOn(buildTask)
