@@ -32,7 +32,7 @@ object Chat : ListenableConfigurable(null, "chat", true), ClientListener {
                 .vararg()
                 .build())
         .handler { args ->
-            client.sendMessage(args.joinToString(separator = " "))
+            client.sendMessage((args[0] as Array<*>).joinToString(" ") { it as String })
         }
         .build()
 
