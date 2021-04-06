@@ -28,6 +28,6 @@ public interface IMixinGameRenderer {
      *
      * @param tickDelta The count of ticks passed since the last time rendered
      */
-    Matrix4f getCameraMVPMatrix(float tickDelta);
+    Matrix4f getCameraMVPMatrix(float tickDelta, boolean bobbing);
 
 }
