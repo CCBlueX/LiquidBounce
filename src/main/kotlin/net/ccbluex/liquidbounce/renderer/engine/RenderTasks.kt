@@ -24,6 +24,8 @@ import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.nio.ByteBuffer
+import kotlin.math.cos
+import kotlin.math.sin
 
 enum class OpenGLLevel(val minor: Int, val major: Int, val backendInfo: String) {
     OpenGL4_3(4, 3, "OpenGL 4.3+ (Multi rendering)"),
@@ -141,6 +143,28 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
     operator fun plus(other: Vec3): Vec3 = add(other)
     operator fun minus(other: Vec3): Vec3 = sub(other)
     operator fun times(scale: Float): Vec3 = Vec3(this.x * scale, this.y * scale, this.z * scale)
+
+    fun rotatePitch(pitch: Float): Vec3 {
+        val f = cos(pitch)
+        val f1 = sin(pitch)
+
+        val d0 = this.x
+        val d1 = this.y * f + this.z * f1
+        val d2 = this.z * f - this.y * f1
+
+        return Vec3(d0, d1, d2)
+    }
+
+    fun rotateYaw(yaw: Float): Vec3 {
+        val f = cos(yaw)
+        val f1 = sin(yaw)
+
+        val d0 = this.x * f + this.z * f1
+        val d1 = this.y
+        val d2 = this.z * f - this.x * f1
+
+        return Vec3(d0, d1, d2)
+    }
 }
 
 /**

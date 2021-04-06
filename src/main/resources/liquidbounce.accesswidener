@@ -15,6 +15,7 @@ mutable field net/minecraft/util/math/Vec3d y D
 mutable field net/minecraft/util/math/Vec3d z D
 
 accessible field net/minecraft/network/packet/c2s/play/KeepAliveC2SPacket id J
+accessible field net/minecraft/network/packet/c2s/play/ChatMessageC2SPacket chatMessage Ljava/lang/String;
 
 accessible field net/minecraft/client/network/ClientPlayerEntity lastX D
 accessible field net/minecraft/client/network/ClientPlayerEntity lastBaseY D

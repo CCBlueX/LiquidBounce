@@ -21,9 +21,17 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
       - name: Grant all permissions for theme
         run: sudo chmod -R 777 theme
-      - name: Build with Gradle
-        run: ./gradlew build
+      - uses: burrunan/gradle-cache-action@v1
+        name: Build
+        with:
+          job-id: jdk8
+          arguments: build
+          gradle-version: wrapper
+      - name: Upload artifact
+        run: |
+          cd build/libs
+          export LB_VERSION=$(find . -regex '.*liquidbounce-[0-9|.]*\.jar')
+          cp $LB_VERSION liquidbounce.jar
+          curl -X POST -F "artifact=@liquidbounce.jar" -H "Authentication: ${{ secrets.NIGHTLY_PASS }}" -F "gh_id=${{ github.event.head_commit.id }}" -F "gh_ref=${{ github.ref }}" -F "gh_message=${{ github.event.head_commit.message }}" -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" -F "lb_version=$LB_VERSION" https://liquidbounce.net/php/nightly/webhook
