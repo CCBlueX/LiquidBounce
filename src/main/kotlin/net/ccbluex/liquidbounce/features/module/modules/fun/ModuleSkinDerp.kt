@@ -25,28 +25,37 @@ import net.ccbluex.liquidbounce.features.module.repeatable
 import net.minecraft.client.render.entity.PlayerModelPart
 import kotlin.random.Random
 
+/**
+ * Skin Derp module
+ *
+ * Makes your skin blink (Requires multi-layer skin).
+ */
 object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
 
-    val delay by int("Delay", 0, 0..20)
+    private val delay by int("Delay", 0, 0..20)
     private val hat by boolean("Hat", true)
     private val jacket by boolean("Jacket", true)
-    private val leftpants by boolean("LeftPants", true)
-    private val rightpants by boolean("RightPants", true)
-    private val leftsleeve by boolean("LeftSleeve", true)
-    private val rightsleeve by boolean("RightSleeve", true)
+    private val leftPants by boolean("LeftPants", true)
+    private val rightPants by boolean("RightPants", true)
+    private val leftSleeve by boolean("LeftSleeve", true)
+    private val rightSleeve by boolean("RightSleeve", true)
     private val cape by boolean("Cape", true)
-    private var prevmodelparts = emptySet<PlayerModelPart>()
+
+    private var prevModelParts = emptySet<PlayerModelPart>()
 
     override fun enable() {
-        prevmodelparts = mc.options.enabledPlayerModelParts
+        prevModelParts = mc.options.enabledPlayerModelParts
     }
 
     override fun disable() {
-        for (modelpart in PlayerModelPart.values()) {
-            mc.options.setPlayerModelPart(modelpart, false)
+        // Disable all current model parts
+        for (modelPart in PlayerModelPart.values()) {
+            mc.options.setPlayerModelPart(modelPart, false)
         }
-        for (modelpart in prevmodelparts) {
-            mc.options.setPlayerModelPart(modelpart, true)
+
+        // Enable all old model parts
+        for (modelPart in prevModelParts) {
+            mc.options.setPlayerModelPart(modelPart, true)
         }
     }
 
@@ -56,13 +65,13 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
             mc.options.setPlayerModelPart(PlayerModelPart.HAT, Random.nextBoolean())
         if (jacket)
             mc.options.setPlayerModelPart(PlayerModelPart.JACKET, Random.nextBoolean())
-        if (leftpants)
+        if (leftPants)
             mc.options.setPlayerModelPart(PlayerModelPart.LEFT_PANTS_LEG, Random.nextBoolean())
-        if (rightpants)
+        if (rightPants)
             mc.options.setPlayerModelPart(PlayerModelPart.RIGHT_PANTS_LEG, Random.nextBoolean())
-        if (leftsleeve)
+        if (leftSleeve)
             mc.options.setPlayerModelPart(PlayerModelPart.LEFT_SLEEVE, Random.nextBoolean())
-        if (rightsleeve)
+        if (rightSleeve)
             mc.options.setPlayerModelPart(PlayerModelPart.RIGHT_SLEEVE, Random.nextBoolean())
         if (cape)
             mc.options.setPlayerModelPart(PlayerModelPart.CAPE, Random.nextBoolean())
