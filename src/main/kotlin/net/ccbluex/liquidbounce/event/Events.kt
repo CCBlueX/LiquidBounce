@@ -61,7 +61,7 @@ class AttackEvent(val enemy: Entity) : Event()
 class SessionEvent : Event()
 
 @Nameable("screen")
-class ScreenEvent(val screen: Screen?) : Event()
+class ScreenEvent(val screen: Screen?) : CancellableEvent()
 
 @Nameable("chatSend")
 class ChatSendEvent(val message: String) : CancellableEvent()

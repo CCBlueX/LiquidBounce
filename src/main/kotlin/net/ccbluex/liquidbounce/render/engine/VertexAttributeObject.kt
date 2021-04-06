@@ -17,17 +17,50 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.render.engine
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.ultralight.screen.UltralightScreen
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
+import org.lwjgl.opengl.GL32
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
+/**
+ * A wrapper for VAOs
+ */
+class VertexAttributeObject {
+    /**
+     * OpenGL's id for the buffer
+     */
+    val id: Int
 
-    override fun enable() {
-        mc.openScreen(UltralightScreen(ThemeManager.page("clickgui") ?: error("no clickgui page found")))
+    init {
+        // Get an id for our VBO
+        id = GL32.glGenVertexArrays()
     }
 
+    /**
+     * Binds this buffer
+     */
+    fun bind() {
+        GL32.glBindVertexArray(id)
+    }
+
+    /**
+     * Unbinds all buffers for this target
+     */
+    fun unbind() {
+        GL32.glBindVertexArray(0)
+    }
+
+    /**
+     * Deletes the buffer
+     */
+    fun delete() {
+        GL32.glDeleteVertexArrays(id)
+    }
+
+    fun finalize() {
+        val id = this.id
+
+        RenderEngine.runOnGlContext {
+            GL32.glDeleteVertexArrays(id)
+        }
+    }
 }

@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.config
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.renderer.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks

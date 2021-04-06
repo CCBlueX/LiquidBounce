@@ -17,17 +17,38 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.render.engine.utils
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.ultralight.screen.UltralightScreen
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
+import net.ccbluex.liquidbounce.render.engine.RenderEngine
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
+/**
+ * Provides a guard for IDs provided by OpenGL which handles freeing of it
+ *
+ * @param deletionFunction A function that is called when the object should be deallocated
+ */
+abstract class GLIDGuard(val id: Int, val deletionFunction: (Int) -> Unit) {
+    /**
+     * Was [delete] called?
+     */
+    private var deleted = false
 
-    override fun enable() {
-        mc.openScreen(UltralightScreen(ThemeManager.page("clickgui") ?: error("no clickgui page found")))
+    protected fun finalize() {
+        if (!deleted) {
+            val id = this.id
+
+            RenderEngine.runOnGlContext {
+                deletionFunction(id)
+            }
+        }
     }
+
+    fun delete() {
+        if (!deleted) {
+            deletionFunction(this.id)
+
+            deleted = false
+        }
+    }
+
 
 }

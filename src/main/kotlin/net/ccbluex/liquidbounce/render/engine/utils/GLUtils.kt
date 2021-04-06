@@ -17,17 +17,32 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.render.engine.utils
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.ultralight.screen.UltralightScreen
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
+import net.ccbluex.liquidbounce.utils.Mat4
+import org.lwjgl.opengl.GL11
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
+/**
+ * Pushes an MVP matrix for immediate mode
+ */
+fun pushMVP(mvpMatrix: Mat4) {
+    // Load the MVP matrix
+    GL11.glMatrixMode(GL11.GL_PROJECTION)
+    GL11.glPushMatrix()
+    GL11.glLoadMatrixf(mvpMatrix.toArray())
 
-    override fun enable() {
-        mc.openScreen(UltralightScreen(ThemeManager.page("clickgui") ?: error("no clickgui page found")))
-    }
+    // Reset model view matrix
+    GL11.glMatrixMode(GL11.GL_MODELVIEW)
+    GL11.glPushMatrix()
+    GL11.glLoadIdentity()
+}
 
+fun popMVP() {
+    // Load the MVP matrix
+    GL11.glMatrixMode(GL11.GL_PROJECTION)
+    GL11.glPopMatrix()
+
+    // Reset model view matrix
+    GL11.glMatrixMode(GL11.GL_MODELVIEW)
+    GL11.glPopMatrix()
 }
