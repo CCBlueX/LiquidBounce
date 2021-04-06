@@ -33,12 +33,13 @@ import org.lwjgl.glfw.GLFW
 /**
  * A module also called 'hack' is able to be enabled and handle events
  */
-open class Module(name: String, // name parameter in configurable
-                  @Exclude val category: Category, // module category
-                  bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
-                  state: Boolean = false, // default state
-                  @Exclude val disableActivation: Boolean = false, // disable activation
-                  hide: Boolean = false // default hide
+open class Module(
+    name: String, // name parameter in configurable
+    @Exclude val category: Category, // module category
+    bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
+    state: Boolean = false, // default state
+    @Exclude val disableActivation: Boolean = false, // disable activation
+    hide: Boolean = false // default hide
 ) : Listenable, Configurable(name) {
 
     // Module options
@@ -47,7 +48,7 @@ open class Module(name: String, // name parameter in configurable
             // Call enable or disable function
             if (new) {
                 enable()
-            }else{
+            } else {
                 disable()
             }
         }.onSuccess {
@@ -113,7 +114,8 @@ open class Module(name: String, // name parameter in configurable
 /**
  * Should handle events when enabled. Allows the client-user to toggle features. (like modules)
  */
-open class ListenableConfigurable(@Exclude val module: Module? = null, name: String, enabled: Boolean) : Listenable, Configurable(name) {
+open class ListenableConfigurable(@Exclude val module: Module? = null, name: String, enabled: Boolean) : Listenable,
+    Configurable(name) {
 
     val enabled by boolean("Enabled", enabled)
 
@@ -124,7 +126,12 @@ open class ListenableConfigurable(@Exclude val module: Module? = null, name: Str
 /**
  * Allows to configure and manage modes
  */
-open class ChoiceConfigurable(@Exclude val module: Module, name: String, val active: String, @Exclude val initialize: (ChoiceConfigurable) -> Unit) : Configurable(name) {
+open class ChoiceConfigurable(
+    @Exclude val module: Module,
+    name: String,
+    val active: String,
+    @Exclude val initialize: (ChoiceConfigurable) -> Unit
+) : Configurable(name) {
     val choices: MutableList<Choice> = mutableListOf()
 }
 
@@ -136,7 +143,8 @@ class NoneChoice(configurable: ChoiceConfigurable) : Choice("None", configurable
 /**
  * A mode is sub-module to separate different bypasses into extra classes
  */
-open class Choice(name: String, @Exclude private val configurable: ChoiceConfigurable) : Listenable, Configurable(name) {
+open class Choice(name: String, @Exclude private val configurable: ChoiceConfigurable) : Listenable,
+    Configurable(name) {
 
     init {
         configurable.choices += this
@@ -153,6 +161,9 @@ open class Choice(name: String, @Exclude private val configurable: ChoiceConfigu
         get() = mc.world!!
     protected val network: ClientPlayNetworkHandler
         get() = mc.networkHandler!!
+
+    val isActive: Boolean
+        get() = configurable.active.equals(name, true)
 
     val handler = handler<ToggleModuleEvent>(ignoreCondition = true) { event ->
         if (configurable.module == event.module && configurable.active.equals(name, true)) {
@@ -177,7 +188,7 @@ open class Choice(name: String, @Exclude private val configurable: ChoiceConfigu
     /**
      * Events should be handled when mode is enabled
      */
-    override fun handleEvents() = configurable.module.enabled && configurable.active.equals(name, true)
+    override fun handleEvents() = configurable.module.enabled && isActive
 
     /**
      * Required for repeatable sequence
@@ -189,7 +200,10 @@ open class Choice(name: String, @Exclude private val configurable: ChoiceConfigu
 /**
  * Registers an event hook for events of type [T] and launches a sequence
  */
-inline fun <reified T : Event> Listenable.sequenceHandler(ignoreCondition: Boolean = false, noinline eventHandler: SuspendableHandler<T>) {
+inline fun <reified T : Event> Listenable.sequenceHandler(
+    ignoreCondition: Boolean = false,
+    noinline eventHandler: SuspendableHandler<T>
+) {
     handler<T>(ignoreCondition) { event -> Sequence(eventHandler, event) }
 }
 

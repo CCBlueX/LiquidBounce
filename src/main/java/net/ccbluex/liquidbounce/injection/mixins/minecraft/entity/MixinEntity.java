@@ -22,15 +22,13 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import net.ccbluex.liquidbounce.event.EntityMarginEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
@@ -59,31 +57,15 @@ public class MixinEntity {
     }
 
     /**
-     * Overwrite changeLookDirection to add NoPitchLimit modification
-     *
-     * @author Mojang / CCBlueX
+     * Hook no pitch limit exploit
      */
-    @Environment(EnvType.CLIENT)
-    @Overwrite
-    public void changeLookDirection(double cursorDeltaX, double cursorDeltaY) {
+    @Redirect(method = "changeLookDirection", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(FFF)F"))
+    public float hookNoPitchLimit(float value, float min, float max) {
         final boolean noLimit = ModuleNoPitchLimit.INSTANCE.getEnabled();
 
-        double d = cursorDeltaY * 0.15D;
-        double e = cursorDeltaX * 0.15D;
-        this.pitch = (float)((double)this.pitch + d);
-        this.yaw = (float)((double)this.yaw + e);
-        if (!noLimit) {
-            this.pitch = MathHelper.clamp(this.pitch, -90.0F, 90.0F);
-        }
-        this.prevPitch = (float)((double)this.prevPitch + d);
-        this.prevYaw = (float)((double)this.prevYaw + e);
-        if (!noLimit) {
-            this.prevPitch = MathHelper.clamp(this.prevPitch, -90.0F, 90.0F);
-        }
-        if (this.vehicle != null) {
-            this.vehicle.onPassengerLookAround((Entity) (Object) this);
-        }
-
+        if (noLimit)
+            return value;
+        return MathHelper.clamp(value, min, max);
     }
 
 }

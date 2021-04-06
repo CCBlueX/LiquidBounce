@@ -114,7 +114,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleAntiLevitation,
             ModuleFullBright,
             ModuleForceUnicodeChat,
-            ModuleAntiBlind
+            ModuleAntiBlind,
+            ModuleTraces
         )
 
         builtin.forEach(this::addModule)

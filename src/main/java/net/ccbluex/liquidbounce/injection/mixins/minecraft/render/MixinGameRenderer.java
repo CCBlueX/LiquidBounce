@@ -55,31 +55,37 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     protected abstract void bobView(MatrixStack matrixStack, float f);
 
     @Override
-    public Matrix4f getCameraMVPMatrix(float tickDelta) {
+    public Matrix4f getCameraMVPMatrix(float tickDelta, boolean bobbing) {
         MatrixStack matrixStack = new MatrixStack();
 
         matrixStack.peek().getModel().multiply(this.getBasicProjectionMatrix(this.camera, tickDelta, true));
 
-        this.bobViewWhenHurt(matrixStack, tickDelta);
+        if (bobbing) {
+            this.bobViewWhenHurt(matrixStack, tickDelta);
 
-        if (this.client.options.bobView) {
-            this.bobView(matrixStack, tickDelta);
-        }
+            if (this.client.options.bobView) {
+                this.bobView(matrixStack, tickDelta);
+            }
 
-        float f = MathHelper.lerp(tickDelta, this.client.player.lastNauseaStrength, this.client.player.nextNauseaStrength) * this.client.options.distortionEffectScale * this.client.options.distortionEffectScale;
+            float f = MathHelper.lerp(tickDelta,
+                                      this.client.player.lastNauseaStrength,
+                                      this.client.player.nextNauseaStrength) * this.client.options.distortionEffectScale * this.client.options.distortionEffectScale;
 
-        if (f > 0.0F) {
-            int i = this.client.player.hasStatusEffect(StatusEffects.NAUSEA) ? 7 : 20;
+            if (f > 0.0F) {
+                int i = this.client.player.hasStatusEffect(StatusEffects.NAUSEA) ? 7 : 20;
 
-            float g = 5.0F / (f * f + 5.0F) - f * 0.04F;
+                float g = 5.0F / (f * f + 5.0F) - f * 0.04F;
 
-            g *= g;
+                g *= g;
 
-            Vector3f vector3f = new Vector3f(0.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F);
-            matrixStack.multiply(vector3f.getDegreesQuaternion(((float) this.ticks + tickDelta) * (float) i));
-            matrixStack.scale(1.0F / g, 1.0F, 1.0F);
-            float h = -((float) this.ticks + tickDelta) * (float) i;
-            matrixStack.multiply(vector3f.getDegreesQuaternion(h));
+                Vector3f vector3f = new Vector3f(0.0F,
+                                                 MathHelper.SQUARE_ROOT_OF_TWO / 2.0F,
+                                                 MathHelper.SQUARE_ROOT_OF_TWO / 2.0F);
+                matrixStack.multiply(vector3f.getDegreesQuaternion(((float) this.ticks + tickDelta) * (float) i));
+                matrixStack.scale(1.0F / g, 1.0F, 1.0F);
+                float h = -((float) this.ticks + tickDelta) * (float) i;
+                matrixStack.multiply(vector3f.getDegreesQuaternion(h));
+            }
         }
 
         matrixStack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
@@ -87,11 +93,9 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
         Vec3d pos = this.camera.getPos();
 
-        Matrix4f translate = Matrix4f.translate(-(float) pos.x, -(float) pos.y, -(float) pos.z);
-
         Matrix4f model = matrixStack.peek().getModel();
 
-        model.multiply(translate);
+        model.multiply(Matrix4f.translate(-(float) pos.x, -(float) pos.y, -(float) pos.z));
 
         return model;
     }

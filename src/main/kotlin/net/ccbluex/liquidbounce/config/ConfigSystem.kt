@@ -76,8 +76,9 @@ object ConfigSystem {
                     return@runCatching
                 }
 
-                logger.info("Reading config ${configurable.name} from '$name'")
+                logger.debug("Reading config ${configurable.name}...")
                 configurable.overwrite(gson.fromJson(gson.newJsonReader(reader()), confType))
+                logger.info("Successfully loaded config '${configurable.name}'.")
             }.onFailure {
                 logger.error("Unable to load config ${configurable.name}", it)
                 store()
@@ -96,10 +97,11 @@ object ConfigSystem {
                     createNewFile().let { logger.debug("Created new file (status: $it)") }
                 }
 
-                logger.info("Writing config ${configurable.name} to '$name'")
+                logger.debug("Writing config ${configurable.name}...")
                 gson.newJsonWriter(writer()).use {
                     gson.toJson(configurable, confType, it)
                 }
+                logger.info("Successfully saved config '${configurable.name}'.")
             }.onFailure {
                 logger.error("Unable to store config ${configurable.name}", it)
             }

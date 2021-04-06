@@ -39,8 +39,8 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
 
     override fun enable() {
         synchronized(positions) {
-            positions.addAll(listOf(player.x, player.eyeY, player.z))
-            positions.addAll(listOf(player.x, player.y, player.z))
+            positions.addAll(listOf(player.x, player.eyeY, player.z - 1.0))
+            positions.addAll(listOf(player.x, player.y, player.z - 1.0))
         }
     }
 
@@ -55,7 +55,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
 
         synchronized(positions) {
             RenderEngine.enqueueForRendering(
-                RenderEngine.CAMERA_VIEW_LAYER, createBreadcrumbsRenderTask(
+                RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, createBreadcrumbsRenderTask(
                     color,
                     positions
                 )
@@ -75,6 +75,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
                 )
             )
         }
+
         return renderTask
     }
 
@@ -88,7 +89,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         lastPosZ = player.z
 
         synchronized(positions) {
-            positions.addAll(listOf(player.x, player.y, player.z))
+            positions.addAll(listOf(player.x, player.y, player.z - 1.0))
         }
     }
 
