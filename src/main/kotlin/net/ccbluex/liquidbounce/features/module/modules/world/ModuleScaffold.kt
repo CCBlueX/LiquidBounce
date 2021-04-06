@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.block.FallingBlock
-import net.minecraft.block.GrassBlock
 import net.minecraft.item.BlockItem
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.util.Hand
@@ -113,7 +112,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             .map { Pair(it, player.inventory.getStack(it).item) }
             .find {
                 val second = it.second
-                second is BlockItem && second.block !is FallingBlock && second.block !is GrassBlock
+                second is BlockItem && second.block !is FallingBlock
             }?.first ?: -1
     }
 }
