@@ -53,7 +53,7 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
     val packetHandler = handler<PacketEvent> { event ->
         // Setback detection
         if (event.packet is PlayerPositionLookS2CPacket) {
-            chat("You have been setback by the server! Make sure you're standing in a block.")
+            chat("You have been set back by the server! Make sure you're standing in a block.")
             enabled = false
         }
     }

@@ -113,6 +113,7 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleBlink,
             ModuleAntiLevitation,
             ModuleFullBright,
+            ModuleForceUnicodeChat,
             ModuleAntiBlind,
             ModuleTraces
         )
