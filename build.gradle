@@ -95,7 +95,7 @@ def zipGui = tasks.register("zipGui", Zip) {
 }
 
 for (folder in file(".").listFiles()) {
-    if (folder.isDirectory() && folder.listFiles().any { (it.name == "public") }) {
+    if (folder.isDirectory() && folder.listFiles().any { (it.name == "package.json") }) {
         def copiedFolder = file("$folder") // copy variable (!important!)
 
         def iTask = tasks.register("install$folder.name", NpmTask) {
