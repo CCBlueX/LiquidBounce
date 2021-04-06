@@ -50,7 +50,7 @@ class Theme(val name: String) {
                 val stream = resource("/assets/liquidbounce/default_theme.zip")
 
                 if (exists) {
-                    themeFolder.delete()
+                    themeFolder.deleteRecursively()
                 }
 
                 extractZip(stream, themeFolder)
