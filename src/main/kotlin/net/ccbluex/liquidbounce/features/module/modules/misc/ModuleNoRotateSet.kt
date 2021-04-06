@@ -19,20 +19,16 @@ object ModuleNoRotateSet : Module("NoRotateSet", Category.MISC) {
         val packet = event.packet
 
         if (packet is PlayerPositionLookS2CPacket) {
-            if (noZero && packet.yaw == 0f && packet.pitch == 0f)
+            if (noZero && packet.yaw == 0F && packet.pitch == 0F)
                 return@handler
 
-            if (confirm)
-                network.sendPacket(PlayerMoveC2SPacket.LookOnly(packet.yaw, packet.pitch, player.isOnGround))
+            if (illegalRotation || packet.pitch <= 90 && packet.pitch >= -90 && RotationManager.serverRotation != null && packet.yaw != RotationManager.serverRotation!!.yaw && packet.pitch != RotationManager.serverRotation!!.pitch) {
 
-            packet.yaw = when {
-                illegalRotation || RotationManager.serverRotation != null && packet.yaw != RotationManager.serverRotation!!.yaw -> packet.yaw
-                else -> 0f // Maybe not 0f, just player.yaw
+                if (confirm)
+                    network.sendPacket(PlayerMoveC2SPacket.LookOnly(packet.yaw, packet.pitch, player.isOnGround))
             }
-            packet.pitch = when {
-                illegalRotation || packet.pitch <= 90 && packet.pitch >= -90 && RotationManager.serverRotation != null && packet.pitch != RotationManager.serverRotation!!.pitch -> packet.pitch
-                else -> 0f // Maybe not 0f, just player.pitch
-            }
+            packet.yaw = player.yaw
+            packet.pitch = player.pitch
         }
     }
 }
