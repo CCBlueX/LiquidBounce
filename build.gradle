@@ -40,6 +40,7 @@ repositories {
     mavenCentral()
     maven { url = "http://maven.fabricmc.net/" }
     maven { url = "https://jitpack.io" }
+    maven { url = "https://dl.bintray.com/earthcomputer/mods" }
 }
 
 dependencies {
@@ -52,6 +53,12 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
+
+    // Multi Connect
+    modImplementation "net.earthcomputer:multiconnect:1.3.35:api"
+    include "net.earthcomputer:multiconnect:1.3.35:api"
+
+    modRuntime "net.earthcomputer:multiconnect:1.3.35:slim"
 
     // Ignore in export
     implementation "com.google.code.findbugs:jsr305:3.0.2" // to fix nullable imports
