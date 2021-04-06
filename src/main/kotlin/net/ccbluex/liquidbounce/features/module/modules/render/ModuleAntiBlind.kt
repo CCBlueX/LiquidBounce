@@ -17,17 +17,13 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.interfaces;
+package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.minecraft.util.math.Matrix4f;
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 
-public interface IMixinGameRenderer {
-
-    /**
-     * Creates a matrix that renders the perspective of the camera
-     *
-     * @param tickDelta The count of ticks passed since the last time rendered
-     */
-    Matrix4f getCameraMVPMatrix(float tickDelta, boolean bobbing);
-
+object ModuleAntiBlind : Module("AntiBlind", Category.RENDER) {
+    val antiBlind by boolean("DisableBlindingEffect", true)
+    val antiNausea by boolean("DisableNauseaEffect", true)
+    val fireOpacity by float("FireOpacity", 1.0F, 0.0F..1.0F)
 }

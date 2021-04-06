@@ -64,9 +64,6 @@ public abstract class MixinMinecraftClient {
     @Shadow
     public abstract ClientBuiltinResourcePackProvider getResourcePackDownloader();
 
-    @Shadow
-    public abstract void openScreen(Screen screen);
-
     @Shadow private int itemUseCooldown;
 
     /**

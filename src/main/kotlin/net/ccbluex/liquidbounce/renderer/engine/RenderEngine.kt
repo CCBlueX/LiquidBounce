@@ -47,9 +47,14 @@ object RenderEngine : Listenable {
     const val CAMERA_VIEW_LAYER = 0
 
     /**
+     * Uses the perspective of the minecraft camera without bobbing, culling enabled
+     */
+    const val CAMERA_VIEW_LAYER_WITHOUT_BOBBING = 1
+
+    /**
      * Screen space, mirrored vertically
      */
-    const val SCREEN_SPACE_LAYER = 1
+    const val SCREEN_SPACE_LAYER = 2
 
     /**
      * A layer to render minecraft-specific stuff, the render engine is barely used
@@ -93,7 +98,8 @@ object RenderEngine : Listenable {
 
     val renderHandler = handler<OverlayRenderEvent> {
         this.cameraMvp = (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
-            it.tickDelta
+            it.tickDelta,
+            true
         ).toMat4()
 
         EventManager.callEvent(EngineRenderEvent(it.tickDelta))
@@ -197,7 +203,14 @@ object RenderEngine : Listenable {
         return when (layer) {
             CAMERA_VIEW_LAYER -> LayerSettings(
                 (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
-                    tickDelta
+                    tickDelta,
+                    true
+                ).toMat4(), true
+            )
+            CAMERA_VIEW_LAYER_WITHOUT_BOBBING -> LayerSettings(
+                (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
+                    tickDelta,
+                    false
                 ).toMat4(), true
             )
             SCREEN_SPACE_LAYER -> {
