@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Choice
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.renderer.engine.*
-import net.ccbluex.liquidbounce.renderer.utils.rainbow
+import net.ccbluex.liquidbounce.render.engine.*
+import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.extensions.shouldBeShown
 import net.minecraft.entity.Entity
 import java.awt.Color

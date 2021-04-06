@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.renderer.engine.Vec4
+import net.ccbluex.liquidbounce.render.engine.Vec4
 import net.minecraft.util.math.Matrix4f
 import net.minecraft.util.math.Quaternion
 import org.lwjgl.BufferUtils

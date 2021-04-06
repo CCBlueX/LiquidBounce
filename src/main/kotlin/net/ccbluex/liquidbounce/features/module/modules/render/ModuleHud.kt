@@ -22,22 +22,22 @@ import net.ccbluex.liquidbounce.event.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.renderer.ultralight.WebView
-import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
+import net.ccbluex.liquidbounce.render.ultralight.WebView
+import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 
 object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
-    private lateinit var webView: WebView
+    private var webView: WebView? = null
 
     override fun init() {
-        this.webView = WebView(width = { mc.window.width }, height = { mc.window.height })
-
-        webView.loadPage(ThemeManager.defaultTheme.page("hud"))
+        webView = WebView(width = { mc.window.width }, height = { mc.window.height })
+        webView!!.loadPage(ThemeManager.defaultTheme.page("hud") ?: error(""))
     }
 
     val renderHandler = handler<OverlayRenderEvent> {
-        webView.update()
-        webView.render()
+        val currentView = webView ?: return@handler
+        currentView.update()
+        currentView.render()
     }
 
 }

@@ -17,17 +17,24 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.render.engine.utils
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.ultralight.screen.UltralightScreen
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
+import org.lwjgl.opengl.GL11
+import java.nio.ByteBuffer
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
+fun imSetColorFromBuffer(vertexBuffer: ByteBuffer, idx: Int) {
+    GL11.glColor4f(
+        (vertexBuffer.get(idx * 4).toInt() and 255) / 255.0f,
+        (vertexBuffer.get(idx * 4 + 1).toInt() and 255) / 255.0f,
+        (vertexBuffer.get(idx * 4 + 2).toInt() and 255) / 255.0f,
+        (vertexBuffer.get(idx * 4 + 3).toInt() and 255) / 255.0f
+    )
+}
 
-    override fun enable() {
-        mc.openScreen(UltralightScreen(ThemeManager.page("clickgui") ?: error("no clickgui page found")))
-    }
-
+fun imVertexPositionFromBuffer(vertexBuffer: ByteBuffer, idx: Int) {
+    GL11.glVertex3f(
+        vertexBuffer.getFloat(idx * 4),
+        vertexBuffer.getFloat((idx + 1) * 4),
+        vertexBuffer.getFloat((idx + 2) * 4)
+    )
 }

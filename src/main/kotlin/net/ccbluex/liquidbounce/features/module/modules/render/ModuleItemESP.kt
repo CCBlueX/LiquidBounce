@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Choice
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.renderer.engine.*
-import net.ccbluex.liquidbounce.renderer.utils.drawBox
-import net.ccbluex.liquidbounce.renderer.utils.drawBoxOutline
-import net.ccbluex.liquidbounce.renderer.utils.rainbow
+import net.ccbluex.liquidbounce.render.engine.*
+import net.ccbluex.liquidbounce.render.utils.drawBox
+import net.ccbluex.liquidbounce.render.utils.drawBoxOutline
+import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box

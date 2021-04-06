@@ -17,17 +17,14 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.render.utils
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.ultralight.screen.UltralightScreen
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import java.awt.Color
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
 
-    override fun enable() {
-        mc.openScreen(UltralightScreen(ThemeManager.page("clickgui") ?: error("no clickgui page found")))
-    }
+fun rainbow(): Color4b {
+    val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + 400000L) / 10000000000F % 1, 1F, 1F))
 
+    return Color4b(currentColor)
 }

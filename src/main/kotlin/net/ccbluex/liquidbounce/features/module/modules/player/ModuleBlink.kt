@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBreadcrumbs
 import net.ccbluex.liquidbounce.features.module.repeatable
-import net.ccbluex.liquidbounce.renderer.engine.*
-import net.ccbluex.liquidbounce.renderer.utils.rainbow
+import net.ccbluex.liquidbounce.render.engine.*
+import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.play.*

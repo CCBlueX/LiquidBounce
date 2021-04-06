@@ -25,9 +25,10 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
 import net.ccbluex.liquidbounce.native.Natives
-import net.ccbluex.liquidbounce.renderer.engine.RenderEngine
-import net.ccbluex.liquidbounce.renderer.ultralight.WebPlatform
-import net.ccbluex.liquidbounce.renderer.ultralight.theme.ThemeManager
+import net.ccbluex.liquidbounce.render.engine.RenderEngine
+import net.ccbluex.liquidbounce.render.ultralight.UltralightScreenHook
+import net.ccbluex.liquidbounce.render.ultralight.WebPlatform
+import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.extensions.RotationManager
 import net.ccbluex.liquidbounce.utils.extensions.globalEnemyConfigurable
@@ -88,6 +89,7 @@ object LiquidBounce : Listenable {
 
         // Load up web platform
         WebPlatform.init()
+        UltralightScreenHook
 
         // Register commands and modules
         CommandManager.registerInbuilt()
