@@ -19,7 +19,7 @@ object ModuleNoRotateSet : Module("NoRotateSet", Category.MISC) {
         val packet = event.packet
 
         if (packet is PlayerPositionLookS2CPacket) {
-            if (noZero && packet.yaw == 0F && packet.pitch == 0F)
+            if (noZero && packet.yaw == 0f && packet.pitch == 0f)
                 return@handler
 
             if (confirm)
