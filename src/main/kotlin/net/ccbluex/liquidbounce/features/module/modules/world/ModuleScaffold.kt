@@ -31,6 +31,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private var keepRotation = false
 
     val repeatable = repeatable {
+
         mc.timer.timerSpeed = timer
 
         val blockPos = BlockPos(player.pos).down()
@@ -54,7 +55,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         place(blockPos)
     }
 
-    private fun place(blockPos: BlockPos) {
+    private fun place(blockPos: BlockPos): Boolean {
+        if (!world.getBlockState(blockPos).material.isReplaceable)
+            return false
+
         val eyes = player.eyesPos
 
         for (direction in Direction.values()) {
@@ -90,7 +94,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             pitch = rotation.pitch
             bothRotations = rotation
 
-            // Send right click
+            // Send right click which for some reason doesn't fucking work
             interaction.interactBlock(
                 player,
                 world,
@@ -103,7 +107,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.swingHand(Hand.MAIN_HAND)
             else
                 network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+            return true
         }
+        return false
     }
 
     // Simple hot bar block detection
