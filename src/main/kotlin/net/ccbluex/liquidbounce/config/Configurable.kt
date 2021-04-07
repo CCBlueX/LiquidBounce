@@ -106,6 +106,9 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
     protected fun text(name: String, default: String = "", change: (String, String) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
+    protected fun textArray(name: String, default: MutableList<String> = mutableListOf(), change: (MutableList<String>, MutableList<String>) -> Unit = { _, _ -> })
+        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+
     protected fun chooseList(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
         = ChooseListValue(name, selected = default, selectables = array, change = change).apply { this@Configurable.value.add(this) }
 
