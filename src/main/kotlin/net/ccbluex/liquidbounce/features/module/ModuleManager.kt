@@ -120,7 +120,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleAntiBlind,
             ModuleTraces,
             ModuleElytraFly,
-            ModuleSpammer
+            ModuleSpammer,
+            ModuleSlimeJump
         )
 
         builtin.forEach(this::addModule)
