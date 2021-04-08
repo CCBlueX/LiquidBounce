@@ -6,6 +6,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import co.uk.hexeption.utils.OutlineUtils
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.tileentity.ITileEntity
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -32,6 +34,18 @@ class StorageESP : Module() {
     private val hopperValue = BoolValue("Hopper", true)
     private val shulkerBoxValue = BoolValue("ShulkerBox", true)
 
+    private fun getColor(tileEntity: ITileEntity):Color?{
+        return when {
+            chestValue.get() && classProvider.isTileEntityChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color(0, 66, 255)
+            enderChestValue.get() && classProvider.isTileEntityEnderChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color.MAGENTA
+            furnaceValue.get() && classProvider.isTileEntityFurnace(tileEntity) -> Color.BLACK
+            dispenserValue.get() && classProvider.isTileEntityDispenser(tileEntity) -> Color.BLACK
+            hopperValue.get() && classProvider.isTileEntityHopper(tileEntity) -> Color.GRAY
+            shulkerBoxValue.get() && classProvider.isTileEntityShulkerBox(tileEntity) -> Color(0x6e, 0x4d, 0x6e).brighter()
+            else -> null
+        }
+    }
+
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         try {
@@ -47,15 +61,7 @@ class StorageESP : Module() {
             mc.gameSettings.gammaSetting = 100000.0f
 
             for (tileEntity in mc.theWorld!!.loadedTileEntityList) {
-                val color: Color = when {
-                    chestValue.get() && classProvider.isTileEntityChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color(0, 66, 255)
-                    enderChestValue.get() && classProvider.isTileEntityEnderChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color.MAGENTA
-                    furnaceValue.get() && classProvider.isTileEntityFurnace(tileEntity) -> Color.BLACK
-                    dispenserValue.get() && classProvider.isTileEntityDispenser(tileEntity) -> Color.BLACK
-                    hopperValue.get() && classProvider.isTileEntityHopper(tileEntity) -> Color.GRAY
-                    shulkerBoxValue.get() && classProvider.isTileEntityShulkerBox(tileEntity) -> Color(0x6e, 0x4d, 0x6e).brighter()
-                    else -> null
-                } ?: continue
+                val color: Color = getColor(tileEntity)?: continue
 
                 if (!(classProvider.isTileEntityChest(tileEntity) || classProvider.isTileEntityEnderChest(tileEntity))) {
                     RenderUtils.drawBlockBox(tileEntity.pos, color, !mode.equals("otherbox", ignoreCase = true))
@@ -87,7 +93,6 @@ class StorageESP : Module() {
                         GL11.glEnable(GL11.GL_LINE_SMOOTH)
                         GL11.glEnable(GL11.GL_BLEND)
                         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-                        functions.renderTileEntity(tileEntity, event.partialTicks, -1)
                         RenderUtils.glColor(color)
                         GL11.glLineWidth(1.5f)
                         functions.renderTileEntity(tileEntity, event.partialTicks, -1)
@@ -152,29 +157,34 @@ class StorageESP : Module() {
         val mode = modeValue.get()
         val shader = (if (mode.equals("shaderoutline", ignoreCase = true)) OutlineShader.OUTLINE_SHADER else if (mode.equals("shaderglow", ignoreCase = true)) GlowShader.GLOW_SHADER else null)
                 ?: return
+        val partialTicks = event.partialTicks
+        val renderManager = mc.renderManager
         shader.startDraw(event.partialTicks)
+
         try {
-            val renderManager = mc.renderManager
-            for (entity in mc.theWorld!!.loadedTileEntityList) {
-                if (!(classProvider.isTileEntityChest(entity) && chestValue.get() ||
-                    classProvider.isTileEntityEnderChest(entity) && enderChestValue.get()))
-                    continue
-                if (clickedBlocks.contains(entity.pos))
-                    continue
+            val entityMap = HashMap<Color, ArrayList<ITileEntity>>()
+            for (tileEntity in mc.theWorld!!.loadedTileEntityList) {
+                val color: Color = getColor(tileEntity) ?: continue
 
-                mc.renderManager.renderEntityAt(
-                        entity,
-                        entity.pos.x - renderManager.renderPosX,
-                        entity.pos.y - renderManager.renderPosY,
-                        entity.pos.z - renderManager.renderPosZ,
-                        event.partialTicks
-                )
+                if (!entityMap.containsKey(color)) {
+                    entityMap.put(color, ArrayList())
+                }
+
+                entityMap[color]!!.add(tileEntity)
             }
-            for (entity in mc.theWorld!!.loadedEntityList) {
-                if (!classProvider.isEntityMinecartChest(entity))
-                    continue
 
-                renderManager.renderEntityStatic(entity, event.partialTicks, true)
+            for ((color, arr) in entityMap) {
+                shader.startDraw(partialTicks)
+                for (entity in arr) {
+                    mc.renderManager.renderEntityAt(
+                            entity,
+                            entity.pos.x - renderManager.renderPosX,
+                            entity.pos.y - renderManager.renderPosY,
+                            entity.pos.z - renderManager.renderPosZ,
+                            partialTicks
+                    )
+                }
+                shader.stopDraw(color, if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f, 1f)
             }
         } catch (ex: Exception) {
             ClientUtils.getLogger().error("An error occurred while rendering all storages for shader esp", ex)

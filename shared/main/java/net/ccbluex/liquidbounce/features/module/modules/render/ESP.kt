@@ -143,21 +143,37 @@ class ESP : Module() {
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
         val mode = modeValue.get().toLowerCase()
+        val partialTicks = event.partialTicks
         val shader = (if (mode.equals("shaderoutline", ignoreCase = true)) OutlineShader.OUTLINE_SHADER else if (mode.equals("shaderglow", ignoreCase = true)) GlowShader.GLOW_SHADER else null)
                 ?: return
-        shader.startDraw(event.partialTicks)
+        val radius = if (mode.equals("shaderoutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("shaderglow", ignoreCase = true)) shaderGlowRadius.get() else 1f
+
         renderNameTags = false
         try {
+            //search entities
+            val entityMap = HashMap<Color, ArrayList<IEntity>>()
             for (entity in mc.theWorld!!.loadedEntityList) {
                 if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
                 if (!EntityUtils.isSelected(entity, false)) continue
-                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                //can draw
+                val color = getColor(entity)
+                if (!entityMap.containsKey(color)) {
+                    entityMap.put(color, ArrayList())
+                }
+                entityMap[color]!!.add(entity)
+            }
+            //then draw it
+            for ((color, arr) in entityMap) {
+                shader.startDraw(partialTicks)
+                for (entity in arr) {
+                    mc.renderManager.renderEntityStatic(entity, partialTicks, true)
+                }
+                shader.stopDraw(color, radius, 1f)
             }
         } catch (ex: Exception) {
             ClientUtils.getLogger().error("An error occurred while rendering all entities for shader esp", ex)
         }
         renderNameTags = true
-        val radius = if (mode.equals("shaderoutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("shaderglow", ignoreCase = true)) shaderGlowRadius.get() else 1f
         shader.stopDraw(getColor(null), radius, 1f)
     }
 
