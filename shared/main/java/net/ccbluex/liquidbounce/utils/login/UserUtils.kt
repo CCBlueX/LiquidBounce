@@ -43,7 +43,6 @@ object UserUtils {
         val body = JsonObject()
         body.addProperty("accessToken", token)
         request.entity = StringEntity(Gson().toJson(body))
-        println(Gson().toJson(body));
 
         val response = client.execute(request)
 
