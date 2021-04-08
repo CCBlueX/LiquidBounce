@@ -9,6 +9,7 @@
     "minecraft.block.MixinFluidBlock",
     "minecraft.client.MixinKeyboard",
     "minecraft.client.MixinMinecraftClient",
+    "minecraft.client.MixinNarratorManager",
     "minecraft.entity.MixinClientPlayerEntity",
     "minecraft.entity.MixinEntity",
     "minecraft.entity.MixinLivingEntity",

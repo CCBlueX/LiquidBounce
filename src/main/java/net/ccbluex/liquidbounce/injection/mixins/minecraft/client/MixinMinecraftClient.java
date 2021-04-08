@@ -64,9 +64,6 @@ public abstract class MixinMinecraftClient {
     @Shadow
     public abstract ClientBuiltinResourcePackProvider getResourcePackDownloader();
 
-    @Shadow
-    public abstract void openScreen(Screen screen);
-
     @Shadow private int itemUseCooldown;
 
     /**
@@ -74,7 +71,7 @@ public abstract class MixinMinecraftClient {
      *
      * @param callback not needed
      */
-    @Inject(method = "<init>", at = @At("RETURN"))
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;onResolutionChanged()V"))
     private void startClient(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(new ClientStartEvent());
     }
@@ -153,9 +150,12 @@ public abstract class MixinMinecraftClient {
      * @param screen to be opened (null = no screen at all)
      * @param callbackInfo          callback
      */
-    @Inject(method = "openScreen", at = @At("HEAD"))
+    @Inject(method = "openScreen", at = @At("HEAD"), cancellable = true)
     private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new ScreenEvent(screen));
+        final ScreenEvent event = new ScreenEvent(screen);
+        EventManager.INSTANCE.callEvent(event);
+        if (event.isCancelled())
+            callbackInfo.cancel();
     }
 
     /**
