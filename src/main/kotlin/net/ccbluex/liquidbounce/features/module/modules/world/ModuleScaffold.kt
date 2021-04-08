@@ -6,16 +6,13 @@ import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.block.FallingBlock
 import net.minecraft.item.BlockItem
-import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
-import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShapes
-import kotlin.math.atan2
-import kotlin.math.sqrt
 
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
@@ -75,15 +72,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 continue
 
             // Make yaw + pitch based on hitVec and eyes
-            val diffX = hitVec.x - eyes.x
-            val diffY = hitVec.y - eyes.y
-            val diffZ = hitVec.z - eyes.z
-            val diffXZ = sqrt(diffX * diffX + diffZ * diffZ)
-
-            val rotation = Rotation(
-                MathHelper.wrapDegrees(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f),
-                MathHelper.wrapDegrees(-Math.toDegrees(atan2(diffY, diffXZ)).toFloat())
-            )
+            val rotation = RotationManager.makeRotation(hitVec, eyes)
 
             // Rotate server-sided
             keepRotation = true

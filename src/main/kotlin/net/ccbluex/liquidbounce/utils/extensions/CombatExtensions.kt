@@ -253,7 +253,7 @@ object RotationManager : Listenable {
         ticksUntilReset = ticks
     }
 
-    private fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
+    fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
         val diffX = vec.x - eyes.x
         val diffY = vec.y - eyes.y
         val diffZ = vec.z - eyes.z
