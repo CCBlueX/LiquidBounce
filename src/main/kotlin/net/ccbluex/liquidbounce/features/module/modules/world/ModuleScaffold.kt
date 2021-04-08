@@ -21,6 +21,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val rotations = RotationsConfigurable()
 
     private var slot = -1
+    private var oldSlot = -1
 
     private var yaw = 0f
     private var pitch = 0f
@@ -46,10 +47,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         // Change slot
         slot = findBlock()
+        oldSlot = player.inventory.selectedSlot
         player.inventory.selectedSlot = slot
 
         // Place block
         place(blockPos)
+
+        // Create some sort of autoblock change without the player noticing (aka slot change server-sided)
+        player.inventory.selectedSlot = oldSlot
     }
 
     private fun place(blockPos: BlockPos): Boolean {
