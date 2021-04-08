@@ -40,6 +40,7 @@ repositories {
     mavenCentral()
     maven { url = "http://maven.fabricmc.net/" }
     maven { url = "https://jitpack.io" }
+    maven { url = "https://dl.bintray.com/earthcomputer/mods" }
 }
 
 dependencies {
@@ -52,6 +53,17 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
+
+    // MultiConnect API
+    modImplementation "net.earthcomputer:multiconnect:${project.multiconnect_version}:api"
+    include "net.earthcomputer:multiconnect:${project.multiconnect_version}:api"
+
+    // Recommended mods (on IDE)
+    modRuntime "net.earthcomputer:multiconnect:${project.multiconnect_version}:slim"
+    modRuntime "io.github.prospector:modmenu:${project.mod_menu_version}"
+    modRuntime "com.github.jellysquid3:sodium-fabric:${project.sodium_version}"
+    modRuntime "com.github.jellysquid3:lithium-fabric:${project.lithium_version}"
+    modRuntime "com.github.jellysquid3:phosphor-fabric:${project.phosphor_version}"
 
     // Ignore in export
     implementation "com.google.code.findbugs:jsr305:3.0.2" // to fix nullable imports

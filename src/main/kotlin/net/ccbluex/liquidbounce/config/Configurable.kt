@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.config
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.renderer.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
@@ -104,6 +104,9 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
 
     protected fun text(name: String, default: String = "", change: (String, String) -> Unit = { _, _ -> })
+        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+
+    protected fun textArray(name: String, default: MutableList<String> = mutableListOf(), change: (MutableList<String>, MutableList<String>) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
     protected fun chooseList(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
