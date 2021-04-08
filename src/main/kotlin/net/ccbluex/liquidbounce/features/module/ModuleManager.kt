@@ -118,7 +118,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleForceUnicodeChat,
             ModuleAntiBlind,
             ModuleTraces,
-            ModuleElytraFly
+            ModuleElytraFly,
+            ModuleSlimeJump
         )
 
         builtin.forEach(this::addModule)
