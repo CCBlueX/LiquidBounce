@@ -122,7 +122,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleElytraFly,
             ModuleSpammer,
             ModuleSlimeJump,
-            ModuleBlockWalk
+            ModuleBlockWalk,
+            ModuleLadderBoost
         )
 
         builtin.forEach(this::addModule)
