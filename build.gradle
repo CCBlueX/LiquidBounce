@@ -74,8 +74,8 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    implementation "com.labymedia:ultralight-java-base:0.4.1"
-    implementation "com.labymedia:ultralight-java-databind:0.4.1"
+    implementation "com.labymedia:ultralight-java-base:0.4.3"
+    implementation "com.labymedia:ultralight-java-databind:0.4.3"
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 

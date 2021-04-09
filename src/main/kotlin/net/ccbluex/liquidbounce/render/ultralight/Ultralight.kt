@@ -44,11 +44,11 @@ import com.labymedia.ultralight.config.UltralightConfig
 import com.labymedia.ultralight.config.UltralightViewConfig
 import com.labymedia.ultralight.databind.Databind
 import com.labymedia.ultralight.databind.DatabindConfiguration
-import net.ccbluex.liquidbounce.native.Natives
 import net.ccbluex.liquidbounce.render.ultralight.bindings.UltralightJsWrapper
 import net.ccbluex.liquidbounce.render.ultralight.input.ClipboardAdapter
 import net.ccbluex.liquidbounce.render.ultralight.input.CursorAdapter
 import net.ccbluex.liquidbounce.render.ultralight.listener.*
+import net.ccbluex.liquidbounce.render.ultralight.native.UltralightNatives
 import net.ccbluex.liquidbounce.render.ultralight.theme.Page
 import net.ccbluex.liquidbounce.utils.SingleThreadTaskScheduler
 import net.ccbluex.liquidbounce.utils.logger
@@ -78,7 +78,7 @@ object WebPlatform {
 
             // Load natives from native directory inside root folder
             logger.debug("Loading ultralight natives")
-            UltralightJava.load(Natives.nativesRoot.toPath())
+            UltralightJava.load(UltralightNatives.nativesRoot.toPath())
 
             // Setup platform
             logger.debug("Setting up ultralight platform")
