@@ -5,7 +5,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.block.CobwebBlock
-import net.minecraft.block.SnowyBlock
+import net.minecraft.block.SnowBlock
 import net.minecraft.util.shape.VoxelShapes
 
 object ModuleBlockWalk : Module("BlockWalk", Category.MOVEMENT) {
@@ -17,7 +17,7 @@ object ModuleBlockWalk : Module("BlockWalk", Category.MOVEMENT) {
         // For some reason, it doesn't really work even though it should? Does this need mixins too?
         event.shape = when(event.state.block) {
             is CobwebBlock -> if(web) VoxelShapes.fullCube() else return@handler
-            is SnowyBlock -> if(snow) VoxelShapes.fullCube() else return@handler
+            is SnowBlock -> if(snow) VoxelShapes.fullCube() else return@handler
             else -> return@handler
         }
     }
