@@ -59,6 +59,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         oldSlot = player.inventory.selectedSlot
         player.inventory.selectedSlot = slot
 
+        // If sameY is not in the same posY it was set to be
+        if(sameY && player.y.toInt() < launchY)
+            return@repeatable
+
         // Place block
         place(blockPos)
 
