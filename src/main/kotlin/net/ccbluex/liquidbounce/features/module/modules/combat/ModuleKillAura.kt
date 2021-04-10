@@ -91,8 +91,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // todo: add predict to box
 
             // find best spot (and skip if no spot was found)
-            val (rotation, _) = RotationManager.raytraceBox(eyes, box, throughWalls = false,
-                range = range.toDouble()) ?: continue
+            val (rotation, _) = RotationManager.raytraceBox(eyes, box, throughWalls = false, range = range.toDouble())
+                ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)

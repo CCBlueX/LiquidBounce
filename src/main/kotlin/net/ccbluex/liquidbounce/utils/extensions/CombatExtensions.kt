@@ -24,6 +24,8 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.mc
+import net.minecraft.block.BlockState
+import net.minecraft.block.ShapeContext
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
@@ -34,6 +36,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.projectile.ProjectileUtil
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.hit.HitResult
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
@@ -127,13 +130,11 @@ class EnemyConfigurable : Configurable("enemies") {
  * Configurable to configure the dynamic rotation engine
  */
 class RotationsConfigurable : Configurable("rotations") {
-
     val turnSpeed by curve("TurnSpeed", arrayOf(4f, 7f, 10f, 3f, 2f, 0.7f))
 
     val outborderOffset = floatRange("Offset")
 
     val predict by boolean("Predict", true)
-
 }
 
 /**
@@ -203,12 +204,37 @@ object RotationManager : Listenable {
     private var y = Random.nextDouble()
     private var z = Random.nextDouble()
 
+    fun raytraceBlock(
+        eyes: Vec3d,
+        pos: BlockPos,
+        state: BlockState,
+        throughWalls: Boolean,
+        range: Double
+    ): VecRotation? {
+        val offset = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+        val shape = state.getVisualShape(mc.world, pos, ShapeContext.of(mc.player))
+
+        for (box in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
+            return raytraceBox(eyes, box.offset(offset), throughWalls, range, pos) ?: continue
+        }
+
+        return null
+    }
+
     /**
      * Find the best spot of a box to aim at.
      */
-    fun raytraceBox(eyes: Vec3d, box: Box, throughWalls: Boolean, range: Double): VecRotation? {
-        val preferredSpot = Vec3d(box.minX + (box.maxX - box.minX) * x * 0.8,box.minY + (box.maxY - box.minY) * y * 0.8,
-            box.minZ + (box.maxZ - box.minZ) * z * 0.8)
+    fun raytraceBox(
+        eyes: Vec3d,
+        box: Box,
+        throughWalls: Boolean,
+        range: Double,
+        expectedTarget: BlockPos? = null
+    ): VecRotation? {
+        val preferredSpot = Vec3d(
+            box.minX + (box.maxX - box.minX) * x * 0.8, box.minY + (box.maxY - box.minY) * y * 0.8,
+            box.minZ + (box.maxZ - box.minZ) * z * 0.8
+        )
         val preferredRotation = makeRotation(eyes, preferredSpot)
 
         var bestRotation: VecRotation? = null
@@ -216,7 +242,8 @@ object RotationManager : Listenable {
         for (x in 0.1..0.9 step 0.1) {
             for (y in 0.1..0.9 step 0.1) {
                 for (z in 0.1..0.9 step 0.1) {
-                    val vec3 = Vec3d(box.minX + (box.maxX - box.minX) * x,box.minY + (box.maxY - box.minY) * y,
+                    val vec3 = Vec3d(
+                        box.minX + (box.maxX - box.minX) * x, box.minY + (box.maxY - box.minY) * y,
                         box.minZ + (box.maxZ - box.minZ) * z)
 
                     // skip because of out of range
@@ -224,11 +251,19 @@ object RotationManager : Listenable {
                         continue
 
                     // todo: prefer visible spots even when through walls is turned on
-                    if (isVisible(eyes, vec3) || throughWalls) {
+                    if (if (expectedTarget != null) facingBlock(eyes, vec3, expectedTarget) else isVisible(
+                            eyes,
+                            vec3
+                        ) || throughWalls
+                    ) {
                         val rotation = makeRotation(vec3, eyes)
 
                         // Calculate next spot to preferred spot
-                        if (bestRotation == null || rotationDifference(rotation, preferredRotation) < rotationDifference(bestRotation.rotation, preferredRotation)) {
+                        if (bestRotation == null || rotationDifference(
+                                rotation,
+                                preferredRotation
+                            ) < rotationDifference(bestRotation.rotation, preferredRotation)
+                        ) {
                             bestRotation = VecRotation(rotation, vec3)
                         }
                     }
@@ -304,14 +339,41 @@ object RotationManager : Listenable {
     /**
      * Allows you to check if a point is behind a wall
      */
-    private fun isVisible(eyes: Vec3d, vec3: Vec3d)
-        = mc.world?.raycast(RaycastContext(eyes, vec3, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player))?.type == HitResult.Type.MISS
+    private fun isVisible(eyes: Vec3d, vec3: Vec3d) = mc.world?.raycast(
+        RaycastContext(
+            eyes,
+            vec3,
+            RaycastContext.ShapeType.COLLIDER,
+            RaycastContext.FluidHandling.NONE,
+            mc.player
+        )
+    )?.type == HitResult.Type.MISS
+
+    /**
+     * Allows you to check if a point is behind a wall
+     */
+    private fun facingBlock(eyes: Vec3d, vec3: Vec3d, blockPos: BlockPos): Boolean {
+        val searchedPos = mc.world?.raycast(
+            RaycastContext(
+                eyes,
+                vec3,
+                RaycastContext.ShapeType.COLLIDER,
+                RaycastContext.FluidHandling.NONE,
+                mc.player
+            )
+        ) ?: return false
+
+        if (searchedPos.type != HitResult.Type.BLOCK)
+            return false
+
+        return searchedPos.blockPos == blockPos
+    }
 
     /**
      * Allows you to check if your enemy is behind a wall
      */
     fun facingEnemy(enemy: Entity, range: Double): Boolean {
-        return raycastEntity(range, serverRotation ?: return false) { it == enemy } != null
+        return raytraceEntity(range, serverRotation ?: return false) { it == enemy } != null
     }
 
     /**
@@ -433,7 +495,7 @@ fun ClientWorld.findEnemy(range: Float, player: Entity = mc.player!!, enemyConf:
         .filter { (_, distance) -> distance <= range }
         .minByOrNull { (_, distance) -> distance }
 
-fun raycastEntity(range: Double, rotation: Rotation, filter: (Entity) -> Boolean): Entity? {
+fun raytraceEntity(range: Double, rotation: Rotation, filter: (Entity) -> Boolean): Entity? {
     val entity: Entity = mc.cameraEntity ?: return null
 
     val cameraVec = entity.getCameraPosVec(1f)
@@ -442,7 +504,14 @@ fun raycastEntity(range: Double, rotation: Rotation, filter: (Entity) -> Boolean
     val vec3d3 = cameraVec.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
     val box = entity.boundingBox.stretch(rotationVec.multiply(range)).expand(1.0, 1.0, 1.0)
 
-    val entityHitResult = ProjectileUtil.raycast(entity, cameraVec, vec3d3, box, { !it.isSpectator && it.collides() && filter(it) }, range * range)
+    val entityHitResult = ProjectileUtil.raycast(
+        entity,
+        cameraVec,
+        vec3d3,
+        box,
+        { !it.isSpectator && it.collides() && filter(it) },
+        range * range
+    )
 
     return entityHitResult?.entity
 }
