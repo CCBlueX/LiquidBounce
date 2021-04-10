@@ -1,9 +1,38 @@
 <html>
     <head>
         <title>Account manager</title>
+        <style>
+            body {
+                background-color: #4285f4;
+            }
+        </style>
     </head>
 
     <body>
+        <h1>Alt Manager</h1>
+
+        <h2>Cracked Login</h2>
+        <form>
+            <input type="text" id="username" name="username" placeholder="username"><br>
+
+            <button onclick="client.getSessionService().loginCracked(document.getElementById('username').value)">Login</button>
+        </form>
+
+        <h2>Mojang Login (NOT MICROSOFT LOGIN!)</h2>
+        <form>
+            <input type="text" id="email" name="email" placeholder="email"><br>
+            <input type="text" id="password" name="password" placeholder="password"><br>
+
+            <button onclick="client.getSessionService().loginMojang(document.getElementById('email').value, document.getElementById('password').value)">Login</button>
+        </form>
+
+        <h2>Altening Login</h2>
+        <form>
+            <input type="text" id="token" name="token" placeholder="token"><br>
+
+            <button onclick="client.getSessionService().loginAltening(document.getElementById('token').value)">Login</button>
+        </form>
+
         <button onclick="ui.open('title', screen)">Back</button>
     </body>
 </html>
