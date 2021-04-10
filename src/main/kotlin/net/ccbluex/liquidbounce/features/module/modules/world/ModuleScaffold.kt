@@ -18,6 +18,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private val swing by boolean("Swing", true)
     private val timer by float("Timer", 1f, 0.1f..3f)
+    private var sameY by boolean("SameY", false)
     private val rotations = RotationsConfigurable()
 
     private var slot = -1
@@ -27,12 +28,20 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private var pitch = 0f
     private var bothRotations: Rotation? = null
     private var keepRotation = false
+    private var launchY = -1
+
+    override fun enable() {
+        launchY = player.y.toInt()
+    }
 
     val repeatable = repeatable {
-
         mc.timer.timerSpeed = timer
 
-        val blockPos = BlockPos(player.pos).down()
+        val blockPos = (if (sameY && launchY <= player.y) BlockPos(
+            player.x,
+            launchY - 1.0,
+            player.z
+        ) else BlockPos(player.pos).down())
 
         // Gipsy KeepRotation
         if (keepRotation)
