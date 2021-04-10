@@ -16,36 +16,37 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.block.BlockState
-import net.minecraft.block.ShapeContext
-import net.minecraft.entity.Entity
-import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
 
-fun Vec3d.toBlockPos() = BlockPos(this)
+fun BlockPos.getCenterDistanceSquared() = mc.player!!.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
 
-fun BlockPos.getState() = mc.world?.getBlockState(this)
+/**
+ * Search blocks around the player in a specific [radius]
+ */
+inline fun searchBlocks(radius: Int, filter: (BlockPos, BlockState) -> Boolean): List<Pair<BlockPos, BlockState>> {
+    val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
 
-fun BlockPos.getBlock() = getState()?.block
+    val thePlayer = mc.player ?: return blocks
+
+    for (x in radius downTo -radius + 1) {
+        for (y in radius downTo -radius + 1) {
+            for (z in radius downTo -radius + 1) {
+                val blockPos = BlockPos(thePlayer.x.toInt() + x, thePlayer.y.toInt() + y, thePlayer.z.toInt() + z)
+                val state = blockPos.getState() ?: continue
+
+                if (!filter(blockPos, state))
+                    continue
 
 
-fun raytraceBlock(range: Double, rotation: Rotation, pos: BlockPos, state: BlockState): BlockHitResult? {
-    val entity: Entity = mc.cameraEntity ?: return null
+                blocks.add(Pair(blockPos, state))
+            }
+        }
+    }
 
-    val start = entity.getCameraPosVec(1f)
-    val rotationVec = rotation.rotationVec
-
-    val end = start.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
-
-    return mc.world!!.raycastBlock(
-        start,
-        end,
-        pos,
-        state.getVisualShape(mc.world, pos, ShapeContext.of(mc.player)),
-        state
-    )
+    return blocks
 }

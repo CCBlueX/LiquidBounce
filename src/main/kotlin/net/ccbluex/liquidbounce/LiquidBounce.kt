@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
-import net.ccbluex.liquidbounce.native.Natives
 import net.ccbluex.liquidbounce.render.engine.RenderEngine
 import net.ccbluex.liquidbounce.render.ultralight.UltralightScreenHook
 import net.ccbluex.liquidbounce.render.ultralight.WebPlatform
+import net.ccbluex.liquidbounce.render.ultralight.native.UltralightNatives
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.extensions.RotationManager
@@ -82,7 +82,7 @@ object LiquidBounce : Listenable {
         Chat
 
         // Download natives
-        Natives.downloadNatives()
+        UltralightNatives.downloadNatives()
 
         // Initialize the render engine
         RenderEngine.init()

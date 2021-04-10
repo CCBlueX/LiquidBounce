@@ -40,6 +40,7 @@ class UltralightJsWrapper(private val viewContextProvider: ViewContextProvider, 
     private val registeredEvents = HashMap<Class<out Event>, ArrayList<EventHook<*>>>()
 
     val moduleManager = ModuleManager
+    val sessionService = UltralightJsSessionService
 
     companion object {
         /**

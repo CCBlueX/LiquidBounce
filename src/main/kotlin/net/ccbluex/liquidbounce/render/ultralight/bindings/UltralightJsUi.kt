@@ -43,7 +43,6 @@ object UltralightJsUi {
     fun get(name: String) = screens.find { it.name == name }
         ?: JsScreen("ultralight", UltralightScreen::class.java) { mc.openScreen(UltralightScreen(ThemeManager.page(name) ?: error("unknown page"))) }
 
-
     fun get(screen: Screen?) = get(screen?.javaClass)
 
     fun get(clazz: Class<*>?) = screens.find { it.clazz == clazz }

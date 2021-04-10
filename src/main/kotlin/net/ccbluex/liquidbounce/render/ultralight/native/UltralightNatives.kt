@@ -16,17 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.native
+package net.ccbluex.liquidbounce.render.ultralight.native
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.utils.*
 import java.io.File
 import kotlin.system.exitProcess
 
-object Natives {
+object UltralightNatives {
 
-    val nativesRoot = File(ConfigSystem.rootFolder, "natives")
-    private const val LIBRARY_VERSION = 0.41
+    val nativesRoot = File(ConfigSystem.rootFolder, "ultralight")
+    private const val LIBRARY_VERSION = 0.43
 
     /**
      * Download required natives

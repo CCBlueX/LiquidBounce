@@ -36,7 +36,7 @@ class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T, priv
         sequences += this@Sequence
         if (!loop) {
             handler(event)
-        }else{
+        } else {
             sync()
             while (loop) {
                 handler(event)
@@ -47,18 +47,28 @@ class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T, priv
     }
 
     private var continuation: Continuation<Unit>? = null
-    private var remainingTicks = 0
+    private var elapsedTicks = 0
+    private var totalTicks: () -> Int = { 0 }
 
     fun tick() {
-        if(remainingTicks > 0) {
-            remainingTicks--
+        if (this.elapsedTicks < this.totalTicks()) {
+            this.elapsedTicks++
         } else {
-            continuation?.resume(Unit)
+            this.continuation?.resume(Unit)
         }
     }
 
     suspend fun wait(ticks: Int) {
-        remainingTicks = ticks
+        this.wait { ticks }
+    }
+
+    /**
+     * Waits for the amount of ticks that is retrieved via [ticksToWait]
+     */
+    suspend fun wait(ticksToWait: () -> Int) {
+        elapsedTicks = 0
+        totalTicks = ticksToWait
+
         suspendCoroutine<Unit> { continuation = it }
     }
 

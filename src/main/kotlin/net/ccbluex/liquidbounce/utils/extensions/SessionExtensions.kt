@@ -94,8 +94,8 @@ private fun MinecraftSessionService.login(username: String, password: String = "
     }
 }
 
-fun MinecraftSessionService.loginMojang(username: String, password: String)
-    = login(username, password, YggdrasilEnvironment.PROD)
+fun MinecraftSessionService.loginMojang(email: String, password: String)
+    = login(email, password, YggdrasilEnvironment.PROD)
 
 fun MinecraftSessionService.loginAltening(account: String)
     = login(account, LiquidBounce.CLIENT_NAME, GenEnvironments.THE_ALTENING)

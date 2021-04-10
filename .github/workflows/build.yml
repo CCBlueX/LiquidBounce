@@ -27,7 +27,7 @@ jobs:
         name: Build
         with:
           job-id: jdk8
-          arguments: build
+          arguments: genSources build
           gradle-version: wrapper
       - name: Upload artifact
         run: |
