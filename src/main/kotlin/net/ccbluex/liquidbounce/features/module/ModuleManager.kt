@@ -117,7 +117,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleTraces,
             ModuleSpammer,
             ModuleChestAura,
-            ModuleAutoBreak
+            ModuleAutoBreak,
+            ModuleAutoArmor
         )
 
         builtin.forEach(this::addModule)

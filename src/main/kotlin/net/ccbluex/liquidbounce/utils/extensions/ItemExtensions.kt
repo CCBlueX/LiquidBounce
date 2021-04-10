@@ -1,9 +1,32 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2021 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.utils.extensions
 
 import com.mojang.brigadier.StringReader
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
+import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.util.Identifier
+import net.minecraft.util.registry.Registry
 
 /**
  * Create item with NBT tags
@@ -18,3 +41,34 @@ fun createItem(stack: String, amount: Int = 1): ItemStack = ItemStringReader(Str
  * Check if a stack is nothing (means empty slot)
  */
 fun ItemStack?.isNothing() = this?.isEmpty == true
+
+fun ItemStack?.getEnchantmentCount(): Int {
+    val enchantments = this?.enchantments ?: return 0
+
+    var c = 0
+
+    for (enchantment in enchantments) {
+        if (enchantment !is CompoundTag)
+            continue
+
+        if (enchantment.contains("ench") || enchantment.contains("id"))
+            c++
+    }
+
+    return c
+}
+
+fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
+    val enchantments = this?.enchantments ?: return 0
+    val enchId = Registry.ENCHANTMENT.getId(enchantment)
+
+    for (enchantmentEntry in enchantments) {
+        if (enchantmentEntry !is CompoundTag)
+            continue
+
+        if (enchantmentEntry.contains("id") && Identifier.tryParse(enchantmentEntry.getString("id")) == enchId)
+            return enchantmentEntry.getShort("lvl").toInt()
+    }
+
+    return 0
+}
