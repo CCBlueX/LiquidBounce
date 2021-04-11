@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.sequenceHandler
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.block.Block
@@ -34,7 +33,9 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 
 /**
- * Changes the speed of the entire game.
+ * ChestAura module
+ *
+ * Automatically opens chests around you.
  */
 object ModuleChestAura : Module("ChestAura", Category.WORLD) {
 
@@ -48,27 +49,24 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
     private val rotations = RotationsConfigurable()
 
     private var currentBlock: BlockPos? = null
-
     val clickedBlocks = hashSetOf<BlockPos>()
 
-    val motionHandler = sequenceHandler<PlayerNetworkMovementTickEvent> { event ->
-        val player = mc.player ?: return@sequenceHandler
-
-        // TODO Allow other modules to block chest aura
+    val networkTickHandler = sequenceHandler<PlayerNetworkMovementTickEvent> { event ->
+        // TODO: Allow other modules to block chest aura
+        // TODO: Raycast facing block instead of working with network tick (like killaura - faster is better)
+        //   and avoiding bugs (caused by rotation modification from other modules).
 
         when (event.state) {
             EventState.PRE -> {
                 if (mc.currentScreen is HandledScreen<*>)
                     wait { delay }
 
-                val targetedBlocks = HashSet<Block>()
+                val targetedBlocks = hashSetOf<Block>()
 
                 targetedBlocks.addAll(chest)
 
                 val radius = range + 1
                 val radiusSquared = radius * radius
-
-                val eyesPos = player.eyesPos
 
                 val blocksToProcess = searchBlocks(radius.toInt()) { pos, state ->
                     targetedBlocks.contains(state.block) && pos !in clickedBlocks && pos.getCenterDistanceSquared() <= radiusSquared
@@ -78,11 +76,11 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
 
                 for ((pos, state) in blocksToProcess) {
                     val (rotation, _) = RotationManager.raytraceBlock(
-                        eyesPos,
+                        player.eyesPos,
                         pos,
                         state,
                         throughWalls = throughWalls,
-                        range = ModuleKillAura.range.toDouble()
+                        range = range.toDouble()
                     ) ?: continue
 
                     finalRotation = rotation
@@ -97,32 +95,26 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
                 RotationManager.aimAt(finalRotation, configurable = rotations)
             }
             EventState.POST -> {
-                val curr = currentBlock
-                val severRot = RotationManager.serverRotation
+                val curr = currentBlock ?: return@sequenceHandler
+                val serverRotation = RotationManager.serverRotation ?: return@sequenceHandler
 
-                if (curr != null && severRot != null) {
-                    val rayTraceResult = raytraceBlock(range.toDouble(), severRot, curr, curr.getState()!!)
+                val rayTraceResult = raytraceBlock(range.toDouble(), serverRotation, curr,
+                    curr.getState() ?: return@sequenceHandler)
 
-                    if (rayTraceResult?.type == HitResult.Type.MISS) {
-                        return@sequenceHandler
-                    }
+                if (rayTraceResult?.type == HitResult.Type.MISS) {
+                    return@sequenceHandler
+                }
 
-                    if (mc.interactionManager!!.interactBlock(
-                            player,
-                            mc.world!!,
-                            Hand.MAIN_HAND,
-                            rayTraceResult
-                        ) == ActionResult.SUCCESS
-                    ) {
-                        if (visualSwing)
-                            player.swingHand(Hand.MAIN_HAND)
-                        else
-                            mc.networkHandler!!.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+                if (interaction.interactBlock(player, mc.world!!, Hand.MAIN_HAND,
+                        rayTraceResult) == ActionResult.SUCCESS) {
+                    if (visualSwing)
+                        player.swingHand(Hand.MAIN_HAND)
+                    else
+                        network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
 
-                        clickedBlocks.add(currentBlock!!)
-                        currentBlock = null
-                        wait { delay }
-                    }
+                    clickedBlocks.add(currentBlock!!)
+                    currentBlock = null
+                    wait { delay }
                 }
             }
         }
