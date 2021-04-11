@@ -22,8 +22,8 @@
   "custom": {
     "modmenu": {
       "links": {
-        "liquidbounce.guilded": "https://guilded.gg/CCBlueX",
-        "liquidbounce.forums": "https://forums.ccbluex.net/"
+        "liquidbounce.generic.guilded": "https://guilded.gg/CCBlueX",
+        "liquidbounce.generic.forum": "https://forums.ccbluex.net/"
       }
     }
   },

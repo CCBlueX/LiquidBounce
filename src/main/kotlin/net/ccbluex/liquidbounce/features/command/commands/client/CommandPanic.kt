@@ -40,7 +40,7 @@ object CommandPanic {
                     .optional()
                     .build()
             )
-            .handler { args ->
+            .handler { command, args ->
                 var modules = ModuleManager.filter { it.enabled }
                 val msg: String
 

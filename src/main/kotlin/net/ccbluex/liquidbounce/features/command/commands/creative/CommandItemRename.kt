@@ -43,7 +43,7 @@ object CommandItemRename {
                     .required()
                     .build()
             )
-            .handler { args ->
+            .handler { command, args ->
                 val name = args[0] as String
 
                 if (mc.interactionManager?.hasCreativeInventory() == false) {

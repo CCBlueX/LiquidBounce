@@ -31,9 +31,15 @@ import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemSk
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.utils.chat
+import net.minecraft.text.BaseText
+import net.minecraft.text.LiteralText
+import net.minecraft.text.TranslatableText
+
 
 class CommandException(message: String, cause: Throwable? = null, val usageInfo: List<String>? = null) :
-    Exception(message, cause)
+    Exception(message, cause) {
+        constructor(message: BaseText, cause: Throwable? = null, usageInfo: List<String>? = null) : this(message.asString(), cause, usageInfo)
+    }
 
 /**
  * Links minecraft with the command engine
@@ -264,7 +270,7 @@ object CommandManager : Iterable<Command> {
             throw CommandException("The command ${command.name} is not executable.", usageInfo = command.usage())
 
         @Suppress("UNCHECKED_CAST")
-        command.handler!!(parsedParameters as Array<Any>)
+        command.handler!!(command, parsedParameters as Array<Any>)
     }
 
     /**

@@ -41,7 +41,7 @@ object CommandHelp {
                     .optional()
                     .build()
             )
-            .handler { args ->
+            .handler { command, args ->
                 val page = if (args.size > 1) {
                     args[0] as Int
                 }else {

@@ -30,30 +30,27 @@ object CommandClient {
     fun createCommand(): Command {
         return CommandBuilder
             .begin("client")
-            .description("Allows you to manage your client")
             .hub()
             .subcommand(
                 CommandBuilder
                     .begin("info")
-                    .description("Shows information about the client")
-                    .handler {
-                        chat(regular("Client name: "), variable(LiquidBounce.CLIENT_NAME), prefix = false)
-                        chat(regular("Client version: "), variable(LiquidBounce.CLIENT_VERSION), prefix = false)
-                        chat(regular("Client author: "), variable(LiquidBounce.CLIENT_AUTHOR), prefix = false)
+                    .handler { command, args ->
+                        chat(regular(command.result("client_name", variable(LiquidBounce.CLIENT_NAME))), prefix = false)
+                        chat(regular(command.result("client_version", variable(LiquidBounce.CLIENT_VERSION))), variable(LiquidBounce.CLIENT_VERSION), prefix = false)
+                        chat(regular(command.result("client_author", variable(LiquidBounce.CLIENT_AUTHOR))), prefix = false)
                     }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("reload")
-                    .description("Reload your client")
-                    .handler {
+                    .handler { _, _ ->
                         // todo: reload client
                     }
                     .build()
             )
 
-            // todo: contributers
+            // todo: contributors
             // todo: links
             // todo: instructions
             // todo: reset

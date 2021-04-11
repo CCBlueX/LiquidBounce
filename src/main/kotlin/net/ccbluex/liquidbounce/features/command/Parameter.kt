@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.command
 
+import net.minecraft.text.TranslatableText
+
 
 class ParameterValidationResult<T> private constructor(
     val errorMessage: String?,
@@ -38,10 +40,16 @@ typealias AutoCompletionHandler = (String) -> List<String>
 
 class Parameter<T>(
     val name: String,
-    val description: String?,
     val required: Boolean,
     val vararg: Boolean,
     val verifier: ParameterVerifier<T>?,
     val autocompletionHandler: AutoCompletionHandler?,
-    val useMinecraftAutoCompletion: Boolean
-)
+    val useMinecraftAutoCompletion: Boolean,
+    var command: Command? = null
+) {
+    val parameterKey: String
+        get() = "${command?.commandKey}.parameter.$name"
+
+    val description: TranslatableText
+        get() = TranslatableText("$parameterKey.description")
+}

@@ -40,7 +40,7 @@ object CommandPrefix {
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .required()
                 .build())
-            .handler { args ->
+            .handler { command, args ->
                 val prefix = args[0] as String
                 CommandManager.Options.prefix = prefix
                 chat(regular("Successfully changed prefix to "), variable(prefix), dot())

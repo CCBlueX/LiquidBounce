@@ -48,7 +48,7 @@ object CommandItemGive {
                     .optional()
                     .build()
             )
-            .handler { args ->
+            .handler { command, args ->
                 val item = args[0] as String
                 val amount = if (args.size > 2) args[1] as Int else 1 // default one
 

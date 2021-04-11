@@ -32,7 +32,7 @@ object CommandUsername {
         return CommandBuilder
             .begin("username")
             .description("Copies your username to the clipboard")
-            .handler {
+            .handler { command, args ->
                 val username = mc.player!!.name.asString()
                 chat(regular("Username: "), variable(username))
                 GLFW.glfwSetClipboardString(mc.window.handle, username)

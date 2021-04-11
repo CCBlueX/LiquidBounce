@@ -41,7 +41,7 @@ object CommandToggle {
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .required()
                 .build())
-            .handler { args ->
+            .handler { command, args ->
                 val name = args[0] as String
                 val module = ModuleManager.find { it.name.equals(name, true) }
                     ?: throw CommandException("Module §b§l${args[0]}§c not found.")

@@ -49,7 +49,7 @@ object CommandHide {
                             .required()
                             .build()
                     )
-                    .handler { args ->
+                    .handler { command, args ->
                         val name = args[0] as String
                         val module = ModuleManager.find { it.name.equals(name, true) }
                             ?: throw CommandException("Module ${args[1]} not found.")
@@ -71,7 +71,7 @@ object CommandHide {
                             .required()
                             .build()
                     )
-                    .handler { args ->
+                    .handler { command, args ->
                         val name = args[0] as String
                         val module = ModuleManager.find { it.name.equals(name, true) }
                             ?: throw CommandException("Module ${args[1]} not found.")
@@ -93,7 +93,7 @@ object CommandHide {
                             .optional()
                             .build()
                     )
-                    .handler { args ->
+                    .handler { command, args ->
                         val page = if (args.size > 1) {
                             args[0] as Int
                         }else {
@@ -130,7 +130,7 @@ object CommandHide {
                 CommandBuilder
                     .begin("clear")
                     .description("Makes every module visible")
-                    .handler {
+                    .handler { command, args ->
                         ModuleManager.forEach { it.hidden = false }
                         chat("Successfully unhidden all modules.")
                     }

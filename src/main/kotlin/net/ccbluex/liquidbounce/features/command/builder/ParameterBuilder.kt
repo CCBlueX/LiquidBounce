@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.command.ParameterVerifier
 
 class ParameterBuilder<T> private constructor(val name: String) {
 
-    private var description: String? = null
     private var verifier: ParameterVerifier<T>? = null
     private var required: Boolean? = null
     private var vararg: Boolean = false
@@ -67,12 +66,6 @@ class ParameterBuilder<T> private constructor(val name: String) {
         return this
     }
 
-    fun description(description: String): ParameterBuilder<T> {
-        this.description = description
-
-        return this
-    }
-
     fun optional(): ParameterBuilder<T> {
         this.required = false
 
@@ -89,6 +82,13 @@ class ParameterBuilder<T> private constructor(val name: String) {
     fun vararg(): ParameterBuilder<T> {
         this.vararg = true
 
+        return this
+    }
+
+
+    // TODO: Remove this once all commands are using translations
+    @Deprecated("Parameter descriptions are now translated using automatically generated translation keys")
+    fun description(description: String): ParameterBuilder<T> {
         return this
     }
 
@@ -117,7 +117,6 @@ class ParameterBuilder<T> private constructor(val name: String) {
 
         return Parameter(
             this.name,
-            this.description,
             this.required
                 ?: throw IllegalArgumentException("The parameter was neither marked as required nor as optional."),
             this.vararg,

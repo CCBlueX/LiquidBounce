@@ -28,16 +28,13 @@ object CommandFriend {
     fun createCommand(): Command {
         return CommandBuilder
             .begin("friend")
-            .description("Allows you to manage your friend list")
             .hub()
             .subcommand(
                 CommandBuilder
                     .begin("add")
-                    .description("Adds a name to the friend list")
                     .parameter(
                         ParameterBuilder
                             .begin<String>("name")
-                            .description("The name of the friend")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                             .required()
                             .build()
@@ -45,37 +42,32 @@ object CommandFriend {
                     .parameter(
                         ParameterBuilder
                             .begin<String>("alias")
-                            .description("An optional alias of the friend")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                             .optional()
                             .build()
                     )
-                    .handler { TODO() }
+                    .handler { _, _ -> TODO() }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("remove")
-                    .description("Removes a name to the friend list")
                     .parameter(
                         ParameterBuilder
                             .begin<String>("name")
-                            .description("The name of the friend")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                             .required()
                             .build()
                     )
-                    .handler { TODO() }
+                    .handler { _, _ -> TODO() }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("alias")
-                    .description("Changes the alias of a friend list entry")
                     .parameter(
                         ParameterBuilder
                             .begin<String>("name")
-                            .description("The name of the friend")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                             .required()
                             .build()
@@ -83,26 +75,23 @@ object CommandFriend {
                     .parameter(
                         ParameterBuilder
                             .begin<String>("alias")
-                            .description("The new alias")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                             .required()
                             .build()
                     )
-                    .handler { TODO() }
+                    .handler { _, _ -> TODO() }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("list")
-                    .description("Lists the friend list")
-                    .handler { println("You have no friends"); return@handler }
+                    .handler { command, _ -> println(command.result("no_friends")); return@handler }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("clear")
-                    .description("Clears the friend list")
-                    .handler { println("You have no friends"); return@handler }
+                    .handler { command, _ -> println(command.result("no_friends")); return@handler }
                     .build()
             )
             .build()

@@ -1,5 +1,66 @@
 {
   "modmenu.descriptionTranslation.liquidbounce": "A free mixin-based injection hacked-client",
-  "liquidbounce.guilded": "Guilded",
-  "liquidbounce.forums": "Forums"
+  "liquidbounce.generic.guilded": "Guilded",
+  "liquidbounce.generic.forum": "Forum",
+
+  "liquidbounce.command.bind.description": "Allows you to set keybinds",
+  "liquidbounce.command.bind.parameter.name.description": "The name of the module",
+  "liquidbounce.command.bind.parameter.key.description": "The new key to bind",
+  "liquidbounce.command.bind.result.module_not_found": "Module %s not found.",
+  "liquidbounce.command.bind.result.module_bound": "Bound module %s to key %s.",
+
+  "liquidbounce.command.binds.description": "Allows you to manage your binds",
+
+  "liquidbounce.command.binds.subcommand.add.description": "Adds a new bind",
+  "liquidbounce.command.binds.subcommand.add.parameter.name.description": "The name of the module",
+  "liquidbounce.command.binds.subcommand.add.parameter.key.description": "The new key to bind",
+  "liquidbounce.command.binds.subcommand.add.result.module_not_found": "Module %s not found.",
+  "liquidbounce.command.binds.subcommand.add.result.unknown_key": "Unknown key.",
+  "liquidbounce.command.binds.subcommand.add.result.module_bound": "Bound module %s to key %s.",
+
+  "liquidbounce.command.binds.subcommand.remove.description": "Removes an existing bind",
+  "liquidbounce.command.binds.subcommand.remove.parameter.name.description": "The name of the module",
+  "liquidbounce.command.binds.subcommand.remove.result.module_not_found": "Module %s not found.",
+  "liquidbounce.command.binds.subcommand.remove.result.module_not_bound": "Module is not bound to any key.",
+  "liquidbounce.command.binds.subcommand.remove.result.bind_removed": "The bind for module %s has been removed.",
+
+  "liquidbounce.command.binds.subcommand.list.description": "Lists all bindings",
+  "liquidbounce.command.binds.subcommand.list.parameter.page.description": "The page to show",
+  "liquidbounce.command.binds.subcommand.list.result.no_bindings": "There are no bindings to be shown.",
+  "liquidbounce.command.binds.subcommand.list.result.page_number_too_large": "The page number you have entered exceeds the maximum number of available pages, it may at most be %d.",
+  "liquidbounce.command.binds.subcommand.list.result.bindings": "Bindings",
+  "liquidbounce.command.binds.subcommand.list.result.page_count": "Page",
+
+  "liquidbounce.command.binds.subcommand.clear.description": "Clears your binds",
+  "liquidbounce.command.binds.subcommand.clear.result.binds_cleared": "Cleared all binds.",
+
+  "liquidbounce.command.clear.description": "Clears the chat",
+
+  "liquidbounce.command.client.description": "Allows you to manage your client",
+
+  "liquidbounce.command.client.subcommand.info.description": "Shows information about the client",
+  "liquidbounce.command.client.subcommand.info.result.client_name": "Client Name: %s",
+  "liquidbounce.command.client.subcommand.info.result.client_version": "Client Version: %s",
+  "liquidbounce.command.client.subcommand.info.result.client_author": "Client Author: %s",
+
+  "liquidbounce.command.client.subcommand.reload.description": "Reload your client",
+
+  "liquidbounce.command.friend.description": "Allows you to manage your friend list",
+
+  "liquidbounce.command.friend.subcommand.add.description": "Adds a name to the friend list",
+  "liquidbounce.command.friend.subcommand.add.parameter.name": "The name of the friend",
+  "liquidbounce.command.friend.subcommand.add.parameter.alias": "An optional alias of the friend",
+
+  "liquidbounce.command.friend.subcommand.remove.description": "Removes a name to the friend list",
+  "liquidbounce.command.friend.subcommand.remove.parameter.name": "The name of the friend",
+
+  "liquidbounce.command.friend.subcommand.alias.description": "Changes the alias of a friend list entry",
+  "liquidbounce.command.friend.subcommand.alias.parameter.name": "The name of the friend",
+  "liquidbounce.command.friend.subcommand.alias.parameter.alias": "The new alias",
+
+  "liquidbounce.command.friend.subcommand.list.description": "Lists the friend list",
+  "liquidbounce.command.friend.subcommand.list.result.no_friends": "You have no friends",
+
+  "liquidbounce.command.friend.subcommand.clear.description": "Clears the friend list",
+  "liquidbounce.command.friend.subcommand.clear.result.no_friends": "You have no friends"
 }

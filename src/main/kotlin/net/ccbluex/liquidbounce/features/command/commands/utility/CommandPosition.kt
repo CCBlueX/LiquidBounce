@@ -34,7 +34,7 @@ object CommandPosition {
             .begin("position")
             .alias("pos")
             .description("Copies your position to the clipboard")
-            .handler {
+            .handler { command, args ->
                 val position = mc.player!!.blockPos.toShortString()
                 chat(regular("Position: "), variable(position))
                 GLFW.glfwSetClipboardString(mc.window.handle, position)
