@@ -148,14 +148,19 @@ object ConfigSystem {
                     deserializeConfigurable(value, currentElement)
                 } else {
                     val currentElement = values[value.name] ?: continue
+                    val currValue = valueField.get(value)
 
-                    try {
-                        val newValue = gson.fromJson(currentElement["value"], valueField.get(value).javaClass)
+                    runCatching {
+                        val newValue = if (currValue is List<*>) {
+                            currentElement["value"].asJsonArray.mapTo(
+                                mutableListOf(),
+                                { gson.fromJson(it, value.listType.type!!) })
+                        } else {
+                            gson.fromJson(currentElement["value"], currValue.javaClass)
+                        }
 
                         valueField.set(value, newValue)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+                    }.onFailure { it.printStackTrace() }
                 }
 
             }

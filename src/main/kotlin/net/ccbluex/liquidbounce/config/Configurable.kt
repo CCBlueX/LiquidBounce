@@ -35,11 +35,13 @@ import kotlin.reflect.jvm.isAccessible
 /**
  * Value based on generics and support for readable names and description
  */
-open class Value<T>(@SerializedName("name")
-                    open val name: String,
-                    @SerializedName("value") internal var value: T,
-                    @Exclude
-                    private val change: (T, T) -> Unit = { _, _ -> },
+open class Value<T>(
+    @SerializedName("name")
+    open val name: String,
+    @SerializedName("value") internal var value: T,
+    @Exclude
+    private val change: (T, T) -> Unit = { _, _ -> },
+    @Exclude internal val listType: ListValueType = ListValueType.None,
 ) {
 
     /**
@@ -127,8 +129,16 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
     protected fun text(name: String, default: String = "", change: (String, String) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun textArray(name: String, default: MutableList<String> = mutableListOf(), change: (MutableList<String>, MutableList<String>) -> Unit = { _, _ -> })
-        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    protected fun textArray(
+        name: String,
+        default: MutableList<String> = mutableListOf(),
+        change: (MutableList<String>, MutableList<String>) -> Unit = { _, _ -> }
+    ) = Value(
+        name,
+        value = default,
+        change = change,
+        listType = ListValueType.String
+    ).apply { this@Configurable.value.add(this) }
 
     protected fun chooseList(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
         = ChooseListValue(name, selected = default, selectables = array, change = change).apply { this@Configurable.value.add(this) }
@@ -149,7 +159,12 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         name: String,
         default: MutableList<Block> = mutableListOf(),
         change: (MutableList<Block>, MutableList<Block>) -> Unit = { _, _ -> }
-    ) = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    ) = Value(
+        name,
+        value = default,
+        change = change,
+        listType = ListValueType.Block
+    ).apply { this@Configurable.value.add(this) }
 
     protected fun item(name: String, default: Item = Items.AIR, change: (Item, Item) -> Unit = { _, _ -> }) =
         Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
@@ -158,13 +173,23 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         name: String,
         default: MutableList<Item> = mutableListOf(),
         change: (MutableList<Item>, MutableList<Item>) -> Unit = { _, _ -> }
-    ) = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    ) = Value(
+        name,
+        value = default,
+        change = change,
+        listType = ListValueType.Item
+    ).apply { this@Configurable.value.add(this) }
 
     protected fun fonts(
         name: String,
         default: MutableList<Fonts.FontDetail> = mutableListOf(),
         change: (MutableList<Fonts.FontDetail>, MutableList<Fonts.FontDetail>) -> Unit = { _, _ -> }
-    ) = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    ) = Value(
+        name,
+        value = default,
+        change = change,
+        listType = ListValueType.FontDetail
+    ).apply { this@Configurable.value.add(this) }
 
     protected fun Module.choices(name: String, active: String, initialize: (ChoiceConfigurable) -> Unit) =
         ChoiceConfigurable(this, name, active, initialize).apply { this@Configurable.value.add(this) }
@@ -190,4 +215,12 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         }
     }
 
+}
+
+enum class ListValueType(val type: Class<*>?) {
+    Block(net.minecraft.block.Block::class.java),
+    Item(net.minecraft.item.Item::class.java),
+    String(kotlin.String::class.java),
+    FontDetail(Fonts.FontDetail::class.java),
+    None(null)
 }
