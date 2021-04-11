@@ -34,10 +34,10 @@ object CommandClient {
             .subcommand(
                 CommandBuilder
                     .begin("info")
-                    .handler { command, args ->
-                        chat(regular(command.result("client_name", variable(LiquidBounce.CLIENT_NAME))), prefix = false)
-                        chat(regular(command.result("client_version", variable(LiquidBounce.CLIENT_VERSION))), variable(LiquidBounce.CLIENT_VERSION), prefix = false)
-                        chat(regular(command.result("client_author", variable(LiquidBounce.CLIENT_AUTHOR))), prefix = false)
+                    .handler { command, _ ->
+                        chat(regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))), prefix = false)
+                        chat(regular(command.result("clientVersion", variable(LiquidBounce.CLIENT_VERSION))), prefix = false)
+                        chat(regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))), prefix = false)
                     }
                     .build()
             )

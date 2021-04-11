@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.features.command
 
 import net.minecraft.text.TranslatableText
+import org.jetbrains.annotations.Contract
 import java.util.*
-import kotlin.collections.ArrayList
 
 typealias CommandHandler = (Command, Array<Any>) -> Unit
 
@@ -34,11 +34,11 @@ class Command(
     val handler: CommandHandler?,
     var parentCommand: Command? = null
 ) {
-    val commandKey: String
+    val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
     val description: TranslatableText
-        get() = TranslatableText("$commandKey.description")
+        get() = TranslatableText("$translationBaseKey.description")
 
     init {
         subcommands.forEach {
@@ -62,7 +62,7 @@ class Command(
     }
 
     fun result(key: String, vararg args: Any): TranslatableText {
-        return TranslatableText("$commandKey.result.$key", args)
+        return TranslatableText("$translationBaseKey.result.$key", *args)
     }
 
     /**

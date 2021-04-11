@@ -32,18 +32,16 @@ object CommandPrefix {
     fun createCommand(): Command {
         return CommandBuilder
             .begin("prefix")
-            .description("Allows you to change the command prefix")
             .parameter(
                 ParameterBuilder
                 .begin<String>("prefix")
-                .description("The new prefix")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .required()
                 .build())
             .handler { command, args ->
                 val prefix = args[0] as String
                 CommandManager.Options.prefix = prefix
-                chat(regular("Successfully changed prefix to "), variable(prefix), dot())
+                chat(regular(command.result("prefixChanged", variable(prefix))))
             }
             .build()
     }

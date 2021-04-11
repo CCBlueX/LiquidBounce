@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.render.ultralight.WebView
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 
 object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
+    override val translationBaseKey: String
+        get() = "liquidbounce.module.hud"
 
     private var webView: WebView? = null
 

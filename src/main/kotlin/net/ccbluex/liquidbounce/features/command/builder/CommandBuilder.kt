@@ -47,12 +47,6 @@ class CommandBuilder private constructor(val name: String) {
         return this
     }
 
-    // TODO: Remove this once all commands are using translations
-    @Deprecated("Command descriptions are now translated using automatically generated translation keys")
-    fun description(description: String): CommandBuilder {
-        return this
-    }
-
     fun subcommand(subcommand: Command): CommandBuilder {
         this.subcommands.add(subcommand)
 

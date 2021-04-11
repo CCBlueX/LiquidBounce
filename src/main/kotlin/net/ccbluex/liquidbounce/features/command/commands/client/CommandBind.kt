@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.*
-import net.minecraft.text.TranslatableText
 
 object CommandBind {
     fun createCommand(): Command {
@@ -47,10 +46,10 @@ object CommandBind {
                 val name = args[0] as String
                 val keyName = args[1] as String
                 val module = ModuleManager.find { it.name.equals(name, true) }
-                    ?: throw CommandException(command.result("module_not_found", name))
+                    ?: throw CommandException(command.result("moduleNotFound", name))
                 val bindKey = key(keyName)
                 module.bind = bindKey
-                chat(regular(command.result("module_bound", variable(module.name), variable(keyName(bindKey)))))
+                chat(regular(command.result("moduleBound", variable(module.name), variable(keyName(bindKey)))))
             }
             .build()
     }

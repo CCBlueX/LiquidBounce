@@ -51,6 +51,8 @@ fun String.translateColorCodes(): String {
     return String(chars)
 }
 
+fun String.toLowerCamelCase() = this.replaceFirst(this.toCharArray()[0], this.toCharArray()[0].toUpperCase())
+
 // https://stackoverflow.com/questions/44315977/ranges-in-kotlin-using-data-type-double
 infix fun ClosedRange<Double>.step(step: Double): Iterable<Double> {
     require(start.isFinite())

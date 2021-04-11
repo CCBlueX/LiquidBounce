@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.chat
-import net.ccbluex.liquidbounce.utils.dot
 import net.ccbluex.liquidbounce.utils.regular
 import net.ccbluex.liquidbounce.utils.variable
 import kotlin.math.ceil
@@ -35,16 +34,13 @@ object CommandHide {
     fun createCommand(): Command {
         return CommandBuilder
             .begin("hide")
-            .description("Allows you to hide modules")
             .hub()
             .subcommand(
                 CommandBuilder
                     .begin("hide")
-                    .description("Hides a module")
                     .parameter(
                         ParameterBuilder
                             .begin<String>("name")
-                            .description("The name of the module")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                             .required()
                             .build()
@@ -52,21 +48,19 @@ object CommandHide {
                     .handler { command, args ->
                         val name = args[0] as String
                         val module = ModuleManager.find { it.name.equals(name, true) }
-                            ?: throw CommandException("Module ${args[1]} not found.")
+                            ?: throw CommandException(command.result("moduleNotFound"))
 
                         module.hidden = true
-                        chat(regular("Module "), variable(module.name), regular(" is now hidden"), dot())
+                        chat(command.result("moduleHidden"), variable(module.name))
                     }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("unhide")
-                    .description("Unhides a module")
                     .parameter(
                         ParameterBuilder
                             .begin<String>("name")
-                            .description("The name of the module")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                             .required()
                             .build()
@@ -74,21 +68,19 @@ object CommandHide {
                     .handler { command, args ->
                         val name = args[0] as String
                         val module = ModuleManager.find { it.name.equals(name, true) }
-                            ?: throw CommandException("Module ${args[1]} not found.")
+                            ?: throw CommandException(command.result("moduleNotFound", name))
 
                         module.hidden = false
-                        chat(regular("Module "), variable(module.name), regular(" is not hidden anymore"), dot())
+                        chat(regular(command.result("moduleUnhidden", variable(module.name))))
                     }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("list")
-                    .description("Lists the hidden modules")
                     .parameter(
                         ParameterBuilder
                             .begin<Int>("page")
-                            .description("The page to show")
                             .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
                             .optional()
                             .build()
@@ -100,27 +92,27 @@ object CommandHide {
                             1
                         }.coerceAtLeast(1)
 
-                        val hiddens = ModuleManager.sortedBy { it.name }
+                        val hiddenModules = ModuleManager.sortedBy { it.name }
                             .filter { it.hidden }
 
-                        if (hiddens.isEmpty()) {
-                            throw CommandException("There are no hidden modules to be shown.")
+                        if (hiddenModules.isEmpty()) {
+                            throw CommandException(command.result("noHiddenModules"))
                         }
 
                         // Max page
-                        val maxPage = ceil(hiddens.size / 8.0).roundToInt()
+                        val maxPage = ceil(hiddenModules.size / 8.0).roundToInt()
                         if (page > maxPage) {
-                            throw CommandException("The number you have entered is too big, it must be under $maxPage.")
+                            throw CommandException(command.result("pageNumberTooLarge", maxPage))
                         }
 
                         // Print out bindings
                         val bindingsOut = StringBuilder()
-                        bindingsOut.append("§c§lHidden\n")
-                        bindingsOut.append("§7> Page: §8$page / $maxPage\n")
+                        bindingsOut.append("§c§l${command.result("hidden")}\n")
+                        bindingsOut.append("§7> ${command.result("page")}: §8$page / $maxPage\n")
 
                         val iterPage = 8 * page
-                        for (module in hiddens.subList(iterPage - 8, iterPage.coerceAtMost(hiddens.size))) {
-                            bindingsOut.append("§6> §7${module.name} (§8§lHidden§7)\n")
+                        for (module in hiddenModules.subList(iterPage - 8, iterPage.coerceAtMost(hiddenModules.size))) {
+                            bindingsOut.append("§6> §7${module.name} (§8§l${command.result("hidden")}§7)\n")
                         }
                         chat(bindingsOut.toString())
                     }
@@ -129,10 +121,9 @@ object CommandHide {
             .subcommand(
                 CommandBuilder
                     .begin("clear")
-                    .description("Makes every module visible")
-                    .handler { command, args ->
+                    .handler { command, _ ->
                         ModuleManager.forEach { it.hidden = false }
-                        chat("Successfully unhidden all modules.")
+                        chat(regular(command.result("modulesUnhidden")))
                     }
                     .build()
             )

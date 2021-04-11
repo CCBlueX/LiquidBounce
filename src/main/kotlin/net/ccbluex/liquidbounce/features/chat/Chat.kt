@@ -12,6 +12,10 @@ import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.extensions.asText
 import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.regular
+import net.minecraft.text.TextColor
+import net.minecraft.text.TranslatableText
+import net.minecraft.util.Formatting
 
 object Chat : ListenableConfigurable(null, "chat", true), ClientListener {
 
@@ -22,16 +26,14 @@ object Chat : ListenableConfigurable(null, "chat", true), ClientListener {
 
     private fun createCommand() = CommandBuilder
         .begin("chat")
-        .description("Allows you to chat")
         .parameter(
             ParameterBuilder
                 .begin<String>("message")
-                .description("Message to send")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .required()
                 .vararg()
                 .build())
-        .handler { args ->
+        .handler { _, args ->
             client.sendMessage((args[0] as Array<*>).joinToString(" ") { it as String })
         }
         .build()
@@ -50,28 +52,28 @@ object Chat : ListenableConfigurable(null, "chat", true), ClientListener {
     }
 
     override fun onConnect() {
-        chat("§7[§a§lChat§7] §9Connecting to chat server...")
+        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.connecting").styled{ it.withColor(Formatting.BLUE) })
     }
 
     override fun onConnected() {
-        chat("§7[§a§lChat§7] §9Connected to chat server!")
+        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.connected").styled{ it.withColor(Formatting.BLUE) })
     }
 
     override fun onDisconnect() {
-        chat("§7[§a§lChat§7] §cDisconnected from chat server!")
+        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.disconnected").styled{ it.withColor(Formatting.RED) })
     }
 
     override fun onLogon() {
-        chat("§7[§a§lChat§7] §9Logging in...")
+        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.loggingIn").styled{ it.withColor(Formatting.BLUE) })
     }
 
     override fun onLoggedIn() {
-        chat("§7[§a§lChat§7] §9Logged in!")
+        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.loggedIn").styled{ it.withColor(Formatting.BLUE) })
 
         chat("====================================")
         chat("§c>> §l")
-        chat("§7Write message: §a.chat <message>")
-        chat("§7Write private message: §a.pchat <user> <message>")
+        chat(regular(TranslatableText("liquidbounce.liquidchat.writeMessage", ".chat <message>".asText().styled { it.withColor(Formatting.GREEN) })))
+        chat(regular(TranslatableText("liquidbounce.liquidchat.writePrivateMessage", ".pchat <user> <message>".asText().styled { it.withColor(Formatting.GREEN) })))
         chat("====================================")
     }
 
@@ -98,7 +100,7 @@ object Chat : ListenableConfigurable(null, "chat", true), ClientListener {
     }
 
     override fun onError(cause: Throwable) {
-        chat("§7[§a§lChat§7] §c§lError: §7${cause.javaClass.name}: ${cause.message}")
+        chat("§7[§a§lChat§7] §c§l${TranslatableText("liquidbounce.generic.error").asString()}: §7${cause.javaClass.name}: ${cause.message}")
     }
 
 }

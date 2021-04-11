@@ -65,6 +65,10 @@ fun chat(vararg texts: Text, prefix: Boolean = true) {
 
 fun chat(text: String) = chat(text.asText())
 
+
+fun notification(title: BaseText, message: String, severity: NotificationEvent.Severity) =
+    EventManager.callEvent(NotificationEvent(title.asString(), message, severity))
+
 fun notification(title: String, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title, message, severity))
 

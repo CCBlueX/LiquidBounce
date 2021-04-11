@@ -85,13 +85,13 @@ object CommandFriend {
             .subcommand(
                 CommandBuilder
                     .begin("list")
-                    .handler { command, _ -> println(command.result("no_friends")); return@handler }
+                    .handler { command, _ -> println(command.result("noFriends")); return@handler }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("clear")
-                    .handler { command, _ -> println(command.result("no_friends")); return@handler }
+                    .handler { command, _ -> println(command.result("noFriends")); return@handler }
                     .build()
             )
             .build()

@@ -47,9 +47,9 @@ class Parameter<T>(
     val useMinecraftAutoCompletion: Boolean,
     var command: Command? = null
 ) {
-    val parameterKey: String
-        get() = "${command?.commandKey}.parameter.$name"
+    val translationBaseKey: String
+        get() = "${command?.translationBaseKey}.parameter.$name"
 
     val description: TranslatableText
-        get() = TranslatableText("$parameterKey.description")
+        get() = TranslatableText("$translationBaseKey.description")
 }
