@@ -21,10 +21,14 @@ package net.ccbluex.liquidbounce.config
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
+import net.minecraft.item.Item
+import net.minecraft.item.Items
+import java.lang.reflect.Modifier
 import kotlin.reflect.KProperty
 import kotlin.reflect.jvm.isAccessible
 
@@ -74,13 +78,30 @@ class ChooseListValue(name: String, selected: String, @Exclude val selectables: 
 
 open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf()): Value<MutableList<Value<*>>>(name, value = value) {
 
+    init {
+        for (field in javaClass.declaredFields) {
+            if (Modifier.isStatic(field.modifiers) || field.isAnnotationPresent(Exclude::class.java) || !Value::class.java.isAssignableFrom(
+                    field.type
+                )
+            )
+                continue
+
+            if (!field.isAccessible)
+                field.isAccessible = true
+
+            val v = field.get(this) ?: continue
+
+            this.value.add(v as Value<*>)
+        }
+    }
+
     fun initConfigurable() {
         value.filterIsInstance<ChoiceConfigurable>().forEach {
             it.initialize(it)
         }
     }
 
-    protected fun <T: Configurable> tree(configurable: T): T {
+    protected fun <T : Configurable> tree(configurable: T): T {
         value.add(configurable)
         return configurable
     }
@@ -112,20 +133,41 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
     protected fun chooseList(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
         = ChooseListValue(name, selected = default, selectables = array, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun curve(name: String, default: Array<Float>, change: (Array<Float>, Array<Float>) -> Unit = { _, _ -> })
-        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    protected fun curve(name: String, default: Array<Float>, change: (Array<Float>, Array<Float>) -> Unit = { _, _ -> }) =
+        Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun color(name: String, color: Color4b = Color4b(255, 255, 255, 255), change: (Color4b, Color4b) -> Unit = { _, _ -> })
-        = Value(name, value = color, change = change).apply { this@Configurable.value.add(this) }
+    protected fun color(
+        name: String,
+        color: Color4b = Color4b(255, 255, 255, 255),
+        change: (Color4b, Color4b) -> Unit = { _, _ -> }
+    ) = Value(name, value = color, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun block(name: String, default: Block = Blocks.AIR, change: (Block, Block) -> Unit = { _, _ -> })
-        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    protected fun block(name: String, default: Block = Blocks.AIR, change: (Block, Block) -> Unit = { _, _ -> }) =
+        Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun blocks(name: String, default: MutableList<Block> = mutableListOf(), change: (MutableList<Block>, MutableList<Block>) -> Unit = { _, _ -> })
-        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    protected fun blocks(
+        name: String,
+        default: MutableList<Block> = mutableListOf(),
+        change: (MutableList<Block>, MutableList<Block>) -> Unit = { _, _ -> }
+    ) = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun Module.choices(name: String, active: String, initialize: (ChoiceConfigurable) -> Unit)
-        = ChoiceConfigurable(this, name, active, initialize).apply { this@Configurable.value.add(this) }
+    protected fun item(name: String, default: Item = Items.AIR, change: (Item, Item) -> Unit = { _, _ -> }) =
+        Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+
+    protected fun items(
+        name: String,
+        default: MutableList<Item> = mutableListOf(),
+        change: (MutableList<Item>, MutableList<Item>) -> Unit = { _, _ -> }
+    ) = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+
+    protected fun fonts(
+        name: String,
+        default: MutableList<Fonts.FontDetail> = mutableListOf(),
+        change: (MutableList<Fonts.FontDetail>, MutableList<Fonts.FontDetail>) -> Unit = { _, _ -> }
+    ) = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+
+    protected fun Module.choices(name: String, active: String, initialize: (ChoiceConfigurable) -> Unit) =
+        ChoiceConfigurable(this, name, active, initialize).apply { this@Configurable.value.add(this) }
 
     /**
      * Overwrite current configurable and their existing values from [configurable].

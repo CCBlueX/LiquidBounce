@@ -134,4 +134,8 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
         return false
     }
+
+    override fun disable() {
+        locked = false
+    }
 }
