@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world
+package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -26,45 +26,44 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 
 /**
- * FastBreak module
+ * AutoBreak module
  *
- * Allows you to break blocks faster.
+ * Automatically breaks blocks
  */
-object ModuleAutoBreak : Module("AutoBreak", Category.WORLD) {
+object ModuleAutoBreak : Module("AutoBreak", Category.PLAYER) {
 
-    private var wasBreaking: Boolean = false
+    private var wasBreaking = false
 
     val repeatable = repeatable {
-        if (wasBreaking) {
+        val crosshairTarget = mc.crosshairTarget
+
+        if (crosshairTarget is BlockHitResult && crosshairTarget.type == HitResult.Type.BLOCK) {
+            val blockState = crosshairTarget.blockPos.getState() ?: return@repeatable
+            if (blockState.isAir) {
+                return@repeatable
+            }
+
+            // Start breaking
+            mc.options.keyAttack.isPressed = true
+            wasBreaking = true
+        }else if (wasBreaking) {
+            // Stop breaking
             wasBreaking = false
             mc.options.keyAttack.isPressed = false
         }
-
-        val crosshairTarget = mc.crosshairTarget
-
-        if (crosshairTarget == null || crosshairTarget.type != HitResult.Type.BLOCK)
-            return@repeatable
-
-        val blockHitResult = crosshairTarget as BlockHitResult
-
-        val blockState = blockHitResult.blockPos.getState() ?: return@repeatable
-
-        if (blockState.isAir) {
-            return@repeatable
-        }
-
-        mc.options.keyAttack.isPressed = true // Default back to off
-        wasBreaking = true
     }
 
     override fun enable() {
+        // Just in case something goes wrong. o.O
         wasBreaking = false
     }
 
     override fun disable() {
-        mc.options.keyAttack.isPressed = false // Default back to off
-
-        super.disable()
+        // Check if auto break was breaking a block
+        if (wasBreaking) {
+            mc.options.keyAttack.isPressed = false
+            wasBreaking = false
+        }
     }
 
 }
