@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.config
 
+import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Module
@@ -35,7 +37,7 @@ import kotlin.reflect.jvm.isAccessible
 /**
  * Value based on generics and support for readable names and description
  */
-open class Value<T>(
+open class Value<T : Any>(
     @SerializedName("name")
     open val name: String,
     @SerializedName("value") internal var value: T,
@@ -67,18 +69,54 @@ open class Value<T>(
         }
     }
 
+    open fun deserializeFrom(gson: Gson, element: JsonElement) {
+        val currValue = this.value
+
+        this.value = if (currValue is List<*>) {
+            element.asJsonArray.mapTo(
+                mutableListOf(),
+                { gson.fromJson(it, this.listType.type!!) }) as T
+        } else {
+            gson.fromJson(element, currValue.javaClass)
+        }
+    }
+
 }
 
 /**
  * Ranged value adds support for closed ranges
  */
-class RangedValue<T>(name: String, value: T, @Exclude val range: ClosedRange<*>, change: (T, T) -> Unit = { _, _ -> })
-    : Value<T>(name, value, change)
+class RangedValue<T : Any>(
+    name: String,
+    value: T,
+    @Exclude val range: ClosedRange<*>,
+    change: (T, T) -> Unit = { _, _ -> }
+) : Value<T>(name, value, change)
 
-class ChooseListValue(name: String, selected: String, @Exclude val selectables: Array<String>, change: (String, String) -> Unit = { _, _ -> })
-    : Value<String>(name, selected, change)
+class ChooseListValue(
+    name: String,
+    selected: String,
+    @Exclude val selectables: Array<String>,
+    change: (String, String) -> Unit = { _, _ -> }
+) : Value<String>(name, selected, change)
 
-open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf()): Value<MutableList<Value<*>>>(name, value = value) {
+class ChooseEnumListValue<T : NamedChoice>(
+    name: String,
+    selected: T,
+    @Exclude val selectables: Array<T>,
+    change: (T, T) -> Unit = { _, _ -> }
+) : Value<T>(name, selected, change) {
+
+    override fun deserializeFrom(gson: Gson, element: JsonElement) {
+        val name = element.asString
+
+        this.value = selectables.first { it.choiceName == name }
+    }
+
+}
+
+open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf()) :
+    Value<MutableList<Value<*>>>(name, value = value) {
 
     init {
         for (field in javaClass.declaredFields) {
@@ -108,8 +146,8 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         return configurable
     }
 
-    protected fun <T> value(name: String, default: T, change: (T, T) -> Unit = { _, _ -> })
-        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    protected fun <T : Any> value(name: String, default: T, change: (T, T) -> Unit = { _, _ -> }) =
+        Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
     protected fun boolean(name: String, default: Boolean = false, change: (Boolean, Boolean) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
@@ -191,6 +229,13 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         listType = ListValueType.FontDetail
     ).apply { this@Configurable.value.add(this) }
 
+    protected fun <T : NamedChoice> enumChoice(
+        name: String,
+        default: T,
+        choices: Array<T>,
+        change: (T, T) -> Unit = { _, _ -> }
+    ) = ChooseEnumListValue(name, default, choices, change = change).apply { this@Configurable.value.add(this) }
+
     protected fun Module.choices(name: String, active: String, initialize: (ChoiceConfigurable) -> Unit) =
         ChoiceConfigurable(this, name, active, initialize).apply { this@Configurable.value.add(this) }
 
@@ -215,6 +260,10 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         }
     }
 
+}
+
+interface NamedChoice {
+    val choiceName: String
 }
 
 enum class ListValueType(val type: Class<*>?) {

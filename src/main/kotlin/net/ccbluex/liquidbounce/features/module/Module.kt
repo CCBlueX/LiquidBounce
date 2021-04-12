@@ -144,8 +144,8 @@ class NoneChoice(configurable: ChoiceConfigurable) : Choice("None", configurable
 /**
  * A mode is sub-module to separate different bypasses into extra classes
  */
-open class Choice(name: String, @Exclude private val configurable: ChoiceConfigurable) : Listenable,
-    Configurable(name) {
+open class Choice(name: String, @Exclude private val configurable: ChoiceConfigurable) : Configurable(name),
+    Listenable {
 
     init {
         configurable.choices += this

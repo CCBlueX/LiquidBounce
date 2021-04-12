@@ -17,14 +17,23 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.utils
+package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import java.awt.Color
+import net.ccbluex.liquidbounce.utils.extensions.getEnchantment
+import net.minecraft.enchantment.Enchantment
+import net.minecraft.item.ItemStack
 
+class EnchantmentValueEstimator(private vararg val weightedEnchantments: WeightedEnchantment) {
 
-fun rainbow(): Color4b {
-    val currentColor = Color(Color.HSBtoRGB((System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F, 1F, 1F))
+    fun estimateValue(itemStack: ItemStack): Float {
+        var sum = 0.0f
 
-    return Color4b(currentColor)
+        for (it in this.weightedEnchantments) {
+            sum += itemStack.getEnchantment(it.enchantment) * it.factor
+        }
+
+        return sum
+    }
+
+    class WeightedEnchantment(val enchantment: Enchantment, val factor: Float)
 }

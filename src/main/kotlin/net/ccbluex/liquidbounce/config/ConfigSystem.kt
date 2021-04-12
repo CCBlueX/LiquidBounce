@@ -60,6 +60,7 @@ object ConfigSystem {
         .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockValueSerializer)
         .registerTypeAdapter(Fonts.FontDetail::class.javaObjectType, FontDetailSerializer)
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
+        .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
         .registerTypeHierarchyAdapter(ListenableConfigurable::class.javaObjectType, ListenableConfigurableSerializer)
         .create()
@@ -106,7 +107,6 @@ object ConfigSystem {
     private fun deserializeConfigurable(configurable: Configurable, jsonElement: JsonElement) {
         runCatching {
             val jsonObject = jsonElement.asJsonObject
-            val javaClass = configurable.javaClass
 
             if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name)
                 throw IllegalStateException()
@@ -114,13 +114,6 @@ object ConfigSystem {
             val values = jsonObject.getAsJsonArray("value")
                 .map { it.asJsonObject }
                 .associateBy { it["name"].asString!! }
-
-
-            val valueClass = Value::class.java
-            val valueField = valueClass.getDeclaredField("value")
-
-            if (!valueField.isAccessible)
-                valueField.isAccessible = true
 
             for (value in configurable.value) {
                 if (value is Configurable) {
@@ -148,18 +141,9 @@ object ConfigSystem {
                     deserializeConfigurable(value, currentElement)
                 } else {
                     val currentElement = values[value.name] ?: continue
-                    val currValue = valueField.get(value)
 
                     runCatching {
-                        val newValue = if (currValue is List<*>) {
-                            currentElement["value"].asJsonArray.mapTo(
-                                mutableListOf(),
-                                { gson.fromJson(it, value.listType.type!!) })
-                        } else {
-                            gson.fromJson(currentElement["value"], currValue.javaClass)
-                        }
-
-                        valueField.set(value, newValue)
+                        value.deserializeFrom(gson, currentElement["value"])
                     }.onFailure { it.printStackTrace() }
                 }
 

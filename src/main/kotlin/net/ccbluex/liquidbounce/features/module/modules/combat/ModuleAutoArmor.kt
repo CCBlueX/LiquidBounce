@@ -25,10 +25,12 @@ import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.ArmorComparator
 import net.ccbluex.liquidbounce.utils.ArmorPiece
 import net.ccbluex.liquidbounce.utils.convertClientSlotToServerSlot
+import net.ccbluex.liquidbounce.utils.extensions.InventoryConstraintsConfigurable
 import net.ccbluex.liquidbounce.utils.extensions.isNothing
 import net.ccbluex.liquidbounce.utils.extensions.moving
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ArmorItem
+import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
@@ -43,10 +45,7 @@ import net.minecraft.util.Hand
  */
 object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
-    private var delay by intRange("Delay", 2..4, 0..20)
-    private val invOpen by boolean("InvOpen", false)
-    private val simulateInventory by boolean("SimulateInventory", true)
-    private val noMove by boolean("NoMove", false)
+    private val inventoryConstraints = InventoryConstraintsConfigurable()
     private val hotbar by boolean("Hotbar", true)
 
     var locked = false
@@ -54,7 +53,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     val repeatable = repeatable {
         val player = mc.player ?: return@repeatable
 
-        if (player.currentScreenHandler.syncId != 0 && invOpen)
+        if (player.currentScreenHandler.syncId != 0)
             return@repeatable
 
         val bestArmor = (0..41)
@@ -76,10 +75,16 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
             if (armorPiece.isAlreadyEquipped)
                 continue
 
-            if (!player.inventory.getStack(armorPiece.inventorySlot).isNothing() && move(armorPiece.inventorySlot, true)
-                || player.inventory.getStack(armorPiece.inventorySlot).isNothing() && move(armorPiece.slot, false)) {
+            val stackInArmor = player.inventory.getStack(armorPiece.inventorySlot)
+
+            if (stackInArmor.item == Items.ELYTRA)
+                continue
+
+            if (!stackInArmor.isNothing() && move(armorPiece.inventorySlot, true)
+                || stackInArmor.isNothing() && move(armorPiece.slot, false)
+            ) {
                 locked = true
-                wait(delay.random())
+                wait(inventoryConstraints.delay.random())
 
                 return@repeatable
             }
@@ -99,7 +104,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
         if (!isObsolete && hotbar && !isInInventoryScreen) {
             if (slot in 36..44) {
-                network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
+                network.sendPacket(UpdateSelectedSlotC2SPacket(item))
                 network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
                 network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
 
@@ -111,8 +116,8 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
             }
         }
 
-        if (!(noMove && player.moving) && (!invOpen || isInInventoryScreen)) {
-            val openInventory = simulateInventory && !isInInventoryScreen
+        if (!(inventoryConstraints.noMove && player.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
+            val openInventory = inventoryConstraints.simulateInventory && !isInInventoryScreen
 
             if (openInventory)
                 network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))

@@ -100,17 +100,6 @@ object ArmorComparator : Comparator<ArmorPiece> {
         return compare
     }
 
-    private inline fun <T> compareByCondition(a: T, b: T, cond: (T) -> Boolean): Int {
-        val condA = cond(a)
-        val condB = cond(b)
-
-        return when {
-            condA == condB -> 0
-            condA -> 1
-            else -> -1
-        }
-    }
-
     private fun getThresholdedDamageReduction(itemStack: ItemStack): Float {
         val item = itemStack.item as ArmorItem
 

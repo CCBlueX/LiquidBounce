@@ -23,7 +23,7 @@ import com.mojang.brigadier.StringReader
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.enchantment.Enchantment
-import net.minecraft.item.ItemStack
+import net.minecraft.item.*
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.util.Identifier
 import net.minecraft.util.registry.Registry
@@ -72,3 +72,23 @@ fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
 
     return 0
 }
+
+fun isInHotbar(slot: Int) = slot == 40 || slot in 0..8
+
+
+val ToolItem.type: Int
+    get() = when (this) {
+        is AxeItem -> 0
+        is PickaxeItem -> 1
+        is ShovelItem -> 2
+        is HoeItem -> 3
+        else -> throw IllegalStateException()
+    }
+
+val Item.attackDamage: Float
+    get() =
+        when (this) {
+            is SwordItem -> this.attackDamage
+            is ToolItem -> this.material.attackDamage
+            else -> throw IllegalArgumentException()
+        }

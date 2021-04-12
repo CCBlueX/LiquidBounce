@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
+import net.ccbluex.liquidbounce.utils.extensions.isInHotbar
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 
@@ -29,5 +30,5 @@ class ArmorPiece(val itemStack: ItemStack, val slot: Int) {
     val isAlreadyEquipped: Boolean
         get() = slot in 36..39
     val isReachableByHand: Boolean
-        get() = slot == 40 || slot in 0..8
+        get() = isInHotbar(slot)
 }
