@@ -138,6 +138,16 @@ class RotationsConfigurable : Configurable("rotations") {
 }
 
 /**
+ * Configurable to configure the dynamic rotation engine
+ */
+class InventoryConstraintsConfigurable : Configurable("inventoryConstraints") {
+    internal var delay by intRange("Delay", 2..4, 0..20)
+    internal val invOpen by boolean("InvOpen", false)
+    internal val simulateInventory by boolean("SimulateInventory", true)
+    internal val noMove by boolean("NoMove", false)
+}
+
+/**
  * A target tracker to choose the best enemy to attack
  */
 class TargetTracker : Configurable("target"), Iterable<Entity> {

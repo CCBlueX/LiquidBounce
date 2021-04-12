@@ -17,14 +17,29 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.utils
+package net.ccbluex.liquidbounce.config.adapter
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import java.awt.Color
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
+import net.ccbluex.liquidbounce.features.module.ListenableConfigurable
+import java.lang.reflect.Type
 
+object ListenableConfigurableSerializer : JsonSerializer<ListenableConfigurable> {
 
-fun rainbow(): Color4b {
-    val currentColor = Color(Color.HSBtoRGB((System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F, 1F, 1F))
+    override fun serialize(
+        src: ListenableConfigurable,
+        typeOfSrc: Type,
+        context: JsonSerializationContext
+    ): JsonElement {
+        val obj = JsonObject()
 
-    return Color4b(currentColor)
+        obj.addProperty("name", src.name)
+        obj.addProperty("enabled", src.enabled)
+        obj.add("value", context.serialize(src.value))
+
+        return obj
+    }
+
 }

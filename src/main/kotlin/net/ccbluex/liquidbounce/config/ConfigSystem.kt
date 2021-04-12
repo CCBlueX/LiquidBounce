@@ -21,8 +21,15 @@ package net.ccbluex.liquidbounce.config
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.adapter.*
+import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
+import net.ccbluex.liquidbounce.features.module.ListenableConfigurable
+import net.ccbluex.liquidbounce.render.Fonts
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
+import net.minecraft.block.Block
+import net.minecraft.item.Item
 import java.io.File
 
 /**
@@ -47,6 +54,15 @@ object ConfigSystem {
     private val gson = GsonBuilder()
         .setPrettyPrinting()
         .addSerializationExclusionStrategy(ExcludeStrategy())
+        .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeSerializer)
+        .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
+        .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
+        .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockValueSerializer)
+        .registerTypeAdapter(Fonts.FontDetail::class.javaObjectType, FontDetailSerializer)
+        .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
+        .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
+        .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
+        .registerTypeHierarchyAdapter(ListenableConfigurable::class.javaObjectType, ListenableConfigurableSerializer)
         .create()
 
     /**
@@ -77,13 +93,62 @@ object ConfigSystem {
                 }
 
                 logger.debug("Reading config ${configurable.name}...")
-                configurable.overwrite(gson.fromJson(gson.newJsonReader(reader()), confType))
+
+                JsonParser().parse(gson.newJsonReader(reader()))?.let { deserializeConfigurable(configurable, it) }
+
                 logger.info("Successfully loaded config '${configurable.name}'.")
             }.onFailure {
                 logger.error("Unable to load config ${configurable.name}", it)
                 store()
             }
         }
+    }
+
+    private fun deserializeConfigurable(configurable: Configurable, jsonElement: JsonElement) {
+        runCatching {
+            val jsonObject = jsonElement.asJsonObject
+
+            if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name)
+                throw IllegalStateException()
+
+            val values = jsonObject.getAsJsonArray("value")
+                .map { it.asJsonObject }
+                .associateBy { it["name"].asString!! }
+
+            for (value in configurable.value) {
+                if (value is Configurable) {
+                    val currentElement = values[value.name] ?: continue
+
+                    runCatching {
+                        if (value is ListenableConfigurable) {
+                            value.enabled = currentElement["enabled"].asBoolean
+                        } else if (value is ChoiceConfigurable) {
+                            val newActive = currentElement["active"].asString
+
+                            if (value.choices.any { it.name == newActive })
+                                value.active = newActive
+
+                            val choices = currentElement["choices"].asJsonObject
+
+                            for (choice in value.choices) {
+                                val choiceElement = choices[choice.name]
+
+                                deserializeConfigurable(choice, choiceElement)
+                            }
+                        }
+                    }.onFailure { it.printStackTrace() }
+
+                    deserializeConfigurable(value, currentElement)
+                } else {
+                    val currentElement = values[value.name] ?: continue
+
+                    runCatching {
+                        value.deserializeFrom(gson, currentElement["value"])
+                    }.onFailure { it.printStackTrace() }
+                }
+
+            }
+        }.onFailure { it.printStackTrace() }
     }
 
     /**

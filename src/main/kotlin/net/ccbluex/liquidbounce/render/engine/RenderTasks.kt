@@ -197,6 +197,8 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
         buffer.put(idx + 2, b.toByte())
         buffer.put(idx + 3, a.toByte())
     }
+
+    fun toRGBA() = Color(this.r, this.g, this.b, this.a).rgb
 }
 
 class VAOData(storageType: VBOStorageType) {

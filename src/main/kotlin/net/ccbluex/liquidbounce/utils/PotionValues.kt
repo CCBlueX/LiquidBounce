@@ -17,14 +17,11 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.utils
+package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import java.awt.Color
+import net.minecraft.potion.Potions
 
-
-fun rainbow(): Color4b {
-    val currentColor = Color(Color.HSBtoRGB((System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F, 1F, 1F))
-
-    return Color4b(currentColor)
-}
+val POTION_VALUES = mapOf(
+    Pair(Potions.REGENERATION, 2.25f),
+    Pair(Potions.FIRE_RESISTANCE, 1.0f),
+)

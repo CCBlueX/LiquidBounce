@@ -18,24 +18,32 @@
  */
 package net.ccbluex.liquidbounce.config
 
+import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.logger
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
+import net.minecraft.item.Item
+import net.minecraft.item.Items
+import java.lang.reflect.Modifier
 import kotlin.reflect.KProperty
 import kotlin.reflect.jvm.isAccessible
 
 /**
  * Value based on generics and support for readable names and description
  */
-open class Value<T>(@SerializedName("name")
-                    open val name: String,
-                    @SerializedName("value") internal var value: T,
-                    @Exclude
-                    private val change: (T, T) -> Unit = { _, _ -> },
+open class Value<T : Any>(
+    @SerializedName("name")
+    open val name: String,
+    @SerializedName("value") internal var value: T,
+    @Exclude
+    private val change: (T, T) -> Unit = { _, _ -> },
+    @Exclude internal val listType: ListValueType = ListValueType.None,
 ) {
 
     /**
@@ -61,18 +69,71 @@ open class Value<T>(@SerializedName("name")
         }
     }
 
+    open fun deserializeFrom(gson: Gson, element: JsonElement) {
+        val currValue = this.value
+
+        this.value = if (currValue is List<*>) {
+            element.asJsonArray.mapTo(
+                mutableListOf(),
+                { gson.fromJson(it, this.listType.type!!) }) as T
+        } else {
+            gson.fromJson(element, currValue.javaClass)
+        }
+    }
+
 }
 
 /**
  * Ranged value adds support for closed ranges
  */
-class RangedValue<T>(name: String, value: T, @Exclude val range: ClosedRange<*>, change: (T, T) -> Unit = { _, _ -> })
-    : Value<T>(name, value, change)
+class RangedValue<T : Any>(
+    name: String,
+    value: T,
+    @Exclude val range: ClosedRange<*>,
+    change: (T, T) -> Unit = { _, _ -> }
+) : Value<T>(name, value, change)
 
-class ChooseListValue(name: String, selected: String, @Exclude val selectables: Array<String>, change: (String, String) -> Unit = { _, _ -> })
-    : Value<String>(name, selected, change)
+class ChooseListValue(
+    name: String,
+    selected: String,
+    @Exclude val selectables: Array<String>,
+    change: (String, String) -> Unit = { _, _ -> }
+) : Value<String>(name, selected, change)
 
-open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf()): Value<MutableList<Value<*>>>(name, value = value) {
+class ChooseEnumListValue<T : NamedChoice>(
+    name: String,
+    selected: T,
+    @Exclude val selectables: Array<T>,
+    change: (T, T) -> Unit = { _, _ -> }
+) : Value<T>(name, selected, change) {
+
+    override fun deserializeFrom(gson: Gson, element: JsonElement) {
+        val name = element.asString
+
+        this.value = selectables.first { it.choiceName == name }
+    }
+
+}
+
+open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf()) :
+    Value<MutableList<Value<*>>>(name, value = value) {
+
+    init {
+        for (field in javaClass.declaredFields) {
+            if (Modifier.isStatic(field.modifiers) || field.isAnnotationPresent(Exclude::class.java) || !Value::class.java.isAssignableFrom(
+                    field.type
+                )
+            )
+                continue
+
+            if (!field.isAccessible)
+                field.isAccessible = true
+
+            val v = field.get(this) ?: continue
+
+            this.value.add(v as Value<*>)
+        }
+    }
 
     fun initConfigurable() {
         value.filterIsInstance<ChoiceConfigurable>().forEach {
@@ -80,13 +141,13 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         }
     }
 
-    protected fun <T: Configurable> tree(configurable: T): T {
+    protected fun <T : Configurable> tree(configurable: T): T {
         value.add(configurable)
         return configurable
     }
 
-    protected fun <T> value(name: String, default: T, change: (T, T) -> Unit = { _, _ -> })
-        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    protected fun <T : Any> value(name: String, default: T, change: (T, T) -> Unit = { _, _ -> }) =
+        Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
     protected fun boolean(name: String, default: Boolean = false, change: (Boolean, Boolean) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
@@ -106,26 +167,77 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
     protected fun text(name: String, default: String = "", change: (String, String) -> Unit = { _, _ -> })
         = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun textArray(name: String, default: MutableList<String> = mutableListOf(), change: (MutableList<String>, MutableList<String>) -> Unit = { _, _ -> })
-        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    protected fun textArray(
+        name: String,
+        default: MutableList<String> = mutableListOf(),
+        change: (MutableList<String>, MutableList<String>) -> Unit = { _, _ -> }
+    ) = Value(
+        name,
+        value = default,
+        change = change,
+        listType = ListValueType.String
+    ).apply { this@Configurable.value.add(this) }
 
     protected fun chooseList(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
         = ChooseListValue(name, selected = default, selectables = array, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun curve(name: String, default: Array<Float>, change: (Array<Float>, Array<Float>) -> Unit = { _, _ -> })
-        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    protected fun curve(name: String, default: Array<Float>, change: (Array<Float>, Array<Float>) -> Unit = { _, _ -> }) =
+        Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun color(name: String, color: Color4b = Color4b(255, 255, 255, 255), change: (Color4b, Color4b) -> Unit = { _, _ -> })
-        = Value(name, value = color, change = change).apply { this@Configurable.value.add(this) }
+    protected fun color(
+        name: String,
+        color: Color4b = Color4b(255, 255, 255, 255),
+        change: (Color4b, Color4b) -> Unit = { _, _ -> }
+    ) = Value(name, value = color, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun block(name: String, default: Block = Blocks.AIR, change: (Block, Block) -> Unit = { _, _ -> })
-        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    protected fun block(name: String, default: Block = Blocks.AIR, change: (Block, Block) -> Unit = { _, _ -> }) =
+        Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun blocks(name: String, default: MutableList<Block> = mutableListOf(), change: (MutableList<Block>, MutableList<Block>) -> Unit = { _, _ -> })
-        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    protected fun blocks(
+        name: String,
+        default: MutableList<Block> = mutableListOf(),
+        change: (MutableList<Block>, MutableList<Block>) -> Unit = { _, _ -> }
+    ) = Value(
+        name,
+        value = default,
+        change = change,
+        listType = ListValueType.Block
+    ).apply { this@Configurable.value.add(this) }
 
-    protected fun Module.choices(name: String, active: String, initialize: (ChoiceConfigurable) -> Unit)
-        = ChoiceConfigurable(this, name, active, initialize).apply { this@Configurable.value.add(this) }
+    protected fun item(name: String, default: Item = Items.AIR, change: (Item, Item) -> Unit = { _, _ -> }) =
+        Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+
+    protected fun items(
+        name: String,
+        default: MutableList<Item> = mutableListOf(),
+        change: (MutableList<Item>, MutableList<Item>) -> Unit = { _, _ -> }
+    ) = Value(
+        name,
+        value = default,
+        change = change,
+        listType = ListValueType.Item
+    ).apply { this@Configurable.value.add(this) }
+
+    protected fun fonts(
+        name: String,
+        default: MutableList<Fonts.FontDetail> = mutableListOf(),
+        change: (MutableList<Fonts.FontDetail>, MutableList<Fonts.FontDetail>) -> Unit = { _, _ -> }
+    ) = Value(
+        name,
+        value = default,
+        change = change,
+        listType = ListValueType.FontDetail
+    ).apply { this@Configurable.value.add(this) }
+
+    protected fun <T : NamedChoice> enumChoice(
+        name: String,
+        default: T,
+        choices: Array<T>,
+        change: (T, T) -> Unit = { _, _ -> }
+    ) = ChooseEnumListValue(name, default, choices, change = change).apply { this@Configurable.value.add(this) }
+
+    protected fun Module.choices(name: String, active: String, initialize: (ChoiceConfigurable) -> Unit) =
+        ChoiceConfigurable(this, name, active, initialize).apply { this@Configurable.value.add(this) }
 
     /**
      * Overwrite current configurable and their existing values from [configurable].
@@ -148,4 +260,16 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         }
     }
 
+}
+
+interface NamedChoice {
+    val choiceName: String
+}
+
+enum class ListValueType(val type: Class<*>?) {
+    Block(net.minecraft.block.Block::class.java),
+    Item(net.minecraft.item.Item::class.java),
+    String(kotlin.String::class.java),
+    FontDetail(Fonts.FontDetail::class.java),
+    None(null)
 }

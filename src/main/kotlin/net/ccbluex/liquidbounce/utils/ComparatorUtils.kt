@@ -17,14 +17,30 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.utils
+package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import java.awt.Color
+class ComparatorChain<T>(private vararg val comparisonFunctions: Comparator<T>) : Comparator<T> {
 
+    override fun compare(o1: T, o2: T): Int {
+        for (comparisonFunction in this.comparisonFunctions) {
+            val comparisonResult = comparisonFunction.compare(o1, o2)
 
-fun rainbow(): Color4b {
-    val currentColor = Color(Color.HSBtoRGB((System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F, 1F, 1F))
+            if (comparisonResult != 0)
+                return comparisonResult
+        }
 
-    return Color4b(currentColor)
+        return 0
+    }
+
+}
+
+inline fun <T> compareByCondition(a: T, b: T, cond: (T) -> Boolean): Int {
+    val condA = cond(a)
+    val condB = cond(b)
+
+    return when {
+        condA == condB -> 0
+        condA -> 1
+        else -> -1
+    }
 }

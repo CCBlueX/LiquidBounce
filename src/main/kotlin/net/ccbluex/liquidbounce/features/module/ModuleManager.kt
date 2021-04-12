@@ -35,6 +35,10 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleTimer
 import net.ccbluex.liquidbounce.features.module.modules.world.*
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleChestAura
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastBreak
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleTimer
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -127,7 +131,10 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleLadderBoost,
             ModuleSpammer,
             ModuleChestAura,
-            ModuleAutoBreak
+            ModuleAutoBreak,
+            ModuleAutoArmor,
+            ModuleInventoryCleaner,
+            ModuleChestStealer
         )
 
         builtin.forEach(this::addModule)

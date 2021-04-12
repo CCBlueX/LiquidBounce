@@ -117,7 +117,7 @@ open class Module(
 open class ListenableConfigurable(@Exclude val module: Module? = null, name: String, enabled: Boolean) : Listenable,
     Configurable(name) {
 
-    val enabled by boolean("Enabled", enabled)
+    var enabled by boolean("Enabled", enabled)
 
     override fun handleEvents() = module?.enabled == true && enabled
 
@@ -129,9 +129,10 @@ open class ListenableConfigurable(@Exclude val module: Module? = null, name: Str
 open class ChoiceConfigurable(
     @Exclude val module: Module,
     name: String,
-    val active: String,
+    var active: String,
     @Exclude val initialize: (ChoiceConfigurable) -> Unit
 ) : Configurable(name) {
+    @Exclude
     val choices: MutableList<Choice> = mutableListOf()
 }
 
@@ -143,8 +144,8 @@ class NoneChoice(configurable: ChoiceConfigurable) : Choice("None", configurable
 /**
  * A mode is sub-module to separate different bypasses into extra classes
  */
-open class Choice(name: String, @Exclude private val configurable: ChoiceConfigurable) : Listenable,
-    Configurable(name) {
+open class Choice(name: String, @Exclude private val configurable: ChoiceConfigurable) : Configurable(name),
+    Listenable {
 
     init {
         configurable.choices += this
@@ -165,6 +166,7 @@ open class Choice(name: String, @Exclude private val configurable: ChoiceConfigu
     val isActive: Boolean
         get() = configurable.active.equals(name, true)
 
+    @Exclude
     val handler = handler<ToggleModuleEvent>(ignoreCondition = true) { event ->
         if (configurable.module == event.module && configurable.active.equals(name, true)) {
             if (event.newState) {

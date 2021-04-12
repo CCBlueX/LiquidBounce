@@ -89,7 +89,7 @@ fun key(name: String) = when(name.toLowerCase()) {
     "rshift" -> GLFW.GLFW_KEY_RIGHT_SHIFT
     "lshift" -> GLFW.GLFW_KEY_LEFT_SHIFT
     else -> runCatching {
-        InputUtil.fromTranslationKey("key.keyboard.$name").code
+        InputUtil.fromTranslationKey("key.keyboard.${name.toLowerCase()}").code
     }.getOrElse { GLFW.GLFW_KEY_UNKNOWN }
 }
 

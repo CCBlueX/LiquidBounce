@@ -16,15 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.utils
 
-package net.ccbluex.liquidbounce.render.utils
+import net.ccbluex.liquidbounce.utils.extensions.isInHotbar
+import net.minecraft.item.ArmorItem
+import net.minecraft.item.ItemStack
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import java.awt.Color
-
-
-fun rainbow(): Color4b {
-    val currentColor = Color(Color.HSBtoRGB((System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F, 1F, 1F))
-
-    return Color4b(currentColor)
+class ArmorPiece(val itemStack: ItemStack, val slot: Int) {
+    val entitySlotId: Int
+        get() = (itemStack.item as ArmorItem).slotType.entitySlotId
+    val inventorySlot: Int
+        get() = 36 + entitySlotId
+    val isAlreadyEquipped: Boolean
+        get() = slot in 36..39
+    val isReachableByHand: Boolean
+        get() = isInHotbar(slot)
 }

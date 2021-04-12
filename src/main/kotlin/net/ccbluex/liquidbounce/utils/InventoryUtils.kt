@@ -17,14 +17,14 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.utils
+package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import java.awt.Color
-
-
-fun rainbow(): Color4b {
-    val currentColor = Color(Color.HSBtoRGB((System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F, 1F, 1F))
-
-    return Color4b(currentColor)
+fun convertClientSlotToServerSlot(slot: Int): Int {
+    return when (slot) {
+        in 0..8 -> 36 + slot
+        in 9..35 -> slot
+        in 36..39 -> 39 - slot + 5
+        40 -> 45
+        else -> throw IllegalArgumentException()
+    }
 }

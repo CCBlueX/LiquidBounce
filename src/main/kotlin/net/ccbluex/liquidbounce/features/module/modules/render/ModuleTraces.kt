@@ -58,7 +58,10 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
             else -> null
         }
 
-        val viewDistance = mc.options.viewDistance * 16 * sqrt(2.0)
+        val viewDistance =
+            (if (DistanceColor.useViewDistance) mc.options.viewDistance.toFloat() else DistanceColor.customViewDistance) * 16 * sqrt(
+                2.0
+            )
         val player = mc.player!!
         val filteredEntities = world.entities.filter(this::shouldRenderTrace)
         val camera = mc.gameRenderer.camera

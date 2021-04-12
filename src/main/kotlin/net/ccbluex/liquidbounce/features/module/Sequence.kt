@@ -34,15 +34,25 @@ class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T, priv
 
     private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
         sequences += this@Sequence
+
         if (!loop) {
             handler(event)
         } else {
             sync()
+
             while (loop) {
-                handler(event)
+                try {
+                    handler(event)
+                } catch (e: Exception) {
+                    System.err.println("Exception occurred during subroutine")
+
+                    e.printStackTrace()
+                }
+
                 sync()
             }
         }
+
         sequences -= this@Sequence
     }
 
