@@ -38,6 +38,7 @@
 package net.ccbluex.liquidbounce.render.ultralight.listener
 
 import com.labymedia.ultralight.plugin.loading.UltralightLoadListener
+import net.ccbluex.liquidbounce.render.ultralight.ScreenView
 import net.ccbluex.liquidbounce.render.ultralight.View
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsUi
 import net.ccbluex.liquidbounce.utils.logger
@@ -114,6 +115,11 @@ class ViewLoadListener(private val view: View) : UltralightLoadListener {
                 val globalObject = globalContext.globalObject
 
                 globalObject.setProperty(
+                    "view",
+                    view.databind.conversionUtils.toJavascript(context, view), 0
+                )
+
+                globalObject.setProperty(
                     "client",
                     view.databind.conversionUtils.toJavascript(context, view.jsWrapper), 0
                 )
@@ -128,6 +134,13 @@ class ViewLoadListener(private val view: View) : UltralightLoadListener {
                     "ui",
                     view.databind.conversionUtils.toJavascript(context, UltralightJsUi), 0
                 )
+
+                if (view is ScreenView) {
+                    globalObject.setProperty(
+                        "screen",
+                        view.databind.conversionUtils.toJavascript(context, view.screen), 0
+                    )
+                }
             }
         }
     }
