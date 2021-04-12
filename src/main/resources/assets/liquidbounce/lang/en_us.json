@@ -93,7 +93,7 @@
   "liquidbounce.command.hide.subcommand.unhide.description": "Unhides a module",
   "liquidbounce.command.hide.subcommand.unhide.parameter.name.description": "The name of the module",
   "liquidbounce.command.hide.subcommand.unhide.result.moduleNotFound": "Module %s not found.",
-  "liquidbounce.command.hide.subcommand.unhide.result.moduleUnhidden": "Module %s is now hidden.",
+  "liquidbounce.command.hide.subcommand.unhide.result.moduleUnhidden": "Module %s is no longer hidden.",
 
   "liquidbounce.command.hide.subcommand.list.description": "Lists the hidden modules",
   "liquidbounce.command.hide.subcommand.list.parameter.page.description": "The page to show",
