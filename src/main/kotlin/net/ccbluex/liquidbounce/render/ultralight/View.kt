@@ -89,8 +89,9 @@ open class View(ultralightRenderer: UltralightRenderer, val viewRenderer: ViewRe
 
             view.loadURL(page.viewableFile)
             currentPage = page
-            logger.debug("Loaded page on ${toString()}")
         }
+
+        logger.debug("Loaded page on ${toString()}")
     }
 
     /**
@@ -98,13 +99,6 @@ open class View(ultralightRenderer: UltralightRenderer, val viewRenderer: ViewRe
      */
     fun update() {
         lockWebView {
-            // Check if size has changed
-            val (width, height) = mc.window.longedSize
-
-            if (width != view.width() || height != view.height()) {
-                resize(width, height)
-            }
-
             // Check if page has new update
             val page = currentPage
 
@@ -127,7 +121,7 @@ open class View(ultralightRenderer: UltralightRenderer, val viewRenderer: ViewRe
     /**
      * Resizes web view to [width] and [height]
      */
-    private fun resize(width: Long, height: Long) {
+    fun resize(width: Long, height: Long) {
         lockWebView {
             view.resize(width, height)
         }
@@ -195,10 +189,12 @@ open class View(ultralightRenderer: UltralightRenderer, val viewRenderer: ViewRe
         lockWebView { it.fireKeyEvent(event) }
     }
 
+    fun remove() {
+
+    }
+
 }
 
 class ScreenView(ultralightRenderer: UltralightRenderer, viewRenderer: ViewRenderer, val screen: Screen) : View(ultralightRenderer, viewRenderer) {
-
-
-
+    val active: Boolean = true
 }

@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.KeyEvent;
+import net.ccbluex.liquidbounce.event.KeyboardCharEvent;
+import net.ccbluex.liquidbounce.event.KeyboardKeyEvent;
 import net.minecraft.client.Keyboard;
 import net.minecraft.client.util.InputUtil;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,6 +32,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Keyboard.class)
 public class MixinKeyboard {
+
+    /**
+     * Hook key event
+     */
+    @Inject(method = "onKey", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", shift = At.Shift.BEFORE))
+    private void hookKeyboardKey(long window, int key, int scancode, int i, int j, CallbackInfo callback) {
+        EventManager.INSTANCE.callEvent(new KeyboardKeyEvent(window, key, scancode, i, j));
+    }
+
+    /**
+     * Hook char event
+     */
+    @Inject(method = "onChar", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", shift = At.Shift.BEFORE))
+    private void hookKeyboardChar(long window, int i, int j, CallbackInfo callback) {
+        EventManager.INSTANCE.callEvent(new KeyboardCharEvent(window, i));
+    }
 
     /**
      * Hook key event

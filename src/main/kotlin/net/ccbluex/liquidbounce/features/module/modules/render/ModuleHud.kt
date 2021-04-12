@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
@@ -30,16 +28,14 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
     private var view: View? = null
 
-    override fun init() {
+    override fun enable() {
         view = UltralightEngine.newOverlayView().apply {
             loadPage(ThemeManager.defaultTheme.page("hud") ?: error("hud not found"))
         }
     }
 
-    val renderHandler = handler<OverlayRenderEvent> {
-        val currentView = view ?: return@handler
-        UltralightEngine.update()
-        UltralightEngine.render()
+    override fun disable() {
+        view?.remove()
     }
 
 }

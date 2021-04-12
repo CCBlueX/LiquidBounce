@@ -24,14 +24,14 @@ import com.labymedia.ultralight.UltralightRenderer
 import com.labymedia.ultralight.config.FontHinting
 import com.labymedia.ultralight.config.UltralightConfig
 import com.labymedia.ultralight.plugin.logging.UltralightLogLevel
-import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import net.ccbluex.liquidbounce.render.ultralight.glfw.GlfwClipboardAdapter
 import net.ccbluex.liquidbounce.render.ultralight.glfw.GlfwCursorAdapter
+import net.ccbluex.liquidbounce.render.ultralight.glfw.GlfwInputAdapter
+import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightIntegrationHook
 import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightScreenHook
 import net.ccbluex.liquidbounce.render.ultralight.renderer.CpuViewRenderer
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.SingleThreadTaskScheduler
-import net.ccbluex.liquidbounce.utils.extensions.asText
 import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.gui.screen.Screen
@@ -61,12 +61,16 @@ object UltralightEngine {
      */
     lateinit var clipboardAdapter: GlfwClipboardAdapter
     lateinit var cursorAdapter: GlfwCursorAdapter
+    lateinit var inputAdapter: GlfwInputAdapter
 
     /**
      * Views
      */
-    val screenViews = mutableListOf<ScreenView>()
-    val overlayViews = mutableListOf<View>()
+    val activeView: View?
+        get() = screenViews.find { mc.currentScreen == it.screen }
+
+    private val screenViews = mutableListOf<ScreenView>()
+    private val overlayViews = mutableListOf<View>()
 
     /**
      * Initializes the platform
@@ -113,6 +117,7 @@ object UltralightEngine {
             renderer = UltralightRenderer.create()
 
             // Setup hooks
+            UltralightIntegrationHook
             UltralightScreenHook
 
             logger.info("Successfully loaded ultralight!")
@@ -121,6 +126,7 @@ object UltralightEngine {
         // Setup GLFW adapters
         clipboardAdapter = GlfwClipboardAdapter()
         cursorAdapter = GlfwCursorAdapter()
+        inputAdapter = GlfwInputAdapter()
     }
 
     fun shutdown() {
@@ -128,35 +134,36 @@ object UltralightEngine {
     }
 
     fun update() {
-        for (view in overlayViews) {
-            view.update()
-        }
-        for (view in screenViews) {
-            view.update()
-        }
-
         contextThread.scheduleBlocking {
+            screenViews.removeIf { !it.active }
+
+            overlayViews.forEach(View::update)
+            screenViews.forEach(View::update)
             renderer.update()
         }
     }
 
-    fun render() {
+    fun render(layer: RenderLayer) {
+        // todo: probably not working for gpu driver, think about something better.
         contextThread.scheduleBlocking {
             renderer.render()
         }
 
-        for (view in overlayViews) {
-            view.render()
+        when(layer) {
+            RenderLayer.SCREEN_LAYER -> screenViews.forEach(View::render)
+            RenderLayer.OVERLAY_LAYER -> overlayViews.forEach(View::render)
         }
-        for (view in screenViews) {
-            view.render()
-        }
+    }
+
+    fun resize(width: Long, height: Long) {
+        screenViews.forEach { it.resize(width, height) }
+        overlayViews.forEach { it.resize(width, height) }
     }
 
     fun newOverlayView()
         = View(renderer, newViewRenderer()).also { overlayViews += it }
 
-    fun newScreenView(screen: Screen = EmptyScreen("ultralight".asText()))
+    fun newScreenView(screen: Screen)
         = ScreenView(renderer, newViewRenderer(), screen).also { screenViews += it }
 
     private fun newViewRenderer() = CpuViewRenderer()
@@ -166,4 +173,8 @@ object UltralightEngine {
         OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> GpuViewRenderer()
     }*/
 
+}
+
+enum class RenderLayer {
+    OVERLAY_LAYER, SCREEN_LAYER
 }
