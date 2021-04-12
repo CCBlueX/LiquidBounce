@@ -17,11 +17,9 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.ultralight.bindings
+package net.ccbluex.liquidbounce.render.ultralight.js.bindings
 
-import net.ccbluex.liquidbounce.render.ultralight.UltralightScreen
-import net.ccbluex.liquidbounce.render.ultralight.UltralightScreenHook
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
+import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightScreenHook
 import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
@@ -41,14 +39,13 @@ object UltralightJsUi {
     )
 
     fun get(name: String) = screens.find { it.name == name }
-        ?: JsScreen("ultralight", UltralightScreen::class.java) { mc.openScreen(UltralightScreen(ThemeManager.page(name) ?: error("unknown page"))) }
 
     fun get(screen: Screen?) = get(screen?.javaClass)
 
     fun get(clazz: Class<*>?) = screens.find { it.clazz == clazz }
 
     fun open(name: String, parent: Screen?) {
-        UltralightScreenHook.nextScreen = QueuedScreen(get(name), parent)
+        UltralightScreenHook.nextScreen = QueuedScreen(get(name)!!, parent)
     }
 
 }

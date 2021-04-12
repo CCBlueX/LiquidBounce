@@ -17,15 +17,22 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.render.ultralight.js.bindings
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.extensions.loginAltening
+import net.ccbluex.liquidbounce.utils.extensions.loginCracked
+import net.ccbluex.liquidbounce.utils.extensions.loginMojang
+import net.ccbluex.liquidbounce.utils.mc
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
+/**
+ * Access session service from Ultralight
+ */
+object UltralightJsSessionService {
 
-    override fun enable() {
-        // mc.openScreen(UltralightScreen(ThemeManager.page("clickgui") ?: error("no clickgui page found")))
-    }
+    fun loginCracked(username: String) = mc.sessionService.loginCracked(username).readable
+
+    fun loginMojang(email: String, password: String) = mc.sessionService.loginMojang(email, password).readable
+
+    fun loginAltening(token: String) = mc.sessionService.loginAltening(token).readable
 
 }

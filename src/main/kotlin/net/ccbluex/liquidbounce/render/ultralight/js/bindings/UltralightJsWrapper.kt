@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.ultralight.bindings
+package net.ccbluex.liquidbounce.render.ultralight.js.bindings
 
 import com.labymedia.ultralight.javascript.JavascriptObject
 import com.labymedia.ultralight.javascript.JavascriptPropertyAttributes
@@ -26,14 +26,14 @@ import net.ccbluex.liquidbounce.event.EventHook
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.render.ultralight.WebPlatform
-import net.ccbluex.liquidbounce.render.ultralight.WebView
-import net.ccbluex.liquidbounce.render.ultralight.listener.ViewContextProvider
+import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
+import net.ccbluex.liquidbounce.render.ultralight.View
+import net.ccbluex.liquidbounce.render.ultralight.js.ViewContextProvider
 
 /**
  * Referenced by JS as `client`
  */
-class UltralightJsWrapper(private val viewContextProvider: ViewContextProvider, val webView: WebView) : Listenable {
+class UltralightJsWrapper(private val viewContextProvider: ViewContextProvider, val view: View) : Listenable {
     /**
      * Contains all events that are registered in the current context
      */
@@ -72,7 +72,7 @@ class UltralightJsWrapper(private val viewContextProvider: ViewContextProvider, 
 
         // Make a property with the name engine__ plus the name of the event. This is made to
         // make the function accessible for the event handler
-        WebPlatform.contextThread.scheduleBlocking {
+        UltralightEngine.contextThread.scheduleBlocking {
             viewContextProvider.syncWithJavascript {
                 it.context.globalObject.setProperty(propertyName, handler, JavascriptPropertyAttributes.NONE)
             }
@@ -80,11 +80,11 @@ class UltralightJsWrapper(private val viewContextProvider: ViewContextProvider, 
 
         // Create an event hook that will call the JS function
         val eventHook = EventHook<Event>(this, { event ->
-            WebPlatform.contextThread.scheduleBlocking {
+            UltralightEngine.contextThread.scheduleBlocking {
                 viewContextProvider.syncWithJavascript {
                     it.context.globalObject.getProperty(propertyName).toObject().callAsFunction(
                         it.context.globalObject,
-                        webView.databind.conversionUtils.toJavascript(it.context, event)
+                        view.databind.conversionUtils.toJavascript(it.context, event)
                     )
                 }
             }

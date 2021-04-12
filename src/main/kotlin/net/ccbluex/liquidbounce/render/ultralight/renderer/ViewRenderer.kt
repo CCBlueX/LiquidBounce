@@ -16,16 +16,29 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.render.ultralight.renderer
 
-package net.ccbluex.liquidbounce.features.module.modules.render
+import com.labymedia.ultralight.UltralightView
+import com.labymedia.ultralight.config.UltralightViewConfig
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+/**
+ * Render Views
+ */
+interface ViewRenderer {
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
+    /**
+     * Setup [viewConfig]
+     */
+    fun setupConfig(viewConfig: UltralightViewConfig)
 
-    override fun enable() {
-        // mc.openScreen(UltralightScreen(ThemeManager.page("clickgui") ?: error("no clickgui page found")))
-    }
+    /**
+     * Render view
+     */
+    fun render(view: UltralightView)
+
+    /**
+     * Delete
+     */
+    fun delete()
 
 }

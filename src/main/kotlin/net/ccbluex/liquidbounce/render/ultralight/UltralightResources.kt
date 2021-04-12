@@ -16,33 +16,47 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.render.ultralight.native
+package net.ccbluex.liquidbounce.render.ultralight
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.utils.*
 import java.io.File
 import kotlin.system.exitProcess
 
-object UltralightNatives {
+class UltralightResources {
 
-    val nativesRoot = File(ConfigSystem.rootFolder, "ultralight")
-    private const val LIBRARY_VERSION = 0.43
+    companion object {
+
+        /**
+         * Exact library version of the LabyMod Ultralight Bindings.
+         */
+        private const val LIBRARY_VERSION = 0.43
+
+    }
+
+    val ultralightRoot = File(ConfigSystem.rootFolder, "ultralight")
+    val cacheRoot = File(ultralightRoot, "cache")
+    val resourcesRoot = File(ultralightRoot, "resources")
 
     /**
-     * Download required natives
+     * Download resources
      */
-    fun downloadNatives() {
+    fun downloadResources() {
         runCatching {
-            val versionsFile = File(nativesRoot, "VERSION")
+            val versionsFile = File(resourcesRoot, "VERSION")
 
+            // Check if library version is matching the resources version
             if (versionsFile.exists() && versionsFile.readText().toDoubleOrNull() == LIBRARY_VERSION) {
                 return
             }
 
-            if (nativesRoot.exists()) {
-                nativesRoot.deleteRecursively()
+            // Make sure the old natives are being deleted
+            if (resourcesRoot.exists()) {
+                resourcesRoot.deleteRecursively()
             }
 
+            // Translate os to path
             val os = when {
                 IS_WINDOWS -> "win"
                 IS_MAC -> "mac"
@@ -50,27 +64,30 @@ object UltralightNatives {
                 else -> error("unsupported operating system")
             }
 
-            logger.info("Downloading v$LIBRARY_VERSION natives... (os: $os)")
-            val nativeUrl = "https://cloud.liquidbounce.net/LiquidBounce/natives/$LIBRARY_VERSION/$os-x64.zip"
+            logger.info("Downloading v${LIBRARY_VERSION} resources... (os: $os)")
+            val nativeUrl = "${LiquidBounce.CLIENT_CLOUD}/natives/${LIBRARY_VERSION}/$os-x64.zip"
 
-            nativesRoot.mkdir()
-            val pkgNatives = File(nativesRoot, "natives.zip").apply {
+            // Download resources
+            resourcesRoot.mkdir()
+            val pkgNatives = File(resourcesRoot, "natives.zip").apply {
                 createNewFile()
                 HttpUtils.download(nativeUrl, this)
             }
 
-            logger.info("Extracting natives...")
-            extractZip(pkgNatives, nativesRoot)
+            // Extract resources from zip archive
+            logger.info("Extracting resources...")
+            extractZip(pkgNatives, resourcesRoot)
             versionsFile.createNewFile()
             versionsFile.writeText(LIBRARY_VERSION.toString())
 
-            logger.debug("Deleting natives bundle...")
+            // Make sure to delete zip archive to save space
+            logger.debug("Deleting resources bundle...")
             pkgNatives.delete()
 
-            logger.info("Successfully loaded natives.")
+            logger.info("Successfully loaded resources.")
         }.onFailure {
-            logger.error("Unable to download natives", it)
-            nativesRoot.delete()
+            logger.error("Unable to download resources", it)
+            resourcesRoot.delete()
 
             exitProcess(-1)
         }

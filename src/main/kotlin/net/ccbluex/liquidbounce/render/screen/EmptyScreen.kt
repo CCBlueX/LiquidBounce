@@ -16,30 +16,29 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.render.screen
 
-import net.ccbluex.liquidbounce.event.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.render.ultralight.View
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
+import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.text.Text
 
-object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
-
-    private var view: View? = null
+class EmptyScreen(title: Text) : Screen(title) {
 
     override fun init() {
-        view = UltralightEngine.newOverlayView().apply {
-            loadPage(ThemeManager.defaultTheme.page("hud") ?: error("hud not found"))
-        }
+        // init nothing
     }
 
-    val renderHandler = handler<OverlayRenderEvent> {
-        val currentView = view ?: return@handler
+    override fun render(matrices: MatrixStack?, mouseX: Int, mouseY: Int, delta: Float) {
+        // render nothing
+
         UltralightEngine.update()
         UltralightEngine.render()
     }
+
+    override fun onClose() {
+        // close nothing
+    }
+
 
 }
