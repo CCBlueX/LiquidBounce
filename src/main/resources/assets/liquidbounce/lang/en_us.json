@@ -165,7 +165,7 @@
   "liquidbounce.module.autoArmor.value.inv_open.description": "Whether the inventory should be opened",
   "liquidbounce.module.autoArmor.value.simulate_inventory.description": "Whether opening the inventory should be simulated",
   "liquidbounce.module.autoArmor.value.no_move.description": "Whether items should be moved to equip them",
-  "liquidbounce.module.autoArmor.value.hotbar.description": "Whether movement should be disabled while the inventory is open",
+  "liquidbounce.module.autoArmor.value.hotbar.description": "Whether items should be equipped via the hotbar",
 
   "liquidbounce.module.autoBow.description": "Automatically shoots with your bow when it's fully charged and makes it possible to shoot faster",
 
