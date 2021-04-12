@@ -103,7 +103,9 @@ class SingleThreadTaskScheduler : AutoCloseable {
     }
 
     fun <T> scheduleBlocking(task: ScheduledRunnable<T>): T {
-        return this.schedule(task).get()
+        // todo: fix freezes (@superblaubeere)
+        // return this.schedule(task).get()
+        return task()
     }
 
     override fun close() {
