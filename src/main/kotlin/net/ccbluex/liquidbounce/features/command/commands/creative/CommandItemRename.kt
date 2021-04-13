@@ -34,30 +34,28 @@ object CommandItemRename {
     fun createCommand(): Command {
         return CommandBuilder
             .begin("rename")
-            .description("Allows you to rename items")
             .parameter(
                 ParameterBuilder
                     .begin<String>("name")
-                    .description("Custom name for the item")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                     .required()
                     .build()
             )
-            .handler { args ->
+            .handler { command, args ->
                 val name = args[0] as String
 
                 if (mc.interactionManager?.hasCreativeInventory() == false) {
-                    throw CommandException("You need to be in creative mode.")
+                    throw CommandException(command.result("mustBeCreative"))
                 }
 
                 val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
                 if (itemStack.isNothing()) {
-                    throw CommandException("You need to hold a item.")
+                    throw CommandException(command.result("mustHoldItem"))
                 }
 
                 itemStack!!.setCustomName(name.translateColorCodes().asText())
                 mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))
-                chat(regular("Renamed "), itemStack.item.name, regular("to "), variable(name), dot())
+                chat(regular(command.result("renamedItem", itemStack.item.name, variable(name))))
             }
             .build()
     }

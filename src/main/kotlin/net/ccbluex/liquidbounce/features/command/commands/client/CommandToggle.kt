@@ -34,21 +34,19 @@ object CommandToggle {
         return CommandBuilder
             .begin("toggle")
             .alias("t")
-            .description("Allows you to toggle modules")
             .parameter(ParameterBuilder
                 .begin<String>("name")
-                .description("The name of the module")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .required()
                 .build())
-            .handler { args ->
+            .handler { command, args ->
                 val name = args[0] as String
                 val module = ModuleManager.find { it.name.equals(name, true) }
-                    ?: throw CommandException("Module §b§l${args[0]}§c not found.")
+                    ?: throw CommandException(command.result("moduleNotFound", name))
 
                 val newState = !module.enabled
                 module.enabled = newState
-                chat(variable(module.name), regular(" has been "), variable(if (newState) "enabled" else "disabled"), dot())
+                chat(regular(command.result("moduleToggled", variable(module.name), variable(if (newState) command.result("enabled") else command.result("disabled")))))
             }
             .build()
     }

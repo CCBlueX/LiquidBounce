@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.extensions.asText
+import net.ccbluex.liquidbounce.utils.extensions.outputString
+import net.minecraft.util.Formatting
 import org.lwjgl.glfw.GLFW
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -34,85 +36,77 @@ object CommandBinds {
     fun createCommand(): Command {
         return CommandBuilder
             .begin("binds")
-            .description("Allows you to manage your binds")
             .hub()
             .subcommand(
                 CommandBuilder
                     .begin("add")
-                    .description("Adds a new bind")
                     .parameter(
                         ParameterBuilder
                             .begin<String>("name")
-                            .description("The name of the module")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                             .required()
                             .build()
                     ).parameter(
                         ParameterBuilder
                             .begin<String>("key")
-                            .description("The new key to bind")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                             .required()
                             .build()
                     )
-                    .handler { args ->
+                    .handler { command, args ->
                         val name = args[0] as String
                         val keyName = args[1] as String
                         val module = ModuleManager.find { it.name.equals(name, true) }
-                            ?: throw CommandException("Module $name not found.")
+                            ?: throw CommandException(command.result("moduleNotFound", name))
 
                         val bindKey = key(keyName)
                         if (bindKey == GLFW.GLFW_KEY_UNKNOWN) {
-                            throw CommandException("Unknown key.")
+                            throw CommandException(command.result("unknownKey"))
                         }
 
                         module.bind = bindKey
-                        chat(regular("Bound module "), variable(module.name), regular(" to key "), variable(keyName(bindKey)), dot())
+                        chat(regular(command.result("moduleBound", variable(module.name), variable(keyName(bindKey)))))
                     }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("remove")
-                    .description("Removes a name to the friend list")
                     .parameter(
                         ParameterBuilder
                             .begin<String>("name")
-                            .description("The name of the module")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                             .required()
                             .build()
                     )
-                    .handler { args ->
+                    .handler { command, args ->
                         val name = args[0] as String
                         val module = ModuleManager.find { it.name.equals(name, true) }
-                            ?: throw CommandException("Module $name not found.")
+                            ?: throw CommandException(command.result("moduleNotFound", name))
 
                         if (module.bind == GLFW.GLFW_KEY_UNKNOWN) {
-                            throw CommandException("Module is not bound to any key.")
+                            throw CommandException(command.result("moduleNotBound"))
                         }
 
                         module.bind = GLFW.GLFW_KEY_UNKNOWN
-                        chat(regular("The bind for module "), variable(module.name), regular(" has been removed"), dot())
+                        chat(regular(command.result("bindRemoved", variable(module.name))))
                     }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("list")
-                    .description("Lists all bindings")
                     .parameter(
                         ParameterBuilder
                             .begin<Int>("page")
-                            .description("The page to show")
                             .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
                             .optional()
                             .build()
                     )
-                    .handler { args ->
+                    .handler { command, args ->
                         val page = if (args.size > 1) {
                             args[0] as Int
-                        }else {
+                        } else {
                             1
                         }.coerceAtLeast(1)
 
@@ -120,35 +114,40 @@ object CommandBinds {
                             .filter { it.bind != GLFW.GLFW_KEY_UNKNOWN }
 
                         if (bindings.isEmpty()) {
-                            throw CommandException("There are no bindings to be shown.")
+                            throw CommandException(command.result("noBindings"))
                         }
 
                         // Max page
                         val maxPage = ceil(bindings.size / 8.0).roundToInt()
                         if (page > maxPage) {
-                            throw CommandException("The number you have entered is too big, it must be under $maxPage.")
+                            throw CommandException(command.result("pageNumberTooLarge", maxPage))
                         }
 
                         // Print out bindings
-                        val bindingsOut = StringBuilder()
-                        bindingsOut.append("§c§lBindings\n")
-                        bindingsOut.append("§7> Page: §8$page / $maxPage\n")
+                        chat(command.result("bindings").styled { it.withColor(Formatting.RED).withBold(true) })
+                        chat(regular(command.result("page", variable("$page / $maxPage"))))
 
                         val iterPage = 8 * page
                         for (module in bindings.subList(iterPage - 8, iterPage.coerceAtMost(bindings.size))) {
-                            bindingsOut.append("§6> §7${module.name} (§8§l${keyName(module.bind).asText()}§7)\n")
+                            chat("> ".asText()
+                                .styled { it.withColor(Formatting.GOLD) }
+                                .append(module.name + " (")
+                                .styled { it.withColor(Formatting.GRAY) }
+                                .append(keyName(module.bind).asText()
+                                .styled { it.withColor(Formatting.DARK_GRAY).withBold(true) })
+                                .append(module.name + " (")
+                                .styled { it.withColor(Formatting.GRAY) }
+                            )
                         }
-                        chat(bindingsOut.toString())
                     }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("clear")
-                    .description("Clears your binds")
-                    .handler {
+                    .handler { command, _ ->
                         ModuleManager.forEach { it.bind = GLFW.GLFW_KEY_UNKNOWN }
-                        chat("Cleared all binds.")
+                        chat(command.result("bindsCleared"))
                     }
                     .build()
             )

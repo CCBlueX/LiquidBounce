@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.command.Parameter
 
 class CommandBuilder private constructor(val name: String) {
 
-    private var description: String? = null
     private var aliases: Array<out String> = emptyArray()
     private var parameters: ArrayList<Parameter<*>> = ArrayList()
     private var subcommands: ArrayList<Command> = ArrayList()
@@ -50,12 +49,6 @@ class CommandBuilder private constructor(val name: String) {
 
     fun subcommand(subcommand: Command): CommandBuilder {
         this.subcommands.add(subcommand)
-
-        return this
-    }
-
-    fun description(description: String): CommandBuilder {
-        this.description = description
 
         return this
     }
@@ -103,7 +96,7 @@ class CommandBuilder private constructor(val name: String) {
         }
 
         return Command(
-            this.name, this.aliases, this.description, this.parameters.toArray(emptyArray()), this.subcommands.toArray(
+            this.name, this.aliases, this.parameters.toArray(emptyArray()), this.subcommands.toArray(
                 emptyArray()
             ), executable, this.handler
         )

@@ -27,8 +27,7 @@ object CommandClear {
     fun createCommand(): Command {
         return CommandBuilder
             .begin("clear")
-            .description("Clears the chat.")
-            .handler {
+            .handler { _, _ ->
                 mc.inGameHud.chatHud.clear(true)
             }
             .build()

@@ -32,6 +32,8 @@ import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
 
 object ModuleItemESP : Module("ItemESP", Category.RENDER) {
+    override val translationBaseKey: String
+        get() = "liquidbounce.module.itemEsp"
 
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.Exclude
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.notification
 import net.minecraft.client.MinecraftClient
@@ -28,6 +29,7 @@ import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.text.TranslatableText
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -41,6 +43,11 @@ open class Module(
     @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false // default hide
 ) : Listenable, Configurable(name) {
+    open val translationBaseKey: String
+        get() = "liquidbounce.module.${name.toLowerCamelCase()}"
+
+    val description: String
+        get() = "$translationBaseKey.description"
 
     // Module options
     var enabled by boolean("enabled", state, change = { old, new ->
@@ -57,7 +64,11 @@ open class Module(
                 error("module disabled activation")
             }
 
-            notification(if (new) "Enabled" else "Disabled", this.name, NotificationEvent.Severity.INFO)
+            notification(
+                if (new) TranslatableText("liquidbounce.generic.enabled") else TranslatableText("liquidbounce.generic.disabled"),
+                this.name,
+                NotificationEvent.Severity.INFO
+            )
 
             // Call out module event
             EventManager.callEvent(ToggleModuleEvent(this, new))
@@ -109,6 +120,9 @@ open class Module(
      */
     override fun handleEvents() = enabled
 
+    fun message(key: String, vararg args: Any): TranslatableText {
+        return TranslatableText("$translationBaseKey.messages.$key", args)
+    }
 }
 
 /**
@@ -116,6 +130,11 @@ open class Module(
  */
 open class ListenableConfigurable(@Exclude val module: Module? = null, name: String, enabled: Boolean) : Listenable,
     Configurable(name) {
+    val translationBaseKey: String
+        get() = "${module?.translationBaseKey}.value.${name.toLowerCamelCase()}"
+
+    val description: TranslatableText
+        get() = TranslatableText("$translationBaseKey.description")
 
     var enabled by boolean("Enabled", enabled)
 
@@ -132,6 +151,12 @@ open class ChoiceConfigurable(
     var active: String,
     @Exclude val initialize: (ChoiceConfigurable) -> Unit
 ) : Configurable(name) {
+    val translationBaseKey: String
+        get() = "${module.translationBaseKey}.value.${name.toLowerCamelCase()}"
+
+    val description: TranslatableText
+        get() = TranslatableText("$translationBaseKey.description")
+
     @Exclude
     val choices: MutableList<Choice> = mutableListOf()
 }
@@ -146,6 +171,12 @@ class NoneChoice(configurable: ChoiceConfigurable) : Choice("None", configurable
  */
 open class Choice(name: String, @Exclude private val configurable: ChoiceConfigurable) : Configurable(name),
     Listenable {
+
+    val translationBaseKey: String
+        get() = "${configurable.translationBaseKey}.choice.${name.toLowerCamelCase()}"
+
+    val description: TranslatableText
+        get() = TranslatableText("$translationBaseKey.description")
 
     init {
         configurable.choices += this

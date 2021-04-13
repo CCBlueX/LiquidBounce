@@ -25,24 +25,24 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.chat
+import net.ccbluex.liquidbounce.utils.regular
+import net.minecraft.text.TranslatableText
 
 object CommandPanic {
 
     fun createCommand(): Command {
         return CommandBuilder
             .begin("panic")
-            .description("Turns off all modules")
             .parameter(
                 ParameterBuilder
                     .begin<String>("category")
-                    .description("Specific category of modules")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                     .optional()
                     .build()
             )
-            .handler { args ->
+            .handler { command, args ->
                 var modules = ModuleManager.filter { it.enabled }
-                val msg: String
+                val msg: TranslatableText
 
                 val type = if (args.isNotEmpty()) {
                     args[0] as String
@@ -51,21 +51,21 @@ object CommandPanic {
                 }
 
                 when (type) {
-                    "all" -> msg = "all"
+                    "all" -> msg = command.result("disabledAllModules")
                     "nonrender" -> {
                         modules = modules.filter { it.category != Category.RENDER }
-                        msg = "all non-render"
+                        msg = command.result("disabledAllCategoryModules", command.result("nonRender"))
                     }
                     else -> {
                         val category = Category.values().find { it.readableName.equals(type, true) } ?:
-                            throw CommandException("Category '$type' not found.")
+                            throw CommandException(command.result("categoryNotFound", type))
                         modules = modules.filter { it.category == category }
-                        msg = "all ${category.readableName}"
+                        msg = command.result("disabledAllCategoryModules", category.readableName)
                     }
                 }
 
                 modules.forEach { it.enabled = false }
-                chat("Disabled $msg modules.")
+                chat(regular(msg))
             }
             .build()
     }

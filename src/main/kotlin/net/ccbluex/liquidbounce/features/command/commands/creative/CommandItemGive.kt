@@ -25,17 +25,16 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.extensions.createItem
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
+import net.minecraft.text.TranslatableText
 
 object CommandItemGive {
 
     fun createCommand(): Command {
         return CommandBuilder
             .begin("give")
-            .description("Allows you to give yourself items")
             .parameter(
                 ParameterBuilder
                     .begin<String>("item")
-                    .description("Item")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                     .required()
                     .build()
@@ -43,29 +42,27 @@ object CommandItemGive {
             .parameter(
                 ParameterBuilder
                     .begin<Int>("amount")
-                    .description("Item amount")
                     .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
                     .optional()
                     .build()
             )
-            .handler { args ->
+            .handler { command, args ->
                 val item = args[0] as String
                 val amount = if (args.size > 2) args[1] as Int else 1 // default one
 
                 if (mc.interactionManager?.hasCreativeInventory() == false) {
-                    throw CommandException("You need to be in creative mode.")
+                    throw CommandException(command.result("mustBeCreative"))
                 }
 
                 val itemStack = createItem(item, amount)
                 val emptySlot = mc.player!!.inventory!!.emptySlot
 
                 if (emptySlot == -1) {
-                    throw CommandException("There are no empty slots in your inventory.")
+                    throw CommandException(command.result("noEmptySlot"))
                 }
 
                 mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(if(emptySlot < 9) emptySlot + 36 else emptySlot, itemStack))
-                chat(regular("Given "), itemStack.toHoverableText().copy(), regular(" * "),
-                    variable(itemStack.count.toString()), dot())
+                chat(regular(command.result("itemGiven", itemStack.toHoverableText(), variable(itemStack.count.toString()))))
             }
             .build()
     }

@@ -1,5 +1,271 @@
 {
-  "modmenu.descriptionTranslation.liquidbounce": "Ein kostenloser Mixin-basierter Injection-Hacked-Client",
-  "liquidbounce.guilded": "Guilded",
-  "liquidbounce.forums": "Foren"
+  "modmenu.descriptionTranslation.liquidbounce": "Ein kostenloser Cheat für Minecraft",
+  "liquidbounce.generic.guilded": "Guilded",
+  "liquidbounce.generic.forum": "Forum",
+  "liquidbounce.generic.error": "Error",
+  "liquidbounce.generic.enabled": "Enabled",
+  "liquidbounce.generic.disabled": "Disabled",
+
+  "liquidbounce.commandManager.exceptionOccurred": "Ausführen des Befehls fehlgeschlagen. %s",
+  "liquidbounce.commandManager.unknownCommand": "Befehl \"%s\" nicht gefunden.",
+  "liquidbounce.commandManager.invalidUsage": "Ungültige Verwendung des Befehls \"%s\"",
+  "liquidbounce.commandManager.commandTakesNoParameters": "Befehl erwartet keine Argumente.",
+  "liquidbounce.commandManager.parameterRequired": "Parameter \"%s\" wird erwartet.",
+  "liquidbounce.commandManager.unknownParameter": "Unbekannter Parameter \"%s\".",
+  "liquidbounce.commandManager.commandNotExecutable": "Befehl \"%s\" ist nicht ausführbar.",
+  "liquidbounce.commandManager.invalidParameterValue": "Ungültiges Argument \"%s\" für Parameter \"%s\". %s",
+
+  "liquidbounce.command.bind.description": "Erlaubt es dir, ein Modul mit einer Taste zu verknüpfen.",
+  "liquidbounce.command.bind.parameter.name.description": "Name des Moduls.",
+  "liquidbounce.command.bind.parameter.key.description": "Taste, mit welcher das Modul verknüpft werden soll.",
+  "liquidbounce.command.bind.result.moduleNotFound": "Modul \"%s\" nicht gefunden.",
+  "liquidbounce.command.bind.result.moduleBound": "Modul \"%s\" wurde mit Taste \"%s\" verknüpft.",
+
+  "liquidbounce.command.binds.description": "Erlaubt es dir, ein Modul mit einer Taste zu verknüpfen.",
+
+  "liquidbounce.command.binds.subcommand.add.description": "Verknüpft ein Modul mit einer Taste.",
+  "liquidbounce.command.binds.subcommand.add.parameter.name.description": "Name des Moduls.",
+  "liquidbounce.command.binds.subcommand.add.parameter.key.description": "Taste, mit welcher das Modul verknüpft werden soll.",
+  "liquidbounce.command.binds.subcommand.add.result.moduleNotFound": "Modul \"%s\" nicht gefunden.",
+  "liquidbounce.command.binds.subcommand.add.result.unknownKey": "Unbekannte Taste.",
+  "liquidbounce.command.binds.subcommand.add.result.moduleBound": "Modul \"%s\" wurde mit Taste \"%s\" verknüpft.",
+
+  "liquidbounce.command.binds.subcommand.remove.description": "Entfernt eine Tastenverknüpfung.",
+  "liquidbounce.command.binds.subcommand.remove.parameter.name.description": "Name des Moduls.",
+  "liquidbounce.command.binds.subcommand.remove.result.moduleNotFound": "Modul \"%s\" nicht gefunden.",
+  "liquidbounce.command.binds.subcommand.remove.result.moduleNotBound": "Modul ist mit keiner Taste verknüpft.",
+  "liquidbounce.command.binds.subcommand.remove.result.bindRemoved": "Tastenverknüpfung von Modul \"%s\" entfernt.",
+
+  "liquidbounce.command.binds.subcommand.list.description": "Listet alle Tastenverknüpfungen auf.",
+  "liquidbounce.command.binds.subcommand.list.parameter.page.description": "Anzuzeigende Seite.",
+  "liquidbounce.command.binds.subcommand.list.result.noBindings": "Keine Tastenverknüpfungen gefunden.",
+  "liquidbounce.command.binds.subcommand.list.result.pageNumberTooLarge": "Die eingegebene Seitenzahl überschreitet die Anzahl an Seiten (%d).",
+  "liquidbounce.command.binds.subcommand.list.result.bindings": "Tastenverknüpfungen",
+  "liquidbounce.command.binds.subcommand.list.result.page": "Seite: %s",
+
+  "liquidbounce.command.binds.subcommand.clear.description": "Entfernt alle Tastenverknüpfungen.",
+  "liquidbounce.command.binds.subcommand.clear.result.bindsCleared": "Alle Tastenverknüpfungen entfernt.",
+
+  "liquidbounce.command.clear.description": "Leert den Chat.",
+
+  "liquidbounce.command.client.description": "Erlaubt es dir, Änderungen am Client vorzunehmen.",
+
+  "liquidbounce.command.client.subcommand.info.description": "Zeigt Informationen über den Client an.",
+  "liquidbounce.command.client.subcommand.info.result.clientName": "Client-Name: %s",
+  "liquidbounce.command.client.subcommand.info.result.clientVersion": "Client-Version: %s",
+  "liquidbounce.command.client.subcommand.info.result.clientAuthor": "Client-Autor: %s",
+
+  "liquidbounce.command.client.subcommand.reload.description": "Lädt den Client neu.",
+
+  "liquidbounce.command.friend.description": "Erlaubt es dir, deine Freundesliste zu bearbeiten.",
+
+  "liquidbounce.command.friend.subcommand.add.description": "Fügt einen Spieler zur Freundesliste hinzu.",
+  "liquidbounce.command.friend.subcommand.add.parameter.name.description": "Name des Freunds.",
+  "liquidbounce.command.friend.subcommand.add.parameter.alias.description": "Optionaler Alias, unter dem der Freund angezeigt werden soll.",
+
+  "liquidbounce.command.friend.subcommand.remove.description": "Entfernt einen Spieler von der Freundesliste.",
+  "liquidbounce.command.friend.subcommand.remove.parameter.name.description": "Name des Freunds.",
+
+  "liquidbounce.command.friend.subcommand.alias.description": "Ändert den Alias eines Freundes.",
+  "liquidbounce.command.friend.subcommand.alias.parameter.name.description": "Name des Freundes.",
+  "liquidbounce.command.friend.subcommand.alias.parameter.alias.description": "Neuer Alias.",
+
+  "liquidbounce.command.friend.subcommand.list.description": "Zeigt deine Freundesliste an.",
+  "liquidbounce.command.friend.subcommand.list.result.noFriends": "Freundesliste ist leer.",
+
+  "liquidbounce.command.friend.subcommand.clear.description": "Leert deine Freundesliste.",
+  "liquidbounce.command.friend.subcommand.clear.result.noFriends": "Freundesliste ist leer.",
+
+  "liquidbounce.command.help.description": "Zeigt alle verfügbaren Befehle an.",
+  "liquidbounce.command.help.parameter.page.description": "Anzuzeigende Seite.",
+  "liquidbounce.command.help.result.pageNumberTooLarge": "Die eingegebene Seitenzahl überschreitet die Anzahl an Seiten (%d).",
+  "liquidbounce.command.help.result.help": "Hilfe",
+  "liquidbounce.command.help.result.pageCount": "Seite: %s",
+  "liquidbounce.command.help.result.page": "seite",
+
+  "liquidbounce.command.hide.description": "Versteckt ein Modul.",
+
+  "liquidbounce.command.hide.subcommand.hide.description": "Versteckt ein Modul.",
+  "liquidbounce.command.hide.subcommand.hide.parameter.name.description": "Name des Moduls.",
+  "liquidbounce.command.hide.subcommand.hide.result.moduleNotFound": "Modul \"%s\" nicht gefunden.",
+  "liquidbounce.command.hide.subcommand.hide.result.moduleHidden": "Modul \"%s\" ist nun versteckt.",
+
+  "liquidbounce.command.hide.subcommand.unhide.description": "Zeigt ein Modul wieder an.",
+  "liquidbounce.command.hide.subcommand.unhide.parameter.name.description": "Name des Moduls.",
+  "liquidbounce.command.hide.subcommand.unhide.result.moduleNotFound": "Modul \"%s\" nicht gefunden.",
+  "liquidbounce.command.hide.subcommand.unhide.result.moduleUnhidden": "Modul \"%s\" is nun nicht mehr versteckt.",
+
+  "liquidbounce.command.hide.subcommand.list.description": "Zeigt alle versteckten Module an.",
+  "liquidbounce.command.hide.subcommand.list.parameter.page.description": "Anzuzeigende Seite",
+  "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "Du hast keine versteckten Module.",
+  "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "Die eingegebene Seitenzahl überschreitet die Anzahl an Seiten (%d).",
+  "liquidbounce.command.hide.subcommand.list.result.hidden": "Versteckt",
+  "liquidbounce.command.hide.subcommand.list.result.page": "Seite",
+
+  "liquidbounce.command.hide.subcommand.clear.description": "Macht alle Module wieder sichtbar.",
+  "liquidbounce.command.hide.subcommand.clear.result.modulesUnhidden": "Erfolgreich alle Module wieder sichtbar gemacht.",
+
+  "liquidbounce.command.panic.description": "Deaktiviert alle Module.",
+  "liquidbounce.command.panic.parameter.category.description": "Deaktiviert nur die Module einer bestimmten Kategorie.",
+  "liquidbounce.command.panic.result.categoryNotFound": "Kategorie \"%s\" nicht gefunden.",
+  "liquidbounce.command.panic.result.disabledAllModules": "Alle Module deaktiviert.",
+  "liquidbounce.command.panic.result.disabledAllCategoryModules": "Alle Module aus der Kategorie \"%s\" wurden deaktiviert.",
+  "liquidbounce.command.panic.result.nonRender": "non-render",
+
+  "liquidbounce.command.prefix.description": "Ändert das Befehls-Prefix.",
+  "liquidbounce.command.prefix.parameter.prefix.description": "Neues Befehls-Prefix.",
+  "liquidbounce.command.prefix.result.prefixChanged": "Befehls-Prefix wurde zu \"%s\" geändert.",
+
+  "liquidbounce.command.toggle.description": "Schaltet ein Modul um.",
+  "liquidbounce.command.toggle.parameter.name.description": "Name des Moduls.",
+  "liquidbounce.command.toggle.result.moduleNotFound": "Modul \"%s\" nicht gefunden.",
+  "liquidbounce.command.toggle.result.moduleToggled": "%s wurde %s.",
+  "liquidbounce.command.toggle.result.enabled": "aktiviert",
+  "liquidbounce.command.toggle.result.disabled": "deaktiviert",
+
+  "liquidbounce.command.give.description": "Gibt dir ein Item.",
+  "liquidbounce.command.give.parameter.item.description": "Name des Items.",
+  "liquidbounce.command.give.parameter.amount.description": "Optionale Angabe über die Menge.",
+  "liquidbounce.command.give.result.mustBeCreative": "Kreativmodus benötigt!",
+  "liquidbounce.command.give.result.noEmptySlot": "In deinem Inventar befinden sich keine freien Slots.",
+  "liquidbounce.command.give.result.itemGiven": "Dir wurden %s * %d gegeben.",
+
+  "liquidbounce.command.rename.description": "Benennt ein Item um.",
+  "liquidbounce.command.rename.parameter.name.description": "Neuer Name für das Item.",
+  "liquidbounce.command.rename.result.mustBeCreative": "Kreativmodus benötigt!",
+  "liquidbounce.command.rename.result.mustHoldItem": "Du hältst kein Item!",
+  "liquidbounce.command.rename.result.renamedItem": "Item von \"%s\" zu \"%s\" umbenannt.",
+
+  "liquidbounce.command.skull.description": "Gibt dir den Schädel eines Spielers.",
+  "liquidbounce.command.skull.parameter.name.description": "Name des Spielers.",
+  "liquidbounce.command.skull.result.mustBeCreative": "Kreativmodus benötigt!",
+  "liquidbounce.command.skull.result.noEmptySlot": "In deinem Inventar befinden sich keine freien Slots.",
+  "liquidbounce.command.skull.result.skullGiven": "Dir wurde der Schädel von %s gegeben.",
+
+  "liquidbounce.command.position.description": "Kopiert deine aktuellen Koordinaten in die Zwischenablage.",
+  "liquidbounce.command.position.result.position": "Koordinaten: %s",
+
+  "liquidbounce.command.username.description": "Kpiert deinen Nutzernamen in die Zwischenablage.",
+  "liquidbounce.command.username.result.username": "Nutzername: %s",
+
+  "liquidbounce.command.chat.description": "Sendet eine Nachricht in den LiquidChat.",
+  "liquidbounce.command.chat.parameter.message.description": "Die zu sendende Nachricht.",
+
+  "liquidbounce.liquidchat.states.connecting": "Verbindung zum Chat-Server wird aufgebaut...",
+  "liquidbounce.liquidchat.states.connected": "Verbunden mit Chat-Server!",
+  "liquidbounce.liquidchat.states.disconnected": "Verbindung zum Chat-Server verloren!",
+  "liquidbounce.liquidchat.states.loggingIn": "Authentifiziere...",
+  "liquidbounce.liquidchat.states.loggedIn": "Authentifiziert!",
+
+  "liquidbounce.liquidchat.writeMessage": "Nachricht senden: %s",
+  "liquidbounce.liquidchat.writePrivateMessage": "Private Nachricht senden: %s",
+
+  "liquidbounce.module.autoArmor.description": "Legt automatisch die besten Rüstungselemente an.",
+  "liquidbounce.module.autoArmor.value.delay.description": "Zeit, die zwischen dem Anlegen verschiedener Rüstungselemente vergehen soll.",
+  "liquidbounce.module.autoArmor.value.inv_open.description": "Ob ein geöffnetes Inventar vorausgesetzt werden soll.",
+  "liquidbounce.module.autoArmor.value.simulate_inventory.description": "Ob ein geöffnetes Invetar server-seitig simuliert werden soll.",
+  "liquidbounce.module.autoArmor.value.no_move.description": "Ob das Bewegen von Rüstungselementen im Inventar simuliert werden soll.",
+  "liquidbounce.module.autoArmor.value.hotbar.description": "Ob Rüstungselemente aus dem Inventar verwendet werden sollen.",
+
+  "liquidbounce.module.autoBow.description": "Schießt automatisch, wenn der Bogen voll aufgeladen ist und erlaubt schnelleres Schießen.",
+
+  "liquidbounce.module.autoLeave.description": "Verlässt automatisch den Server, wenn die Anzahl der Leben die angegebene Grenze unterschreitet.",
+
+  "liquidbounce.module.criticals.description": "Fügt automatisch immer kritischen Schaden zu.",
+
+  "liquidbounce.module.hitbox.description": "Vergrößert die Hitbox von Entities.",
+
+  "liquidbounce.module.killAura.description": "Greift Feinde automatisch an.",
+
+  "liquidbounce.module.superKnockback.description": "Erhöht die Menge an Knockback, die andere Entities erfahren.",
+
+  "liquidbounce.module.trigger.description": "Greift automatisch an, wenn ein Feind anvisiert wird.",
+
+  "liquidbounce.module.velocity.description": "Verändert die Menge an Knockback, die du erfährst.",
+
+  "liquidbounce.module.abortBreaking.description": "Erlaubt es dir, aufzuhören einen Block abzubauen, ohne deinen Fortschritt zu verlieren.",
+
+  "liquidbounce.module.bedWalk.description": "Erlaubt es dir, aus deinem Bett zu laufen, während du schläfst.",
+
+  "liquidbounce.module.clip.description": "Erlaubt es dir, dich durch Blöcke zu bewegen..",
+
+  "liquidbounce.module.damage.description": "Fügt dir selbst eine angegebene Menge an Schaden zu.",
+
+  "liquidbounce.module.disabler.description": "Deaktiviert bestimmte AntiCheats.",
+
+  "liquidbounce.module.forceUnicodeChat.description": "Übersetzt alle deine Chatnachrichten zu Unicode.",
+
+  "liquidbounce.module.godMode.description": "Friert dich in der aktuellen Position ein und macht dich dabei unverletzbar.",
+
+  "liquidbounce.module.kick.description": "Kickt dich selbst vom Server.",
+  "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Kann %s nicht im Singleplayer verwenden.",
+
+  "liquidbounce.module.moreCarry.description": "Erlaubt es dir, zusätzliche Items in den Craftingslots deines Inventars zu tragen (funktioniert nur im Multiplayer).",
+
+  "liquidbounce.module.noPitchLimit.description": "Erlaubt es dir, deinen Kopf über die eigentlichen Grenzen hinaus zu bewegen.",
+
+  "liquidbounce.module.pingSpoof.description": "Fälscht deinen Ping auf einen angegebenen Wert.",
+
+  "liquidbounce.module.portalMenu.description": "Erlaubt es dir, Menüs zu öffnen, während du in einem Portal stehst.",
+
+  "liquidbounce.module.vehicleOneHit.description": "Erlaubt es dir, alle Fortbewegungsmittel mit nur einem Schlag zu zerstören.",
+
+  "liquidbounce.module.skinDerp.description": "Lässt deinen Skin blinken (erfordert Skin mit mehreren Ebenen).",
+
+  "liquidbounce.module.spammer.description": "Müllt den Chat mit angegebenen Nachrichten zu.",
+
+  "liquidbounce.module.fly.description": "Erlaubt es dir, im Überlebensmodus zu fliegen.",
+
+  "liquidbounce.module.freeze.description": "Erlaubt es dir, dich in deiner aktuellen Position einzufrieren, ohne dass der Server dies mitbekommt.",
+
+  "liquidbounce.module.noClip.description": "Erlaubt es dir, durch Blöcke zu fliegen.",
+  "liquidbounce.module.noClip.messages.setbackDetected": "Du wurdest vom Server zurückgesetzt! Stelle sicher, dass du dich bereits in einem Block befindest.",
+
+  "liquidbounce.module.parkour.description": "Springt automatisch, wenn du dich an der Kante eines Blocks befindest.",
+
+  "liquidbounce.module.speed.description": "Erlaubt es dir, dich schneller zu bewegen.",
+
+  "liquidbounce.module.strafe.description": "Erlaubt es dir, deine Richtung in der Luft zu ändern.",
+
+  "liquidbounce.module.vehicleFly.description": "Erlaubt es dir zu fliegen, während du auf einem anderen Entity reiteest (z.B. Boot, Pferd).",
+
+  "liquidbounce.module.antiCactus.description": "Verhindert, dass Kakteen dir Schaden zufügen können.",
+
+  "liquidbounce.module.antiLevitation.description": "Verhindert, dass Schwebekraft- und Sanfter-Fall-Effekte einen Einfluss auf dich haben .",
+
+  "liquidbounce.module.autoBreak.description": "Baut automatisch den Block ab, den du anschaust.",
+
+  "liquidbounce.module.autoRespawn.description": "Lässt dich automatisch nach dem Sterben neuerscheinen.",
+
+  "liquidbounce.module.autoWalk.description": "Läuft automatisch in die Richtung, in die du schaust.",
+
+  "liquidbounce.module.blink.description": "Lässt es für andere Spieler so wirken, als würdest du dich teleportieren.",
+
+  "liquidbounce.module.eagle.description": "Schleicht automatisch, wenn du dich an der Kante eines Blocks vbefindest (aka. FastBridge).",
+
+  "liquidbounce.module.noFall.description": "Verhindert, dass du Fallschaden nimmst.",
+
+  "liquidbounce.module.antiBlind.description": "Verhindert, dass potenziell störende Effekte deinen Bildschirm blockieren können.",
+
+  "liquidbounce.module.breadcrumbs.description": "Lässt eine Spur hinter dir.",
+
+  "liquidbounce.module.clickGUI.description": "Zeigt dir ein grafisches Menü, von dem aus du Module leicht konfigurieren kannst.",
+
+  "liquidbounce.module.fullBright.description": "Macht die Welt zu einem helleren Ort.",
+
+  "liquidbounce.module.hud.description": "Zeigt in Overlay mit zahlreichen nützlichen Funktionen.",
+
+  "liquidbounce.module.itemEsp.description": "Erlaubt es dir, fallengelassene Items durch Wände zu sehen.",
+
+  "liquidbounce.module.nametags.description": "Macht die Nametags anderer Spieler besser sichtbar und fügt nützliche Informationen hinzu.",
+
+  "liquidbounce.module.traces.description": "Zeigt eine Linie zu jedem Spieler im Umkreis.",
+
+  "liquidbounce.module.chestAura.description": "Öffnest automatisch Kisten um dich herum.",
+
+  "liquidbounce.module.fastBreak.description": "Erlaubt es dir, Blöcke schneller abzubauen.",
+
+  "liquidbounce.module.fastPlace.description": "Erlaubt es dir, Blöcke schneller zu platzieren.",
+
+  "liquidbounce.module.timer.description": "Ändert die Geschwindigkeit, mit der das Spiel läuft."
 }

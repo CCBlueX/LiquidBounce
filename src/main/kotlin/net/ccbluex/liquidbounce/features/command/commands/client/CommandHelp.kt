@@ -24,6 +24,13 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.chat
+import net.ccbluex.liquidbounce.utils.extensions.asText
+import net.ccbluex.liquidbounce.utils.extensions.outputString
+import net.ccbluex.liquidbounce.utils.keyName
+import net.ccbluex.liquidbounce.utils.regular
+import net.ccbluex.liquidbounce.utils.variable
+import net.minecraft.text.LiteralText
+import net.minecraft.util.Formatting
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -32,19 +39,17 @@ object CommandHelp {
     fun createCommand(): Command {
         return CommandBuilder
             .begin("help")
-            .description("Shows a list of commands")
             .parameter(
                 ParameterBuilder
                     .begin<Int>("page")
-                    .description("The page to show")
                     .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
                     .optional()
                     .build()
             )
-            .handler { args ->
+            .handler { command, args ->
                 val page = if (args.size > 1) {
                     args[0] as Int
-                }else {
+                } else {
                     1
                 }.coerceAtLeast(1)
 
@@ -53,22 +58,34 @@ object CommandHelp {
                 // Max page
                 val maxPage = ceil(commands.size / 8.0).roundToInt()
                 if (page > maxPage) {
-                    throw CommandException("The page number you have entered exceeds the maximum number of available help pages, it may at most be $maxPage.")
+                    throw CommandException(command.result("pageNumberTooLarge", maxPage))
                 }
 
                 // Print out help page
-                val helpOut = StringBuilder()
-                helpOut.append("§c§lHelp\n")
-                helpOut.append("§7> Page: §8$page / $maxPage\n")
+                chat(command.result("help").styled { it.withColor(Formatting.RED).withBold(true) })
+                chat(regular(command.result("pageCount", variable("$page / $maxPage"))))
 
                 val iterPage = 8 * page
-                for (command in commands.subList(iterPage - 8, iterPage.coerceAtMost(commands.size))){
-                    val aliases = if (command.aliases.isEmpty()) "" else " §7(§8${command.aliases.joinToString("§7, §8")}§7)"
-                    helpOut.append("§6> §7${CommandManager.Options.prefix}${command.name}$aliases\n")
+                for (cmd in commands.subList(iterPage - 8, iterPage.coerceAtMost(commands.size))) {
+                    val aliases = LiteralText("")
+
+                    if (cmd.aliases.isNotEmpty())
+                        cmd.aliases.forEach { alias -> aliases.append(variable(", ")).append(regular(alias)) }
+
+                    chat("- ".asText()
+                        .styled { it.withColor(Formatting.BLUE) }
+                        .append(CommandManager.Options.prefix + cmd.name)
+                        .styled { it.withColor(Formatting.GRAY) }
+                        .append(aliases)
+                    )
                 }
 
-                helpOut.append("§a------------\n§7> §c${CommandManager.Options.prefix}help §8<§7§lpage§8>")
-                chat(helpOut.toString())
+                chat("--- ".asText()
+                    .styled { it.withColor(Formatting.DARK_GRAY) }
+                    .append(variable("${CommandManager.Options.prefix}help <"))
+                    .append(variable(command.result("page")))
+                    .append(variable(">"))
+                )
             }
             .build()
     }

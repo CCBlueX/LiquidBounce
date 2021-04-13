@@ -19,21 +19,26 @@
 
 package net.ccbluex.liquidbounce.features.command
 
+import net.minecraft.text.TranslatableText
+import org.jetbrains.annotations.Contract
 import java.util.*
-import kotlin.collections.ArrayList
 
-typealias CommandHandler = (Array<Any>) -> Unit
+typealias CommandHandler = (Command, Array<Any>) -> Unit
 
 class Command(
     val name: String,
     val aliases: Array<out String>,
-    val description: String?,
     val parameters: Array<Parameter<*>>,
     val subcommands: Array<Command>,
     val executable: Boolean,
     val handler: CommandHandler?,
     var parentCommand: Command? = null
 ) {
+    val translationBaseKey: String
+        get() = "liquidbounce.command.${getParentKeys(this, name)}"
+
+    val description: TranslatableText
+        get() = TranslatableText("$translationBaseKey.description")
 
     init {
         subcommands.forEach {
@@ -42,6 +47,22 @@ class Command(
 
             it.parentCommand = this
         }
+
+        parameters.forEach {
+            if (it.command != null)
+                throw IllegalStateException("Parameter already has a command")
+
+            it.command = this
+        }
+    }
+
+    private fun getParentKeys(currentCommand: Command?, current: String): String {
+        val parentName = currentCommand?.parentCommand?.name
+        return if (parentName != null) getParentKeys(currentCommand.parentCommand, "$parentName.subcommand.$current") else current
+    }
+
+    fun result(key: String, vararg args: Any): TranslatableText {
+        return TranslatableText("$translationBaseKey.result.$key", *args)
     }
 
     /**
