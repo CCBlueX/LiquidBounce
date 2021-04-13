@@ -6,22 +6,22 @@
   "liquidbounce.generic.enabled": "Enabled",
   "liquidbounce.generic.disabled": "Disabled",
 
-  "liquidbounce.commandManager.exceptionOccurred": "Failed to execute command: %s",
+  "liquidbounce.commandManager.exceptionOccurred": "Failed to execute command. %s",
   "liquidbounce.commandManager.unknownCommand": "Command \"%s\" not found.",
-  "liquidbounce.commandManager.invalidUsage": "Invalid usage of command \"%s\"",
-  "liquidbounce.commandManager.commandTakesNoParameters": "Command does not take any parameters",
-  "liquidbounce.commandManager.parameterRequired": "Parameter \"%s\" is required",
-  "liquidbounce.commandManager.unknownParameter": "Unknown parameter \"%s\"",
-  "liquidbounce.commandManager.commandNotExecutable": "Command \"%s\" is not executable",
-  "liquidbounce.commandManager.invalidParameterValue": "Invalid argument \"%s\" for parameter \"%s\": %s",
+  "liquidbounce.commandManager.invalidUsage": "Invalid usage of command \"%s\".",
+  "liquidbounce.commandManager.commandTakesNoParameters": "Command does not take any arguments.",
+  "liquidbounce.commandManager.parameterRequired": "Parameter \"%s\" is required.",
+  "liquidbounce.commandManager.unknownParameter": "Unknown parameter \"%s\".",
+  "liquidbounce.commandManager.commandNotExecutable": "Command \"%s\" is not executable.",
+  "liquidbounce.commandManager.invalidParameterValue": "Invalid argument \"%s\" for parameter \"%s\". %s",
 
-  "liquidbounce.command.bind.description": "Allows you to bind a module to a key.",
+  "liquidbounce.command.bind.description": "Binds a module to a key.",
   "liquidbounce.command.bind.parameter.name.description": "Name of the module.",
   "liquidbounce.command.bind.parameter.key.description": "Key to which the module should be bound.",
   "liquidbounce.command.bind.result.moduleNotFound": "Module \"%s\" not found.",
   "liquidbounce.command.bind.result.moduleBound": "Bound module \"%s\" to key \"%s\".",
 
-  "liquidbounce.command.binds.description": "Allows you to bind a module to a key.",
+  "liquidbounce.command.binds.description": "Binds a module to a key.",
 
   "liquidbounce.command.binds.subcommand.add.description": "Adds a new bind.",
   "liquidbounce.command.binds.subcommand.add.parameter.name.description": "Name of the module.",
@@ -31,7 +31,7 @@
   "liquidbounce.command.binds.subcommand.add.result.moduleBound": "Bound module \"%s\" to key \"%s\".",
 
   "liquidbounce.command.binds.subcommand.remove.description": "Removes an existing bind.",
-  "liquidbounce.command.binds.subcommand.remove.parameter.name.description": "Name of the module",
+  "liquidbounce.command.binds.subcommand.remove.parameter.name.description": "Name of the module.",
   "liquidbounce.command.binds.subcommand.remove.result.moduleNotFound": "Module \"%s\" not found.",
   "liquidbounce.command.binds.subcommand.remove.result.moduleNotBound": "Module is not bound to any key.",
   "liquidbounce.command.binds.subcommand.remove.result.bindRemoved": "Removed bind of module \"%s\".",
@@ -145,7 +145,7 @@
   "liquidbounce.command.position.description": "Copies your current coordinates to the clipboard.",
   "liquidbounce.command.position.result.position": "Position: %s",
 
-  "liquidbounce.command.username.description": "Copies your username to the clipboard",
+  "liquidbounce.command.username.description": "Copies your username to the clipboard.",
   "liquidbounce.command.username.result.username": "Username: %s",
 
   "liquidbounce.command.chat.description": "Sends a message into LiquidChat.",
@@ -169,7 +169,7 @@
 
   "liquidbounce.module.autoBow.description": "Automatically shoots an arrow when the bow is fully charged and allows faster shooting.",
 
-  "liquidbounce.module.autoLeave.description": "Automatically leaves the server whenever your health goes below a certain threshold.",
+  "liquidbounce.module.autoLeave.description": "Automatically leaves the server whenever your health goes below the specified threshold.",
 
   "liquidbounce.module.criticals.description": "Automatically deals critical damage everytime an entity is hit.",
 
@@ -197,7 +197,7 @@
 
   "liquidbounce.module.godMode.description": "Freezes you in your current position and thereby makes you invincible.",
 
-  "liquidbounce.module.kick.description": "Kicky yourself from the server",
+  "liquidbounce.module.kick.description": "Kicks yourself from the server.",
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Cannot enable %s in singleplayer.",
 
   "liquidbounce.module.moreCarry.description": "Allows you to store additional items in your crafting slots (only works in multiplayer).",
@@ -218,7 +218,7 @@
 
   "liquidbounce.module.freeze.description": "Allows you to freeze yourself in your current position without the server knowing.",
 
-  "liquidbounce.module.noClip.description": "Allows you to move through blocks.",
+  "liquidbounce.module.noClip.description": "Allows you to fly through blocks.",
   "liquidbounce.module.noClip.messages.setbackDetected": "You have been set back by the server! Make sure you are already standing inside of a block.",
 
   "liquidbounce.module.parkour.description": "Automatically jumps at the very edge of a block.",
@@ -229,7 +229,7 @@
 
   "liquidbounce.module.vehicleFly.description": "Allows you to fly while riding an entity (eg. boat, horse).",
 
-  "liquidbounce.module.antiCactus.description": "Prevents taking damage from cacti.",
+  "liquidbounce.module.antiCactus.description": "Protects taking damage from cacti.",
 
   "liquidbounce.module.antiLevitation.description": "Prevents levitation and slow falling effects from affecting you.",
 
