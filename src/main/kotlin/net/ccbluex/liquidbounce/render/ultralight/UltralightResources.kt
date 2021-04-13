@@ -35,7 +35,8 @@ class UltralightResources {
 
     }
 
-    val ultralightRoot = File(ConfigSystem.rootFolder, "ultralight")
+    private val ultralightRoot = File(ConfigSystem.rootFolder, "ultralight")
+    val binRoot = File(ultralightRoot, "bin")
     val cacheRoot = File(ultralightRoot, "cache")
     val resourcesRoot = File(ultralightRoot, "resources")
 
@@ -44,7 +45,7 @@ class UltralightResources {
      */
     fun downloadResources() {
         runCatching {
-            val versionsFile = File(resourcesRoot, "VERSION")
+            val versionsFile = File(ultralightRoot, "VERSION")
 
             // Check if library version is matching the resources version
             if (versionsFile.exists() && versionsFile.readText().toDoubleOrNull() == LIBRARY_VERSION) {
@@ -52,6 +53,10 @@ class UltralightResources {
             }
 
             // Make sure the old natives are being deleted
+            if (binRoot.exists()) {
+                binRoot.deleteRecursively()
+            }
+
             if (resourcesRoot.exists()) {
                 resourcesRoot.deleteRecursively()
             }
@@ -65,18 +70,18 @@ class UltralightResources {
             }
 
             logger.info("Downloading v${LIBRARY_VERSION} resources... (os: $os)")
-            val nativeUrl = "${LiquidBounce.CLIENT_CLOUD}/natives/${LIBRARY_VERSION}/$os-x64.zip"
+            val nativeUrl = "${LiquidBounce.CLIENT_CLOUD}/ultralight_resources/${LIBRARY_VERSION}/$os-x64.zip"
 
             // Download resources
-            resourcesRoot.mkdir()
-            val pkgNatives = File(resourcesRoot, "natives.zip").apply {
+            ultralightRoot.mkdir()
+            val pkgNatives = File(ultralightRoot, "resources.zip").apply {
                 createNewFile()
                 HttpUtils.download(nativeUrl, this)
             }
 
             // Extract resources from zip archive
             logger.info("Extracting resources...")
-            extractZip(pkgNatives, resourcesRoot)
+            extractZip(pkgNatives, ultralightRoot)
             versionsFile.createNewFile()
             versionsFile.writeText(LIBRARY_VERSION.toString())
 
@@ -87,7 +92,6 @@ class UltralightResources {
             logger.info("Successfully loaded resources.")
         }.onFailure {
             logger.error("Unable to download resources", it)
-            resourcesRoot.delete()
 
             exitProcess(-1)
         }

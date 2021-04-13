@@ -24,18 +24,46 @@ import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.View
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 
+/**
+ * Module HUD
+ *
+ * The client in-game dashboard
+ */
 object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
     private var view: View? = null
 
-    override fun enable() {
+    /**
+     * Create new HUD view
+     */
+    private fun makeView() {
+        if (view != null)
+            return
+
+        val page = ThemeManager.defaultTheme.page("hud") ?: error("unable to find hud page in current theme")
         view = UltralightEngine.newOverlayView().apply {
-            loadPage(ThemeManager.defaultTheme.page("hud") ?: error("hud not found"))
+            loadPage(page)
         }
     }
 
+    /**
+     * Unload HUD view
+     */
+    private fun unloadView() {
+        view?.let { UltralightEngine.removeView(it) }
+        view = null
+    }
+
+    override fun init() {
+        makeView()
+    }
+
+    override fun enable() {
+        makeView()
+    }
+
     override fun disable() {
-        view?.remove()
+        unloadView()
     }
 
 }

@@ -38,11 +38,9 @@
 package net.ccbluex.liquidbounce.render.ultralight.listener
 
 import com.labymedia.ultralight.plugin.loading.UltralightLoadListener
-import net.ccbluex.liquidbounce.render.ultralight.ScreenView
 import net.ccbluex.liquidbounce.render.ultralight.View
-import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsUi
+import net.ccbluex.liquidbounce.render.ultralight.js.ContextSetup
 import net.ccbluex.liquidbounce.utils.logger
-import net.ccbluex.liquidbounce.utils.mc
 
 class ViewLoadListener(private val view: View) : UltralightLoadListener {
 
@@ -108,40 +106,9 @@ class ViewLoadListener(private val view: View) : UltralightLoadListener {
      * @param url         The url that the frame currently contains
      */
     override fun onWindowObjectReady(frameId: Long, isMainFrame: Boolean, url: String) {
-        view.lockWebView {
-            it.lockJavascriptContext().use { lock ->
-                val context = lock.context
-                val globalContext = context.globalContext
-                val globalObject = globalContext.globalObject
-
-                globalObject.setProperty(
-                    "view",
-                    view.databind.conversionUtils.toJavascript(context, view), 0
-                )
-
-                globalObject.setProperty(
-                    "client",
-                    view.databind.conversionUtils.toJavascript(context, view.jsWrapper), 0
-                )
-
-                // todo: minecraft has to be remapped
-                globalObject.setProperty(
-                    "minecraft",
-                    view.databind.conversionUtils.toJavascript(context, mc), 0
-                )
-
-                globalObject.setProperty(
-                    "ui",
-                    view.databind.conversionUtils.toJavascript(context, UltralightJsUi), 0
-                )
-
-                if (view is ScreenView) {
-                    globalObject.setProperty(
-                        "screen",
-                        view.databind.conversionUtils.toJavascript(context, view.screen), 0
-                    )
-                }
-            }
+        view.ultralightView.lockJavascriptContext().use { lock ->
+            val context = lock.context
+            ContextSetup.setupContext(view, context)
         }
     }
 

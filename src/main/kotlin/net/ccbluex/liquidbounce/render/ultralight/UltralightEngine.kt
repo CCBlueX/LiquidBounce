@@ -31,19 +31,18 @@ import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightIntegrationHoo
 import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightScreenHook
 import net.ccbluex.liquidbounce.render.ultralight.renderer.CpuViewRenderer
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.SingleThreadTaskScheduler
 import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.gui.screen.Screen
 
 object UltralightEngine {
 
-    val window = mc.window.handle
-
     /**
-     * This is the thread that has also write access to the Ultralight instance
+     * Ultralight window
+     *
+     * Might be useful in the future for external UI.
      */
-    val contextThread = SingleThreadTaskScheduler()
+    val window = mc.window.handle
 
     /**
      * Ultralight resources
@@ -65,12 +64,13 @@ object UltralightEngine {
 
     /**
      * Views
+     *
+     * todo: might cache views instead of creating new ones
      */
     val activeView: View?
-        get() = screenViews.find { mc.currentScreen == it.screen }
+        get() = views.find { it is ScreenView && mc.currentScreen == it.screen }
 
-    private val screenViews = mutableListOf<ScreenView>()
-    private val overlayViews = mutableListOf<View>()
+    private val views = mutableListOf<View>()
 
     /**
      * Initializes the platform
@@ -78,55 +78,53 @@ object UltralightEngine {
     fun init() {
         val refreshRate = mc.window.refreshRate
 
-        contextThread.scheduleBlocking {
-            logger.info("Loading ultralight...")
+        logger.info("Loading ultralight...")
 
-            // Check resources
-            logger.info("Checking resources...")
-            resources.downloadResources()
+        // Check resources
+        logger.info("Checking resources...")
+        resources.downloadResources()
 
-            // Load natives from native directory inside root folder
-            logger.debug("Loading ultralight natives")
-            UltralightJava.load(resources.resourcesRoot.toPath())
+        // Load natives from native directory inside root folder
+        logger.debug("Loading ultralight natives")
+        UltralightJava.load(resources.binRoot.toPath()) // todo: fix not loading on first startup
 
-            // Setup platform
-            logger.debug("Setting up ultralight platform")
-            platform = UltralightPlatform.instance()
-            platform.setConfig(
-                UltralightConfig()
-                    .animationTimerDelay(1.0 / refreshRate)
-                    .scrollTimerDelay(1.0 / refreshRate)
-                    .resourcePath(resources.resourcesRoot.absolutePath)
-                    .cachePath(resources.cacheRoot.absolutePath)
-                    .fontHinting(FontHinting.SMOOTH)
-            )
-            platform.usePlatformFontLoader()
-            platform.usePlatformFileSystem(ThemeManager.themesFolder.absolutePath)
-            platform.setClipboard(GlfwClipboardAdapter())
-            platform.setLogger { level, message ->
-                @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
-                when (level) {
-                    UltralightLogLevel.ERROR -> logger.debug("[Ultralight/ERR] $message")
-                    UltralightLogLevel.WARNING -> logger.debug("[Ultralight/WARN] $message")
-                    UltralightLogLevel.INFO -> logger.debug("[Ultralight/INFO] $message")
-                }
+        // Setup platform
+        logger.debug("Setting up ultralight platform")
+        platform = UltralightPlatform.instance()
+        platform.setConfig(
+            UltralightConfig()
+                .animationTimerDelay(1.0 / refreshRate)
+                .scrollTimerDelay(1.0 / refreshRate)
+                .resourcePath(resources.resourcesRoot.absolutePath)
+                .cachePath(resources.cacheRoot.absolutePath)
+                .fontHinting(FontHinting.SMOOTH)
+        )
+        platform.usePlatformFontLoader()
+        platform.usePlatformFileSystem(ThemeManager.themesFolder.absolutePath)
+        platform.setClipboard(GlfwClipboardAdapter())
+        platform.setLogger { level, message ->
+            @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
+            when (level) {
+                UltralightLogLevel.ERROR -> logger.debug("[Ultralight/ERR] $message")
+                UltralightLogLevel.WARNING -> logger.debug("[Ultralight/WARN] $message")
+                UltralightLogLevel.INFO -> logger.debug("[Ultralight/INFO] $message")
             }
-
-            // Setup renderer
-            logger.debug("Setting up ultralight renderer")
-            renderer = UltralightRenderer.create()
-
-            // Setup hooks
-            UltralightIntegrationHook
-            UltralightScreenHook
-
-            logger.info("Successfully loaded ultralight!")
         }
+
+        // Setup renderer
+        logger.debug("Setting up ultralight renderer")
+        renderer = UltralightRenderer.create()
+
+        // Setup hooks
+        UltralightIntegrationHook
+        UltralightScreenHook
 
         // Setup GLFW adapters
         clipboardAdapter = GlfwClipboardAdapter()
         cursorAdapter = GlfwCursorAdapter()
         inputAdapter = GlfwInputAdapter()
+
+        logger.info("Successfully loaded ultralight!")
     }
 
     fun shutdown() {
@@ -134,37 +132,33 @@ object UltralightEngine {
     }
 
     fun update() {
-        contextThread.scheduleBlocking {
-            screenViews.removeIf { !it.active }
+        UltralightScreenHook.update()
 
-            overlayViews.forEach(View::update)
-            screenViews.forEach(View::update)
-            renderer.update()
-        }
+        views.forEach(View::update)
+        renderer.update()
     }
 
     fun render(layer: RenderLayer) {
-        // todo: probably not working for gpu driver, think about something better.
-        contextThread.scheduleBlocking {
-            renderer.render()
-        }
+        renderer.render()
 
-        when(layer) {
-            RenderLayer.SCREEN_LAYER -> screenViews.forEach(View::render)
-            RenderLayer.OVERLAY_LAYER -> overlayViews.forEach(View::render)
-        }
+        views.filter { it.layer == layer }
+            .forEach(View::render)
     }
 
     fun resize(width: Long, height: Long) {
-        screenViews.forEach { it.resize(width, height) }
-        overlayViews.forEach { it.resize(width, height) }
+        views.forEach { it.resize(width, height) }
     }
 
     fun newOverlayView()
-        = View(renderer, newViewRenderer()).also { overlayViews += it }
+        = View(RenderLayer.OVERLAY_LAYER, renderer, newViewRenderer()).also { views += it }
 
-    fun newScreenView(screen: Screen)
-        = ScreenView(renderer, newViewRenderer(), screen).also { screenViews += it }
+    fun newScreenView(screen: Screen, adaptedScreen: Screen? = null, parentScreen: Screen? = null)
+        = ScreenView(renderer, newViewRenderer(), screen, adaptedScreen, parentScreen).also { views += it }
+
+    fun removeView(view: View) {
+        view.free()
+        views.remove(view)
+    }
 
     private fun newViewRenderer() = CpuViewRenderer()
 

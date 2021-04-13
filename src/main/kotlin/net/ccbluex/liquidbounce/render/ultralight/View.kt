@@ -27,7 +27,7 @@ import com.labymedia.ultralight.input.UltralightKeyEvent
 import com.labymedia.ultralight.input.UltralightMouseEvent
 import com.labymedia.ultralight.input.UltralightScrollEvent
 import net.ccbluex.liquidbounce.render.ultralight.js.ViewContextProvider
-import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsWrapper
+import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsEvents
 import net.ccbluex.liquidbounce.render.ultralight.listener.ViewListener
 import net.ccbluex.liquidbounce.render.ultralight.listener.ViewLoadListener
 import net.ccbluex.liquidbounce.render.ultralight.renderer.ViewRenderer
@@ -37,40 +37,38 @@ import net.ccbluex.liquidbounce.utils.logger
 import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.gui.screen.Screen
 
-open class View(ultralightRenderer: UltralightRenderer, val viewRenderer: ViewRenderer) {
+open class View(val layer: RenderLayer, ultralightRenderer: UltralightRenderer, private val viewRenderer: ViewRenderer) {
 
-    private lateinit var view: UltralightView
-    var currentPage: Page? = null
+    internal val ultralightView: UltralightView
+    val jsEvents: UltralightJsEvents
+    val databind: Databind
 
-    lateinit var jsWrapper: UltralightJsWrapper
-    lateinit var databind: Databind
+    var viewPage: Page? = null
 
     private var jsGarbageCollected = 0L
 
     init {
         // Setup view
-        UltralightEngine.contextThread.scheduleBlocking {
-            val (width, height) = mc.window.longedSize
-            val viewConfig = UltralightViewConfig()
-                .isTransparent(true)
-                .initialDeviceScale(1.0)
+        val (width, height) = mc.window.longedSize
+        val viewConfig = UltralightViewConfig()
+            .isTransparent(true)
+            .initialDeviceScale(1.0)
 
-            // Make sure renderer setups config correctly
-            viewRenderer.setupConfig(viewConfig)
+        // Make sure renderer setups config correctly
+        viewRenderer.setupConfig(viewConfig)
 
-            view = ultralightRenderer.createView(width, height, viewConfig)
-            view.setViewListener(ViewListener())
-            view.setLoadListener(ViewLoadListener(this))
+        ultralightView = ultralightRenderer.createView(width, height, viewConfig)
+        ultralightView.setViewListener(ViewListener())
+        ultralightView.setLoadListener(ViewLoadListener(this))
 
-            // Setup JS bindings
-            databind = Databind(
-                DatabindConfiguration
-                    .builder()
-                    .contextProviderFactory(ViewContextProvider.Factory(view))
-                    .build()
-            )
-            jsWrapper = UltralightJsWrapper(ViewContextProvider(view), this)
-        }
+        // Setup JS bindings
+        databind = Databind(
+            DatabindConfiguration
+                .builder()
+                .contextProviderFactory(ViewContextProvider.Factory(ultralightView))
+                .build()
+        )
+        jsEvents = UltralightJsEvents(ViewContextProvider(ultralightView), this)
 
         logger.debug("Created new view ${toString()}")
     }
@@ -80,16 +78,14 @@ open class View(ultralightRenderer: UltralightRenderer, val viewRenderer: ViewRe
      */
     fun loadPage(page: Page) {
         // Unregiste listeners
-        jsWrapper.unregisterEvents()
+        jsEvents._unregisterEvents()
 
-        lockWebView {
-            if (currentPage != page && currentPage != null) {
-                page.close()
-            }
-
-            view.loadURL(page.viewableFile)
-            currentPage = page
+        if (viewPage != page && viewPage != null) {
+            page.close()
         }
+
+        ultralightView.loadURL(page.viewableFile)
+        viewPage = page
 
         logger.debug("Loaded page on ${toString()}")
     }
@@ -98,55 +94,30 @@ open class View(ultralightRenderer: UltralightRenderer, val viewRenderer: ViewRe
      * Update view
      */
     fun update() {
-        lockWebView {
-            // Check if page has new update
-            val page = currentPage
+        // Check if page has new update
+        val page = viewPage
 
-            if (page?.hasUpdate() == true) {
-                loadPage(page)
-            }
-
-            // Collect JS garbage
-            collectGarbage()
+        if (page?.hasUpdate() == true) {
+            loadPage(page)
         }
+
+        // Collect JS garbage
+        collectGarbage()
     }
 
     /**
      * Render view
      */
-    fun render() {
-        viewRenderer.render(view)
+    open fun render() {
+        viewRenderer.render(ultralightView)
     }
 
     /**
      * Resizes web view to [width] and [height]
      */
     fun resize(width: Long, height: Long) {
-        lockWebView {
-            view.resize(width, height)
-        }
-
+        ultralightView.resize(width, height)
         logger.debug("Resized ${toString()} to (w: $width h: $height)")
-    }
-
-    /**
-     * Free the view
-     */
-    fun free() {
-        jsWrapper.unregisterEvents()
-
-        lockWebView {
-            view.unfocus()
-            view.stop()
-            currentPage?.close()
-        }
-    }
-
-    /**
-     * Lock [runnable] on context thread
-     */
-    fun <T> lockWebView(runnable: (UltralightView) -> T): T {
-        return UltralightEngine.contextThread.scheduleBlocking { runnable(this.view) }
     }
 
     /**
@@ -157,7 +128,7 @@ open class View(ultralightRenderer: UltralightRenderer, val viewRenderer: ViewRe
             jsGarbageCollected = System.currentTimeMillis()
         } else if (System.currentTimeMillis() - jsGarbageCollected > 1000) {
             logger.debug("Garbage collecting Ultralight Javascript...")
-            view.lockJavascriptContext().use { lock ->
+            ultralightView.lockJavascriptContext().use { lock ->
                 lock.context.garbageCollect()
             }
             jsGarbageCollected = System.currentTimeMillis()
@@ -165,36 +136,44 @@ open class View(ultralightRenderer: UltralightRenderer, val viewRenderer: ViewRe
     }
 
     /**
-     * Shows some detailed infos about view
+     * Free view
      */
-    override fun toString() = "View(page: $currentPage, url: ${view.url()}, w: ${view.width()}, h: ${view.height()})"
+    fun free() {
+        // todo: figure out how to remove it from the ultralight renderer
+
+        ultralightView.unfocus()
+        ultralightView.stop()
+        viewPage?.close()
+        viewRenderer.delete()
+        jsEvents._unregisterEvents()
+    }
 
     fun focus() {
-        lockWebView { it.focus() }
+        ultralightView.focus()
     }
 
     fun unfocus() {
-        lockWebView { it.unfocus() }
+        ultralightView.unfocus()
     }
 
     fun fireScrollEvent(event: UltralightScrollEvent) {
-        lockWebView { it.fireScrollEvent(event) }
+        ultralightView.fireScrollEvent(event)
     }
 
     fun fireMouseEvent(event: UltralightMouseEvent) {
-        lockWebView { it.fireMouseEvent(event) }
+        ultralightView.fireMouseEvent(event)
     }
 
     fun fireKeyEvent(event: UltralightKeyEvent) {
-        lockWebView { it.fireKeyEvent(event) }
+        ultralightView.fireKeyEvent(event)
     }
 
-    fun remove() {
-
-    }
+    /**
+     * Shows some detailed infos about view
+     */
+    final override fun toString() = "View(page: $viewPage, url: ${ultralightView.url()}, w: ${ultralightView.width()}, h: ${ultralightView.height()})"
 
 }
 
-class ScreenView(ultralightRenderer: UltralightRenderer, viewRenderer: ViewRenderer, val screen: Screen) : View(ultralightRenderer, viewRenderer) {
-    val active: Boolean = true
-}
+class ScreenView(ultralightRenderer: UltralightRenderer, viewRenderer: ViewRenderer, val screen: Screen, val adaptedScreen: Screen?, val parentScreen: Screen?)
+    : View(RenderLayer.SCREEN_LAYER, ultralightRenderer, viewRenderer)

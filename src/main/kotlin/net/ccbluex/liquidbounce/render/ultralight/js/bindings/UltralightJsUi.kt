@@ -19,7 +19,10 @@
 
 package net.ccbluex.liquidbounce.render.ultralight.js.bindings
 
+import net.ccbluex.liquidbounce.render.screen.EmptyScreen
+import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightScreenHook
+import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
@@ -27,25 +30,33 @@ import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
 
 /**
- * A utility to access minecraft screens from ultralight views
+ * Referenced by JS as `ui`
  */
 object UltralightJsUi {
 
     // A collection of minecraft screens
-    private val screens = arrayOf(
+    private val _jsScreens = arrayOf(
         JsScreen("title", TitleScreen::class.java) { mc.openScreen(TitleScreen()) },
         JsScreen("singleplayer", SelectWorldScreen::class.java) { mc.openScreen(SelectWorldScreen(it)) },
         JsScreen("multiplayer", MultiplayerScreen::class.java) { mc.openScreen(MultiplayerScreen(it)) }
     )
 
-    fun get(name: String) = screens.find { it.name == name }
+    fun get(name: String) = _jsScreens.find { it.name == name }
+        ?: JsScreen("ultralight", EmptyScreen::class.java) {
+            val page = ThemeManager.page(name) ?: error("unknown custom page")
+            val emptyScreen = EmptyScreen()
+            UltralightEngine.newScreenView(emptyScreen, mc.currentScreen).apply {
+                loadPage(page)
+            }
+            mc.openScreen(emptyScreen)
+        }
 
     fun get(screen: Screen?) = get(screen?.javaClass)
 
-    fun get(clazz: Class<*>?) = screens.find { it.clazz == clazz }
+    fun get(clazz: Class<*>?) = _jsScreens.find { it.clazz == clazz }
 
     fun open(name: String, parent: Screen?) {
-        UltralightScreenHook.nextScreen = QueuedScreen(get(name)!!, parent)
+        UltralightScreenHook.nextScreen = QueuedScreen(get(name), parent)
     }
 
 }

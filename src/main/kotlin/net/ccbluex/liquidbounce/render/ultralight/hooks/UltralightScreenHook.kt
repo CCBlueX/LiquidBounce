@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.render.ultralight.hooks
 
-import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.screen.EmptyScreen
+import net.ccbluex.liquidbounce.render.ultralight.ScreenView
 import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.QueuedScreen
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsUi
@@ -36,8 +36,9 @@ object UltralightScreenHook : Listenable {
     /**
      * Check queue every game tick
      */
-    val tickHandler = handler<GameTickEvent> { event ->
-        val (screen, parent) = nextScreen ?: return@handler
+    fun update() {
+        val (screen, parent) = nextScreen ?: return
+
         // Making it null before opening is very important to make sure it doesn't repeat any further
         nextScreen = null
 
@@ -45,14 +46,26 @@ object UltralightScreenHook : Listenable {
         screen.open(parent)
     }
 
+    /**
+     * Handle opening new screens
+     */
     val screenHandler = handler<ScreenEvent> { event ->
-        val name = UltralightJsUi.get(event.screen)?.name ?: return@handler
+        val activeView = UltralightEngine.activeView
+        if (activeView is ScreenView) {
+            if (activeView.jsEvents._fireViewClose()) {
+                UltralightEngine.removeView(activeView)
+            }
+        }
+
+        val screen = event.screen ?: return@handler
+        val name = UltralightJsUi.get(screen)?.name ?: return@handler
         val page = ThemeManager.page(name) ?: return@handler
 
         val emptyScreen = EmptyScreen()
-        UltralightEngine.newScreenView(emptyScreen).apply {
+        UltralightEngine.newScreenView(emptyScreen, adaptedScreen = screen, parentScreen = mc.currentScreen).apply {
             loadPage(page)
         }
+
         mc.openScreen(emptyScreen)
         event.cancelEvent()
     }
