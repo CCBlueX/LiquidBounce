@@ -38,10 +38,12 @@ import org.lwjgl.glfw.GLFW
  */
 open class Module(
     name: String, // name parameter in configurable
-    @Exclude val category: Category, // module category
+    @Exclude(keepInternal = true)
+    val category: Category, // module category
     bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
     state: Boolean = false, // default state
-    @Exclude val disableActivation: Boolean = false, // disable activation
+    @Exclude(keepInternal = true)
+    val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false // default hide
 ) : Listenable, Configurable(name) {
 

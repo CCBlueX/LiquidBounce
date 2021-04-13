@@ -56,7 +56,7 @@ open class ChoiceConfigurable(
         }
     }
 
-    @Exclude
+    @Exclude(keepInternal = true)
     val choices: MutableList<Choice> = mutableListOf()
 
 }
