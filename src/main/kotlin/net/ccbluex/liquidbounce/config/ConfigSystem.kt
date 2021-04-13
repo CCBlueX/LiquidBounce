@@ -120,9 +120,7 @@ object ConfigSystem {
                     val currentElement = values[value.name] ?: continue
 
                     runCatching {
-                        if (value is ListenableConfigurable) {
-                            value.enabled = currentElement["enabled"].asBoolean
-                        } else if (value is ChoiceConfigurable) {
+                        if (value is ChoiceConfigurable) {
                             val newActive = currentElement["active"].asString
 
                             if (value.choices.any { it.name == newActive })
