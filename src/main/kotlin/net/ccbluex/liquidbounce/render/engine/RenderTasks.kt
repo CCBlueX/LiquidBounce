@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.render.engine
 
 import net.ccbluex.liquidbounce.utils.Mat4
 import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.nio.ByteBuffer
@@ -125,6 +126,7 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
     constructor(x: Double, y: Double, z: Double) : this(x.toFloat(), y.toFloat(), z.toFloat())
     constructor(vec: Vec3d) : this(vec.x, vec.y, vec.z)
     constructor(vec: Vec4) : this(vec.x, vec.y, vec.z)
+    constructor(vec: Vec3i) : this(vec.x.toFloat(), vec.y.toFloat(), vec.z.toFloat())
 
     fun writeToBuffer(idx: Int, buffer: ByteBuffer) {
         buffer.putFloat(idx, x)
@@ -190,6 +192,7 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     }
 
     constructor(color: Color) : this(color.red, color.green, color.blue, color.alpha)
+    constructor(r: Int, g: Int, b: Int) : this(r, g, b, 255)
 
     fun writeToBuffer(idx: Int, buffer: ByteBuffer) {
         buffer.put(idx, r.toByte())

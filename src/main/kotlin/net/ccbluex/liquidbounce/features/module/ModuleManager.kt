@@ -123,7 +123,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleAutoBreak,
             ModuleAutoArmor,
             ModuleInventoryCleaner,
-            ModuleChestStealer
+            ModuleChestStealer,
+            ModuleStorageESP
         )
 
         builtin.forEach(this::addModule)

@@ -36,7 +36,6 @@ object ListenableConfigurableSerializer : JsonSerializer<ListenableConfigurable>
         val obj = JsonObject()
 
         obj.addProperty("name", src.name)
-        obj.addProperty("enabled", src.enabled)
         obj.add("value", context.serialize(src.value))
 
         return obj

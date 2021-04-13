@@ -44,6 +44,9 @@ class EngineRenderEvent(val tickDelta: Float) : Event()
 @Nameable("overlayRender")
 class OverlayRenderEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
 
+@Nameable("postRenderWorld")
+class PostRenderWorldRenderEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
+
 // Input events
 
 @Nameable("inputHandle")

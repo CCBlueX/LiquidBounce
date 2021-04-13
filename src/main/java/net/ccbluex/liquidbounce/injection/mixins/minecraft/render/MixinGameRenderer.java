@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.PostRenderWorldRenderEvent;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
@@ -32,6 +34,9 @@ import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameRenderer.class)
 public abstract class MixinGameRenderer implements IMixinGameRenderer {
@@ -98,5 +103,10 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
         model.multiply(Matrix4f.translate(-(float) pos.x, -(float) pos.y, -(float) pos.z));
 
         return model;
+    }
+
+    @Inject(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z"))
+    private void injectPostWorldRenderEvent(float tickDelta, long limitTime, MatrixStack matrix, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new PostRenderWorldRenderEvent(matrix, tickDelta));
     }
 }
