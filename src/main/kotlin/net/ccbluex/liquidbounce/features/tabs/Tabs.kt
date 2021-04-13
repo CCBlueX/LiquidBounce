@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.tabs
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.decode
+import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.HttpUtils
 import net.ccbluex.liquidbounce.utils.extensions.asText
 import net.ccbluex.liquidbounce.utils.extensions.createItem
@@ -31,7 +31,6 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.collection.DefaultedList
 import java.util.*
-import kotlin.collections.HashMap
 
 /**
  * LiquidBounce Creative Tabs with useful items and blocks

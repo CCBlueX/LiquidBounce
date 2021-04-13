@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.Nameable
 import net.minecraft.block.BlockState
@@ -146,6 +147,9 @@ class ClientStartEvent : Event()
 
 @Nameable("clientShutdown")
 class ClientShutdownEvent : Event()
+
+@Nameable("valueChanged")
+class ValueChangedEvent(val value: Value<*>) : Event()
 
 @Nameable("toggleModule")
 class ToggleModuleEvent(val module: Module, val newState: Boolean) : Event()

@@ -16,49 +16,52 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module
+package net.ccbluex.liquidbounce.event
 
 import com.google.common.collect.Lists
 import kotlinx.coroutines.*
-import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.utils.logger
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-// Running sequences
-internal val sequences = Lists.newCopyOnWriteArrayList<Sequence<*>>()
-
 typealias SuspendableHandler<T> = suspend Sequence<T>.(T) -> Unit
 
-class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T, private var loop: Boolean = false) {
+object SequenceManager : Listenable {
+
+    // Running sequences
+    internal val sequences = Lists.newCopyOnWriteArrayList<Sequence<*>>()
+
+    /**
+     * Tick sequences
+     */
+    val entityTickHandler = handler<PlayerMovementTickEvent> {
+        for (sequence in sequences) {
+            sequence.tick()
+        }
+    }
+
+}
+
+open class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T) {
 
     private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
-        sequences += this@Sequence
-
-        if (!loop) {
-            handler(event)
-        } else {
-            sync()
-
-            while (loop) {
-                try {
-                    handler(event)
-                } catch (e: Exception) {
-                    System.err.println("Exception occurred during subroutine")
-
-                    e.printStackTrace()
-                }
-
-                sync()
-            }
-        }
-
-        sequences -= this@Sequence
+        SequenceManager.sequences += this@Sequence
+        coroutineRun()
+        SequenceManager.sequences -= this@Sequence
     }
 
     private var continuation: Continuation<Unit>? = null
     private var elapsedTicks = 0
     private var totalTicks: () -> Int = { 0 }
+
+    internal open suspend fun coroutineRun() {
+        runCatching {
+            handler(event)
+        }.onFailure {
+            logger.error("Exception occurred during subroutine", it)
+        }
+    }
 
     fun tick() {
         if (this.elapsedTicks < this.totalTicks()) {
@@ -82,7 +85,7 @@ class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T, priv
         suspendCoroutine<Unit> { continuation = it }
     }
 
-    private suspend fun sync() = wait(0)
+    internal suspend fun sync() = wait(0)
 
     suspend fun waitUntil(case: () -> Boolean) {
         while (!case()) {
@@ -90,8 +93,30 @@ class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T, priv
         }
     }
 
+}
+
+class DummyEvent : Event()
+
+class RepeatingSequence(handler: SuspendableHandler<DummyEvent>) : Sequence<DummyEvent>(handler, DummyEvent()) {
+
+    private var repeat = true
+
+    override suspend fun coroutineRun() {
+        sync()
+
+        while (repeat) {
+            runCatching {
+                handler(event)
+            }.onFailure {
+                logger.error("Exception occurred during subroutine", it)
+            }
+
+            sync()
+        }
+    }
+
     fun cancel() {
-        loop = false
+        repeat = false
     }
 
 }

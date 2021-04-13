@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.ArmorComparator
 import net.ccbluex.liquidbounce.utils.ArmorPiece
 import net.ccbluex.liquidbounce.utils.convertClientSlotToServerSlot

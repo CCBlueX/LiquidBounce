@@ -23,19 +23,20 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import java.lang.reflect.Type
 
-object ConfigurableSerializer : JsonSerializer<Configurable> {
+object ListenableConfigurableSerializer : JsonSerializer<ToggleableConfigurable> {
 
     override fun serialize(
-        src: Configurable,
+        src: ToggleableConfigurable,
         typeOfSrc: Type,
         context: JsonSerializationContext
     ): JsonElement {
         val obj = JsonObject()
 
         obj.addProperty("name", src.name)
+        obj.addProperty("enabled", src.enabled)
         obj.add("value", context.serialize(src.value))
 
         return obj

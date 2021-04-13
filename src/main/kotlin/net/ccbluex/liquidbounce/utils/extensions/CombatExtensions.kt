@@ -138,9 +138,6 @@ class EnemyConfigurable : Configurable("enemies") {
  */
 class RotationsConfigurable : Configurable("rotations") {
     val turnSpeed by curve("TurnSpeed", arrayOf(4f, 7f, 10f, 3f, 2f, 0.7f))
-
-    val outborderOffset = floatRange("Offset")
-
     val predict by boolean("Predict", true)
 }
 
@@ -162,7 +159,7 @@ class TargetTracker(defaultPriority: Priority = Priority.HEALTH) : Configurable(
     var possibleTargets: Array<Entity> = emptyArray()
     var lockedOnTarget: Entity? = null
 
-    val priority by enumChoice("Priority", defaultPriority, Priority.values())
+    val priority by enumChoice("Priority", PriorityEnum.HEALTH, PriorityEnum.values())
     val lockOnTarget by boolean("LockOnTarget", false)
     val sortOut by boolean("SortOut", true)
     val delayableSwitch by intRange("DelayableSwitch", 10..20, 0..40)
@@ -182,8 +179,8 @@ class TargetTracker(defaultPriority: Priority = Priority.HEALTH) : Configurable(
         // default
 
         when (priority) {
-            Priority.HEALTH -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health
-            Priority.DIRECTION -> entities.sortedBy {
+            PriorityEnum.HEALTH -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health
+            PriorityEnum.DIRECTION -> entities.sortedBy {
                 RotationManager.rotationDifference(
                     RotationManager.makeRotation(
                         eyePos,
@@ -191,7 +188,7 @@ class TargetTracker(defaultPriority: Priority = Priority.HEALTH) : Configurable(
                     )
                 )
             } // Sort by FOV
-            Priority.AGE -> entities.sortedBy { -it.age } // Sort by existence
+            PriorityEnum.AGE -> entities.sortedBy { -it.age } // Sort by existence
         }
 
         possibleTargets = entities.toTypedArray()
@@ -208,12 +205,13 @@ class TargetTracker(defaultPriority: Priority = Priority.HEALTH) : Configurable(
 
     override fun iterator() = possibleTargets.iterator()
 
-    enum class Priority(override val choiceName: String) : NamedChoice {
-        HEALTH("Health"),
-        DISTANCE("Distance"),
-        DIRECTION("Direction"),
-        AGE("Age");
-    }
+}
+
+enum class PriorityEnum(override val choiceName: String) : NamedChoice {
+    HEALTH("Health"),
+    DISTANCE("Distance"),
+    DIRECTION("Direction"),
+    AGE("Age")
 }
 
 /**
@@ -536,7 +534,7 @@ fun ClientWorld.findEnemy(
 
 fun raytraceEntity(range: Double, rotation: Rotation, filter: (Entity) -> Boolean): Entity? {
     val entity: Entity = mc.cameraEntity ?: return null
-    entity.rotationVector
+
     val cameraVec = entity.getCameraPosVec(1f)
     val rotationVec = rotation.rotationVec
 

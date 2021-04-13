@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.NoneChoice
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -80,7 +83,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     /**
      * Just some visuals.
      */
-    private object VisualsConfigurable : ListenableConfigurable(this, "Visuals", true) {
+    private object VisualsConfigurable : ToggleableConfigurable(this, "Visuals", true) {
 
         val critParticles by int("CritParticles", 1, 0..20)
         val magicParticles by int("MagicParticles", 0, 0..20)
