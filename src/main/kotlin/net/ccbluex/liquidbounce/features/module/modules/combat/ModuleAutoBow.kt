@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ListenableConfigurable
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.item.BowItem
@@ -33,10 +32,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import kotlin.math.atan
-import kotlin.math.atan2
-import kotlin.math.sqrt
-
+import kotlin.math.*
 
 /**
  * AutoBow module
@@ -62,6 +58,8 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                 if (player.itemUseTime < charged)
                     return@handler
 
+                println("gay")
+
                 // Send stop using item to server
                 network.sendPacket(
                     PlayerActionC2SPacket(
@@ -81,49 +79,99 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
     private object BowAimbotOptions : ListenableConfigurable(this, "BowAimbot", false) {
 
         // Target
-        val targetTracker = TargetTracker()
+        val targetTracker = TargetTracker(TargetTracker.Priority.DISTANCE)
 
         // Rotation
         val rotationConfigurable = RotationsConfigurable()
 
+        val predictSize by float("PredictionCofactor", 1.0f, 0.0f..1.5f)
+
+        init {
+            tree(targetTracker)
+            tree(rotationConfigurable)
+        }
+
         val tickRepeatable = handler<GameTickEvent> {
             targetTracker.update()
 
-            val world = world
+            targetTracker.lockedOnTarget = null
+
+            val world = mc.world ?: return@handler
             val player = player
+
+
+            // Should check if player is using bow
+            if (player.activeItem?.item !is BowItem)
+                return@handler
+
 
             val eyePos = player.eyesPos
 
             val target = targetTracker.firstOrNull() ?: return@handler
 
-            val rotation = faceBow(target.boundingBox.center.subtract(eyePos), FastChargeOptions.enabled)
+            var deltaPos = target.boundingBox.center.subtract(eyePos)
+
+            val basePrediction = predictBow(deltaPos, FastChargeOptions.enabled)
+
+            val v0 =
+                cos(Math.toRadians(basePrediction.rotation.pitch.toDouble())) * basePrediction.pullProgress * 3.0F * 0.7f
+            val ticksTravelled = (predictSize * basePrediction.travelledOnX) / v0 + 1.0f
+            val realTravelTime = getTravelTime(ticksTravelled, basePrediction.travelledOnX, v0)
+
+            if (!ticksTravelled.isNaN()) {
+                deltaPos = deltaPos.add(
+                    (target.x - target.prevX) * realTravelTime,
+                    (target.y - target.prevY) * realTravelTime,
+                    (target.z - target.prevZ) * realTravelTime,
+                )
+            }
+
+            val rotation = predictBow(deltaPos, FastChargeOptions.enabled).rotation
+
+            if (rotation.yaw.isNaN() || rotation.pitch.isNaN())
+                return@handler
+
+            player.yaw = rotation.yaw
+            player.pitch = rotation.pitch
 
             RotationManager.aimAt(rotation, configurable = rotationConfigurable)
         }
 
     }
 
+    val ONE_OVER_LN = 1 / ln(0.99)
+
+    fun getTravelTime(oldTickDelta: Double, dist: Double, v0: Double, iterations: Int = 10): Float {
+        return log((v0 / (ln(0.99)) + dist) / (v0 / (ln(0.99))), 0.99).toFloat()
+    }
+
     override fun disable() {
         BowAimbotOptions.targetTracker.cleanup()
     }
 
-    fun faceBow(target: Vec3d, assumeElongated: Boolean): Rotation {
+    fun predictBow(target: Vec3d, assumeElongated: Boolean): BowPredictionResult {
         val player = player
 
-        val posSqrt = sqrt(target.x * target.x + target.z * target.z)
+        val travelledOnX = sqrt(target.x * target.x + target.z * target.z)
 
-        var velocity = if (assumeElongated) 1f else player.itemUseTime / 20f
+        var velocity: Float = if (assumeElongated) 1f else player.itemUseTime / 20f
 
-        velocity = (velocity * velocity + velocity * 2) / 3
+        velocity = (velocity * velocity + velocity * 2.0f) / 3.0f
 
-        if (velocity > 1)
+        if (velocity > 1.0f)
             velocity = 1f
 
-        return Rotation(
-            (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f,
-            (-Math.toDegrees(atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (posSqrt * posSqrt) + 2 * target.y * (velocity * velocity)))) / (0.006f * posSqrt)).toDouble())).toFloat()
+        return BowPredictionResult(
+            Rotation(
+                (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f,
+                (-Math.toDegrees(Math.atan((velocity * velocity - Math.sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX)))).toFloat()
+            ),
+            velocity,
+            travelledOnX
         )
     }
+
+    class BowPredictionResult(val rotation: Rotation, val pullProgress: Float, val travelledOnX: Double)
 
     fun getRotationVector(pitch: Float, yaw: Float): Vec3 {
         val f = pitch * 0.017453292f
@@ -147,7 +195,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         val packets by int("Packets", 20, 3..20)
 
-        val tickRepeatable = repeatable {
+        val tickRepeatable = handler<GameTickEvent> {
             val currentItem = player.activeItem
 
             // Should accelerated game ticks when using bow
@@ -173,4 +221,5 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
     }
 
 }
+
 

@@ -157,12 +157,12 @@ class InventoryConstraintsConfigurable : Configurable("inventoryConstraints") {
 /**
  * A target tracker to choose the best enemy to attack
  */
-class TargetTracker : Configurable("target"), Iterable<Entity> {
+class TargetTracker(defaultPriority: Priority = Priority.HEALTH) : Configurable("target"), Iterable<Entity> {
 
     var possibleTargets: Array<Entity> = emptyArray()
     var lockedOnTarget: Entity? = null
 
-    val priority by enumChoice("Priority", Priority.HEALTH, Priority.values())
+    val priority by enumChoice("Priority", defaultPriority, Priority.values())
     val lockOnTarget by boolean("LockOnTarget", false)
     val sortOut by boolean("SortOut", true)
     val delayableSwitch by intRange("DelayableSwitch", 10..20, 0..40)
@@ -173,17 +173,16 @@ class TargetTracker : Configurable("target"), Iterable<Entity> {
     fun update(enemyConf: EnemyConfigurable = globalEnemyConfigurable) {
         possibleTargets = emptyArray()
 
-        val entities = mc.world!!.entities
+        val entities = (mc.world ?: return).entities
             .filter { it.shouldBeAttacked(enemyConf) }
+            .sortedBy { mc.player!!.squaredBoxedDistanceTo(it) } // Sort by distance
 
         val eyePos = mc.player!!.eyesPos
 
         // default
-        entities.sortedBy { -mc.player!!.boxedDistanceTo(it) } // Sort by distance
 
         when (priority) {
             Priority.HEALTH -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health
-            Priority.DISTANCE -> entities.sortedBy { it.squaredDistanceTo(mc.player) } // Sort by distance
             Priority.DIRECTION -> entities.sortedBy {
                 RotationManager.rotationDifference(
                     RotationManager.makeRotation(

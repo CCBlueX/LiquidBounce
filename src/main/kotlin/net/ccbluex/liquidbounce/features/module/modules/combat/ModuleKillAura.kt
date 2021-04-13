@@ -23,7 +23,10 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.repeatable
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.RotationManager
+import net.ccbluex.liquidbounce.utils.extensions.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.extensions.TargetTracker
+import net.ccbluex.liquidbounce.utils.extensions.eyesPos
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.util.Hand
@@ -81,9 +84,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         // todo: add predict to eyes
 
+        val rangeSquared = range * range
+
         targetTracker.lockedOnTarget = null
+
         for (target in targetTracker) {
-            if (target.boxedDistanceTo(player) > range)
+            if (target.squaredDistanceTo(player) > rangeSquared)
                 continue
 
             val box = target.boundingBox
@@ -103,8 +109,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         val target = targetTracker.lockedOnTarget ?: return
 
-        if (target.boxedDistanceTo(player) <= range && RotationManager.facingEnemy(target, range.toDouble())
-            && player.getAttackCooldownProgress(0.0f) >= 1.0f) {
+        if (target.squaredDistanceTo(player) <= rangeSquared && RotationManager.facingEnemy(target, range.toDouble())
+            && player.getAttackCooldownProgress(0.0f) >= 1.0f
+        ) {
             attackEntity(target)
         }
     }

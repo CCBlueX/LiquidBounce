@@ -48,6 +48,10 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     private val inventoryConstraints = InventoryConstraintsConfigurable()
     private val hotbar by boolean("Hotbar", true)
 
+    init {
+        tree(inventoryConstraints)
+    }
+
     var locked = false
 
     val repeatable = repeatable {

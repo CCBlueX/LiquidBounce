@@ -60,7 +60,7 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
     }
 
     override fun disable() {
-        player.noClip = false
+        mc.player?.noClip = false
     }
 
 }

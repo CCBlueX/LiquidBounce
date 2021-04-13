@@ -23,7 +23,6 @@ import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.adapter.*
 import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.ListenableConfigurable
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.logger
@@ -62,7 +61,7 @@ object ConfigSystem {
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
-        .registerTypeHierarchyAdapter(ListenableConfigurable::class.javaObjectType, ListenableConfigurableSerializer)
+        .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer)
         .create()
 
     /**

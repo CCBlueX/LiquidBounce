@@ -47,7 +47,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         }
 
         override fun disable() {
-            player.abilities.flying = false
+            mc.player?.abilities?.flying = false
         }
 
     }
