@@ -1,5 +1,5 @@
 <script>
-    import { fly } from "svelte/transition";
+    import {fly} from "svelte/transition";
     import Category from "./Category.svelte";
     import Module from "./Module.svelte";
 
@@ -111,8 +111,8 @@
     }
 
     try {
-        client.on("key", handleKeydown);
-        client.on("toggleModule", handleToggleModule);
+        events.on("key", handleKeydown);
+        events.on("toggleModule", handleToggleModule);
     } catch (err) {
         window.addEventListener("keydown", handleKeydown);
         console.log(err);

@@ -1,6 +1,6 @@
 <script>
-    import { flip } from "svelte/animate";
-    import { fly } from "svelte/transition";
+    import {flip} from "svelte/animate";
+    import {fly} from "svelte/transition";
     import Module from "./Module.svelte";
 
     function getTextWidth(s) {
@@ -53,7 +53,7 @@
     }
 
     try {
-        client.on("toggleModule", handleToggleModule);
+        events.on("toggleModule", handleToggleModule);
     } catch (err) {
         console.log(err);
     }

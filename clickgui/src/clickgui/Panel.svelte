@@ -1,6 +1,6 @@
 <script>
-    import { sineInOut } from "svelte/easing";
-    import { slide } from "svelte/transition";
+    import {sineInOut} from "svelte/easing";
+    import {slide} from "svelte/transition";
     import Module from "./Module.svelte";
 
     export let category;
@@ -64,7 +64,7 @@
     }
 
     try {
-        client.on("toggleModule", handleToggleModule);
+        events.on("toggleModule", handleToggleModule);
     } catch (err) {
         console.log(err);
     }

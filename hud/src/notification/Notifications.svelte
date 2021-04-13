@@ -1,6 +1,6 @@
 <script>
-    import { flip } from "svelte/animate";
-    import { fly } from "svelte/transition";
+    import {flip} from "svelte/animate";
+    import {fly} from "svelte/transition";
     import Notification from "./Notification.svelte";
 
     let notifications = [];
@@ -14,7 +14,7 @@
     }
 
     try {
-        client.on("notification", event => {
+        events.on("notification", event => {
             addNotification(event.getTitle(), event.getMessage(), event.getSeverity());
         });
     } catch (err) {
