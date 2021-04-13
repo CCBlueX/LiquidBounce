@@ -35,15 +35,16 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package net.ccbluex.liquidbounce.render.ultralight.input
+package net.ccbluex.liquidbounce.render.ultralight.glfw
 
 import com.labymedia.ultralight.input.UltralightCursor
+import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import org.lwjgl.glfw.GLFW
 
 /**
  * Utility class for controlling GLFW cursors.
  */
-class CursorAdapter(private val window: Long) {
+class GlfwCursorAdapter {
 
     private val beamCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_IBEAM_CURSOR)
     private val crosshairCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_CROSSHAIR_CURSOR)
@@ -52,25 +53,24 @@ class CursorAdapter(private val window: Long) {
     private val vresizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR)
 
     /**
-     * Signals this [CursorAdapter] that the cursor has been updated and needs to be updated on the GLFW side
+     * Signals this [GlfwCursorAdapter] that the cursor has been updated and needs to be updated on the GLFW side
      * too.
      *
      * @param cursor The new [UltralightCursor] to display
      */
     fun notifyCursorUpdated(cursor: UltralightCursor?) {
         when (cursor) {
-            UltralightCursor.CROSS -> GLFW.glfwSetCursor(window, crosshairCursor)
-            UltralightCursor.HAND -> GLFW.glfwSetCursor(window, handCursor)
-            UltralightCursor.I_BEAM -> GLFW.glfwSetCursor(window, beamCursor)
-            UltralightCursor.EAST_WEST_RESIZE -> GLFW.glfwSetCursor(window, hresizeCursor)
-            UltralightCursor.NORTH_SOUTH_RESIZE -> GLFW.glfwSetCursor(window, vresizeCursor)
-            else ->                 // No matching GLFW cursor
-                GLFW.glfwSetCursor(window, 0)
+            UltralightCursor.CROSS -> GLFW.glfwSetCursor(UltralightEngine.window, crosshairCursor)
+            UltralightCursor.HAND -> GLFW.glfwSetCursor(UltralightEngine.window, handCursor)
+            UltralightCursor.I_BEAM -> GLFW.glfwSetCursor(UltralightEngine.window, beamCursor)
+            UltralightCursor.EAST_WEST_RESIZE -> GLFW.glfwSetCursor(UltralightEngine.window, hresizeCursor)
+            UltralightCursor.NORTH_SOUTH_RESIZE -> GLFW.glfwSetCursor(UltralightEngine.window, vresizeCursor)
+            else -> GLFW.glfwSetCursor(UltralightEngine.window, 0)
         }
     }
 
     /**
-     * Frees GLFW resources allocated by this [CursorAdapter].
+     * Frees GLFW resources allocated by this [GlfwCursorAdapter].
      */
     fun cleanup() {
         GLFW.glfwDestroyCursor(vresizeCursor)

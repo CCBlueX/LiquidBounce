@@ -35,23 +35,37 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package net.ccbluex.liquidbounce.render.ultralight.listener
+package net.ccbluex.liquidbounce.render.ultralight.glfw
 
-import com.labymedia.ultralight.plugin.logging.UltralightLogLevel
-import com.labymedia.ultralight.plugin.logging.UltralightLogger
-import net.ccbluex.liquidbounce.utils.logger
+import com.labymedia.ultralight.plugin.clipboard.UltralightClipboard
+import org.lwjgl.glfw.GLFW
 
 /**
- * Implementation of a logger
+ * Clipboard using GLFW
  */
-class ViewLogger : UltralightLogger {
+class GlfwClipboardAdapter : UltralightClipboard {
 
-    override fun logMessage(level: UltralightLogLevel, message: String) {
-        when (level) {
-            UltralightLogLevel.ERROR -> logger.debug("[Ultralight/ERR] $message")
-            UltralightLogLevel.WARNING -> logger.debug("[Ultralight/WARN] $message")
-            UltralightLogLevel.INFO -> logger.debug("[Ultralight/INFO] $message")
-        }
+    /**
+     * This is called by Ultralight when the clipboard is requested as a string.
+     *
+     * @return The clipboard content as a string
+     */
+    override fun readPlainText() = GLFW.glfwGetClipboardString(0)!!
+
+    /**
+     * This is called by Ultralight when the clipboard content should be overwritten.
+     *
+     * @param text The plain text to write to the clipboard
+     */
+    override fun writePlainText(text: String) {
+        GLFW.glfwSetClipboardString(0, text)
+    }
+
+    /**
+     * This is called by Ultralight when the clipboard should be cleared.
+     */
+    override fun clear() {
+        GLFW.glfwSetClipboardString(0, "")
     }
 
 }
