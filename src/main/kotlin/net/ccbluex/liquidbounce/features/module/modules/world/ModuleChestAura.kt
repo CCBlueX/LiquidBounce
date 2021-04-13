@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.*
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
@@ -47,7 +47,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
     private val throughWalls by boolean("ThroughWalls", false)
 
 
-    private object AwaitContainerOptions : ListenableConfigurable(this, "AwaitContainer", true) {
+    private object AwaitContainerOptions : ToggleableConfigurable(this, "AwaitContainer", true) {
         val timeout by int("Timeout", 10, 1..80)
         val maxRetrys by int("MaxRetries", 4, 1..10)
     }

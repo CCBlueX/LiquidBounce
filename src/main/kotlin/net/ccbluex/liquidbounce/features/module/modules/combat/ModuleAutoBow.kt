@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -57,7 +57,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             if (currentItem?.item is BowItem) {
                 // Wait until bow is fully charged
                 if (player.itemUseTime < charged)
-                    return@handler
+                    return@repeatable
 
                 println("gay")
 
@@ -80,7 +80,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
     private object BowAimbotOptions : ToggleableConfigurable(this, "BowAimbot", false) {
 
         // Target
-        val targetTracker = TargetTracker(TargetTracker.Priority.DISTANCE)
+        val targetTracker = TargetTracker(PriorityEnum.DISTANCE)
 
         // Rotation
         val rotationConfigurable = RotationsConfigurable()

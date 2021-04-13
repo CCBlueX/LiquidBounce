@@ -154,7 +154,7 @@ class InventoryConstraintsConfigurable : Configurable("inventoryConstraints") {
 /**
  * A target tracker to choose the best enemy to attack
  */
-class TargetTracker(defaultPriority: Priority = Priority.HEALTH) : Configurable("target"), Iterable<Entity> {
+class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Configurable("target"), Iterable<Entity> {
 
     var possibleTargets: Array<Entity> = emptyArray()
     var lockedOnTarget: Entity? = null
