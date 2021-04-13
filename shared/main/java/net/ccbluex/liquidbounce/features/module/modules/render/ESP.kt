@@ -153,8 +153,8 @@ class ESP : Module() {
             //search entities
             val entityMap = HashMap<Color, ArrayList<IEntity>>()
             for (entity in mc.theWorld!!.loadedEntityList) {
-                if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
                 if (!EntityUtils.isSelected(entity, false)) continue
+                if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
                 //can draw
                 val color = getColor(entity)
                 if (!entityMap.containsKey(color)) {
