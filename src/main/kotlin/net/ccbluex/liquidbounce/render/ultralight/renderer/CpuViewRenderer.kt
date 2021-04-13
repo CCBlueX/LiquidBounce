@@ -105,7 +105,7 @@ class CpuViewRenderer : ViewRenderer {
         }
 
         // Set up the OpenGL state for rendering of a fullscreen quad
-        glPushAttrib(GL_ENABLE_BIT or GL_COLOR_BUFFER_BIT or GL_TRANSFORM_BIT)
+        glPushAttrib(GL_ENABLE_BIT or GL_COLOR_BUFFER_BIT or GL_TRANSFORM_BIT or GL_TEXTURE_BIT)
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()
         glLoadIdentity()
