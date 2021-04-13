@@ -17,12 +17,13 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config
+package net.ccbluex.liquidbounce.config.adapter
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import net.ccbluex.liquidbounce.config.Value
 import java.lang.reflect.Type
 
 object ValueSerializationAdapter : JsonSerializer<Value<*>> {

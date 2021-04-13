@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket

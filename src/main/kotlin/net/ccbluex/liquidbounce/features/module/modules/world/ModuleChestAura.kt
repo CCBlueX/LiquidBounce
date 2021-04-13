@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.sequenceHandler
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks

@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ListenableConfigurable
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 import net.minecraft.item.BowItem
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -39,7 +39,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
     /**
      * Automatically shoots with your bow when you aim correctly at an enemy or when the bow is fully charged.
      */
-    private object AutoShootOptions : ListenableConfigurable(this, "AutoShoot", true) {
+    private object AutoShootOptions : ToggleableConfigurable(this, "AutoShoot", true) {
 
         val charged by int("Charged", 20, 3..20)
 
@@ -63,7 +63,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
     /**
      * Bow aimbot automatically aims at enemy targets
      */
-    private object BowAimbotOptions : ListenableConfigurable(this, "BowAimbot", false) {
+    private object BowAimbotOptions : ToggleableConfigurable(this, "BowAimbot", false) {
 
         val tickRepeatable = repeatable {
 
@@ -77,7 +77,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
      *
      * TODO: Add version specific options
      */
-    private object FastChargeOptions : ListenableConfigurable(this, "FastCharge", true) {
+    private object FastChargeOptions : ToggleableConfigurable(this, "FastCharge", true) {
 
         val packets by int("Packets", 20, 3..20)
 

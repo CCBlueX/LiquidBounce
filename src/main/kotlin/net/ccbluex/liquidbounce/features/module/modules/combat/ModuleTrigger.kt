@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.extensions.shouldBeAttacked
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.EntityHitResult

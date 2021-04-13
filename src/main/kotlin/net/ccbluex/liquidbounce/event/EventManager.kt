@@ -50,6 +50,10 @@ object EventManager {
         NotificationEvent::class,
     ).map { Pair(it.findAnnotation<Nameable>()!!.name, it) }
 
+    init {
+        SequenceManager
+    }
+
     /**
      * Registers an event hook for events of type [T]
      */

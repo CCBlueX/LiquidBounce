@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config
+package net.ccbluex.liquidbounce.config.util
 
 import com.google.gson.ExclusionStrategy
 import com.google.gson.FieldAttributes

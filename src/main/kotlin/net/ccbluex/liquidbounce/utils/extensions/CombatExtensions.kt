@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -131,9 +132,6 @@ class EnemyConfigurable : Configurable("enemies") {
  */
 class RotationsConfigurable : Configurable("rotations") {
     val turnSpeed by curve("TurnSpeed", arrayOf(4f, 7f, 10f, 3f, 2f, 0.7f))
-
-    val outborderOffset = floatRange("Offset")
-
     val predict by boolean("Predict", true)
 }
 
@@ -155,7 +153,7 @@ class TargetTracker : Configurable("target"), Iterable<Entity> {
     var possibleTargets: Array<Entity> = emptyArray()
     var lockedOnTarget: Entity? = null
 
-    val priority by chooseList("Priority", "Health", arrayOf("Health", "Distance", "Direction", "Age"))
+    val priority by enumChoice("Priority", PriorityEnum.HEALTH, PriorityEnum.values())
     val lockOnTarget by boolean("LockOnTarget", false)
     val sortOut by boolean("SortOut", true)
     val delayableSwitch by intRange("DelayableSwitch", 10..20, 0..40)
@@ -171,10 +169,11 @@ class TargetTracker : Configurable("target"), Iterable<Entity> {
 
         // default
         entities.sortedBy { -mc.player!!.boxedDistanceTo(it) } // Sort by distance
-        when {
-            priority.equals("health", true) -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health
-            // priority.equals("direction", true) -> entities.sortedBy { RotationUtils.getRotationDifference(it) } // Sort by FOV
-            priority.equals("age", true) -> entities.sortedBy { -it.age } // Sort by existence
+        when(priority) {
+            PriorityEnum.HEALTH -> entities.sortedBy { if (it is LivingEntity) it.health else 0f }
+            PriorityEnum.DISTANCE -> TODO()
+            PriorityEnum.DIRECTION -> TODO() // entities.sortedBy { RotationManager.rotationDifference(it.boundingBox.center) } // Sort by FOV
+            PriorityEnum.AGE -> entities.sortedBy { -it.age }
         }
 
         possibleTargets = entities.toTypedArray()
@@ -191,6 +190,13 @@ class TargetTracker : Configurable("target"), Iterable<Entity> {
 
     override fun iterator() = possibleTargets.iterator()
 
+}
+
+enum class PriorityEnum(override val choiceName: String) : NamedChoice {
+    HEALTH("Health"),
+    DISTANCE("Distance"),
+    DIRECTION("Direction"),
+    AGE("Age")
 }
 
 /**

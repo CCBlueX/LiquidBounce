@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBreadcrumbs
-import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.render.engine.*
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.minecraft.client.network.OtherClientPlayerEntity

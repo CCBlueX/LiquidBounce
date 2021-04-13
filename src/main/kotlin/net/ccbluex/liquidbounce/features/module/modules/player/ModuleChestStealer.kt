@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.screen.slot.SlotActionType
 

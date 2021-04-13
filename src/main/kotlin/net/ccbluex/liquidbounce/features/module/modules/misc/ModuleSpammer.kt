@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 import org.apache.commons.lang3.RandomStringUtils
 import kotlin.random.Random
 

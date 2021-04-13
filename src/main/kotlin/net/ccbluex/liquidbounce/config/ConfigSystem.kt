@@ -22,8 +22,7 @@ import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.adapter.*
-import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.ListenableConfigurable
+import net.ccbluex.liquidbounce.config.util.ExcludeStrategy
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.logger
@@ -62,7 +61,7 @@ object ConfigSystem {
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
-        .registerTypeHierarchyAdapter(ListenableConfigurable::class.javaObjectType, ListenableConfigurableSerializer)
+        .registerTypeHierarchyAdapter(ToggleableConfigurable::class.javaObjectType, ListenableConfigurableSerializer)
         .create()
 
     /**
@@ -70,13 +69,14 @@ object ConfigSystem {
      */
     fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()) {
         @Suppress("UNCHECKED_CAST")
-        configurables.add(Configurable(name, tree as MutableList<Value<*>>))
+        root(Configurable(name, tree as MutableList<Value<*>>))
     }
 
     /**
      * Add a root configurable
      */
     fun root(configurable: Configurable) {
+        configurable.initConfigurable()
         configurables.add(configurable)
     }
 
@@ -120,7 +120,7 @@ object ConfigSystem {
                     val currentElement = values[value.name] ?: continue
 
                     runCatching {
-                        if (value is ListenableConfigurable) {
+                        if (value is ToggleableConfigurable) {
                             value.enabled = currentElement["enabled"].asBoolean
                         } else if (value is ChoiceConfigurable) {
                             val newActive = currentElement["active"].asString
