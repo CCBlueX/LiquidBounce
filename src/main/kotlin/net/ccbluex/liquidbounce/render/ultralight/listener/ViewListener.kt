@@ -43,10 +43,10 @@ import com.labymedia.ultralight.math.IntRect
 import com.labymedia.ultralight.plugin.view.MessageLevel
 import com.labymedia.ultralight.plugin.view.MessageSource
 import com.labymedia.ultralight.plugin.view.UltralightViewListener
-import net.ccbluex.liquidbounce.render.ultralight.input.CursorAdapter
+import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.utils.logger
 
-class ViewListener(private val cursorManager: CursorAdapter) : UltralightViewListener {
+class ViewListener : UltralightViewListener {
 
     /**
      * Called by Ultralight when the page title changes.
@@ -78,7 +78,7 @@ class ViewListener(private val cursorManager: CursorAdapter) : UltralightViewLis
      * @param cursor The new page cursor
      */
     override fun onChangeCursor(cursor: UltralightCursor) {
-        cursorManager.notifyCursorUpdated(cursor)
+        UltralightEngine.cursorAdapter.notifyCursorUpdated(cursor)
     }
 
     /**

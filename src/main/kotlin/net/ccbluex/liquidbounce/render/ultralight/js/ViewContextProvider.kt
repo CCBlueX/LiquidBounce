@@ -35,37 +35,30 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package net.ccbluex.liquidbounce.render.ultralight.input
+package net.ccbluex.liquidbounce.render.ultralight.js
 
-import com.labymedia.ultralight.plugin.clipboard.UltralightClipboard
-import org.lwjgl.glfw.GLFW
+import com.labymedia.ultralight.UltralightView
+import com.labymedia.ultralight.databind.context.ContextProvider
+import com.labymedia.ultralight.databind.context.ContextProviderFactory
+import com.labymedia.ultralight.javascript.JavascriptContextLock
+import com.labymedia.ultralight.javascript.JavascriptValue
+import java.util.function.Consumer
 
 /**
- * Clipboard using GLFW
+ * This class is used in case Ultralight needs a Javascript context.
  */
-class ClipboardAdapter : UltralightClipboard {
+class ViewContextProvider(private val view: UltralightView) : ContextProvider {
 
-    /**
-     * This is called by Ultralight when the clipboard is requested as a string.
-     *
-     * @return The clipboard content as a string
-     */
-    override fun readPlainText() = GLFW.glfwGetClipboardString(0)!!
-
-    /**
-     * This is called by Ultralight when the clipboard content should be overwritten.
-     *
-     * @param text The plain text to write to the clipboard
-     */
-    override fun writePlainText(text: String) {
-        GLFW.glfwSetClipboardString(0, text)
+    override fun syncWithJavascript(callback: Consumer<JavascriptContextLock>) {
+        view.lockJavascriptContext().use { lock -> callback.accept(lock) }
     }
 
-    /**
-     * This is called by Ultralight when the clipboard should be cleared.
-     */
-    override fun clear() {
-        GLFW.glfwSetClipboardString(0, "")
-    }
+    class Factory(private val view: UltralightView) : ContextProviderFactory {
 
+        override fun bindProvider(value: JavascriptValue): ContextProvider {
+            // We only have one view, so we can ignore the value.
+            // Else use the formula pointed at above to find a view for a given value.
+            return ViewContextProvider(view)
+        }
+    }
 }

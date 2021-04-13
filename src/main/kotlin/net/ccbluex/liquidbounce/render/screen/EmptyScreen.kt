@@ -16,25 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.render.screen
 
-package net.ccbluex.liquidbounce.features.module.modules.render
+import net.ccbluex.liquidbounce.utils.extensions.asText
+import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.text.Text
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.screen.EmptyScreen
-import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
+class EmptyScreen(title: Text = "".asText()) : Screen(title) {
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
-
-    override fun enable() {
-        val page = ThemeManager.page("clickgui") ?: error("unable to find clickgui page in current theme")
-
-        val emptyScreen = EmptyScreen()
-        UltralightEngine.newScreenView(emptyScreen).apply {
-            loadPage(page)
-        }
-        mc.openScreen(emptyScreen)
+    override fun init() {
+        // init nothing
     }
+
+    override fun render(matrices: MatrixStack?, mouseX: Int, mouseY: Int, delta: Float) {
+        // render nothing
+    }
+
 
 }

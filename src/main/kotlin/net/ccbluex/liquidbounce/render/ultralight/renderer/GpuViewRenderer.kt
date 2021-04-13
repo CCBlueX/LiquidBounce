@@ -16,23 +16,28 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.render.ultralight.renderer
 
-package net.ccbluex.liquidbounce.render.ultralight.bindings
-
-import net.ccbluex.liquidbounce.utils.extensions.loginAltening
-import net.ccbluex.liquidbounce.utils.extensions.loginCracked
-import net.ccbluex.liquidbounce.utils.extensions.loginMojang
-import net.ccbluex.liquidbounce.utils.mc
+import com.labymedia.ultralight.UltralightView
+import com.labymedia.ultralight.config.UltralightViewConfig
 
 /**
- * Access session service from Ultralight
+ * A gpu view renderer
+ *
+ * todo: not yet implemented
  */
-object UltralightJsSessionService {
+class GpuViewRenderer : ViewRenderer {
 
-    fun loginCracked(username: String) = mc.sessionService.loginCracked(username).readable
+    override fun setupConfig(viewConfig: UltralightViewConfig) {
+        viewConfig.isAccelerated(true)
+    }
 
-    fun loginMojang(email: String, password: String) = mc.sessionService.loginMojang(email, password).readable
+    override fun render(view: UltralightView) {
+        TODO("Not yet implemented")
+    }
 
-    fun loginAltening(token: String) = mc.sessionService.loginAltening(token).readable
+    override fun delete() {
+        TODO("Not yet implemented")
+    }
 
 }

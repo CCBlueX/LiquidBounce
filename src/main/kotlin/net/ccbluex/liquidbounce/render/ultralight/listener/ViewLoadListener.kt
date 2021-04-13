@@ -38,12 +38,11 @@
 package net.ccbluex.liquidbounce.render.ultralight.listener
 
 import com.labymedia.ultralight.plugin.loading.UltralightLoadListener
-import net.ccbluex.liquidbounce.render.ultralight.WebView
-import net.ccbluex.liquidbounce.render.ultralight.bindings.UltralightJsUi
+import net.ccbluex.liquidbounce.render.ultralight.View
+import net.ccbluex.liquidbounce.render.ultralight.js.ContextSetup
 import net.ccbluex.liquidbounce.utils.logger
-import net.ccbluex.liquidbounce.utils.mc
 
-class ViewLoadListener(private val webView: WebView) : UltralightLoadListener {
+class ViewLoadListener(private val view: View) : UltralightLoadListener {
 
     /**
      * Helper function to construct a name for a frame from a given set of parameters.
@@ -107,35 +106,9 @@ class ViewLoadListener(private val webView: WebView) : UltralightLoadListener {
      * @param url         The url that the frame currently contains
      */
     override fun onWindowObjectReady(frameId: Long, isMainFrame: Boolean, url: String) {
-        webView.lockWebView {
-            it.lockJavascriptContext().use { lock ->
-                val context = lock.context
-                val globalContext = context.globalContext
-                val globalObject = globalContext.globalObject
-
-                globalObject.setProperty(
-                    "client",
-                    webView.databind.conversionUtils.toJavascript(context, webView.jsWrapper), 0
-                )
-
-                // todo: minecraft has to be remapped
-                globalObject.setProperty(
-                    "minecraft",
-                    webView.databind.conversionUtils.toJavascript(context, mc), 0
-                )
-
-                globalObject.setProperty(
-                    "ui",
-                    webView.databind.conversionUtils.toJavascript(context, UltralightJsUi), 0
-                )
-
-                if (webView.screen != null) {
-                    globalObject.setProperty(
-                        "screen",
-                        webView.databind.conversionUtils.toJavascript(context, webView.screen), 0
-                    )
-                }
-            }
+        view.ultralightView.lockJavascriptContext().use { lock ->
+            val context = lock.context
+            ContextSetup.setupContext(view, context)
         }
     }
 
