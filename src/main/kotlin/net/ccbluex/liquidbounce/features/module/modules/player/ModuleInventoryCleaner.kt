@@ -92,8 +92,6 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             return@repeatable
 
         if (ModuleAutoArmor.locked) {
-            chat("AutoArmor locked")
-
             return@repeatable
         }
 

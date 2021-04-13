@@ -63,6 +63,10 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
             null
         }
 
+        val total = filteredEntities.size.toFloat()
+        val delta = 0.5f / filteredEntities.size.toFloat()
+        var currIdx = 0
+
         for (entity in filteredEntities) {
             val tag = if (clearNamesValue)
                 entity.displayName.asTruncatedString(100)?.stripMinecraftColorCodes() ?: continue
@@ -118,7 +122,9 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
 
             val xWithoutAspectRatio = vec.x * factor
 
-            val screenSpaceVec = Vec3(xWithoutAspectRatio * aspectRatio, -vec.y * factor, 0.0f)
+            val currZ = -(currIdx.toFloat() / total)
+
+            val screenSpaceVec = Vec3(xWithoutAspectRatio * aspectRatio, -vec.y * factor, currZ)
 
             renderTask.rect(
                 screenSpaceVec + p1 * scale,
@@ -138,7 +144,8 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                 screenSpaceVec.y - fontRenderer.height / 2.0f * scale,
                 Color4b.WHITE,
                 true,
-                scale = scale
+                scale = scale,
+                z = currZ - delta
             )
 
             if (armorValue && entity is PlayerEntity) {
@@ -165,6 +172,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                 )
             }
 
+            currIdx++
         }
 
         RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, renderTask)

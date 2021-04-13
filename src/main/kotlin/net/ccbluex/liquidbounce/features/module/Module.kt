@@ -244,11 +244,7 @@ inline fun <reified T : Event> Listenable.sequenceHandler(
  * Registers a repeatable sequence which continues to execute until the module is turned off
  */
 fun Module.repeatable(eventHandler: SuspendableHandler<ToggleModuleEvent>) {
-    var sequence: Sequence<ToggleModuleEvent>? = if ((hook() as Module).enabled) Sequence(
-        eventHandler,
-        ToggleModuleEvent(hook() as Module, true),
-        loop = true
-    ) else null
+    var sequence: Sequence<ToggleModuleEvent>? = null
 
     handler<ToggleModuleEvent>(ignoreCondition = true) { event ->
         if (event.module == hook()) {

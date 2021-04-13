@@ -61,6 +61,10 @@ open class Value<T : Any>(
     operator fun getValue(u: Any?, property: KProperty<*>) = value
 
     operator fun setValue(u: Any?, property: KProperty<*>, t: T) {
+        setValue(t)
+    }
+
+    fun setValue(t: T) {
         // Just throw out a error to keep the old value
         runCatching {
             change(value, t)
@@ -72,13 +76,15 @@ open class Value<T : Any>(
     open fun deserializeFrom(gson: Gson, element: JsonElement) {
         val currValue = this.value
 
-        this.value = if (currValue is List<*>) {
-            element.asJsonArray.mapTo(
-                mutableListOf(),
-                { gson.fromJson(it, this.listType.type!!) }) as T
-        } else {
-            gson.fromJson(element, currValue.javaClass)
-        }
+        this.setValue(
+            if (currValue is List<*>) {
+                element.asJsonArray.mapTo(
+                    mutableListOf(),
+                    { gson.fromJson(it, this.listType.type!!) }) as T
+            } else {
+                gson.fromJson(element, currValue.javaClass)
+            }
+        )
     }
 
 }
@@ -149,23 +155,39 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
     protected fun <T : Any> value(name: String, default: T, change: (T, T) -> Unit = { _, _ -> }) =
         Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun boolean(name: String, default: Boolean = false, change: (Boolean, Boolean) -> Unit = { _, _ -> })
-        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    protected fun boolean(name: String, default: Boolean = false, change: (Boolean, Boolean) -> Unit = { _, _ -> }) =
+        Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun float(name: String, default: Float = 1.0f,  range: ClosedFloatingPointRange<Float> = 0.0f..default, change: (Float, Float) -> Unit = { _, _ -> })
-        = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
+    protected fun float(
+        name: String,
+        default: Float = 1.0f,
+        range: ClosedFloatingPointRange<Float> = 0.0f..default,
+        change: (Float, Float) -> Unit = { _, _ -> }
+    ) = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun floatRange(name: String, default: ClosedFloatingPointRange<Float> = 0.0f..1.0f, range: ClosedFloatingPointRange<Float> = default, change: (ClosedFloatingPointRange<Float>, ClosedFloatingPointRange<Float>) -> Unit = { _, _ -> })
-        = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
+    protected fun floatRange(
+        name: String,
+        default: ClosedFloatingPointRange<Float> = 0.0f..1.0f,
+        range: ClosedFloatingPointRange<Float> = default,
+        change: (ClosedFloatingPointRange<Float>, ClosedFloatingPointRange<Float>) -> Unit = { _, _ -> }
+    ) = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun int(name: String, default: Int = 1, range: IntRange = 0..default, change: (Int, Int) -> Unit = { _, _ -> })
-        = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
+    protected fun int(
+        name: String,
+        default: Int = 1,
+        range: IntRange = 0..default,
+        change: (Int, Int) -> Unit = { _, _ -> }
+    ) = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun intRange(name: String, default: IntRange = 0..1, range: IntRange = default, change: (IntRange, IntRange) -> Unit = { _, _ -> })
-        = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
+    protected fun intRange(
+        name: String,
+        default: IntRange = 0..1,
+        range: IntRange = default,
+        change: (IntRange, IntRange) -> Unit = { _, _ -> }
+    ) = RangedValue(name, value = default, range = range, change = change).apply { this@Configurable.value.add(this) }
 
-    protected fun text(name: String, default: String = "", change: (String, String) -> Unit = { _, _ -> })
-        = Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
+    protected fun text(name: String, default: String = "", change: (String, String) -> Unit = { _, _ -> }) =
+        Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
     protected fun textArray(
         name: String,
@@ -178,10 +200,23 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         listType = ListValueType.String
     ).apply { this@Configurable.value.add(this) }
 
-    protected fun chooseList(name: String, default: String, array: Array<String>, change: (String, String) -> Unit = { _, _ -> })
-        = ChooseListValue(name, selected = default, selectables = array, change = change).apply { this@Configurable.value.add(this) }
+    protected fun chooseList(
+        name: String,
+        default: String,
+        array: Array<String>,
+        change: (String, String) -> Unit = { _, _ -> }
+    ) = ChooseListValue(
+        name,
+        selected = default,
+        selectables = array,
+        change = change
+    ).apply { this@Configurable.value.add(this) }
 
-    protected fun curve(name: String, default: Array<Float>, change: (Array<Float>, Array<Float>) -> Unit = { _, _ -> }) =
+    protected fun curve(
+        name: String,
+        default: Array<Float>,
+        change: (Array<Float>, Array<Float>) -> Unit = { _, _ -> }
+    ) =
         Value(name, value = default, change = change).apply { this@Configurable.value.add(this) }
 
     protected fun color(

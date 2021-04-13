@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.render.engine.utils.pushMVP
 import net.ccbluex.liquidbounce.utils.Mat4
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL12
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL33
 import java.nio.ByteBuffer
@@ -216,6 +217,13 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
     override fun getBatchRenderer(): BatchRenderer? = null
 
     override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
+        GL12.glDisable(GL12.GL_LIGHTING)
+        GL12.glDisable(GL12.GL_SCISSOR_TEST)
+        GL12.glDisable(GL12.GL_TEXTURE_2D)
+        GL12.glEnable(GL12.GL_BLEND)
+        GL12.glEnable(GL12.GL_BLEND)
+        GL12.glBlendFunc(GL12.GL_SRC_ALPHA, GL12.GL_ONE_MINUS_SRC_ALPHA)
+
         when (level) {
             OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
                 InstancedColoredPrimitiveShader.bind(mvpMatrix)

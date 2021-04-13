@@ -33,7 +33,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.regex.Pattern
 
 class Layer(val renderTasks: ArrayList<RenderTask> = ArrayList(200))
-class LayerSettings(val mvpMatrix: Mat4, val culling: Boolean)
+class LayerSettings(val mvpMatrix: Mat4, val culling: Boolean, val depthTest: Boolean = false)
 
 /**
  * Handles all rendering tasks.
@@ -52,7 +52,7 @@ object RenderEngine : Listenable {
     const val CAMERA_VIEW_LAYER_WITHOUT_BOBBING = 1
 
     /**
-     * Screen space, mirrored vertically
+     * Screen space, mirrored vertically, depth test enabled
      */
     const val SCREEN_SPACE_LAYER = 2
 
@@ -189,6 +189,16 @@ object RenderEngine : Listenable {
 
             val settings = getSettingsForLayer(idx, tickDelta)
 
+            if (settings.culling)
+                GL11.glEnable(GL11.GL_CULL_FACE)
+            else
+                GL11.glDisable(GL11.GL_CULL_FACE)
+
+            if (settings.depthTest)
+                GL11.glEnable(GL11.GL_DEPTH_TEST)
+            else
+                GL11.glDisable(GL11.GL_DEPTH_TEST)
+
             for (renderTask in layer.renderTasks) {
                 renderTask.initRendering(lvl, settings.mvpMatrix)
                 renderTask.draw(lvl)
@@ -218,7 +228,8 @@ object RenderEngine : Listenable {
 
                 LayerSettings(
                     Mat4.orthograpicProjectionMatrix(-aspectRatio, -1.0f, aspectRatio, 1.0f, -1.0f, 1.0f),
-                    true
+                    true,
+                    depthTest = true
                 )
             }
             HUD_LAYER -> LayerSettings(
