@@ -2,9 +2,9 @@
   "modmenu.descriptionTranslation.liquidbounce": "Ein kostenloser Cheat für Minecraft",
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.forum": "Forum",
-  "liquidbounce.generic.error": "Error",
-  "liquidbounce.generic.enabled": "Enabled",
-  "liquidbounce.generic.disabled": "Disabled",
+  "liquidbounce.generic.error": "Fehler",
+  "liquidbounce.generic.enabled": "Aktiviert",
+  "liquidbounce.generic.disabled": "Deaktiviert",
 
   "liquidbounce.commandManager.exceptionOccurred": "Ausführen des Befehls fehlgeschlagen. %s",
   "liquidbounce.commandManager.unknownCommand": "Befehl \"%s\" nicht gefunden.",
