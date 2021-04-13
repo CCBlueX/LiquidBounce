@@ -56,7 +56,6 @@ class CpuViewRenderer : ViewRenderer {
         val height = view.height().toInt()
 
         // Prepare OpenGL for 2D textures and bind our texture
-        glPushAttrib(GL_TEXTURE_BIT)
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, glTexture)
 
@@ -106,7 +105,7 @@ class CpuViewRenderer : ViewRenderer {
         }
 
         // Set up the OpenGL state for rendering of a fullscreen quad
-        glPushAttrib(GL_ENABLE_BIT or GL_COLOR_BUFFER_BIT or GL_TRANSFORM_BIT or GL_SCISSOR_BIT or GL_LIGHTING_BIT)
+        glPushAttrib(GL_ENABLE_BIT or GL_COLOR_BUFFER_BIT or GL_TRANSFORM_BIT)
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()
         glLoadIdentity()
