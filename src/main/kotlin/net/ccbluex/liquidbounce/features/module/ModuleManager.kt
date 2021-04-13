@@ -30,15 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleSpammer
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.render.*
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastBreak
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleTimer
 import net.ccbluex.liquidbounce.features.module.modules.world.*
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleChestAura
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastBreak
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleFastPlace
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleTimer
 import org.lwjgl.glfw.GLFW
 
 /**

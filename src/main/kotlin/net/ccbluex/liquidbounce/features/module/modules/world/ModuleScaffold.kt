@@ -20,21 +20,23 @@ import kotlin.math.abs
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private val swing by boolean("Swing", true)
-    private val eagle by chooseList("Eagle", "Off", arrayOf("Off", "Normal", "Silent"))
+    private val search by boolean("Search", true)
+    private val eagle by chooseList("Eagle", "Normal", arrayOf("Off", "Normal", "Silent"))
     private val blocksToEagle by int("BlocksToEagle", 0, 0..10)
     private val edgeDist by float("EagleEdgeDistance", 0f, 0f..0.5f)
     private val timer by float("Timer", 1f, 0.1f..3f)
-    private var speedModifier by float("SpeedModifier", 1.2f, 0f..2f)
-    private var sameY by boolean("SameY", false)
+    private var speedModifier by float("SpeedModifier", 1.5f, 0f..2f)
+    private var sameY by boolean("SameY", true)
     private val rotations = RotationsConfigurable()
 
     private var slot = -1
     private var oldSlot = -1
     private var placedBlocksWithoutEagle = 0
-    private var eagleSneaking: Boolean = false
+    private var eagleSneaking = false
     private var yaw = 0f
     private var pitch = 0f
     private var bothRotations: Rotation? = null
+    private var keepRotation = false
     private var facesBlock = false
     private var launchY = -1
 
@@ -44,6 +46,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     override fun disable() {
         facesBlock = false
+        keepRotation = false
         mc.options.keySneak.isPressed = false
         if (eagleSneaking)
             network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
@@ -108,7 +111,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         // KeepRotation
-        RotationManager.aimAt(bothRotations!!, configurable = rotations)
+        if (keepRotation)
+            RotationManager.aimAt(bothRotations!!, configurable = rotations)
 
         if (!world.getBlockState(blockPos).material.isReplaceable)
             return@repeatable
@@ -126,14 +130,34 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         if (sameY && player.y.toInt() < launchY)
             return@repeatable
 
+        // Search
+        if (search)
+            extraSearch()
         // Place block
-        place(blockPos)
+        place(blockPos, !sameY)
 
         // Create some sort of autoblock change without the player noticing (aka slot change server-sided)
         player.inventory.selectedSlot = oldSlot
     }
 
-    private fun place(blockPos: BlockPos): Boolean {
+    private fun extraSearch() {
+        val blockPos = (if (sameY && launchY <= player.y) BlockPos(
+            player.x,
+            launchY - 1.0,
+            player.z
+        ) else BlockPos(player.pos).down())
+        if ((!world.getBlockState(blockPos).material.isReplaceable || place(blockPos, !sameY)))
+            return
+
+        for (x in -1..1) {
+            for (z in -1..1) {
+                if (place(blockPos.add(x, 0, z), !sameY))
+                    return
+            }
+        }
+    }
+
+    private fun place(blockPos: BlockPos, checks: Boolean): Boolean {
         facesBlock = false
         if (!world.getBlockState(blockPos).material.isReplaceable)
             return false
@@ -149,13 +173,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             val hitVec = Vec3d.ofCenter(neighbor).add(Vec3d.of(opposite.vector).multiply(0.5))
 
-            if (eyes.squaredDistanceTo(hitVec) > 18)
+            if (checks && eyes.squaredDistanceTo(hitVec) > 18)
                 continue
 
             // Make yaw + pitch based on hitVec and eyes
             val rotation = RotationManager.makeRotation(hitVec, eyes)
 
             // Rotate server-sided
+            keepRotation = true
             RotationManager.aimAt(rotation, configurable = rotations)
 
             // Save yaw + pitch to variables to make KeepRotation the gipsy way
