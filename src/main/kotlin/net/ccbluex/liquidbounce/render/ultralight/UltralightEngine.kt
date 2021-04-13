@@ -149,6 +149,9 @@ object UltralightEngine {
         views.forEach { it.resize(width, height) }
     }
 
+    fun newUndefinedView()
+        = View(RenderLayer.SPLASH_LAYER, renderer, newViewRenderer()).also { views += it }
+
     fun newOverlayView()
         = View(RenderLayer.OVERLAY_LAYER, renderer, newViewRenderer()).also { views += it }
 
@@ -170,5 +173,5 @@ object UltralightEngine {
 }
 
 enum class RenderLayer {
-    OVERLAY_LAYER, SCREEN_LAYER
+    OVERLAY_LAYER, SCREEN_LAYER, SPLASH_LAYER
 }
