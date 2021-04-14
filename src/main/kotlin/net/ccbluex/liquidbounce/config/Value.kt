@@ -41,7 +41,9 @@ open class Value<T : Any>(
     @SerializedName("value")
     internal var value: T,
     @Exclude
-    internal val listType: ListValueType = ListValueType.None,
+    internal val valueType: ValueType,
+    @Exclude
+    internal val listType: ListValueType = ListValueType.None
 ) {
 
     @Exclude
@@ -111,26 +113,65 @@ class RangedValue<T : Any>(
     name: String,
     value: T,
     @Exclude
-    val range: ClosedRange<*>
-) : Value<T>(name, value)
+    val range: ClosedRange<*>,
+    type: ValueType
+) : Value<T>(name, value, valueType = type) {
+
+    fun getFrom(): Double {
+        return (this.range.start as Number).toDouble()
+    }
+
+    fun getTo(): Double {
+        return (this.range.endInclusive as Number).toDouble()
+    }
+
+}
 
 class ChooseListValue<T : NamedChoice>(
     name: String,
     selected: T,
     @Exclude
     val choices: Array<T>
-) : Value<T>(name, selected) {
+) : Value<T>(name, selected, ValueType.CHOICE) {
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val name = element.asString
 
+        setFromValueName(name)
+    }
+
+    fun setFromValueName(name: String?) {
         this.value = choices.first { it.choiceName == name }
     }
+
+    fun getChoices(): Array<String> {
+        return this.choices.map { it.choiceName }.toTypedArray()
+    }
+
 
 }
 
 interface NamedChoice {
     val choiceName: String
+}
+
+enum class ValueType {
+    BOOLEAN,
+    FLOAT,
+    FLOAT_RANGE,
+    INT,
+    INT_RANGE,
+    TEXT,
+    TEXT_ARRAY,
+    CURVE,
+    COLOR,
+    BLOCK,
+    BLOCKS,
+    ITEM,
+    ITEMS,
+    CHOICE,
+    INVALID,
+    TOGGLEABLE
 }
 
 enum class ListValueType(val type: Class<*>?) {

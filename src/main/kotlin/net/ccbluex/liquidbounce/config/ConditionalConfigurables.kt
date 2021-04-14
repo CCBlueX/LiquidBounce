@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2021 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.config
 
 import net.ccbluex.liquidbounce.config.util.Exclude
@@ -14,7 +33,7 @@ import net.minecraft.text.TranslatableText
  * Should handle events when enabled. Allows the client-user to toggle features. (like modules)
  */
 open class ToggleableConfigurable(@Exclude val module: Module? = null, name: String, enabled: Boolean) : Listenable,
-    Configurable(name) {
+    Configurable(name, valueType = ValueType.TOGGLEABLE) {
 
     val translationBaseKey: String
         get() = "${module?.translationBaseKey}.value.${name.toLowerCamelCase()}"
@@ -28,6 +47,9 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
 
     override fun parent() = module
 
+    fun getEnabledValue(): Value<*> {
+        return this.value[0]
+    }
 }
 
 /**
@@ -38,7 +60,7 @@ open class ChoiceConfigurable(
     name: String,
     var active: String,
     val initialize: (ChoiceConfigurable) -> Unit
-) : Configurable(name) {
+) : Configurable(name, valueType = ValueType.CHOICE) {
 
     val translationBaseKey: String
         get() = "${module.translationBaseKey}.value.${name.toLowerCamelCase()}"
@@ -59,6 +81,14 @@ open class ChoiceConfigurable(
     @Exclude
     val choices: MutableList<Choice> = mutableListOf()
 
+    fun getChoices(): Array<String> {
+        return this.choices.map { it.name }.toTypedArray()
+    }
+
+    // TODO Cancel sequence hanndlers on update, etc.
+    fun setFromValueName(name: String) {
+        this.active = name
+    }
 }
 
 /**
