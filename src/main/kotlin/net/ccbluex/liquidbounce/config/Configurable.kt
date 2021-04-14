@@ -53,6 +53,34 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         }
     }
 
+    fun getContainedSettingsRecursively(): Array<Value<*>> {
+        val output = mutableListOf<Value<*>>()
+
+        this.getContainedSettingsRecursivelyInternal(output)
+
+        return output.toTypedArray()
+    }
+
+    fun getContainedSettingsRecursivelyInternal(output: MutableList<Value<*>>) {
+        for (currentValue in this.value) {
+            if (currentValue is ToggleableConfigurable) {
+                output.addAll(currentValue.value.filter { it.name.equals("enabled", true) })
+            } else {
+                if (currentValue is Configurable) {
+                    currentValue.getContainedSettingsRecursivelyInternal(output)
+                } else {
+                    output.add(currentValue)
+                }
+            }
+
+            if (currentValue is ChoiceConfigurable) {
+                for (choice in currentValue.choices) {
+                    choice.getContainedSettingsRecursivelyInternal(output)
+                }
+            }
+        }
+    }
+
     // Common value types
 
     protected fun <T : Configurable> tree(configurable: T): T {
@@ -74,7 +102,11 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
     protected fun float(name: String, default: Float, range: ClosedFloatingPointRange<Float>) =
         rangedValue(name, default, range)
 
-    protected fun floatRange(name: String, default: ClosedFloatingPointRange<Float>, range: ClosedFloatingPointRange<Float>) =
+    protected fun floatRange(
+        name: String,
+        default: ClosedFloatingPointRange<Float>,
+        range: ClosedFloatingPointRange<Float>
+    ) =
         rangedValue(name, default, range)
 
     protected fun int(name: String, default: Int, range: IntRange) =
