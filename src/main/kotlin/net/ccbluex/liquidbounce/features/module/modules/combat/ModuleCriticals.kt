@@ -47,8 +47,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     private object PacketCrit : Choice("Packet", modes) {
 
         val attackHandler = handler<AttackEvent> { event ->
-            if (event.enemy !is LivingEntity)
+            if (event.enemy !is LivingEntity) {
                 return@handler
+            }
 
             val (x, y, z) = player.exactPosition
 
@@ -89,8 +90,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val magicParticles by int("MagicParticles", 0, 0..20)
 
         val attackHandler = handler<AttackEvent> { event ->
-            if (event.enemy !is LivingEntity)
+            if (event.enemy !is LivingEntity) {
                 return@handler
+            }
 
             repeat(critParticles) {
                 player.addCritParticles(event.enemy)

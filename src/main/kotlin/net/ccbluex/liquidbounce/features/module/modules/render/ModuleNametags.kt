@@ -68,18 +68,20 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
         var currIdx = 0
 
         for (entity in filteredEntities) {
-            val tag = if (clearNamesValue)
+            val tag = if (clearNamesValue) {
                 entity.displayName.asTruncatedString(100)?.stripMinecraftColorCodes() ?: continue
-            else
+            } else {
                 entity.displayName.asTruncatedString(100) ?: continue
+            }
 
             // Scale
             var distance = player.distanceTo(entity) * 0.25f
 
-            if (distance < 1.0f)
+            if (distance < 1.0f) {
                 distance = 1.0f
-            else if (distance > 3.0f)
+            } else if (distance > 3.0f) {
                 distance = 3.0f
+            }
 
             val scale = 1.0f / (25f * fontRenderer.size * distance) * scaleValue
 
@@ -103,7 +105,6 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
             val boundingBox = entity.boundingBox
             val boundingBoxCenter = boundingBox.center
 
-
             val offset = Vec3(
                 boundingBoxCenter.x - entity.x + entity.lastRenderX + (entity.x - entity.lastRenderX) * event.tickDelta,
                 boundingBox.minY - entity.y + entity.lastRenderY + entity.standingEyeHeight + 0.55 + height * scale + (entity.y - entity.lastRenderY) * event.tickDelta,
@@ -115,8 +116,9 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
 
             val vec = RenderEngine.cameraMvp * Vec4(offset, 1.0f)
 
-            if (vec.w < 0.0f)
+            if (vec.w < 0.0f) {
                 continue
+            }
 
             val factor = 1.0f / vec.w
 

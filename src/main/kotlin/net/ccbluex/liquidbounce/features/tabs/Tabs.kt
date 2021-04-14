@@ -114,13 +114,14 @@ object Tabs {
 
 }
 
-
-
 /**
  * A item group from the client
  */
-open class LiquidsItemGroup(val plainName: String, val icon: () -> ItemStack,
-                            val items: (items: MutableList<ItemStack>) -> Unit) {
+open class LiquidsItemGroup(
+    val plainName: String,
+    val icon: () -> ItemStack,
+    val items: (items: MutableList<ItemStack>) -> Unit
+) {
 
     // Create item group and assign to minecraft groups
     fun create(): ItemGroup {

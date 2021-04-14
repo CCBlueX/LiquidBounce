@@ -31,11 +31,12 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleKick
 object ModuleAutoLeave : Module("AutoLeave", Category.COMBAT) {
 
     private val health by float("Health", 8f, 0f..20f)
+
     private val delay by int("Delay", 0, 0..60) // min 0 ticks to 60 ticks (20 ticks == 1 second)
     private val mode by enumChoice("Mode", ModuleKick.KickModeEnum.QUIT, ModuleKick.KickModeEnum.values())
 
     val tickRepeatable = repeatable {
-        if(player.health <= health && !player.abilities.creativeMode && !mc.isIntegratedServerRunning) {
+        if (player.health <= health && !player.abilities.creativeMode && !mc.isIntegratedServerRunning) {
             // Delay to bypass anti cheat or combat log detections
             wait(delay)
 

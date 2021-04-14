@@ -76,7 +76,6 @@ fun drawBoxOutline(box: Box, color: Color4b): ColoredPrimitiveRenderTask {
     renderTask.indexLine(p4, p6)
     renderTask.indexLine(p5, p7)
 
-
     return renderTask
 }
 

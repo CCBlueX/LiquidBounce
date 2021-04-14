@@ -45,7 +45,6 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
     private val hopperValue by boolean("Hopper", true)
     private val shulkerBoxValue by boolean("ShulkerBox", true)
 
-
     private object Box : Choice("Box", modes) {
         private val outline by boolean("Outline", true)
 
@@ -107,6 +106,5 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
             else -> null
         }
     }
-
 
 }

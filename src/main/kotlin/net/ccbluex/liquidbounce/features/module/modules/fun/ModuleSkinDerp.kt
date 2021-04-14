@@ -61,19 +61,26 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
 
     val repeatable = repeatable {
         wait(delay)
-        if (hat)
+        if (hat) {
             mc.options.setPlayerModelPart(PlayerModelPart.HAT, Random.nextBoolean())
-        if (jacket)
+        }
+        if (jacket) {
             mc.options.setPlayerModelPart(PlayerModelPart.JACKET, Random.nextBoolean())
-        if (leftPants)
+        }
+        if (leftPants) {
             mc.options.setPlayerModelPart(PlayerModelPart.LEFT_PANTS_LEG, Random.nextBoolean())
-        if (rightPants)
+        }
+        if (rightPants) {
             mc.options.setPlayerModelPart(PlayerModelPart.RIGHT_PANTS_LEG, Random.nextBoolean())
-        if (leftSleeve)
+        }
+        if (leftSleeve) {
             mc.options.setPlayerModelPart(PlayerModelPart.LEFT_SLEEVE, Random.nextBoolean())
-        if (rightSleeve)
+        }
+        if (rightSleeve) {
             mc.options.setPlayerModelPart(PlayerModelPart.RIGHT_SLEEVE, Random.nextBoolean())
-        if (cape)
+        }
+        if (cape) {
             mc.options.setPlayerModelPart(PlayerModelPart.CAPE, Random.nextBoolean())
+        }
     }
 }

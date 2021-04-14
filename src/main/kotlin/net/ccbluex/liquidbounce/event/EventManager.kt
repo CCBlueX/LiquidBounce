@@ -101,8 +101,9 @@ object EventManager {
         val target = registry[event.javaClass] ?: return
 
         for (eventHook in target) {
-            if (!eventHook.ignoresCondition && !eventHook.handlerClass.handleEvents())
+            if (!eventHook.ignoresCondition && !eventHook.handlerClass.handleEvents()) {
                 continue
+            }
 
             runCatching {
                 eventHook.handler(event)

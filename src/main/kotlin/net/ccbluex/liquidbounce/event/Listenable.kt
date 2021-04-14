@@ -68,4 +68,3 @@ fun Module.repeatable(eventHandler: (SuspendableHandler<DummyEvent>)) {
         }
     }
 }
-

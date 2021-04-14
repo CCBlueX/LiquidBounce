@@ -36,7 +36,6 @@ import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.util.math.BlockPos
 
-
 /**
  * A anti cactus module
  *
@@ -54,7 +53,8 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     val maxArrows by int("MaxArrows", 256, 0..3000)
 
     val usefulItems = items(
-        "UsefulItems", mutableListOf(
+        "UsefulItems",
+        mutableListOf(
             Items.WATER_BUCKET,
             Items.LAVA_BUCKET,
             Items.MILK_BUCKET,
@@ -86,8 +86,9 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK, ItemSortChoice.values())
 
     val repeatable = repeatable {
-        if (player.currentScreenHandler.syncId != 0)
+        if (player.currentScreenHandler.syncId != 0) {
             return@repeatable
+        }
 
         if (ModuleAutoArmor.locked) {
             return@repeatable
@@ -120,15 +121,17 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
             var requiredStackCount = hotbarSlotsToFill?.size
 
-            if (requiredStackCount == null)
+            if (requiredStackCount == null) {
                 requiredStackCount = 0
+            }
 
             var currentStackCount = 0
             var currentItemCount = 0
 
             for (weightedItem in value.sortedDescending()) {
-                if (currentItemCount >= maxCount && currentStackCount >= requiredStackCount)
+                if (currentItemCount >= maxCount && currentStackCount >= requiredStackCount) {
                     break
+                }
 
                 usefulItems.add(weightedItem.slot)
 
@@ -153,8 +156,9 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         }
 
         for (i in 0..40) {
-            if (player.inventory.getStack(i).isNothing() || i in usefulItems)
+            if (player.inventory.getStack(i).isNothing() || i in usefulItems) {
                 continue
+            }
 
             if (executeAction(i, 1, SlotActionType.THROW)) {
                 wait(inventoryConstraints.delay.random())
@@ -165,9 +169,10 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     }
 
     fun getUsefulItems(handledScreen: GenericContainerScreen): List<Int> {
-        if (!enabled)
+        if (!enabled) {
             return handledScreen.screenHandler.slots.filter { !it.stack.isNothing() && it.inventory === handledScreen.screenHandler.inventory }
                 .map { it.id }
+        }
 
         val hotbarSlotMap = getHotbarSlotMap()
 
@@ -182,8 +187,9 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         }
 
         handledScreen.screenHandler.slots.forEach {
-            if (it.inventory === handledScreen.screenHandler.inventory)
+            if (it.inventory === handledScreen.screenHandler.inventory) {
                 categoriteItem(items, it.stack, it.id + 41)
+            }
         }
 
         val groupedByItemCategory = items.groupBy { it.category }
@@ -200,15 +206,17 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
             var requiredStackCount = hotbarSlotsToFill?.size
 
-            if (requiredStackCount == null)
+            if (requiredStackCount == null) {
                 requiredStackCount = 0
+            }
 
             var currentStackCount = 0
             var currentItemCount = 0
 
             for (weightedItem in value.sortedDescending()) {
-                if (currentItemCount >= maxCount && currentStackCount >= requiredStackCount)
+                if (currentItemCount >= maxCount && currentStackCount >= requiredStackCount) {
                     break
+                }
 
                 usefulItems.add(weightedItem.slot)
 
@@ -240,13 +248,15 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         if (!(inventoryConstraints.noMove && player.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
             val openInventory = inventoryConstraints.simulateInventory && !isInInventoryScreen
 
-            if (openInventory)
+            if (openInventory) {
                 network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
+            }
 
             interaction.clickSlot(0, slot, clickData, slotActionType, player)
 
-            if (openInventory)
+            if (openInventory) {
                 network.sendPacket(CloseHandledScreenC2SPacket(0))
+            }
 
             return true
         }
@@ -259,11 +269,11 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         stack: ItemStack,
         slotId: Int
     ) {
-        if (stack.isNothing())
+        if (stack.isNothing()) {
             return
+        }
 
         val item = stack.item
-
 
         items.add(
             when (item) {
@@ -365,12 +375,16 @@ class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
         )
         private val COMPARATOR = ComparatorChain<WeightedSwordItem>(
             { o1, o2 ->
-                (o1.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)) + o1.itemStack.getEnchantment(
-                    Enchantments.FIRE_ASPECT
-                ) * 4.0f * 0.625f * 0.9f).compareTo(
-                    o2.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(
-                        o2.itemStack
-                    ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f)
+                (
+                    o1.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)) + o1.itemStack.getEnchantment(
+                        Enchantments.FIRE_ASPECT
+                    ) * 4.0f * 0.625f * 0.9f
+                    ).compareTo(
+                    o2.itemStack.item.attackDamage * (
+                        1.0f + DAMAGE_ESTIMATOR.estimateValue(
+                            o2.itemStack
+                        ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f
+                        )
                 )
             },
             { o1, o2 ->

@@ -41,8 +41,9 @@ object ConfigSystem {
     // Config directory folder
     val rootFolder = File(mc.runDirectory, LiquidBounce.CLIENT_NAME).apply {
         // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
-        if (!exists())
+        if (!exists()) {
             mkdir()
+        }
     }
 
     // A mutable list of all root configurable classes (and their sub classes)
@@ -121,8 +122,9 @@ object ConfigSystem {
         runCatching {
             val jsonObject = jsonElement.asJsonObject
 
-            if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name)
+            if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
                 throw IllegalStateException()
+            }
 
             val values = jsonObject.getAsJsonArray("value")
                 .map { it.asJsonObject }
@@ -136,8 +138,9 @@ object ConfigSystem {
                         if (value is ChoiceConfigurable) {
                             val newActive = currentElement["active"].asString
 
-                            if (value.choices.any { it.name == newActive })
+                            if (value.choices.any { it.name == newActive }) {
                                 value.active = newActive
+                            }
 
                             val choices = currentElement["choices"].asJsonObject
 
@@ -185,4 +188,3 @@ object ConfigSystem {
     }
 
 }
-

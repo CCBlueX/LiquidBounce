@@ -34,7 +34,7 @@ object ProfileUtils {
         // Read response content and get id from json
         val jsonElement = JsonParser().parse(text)
 
-        if(jsonElement.isJsonObject) {
+        if (jsonElement.isJsonObject) {
             return jsonElement.asJsonObject.get("id").asString
         }
         return ""

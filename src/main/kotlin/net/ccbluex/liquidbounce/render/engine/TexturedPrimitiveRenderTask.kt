@@ -71,8 +71,9 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
     private lateinit var vaoData: VAOData
 
     init {
-        if (maxPrimitiveCount * type.verticesPerPrimitive > 65535)
+        if (maxPrimitiveCount * type.verticesPerPrimitive > 65535) {
             throw IllegalStateException("Too many vertices")
+        }
     }
 
     /**
@@ -163,11 +164,11 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
 //        println(caps.filter { glGetBoolean(it) }.map { it.toString() }.joinToString(", "))
 
         when (level) {
-            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 // Create an orthographic projection matrix
                 TexturedPrimitiveShader.bind(mvpMatrix)
             }
-            OpenGLLevel.OpenGL1_2 -> {
+            OpenGLLevel.OPENGL1_2 -> {
                 pushMVP(mvpMatrix)
             }
         }
@@ -176,7 +177,7 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
     override fun draw(level: OpenGLLevel) {
         when (level) {
             // Use Immediate mode for OpenGL 1.2. A cheap emulated version of the OpenGL 2.1 backend.
-            OpenGLLevel.OpenGL1_2 -> {
+            OpenGLLevel.OPENGL1_2 -> {
                 this.texture.bind()
 
                 // Begin rendering with the type's mode
@@ -210,7 +211,7 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
                 GL11.glEnd()
             }
             // Use VBOs for later OpenGL versions.
-            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 // Upload if not done yet
                 this.uploadIfNotUploaded()
 
@@ -268,13 +269,13 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
 
     override fun cleanupRendering(level: OpenGLLevel) {
         when (level) {
-            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 // Disable all shader programs
                 GL20.glUseProgram(0)
                 // Unbind VBOs, only needs to be done once during rendering
                 GL33.glBindVertexArray(0)
             }
-            OpenGLLevel.OpenGL1_2 -> {
+            OpenGLLevel.OPENGL1_2 -> {
                 popMVP()
             }
         }

@@ -110,7 +110,6 @@ class BlockShapeEvent(val state: BlockState, val pos: BlockPos, var shape: Voxel
 @Nameable("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 
-
 // Entity events bound to client-user entity
 
 @Nameable("playerTick")

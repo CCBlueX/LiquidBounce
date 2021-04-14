@@ -72,8 +72,9 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
     }
 
     override fun disable() {
-        if (mc.player == null)
+        if (mc.player == null) {
             return
+        }
 
         blink()
 
@@ -91,8 +92,9 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (mc.player == null || disablelogger)
+        if (mc.player == null || disablelogger) {
             return@handler
+        }
 
         if (event.packet is PlayerMoveC2SPacket || event.packet is PlayerInteractBlockC2SPacket ||
             event.packet is HandSwingC2SPacket ||

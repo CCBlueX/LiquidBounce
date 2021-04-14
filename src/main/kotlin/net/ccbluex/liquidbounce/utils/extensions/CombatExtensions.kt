@@ -89,9 +89,9 @@ class EnemyConfigurable : Configurable("enemies") {
          * Check if player might be a bot
          */
         fun isBot(player: ClientPlayerEntity): Boolean {
-            if (!enabled)
+            if (!enabled) {
                 return false
-
+            }
 
             return false
         }
@@ -263,7 +263,8 @@ object RotationManager : Listenable {
         expectedTarget: BlockPos? = null
     ): VecRotation? {
         val preferredSpot = Vec3d(
-            box.minX + (box.maxX - box.minX) * x * 0.8, box.minY + (box.maxY - box.minY) * y * 0.8,
+            box.minX + (box.maxX - box.minX) * x * 0.8,
+            box.minY + (box.maxY - box.minY) * y * 0.8,
             box.minZ + (box.maxZ - box.minZ) * z * 0.8
         )
         val preferredRotation = makeRotation(eyes, preferredSpot)
@@ -274,13 +275,15 @@ object RotationManager : Listenable {
             for (y in 0.1..0.9 step 0.1) {
                 for (z in 0.1..0.9 step 0.1) {
                     val vec3 = Vec3d(
-                        box.minX + (box.maxX - box.minX) * x, box.minY + (box.maxY - box.minY) * y,
+                        box.minX + (box.maxX - box.minX) * x,
+                        box.minY + (box.maxY - box.minY) * y,
                         box.minZ + (box.maxZ - box.minZ) * z
                     )
 
                     // skip because of out of range
-                    if (eyes.distanceTo(vec3) > range)
+                    if (eyes.distanceTo(vec3) > range) {
                         continue
+                    }
 
                     // todo: prefer visible spots even when through walls is turned on
                     if (if (expectedTarget != null) facingBlock(eyes, vec3, expectedTarget) else isVisible(
@@ -395,8 +398,9 @@ object RotationManager : Listenable {
             )
         ) ?: return false
 
-        if (searchedPos.type != HitResult.Type.BLOCK)
+        if (searchedPos.type != HitResult.Type.BLOCK) {
             return false
+        }
 
         return searchedPos.blockPos == blockPos
     }
@@ -479,8 +483,9 @@ data class Rotation(var yaw: Float, var pitch: Float) {
      * Set rotations to [player]
      */
     fun toPlayer(player: PlayerEntity) {
-        if (yaw.isNaN() || pitch.isNaN())
+        if (yaw.isNaN() || pitch.isNaN()) {
             return
+        }
 
         player.yaw = yaw
         player.pitch = pitch

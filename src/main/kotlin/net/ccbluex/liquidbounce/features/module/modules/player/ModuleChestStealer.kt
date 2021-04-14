@@ -32,8 +32,9 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     val repeatable = repeatable {
         val screen = mc.currentScreen
 
-        if (screen !is GenericContainerScreen)
+        if (screen !is GenericContainerScreen) {
             return@repeatable
+        }
 
         val itemsToCollect = ModuleInventoryCleaner.getUsefulItems(screen).shuffled()
 
@@ -44,8 +45,9 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             return@repeatable
         }
 
-        if (itemsToCollect.isEmpty())
+        if (itemsToCollect.isEmpty()) {
             player.closeHandledScreen()
+        }
     }
 
 }

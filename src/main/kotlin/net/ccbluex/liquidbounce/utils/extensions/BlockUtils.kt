@@ -39,9 +39,9 @@ inline fun searchBlocks(radius: Int, filter: (BlockPos, BlockState) -> Boolean):
                 val blockPos = BlockPos(thePlayer.x.toInt() + x, thePlayer.y.toInt() + y, thePlayer.z.toInt() + z)
                 val state = blockPos.getState() ?: continue
 
-                if (!filter(blockPos, state))
+                if (!filter(blockPos, state)) {
                     continue
-
+                }
 
                 blocks.add(Pair(blockPos, state))
             }

@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.extensions.asText
-import net.ccbluex.liquidbounce.utils.extensions.outputString
 import net.minecraft.util.Formatting
 import org.lwjgl.glfw.GLFW
 import kotlin.math.ceil
@@ -129,14 +128,17 @@ object CommandBinds {
 
                         val iterPage = 8 * page
                         for (module in bindings.subList(iterPage - 8, iterPage.coerceAtMost(bindings.size))) {
-                            chat("> ".asText()
-                                .styled { it.withColor(Formatting.GOLD) }
-                                .append(module.name + " (")
-                                .styled { it.withColor(Formatting.GRAY) }
-                                .append(keyName(module.bind).asText()
-                                .styled { it.withColor(Formatting.DARK_GRAY).withBold(true) })
-                                .append(module.name + " (")
-                                .styled { it.withColor(Formatting.GRAY) }
+                            chat(
+                                "> ".asText()
+                                    .styled { it.withColor(Formatting.GOLD) }
+                                    .append(module.name + " (")
+                                    .styled { it.withColor(Formatting.GRAY) }
+                                    .append(
+                                        keyName(module.bind).asText()
+                                            .styled { it.withColor(Formatting.DARK_GRAY).withBold(true) }
+                                    )
+                                    .append(module.name + " (")
+                                    .styled { it.withColor(Formatting.GRAY) }
                             )
                         }
                     }

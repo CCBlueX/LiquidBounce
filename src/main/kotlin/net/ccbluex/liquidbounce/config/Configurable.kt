@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
-
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 import java.lang.reflect.Modifier
@@ -32,12 +31,15 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
 
     init {
         for (field in javaClass.declaredFields) {
-            if (Modifier.isStatic(field.modifiers) || field.isAnnotationPresent(Exclude::class.java)
-                || !Value::class.java.isAssignableFrom(field.type))
+            if (Modifier.isStatic(field.modifiers) || field.isAnnotationPresent(Exclude::class.java) ||
+                !Value::class.java.isAssignableFrom(field.type)
+            ) {
                 continue
+            }
 
-            if (!field.isAccessible)
+            if (!field.isAccessible) {
                 field.isAccessible = true
+            }
 
             val v = field.get(this) ?: continue
 
@@ -58,60 +60,60 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         return configurable
     }
 
-    protected fun <T : Any> value(name: String, default: T, listType: ListValueType = ListValueType.None)
-        = Value(name, default, listType).apply { this@Configurable.value.add(this) }
+    protected fun <T : Any> value(name: String, default: T, listType: ListValueType = ListValueType.None) =
+        Value(name, default, listType).apply { this@Configurable.value.add(this) }
 
-    protected fun <T : Any> rangedValue(name: String, default: T, range: ClosedRange<*>)
-        = RangedValue(name, default, range).apply { this@Configurable.value.add(this) }
+    protected fun <T : Any> rangedValue(name: String, default: T, range: ClosedRange<*>) =
+        RangedValue(name, default, range).apply { this@Configurable.value.add(this) }
 
     // Fixed data types
 
-    protected fun boolean(name: String, default: Boolean)
-        = value(name, default)
+    protected fun boolean(name: String, default: Boolean) =
+        value(name, default)
 
-    protected fun float(name: String, default: Float, range: ClosedFloatingPointRange<Float>)
-        = rangedValue(name, default, range)
+    protected fun float(name: String, default: Float, range: ClosedFloatingPointRange<Float>) =
+        rangedValue(name, default, range)
 
-    protected fun floatRange(name: String, default: ClosedFloatingPointRange<Float>, range: ClosedFloatingPointRange<Float>)
-        = rangedValue(name, default, range)
+    protected fun floatRange(name: String, default: ClosedFloatingPointRange<Float>, range: ClosedFloatingPointRange<Float>) =
+        rangedValue(name, default, range)
 
-    protected fun int(name: String, default: Int, range: IntRange)
-        = rangedValue(name, default, range)
+    protected fun int(name: String, default: Int, range: IntRange) =
+        rangedValue(name, default, range)
 
-    protected fun intRange(name: String, default: IntRange, range: IntRange)
-        = rangedValue(name, default, range)
+    protected fun intRange(name: String, default: IntRange, range: IntRange) =
+        rangedValue(name, default, range)
 
-    protected fun text(name: String, default: String)
-        = value(name, default)
+    protected fun text(name: String, default: String) =
+        value(name, default)
 
-    protected fun textArray(name: String, default: MutableList<String>)
-        = value(name, default, ListValueType.String)
+    protected fun textArray(name: String, default: MutableList<String>) =
+        value(name, default, ListValueType.String)
 
-    protected fun curve(name: String, default: Array<Float>)
-        = value(name, default)
+    protected fun curve(name: String, default: Array<Float>) =
+        value(name, default)
 
-    protected fun color(name: String, default: Color4b)
-        = value(name, default)
+    protected fun color(name: String, default: Color4b) =
+        value(name, default)
 
-    protected fun block(name: String, default: Block)
-        = value(name, default)
+    protected fun block(name: String, default: Block) =
+        value(name, default)
 
-    protected fun blocks(name: String, default: MutableList<Block>)
-        = value(name, default, ListValueType.Block)
+    protected fun blocks(name: String, default: MutableList<Block>) =
+        value(name, default, ListValueType.Block)
 
-    protected fun item(name: String, default: Item)
-        = value(name, default)
+    protected fun item(name: String, default: Item) =
+        value(name, default)
 
-    protected fun items(name: String, default: MutableList<Item>)
-        = value(name, default, ListValueType.Item)
+    protected fun items(name: String, default: MutableList<Item>) =
+        value(name, default, ListValueType.Item)
 
-    protected fun fonts(name: String, default: MutableList<Fonts.FontDetail>)
-        = value(name, default, ListValueType.FontDetail)
+    protected fun fonts(name: String, default: MutableList<Fonts.FontDetail>) =
+        value(name, default, ListValueType.FontDetail)
 
-    protected fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Array<T>)
-        = ChooseListValue(name, default, choices).apply { this@Configurable.value.add(this) }
+    protected fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Array<T>) =
+        ChooseListValue(name, default, choices).apply { this@Configurable.value.add(this) }
 
-    protected fun Module.choices(name: String, active: String, initialize: (ChoiceConfigurable) -> Unit)
-        = ChoiceConfigurable(this, name, active, initialize).apply { this@Configurable.value.add(this) }
+    protected fun Module.choices(name: String, active: String, initialize: (ChoiceConfigurable) -> Unit) =
+        ChoiceConfigurable(this, name, active, initialize).apply { this@Configurable.value.add(this) }
 
 }

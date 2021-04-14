@@ -46,7 +46,6 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
     private val chest by blocks("Chest", mutableListOf(Blocks.CHEST))
     private val throughWalls by boolean("ThroughWalls", false)
 
-
     private object AwaitContainerOptions : ToggleableConfigurable(this, "AwaitContainer", true) {
         val timeout by int("Timeout", 10, 1..80)
         val maxRetrys by int("MaxRetries", 4, 1..10)
@@ -65,11 +64,13 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
     var currentRetries = 0
 
     val networkTickHandler = repeatable { event ->
-        if (mc.currentScreen != null)
+        if (mc.currentScreen != null) {
             return@repeatable
+        }
 
-        if (mc.currentScreen is HandledScreen<*>)
+        if (mc.currentScreen is HandledScreen<*>) {
             wait { delay }
+        }
 
         updateTarget()
 
@@ -77,7 +78,9 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         val serverRotation = RotationManager.serverRotation ?: return@repeatable
 
         val rayTraceResult = raytraceBlock(
-            range.toDouble(), serverRotation, curr,
+            range.toDouble(),
+            serverRotation,
+            curr,
             curr.getState() ?: return@repeatable
         )
 
@@ -86,14 +89,17 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         }
 
         if (interaction.interactBlock(
-                player, mc.world!!, Hand.MAIN_HAND,
+                player,
+                mc.world!!,
+                Hand.MAIN_HAND,
                 rayTraceResult
             ) == ActionResult.SUCCESS
         ) {
-            if (visualSwing)
+            if (visualSwing) {
                 player.swingHand(Hand.MAIN_HAND)
-            else
+            } else {
                 network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+            }
 
             var success = false
 
@@ -103,8 +109,9 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
                         success = true
 
                         0
-                    } else
+                    } else {
                         AwaitContainerOptions.timeout
+                    }
                 }
             } else {
                 clickedBlocks.add(currentBlock!!)

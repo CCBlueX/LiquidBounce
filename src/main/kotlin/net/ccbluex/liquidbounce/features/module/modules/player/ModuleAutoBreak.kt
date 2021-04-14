@@ -46,7 +46,7 @@ object ModuleAutoBreak : Module("AutoBreak", Category.PLAYER) {
             // Start breaking
             mc.options.keyAttack.isPressed = true
             wasBreaking = true
-        }else if (wasBreaking) {
+        } else if (wasBreaking) {
             // Stop breaking
             wasBreaking = false
             mc.options.keyAttack.isPressed = false

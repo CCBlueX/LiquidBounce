@@ -46,7 +46,7 @@ object CommandPanic {
 
                 val type = if (args.isNotEmpty()) {
                     args[0] as String
-                }else{
+                } else {
                     "nonrender"
                 }
 
@@ -57,8 +57,8 @@ object CommandPanic {
                         msg = command.result("disabledAllCategoryModules", command.result("nonRender"))
                     }
                     else -> {
-                        val category = Category.values().find { it.readableName.equals(type, true) } ?:
-                            throw CommandException(command.result("categoryNotFound", type))
+                        val category = Category.values().find { it.readableName.equals(type, true) }
+                            ?: throw CommandException(command.result("categoryNotFound", type))
                         modules = modules.filter { it.category == category }
                         msg = command.result("disabledAllCategoryModules", category.readableName)
                     }

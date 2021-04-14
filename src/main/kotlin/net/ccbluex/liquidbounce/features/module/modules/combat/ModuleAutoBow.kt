@@ -56,15 +56,17 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             // Should check if player is using bow
             if (currentItem?.item is BowItem) {
                 // Wait until bow is fully charged
-                if (player.itemUseTime < charged)
+                if (player.itemUseTime < charged) {
                     return@repeatable
+                }
 
                 println("gay")
 
                 // Send stop using item to server
                 network.sendPacket(
                     PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN,
+                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                        BlockPos.ORIGIN,
                         Direction.DOWN
                     )
                 )
@@ -100,11 +102,10 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             val world = mc.world ?: return@handler
             val player = player
 
-
             // Should check if player is using bow
-            if (player.activeItem?.item !is BowItem)
+            if (player.activeItem?.item !is BowItem) {
                 return@handler
-
+            }
 
             val eyePos = player.eyesPos
 
@@ -129,8 +130,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
             val rotation = predictBow(deltaPos, FastChargeOptions.enabled).rotation
 
-            if (rotation.yaw.isNaN() || rotation.pitch.isNaN())
+            if (rotation.yaw.isNaN() || rotation.pitch.isNaN()) {
                 return@handler
+            }
 
             player.yaw = rotation.yaw
             player.pitch = rotation.pitch
@@ -159,8 +161,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         velocity = (velocity * velocity + velocity * 2.0f) / 3.0f
 
-        if (velocity > 1.0f)
+        if (velocity > 1.0f) {
             velocity = 1f
+        }
 
         return BowPredictionResult(
             Rotation(
@@ -222,5 +225,3 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
     }
 
 }
-
-

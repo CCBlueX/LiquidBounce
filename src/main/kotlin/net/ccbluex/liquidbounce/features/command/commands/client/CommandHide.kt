@@ -88,7 +88,7 @@ object CommandHide {
                     .handler { command, args ->
                         val page = if (args.size > 1) {
                             args[0] as Int
-                        }else {
+                        } else {
                             1
                         }.coerceAtLeast(1)
 

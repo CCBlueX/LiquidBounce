@@ -57,8 +57,9 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     val repeatable = repeatable {
         val player = mc.player ?: return@repeatable
 
-        if (player.currentScreenHandler.syncId != 0)
+        if (player.currentScreenHandler.syncId != 0) {
             return@repeatable
+        }
 
         val bestArmor = (0..41)
             .mapNotNull { slot ->
@@ -76,16 +77,18 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
             }
 
         for (armorPiece in bestArmor) {
-            if (armorPiece.isAlreadyEquipped)
+            if (armorPiece.isAlreadyEquipped) {
                 continue
+            }
 
             val stackInArmor = player.inventory.getStack(armorPiece.inventorySlot)
 
-            if (stackInArmor.item == Items.ELYTRA)
+            if (stackInArmor.item == Items.ELYTRA) {
                 continue
+            }
 
-            if (!stackInArmor.isNothing() && move(armorPiece.inventorySlot, true)
-                || stackInArmor.isNothing() && move(armorPiece.slot, false)
+            if (!stackInArmor.isNothing() && move(armorPiece.inventorySlot, true) ||
+                stackInArmor.isNothing() && move(armorPiece.slot, false)
             ) {
                 locked = true
                 wait(inventoryConstraints.delay.random())
@@ -123,8 +126,9 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         if (!(inventoryConstraints.noMove && player.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
             val openInventory = inventoryConstraints.simulateInventory && !isInInventoryScreen
 
-            if (openInventory)
+            if (openInventory) {
                 network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
+            }
 
             // Should the item be just thrown out of the inventory
             val shouldThrow = isObsolete && player.inventory.main.none { it.isEmpty }
@@ -135,8 +139,9 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
                 interaction.clickSlot(0, slot, 0, SlotActionType.QUICK_MOVE, player)
             }
 
-            if (openInventory)
+            if (openInventory) {
                 network.sendPacket(CloseHandledScreenC2SPacket(0))
+            }
 
             return true
         }

@@ -47,7 +47,7 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
         }
 
         val tickHandler = sequenceHandler<PlayerTickEvent> {
-            if(mc.options.gamma <= 100) {
+            if (mc.options.gamma <= 100) {
                 mc.options.gamma++
             }
         }

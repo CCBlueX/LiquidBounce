@@ -51,8 +51,9 @@ class JsModule(private val moduleObject: JSObject) : Module(
                 value.add(settings.getMember(settingName) as Value<*>)
         }
 
-        if (moduleObject.hasMember("tag"))
+        if (moduleObject.hasMember("tag")) {
             _tag = moduleObject.getMember("tag") as String
+        }
     }
 
     /**
@@ -89,9 +90,16 @@ class JsModule(private val moduleObject: JSObject) : Module(
     private fun hookHandler(eventName: String) {
         val (_, clazz) = EventManager.mappedEvents.find { (name, _) -> name.equals(eventName, true) } ?: return
 
-        EventManager.registerEventHook(clazz.java, EventHook(this, {
-            callEvent(eventName, it)
-        }, false))
+        EventManager.registerEventHook(
+            clazz.java,
+            EventHook(
+                this,
+                {
+                    callEvent(eventName, it)
+                },
+                false
+            )
+        )
     }
 
 }

@@ -28,9 +28,14 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
     val repeatable = repeatable {
         if (player.moving && player.isOnGround && !player.isSneaking && !mc.options.keySneak.isPressed && !mc.options.keyJump.isPressed) {
-            if (world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.5, 0.0)
-                    .expand(-0.001, 0.0, -0.001)).count() > 0)
+            if (world.getBlockCollisions(
+                    player,
+                    player.boundingBox.offset(0.0, -0.5, 0.0)
+                        .expand(-0.001, 0.0, -0.001)
+                ).count() > 0
+            ) {
                 return@repeatable
+            }
 
             player.jump()
         }

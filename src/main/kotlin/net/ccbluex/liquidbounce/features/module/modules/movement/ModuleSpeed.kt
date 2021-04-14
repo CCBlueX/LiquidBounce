@@ -47,4 +47,3 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
     }
 
 }
-

@@ -69,8 +69,9 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
     private lateinit var vaoData: VAOData
 
     init {
-        if (maxPrimitiveCount * type.verticesPerPrimitive > 65535)
+        if (maxPrimitiveCount * type.verticesPerPrimitive > 65535) {
             throw IllegalStateException("Too many vertices")
+        }
     }
 
     /**
@@ -98,8 +99,9 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
      * @throws IllegalStateException If this tasks doesn't render lines ([type] != [PrimitiveType.Lines])
      */
     fun line(p1: Vec3, p2: Vec3, color1: Color4b, color2: Color4b = color1) {
-        if (this.type != PrimitiveType.Lines)
+        if (this.type != PrimitiveType.Lines) {
             throw IllegalStateException("Type is not Lines")
+        }
 
         index(vertex(p1, color1))
         index(vertex(p2, color2))
@@ -118,8 +120,9 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
         color2: Color4b = color1,
         color3: Color4b = color1
     ) {
-        if (this.type != PrimitiveType.Triangles)
+        if (this.type != PrimitiveType.Triangles) {
             throw IllegalStateException("Type is not Triangles")
+        }
 
         index(vertex(p1, color1))
         index(vertex(p2, color2))
@@ -145,8 +148,9 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
         color3: Color4b = color1,
         color4: Color4b = color1
     ) {
-        if (this.type != PrimitiveType.Triangles)
+        if (this.type != PrimitiveType.Triangles) {
             throw IllegalStateException("Type is not Triangles or Quads")
+        }
 
         val v1 = vertex(p1, color1)
         val v2 = vertex(p2, color2)
@@ -200,8 +204,9 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
             vertex(p3, color3)
             vertex(p4, color4)
 
-            if (this.type == PrimitiveType.LineStrip)
+            if (this.type == PrimitiveType.LineStrip) {
                 vertex(p1, color1)
+            }
         } else {
             throw IllegalStateException("Type is not Lines, LineLoop or LineStrip")
         }
@@ -225,7 +230,7 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
         GL12.glBlendFunc(GL12.GL_SRC_ALPHA, GL12.GL_ONE_MINUS_SRC_ALPHA)
 
         when (level) {
-            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 InstancedColoredPrimitiveShader.bind(mvpMatrix)
             }
             else -> {
@@ -237,7 +242,7 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
     override fun draw(level: OpenGLLevel) {
         when (level) {
             // Use Immediate mode for OpenGL 1.2. A cheap emulated version of the OpenGL 2.1 backend.
-            OpenGLLevel.OpenGL1_2 -> {
+            OpenGLLevel.OPENGL1_2 -> {
                 // Begin rendering with the type's mode
                 GL11.glBegin(this.type.mode)
 
@@ -260,7 +265,7 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
                 GL11.glEnd()
             }
             // Use VBOs for later OpenGL versions.
-            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 // Upload if not done yet
                 this.uploadIfNotUploaded()
 
@@ -304,7 +309,6 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
         // Color info at attrib[1], we want the data to be normalized
         GL20.glVertexAttribPointer(1, 4, GL20.GL_UNSIGNED_BYTE, true, 16, 12)
 
-
         vaoData.elementBuffer.bind()
         vaoData.elementBuffer.putData(this.indexBuffer)
 
@@ -315,7 +319,7 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
 
     override fun cleanupRendering(level: OpenGLLevel) {
         when (level) {
-            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 // Disable all shader programs
                 GL20.glUseProgram(0)
                 // Unbind VBOs, only needs to be done once during rendering
@@ -328,4 +332,3 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
     }
 
 }
-

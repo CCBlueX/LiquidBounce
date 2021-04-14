@@ -64,4 +64,3 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
     }
 
 }
-

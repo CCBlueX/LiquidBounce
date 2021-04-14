@@ -34,8 +34,9 @@ object ModuleFastBreak : Module("FastBreak", Category.WORLD) {
     val repeatable = repeatable {
         interaction.blockBreakingCooldown = 0
 
-        if (interaction.currentBreakingProgress > breakDamage)
+        if (interaction.currentBreakingProgress > breakDamage) {
             interaction.currentBreakingProgress = 1f
+        }
     }
 
 }

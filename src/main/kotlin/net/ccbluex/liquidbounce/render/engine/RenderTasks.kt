@@ -29,16 +29,17 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 enum class OpenGLLevel(val minor: Int, val major: Int, val backendInfo: String) {
-    OpenGL4_3(4, 3, "OpenGL 4.3+ (Multi rendering)"),
-    OpenGL3_3(3, 3, "OpenGL 3.3+ (VAOs, VBOs, Instancing, Shaders)"),
-    OpenGL1_2(1, 2, "OpenGL 1.2+ (Immediate mode, Display Lists)");
+    OPENGL4_3(4, 3, "OpenGL 4.3+ (Multi rendering)"),
+    OPENGL3_3(3, 3, "OpenGL 3.3+ (VAOs, VBOs, Instancing, Shaders)"),
+    OPENGL1_2(1, 2, "OpenGL 1.2+ (Immediate mode, Display Lists)");
 
     /**
      * Determines if an OpenGL level is supported
      */
     fun isSupported(major: Int, minor: Int): Boolean {
-        if (major > this.major)
+        if (major > this.major) {
             return true
+        }
 
         return major >= this.major && minor >= this.minor
     }

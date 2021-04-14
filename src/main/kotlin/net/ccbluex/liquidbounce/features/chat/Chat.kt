@@ -31,7 +31,8 @@ object Chat : ToggleableConfigurable(null, "chat", true), ClientListener {
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .required()
                 .vararg()
-                .build())
+                .build()
+        )
         .handler { _, args ->
             client.sendMessage((args[0] as Array<*>).joinToString(" ") { it as String })
         }
@@ -43,31 +44,32 @@ object Chat : ToggleableConfigurable(null, "chat", true), ClientListener {
     }
 
     fun connect() {
-        if (!enabled)
+        if (!enabled) {
             return
+        }
 
         client.connect()
         client.loginMojang()
     }
 
     override fun onConnect() {
-        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.connecting").styled{ it.withColor(Formatting.BLUE) })
+        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.connecting").styled { it.withColor(Formatting.BLUE) })
     }
 
     override fun onConnected() {
-        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.connected").styled{ it.withColor(Formatting.BLUE) })
+        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.connected").styled { it.withColor(Formatting.BLUE) })
     }
 
     override fun onDisconnect() {
-        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.disconnected").styled{ it.withColor(Formatting.RED) })
+        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.disconnected").styled { it.withColor(Formatting.RED) })
     }
 
     override fun onLogon() {
-        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.loggingIn").styled{ it.withColor(Formatting.BLUE) })
+        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.loggingIn").styled { it.withColor(Formatting.BLUE) })
     }
 
     override fun onLoggedIn() {
-        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.loggedIn").styled{ it.withColor(Formatting.BLUE) })
+        chat("§7[§a§lChat§7]".asText(), TranslatableText("liquidbounce.liquidchat.states.loggedIn").styled { it.withColor(Formatting.BLUE) })
 
         chat("====================================")
         chat("§c>> §l")

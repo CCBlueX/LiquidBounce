@@ -64,37 +64,44 @@ class Client(val listener: ClientListener) {
         val uri = URI("wss://chat.liquidbounce.net:7886/ws")
 
         val ssl = uri.scheme.equals("wss", true)
-        val sslContext = if(ssl) SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE) else null
+        val sslContext = if (ssl) SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE) else null
 
         val group = NioEventLoopGroup()
-        val handler = ChannelHandler(this, WebSocketClientHandshakerFactory.newHandshaker(
-                uri, WebSocketVersion.V13, null,
-                true, DefaultHttpHeaders()))
+        val handler = ChannelHandler(
+            this,
+            WebSocketClientHandshakerFactory.newHandshaker(
+                uri,
+                WebSocketVersion.V13,
+                null,
+                true,
+                DefaultHttpHeaders()
+            )
+        )
 
         val bootstrap = Bootstrap()
 
         bootstrap.group(group)
-                .channel(NioSocketChannel::class.java)
-                .handler(object : ChannelInitializer<SocketChannel>() {
+            .channel(NioSocketChannel::class.java)
+            .handler(object : ChannelInitializer<SocketChannel>() {
 
-                    /**
-                     * This method will be called once the [Channel] was registered. After the method returns this instance
-                     * will be removed from the [ChannelPipeline] of the [Channel].
-                     *
-                     * @param ch            the [Channel] which was registered.
-                     * @throws Exception    is thrown if an error occurs. In that case the [Channel] will be closed.
-                     */
-                    override fun initChannel(ch: SocketChannel) {
-                        val pipeline = ch.pipeline()
+                /**
+                 * This method will be called once the [Channel] was registered. After the method returns this instance
+                 * will be removed from the [ChannelPipeline] of the [Channel].
+                 *
+                 * @param ch            the [Channel] which was registered.
+                 * @throws Exception    is thrown if an error occurs. In that case the [Channel] will be closed.
+                 */
+                override fun initChannel(ch: SocketChannel) {
+                    val pipeline = ch.pipeline()
 
-                        if(sslContext != null) {
-                            pipeline.addLast(sslContext.newHandler(ch.alloc()))
-                        }
-
-                        pipeline.addLast(HttpClientCodec(), HttpObjectAggregator(8192), handler)
+                    if (sslContext != null) {
+                        pipeline.addLast(sslContext.newHandler(ch.alloc()))
                     }
 
-                })
+                    pipeline.addLast(HttpClientCodec(), HttpObjectAggregator(8192), handler)
+                }
+
+            })
 
         channel = bootstrap.connect(uri.host, uri.port).sync().channel()
         handler.handshakeFuture.sync()
@@ -135,11 +142,11 @@ class Client(val listener: ClientListener) {
      */
     internal fun onMessage(message: String) {
         val gson = GsonBuilder()
-                .registerTypeAdapter(Packet::class.java, deserializer)
-                .create()
+            .registerTypeAdapter(Packet::class.java, deserializer)
+            .create()
 
         val packet = gson.fromJson(message, Packet::class.java)
-        when(packet) {
+        when (packet) {
             is ClientMojangInfoPacket -> {
                 listener.onLogon()
 
@@ -151,7 +158,7 @@ class Client(val listener: ClientListener) {
                     jwt = false
 
                     sendPacket(ServerLoginMojangPacket(mc.session.username, mc.session.profile.id, allowMessages = true))
-                }catch (throwable: Throwable) {
+                } catch (throwable: Throwable) {
                     listener.onError(throwable)
                 }
                 return
@@ -192,7 +199,6 @@ class Client(val listener: ClientListener) {
             }
 
             is ClientNewJWTPacket -> {
-
             }
         }
     }
@@ -202,8 +208,8 @@ class Client(val listener: ClientListener) {
      */
     fun sendPacket(packet: Packet) {
         val gson = GsonBuilder()
-                .registerTypeAdapter(Packet::class.java, serializer)
-                .create()
+            .registerTypeAdapter(Packet::class.java, serializer)
+            .create()
 
         channel?.writeAndFlush(TextWebSocketFrame(gson.toJson(packet, Packet::class.java)))
     }
@@ -236,16 +242,16 @@ class Client(val listener: ClientListener) {
             UUID.fromString(target)
 
             target
-        }catch (_: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             val incomingUUID = ProfileUtils.getUUID(target)
 
-            if(incomingUUID.isBlank()) return ""
+            if (incomingUUID.isBlank()) return ""
 
             val uuid = StringBuffer(incomingUUID)
-                    .insert(20, '-')
-                    .insert(16, '-')
-                    .insert(12, '-')
-                    .insert(8, '-')
+                .insert(20, '-')
+                .insert(16, '-')
+                .insert(12, '-')
+                .insert(8, '-')
 
             uuid.toString()
         }

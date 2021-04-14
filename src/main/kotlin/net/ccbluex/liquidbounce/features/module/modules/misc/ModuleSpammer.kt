@@ -33,16 +33,19 @@ import kotlin.random.Random
 object ModuleSpammer : Module("Spammer", Category.MISC) {
 
     private val delay by intRange("Delay", 12..14, 0..20)
-    private val messages by textArray("Messages", mutableListOf(
-        "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}",
-        "LiquidBounce: FREE and OPEN-SOURCE & 100% CUSTOMIZABLE"
-    ))
+    private val messages by textArray(
+        "Messages",
+        mutableListOf(
+            "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}",
+            "LiquidBounce: FREE and OPEN-SOURCE & 100% CUSTOMIZABLE"
+        )
+    )
     private val customFormatter by boolean("CustomFormatter", false)
 
     val repeatable = repeatable {
         val text = if (customFormatter) {
             format(messages.random())
-        }else{
+        } else {
             "[${RandomStringUtils.randomAlphabetic(Random.nextInt(4) + 1)}] " + messages.random().toCharArray()
                 .map { if (Random.nextBoolean()) it.toUpperCase() else it.toLowerCase() }.joinToString("")
         }

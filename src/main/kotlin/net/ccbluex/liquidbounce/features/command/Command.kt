@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.features.command
 
 import net.minecraft.text.TranslatableText
-import org.jetbrains.annotations.Contract
 import java.util.*
 
 typealias CommandHandler = (Command, Array<Any>) -> Unit
@@ -42,15 +41,17 @@ class Command(
 
     init {
         subcommands.forEach {
-            if (it.parentCommand != null)
+            if (it.parentCommand != null) {
                 throw IllegalStateException("Subcommand already has parent command")
+            }
 
             it.parentCommand = this
         }
 
         parameters.forEach {
-            if (it.command != null)
+            if (it.command != null) {
                 throw IllegalStateException("Parameter already has a command")
+            }
 
             it.command = this
         }
@@ -71,10 +72,11 @@ class Command(
     fun getFullName(): String {
         val parent = this.parentCommand
 
-        return if (parent == null)
+        return if (parent == null) {
             this.name
-        else
+        } else {
             parent.getFullName() + " " + this.name
+        }
     }
 
     /**
@@ -92,13 +94,15 @@ class Command(
             for (parameter in parameters) {
                 var name = parameter.name
 
-                name = if (parameter.required)
+                name = if (parameter.required) {
                     "<$name>"
-                else
+                } else {
                     "[<$name>]"
+                }
 
-                if (parameter.vararg)
+                if (parameter.vararg) {
                     name += "..."
+                }
 
                 joiner.add(name)
             }

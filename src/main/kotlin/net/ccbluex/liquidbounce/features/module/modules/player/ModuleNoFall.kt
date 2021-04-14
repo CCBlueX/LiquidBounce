@@ -45,12 +45,11 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
     private object Packet : Choice("Packet", modes) {
 
         val repeatable = repeatable {
-            if(player.fallDistance > 2f) {
+            if (player.fallDistance > 2f) {
                 network.sendPacket(PlayerMoveC2SPacket(true))
             }
         }
 
     }
-
 
 }

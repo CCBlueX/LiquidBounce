@@ -45,7 +45,6 @@ data class ServerLoginMojangPacket(
 
 ) : Packet
 
-
 /**
  * To login using a json web token, the client has to send a LoginJWT packet.
  * it will send Success if the login was successful.

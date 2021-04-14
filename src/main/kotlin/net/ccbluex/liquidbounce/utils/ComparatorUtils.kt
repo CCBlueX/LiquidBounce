@@ -25,8 +25,9 @@ class ComparatorChain<T>(private vararg val comparisonFunctions: Comparator<T>) 
         for (comparisonFunction in this.comparisonFunctions) {
             val comparisonResult = comparisonFunction.compare(o1, o2)
 
-            if (comparisonResult != 0)
+            if (comparisonResult != 0) {
                 return comparisonResult
+            }
         }
 
         return 0
