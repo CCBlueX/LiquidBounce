@@ -1,8 +1,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.block.Blocks
 import net.minecraft.block.FallingBlock
@@ -21,7 +22,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private val swing by boolean("Swing", true)
     private val search by boolean("Search", true)
-    private val eagle by chooseList("Eagle", "Normal", arrayOf("Off", "Normal", "Silent"))
+    private val eagle by enumChoice("Eagle", EagleMode.OFF, EagleMode.values())
     private val blocksToEagle by int("BlocksToEagle", 0, 0..10)
     private val edgeDist by float("EagleEdgeDistance", 0f, 0f..0.5f)
     private val timer by float("Timer", 1f, 0.1f..3f)
@@ -61,8 +62,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             player.z
         ) else BlockPos(player.pos).down())
 
-        // Eagle (by bestnub)
-        if (!eagle.equals("Off", true)) {
+        if (eagle != EagleMode.OFF) {
             var dif = 0.5
             if (edgeDist > 0) {
                 for (direction in Direction.values()) {
@@ -91,7 +91,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                         player.z
                     )
                 ).block == Blocks.AIR || dif < edgeDist
-                if (eagle.equals("Silent", true)) {
+                if (eagle == EagleMode.SNEAK) {
                     if (eagleSneaking != shouldEagle) {
                         network.sendPacket(
                             ClientCommandC2SPacket(
@@ -223,4 +223,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 second is BlockItem && second.block !is FallingBlock
             }?.first ?: -1
     }
+
+    private enum class EagleMode(override val choiceName: String) : NamedChoice {
+        OFF("Off"), SNEAK("On"), SILENT_SNEAK("Silent")
+    }
+
 }

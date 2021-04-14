@@ -1,8 +1,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.extensions.moving
 import net.ccbluex.liquidbounce.utils.extensions.strafe
 import net.minecraft.entity.EquipmentSlot
@@ -16,16 +16,17 @@ object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
     private val horizontal by float("Horizontal", 1f, 0.1f..2f)
 
     val repeatable = repeatable {
-
         // Find the chest slot
         val chestSlot = player.getEquippedStack(EquipmentSlot.CHEST)
 
-        if(player.abilities.creativeMode)
+        if (player.abilities.creativeMode) {
             return@repeatable
+        }
 
         // If the player doesn't have an elytra in the chest slot
-        if (chestSlot.item != Items.ELYTRA)
+        if (chestSlot.item != Items.ELYTRA) {
             return@repeatable
+        }
 
         // If dude's flying
         if (player.isFallFlying) {

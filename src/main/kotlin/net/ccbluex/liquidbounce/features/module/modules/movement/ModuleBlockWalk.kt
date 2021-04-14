@@ -15,9 +15,9 @@ object ModuleBlockWalk : Module("BlockWalk", Category.MOVEMENT) {
 
     val shapeHandler = handler<BlockShapeEvent> { event ->
         // For some reason, it doesn't really work even though it should? Does this need mixins too?
-        event.shape = when(event.state.block) {
-            is CobwebBlock -> if(web) VoxelShapes.fullCube() else return@handler
-            is SnowBlock -> if(snow) VoxelShapes.fullCube() else return@handler
+        event.shape = when (event.state.block) {
+            is CobwebBlock -> if (web) VoxelShapes.fullCube() else return@handler
+            is SnowBlock -> if (snow) VoxelShapes.fullCube() else return@handler
             else -> return@handler
         }
     }
