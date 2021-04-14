@@ -8,13 +8,15 @@ import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.minecraft.block.Blocks
 import net.minecraft.util.math.BlockPos
 
-object ModuleSlimeJump : Module("SlimeJump", Category.MOVEMENT) {
+object ModuleBounce : Module("Bounce", Category.MOVEMENT) {
 
     private val modes = choices("Mode", "Add") {
         Add
         Set
     }
     private val motion by float("Motion", 0.42f, 0.2f..1f)
+
+    // todo: add for beds
 
     private object Add : Choice("Add", modes) {
         val repeatable = repeatable {
