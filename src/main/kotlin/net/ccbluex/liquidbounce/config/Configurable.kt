@@ -18,35 +18,14 @@
  */
 package net.ccbluex.liquidbounce.config
 
-import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.minecraft.block.Block
 import net.minecraft.item.Item
-import java.lang.reflect.Modifier
 
 open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf()) :
     Value<MutableList<Value<*>>>(name, value = value) {
-
-    init {
-        for (field in javaClass.declaredFields) {
-            if (Modifier.isStatic(field.modifiers) || field.isAnnotationPresent(
-                    Exclude::class.java
-                ) || !Value::class.java.isAssignableFrom(field.type)
-            ) {
-                continue
-            }
-
-            if (!field.isAccessible) {
-                field.isAccessible = true
-            }
-
-            val v = field.get(this) ?: continue
-
-            this.value.add(v as Value<*>)
-        }
-    }
 
     fun initConfigurable() {
         value.filterIsInstance<ChoiceConfigurable>().forEach {
