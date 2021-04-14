@@ -149,7 +149,7 @@ object UltralightEngine {
         views.forEach { it.resize(width, height) }
     }
 
-    fun newUndefinedView() =
+    fun newSplashView() =
         View(RenderLayer.SPLASH_LAYER, renderer, newViewRenderer()).also { views += it }
 
     fun newOverlayView() =

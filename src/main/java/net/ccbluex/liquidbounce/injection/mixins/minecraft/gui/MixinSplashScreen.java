@@ -53,7 +53,7 @@ public class MixinSplashScreen {
         if (page == null)
             return;
 
-        view = UltralightEngine.INSTANCE.newUndefinedView();
+        view = UltralightEngine.INSTANCE.newSplashView();
         view.loadPage(page);
     }
 
