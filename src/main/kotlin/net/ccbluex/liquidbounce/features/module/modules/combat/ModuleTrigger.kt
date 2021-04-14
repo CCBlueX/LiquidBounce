@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.CpsTimer
 import net.ccbluex.liquidbounce.utils.extensions.shouldBeAttacked
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.EntityHitResult
@@ -36,13 +37,23 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
     val cps by intRange("CPS", 5..8, 1..20)
     val cooldown by boolean("Cooldown", true)
 
-    val tickRepeatable = repeatable {
-        waitUntil { player.getAttackCooldownProgress(0.0f) >= 1.0f }
+    private val cpsTimer = CpsTimer()
 
+    val repeatable = repeatable {
         val crosshair = mc.crosshairTarget
+
         if (crosshair is EntityHitResult && crosshair.entity.shouldBeAttacked()) {
-            interaction.attackEntity(player, crosshair.entity)
-            player.swingHand(Hand.MAIN_HAND)
+            cpsTimer.tick(
+                click = {
+                    interaction.attackEntity(player, crosshair.entity)
+                    player.swingHand(Hand.MAIN_HAND)
+                },
+                condition = {
+                    !cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f
+                },
+                cps
+            )
+
         }
     }
 

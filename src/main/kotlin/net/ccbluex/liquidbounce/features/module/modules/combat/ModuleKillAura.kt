@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.CpsTimer
 import net.ccbluex.liquidbounce.utils.extensions.RotationManager
 import net.ccbluex.liquidbounce.utils.extensions.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.extensions.TargetTracker
@@ -69,6 +70,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     val checkableInventory by boolean("CheckableInventory", false) // todo:
 
+    private val cpsTimer = CpsTimer()
+
     override fun enable() {
         targetTracker.update()
     }
@@ -113,8 +116,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         val target = targetTracker.lockedOnTarget ?: return
 
-        if (target.squaredDistanceTo(player) <= rangeSquared && RotationManager.facingEnemy(target, range.toDouble()) && player.getAttackCooldownProgress(0.0f) >= 1.0f) {
-            attackEntity(target)
+        if (target.squaredDistanceTo(player) <= rangeSquared && RotationManager.facingEnemy(target, range.toDouble())) {
+            cpsTimer.tick(
+                click = {
+                    attackEntity(target)
+                },
+                condition = {
+                    !cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f
+                },
+                cps
+            )
         }
     }
 

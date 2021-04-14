@@ -169,7 +169,7 @@ public abstract class MixinMinecraftClient {
     /**
      * Hook input handling
      */
-    @Inject(method = "tick", at = @At("RETURN"))
+    @Inject(method = "handleInputEvents", at = @At("RETURN"))
     private void hookHandleInputEvent(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new InputHandleEvent());
     }
