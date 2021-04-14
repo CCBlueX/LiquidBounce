@@ -40,11 +40,11 @@ open class Value<T : Any>(
     open val name: String,
     @SerializedName("value")
     internal var value: T,
-    @Exclude(keepInternal = true)
+    @Exclude
     internal val listType: ListValueType = ListValueType.None,
 ) {
 
-    @Exclude(keepInternal = true)
+    @Exclude
     private val type: String = value.javaClass.typeName
 
     @Exclude
@@ -102,8 +102,6 @@ open class Value<T : Any>(
         }
     }
 
-    fun toInternalJson(): String = ConfigSystem.internalGson.toJson(this)
-
 }
 
 /**
@@ -112,14 +110,14 @@ open class Value<T : Any>(
 class RangedValue<T : Any>(
     name: String,
     value: T,
-    @Exclude(keepInternal = true)
+    @Exclude
     val range: ClosedRange<*>
 ) : Value<T>(name, value)
 
 class ChooseListValue<T : NamedChoice>(
     name: String,
     selected: T,
-    @Exclude(keepInternal = true)
+    @Exclude
     val choices: Array<T>
 ) : Value<T>(name, selected) {
 
