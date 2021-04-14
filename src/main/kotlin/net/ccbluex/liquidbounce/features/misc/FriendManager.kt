@@ -26,7 +26,7 @@ import java.util.*
 
 object FriendManager: Configurable("friends") {
 
-    val friends by value(name, TreeSet<Friend>(), ListValueType.Friend)
+    val friends by value(name, TreeSet<Friend>(), listType = ListValueType.Friend)
 
     init {
         ConfigSystem.root(this)

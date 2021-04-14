@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.script.bindings.global
 import jdk.nashorn.api.scripting.JSObject
 import net.ccbluex.liquidbounce.config.RangedValue
 import net.ccbluex.liquidbounce.config.Value
+import net.ccbluex.liquidbounce.config.ValueType
 import net.minecraft.block.Block
 
 /**
@@ -38,7 +39,7 @@ object Setting {
         val name = settingInfo.getMember("name") as String
         val default = settingInfo.getMember("default") as Boolean
 
-        return Value(name, value = default)
+        return Value(name, value = default, ValueType.BOOLEAN)
     }
 
     /**
@@ -53,7 +54,7 @@ object Setting {
         val min = (settingInfo.getMember("min") as Number).toInt()
         val max = (settingInfo.getMember("max") as Number).toInt()
 
-        return RangedValue(name, value = default, range = min..max)
+        return RangedValue(name, value = default, range = min..max, ValueType.INT)
     }
 
     /**
@@ -68,7 +69,7 @@ object Setting {
         val min = (settingInfo.getMember("min") as Number).toFloat()
         val max = (settingInfo.getMember("max") as Number).toFloat()
 
-        return RangedValue(name, value = default, range = min..max)
+        return RangedValue(name, value = default, range = min..max, ValueType.FLOAT)
     }
 
     /**
@@ -81,7 +82,7 @@ object Setting {
         val name = settingInfo.getMember("name") as String
         val default = settingInfo.getMember("default") as String
 
-        return Value(name, value = default)
+        return Value(name, value = default, ValueType.TEXT)
     }
 
     /**
@@ -94,7 +95,7 @@ object Setting {
         val name = settingInfo.getMember("name") as String
         val default = settingInfo.getMember("default") as Block
 
-        return Value(name, value = default)
+        return Value(name, value = default, ValueType.BLOCK)
     }
 
 }
