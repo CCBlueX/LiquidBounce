@@ -37,6 +37,7 @@ object CommandToggle {
                 ParameterBuilder
                     .begin<String>("name")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                    .autocompletedWith(ModuleManager::autoComplete)
                     .required()
                     .build()
             )
