@@ -25,18 +25,12 @@ import com.google.gson.reflect.TypeToken
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)
-annotation class Exclude(val keepInternal: Boolean = false)
+annotation class Exclude
 
 class ExcludeStrategy(val internal: Boolean) : ExclusionStrategy {
     override fun shouldSkipClass(clazz: Class<*>?) = false
-    override fun shouldSkipField(field: FieldAttributes): Boolean {
-        val annotation = field.getAnnotation(Exclude::class.java) ?: return false
-
-        if (internal && annotation.keepInternal) {
-            return false
-        }
-        return true
-    }
+    override fun shouldSkipField(field: FieldAttributes) =
+        field.getAnnotation(Exclude::class.java) != null
 }
 
 /**

@@ -65,19 +65,6 @@ object ConfigSystem {
         .registerTypeHierarchyAdapter(ToggleableConfigurable::class.javaObjectType, ToggleableConfigurableSerializer)
         .create()
 
-    internal val internalGson = GsonBuilder()
-        .addSerializationExclusionStrategy(ExcludeStrategy(true))
-        .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeSerializer)
-        .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
-        .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
-        .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockValueSerializer)
-        .registerTypeAdapter(Fonts.FontDetail::class.javaObjectType, FontDetailSerializer)
-        .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
-        .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
-        .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
-        .registerTypeHierarchyAdapter(ToggleableConfigurable::class.javaObjectType, ToggleableConfigurableSerializer)
-        .create()
-
     /**
      * Create a new root configurable
      */
