@@ -18,8 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.Exclude
+import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.logger
@@ -37,12 +38,15 @@ import org.lwjgl.glfw.GLFW
  */
 open class Module(
     name: String, // name parameter in configurable
-    @Exclude val category: Category, // module category
+    @Exclude(keepInternal = true)
+    val category: Category, // module category
     bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
     state: Boolean = false, // default state
-    @Exclude val disableActivation: Boolean = false, // disable activation
+    @Exclude(keepInternal = true)
+    val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false // default hide
 ) : Listenable, Configurable(name) {
+
     open val translationBaseKey: String
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
 
@@ -50,36 +54,44 @@ open class Module(
         get() = "$translationBaseKey.description"
 
     // Module options
-    var enabled by boolean("enabled", state, change = { old, new ->
-        runCatching {
-            // Call enable or disable function
-            if (new) {
-                enable()
-            } else {
-                disable()
-            }
-        }.onSuccess {
-            // Save new module state when module activation is enabled
-            if (disableActivation) {
-                error("module disabled activation")
+    var enabled by boolean("enabled", state)
+        .listen { new ->
+            runCatching {
+                // Call enable or disable function
+                if (new) {
+                    enable()
+                } else {
+                    disable()
+                }
+            }.onSuccess {
+                // Save new module state when module activation is enabled
+                if (disableActivation) {
+                    return@listen false
+                }
+
+                notification(
+                    if (new) TranslatableText("liquidbounce.generic.enabled") else TranslatableText("liquidbounce.generic.disabled"),
+                    this.name,
+                    NotificationEvent.Severity.INFO
+                )
+
+                // Call out module event
+                EventManager.callEvent(ToggleModuleEvent(this, new))
+
+                // Call to choices
+                value.filterIsInstance<ChoiceConfigurable>()
+                    .forEach { it.newState(new) }
+            }.onFailure {
+                // Log error
+                logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
+                // In case of an error module should stay disabled
+                throw it
             }
 
-            notification(
-                if (new) TranslatableText("liquidbounce.generic.enabled") else TranslatableText("liquidbounce.generic.disabled"),
-                this.name,
-                NotificationEvent.Severity.INFO
-            )
-
-            // Call out module event
-            EventManager.callEvent(ToggleModuleEvent(this, new))
-        }.onFailure {
-            // Log error
-            logger.error("Module toggle failed (old: $old, new: $new)", it)
-            // In case of an error module should stay disabled
-            throw it
+            new
         }
-    })
-    var bind by int("bind", bind)
+
+    var bind by int("bind", bind, 0..0)
     var hidden by boolean("hidden", hide)
 
     // Tag to be displayed on the HUD
@@ -103,17 +115,17 @@ open class Module(
     /**
      * Called when module is turned on
      */
-    open fun enable() {}
+    open fun enable() { }
 
     /**
      * Called when module is turned off
      */
-    open fun disable() {}
+    open fun disable() { }
 
     /**
      * Called when the module is added to the module manager
      */
-    open fun init() {}
+    open fun init() { }
 
     /**
      * Events should be handled when module is enabled
@@ -123,137 +135,5 @@ open class Module(
     fun message(key: String, vararg args: Any): TranslatableText {
         return TranslatableText("$translationBaseKey.messages.$key", args)
     }
-}
 
-/**
- * Should handle events when enabled. Allows the client-user to toggle features. (like modules)
- */
-open class ListenableConfigurable(@Exclude val module: Module? = null, name: String, enabled: Boolean) : Listenable,
-    Configurable(name) {
-    val translationBaseKey: String
-        get() = "${module?.translationBaseKey}.value.${name.toLowerCamelCase()}"
-
-    val description: TranslatableText
-        get() = TranslatableText("$translationBaseKey.description")
-
-    var enabled by boolean("Enabled", enabled)
-
-    override fun handleEvents() = module?.enabled == true && enabled
-
-}
-
-/**
- * Allows to configure and manage modes
- */
-open class ChoiceConfigurable(
-    @Exclude val module: Module,
-    name: String,
-    var active: String,
-    @Exclude val initialize: (ChoiceConfigurable) -> Unit
-) : Configurable(name) {
-    val translationBaseKey: String
-        get() = "${module.translationBaseKey}.value.${name.toLowerCamelCase()}"
-
-    val description: TranslatableText
-        get() = TranslatableText("$translationBaseKey.description")
-
-    @Exclude
-    val choices: MutableList<Choice> = mutableListOf()
-}
-
-/**
- * Empty mode. It does nothing. Use it when you want a client-user to disable a feature.
- */
-class NoneChoice(configurable: ChoiceConfigurable) : Choice("None", configurable)
-
-/**
- * A mode is sub-module to separate different bypasses into extra classes
- */
-open class Choice(name: String, @Exclude private val configurable: ChoiceConfigurable) : Configurable(name),
-    Listenable {
-
-    val translationBaseKey: String
-        get() = "${configurable.translationBaseKey}.choice.${name.toLowerCamelCase()}"
-
-    val description: TranslatableText
-        get() = TranslatableText("$translationBaseKey.description")
-
-    init {
-        configurable.choices += this
-    }
-
-    /**
-     * Quick access
-     */
-    protected val mc: MinecraftClient
-        get() = net.ccbluex.liquidbounce.utils.mc
-    protected val player: ClientPlayerEntity
-        get() = mc.player!!
-    protected val world: ClientWorld
-        get() = mc.world!!
-    protected val network: ClientPlayNetworkHandler
-        get() = mc.networkHandler!!
-
-    val isActive: Boolean
-        get() = configurable.active.equals(name, true)
-
-    @Exclude
-    val handler = handler<ToggleModuleEvent>(ignoreCondition = true) { event ->
-        if (configurable.module == event.module && configurable.active.equals(name, true)) {
-            if (event.newState) {
-                enable()
-            } else {
-                disable()
-            }
-        }
-    }
-
-    /**
-     * Called when module is turned on
-     */
-    open fun enable() {}
-
-    /**
-     * Called when module is turned off
-     */
-    open fun disable() {}
-
-    /**
-     * Events should be handled when mode is enabled
-     */
-    override fun handleEvents() = configurable.module.enabled && isActive
-
-    /**
-     * Required for repeatable sequence
-     */
-    override fun hook() = configurable.module
-
-}
-
-/**
- * Registers an event hook for events of type [T] and launches a sequence
- */
-inline fun <reified T : Event> Listenable.sequenceHandler(
-    ignoreCondition: Boolean = false,
-    noinline eventHandler: SuspendableHandler<T>
-) {
-    handler<T>(ignoreCondition) { event -> Sequence(eventHandler, event) }
-}
-
-/**
- * Registers a repeatable sequence which continues to execute until the module is turned off
- */
-fun Listenable.repeatable(eventHandler: SuspendableHandler<ToggleModuleEvent>) {
-    var sequence: Sequence<ToggleModuleEvent>? = null
-
-    handler<ToggleModuleEvent>(ignoreCondition = true) { event ->
-        if (event.module == hook()) {
-            sequence = if (event.newState) {
-                Sequence(eventHandler, event, loop = true)
-            } else {
-                sequence?.cancel()
-                null
-            }
-        }
-    }
 }

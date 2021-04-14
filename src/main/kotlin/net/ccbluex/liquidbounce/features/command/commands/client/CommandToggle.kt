@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.chat
-import net.ccbluex.liquidbounce.utils.dot
 import net.ccbluex.liquidbounce.utils.regular
 import net.ccbluex.liquidbounce.utils.variable
 
@@ -34,11 +33,13 @@ object CommandToggle {
         return CommandBuilder
             .begin("toggle")
             .alias("t")
-            .parameter(ParameterBuilder
-                .begin<String>("name")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .required()
-                .build())
+            .parameter(
+                ParameterBuilder
+                    .begin<String>("name")
+                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                    .required()
+                    .build()
+            )
             .handler { command, args ->
                 val name = args[0] as String
                 val module = ModuleManager.find { it.name.equals(name, true) }

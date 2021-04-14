@@ -32,11 +32,8 @@ import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPositio
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.extensions.outputString
-import net.minecraft.text.BaseText
-import net.minecraft.text.LiteralText
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Formatting
-
 
 class CommandException(val text: TranslatableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
     Exception(text.outputString(), cause)
@@ -64,7 +61,7 @@ object CommandExecutor : Listenable {
                     //  .friend add <name> [<alias>]
                     //  OR .friend remove <name>
                     e.usageInfo.forEach { usage ->
-                        chat("§c ${if (first) "" else "OR "}.${usage}")
+                        chat("§c ${if (first) "" else "OR "}.$usage")
 
                         if (first) {
                             first = false
@@ -165,8 +162,9 @@ object CommandManager : Iterable<Command> {
         idx: Int = 0
     ): Pair<Command, Int>? {
         // Return the last command when there are no more arguments
-        if (idx >= args.size)
+        if (idx >= args.size) {
             return currentCommand
+        }
 
         // If currentCommand is null, idx must be 0, so search in all commands
         val commandSupplier = currentCommand?.first?.subcommands?.asIterable() ?: commands
@@ -196,8 +194,9 @@ object CommandManager : Iterable<Command> {
         val args = tokenize(cmd)
 
         // Prevent bugs
-        if (args.isEmpty())
+        if (args.isEmpty()) {
             return
+        }
 
         // getSubcommands will only return null if it returns on the first index.
         // since the first index must contain a valid command, it is reported as
@@ -206,15 +205,17 @@ object CommandManager : Iterable<Command> {
         val command = pair.first
 
         // If the command is not executable, don't allow it to be executed
-        if (!command.executable)
+        if (!command.executable) {
             throw CommandException(TranslatableText("liquidbounce.commandManager.invalidUsage", args[0]), usageInfo = command.usage())
+        }
 
         // The index the command is in
         val idx = pair.second
 
         // If there are more arguments for a command that takes no parameters
-        if (command.parameters.isEmpty() && idx != args.size - 1)
+        if (command.parameters.isEmpty() && idx != args.size - 1) {
             throw CommandException(TranslatableText("liquidbounce.commandManager.commandTakesNoParameters"), usageInfo = command.usage())
+        }
 
         // If there is a required parameter after the supply of arguments ends, it is absent
         if (args.size - idx - 1 < command.parameters.size && command.parameters[args.size - idx - 1].required) {
@@ -262,12 +263,14 @@ object CommandManager : Iterable<Command> {
 
             // Varargs can only occur at the end and the following args shouldn't be treated
             // as parameters, so we can end
-            if (parameter.vararg)
+            if (parameter.vararg) {
                 break
+            }
         }
 
-        if (!command.executable)
+        if (!command.executable) {
             throw CommandException(TranslatableText("liquidbounce.commandManager.commandNotExecutable", command.name), usageInfo = command.usage())
+        }
 
         @Suppress("UNCHECKED_CAST")
         command.handler!!(command, parsedParameters as Array<Any>)

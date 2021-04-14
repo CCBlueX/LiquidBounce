@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.Nameable
 import net.minecraft.block.BlockState
@@ -109,7 +110,6 @@ class BlockShapeEvent(val state: BlockState, val pos: BlockPos, var shape: Voxel
 @Nameable("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 
-
 // Entity events bound to client-user entity
 
 @Nameable("playerTick")
@@ -126,6 +126,9 @@ class PlayerPushOutEvent : CancellableEvent()
 
 @Nameable("playerMove")
 class PlayerMoveEvent(val type: MovementType, val movement: Vec3d) : Event()
+
+@Nameable("playerJump")
+class PlayerJumpEvent(var motion: Float) : CancellableEvent()
 
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
@@ -146,6 +149,9 @@ class ClientStartEvent : Event()
 
 @Nameable("clientShutdown")
 class ClientShutdownEvent : Event()
+
+@Nameable("valueChanged")
+class ValueChangedEvent(val value: Value<*>) : Event()
 
 @Nameable("toggleModule")
 class ToggleModuleEvent(val module: Module, val newState: Boolean) : Event()

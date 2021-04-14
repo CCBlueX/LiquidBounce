@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.render.utils
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import java.awt.Color
 
-
 fun rainbow(): Color4b {
     val currentColor = Color(Color.HSBtoRGB((System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F, 1F, 1F))
 

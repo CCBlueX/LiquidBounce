@@ -25,8 +25,6 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.extensions.asText
-import net.ccbluex.liquidbounce.utils.extensions.outputString
-import net.ccbluex.liquidbounce.utils.keyName
 import net.ccbluex.liquidbounce.utils.regular
 import net.ccbluex.liquidbounce.utils.variable
 import net.minecraft.text.LiteralText
@@ -69,22 +67,25 @@ object CommandHelp {
                 for (cmd in commands.subList(iterPage - 8, iterPage.coerceAtMost(commands.size))) {
                     val aliases = LiteralText("")
 
-                    if (cmd.aliases.isNotEmpty())
+                    if (cmd.aliases.isNotEmpty()) {
                         cmd.aliases.forEach { alias -> aliases.append(variable(", ")).append(regular(alias)) }
+                    }
 
-                    chat("- ".asText()
-                        .styled { it.withColor(Formatting.BLUE) }
-                        .append(CommandManager.Options.prefix + cmd.name)
-                        .styled { it.withColor(Formatting.GRAY) }
-                        .append(aliases)
+                    chat(
+                        "- ".asText()
+                            .styled { it.withColor(Formatting.BLUE) }
+                            .append(CommandManager.Options.prefix + cmd.name)
+                            .styled { it.withColor(Formatting.GRAY) }
+                            .append(aliases)
                     )
                 }
 
-                chat("--- ".asText()
-                    .styled { it.withColor(Formatting.DARK_GRAY) }
-                    .append(variable("${CommandManager.Options.prefix}help <"))
-                    .append(variable(command.result("page")))
-                    .append(variable(">"))
+                chat(
+                    "--- ".asText()
+                        .styled { it.withColor(Formatting.DARK_GRAY) }
+                        .append(variable("${CommandManager.Options.prefix}help <"))
+                        .append(variable(command.result("page")))
+                        .append(variable(">"))
                 )
             }
             .build()

@@ -34,8 +34,9 @@ object Shaders {
      */
     fun init() {
         // Don't try to load shaders if they are not supported
-        if (!RenderEngine.openglLevel.supportsShaders())
+        if (!RenderEngine.openglLevel.supportsShaders()) {
             return
+        }
 
         try {
             InstancedColoredPrimitiveShader
@@ -80,7 +81,6 @@ object ColoredPrimitiveShader {
     }
 }
 
-
 /**
  * Used for [TexturedPrimitiveRenderTask]
  */
@@ -114,7 +114,6 @@ object TexturedPrimitiveShader {
         mvpMatrix.putToUniform(this.mvpMatrixUniformLocation)
     }
 }
-
 
 /**
  * Used for [InstancedColoredPrimitiveRenderTask]

@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.mc
 import net.ccbluex.liquidbounce.utils.regular
 import net.ccbluex.liquidbounce.utils.variable
-
 import org.lwjgl.glfw.GLFW
 
 object CommandPosition {

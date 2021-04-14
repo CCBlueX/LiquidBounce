@@ -41,13 +41,12 @@ class PacketSerializer : JsonSerializer<Packet> {
      */
     override fun serialize(src: Packet, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         val packetName = packetRegistry.getOrDefault(src.javaClass, "UNKNOWN")
-        val serializedPacket = SerializedPacket(packetName, if(src.javaClass.constructors.none { it.parameterCount != 0 }) null else src )
+        val serializedPacket = SerializedPacket(packetName, if (src.javaClass.constructors.none { it.parameterCount != 0 }) null else src)
 
         return Gson().toJsonTree(serializedPacket)
     }
 
 }
-
 
 /**
  * Packet Deserializer
@@ -84,13 +83,12 @@ class PacketDeserializer : JsonDeserializer<Packet> {
         val packetObject = json.asJsonObject
         val packetName = packetObject.get("m").asString
 
-        if(!packetRegistry.containsKey(packetName)) return null
+        if (!packetRegistry.containsKey(packetName)) return null
 
-        if(!packetObject.has("c")) packetObject.add("c", JsonObject())
+        if (!packetObject.has("c")) packetObject.add("c", JsonObject())
 
         return Gson().fromJson(packetObject.get("c"), packetRegistry[packetName])
 
     }
 
 }
-

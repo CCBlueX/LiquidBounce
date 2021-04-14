@@ -50,6 +50,10 @@ object EventManager {
         NotificationEvent::class,
     ).map { Pair(it.findAnnotation<Nameable>()!!.name, it) }
 
+    init {
+        SequenceManager
+    }
+
     /**
      * Registers an event hook for events of type [T]
      */
@@ -97,8 +101,9 @@ object EventManager {
         val target = registry[event.javaClass] ?: return
 
         for (eventHook in target) {
-            if (!eventHook.ignoresCondition && !eventHook.handlerClass.handleEvents())
+            if (!eventHook.ignoresCondition && !eventHook.handlerClass.handleEvents()) {
                 continue
+            }
 
             runCatching {
                 eventHook.handler(event)

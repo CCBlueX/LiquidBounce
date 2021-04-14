@@ -48,11 +48,13 @@ fun ItemStack?.getEnchantmentCount(): Int {
     var c = 0
 
     for (enchantment in enchantments) {
-        if (enchantment !is CompoundTag)
+        if (enchantment !is CompoundTag) {
             continue
+        }
 
-        if (enchantment.contains("ench") || enchantment.contains("id"))
+        if (enchantment.contains("ench") || enchantment.contains("id")) {
             c++
+        }
     }
 
     return c
@@ -63,18 +65,19 @@ fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
     val enchId = Registry.ENCHANTMENT.getId(enchantment)
 
     for (enchantmentEntry in enchantments) {
-        if (enchantmentEntry !is CompoundTag)
+        if (enchantmentEntry !is CompoundTag) {
             continue
+        }
 
-        if (enchantmentEntry.contains("id") && Identifier.tryParse(enchantmentEntry.getString("id")) == enchId)
+        if (enchantmentEntry.contains("id") && Identifier.tryParse(enchantmentEntry.getString("id")) == enchId) {
             return enchantmentEntry.getShort("lvl").toInt()
+        }
     }
 
     return 0
 }
 
 fun isInHotbar(slot: Int) = slot == 40 || slot in 0..8
-
 
 val ToolItem.type: Int
     get() = when (this) {

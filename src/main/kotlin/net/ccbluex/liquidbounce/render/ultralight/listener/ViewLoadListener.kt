@@ -88,8 +88,14 @@ class ViewLoadListener(private val view: View) : UltralightLoadListener {
      * @param errorDomain The domain that failed to load
      * @param errorCode   An error code indicating the error reason
      */
-    override fun onFailLoading(frameId: Long, isMainFrame: Boolean, url: String, description: String,
-                               errorDomain: String, errorCode: Int) {
+    override fun onFailLoading(
+        frameId: Long,
+        isMainFrame: Boolean,
+        url: String,
+        description: String,
+        errorDomain: String,
+        errorCode: Int
+    ) {
         logger.error("${frameName(frameId, isMainFrame, url)}Failed to load $errorDomain, $errorCode($description)")
     }
 

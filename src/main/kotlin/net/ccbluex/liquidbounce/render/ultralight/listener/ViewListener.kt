@@ -92,8 +92,14 @@ class ViewListener : UltralightViewListener {
      * @param columnNumber The column the message originated from
      * @param sourceId     The id of the source
      */
-    override fun onAddConsoleMessage(source: MessageSource, level: MessageLevel, message: String, lineNumber: Long,
-                                     columnNumber: Long, sourceId: String) {
+    override fun onAddConsoleMessage(
+        source: MessageSource,
+        level: MessageLevel,
+        message: String,
+        lineNumber: Long,
+        columnNumber: Long,
+        sourceId: String
+    ) {
         logger.info("View message: [${source.name}/${level.name}] $sourceId:$lineNumber:$columnNumber: $message")
     }
 
@@ -109,8 +115,12 @@ class ViewListener : UltralightViewListener {
      * @return The view to display the new URL in, or `null`, if the request should not be further handled by
      * Ultralight
      */
-    override fun onCreateChildView(openerUrl: String, targetUrl: String, isPopup: Boolean,
-                                   popupRect: IntRect): UltralightView? {
+    override fun onCreateChildView(
+        openerUrl: String,
+        targetUrl: String,
+        isPopup: Boolean,
+        popupRect: IntRect
+    ): UltralightView? {
         // Returning null will stop Ultralight from further handling the request, ignoring it altogether
         return null
     }

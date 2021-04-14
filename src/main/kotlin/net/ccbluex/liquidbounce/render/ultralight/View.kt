@@ -175,5 +175,5 @@ open class View(val layer: RenderLayer, ultralightRenderer: UltralightRenderer, 
 
 }
 
-class ScreenView(ultralightRenderer: UltralightRenderer, viewRenderer: ViewRenderer, val screen: Screen, val adaptedScreen: Screen?, val parentScreen: Screen?)
-    : View(RenderLayer.SCREEN_LAYER, ultralightRenderer, viewRenderer)
+class ScreenView(ultralightRenderer: UltralightRenderer, viewRenderer: ViewRenderer, val screen: Screen, val adaptedScreen: Screen?, val parentScreen: Screen?) :
+    View(RenderLayer.SCREEN_LAYER, ultralightRenderer, viewRenderer)

@@ -33,5 +33,4 @@ class EmptyScreen(title: Text = "".asText()) : Screen(title) {
         // render nothing
     }
 
-
 }

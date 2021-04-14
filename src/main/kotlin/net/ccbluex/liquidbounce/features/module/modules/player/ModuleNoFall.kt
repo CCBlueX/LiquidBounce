@@ -1,11 +1,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Choice
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object ModuleNoFall : Module("NoFall", Category.PLAYER) {
@@ -45,12 +45,11 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
     private object Packet : Choice("Packet", modes) {
 
         val repeatable = repeatable {
-            if(player.fallDistance > 2f) {
+            if (player.fallDistance > 2f) {
                 network.sendPacket(PlayerMoveC2SPacket(true))
             }
         }
 
     }
-
 
 }

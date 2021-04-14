@@ -56,39 +56,46 @@ object ContextSetup {
 
         globalObject.setProperty(
             "engine",
-            view.databind.conversionUtils.toJavascript(context, UltralightEngine), 0
+            view.databind.conversionUtils.toJavascript(context, UltralightEngine),
+            0
         )
 
         globalObject.setProperty(
             "view",
-            view.databind.conversionUtils.toJavascript(context, view), 0
+            view.databind.conversionUtils.toJavascript(context, view),
+            0
         )
 
         globalObject.setProperty(
             "client",
-            view.databind.conversionUtils.toJavascript(context, UltralightJsClient), 0
+            view.databind.conversionUtils.toJavascript(context, UltralightJsClient),
+            0
         )
 
         globalObject.setProperty(
             "events",
-            view.databind.conversionUtils.toJavascript(context, view.jsEvents), 0
+            view.databind.conversionUtils.toJavascript(context, view.jsEvents),
+            0
         )
 
         // todo: minecraft has to be remapped
         globalObject.setProperty(
             "minecraft",
-            view.databind.conversionUtils.toJavascript(context, mc), 0
+            view.databind.conversionUtils.toJavascript(context, mc),
+            0
         )
 
         globalObject.setProperty(
             "ui",
-            view.databind.conversionUtils.toJavascript(context, UltralightJsUi), 0
+            view.databind.conversionUtils.toJavascript(context, UltralightJsUi),
+            0
         )
 
         if (view is ScreenView) {
             globalObject.setProperty(
                 "screen",
-                view.databind.conversionUtils.toJavascript(context, view.adaptedScreen ?: view.screen), 0
+                view.databind.conversionUtils.toJavascript(context, view.adaptedScreen ?: view.screen),
+                0
             )
 
             val parentScreen = view.parentScreen
@@ -96,7 +103,8 @@ object ContextSetup {
             if (parentScreen != null) {
                 globalObject.setProperty(
                     "parentScreen",
-                    view.databind.conversionUtils.toJavascript(context, view.parentScreen), 0
+                    view.databind.conversionUtils.toJavascript(context, view.parentScreen),
+                    0
                 )
             }
         }

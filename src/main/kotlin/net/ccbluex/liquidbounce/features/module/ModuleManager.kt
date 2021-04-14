@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
@@ -54,15 +53,6 @@ object ModuleManager : Iterable<Module>, Listenable {
         if (ev.action == GLFW.GLFW_PRESS) {
             filter { it.bind == ev.key.code } // modules bound to specific key
                 .forEach { it.enabled = !it.enabled } // toggle modules
-        }
-    }
-
-    /**
-     * Tick sequences
-     */
-    val entityTickHandler = handler<PlayerMovementTickEvent>(false) {
-        for (sequence in sequences) {
-            sequence.tick()
         }
     }
 
@@ -118,22 +108,25 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleForceUnicodeChat,
             ModuleAntiBlind,
             ModuleTraces,
+            ModuleElytraFly,
             ModuleSpammer,
+            ModuleHighJump,
+            ModuleBounce,
+            ModuleBlockWalk,
             ModuleChestAura,
             ModuleAutoBreak,
             ModuleAutoArmor,
             ModuleInventoryCleaner,
-            ModuleChestStealer
+            ModuleChestStealer,
+            ModuleStorageESP
         )
 
         builtin.forEach(this::addModule)
-
-
     }
 
     fun addModule(module: Module) {
-        module.init()
         module.initConfigurable()
+        module.init()
         modules += module
     }
 

@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.command
 
 import net.minecraft.text.TranslatableText
 
-
 class ParameterValidationResult<T> private constructor(
     val errorMessage: String?,
     val mappedResult: T?

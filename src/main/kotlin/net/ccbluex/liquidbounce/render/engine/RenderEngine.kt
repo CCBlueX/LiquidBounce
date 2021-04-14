@@ -33,7 +33,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.regex.Pattern
 
 class Layer(val renderTasks: ArrayList<RenderTask> = ArrayList(200))
-class LayerSettings(val mvpMatrix: Mat4, val culling: Boolean)
+class LayerSettings(val mvpMatrix: Mat4, val culling: Boolean, val depthTest: Boolean = false)
 
 /**
  * Handles all rendering tasks.
@@ -52,7 +52,7 @@ object RenderEngine : Listenable {
     const val CAMERA_VIEW_LAYER_WITHOUT_BOBBING = 1
 
     /**
-     * Screen space, mirrored vertically
+     * Screen space, mirrored vertically, depth test enabled
      */
     const val SCREEN_SPACE_LAYER = 2
 
@@ -84,7 +84,7 @@ object RenderEngine : Listenable {
     /**
      * What OpenGL level is this client supposed to use? Determined when initialized
      */
-    var openglLevel: OpenGLLevel = OpenGLLevel.OpenGL1_2
+    var openglLevel: OpenGLLevel = OpenGLLevel.OPENGL1_2
 
     /**
      * Used to recognize what GL version we are on
@@ -184,10 +184,23 @@ object RenderEngine : Listenable {
 
         for ((idx, layer) in renderTaskTable.withIndex()) {
             // Don't calculate mvp matrices for empty layers
-            if (layer.renderTasks.isEmpty())
+            if (layer.renderTasks.isEmpty()) {
                 continue
+            }
 
             val settings = getSettingsForLayer(idx, tickDelta)
+
+            if (settings.culling) {
+                GL11.glEnable(GL11.GL_CULL_FACE)
+            } else {
+                GL11.glDisable(GL11.GL_CULL_FACE)
+            }
+
+            if (settings.depthTest) {
+                GL11.glEnable(GL11.GL_DEPTH_TEST)
+            } else {
+                GL11.glDisable(GL11.GL_DEPTH_TEST)
+            }
 
             for (renderTask in layer.renderTasks) {
                 renderTask.initRendering(lvl, settings.mvpMatrix)
@@ -205,20 +218,23 @@ object RenderEngine : Listenable {
                 (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
                     tickDelta,
                     true
-                ).toMat4(), true
+                ).toMat4(),
+                true
             )
             CAMERA_VIEW_LAYER_WITHOUT_BOBBING -> LayerSettings(
                 (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
                     tickDelta,
                     false
-                ).toMat4(), true
+                ).toMat4(),
+                true
             )
             SCREEN_SPACE_LAYER -> {
                 val aspectRatio = mc.window.width.toFloat() / mc.window.height.toFloat()
 
                 LayerSettings(
                     Mat4.orthograpicProjectionMatrix(-aspectRatio, -1.0f, aspectRatio, 1.0f, -1.0f, 1.0f),
-                    true
+                    true,
+                    depthTest = true
                 )
             }
             HUD_LAYER -> LayerSettings(
@@ -240,7 +256,8 @@ object RenderEngine : Listenable {
                     MinecraftClient.getInstance().window.scaledHeight.toFloat(),
                     -200.0f,
                     200.0f
-                ), false
+                ),
+                false
             )
             else -> throw UnsupportedOperationException("Unknown layer")
         }

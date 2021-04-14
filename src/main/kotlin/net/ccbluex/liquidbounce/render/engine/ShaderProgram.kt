@@ -51,8 +51,9 @@ private class Shader(shaderType: ShaderType, source: String) {
         GL20.glCompileShader(this.id)
 
         // Check if the shader was compiled correctly
-        if (GL20.glGetShaderi(this.id, GL20.GL_COMPILE_STATUS) != GL20.GL_TRUE)
+        if (GL20.glGetShaderi(this.id, GL20.GL_COMPILE_STATUS) != GL20.GL_TRUE) {
             throw IllegalStateException("Shader failed to compile: ${GL20.glGetShaderInfoLog(this.id)}")
+        }
     }
 
     /**
@@ -119,8 +120,9 @@ class ShaderProgram(vertexShaderSource: String, fragmentShaderSource: String) {
         GL20.glLinkProgram(this.id)
 
         // Check if the shader was compiled correctly
-        if (GL20.glGetProgrami(this.id, GL20.GL_LINK_STATUS) != GL20.GL_TRUE)
+        if (GL20.glGetProgrami(this.id, GL20.GL_LINK_STATUS) != GL20.GL_TRUE) {
             throw IllegalStateException("Program failed to link: ${GL20.glGetShaderInfoLog(this.id)}")
+        }
 
         // The shaders are linked into a program, we don't want to play with them anymore
         vertexShader.delete()

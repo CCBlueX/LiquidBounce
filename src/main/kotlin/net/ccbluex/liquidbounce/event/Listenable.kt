@@ -18,17 +18,23 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.features.module.Module
+
+typealias Handler<T> = (T) -> Unit
+
+class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean)
+
 interface Listenable {
 
     /**
      * Allows to disable event handling when condition is false.
      */
-    fun handleEvents() = true
+    fun handleEvents(): Boolean = parent()?.handleEvents() ?: true
 
     /**
-     * Required for repeatable sequence
+     * Parent listenable
      */
-    fun hook() = this
+    fun parent(): Listenable? = null
 
 }
 
@@ -36,6 +42,29 @@ inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = fal
     EventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
 }
 
-typealias Handler<T> = (T) -> Unit
+/**
+ * Registers an event hook for events of type [T] and launches a sequence
+ */
+inline fun <reified T : Event> Listenable.sequenceHandler(ignoreCondition: Boolean = false, noinline eventHandler: SuspendableHandler<T>) {
+    handler<T>(ignoreCondition) { event -> Sequence(eventHandler, event) }
+}
 
-class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean)
+/**
+ * Registers a repeatable sequence which repeats the execution of code.
+ */
+fun Module.repeatable(eventHandler: (SuspendableHandler<DummyEvent>)) {
+    var sequence: RepeatingSequence? = null
+
+    handler<ToggleModuleEvent>(ignoreCondition = true) {
+        if (this == it.module || this.parent() == it.module) {
+            if (this.handleEvents()) {
+                if (sequence == null) {
+                    sequence = RepeatingSequence(eventHandler)
+                }
+            } else if (sequence != null) {
+                sequence?.cancel()
+                sequence = null
+            }
+        }
+    }
+}

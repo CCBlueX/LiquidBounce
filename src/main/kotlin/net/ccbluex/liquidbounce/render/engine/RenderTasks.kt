@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.render.engine
 
 import net.ccbluex.liquidbounce.utils.Mat4
 import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.nio.ByteBuffer
@@ -28,16 +29,17 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 enum class OpenGLLevel(val minor: Int, val major: Int, val backendInfo: String) {
-    OpenGL4_3(4, 3, "OpenGL 4.3+ (Multi rendering)"),
-    OpenGL3_3(3, 3, "OpenGL 3.3+ (VAOs, VBOs, Instancing, Shaders)"),
-    OpenGL1_2(1, 2, "OpenGL 1.2+ (Immediate mode, Display Lists)");
+    OPENGL4_3(4, 3, "OpenGL 4.3+ (Multi rendering)"),
+    OPENGL3_3(3, 3, "OpenGL 3.3+ (VAOs, VBOs, Instancing, Shaders)"),
+    OPENGL1_2(1, 2, "OpenGL 1.2+ (Immediate mode, Display Lists)");
 
     /**
      * Determines if an OpenGL level is supported
      */
     fun isSupported(major: Int, minor: Int): Boolean {
-        if (major > this.major)
+        if (major > this.major) {
             return true
+        }
 
         return major >= this.major && minor >= this.minor
     }
@@ -125,6 +127,7 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
     constructor(x: Double, y: Double, z: Double) : this(x.toFloat(), y.toFloat(), z.toFloat())
     constructor(vec: Vec3d) : this(vec.x, vec.y, vec.z)
     constructor(vec: Vec4) : this(vec.x, vec.y, vec.z)
+    constructor(vec: Vec3i) : this(vec.x.toFloat(), vec.y.toFloat(), vec.z.toFloat())
 
     fun writeToBuffer(idx: Int, buffer: ByteBuffer) {
         buffer.putFloat(idx, x)
@@ -190,6 +193,7 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     }
 
     constructor(color: Color) : this(color.red, color.green, color.blue, color.alpha)
+    constructor(r: Int, g: Int, b: Int) : this(r, g, b, 255)
 
     fun writeToBuffer(idx: Int, buffer: ByteBuffer) {
         buffer.put(idx, r.toByte())

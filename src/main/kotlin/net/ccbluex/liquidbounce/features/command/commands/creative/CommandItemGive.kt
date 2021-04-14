@@ -22,10 +22,12 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.extensions.createItem
+import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.regular
+import net.ccbluex.liquidbounce.utils.variable
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
-import net.minecraft.text.TranslatableText
 
 object CommandItemGive {
 
@@ -48,6 +50,7 @@ object CommandItemGive {
             )
             .handler { command, args ->
                 val item = args[0] as String
+
                 val amount = if (args.size > 2) args[1] as Int else 1 // default one
 
                 if (mc.interactionManager?.hasCreativeInventory() == false) {
@@ -61,7 +64,7 @@ object CommandItemGive {
                     throw CommandException(command.result("noEmptySlot"))
                 }
 
-                mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(if(emptySlot < 9) emptySlot + 36 else emptySlot, itemStack))
+                mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot, itemStack))
                 chat(regular(command.result("itemGiven", itemStack.toHoverableText(), variable(itemStack.count.toString()))))
             }
             .build()

@@ -22,8 +22,7 @@ import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.adapter.*
-import net.ccbluex.liquidbounce.features.module.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.ListenableConfigurable
+import net.ccbluex.liquidbounce.config.util.ExcludeStrategy
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.logger
@@ -42,8 +41,9 @@ object ConfigSystem {
     // Config directory folder
     val rootFolder = File(mc.runDirectory, LiquidBounce.CLIENT_NAME).apply {
         // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
-        if (!exists())
+        if (!exists()) {
             mkdir()
+        }
     }
 
     // A mutable list of all root configurable classes (and their sub classes)
@@ -53,7 +53,7 @@ object ConfigSystem {
     private val confType = TypeToken.get(Configurable::class.java).type
     private val gson = GsonBuilder()
         .setPrettyPrinting()
-        .addSerializationExclusionStrategy(ExcludeStrategy())
+        .addSerializationExclusionStrategy(ExcludeStrategy(false))
         .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeSerializer)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
         .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
@@ -62,7 +62,20 @@ object ConfigSystem {
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
-        .registerTypeHierarchyAdapter(ListenableConfigurable::class.javaObjectType, ListenableConfigurableSerializer)
+        .registerTypeHierarchyAdapter(ToggleableConfigurable::class.javaObjectType, ToggleableConfigurableSerializer)
+        .create()
+
+    internal val internalGson = GsonBuilder()
+        .addSerializationExclusionStrategy(ExcludeStrategy(true))
+        .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeSerializer)
+        .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
+        .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
+        .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockValueSerializer)
+        .registerTypeAdapter(Fonts.FontDetail::class.javaObjectType, FontDetailSerializer)
+        .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
+        .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
+        .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
+        .registerTypeHierarchyAdapter(ToggleableConfigurable::class.javaObjectType, ToggleableConfigurableSerializer)
         .create()
 
     /**
@@ -70,13 +83,14 @@ object ConfigSystem {
      */
     fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()) {
         @Suppress("UNCHECKED_CAST")
-        configurables.add(Configurable(name, tree as MutableList<Value<*>>))
+        root(Configurable(name, tree as MutableList<Value<*>>))
     }
 
     /**
      * Add a root configurable
      */
     fun root(configurable: Configurable) {
+        configurable.initConfigurable()
         configurables.add(configurable)
     }
 
@@ -108,8 +122,9 @@ object ConfigSystem {
         runCatching {
             val jsonObject = jsonElement.asJsonObject
 
-            if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name)
+            if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
                 throw IllegalStateException()
+            }
 
             val values = jsonObject.getAsJsonArray("value")
                 .map { it.asJsonObject }
@@ -120,13 +135,12 @@ object ConfigSystem {
                     val currentElement = values[value.name] ?: continue
 
                     runCatching {
-                        if (value is ListenableConfigurable) {
-                            value.enabled = currentElement["enabled"].asBoolean
-                        } else if (value is ChoiceConfigurable) {
+                        if (value is ChoiceConfigurable) {
                             val newActive = currentElement["active"].asString
 
-                            if (value.choices.any { it.name == newActive })
+                            if (value.choices.any { it.name == newActive }) {
                                 value.active = newActive
+                            }
 
                             val choices = currentElement["choices"].asJsonObject
 
@@ -174,4 +188,3 @@ object ConfigSystem {
     }
 
 }
-

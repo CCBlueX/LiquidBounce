@@ -39,10 +39,11 @@ object RangeSerializer : JsonSerializer<ClosedRange<*>>, JsonDeserializer<Closed
         val first = obj["from"]
         val second = obj["to"]
 
-        if (typeOfT == (0.0f..5.0f).javaClass)
+        if (typeOfT == (0.0f..5.0f).javaClass) {
             return first.asFloat..second.asFloat
-        else if (typeOfT == (0.0..5.0).javaClass)
+        } else if (typeOfT == (0.0..5.0).javaClass) {
             return first.asDouble..second.asDouble
+        }
 
         TODO("Not implemented")
     }

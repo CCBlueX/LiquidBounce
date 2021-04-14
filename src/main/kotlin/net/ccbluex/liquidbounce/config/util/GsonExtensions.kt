@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config
+package net.ccbluex.liquidbounce.config.util
 
 import com.google.gson.ExclusionStrategy
 import com.google.gson.FieldAttributes
@@ -25,11 +25,18 @@ import com.google.gson.reflect.TypeToken
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)
-annotation class Exclude
+annotation class Exclude(val keepInternal: Boolean = false)
 
-class ExcludeStrategy : ExclusionStrategy {
+class ExcludeStrategy(val internal: Boolean) : ExclusionStrategy {
     override fun shouldSkipClass(clazz: Class<*>?) = false
-    override fun shouldSkipField(field: FieldAttributes) = field.getAnnotation(Exclude::class.java) != null
+    override fun shouldSkipField(field: FieldAttributes): Boolean {
+        val annotation = field.getAnnotation(Exclude::class.java) ?: return false
+
+        if (internal && annotation.keepInternal) {
+            return false
+        }
+        return true
+    }
 }
 
 /**

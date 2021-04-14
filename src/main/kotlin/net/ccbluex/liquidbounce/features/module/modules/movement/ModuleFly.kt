@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Choice
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 
 /**
  * Fly module
@@ -47,7 +47,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         }
 
         override fun disable() {
-            player.abilities.flying = false
+            mc.player?.abilities?.flying = false
         }
 
     }

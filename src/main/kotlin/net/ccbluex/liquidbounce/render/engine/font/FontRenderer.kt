@@ -69,8 +69,9 @@ class FontRenderer(
     val ascent: Float
 
     init {
-        if (this.glyphPages[0] == null)
+        if (this.glyphPages[0] == null) {
             throw IllegalArgumentException("glyphPages[0] must not be null.")
+        }
 
         this.height = glyphPages.maxByOrNull { it?.height ?: 0.0f }!!.height
         this.ascent = glyphPages.maxByOrNull { it?.ascent ?: 0.0f }!!.ascent
@@ -110,16 +111,18 @@ class FontRenderer(
          * It generates glyph pages for all possible styles.
          */
         fun createFontRendererWithStyles(font: Font, vararg styles: Int): FontRenderer {
-            return FontRenderer(Array(4) { style ->
-                if (style != 0 && !styles.contains(style))
-                    null
-                else GlyphPage.create(
-                    '\u0000'..'\u00FF',
-                    font.deriveFont(style)
-                )
-            }, font.size.toFloat())
+            return FontRenderer(
+                Array(4) { style ->
+                    if (style != 0 && !styles.contains(style)) {
+                        null
+                    } else GlyphPage.create(
+                        '\u0000'..'\u00FF',
+                        font.deriveFont(style)
+                    )
+                },
+                font.size.toFloat()
+            )
         }
-
 
         private fun getColorIndex(type: Char): Int {
             return when (type) {
@@ -134,8 +137,9 @@ class FontRenderer(
     }
 
     override fun begin() {
-        if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty())
+        if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty()) {
             throw IllegalStateException("Can't begin a build a new batch when there are pending operations.")
+        }
     }
 
     override fun draw(
@@ -151,8 +155,9 @@ class FontRenderer(
         // Create a common seed for rendering random fonts
         val seed = Random.nextLong()
 
-        if (shadow)
+        if (shadow) {
             len = drawInternal(text, x0 + 2.0f * scale, y0 + 2.0f * scale, Color4b(0, 0, 0, 150), true, seed, z, scale)
+        }
 
         return max(len, drawInternal(text, x0, y0, defaultColor, false, seed, z, scale))
     }
@@ -175,8 +180,9 @@ class FontRenderer(
         z: Float,
         scale: Float
     ): Float {
-        if (text.isEmpty())
+        if (text.isEmpty()) {
             return x0
+        }
 
         // Used for obfuscated strings
         val obfuscatedRandom = Random(obfuscatedSeed)
@@ -205,7 +211,6 @@ class FontRenderer(
 
         for (codepoint in text.chars()) {
             val char = codepoint.toChar()
-
 
             // Don't draw paragraph characters, but remember that we found them
             if (char == '§') {
@@ -270,8 +275,9 @@ class FontRenderer(
                     else -> shouldContinue = true
                 }
 
-                if (!shouldContinue)
+                if (!shouldContinue) {
                     continue
+                }
             }
 
             val glyphPage = glyphPages[style] ?: defaultStyle
@@ -311,13 +317,13 @@ class FontRenderer(
         return x
     }
 
-
     override fun getStringWidth(
         text: String,
         shadow: Boolean
     ): Float {
-        if (text.isEmpty())
+        if (text.isEmpty()) {
             return 0.0f
+        }
 
         var x = 0.0f
 
@@ -334,7 +340,6 @@ class FontRenderer(
 
         for (codepoint in text.chars()) {
             val char = codepoint.toChar()
-
 
             // Don't draw paragraph characters, but remember that we found them
             if (char == '§') {
@@ -358,8 +363,9 @@ class FontRenderer(
                     else -> shouldContinue = true
                 }
 
-                if (!shouldContinue)
+                if (!shouldContinue) {
                     continue
+                }
             }
 
             val glyphPage = glyphPages[style] ?: defaultStyle
@@ -372,10 +378,11 @@ class FontRenderer(
             x += glyph.advanceX
         }
 
-        return if (shadow)
+        return if (shadow) {
             x + 2.0f
-        else
+        } else {
             x
+        }
     }
 
     private fun drawLine(
@@ -405,7 +412,6 @@ class FontRenderer(
         }
 
     }
-
 
     override fun commit(): Array<RenderTask> {
         val tasks = ArrayList<RenderTask>(5)

@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Choice
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.*
 import net.ccbluex.liquidbounce.render.utils.rainbow
@@ -75,7 +75,7 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
         for (entity in filteredEntities) {
             val dist = player.distanceTo(entity) * 2.0
 
-            val color = if (useDistanceColor)
+            val color = if (useDistanceColor) {
                 Color4b(
                     Color.getHSBColor(
                         (dist.coerceAtMost(viewDistance) / viewDistance).toFloat() * (120.0f / 360.0f),
@@ -83,9 +83,9 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
                         1.0f
                     )
                 )
-            else
+            } else {
                 baseColor!!
-
+            }
 
             val x = (entity.lastRenderX + (entity.x - entity.lastRenderX) * event.tickDelta)
             val y = (entity.lastRenderY + (entity.y - entity.lastRenderY) * event.tickDelta)

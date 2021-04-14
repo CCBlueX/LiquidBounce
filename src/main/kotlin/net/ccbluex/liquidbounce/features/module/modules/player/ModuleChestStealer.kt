@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.screen.slot.SlotActionType
 
@@ -32,8 +32,9 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     val repeatable = repeatable {
         val screen = mc.currentScreen
 
-        if (screen !is GenericContainerScreen)
+        if (screen !is GenericContainerScreen) {
             return@repeatable
+        }
 
         val itemsToCollect = ModuleInventoryCleaner.getUsefulItems(screen).shuffled()
 
@@ -44,8 +45,9 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             return@repeatable
         }
 
-        if (itemsToCollect.isEmpty())
+        if (itemsToCollect.isEmpty()) {
             player.closeHandledScreen()
+        }
     }
 
 }

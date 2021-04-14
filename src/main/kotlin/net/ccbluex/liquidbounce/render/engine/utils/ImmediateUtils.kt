@@ -19,8 +19,18 @@
 
 package net.ccbluex.liquidbounce.render.engine.utils
 
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import org.lwjgl.opengl.GL11
 import java.nio.ByteBuffer
+
+fun Color4b.imSetColor() {
+    GL11.glColor4f(
+        this.r / 255.0f,
+        this.g / 255.0f,
+        this.b / 255.0f,
+        this.a / 255.0f,
+    )
+}
 
 fun imSetColorFromBuffer(vertexBuffer: ByteBuffer, idx: Int) {
     GL11.glColor4f(

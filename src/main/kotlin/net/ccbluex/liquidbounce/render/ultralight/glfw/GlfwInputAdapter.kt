@@ -114,12 +114,14 @@ class GlfwInputAdapter {
             .x((x * 1f).toInt())
             .y((y * 1f).toInt())
             .type(UltralightMouseEventType.MOVED)
-            .button(when (GLFW.GLFW_PRESS) {
-                GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) -> UltralightMouseEventButton.LEFT
-                GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_MIDDLE) -> UltralightMouseEventButton.MIDDLE
-                GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) -> UltralightMouseEventButton.RIGHT
-                else -> null
-            })
+            .button(
+                when (GLFW.GLFW_PRESS) {
+                    GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) -> UltralightMouseEventButton.LEFT
+                    GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_MIDDLE) -> UltralightMouseEventButton.MIDDLE
+                    GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) -> UltralightMouseEventButton.RIGHT
+                    else -> null
+                }
+            )
 
         // Fire the event
         UltralightEngine.activeView?.fireMouseEvent(event)

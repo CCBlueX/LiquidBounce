@@ -38,19 +38,20 @@ class ParameterBuilder<T> private constructor(val name: String) {
             try {
                 ParameterValidationResult.ok(it.toInt())
             } catch (e: NumberFormatException) {
-                ParameterValidationResult.error("'${it}' is not a valid integer")
+                ParameterValidationResult.error("'$it' is not a valid integer")
             }
         }
         val POSITIVE_INTEGER_VALIDATOR: ParameterVerifier<Int> = {
             try {
                 val integer = it.toInt()
 
-                if (integer >= 0)
+                if (integer >= 0) {
                     ParameterValidationResult.ok(integer)
-                else
+                } else {
                     ParameterValidationResult.error("The integer must be positive")
+                }
             } catch (e: NumberFormatException) {
-                ParameterValidationResult.error("'${it}' is not a valid integer")
+                ParameterValidationResult.error("'$it' is not a valid integer")
             }
         }
 
@@ -84,7 +85,6 @@ class ParameterBuilder<T> private constructor(val name: String) {
 
         return this
     }
-
 
     // TODO: Remove this once all commands are using translations
     @Deprecated("Parameter descriptions are now translated using automatically generated translation keys")

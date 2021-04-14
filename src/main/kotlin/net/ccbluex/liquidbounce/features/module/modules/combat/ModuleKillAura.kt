@@ -20,10 +20,13 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.RotationManager
+import net.ccbluex.liquidbounce.utils.extensions.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.extensions.TargetTracker
+import net.ccbluex.liquidbounce.utils.extensions.eyesPos
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.util.Hand
@@ -37,10 +40,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Attack speed
     val cps by intRange("CPS", 5..8, 1..20) // todo:
+
     val cooldown by boolean("Cooldown", true) // todo:
 
     // Range
     val range by float("Range", 4.7f, 1f..8f)
+
     val wallRange by float("WallRange", 3f, 0f..8f) // todo:
 
     // Target
@@ -51,6 +56,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Predict
     val predict by floatRange("Predict", 0f..0f, 0f..5f) // todo:
+
     val backtrack by floatRange("Backtrack", 0f..0f, 0f..20f) // todo:
 
     // Bypass techniques
@@ -58,6 +64,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val keepSprint by boolean("KeepSprint", true)
 
     val failRate by int("FailRate", 0, 0..100) // todo:
+
     val missSwing by boolean("MissSwing", true) // todo:
 
     val checkableInventory by boolean("CheckableInventory", false) // todo:
@@ -81,10 +88,14 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         // todo: add predict to eyes
 
+        val rangeSquared = range * range
+
         targetTracker.lockedOnTarget = null
+
         for (target in targetTracker) {
-            if (target.boxedDistanceTo(player) > range)
+            if (target.squaredDistanceTo(player) > rangeSquared) {
                 continue
+            }
 
             val box = target.boundingBox
 
@@ -103,8 +114,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         val target = targetTracker.lockedOnTarget ?: return
 
-        if (target.boxedDistanceTo(player) <= range && RotationManager.facingEnemy(target, range.toDouble())
-            && player.getAttackCooldownProgress(0.0f) >= 1.0f) {
+        if (target.squaredDistanceTo(player) <= rangeSquared && RotationManager.facingEnemy(target, range.toDouble()) &&
+            player.getAttackCooldownProgress(0.0f) >= 1.0f
+        ) {
             attackEntity(target)
         }
     }
@@ -123,7 +135,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         if (keepSprint) {
             // todo: show crits
-        }else{
+        } else {
             player.attack(entity)
         }
 

@@ -23,13 +23,13 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.ccbluex.liquidbounce.features.module.ListenableConfigurable
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import java.lang.reflect.Type
 
-object ListenableConfigurableSerializer : JsonSerializer<ListenableConfigurable> {
+object ToggleableConfigurableSerializer : JsonSerializer<ToggleableConfigurable> {
 
     override fun serialize(
-        src: ListenableConfigurable,
+        src: ToggleableConfigurable,
         typeOfSrc: Type,
         context: JsonSerializationContext
     ): JsonElement {

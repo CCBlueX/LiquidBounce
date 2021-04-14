@@ -69,8 +69,8 @@ class UltralightResources {
                 else -> error("unsupported operating system")
             }
 
-            logger.info("Downloading v${LIBRARY_VERSION} resources... (os: $os)")
-            val nativeUrl = "${LiquidBounce.CLIENT_CLOUD}/ultralight_resources/${LIBRARY_VERSION}/$os-x64.zip"
+            logger.info("Downloading v$LIBRARY_VERSION resources... (os: $os)")
+            val nativeUrl = "${LiquidBounce.CLIENT_CLOUD}/ultralight_resources/$LIBRARY_VERSION/$os-x64.zip"
 
             // Download resources
             ultralightRoot.mkdir()
