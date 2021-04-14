@@ -149,11 +149,14 @@ object UltralightEngine {
         views.forEach { it.resize(width, height) }
     }
 
+    fun newSplashView() =
+        View(RenderLayer.SPLASH_LAYER, renderer, newViewRenderer()).also { views += it }
+
     fun newOverlayView() =
         View(RenderLayer.OVERLAY_LAYER, renderer, newViewRenderer()).also { views += it }
 
-    fun newScreenView(screen: Screen, adaptedScreen: Screen? = null, parentScreen: Screen? = null) =
-        ScreenView(renderer, newViewRenderer(), screen, adaptedScreen, parentScreen).also { views += it }
+    fun newScreenView(screen: Screen, adaptedScreen: Screen? = null, parentScreen: Screen? = null)
+        = ScreenView(renderer, newViewRenderer(), screen, adaptedScreen, parentScreen).also { views += it }
 
     fun removeView(view: View) {
         view.free()
@@ -170,5 +173,5 @@ object UltralightEngine {
 }
 
 enum class RenderLayer {
-    OVERLAY_LAYER, SCREEN_LAYER
+    OVERLAY_LAYER, SCREEN_LAYER, SPLASH_LAYER
 }

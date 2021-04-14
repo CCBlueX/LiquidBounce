@@ -19,6 +19,7 @@
     "minecraft.entity.MixinLivingEntity",
     "minecraft.gui.MixinInGameHud",
     "minecraft.gui.MixinScreen",
+    "minecraft.gui.MixinSplashScreen",
     "minecraft.network.MixinClientConnection",
     "minecraft.network.MixinClientPlayerInteractionManager",
     "minecraft.render.MixinBackgroundRenderer",
