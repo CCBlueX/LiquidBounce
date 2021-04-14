@@ -102,8 +102,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // todo: add predict to box
 
             // find best spot (and skip if no spot was found)
-            val (rotation, _) = RotationManager.raytraceBox(eyes, box, throughWalls = false, range = range.toDouble())
-                ?: continue
+            val (rotation, _) = RotationManager.raytraceBox(eyes, box, throughWalls = false, range = range.toDouble()) ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)
@@ -114,16 +113,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         val target = targetTracker.lockedOnTarget ?: return
 
-        if (target.squaredDistanceTo(player) <= rangeSquared && RotationManager.facingEnemy(target, range.toDouble()) &&
-            player.getAttackCooldownProgress(0.0f) >= 1.0f
-        ) {
+        if (target.squaredDistanceTo(player) <= rangeSquared && RotationManager.facingEnemy(target, range.toDouble()) && player.getAttackCooldownProgress(0.0f) >= 1.0f) {
             attackEntity(target)
         }
     }
 
-    private fun attackEntity(entity: Entity) {
-        // todo: stop blocking (1.8 support sword / 1.9+ shield)
-
+    private fun attackEntity(entity: Entity) { // todo: stop blocking (1.8 support sword / 1.9+ shield)
         EventManager.callEvent(AttackEvent(entity))
 
         // todo: swing now (1.8)
@@ -133,8 +128,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // swing post (1.9+)
         player.swingHand(Hand.MAIN_HAND)
 
-        if (keepSprint) {
-            // todo: show crits
+        if (keepSprint) { // todo: show crits
         } else {
             player.attack(entity)
         }

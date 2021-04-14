@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.command
 
+import com.mojang.brigadier.suggestion.Suggestions
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.ChatSendEvent
@@ -34,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.extensions.outputString
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Formatting
+import java.util.concurrent.CompletableFuture
 
 class CommandException(val text: TranslatableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
     Exception(text.outputString(), cause)
@@ -144,7 +147,7 @@ object CommandManager : Iterable<Command> {
      * @return A [Pair] of the subcommand and the index of the tokenized [cmd] it is in, if none was found, null
      */
     fun getSubCommand(cmd: String): Pair<Command, Int>? {
-        return getSubCommand(tokenize(cmd))
+        return getSubCommand(tokenizeCommand(cmd).first)
     }
 
     /**
@@ -191,7 +194,7 @@ object CommandManager : Iterable<Command> {
      * @param cmd The command. If there is no command in it (it is empty or only whitespaces), this method is a no op
      */
     fun execute(cmd: String) {
-        val args = tokenize(cmd)
+        val args = tokenizeCommand(cmd).first
 
         // Prevent bugs
         if (args.isEmpty()) {
@@ -303,14 +306,21 @@ object CommandManager : Iterable<Command> {
      *
      * For example: `.friend add "Senk Ju"` -> [[`.friend`, `add`, `Senk Ju`]]
      */
-    fun tokenize(line: String): List<String> {
+    fun tokenizeCommand(line: String): Pair<List<String>, List<Int>> {
         val output = ArrayList<String>(10)
+        val outputIndices = ArrayList<Int>(10)
         val stringBuilder = StringBuilder(40)
+
+        outputIndices.add(0)
 
         var escaped = false
         var quote = false
 
+        var idx = 0
+
         for (c in line.toCharArray()) {
+            idx++
+
             // Was this character escaped?
             if (escaped) {
                 stringBuilder.append(c)
@@ -331,6 +341,7 @@ object CommandManager : Iterable<Command> {
 
                     // Reset string buffer
                     stringBuilder.setLength(0)
+                    outputIndices.add(idx)
                 }
             } else {
                 stringBuilder.append(c)
@@ -348,9 +359,96 @@ object CommandManager : Iterable<Command> {
             }
         }
 
-        return output
+        return Pair(output, outputIndices)
     }
 
     override fun iterator() = commands.iterator()
+
+    fun autoComplete(origCmd: String, start: Int): CompletableFuture<Suggestions> {
+        if (start < Options.prefix.length)
+            return Suggestions.empty()
+
+        try {
+            val cmd = origCmd.substring(Options.prefix.length, start)
+            val tokenized = tokenizeCommand(cmd)
+            var args = tokenized.first
+
+            if (args.isEmpty())
+                args = listOf("")
+
+            val nextParameter = !args.last().endsWith(" ") && cmd.endsWith(" ")
+            var currentArgStart = tokenized.second.lastOrNull()
+
+            if (currentArgStart == null)
+                currentArgStart = 0
+
+            if (nextParameter)
+                currentArgStart = cmd.length
+
+            val builder = SuggestionsBuilder(origCmd, currentArgStart + Options.prefix.length)
+
+            // getSubcommands will only return null if it returns on the first index.
+            // since the first index must contain a valid command, it is reported as
+            // unknown
+            val pair = getSubCommand(args)
+
+            if (args.size == 1 && (pair == null || !nextParameter)) {
+                for (command in this.commands) {
+                    if (command.name.startsWith(args[0], true))
+                        builder.suggest(command.name)
+
+                    command.aliases.filter { it.startsWith(args[0], true) }.forEach { builder.suggest(it) }
+                }
+
+                return builder.buildFuture()
+            }
+
+            if (pair == null)
+                return Suggestions.empty()
+
+
+            pair.first.autoComplete(builder, tokenized, pair.second, nextParameter)
+
+            return builder.buildFuture()
+        } catch (e: Exception) {
+            e.printStackTrace()
+
+            return Suggestions.empty()
+        }
+
+        //        val command = pair.first
+//
+//        // If the command is not executable, don't allow it to be executed
+//        if (!command.executable) {
+//            return Suggestions.empty()
+//        }
+//
+//        // The index the command is in
+//        val idx = pair.second
+//
+//        var paramIdx = command.parameters.size - idx
+//
+//        if ()
+//            paramIdx++
+//
+//        val parameter = if (paramIdx >= args.size) {
+//            val lastParameter = command.parameters.lastOrNull()
+//
+//            if (lastParameter?.vararg != true)
+//                return Suggestions.empty()
+//
+//            lastParameter
+//        } else {
+//            command.parameters[paramIdx]
+//        }
+//
+//        val handler = parameter.autocompletionHandler ?: return Suggestions.empty()
+//
+//        for (s in handler(args[paramIdx])) {
+//            builder.suggest(s)
+//        }
+//
+//        return builder.buildFuture()
+    }
 
 }

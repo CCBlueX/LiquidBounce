@@ -62,19 +62,27 @@
   "liquidbounce.command.friend.subcommand.add.description": "Adds a name to the friend list.",
   "liquidbounce.command.friend.subcommand.add.parameter.name.description": "Name of the friend.",
   "liquidbounce.command.friend.subcommand.add.parameter.alias.description": "Optional alias for the friend.",
+  "liquidbounce.command.friend.subcommand.add.result.alreadyFriends": "%s is already on the friend list.",
+  "liquidbounce.command.friend.subcommand.add.result.success": "%s was successfully added to the friend list.",
+  "liquidbounce.command.friend.subcommand.add.result.successAlias": "%s was successfully added to the friend list as %s.",
 
   "liquidbounce.command.friend.subcommand.remove.description": "Removes a friend from the friends list.",
   "liquidbounce.command.friend.subcommand.remove.parameter.name.description": "Name of the friend.",
+  "liquidbounce.command.friend.subcommand.remove.result.notFriends": "%s was not on the friend list.",
+  "liquidbounce.command.friend.subcommand.remove.result.success": "%s was successfully removed from the friend list.",
 
   "liquidbounce.command.friend.subcommand.alias.description": "Changes the alias of friend.",
   "liquidbounce.command.friend.subcommand.alias.parameter.name.description": "Name of the friend.",
   "liquidbounce.command.friend.subcommand.alias.parameter.alias.description": "New alias.",
+  "liquidbounce.command.friend.subcommand.alias.result.notFriends": "%s is not on your friend list.",
+  "liquidbounce.command.friend.subcommand.alias.result.success": "%s's alias was changed to %s",
 
   "liquidbounce.command.friend.subcommand.list.description": "Lists all friends.",
   "liquidbounce.command.friend.subcommand.list.result.noFriends": "Friends list is empty.",
 
   "liquidbounce.command.friend.subcommand.clear.description": "Clears the friends list.",
-  "liquidbounce.command.friend.subcommand.clear.result.noFriends": "Friends list is empty.",
+  "liquidbounce.command.friend.subcommand.clear.result.noFriends": "Friend list is empty.",
+  "liquidbounce.command.friend.subcommand.clear.result.success": "Friend list cleared.",
 
   "liquidbounce.command.help.description": "Lists all available commands.",
   "liquidbounce.command.help.parameter.page.description": "Page to show.",

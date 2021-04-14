@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.command
 
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.minecraft.text.TranslatableText
 import java.util.*
 
@@ -117,5 +118,56 @@ class Command(
         }
 
         return output
+    }
+
+    fun autoComplete(
+        builder: SuggestionsBuilder,
+        tokenizationResult: Pair<List<String>, List<Int>>,
+        commandIdx: Int,
+        isNewParameter: Boolean
+    ) {
+        val args = tokenizationResult.first
+
+        val offset = args.size - commandIdx - 1
+
+        if (offset == 0 && isNewParameter || offset == 1 && !isNewParameter) {
+            val comparedAgainst = if (isNewParameter)
+                ""
+            else args[offset]
+
+            this.subcommands.forEach { subcommand ->
+                if (subcommand.name.startsWith(comparedAgainst, true))
+                    builder.suggest(subcommand.name)
+
+                subcommand.aliases.filter { it.startsWith(comparedAgainst, true) }.forEach { builder.suggest(it) }
+            }
+        }
+
+        var paramIdx = args.size - commandIdx - 2
+
+        if (isNewParameter)
+            paramIdx++
+
+        if (paramIdx < 0)
+            return
+
+        val idx = commandIdx + paramIdx + 1
+
+        val parameter = if (paramIdx >= parameters.size) {
+            val lastParameter = this.parameters.lastOrNull()
+
+            if (lastParameter?.vararg != true)
+                return
+
+            lastParameter
+        } else {
+            this.parameters[paramIdx]
+        }
+
+        val handler = parameter.autocompletionHandler ?: return
+
+        for (s in handler(args.getOrElse(idx) { "" })) {
+            builder.suggest(s)
+        }
     }
 }

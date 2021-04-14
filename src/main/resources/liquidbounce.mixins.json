@@ -18,6 +18,7 @@
     "minecraft.entity.MixinClientPlayerEntity",
     "minecraft.entity.MixinEntity",
     "minecraft.entity.MixinLivingEntity",
+    "minecraft.gui.MixinCommandSuggestor",
     "minecraft.gui.MixinInGameHud",
     "minecraft.gui.MixinScreen",
     "minecraft.gui.MixinSplashScreen",

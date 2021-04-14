@@ -140,4 +140,8 @@ object ModuleManager : Iterable<Module>, Listenable {
 
     override fun iterator() = modules.iterator()
 
+    fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
+        return ModuleManager.filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }
+    }
+
 }

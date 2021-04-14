@@ -33,6 +33,7 @@ object CommandBind {
                 ParameterBuilder
                     .begin<String>("name")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                    .autocompletedWith(ModuleManager::autoComplete)
                     .required()
                     .build()
             ).parameter(
@@ -45,10 +46,13 @@ object CommandBind {
             .handler { command, args ->
                 val name = args[0] as String
                 val keyName = args[1] as String
+
                 val module = ModuleManager.find { it.name.equals(name, true) }
                     ?: throw CommandException(command.result("moduleNotFound", name))
+
                 val bindKey = key(keyName)
                 module.bind = bindKey
+
                 chat(regular(command.result("moduleBound", variable(module.name), variable(keyName(bindKey)))))
             }
             .build()

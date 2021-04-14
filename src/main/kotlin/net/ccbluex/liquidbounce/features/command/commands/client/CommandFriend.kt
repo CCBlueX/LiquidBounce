@@ -20,8 +20,13 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.utils.chat
+import net.ccbluex.liquidbounce.utils.regular
+import net.ccbluex.liquidbounce.utils.variable
 
 object CommandFriend {
 
@@ -36,6 +41,7 @@ object CommandFriend {
                         ParameterBuilder
                             .begin<String>("name")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                            .useMinecraftAutoCompletion()
                             .required()
                             .build()
                     )
@@ -46,7 +52,20 @@ object CommandFriend {
                             .optional()
                             .build()
                     )
-                    .handler { _, _ -> TODO() }
+                    .handler { command, args ->
+                        val friend = FriendManager.Friend(args[0] as String, args.getOrNull(1) as String?)
+
+                        if (FriendManager.friends.add(friend)) {
+                            if (friend.alias == null) {
+                                chat(regular(command.result("success", variable(friend.name))))
+                            } else {
+                                chat(regular(command.result("successAlias", variable(friend.name), variable(friend.alias!!))))
+                            }
+                        } else {
+                            throw CommandException(command.result("alreadyFriends", variable(friend.name)))
+                        }
+
+                     }
                     .build()
             )
             .subcommand(
@@ -59,7 +78,15 @@ object CommandFriend {
                             .required()
                             .build()
                     )
-                    .handler { _, _ -> TODO() }
+                    .handler { command, args ->
+                        val friend = FriendManager.Friend(args[0] as String, null)
+
+                        if (FriendManager.friends.remove(friend)) {
+                            chat(regular(command.result("success", variable(friend.name))))
+                        } else {
+                            throw CommandException(command.result("notFriends", variable(friend.name)))
+                        }
+                    }
                     .build()
             )
             .subcommand(
@@ -69,6 +96,7 @@ object CommandFriend {
                         ParameterBuilder
                             .begin<String>("name")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                            .autocompletedWith { begin -> FriendManager.friends.filter { it.name.startsWith(begin, true) }.map { it.name } }
                             .required()
                             .build()
                     )
@@ -79,19 +107,50 @@ object CommandFriend {
                             .required()
                             .build()
                     )
-                    .handler { _, _ -> TODO() }
+                    .handler { command, args ->
+                        val name = args[0] as String
+                        val friend = FriendManager.friends.firstOrNull { it.name == name }
+
+                        if (friend != null) {
+                            friend.alias = args[1] as String
+
+                            chat(regular(command.result("success", variable(name), variable(args[1] as String))))
+                        } else {
+                            throw CommandException(command.result("notFriends", variable(name)))
+                        }
+                    }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("list")
-                    .handler { command, _ -> println(command.result("noFriends")); return@handler }
+                    .handler { command, _ ->
+                        if (FriendManager.friends.isEmpty()) {
+                            chat(command.result("noFriends"))
+                        } else {
+                            FriendManager.friends.forEach {
+                                if (it.alias != null) {
+                                    chat(regular("- "), variable(it.name), regular(" ("), variable(it.alias!!), regular(")"))
+                                } else {
+                                    chat(regular("- "), variable(it.name))
+                                }
+                            }
+                        }
+                    }
                     .build()
             )
             .subcommand(
                 CommandBuilder
                     .begin("clear")
-                    .handler { command, _ -> println(command.result("noFriends")); return@handler }
+                    .handler { command, _ ->
+                        if (FriendManager.friends.isEmpty()) {
+                            throw CommandException(command.result("noFriends"))
+                        } else {
+                            FriendManager.friends.clear()
+
+                            chat(regular(command.result("success")))
+                        }
+                    }
                     .build()
             )
             .build()

@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2021 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.config
 
 import com.google.gson.Gson
@@ -6,7 +25,9 @@ import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.ValueChangedEvent
+import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.render.Fonts
+import java.util.*
 import kotlin.reflect.KProperty
 
 typealias ValueListener<T> = (T) -> T
@@ -73,6 +94,9 @@ open class Value<T : Any>(
         this.value = if (currValue is List<*>) {
             @Suppress("UNCHECKED_CAST")
             element.asJsonArray.mapTo(mutableListOf(), { gson.fromJson(it, this.listType.type!!) }) as T
+        } else if (currValue is Set<*>) {
+            @Suppress("UNCHECKED_CAST")
+            element.asJsonArray.mapTo(TreeSet(), { gson.fromJson(it, this.listType.type!!) }) as T
         } else {
             gson.fromJson(element, currValue.javaClass)
         }
@@ -115,6 +139,7 @@ enum class ListValueType(val type: Class<*>?) {
     Block(net.minecraft.block.Block::class.java),
     Item(net.minecraft.item.Item::class.java),
     String(kotlin.String::class.java),
+    Friend(FriendManager.Friend::class.java),
     FontDetail(Fonts.FontDetail::class.java),
     None(null)
 }

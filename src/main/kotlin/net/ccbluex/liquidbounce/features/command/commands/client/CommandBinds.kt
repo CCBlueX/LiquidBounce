@@ -43,6 +43,7 @@ object CommandBinds {
                         ParameterBuilder
                             .begin<String>("name")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                            .autocompletedWith(ModuleManager::autoComplete)
                             .required()
                             .build()
                     ).parameter(
@@ -75,6 +76,7 @@ object CommandBinds {
                         ParameterBuilder
                             .begin<String>("name")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                            .autocompletedWith { ModuleManager.autoComplete(it) { mod -> mod.bind != -1 } }
                             .required()
                             .build()
                     )
