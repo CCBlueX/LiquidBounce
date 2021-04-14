@@ -51,9 +51,7 @@ object ConfigSystem {
 
     // Gson
     private val confType = TypeToken.get(Configurable::class.java).type
-    private val gson = GsonBuilder()
-        .setPrettyPrinting()
-        .addSerializationExclusionStrategy(ExcludeStrategy(false))
+    private val gson = GsonBuilder().setPrettyPrinting().addSerializationExclusionStrategy(ExcludeStrategy(false))
         .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeSerializer)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
         .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
@@ -62,11 +60,10 @@ object ConfigSystem {
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
-        .registerTypeHierarchyAdapter(ToggleableConfigurable::class.javaObjectType, ToggleableConfigurableSerializer)
+        .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer)
         .create()
 
-    internal val internalGson = GsonBuilder()
-        .addSerializationExclusionStrategy(ExcludeStrategy(true))
+    internal val internalGson = GsonBuilder().addSerializationExclusionStrategy(ExcludeStrategy(true))
         .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeSerializer)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
         .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
@@ -75,7 +72,7 @@ object ConfigSystem {
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
-        .registerTypeHierarchyAdapter(ToggleableConfigurable::class.javaObjectType, ToggleableConfigurableSerializer)
+        .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer)
         .create()
 
     /**
