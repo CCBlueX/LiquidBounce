@@ -31,8 +31,9 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
 
     init {
         for (field in javaClass.declaredFields) {
-            if (Modifier.isStatic(field.modifiers) || field.isAnnotationPresent(Exclude::class.java) ||
-                !Value::class.java.isAssignableFrom(field.type)
+            if (Modifier.isStatic(field.modifiers) || field.isAnnotationPresent(
+                    Exclude::class.java
+                ) || !Value::class.java.isAssignableFrom(field.type)
             ) {
                 continue
             }
@@ -74,9 +75,9 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
             }
 
             if (currentValue is ChoiceConfigurable) {
-                for (choice in currentValue.choices) {
-                    choice.getContainedSettingsRecursivelyInternal(output)
-                }
+                currentValue.choices.filter { it.isActive }.forEach {
+                        it.getContainedSettingsRecursivelyInternal(output)
+                    }
             }
         }
     }
@@ -96,48 +97,34 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
 
     // Fixed data types
 
-    protected fun boolean(name: String, default: Boolean) =
-        value(name, default)
+    protected fun boolean(name: String, default: Boolean) = value(name, default)
 
     protected fun float(name: String, default: Float, range: ClosedFloatingPointRange<Float>) =
         rangedValue(name, default, range)
 
     protected fun floatRange(
-        name: String,
-        default: ClosedFloatingPointRange<Float>,
-        range: ClosedFloatingPointRange<Float>
-    ) =
-        rangedValue(name, default, range)
+        name: String, default: ClosedFloatingPointRange<Float>, range: ClosedFloatingPointRange<Float>
+    ) = rangedValue(name, default, range)
 
-    protected fun int(name: String, default: Int, range: IntRange) =
-        rangedValue(name, default, range)
+    protected fun int(name: String, default: Int, range: IntRange) = rangedValue(name, default, range)
 
-    protected fun intRange(name: String, default: IntRange, range: IntRange) =
-        rangedValue(name, default, range)
+    protected fun intRange(name: String, default: IntRange, range: IntRange) = rangedValue(name, default, range)
 
-    protected fun text(name: String, default: String) =
-        value(name, default)
+    protected fun text(name: String, default: String) = value(name, default)
 
-    protected fun textArray(name: String, default: MutableList<String>) =
-        value(name, default, ListValueType.String)
+    protected fun textArray(name: String, default: MutableList<String>) = value(name, default, ListValueType.String)
 
-    protected fun curve(name: String, default: Array<Float>) =
-        value(name, default)
+    protected fun curve(name: String, default: Array<Float>) = value(name, default)
 
-    protected fun color(name: String, default: Color4b) =
-        value(name, default)
+    protected fun color(name: String, default: Color4b) = value(name, default)
 
-    protected fun block(name: String, default: Block) =
-        value(name, default)
+    protected fun block(name: String, default: Block) = value(name, default)
 
-    protected fun blocks(name: String, default: MutableList<Block>) =
-        value(name, default, ListValueType.Block)
+    protected fun blocks(name: String, default: MutableList<Block>) = value(name, default, ListValueType.Block)
 
-    protected fun item(name: String, default: Item) =
-        value(name, default)
+    protected fun item(name: String, default: Item) = value(name, default)
 
-    protected fun items(name: String, default: MutableList<Item>) =
-        value(name, default, ListValueType.Item)
+    protected fun items(name: String, default: MutableList<Item>) = value(name, default, ListValueType.Item)
 
     protected fun fonts(name: String, default: MutableList<Fonts.FontDetail>) =
         value(name, default, ListValueType.FontDetail)
