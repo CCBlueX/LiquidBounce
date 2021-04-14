@@ -16,24 +16,28 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.render.ultralight.renderer
 
-package net.ccbluex.liquidbounce.config
+import com.labymedia.ultralight.UltralightView
+import com.labymedia.ultralight.config.UltralightViewConfig
 
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
-import java.lang.reflect.Type
+/**
+ * A gpu view renderer
+ *
+ * todo: not yet implemented
+ */
+class GpuViewRenderer : ViewRenderer {
 
-object ValueSerializationAdapter : JsonSerializer<Value<*>> {
+    override fun setupConfig(viewConfig: UltralightViewConfig) {
+        viewConfig.isAccelerated(true)
+    }
 
-    override fun serialize(src: Value<*>, typeOfSrc: Type?, context: JsonSerializationContext): JsonElement {
-        val obj = JsonObject()
+    override fun render(view: UltralightView) {
+        TODO("Not yet implemented")
+    }
 
-        obj.addProperty("name", src.name)
-        obj.add("value", context.serialize(src.value))
-
-        return obj
+    override fun delete() {
+        TODO("Not yet implemented")
     }
 
 }

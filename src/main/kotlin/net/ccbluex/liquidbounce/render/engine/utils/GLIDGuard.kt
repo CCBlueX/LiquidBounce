@@ -50,5 +50,4 @@ abstract class GLIDGuard(val id: Int, val deletionFunction: (Int) -> Unit) {
         }
     }
 
-
 }

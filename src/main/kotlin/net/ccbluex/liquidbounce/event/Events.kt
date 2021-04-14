@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.Nameable
 import net.minecraft.block.BlockState
@@ -38,11 +39,38 @@ class GameTickEvent : Event()
 
 // Render events
 
+@Nameable("gameRender")
+class GameRenderEvent : Event()
+
 @Nameable("engineRender")
 class EngineRenderEvent(val tickDelta: Float) : Event()
 
 @Nameable("overlayRender")
 class OverlayRenderEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
+
+@Nameable("screenRender")
+class ScreenRenderEvent(val screen: Screen, val matrices: MatrixStack, mouseX: Int, mouseY: Int, delta: Float) : Event()
+
+@Nameable("windowResize")
+class WindowResizeEvent(val window: Long, val width: Int, val height: Int) : Event()
+
+@Nameable("windowFocus")
+class WindowFocusEvent(val window: Long, val focused: Boolean) : Event()
+
+@Nameable("mouseButton")
+class MouseButtonEvent(val window: Long, val button: Int, val action: Int, val mods: Int) : Event()
+
+@Nameable("mouseScroll")
+class MouseScrollEvent(val window: Long, val horizontal: Double, val vertical: Double) : Event()
+
+@Nameable("mouseCursor")
+class MouseCursorEvent(val window: Long, val x: Double, val y: Double) : Event()
+
+@Nameable("keyboardKey")
+class KeyboardKeyEvent(val window: Long, val keyCode: Int, val scancode: Int, val action: Int, val mods: Int) : Event()
+
+@Nameable("keyboardChar")
+class KeyboardCharEvent(val window: Long, val codepoint: Int) : Event()
 
 // Input events
 
@@ -82,7 +110,6 @@ class BlockShapeEvent(val state: BlockState, val pos: BlockPos, var shape: Voxel
 @Nameable("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 
-
 // Entity events bound to client-user entity
 
 @Nameable("playerTick")
@@ -119,6 +146,9 @@ class ClientStartEvent : Event()
 
 @Nameable("clientShutdown")
 class ClientShutdownEvent : Event()
+
+@Nameable("valueChanged")
+class ValueChangedEvent(val value: Value<*>) : Event()
 
 @Nameable("toggleModule")
 class ToggleModuleEvent(val module: Module, val newState: Boolean) : Event()

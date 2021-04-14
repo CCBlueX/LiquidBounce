@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.render.engine.utils.pushMVP
 import net.ccbluex.liquidbounce.utils.Mat4
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL12
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL33
 import java.nio.ByteBuffer
@@ -70,8 +71,9 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
     private lateinit var vaoData: VAOData
 
     init {
-        if (maxPrimitiveCount * type.verticesPerPrimitive > 65535)
+        if (maxPrimitiveCount * type.verticesPerPrimitive > 65535) {
             throw IllegalStateException("Too many vertices")
+        }
     }
 
     /**
@@ -155,12 +157,18 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
     override fun getBatchRenderer(): BatchRenderer? = null
 
     override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
+        GL12.glEnable(GL12.GL_TEXTURE_2D)
+        GL12.glDisable(GL12.GL_DEPTH_TEST)
+//        val caps = intArrayOf(GL_BLEND,GL_COLOR_LOGIC_OP,GL_CULL_FACE,GL_DEBUG_OUTPUT,GL_DEBUG_OUTPUT_SYNCHRONOUS,GL_DEPTH_CLAMP,GL_DEPTH_TEST,GL_DITHER,GL_FRAMEBUFFER_SRGB,GL_LINE_SMOOTH,GL_MULTISAMPLE,GL_POLYGON_OFFSET_FILL,GL_POLYGON_OFFSET_LINE,GL_POLYGON_OFFSET_POINT,GL_POLYGON_SMOOTH,GL_PRIMITIVE_RESTART,GL_PRIMITIVE_RESTART_FIXED_INDEX,GL_RASTERIZER_DISCARD,GL_SAMPLE_ALPHA_TO_COVERAGE,GL_SAMPLE_ALPHA_TO_ONE,GL_SAMPLE_COVERAGE,GL_SAMPLE_COVERAGE_INVERT,GL_SAMPLE_SHADING,GL_SAMPLE_MASK,GL_SAMPLE_MASK_VALUE,GL_SCISSOR_TEST,GL_STENCIL_TEST,GL_TEXTURE_CUBE_MAP_SEAMLESS)
+//
+//        println(caps.filter { glGetBoolean(it) }.map { it.toString() }.joinToString(", "))
+
         when (level) {
-            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 // Create an orthographic projection matrix
                 TexturedPrimitiveShader.bind(mvpMatrix)
             }
-            OpenGLLevel.OpenGL1_2 -> {
+            OpenGLLevel.OPENGL1_2 -> {
                 pushMVP(mvpMatrix)
             }
         }
@@ -169,7 +177,7 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
     override fun draw(level: OpenGLLevel) {
         when (level) {
             // Use Immediate mode for OpenGL 1.2. A cheap emulated version of the OpenGL 2.1 backend.
-            OpenGLLevel.OpenGL1_2 -> {
+            OpenGLLevel.OPENGL1_2 -> {
                 this.texture.bind()
 
                 // Begin rendering with the type's mode
@@ -203,7 +211,7 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
                 GL11.glEnd()
             }
             // Use VBOs for later OpenGL versions.
-            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 // Upload if not done yet
                 this.uploadIfNotUploaded()
 
@@ -261,13 +269,13 @@ class TexturedPrimitiveRenderTask(private val maxPrimitiveCount: Int, private va
 
     override fun cleanupRendering(level: OpenGLLevel) {
         when (level) {
-            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 // Disable all shader programs
                 GL20.glUseProgram(0)
                 // Unbind VBOs, only needs to be done once during rendering
                 GL33.glBindVertexArray(0)
             }
-            OpenGLLevel.OpenGL1_2 -> {
+            OpenGLLevel.OPENGL1_2 -> {
                 popMVP()
             }
         }

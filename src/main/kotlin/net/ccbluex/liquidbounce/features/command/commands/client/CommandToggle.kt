@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.chat
-import net.ccbluex.liquidbounce.utils.dot
 import net.ccbluex.liquidbounce.utils.regular
 import net.ccbluex.liquidbounce.utils.variable
 
@@ -34,21 +33,21 @@ object CommandToggle {
         return CommandBuilder
             .begin("toggle")
             .alias("t")
-            .description("Allows you to toggle modules")
-            .parameter(ParameterBuilder
-                .begin<String>("name")
-                .description("The name of the module")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .required()
-                .build())
-            .handler { args ->
+            .parameter(
+                ParameterBuilder
+                    .begin<String>("name")
+                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                    .required()
+                    .build()
+            )
+            .handler { command, args ->
                 val name = args[0] as String
                 val module = ModuleManager.find { it.name.equals(name, true) }
-                    ?: throw CommandException("Module §b§l${args[0]}§c not found.")
+                    ?: throw CommandException(command.result("moduleNotFound", name))
 
                 val newState = !module.enabled
                 module.enabled = newState
-                chat(variable(module.name), regular(" has been "), variable(if (newState) "enabled" else "disabled"), dot())
+                chat(regular(command.result("moduleToggled", variable(module.name), variable(if (newState) command.result("enabled") else command.result("disabled")))))
             }
             .build()
     }

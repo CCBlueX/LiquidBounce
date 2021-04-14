@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.mc
 import net.ccbluex.liquidbounce.utils.regular
 import net.ccbluex.liquidbounce.utils.variable
-
 import org.lwjgl.glfw.GLFW
 
 object CommandPosition {
@@ -33,10 +32,9 @@ object CommandPosition {
         return CommandBuilder
             .begin("position")
             .alias("pos")
-            .description("Copies your position to the clipboard")
-            .handler {
+            .handler { command, _ ->
                 val position = mc.player!!.blockPos.toShortString()
-                chat(regular("Position: "), variable(position))
+                chat(regular(command.result("position", variable(position))))
                 GLFW.glfwSetClipboardString(mc.window.handle, position)
             }
             .build()

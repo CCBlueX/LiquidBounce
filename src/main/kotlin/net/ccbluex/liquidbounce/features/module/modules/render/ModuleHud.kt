@@ -18,26 +18,55 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.ultralight.WebView
+import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
+import net.ccbluex.liquidbounce.render.ultralight.View
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 
+/**
+ * Module HUD
+ *
+ * The client in-game dashboard
+ */
 object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
+    override val translationBaseKey: String
+        get() = "liquidbounce.module.hud"
 
-    private var webView: WebView? = null
+    private var view: View? = null
 
-    override fun init() {
-        webView = WebView(width = { mc.window.width }, height = { mc.window.height })
-        webView!!.loadPage(ThemeManager.defaultTheme.page("hud") ?: error(""))
+    /**
+     * Create new HUD view
+     */
+    private fun makeView() {
+        if (view != null) {
+            return
+        }
+
+        val page = ThemeManager.defaultTheme.page("hud") ?: error("unable to find hud page in current theme")
+        view = UltralightEngine.newOverlayView().apply {
+            loadPage(page)
+        }
     }
 
-    val renderHandler = handler<OverlayRenderEvent> {
-        val currentView = webView ?: return@handler
-        currentView.update()
-        currentView.render()
+    /**
+     * Unload HUD view
+     */
+    private fun unloadView() {
+        view?.let { UltralightEngine.removeView(it) }
+        view = null
+    }
+
+    override fun init() {
+        makeView()
+    }
+
+    override fun enable() {
+        makeView()
+    }
+
+    override fun disable() {
+        unloadView()
     }
 
 }

@@ -16,23 +16,25 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config
 
-import com.google.gson.ExclusionStrategy
-import com.google.gson.FieldAttributes
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+package net.ccbluex.liquidbounce.config.adapter
 
-@Retention(AnnotationRetention.RUNTIME)
-@Target(AnnotationTarget.FIELD)
-annotation class Exclude
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
+import net.ccbluex.liquidbounce.config.Value
+import java.lang.reflect.Type
 
-class ExcludeStrategy : ExclusionStrategy {
-    override fun shouldSkipClass(clazz: Class<*>?) = false
-    override fun shouldSkipField(field: FieldAttributes) = field.getAnnotation(Exclude::class.java) != null
+object ValueSerializationAdapter : JsonSerializer<Value<*>> {
+
+    override fun serialize(src: Value<*>, typeOfSrc: Type?, context: JsonSerializationContext): JsonElement {
+        val obj = JsonObject()
+
+        obj.addProperty("name", src.name)
+        obj.add("value", context.serialize(src.value))
+
+        return obj
+    }
+
 }
-
-/**
- * Decode JSON content
- */
-inline fun <reified T> decode(stringJson: String): T = Gson().fromJson(stringJson, object : TypeToken<T>() {}.type)

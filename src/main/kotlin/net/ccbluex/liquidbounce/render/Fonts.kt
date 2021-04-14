@@ -37,17 +37,21 @@ object Fonts {
     val loadedFonts = mutableMapOf<FontDetail, AbstractFontRenderer>()
 
     private val fontsRoot = File(ConfigSystem.rootFolder, "fonts").apply {
-        if (!exists())
+        if (!exists()) {
             mkdir()
+        }
     }
 
     private object Options : Configurable("fonts") {
 
-        val fonts by value("Fonts", arrayOf(
-            // Default fonts
-            FontDetail("Roboto-Medium.ttf", 40),
-            FontDetail("Roboto-Bold.ttf", 180)
-        ))
+        val fonts by value(
+            "Fonts",
+            arrayOf(
+                // Default fonts
+                FontDetail("Roboto-Medium.ttf", 40),
+                FontDetail("Roboto-Bold.ttf", 180)
+            )
+        )
 
     }
 

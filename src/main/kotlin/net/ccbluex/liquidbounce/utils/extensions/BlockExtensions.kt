@@ -32,7 +32,6 @@ fun BlockPos.getState() = mc.world?.getBlockState(this)
 
 fun BlockPos.getBlock() = getState()?.block
 
-
 fun raytraceBlock(range: Double, rotation: Rotation, pos: BlockPos, state: BlockState): BlockHitResult? {
     val entity: Entity = mc.cameraEntity ?: return null
 

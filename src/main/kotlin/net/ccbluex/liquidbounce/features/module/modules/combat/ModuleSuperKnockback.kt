@@ -39,8 +39,9 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
         val enemy = event.enemy
 
         if (enemy is LivingEntity && enemy.hurtTime <= hurtTime) {
-            if (player.isSprinting)
+            if (player.isSprinting) {
                 network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
+            }
 
             network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SPRINTING))
             network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))

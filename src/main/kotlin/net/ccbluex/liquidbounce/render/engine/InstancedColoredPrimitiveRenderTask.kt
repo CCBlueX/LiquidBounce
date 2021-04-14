@@ -25,10 +25,7 @@ import net.ccbluex.liquidbounce.render.engine.utils.popMVP
 import net.ccbluex.liquidbounce.render.engine.utils.pushMVP
 import net.ccbluex.liquidbounce.utils.Mat4
 import org.lwjgl.BufferUtils
-import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL20
-import org.lwjgl.opengl.GL31
-import org.lwjgl.opengl.GL33
+import org.lwjgl.opengl.*
 import java.nio.ByteBuffer
 
 class InstancedColoredPrimitiveRenderTask(
@@ -63,8 +60,10 @@ class InstancedColoredPrimitiveRenderTask(
     override fun getBatchRenderer(): BatchRenderer? = null
 
     override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
+        GL12.glDisable(GL12.GL_TEXTURE_2D)
+
         when (level) {
-            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 InstancedColoredPrimitiveShader.bind(mvpMatrix)
             }
             else -> {
@@ -76,7 +75,7 @@ class InstancedColoredPrimitiveRenderTask(
     override fun draw(level: OpenGLLevel) {
         when (level) {
             // Use Immediate mode for OpenGL 1.2. A cheap emulated version of the OpenGL 2.1 backend.
-            OpenGLLevel.OpenGL1_2 -> {
+            OpenGLLevel.OPENGL1_2 -> {
                 val list = GL11.glGenLists(1)
 
                 GL11.glNewList(list, GL11.GL_COMPILE)
@@ -131,7 +130,7 @@ class InstancedColoredPrimitiveRenderTask(
                 GL11.glDeleteLists(list, 1)
             }
             // Use VBOs for later OpenGL versions.
-            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 // Upload if not done yet
                 this.uploadIfNotUploaded()
 
@@ -151,7 +150,7 @@ class InstancedColoredPrimitiveRenderTask(
 
     override fun cleanupRendering(level: OpenGLLevel) {
         when (level) {
-            OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 -> {
+            OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 // Disable all shader programs
                 GL20.glUseProgram(0)
                 // Unbind VBOs, only needs to be done once during rendering
@@ -193,7 +192,6 @@ class InstancedColoredPrimitiveRenderTask(
         GL20.glBindBuffer(GL20.GL_ARRAY_BUFFER, 0)
 
         vaoData.unbind()
-
 
         this.vaoData = vaoData
     }

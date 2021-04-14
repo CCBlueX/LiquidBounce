@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.ScreenEvent
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.sequenceHandler
 import net.minecraft.client.gui.screen.DeathScreen
 
 /**
@@ -36,8 +36,9 @@ object ModuleAutoRespawn : Module("AutoRespawn", Category.PLAYER) {
 
     val screenHandler = sequenceHandler<ScreenEvent> {
         if (it.screen is DeathScreen) {
-            if (delay > 0)
+            if (delay > 0) {
                 wait(delay)
+            }
 
             player.requestRespawn()
             mc.openScreen(null)

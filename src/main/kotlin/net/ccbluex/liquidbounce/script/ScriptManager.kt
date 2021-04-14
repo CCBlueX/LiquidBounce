@@ -32,8 +32,9 @@ object ScriptManager {
 
     // Store all of your scripts into this folder to get loaded
     val scriptsRoot = File(ConfigSystem.rootFolder, "scripts").apply {
-        if (!exists())
+        if (!exists()) {
             mkdir()
+        }
     }
 
     /**

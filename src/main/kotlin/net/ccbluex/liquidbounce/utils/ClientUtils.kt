@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.extensions.asText
 import net.ccbluex.liquidbounce.utils.extensions.outputString
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.util.InputUtil
+import net.minecraft.text.BaseText
 import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -42,7 +43,11 @@ private val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] ".asText()
 
 fun dot() = regular(".")
 
+fun regular(text: BaseText) = text.styled { it.withColor(Formatting.GRAY) }
+
 fun regular(text: String) = text.asText().styled { it.withColor(Formatting.GRAY) }
+
+fun variable(text: BaseText) = text.styled { it.withColor(Formatting.DARK_GRAY) }
 
 fun variable(text: String) = text.asText().styled { it.withColor(Formatting.DARK_GRAY) }
 
@@ -59,6 +64,9 @@ fun chat(vararg texts: Text, prefix: Boolean = true) {
 }
 
 fun chat(text: String) = chat(text.asText())
+
+fun notification(title: BaseText, message: String, severity: NotificationEvent.Severity) =
+    EventManager.callEvent(NotificationEvent(title.asString(), message, severity))
 
 fun notification(title: String, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title, message, severity))
@@ -85,7 +93,7 @@ fun resourceToString(path: String) = resource(path).use { it.reader().readText()
 /**
  * Translated key code to key name using GLFW and translates unknown key to NONE
  */
-fun key(name: String) = when(name.toLowerCase()) {
+fun key(name: String) = when (name.toLowerCase()) {
     "rshift" -> GLFW.GLFW_KEY_RIGHT_SHIFT
     "lshift" -> GLFW.GLFW_KEY_LEFT_SHIFT
     else -> runCatching {
@@ -96,7 +104,7 @@ fun key(name: String) = when(name.toLowerCase()) {
 /**
  * Translated key code to key name using GLFW and translates unknown key to NONE
  */
-fun keyName(keyCode: Int) = when(keyCode) {
+fun keyName(keyCode: Int) = when (keyCode) {
     GLFW.GLFW_KEY_UNKNOWN -> "NONE"
     else -> InputUtil.fromKeyCode(keyCode, -1).translationKey
         .split(".")

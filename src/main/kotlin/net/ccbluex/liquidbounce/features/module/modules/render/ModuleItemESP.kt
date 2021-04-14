@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Choice
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.*
 import net.ccbluex.liquidbounce.render.utils.drawBox
@@ -32,6 +32,8 @@ import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
 
 object ModuleItemESP : Module("ItemESP", Category.RENDER) {
+    override val translationBaseKey: String
+        get() = "liquidbounce.module.itemEsp"
 
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)

@@ -22,8 +22,11 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.extensions.createItem
+import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.regular
+import net.ccbluex.liquidbounce.utils.variable
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
 object CommandItemSkull {
@@ -31,31 +34,29 @@ object CommandItemSkull {
     fun createCommand(): Command {
         return CommandBuilder
             .begin("skull")
-            .description("Allows you to give yourself player skulls")
             .parameter(
                 ParameterBuilder
                     .begin<String>("name")
-                    .description("Name of the player")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                     .required()
                     .build()
             )
-            .handler { args ->
+            .handler { command, args ->
                 val name = args[0] as String
 
                 if (mc.interactionManager?.hasCreativeInventory() == false) {
-                    throw CommandException("You need to be in creative mode.")
+                    throw CommandException(command.result("mustBeCreative"))
                 }
 
                 val itemStack = createItem("minecraft:player_head{SkullOwner:$name}")
                 val emptySlot = mc.player!!.inventory!!.emptySlot
 
                 if (emptySlot == -1) {
-                    throw CommandException("There are no empty slots in your inventory.")
+                    throw CommandException(command.result("noEmptySlot"))
                 }
 
-                mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(if(emptySlot < 9) emptySlot + 36 else emptySlot, itemStack))
-                chat(regular("Given skull of "), variable(name), dot())
+                mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot, itemStack))
+                chat(regular(command.result("skullGiven", variable(name))))
             }
             .build()
     }

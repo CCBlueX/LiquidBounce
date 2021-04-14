@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.command.Parameter
 
 class CommandBuilder private constructor(val name: String) {
 
-    private var description: String? = null
     private var aliases: Array<out String> = emptyArray()
     private var parameters: ArrayList<Parameter<*>> = ArrayList()
     private var subcommands: ArrayList<Command> = ArrayList()
@@ -54,12 +53,6 @@ class CommandBuilder private constructor(val name: String) {
         return this
     }
 
-    fun description(description: String): CommandBuilder {
-        this.description = description
-
-        return this
-    }
-
     fun handler(handler: CommandHandler): CommandBuilder {
         this.handler = handler
 
@@ -80,12 +73,12 @@ class CommandBuilder private constructor(val name: String) {
         return this
     }
 
-
     fun build(): Command {
-        if (!executable && this.handler != null)
+        if (!executable && this.handler != null) {
             throw IllegalArgumentException("The command is marked as not executable (hub), but no handler was specified")
-        else if (executable && this.handler == null)
+        } else if (executable && this.handler == null) {
             throw IllegalArgumentException("The command is marked as executable, but no handler was specified.")
+        }
 
         var wasOptional = false
         var wasVararg = false
@@ -103,9 +96,14 @@ class CommandBuilder private constructor(val name: String) {
         }
 
         return Command(
-            this.name, this.aliases, this.description, this.parameters.toArray(emptyArray()), this.subcommands.toArray(
+            this.name,
+            this.aliases,
+            this.parameters.toArray(emptyArray()),
+            this.subcommands.toArray(
                 emptyArray()
-            ), executable, this.handler
+            ),
+            executable,
+            this.handler
         )
     }
 

@@ -43,10 +43,10 @@ import com.labymedia.ultralight.math.IntRect
 import com.labymedia.ultralight.plugin.view.MessageLevel
 import com.labymedia.ultralight.plugin.view.MessageSource
 import com.labymedia.ultralight.plugin.view.UltralightViewListener
-import net.ccbluex.liquidbounce.render.ultralight.input.CursorAdapter
+import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.utils.logger
 
-class ViewListener(private val cursorManager: CursorAdapter) : UltralightViewListener {
+class ViewListener : UltralightViewListener {
 
     /**
      * Called by Ultralight when the page title changes.
@@ -78,7 +78,7 @@ class ViewListener(private val cursorManager: CursorAdapter) : UltralightViewLis
      * @param cursor The new page cursor
      */
     override fun onChangeCursor(cursor: UltralightCursor) {
-        cursorManager.notifyCursorUpdated(cursor)
+        UltralightEngine.cursorAdapter.notifyCursorUpdated(cursor)
     }
 
     /**
@@ -92,8 +92,14 @@ class ViewListener(private val cursorManager: CursorAdapter) : UltralightViewLis
      * @param columnNumber The column the message originated from
      * @param sourceId     The id of the source
      */
-    override fun onAddConsoleMessage(source: MessageSource, level: MessageLevel, message: String, lineNumber: Long,
-                                     columnNumber: Long, sourceId: String) {
+    override fun onAddConsoleMessage(
+        source: MessageSource,
+        level: MessageLevel,
+        message: String,
+        lineNumber: Long,
+        columnNumber: Long,
+        sourceId: String
+    ) {
         logger.info("View message: [${source.name}/${level.name}] $sourceId:$lineNumber:$columnNumber: $message")
     }
 
@@ -109,8 +115,12 @@ class ViewListener(private val cursorManager: CursorAdapter) : UltralightViewLis
      * @return The view to display the new URL in, or `null`, if the request should not be further handled by
      * Ultralight
      */
-    override fun onCreateChildView(openerUrl: String, targetUrl: String, isPopup: Boolean,
-                                   popupRect: IntRect): UltralightView? {
+    override fun onCreateChildView(
+        openerUrl: String,
+        targetUrl: String,
+        isPopup: Boolean,
+        popupRect: IntRect
+    ): UltralightView? {
         // Returning null will stop Ultralight from further handling the request, ignoring it altogether
         return null
     }

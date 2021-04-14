@@ -21,12 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.repeatable
 import net.ccbluex.liquidbounce.utils.chat
 import net.ccbluex.liquidbounce.utils.extensions.moving
 import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.regular
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
@@ -53,14 +54,13 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
     val packetHandler = handler<PacketEvent> { event ->
         // Setback detection
         if (event.packet is PlayerPositionLookS2CPacket) {
-            chat("You have been set back by the server! Make sure you're standing in a block.")
+            chat(regular(this.message("setbackDetected")))
             enabled = false
         }
     }
 
     override fun disable() {
-        player.noClip = false
+        mc.player?.noClip = false
     }
 
 }
-

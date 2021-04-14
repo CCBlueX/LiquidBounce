@@ -19,8 +19,12 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.GameRenderEvent;
+import net.ccbluex.liquidbounce.event.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -32,6 +36,10 @@ import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameRenderer.class)
 public abstract class MixinGameRenderer implements IMixinGameRenderer {
@@ -53,6 +61,23 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
     @Shadow
     protected abstract void bobView(MatrixStack matrixStack, float f);
+
+    /**
+     * Hook game render event
+     */
+    @Inject(method = "render", at = @At("HEAD"))
+    public void hookGameRender(CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new GameRenderEvent());
+    }
+
+    /**
+     * Hook screen render event
+     */
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"))
+    public void hookScreenRender(Screen screen, MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        screen.render(matrices, mouseX, mouseY, delta);
+        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(screen, matrices, mouseX, mouseY, delta));
+    }
 
     @Override
     public Matrix4f getCameraMVPMatrix(float tickDelta, boolean bobbing) {

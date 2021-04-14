@@ -68,8 +68,9 @@ class Theme(val name: String) {
     fun page(name: String): Page? {
         val page = Page(this, name)
 
-        if (page.exist)
+        if (page.exist) {
             return page
+        }
         return null
     }
 

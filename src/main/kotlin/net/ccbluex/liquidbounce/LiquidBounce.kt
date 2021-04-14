@@ -25,9 +25,7 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
 import net.ccbluex.liquidbounce.render.engine.RenderEngine
-import net.ccbluex.liquidbounce.render.ultralight.UltralightScreenHook
-import net.ccbluex.liquidbounce.render.ultralight.WebPlatform
-import net.ccbluex.liquidbounce.render.ultralight.native.UltralightNatives
+import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.extensions.RotationManager
@@ -81,15 +79,11 @@ object LiquidBounce : Listenable {
         Tabs
         Chat
 
-        // Download natives
-        UltralightNatives.downloadNatives()
-
         // Initialize the render engine
         RenderEngine.init()
 
         // Load up web platform
-        WebPlatform.init()
-        UltralightScreenHook
+        UltralightEngine.init()
 
         // Register commands and modules
         CommandManager.registerInbuilt()
@@ -113,6 +107,7 @@ object LiquidBounce : Listenable {
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
         ConfigSystem.store()
+        UltralightEngine.shutdown()
     }
 
 }

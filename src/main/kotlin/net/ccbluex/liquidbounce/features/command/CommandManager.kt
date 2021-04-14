@@ -31,9 +31,12 @@ import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemSk
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.utils.chat
+import net.ccbluex.liquidbounce.utils.extensions.outputString
+import net.minecraft.text.TranslatableText
+import net.minecraft.util.Formatting
 
-class CommandException(message: String, cause: Throwable? = null, val usageInfo: List<String>? = null) :
-    Exception(message, cause)
+class CommandException(val text: TranslatableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
+    Exception(text.outputString(), cause)
 
 /**
  * Links minecraft with the command engine
@@ -48,7 +51,7 @@ object CommandExecutor : Listenable {
             try {
                 CommandManager.execute(it.message.substring(CommandManager.Options.prefix.length))
             } catch (e: CommandException) {
-                chat("§c${e.message}")
+                chat(e.text.styled { it.withColor(Formatting.RED) })
                 chat("§cUsage: ")
 
                 if (e.usageInfo != null) {
@@ -58,7 +61,7 @@ object CommandExecutor : Listenable {
                     //  .friend add <name> [<alias>]
                     //  OR .friend remove <name>
                     e.usageInfo.forEach { usage ->
-                        chat("§c ${if (first) "" else "OR "}.${usage}")
+                        chat("§c ${if (first) "" else "OR "}.$usage")
 
                         if (first) {
                             first = false
@@ -66,7 +69,7 @@ object CommandExecutor : Listenable {
                     }
                 }
             } catch (e: Exception) {
-                chat("§cAn exception occurred while executing the command: $e")
+                chat(TranslatableText("liquidbounce.commandManager.exceptionOccurred", e).styled { it.withColor(Formatting.RED) })
             }
 
             it.cancelEvent()
@@ -159,8 +162,9 @@ object CommandManager : Iterable<Command> {
         idx: Int = 0
     ): Pair<Command, Int>? {
         // Return the last command when there are no more arguments
-        if (idx >= args.size)
+        if (idx >= args.size) {
             return currentCommand
+        }
 
         // If currentCommand is null, idx must be 0, so search in all commands
         val commandSupplier = currentCommand?.first?.subcommands?.asIterable() ?: commands
@@ -190,30 +194,33 @@ object CommandManager : Iterable<Command> {
         val args = tokenize(cmd)
 
         // Prevent bugs
-        if (args.isEmpty())
+        if (args.isEmpty()) {
             return
+        }
 
         // getSubcommands will only return null if it returns on the first index.
         // since the first index must contain a valid command, it is reported as
         // unknown
-        val pair = getSubCommand(args) ?: throw CommandException("Unknown command ${args[0]}")
+        val pair = getSubCommand(args) ?: throw CommandException(TranslatableText("liquidbounce.commandManager.unknownCommand", args[0]))
         val command = pair.first
 
         // If the command is not executable, don't allow it to be executed
-        if (!command.executable)
-            throw CommandException("Invalid usage of command ${args[0]}", usageInfo = command.usage())
+        if (!command.executable) {
+            throw CommandException(TranslatableText("liquidbounce.commandManager.invalidUsage", args[0]), usageInfo = command.usage())
+        }
 
         // The index the command is in
         val idx = pair.second
 
         // If there are more arguments for a command that takes no parameters
-        if (command.parameters.isEmpty() && idx != args.size - 1)
-            throw CommandException("This command takes no parameters", usageInfo = command.usage())
+        if (command.parameters.isEmpty() && idx != args.size - 1) {
+            throw CommandException(TranslatableText("liquidbounce.commandManager.commandTakesNoParameters"), usageInfo = command.usage())
+        }
 
         // If there is a required parameter after the supply of arguments ends, it is absent
         if (args.size - idx - 1 < command.parameters.size && command.parameters[args.size - idx - 1].required) {
             throw CommandException(
-                "Parameter ${command.parameters[args.size - idx - 1].name} is required",
+                TranslatableText("liquidbounce.commandManager.parameterRequired", command.parameters[args.size - idx - 1].name),
                 usageInfo = command.usage()
             )
         }
@@ -233,7 +240,7 @@ object CommandManager : Iterable<Command> {
 
             // Check if there is a parameter for this index
             if (paramIndex >= command.parameters.size) {
-                throw CommandException("Unknown parameter \"${args[i]}\"", usageInfo = command.usage())
+                throw CommandException(TranslatableText("liquidbounce.commandManager.unknownParameter", args[i]), usageInfo = command.usage())
             }
 
             val parameter = command.parameters[paramIndex]
@@ -256,15 +263,17 @@ object CommandManager : Iterable<Command> {
 
             // Varargs can only occur at the end and the following args shouldn't be treated
             // as parameters, so we can end
-            if (parameter.vararg)
+            if (parameter.vararg) {
                 break
+            }
         }
 
-        if (!command.executable)
-            throw CommandException("The command ${command.name} is not executable.", usageInfo = command.usage())
+        if (!command.executable) {
+            throw CommandException(TranslatableText("liquidbounce.commandManager.commandNotExecutable", command.name), usageInfo = command.usage())
+        }
 
         @Suppress("UNCHECKED_CAST")
-        command.handler!!(parsedParameters as Array<Any>)
+        command.handler!!(command, parsedParameters as Array<Any>)
     }
 
     /**
@@ -278,7 +287,7 @@ object CommandManager : Iterable<Command> {
 
             if (validationResult.errorMessage != null) {
                 throw CommandException(
-                    "Invalid parameter value for parameter ${parameter.name} (\"$argument\"): ${validationResult.errorMessage}",
+                    TranslatableText("liquidbounce.commandManager.invalidParameterValue", parameter.name, argument, validationResult.errorMessage),
                     usageInfo = command.usage()
                 )
             }

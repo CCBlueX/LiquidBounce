@@ -55,7 +55,8 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
 
         synchronized(positions) {
             RenderEngine.enqueueForRendering(
-                RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, createBreadcrumbsRenderTask(
+                RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING,
+                createBreadcrumbsRenderTask(
                     color,
                     positions
                 )

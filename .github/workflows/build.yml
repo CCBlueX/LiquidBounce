@@ -18,9 +18,6 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '14'
       - name: Grant all permissions for theme
         run: sudo chmod -R 777 theme
       - uses: burrunan/gradle-cache-action@v1
@@ -34,4 +31,4 @@ jobs:
           cd build/libs
           export LB_VERSION=$(find . -regex '.*liquidbounce-[0-9|.]*\.jar')
           cp $LB_VERSION liquidbounce.jar
-          curl -X POST -F "artifact=@liquidbounce.jar" -H "Authentication: ${{ secrets.NIGHTLY_PASS }}" -F "gh_id=${{ github.event.head_commit.id }}" -F "gh_ref=${{ github.ref }}" -F "gh_message=${{ github.event.head_commit.message }}" -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" -F "lb_version=$LB_VERSION" https://liquidbounce.net/php/nightly/webhook
+          curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.jar" -H "Authentication: ${{ secrets.NIGHTLY_PASS }}" -F "gh_id=${{ github.event.head_commit.id }}" -F "gh_ref=${{ github.ref }}" -F "gh_message=${{ github.event.head_commit.message }}" -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" -F "lb_version=$LB_VERSION" https://liquidbounce.net/php/nightly/webhook

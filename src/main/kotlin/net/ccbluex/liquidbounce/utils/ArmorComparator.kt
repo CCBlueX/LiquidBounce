@@ -85,13 +85,15 @@ object ArmorComparator : Comparator<ArmorPiece> {
                 // Last comparision: Enchantability
                 val enchantabilityCmp = o1a.material.enchantability.compareTo(o2a.material.enchantability)
 
-                if (enchantabilityCmp != 0)
+                if (enchantabilityCmp != 0) {
                     return enchantabilityCmp
+                }
 
                 val alreadyEquippedCmp = compareByCondition(o1, o2, ArmorPiece::isAlreadyEquipped)
 
-                if (alreadyEquippedCmp != 0)
+                if (alreadyEquippedCmp != 0) {
                     return alreadyEquippedCmp
+                }
 
                 return compareByCondition(o1, o2, ArmorPiece::isReachableByHand)
             }

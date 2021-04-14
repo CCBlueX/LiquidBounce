@@ -24,40 +24,32 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.*
-import net.ccbluex.liquidbounce.utils.extensions.asText
-import net.minecraft.client.util.InputUtil
-import org.lwjgl.glfw.GLFW
 
 object CommandBind {
-
     fun createCommand(): Command {
         return CommandBuilder
             .begin("bind")
-            .description("Allows you to set keybinds")
             .parameter(
                 ParameterBuilder
                     .begin<String>("name")
-                    .description("The name of the module")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                     .required()
                     .build()
             ).parameter(
                 ParameterBuilder
                     .begin<String>("key")
-                    .description("The new key to bind")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                     .required()
                     .build()
             )
-            .handler { args ->
+            .handler { command, args ->
                 val name = args[0] as String
                 val keyName = args[1] as String
                 val module = ModuleManager.find { it.name.equals(name, true) }
-                    ?: throw CommandException("Module $name not found.")
-
+                    ?: throw CommandException(command.result("moduleNotFound", name))
                 val bindKey = key(keyName)
                 module.bind = bindKey
-                chat(regular("Bound module "), variable(module.name), regular(" to key "), variable(keyName(bindKey)), dot())
+                chat(regular(command.result("moduleBound", variable(module.name), variable(keyName(bindKey)))))
             }
             .build()
     }

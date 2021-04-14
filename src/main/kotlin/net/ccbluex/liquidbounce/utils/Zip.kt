@@ -19,14 +19,15 @@
 package net.ccbluex.liquidbounce.utils
 
 import java.io.File
-import java.io.FileOutputStream
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.InputStream
 import java.util.zip.ZipInputStream
 
 fun extractZip(zipStream: InputStream, folder: File) {
-    if (!folder.exists())
+    if (!folder.exists()) {
         folder.mkdir()
+    }
 
     ZipInputStream(zipStream).use { zipInputStream ->
         var zipEntry = zipInputStream.nextEntry
@@ -40,13 +41,14 @@ fun extractZip(zipStream: InputStream, folder: File) {
             val newFile = File(folder, zipEntry.name)
             File(newFile.parent).mkdirs()
 
-            zipInputStream.copyTo(FileOutputStream(newFile))
+            FileOutputStream(newFile).use {
+                zipInputStream.copyTo(it)
+            }
             zipEntry = zipInputStream.nextEntry
         }
 
         zipInputStream.closeEntry()
     }
 }
-
 
 fun extractZip(zipFile: File, folder: File) = extractZip(FileInputStream(zipFile), folder)

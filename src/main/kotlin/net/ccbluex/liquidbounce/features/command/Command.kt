@@ -19,29 +19,51 @@
 
 package net.ccbluex.liquidbounce.features.command
 
+import net.minecraft.text.TranslatableText
 import java.util.*
-import kotlin.collections.ArrayList
 
-typealias CommandHandler = (Array<Any>) -> Unit
+typealias CommandHandler = (Command, Array<Any>) -> Unit
 
 class Command(
     val name: String,
     val aliases: Array<out String>,
-    val description: String?,
     val parameters: Array<Parameter<*>>,
     val subcommands: Array<Command>,
     val executable: Boolean,
     val handler: CommandHandler?,
     var parentCommand: Command? = null
 ) {
+    val translationBaseKey: String
+        get() = "liquidbounce.command.${getParentKeys(this, name)}"
+
+    val description: TranslatableText
+        get() = TranslatableText("$translationBaseKey.description")
 
     init {
         subcommands.forEach {
-            if (it.parentCommand != null)
+            if (it.parentCommand != null) {
                 throw IllegalStateException("Subcommand already has parent command")
+            }
 
             it.parentCommand = this
         }
+
+        parameters.forEach {
+            if (it.command != null) {
+                throw IllegalStateException("Parameter already has a command")
+            }
+
+            it.command = this
+        }
+    }
+
+    private fun getParentKeys(currentCommand: Command?, current: String): String {
+        val parentName = currentCommand?.parentCommand?.name
+        return if (parentName != null) getParentKeys(currentCommand.parentCommand, "$parentName.subcommand.$current") else current
+    }
+
+    fun result(key: String, vararg args: Any): TranslatableText {
+        return TranslatableText("$translationBaseKey.result.$key", *args)
     }
 
     /**
@@ -50,10 +72,11 @@ class Command(
     fun getFullName(): String {
         val parent = this.parentCommand
 
-        return if (parent == null)
+        return if (parent == null) {
             this.name
-        else
+        } else {
             parent.getFullName() + " " + this.name
+        }
     }
 
     /**
@@ -71,13 +94,15 @@ class Command(
             for (parameter in parameters) {
                 var name = parameter.name
 
-                name = if (parameter.required)
+                name = if (parameter.required) {
                     "<$name>"
-                else
+                } else {
                     "[<$name>]"
+                }
 
-                if (parameter.vararg)
+                if (parameter.vararg) {
                     name += "..."
+                }
 
                 joiner.add(name)
             }

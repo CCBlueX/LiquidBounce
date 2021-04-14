@@ -18,11 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.PlayerTickEvent
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Choice
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.sequenceHandler
 import net.ccbluex.liquidbounce.utils.extensions.downwards
 import net.ccbluex.liquidbounce.utils.extensions.moving
 import net.ccbluex.liquidbounce.utils.extensions.strafe
@@ -36,17 +35,15 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     private object SpeedYPort : Choice("YPort", modes) {
 
-        val tickHandler = sequenceHandler<PlayerTickEvent> {
+        val repeatable = repeatable {
             if (player.isOnGround && player.moving) {
                 player.strafe(speed = 0.4)
                 player.upwards(0.42f)
                 wait(1)
                 player.downwards(-1f)
             }
-
         }
 
     }
 
 }
-

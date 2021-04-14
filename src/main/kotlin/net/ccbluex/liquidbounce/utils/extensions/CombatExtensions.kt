@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -58,16 +59,22 @@ class EnemyConfigurable : Configurable("enemies") {
 
     // Players should be considered as a enemy
     val players by boolean("Players", true)
+
     // Hostile mobs (like skeletons and zombies) should be considered as a enemy
     val mobs by boolean("Mobs", true)
+
     // Animals (like cows, pigs and so on) should be considered as a enemy
     val animals by boolean("Animals", false)
+
     // Invisible entities should be also considered as a enemy
     var invisible by boolean("Invisible", true)
+
     // Dead entities should be also considered as a enemy to bypass modern anti cheat techniques
     var dead by boolean("Dead", false)
+
     // Friends (client friends - other players) should be also considered as enemy
     val friends by boolean("Friends", false)
+
     // Should bots be blocked to bypass anti cheat techniques
     val antibot = tree(AntiBotConfigurable())
 
@@ -82,9 +89,9 @@ class EnemyConfigurable : Configurable("enemies") {
          * Check if player might be a bot
          */
         fun isBot(player: ClientPlayerEntity): Boolean {
-            if (!enabled)
+            if (!enabled) {
                 return false
-
+            }
 
             return false
         }
@@ -113,9 +120,9 @@ class EnemyConfigurable : Configurable("enemies") {
                     }
 
                     return true
-                }else if (enemy is PassiveEntity && animals) {
+                } else if (enemy is PassiveEntity && animals) {
                     return true
-                }else if (enemy is MobEntity && mobs) {
+                } else if (enemy is MobEntity && mobs) {
                     return true
                 }
             }
@@ -131,9 +138,6 @@ class EnemyConfigurable : Configurable("enemies") {
  */
 class RotationsConfigurable : Configurable("rotations") {
     val turnSpeed by curve("TurnSpeed", arrayOf(4f, 7f, 10f, 3f, 2f, 0.7f))
-
-    val outborderOffset = floatRange("Offset")
-
     val predict by boolean("Predict", true)
 }
 
@@ -150,12 +154,12 @@ class InventoryConstraintsConfigurable : Configurable("inventoryConstraints") {
 /**
  * A target tracker to choose the best enemy to attack
  */
-class TargetTracker : Configurable("target"), Iterable<Entity> {
+class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Configurable("target"), Iterable<Entity> {
 
     var possibleTargets: Array<Entity> = emptyArray()
     var lockedOnTarget: Entity? = null
 
-    val priority by chooseList("Priority", "Health", arrayOf("Health", "Distance", "Direction", "Age"))
+    val priority by enumChoice("Priority", PriorityEnum.HEALTH, PriorityEnum.values())
     val lockOnTarget by boolean("LockOnTarget", false)
     val sortOut by boolean("SortOut", true)
     val delayableSwitch by intRange("DelayableSwitch", 10..20, 0..40)
@@ -166,15 +170,25 @@ class TargetTracker : Configurable("target"), Iterable<Entity> {
     fun update(enemyConf: EnemyConfigurable = globalEnemyConfigurable) {
         possibleTargets = emptyArray()
 
-        val entities = mc.world!!.entities
+        val entities = (mc.world ?: return).entities
             .filter { it.shouldBeAttacked(enemyConf) }
+            .sortedBy { mc.player!!.squaredBoxedDistanceTo(it) } // Sort by distance
+
+        val eyePos = mc.player!!.eyesPos
 
         // default
-        entities.sortedBy { -mc.player!!.boxedDistanceTo(it) } // Sort by distance
-        when {
-            priority.equals("health", true) -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health
-            // priority.equals("direction", true) -> entities.sortedBy { RotationUtils.getRotationDifference(it) } // Sort by FOV
-            priority.equals("age", true) -> entities.sortedBy { -it.age } // Sort by existence
+
+        when (priority) {
+            PriorityEnum.HEALTH -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health
+            PriorityEnum.DIRECTION -> entities.sortedBy {
+                RotationManager.rotationDifference(
+                    RotationManager.makeRotation(
+                        eyePos,
+                        it.boundingBox.center
+                    )
+                )
+            } // Sort by FOV
+            PriorityEnum.AGE -> entities.sortedBy { -it.age } // Sort by existence
         }
 
         possibleTargets = entities.toTypedArray()
@@ -191,6 +205,13 @@ class TargetTracker : Configurable("target"), Iterable<Entity> {
 
     override fun iterator() = possibleTargets.iterator()
 
+}
+
+enum class PriorityEnum(override val choiceName: String) : NamedChoice {
+    HEALTH("Health"),
+    DISTANCE("Distance"),
+    DIRECTION("Direction"),
+    AGE("Age")
 }
 
 /**
@@ -242,7 +263,8 @@ object RotationManager : Listenable {
         expectedTarget: BlockPos? = null
     ): VecRotation? {
         val preferredSpot = Vec3d(
-            box.minX + (box.maxX - box.minX) * x * 0.8, box.minY + (box.maxY - box.minY) * y * 0.8,
+            box.minX + (box.maxX - box.minX) * x * 0.8,
+            box.minY + (box.maxY - box.minY) * y * 0.8,
             box.minZ + (box.maxZ - box.minZ) * z * 0.8
         )
         val preferredRotation = makeRotation(eyes, preferredSpot)
@@ -253,12 +275,15 @@ object RotationManager : Listenable {
             for (y in 0.1..0.9 step 0.1) {
                 for (z in 0.1..0.9 step 0.1) {
                     val vec3 = Vec3d(
-                        box.minX + (box.maxX - box.minX) * x, box.minY + (box.maxY - box.minY) * y,
-                        box.minZ + (box.maxZ - box.minZ) * z)
+                        box.minX + (box.maxX - box.minX) * x,
+                        box.minY + (box.maxY - box.minY) * y,
+                        box.minZ + (box.maxZ - box.minZ) * z
+                    )
 
                     // skip because of out of range
-                    if (eyes.distanceTo(vec3) > range)
+                    if (eyes.distanceTo(vec3) > range) {
                         continue
+                    }
 
                     // todo: prefer visible spots even when through walls is turned on
                     if (if (expectedTarget != null) facingBlock(eyes, vec3, expectedTarget) else isVisible(
@@ -288,8 +313,8 @@ object RotationManager : Listenable {
         return null
     }
 
-    fun aimAt(vec: Vec3d, eyes: Vec3d, ticks: Int = 5, configurable: RotationsConfigurable)
-        = aimAt(makeRotation(vec, eyes), ticks, configurable)
+    fun aimAt(vec: Vec3d, eyes: Vec3d, ticks: Int = 5, configurable: RotationsConfigurable) =
+        aimAt(makeRotation(vec, eyes), ticks, configurable)
 
     fun aimAt(rotation: Rotation, ticks: Int = 5, configurable: RotationsConfigurable) {
         activeConfigurable = configurable
@@ -373,8 +398,9 @@ object RotationManager : Listenable {
             )
         ) ?: return false
 
-        if (searchedPos.type != HitResult.Type.BLOCK)
+        if (searchedPos.type != HitResult.Type.BLOCK) {
             return false
+        }
 
         return searchedPos.blockPos == blockPos
     }
@@ -396,8 +422,8 @@ object RotationManager : Listenable {
     /**
      * Calculate difference between two rotations
      */
-    fun rotationDifference(a: Rotation, b: Rotation)
-        = hypot(angleDifference(a.yaw, b.yaw).toDouble(), (a.pitch - b.pitch).toDouble())
+    fun rotationDifference(a: Rotation, b: Rotation) =
+        hypot(angleDifference(a.yaw, b.yaw).toDouble(), (a.pitch - b.pitch).toDouble())
 
     /**
      * Limit your rotations
@@ -457,8 +483,9 @@ data class Rotation(var yaw: Float, var pitch: Float) {
      * Set rotations to [player]
      */
     fun toPlayer(player: PlayerEntity) {
-        if (yaw.isNaN() || pitch.isNaN())
+        if (yaw.isNaN() || pitch.isNaN()) {
             return
+        }
 
         player.yaw = yaw
         player.pitch = pitch
@@ -493,17 +520,22 @@ data class VecRotation(val rotation: Rotation, val vec: Vec3d)
 
 fun Entity.shouldBeShown(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isEnemy(this)
 
-fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isEnemy(this,
-    true)
+fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isEnemy(
+    this,
+    true
+)
 
 /**
  * Find the best emeny in current world in a specific range.
  */
-fun ClientWorld.findEnemy(range: Float, player: Entity = mc.player!!, enemyConf: EnemyConfigurable = globalEnemyConfigurable)
-    = entities.filter { enemyConf.isEnemy(it, true) }
-        .map { Pair(it, it.boxedDistanceTo(player)) }
-        .filter { (_, distance) -> distance <= range }
-        .minByOrNull { (_, distance) -> distance }
+fun ClientWorld.findEnemy(
+    range: Float,
+    player: Entity = mc.player!!,
+    enemyConf: EnemyConfigurable = globalEnemyConfigurable
+) = entities.filter { enemyConf.isEnemy(it, true) }
+    .map { Pair(it, it.boxedDistanceTo(player)) }
+    .filter { (_, distance) -> distance <= range }
+    .minByOrNull { (_, distance) -> distance }
 
 fun raytraceEntity(range: Double, rotation: Rotation, filter: (Entity) -> Boolean): Entity? {
     val entity: Entity = mc.cameraEntity ?: return null

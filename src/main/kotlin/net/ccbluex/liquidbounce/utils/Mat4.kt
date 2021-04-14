@@ -216,7 +216,6 @@ $a30 $a31 $a32 $a33
         a33 = u
     }
 
-
     operator fun times(vec: Vec4): Vec4 {
         val x = this.a00 * vec.x + this.a01 * vec.y + this.a02 * vec.z + this.a03 * vec.w
         val y = this.a10 * vec.x + this.a11 * vec.y + this.a12 * vec.z + this.a13 * vec.w
@@ -225,7 +224,6 @@ $a30 $a31 $a32 $a33
 
         return Vec4(x, y, z, w)
     }
-
 
     fun multiply(quaternion: Quaternion) {
         this.multiply(Mat4(quaternion))
@@ -283,7 +281,6 @@ $a30 $a31 $a32 $a33
             mat4.a23 = z
             return mat4
         }
-
 
         fun scale(x: Float, y: Float, z: Float): Mat4 {
             val mat4 = Mat4()

@@ -34,7 +34,6 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
-
 data class BoundingBox2f(val xMin: Float, val yMin: Float, val xMax: Float, val yMax: Float) {
     constructor(rect: Rectangle2D) : this(
         rect.x.toFloat(),
@@ -150,8 +149,9 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
             // Do the placement
             val atlasDimensions = doCharacterPlacement(glyphsToRender, suggestedAtlasWidth)
 
-            if (atlasDimensions.width > maxTextureSize || atlasDimensions.height > maxTextureSize)
+            if (atlasDimensions.width > maxTextureSize || atlasDimensions.height > maxTextureSize) {
                 TODO("Implement multiple atlases.")
+            }
 
             // Allocate the atlas texture
             val atlas = BufferedImage(atlasDimensions.width, atlasDimensions.height, BufferedImage.TYPE_INT_ARGB)
@@ -170,8 +170,9 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
             // Draw glyphs onto the image
             for (characterInfo in glyphsToRender) {
                 // Whitespaces are not placed, so they are not rendered
-                if (characterInfo.glyphMetrics.isWhitespace)
+                if (characterInfo.glyphMetrics.isWhitespace) {
                     continue
+                }
 
                 // Draw the character to the atlas, offset by start of the character + a pixel padding
                 atlasGraphics.drawString(
@@ -184,9 +185,9 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
             atlasGraphics.dispose()
 
             val glyphs = glyphsToRender.map {
-                val atlasLocation = if (it.glyphMetrics.isWhitespace)
+                val atlasLocation = if (it.glyphMetrics.isWhitespace) {
                     null
-                else {
+                } else {
                     val x = it.atlasLocation.x.toFloat()
                     val y = it.atlasLocation.y.toFloat()
 
@@ -257,8 +258,9 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
 
             for (glyph in glyphs) {
                 // Whitespaces don't need to be placed
-                if (glyph.glyphMetrics.isWhitespace)
+                if (glyph.glyphMetrics.isWhitespace) {
                     continue
+                }
 
                 // 1px padding to prevent stuff from happening
                 val glyphWidth = ceil(glyph.glyphMetrics.bounds2D.width).toInt() + 2
@@ -272,12 +274,14 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
                 }
 
                 // Update max width
-                if (currentX + glyphWidth > maxWidth)
+                if (currentX + glyphWidth > maxWidth) {
                     maxWidth = currentX + glyphWidth
+                }
 
                 // Update currentLineMaxHeight
-                if (glyphHeight > currentLineMaxHeight)
+                if (glyphHeight > currentLineMaxHeight) {
                     currentLineMaxHeight = glyphHeight
+                }
 
                 // Do the placement
                 glyph.atlasLocation = Point(currentX, currentY)
@@ -289,6 +293,5 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
             return Dimension(max(1, maxWidth), max(1, currentY + currentLineMaxHeight))
         }
     }
-
 
 }

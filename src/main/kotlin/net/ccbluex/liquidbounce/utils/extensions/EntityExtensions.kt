@@ -25,7 +25,9 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.stat.Stats
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import kotlin.math.*
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 val ClientPlayerEntity.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
@@ -41,20 +43,24 @@ val ClientPlayerEntity.directionYaw: Float
         var rotationYaw = yaw
 
         // Check if client-user tries to walk backwards (+180 to turn around)
-        if (input.movementForward < 0f)
+        if (input.movementForward < 0f) {
             rotationYaw += 180f
+        }
 
         // Check which direction the client-user tries to walk sideways
         var forward = 1f
-        if (input.movementForward < 0f)
+        if (input.movementForward < 0f) {
             forward = -0.5f
-        else if (input.movementForward > 0f)
+        } else if (input.movementForward > 0f) {
             forward = 0.5f
+        }
 
-        if (input.movementSideways > 0f)
+        if (input.movementSideways > 0f) {
             rotationYaw -= 90f * forward
-        if (input.movementSideways < 0f)
+        }
+        if (input.movementSideways < 0f) {
             rotationYaw += 90f * forward
+        }
 
         return rotationYaw
     }
@@ -100,12 +106,18 @@ val ClientPlayerEntity.eyesPos: Vec3d
  * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
  */
 fun Entity.boxedDistanceTo(entity: Entity): Double {
+    return sqrt(entity.squaredBoxedDistanceTo(entity))
+}
+
+fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
     val eyes = entity.getCameraPosVec(1F)
     val pos = getNearestPoint(eyes, boundingBox)
-    val xDist = abs(pos.x - eyes.x)
-    val yDist = abs(pos.y - eyes.y)
-    val zDist = abs(pos.z - eyes.z)
-    return sqrt(xDist.pow(2) + yDist.pow(2) + zDist.pow(2))
+
+    val xDist = pos.x - eyes.x
+    val yDist = pos.y - eyes.y
+    val zDist = pos.z - eyes.z
+
+    return xDist * xDist + yDist * yDist + zDist * zDist
 }
 
 /**
@@ -118,10 +130,11 @@ fun getNearestPoint(eyes: Vec3d, box: Box): Vec3d {
 
     // It loops through every coordinate of the double arrays and picks the nearest point
     for (i in 0..2) {
-        if (origin[i] > destMaxs[i])
+        if (origin[i] > destMaxs[i]) {
             origin[i] = destMaxs[i]
-        else if (origin[i] < destMins[i])
+        } else if (origin[i] < destMins[i]) {
             origin[i] = destMins[i]
+        }
     }
 
     return Vec3d(origin[0], origin[1], origin[2])

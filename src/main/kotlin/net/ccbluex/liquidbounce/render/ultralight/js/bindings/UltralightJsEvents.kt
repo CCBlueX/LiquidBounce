@@ -17,79 +17,78 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.ultralight.bindings
+package net.ccbluex.liquidbounce.render.ultralight.js.bindings
 
+import com.labymedia.ultralight.databind.context.ContextProvider
 import com.labymedia.ultralight.javascript.JavascriptObject
 import com.labymedia.ultralight.javascript.JavascriptPropertyAttributes
-import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.event.EventHook
-import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.render.ultralight.WebPlatform
-import net.ccbluex.liquidbounce.render.ultralight.WebView
-import net.ccbluex.liquidbounce.render.ultralight.listener.ViewContextProvider
+import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.render.ultralight.View
+import net.ccbluex.liquidbounce.utils.logger
 
 /**
- * Referenced by JS as `client`
+ * Referenced by JS as `events`
  */
-class UltralightJsWrapper(private val viewContextProvider: ViewContextProvider, val webView: WebView) : Listenable {
-    /**
-     * Contains all events that are registered in the current context
-     */
-    private val registeredEvents = HashMap<Class<out Event>, ArrayList<EventHook<*>>>()
-
-    val moduleManager = ModuleManager
-    val sessionService = UltralightJsSessionService
+class UltralightJsEvents(private val viewContextProvider: ContextProvider, val view: View) : Listenable {
 
     companion object {
+
         /**
          * Contains mappings from event names to the corresponding classes
          */
-        private val EVENT_MAP = HashMap<String, Class<out Event>>()
+        private val EVENT_MAP = mutableMapOf<String, Class<out Event>>()
 
         init {
             // Register the known events
             for ((name, eventClass) in EventManager.mappedEvents) {
                 EVENT_MAP[name] = eventClass.java
             }
+
+            // Register view related events
+            EVENT_MAP["close"] = ViewCloseEvent::class.java
         }
+
     }
 
+    /**
+     * Contains all events that are registered in the current context
+     */
+    private val _registeredEvents = mutableMapOf<Class<out Event>, ArrayList<EventHook<in Event>>>()
+
     fun on(name: String, handler: JavascriptObject) {
-        if (!handler.isFunction)
+        if (!handler.isFunction) {
             throw IllegalArgumentException("$handler is not a function.")
+        }
 
         // Do we know an event that has this name? What is the event class behind this name?
         val eventClass = EVENT_MAP[name] ?: throw IllegalArgumentException("Unknown event: $name")
 
-
         // Get the list of the current event type
-        val hookList = registeredEvents.computeIfAbsent(eventClass) { ArrayList() }
+        val hookList = _registeredEvents.computeIfAbsent(eventClass) { ArrayList() }
 
         // The event function is stored in this property
         val propertyName = "engine__${name}__${hookList.size}"
 
         // Make a property with the name engine__ plus the name of the event. This is made to
         // make the function accessible for the event handler
-        WebPlatform.contextThread.scheduleBlocking {
-            viewContextProvider.syncWithJavascript {
-                it.context.globalObject.setProperty(propertyName, handler, JavascriptPropertyAttributes.NONE)
-            }
+        viewContextProvider.syncWithJavascript {
+            it.context.globalObject.setProperty(propertyName, handler, JavascriptPropertyAttributes.NONE)
         }
 
         // Create an event hook that will call the JS function
-        val eventHook = EventHook<Event>(this, { event ->
-            WebPlatform.contextThread.scheduleBlocking {
+        val eventHook = EventHook<Event>(
+            this,
+            { event ->
                 viewContextProvider.syncWithJavascript {
                     it.context.globalObject.getProperty(propertyName).toObject().callAsFunction(
                         it.context.globalObject,
-                        webView.databind.conversionUtils.toJavascript(it.context, event)
+                        view.databind.conversionUtils.toJavascript(it.context, event)
                     )
                 }
-            }
 
-        }, false)
+            },
+            false
+        )
 
         // Add the event hook to the list
         hookList.add(eventHook)
@@ -101,13 +100,37 @@ class UltralightJsWrapper(private val viewContextProvider: ViewContextProvider, 
     /**
      * Unregisters all events that are registered by this wrapper
      */
-    fun unregisterEvents() {
-        for ((clazz, hooks) in this.registeredEvents) {
+    fun _unregisterEvents() {
+        for ((clazz, hooks) in this._registeredEvents) {
             for (hook in hooks) {
                 EventManager.unregisterEventHook(clazz, hook)
             }
         }
 
-        this.registeredEvents.clear()
+        this._registeredEvents.clear()
     }
+
+    /**
+     * Directly call event to ultralight view
+     */
+    fun _directlyCallEvent(event: Event) {
+        val target = _registeredEvents[event.javaClass] ?: return
+
+        for (eventHook in target) {
+            runCatching {
+                eventHook.handler(event)
+            }.onFailure {
+                logger.error("Exception while executing handler.", it)
+            }
+        }
+    }
+
+    fun _fireViewClose(): Boolean {
+        val viewCloseEvent = ViewCloseEvent()
+        _directlyCallEvent(viewCloseEvent)
+        return !viewCloseEvent.isCancelled
+    }
+
+    inner class ViewCloseEvent : CancellableEvent()
+
 }

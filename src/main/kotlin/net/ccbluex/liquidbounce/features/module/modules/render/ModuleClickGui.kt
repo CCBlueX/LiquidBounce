@@ -21,13 +21,20 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.ultralight.UltralightScreen
+import net.ccbluex.liquidbounce.render.screen.EmptyScreen
+import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 
 object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
 
     override fun enable() {
-        mc.openScreen(UltralightScreen(ThemeManager.page("clickgui") ?: error("no clickgui page found")))
+        val page = ThemeManager.page("clickgui") ?: error("unable to find clickgui page in current theme")
+
+        val emptyScreen = EmptyScreen()
+        UltralightEngine.newScreenView(emptyScreen).apply {
+            loadPage(page)
+        }
+        mc.openScreen(emptyScreen)
     }
 
 }
