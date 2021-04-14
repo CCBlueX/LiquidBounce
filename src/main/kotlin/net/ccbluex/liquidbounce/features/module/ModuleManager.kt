@@ -118,7 +118,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleAutoArmor,
             ModuleInventoryCleaner,
             ModuleChestStealer,
-            ModuleStorageESP
+            ModuleStorageESP,
+            ModuleInventoryMove
         )
 
         builtin.forEach(this::addModule)
