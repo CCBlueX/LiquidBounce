@@ -62,7 +62,7 @@ object ConfigSystem {
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
-        .registerTypeHierarchyAdapter(ToggleableConfigurable::class.javaObjectType, ListenableConfigurableSerializer)
+        .registerTypeHierarchyAdapter(ToggleableConfigurable::class.javaObjectType, ToggleableConfigurableSerializer)
         .create()
 
     internal val internalGson = GsonBuilder()
@@ -75,7 +75,7 @@ object ConfigSystem {
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
-        .registerTypeHierarchyAdapter(ToggleableConfigurable::class.javaObjectType, ListenableConfigurableSerializer)
+        .registerTypeHierarchyAdapter(ToggleableConfigurable::class.javaObjectType, ToggleableConfigurableSerializer)
         .create()
 
     /**

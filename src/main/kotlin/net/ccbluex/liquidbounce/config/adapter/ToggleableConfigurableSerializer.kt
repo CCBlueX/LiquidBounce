@@ -26,7 +26,7 @@ import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import java.lang.reflect.Type
 
-object ListenableConfigurableSerializer : JsonSerializer<ToggleableConfigurable> {
+object ToggleableConfigurableSerializer : JsonSerializer<ToggleableConfigurable> {
 
     override fun serialize(
         src: ToggleableConfigurable,
