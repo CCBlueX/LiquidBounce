@@ -111,7 +111,7 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleElytraFly,
             ModuleSpammer,
             ModuleHighJump,
-            ModuleBounce,
+            ModuleBlockBounce,
             ModuleBlockWalk,
             ModuleChestAura,
             ModuleAutoBreak,
