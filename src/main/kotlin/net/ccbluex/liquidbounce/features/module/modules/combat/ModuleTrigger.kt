@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.math.CpsTimer
+import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.EntityHitResult
 
@@ -37,7 +37,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
     val cps by intRange("CPS", 5..8, 1..20)
     val cooldown by boolean("Cooldown", true)
 
-    private val cpsTimer = CpsTimer()
+    private val cpsTimer = CpsScheduler()
 
     val repeatable = repeatable {
         val crosshair = mc.crosshairTarget

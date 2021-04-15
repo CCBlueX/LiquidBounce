@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.utils.kotlin.compareByCondition
+import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.ArmorItem

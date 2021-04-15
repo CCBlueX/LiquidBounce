@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.kotlin
+package net.ccbluex.liquidbounce.utils.sorting
 
 class ComparatorChain<T>(private vararg val comparisonFunctions: Comparator<T>) : Comparator<T> {
 

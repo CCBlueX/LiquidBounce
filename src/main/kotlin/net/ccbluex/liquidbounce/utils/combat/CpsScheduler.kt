@@ -17,12 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.math
+package net.ccbluex.liquidbounce.utils.combat
 
 /**
- * A CPS utility
+ * A CPS scheduler
+ *
+ * Minecraft is counting every click until it they handle all inputs.
+ * code:
+ * while(this.options.keyAttack.wasPressed()) {
+ *     this.doAttack();
+ * }
  */
-class CpsTimer {
+class CpsScheduler {
 
     var lastClick = 0L
     var clickTime = -1L

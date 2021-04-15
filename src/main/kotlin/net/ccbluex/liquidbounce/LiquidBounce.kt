@@ -30,9 +30,9 @@ import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.client.loginAltening
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import org.apache.logging.log4j.LogManager
 
 /**

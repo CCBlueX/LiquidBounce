@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.liquidbounce.config.Configurable
+
 fun convertClientSlotToServerSlot(slot: Int): Int {
     return when (slot) {
         in 0..8 -> 36 + slot
@@ -27,4 +29,14 @@ fun convertClientSlotToServerSlot(slot: Int): Int {
         40 -> 45
         else -> throw IllegalArgumentException()
     }
+}
+
+/**
+ * Configurable to configure the dynamic rotation engine
+ */
+class InventoryConstraintsConfigurable : Configurable("inventoryConstraints") {
+    internal var delay by intRange("Delay", 2..4, 0..20)
+    internal val invOpen by boolean("InvOpen", false)
+    internal val simulateInventory by boolean("SimulateInventory", true)
+    internal val noMove by boolean("NoMove", false)
 }

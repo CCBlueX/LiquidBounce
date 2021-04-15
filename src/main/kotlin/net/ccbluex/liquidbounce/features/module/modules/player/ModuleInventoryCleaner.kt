@@ -24,12 +24,11 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor
 import net.ccbluex.liquidbounce.utils.*
-import net.ccbluex.liquidbounce.utils.aiming.InventoryConstraintsConfigurable
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
-import net.ccbluex.liquidbounce.utils.kotlin.ComparatorChain
-import net.ccbluex.liquidbounce.utils.kotlin.compareByCondition
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.Enchantments

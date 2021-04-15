@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.*
 import net.ccbluex.liquidbounce.render.utils.rect
-import net.ccbluex.liquidbounce.utils.aiming.shouldBeShown
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
+import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.math.Mat4
 import net.minecraft.entity.Entity

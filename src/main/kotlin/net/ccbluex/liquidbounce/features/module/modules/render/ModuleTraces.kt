@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.*
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.utils.aiming.shouldBeShown
+import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.minecraft.entity.Entity
 import java.awt.Color
 import kotlin.math.sqrt
