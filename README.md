@@ -1,5 +1,15 @@
 # LiquidBounce
+
+
+<a href='//liquidbounce.net'>
+    <img src='https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/liquidbounceLogo.svg' width=30%>
+    </img>
+</a>
+
+<br />
+
 LiquidBounce is a free open-source mixin-based injection hacked client for Minecraft via FabricMC written in kotlin. 
+
 
 **> Website** [ https://liquidbounce.net ]
 **> Forum** [ https://forums.ccbluex.net ]
@@ -43,11 +53,3 @@ Mixins can be used to modify classes at runtime before they are loaded. LiquidBo
 <br />
 ## Contributing
 We appreciate contributions. So if you want to support us, feel free to make changes to LiquidBounce's source code and submit a pull request.
-
-
-<br /> <br /> <br />
-
-<a href='//liquidbounce.net'>
-    <img src='https://www.wizardhax.com/wp-content/uploads/2018/05/lblogo.png'>
-    </img>
-</a>
