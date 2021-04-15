@@ -30,8 +30,6 @@ import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.loginAltening
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import org.apache.logging.log4j.LogManager
 
@@ -99,7 +97,7 @@ object LiquidBounce : Listenable {
         // Load config system from disk
         ConfigSystem.load()
 
-        mc.sessionService.loginAltening("f11ry-a68og@alt.com")
+//        mc.sessionService.loginAltening("f11ry-a68og@alt.com")
 
         // Connect to chat server
         Chat.connect()

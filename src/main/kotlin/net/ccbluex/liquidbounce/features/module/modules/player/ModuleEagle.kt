@@ -21,8 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.minecraft.block.Blocks
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.minecraft.block.SideShapeType
+import net.minecraft.util.math.Direction
 
 /**
  * A eagle module
@@ -33,7 +34,8 @@ object ModuleEagle : Module("Eagle", Category.PLAYER) {
 
     val repeatable = repeatable {
         // Check if player is on the edge and is NOT flying
-        val nothing = player.blockPos.down().getBlock() == Blocks.AIR && player.canFly()
+        val pos = player.blockPos.down()
+        val nothing = !pos.getState()!!.isSideSolid(mc.world!!, pos, Direction.UP, SideShapeType.CENTER) && player.canFly()
 
         // Sneak when player is at the edge
         mc.options.keySneak.isPressed = nothing

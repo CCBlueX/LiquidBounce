@@ -67,6 +67,25 @@ fun raytraceBlock(range: Double, rotation: Rotation, pos: BlockPos, state: Block
     )
 }
 
+fun raycast(range: Double, rotation: Rotation): BlockHitResult? {
+    val entity: Entity = mc.cameraEntity ?: return null
+
+    val start = entity.getCameraPosVec(1f)
+    val rotationVec = rotation.rotationVec
+
+    val end = start.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
+
+    return mc.world!!.raycast(
+        RaycastContext(
+            start,
+            end,
+            RaycastContext.ShapeType.OUTLINE,
+            RaycastContext.FluidHandling.NONE,
+            mc.cameraEntity!!
+        )
+    )
+}
+
 /**
  * Allows you to check if a point is behind a wall
  */

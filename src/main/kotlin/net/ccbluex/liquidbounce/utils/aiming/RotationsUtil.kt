@@ -174,7 +174,7 @@ object RotationManager : Listenable {
         }
 
         // Update rotations
-        val turnSpeed = RandomUtils.nextFloat(14f, 15f)// todo: use config
+        val turnSpeed = RandomUtils.nextFloat(68f, 80f) // todo: use config
 
         val playerRotation = Rotation(mc.player!!.yaw, mc.player!!.pitch)
         if (ticksUntilReset == 0) {
