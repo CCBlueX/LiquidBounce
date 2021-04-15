@@ -14,11 +14,11 @@
 LiquidBounce is a free open-source mixin-based injection hacked client for Minecraft via FabricMC written in kotlin. 
 
 
-**> Website** [ https://liquidbounce.net ]
-**> Forum** [ https://forums.ccbluex.net ]
-**> Guilded** [ https://guilded.gg/CCBlueX ]
-**> YouTube** [ https://youtube.com/CCBlueX ]
-**> Twitter** [ https://twitter.com/CCBlueX ]
+**> Website** [ https://liquidbounce.net ] <br />
+**> Forum** [ https://forums.ccbluex.net ] <br />
+**> Guilded** [ https://guilded.gg/CCBlueX ] <br />
+**> YouTube** [ https://youtube.com/CCBlueX ] <br />
+**> Twitter** [ https://twitter.com/CCBlueX ] <br />
 
 ## Issues
 If you notice any bugs or missing features, you can let us know by opening an issue [here](https://github.com/CCBlueX/LiquidBounce/issues).
