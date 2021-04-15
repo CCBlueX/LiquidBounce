@@ -16,7 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.extensions
+
+package net.ccbluex.liquidbounce.utils.client
 
 import com.mojang.authlib.Agent
 import com.mojang.authlib.Environment
@@ -28,8 +29,6 @@ import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.SessionEvent
-import net.ccbluex.liquidbounce.utils.ProfileUtils
-import net.ccbluex.liquidbounce.utils.mc
 import net.minecraft.client.util.Session
 import java.net.Proxy
 import java.util.*
@@ -106,7 +105,7 @@ fun MinecraftSessionService.loginAltening(account: String) =
     login(account, LiquidBounce.CLIENT_NAME, GenEnvironments.THE_ALTENING)
 
 fun MinecraftSessionService.loginCracked(username: String): LoginResult {
-    mc.session = Session(username, ProfileUtils.getUUID(username), "-", "legacy")
+    mc.session = Session(username, MojangApi.getUUID(username), "-", "legacy")
     EventManager.callEvent(SessionEvent())
     return LoginResult.LOGGED_IN
 }

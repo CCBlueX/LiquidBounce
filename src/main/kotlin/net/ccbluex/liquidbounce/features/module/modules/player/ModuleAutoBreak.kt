@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.extensions.getState
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 

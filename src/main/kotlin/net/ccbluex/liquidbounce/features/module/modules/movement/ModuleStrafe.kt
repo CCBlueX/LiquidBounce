@@ -22,9 +22,9 @@ import net.ccbluex.liquidbounce.event.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.extensions.directionYaw
-import net.ccbluex.liquidbounce.utils.extensions.moving
-import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.entity.directionYaw
+import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.entity.MovementType
 
 /**

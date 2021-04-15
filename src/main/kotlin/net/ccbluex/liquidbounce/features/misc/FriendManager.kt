@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
 import java.util.*
 
-object FriendManager: Configurable("friends") {
+object FriendManager : Configurable("friends") {
 
     val friends by value(name, TreeSet<Friend>(), listType = ListValueType.Friend)
 
@@ -32,7 +32,7 @@ object FriendManager: Configurable("friends") {
         ConfigSystem.root(this)
     }
 
-    class Friend(val name: String, var alias: String?): Comparable<Friend> {
+    class Friend(val name: String, var alias: String?) : Comparable<Friend> {
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

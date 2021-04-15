@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.QueuedScreen
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsUi
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.client.mc
 
 object UltralightScreenHook : Listenable {
 

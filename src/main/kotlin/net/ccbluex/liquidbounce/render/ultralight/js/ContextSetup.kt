@@ -43,7 +43,7 @@ import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.View
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsClient
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsUi
-import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.client.mc
 
 /**
  * Context setup

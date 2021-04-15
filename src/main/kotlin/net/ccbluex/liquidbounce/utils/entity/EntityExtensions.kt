@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.extensions
+package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
@@ -106,7 +106,7 @@ val ClientPlayerEntity.eyesPos: Vec3d
  * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
  */
 fun Entity.boxedDistanceTo(entity: Entity): Double {
-    return sqrt(entity.squaredBoxedDistanceTo(entity))
+    return sqrt(squaredBoxedDistanceTo(entity))
 }
 
 fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {

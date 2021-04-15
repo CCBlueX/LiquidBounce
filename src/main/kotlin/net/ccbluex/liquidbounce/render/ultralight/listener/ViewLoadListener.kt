@@ -40,7 +40,7 @@ package net.ccbluex.liquidbounce.render.ultralight.listener
 import com.labymedia.ultralight.plugin.loading.UltralightLoadListener
 import net.ccbluex.liquidbounce.render.ultralight.View
 import net.ccbluex.liquidbounce.render.ultralight.js.ContextSetup
-import net.ccbluex.liquidbounce.utils.logger
+import net.ccbluex.liquidbounce.utils.client.logger
 
 class ViewLoadListener(private val view: View) : UltralightLoadListener {
 

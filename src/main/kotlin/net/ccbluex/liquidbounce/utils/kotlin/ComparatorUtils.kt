@@ -16,21 +16,32 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.extensions
 
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.util.Window
+package net.ccbluex.liquidbounce.utils.kotlin
 
-// Global minecraft timer
-object Timer {
-    var timerSpeed = 1f
+class ComparatorChain<T>(private vararg val comparisonFunctions: Comparator<T>) : Comparator<T> {
+
+    override fun compare(o1: T, o2: T): Int {
+        for (comparisonFunction in this.comparisonFunctions) {
+            val comparisonResult = comparisonFunction.compare(o1, o2)
+
+            if (comparisonResult != 0) {
+                return comparisonResult
+            }
+        }
+
+        return 0
+    }
+
 }
 
-val MinecraftClient.timer
-    get() = Timer
+inline fun <T> compareByCondition(a: T, b: T, cond: (T) -> Boolean): Int {
+    val condA = cond(a)
+    val condB = cond(b)
 
-val Window.size
-    get() = Pair(width, height)
-
-val Window.longedSize
-    get() = Pair(width.toLong(), height.toLong())
+    return when {
+        condA == condB -> 0
+        condA -> 1
+        else -> -1
+    }
+}

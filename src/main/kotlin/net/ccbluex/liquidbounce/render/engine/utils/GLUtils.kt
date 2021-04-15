@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.utils
 
-import net.ccbluex.liquidbounce.utils.Mat4
+import net.ccbluex.liquidbounce.utils.math.Mat4
 import org.lwjgl.opengl.GL11
 
 /**

@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.tabs
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.util.decode
-import net.ccbluex.liquidbounce.utils.HttpUtils
-import net.ccbluex.liquidbounce.utils.extensions.asText
-import net.ccbluex.liquidbounce.utils.extensions.createItem
-import net.ccbluex.liquidbounce.utils.logger
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.io.HttpClient
+import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.block.Blocks
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.ItemGroup
@@ -83,12 +83,12 @@ object Tabs {
         logger.info("Loading heads...")
         // Load head service from cloud
         //  Makes it possible to disable service or change domain in case of an emergency
-        val headService: HeadsService = decode(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/heads.json"))
+        val headService: HeadsService = decode(HttpClient.get("${LiquidBounce.CLIENT_CLOUD}/heads.json"))
 
         if (headService.enabled) {
             // Load heads from service
             //  Syntax based on HeadDB (headdb.org)
-            val heads: HashMap<String, Head> = decode(HttpUtils.get(headService.url))
+            val heads: HashMap<String, Head> = decode(HttpClient.get(headService.url))
 
             heads.map { it.value }
                 .toTypedArray()

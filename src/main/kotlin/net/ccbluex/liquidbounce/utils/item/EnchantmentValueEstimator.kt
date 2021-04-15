@@ -17,9 +17,8 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.utils.extensions.getEnchantment
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.ItemStack
 

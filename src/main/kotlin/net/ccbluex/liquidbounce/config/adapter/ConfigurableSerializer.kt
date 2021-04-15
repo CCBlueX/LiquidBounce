@@ -29,7 +29,9 @@ import java.lang.reflect.Type
 object ConfigurableSerializer : JsonSerializer<Configurable> {
 
     override fun serialize(
-        src: Configurable, typeOfSrc: Type, context: JsonSerializationContext
+        src: Configurable,
+        typeOfSrc: Type,
+        context: JsonSerializationContext
     ): JsonElement {
         val obj = JsonObject()
 

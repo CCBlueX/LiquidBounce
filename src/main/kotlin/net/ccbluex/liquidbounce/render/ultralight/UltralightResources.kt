@@ -20,7 +20,12 @@ package net.ccbluex.liquidbounce.render.ultralight
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.client.IS_MAC
+import net.ccbluex.liquidbounce.utils.client.IS_UNIX
+import net.ccbluex.liquidbounce.utils.client.IS_WINDOWS
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.io.HttpClient
+import net.ccbluex.liquidbounce.utils.io.extractZip
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -76,7 +81,7 @@ class UltralightResources {
             ultralightRoot.mkdir()
             val pkgNatives = File(ultralightRoot, "resources.zip").apply {
                 createNewFile()
-                HttpUtils.download(nativeUrl, this)
+                HttpClient.download(nativeUrl, this)
             }
 
             // Extract resources from zip archive

@@ -32,9 +32,9 @@ import net.ccbluex.liquidbounce.render.ultralight.listener.ViewListener
 import net.ccbluex.liquidbounce.render.ultralight.listener.ViewLoadListener
 import net.ccbluex.liquidbounce.render.ultralight.renderer.ViewRenderer
 import net.ccbluex.liquidbounce.render.ultralight.theme.Page
-import net.ccbluex.liquidbounce.utils.extensions.longedSize
-import net.ccbluex.liquidbounce.utils.logger
-import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.longedSize
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
 
 open class View(val layer: RenderLayer, ultralightRenderer: UltralightRenderer, private val viewRenderer: ViewRenderer) {

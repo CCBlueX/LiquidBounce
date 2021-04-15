@@ -4,7 +4,7 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.extensions.getBlock
+import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.minecraft.block.Blocks
 import net.minecraft.util.math.BlockPos
 

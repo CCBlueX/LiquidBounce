@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.EventHook
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.logger
+import net.ccbluex.liquidbounce.utils.client.logger
 
 @Suppress("unused")
 class JsModule(private val moduleObject: JSObject) : Module(

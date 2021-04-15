@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.utils.io
 
 import java.io.File
 import java.io.FileOutputStream
@@ -24,7 +24,7 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-object HttpUtils {
+object HttpClient {
 
     private const val DEFAULT_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36 Edg/87.0.664.60"
 

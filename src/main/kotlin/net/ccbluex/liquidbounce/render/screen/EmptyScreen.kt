@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.screen
 
-import net.ccbluex.liquidbounce.utils.extensions.asText
+import net.ccbluex.liquidbounce.utils.client.asText
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text

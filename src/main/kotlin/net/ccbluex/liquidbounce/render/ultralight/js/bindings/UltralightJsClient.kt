@@ -20,10 +20,10 @@
 package net.ccbluex.liquidbounce.render.ultralight.js.bindings
 
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.utils.extensions.loginAltening
-import net.ccbluex.liquidbounce.utils.extensions.loginCracked
-import net.ccbluex.liquidbounce.utils.extensions.loginMojang
-import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.client.loginAltening
+import net.ccbluex.liquidbounce.utils.client.loginCracked
+import net.ccbluex.liquidbounce.utils.client.loginMojang
+import net.ccbluex.liquidbounce.utils.client.mc
 
 /**
  * Referenced by JS as `client`

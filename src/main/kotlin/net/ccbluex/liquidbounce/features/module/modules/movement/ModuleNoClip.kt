@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.chat
-import net.ccbluex.liquidbounce.utils.extensions.moving
-import net.ccbluex.liquidbounce.utils.extensions.strafe
-import net.ccbluex.liquidbounce.utils.regular
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {

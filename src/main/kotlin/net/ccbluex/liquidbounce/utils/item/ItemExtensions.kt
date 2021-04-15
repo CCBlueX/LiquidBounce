@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.extensions
+package net.ccbluex.liquidbounce.utils.item
 
 import com.mojang.brigadier.StringReader
 import net.minecraft.command.argument.ItemStackArgument

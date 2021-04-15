@@ -24,7 +24,7 @@ import com.labymedia.ultralight.javascript.JavascriptObject
 import com.labymedia.ultralight.javascript.JavascriptPropertyAttributes
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.render.ultralight.View
-import net.ccbluex.liquidbounce.utils.logger
+import net.ccbluex.liquidbounce.utils.client.logger
 
 /**
  * Referenced by JS as `events`

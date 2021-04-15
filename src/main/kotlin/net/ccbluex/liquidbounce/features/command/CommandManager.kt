@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemRe
 import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemSkull
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
-import net.ccbluex.liquidbounce.utils.chat
-import net.ccbluex.liquidbounce.utils.extensions.outputString
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.outputString
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Formatting
 import java.util.concurrent.CompletableFuture
@@ -366,25 +366,29 @@ object CommandManager : Iterable<Command> {
     override fun iterator() = commands.iterator()
 
     fun autoComplete(origCmd: String, start: Int): CompletableFuture<Suggestions> {
-        if (start < Options.prefix.length)
+        if (start < Options.prefix.length) {
             return Suggestions.empty()
+        }
 
         try {
             val cmd = origCmd.substring(Options.prefix.length, start)
             val tokenized = tokenizeCommand(cmd)
             var args = tokenized.first
 
-            if (args.isEmpty())
+            if (args.isEmpty()) {
                 args = listOf("")
+            }
 
             val nextParameter = !args.last().endsWith(" ") && cmd.endsWith(" ")
             var currentArgStart = tokenized.second.lastOrNull()
 
-            if (currentArgStart == null)
+            if (currentArgStart == null) {
                 currentArgStart = 0
+            }
 
-            if (nextParameter)
+            if (nextParameter) {
                 currentArgStart = cmd.length
+            }
 
             val builder = SuggestionsBuilder(origCmd, currentArgStart + Options.prefix.length)
 
@@ -395,8 +399,9 @@ object CommandManager : Iterable<Command> {
 
             if (args.size == 1 && (pair == null || !nextParameter)) {
                 for (command in this.commands) {
-                    if (command.name.startsWith(args[0], true))
+                    if (command.name.startsWith(args[0], true)) {
                         builder.suggest(command.name)
+                    }
 
                     command.aliases.filter { it.startsWith(args[0], true) }.forEach { builder.suggest(it) }
                 }
@@ -404,9 +409,9 @@ object CommandManager : Iterable<Command> {
                 return builder.buildFuture()
             }
 
-            if (pair == null)
+            if (pair == null) {
                 return Suggestions.empty()
-
+            }
 
             pair.first.autoComplete(builder, tokenized, pair.second, nextParameter)
 

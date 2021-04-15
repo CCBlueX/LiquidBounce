@@ -44,7 +44,7 @@ import com.labymedia.ultralight.plugin.view.MessageLevel
 import com.labymedia.ultralight.plugin.view.MessageSource
 import com.labymedia.ultralight.plugin.view.UltralightViewListener
 import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.utils.logger
+import net.ccbluex.liquidbounce.utils.client.logger
 
 class ViewListener : UltralightViewListener {
 

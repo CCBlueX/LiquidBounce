@@ -16,42 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.extensions
 
-import net.minecraft.text.LiteralText
-import net.minecraft.text.Text
-import java.util.regex.Pattern
-
-private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
-
-fun String.stripMinecraftColorCodes(): String {
-    return COLOR_PATTERN.matcher(this).replaceAll("")
-}
-
-fun text() = LiteralText("")
-
-fun String.asText() = LiteralText(this)
-
-fun Text.outputString(): String = "${asString()}${siblings.joinToString(separator = "") { it.outputString() }}"
-
-/**
- * Translate alt color codes to minecraft color codes
- */
-fun String.translateColorCodes(): String {
-    val charset = "0123456789AaBbCcDdEeFfKkLlMmNnOoRr"
-
-    val chars = toCharArray()
-    for (i in 0 until chars.size - 1) {
-        if (chars[i] == '&' && charset.contains(chars[i + 1], true)) {
-            chars[i] = '§'
-            chars[i + 1] = chars[i + 1].toLowerCase()
-        }
-    }
-
-    return String(chars)
-}
-
-fun String.toLowerCamelCase() = this.replaceFirst(this.toCharArray()[0], this.toCharArray()[0].toUpperCase())
+package net.ccbluex.liquidbounce.utils.kotlin
 
 // https://stackoverflow.com/questions/44315977/ranges-in-kotlin-using-data-type-double
 infix fun ClosedRange<Double>.step(step: Double): Iterable<Double> {

@@ -17,11 +17,14 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.utils.item
 
-import net.minecraft.potion.Potions
-
-val POTION_VALUES = mapOf(
-    Pair(Potions.REGENERATION, 2.25f),
-    Pair(Potions.FIRE_RESISTANCE, 1.0f),
-)
+fun convertClientSlotToServerSlot(slot: Int): Int {
+    return when (slot) {
+        in 0..8 -> 36 + slot
+        in 9..35 -> slot
+        in 36..39 -> 39 - slot + 5
+        40 -> 45
+        else -> throw IllegalArgumentException()
+    }
+}

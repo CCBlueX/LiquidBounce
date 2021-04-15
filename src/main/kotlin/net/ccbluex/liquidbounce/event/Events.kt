@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.Nameable
+import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.InputUtil

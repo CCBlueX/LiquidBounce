@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightIntegrationHoo
 import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightScreenHook
 import net.ccbluex.liquidbounce.render.ultralight.renderer.CpuViewRenderer
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.logger
-import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
 
 object UltralightEngine {

@@ -148,7 +148,6 @@ class ChooseListValue<T : NamedChoice>(
         return this.choices.map { it.choiceName }.toTypedArray()
     }
 
-
 }
 
 interface NamedChoice {

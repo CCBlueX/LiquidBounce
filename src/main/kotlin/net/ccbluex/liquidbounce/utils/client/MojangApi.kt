@@ -16,11 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.utils.client
 
 import com.google.gson.JsonParser
+import net.ccbluex.liquidbounce.utils.io.HttpClient
 
-object ProfileUtils {
+object MojangApi {
 
     /**
      * Get UUID of username
@@ -29,7 +30,7 @@ object ProfileUtils {
         // TODO: Use GameProfileSerializer from authlib
 
         // Make a http connection to Mojang API and ask for UUID of username
-        val text = HttpUtils.get("https://api.mojang.com/users/profiles/minecraft/$username")
+        val text = HttpClient.get("https://api.mojang.com/users/profiles/minecraft/$username")
 
         // Read response content and get id from json
         val jsonElement = JsonParser().parse(text)

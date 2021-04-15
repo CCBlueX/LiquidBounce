@@ -22,10 +22,8 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.utils.*
-import net.ccbluex.liquidbounce.utils.extensions.asText
-import net.ccbluex.liquidbounce.utils.extensions.isNothing
-import net.ccbluex.liquidbounce.utils.extensions.translateColorCodes
+import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import net.minecraft.util.Hand
 

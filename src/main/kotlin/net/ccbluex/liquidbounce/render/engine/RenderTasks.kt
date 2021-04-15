@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.engine
 
-import net.ccbluex.liquidbounce.utils.Mat4
+import net.ccbluex.liquidbounce.utils.math.Mat4
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import org.lwjgl.opengl.GL11

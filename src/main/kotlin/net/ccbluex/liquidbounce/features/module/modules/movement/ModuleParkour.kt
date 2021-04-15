@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.extensions.moving
+import net.ccbluex.liquidbounce.utils.entity.moving
 
 object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 

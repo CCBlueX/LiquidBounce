@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import net.ccbluex.liquidbounce.utils.Nameable
-import net.ccbluex.liquidbounce.utils.logger
+import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.utils.client.logger
 import kotlin.reflect.full.findAnnotation
 
 /**

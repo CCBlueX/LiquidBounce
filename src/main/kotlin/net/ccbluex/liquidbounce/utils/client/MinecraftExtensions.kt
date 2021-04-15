@@ -16,15 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.utils.client
 
-package net.ccbluex.liquidbounce.utils
+import net.minecraft.client.MinecraftClient
+import net.minecraft.client.util.Window
 
-fun convertClientSlotToServerSlot(slot: Int): Int {
-    return when (slot) {
-        in 0..8 -> 36 + slot
-        in 9..35 -> slot
-        in 36..39 -> 39 - slot + 5
-        40 -> 45
-        else -> throw IllegalArgumentException()
-    }
+// Global minecraft timer
+object Timer {
+    var timerSpeed = 1f
 }
+
+val MinecraftClient.timer
+    get() = Timer
+
+val Window.size
+    get() = Pair(width, height)
+
+val Window.longedSize
+    get() = Pair(width.toLong(), height.toLong())

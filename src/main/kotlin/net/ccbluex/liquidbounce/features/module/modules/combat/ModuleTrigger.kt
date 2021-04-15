@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.CpsTimer
-import net.ccbluex.liquidbounce.utils.extensions.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.aiming.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.math.CpsTimer
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.EntityHitResult
 

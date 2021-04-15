@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
-import net.ccbluex.liquidbounce.utils.HttpUtils.download
-import net.ccbluex.liquidbounce.utils.logger
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.io.HttpClient.download
 import java.awt.Font
 import java.io.File
 import java.io.FileInputStream

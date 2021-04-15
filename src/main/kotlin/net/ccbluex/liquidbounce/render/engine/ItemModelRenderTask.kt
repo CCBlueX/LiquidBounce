@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.render.engine
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNametags
 import net.ccbluex.liquidbounce.render.engine.utils.popMVP
 import net.ccbluex.liquidbounce.render.engine.utils.pushMVP
-import net.ccbluex.liquidbounce.utils.Mat4
-import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.math.Mat4
 import net.minecraft.item.ItemStack
 import org.lwjgl.opengl.GL11.GL_ALPHA_TEST
 import org.lwjgl.opengl.GL11.glEnable

@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils
+
+package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.NotificationEvent
-import net.ccbluex.liquidbounce.utils.extensions.asText
-import net.ccbluex.liquidbounce.utils.extensions.outputString
+import net.earthcomputer.multiconnect.api.MultiConnectAPI
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.util.InputUtil
 import net.minecraft.text.BaseText
@@ -31,12 +31,24 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.apache.logging.log4j.Logger
 import org.lwjgl.glfw.GLFW
-import java.io.InputStream
 
+/**
+ * Get minecraft instance
+ */
 val mc = MinecraftClient.getInstance()!!
 
 val logger: Logger
     get() = LiquidBounce.logger
+
+/**
+ * Get current protocol version depending on Multi Connect
+ */
+val protocolVersion: Int
+    get() = runCatching {
+        MultiConnectAPI.instance().protocolVersion
+    }.getOrElse { 754 }
+
+const val MC_1_8: Int = 47
 
 // Chat formatting
 private val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] ".asText()
@@ -70,25 +82,6 @@ fun notification(title: Text, message: String, severity: NotificationEvent.Sever
 
 fun notification(title: String, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title, message, severity))
-
-/**
- * Find resource
- *
- * @param path The *absolute* resource path
- * @throws IllegalArgumentException If the path is invalid
- */
-fun resource(path: String): InputStream {
-    class Empty
-    return Empty::class.java.getResourceAsStream(path) ?: throw IllegalArgumentException("Resource $path not found")
-}
-
-/**
- * Converts resource to string
- *
- * @param path The *absolute* resource path
- * @throws IllegalArgumentException If the path is invalid
- */
-fun resourceToString(path: String) = resource(path).use { it.reader().readText() }
 
 /**
  * Translated key code to key name using GLFW and translates unknown key to NONE

@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.utils.chat
-import net.ccbluex.liquidbounce.utils.regular
-import net.ccbluex.liquidbounce.utils.variable
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 
 object CommandClient {
 

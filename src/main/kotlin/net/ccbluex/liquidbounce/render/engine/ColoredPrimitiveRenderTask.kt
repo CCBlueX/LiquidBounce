@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.render.engine.utils.imSetColorFromBuffer
 import net.ccbluex.liquidbounce.render.engine.utils.imVertexPositionFromBuffer
 import net.ccbluex.liquidbounce.render.engine.utils.popMVP
 import net.ccbluex.liquidbounce.render.engine.utils.pushMVP
-import net.ccbluex.liquidbounce.utils.Mat4
+import net.ccbluex.liquidbounce.utils.math.Mat4
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL12

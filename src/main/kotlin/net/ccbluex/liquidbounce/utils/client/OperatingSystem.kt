@@ -16,19 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.utils.extensions.isInHotbar
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.ItemStack
+package net.ccbluex.liquidbounce.utils.client
 
-class ArmorPiece(val itemStack: ItemStack, val slot: Int) {
-    val entitySlotId: Int
-        get() = (itemStack.item as ArmorItem).slotType.entitySlotId
-    val inventorySlot: Int
-        get() = 36 + entitySlotId
-    val isAlreadyEquipped: Boolean
-        get() = slot in 36..39
-    val isReachableByHand: Boolean
-        get() = isInHotbar(slot)
-}
+private val OS = System.getProperty("os.name").toLowerCase()
+var IS_WINDOWS = OS.indexOf("win") >= 0
+var IS_MAC = OS.indexOf("mac") >= 0
+var IS_UNIX = OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0

@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightScreenHook
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen

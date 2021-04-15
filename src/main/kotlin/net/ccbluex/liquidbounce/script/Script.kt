@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.script.bindings.JsModule
 import net.ccbluex.liquidbounce.script.bindings.global.Chat
 import net.ccbluex.liquidbounce.script.bindings.global.Item
 import net.ccbluex.liquidbounce.script.bindings.global.Setting
-import net.ccbluex.liquidbounce.utils.logger
-import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import java.io.File
 import java.util.function.Function
 import javax.script.ScriptEngine

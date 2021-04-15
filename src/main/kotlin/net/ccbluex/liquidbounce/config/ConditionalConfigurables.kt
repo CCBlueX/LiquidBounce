@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.config
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
@@ -110,7 +110,7 @@ open class Choice(name: String, @Exclude private val configurable: ChoiceConfigu
      * Quick access
      */
     protected val mc: MinecraftClient
-        get() = net.ccbluex.liquidbounce.utils.mc
+        get() = net.ccbluex.liquidbounce.utils.client.mc
     protected val player: ClientPlayerEntity
         get() = mc.player!!
     protected val world: ClientWorld

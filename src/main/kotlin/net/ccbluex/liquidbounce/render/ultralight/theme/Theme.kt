@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.render.ultralight.theme
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.utils.extractZip
-import net.ccbluex.liquidbounce.utils.logger
-import net.ccbluex.liquidbounce.utils.resource
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.io.extractZip
+import net.ccbluex.liquidbounce.utils.io.resource
 import java.io.File
 import java.nio.file.StandardWatchEventKinds.*
 

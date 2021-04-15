@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.command.commands.utility
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.utils.chat
-import net.ccbluex.liquidbounce.utils.mc
-import net.ccbluex.liquidbounce.utils.regular
-import net.ccbluex.liquidbounce.utils.variable
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 import org.lwjgl.glfw.GLFW
 
 object CommandPosition {

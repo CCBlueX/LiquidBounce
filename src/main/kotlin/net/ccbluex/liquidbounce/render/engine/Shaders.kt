@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.render.engine
 
-import net.ccbluex.liquidbounce.utils.Mat4
-import net.ccbluex.liquidbounce.utils.resourceToString
+import net.ccbluex.liquidbounce.utils.io.resourceToString
+import net.ccbluex.liquidbounce.utils.math.Mat4
 
 /**
  * Here, all common shaders are controlled.

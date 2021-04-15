@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.engine
 
-import net.ccbluex.liquidbounce.utils.Mat4
+import net.ccbluex.liquidbounce.utils.math.Mat4
 
 /**
  * A collection of render tasks that use an own MVP matrix besides the current MVP matrix. Can only be used for one type of render task.

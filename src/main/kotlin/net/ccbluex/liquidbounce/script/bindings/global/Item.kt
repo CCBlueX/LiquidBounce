@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.global
 
-import net.ccbluex.liquidbounce.utils.extensions.createItem
+import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.item.ItemStack
 
 /**

@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.*
-import net.ccbluex.liquidbounce.utils.extensions.exactPosition
-import net.ccbluex.liquidbounce.utils.extensions.findEnemy
-import net.ccbluex.liquidbounce.utils.extensions.upwards
+import net.ccbluex.liquidbounce.utils.aiming.findEnemy
+import net.ccbluex.liquidbounce.utils.entity.exactPosition
+import net.ccbluex.liquidbounce.utils.entity.upwards
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 

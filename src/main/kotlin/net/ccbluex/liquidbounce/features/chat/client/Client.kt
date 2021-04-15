@@ -21,9 +21,9 @@ import io.netty.handler.codec.http.websocketx.WebSocketVersion
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import net.ccbluex.liquidbounce.features.chat.client.packet.*
-import net.ccbluex.liquidbounce.utils.ProfileUtils
-import net.ccbluex.liquidbounce.utils.chat
-import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.client.MojangApi
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
 import java.net.URI
 import java.util.*
 
@@ -243,7 +243,7 @@ class Client(val listener: ClientListener) {
 
             target
         } catch (_: IllegalArgumentException) {
-            val incomingUUID = ProfileUtils.getUUID(target)
+            val incomingUUID = MojangApi.getUUID(target)
 
             if (incomingUUID.isBlank()) return ""
 

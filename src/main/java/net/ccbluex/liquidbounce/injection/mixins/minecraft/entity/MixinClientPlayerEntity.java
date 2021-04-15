@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
-import net.ccbluex.liquidbounce.utils.extensions.Rotation;
-import net.ccbluex.liquidbounce.utils.extensions.RotationManager;
+import net.ccbluex.liquidbounce.utils.aiming.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.MovementType;
@@ -115,7 +115,7 @@ public abstract class MixinClientPlayerEntity extends MixinLivingEntity {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasVehicle()Z", shift = At.Shift.BEFORE))
     private boolean hookSilentRotations(boolean bl4) {
         updatedSilent = RotationManager.INSTANCE.needsUpdate(lastYaw, lastPitch);
-        return (bl4 && RotationManager.INSTANCE.getCurrRotation() == null) || updatedSilent;
+        return (bl4 && RotationManager.INSTANCE.getCurrentRotation() == null) || updatedSilent;
     }
 
     /**
@@ -126,7 +126,7 @@ public abstract class MixinClientPlayerEntity extends MixinLivingEntity {
         if (updatedSilent) {
             updatedSilent = false;
 
-            final Rotation currRotation = RotationManager.INSTANCE.getCurrRotation();
+            final Rotation currRotation = RotationManager.INSTANCE.getCurrentRotation();
             if (currRotation == null)
                 return;
 

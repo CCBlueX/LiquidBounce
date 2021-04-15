@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.config.adapter.*
 import net.ccbluex.liquidbounce.config.util.ExcludeStrategy
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.logger
-import net.ccbluex.liquidbounce.utils.mc
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 import java.io.File

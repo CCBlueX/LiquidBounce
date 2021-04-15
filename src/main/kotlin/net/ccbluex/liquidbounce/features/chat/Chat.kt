@@ -8,11 +8,7 @@ import net.ccbluex.liquidbounce.features.chat.client.packet.User
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.utils.chat
-import net.ccbluex.liquidbounce.utils.extensions.asText
-import net.ccbluex.liquidbounce.utils.logger
-import net.ccbluex.liquidbounce.utils.mc
-import net.ccbluex.liquidbounce.utils.regular
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Formatting
 

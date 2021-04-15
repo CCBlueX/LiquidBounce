@@ -17,31 +17,6 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.utils.client
 
-class ComparatorChain<T>(private vararg val comparisonFunctions: Comparator<T>) : Comparator<T> {
-
-    override fun compare(o1: T, o2: T): Int {
-        for (comparisonFunction in this.comparisonFunctions) {
-            val comparisonResult = comparisonFunction.compare(o1, o2)
-
-            if (comparisonResult != 0) {
-                return comparisonResult
-            }
-        }
-
-        return 0
-    }
-
-}
-
-inline fun <T> compareByCondition(a: T, b: T, cond: (T) -> Boolean): Int {
-    val condA = cond(a)
-    val condB = cond(b)
-
-    return when {
-        condA == condB -> 0
-        condA -> 1
-        else -> -1
-    }
-}
+annotation class Nameable(val name: String)

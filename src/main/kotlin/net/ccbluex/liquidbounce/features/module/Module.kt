@@ -22,9 +22,9 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
-import net.ccbluex.liquidbounce.utils.logger
-import net.ccbluex.liquidbounce.utils.notification
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
@@ -102,7 +102,7 @@ open class Module(
      * Quick access
      */
     protected val mc: MinecraftClient
-        get() = net.ccbluex.liquidbounce.utils.mc
+        get() = net.ccbluex.liquidbounce.utils.client.mc
     protected val player: ClientPlayerEntity
         get() = mc.player!!
     protected val world: ClientWorld

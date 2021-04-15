@@ -22,7 +22,14 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.*
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.searchBlocks
+import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.HandledScreen

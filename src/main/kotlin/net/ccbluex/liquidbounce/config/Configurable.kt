@@ -59,8 +59,8 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
                 output.add(currentValue)
 
                 currentValue.choices.filter { it.isActive }.forEach {
-                        it.getContainedSettingsRecursivelyInternal(output)
-                    }
+                    it.getContainedSettingsRecursivelyInternal(output)
+                }
             }
         }
     }
@@ -86,7 +86,9 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         rangedValue(name, default, range, ValueType.FLOAT)
 
     protected fun floatRange(
-        name: String, default: ClosedFloatingPointRange<Float>, range: ClosedFloatingPointRange<Float>
+        name: String,
+        default: ClosedFloatingPointRange<Float>,
+        range: ClosedFloatingPointRange<Float>
     ) = rangedValue(name, default, range, ValueType.FLOAT_RANGE)
 
     protected fun int(name: String, default: Int, range: IntRange) = rangedValue(name, default, range, ValueType.INT)

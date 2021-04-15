@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
-import net.ccbluex.liquidbounce.utils.Mat4
-import net.ccbluex.liquidbounce.utils.logger
-import net.ccbluex.liquidbounce.utils.mc
-import net.ccbluex.liquidbounce.utils.toMat4
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.math.Mat4
+import net.ccbluex.liquidbounce.utils.math.toMat4
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.opengl.GL11
 import java.util.concurrent.LinkedBlockingQueue

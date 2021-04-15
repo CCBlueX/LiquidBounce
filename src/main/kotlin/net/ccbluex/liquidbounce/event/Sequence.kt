@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.event
 
 import com.google.common.collect.Lists
 import kotlinx.coroutines.*
-import net.ccbluex.liquidbounce.utils.logger
+import net.ccbluex.liquidbounce.utils.client.logger
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine

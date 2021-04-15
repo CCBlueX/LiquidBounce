@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.utils.chat
-import net.ccbluex.liquidbounce.utils.extensions.asText
-import net.ccbluex.liquidbounce.utils.regular
-import net.ccbluex.liquidbounce.utils.variable
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.text.LiteralText
 import net.minecraft.util.Formatting
 import kotlin.math.ceil

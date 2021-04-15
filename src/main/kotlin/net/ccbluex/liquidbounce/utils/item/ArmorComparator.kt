@@ -17,10 +17,9 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.utils.extensions.getEnchantment
-import net.ccbluex.liquidbounce.utils.extensions.getEnchantmentCount
+import net.ccbluex.liquidbounce.utils.kotlin.compareByCondition
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.ArmorItem

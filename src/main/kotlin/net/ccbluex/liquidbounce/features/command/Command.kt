@@ -131,13 +131,14 @@ class Command(
         val offset = args.size - commandIdx - 1
 
         if (offset == 0 && isNewParameter || offset == 1 && !isNewParameter) {
-            val comparedAgainst = if (isNewParameter)
+            val comparedAgainst = if (isNewParameter) {
                 ""
-            else args[offset]
+            } else args[offset]
 
             this.subcommands.forEach { subcommand ->
-                if (subcommand.name.startsWith(comparedAgainst, true))
+                if (subcommand.name.startsWith(comparedAgainst, true)) {
                     builder.suggest(subcommand.name)
+                }
 
                 subcommand.aliases.filter { it.startsWith(comparedAgainst, true) }.forEach { builder.suggest(it) }
             }
@@ -145,19 +146,22 @@ class Command(
 
         var paramIdx = args.size - commandIdx - 2
 
-        if (isNewParameter)
+        if (isNewParameter) {
             paramIdx++
+        }
 
-        if (paramIdx < 0)
+        if (paramIdx < 0) {
             return
+        }
 
         val idx = commandIdx + paramIdx + 1
 
         val parameter = if (paramIdx >= parameters.size) {
             val lastParameter = this.parameters.lastOrNull()
 
-            if (lastParameter?.vararg != true)
+            if (lastParameter?.vararg != true) {
                 return
+            }
 
             lastParameter
         } else {

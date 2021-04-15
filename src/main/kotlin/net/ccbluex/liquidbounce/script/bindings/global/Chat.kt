@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.global
 
-import net.ccbluex.liquidbounce.utils.chat
+import net.ccbluex.liquidbounce.utils.client.chat
 
 /**
  * Object used by the script API to provide an easier way of calling chat-related methods.

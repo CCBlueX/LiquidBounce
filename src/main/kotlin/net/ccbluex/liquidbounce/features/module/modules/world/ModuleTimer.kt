@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.extensions.moving
-import net.ccbluex.liquidbounce.utils.extensions.timer
+import net.ccbluex.liquidbounce.utils.client.timer
+import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
  * Changes the speed of the entire game.
