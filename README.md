@@ -30,11 +30,11 @@ For those who are unfamiliar with the license, here is a summary of its main poi
 
 ## Setting up a Workspace
 LiquidBounce uses Gradle, to make sure that it is installed properly you can check [Gradle's website](https://gradle.org/install/).
-**1.)** Clone the repository using `git clone --recurse-submodules https://github.com/CCBlueX/LiquidBounce`. 
-**2.)** Open the folder inside of terminal / cmd via the `cd` command.
-**3.)** Open the folder as a Gradle project in your Prefered IDE.
-**4.)** Execute the command `gradlew genSources`
-**5.)** Run the client
+1. Clone the repository using `git clone --recurse-submodules https://github.com/CCBlueX/LiquidBounce`. 
+2. Open the folder inside of terminal / cmd via the `cd` command.
+3. Open the folder as a Gradle project in your Prefered IDE.
+4. Execute the command `gradlew genSources`
+5. Run the client
 <br />
 
 ## Additional libraries
