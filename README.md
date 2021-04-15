@@ -1,5 +1,5 @@
 # LiquidBounce
-LiquidBounce is a free oepnsource mixin-based injection hacked client for Minecraft via FabricMC written in kotlin. 
+LiquidBounce is a free open-source mixin-based injection hacked client for Minecraft via FabricMC written in kotlin. 
 
 **> Website** [ https://liquidbounce.net ]
 **> Forum** [ https://forums.ccbluex.net ]
