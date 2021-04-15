@@ -2,11 +2,14 @@
 
 
 <a href='//liquidbounce.net'>
-    <img src='https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/liquidbounceLogo.svg' width=30%>
+    <img src='https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/liquidbounceLogo.svg' width=30% align="right">
     </img>
 </a>
 
 <br />
+<br />
+
+
 
 LiquidBounce is a free open-source mixin-based injection hacked client for Minecraft via FabricMC written in kotlin. 
 
