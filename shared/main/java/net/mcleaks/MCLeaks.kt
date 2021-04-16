@@ -25,7 +25,7 @@ object MCLeaks
 	val isAltActive: Boolean
 		get() = session != null
 
-	// private val EXECUTOR_SERVICE = Executors.newCachedThreadPool()
+	// private val EXECUTOR_SERVICE = Executors.newCachedThreadPool() // Share LiquidBounce workers
 
 	private val gson = Gson()
 	private const val REDEEM_URL = "https://auth.mcleaks.net/v1/redeem"
@@ -44,12 +44,12 @@ object MCLeaks
 
 	fun redeem(token: String, callback: (Any) -> Unit)
 	{
-		// Use LiquidBounce's one
+		// Use LiquidBounce worker instead
 		WorkerUtils.workers.execute {
 			val connection = preparePostRequest("{\"token\":\"$token\"}")
 			if (connection == null)
 			{
-				callback("An error occurred! [R1] - Failed to prepare request")
+				callback("An error occurred! [Redeem - 0x1] - Failed to prepare request!")
 				return@execute
 			}
 
@@ -63,7 +63,7 @@ object MCLeaks
 			val jsonObject = result as? JsonObject? ?: return@execute
 			if (!jsonObject.has("mcname") || !jsonObject.has("session"))
 			{
-				callback("An error occurred! [R2] - Responce doesn't have 'mcname' or 'session' member")
+				callback("An error occurred! [Redeem - 0x2] - Responce doesn't have 'mcname' or 'session' member!")
 				return@execute
 			}
 
@@ -107,15 +107,15 @@ object MCLeaks
 
 			val jsonElement = gson.fromJson(readData, JsonElement::class.java)
 
-			if (!jsonElement.isJsonObject || !jsonElement.asJsonObject.has("success")) return "An error occurred! [G1] - Responce is not JsonObject or Responce doesn't have 'success' member"
-			if (!jsonElement.asJsonObject["success"].asBoolean) return if (jsonElement.asJsonObject.has("errorMessage")) jsonElement.asJsonObject["errorMessage"].asString else "An error occurred! [G4] - Failed without any errorMessage"
-			if (!jsonElement.asJsonObject.has("result")) return "An error occurred! [G3] - Responce doesn't have 'result' member"
+			if (!jsonElement.isJsonObject || !jsonElement.asJsonObject.has("success")) return "An error occurred! [Result Analysis - 0x1] - Responce is not JsonObject or Responce doesn't have 'success' member!"
+			if (!jsonElement.asJsonObject["success"].asBoolean) return if (jsonElement.asJsonObject.has("errorMessage")) jsonElement.asJsonObject["errorMessage"].asString else "An error occurred! [Result Analysis - 0x4] - Failed without any error message!"
+			if (!jsonElement.asJsonObject.has("result")) return "An error occurred! [Result Analysis - 0x3] - Responce doesn't have 'result' member!"
 			if (jsonElement.asJsonObject["result"].isJsonObject) jsonElement.asJsonObject["result"].asJsonObject else null
 		}
 		catch (e: Exception)
 		{
 			e.printStackTrace()
-			"An error occurred! [G2] - Unexpected exception thrown while processing responce"
+			"An error occurred! [Result Analysis - 0x2] - Unexpected exception ($e) thrown while processing responce!"
 		}
 	}
 }

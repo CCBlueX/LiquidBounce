@@ -1,7 +1,5 @@
 package net.ccbluex.liquidbounce.utils
 
-import java.util.*
-
 object Maps
 {
 	@JvmStatic
@@ -27,10 +25,12 @@ object Maps
 			put(18, "BoA") // Bane of Arthropods (Sword)
 			put(19, "KB") // Knockback (Sword)
 			put(20, "FA") // Fire Aspect (Sword)
+
 			put(21, "L") // Looting (Tool)
 			put(32, "EFF") // Efficiency (Tool)
 			put(33, "ST") // Silk Touch (Tool)
 			put(34, "UNB") // Unbreaking  (Tool)
+
 			put(35, "F") // Flame (Sword)
 
 			/* Bow */
@@ -43,7 +43,7 @@ object Maps
 			put(61, "LoS") // Luck of the Sea
 			put(62, "LU") // Lure
 
-			put(70, "MEN") //
+			put(70, "MEN") // Mending (1.9+)
 		}
 	}
 
@@ -53,7 +53,7 @@ object Maps
 		init
 		{
 			put(1, "Spd") // Speed
-			put(2, "Slow") // Slowness
+			put(2, "Slo") // Slowness
 			put(3, "Hst") // Haste
 			put(4, "MFtg") // Mining Fatigue
 			put(5, "Str") // Strength
@@ -78,7 +78,7 @@ object Maps
 			put(24, "Glow") // Glowing
 			put(25, "Lev") // Levitation
 			put(26, "Luc") // Luck
-			put(27, "BLu") // Unluck
+			put(27, "UNL") // Unluck
 		}
 	}
 }

@@ -22,9 +22,11 @@ class CustomTexture(private val image: BufferedImage)
 		get()
 		{
 			check(!unloaded) { "Texture unloaded" }
+
+			if (field != -1) return field
+
 			val textureUtil = wrapper.classProvider.textureUtil
-			if (field == -1) field = textureUtil.uploadTextureImageAllocate(textureUtil.glGenTextures(), image, textureBlur = true, textureClamp = true)
-			return field
+			return textureUtil.uploadTextureImageAllocate(textureUtil.glGenTextures(), image, textureBlur = true, textureClamp = true).also { field = it }
 		}
 		private set
 

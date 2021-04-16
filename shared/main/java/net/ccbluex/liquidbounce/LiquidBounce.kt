@@ -37,10 +37,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 
-// TODO: Replace all redundant netHandler.addToSendQueue calls to networkManager.sendPacketWithoutEvent (to reduce event-call overhead)
-// TODO: Introduce redundant duplicated wrapper calls (as MinecraftInstance.classProvider, LiquidBounce.wrapper.classProvider, etc.) to local variable
 // TODO: Add fade-in(or slide-in) animations to GUIs
-// TODO:  Integrate OrangeMarshall's Vanilla Enhancements mod
 object LiquidBounce
 {
 	// Client information
@@ -115,7 +112,8 @@ object LiquidBounce
 		moduleManager.registerModules()
 
 		try
-		{ // Remapper
+		{
+			// Remapper
 			loadSrg()
 
 			// ScriptManager

@@ -18,7 +18,6 @@ import java.io.File
  */
 object Remapper
 {
-
 	private const val srgName = "stable_22"
 	private val srgFile = File(LiquidBounce.fileManager.dir, "mcp-$srgName.srg")
 

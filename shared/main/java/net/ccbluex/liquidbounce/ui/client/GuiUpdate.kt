@@ -15,7 +15,6 @@ import org.lwjgl.opengl.GL11
 
 class GuiUpdate : WrappedGuiScreen()
 {
-
 	override fun initGui()
 	{
 		val j = (representedScreen.height shr 2) + 48
