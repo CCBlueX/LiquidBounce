@@ -15,7 +15,8 @@ object TabUtils
 		var index = 0
 		val tabsSize = textFields.size
 
-		while (index < tabsSize)
+		if (tabsSize == 1) textFields[index].isFocused = true
+		else while (index < tabsSize)
 		{
 			val textField = textFields[index]
 

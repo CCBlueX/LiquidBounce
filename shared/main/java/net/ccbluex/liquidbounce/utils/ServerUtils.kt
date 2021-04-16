@@ -28,9 +28,7 @@ object ServerUtils : MinecraftInstance()
 	val remoteIp: String
 		get()
 		{
-			val theWorld = mc.theWorld ?: return "World is null"
-
-			if (theWorld.isRemote)
+			if ((mc.theWorld ?: return "World is null").isRemote)
 			{
 				val serverData = mc.currentServerData
 

@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import java.io.Serializable
-import java.util.*
 
 /**
  * Author: Sigma devs
@@ -25,7 +24,7 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 		compute(1000, 4)
 	}
 
-	private fun compute(loops: Int, depth: Int)
+	fun compute(loops: Int, depth: Int)
 	{
 		path.clear()
 		hubsToWork.clear()
@@ -97,7 +96,7 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 
 			path.add(loc)
 
-			existingHub.setPos(loc)
+			existingHub.position = loc
 			existingHub.path = path
 			existingHub.squareDistanceToFromTarget = loc.squareDistanceTo(endVec)
 			existingHub.cost = cost
@@ -108,12 +107,6 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 	}
 
 	class Hub internal constructor(var position: WVec3, @Suppress("UNUSED_PARAMETER") parent: Hub?, var path: ArrayList<WVec3>, var squareDistanceToFromTarget: Double, var cost: Double, var totalCost: Double)
-	{
-		fun setPos(pos: WVec3)
-		{
-			position = pos
-		}
-	}
 
 	class HubComparator : Comparator<Hub>, Serializable
 	{

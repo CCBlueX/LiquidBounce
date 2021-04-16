@@ -87,7 +87,7 @@ dependencies {
 	compile 'com.jagrosh:DiscordIPC:0.4'
 	compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
 
-	implementation 'com.github.TheAltening:API-Java:master-SNAPSHOT'
+	implementation 'com.github.TheAltening:API-Java:d0771f42d3'
 	implementation 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
 	compile 'com.github.TheAltening:API-Java:api-2.0-SNAPSHOT'
 	compile 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
