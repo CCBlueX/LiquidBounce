@@ -1,40 +1,46 @@
 <html>
-    <head>
-        <title>Account manager</title>
-        <style>
-            body {
-                background-color: #4285f4;
-            }
-        </style>
-    </head>
+<head>
+    <title>Account manager</title>
+    <style>
+        body {
+            background-color: #4285f4;
+        }
+    </style>
+</head>
 
-    <body>
-        <h1>Alt Manager</h1>
+<body>
+<h1>Alt Manager</h1>
 
-        <p id="response"></p>
+<p id="response"></p>
 
-        <h2>Cracked Login</h2>
-        <div>
-            <input type="text" id="username" name="username" placeholder="username"><br>
+<h2>Cracked Login</h2>
+<div>
+    <input type="text" id="username" name="username" placeholder="username"><br>
 
-            <button onclick="document.getElementById('response').innerText = client.getSessionService().loginCracked(document.getElementById('username').value);">Login</button>
-        </div>
+    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginCracked(document.getElementById('username').value);">Login</button>
+</div>
 
-        <h2>Mojang Login (NOT MICROSOFT LOGIN!)</h2>
-        <div>
-            <input type="text" id="email" name="email" placeholder="email"><br>
-            <input type="text" id="password" name="password" placeholder="password"><br>
+<h2>Mojang Login (NOT MICROSOFT LOGIN!)</h2>
+<div>
+    <input type="text" id="email" name="email" placeholder="email"><br>
+    <input type="text" id="password" name="password" placeholder="password"><br>
 
-            <button onclick="document.getElementById('response').innerText = client.getSessionService().loginMojang(document.getElementById('email').value, document.getElementById('password').value);">Login</button>
-        </div>
+    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginMojang(document.getElementById('email').value, document.getElementById('password').value);">Login</button>
+</div>
 
-        <h2>Altening Login</h2>
-        <div>
-            <input type="text" id="token" name="token" placeholder="token"><br>
+<h2>Altening Login</h2>
+<div>
+    <input type="text" id="token" name="token" placeholder="token"><br>
 
-            <button onclick="document.getElementById('response').innerText = client.getSessionService().loginAltening(document.getElementById('token').value);">Login</button>
-        </div>
+    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginAltening(document.getElementById('token').value);">Login</button>
 
-        <button onclick="ui.open('title', screen)">Back</button>
-    </body>
+    <br>
+
+    <input type="text" id="apitoken" name="apitoken" placeholder="API Token"><br>
+
+    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginAltening(client.getTheAltening().generateAccount(document.getElementById('apitoken').value));">Login</button>
+</div>
+
+<button onclick="ui.open('title', screen)">Back</button>
+</body>
 </html>
