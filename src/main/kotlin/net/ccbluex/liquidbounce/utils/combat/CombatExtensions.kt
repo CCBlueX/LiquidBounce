@@ -91,7 +91,7 @@ class EnemyConfigurable : Configurable("enemies") {
             // Check if enemy is invisible (or ignore being invisible)
             if (invisible || !enemy.isInvisible) {
                 // Check if enemy is a player and should be considered as enemy
-                if (enemy is PlayerEntity && players && enemy != mc.player) {
+                if (enemy is PlayerEntity && enemy != mc.player) {
                     // TODO: Check friends because there is no friend system right now
 
                     // Check if player might be a bot
@@ -99,11 +99,11 @@ class EnemyConfigurable : Configurable("enemies") {
                         return false
                     }
 
-                    return true
-                } else if (enemy is PassiveEntity && animals) {
-                    return true
-                } else if (enemy is MobEntity && mobs) {
-                    return true
+                    return players
+                } else if (enemy is PassiveEntity) {
+                    return animals
+                } else if (enemy is MobEntity) {
+                    return mobs
                 }
             }
         }
@@ -129,7 +129,7 @@ fun ClientWorld.findEnemy(
     range: Float,
     player: Entity = mc.player!!,
     enemyConf: EnemyConfigurable = globalEnemyConfigurable
-) = entities.filter { enemyConf.isEnemy(it, true) }
+) = entities.filter { it.shouldBeAttacked(enemyConf) }
     .map { Pair(it, it.boxedDistanceTo(player)) }
     .filter { (_, distance) -> distance <= range }
     .minByOrNull { (_, distance) -> distance }
