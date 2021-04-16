@@ -56,12 +56,27 @@ import javax.crypto.SecretKey
 
 interface IClassProvider
 {
+	/**
+	 * The Tessellator backend instance
+	 */
 	val tessellatorInstance: ITessellator
+
+	/**
+	 * The JsonToNBT backend instance
+	 */
 	val jsonToNBTInstance: IJsonToNBT
+
+	/**
+	 * The GLStateManager backend instance
+	 */
 	val glStateManager: IGlStateManager
+
+	/**
+	 * The TextureUtil backend instance
+	 */
 	val textureUtil: ITextureUtil
 
-	// create new instance
+	/* Constructors */
 	fun createResourceLocation(resourceName: String): IResourceLocation
 	fun createThreadDownloadImageData(cacheFileIn: File?, imageUrlIn: String, textureResourceLocation: IResourceLocation?, imageBufferIn: WIImageBuffer): IThreadDownloadImageData
 	fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer
@@ -80,27 +95,26 @@ interface IClassProvider
 	fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect
 	fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer
 
-	// Create new Item instances
+	/* Constructors (Item) */
 	fun createItem(): IItem
 	fun createItemStack(item: IItem, amount: Int, meta: Int): IItemStack
 	fun createItemStack(item: IItem): IItemStack
-
 	fun createItemStack(blockEnum: IBlock): IItemStack
 
-	// Create new NBT instances
+	/* Constructors (NBT) */
 	fun createNBTTagCompound(): INBTTagCompound
 	fun createNBTTagList(): INBTTagList
 	fun createNBTTagString(string: String): INBTTagString
 	fun createNBTTagDouble(value: Double): INBTTagDouble
 
-	// Create new GUI instances
+	/* Constructors (GUI) */
 	fun createGuiOptions(parentScreen: IGuiScreen, gameSettings: IGameSettings): IGuiScreen
 	fun createGuiSelectWorld(parentScreen: IGuiScreen): IGuiScreen
 	fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen
 	fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen
 	fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen
 
-	// Create new CPackets instances
+	/* Constructors (Client-side packet) */
 	fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange
 	fun createCPacketPlayerBlockPlacement(positionIn: WBlockPos, placedBlockDirectionIn: Int, stackIn: IItemStack?, facingXIn: Float, facingYIn: Float, facingZIn: Float): ICPacketPlayerBlockPlacement
 	fun createCPacketPlayerPosLook(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayerPosLook
@@ -134,7 +148,7 @@ interface IClassProvider
 
 	fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer
 
-	// Entity instance checks
+	/* instanceof checks (Entity) */
 	fun isEntityAnimal(obj: Any?): Boolean
 	fun isEntitySquid(obj: Any?): Boolean
 	fun isEntityBat(obj: Any?): Boolean
@@ -158,7 +172,7 @@ interface IClassProvider
 	fun isEntityMinecartHopper(obj: Any?): Boolean
 	fun isEntityShulker(obj: Any?): Boolean
 
-	// TileEntity instance checks
+	/* instanceof checks (TileEntity) */
 	fun isTileEntityChest(obj: Any?): Boolean
 	fun isTileEntityEnderChest(obj: Any?): Boolean
 	fun isTileEntityFurnace(obj: Any?): Boolean
@@ -166,7 +180,7 @@ interface IClassProvider
 	fun isTileEntityHopper(obj: Any?): Boolean
 	fun isTileEntityShulkerBox(obj: Any?): Boolean
 
-	// SPacket instance checks
+	/* instanceof checks (Server-side packet) */
 	fun isSPacketEntity(obj: Any?): Boolean
 	fun isSPacketResourcePackSend(obj: Any?): Boolean
 	fun isSPacketPlayerPosLook(obj: Any?): Boolean
@@ -182,7 +196,7 @@ interface IClassProvider
 	fun isSPacketEntityTeleport(obj: Any?): Boolean
 	fun isSPacketTitle(obj: Any?): Boolean
 
-	// CPacket instance checks
+	/* instanceof checks (Client-side packet) */
 	fun isCPacketPlayer(obj: Any?): Boolean
 	fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean
 	fun isCPacketUseEntity(obj: Any?): Boolean
@@ -201,31 +215,7 @@ interface IClassProvider
 	fun isCPacketPlayerDigging(obj: Any?): Boolean
 	fun isCPacketConfirmTransaction(obj: Any?): Boolean
 
-	// Item instance checks
-	fun isItemSword(obj: Any?): Boolean
-	fun isItemTool(obj: Any?): Boolean
-	fun isItemArmor(obj: Any?): Boolean
-	fun isItemPotion(obj: Any?): Boolean
-	fun isItemBlock(obj: Any?): Boolean
-	fun isItemBow(obj: Any?): Boolean
-	fun isItemBucket(obj: Any?): Boolean
-	fun isItemFood(obj: Any?): Boolean
-	fun isItemBucketMilk(obj: Any?): Boolean
-	fun isItemPickaxe(obj: Any?): Boolean
-	fun isItemAxe(obj: Any?): Boolean
-	fun isItemBed(obj: Any?): Boolean
-	fun isItemEnderPearl(obj: Any?): Boolean
-	fun isItemEnchantedBook(obj: Any?): Boolean
-	fun isItemBoat(obj: Any?): Boolean
-	fun isItemMinecart(obj: Any?): Boolean
-	fun isItemAppleGold(obj: Any?): Boolean
-	fun isItemSnowball(obj: Any?): Boolean
-	fun isItemEgg(obj: Any?): Boolean
-	fun isItemFishingRod(obj: Any?): Boolean
-	fun isItemAir(obj: Any?): Boolean
-	fun isItemMap(obj: Any?): Boolean
-
-	// Block instance checks
+	/* instanceof checks (Block) */
 	fun isBlockAir(obj: Any?): Boolean
 	fun isBlockFence(obj: Any?): Boolean
 	fun isBlockSnow(obj: Any?): Boolean
@@ -255,7 +245,31 @@ interface IClassProvider
 	fun isBlockTrapDoor(obj: Any?): Boolean
 	fun isBlockContainer(obj: Any?): Boolean
 
-	// GUI instance checks
+	/* instanceof checks (Item) */
+	fun isItemSword(obj: Any?): Boolean
+	fun isItemTool(obj: Any?): Boolean
+	fun isItemArmor(obj: Any?): Boolean
+	fun isItemPotion(obj: Any?): Boolean
+	fun isItemBlock(obj: Any?): Boolean
+	fun isItemBow(obj: Any?): Boolean
+	fun isItemBucket(obj: Any?): Boolean
+	fun isItemFood(obj: Any?): Boolean
+	fun isItemBucketMilk(obj: Any?): Boolean
+	fun isItemPickaxe(obj: Any?): Boolean
+	fun isItemAxe(obj: Any?): Boolean
+	fun isItemBed(obj: Any?): Boolean
+	fun isItemEnderPearl(obj: Any?): Boolean
+	fun isItemEnchantedBook(obj: Any?): Boolean
+	fun isItemBoat(obj: Any?): Boolean
+	fun isItemMinecart(obj: Any?): Boolean
+	fun isItemAppleGold(obj: Any?): Boolean
+	fun isItemSnowball(obj: Any?): Boolean
+	fun isItemEgg(obj: Any?): Boolean
+	fun isItemFishingRod(obj: Any?): Boolean
+	fun isItemAir(obj: Any?): Boolean
+	fun isItemMap(obj: Any?): Boolean
+
+	/* instanceof checks (GUI) */
 	fun isGuiInventory(obj: Any?): Boolean
 	fun isGuiContainer(obj: Any?): Boolean
 	fun isGuiGameOver(obj: Any?): Boolean
@@ -265,7 +279,7 @@ interface IClassProvider
 	fun isGuiHudDesigner(obj: Any?): Boolean
 	fun isClickGui(obj: Any?): Boolean
 
-	// get enums
+	/* Enum constructors */
 	fun getPotionEnum(type: PotionType): IPotion
 	fun getEnumFacing(type: EnumFacingType): IEnumFacing
 	fun getBlockEnum(type: BlockType): IBlock
@@ -275,7 +289,7 @@ interface IClassProvider
 	fun getEnchantmentEnum(type: EnchantmentType): IEnchantment
 	fun getVertexFormatEnum(type: WDefaultVertexFormats): IVertexFormat
 
-	// Wrap
+	/* Wrappers */
 	fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer
 	fun wrapGuiScreen(clickGui: WrappedGuiScreen): IGuiScreen
 	fun wrapCreativeTab(name: String, wrappedCreativeTabs: WrappedCreativeTabs)

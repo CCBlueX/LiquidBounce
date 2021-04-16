@@ -14,6 +14,19 @@ import net.minecraft.util.AxisAlignedBB
 
 class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB
 {
+	override val minX: Double
+		get() = wrapped.minX
+	override val minY: Double
+		get() = wrapped.minY
+	override val minZ: Double
+		get() = wrapped.minZ
+	override val maxX: Double
+		get() = wrapped.maxX
+	override val maxY: Double
+		get() = wrapped.maxY
+	override val maxZ: Double
+		get() = wrapped.maxZ
+
 	override fun addCoord(x: Double, y: Double, z: Double): IAxisAlignedBB = wrapped.addCoord(x, y, z).wrap()
 
 	override fun expand(x: Double, y: Double, z: Double): IAxisAlignedBB = wrapped.expand(x, y, z).wrap()
@@ -27,19 +40,6 @@ class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB
 	override fun intersectsWith(boundingBox: IAxisAlignedBB): Boolean = wrapped.intersectsWith(boundingBox.unwrap())
 
 	override fun toString(): String = "$wrapped"
-
-	override val minX: Double
-		get() = wrapped.minX
-	override val minY: Double
-		get() = wrapped.minY
-	override val minZ: Double
-		get() = wrapped.minZ
-	override val maxX: Double
-		get() = wrapped.maxX
-	override val maxY: Double
-		get() = wrapped.maxY
-	override val maxZ: Double
-		get() = wrapped.maxZ
 
 	override fun equals(other: Any?): Boolean = other is AxisAlignedBBImpl && other.wrapped == wrapped
 }

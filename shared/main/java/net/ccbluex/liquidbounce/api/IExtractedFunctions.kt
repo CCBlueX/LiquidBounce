@@ -47,7 +47,7 @@ interface IExtractedFunctions
 	fun setActiveTextureLightMapTexUnit()
 	fun setActiveTextureDefaultTexUnit()
 	fun getLightMapTexUnit(): Int
-	fun setLightmapTextureCoords(target: Int, j: Float, k: Float)
+	fun setLightmapTextureCoords(target: Int, x: Float, y: Float)
 
 	fun formatI18n(key: String, vararg values: String): String
 	fun sessionServiceJoinServer(profile: GameProfile, token: String, sessionHash: String)

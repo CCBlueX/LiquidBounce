@@ -11,7 +11,6 @@ import net.minecraft.event.ClickEvent
 
 class ClickEventImpl(val wrapped: ClickEvent) : IClickEvent
 {
-
 	override fun equals(other: Any?): Boolean = other is ClickEventImpl && other.wrapped == wrapped
 }
 

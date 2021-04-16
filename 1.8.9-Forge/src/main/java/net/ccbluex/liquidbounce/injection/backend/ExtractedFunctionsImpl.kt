@@ -39,90 +39,104 @@ import java.lang.reflect.Field
 
 object ExtractedFunctionsImpl : IExtractedFunctions
 {
-	private var fastRenderField: Field? = null
+	private var ofFastRenderField: Field? = null
 
 	init
 	{
 		try
 		{
-			val declaredField = GameSettings::class.java.getDeclaredField("ofFastRender")
-
-			fastRenderField = declaredField
+			val declaredField = GameSettings::class.java.getDeclaredField("ofFastRender").also { ofFastRenderField = it }
 
 			if (!declaredField.isAccessible) declaredField.isAccessible = true
 		}
 		catch (ignored: NoSuchFieldException)
 		{
+			// OptiFine not installed
 		}
 	}
 
+	/* Block */
 	override fun getBlockById(id: Int): IBlock? = Block.getBlockById(id)?.let(::BlockImpl)
 
 	override fun getIdFromBlock(block: IBlock): Int = Block.getIdFromBlock(block.unwrap())
 
-	override fun getModifierForCreature(heldItem: IItemStack?, creatureAttribute: IEnumCreatureAttribute): Float = EnchantmentHelper.getModifierForCreature(heldItem?.unwrap(), creatureAttribute.unwrap())
-
-	override fun getObjectFromItemRegistry(res: IResourceLocation): IItem? = Item.itemRegistry.getObject(res.unwrap())?.wrap()
-
-	override fun renderTileEntity(tileEntity: ITileEntity, partialTicks: Float, destroyStage: Int) = TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity.unwrap(), partialTicks, destroyStage)
-
 	override fun getBlockFromName(name: String): IBlock? = Block.getBlockFromName(name)?.wrap()
 
+	override fun getEnchantments(item: IItemStack): Map<Int, Int> = EnchantmentHelper.getEnchantments(item.unwrap())
+
+	override fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean = Block.isEqualTo(block1?.unwrap(), block2?.unwrap())
+
+	/* Item */
 	override fun getItemByName(name: String): IItem? = (Items::class.java.getField(name).get(null) as Item?)?.wrap()
 
+	override fun getModifierForCreature(heldItem: IItemStack?, creatureAttribute: IEnumCreatureAttribute): Float = EnchantmentHelper.getModifierForCreature(heldItem?.unwrap(), creatureAttribute.unwrap())
+
+	override fun getIdFromItem(item: IItem): Int = Item.getIdFromItem(item.unwrap())
+
+	/* Registry */
+	override fun getObjectFromItemRegistry(res: IResourceLocation): IItem? = Item.itemRegistry.getObject(res.unwrap())?.wrap()
+
+	override fun getItemRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Item.itemRegistry.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
+
+	override fun getBlockRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Block.blockRegistry.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
+
+	/* Enchantment */
 	override fun getEnchantmentByLocation(location: String): IEnchantment? = Enchantment.getEnchantmentByLocation(location)?.wrap()
 
 	override fun getEnchantmentById(enchantID: Int): IEnchantment? = Enchantment.getEnchantmentById(enchantID)?.wrap()
 
 	override fun getEnchantments(): Collection<IResourceLocation> = WrappedCollection(Enchantment.func_181077_c(), IResourceLocation::unwrap, ResourceLocation::wrap)
 
-	override fun getItemRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Item.itemRegistry.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
+	override fun getEnchantmentLevel(enchId: Int, stack: IItemStack): Int = EnchantmentHelper.getEnchantmentLevel(enchId, stack.unwrap())
 
-	override fun getBlockRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Block.blockRegistry.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
-
+	/* Rendering-related */
+	override fun enableStandardItemLighting() = RenderHelper.enableStandardItemLighting()
 	override fun disableStandardItemLighting() = RenderHelper.disableStandardItemLighting()
 
-	override fun formatI18n(key: String, vararg values: String): String = I18n.format(key, values)
+	override fun setActiveTextureLightMapTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
+	override fun setActiveTextureDefaultTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
 
-	override fun sessionServiceJoinServer(profile: GameProfile, token: String, sessionHash: String) = Minecraft.getMinecraft().sessionService.joinServer(profile, token, sessionHash)
+	override fun getHorizontalFacing(yaw: Float): IEnumFacing = EnumFacing.getHorizontal(MathHelper.floor_double((yaw * 4.0 / 360.0) + 0.5) and 3).wrap()
+	override fun getLightMapTexUnit(): Int = OpenGlHelper.lightmapTexUnit
+	override fun setLightmapTextureCoords(target: Int, x: Float, y: Float) = OpenGlHelper.setLightmapTextureCoords(target, x, y)
 
-	override fun getPotionById(potionID: Int): IPotion = Potion.potionTypes[potionID].wrap()
+	override fun renderTileEntity(tileEntity: ITileEntity, partialTicks: Float, destroyStage: Int) = TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity.unwrap(), partialTicks, destroyStage)
 
-	override fun enableStandardItemLighting() = RenderHelper.enableStandardItemLighting()
-
-	override fun scoreboardFormatPlayerName(scorePlayerTeam: ITeam?, playerName: String): String = ScorePlayerTeam.formatPlayerName(scorePlayerTeam?.unwrap(), playerName)
-
+	/**
+	 * Disable OptiFine fast render
+	 */
 	override fun disableFastRender()
 	{
 		try
 		{
-			val fastRenderer = fastRenderField
+			val fastRenderer = ofFastRenderField ?: return
 
-			if (fastRenderer != null)
-			{
-				if (!fastRenderer.isAccessible) fastRenderer.isAccessible = true
+			if (!fastRenderer.isAccessible) fastRenderer.isAccessible = true
 
-				fastRenderer.setBoolean(Minecraft.getMinecraft().gameSettings, false)
-			}
+			fastRenderer.setBoolean(Minecraft.getMinecraft().gameSettings, false)
 		}
 		catch (ignored: IllegalAccessException)
 		{
 		}
 	}
 
-	override fun jsonToComponent(toString: String): IIChatComponent = IChatComponent.Serializer.jsonToComponent(toString).wrap()
-	override fun setActiveTextureLightMapTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
-	override fun setActiveTextureDefaultTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
-	override fun getHorizontalFacing(yaw: Float): IEnumFacing = EnumFacing.getHorizontal(MathHelper.floor_double((yaw * 4.0 / 360.0) + 0.5) and 3).wrap()
-	override fun getLightMapTexUnit(): Int = OpenGlHelper.lightmapTexUnit
-	override fun setLightmapTextureCoords(target: Int, j: Float, k: Float) = OpenGlHelper.setLightmapTextureCoords(target, j, k)
+	/* Translation */
+	override fun formatI18n(key: String, vararg values: String): String = I18n.format(key, values)
+	override fun translateToLocal(key: String): String = StatCollector.translateToLocal(key)
 
+	/* Potion */
+	override fun getPotionById(potionID: Int): IPotion = Potion.potionTypes[potionID].wrap()
+
+	/* Session */
+	override fun sessionServiceJoinServer(profile: GameProfile, token: String, sessionHash: String) = Minecraft.getMinecraft().sessionService.joinServer(profile, token, sessionHash)
+
+	/* Scoreboard */
+	override fun scoreboardFormatPlayerName(scorePlayerTeam: ITeam?, playerName: String): String = ScorePlayerTeam.formatPlayerName(scorePlayerTeam?.unwrap(), playerName)
+
+	/* JSON */
+	override fun jsonToComponent(toString: String): IIChatComponent = IChatComponent.Serializer.jsonToComponent(toString).wrap()
+
+	/* Delegate to MathHelper */
 	override fun cos(radians: Float): Float = MathHelper.cos(radians)
 	override fun sin(radians: Float): Float = MathHelper.sin(radians)
-
-	override fun getEnchantments(item: IItemStack): Map<Int, Int> = EnchantmentHelper.getEnchantments(item.unwrap())
-	override fun getIdFromItem(item: IItem): Int = Item.getIdFromItem(item.unwrap())
-	override fun getEnchantmentLevel(enchId: Int, stack: IItemStack): Int = EnchantmentHelper.getEnchantmentLevel(enchId, stack.unwrap())
-	override fun translateToLocal(key: String): String = StatCollector.translateToLocal(key)
-	override fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean = Block.isEqualTo(block1?.unwrap(), block2?.unwrap())
 }

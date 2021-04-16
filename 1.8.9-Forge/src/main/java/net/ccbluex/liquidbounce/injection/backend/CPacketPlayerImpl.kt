@@ -29,6 +29,7 @@ class CPacketPlayerImpl<out T : C03PacketPlayer>(wrapped: T) : PacketImpl<T>(wra
 		{
 			wrapped.z = value
 		}
+
 	override var yaw: Float
 		get() = wrapped.yaw
 		set(value)
@@ -41,12 +42,14 @@ class CPacketPlayerImpl<out T : C03PacketPlayer>(wrapped: T) : PacketImpl<T>(wra
 		{
 			wrapped.pitch = value
 		}
+
 	override var onGround: Boolean
 		get() = wrapped.onGround
 		set(value)
 		{
 			wrapped.onGround = value
 		}
+
 	override var moving: Boolean
 		get() = wrapped.isMoving
 		set(value)

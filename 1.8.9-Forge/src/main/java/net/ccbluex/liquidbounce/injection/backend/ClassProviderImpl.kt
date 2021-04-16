@@ -114,6 +114,7 @@ object ClassProviderImpl : IClassProvider
 	override val textureUtil: ITextureUtil
 		get() = TextureUtilImpl
 
+	/* Constructors */
 	override fun createResourceLocation(resourceName: String): IResourceLocation = ResourceLocationImpl(ResourceLocation(resourceName))
 
 	override fun createThreadDownloadImageData(cacheFileIn: File?, imageUrlIn: String, textureResourceLocation: IResourceLocation?, imageBufferIn: WIImageBuffer): IThreadDownloadImageData
@@ -176,6 +177,7 @@ object ClassProviderImpl : IClassProvider
 	override fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiMultiplayer(parentScreen.unwrap()))
 
 	override fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiModList(parentScreen.unwrap()))
+
 	override fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen = GuiScreenImpl(GuiConnecting(parent.unwrap(), mc.unwrap(), serverData.unwrap()))
 
 	override fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(C09PacketHeldItemChange(slot))
@@ -222,6 +224,13 @@ object ClassProviderImpl : IClassProvider
 
 	override fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer = FramebufferImpl(Framebuffer(displayWidth, displayHeight, useDepth))
 
+	override fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer = SafeVertexBuffer(vertexFormat.unwrap()).wrap()
+
+	override fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, verifyToken: ByteArray): IPacket = PacketImpl(C01PacketEncryptionResponse(secretKey, publicKey, verifyToken))
+
+	override fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*> = Backend.BACKEND_UNSUPPORTED()
+
+	/* instanceof checks */
 	override fun isEntityAnimal(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityAnimal
 
 	override fun isEntitySquid(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntitySquid
@@ -416,6 +425,7 @@ object ClassProviderImpl : IClassProvider
 	override fun isBlockSign(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSign
 
 	override fun isBlockDoor(obj: Any?): Boolean = obj is BlockImpl && (obj.wrapped is BlockDoor || obj.wrapped is BlockTrapDoor)
+
 	override fun isBlockChest(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockChest
 
 	override fun isBlockEnderChest(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockEnderChest
@@ -454,6 +464,9 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isClickGui(obj: Any?): Boolean = obj is GuiScreenImpl<*> && obj.wrapped is GuiScreenWrapper && obj.wrapped.wrapped is ClickGui
 
+	override fun isTileEntityShulkerBox(obj: Any?): Boolean = false
+
+	/* Enum constructors */
 	override fun getPotionEnum(type: PotionType): IPotion
 	{
 		return PotionImpl(when (type)
@@ -639,6 +652,7 @@ object ClassProviderImpl : IClassProvider
 		})
 	}
 
+	/* Wrappers */
 	override fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer = FontRendererImpl(FontRendererWrapper(fontRenderer))
 
 	override fun wrapGuiScreen(clickGui: WrappedGuiScreen): IGuiScreen
@@ -650,7 +664,6 @@ object ClassProviderImpl : IClassProvider
 		return instance
 	}
 
-	override fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer = SafeVertexBuffer(vertexFormat.unwrap()).wrap()
 	override fun wrapCreativeTab(name: String, wrappedCreativeTabs: WrappedCreativeTabs)
 	{
 		wrappedCreativeTabs.representedType = CreativeTabsImpl(CreativeTabsWrapper(wrappedCreativeTabs, name))
@@ -660,10 +673,4 @@ object ClassProviderImpl : IClassProvider
 	{
 		GuiSlotWrapper(wrappedGuiSlot, mc, width, height, top, bottom, slotHeight)
 	}
-
-	override fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, VerifyToken: ByteArray): IPacket = PacketImpl(C01PacketEncryptionResponse(secretKey, publicKey, VerifyToken))
-
-	override fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*> = Backend.BACKEND_UNSUPPORTED()
-
-	override fun isTileEntityShulkerBox(obj: Any?): Boolean = false
 }

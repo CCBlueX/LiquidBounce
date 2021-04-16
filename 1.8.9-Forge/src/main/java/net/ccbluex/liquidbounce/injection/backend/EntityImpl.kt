@@ -23,6 +23,7 @@ import java.util.*
 
 open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 {
+	// distanceWalked
 	override var distanceWalkedOnStepModified: Float
 		get() = wrapped.distanceWalkedOnStepModified
 		set(value)
@@ -35,34 +36,41 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		{
 			wrapped.distanceWalkedModified = value
 		}
-	override val sneaking: Boolean
-		get() = wrapped.isSneaking
+
+	// Step Height
 	override var stepHeight: Float
 		get() = wrapped.stepHeight
 		set(value)
 		{
 			wrapped.stepHeight = value
 		}
+
 	override val horizontalFacing: IEnumFacing
 		get() = wrapped.horizontalFacing.wrap()
+
 	override val lookVec: WVec3?
 		get() = wrapped.lookVec.wrap()
+
 	override var isDead: Boolean
 		get() = wrapped.isDead
 		set(value)
 		{
 			wrapped.isDead = value
 		}
+
+	// collision check
 	override val isCollidedVertically: Boolean
 		get() = wrapped.isCollidedVertically
 	override val isCollidedHorizontally: Boolean
 		get() = wrapped.isCollidedHorizontally
+
 	override var isAirBorne: Boolean
 		get() = wrapped.isAirBorne
 		set(value)
 		{
 			wrapped.isAirBorne = value
 		}
+
 	override val hurtResistantTime: Int
 		get() = wrapped.hurtResistantTime
 	override var noClip: Boolean
@@ -71,20 +79,29 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		{
 			wrapped.noClip = value
 		}
+
 	override var sprinting: Boolean
 		get() = wrapped.isSprinting
 		set(value)
 		{
 			wrapped.isSprinting = value
 		}
+
+	override val sneaking: Boolean
+		get() = wrapped.isSneaking
+
 	override val positionVector: WVec3
 		get() = wrapped.positionVector.wrap()
+
 	override val isRiding: Boolean
 		get() = wrapped.isRiding
+
 	override val position: WBlockPos
 		get() = wrapped.position.wrap()
+
 	override val burning: Boolean
 		get() = wrapped.isBurning
+
 	override var fallDistance: Float
 		get() = wrapped.fallDistance
 		set(value)
@@ -101,10 +118,12 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		}
 	override val isInLava: Boolean
 		get() = wrapped.isInLava
+
 	override val width: Float
 		get() = wrapped.width
 	override val height: Float
 		get() = wrapped.height
+
 	override var onGround: Boolean
 		get() = wrapped.onGround
 		set(value)
@@ -202,43 +221,42 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 	override val prevRotationYaw: Float
 		get() = wrapped.prevRotationYaw
 
-	override fun getPositionEyes(partialTicks: Float): WVec3 = wrapped.getPositionEyes(partialTicks).wrap()
-
-	override fun canBeCollidedWith(): Boolean = wrapped.canBeCollidedWith()
-
-	override fun canRiderInteract(): Boolean = wrapped.canRiderInteract()
-
-	override fun moveEntity(x: Double, y: Double, z: Double) = wrapped.moveEntity(x, y, z)
-
-	override fun getDistanceToEntity(it: IEntity): Float = wrapped.getDistanceToEntity(it.unwrap())
-
-	override fun getDistanceSqToEntity(it: IEntity): Double = wrapped.getDistanceSqToEntity(it.unwrap())
-
+	/* Type casting */
 	override fun asEntityPlayer(): IEntityPlayer = EntityPlayerImpl(wrapped as EntityPlayer)
 
 	override fun asEntityLivingBase(): IEntityLivingBase = EntityLivingBaseImpl(wrapped as EntityLivingBase)
 
 	override fun asEntityTNTPrimed(): IEntityTNTPrimed = EntityTNTPrimedImpl(wrapped as EntityTNTPrimed)
 
-	override fun getDistance(x: Double, y: Double, z: Double): Double = wrapped.getDistance(x, y, z)
+	/* Position-related */
+	override fun getPositionEyes(partialTicks: Float): WVec3 = wrapped.getPositionEyes(partialTicks).wrap()
 
-	override fun setPosition(x: Double, y: Double, z: Double) = wrapped.setPosition(x, y, z)
-
-	override fun getDistanceSq(blockPos: WBlockPos): Double = wrapped.getDistanceSq(blockPos.unwrap())
-
-	override fun getDistanceSq(x: Double, y: Double, z: Double): Double = wrapped.getDistanceSq(x, y, z)
-
-	override fun setPositionAndUpdate(posX: Double, posY: Double, posZ: Double) = wrapped.setPositionAndUpdate(posX, posY, posZ)
-
-	override fun rayTrace(range: Double, partialTicks: Float): IMovingObjectPosition? = wrapped.rayTrace(range, partialTicks).wrap()
-
-	override fun getLook(partialTicks: Float): WVec3 = wrapped.getLook(partialTicks).wrap()
-
-	override fun isInsideOfMaterial(material: IMaterial): Boolean = wrapped.isInsideOfMaterial(material.unwrap())
+	override fun moveEntity(x: Double, y: Double, z: Double) = wrapped.moveEntity(x, y, z)
 
 	override fun copyLocationAndAnglesFrom(player: IEntityPlayerSP) = wrapped.copyLocationAndAnglesFrom(player.unwrap())
 
+	override fun getLook(partialTicks: Float): WVec3 = wrapped.getLook(partialTicks).wrap()
+
+	override fun setPosition(x: Double, y: Double, z: Double) = wrapped.setPosition(x, y, z)
+	override fun setPositionAndUpdate(posX: Double, posY: Double, posZ: Double) = wrapped.setPositionAndUpdate(posX, posY, posZ)
 	override fun setPositionAndRotation(oldX: Double, oldY: Double, oldZ: Double, rotationYaw: Float, rotationPitch: Float) = wrapped.setPositionAndRotation(oldX, oldY, oldZ, rotationYaw, rotationPitch)
+
+	/* Distance */
+	override fun getDistanceToEntity(it: IEntity): Float = wrapped.getDistanceToEntity(it.unwrap())
+	override fun getDistanceSqToEntity(it: IEntity): Double = wrapped.getDistanceSqToEntity(it.unwrap())
+
+	override fun getDistance(x: Double, y: Double, z: Double): Double = wrapped.getDistance(x, y, z)
+
+	override fun getDistanceSq(blockPos: WBlockPos): Double = wrapped.getDistanceSq(blockPos.unwrap())
+	override fun getDistanceSq(x: Double, y: Double, z: Double): Double = wrapped.getDistanceSq(x, y, z)
+
+	override fun rayTrace(range: Double, partialTicks: Float): IMovingObjectPosition? = wrapped.rayTrace(range, partialTicks).wrap()
+
+	override fun isInsideOfMaterial(material: IMaterial): Boolean = wrapped.isInsideOfMaterial(material.unwrap())
+
+	override fun canBeCollidedWith(): Boolean = wrapped.canBeCollidedWith()
+
+	override fun canRiderInteract(): Boolean = wrapped.canRiderInteract()
 
 	override fun equals(other: Any?): Boolean = other is EntityImpl<*> && wrapped.isEntityEqual(other.unwrap())
 }
