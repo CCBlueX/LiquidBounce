@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.utils.login
 
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import org.apache.http.HttpHeaders
 import org.apache.http.StatusLine
@@ -14,8 +16,6 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicHeader
 import org.apache.http.util.EntityUtils
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
@@ -43,9 +43,9 @@ object UserUtils
 		val request = HttpPost("https://authserver.mojang.com/validate")
 		request.setHeaders(headers)
 
-		val body = JSONObject()
-		body.put("accessToken", token)
-		request.entity = StringEntity("$body")
+		val body = JsonObject()
+		body.addProperty("accessToken", token)
+		request.entity = StringEntity(Gson().toJson(body))
 
 		val response = client.execute(request)
 
@@ -58,22 +58,11 @@ object UserUtils
 		val request = HttpGet("https://api.mojang.com/user/profiles/${uuid}/names")
 		val response = client.execute(request)
 
-		if (response.statusLine.statusCode != 200)
-		{
-			return null
-		}
+		if (response.statusLine.statusCode != 200) return null
 
-		return try
-		{
-			val names = JSONArray(EntityUtils.toString(response.entity))
+		val names = JsonParser().parse(EntityUtils.toString(response.entity)).asJsonArray
 
-			JSONObject(names.get(names.length() - 1).toString()).getString("name")
-		}
-		catch (e: Exception)
-		{
-			e.printStackTrace()
-			return null
-		}
+		return names.get(names.size() - 1).asJsonObject.get("name").asString
 	}
 
 	/**

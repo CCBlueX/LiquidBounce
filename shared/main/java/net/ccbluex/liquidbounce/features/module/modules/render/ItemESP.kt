@@ -25,6 +25,7 @@ import java.awt.Color
 class ItemESP : Module()
 {
 	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Hydra", "ShaderOutline"), "Box")
+	private val shaderRadiusValue = FloatValue("ShaderRadius", 2f, 0.5f, 5f)
 	private val colorRedValue = IntegerValue("R", 0, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 255, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 0, 0, 255)
@@ -77,7 +78,7 @@ class ItemESP : Module()
 				ClientUtils.logger.error("An error occurred while rendering all item entities for shader esp", ex)
 			}
 
-			OutlineShader.INSTANCE.stopDraw(if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), 1f, 1f)
+			OutlineShader.INSTANCE.stopDraw(if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), shaderRadiusValue.get(), 1f)
 		}
 	}
 

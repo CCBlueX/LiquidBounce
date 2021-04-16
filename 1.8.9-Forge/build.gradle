@@ -87,9 +87,9 @@ dependencies {
 	compile 'com.jagrosh:DiscordIPC:0.4'
 	compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
 
-	implementation 'com.github.TheAltening:API-Java:d0771f42d3'
+	implementation 'com.github.TheAltening:TheAltening4j:d0771f42d3'
 	implementation 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
-	compile 'com.github.TheAltening:API-Java:api-2.0-SNAPSHOT'
+	compile 'com.github.TheAltening:TheAltening4j:api-2.0-22541fa70f-1'
 	compile 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
 	compile('commons-io:commons-io') {
 		version {
@@ -138,7 +138,6 @@ shadowJar {
 	dependencies {
 		include(dependency('org.spongepowered:mixin'))
 		include(dependency('com.jagrosh:DiscordIPC'))
-		include(dependency('org.json:json'))
 		include(dependency('org.slf4j:slf4j-api'))
 		include(dependency('log4j:log4j:1.2.17'))
 		include(dependency('org.scijava:native-lib-loader'))
