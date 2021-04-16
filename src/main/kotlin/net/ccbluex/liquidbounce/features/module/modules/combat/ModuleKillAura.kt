@@ -73,7 +73,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val swing by boolean("Swing", true)
     private val keepSprint by boolean("KeepSprint", true)
 
-    private val raycast by enumChoice("Raycast", HIT_NOENEMY, values())
+    private val raycast by enumChoice("Raycast", TRACE_ALL, values())
 
     private val failRate by int("FailRate", 0, 0..100) // todo:
     private val missSwing by boolean("MissSwing", true) // todo:
@@ -126,9 +126,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // Check if between enemy and player is another entity
             val raycastedEntity = raytraceEntity(range.toDouble(), rotation, filter = {
                 when (raycast) {
-                    HIT_THROUGH -> false
-                    HIT_ENEMY -> it.shouldBeAttacked()
-                    HIT_NOENEMY -> true
+                    TRACE_NONE -> false
+                    TRACE_ONLYENEMY -> it.shouldBeAttacked()
+                    TRACE_ALL -> true
                 }
             }) ?: target
 
@@ -194,10 +194,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     enum class RaycastMode(override val choiceName: String) : NamedChoice {
-        // todo: find better names
-        HIT_THROUGH("HitThrough"),
-        HIT_ENEMY("HitEnemy"),
-        HIT_NOENEMY("HitNoEnemy")
+        TRACE_NONE("None"),
+        TRACE_ONLYENEMY("Enemy"),
+        TRACE_ALL("All")
     }
 
 }
