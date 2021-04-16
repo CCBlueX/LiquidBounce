@@ -21,7 +21,9 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EntityMarginEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -47,6 +49,23 @@ public abstract class MixinEntity {
 
     @Shadow public abstract void setVelocity(double x, double y, double z);
 
+    @Shadow
+    protected static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
+        return null;
+    }
+
+    @Shadow public float pitch;
+
+    @Shadow protected boolean onGround;
+
+    @Shadow public abstract boolean hasVehicle();
+
+    @Shadow public abstract double getX();
+
+    @Shadow public abstract double getY();
+
+    @Shadow public abstract double getZ();
+
     /**
      * Hook entity margin modification event
      */
@@ -69,4 +88,19 @@ public abstract class MixinEntity {
         return MathHelper.clamp(value, min, max);
     }
 
+    @Redirect(method = "updateVelocity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;movementInputToVelocity(Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;"))
+    public Vec3d hookVelocity(Vec3d movementInput, float speed, float yaw) {
+        //noinspection ConstantConditions
+        if ((Object) this == MinecraftClient.getInstance().player) {
+            final PlayerVelocityStrafe event = new PlayerVelocityStrafe(movementInput, speed, yaw);
+            EventManager.INSTANCE.callEvent(event);
+            if (event.isCancelled()) {
+                return Vec3d.ZERO;
+            }
+
+            return movementInputToVelocity(event.getMovementInput(), event.getSpeed(), event.getYaw());
+        }
+
+        return movementInputToVelocity(movementInput, speed, yaw);
+    }
 }

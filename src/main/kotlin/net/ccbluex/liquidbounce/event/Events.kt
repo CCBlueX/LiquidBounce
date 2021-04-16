@@ -130,6 +130,9 @@ class PlayerMoveEvent(val type: MovementType, val movement: Vec3d) : Event()
 @Nameable("playerJump")
 class PlayerJumpEvent(var motion: Float) : CancellableEvent()
 
+@Nameable("playerVelocity")
+class PlayerVelocityStrafe(var movementInput: Vec3d, var speed: Float, var yaw: Float) : CancellableEvent()
+
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
 

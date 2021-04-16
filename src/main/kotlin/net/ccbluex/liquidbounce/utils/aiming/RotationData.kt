@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 
@@ -34,18 +33,6 @@ data class Rotation(var yaw: Float, var pitch: Float) {
             val pitchSin = MathHelper.sin(pitch * 0.017453292f)
             return Vec3d((yawSin * pitchCos).toDouble(), (-pitchSin).toDouble(), (yawCos * pitchCos).toDouble())
         }
-
-    /**
-     * Set rotations to [player]
-     */
-    fun toPlayer(player: PlayerEntity) {
-        if (yaw.isNaN() || pitch.isNaN()) {
-            return
-        }
-
-        player.yaw = yaw
-        player.pitch = pitch
-    }
 
     /**
      * Fix rotation based on sensitivity

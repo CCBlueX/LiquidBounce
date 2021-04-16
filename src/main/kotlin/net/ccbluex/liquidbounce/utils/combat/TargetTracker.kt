@@ -12,9 +12,8 @@ import net.minecraft.entity.LivingEntity
 /**
  * A target tracker to choose the best enemy to attack
  */
-class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Configurable("target"), Iterable<Entity> {
+class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Configurable("target") {
 
-    var possibleTargets: Array<Entity> = emptyArray()
     var lockedOnTarget: Entity? = null
 
     val priority by enumChoice("Priority", PriorityEnum.HEALTH, PriorityEnum.values())
@@ -25,34 +24,23 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
     /**
      * Update should be called to always pick the best target out of the current world context
      */
-    fun update(enemyConf: EnemyConfigurable = globalEnemyConfigurable) {
-        possibleTargets = emptyArray()
-
-        val entities = (mc.world ?: return).entities
+    fun enemies(enemyConf: EnemyConfigurable = globalEnemyConfigurable): Iterable<Entity> {
+        val entities = mc.world!!.entities
             .filter { it.shouldBeAttacked(enemyConf) }
             .sortedBy { mc.player!!.squaredBoxedDistanceTo(it) } // Sort by distance
 
         val eyePos = mc.player!!.eyesPos
 
-        // default
         when (priority) {
             PriorityEnum.HEALTH -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health
-            PriorityEnum.DIRECTION -> entities.sortedBy {
-                RotationManager.rotationDifference(
-                    RotationManager.makeRotation(
-                        it.boundingBox.center,
-                        eyePos,
-                    )
-                )
-            } // Sort by FOV
+            PriorityEnum.DIRECTION -> entities.sortedBy { RotationManager.rotationDifference(RotationManager.makeRotation(it.boundingBox.center, eyePos))} // Sort by FOV
             PriorityEnum.AGE -> entities.sortedBy { -it.age } // Sort by existence
         }
 
-        possibleTargets = entities.toTypedArray()
+        return entities.asIterable()
     }
 
     fun cleanup() {
-        possibleTargets = emptyArray()
         lockedOnTarget = null
     }
 
@@ -60,7 +48,11 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
         lockedOnTarget = entity
     }
 
-    override fun iterator() = possibleTargets.iterator()
+    fun validateLock(validator: (Entity) -> Boolean) {
+        if (!validator(lockedOnTarget ?: return)) {
+            lockedOnTarget = null
+        }
+    }
 
 }
 

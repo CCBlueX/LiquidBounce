@@ -63,8 +63,6 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                     return@repeatable
                 }
 
-                println("gay")
-
                 // Send stop using item to server
                 network.sendPacket(
                     PlayerActionC2SPacket(
@@ -98,12 +96,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         }
 
         val tickRepeatable = handler<GameTickEvent> {
-            targetTracker.update()
-
             targetTracker.lockedOnTarget = null
-
-            val world = mc.world ?: return@handler
-            val player = player
 
             // Should check if player is using bow
             if (player.activeItem?.item !is BowItem) {
@@ -112,7 +105,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
             val eyePos = player.eyesPos
 
-            val target = targetTracker.firstOrNull() ?: return@handler
+            val target = targetTracker.enemies().firstOrNull() ?: return@handler
 
             var deltaPos = target.boundingBox.center.subtract(eyePos)
 

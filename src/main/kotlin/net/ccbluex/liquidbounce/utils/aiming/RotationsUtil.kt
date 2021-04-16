@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.step
@@ -260,6 +261,13 @@ object RotationManager : Listenable {
                 serverRotation = Rotation(packet.yaw, packet.pitch)
             }
         }
+    }
+
+    val velocity = handler<PlayerVelocityStrafe> { event ->
+        // todo: fix strafing and make it silent
+        // serverRotation?.let {
+        //    event.yaw = it.yaw
+        // }
     }
 
 }

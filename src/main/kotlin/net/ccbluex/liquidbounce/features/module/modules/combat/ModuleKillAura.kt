@@ -18,18 +18,22 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.minecraft.enchantment.EnchantmentHelper
@@ -49,39 +53,34 @@ import net.minecraft.world.GameMode
 object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Attack speed
-    val cps by intRange("CPS", 5..8, 1..20) // todo:
-
-    val cooldown by boolean("Cooldown", true) // todo:
+    private val cps by intRange("CPS", 5..8, 1..20)
+    private val cooldown by boolean("Cooldown", true)
 
     // Range
-    val range by float("Range", 4.7f, 1f..8f)
-
-    val wallRange by float("WallRange", 3f, 0f..8f) // todo:
+    private val range by float("Range", 4.2f, 1f..8f)
+    private val wallRange by float("WallRange", 3f, 0f..8f) // todo:
 
     // Target
-    val targetTracker = tree(TargetTracker())
+    private val targetTracker = tree(TargetTracker())
 
     // Rotation
-    val rotations = tree(RotationsConfigurable())
+    private val rotations = tree(RotationsConfigurable())
 
     // Predict
-    val predict by floatRange("Predict", 0f..0f, 0f..5f) // todo:
+    private val predict by floatRange("Predict", 0f..0f, 0f..5f) // todo:
 
     // Bypass techniques
-    val swing by boolean("Swing", true)
-    val keepSprint by boolean("KeepSprint", true)
+    private val swing by boolean("Swing", true)
+    private val keepSprint by boolean("KeepSprint", true)
 
-    val failRate by int("FailRate", 0, 0..100) // todo:
+    private val raycast by enumChoice("Raycast", HIT_NOENEMY, values())
 
-    val missSwing by boolean("MissSwing", true) // todo:
+    private val failRate by int("FailRate", 0, 0..100) // todo:
+    private val missSwing by boolean("MissSwing", true) // todo:
 
-    val checkableInventory by boolean("CheckableInventory", false) // todo:
+    private val checkableInventory by boolean("CheckableInventory", false) // todo:
 
     private val cpsTimer = CpsScheduler()
-
-    override fun enable() {
-        targetTracker.update()
-    }
 
     override fun disable() {
         targetTracker.cleanup()
@@ -96,23 +95,18 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return
         }
 
-        targetTracker.update()
+        targetTracker.validateLock { it.boxedDistanceTo(player) <= range }
 
         val eyes = player.eyesPos
 
-        if (predict.endInclusive > 0f) {
-        }
-
-        targetTracker.lockedOnTarget = null
-
-        for (target in targetTracker) {
+        for (target in targetTracker.enemies()) {
             if (target.boxedDistanceTo(player) > range) {
                 continue
             }
 
             val box = target.boundingBox
 
-            // todo: add predict to box
+            // todo: add predict to box and eyes
 
             // find best spot (and skip if no spot was found)
             val (rotation, _) = RotationManager.raytraceBox(eyes, box, throughWalls = false, range = range.toDouble()) ?: continue
@@ -122,14 +116,32 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             // aim on target
             RotationManager.aimAt(rotation, configurable = rotations)
+            break
         }
 
         val target = targetTracker.lockedOnTarget ?: return
+        val rotation = RotationManager.serverRotation ?: return
 
-        if (target.boxedDistanceTo(player) <= range && RotationManager.serverRotation?.let { facingEnemy(target, range.toDouble(), it) } == true) {
+        if (target.boxedDistanceTo(player) <= range && facingEnemy(target, range.toDouble(), rotation)) {
+            // Check if between enemy and player is another entity
+            val raycastedEntity = raytraceEntity(range.toDouble(), rotation, filter = {
+                when (raycast) {
+                    HIT_THROUGH -> false
+                    HIT_ENEMY -> it.shouldBeAttacked()
+                    HIT_NOENEMY -> true
+                }
+            }) ?: target
+
+            // Swap enemy if there is a better enemy
+            // todo: compare current target to locked target
+            if (raycastedEntity.shouldBeAttacked() && raycastedEntity != target) {
+                targetTracker.lock(raycastedEntity)
+            }
+
+            // Attack enemy according to cps and cooldown
             cpsTimer.tick(
                 click = {
-                    attackEntity(target)
+                    attackEntity(raycastedEntity)
                 },
                 condition = {
                     !cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f
@@ -179,6 +191,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         // reset cooldown
         player.resetLastAttackedTicks()
+    }
+
+    enum class RaycastMode(override val choiceName: String) : NamedChoice {
+        // todo: find better names
+        HIT_THROUGH("HitThrough"),
+        HIT_ENEMY("HitEnemy"),
+        HIT_NOENEMY("HitNoEnemy")
     }
 
 }
