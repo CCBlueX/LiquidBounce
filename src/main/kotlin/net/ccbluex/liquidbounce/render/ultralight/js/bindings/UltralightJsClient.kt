@@ -20,11 +20,13 @@
 package net.ccbluex.liquidbounce.render.ultralight.js.bindings
 
 import com.thealtening.api.TheAltening
+import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.loginAltening
 import net.ccbluex.liquidbounce.utils.client.loginCracked
 import net.ccbluex.liquidbounce.utils.client.loginMojang
 import net.ccbluex.liquidbounce.utils.client.mc
+import java.net.InetSocketAddress
 
 /**
  * Referenced by JS as `client`
@@ -33,6 +35,7 @@ object UltralightJsClient {
 
     val moduleManager = ModuleManager
     val sessionService = UltralightJsSessionService
+    val proxyManager = UltralightJsProxyManager
     val theAltening = UltralightAlteningService
 
     /**
@@ -43,6 +46,24 @@ object UltralightJsClient {
         fun loginCracked(username: String) = mc.sessionService.loginCracked(username).readable
         fun loginMojang(email: String, password: String) = mc.sessionService.loginMojang(email, password).readable
         fun loginAltening(token: String) = mc.sessionService.loginAltening(token).readable
+
+    }
+
+    /**
+     * Access Proxy Manager from Ultralight
+     */
+    object UltralightJsProxyManager {
+
+        fun setProxy(host: String, port: Int, username: String, password: String): String {
+            ProxyManager.currentProxy = ProxyManager.Proxy(InetSocketAddress(host, port), if (username.isNotBlank()) ProxyManager.ProxyCredentials(username, password) else null)
+
+            return "Successfully set proxy"
+        }
+
+        fun unsetProxy(): String {
+            ProxyManager.currentProxy = null
+            return "Successfully unset proxy"
+        }
 
     }
 

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.render.Fonts
 import java.util.*
 import kotlin.reflect.KProperty
@@ -178,6 +179,7 @@ enum class ListValueType(val type: Class<*>?) {
     Item(net.minecraft.item.Item::class.java),
     String(kotlin.String::class.java),
     Friend(FriendManager.Friend::class.java),
+    Proxy(ProxyManager.Proxy::class.java),
     FontDetail(Fonts.FontDetail::class.java),
     None(null)
 }
