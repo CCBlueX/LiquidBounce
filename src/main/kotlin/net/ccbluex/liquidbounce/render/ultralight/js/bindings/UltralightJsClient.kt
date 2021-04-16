@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.ultralight.js.bindings
 
+import com.thealtening.api.TheAltening
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.loginAltening
 import net.ccbluex.liquidbounce.utils.client.loginCracked
@@ -32,6 +33,7 @@ object UltralightJsClient {
 
     val moduleManager = ModuleManager
     val sessionService = UltralightJsSessionService
+    val theAltening = UltralightAlteningService
 
     /**
      * Access session service from Ultralight
@@ -41,6 +43,15 @@ object UltralightJsClient {
         fun loginCracked(username: String) = mc.sessionService.loginCracked(username).readable
         fun loginMojang(email: String, password: String) = mc.sessionService.loginMojang(email, password).readable
         fun loginAltening(token: String) = mc.sessionService.loginAltening(token).readable
+
+    }
+
+    /**
+     * Access Altening API from Ultralight
+     */
+    object UltralightAlteningService {
+
+        fun generateAccount(token: String) = TheAltening.newBasicRetriever(token).account.token
 
     }
 
