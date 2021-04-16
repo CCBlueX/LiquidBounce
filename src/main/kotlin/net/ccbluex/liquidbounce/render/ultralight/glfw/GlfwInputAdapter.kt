@@ -40,7 +40,7 @@ package net.ccbluex.liquidbounce.render.ultralight.glfw
 import com.labymedia.ultralight.input.*
 import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import org.lwjgl.glfw.GLFW
-import org.lwjgl.glfw.GLFW.glfwGetCursorPos
+import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.system.MemoryStack
 import java.nio.DoubleBuffer
 
@@ -55,12 +55,24 @@ class GlfwInputAdapter {
      * @param action   The GLFW action
      * @param mods     The key modifiers
      */
+    private val keys = mutableListOf<Int>()
+
     fun keyCallback(window: Long, key: Int, scancode: Int, action: Int, mods: Int) {
         val translatedKey = glfwToUltralightKey(key)
 
+        if (action == GLFW_PRESS) {
+            if (keys.contains(key)) {
+                return
+            }
+
+            keys.add(key)
+        } else if (action == GLFW_RELEASE) {
+            keys.remove(key)
+        }
+
         // Build the event
         val event = UltralightKeyEvent()
-            .type(if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) UltralightKeyEventType.RAW_DOWN else UltralightKeyEventType.UP)
+            .type(if (action == GLFW_PRESS || action == GLFW_REPEAT) UltralightKeyEventType.RAW_DOWN else UltralightKeyEventType.UP)
             .virtualKeyCode(translatedKey)
             .nativeKeyCode(scancode)
             .keyIdentifier(UltralightKeyEvent.getKeyIdentifierFromVirtualKeyCode(translatedKey))
@@ -68,9 +80,9 @@ class GlfwInputAdapter {
 
         // Send the event
         UltralightEngine.activeView?.fireKeyEvent(event)
-        if ((action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) && (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_TAB)) {
+        if ((action == GLFW_PRESS || action == GLFW_REPEAT) && (key == GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_TAB)) {
             // These keys need to be translated specially
-            val text = if (key == GLFW.GLFW_KEY_ENTER) "\r" else "\t"
+            val text = if (key == GLFW_KEY_ENTER) "\r" else "\t"
             val extraEvent = UltralightKeyEvent()
                 .type(UltralightKeyEventType.CHAR)
                 .text(text)
@@ -115,7 +127,7 @@ class GlfwInputAdapter {
             .y((y * 1f).toInt())
             .type(UltralightMouseEventType.MOVED)
             .button(
-                when (GLFW.GLFW_PRESS) {
+                when (GLFW_PRESS) {
                     GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) -> UltralightMouseEventButton.LEFT
                     GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_MIDDLE) -> UltralightMouseEventButton.MIDDLE
                     GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) -> UltralightMouseEventButton.RIGHT
@@ -157,7 +169,7 @@ class GlfwInputAdapter {
         val event = UltralightMouseEvent()
             .x((x * 1f).toInt())
             .y((y * 1f).toInt())
-            .type(if (action == GLFW.GLFW_PRESS) UltralightMouseEventType.DOWN else UltralightMouseEventType.UP)
+            .type(if (action == GLFW_PRESS) UltralightMouseEventType.DOWN else UltralightMouseEventType.UP)
         when (button) {
             GLFW.GLFW_MOUSE_BUTTON_LEFT -> event.button(UltralightMouseEventButton.LEFT)
             GLFW.GLFW_MOUSE_BUTTON_MIDDLE -> event.button(UltralightMouseEventButton.MIDDLE)
@@ -279,7 +291,7 @@ class GlfwInputAdapter {
         GLFW.GLFW_KEY_RIGHT_BRACKET -> UltralightKey.OEM_6
         GLFW.GLFW_KEY_GRAVE_ACCENT -> UltralightKey.OEM_3
         GLFW.GLFW_KEY_ESCAPE -> UltralightKey.ESCAPE
-        GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER -> UltralightKey.RETURN
+        GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER -> UltralightKey.RETURN
         GLFW.GLFW_KEY_TAB -> UltralightKey.TAB
         GLFW.GLFW_KEY_BACKSPACE -> UltralightKey.BACK
         GLFW.GLFW_KEY_INSERT -> UltralightKey.INSERT

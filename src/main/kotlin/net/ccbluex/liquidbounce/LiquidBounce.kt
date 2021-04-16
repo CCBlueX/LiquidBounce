@@ -97,8 +97,6 @@ object LiquidBounce : Listenable {
         // Load config system from disk
         ConfigSystem.load()
 
-//        mc.sessionService.loginAltening("f11ry-a68og@alt.com")
-
         // Connect to chat server
         Chat.connect()
 

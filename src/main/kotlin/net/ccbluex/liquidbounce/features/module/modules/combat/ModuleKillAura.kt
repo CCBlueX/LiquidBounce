@@ -58,6 +58,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Range
     private val range by float("Range", 4.2f, 1f..8f)
+
     private val wallRange by float("WallRange", 3f, 0f..8f) // todo:
 
     // Target
@@ -76,6 +77,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
 
     private val failRate by int("FailRate", 0, 0..100) // todo:
+
     private val missSwing by boolean("MissSwing", true) // todo:
 
     private val checkableInventory by boolean("CheckableInventory", false) // todo:
@@ -124,13 +126,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         if (target.boxedDistanceTo(player) <= range && facingEnemy(target, range.toDouble(), rotation)) {
             // Check if between enemy and player is another entity
-            val raycastedEntity = raytraceEntity(range.toDouble(), rotation, filter = {
-                when (raycast) {
-                    TRACE_NONE -> false
-                    TRACE_ONLYENEMY -> it.shouldBeAttacked()
-                    TRACE_ALL -> true
+            val raycastedEntity = raytraceEntity(
+                range.toDouble(), rotation,
+                filter = {
+                    when (raycast) {
+                        TRACE_NONE -> false
+                        TRACE_ONLYENEMY -> it.shouldBeAttacked()
+                        TRACE_ALL -> true
+                    }
                 }
-            }) ?: target
+            ) ?: target
 
             // Swap enemy if there is a better enemy
             // todo: compare current target to locked target
