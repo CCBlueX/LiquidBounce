@@ -18,19 +18,40 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
+import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.ccbluex.liquidbounce.event.TransferOrigin;
+import net.ccbluex.liquidbounce.features.misc.ProxyManager;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.network.ClientConnection;
+import net.minecraft.network.NetworkSide;
 import net.minecraft.network.Packet;
+import net.minecraft.util.Lazy;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.net.InetAddress;
+
 @Mixin(ClientConnection.class)
 public class MixinClientConnection {
+
+    @Shadow @Final public static Lazy<EpollEventLoopGroup> CLIENT_IO_GROUP_EPOLL;
+
+    @Shadow @Final public static Lazy<NioEventLoopGroup> CLIENT_IO_GROUP;
 
     /**
      * Handle sending packets
@@ -63,6 +84,34 @@ public class MixinClientConnection {
 
         if (event.isCancelled())
             callbackInfo.cancel();
+    }
+
+    /**
+     * Hook custom netty connection
+     * @author mojang
+     */
+    @Overwrite
+    @Environment(EnvType.CLIENT)
+    public static ClientConnection connect(InetAddress address, int port, boolean shouldUseNativeTransport) {
+        final ClientConnection clientConnection = new ClientConnection(NetworkSide.CLIENTBOUND);
+
+        Class class2;
+        Lazy lazy2;
+        if (Epoll.isAvailable() && shouldUseNativeTransport) {
+            class2 = EpollSocketChannel.class;
+            lazy2 = CLIENT_IO_GROUP_EPOLL;
+        } else {
+            class2 = NioSocketChannel.class;
+            lazy2 = CLIENT_IO_GROUP;
+        }
+
+        new Bootstrap()
+                .group((EventLoopGroup)lazy2.get())
+                .handler(ProxyManager.INSTANCE.setupConnect(clientConnection))
+                .channel(class2)
+                .connect(address, port)
+                .syncUninterruptibly();
+        return clientConnection;
     }
 
 }

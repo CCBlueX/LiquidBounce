@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
 import net.ccbluex.liquidbounce.render.engine.RenderEngine
@@ -78,6 +79,7 @@ object LiquidBounce : Listenable {
         ScriptManager
         RotationManager
         FriendManager
+        ProxyManager
         Tabs
         Chat
 
@@ -96,8 +98,6 @@ object LiquidBounce : Listenable {
 
         // Load config system from disk
         ConfigSystem.load()
-
-//        mc.sessionService.loginAltening("f11ry-a68og@alt.com")
 
         // Connect to chat server
         Chat.connect()
