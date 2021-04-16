@@ -36,14 +36,10 @@ typealias ValueListener<T> = (T) -> T
  * Value based on generics and support for readable names and description
  */
 open class Value<T : Any>(
-    @SerializedName("name")
-    open val name: String,
-    @SerializedName("value")
-    internal var value: T,
-    @Exclude
-    internal val valueType: ValueType,
-    @Exclude
-    internal val listType: ListValueType = ListValueType.None
+    @SerializedName("name") open val name: String,
+    @SerializedName("value") internal var value: T,
+    @Exclude internal val valueType: ValueType,
+    @Exclude internal val listType: ListValueType = ListValueType.None
 ) {
 
     @Exclude
@@ -66,12 +62,16 @@ open class Value<T : Any>(
 
     operator fun getValue(u: Any?, property: KProperty<*>) = value
 
-    operator fun setValue(u: Any?, property: KProperty<*>, t: T) {
-        // temporary set value
+    operator fun setValue(u: Any?, property: KProperty<*>, t: T) { // temporary set value
+        // check if value is really accepted
+        setValueChecked(t)
+    }
+
+    private fun setValueChecked(t: T) {
         value = t
 
-        // check if value is really accepted
         var currT = t
+
         runCatching {
             listeners.forEach {
                 currT = it(t)
@@ -93,15 +93,27 @@ open class Value<T : Any>(
     open fun deserializeFrom(gson: Gson, element: JsonElement) {
         val currValue = this.value
 
-        this.value = if (currValue is List<*>) {
-            @Suppress("UNCHECKED_CAST")
-            element.asJsonArray.mapTo(mutableListOf(), { gson.fromJson(it, this.listType.type!!) }) as T
-        } else if (currValue is Set<*>) {
-            @Suppress("UNCHECKED_CAST")
-            element.asJsonArray.mapTo(TreeSet(), { gson.fromJson(it, this.listType.type!!) }) as T
-        } else {
-            gson.fromJson(element, currValue.javaClass)
-        }
+        setValueChecked(
+            when (currValue) {
+                is List<*> -> {
+                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(mutableListOf(), {
+                        gson.fromJson(
+                            it, this.listType.type!!
+                        )
+                    }) as T
+                }
+                is Set<*>  -> {
+                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(TreeSet(), {
+                        gson.fromJson(
+                            it, this.listType.type!!
+                        )
+                    }) as T
+                }
+                else       -> {
+                    gson.fromJson(element, currValue.javaClass)
+                }
+            }
+        )
     }
 
 }
@@ -110,11 +122,7 @@ open class Value<T : Any>(
  * Ranged value adds support for closed ranges
  */
 class RangedValue<T : Any>(
-    name: String,
-    value: T,
-    @Exclude
-    val range: ClosedRange<*>,
-    type: ValueType
+    name: String, value: T, @Exclude val range: ClosedRange<*>, type: ValueType
 ) : Value<T>(name, value, valueType = type) {
 
     fun getFrom(): Double {
@@ -128,10 +136,7 @@ class RangedValue<T : Any>(
 }
 
 class ChooseListValue<T : NamedChoice>(
-    name: String,
-    selected: T,
-    @Exclude
-    val choices: Array<T>
+    name: String, selected: T, @Exclude val choices: Array<T>
 ) : Value<T>(name, selected, ValueType.CHOICE) {
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
@@ -154,8 +159,7 @@ interface NamedChoice {
     val choiceName: String
 }
 
-enum class ValueType {
-    BOOLEAN,
+enum class ValueType { BOOLEAN,
     FLOAT,
     FLOAT_RANGE,
     INT,
