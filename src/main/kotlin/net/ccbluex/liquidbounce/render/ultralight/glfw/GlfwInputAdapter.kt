@@ -15,25 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- * and
- *
- * Ultralight Java - Java wrapper for the Ultralight web engine
- * Copyright (C) 2020 - 2021 LabyMedia and contributors
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 3 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 package net.ccbluex.liquidbounce.render.ultralight.glfw
 
@@ -55,20 +36,8 @@ class GlfwInputAdapter {
      * @param action   The GLFW action
      * @param mods     The key modifiers
      */
-    private val keys = mutableListOf<Int>()
-
     fun keyCallback(window: Long, key: Int, scancode: Int, action: Int, mods: Int) {
         val translatedKey = glfwToUltralightKey(key)
-
-        if (action == GLFW_PRESS) {
-            if (keys.contains(key)) {
-                return
-            }
-
-            keys.add(key)
-        } else if (action == GLFW_RELEASE) {
-            keys.remove(key)
-        }
 
         // Build the event
         val event = UltralightKeyEvent()
