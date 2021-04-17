@@ -68,7 +68,7 @@ open class Value<T : Any>(
     operator fun getValue(u: Any?, property: KProperty<*>) = get()
 
     operator fun setValue(u: Any?, property: KProperty<*>, t: T) {
-        set(value)
+        set(t)
     }
 
     fun listen(listener: ValueListener<T>): Value<T> {
