@@ -35,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientPlayerEntity.class)
-public abstract class MixinClientPlayerEntity extends MixinLivingEntity {
+public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @Shadow private float lastYaw;
 

@@ -137,6 +137,9 @@ class PlayerUseMultiplier(var forward: Float, var sideways: Float) : Event()
 @Nameable("playerVelocity")
 class PlayerVelocityStrafe(val movementInput: Vec3d, val speed: Float, val yaw: Float, var velocity: Vec3d) : Event()
 
+@Nameable("playerStride")
+class PlayerStrideEvent(var strideOnAir: Boolean) :  Event()
+
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
 
