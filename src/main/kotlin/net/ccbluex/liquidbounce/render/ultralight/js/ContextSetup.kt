@@ -42,6 +42,7 @@ import net.ccbluex.liquidbounce.render.ultralight.ScreenView
 import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.View
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsClient
+import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsKotlin
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsUi
 import net.ccbluex.liquidbounce.utils.client.mc
 
@@ -88,6 +89,12 @@ object ContextSetup {
         globalObject.setProperty(
             "ui",
             view.databind.conversionUtils.toJavascript(context, UltralightJsUi),
+            0
+        )
+
+        globalObject.setProperty(
+            "kotlin",
+            view.databind.conversionUtils.toJavascript(context, UltralightJsKotlin),
             0
         )
 

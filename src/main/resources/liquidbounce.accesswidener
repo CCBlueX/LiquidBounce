@@ -60,6 +60,8 @@ accessible field net/minecraft/util/math/Matrix4f a31 F
 accessible field net/minecraft/util/math/Matrix4f a32 F
 accessible field net/minecraft/util/math/Matrix4f a33 F
 
+accessible field net/minecraft/network/packet/c2s/play/ResourcePackStatusC2SPacket status Lnet/minecraft/network/packet/c2s/play/ResourcePackStatusC2SPacket$Status;
+
 accessible field net/minecraft/item/BucketItem fluid Lnet/minecraft/fluid/Fluid;
 
 accessible field net/minecraft/client/options/KeyBinding boundKey Lnet/minecraft/client/util/InputUtil$Key;

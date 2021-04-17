@@ -61,26 +61,10 @@ open class Value<T : Any>(
      * @docs https://kotlinlang.org/docs/reference/delegated-properties.html
      */
 
-    operator fun getValue(u: Any?, property: KProperty<*>) = value
+    operator fun getValue(u: Any?, property: KProperty<*>) = get()
 
-    operator fun setValue(u: Any?, property: KProperty<*>, t: T) { // temporary set value
-        // check if value is really accepted
-        setValueChecked(t)
-    }
-
-    private fun setValueChecked(t: T) {
-        value = t
-
-        var currT = t
-
-        runCatching {
-            listeners.forEach {
-                currT = it(t)
-            }
-        }.onSuccess {
-            value = currT
-            EventManager.callEvent(ValueChangedEvent(this))
-        }
+    operator fun setValue(u: Any?, property: KProperty<*>, t: T) {
+        set(t)
     }
 
     fun listen(listener: ValueListener<T>): Value<T> {
@@ -94,27 +78,33 @@ open class Value<T : Any>(
     open fun deserializeFrom(gson: Gson, element: JsonElement) {
         val currValue = this.value
 
-        setValueChecked(
-            when (currValue) {
-                is List<*> -> {
-                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(mutableListOf(), {
-                        gson.fromJson(
-                            it, this.listType.type!!
-                        )
-                    }) as T
-                }
-                is Set<*>  -> {
-                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(TreeSet(), {
-                        gson.fromJson(
-                            it, this.listType.type!!
-                        )
-                    }) as T
-                }
-                else       -> {
-                    gson.fromJson(element, currValue.javaClass)
-                }
+        this.value = if (currValue is List<*>) {
+            @Suppress("UNCHECKED_CAST")
+            element.asJsonArray.mapTo(mutableListOf(), { gson.fromJson(it, this.listType.type!!) }) as T
+        } else if (currValue is Set<*>) {
+            @Suppress("UNCHECKED_CAST")
+            element.asJsonArray.mapTo(TreeSet(), { gson.fromJson(it, this.listType.type!!) }) as T
+        } else {
+            gson.fromJson(element, currValue.javaClass)
+        }
+    }
+
+    fun get() = value
+
+    fun set(t: T) {
+        // temporary set value
+        value = t
+
+        // check if value is really accepted
+        var currT = t
+        runCatching {
+            listeners.forEach {
+                currT = it(t)
             }
-        )
+        }.onSuccess {
+            value = currT
+            EventManager.callEvent(ValueChangedEvent(this))
+        }
     }
 
 }
@@ -160,7 +150,8 @@ interface NamedChoice {
     val choiceName: String
 }
 
-enum class ValueType { BOOLEAN,
+enum class ValueType {
+    BOOLEAN,
     FLOAT,
     FLOAT_RANGE,
     INT,

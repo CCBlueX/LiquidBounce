@@ -44,6 +44,7 @@ import kotlin.math.sqrt
 class RotationsConfigurable : Configurable("rotations") {
     val turnSpeed by curve("TurnSpeed", arrayOf(4f, 7f, 10f, 3f, 2f, 0.7f))
     val predict by boolean("Predict", true)
+    val strafe by boolean("Strafe", true)
 }
 
 /**
@@ -147,6 +148,7 @@ object RotationManager : Listenable {
         activeConfigurable = configurable
         targetRotation = rotation
         ticksUntilReset = ticks
+        update()
     }
 
     fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
@@ -264,10 +266,34 @@ object RotationManager : Listenable {
     }
 
     val velocity = handler<PlayerVelocityStrafe> { event ->
-        // todo: fix strafing and make it silent
-        // serverRotation?.let {
-        //    event.yaw = it.yaw
-        // }
+        if (activeConfigurable?.strafe == true) {
+            event.velocity = fixVelocity(event.velocity, event.movementInput, event.speed)
+        }
+    }
+
+    /**
+     * Fix velocity
+     */
+    fun fixVelocity(currVelocity: Vec3d, movementInput: Vec3d, speed: Float): Vec3d {
+        currentRotation?.fixedSensitivity()?.let { rotation ->
+            val yaw = rotation.yaw
+            val d = movementInput.lengthSquared()
+            return if (d < 1.0E-7) {
+                Vec3d.ZERO
+            } else {
+                val vec3d = (if (d > 1.0) movementInput.normalize() else movementInput)
+                    .multiply(speed.toDouble())
+                val f = MathHelper.sin(yaw * 0.017453292f)
+                val g = MathHelper.cos(yaw * 0.017453292f)
+                Vec3d(
+                    vec3d.x * g.toDouble() - vec3d.z * f.toDouble(),
+                    vec3d.y,
+                    vec3d.z * g.toDouble() + vec3d.x * f.toDouble()
+                )
+            }
+        }
+
+        return currVelocity
     }
 
 }

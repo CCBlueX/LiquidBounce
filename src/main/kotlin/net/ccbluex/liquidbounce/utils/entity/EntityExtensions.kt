@@ -85,6 +85,12 @@ fun ClientPlayerEntity.downwards(motion: Float) {
 }
 
 fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed) {
+    if (!moving) {
+        velocity.x = 0.0
+        velocity.z = 0.0
+        return
+    }
+
     val angle = Math.toRadians(yaw.toDouble())
     velocity.x = -sin(angle) * speed
     velocity.z = cos(angle) * speed

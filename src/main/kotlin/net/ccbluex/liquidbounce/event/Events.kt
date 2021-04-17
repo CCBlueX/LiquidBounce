@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.event
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.InputUtil
@@ -99,11 +100,11 @@ class UseCooldownEvent(var cooldown: Int) : Event()
 
 // World events
 
-/**
- * Block Shape hooked at CACTUS_BLOCK, FLUID_BLOCK to reduce performance impact and headache
- */
 @Nameable("blockShape")
 class BlockShapeEvent(val state: BlockState, val pos: BlockPos, var shape: VoxelShape) : Event()
+
+@Nameable("blockMultiplier")
+class BlockVelocityMultiplierEvent(val block: Block, var multiplier: Float) : Event()
 
 // Entity events
 
@@ -130,8 +131,14 @@ class PlayerMoveEvent(val type: MovementType, val movement: Vec3d) : Event()
 @Nameable("playerJump")
 class PlayerJumpEvent(var motion: Float) : CancellableEvent()
 
+@Nameable("playerUseMultiplier")
+class PlayerUseMultiplier(var forward: Float, var sideways: Float) : Event()
+
 @Nameable("playerVelocity")
-class PlayerVelocityStrafe(var movementInput: Vec3d, var speed: Float, var yaw: Float) : CancellableEvent()
+class PlayerVelocityStrafe(val movementInput: Vec3d, val speed: Float, val yaw: Float, var velocity: Vec3d) : Event()
+
+@Nameable("playerStride")
+class PlayerStrideEvent(var strideOnAir: Boolean) : Event()
 
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
