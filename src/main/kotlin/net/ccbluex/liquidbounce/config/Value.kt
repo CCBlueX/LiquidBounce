@@ -42,13 +42,10 @@ open class Value<T : Any>(
     @SerializedName("value")
     internal var value: T,
     @Exclude
-    internal val valueType: ValueType,
+    val valueType: ValueType,
     @Exclude
-    internal val listType: ListValueType = ListValueType.None
+    val listType: ListValueType = ListValueType.None
 ) {
-
-    @Exclude
-    private val type: String = value.javaClass.typeName
 
     @Exclude
     private val listeners = mutableListOf<ValueListener<T>>()
@@ -71,6 +68,26 @@ open class Value<T : Any>(
         set(t)
     }
 
+    fun get() = value
+
+    fun set(t: T) {
+        // temporary set value
+        value = t
+
+        // check if value is really accepted
+        var currT = t
+        runCatching {
+            listeners.forEach {
+                currT = it(t)
+            }
+        }.onSuccess {
+            value = currT
+            EventManager.callEvent(ValueChangedEvent(this))
+        }
+    }
+
+    fun type() = valueType
+
     fun listen(listener: ValueListener<T>): Value<T> {
         listeners += listener
         return this
@@ -90,24 +107,6 @@ open class Value<T : Any>(
             element.asJsonArray.mapTo(TreeSet(), { gson.fromJson(it, this.listType.type!!) }) as T
         } else {
             gson.fromJson(element, currValue.javaClass)
-        }
-    }
-
-    fun get() = value
-
-    fun set(t: T) {
-        // temporary set value
-        value = t
-
-        // check if value is really accepted
-        var currT = t
-        runCatching {
-            listeners.forEach {
-                currT = it(t)
-            }
-        }.onSuccess {
-            value = currT
-            EventManager.callEvent(ValueChangedEvent(this))
         }
     }
 
