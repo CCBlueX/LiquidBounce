@@ -43,8 +43,10 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
                 when (event.state) {
                     EventState.PRE -> network.sendPacket(
                         PlayerActionC2SPacket(
-                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN,
-                            Direction.DOWN)
+                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                            BlockPos.ORIGIN,
+                            Direction.DOWN
+                        )
                     )
                     EventState.POST -> network.sendPacket(PlayerInteractItemC2SPacket(player.activeHand))
                 }
@@ -94,7 +96,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         UseAction.NONE -> Pair(1f, 1f)
         UseAction.EAT, UseAction.DRINK -> Pair(Consume.forwardMultiplier, Consume.sidewaysMultiplier)
         UseAction.BLOCK -> Pair(Block.forwardMultiplier, Block.sidewaysMultiplier)
-        UseAction.BOW, UseAction.CROSSBOW, UseAction.SPEAR  -> Pair(Bow.forwardMultiplier, Bow.sidewaysMultiplier)
+        UseAction.BOW, UseAction.CROSSBOW, UseAction.SPEAR -> Pair(Bow.forwardMultiplier, Bow.sidewaysMultiplier)
     }
 
 }
