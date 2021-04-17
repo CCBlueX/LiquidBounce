@@ -2,7 +2,6 @@
 <p>
     <img width="200" src="https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/liquidbounceLogo.svg">
 </p>
-<h1>LiquidBounce</h1>
 
 [liquidbounce.net](https://liquidbounce.net) |
 [Forum](https://forums.ccbluex.net) |
