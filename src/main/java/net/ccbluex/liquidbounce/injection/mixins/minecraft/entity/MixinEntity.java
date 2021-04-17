@@ -92,13 +92,9 @@ public abstract class MixinEntity {
     public Vec3d hookVelocity(Vec3d movementInput, float speed, float yaw) {
         //noinspection ConstantConditions
         if ((Object) this == MinecraftClient.getInstance().player) {
-            final PlayerVelocityStrafe event = new PlayerVelocityStrafe(movementInput, speed, yaw);
+            final PlayerVelocityStrafe event = new PlayerVelocityStrafe(movementInput, speed, yaw, movementInputToVelocity(movementInput, speed, yaw));
             EventManager.INSTANCE.callEvent(event);
-            if (event.isCancelled()) {
-                return Vec3d.ZERO;
-            }
-
-            return movementInputToVelocity(event.getMovementInput(), event.getSpeed(), event.getYaw());
+            return event.getVelocity();
         }
 
         return movementInputToVelocity(movementInput, speed, yaw);
