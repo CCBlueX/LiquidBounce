@@ -117,7 +117,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleChestStealer,
             ModuleStorageESP,
             ModuleInventoryMove,
-            ModuleScaffold
+            ModuleScaffold,
+            ModuleNoSlow
         )
 
         builtin.forEach(this::addModule)

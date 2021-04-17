@@ -6,6 +6,7 @@
   "mixins": [],
   "client": [
     "minecraft.block.MixinAbstractBlock",
+    "minecraft.block.MixinBlock",
     "minecraft.block.MixinCactusBlock",
     "minecraft.block.MixinFluidBlock",
     "minecraft.block.MixinSnowBlock",
