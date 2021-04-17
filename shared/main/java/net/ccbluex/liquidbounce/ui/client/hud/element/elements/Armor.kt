@@ -58,10 +58,12 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F, side: Side = 
 				else if (mode.equals("Vertical", true)) y += 18
 			}
 
-			provider.glStateManager.enableAlpha()
-			provider.glStateManager.disableBlend()
-			provider.glStateManager.disableLighting()
-			provider.glStateManager.disableCull()
+			val glStateManager = provider.glStateManager
+
+			glStateManager.enableAlpha()
+			glStateManager.disableBlend()
+			glStateManager.disableLighting()
+			glStateManager.disableCull()
 			GL11.glPopMatrix()
 		}
 

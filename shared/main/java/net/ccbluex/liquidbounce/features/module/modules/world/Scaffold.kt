@@ -36,11 +36,17 @@ import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.floor
+import kotlin.math.hypot
 import kotlin.random.Random
 
 @ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_I)
@@ -811,6 +817,9 @@ class Scaffold : Module()
 
 		// Switch Delay wait
 		if (!switchTimer.hasTimePassed(switchDelay)) return
+
+		// CPSCounter support
+		CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 
 		// Place block
 		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, targetPlace.blockPos, targetPlace.enumFacing, targetPlace.vec3))

@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.minecraft.client.gui.Gui
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL14
 import java.awt.Color
@@ -829,6 +830,22 @@ object RenderUtils : MinecraftInstance()
 		val scaledResolution = classProvider.createScaledResolution(mc)
 
 		drawCircle((scaledResolution.scaledWidth shr 1).toFloat(), (scaledResolution.scaledHeight shr 1).toFloat(), fov * 6.0f / (mc.gameSettings.fovSettings / 70.0f), 0, 360)
+	}
+
+	@JvmStatic
+	fun drawHorizontalLine(startX: Int, endX: Int, y: Int, color: Int)
+	{
+		var startX = startX
+		var endX = endX
+
+		if (endX < startX)
+		{
+			val i = startX
+			startX = endX
+			endX = i
+		}
+
+		Gui.drawRect(startX, y, endX + 1, y + 1, color)
 	}
 
 	init

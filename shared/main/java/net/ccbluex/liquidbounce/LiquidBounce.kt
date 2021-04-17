@@ -74,7 +74,7 @@ object LiquidBounce
 	lateinit var wrapper: Wrapper
 
 	@JvmStatic
-	val title: String = "$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR | Backend version $MINECRAFT_VERSION | Forked version | Repo: github.com/hsheric0210/LiquidBounce ${if (IN_DEV) " | DEVELOPMENT BUILD" else ""}" // TODO: Add more details
+	val title: String = "$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR | Backend version $MINECRAFT_VERSION | Forked version | Repo: github.com/hsheric0210/LiquidBounce${if (IN_DEV) " | DEVELOPMENT BUILD" else ""}" // TODO: Add more details
 
 	/**
 	 * Execute if client will be started

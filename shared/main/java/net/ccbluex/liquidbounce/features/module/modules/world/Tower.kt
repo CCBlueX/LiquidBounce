@@ -11,7 +11,10 @@ import net.ccbluex.liquidbounce.api.enums.StatType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.util.*
+import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
+import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -28,10 +31,12 @@ import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.truncate
@@ -399,6 +404,9 @@ class Tower : Module()
 
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
 		}
+
+		// CPSCounter support
+		CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 
 		// Place block
 		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, placeInfo.blockPos, placeInfo.enumFacing, placeInfo.vec3)) if (swingValue.get()) thePlayer.swingItem() else netHandler.addToSendQueue(provider.createCPacketAnimation())
