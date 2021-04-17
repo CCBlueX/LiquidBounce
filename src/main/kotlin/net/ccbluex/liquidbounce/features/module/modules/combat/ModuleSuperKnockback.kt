@@ -46,6 +46,7 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
             network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SPRINTING))
             network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
             network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SPRINTING))
+
             player.isSprinting = true
             player.lastSprinting = true
         }

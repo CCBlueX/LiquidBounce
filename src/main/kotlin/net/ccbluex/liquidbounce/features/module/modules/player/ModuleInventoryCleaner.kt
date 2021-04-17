@@ -380,6 +380,7 @@ class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
         private val COMPARATOR = ComparatorChain<WeightedSwordItem>(
             { o1, o2 ->
                 (
+                    // TODO: Attack Speed
                     o1.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)) + o1.itemStack.getEnchantment(
                         Enchantments.FIRE_ASPECT
                     ) * 4.0f * 0.625f * 0.9f
