@@ -65,22 +65,10 @@ open class Value<T : Any>(
      * @docs https://kotlinlang.org/docs/reference/delegated-properties.html
      */
 
-    operator fun getValue(u: Any?, property: KProperty<*>) = value
+    operator fun getValue(u: Any?, property: KProperty<*>) = get()
 
     operator fun setValue(u: Any?, property: KProperty<*>, t: T) {
-        // temporary set value
-        value = t
-
-        // check if value is really accepted
-        var currT = t
-        runCatching {
-            listeners.forEach {
-                currT = it(t)
-            }
-        }.onSuccess {
-            value = currT
-            EventManager.callEvent(ValueChangedEvent(this))
-        }
+        set(value)
     }
 
     fun listen(listener: ValueListener<T>): Value<T> {
@@ -102,6 +90,24 @@ open class Value<T : Any>(
             element.asJsonArray.mapTo(TreeSet(), { gson.fromJson(it, this.listType.type!!) }) as T
         } else {
             gson.fromJson(element, currValue.javaClass)
+        }
+    }
+
+    fun get() = value
+
+    fun set(t: T) {
+        // temporary set value
+        value = t
+
+        // check if value is really accepted
+        var currT = t
+        runCatching {
+            listeners.forEach {
+                currT = it(t)
+            }
+        }.onSuccess {
+            value = currT
+            EventManager.callEvent(ValueChangedEvent(this))
         }
     }
 
