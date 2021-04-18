@@ -81,6 +81,9 @@ class InputHandleEvent : Event()
 @Nameable("key")
 class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
 
+@Nameable("mouseRotation")
+class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : CancellableEvent()
+
 // User action events
 
 @Nameable("attack")
