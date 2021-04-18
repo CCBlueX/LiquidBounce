@@ -17,26 +17,15 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.exploit
-
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.entity.EntityPose
+package net.ccbluex.liquidbounce.render.ultralight.js.bindings
 
 /**
- * BedWalk module (BedGodMode)
- *
- * Allows you to walk while sleeping.
+ * A easy way to create kotlin things in JS
  */
-object ModuleBedWalk : Module("BedWalk", Category.EXPLOIT) {
+object UltralightJsKotlin {
 
-    val repeatable = repeatable {
-        if (player.isSleeping) {
-            player.pose = EntityPose.STANDING
-            player.clearSleepingPosition()
-            mc.openScreen(null)
-        }
-    }
+    fun intRange(from: Int, to: Int) = from..to
+
+    fun floatRange(from: Float, to: Float) = from..to
 
 }

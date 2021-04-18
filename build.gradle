@@ -54,6 +54,7 @@ repositories {
     maven { url = "http://maven.fabricmc.net/" }
     maven { url = "https://jitpack.io" }
     maven { url = "https://dl.bintray.com/earthcomputer/mods" }
+    maven { url = "https://maven.terraformersmc.com/" }
 }
 
 dependencies {
@@ -73,7 +74,7 @@ dependencies {
 
     // Recommended mods (on IDE)
     modRuntime "net.earthcomputer:multiconnect:${project.multiconnect_version}:slim"
-    modRuntime "io.github.prospector:modmenu:${project.mod_menu_version}"
+    modRuntime "com.terraformersmc:modmenu:${project.mod_menu_version}"
     modRuntime "com.github.jellysquid3:sodium-fabric:${project.sodium_version}"
     modRuntime "com.github.jellysquid3:lithium-fabric:${project.lithium_version}"
     modRuntime "com.github.jellysquid3:phosphor-fabric:${project.phosphor_version}"

@@ -19,9 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.PlayerStrideEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.entity.strafe
 
 /**
  * Fly module
@@ -35,19 +39,25 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         Jetpack
     }
 
+    private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
+
+        private val stride by boolean("Stride", true)
+
+        val strideHandler = handler<PlayerStrideEvent> { event ->
+            event.strideOnAir = stride
+        }
+
+    }
+
     private object Vanilla : Choice("Vanilla", modes) {
 
-        override fun enable() {
-            player.abilities.flying = true
-        }
-
         val repeatable = repeatable {
-            // Just to make sure it stays enabled
-            player.abilities.flying = true
-        }
-
-        override fun disable() {
-            mc.player?.abilities?.flying = false
+            player.strafe(speed = 0.44)
+            player.velocity.y = when {
+                player.input.jumping -> 0.31
+                player.input.sneaking -> -0.31
+                else -> 0.0
+            }
         }
 
     }
@@ -55,13 +65,17 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
     private object Jetpack : Choice("Jetpack", modes) {
 
         val repeatable = repeatable {
-            if (mc.options.keyJump.isPressed) {
+            if (player.input.jumping) {
                 player.velocity.x *= 1.1
                 player.velocity.y += 0.15
                 player.velocity.z *= 1.1
             }
         }
 
+    }
+
+    init {
+        tree(Visuals)
     }
 
 }

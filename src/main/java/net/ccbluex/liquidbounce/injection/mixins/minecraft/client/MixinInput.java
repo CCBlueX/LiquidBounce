@@ -17,16 +17,16 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.aiming
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.client.input.Input;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 
-fun PlayerEntity.applyRotation(rotation: Rotation) {
-    rotation.fixedSensitivity()?.let {
-        prevPitch = pitch
-        prevYaw = yaw
+@Mixin(Input.class)
+public class MixinInput {
 
-        yaw = it.yaw
-        pitch = it.pitch
-    }
+
+    @Shadow public float movementForward;
+    @Shadow public float movementSideways;
 }

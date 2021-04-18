@@ -41,7 +41,7 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
     val description: TranslatableText
         get() = TranslatableText("$translationBaseKey.description")
 
-    var enabled by boolean("Enabled", enabled)
+    var enabled by boolean(name, enabled)
 
     override fun handleEvents() = super.handleEvents() && enabled
 

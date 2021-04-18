@@ -21,26 +21,27 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientPlayerEntity.class)
-public abstract class MixinClientPlayerEntity extends MixinLivingEntity {
+public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @Shadow private float lastYaw;
 
     @Shadow private float lastPitch;
+
+    @Shadow public Input input;
 
     /**
      * Hook entity tick event
@@ -102,6 +103,42 @@ public abstract class MixinClientPlayerEntity extends MixinLivingEntity {
             return true;
         }
         return screen.isPauseScreen();
+    }
+
+    /**
+     * Hook custom multiplier
+     */
+    @Inject(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/Input;movementForward:F", shift = At.Shift.AFTER))
+    private void hookCustomMultiplier(CallbackInfo callbackInfo) {
+        final Input input = this.input;
+        // reverse
+        input.movementForward /= 0.2f;
+        input.movementSideways /= 0.2f;
+
+        // then
+        final PlayerUseMultiplier playerUseMultiplier = new PlayerUseMultiplier(0.2f, 0.2f);
+        EventManager.INSTANCE.callEvent(playerUseMultiplier);
+        input.movementForward *= playerUseMultiplier.getForward();
+        input.movementSideways *= playerUseMultiplier.getSideways();
+    }
+
+    /**
+     * Hook sprint affect from NoSlow module
+     */
+    @Redirect(method = "tickMovement",
+            slice = @Slice(
+                    from = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;noClip:Z")
+            ),
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"),
+            require = 2,
+            allow = 2
+    )
+    private boolean hookSprintAffect(ClientPlayerEntity playerEntity) {
+        if (ModuleNoSlow.INSTANCE.getEnabled()) {
+            return false;
+        }
+
+        return playerEntity.isUsingItem();
     }
 
     // Silent rotations (Rotation Manager)

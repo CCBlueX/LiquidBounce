@@ -42,13 +42,10 @@ open class Value<T : Any>(
     @SerializedName("value")
     internal var value: T,
     @Exclude
-    internal val valueType: ValueType,
+    val valueType: ValueType,
     @Exclude
-    internal val listType: ListValueType = ListValueType.None
+    val listType: ListValueType = ListValueType.None
 ) {
-
-    @Exclude
-    private val type: String = value.javaClass.typeName
 
     @Exclude
     private val listeners = mutableListOf<ValueListener<T>>()
@@ -65,9 +62,15 @@ open class Value<T : Any>(
      * @docs https://kotlinlang.org/docs/reference/delegated-properties.html
      */
 
-    operator fun getValue(u: Any?, property: KProperty<*>) = value
+    operator fun getValue(u: Any?, property: KProperty<*>) = get()
 
     operator fun setValue(u: Any?, property: KProperty<*>, t: T) {
+        set(t)
+    }
+
+    fun get() = value
+
+    fun set(t: T) {
         // temporary set value
         value = t
 
@@ -82,6 +85,8 @@ open class Value<T : Any>(
             EventManager.callEvent(ValueChangedEvent(this))
         }
     }
+
+    fun type() = valueType
 
     fun listen(listener: ValueListener<T>): Value<T> {
         listeners += listener
