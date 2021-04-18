@@ -3,7 +3,7 @@
 
     let clickGuiOpened = true;
 
-    const categories = ["Movement", "Combat", "Render", "Exploit", "Player", "World", "Misc", "Fun"];
+    const categories = ["Combat", "Render"];
     const modules = [];
     
     try {
@@ -15,12 +15,68 @@
                 name: m.getName(),
                 category: m.getCategory().getReadableName(),
                 enabled: m.getEnabled(),
-                setEnabled: m.setEnabled
+                setEnabled: m.setEnabled,
+                settings: valueParser.parse(m.getContainedSettingsRecursively())
             });
         }
     } catch (err) {
         console.log(err);
     }
+
+/*     modules.unshift(
+        {
+            name: "TestModule",
+            category: "Combat",
+            enabled: false,
+            setEnabled: null,
+            settings: [
+                {
+                    type: "boolean",
+                    name: "Test",
+                    value: true
+                },
+                {
+                    type: "boolean",
+                    name: "Test",
+                    value: false
+                },
+                {
+                    type: "range",
+                    name: "Range",
+                    min: 0,
+                    max: 8,
+                    step: 0.1,
+                    value1: 3,
+                    value2: null
+                },
+                {
+                    type: "range",
+                    name: "CPS",
+                    min: 0,
+                    max: 20,
+                    step: 1,
+                    value1: 4,
+                    value2: 12
+                },
+                {
+                    type: "list",
+                    name: "Mode",
+                    values: ["Multi", "Single", "Switch"],
+                    value: "Single"
+                },
+                {
+                    type: "color",
+                    name: "Color",
+                    value: "2A4AA1"
+                },
+                {
+                    type: "text",
+                    name: "Text",
+                    value: "This is a text"
+                }
+            ]
+        }
+    ); */
 
     function getModulesOfCategory(category) {
         return modules.filter(m => m.category === category);
