@@ -1,6 +1,6 @@
 {
   "modmenu.descriptionTranslation.liquidbounce": "Бесплатный чит-клиент основанный на миксинах",
-  "liquidbounce.generic.guilded": "Позолоченный",
+  "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.forum": "Форум",
   "liquidbounce.generic.error": "Ошибка",
   "liquidbounce.generic.enabled": "Включен",
@@ -46,7 +46,7 @@
   "liquidbounce.command.binds.subcommand.clear.description": "Удаляет все привязки.",
   "liquidbounce.command.binds.subcommand.clear.result.bindsCleared": "Все привязки были удалены.",
 
-  "liquidbounce.command.clear.description": "Ощиает чат.",
+  "liquidbounce.command.clear.description": "Очищает чат.",
 
   "liquidbounce.command.client.description": "Позволяет Вам управлять клиентом.",
 
