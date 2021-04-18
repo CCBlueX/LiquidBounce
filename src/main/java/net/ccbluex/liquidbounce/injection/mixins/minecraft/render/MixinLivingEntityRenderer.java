@@ -90,7 +90,7 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
         return entity.headYaw;
     }
 
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "pitch:F"))
+    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;pitch:F"))
     private float injectRotationsE(T entity) {
         Rotation rot = currentRotation.get();
 
@@ -100,7 +100,7 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
         return entity.pitch;
     }
 
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "prevPitch:F"))
+    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;prevPitch:F"))
     private float injectRotationsF(T entity) {
         Rotation rot = currentRotation.get();
 
