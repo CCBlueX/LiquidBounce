@@ -81,7 +81,7 @@ open class ChoiceConfigurable(
     @Exclude
     val choices: MutableList<Choice> = mutableListOf()
 
-    fun getChoices(): Array<String> {
+    fun getChoicesStrings(): Array<String> {
         return this.choices.map { it.name }.toTypedArray()
     }
 

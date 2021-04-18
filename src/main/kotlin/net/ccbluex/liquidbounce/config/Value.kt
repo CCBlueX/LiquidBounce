@@ -142,7 +142,7 @@ class ChooseListValue<T : NamedChoice>(
         this.value = choices.first { it.choiceName == name }
     }
 
-    fun getChoices(): Array<String> {
+    fun getChoicesStrings(): Array<String> {
         return this.choices.map { it.choiceName }.toTypedArray()
     }
 
