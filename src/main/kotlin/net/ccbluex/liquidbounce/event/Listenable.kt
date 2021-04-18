@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import net.ccbluex.liquidbounce.features.module.Module
-
 typealias Handler<T> = (T) -> Unit
 
 class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean)
@@ -52,7 +50,7 @@ inline fun <reified T : Event> Listenable.sequenceHandler(ignoreCondition: Boole
 /**
  * Registers a repeatable sequence which repeats the execution of code.
  */
-fun Module.repeatable(eventHandler: (SuspendableHandler<DummyEvent>)) {
+fun Listenable.repeatable(eventHandler: (SuspendableHandler<DummyEvent>)) {
     var sequence: RepeatingSequence? = null
 
     handler<ToggleModuleEvent>(ignoreCondition = true) {
