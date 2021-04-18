@@ -37,14 +37,15 @@ typealias ValueListener<T> = (T) -> T
  * Value based on generics and support for readable names and description
  */
 open class Value<T : Any>(
-    @SerializedName("name") open val name: String,
-    @SerializedName("value") internal var value: T,
-    @Exclude internal val valueType: ValueType,
-    @Exclude internal val listType: ListValueType = ListValueType.None
-) {
-
+    @SerializedName("name")
+    open val name: String,
+    @SerializedName("value")
+    internal var value: T,
     @Exclude
-    private val type: String = value.javaClass.typeName
+    val valueType: ValueType,
+    @Exclude
+    val listType: ListValueType = ListValueType.None
+) {
 
     @Exclude
     private val listeners = mutableListOf<ValueListener<T>>()
@@ -66,6 +67,26 @@ open class Value<T : Any>(
     operator fun setValue(u: Any?, property: KProperty<*>, t: T) {
         set(t)
     }
+
+    fun get() = value
+
+    fun set(t: T) {
+        // temporary set value
+        value = t
+
+        // check if value is really accepted
+        var currT = t
+        runCatching {
+            listeners.forEach {
+                currT = it(t)
+            }
+        }.onSuccess {
+            value = currT
+            EventManager.callEvent(ValueChangedEvent(this))
+        }
+    }
+
+    fun type() = valueType
 
     fun listen(listener: ValueListener<T>): Value<T> {
         listeners += listener
@@ -89,31 +110,17 @@ open class Value<T : Any>(
         }
     }
 
-    fun get() = value
-
-    fun set(t: T) {
-        // temporary set value
-        value = t
-
-        // check if value is really accepted
-        var currT = t
-        runCatching {
-            listeners.forEach {
-                currT = it(t)
-            }
-        }.onSuccess {
-            value = currT
-            EventManager.callEvent(ValueChangedEvent(this))
-        }
-    }
-
 }
 
 /**
  * Ranged value adds support for closed ranges
  */
 class RangedValue<T : Any>(
-    name: String, value: T, @Exclude val range: ClosedRange<*>, type: ValueType
+    name: String,
+    value: T,
+    @Exclude
+    val range: ClosedRange<*>,
+    type: ValueType
 ) : Value<T>(name, value, valueType = type) {
 
     fun getFrom(): Double {
@@ -127,7 +134,10 @@ class RangedValue<T : Any>(
 }
 
 class ChooseListValue<T : NamedChoice>(
-    name: String, selected: T, @Exclude val choices: Array<T>
+    name: String,
+    selected: T,
+    @Exclude
+    val choices: Array<T>
 ) : Value<T>(name, selected, ValueType.CHOICE) {
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
