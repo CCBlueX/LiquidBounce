@@ -10,6 +10,7 @@
     "minecraft.block.MixinCactusBlock",
     "minecraft.block.MixinFluidBlock",
     "minecraft.block.MixinSnowBlock",
+    "minecraft.client.MixinInput",
     "minecraft.client.MixinKeyboard",
     "minecraft.client.MixinKeyboardInput",
     "minecraft.client.MixinMinecraftClient",

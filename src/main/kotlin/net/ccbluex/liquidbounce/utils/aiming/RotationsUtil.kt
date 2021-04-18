@@ -60,7 +60,7 @@ object RotationManager : Listenable {
     var ticksUntilReset: Int = 0
 
     // Active configurable
-    private var activeConfigurable: RotationsConfigurable? = null
+    var activeConfigurable: RotationsConfigurable? = null
 
     // useful for something like autopot
     var deactivateManipulation = false
@@ -278,13 +278,17 @@ object RotationManager : Listenable {
         currentRotation?.fixedSensitivity()?.let { rotation ->
             val yaw = rotation.yaw
             val d = movementInput.lengthSquared()
+
             return if (d < 1.0E-7) {
                 Vec3d.ZERO
             } else {
-                val vec3d = (if (d > 1.0) movementInput.normalize() else movementInput)
-                    .multiply(speed.toDouble())
+                var vec3d = (if (d > 1.0) movementInput.normalize() else movementInput)
+
+                vec3d = vec3d.multiply(speed.toDouble())
+
                 val f = MathHelper.sin(yaw * 0.017453292f)
                 val g = MathHelper.cos(yaw * 0.017453292f)
+
                 Vec3d(
                     vec3d.x * g.toDouble() - vec3d.z * f.toDouble(),
                     vec3d.y,
