@@ -43,6 +43,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.util.Hand
+import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 
 /**
@@ -106,12 +107,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 continue
             }
 
-            val box = target.boundingBox
 
-            // todo: add predict to box and eyes
+            val predictedTicks = predict.start + (predict.endInclusive - predict.start) * Math.random()
+
+            val targetPrediction = Vec3d(target.x - target.prevX, target.y - target.prevY, target.z - target.prevZ).multiply(predictedTicks)
+            val playerPrediction = Vec3d(player.x - player.prevX, player.y - player.prevY, player.z - player.prevZ).multiply(predictedTicks)
+
+            val box = target.boundingBox.offset(targetPrediction)
 
             // find best spot (and skip if no spot was found)
-            val (rotation, _) = RotationManager.raytraceBox(eyes, box, throughWalls = false, range = range.toDouble()) ?: continue
+            val (rotation, _) = RotationManager.raytraceBox(eyes.add(playerPrediction), box, throughWalls = false, range = range.toDouble()) ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)

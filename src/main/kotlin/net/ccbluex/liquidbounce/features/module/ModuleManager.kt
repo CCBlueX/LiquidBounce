@@ -120,7 +120,8 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleScaffold,
             ModuleNoSlow,
             ModuleResourceSpoof,
-            ModuleAimbot
+            ModuleAimbot,
+            ModuleRotations
         )
 
         builtin.forEach(this::addModule)
