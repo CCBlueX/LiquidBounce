@@ -27,9 +27,9 @@ import net.minecraft.item.Item
 open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf(), valueType: ValueType = ValueType.INVALID) :
     Value<MutableList<Value<*>>>(name, value = value, valueType) {
 
-    fun initConfigurable() {
-        value.filterIsInstance<ChoiceConfigurable>().forEach {
-            it.initialize(it)
+    open fun initConfigurable() {
+        value.filterIsInstance<Configurable>().forEach {
+            it.initConfigurable()
         }
     }
 

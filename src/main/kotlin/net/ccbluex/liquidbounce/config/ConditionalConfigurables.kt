@@ -68,6 +68,11 @@ open class ChoiceConfigurable(
     val description: TranslatableText
         get() = TranslatableText("$translationBaseKey.description")
 
+    override fun initConfigurable() {
+        initialize(this)
+        super.initConfigurable()
+    }
+
     fun newState(state: Boolean) {
         val choice = choices.find { active.equals(it.name, true) } ?: return
 
