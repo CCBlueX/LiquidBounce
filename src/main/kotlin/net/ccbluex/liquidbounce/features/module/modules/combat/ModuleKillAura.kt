@@ -41,8 +41,12 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityGroup
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 
@@ -149,6 +153,18 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 targetTracker.lock(raycastedEntity)
             }
 
+            val blocking = player.isBlocking
+
+            if (blocking) {
+                network.sendPacket(
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                        BlockPos.ORIGIN,
+                        Direction.DOWN
+                    )
+                )
+            }
+
             // Attack enemy according to cps and cooldown
             cpsTimer.tick(
                 click = {
@@ -159,12 +175,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 },
                 cps
             )
+
+
+            if (blocking) {
+                network.sendPacket(PlayerInteractItemC2SPacket(player.activeHand))
+            }
         }
     }
 
     private fun attackEntity(entity: Entity) {
-        // todo: stop blocking (1.8 support sword / 1.9+ shield)
-
         EventManager.callEvent(AttackEvent(entity))
 
         // Swing before attacking (on 1.8)
