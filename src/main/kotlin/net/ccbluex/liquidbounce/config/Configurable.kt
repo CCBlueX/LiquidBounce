@@ -45,7 +45,7 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         for (currentValue in this.value) {
             if (currentValue is ToggleableConfigurable) {
                 output.add(currentValue)
-                output.addAll(currentValue.value.filter { it.name == currentValue.name })
+                output.addAll(currentValue.value.filter { it.name.equals("Enabled", true) })
             } else {
                 if (currentValue is Configurable) {
                     currentValue.getContainedSettingsRecursivelyInternal(output)
