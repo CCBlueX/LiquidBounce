@@ -34,7 +34,8 @@ object ModuleAutoWalk : Module("AutoWalk", Category.PLAYER) {
     }
 
     override fun disable() {
-        mc.options.keyForward.isPressed = false
+        if(!mc.options.keyForward.isPressed) {
+            mc.options.keyForward.isPressed = false
+        }
     }
-
 }
