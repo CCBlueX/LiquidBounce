@@ -19,6 +19,7 @@ import net.minecraft.util.Hand
 
 object ModuleCrystalAura : Module("CrystalAura", Category.COMBAT) {
     private val range by float("Range", 4f, 1f..8f)
+    private val wallRange by float("WallRange", 3f, 0f..8f) // Maybe useful to avoid players trolling the user behind walls with End Crystals
     private val swing by boolean("Swing", true)
     private val rotations = tree(RotationsConfigurable())
     private val targetTracker = tree(TargetTracker())
