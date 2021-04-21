@@ -16,17 +16,21 @@ object ModuleBlockBounce : Module("BlockBounce", Category.MOVEMENT) {
     }
     private val motion by float("Motion", 0.42f, 0.2f..1f)
 
-    val blockPos = BlockPos(player.pos).down().getBlock()
     private object Add : Choice("Add", modes) {
         val repeatable = repeatable {
-            if (blockPos == Blocks.SLIME_BLOCK || blockPos == Blocks.HONEY_BLOCK || allBeds() && mc.options.keyJump.isPressed) {
+            if (BlockPos(player.pos).down()
+                    .getBlock() == Blocks.SLIME_BLOCK || allBeds() && mc.options.keyJump.isPressed
+            ) {
                 player.velocity.y += motion
             }
         }
     }
+
     private object Set : Choice("Set", modes) {
         val repeatable = repeatable {
-            if (blockPos == Blocks.SLIME_BLOCK || blockPos == Blocks.HONEY_BLOCK || allBeds() && mc.options.keyJump.isPressed) {
+            if (BlockPos(player.pos).down()
+                    .getBlock() == Blocks.SLIME_BLOCK || allBeds() && mc.options.keyJump.isPressed
+            ) {
                 player.velocity.y = motion.toDouble()
             }
         }
@@ -34,7 +38,7 @@ object ModuleBlockBounce : Module("BlockBounce", Category.MOVEMENT) {
 
     // Perhaps not the best way but still works
     fun allBeds(): Boolean {
-        return when(BlockPos(player.pos).down().getBlock()) {
+        return when (BlockPos(player.pos).down().getBlock()) {
             Blocks.RED_BED -> true
             Blocks.BLACK_BED -> true
             Blocks.BLUE_BED -> true
