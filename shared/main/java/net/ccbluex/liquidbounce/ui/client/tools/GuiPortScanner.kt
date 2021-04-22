@@ -18,7 +18,6 @@ import java.awt.Color
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Socket
-import java.util.*
 import java.util.concurrent.Executors
 import javax.swing.JOptionPane
 
@@ -33,7 +32,7 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	private lateinit var buttonToggle: IGuiButton
 
 	private var running = false
-	private var status = "\u00A77Waiting..."
+	private var status = "\u00A77Idle..."
 	private var host: String? = null
 	private var currentPort = 0
 	private var maxPort = 0
@@ -72,8 +71,14 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	{
 		representedScreen.drawBackground(0)
 
-		Fonts.font40.drawCenteredString("Port Scanner", (representedScreen.width shr 1).toFloat(), 34f, 0xffffff)
-		Fonts.font35.drawCenteredString(if (running) "\u00A77$checkedPort \u00A78/ \u00A77$maxPort" else status, (representedScreen.width shr 1).toFloat(), (representedScreen.height shr 2) + 80f, 0xffffff)
+		val titleFont = Fonts.font40
+
+		val textFont = Fonts.font35
+		val textFontHeight = textFont.fontHeight
+
+		titleFont.drawCenteredString("Port Scanner", (representedScreen.width shr 1).toFloat(), 34f, 0xffffff)
+
+		textFont.drawCenteredString(if (running) "\u00A77$checkedPort \u00A78/ \u00A77$maxPort" else status, (representedScreen.width shr 1).toFloat(), (representedScreen.height shr 2) + 80f, 0xffffff)
 
 		buttonToggle.displayString = if (running) "Stop" else "Start"
 		hostField.drawTextBox()
@@ -81,15 +86,15 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		maxPortField.drawTextBox()
 		threadsField.drawTextBox()
 
-		Fonts.font40.drawString("\u00A7c\u00A7lPorts:", 2, 2, Color.WHITE.hashCode())
+		titleFont.drawString("\u00A7c\u00A7lPorts:", 2, 2, Color.WHITE.hashCode())
 
 		synchronized(ports) {
-			var i = 12
+			var height = 12
 
 			for (integer in ports)
 			{
-				Fonts.font35.drawString("$integer", 2, i, Color.WHITE.hashCode())
-				i += Fonts.font35.fontHeight
+				textFont.drawString("$integer", 2, height, Color.WHITE.hashCode())
+				height += textFontHeight
 			}
 		}
 

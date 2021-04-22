@@ -50,10 +50,7 @@ public class MixinModelBiped
 
 		final Rotations rotations = (Rotations) LiquidBounce.moduleManager.getModule(Rotations.class);
 
-		if (rotations.getState() && !rotations.getBodyValue().get() && RotationUtils.lastServerRotation != null && RotationUtils.serverRotation != null && entityIn instanceof EntityPlayer && entityIn.equals(Minecraft.getMinecraft().thePlayer))
-		{
-			final float pitch = rotations.getInterpolateRotationsValue().get() ? Rotations.Companion.interpolateRotation(RotationUtils.lastServerRotation.getPitch(), RotationUtils.serverRotation.getPitch(), Minecraft.getMinecraft().timer.renderPartialTicks) : RotationUtils.serverRotation.getPitch();
-			bipedHead.rotateAngleX = WMathHelper.toRadians(pitch);
-		}
+		if (rotations.getState() && !rotations.getBodyValue().get() && entityIn instanceof EntityPlayer && entityIn.equals(Minecraft.getMinecraft().thePlayer))
+			bipedHead.rotateAngleX = WMathHelper.toRadians(rotations.getInterpolateRotationsValue().get() ? Rotations.Companion.interpolateRotation(RotationUtils.lastServerRotation.getPitch(), RotationUtils.serverRotation.getPitch(), Minecraft.getMinecraft().timer.renderPartialTicks) : RotationUtils.serverRotation.getPitch());
 	}
 }

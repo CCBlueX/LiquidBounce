@@ -110,6 +110,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	{
 		if (MinecraftForge.EVENT_BUS.post(new Pre(entity, (RendererLivingEntity) (Object) this, x, y, z)))
 			return;
+
 		final Chams chams = (Chams) LiquidBounce.moduleManager.getModule(Chams.class);
 		final Rotations rotations = (Rotations) LiquidBounce.moduleManager.getModule(Rotations.class);
 

@@ -173,8 +173,6 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
 	{
 		drawDefaultBackground();
-		final int i = guiLeft;
-		final int j = guiTop;
 		drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
 		GlStateManager.disableRescaleNormal();
 		RenderHelper.disableStandardItemLighting();
@@ -183,16 +181,14 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 		super.drawScreen(mouseX, mouseY, partialTicks);
 		RenderHelper.enableGUIStandardItemLighting();
 		GlStateManager.pushMatrix();
-		GlStateManager.translate(i, j, 0.0F);
+		GlStateManager.translate(guiLeft, guiTop, 0.0F);
 		GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 		GlStateManager.enableRescaleNormal();
 		theSlot = null;
-		final int k = 240;
-		final int l = 240;
-		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, k, l);
+		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 		GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 
-		int l2;
+		int slotYPos;
 
 		for (int slotNumber = 0, slotLength = inventorySlots.inventorySlots.size(); slotNumber < slotLength; ++slotNumber)
 		{
@@ -209,10 +205,10 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 				theSlot = slot;
 				GlStateManager.disableLighting();
 				GlStateManager.disableDepth();
-				final int j1 = slot.xDisplayPosition;
-				l2 = slot.yDisplayPosition;
+				final int slotXPos = slot.xDisplayPosition;
+				slotYPos = slot.yDisplayPosition;
 				GlStateManager.colorMask(true, true, true, false);
-				drawGradientRect(j1, l2, j1 + 16, l2 + 16, color, color);
+				drawGradientRect(slotXPos, slotYPos, slotXPos + 16, slotYPos + 16, color, color);
 				GlStateManager.colorMask(true, true, true, true);
 				GlStateManager.enableLighting();
 				GlStateManager.enableDepth();
@@ -231,8 +227,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 
 		if (itemstack != null)
 		{
-			final int j2 = 8;
-			l2 = draggedStack == null ? 8 : 16;
+			slotYPos = draggedStack == null ? 8 : 16;
 			String s = null;
 			if (draggedStack != null && isRightMouseClick)
 			{
@@ -247,7 +242,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 					s = EnumChatFormatting.YELLOW + "0";
 			}
 
-			drawItemStack(itemstack, mouseX - i - j2, mouseY - j - l2, s);
+			drawItemStack(itemstack, mouseX - guiLeft - 8, mouseY - guiTop - slotYPos, s);
 		}
 
 		if (returningStack != null)
@@ -259,19 +254,13 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 				returningStack = null;
 			}
 
-			l2 = returningStackDestSlot.xDisplayPosition - touchUpX;
-			final int i3 = returningStackDestSlot.yDisplayPosition - touchUpY;
-			final int l1 = touchUpX + (int) (l2 * f);
-			final int i2 = touchUpY + (int) (i3 * f);
-			drawItemStack(returningStack, l1, i2, null);
+			slotYPos = returningStackDestSlot.xDisplayPosition - touchUpX;
+			drawItemStack(returningStack, touchUpX + (int) (slotYPos * f), touchUpY + (int) ((returningStackDestSlot.yDisplayPosition - touchUpY) * f), null);
 		}
 
 		GlStateManager.popMatrix();
 		if (inventoryplayer.getItemStack() == null && theSlot != null && theSlot.getHasStack())
-		{
-			final ItemStack itemstack1 = theSlot.getStack();
-			renderToolTip(itemstack1, mouseX, mouseY);
-		}
+			renderToolTip(theSlot.getStack(), mouseX, mouseY);
 
 		GlStateManager.enableLighting();
 		GlStateManager.enableDepth();

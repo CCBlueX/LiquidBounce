@@ -26,33 +26,34 @@ class GuiWelcome : WrappedGuiScreen()
 		representedScreen.drawBackground(0)
 
 		val font = Fonts.font35
+		val fontHeight = font.fontHeight
 
 		val middleScreen = (representedScreen.width shr 1).toFloat()
-		val buttonY = representedScreen.height shr 3
-		val buttonY2 = buttonY + 80f
+		val y = representedScreen.height shr 3
+		val y2 = y + 80f
 
-		font.drawCenteredString("Thank you for downloading and installing our client!", middleScreen, buttonY + 70f, 0xffffff, true)
-		font.drawCenteredString("Here is some information you might find useful if you are using LiquidBounce for the first time.", middleScreen, buttonY + 70f + font.fontHeight, 0xffffff, true)
+		font.drawCenteredString("Thank you for downloading and installing our client!", middleScreen, y + 70f, 0xffffff, true)
+		font.drawCenteredString("Here is some information you might find useful if you are using LiquidBounce for the first time.", middleScreen, y + 70f + fontHeight, 0xffffff, true)
 
-		font.drawCenteredString("\u00A7lClickGUI:", middleScreen, buttonY2 + font.fontHeight * 3, 0xffffff, true)
-		font.drawCenteredString("Press ${Keyboard.getKeyName(LiquidBounce.moduleManager[ClickGUI::class.java].keyBind)} to open up the ClickGUI", middleScreen, (representedScreen.height shr 3) + 80F + font.fontHeight * 4, 0xffffff, true)
-		font.drawCenteredString("Right-click modules with a '+' next to them to edit their settings.", middleScreen, buttonY2 + font.fontHeight * 5, 0xffffff, true)
-		font.drawCenteredString("Hover a module to see it's description.", middleScreen, buttonY2 + font.fontHeight * 6, 0xffffff, true)
+		font.drawCenteredString("\u00A7lClickGUI:", middleScreen, y2 + fontHeight * 3, 0xffffff, true)
+		font.drawCenteredString("Press ${Keyboard.getKeyName(LiquidBounce.moduleManager[ClickGUI::class.java].keyBind)} to open up the ClickGUI", middleScreen, (representedScreen.height shr 3) + 80F + fontHeight * 4, 0xffffff, true)
+		font.drawCenteredString("Right-click modules with a '+' next to them to edit their settings.", middleScreen, y2 + fontHeight * 5, 0xffffff, true)
+		font.drawCenteredString("Hover a module to see it's description.", middleScreen, y2 + fontHeight * 6, 0xffffff, true)
 
-		font.drawCenteredString("\u00A7lImportant Commands:", middleScreen, buttonY2 + (font.fontHeight shl 3), 0xffffff, true)
-		font.drawCenteredString(".bind <module> <key> / .bind <module> none", middleScreen, buttonY2 + font.fontHeight * 9, 0xffffff, true)
-		font.drawCenteredString(".autosettings load <name> / .autosettings list", middleScreen, buttonY2 + font.fontHeight * 10, 0xffffff, true)
+		font.drawCenteredString("\u00A7lImportant Commands:", middleScreen, y2 + (fontHeight shl 3), 0xffffff, true)
+		font.drawCenteredString(".bind <module> <key> / .bind <module> none", middleScreen, y2 + fontHeight * 9, 0xffffff, true)
+		font.drawCenteredString(".autosettings load <name> / .autosettings list", middleScreen, y2 + fontHeight * 10, 0xffffff, true)
 
-		font.drawCenteredString("\u00A7lNeed help? Feel free to contact us!", middleScreen, buttonY2 + font.fontHeight * 12, 0xffffff, true)
-		font.drawCenteredString("YouTube: https://youtube.com/ccbluex", middleScreen, buttonY2 + font.fontHeight * 13, 0xffffff, true)
-		font.drawCenteredString("Twitter: https://twitter.com/ccbluex", middleScreen, buttonY2 + font.fontHeight * 14, 0xffffff, true)
-		font.drawCenteredString("Forum: https://forum.ccbluex.net/", middleScreen, buttonY2 + font.fontHeight * 15, 0xffffff, true)
+		font.drawCenteredString("\u00A7lNeed help? Feel free to contact us!", middleScreen, y2 + fontHeight * 12, 0xffffff, true)
+		font.drawCenteredString("YouTube: https://youtube.com/ccbluex", middleScreen, y2 + fontHeight * 13, 0xffffff, true)
+		font.drawCenteredString("Twitter: https://twitter.com/ccbluex", middleScreen, y2 + fontHeight * 14, 0xffffff, true)
+		font.drawCenteredString("Forum: https://forum.ccbluex.net/", middleScreen, y2 + fontHeight * 15, 0xffffff, true)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 
 		// Title
 		GL11.glScalef(2F, 2F, 2F)
-		Fonts.font40.drawCenteredString("Welcome!", (representedScreen.width shr 2).toFloat(), (buttonY shr 1) + 20f, -16741121, true)
+		Fonts.font40.drawCenteredString("Welcome!", (representedScreen.width shr 2).toFloat(), (y shr 1) + 20f, -16741121, true)
 	}
 
 	override fun keyTyped(typedChar: Char, keyCode: Int)

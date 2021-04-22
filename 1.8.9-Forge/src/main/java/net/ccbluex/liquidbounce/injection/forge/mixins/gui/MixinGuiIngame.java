@@ -86,7 +86,7 @@ public abstract class MixinGuiIngame
 	@Inject(method = "renderTooltip", at = @At("RETURN"))
 	private void renderTooltipPost(final ScaledResolution sr, final float partialTicks, final CallbackInfo callbackInfo)
 	{
-		if (!ClassUtils.hasClass("net.labymod.api.LabyModAPI"))
+		if (!ClassUtils.hasLabyMod())
 		{
 			LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
 			AWTFontRenderer.Companion.garbageCollectionTick();

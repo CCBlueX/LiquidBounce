@@ -31,16 +31,19 @@ class GuiUpdate : WrappedGuiScreen()
 	{
 		representedScreen.drawBackground(0)
 
-		val middleScreen = (representedScreen.width shr 1).toFloat()
+		val font = Fonts.font35
 
-		Fonts.font35.drawCenteredString("b${LiquidBounce.latestVersion} got released!", middleScreen, (representedScreen.height shr 3) + 80f, 0xffffff)
-		Fonts.font35.drawCenteredString("Press \"Download\" to visit our website or dismiss this message by pressing \"OK\".", middleScreen, (representedScreen.height shr 3) + 80f + Fonts.font35.fontHeight, 0xffffff)
+		val middleScreen = (representedScreen.width shr 1).toFloat()
+		val textY = (representedScreen.height shr 3) + 80f
+
+		font.drawCenteredString("b${LiquidBounce.latestVersion} got released!", middleScreen, textY, 0xffffff)
+		font.drawCenteredString("Press \"Download\" to visit our website or dismiss this message by pressing \"OK\".", middleScreen, textY + font.fontHeight, 0xffffff)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 
 		// Title
 		GL11.glScalef(2F, 2F, 2F)
-		Fonts.font35.drawCenteredString("New update available!", (representedScreen.width shr 2).toFloat(), (representedScreen.height shr 4) + 20f, -65536)
+		font.drawCenteredString("New update available!", (representedScreen.width shr 2).toFloat(), (representedScreen.height shr 4) + 20f, -65536)
 	}
 
 	override fun actionPerformed(button: IGuiButton)

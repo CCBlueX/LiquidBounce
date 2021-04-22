@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GuiSpectator.class)
 public class MixinGuiSpectator
 {
-
 	@Inject(method = "renderTooltip", at = @At("RETURN"))
 	private void renderTooltipPost(final ScaledResolution scaledResolution, final float partialTicks, final CallbackInfo callbackInfo)
 	{

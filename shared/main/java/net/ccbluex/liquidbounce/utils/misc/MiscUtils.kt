@@ -33,11 +33,11 @@ object MiscUtils : MinecraftInstance()
 		catch (e: IOException)
 		{
 			// noinspection StringConcatenationArgumentToLogCall
-			logger.error("Can't show URL \"$url\"", e)
+			logger.error("Can't show URL \"$url\" (IOException)", e)
 		}
 		catch (e: URISyntaxException)
 		{
-			logger.error("Can't show URL \"$url\"", e)
+			logger.error("Can't show URL \"$url\" (URI syntax exception)", e)
 		}
 	}
 
@@ -46,17 +46,27 @@ object MiscUtils : MinecraftInstance()
 	{
 		if (mc.isFullScreen) mc.toggleFullscreen()
 
-		val fileChooser = JFileChooser()
-		val frame = JFrame()
-		fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
-		frame.isVisible = true
-		frame.toFront()
-		frame.isVisible = false
+		var fileChooser: JFileChooser? = null
+		var action = JFileChooser.CANCEL_OPTION
 
-		val action = fileChooser.showOpenDialog(frame)
-		frame.dispose()
+		try
+		{
+			fileChooser = JFileChooser()
+			val frame = JFrame()
+			fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
+			frame.isVisible = true
+			frame.toFront()
+			frame.isVisible = false
 
-		return if (action == JFileChooser.APPROVE_OPTION) fileChooser.selectedFile else null
+			action = fileChooser.showOpenDialog(frame)
+			frame.dispose()
+		}
+		catch (e: Throwable)
+		{
+			logger.warn("[openFileChooser()] Can't open file chooser", e)
+		}
+
+		return if (action == JFileChooser.APPROVE_OPTION) fileChooser?.selectedFile else null
 	}
 
 	@JvmStatic
@@ -64,17 +74,27 @@ object MiscUtils : MinecraftInstance()
 	{
 		if (mc.isFullScreen) mc.toggleFullscreen()
 
-		val fileChooser = JFileChooser()
-		val frame = JFrame()
-		fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
-		frame.isVisible = true
-		frame.toFront()
-		frame.isVisible = false
+		var fileChooser: JFileChooser? = null
+		var action = JFileChooser.CANCEL_OPTION
 
-		val action = fileChooser.showSaveDialog(frame)
-		frame.dispose()
+		try
+		{
+			fileChooser = JFileChooser()
+			val frame = JFrame()
+			fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
+			frame.isVisible = true
+			frame.toFront()
+			frame.isVisible = false
 
-		return if (action == JFileChooser.APPROVE_OPTION) fileChooser.selectedFile else null
+			action = fileChooser.showSaveDialog(frame)
+			frame.dispose()
+		}
+		catch (e: Throwable)
+		{
+			logger.warn("[saveFileChooser()] Can't open file chooser", e)
+		}
+
+		return if (action == JFileChooser.APPROVE_OPTION) fileChooser?.selectedFile else null
 	}
 
 	/**

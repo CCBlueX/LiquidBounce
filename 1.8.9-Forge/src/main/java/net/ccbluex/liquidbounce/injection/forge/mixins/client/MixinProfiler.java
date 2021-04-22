@@ -18,11 +18,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Profiler.class)
 public class MixinProfiler
 {
-
 	@Inject(method = "startSection", at = @At("HEAD"))
 	private void startSection(final String name, final CallbackInfo callbackInfo)
 	{
-		if ("bossHealth".equals(name) && ClassUtils.hasClass("net.labymod.api.LabyModAPI"))
+		if ("bossHealth".equals(name) && ClassUtils.hasLabyMod())
 			LiquidBounce.eventManager.callEvent(new Render2DEvent(0.0F));
 	}
 }

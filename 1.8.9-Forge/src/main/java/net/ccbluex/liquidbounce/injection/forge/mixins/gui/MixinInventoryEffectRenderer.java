@@ -26,6 +26,7 @@ public abstract class MixinInventoryEffectRenderer extends MixinGuiContainer
 		for (final PotionEffect potioneffect : mc.thePlayer.getActivePotionEffects())
 		{
 			final Potion potion = Potion.potionTypes[potioneffect.getPotionID()];
+
 			if (potion.shouldRender(potioneffect))
 			{
 				hasVisibleEffect = true;

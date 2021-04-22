@@ -14,9 +14,7 @@ import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import org.lwjgl.input.Keyboard
-import java.awt.Color
 import java.io.IOException
-import java.util.*
 
 class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 {
@@ -44,39 +42,36 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		val middleScreen = (width shr 1).toFloat()
 		val quarterScreen = (height shr 2).toFloat()
 
-		RenderUtils.drawRect(middleScreen - 115, i - 5.0f, middleScreen + 115, quarterScreen + 43 + if (status.keys.isEmpty()) 10 else status.keys.size * Fonts.font40.fontHeight, Integer.MIN_VALUE)
+		val font = Fonts.font40
+		val fontHeight = font.fontHeight
 
-		if (status.isEmpty())
+		RenderUtils.drawRect(middleScreen - 115, i - 5.0f, middleScreen + 115, quarterScreen + 43 + if (status.keys.isEmpty()) 10 else status.keys.size * fontHeight, Integer.MIN_VALUE)
+
+		if (status.isEmpty()) font.drawCenteredString("Loading...", middleScreen, quarterScreen + 40, -1)
+		else for (address in status.keys)
 		{
-			Fonts.font40.drawCenteredString("Loading...", middleScreen, quarterScreen + 40, -1)
-		}
-		else
-		{
-			for (address in status.keys)
-			{
-				val color = status[address]
-				val text = "${
-					when (color?.toLowerCase())
-					{
-						"green" -> "\u00A7a"
-						"yellow" -> "\u00A7e"
-						"red" -> "\u00A7c"
-						else -> color
-					}
-				}$address: ${
-					when (color?.toLowerCase())
-					{
-						"green" -> "Online and Stable"
-						"yellow" -> "Slow or Unstable"
-						"red" -> "Offline or Down"
-						else -> color
-					}
-				}"
+			val color = status[address]
+			val text = "${
+				when (color?.toLowerCase())
+				{
+					"green" -> "\u00A7a"
+					"yellow" -> "\u00A7e"
+					"red" -> "\u00A7c"
+					else -> color
+				}
+			}$address: ${
+				when (color?.toLowerCase())
+				{
+					"green" -> "Online and Stable"
+					"yellow" -> "Slow or Unstable"
+					"red" -> "Offline or Down"
+					else -> color
+				}
+			}"
 
-				Fonts.font40.drawCenteredString(text, middleScreen, i.toFloat(), -1)
+			font.drawCenteredString(text, middleScreen, i.toFloat(), -1)
 
-				i += Fonts.font40.fontHeight
-			}
+			i += fontHeight
 		}
 
 		Fonts.fontBold180.drawCenteredString("Server Status", (width shr 1).toFloat(), (height shr 3) + 5F, 4673984, true)

@@ -18,7 +18,7 @@ object PPSCounter
 	}
 
 	/**
-	 * Gets the count of clicks that have occurrence since the last 1000ms
+	 * Gets the count of packets that have occurrence since the last 1000ms
 	 *
 	 * @param  boundType
 	 * The packet type

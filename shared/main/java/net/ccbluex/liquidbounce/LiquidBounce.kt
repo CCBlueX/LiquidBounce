@@ -159,7 +159,7 @@ object LiquidBounce
 		FileManager.loadConfig(fileManager.hudConfig)
 
 		// Disable optifine fastrender
-		ClientUtils.disableFastRender()
+		// ClientUtils.disableFastRender()
 
 		try
 		{

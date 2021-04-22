@@ -132,7 +132,7 @@ class Keystrokes(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F, side: Si
 		)
 	}
 
-	private val spaceBar = KeySpace(mc.gameSettings.keyBindJump, 0, { mouseYPosValue.get() + 60 }, 59, 11, { Color(spacePressedRedValue.get(), spacePressedGreenValue.get(), spacePressedBlueValue.get(), spacePressedAlphaValue.get()) to Color(spaceTextPressedRedValue.get(), spaceTextPressedGreenValue.get(), spaceTextPressedBlueValue.get(), spaceTextPressedAlphaValue.get()) }, { Color(spaceUnpressedRedValue.get(), spaceUnpressedGreenValue.get(), spaceUnpressedBlueValue.get(), spaceUnpressedAlphaValue.get()) to Color(spaceTextUnpressedRedValue.get(), spaceTextUnpressedGreenValue.get(), spaceTextUnpressedBlueValue.get(), spaceTextUnpressedAlphaValue.get()) }, fadingTime::get)
+	private val spaceBar = KeySpace(mc.gameSettings.keyBindJump, 0, { spaceYPosValue.get() + 60 }, 59, 11, { Color(spacePressedRedValue.get(), spacePressedGreenValue.get(), spacePressedBlueValue.get(), spacePressedAlphaValue.get()) to Color(spaceTextPressedRedValue.get(), spaceTextPressedGreenValue.get(), spaceTextPressedBlueValue.get(), spaceTextPressedAlphaValue.get()) }, { Color(spaceUnpressedRedValue.get(), spaceUnpressedGreenValue.get(), spaceUnpressedBlueValue.get(), spaceUnpressedAlphaValue.get()) to Color(spaceTextUnpressedRedValue.get(), spaceTextUnpressedGreenValue.get(), spaceTextUnpressedBlueValue.get(), spaceTextUnpressedAlphaValue.get()) }, fadingTime::get)
 
 	/**
 	 * Draw element

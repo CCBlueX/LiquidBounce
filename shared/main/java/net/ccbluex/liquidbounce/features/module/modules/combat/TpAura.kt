@@ -28,10 +28,12 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
-import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.max
 import kotlin.math.min
@@ -176,7 +178,9 @@ class TpAura : Module()
 					for (path in currentPath) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
 
 					LiquidBounce.eventManager.callEvent(AttackEvent(currentTarget))
+
 					CPSCounter.registerClick(CPSCounter.MouseButton.LEFT)
+
 					if (swingValue.get()) thePlayer.swingItem()
 
 					// Make AutoWeapon compatible

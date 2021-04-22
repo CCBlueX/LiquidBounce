@@ -21,7 +21,6 @@ import java.awt.Desktop
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
-import java.util.*
 import java.util.zip.ZipFile
 
 class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
@@ -35,19 +34,18 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		list.represented.registerScrollButtons(7, 8)
 		list.elementClicked(-1, false, 0, 0)
 
-		val j = 22
 		val buttonX = representedScreen.width - 80
 
 		val provider = classProvider
 
 		val buttonList = representedScreen.buttonList
 		buttonList.add(provider.createGuiButton(0, buttonX, representedScreen.height - 65, 70, 20, "Back"))
-		buttonList.add(provider.createGuiButton(1, buttonX, j + 24, 70, 20, "Import"))
-		buttonList.add(provider.createGuiButton(2, buttonX, j + (24 shl 1), 70, 20, "Delete"))
-		buttonList.add(provider.createGuiButton(3, buttonX, j + 24 * 3, 70, 20, "Reload"))
-		buttonList.add(provider.createGuiButton(4, buttonX, j + (24 shl 2), 70, 20, "Folder"))
-		buttonList.add(provider.createGuiButton(5, buttonX, j + 24 * 5, 70, 20, "Docs"))
-		buttonList.add(provider.createGuiButton(6, buttonX, j + 24 * 6, 70, 20, "Find Scripts"))
+		buttonList.add(provider.createGuiButton(1, buttonX, 46, 70, 20, "Import"))
+		buttonList.add(provider.createGuiButton(2, buttonX, 70, 70, 20, "Delete"))
+		buttonList.add(provider.createGuiButton(3, buttonX, 94, 70, 20, "Reload"))
+		buttonList.add(provider.createGuiButton(4, buttonX, 118, 70, 20, "Folder"))
+		buttonList.add(provider.createGuiButton(5, buttonX, 142, 70, 20, "Docs"))
+		buttonList.add(provider.createGuiButton(6, buttonX, 166, 70, 20, "Find Scripts"))
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)

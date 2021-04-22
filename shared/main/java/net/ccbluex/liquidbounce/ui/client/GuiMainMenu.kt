@@ -20,29 +20,29 @@ class GuiMainMenu : WrappedGuiScreen()
 		val defaultHeight = (representedScreen.height shr 2) + 48
 
 		val middleScreen = representedScreen.width shr 1
-		val buttonX1 = middleScreen - 100
-		val buttonX2 = middleScreen + 2
+		val buttonXPosLeft = middleScreen - 100
+		val buttonXPosRight = middleScreen + 2
 
 		val buttonList = representedScreen.buttonList
 
 		val provider = classProvider
 
-		buttonList.add(provider.createGuiButton(100, buttonX1, defaultHeight + 24, 98, 20, "AltManager"))
-		buttonList.add(provider.createGuiButton(103, buttonX2, defaultHeight + 24, 98, 20, "Mods"))
-		buttonList.add(provider.createGuiButton(101, buttonX1, defaultHeight + 48, 98, 20, "Server Status"))
-		buttonList.add(provider.createGuiButton(102, buttonX2, defaultHeight + 48, 98, 20, "Background"))
+		buttonList.add(provider.createGuiButton(100, buttonXPosLeft, defaultHeight + 24, 98, 20, "AltManager"))
+		buttonList.add(provider.createGuiButton(103, buttonXPosRight, defaultHeight + 24, 98, 20, "Mods"))
+		buttonList.add(provider.createGuiButton(101, buttonXPosLeft, defaultHeight + 48, 98, 20, "Server Status"))
+		buttonList.add(provider.createGuiButton(102, buttonXPosRight, defaultHeight + 48, 98, 20, "Background"))
 
 		val func = functions
 
-		buttonList.add(provider.createGuiButton(1, buttonX1, defaultHeight, 98, 20, func.formatI18n("menu.singleplayer")))
-		buttonList.add(provider.createGuiButton(2, buttonX2, defaultHeight, 98, 20, func.formatI18n("menu.multiplayer")))
+		buttonList.add(provider.createGuiButton(1, buttonXPosLeft, defaultHeight, 98, 20, func.formatI18n("menu.singleplayer")))
+		buttonList.add(provider.createGuiButton(2, buttonXPosRight, defaultHeight, 98, 20, func.formatI18n("menu.multiplayer")))
 
 		// Minecraft Realms
 		//		this.buttonList.add(new classProvider.createGuiButton(14, (this.width shr 1) - 100, j + (24 shl 1), I18n.format("menu.online", new Object[0])));
 
-		buttonList.add(provider.createGuiButton(108, buttonX1, defaultHeight + 72, "Contributors"))
-		buttonList.add(provider.createGuiButton(0, buttonX1, defaultHeight + 96, 98, 20, func.formatI18n("menu.options")))
-		buttonList.add(provider.createGuiButton(4, buttonX2, defaultHeight + 96, 98, 20, func.formatI18n("menu.quit")))
+		buttonList.add(provider.createGuiButton(108, buttonXPosLeft, defaultHeight + 72, "Contributors"))
+		buttonList.add(provider.createGuiButton(0, buttonXPosLeft, defaultHeight + 96, 98, 20, func.formatI18n("menu.options")))
+		buttonList.add(provider.createGuiButton(4, buttonXPosRight, defaultHeight + 96, 98, 20, func.formatI18n("menu.quit")))
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)

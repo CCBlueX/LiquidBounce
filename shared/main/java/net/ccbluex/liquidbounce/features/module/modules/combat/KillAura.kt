@@ -33,7 +33,10 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import kotlin.math.max
@@ -852,6 +855,8 @@ class KillAura : Module()
 		if (swing && Backend.MINECRAFT_VERSION_MINOR == 8) thePlayer.swingItem()
 
 		netHandler.addToSendQueue(provider.createCPacketUseEntity(entity, ICPacketUseEntity.WAction.ATTACK))
+
+		CPSCounter.registerClick(CPSCounter.MouseButton.LEFT)
 
 		if (swing && Backend.MINECRAFT_VERSION_MINOR != 8) thePlayer.swingItem()
 

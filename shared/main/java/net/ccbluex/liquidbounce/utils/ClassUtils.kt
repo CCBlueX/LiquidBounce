@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.utils
 
 object ClassUtils
 {
-
 	private val cachedClasses = mutableMapOf<String, Boolean>()
 
 	/**
@@ -32,5 +31,9 @@ object ClassUtils
 		}
 	}
 
+	@JvmStatic
 	fun hasForge() = hasClass("net.minecraftforge.common.MinecraftForge")
+
+	@JvmStatic
+	fun hasLabyMod() = hasClass("net.labymod.api.LabyModAPI")
 }

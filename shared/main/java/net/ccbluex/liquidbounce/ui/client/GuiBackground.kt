@@ -76,14 +76,11 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen()
 				{
 					Files.copy(file.toPath(), FileOutputStream(LiquidBounce.fileManager.backgroundFile))
 
-					val provider = classProvider
-
-					val image = ImageIO.read(FileInputStream(LiquidBounce.fileManager.backgroundFile))
-					val location = provider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png")
+					val location = classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png")
 
 					LiquidBounce.background = location
 
-					mc.textureManager.loadTexture(location, provider.createDynamicTexture(image))
+					mc.textureManager.loadTexture(location, classProvider.createDynamicTexture(ImageIO.read(FileInputStream(LiquidBounce.fileManager.backgroundFile))))
 				}
 				catch (e: Exception)
 				{
