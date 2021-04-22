@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.event
 
 typealias Handler<T> = (T) -> Unit
 
-class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean)
+class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean, val priority: Int = 0)
 
 interface Listenable {
 
@@ -36,8 +36,8 @@ interface Listenable {
 
 }
 
-inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, noinline handler: Handler<T>) {
-    EventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition))
+inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, priority: Int = 0, noinline handler: Handler<T>) {
+    EventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition, priority))
 }
 
 /**

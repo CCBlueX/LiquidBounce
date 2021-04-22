@@ -72,6 +72,8 @@ object LiquidBounce : Listenable {
         ConfigSystem
         globalEnemyConfigurable
 
+        RotationManager
+
         // Features
         ModuleManager
         CommandManager

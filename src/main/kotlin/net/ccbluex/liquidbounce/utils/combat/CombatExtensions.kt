@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.utils.combat
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.minecraft.client.network.ClientPlayerEntity
@@ -55,6 +57,9 @@ class EnemyConfigurable : Configurable("enemies") {
     // Friends (client friends - other players) should be also considered as enemy
     val friends by boolean("Friends", false)
 
+    // Friends (client friends - other players) should be also considered as enemy
+    val teamMates by boolean("TeamMates", false)
+
     // Should bots be blocked to bypass anti cheat techniques
     val antibot = tree(AntiBotConfigurable())
 
@@ -85,24 +90,28 @@ class EnemyConfigurable : Configurable("enemies") {
     /**
      * Check if entity is considered a enemy
      */
-    fun isEnemy(enemy: Entity, attackable: Boolean = false): Boolean {
+    fun isEnemy(suspect: Entity, attackable: Boolean = false): Boolean {
         // Check if enemy is living and not dead (or ignore being dead)
-        if (enemy is LivingEntity && (dead || enemy.isAlive)) {
+        if (suspect is LivingEntity && (dead || suspect.isAlive)) {
             // Check if enemy is invisible (or ignore being invisible)
-            if (invisible || !enemy.isInvisible) {
+            if (invisible || !suspect.isInvisible) {
+                if (!teamMates && Teams.isInClientPlayersTeam(suspect))
+                    return false
+
                 // Check if enemy is a player and should be considered as enemy
-                if (enemy is PlayerEntity && enemy != mc.player) {
-                    // TODO: Check friends because there is no friend system right now
+                if (suspect is PlayerEntity && suspect != mc.player) {
+                    if (!friends && FriendManager.isFriend(suspect))
+                        return false
 
                     // Check if player might be a bot
-                    if (enemy is ClientPlayerEntity && antibot.isBot(enemy)) {
+                    if (suspect is ClientPlayerEntity && antibot.isBot(suspect)) {
                         return false
                     }
 
                     return players
-                } else if (enemy is PassiveEntity) {
+                } else if (suspect is PassiveEntity) {
                     return animals
-                } else if (enemy is MobEntity) {
+                } else if (suspect is MobEntity) {
                     return mobs
                 }
             }

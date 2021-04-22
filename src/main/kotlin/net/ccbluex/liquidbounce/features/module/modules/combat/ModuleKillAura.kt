@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityGroup
@@ -63,6 +64,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Range
     private val range by float("Range", 4.2f, 1f..8f)
+    private val scanExtraRange by float("ScanExtraRange", 3.0f, 0.0f..7.0f)
 
     private val wallRange by float("WallRange", 3f, 0f..8f) // todo:
 
@@ -102,15 +104,21 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return
         }
 
-        targetTracker.validateLock { it.boxedDistanceTo(player) <= range }
+        val rangeSquared = range * range
+
+        targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= rangeSquared }
 
         val eyes = player.eyesPos
 
+        val scanRange = if (targetTracker.maxDistanceSquared > rangeSquared)
+            (rangeSquared + scanExtraRange * scanExtraRange).toDouble()
+        else
+            rangeSquared.toDouble()
+
         for (target in targetTracker.enemies()) {
-            if (target.boxedDistanceTo(player) > range) {
+            if (target.squaredBoxedDistanceTo(player) > scanRange) {
                 continue
             }
-
 
             val predictedTicks = predict.start + (predict.endInclusive - predict.start) * Math.random()
 
@@ -120,7 +128,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val box = target.boundingBox.offset(targetPrediction)
 
             // find best spot (and skip if no spot was found)
-            val (rotation, _) = RotationManager.raytraceBox(eyes.add(playerPrediction), box, throughWalls = false, range = range.toDouble()) ?: continue
+            val (rotation, _) = RotationManager.raytraceBox(eyes.add(playerPrediction), box, throughWalls = false, range = scanRange) ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)
