@@ -27,7 +27,7 @@ import kotlin.reflect.full.findAnnotation
  */
 object EventManager {
 
-    private val registry = mutableMapOf<Class<out Event>, HashSet<EventHook<in Event>>>()
+    private val registry = mutableMapOf<Class<out Event>, ArrayList<EventHook<in Event>>>()
 
     val mappedEvents = arrayOf(
         GameTickEvent::class,
@@ -55,21 +55,18 @@ object EventManager {
     }
 
     /**
-     * Registers an event hook for events of type [T]
-     */
-    private inline fun <reified T : Event> handler(
-        listener: Listenable,
-        ignoreCondition: Boolean = false,
-        noinline eventHandler: (T) -> Unit
-    ) {
-        registerEventHook(T::class.java, EventHook(listener, eventHandler, ignoreCondition))
-    }
-
-    /**
-     * Used by [handler]
+     * Used by handler methods
      */
     fun <T : Event> registerEventHook(eventClass: Class<out Event>, eventHook: EventHook<T>) {
-        registry.computeIfAbsent(eventClass) { HashSet() }.add(eventHook as EventHook<in Event>)
+        val handlers = registry.computeIfAbsent(eventClass) { ArrayList() }
+
+        val hook = eventHook as EventHook<in Event>
+
+        if (!handlers.contains(hook)) {
+            handlers.add(hook)
+
+            handlers.sortByDescending { it.priority }
+        }
     }
 
     /**

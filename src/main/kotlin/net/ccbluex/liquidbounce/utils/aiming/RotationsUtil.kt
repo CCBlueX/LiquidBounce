@@ -96,6 +96,8 @@ object RotationManager : Listenable {
         val preferredSpot = pattern.spot(box)
         val preferredRotation = makeRotation(preferredSpot, eyes)
 
+        val rangeSquared = range * range
+
         var visibleRot: VecRotation? = null
         var notVisibleRot: VecRotation? = null
 
@@ -109,7 +111,7 @@ object RotationManager : Listenable {
                     )
 
                     // skip because of out of range
-                    if (eyes.distanceTo(vec3) > range) {
+                    if (eyes.squaredDistanceTo(vec3) > rangeSquared) {
                         continue
                     }
 
@@ -177,11 +179,13 @@ object RotationManager : Listenable {
         }
 
         // Update rotations
-        val turnSpeed = RandomUtils.nextFloat(68f, 80f) // todo: use config
+        val turnSpeed = RandomUtils.nextFloat(60f, 80f) // todo: use config
 
         val playerRotation = Rotation(mc.player!!.yaw, mc.player!!.pitch)
+
         if (ticksUntilReset == 0) {
             val threshold = 2f // todo: might use turn speed
+
             if (rotationDifference(this.currentRotation ?: serverRotation ?: return, playerRotation) < threshold) {
                 ticksUntilReset = -1
 

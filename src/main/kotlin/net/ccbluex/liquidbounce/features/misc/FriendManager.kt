@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.misc
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
+import net.minecraft.entity.player.PlayerEntity
 import java.util.*
 
 object FriendManager : Configurable("friends") {
@@ -52,5 +53,7 @@ object FriendManager : Configurable("friends") {
         override fun compareTo(other: Friend): Int = this.name.compareTo(other.name)
 
     }
+
+    fun isFriend(entity: PlayerEntity): Boolean = friends.contains(Friend(entity.gameProfile.name, null))
 
 }

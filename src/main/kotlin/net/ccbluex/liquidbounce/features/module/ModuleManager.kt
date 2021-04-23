@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleSpammer
+import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.render.*
@@ -123,7 +124,11 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleAimbot,
             ModuleRotations,
             ModuleTerrainSpeed,
-            ModuleCrystalAura
+            ModuleCrystalAura,
+            ModuleBadWifi,
+            ModuleESP,
+            ModuleFucker,
+            Teams
         )
 
         builtin.forEach(this::addModule)

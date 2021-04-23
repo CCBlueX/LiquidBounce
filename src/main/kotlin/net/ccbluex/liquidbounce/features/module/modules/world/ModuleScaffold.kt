@@ -55,7 +55,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val curr = currentTarget ?: return@handler
         val serverRotation = RotationManager.serverRotation ?: return@handler
 
-        val rayTraceResult = raycast(4.5, serverRotation)
+        val rayTraceResult = raycast(4.0, serverRotation)
 
         if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != curr.blockPos || rayTraceResult.pos.y < curr.minY) {
             return@handler
@@ -157,7 +157,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 }.maxWithOrNull(Comparator.comparingDouble<Pair<Face, Vec3d>> { it.second.subtract(Vec3d(0.5, 0.5, 0.5)).multiply(Vec3d.of(first.first.vector)).lengthSquared() }.thenComparingDouble { it.second.y })
                     ?: continue
 
-                RotationManager.aimAt(face.second.add(Vec3d.of(currPos)), player.eyesPos, configurable = rotationsConfigurable)
+                RotationManager.aimAt(face.second.add(Vec3d.of(currPos)), player.eyesPos, ticks = 30, configurable = rotationsConfigurable)
 
                 currentTarget = Target(currPos, first.first, face.first.from.y + currPos.y)
 
