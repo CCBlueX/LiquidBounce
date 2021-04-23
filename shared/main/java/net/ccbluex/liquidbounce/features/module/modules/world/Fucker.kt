@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
+import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
@@ -144,6 +145,8 @@ object Fucker : Module()
 
 				if (autoTool.state) autoTool.switchSlot(newPos)
 
+				CPSCounter.registerClick(CPSCounter.MouseButton.LEFT)
+
 				// Break block
 				if (instantValue.get())
 				{
@@ -191,13 +194,18 @@ object Fucker : Module()
 			}
 
 			// Use block
-			actionValue.get().equals("use", true) -> if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentPos, provider.getEnumFacing(EnumFacingType.DOWN), WVec3(newPos.x.toDouble(), newPos.y.toDouble(), newPos.z.toDouble())))
+			actionValue.get().equals("use", true) ->
 			{
-				if (swingValue.get()) thePlayer.swingItem()
+				CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 
-				blockHitDelay = 4
-				currentDamage = 0F
-				this.currentPos = null
+				if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentPos, provider.getEnumFacing(EnumFacingType.DOWN), WVec3(newPos.x.toDouble(), newPos.y.toDouble(), newPos.z.toDouble())))
+				{
+					if (swingValue.get()) thePlayer.swingItem()
+
+					blockHitDelay = 4
+					currentDamage = 0F
+					this.currentPos = null
+				}
 			}
 		}
 	}

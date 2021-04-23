@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
+import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.extensions.getVec
@@ -83,6 +84,9 @@ object ChestAura : Module()
 			EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delay))
 			{
 				val currentBlock = currentBlock ?: return
+
+				CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
+
 				if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentBlock, provider.getEnumFacing(EnumFacingType.DOWN), currentBlock.getVec()))
 				{
 					if (visualSwing.get()) thePlayer.swingItem()
