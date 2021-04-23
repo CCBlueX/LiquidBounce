@@ -1057,16 +1057,13 @@ class Scaffold : Module()
 		// Rotate
 		if (!rotationModeValue.get().equals("Off", ignoreCase = true))
 		{
-			val tower = LiquidBounce.moduleManager[Tower::class.java] as Tower
-			val keepRotationTicks = if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get()
-			else minKeepRotationTicksValue.get() + Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get())
-			else 0
+			val keepRotationTicks = if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get() else minKeepRotationTicksValue.get() + Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get()) else 0
 
 			if (minTurnSpeedValue.get() < 180)
 			{
 				limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, placeRotation!!.rotation, (Random.nextFloat() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()), 0.0F) // TODO: Apply some settings here too
 				setRotation(thePlayer, limitedRotation!!, keepRotationTicks)
-				tower.lockRotation = null // Prevents conflict
+
 				lockRotation = limitedRotation
 				facesBlock = false
 
@@ -1098,10 +1095,12 @@ class Scaffold : Module()
 			else
 			{
 				setRotation(thePlayer, placeRotation!!.rotation, keepRotationTicks)
-				tower.lockRotation = null // Prevents conflict
+
 				lockRotation = placeRotation!!.rotation
 				facesBlock = true
 			}
+
+			(LiquidBounce.moduleManager[Tower::class.java] as Tower).lockRotation = null // Prevents conflict
 		}
 
 		targetPlace = placeRotation!!.placeInfo

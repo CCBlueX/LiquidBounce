@@ -39,7 +39,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
 	fun fixedSensitivity(sensitivity: Float)
 	{
 		val sensitivityModifier = sensitivity * 0.6F + 0.2F
-		val gcd = sensitivityModifier * sensitivityModifier * sensitivityModifier * 1.2F
+		val gcd = sensitivityModifier * sensitivityModifier * sensitivityModifier * 1.2F // * 8.0F
 
 		// get previous rotation
 		val rotation = RotationUtils.serverRotation

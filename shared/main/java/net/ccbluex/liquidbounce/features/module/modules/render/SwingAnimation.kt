@@ -52,10 +52,10 @@ class SwingAnimation : Module()
 
 	/* TIP: I recommend 0.13 for Slide mode; zero or lower value for EXHIBOBO mode */
 	val blockYRTranslation = FloatValue("Block-Y-RelTranslation", 0.13f, -1f, 1f)
-	val blockYRTranslationSmoothingMethod = ListValue("Block-Y-RelTranslationSmoothingMethod", arrayOf("None", "Reverse", "SqrtSqrt", "Sq", "SqSq", "Linear"), "Sqrt")
+	val blockYRTranslationSmoothingMethod = ListValue("Block-Y-RelTranslationSmoothingMethod", arrayOf("None", "Reverse", "Sqrt", "SqrtSqrt", "Sq", "SqSq", "Linear"), "Sqrt")
 
 	val blockZRTranslation = FloatValue("Block-Z-RelTranslation", 0f, -1f, 1f)
-	val blockZRTranslationSmoothingMethod = ListValue("Block-Z-RelTranslationSmoothingMethod", arrayOf("None", "Reverse", "SqrtSqrt", "Sq", "SqSq", "Linear"), "Sqrt")
+	val blockZRTranslationSmoothingMethod = ListValue("Block-Z-RelTranslationSmoothingMethod", arrayOf("None", "Reverse", "Sqrt", "SqrtSqrt", "Sq", "SqSq", "Linear"), "Sqrt")
 
 	val blockScale = FloatValue("Block-Scale", .4f, 0.2f, 0.6f)
 

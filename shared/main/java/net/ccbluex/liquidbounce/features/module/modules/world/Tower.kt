@@ -184,9 +184,9 @@ class Tower : Module()
 		// OnJump
 		if (onJumpValue.get() && !mc.gameSettings.keyBindJump.isKeyDown)
 		{
-
 			// Skip if jump key isn't pressed
 			if (onJumpDelayValue.get() > 0) onJumpTimer.reset()
+
 			return
 		}
 		else if (onJumpValue.get() && onJumpDelayValue.get() > 0 && (!onJumpTimer.hasTimePassed(onJumpDelayValue.get().toLong()) || disableOnJumpWhileMoving.get()) && (isMoving(thePlayer) || !onJumpNoDelayIfNotMovingValue.get())) // Skip if onjump delay aren't over yet.
@@ -397,9 +397,7 @@ class Tower : Module()
 					controller.updateController()
 				}
 
-				"Spoof" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
-
-				"Switch" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
+				"Spoof", "Switch" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
 			}
 
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
@@ -484,13 +482,17 @@ class Tower : Module()
 				xSearch += 0.1
 			}
 		}
+
 		if (placeRotation == null) return false
+
 		if (rotationsValue.get())
 		{
-			val scaffold = LiquidBounce.moduleManager[Scaffold::class.java] as Scaffold
+			// Rotate
 			RotationUtils.setTargetRotation(placeRotation!!.rotation, keepRotationTicks)
 			RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
-			scaffold.lockRotation = null // Prevent to lockRotation confliction
+
+			// Lock Rotation
+			(LiquidBounce.moduleManager[Scaffold::class.java] as Scaffold).lockRotation = null // Prevent to lockRotation confliction
 			lockRotation = placeRotation!!.rotation
 		}
 
@@ -543,7 +545,12 @@ class Tower : Module()
 	fun onJump(event: JumpEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
-		if (onJumpValue.get() && (onJumpDelayValue.get() > 0 && onJumpTimer.hasTimePassed(onJumpDelayValue.get().toLong()) && !disableOnJumpWhileMoving.get() || !isMoving(thePlayer) && onJumpNoDelayIfNotMovingValue.get())) event.cancelEvent()
+
+		if (!onJumpValue.get()) return
+
+		val onJumpDelay = onJumpDelayValue.get()
+
+		if (onJumpDelay > 0 && onJumpTimer.hasTimePassed(onJumpDelay.toLong()) && !disableOnJumpWhileMoving.get() || !isMoving(thePlayer) && onJumpNoDelayIfNotMovingValue.get()) event.cancelEvent()
 	}
 
 	/**
@@ -564,7 +571,5 @@ class Tower : Module()
 	var active = false
 
 	private val keepRotationTicks: Int
-		get() = if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get()
-		else minKeepRotationTicksValue.get() + Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get())
-		else 0
+		get() = if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get() else minKeepRotationTicksValue.get() + Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get()) else 0
 }
