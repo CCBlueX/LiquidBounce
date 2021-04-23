@@ -126,7 +126,6 @@ object ModuleManager : Iterable<Module>, Listenable {
             ModuleTerrainSpeed,
             ModuleCrystalAura,
             ModuleBadWifi,
-            ModuleESP,
             ModuleFucker,
             Teams
         )
