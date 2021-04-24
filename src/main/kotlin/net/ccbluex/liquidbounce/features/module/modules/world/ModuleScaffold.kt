@@ -25,12 +25,19 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.block.ShapeContext
 import net.minecraft.block.SideShapeType
+import net.minecraft.item.BlockItem
+import net.minecraft.item.ItemStack
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.*
+import kotlin.math.absoluteValue
 
 /**
  * Scaffold module
@@ -39,27 +46,76 @@ import net.minecraft.util.math.*
  */
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
+    private val BLOCK_COMPARATOR = ComparatorChain<ItemStack>(
+        { o1, o2 ->
+            compareByCondition(
+                o1,
+                o2
+            ) { (it.item as BlockItem).block.defaultState.material.isSolid }
+        },
+        { o1, o2 ->
+            compareByCondition(
+                o1,
+                o2
+            ) { (it.item as BlockItem).block.defaultState.isFullCube(mc.world, BlockPos(0, 0, 0)) }
+        },
+        { o1, o2 -> (o2.item as BlockItem).block.slipperiness.compareTo((o1.item as BlockItem).block.slipperiness) },
+        Comparator.comparingDouble { (1.5 - (it.item as BlockItem).block.defaultState.getHardness(mc.world, BlockPos(0, 0, 0))).absoluteValue },
+        { o1, o2 -> o2.count.compareTo(o1.count) }
+    )
+
+    var delay by intRange("Delay", 100..200, 0..2000)
+
     // Rotation
     val rotationsConfigurable = tree(RotationsConfigurable())
 
     var currentTarget: Target? = null
+    val timer = Chronometer()
 
     val networkTickHandler = repeatable { event ->
         updateTarget()
     }
 
-    val handleInputsEvents = handler<InputHandleEvent> {
+    val silent by boolean("Silent", true)
+
+    val handleInputsEvents = handler<GameRenderEvent> {
+        if (!timer.hasElapsed())
+            return@handler
+
         val player = mc.player ?: return@handler
         val world = world
 
-        val curr = currentTarget ?: return@handler
+        val target = currentTarget ?: return@handler
         val serverRotation = RotationManager.serverRotation ?: return@handler
 
         val rayTraceResult = raycast(4.0, serverRotation)
 
-        if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != curr.blockPos || rayTraceResult.pos.y < curr.minY) {
+        if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.pos.y < target.minY) {
             return@handler
         }
+
+        var hasBlockInHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot), target)
+
+        // Handle silent block selection
+        if (this.silent && !hasBlockInHand) {
+            val slot = (0..8).mapNotNull {
+                val stack = player.inventory.getStack(it)
+
+                if (stack.item is BlockItem) Pair(it, stack)
+                else null
+            }.maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR.compare(o1.second, o2.second) }?.first
+
+            if (slot != null) {
+                SilentHotbar.selectSlotSilently(this, slot, 20)
+
+                hasBlockInHand = true
+            }
+        } else {
+            SilentHotbar.resetSlot(this)
+        }
+
+        if (!hasBlockInHand)
+            return@handler
 
         val result = interaction.interactBlock(
             player,
@@ -73,8 +129,28 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.swingHand(Hand.MAIN_HAND)
             }
 
+            timer.waitFor(delay.random().toLong())
+
             currentTarget = null
         }
+    }
+
+    override fun disable() {
+        SilentHotbar.resetSlot(this)
+    }
+
+    private fun isValidBlock(stack: ItemStack?, target: Target): Boolean {
+        if (stack == null)
+            return false
+
+        val item = stack.item
+
+        if (item !is BlockItem)
+            return false
+
+        val block = item.block
+
+        return block.defaultState.isSideSolid(mc.world, target.blockPos, target.direction, SideShapeType.CENTER)
     }
 
     fun updateTarget() {

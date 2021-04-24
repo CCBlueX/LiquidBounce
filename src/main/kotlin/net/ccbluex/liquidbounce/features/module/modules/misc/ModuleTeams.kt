@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.entity.LivingEntity
 
-object Teams : Module("Teams", Category.MISC) {
+object ModuleTeams : Module("Teams", Category.MISC) {
 
     private val scoreboard by boolean("ScoreboardTeam", true)
     private val color by boolean("Color", true)
@@ -44,8 +44,8 @@ object Teams : Module("Teams", Category.MISC) {
         val displayName = thePlayer.displayName
 
         if (gommeSW && displayName != null && entity.displayName != null) {
-            val targetName = entity.displayName!!.asString().replace("§r", "")
-            val clientName = displayName.asString().replace("§r", "")
+            val targetName = entity.displayName!!.string.replace("§r", "")
+            val clientName = displayName.string.replace("§r", "")
 
             if (targetName.length < 2 || clientName.length < 2)
                 return false
@@ -56,8 +56,8 @@ object Teams : Module("Teams", Category.MISC) {
         }
 
         if (color && displayName != null && entity.displayName != null) {
-            val targetName = entity.displayName!!.asString().replace("§r", "")
-            val clientName = displayName.asString().replace("§r", "")
+            val targetName = entity.displayName!!.string.replace("§r", "")
+            val clientName = displayName.string.replace("§r", "")
 
             if (targetName.length < 2 || clientName.length < 2)
                 return false

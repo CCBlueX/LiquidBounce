@@ -78,6 +78,8 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         )
     )
 
+    val isGreedy by boolean("Greedy", true)
+
     val offHandItem by enumChoice("OffHandItem", ItemSortChoice.SHIELD, ItemSortChoice.values())
     val slotItem1 by enumChoice("SlotItem-1", ItemSortChoice.SWORD, ItemSortChoice.values())
     val slotItem2 by enumChoice("SlotItem-2", ItemSortChoice.BOW, ItemSortChoice.values())
@@ -142,7 +144,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                 if (hotbarSlotsToFill != null && currentStackCount < hotbarSlotsToFill.size && weightedItem.slot !in itemsUsedInHotbar) {
                     val hotbarSlotToFill = hotbarSlotsToFill[currentStackCount]
 
-                    if (hotbarSlotToFill.first.satisfactionCheck?.invoke(inventory.getStack(hotbarSlotToFill.second)) != true && weightedItem.slot != hotbarSlotToFill.second) {
+                    if ((isGreedy || hotbarSlotToFill.first.satisfactionCheck?.invoke(inventory.getStack(hotbarSlotToFill.second)) != true) && weightedItem.slot != hotbarSlotToFill.second) {
                         if (executeAction(weightedItem.slot, hotbarSlotToFill.second, SlotActionType.SWAP)) {
                             wait(inventoryConstraints.delay.random())
 
@@ -336,6 +338,10 @@ open class WeightedItem(val itemStack: ItemStack, val slot: Int) : Comparable<We
 
     val isInHotbar: Boolean
         get() = isInHotbar(slot)
+
+    open fun isSignificantlyBetter(other: WeightedItem): Boolean {
+        return false
+    }
 
     override fun compareTo(other: WeightedItem): Int = compareByCondition(this, other, WeightedItem::isInHotbar)
 }
@@ -556,6 +562,9 @@ class WeightedShieldItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemSta
 class WeightedFoodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
         private val COMPARATOR = ComparatorChain<WeightedFoodItem>(
+            { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item == Items.ENCHANTED_GOLDEN_APPLE } },
+            { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item == Items.GOLDEN_APPLE } },
+            { o1, o2 -> o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) },
             { o1, o2 -> o1.itemStack.item.foodComponent!!.saturationModifier.compareTo(o2.itemStack.item.foodComponent!!.saturationModifier) },
             { o1, o2 ->
                 o1.itemStack.count.compareTo(o2.itemStack.count)

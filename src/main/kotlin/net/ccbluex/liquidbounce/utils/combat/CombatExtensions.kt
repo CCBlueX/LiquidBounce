@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.combat
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.minecraft.client.network.ClientPlayerEntity
@@ -90,17 +90,17 @@ class EnemyConfigurable : Configurable("enemies") {
     /**
      * Check if entity is considered a enemy
      */
-    fun isEnemy(suspect: Entity, attackable: Boolean = false): Boolean {
+    fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean {
         // Check if enemy is living and not dead (or ignore being dead)
         if (suspect is LivingEntity && (dead || suspect.isAlive)) {
             // Check if enemy is invisible (or ignore being invisible)
             if (invisible || !suspect.isInvisible) {
-                if (!teamMates && Teams.isInClientPlayersTeam(suspect))
+                if (attackable && !teamMates && ModuleTeams.isInClientPlayersTeam(suspect))
                     return false
 
                 // Check if enemy is a player and should be considered as enemy
                 if (suspect is PlayerEntity && suspect != mc.player) {
-                    if (!friends && FriendManager.isFriend(suspect))
+                    if (attackable && !friends && FriendManager.isFriend(suspect))
                         return false
 
                     // Check if player might be a bot
@@ -124,9 +124,9 @@ class EnemyConfigurable : Configurable("enemies") {
 
 // Extensions
 
-fun Entity.shouldBeShown(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isEnemy(this)
+fun Entity.shouldBeShown(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(this)
 
-fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isEnemy(
+fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(
     this,
     true
 )
