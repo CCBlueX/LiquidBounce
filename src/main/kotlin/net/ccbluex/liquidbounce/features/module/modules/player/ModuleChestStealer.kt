@@ -43,22 +43,24 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         }
 
         val itemsToCollect = ModuleInventoryCleaner.getUsefulItems(screen).shuffled()
+        if (itemsToCollect.isEmpty()) {
+            player.closeHandledScreen()
+        }
 
         for (slotId in itemsToCollect) {
             mc.interactionManager!!.clickSlot(screen.screenHandler.syncId, slotId, 0, SlotActionType.QUICK_MOVE, player)
 
             val time = delay.random()
 
-            if (time == 0)
+            if (time == 0) {
                 continue
+            }
 
             timer.waitFor(time.toLong())
-            return@handler
+
         }
 
-        if (itemsToCollect.isEmpty()) {
-            player.closeHandledScreen()
-        }
+
     }
 
 }

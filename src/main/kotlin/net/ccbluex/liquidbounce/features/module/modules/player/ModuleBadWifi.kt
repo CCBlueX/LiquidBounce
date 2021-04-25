@@ -62,7 +62,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         blink()
     }
 
-    val packetHandler = handler<PacketEvent>(priority = -1) { event ->
+    val packetHandler = handler<PacketEvent<*>>(priority = -1) { event ->
         if (mc.player == null || disablelogger || !currentlyBlinking || event.origin != TransferOrigin.SEND) {
             return@handler
         }
@@ -124,24 +124,18 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
     private fun blink() {
         chat("BLINK")
-
-        try {
+        runCatching {
             disablelogger = true
 
             while (!packets.isEmpty()) {
                 network.sendPacket(packets.take())
             }
-
             disablelogger = false
-        } catch (e: Exception) {
-            e.printStackTrace()
-
+        }.onFailure {
+            it.printStackTrace()
             disablelogger = false
         }
 
-        currentlyBlinking = false
-
-        refreshMaxPackets()
     }
 
     private fun refreshMaxPackets() {

@@ -149,7 +149,7 @@ class CancelBlockBreakingEvent : CancellableEvent()
 // Network events
 
 @Nameable("packet")
-class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>) : CancellableEvent()
+class PacketEvent<T : Packet<*>>(val origin: TransferOrigin, val packet: T) : CancellableEvent()
 
 enum class TransferOrigin {
     SEND, RECEIVE
