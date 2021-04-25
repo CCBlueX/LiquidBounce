@@ -51,6 +51,7 @@ object UltralightScreenHook : Listenable {
      */
     val screenHandler = handler<ScreenEvent> { event ->
         val activeView = UltralightEngine.activeView
+
         if (activeView is ScreenView) {
             if (activeView.jsEvents._fireViewClose()) {
                 UltralightEngine.removeView(activeView)
