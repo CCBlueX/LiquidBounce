@@ -22,18 +22,26 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.screen.slot.SlotActionType
 
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
-    var delay by intRange("Delay", 0..5, 0..40)
+    var delay by intRange("Delay", 50..200, 0..2000)
+
+    val timer = Chronometer()
 
     val repeatable = repeatable {
+        if (!timer.hasElapsed())
+            return@repeatable
+
         val screen = mc.currentScreen
+
         if (screen !is GenericContainerScreen) {
             return@repeatable
         }
+
         val itemsToCollect = ModuleInventoryCleaner.getUsefulItems(screen).shuffled()
         if (itemsToCollect.isEmpty()) {
             player.closeHandledScreen()
@@ -48,7 +56,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 continue
             }
 
-            wait(time)
+            timer.waitFor(time.toLong())
 
         }
 
