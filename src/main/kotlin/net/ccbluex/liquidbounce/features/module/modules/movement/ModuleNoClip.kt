@@ -51,12 +51,11 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
         }
     }
 
-    val packetHandler = handler<PacketEvent> { event ->
+    val packetHandler = handler<PacketEvent<PlayerPositionLookS2CPacket>> {
         // Setback detection
-        if (event.packet is PlayerPositionLookS2CPacket) {
-            chat(regular(this.message("setbackDetected")))
-            enabled = false
-        }
+        chat(regular(this.message("setbackDetected")))
+        enabled = false
+
     }
 
     override fun disable() {

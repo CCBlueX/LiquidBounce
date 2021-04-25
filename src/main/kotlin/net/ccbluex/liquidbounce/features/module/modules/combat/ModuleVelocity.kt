@@ -26,12 +26,13 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 
 object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
-    val packetReceiveHandler = handler<PacketEvent> {
-        val packet = it.packet
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.entityId) {
+    val handler = handler<PacketEvent<EntityVelocityUpdateS2CPacket>> {
+        if (it.packet.id == player.entityId) {
             it.cancelEvent()
         }
     }
+
+
 
 }

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.minecraft.network.Packet
 import kotlin.reflect.full.findAnnotation
 
 /**
@@ -65,7 +66,6 @@ object EventManager {
         if (!handlers.contains(hook)) {
             handlers.add(hook)
 
-            handlers.sortByDescending { it.priority }
         }
     }
 

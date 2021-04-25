@@ -125,7 +125,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         }
     }
 
-    val packetHandler = handler<PacketEvent>(priority = -1) { event ->
+    val packetHandler = handler<PacketEvent<*>>(priority = -1) { event ->
         if (mc.player == null || disablelogger || event.origin != TransferOrigin.SEND) {
             return@handler
         }

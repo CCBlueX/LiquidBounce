@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.*
@@ -56,15 +57,15 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         val charged by int("Charged", 20, 3..20)
 
-        val tickRepeatable = handler<GameTickEvent> {
-            val player = mc.player ?: return@handler
+        val tickRepeatable = repeatable {
+            val player = mc.player ?: return@repeatable
 
             val currentItem = player.activeItem
 
             // Should check if player is using bow
-            if (currentItem?.item is BowItem) { // Wait until bow is fully charged
-                if (player.itemUseTime < charged) {
-                    return@handler
+            if (currentItem?.item is BowItem) {
+                if (player.itemUseTime < charged) { // Wait until bow is fully charged
+                    return@repeatable
                 }
 
                 // Send stop using item to server

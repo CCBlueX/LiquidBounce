@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.minecraft.network.Packet
+
 typealias Handler<T> = (T) -> Unit
 
 class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean, val priority: Int = 0)

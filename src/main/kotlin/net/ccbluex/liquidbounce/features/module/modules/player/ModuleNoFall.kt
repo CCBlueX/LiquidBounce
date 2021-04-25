@@ -18,27 +18,13 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
     private object SpoofGround : Choice("SpoofGround", modes) {
 
-        val packetHandler = handler<PacketEvent> {
-            val packet = it.packet
-
-            if (packet is PlayerMoveC2SPacket) {
-                packet.onGround = true
-            }
-
-        }
+        val packetHandler = handler<PacketEvent<PlayerMoveC2SPacket>> { it.packet.onGround = true }
 
     }
 
     private object NoGround : Choice("NoGround", modes) {
 
-        val packetHandler = handler<PacketEvent> {
-            val packet = it.packet
-
-            if (packet is PlayerMoveC2SPacket) {
-                packet.onGround = false
-            }
-
-        }
+        val packetHandler = handler<PacketEvent<PlayerMoveC2SPacket>> { it.packet.onGround = false }
 
     }
 
