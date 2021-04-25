@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket
 
 /**
  * Freeze module
@@ -42,6 +43,12 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
 
     val packetHandler = handler<PacketEvent> { event ->
         if (mc.world != null && event.origin == TransferOrigin.SEND) {
+            if (event.packet is TeleportConfirmC2SPacket) {
+                enabled = false
+
+                return@handler
+            }
+
             event.cancelEvent()
         }
     }

@@ -21,13 +21,22 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PlayerStrideEvent;
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(PlayerEntity.class)
 public abstract class MixinPlayerEntity extends MixinLivingEntity {
+
+    @Shadow @Final public PlayerInventory inventory;
 
     /**
      * Hook player stride event
@@ -41,6 +50,18 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             return true;
         }
         return playerEntity.isOnGround();
+    }
+
+    @Redirect(method = "getEquippedStack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;getMainHandStack()Lnet/minecraft/item/ItemStack;"))
+    private ItemStack hookMainHandStack(PlayerInventory playerInventory) {
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+
+        if ((Object) this != player)
+            return this.inventory.getMainHandStack();
+
+        int slot = SilentHotbar.INSTANCE.getServersideSlot();
+
+        return PlayerInventory.isValidHotbarIndex(slot) ? player.inventory.main.get(slot) : ItemStack.EMPTY;
     }
 
 }

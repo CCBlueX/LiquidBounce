@@ -67,6 +67,12 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
     }
 
     override fun enable() {
+        if (ModuleBadWifi.enabled) {
+            this.enabled = false
+
+            notification("Compatibility error", "Blink is incompatible with BadWIFI", NotificationEvent.Severity.ERROR)
+        }
+
         if (!pulse && dummy) {
             val faker = OtherClientPlayerEntity(world, player.gameProfile)
 
@@ -119,8 +125,8 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         }
     }
 
-    val packetHandler = handler<PacketEvent> { event ->
-        if (mc.player == null || disablelogger) {
+    val packetHandler = handler<PacketEvent>(priority = -1) { event ->
+        if (mc.player == null || disablelogger || event.origin != TransferOrigin.SEND) {
             return@handler
         }
 

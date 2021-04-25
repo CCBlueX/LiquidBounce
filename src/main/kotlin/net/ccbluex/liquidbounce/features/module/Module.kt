@@ -44,7 +44,7 @@ open class Module(
     state: Boolean = false, // default state
     @Exclude
     val disableActivation: Boolean = false, // disable activation
-    hide: Boolean = false // default hide
+    hide: Boolean = false, // default hide
 ) : Listenable, Configurable(name) {
 
     open val translationBaseKey: String
@@ -54,7 +54,7 @@ open class Module(
         get() = "$translationBaseKey.description"
 
     // Module options
-    var enabled by boolean("enabled", state)
+    var enabled by boolean("Enabled", state)
         .listen { new ->
             runCatching {
                 // Call enable or disable function
@@ -91,8 +91,8 @@ open class Module(
             new
         }
 
-    var bind by int("bind", bind, 0..0)
-    var hidden by boolean("hidden", hide)
+    var bind by int("Bind", bind, 0..0)
+    var hidden by boolean("Hidden", hide)
 
     // Tag to be displayed on the HUD
     open val tag: String?

@@ -36,13 +36,19 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityGroup
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 
 /**
@@ -58,6 +64,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Range
     private val range by float("Range", 4.2f, 1f..8f)
+    private val scanExtraRange by float("ScanExtraRange", 3.0f, 0.0f..7.0f)
 
     private val wallRange by float("WallRange", 3f, 0f..8f) // todo:
 
@@ -97,21 +104,31 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return
         }
 
-        targetTracker.validateLock { it.boxedDistanceTo(player) <= range }
+        val rangeSquared = range * range
+
+        targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= rangeSquared }
 
         val eyes = player.eyesPos
 
+        val scanRange = if (targetTracker.maxDistanceSquared > rangeSquared)
+            (rangeSquared + scanExtraRange * scanExtraRange).toDouble()
+        else
+            rangeSquared.toDouble()
+
         for (target in targetTracker.enemies()) {
-            if (target.boxedDistanceTo(player) > range) {
+            if (target.squaredBoxedDistanceTo(player) > scanRange) {
                 continue
             }
 
-            val box = target.boundingBox
+            val predictedTicks = predict.start + (predict.endInclusive - predict.start) * Math.random()
 
-            // todo: add predict to box and eyes
+            val targetPrediction = Vec3d(target.x - target.prevX, target.y - target.prevY, target.z - target.prevZ).multiply(predictedTicks)
+            val playerPrediction = Vec3d(player.x - player.prevX, player.y - player.prevY, player.z - player.prevZ).multiply(predictedTicks)
+
+            val box = target.boundingBox.offset(targetPrediction)
 
             // find best spot (and skip if no spot was found)
-            val (rotation, _) = RotationManager.raytraceBox(eyes, box, throughWalls = false, range = range.toDouble()) ?: continue
+            val (rotation, _) = RotationManager.raytraceBox(eyes.add(playerPrediction), box, throughWalls = false, range = scanRange) ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)
@@ -144,6 +161,18 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 targetTracker.lock(raycastedEntity)
             }
 
+            val blocking = player.isBlocking
+
+            if (blocking) {
+                network.sendPacket(
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                        BlockPos.ORIGIN,
+                        Direction.DOWN
+                    )
+                )
+            }
+
             // Attack enemy according to cps and cooldown
             cpsTimer.tick(
                 click = {
@@ -154,12 +183,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 },
                 cps
             )
+
+
+            if (blocking) {
+                network.sendPacket(PlayerInteractItemC2SPacket(player.activeHand))
+            }
         }
     }
 
     private fun attackEntity(entity: Entity) {
-        // todo: stop blocking (1.8 support sword / 1.9+ shield)
-
         EventManager.callEvent(AttackEvent(entity))
 
         // Swing before attacking (on 1.8)

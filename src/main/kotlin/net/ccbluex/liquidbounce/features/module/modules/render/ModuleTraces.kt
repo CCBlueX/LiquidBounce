@@ -21,12 +21,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.*
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.minecraft.entity.Entity
+import net.minecraft.entity.player.PlayerEntity
 import java.awt.Color
 import kotlin.math.sqrt
 
@@ -83,6 +85,8 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
                         1.0f
                     )
                 )
+            } else if (entity is PlayerEntity && FriendManager.isFriend(entity)) {
+                Color4b(0, 0, 255)
             } else {
                 baseColor!!
             }

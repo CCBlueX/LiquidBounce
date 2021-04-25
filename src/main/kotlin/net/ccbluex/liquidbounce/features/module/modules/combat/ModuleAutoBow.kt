@@ -21,21 +21,21 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.minecraft.entity.Entity
 import net.minecraft.item.BowItem
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
-import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
+import net.minecraft.world.RaycastContext
 import kotlin.math.*
 
 /**
@@ -46,6 +46,9 @@ import kotlin.math.*
  */
 object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
+    const val ACCELERATION = -0.006
+    const val REAL_ACCELERATION = -0.005
+
     /**
      * Automatically shoots with your bow when you aim correctly at an enemy or when the bow is fully charged.
      */
@@ -53,25 +56,23 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         val charged by int("Charged", 20, 3..20)
 
-        val tickRepeatable = repeatable {
+        val tickRepeatable = handler<GameTickEvent> {
+            val player = mc.player ?: return@handler
+
             val currentItem = player.activeItem
 
             // Should check if player is using bow
-            if (currentItem?.item is BowItem) {
-                // Wait until bow is fully charged
+            if (currentItem?.item is BowItem) { // Wait until bow is fully charged
                 if (player.itemUseTime < charged) {
-                    return@repeatable
+                    return@handler
                 }
 
                 // Send stop using item to server
                 network.sendPacket(
                     PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                        BlockPos.ORIGIN,
-                        Direction.DOWN
+                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
                     )
-                )
-                // Stop using item client-side
+                ) // Stop using item client-side
                 player.stopUsingItem()
             }
         }
@@ -96,6 +97,8 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         }
 
         val tickRepeatable = handler<GameTickEvent> {
+            val player = mc.player ?: return@handler
+
             targetTracker.lockedOnTarget = null
 
             // Should check if player is using bow
@@ -105,30 +108,20 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
             val eyePos = player.eyesPos
 
-            val target = targetTracker.enemies().firstOrNull() ?: return@handler
+            var target: Entity? = null
+            var rotation: Rotation? = null
 
-            var deltaPos = target.boundingBox.center.subtract(eyePos)
+            for (enemy in targetTracker.enemies()) {
+                val rot = getRotationToTarget(enemy.boundingBox.center, eyePos, enemy) ?: continue
 
-            val basePrediction = predictBow(deltaPos, FastChargeOptions.enabled)
+                target = enemy
+                rotation = rot
 
-            val v0 =
-                cos(Math.toRadians(basePrediction.rotation.pitch.toDouble())) * basePrediction.pullProgress * 3.0F * 0.7f
-            val ticksTravelled = (predictSize * basePrediction.travelledOnX) / v0 + 1.0f
-            val realTravelTime = getTravelTime(ticksTravelled, basePrediction.travelledOnX, v0)
-
-            if (!ticksTravelled.isNaN()) {
-                deltaPos = deltaPos.add(
-                    (target.x - target.prevX) * realTravelTime,
-                    (target.y - target.prevY) * realTravelTime,
-                    (target.z - target.prevZ) * realTravelTime,
-                )
+                break;
             }
 
-            val rotation = predictBow(deltaPos, FastChargeOptions.enabled).rotation
-
-            if (rotation.yaw.isNaN() || rotation.pitch.isNaN()) {
+            if (rotation == null)
                 return@handler
-            }
 
             player.yaw = rotation.yaw
             player.pitch = rotation.pitch
@@ -138,9 +131,96 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
     }
 
-    val ONE_OVER_LN = 1 / ln(0.99)
+    private fun getRotationToTarget(targetPos: Vec3d, eyePos: Vec3d, target: Entity): Rotation? {
+        var deltaPos = targetPos.subtract(eyePos)
+        val basePrediction = predictBow(deltaPos, FastChargeOptions.enabled)
 
-    fun getTravelTime(oldTickDelta: Double, dist: Double, v0: Double, iterations: Int = 10): Float {
+        val realTravelTime = getTravelTime(
+            basePrediction.travelledOnX,
+            cos(Math.toRadians(basePrediction.rotation.pitch.toDouble())) * basePrediction.pullProgress * 3.0F * 0.7f
+        )
+
+        if (!realTravelTime.isNaN()) {
+            deltaPos = deltaPos.add(
+                (target.x - target.prevX) * realTravelTime,
+                (target.y - target.prevY) * realTravelTime,
+                (target.z - target.prevZ) * realTravelTime,
+            )
+        }
+
+        val finalPrediction = predictBow(deltaPos, FastChargeOptions.enabled)
+        val rotation = finalPrediction.rotation
+
+        if (rotation.yaw.isNaN() || rotation.pitch.isNaN()) {
+            return null
+        }
+
+        val v0 = finalPrediction.pullProgress * 3.0F * 0.7f
+
+        val v_x = cos(Math.toRadians(rotation.pitch.toDouble())) * v0
+        val v_y = sin(Math.toRadians(rotation.pitch.toDouble())) * v0
+
+        val maxX = -(v_x * v_y) / (2.0 * ACCELERATION) // -(v_x*v_y)/a
+        val maxY = -(v_y * v_y) / (4.0 * ACCELERATION) // -v_y^2/(2*a)
+
+        val positions = mutableListOf<Vec3d>()
+
+        positions.add(eyePos)
+
+        val xPitch = cos(Math.toRadians(rotation.yaw.toDouble() - 90.0F))
+        val zPitch = sin(Math.toRadians(rotation.yaw.toDouble() - 90.0F))
+
+        val vertex = if (maxX < 0 && maxX * maxX < deltaPos.x * deltaPos.x + deltaPos.z * deltaPos.z) {
+            Vec3d(
+                xPitch * maxX, maxY, zPitch * maxX
+            )
+        } else {
+            null
+        }
+
+        if (vertex != null) positions.add(vertex.add(eyePos))
+
+//        var lowerBound = if (vertex != null) -maxX
+//        else 0.0
+//
+//        val upperBound = sqrt(deltaPos.x * deltaPos.x + deltaPos.z * deltaPos.z)
+//
+//        while ((upperBound - lowerBound).absoluteValue > 2.0) {
+//            lowerBound += (upperBound - lowerBound) / 2.0
+//
+//            val y = (ACCELERATION * lowerBound * lowerBound) / (v_x * v_x) + (v_y * lowerBound) / v_x
+//
+//            println("$lowerBound $y")
+//
+//            positions.add(
+//                Vec3d(
+//                    xPitch * lowerBound, y, zPitch * lowerBound
+//                ).add(eyePos)
+//            )
+//        }
+
+        positions.add(targetPos)
+
+        println(positions.size)
+
+        for (i in 0 until positions.lastIndex) {
+            val raycast = world.raycast(
+                RaycastContext(
+                    positions[i],
+                    positions[i + 1],
+                    RaycastContext.ShapeType.OUTLINE,
+                    RaycastContext.FluidHandling.ANY,
+                    player
+                )
+            )
+
+            if (raycast.type == HitResult.Type.BLOCK) return null
+        }
+
+        return rotation
+    }
+
+    fun getTravelTime(dist: Double, v0: Double): Float {
         return log((v0 / (ln(0.99)) + dist) / (v0 / (ln(0.99))), 0.99).toFloat()
     }
 
@@ -165,25 +245,11 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             Rotation(
                 (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f,
                 (-Math.toDegrees(Math.atan((velocity * velocity - Math.sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX)))).toFloat()
-            ),
-            velocity,
-            travelledOnX
+            ), velocity, travelledOnX
         )
     }
 
     class BowPredictionResult(val rotation: Rotation, val pullProgress: Float, val travelledOnX: Double)
-
-    fun getRotationVector(pitch: Float, yaw: Float): Vec3 {
-        val f = pitch * 0.017453292f
-        val g = -yaw * 0.017453292f
-
-        val h = MathHelper.cos(g)
-        val i = MathHelper.sin(g)
-        val j = MathHelper.cos(f)
-        val k = MathHelper.sin(f)
-
-        return Vec3(i * j, -k, h * j)
-    }
 
     /**
      * @desc Fast charge options (like FastBow) can be used to charge the bow faster.
@@ -195,15 +261,15 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         val packets by int("Packets", 20, 3..20)
 
-        val tickRepeatable = repeatable {
+        val tickRepeatable = handler<GameTickEvent> {
+            val player = mc.player ?: return@handler
+
             val currentItem = player.activeItem
 
             // Should accelerated game ticks when using bow
             if (currentItem?.item is BowItem) {
-                repeat(packets) {
-                    // Send movement packet to simulate ticks (has been patched in 1.19)
-                    network.sendPacket(PlayerMoveC2SPacket(true))
-                    // Just show visual effect (not required to work - but looks better)
+                repeat(packets) { // Send movement packet to simulate ticks (has been patched in 1.19)
+                    network.sendPacket(PlayerMoveC2SPacket(true)) // Just show visual effect (not required to work - but looks better)
                     player.tickActiveItemStack()
                 }
 

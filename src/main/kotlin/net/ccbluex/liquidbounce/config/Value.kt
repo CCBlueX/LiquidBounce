@@ -37,14 +37,10 @@ typealias ValueListener<T> = (T) -> T
  * Value based on generics and support for readable names and description
  */
 open class Value<T : Any>(
-    @SerializedName("name")
-    open val name: String,
-    @SerializedName("value")
-    internal var value: T,
-    @Exclude
-    val valueType: ValueType,
-    @Exclude
-    val listType: ListValueType = ListValueType.None
+    @SerializedName("name") open val name: String,
+    @SerializedName("value") internal var value: T,
+    @Exclude val valueType: ValueType,
+    @Exclude val listType: ListValueType = ListValueType.None
 ) {
 
     @Exclude
@@ -70,8 +66,7 @@ open class Value<T : Any>(
 
     fun get() = value
 
-    fun set(t: T) {
-        // temporary set value
+    fun set(t: T) { // temporary set value
         value = t
 
         // check if value is really accepted
@@ -99,15 +94,19 @@ open class Value<T : Any>(
     open fun deserializeFrom(gson: Gson, element: JsonElement) {
         val currValue = this.value
 
-        this.value = if (currValue is List<*>) {
-            @Suppress("UNCHECKED_CAST")
-            element.asJsonArray.mapTo(mutableListOf(), { gson.fromJson(it, this.listType.type!!) }) as T
-        } else if (currValue is Set<*>) {
-            @Suppress("UNCHECKED_CAST")
-            element.asJsonArray.mapTo(TreeSet(), { gson.fromJson(it, this.listType.type!!) }) as T
-        } else {
-            gson.fromJson(element, currValue.javaClass)
-        }
+        set(
+            if (currValue is List<*>) {
+                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                    mutableListOf(),
+                    { gson.fromJson(it, this.listType.type!!) }) as T
+            } else if (currValue is Set<*>) {
+                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                    TreeSet(),
+                    { gson.fromJson(it, this.listType.type!!) }) as T
+            } else {
+                gson.fromJson(element, currValue.javaClass)
+            }
+        )
     }
 
 }
@@ -116,11 +115,7 @@ open class Value<T : Any>(
  * Ranged value adds support for closed ranges
  */
 class RangedValue<T : Any>(
-    name: String,
-    value: T,
-    @Exclude
-    val range: ClosedRange<*>,
-    type: ValueType
+    name: String, value: T, @Exclude val range: ClosedRange<*>, type: ValueType
 ) : Value<T>(name, value, valueType = type) {
 
     fun getFrom(): Double {
@@ -134,10 +129,7 @@ class RangedValue<T : Any>(
 }
 
 class ChooseListValue<T : NamedChoice>(
-    name: String,
-    selected: T,
-    @Exclude
-    val choices: Array<T>
+    name: String, selected: T, @Exclude val choices: Array<T>
 ) : Value<T>(name, selected, ValueType.CHOICE) {
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
@@ -150,41 +142,23 @@ class ChooseListValue<T : NamedChoice>(
         this.value = choices.first { it.choiceName == name }
     }
 
-    fun getChoices(): Array<String> {
+    fun getChoicesStrings(): Array<String> {
         return this.choices.map { it.choiceName }.toTypedArray()
     }
 
 }
 
 interface NamedChoice {
+
     val choiceName: String
 }
 
-enum class ValueType {
-    BOOLEAN,
-    FLOAT,
-    FLOAT_RANGE,
-    INT,
-    INT_RANGE,
-    TEXT,
-    TEXT_ARRAY,
-    CURVE,
-    COLOR,
-    BLOCK,
-    BLOCKS,
-    ITEM,
-    ITEMS,
-    CHOICE,
-    INVALID,
-    TOGGLEABLE
+enum class ValueType { BOOLEAN, FLOAT, FLOAT_RANGE, INT, INT_RANGE, TEXT, TEXT_ARRAY, CURVE, COLOR, BLOCK, BLOCKS, ITEM,
+    ITEMS, CHOICE, INVALID, TOGGLEABLE
 }
 
-enum class ListValueType(val type: Class<*>?) {
-    Block(net.minecraft.block.Block::class.java),
-    Item(net.minecraft.item.Item::class.java),
-    String(kotlin.String::class.java),
-    Friend(FriendManager.Friend::class.java),
-    Proxy(ProxyManager.Proxy::class.java),
-    FontDetail(Fonts.FontDetail::class.java),
-    None(null)
+enum class ListValueType(val type: Class<*>?) { Block(net.minecraft.block.Block::class.java),
+    Item(net.minecraft.item.Item::class.java), String(kotlin.String::class.java),
+    Friend(FriendManager.Friend::class.java), Proxy(ProxyManager.Proxy::class.java),
+    FontDetail(Fonts.FontDetail::class.java), None(null)
 }

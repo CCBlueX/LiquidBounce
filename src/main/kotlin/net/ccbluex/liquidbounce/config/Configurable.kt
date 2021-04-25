@@ -27,9 +27,9 @@ import net.minecraft.item.Item
 open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf(), valueType: ValueType = ValueType.INVALID) :
     Value<MutableList<Value<*>>>(name, value = value, valueType) {
 
-    fun initConfigurable() {
-        value.filterIsInstance<ChoiceConfigurable>().forEach {
-            it.initialize(it)
+    open fun initConfigurable() {
+        value.filterIsInstance<Configurable>().forEach {
+            it.initConfigurable()
         }
     }
 
@@ -45,7 +45,7 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         for (currentValue in this.value) {
             if (currentValue is ToggleableConfigurable) {
                 output.add(currentValue)
-                output.addAll(currentValue.value.filter { it.name == currentValue.name })
+                output.addAll(currentValue.value.filter { it.name.equals("Enabled", true) })
             } else {
                 if (currentValue is Configurable) {
                     currentValue.getContainedSettingsRecursivelyInternal(output)

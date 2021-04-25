@@ -87,7 +87,7 @@ class UltralightJsEvents(private val viewContextProvider: ContextProvider, val v
                 }
 
             },
-            false
+            false,
         )
 
         // Add the event hook to the list

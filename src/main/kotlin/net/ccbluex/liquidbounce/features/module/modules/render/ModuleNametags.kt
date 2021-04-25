@@ -156,7 +156,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                 val pixelX = (xWithoutAspectRatio + 1.0f) / 2.0f * mc.window.scaledWidth
                 val pixelY = (screenSpaceVec.y + 1.0f) / 2.0f * mc.window.scaledHeight
 
-                val slotTypes = arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+                val slotTypes = arrayOf(EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND, EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
 
                 val renderTasks = slotTypes.withIndex().mapNotNull { (index, slot) ->
                     val equipmentInSlot = entity.getEquippedStack(slot) ?: return@mapNotNull null

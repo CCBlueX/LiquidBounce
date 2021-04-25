@@ -41,7 +41,7 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
     val description: TranslatableText
         get() = TranslatableText("$translationBaseKey.description")
 
-    var enabled by boolean(name, enabled)
+    var enabled by boolean("Enabled", enabled)
 
     override fun handleEvents() = super.handleEvents() && enabled
 
@@ -68,6 +68,11 @@ open class ChoiceConfigurable(
     val description: TranslatableText
         get() = TranslatableText("$translationBaseKey.description")
 
+    override fun initConfigurable() {
+        initialize(this)
+        super.initConfigurable()
+    }
+
     fun newState(state: Boolean) {
         val choice = choices.find { active.equals(it.name, true) } ?: return
 
@@ -81,7 +86,7 @@ open class ChoiceConfigurable(
     @Exclude
     val choices: MutableList<Choice> = mutableListOf()
 
-    fun getChoices(): Array<String> {
+    fun getChoicesStrings(): Array<String> {
         return this.choices.map { it.name }.toTypedArray()
     }
 

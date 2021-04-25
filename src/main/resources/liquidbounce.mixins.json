@@ -31,7 +31,9 @@
     "minecraft.render.MixinEntityRenderer",
     "minecraft.render.MixinGameRenderer",
     "minecraft.render.MixinInGameOverlayRenderer",
-    "minecraft.render.MixinRenderTickCounter"
+    "minecraft.render.MixinLivingEntityRenderer",
+    "minecraft.render.MixinRenderTickCounter",
+    "minecraft.render.MixinTextRenderer"
   ],
   "server": [],
   "injectors": {
