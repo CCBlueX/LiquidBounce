@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
 
-object ModuleNameProtect : Module("NameProtect", Category.RENDER) {
+object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
     val replacement by text("Replacement", "You")
     val replaceFriendNames by boolean("ObfuscateFriends", true)
