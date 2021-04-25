@@ -87,7 +87,7 @@ class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : C
 // User action events
 
 @Nameable("attack")
-class AttackEvent(val enemy: Entity) : Event()
+class AttackEvent<T : Entity>(val enemy: T) : Event()
 
 @Nameable("session")
 class SessionEvent : Event()
@@ -149,7 +149,7 @@ class CancelBlockBreakingEvent : CancellableEvent()
 // Network events
 
 @Nameable("packet")
-class PacketEvent<T : Packet<*>>(val origin: TransferOrigin, val packet: T) : CancellableEvent()
+class PacketEvent<out T : Packet<*>>(val origin: TransferOrigin, val packet: T) : CancellableEvent()
 
 enum class TransferOrigin {
     SEND, RECEIVE

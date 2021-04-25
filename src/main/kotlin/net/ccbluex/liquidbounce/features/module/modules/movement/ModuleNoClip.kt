@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.packetHandler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -51,7 +52,7 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
         }
     }
 
-    val packetHandler = handler<PacketEvent<PlayerPositionLookS2CPacket>> {
+    val packetHandler = packetHandler<PlayerPositionLookS2CPacket> {
         // Setback detection
         chat(regular(this.message("setbackDetected")))
         enabled = false

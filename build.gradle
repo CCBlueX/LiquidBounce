@@ -128,6 +128,9 @@ compileKotlin {
     kotlinOptions.suppressWarnings = true
     kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.useIR = true
+    kotlinOptions {
+        freeCompilerArgs = ["-Xinline-classes"]
+    }
 }
 
 // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task

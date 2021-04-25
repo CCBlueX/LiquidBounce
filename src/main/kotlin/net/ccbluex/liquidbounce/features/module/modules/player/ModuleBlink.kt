@@ -125,15 +125,15 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         }
     }
 
-    val packetHandler = handler<PacketEvent<*>>(priority = -1) { event ->
+    val handler = packetHandler<Packet<*>>(priority = -1) { event ->
         if (mc.player == null || disablelogger || event.origin != TransferOrigin.SEND) {
-            return@handler
+            return@packetHandler
         }
 
         if (ambush && event.packet is PlayerInteractEntityC2SPacket) {
             enabled = false
 
-            return@handler
+            return@packetHandler
         }
 
         if (event.packet is PlayerMoveC2SPacket || event.packet is PlayerInteractBlockC2SPacket ||
@@ -141,7 +141,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
             event.packet is PlayerActionC2SPacket || event.packet is PlayerInteractEntityC2SPacket
         ) {
             if (event.packet is PlayerMoveC2SPacket && !event.packet.changePosition)
-                return@handler
+                return@packetHandler
 
             if (event.packet is PlayerMoveC2SPacket) {
                 positionPackets.getAndIncrement()

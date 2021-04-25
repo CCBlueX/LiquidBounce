@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.packetHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
@@ -27,7 +28,7 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
 
-    val handler = handler<PacketEvent<EntityVelocityUpdateS2CPacket>> {
+    val handler = packetHandler<EntityVelocityUpdateS2CPacket> {
         if (it.packet.id == player.entityId) {
             it.cancelEvent()
         }

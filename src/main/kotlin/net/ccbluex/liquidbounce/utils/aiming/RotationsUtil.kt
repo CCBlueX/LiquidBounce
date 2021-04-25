@@ -20,10 +20,7 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.minecraft.block.BlockState
@@ -252,7 +249,7 @@ object RotationManager : Listenable {
     /**
      * Modify server-side rotations
      */
-    private val packetHandler = handler<PacketEvent<PlayerMoveC2SPacket>> { event ->
+    private val packetHandler = packetHandler<PlayerMoveC2SPacket> { event ->
         val packet = event.packet
 
         if (!deactivateManipulation) {

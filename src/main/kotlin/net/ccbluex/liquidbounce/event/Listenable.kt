@@ -38,8 +38,19 @@ interface Listenable {
 
 }
 
+/**
+ * Do not use with PacketEvent
+ */
 inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, priority: Int = 0, noinline handler: Handler<T>) {
     EventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition, priority))
+}
+
+inline fun <reified T> Listenable.packetHandler(ignoreCondition: Boolean = false, priority: Int = 0, noinline handler: Handler<PacketEvent<T>>) where T : Packet<*> {
+    handler<PacketEvent<*>> {
+        if (it.packet is T) {
+            handler(it as PacketEvent<T>)
+        }
+    }
 }
 
 /**

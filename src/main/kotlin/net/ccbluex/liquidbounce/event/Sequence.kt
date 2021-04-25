@@ -60,6 +60,7 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T)
             handler(event)
         }.onFailure {
             logger.error("Exception occurred during subroutine", it)
+            it.printStackTrace()
         }
     }
 
