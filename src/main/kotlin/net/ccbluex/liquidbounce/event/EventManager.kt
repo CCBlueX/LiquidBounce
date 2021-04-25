@@ -66,6 +66,7 @@ object EventManager {
         if (!handlers.contains(hook)) {
             handlers.add(hook)
 
+            handlers.sortByDescending { it.priority }
         }
     }
 

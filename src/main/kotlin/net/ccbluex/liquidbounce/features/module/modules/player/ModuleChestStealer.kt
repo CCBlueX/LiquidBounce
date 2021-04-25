@@ -32,14 +32,14 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     val timer = Chronometer()
 
-    val repeatable = repeatable {
+    val repeatable = handler<GameRenderEvent> {
         if (!timer.hasElapsed())
-            return@repeatable
+            return@handler
 
         val screen = mc.currentScreen
 
         if (screen !is GenericContainerScreen) {
-            return@repeatable
+            return@handler
         }
 
         val itemsToCollect = ModuleInventoryCleaner.getUsefulItems(screen).shuffled()
