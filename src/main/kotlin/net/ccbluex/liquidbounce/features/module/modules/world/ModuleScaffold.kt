@@ -72,13 +72,13 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val rotationsConfigurable = tree(RotationsConfigurable())
 
     var currentTarget: Target? = null
+    val timer = Chronometer()
 
-    val repeating = repeatable { event ->
-        updateTarget()
+    val networkTickHandler = repeatable { event ->
+        currentTarget = updateTarget(player.blockPos.add(0, -1, 0))
 
         val target = currentTarget ?: return@repeatable
         val serverRotation = RotationManager.serverRotation ?: return@repeatable
-
         val rayTraceResult = raycast(4.0, serverRotation) ?: return@repeatable
 
         if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos ||
@@ -144,14 +144,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return block.defaultState.isSideSolid(world, target.blockPos, target.direction, SideShapeType.CENTER)
     }
 
-    private fun updateTarget() {
-        this.currentTarget = null
+    fun updateTarget(pos: BlockPos): Target? {
+        val state = pos.getState()
 
-        val pos = player.blockPos.add(0, -1, 0)
-        val state = pos.getState() ?: return
-
-        if (state.isSideSolid(world, pos, Direction.UP, SideShapeType.CENTER)) {
-            return
+        if (state!!.isSideSolid(mc.world!!, pos, Direction.UP, SideShapeType.CENTER)) {
+            return null
         }
 
         val offsetsToInvestigate = arrayOf(
@@ -170,7 +167,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         for (vec3i in offsetsToInvestigate) {
             val posToInvestigate = pos.add(vec3i)
 
-            if (posToInvestigate.getState()!!.isSideSolid(world, posToInvestigate, Direction.UP, SideShapeType.CENTER)) {
+            if (posToInvestigate.getState()!!.isSideSolid(mc.world!!, posToInvestigate, Direction.UP, SideShapeType.CENTER)) {
                 continue
             }
 
@@ -187,7 +184,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 val currPos = posToInvestigate.add(direction.vector)
                 val currState = currPos.getState() ?: return@mapNotNull null
 
-                if (currState.isAir) {
+                if (currState.isAir || currState.material.isReplaceable) {
                     return@mapNotNull null
                 }
 
@@ -210,7 +207,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 val currState = currPos.getState()
 
                 val face = currState!!.getVisualShape(
-                    world,
+                    mc.world,
                     currPos,
                     ShapeContext.of(player)
                 ).boundingBoxes.mapNotNull {
@@ -225,10 +222,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     ?: continue
 
                 RotationManager.aimAt(face.second.add(Vec3d.of(currPos)), player.eyesPos, ticks = 30, configurable = rotationsConfigurable)
-                currentTarget = Target(currPos, first.first, face.first.from.y + currPos.y)
-                break
+
+                return Target(currPos, first.first, face.first.from.y + currPos.y)
             }
         }
+
+        return null
     }
 
     val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->

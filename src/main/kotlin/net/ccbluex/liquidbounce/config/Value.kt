@@ -22,12 +22,19 @@ package net.ccbluex.liquidbounce.config
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
+import com.mojang.brigadier.StringReader
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.render.Fonts
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.minecraft.block.Block
+import net.minecraft.item.Item
+import net.minecraft.util.Identifier
+import net.minecraft.util.registry.Registry
+import java.awt.Color
 import java.util.*
 import kotlin.reflect.KProperty
 
@@ -96,17 +103,36 @@ open class Value<T : Any>(
 
         set(
             if (currValue is List<*>) {
-                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
-                    mutableListOf(),
-                    { gson.fromJson(it, this.listType.type!!) }) as T
+                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(mutableListOf(),
+                                                                      { gson.fromJson(it, this.listType.type!!) }) as T
             } else if (currValue is Set<*>) {
-                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
-                    TreeSet(),
-                    { gson.fromJson(it, this.listType.type!!) }) as T
+                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(TreeSet(),
+                                                                      { gson.fromJson(it, this.listType.type!!) }) as T
             } else {
                 gson.fromJson(element, currValue.javaClass)
             }
         )
+    }
+
+    open fun setByString(string: String) {
+        if (this.value is Boolean) {
+            val newValue = when (string.toLowerCase(Locale.ROOT)) {
+                "true", "on"   -> true
+                "false", "off" -> false
+                else           -> throw IllegalArgumentException()
+            }
+
+            set(newValue as T)
+        } else if (this.value is Color4b) {
+            if (string.startsWith("#")) set(Color4b(Color(string.substring(1).toInt(16))) as T)
+            else set(Color4b(Color(string.toInt())) as T)
+        } else if (this.value is Block) {
+            set(Registry.BLOCK.get(Identifier.fromCommandInput(StringReader(string))) as T)
+        } else if (this.value is Item) {
+            set(Registry.ITEM.get(Identifier.fromCommandInput(StringReader(string))) as T)
+        } else {
+            throw IllegalStateException()
+        }
     }
 
 }
@@ -124,6 +150,36 @@ class RangedValue<T : Any>(
 
     fun getTo(): Double {
         return (this.range.endInclusive as Number).toDouble()
+    }
+
+    override fun setByString(string: String) {
+        if (this.value is ClosedRange<*>) {
+            val split = string.split("..")
+
+            if (split.size != 2) throw IllegalArgumentException()
+
+            val closedRange = this.value as ClosedRange<*>
+
+            val newValue = when (closedRange.start) {
+                is Int    -> split[0].toInt()..split[1].toInt()
+                is Long   -> split[0].toLong()..split[1].toLong()
+                is Float  -> split[0].toFloat()..split[1].toFloat()
+                is Double -> split[0].toDouble()..split[1].toDouble()
+                else      -> throw IllegalStateException()
+            }
+
+            set(newValue as T)
+        } else {
+            val translationFunction: (String) -> Any = when (this.value) {
+                is Int    -> String::toInt
+                is Long   -> String::toLong
+                is Float  -> String::toFloat
+                is Double -> String::toDouble
+                else      -> throw IllegalStateException()
+            }
+
+            set(translationFunction(string) as T)
+        }
     }
 
 }
@@ -146,6 +202,9 @@ class ChooseListValue<T : NamedChoice>(
         return this.choices.map { it.choiceName }.toTypedArray()
     }
 
+    override fun setByString(string: String) {
+        set(this.choices.firstOrNull { it.choiceName.equals(string, true) }!! as T)
+    }
 }
 
 interface NamedChoice {

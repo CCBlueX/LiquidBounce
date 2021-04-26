@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.GameRenderEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -30,8 +30,10 @@ import net.minecraft.screen.slot.SlotActionType
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     var delay by intRange("Delay", 50..200, 0..2000)
+    var selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
 
-    val timer = Chronometer()
+    private var lastSlot = 0
+    private val timer = Chronometer()
 
     val repeatable = handler<GameRenderEvent> {
         if (!timer.hasElapsed())
@@ -43,10 +45,12 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             return@handler
         }
 
-        val itemsToCollect = ModuleInventoryCleaner.getUsefulItems(screen).shuffled()
+        val itemsToCollect = this.selectionMode.processor(ModuleInventoryCleaner.getUsefulItems(screen))
 
         for (slotId in itemsToCollect) {
             mc.interactionManager!!.clickSlot(screen.screenHandler.syncId, slotId, 0, SlotActionType.QUICK_MOVE, player)
+
+            this.lastSlot = slotId
 
             val time = delay.random()
 
@@ -60,6 +64,20 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         if (itemsToCollect.isEmpty()) {
             player.closeHandledScreen()
         }
+    }
+
+    enum class SelectionMode(override val choiceName: String, val processor: (List<Int>) -> List<Int>): NamedChoice {
+        DISTANCE("Distance", { it.sortedBy { slot ->
+            val rowA = slot / 9
+            val colA = slot % 9
+
+            val rowB = lastSlot / 9
+            val colB = lastSlot % 9
+
+            (colA - colB) * (colA - colB) + (rowA - rowB) * (rowA - rowB)
+        } }),
+        INDEX("Index", List<Int>::sorted),
+        RANDOM("Random", List<Int>::shuffled),
     }
 
 }
