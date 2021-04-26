@@ -18,14 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.*
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
@@ -57,47 +56,38 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             compareByCondition(
                 o1,
                 o2
-            ) { (it.item as BlockItem).block.defaultState.isFullCube(mc.world, BlockPos(0, 0, 0)) }
+            ) { (it.item as BlockItem).block.defaultState.isFullCube(world, BlockPos(0, 0, 0)) }
         },
         { o1, o2 -> (o2.item as BlockItem).block.slipperiness.compareTo((o1.item as BlockItem).block.slipperiness) },
-        Comparator.comparingDouble { (1.5 - (it.item as BlockItem).block.defaultState.getHardness(mc.world, BlockPos(0, 0, 0))).absoluteValue },
+        Comparator.comparingDouble { (1.5 - (it.item as BlockItem).block.defaultState.getHardness(world, BlockPos(0, 0, 0))).absoluteValue },
         { o1, o2 -> o2.count.compareTo(o1.count) }
     )
 
-    var delay by intRange("Delay", 100..200, 0..2000)
+    val silent by boolean("Silent", true)
+    var delay by intRange("Delay", 3..5, 0..40)
 
     // Rotation
     val rotationsConfigurable = tree(RotationsConfigurable())
 
     var currentTarget: Target? = null
-    val timer = Chronometer()
 
-    val networkTickHandler = repeatable { event ->
+    val repeating = repeatable { event ->
         updateTarget()
-    }
 
-    val silent by boolean("Silent", true)
+        val target = currentTarget ?: return@repeatable
+        val serverRotation = RotationManager.serverRotation ?: return@repeatable
 
-    val handleInputsEvents = handler<GameRenderEvent> {
-        if (!timer.hasElapsed())
-            return@handler
+        val rayTraceResult = raycast(4.0, serverRotation) ?: return@repeatable
 
-        val player = mc.player ?: return@handler
-        val world = world
-
-        val target = currentTarget ?: return@handler
-        val serverRotation = RotationManager.serverRotation ?: return@handler
-
-        val rayTraceResult = raycast(4.0, serverRotation)
-
-        if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.pos.y < target.minY) {
-            return@handler
+        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos ||
+            rayTraceResult.pos.y < target.minY) {
+            return@repeatable
         }
 
         var hasBlockInHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot), target)
 
         // Handle silent block selection
-        if (this.silent && !hasBlockInHand) {
+        if (silent && !hasBlockInHand) {
             val slot = (0..8).mapNotNull {
                 val stack = player.inventory.getStack(it)
 
@@ -115,7 +105,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         if (!hasBlockInHand)
-            return@handler
+            return@repeatable
 
         val result = interaction.interactBlock(
             player,
@@ -129,9 +119,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.swingHand(Hand.MAIN_HAND)
             }
 
-            timer.waitFor(delay.random().toLong())
-
             currentTarget = null
+            wait(delay.random())
         }
     }
 
@@ -150,16 +139,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val block = item.block
 
-        return block.defaultState.isSideSolid(mc.world, target.blockPos, target.direction, SideShapeType.CENTER)
+        return block.defaultState.isSideSolid(world, target.blockPos, target.direction, SideShapeType.CENTER)
     }
 
-    fun updateTarget() {
+    private fun updateTarget() {
         this.currentTarget = null
 
         val pos = player.blockPos.add(0, -1, 0)
-        val state = pos.getState()
+        val state = pos.getState() ?: return
 
-        if (state!!.isSideSolid(mc.world!!, pos, Direction.UP, SideShapeType.CENTER)) {
+        if (state.isSideSolid(world, pos, Direction.UP, SideShapeType.CENTER)) {
             return
         }
 
@@ -179,7 +168,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         for (vec3i in offsetsToInvestigate) {
             val posToInvestigate = pos.add(vec3i)
 
-            if (posToInvestigate.getState()!!.isSideSolid(mc.world!!, posToInvestigate, Direction.UP, SideShapeType.CENTER)) {
+            if (posToInvestigate.getState()!!.isSideSolid(world, posToInvestigate, Direction.UP, SideShapeType.CENTER)) {
                 continue
             }
 
@@ -219,7 +208,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 val currState = currPos.getState()
 
                 val face = currState!!.getVisualShape(
-                    mc.world,
+                    world,
                     currPos,
                     ShapeContext.of(player)
                 ).boundingBoxes.mapNotNull {
@@ -234,9 +223,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     ?: continue
 
                 RotationManager.aimAt(face.second.add(Vec3d.of(currPos)), player.eyesPos, ticks = 30, configurable = rotationsConfigurable)
-
                 currentTarget = Target(currPos, first.first, face.first.from.y + currPos.y)
-
                 break
             }
         }
