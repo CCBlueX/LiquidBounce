@@ -72,7 +72,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val rotationsConfigurable = tree(RotationsConfigurable())
 
     var currentTarget: Target? = null
-    val timer = Chronometer()
 
     val networkTickHandler = repeatable { event ->
         currentTarget = updateTarget(player.blockPos.add(0, -1, 0))
