@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -227,6 +229,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 break
             }
         }
+    }
+
+    val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
+        event.isSafeWalk = true
     }
 
     fun Box.getFace(direction: Direction): Face {

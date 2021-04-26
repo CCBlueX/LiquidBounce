@@ -132,7 +132,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleFucker,
             ModuleTeams,
             ModuleBugUp,
-            ModuleNameProtect
+            ModuleNameProtect,
+            ModuleSafeWalk
         )
 
         builtin.forEach(this::addModule)

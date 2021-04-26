@@ -143,6 +143,9 @@ class PlayerVelocityStrafe(val movementInput: Vec3d, val speed: Float, val yaw: 
 @Nameable("playerStride")
 class PlayerStrideEvent(var strideOnAir: Boolean) : Event()
 
+@Nameable("playerSafeWalk")
+class PlayerSafeWalkEvent(var isSafeWalk: Boolean = false) : Event()
+
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
 
