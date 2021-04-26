@@ -70,7 +70,7 @@ object RotationManager : Listenable {
         pos: BlockPos,
         state: BlockState,
         throughWalls: Boolean,
-        range: Double,
+        range: Double
     ): VecRotation? {
         val offset = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
         val shape = state.getVisualShape(mc.world, pos, ShapeContext.of(mc.player))
@@ -91,7 +91,7 @@ object RotationManager : Listenable {
         throughWalls: Boolean,
         range: Double,
         expectedTarget: BlockPos? = null,
-        pattern: Pattern = GaussianPattern,
+        pattern: Pattern = GaussianPattern
     ): VecRotation? {
         val preferredSpot = pattern.spot(box)
         val preferredRotation = makeRotation(preferredSpot, eyes)
@@ -126,16 +126,12 @@ object RotationManager : Listenable {
 
                         if (visible) {
                             // Calculate next spot to preferred spot
-                            if (visibleRot == null || rotationDifference(rotation,
-                                    preferredRotation) < rotationDifference(visibleRot.rotation, preferredRotation)
-                            ) {
+                            if (visibleRot == null || rotationDifference(rotation, preferredRotation) < rotationDifference(visibleRot.rotation, preferredRotation)) {
                                 visibleRot = VecRotation(rotation, vec3)
                             }
                         } else if (throughWalls) {
                             // Calculate next spot to preferred spot
-                            if (notVisibleRot == null || rotationDifference(rotation,
-                                    preferredRotation) < rotationDifference(notVisibleRot.rotation, preferredRotation)
-                            ) {
+                            if (notVisibleRot == null || rotationDifference(rotation, preferredRotation) < rotationDifference(notVisibleRot.rotation, preferredRotation)) {
                                 notVisibleRot = VecRotation(rotation, vec3)
                             }
                         }
@@ -198,12 +194,10 @@ object RotationManager : Listenable {
                 return
             }
 
-            this.currentRotation =
-                limitAngleChange(this.currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed)
+            this.currentRotation = limitAngleChange(this.currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed)
         } else if (targetRotation != null) {
             targetRotation?.let { targetRotation ->
-                this.currentRotation =
-                    limitAngleChange(this.currentRotation ?: playerRotation, targetRotation, turnSpeed)
+                this.currentRotation = limitAngleChange(this.currentRotation ?: playerRotation, targetRotation, turnSpeed)
             }
         }
     }
@@ -252,26 +246,27 @@ object RotationManager : Listenable {
     /**
      * Modify server-side rotations
      */
-    private val packetHandler = handler<PacketEvent<PlayerMoveC2SPacket>> { event ->
+    private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (!deactivateManipulation) {
-            currentRotation?.fixedSensitivity()?.let {
-                val (serverYaw, serverPitch) = serverRotation ?: Rotation(0f, 0f)
+        if (packet is PlayerMoveC2SPacket) {
+            if (!deactivateManipulation) {
+                currentRotation?.fixedSensitivity()?.let {
+                    val (serverYaw, serverPitch) = serverRotation ?: Rotation(0f, 0f)
 
-                if (it.yaw != serverYaw || it.pitch != serverPitch) {
-                    packet.yaw = it.yaw
-                    packet.pitch = it.pitch
-                    packet.changeLook = true
+                    if (it.yaw != serverYaw || it.pitch != serverPitch) {
+                        packet.yaw = it.yaw
+                        packet.pitch = it.pitch
+                        packet.changeLook = true
+                    }
                 }
             }
-        }
 
-        // Update current rotation
-        if (packet.changeLook) {
-            serverRotation = Rotation(packet.yaw, packet.pitch)
+            // Update current rotation
+            if (packet.changeLook) {
+                serverRotation = Rotation(packet.yaw, packet.pitch)
+            }
         }
-
     }
 
     val velocity = handler<PlayerVelocityStrafe> { event ->

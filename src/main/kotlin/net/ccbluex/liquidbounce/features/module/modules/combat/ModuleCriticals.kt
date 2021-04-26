@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.*
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
 import net.ccbluex.liquidbounce.utils.entity.upwards
@@ -72,8 +72,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         // Jump crit should just be active until an enemy is in your reach to be attacked
         val range by float("Range", 4f, 1f..6f)
 
-        val tickHandler = repeatable {
-            val (_, _) = world.findEnemy(range) ?: return@repeatable
+        val tickHandler = handler<PlayerTickEvent> {
+            val (_, _) = world.findEnemy(range) ?: return@handler
 
             if (player.isOnGround) {
                 player.upwards(height)

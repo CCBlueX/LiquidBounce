@@ -24,7 +24,8 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBreadcrumbs
-import net.ccbluex.liquidbounce.render.engine.*
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.RenderEngine
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -33,7 +34,6 @@ import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.util.math.Vec3d
-import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -125,7 +125,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         }
     }
 
-    val packetHandler = handler<PacketEvent<*>>(priority = -1) { event ->
+    val packetHandler = handler<PacketEvent>(priority = -1) { event ->
         if (mc.player == null || disablelogger || event.origin != TransferOrigin.SEND) {
             return@handler
         }

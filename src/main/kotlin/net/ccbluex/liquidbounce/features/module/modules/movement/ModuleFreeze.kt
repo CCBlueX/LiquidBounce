@@ -41,15 +41,16 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
         event.movement.z = 0.0
     }
 
-    val packetHandler = handler<PacketEvent<TeleportConfirmC2SPacket>> { event ->
+    val packetHandler = handler<PacketEvent> { event ->
         if (mc.world != null && event.origin == TransferOrigin.SEND) {
-            enabled = false
+            if (event.packet is TeleportConfirmC2SPacket) {
+                enabled = false
 
-            return@handler
+                return@handler
+            }
+
+            event.cancelEvent()
         }
-
-        event.cancelEvent()
-
     }
 
 }

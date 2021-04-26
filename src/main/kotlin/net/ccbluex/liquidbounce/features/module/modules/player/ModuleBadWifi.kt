@@ -22,14 +22,12 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.*
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.util.math.Vec3d
-import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
 object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
@@ -62,7 +60,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         blink()
     }
 
-    val packetHandler = handler<PacketEvent<*>>(priority = -1) { event ->
+    val packetHandler = handler<PacketEvent>(priority = -1) { event ->
         if (mc.player == null || disablelogger || !currentlyBlinking || event.origin != TransferOrigin.SEND) {
             return@handler
         }
@@ -124,18 +122,24 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
     private fun blink() {
         chat("BLINK")
-        runCatching {
+
+        try {
             disablelogger = true
 
             while (!packets.isEmpty()) {
                 network.sendPacket(packets.take())
             }
+
             disablelogger = false
-        }.onFailure {
-            it.printStackTrace()
+        } catch (e: Exception) {
+            e.printStackTrace()
+
             disablelogger = false
         }
 
+        currentlyBlinking = false
+
+        refreshMaxPackets()
     }
 
     private fun refreshMaxPackets() {
