@@ -94,8 +94,8 @@ object EventManager {
      *
      * @param event to call
      */
-    fun callEvent(event: Event) {
-        val target = registry[event.javaClass] ?: return
+    fun <T: Event> callEvent(event: T): T {
+        val target = registry[event.javaClass] ?: return event
 
         for (eventHook in target) {
             if (!eventHook.ignoresCondition && !eventHook.handlerClass.handleEvents()) {
@@ -108,6 +108,8 @@ object EventManager {
                 logger.error("Exception while executing handler.", it)
             }
         }
+
+        return event
     }
 
 }
