@@ -28,17 +28,24 @@ import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 
 object ModuleBlockBounce : Module("BlockBounce", Category.MOVEMENT) {
-
+    
+    private val modes by enumChoice("Mode", Mode.SET, Mode.values())
     private val motion by float("Motion", 0.42f, 0.2f..1f)
 
     val repeatable = repeatable {
         val block = player.pos.toBlockPos().down().getBlock() ?: return@repeatable
 
         if (isBouncingBlock(block) && mc.options.keyJump.isPressed) {
-            player.velocity.y += motion
+            when (modes) {
+                Mode.SET -> player.velocity.y = motion.toDouble()
+                Mode.ADD -> player.velocity.y += motion.toDouble()
+            }
         }
     }
 
     private fun isBouncingBlock(block: Block) = block == Blocks.SLIME_BLOCK || block is BedBlock
 
+    private enum class Mode(override val choiceName: String) : NamedChoice {
+        ADD("Add"), SET("Set")
+    }
 }
