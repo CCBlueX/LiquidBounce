@@ -23,7 +23,9 @@ import net.ccbluex.liquidbounce.event.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.text.*
+import net.minecraft.text.CharacterVisitor
+import net.minecraft.text.OrderedText
+import net.minecraft.text.Style
 import net.minecraft.util.Formatting
 
 object ModuleNameProtect : Module("NameProtect", Category.MISC) {
@@ -43,8 +45,9 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
     }
 
     fun replace(original: String): String {
-        if (!enabled)
+        if (!enabled) {
             return original
+        }
 
         val output = StringBuilder()
 
@@ -99,8 +102,9 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
         var wasParagraph = false
 
         while (replacementCharsIndex < replacementChars.size) {
-            if (charsIndex > chars.lastIndex)
+            if (charsIndex > chars.lastIndex) {
                 return -1
+            }
 
             val c = chars[charsIndex++]
 
@@ -121,7 +125,7 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
     class ReplacementMapping(val originalName: String, val replacement: String)
 
-    class NameProtectOrderedText(original: OrderedText): OrderedText {
+    class NameProtectOrderedText(original: OrderedText) : OrderedText {
         private val mappedCharacters = ArrayList<MappedCharacter>()
 
         init {
@@ -141,8 +145,9 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
                 run {
                     for (replacement in replacements) {
                         // Empty names would cause undefined behaviour
-                        if (replacement.originalName.isEmpty())
+                        if (replacement.originalName.isEmpty()) {
                             continue
+                        }
 
                         var canReplace = true
 
@@ -156,8 +161,16 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
                         }
 
                         if (canReplace) {
-                            this.mappedCharacters.addAll(replacement.replacement.map { MappedCharacter(originalChar.style.withColor(
-                                Formatting.RED), it.toInt()) })
+                            this.mappedCharacters.addAll(
+                                replacement.replacement.map {
+                                    MappedCharacter(
+                                        originalChar.style.withColor(
+                                            Formatting.RED
+                                        ),
+                                        it.toInt()
+                                    )
+                                }
+                            )
                             index += replacement.originalName.length
                             return@run
                         }
@@ -175,8 +188,9 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
             var index = 0
 
             for ((style, codePoint) in this.mappedCharacters) {
-                if (!visitor.accept(index, style, codePoint))
+                if (!visitor.accept(index, style, codePoint)) {
                     return false
+                }
 
                 index++
             }

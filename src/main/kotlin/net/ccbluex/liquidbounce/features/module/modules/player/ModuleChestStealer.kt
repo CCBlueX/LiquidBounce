@@ -36,8 +36,9 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     private val timer = Chronometer()
 
     val repeatable = handler<GameRenderEvent> {
-        if (!timer.hasElapsed())
+        if (!timer.hasElapsed()) {
             return@handler
+        }
 
         val screen = mc.currentScreen
 
@@ -54,8 +55,9 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
             val time = delay.random()
 
-            if (time == 0)
+            if (time == 0) {
                 continue
+            }
 
             timer.waitFor(time.toLong())
             return@handler
@@ -66,16 +68,21 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         }
     }
 
-    enum class SelectionMode(override val choiceName: String, val processor: (List<Int>) -> List<Int>): NamedChoice {
-        DISTANCE("Distance", { it.sortedBy { slot ->
-            val rowA = slot / 9
-            val colA = slot % 9
+    enum class SelectionMode(override val choiceName: String, val processor: (List<Int>) -> List<Int>) : NamedChoice {
+        DISTANCE(
+            "Distance",
+            {
+                it.sortedBy { slot ->
+                    val rowA = slot / 9
+                    val colA = slot % 9
 
-            val rowB = lastSlot / 9
-            val colB = lastSlot % 9
+                    val rowB = lastSlot / 9
+                    val colB = lastSlot % 9
 
-            (colA - colB) * (colA - colB) + (rowA - rowB) * (rowA - rowB)
-        } }),
+                    (colA - colB) * (colA - colB) + (rowA - rowB) * (rowA - rowB)
+                }
+            }
+        ),
         INDEX("Index", List<Int>::sorted),
         RANDOM("Random", List<Int>::shuffled),
     }

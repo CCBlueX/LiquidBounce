@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 /**
  * Manages things like [Scaffold]'s silent mode. Not thread safe, please only use this on the main-thread of minecraft
  */
-object SilentHotbar: Listenable {
+object SilentHotbar : Listenable {
 
     private var hotbarState: SilentHotbarState? = null
     private var ticksSinceLastUpdate: Int = 0
@@ -47,16 +47,18 @@ object SilentHotbar: Listenable {
     fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int = 20) {
         val allowOverride = this.hotbarState == null || ticksSinceLastUpdate > 1
 
-        if (!allowOverride)
+        if (!allowOverride) {
             return
+        }
 
         this.hotbarState = SilentHotbarState(slot, requester, ticksUntilReset)
         this.ticksSinceLastUpdate = 0
     }
 
     fun resetSlot(requester: Any?) {
-        if (this.hotbarState?.requester == requester)
+        if (this.hotbarState?.requester == requester) {
             this.hotbarState = null
+        }
     }
 
     val gametickHandler = handler<GameTickEvent> {

@@ -110,10 +110,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         val eyes = player.eyesPos
 
-        val scanRange = if (targetTracker.maxDistanceSquared > rangeSquared)
+        val scanRange = if (targetTracker.maxDistanceSquared > rangeSquared) {
             (rangeSquared + scanExtraRange * scanExtraRange).toDouble()
-        else
+        } else {
             rangeSquared.toDouble()
+        }
 
         for (target in targetTracker.enemies()) {
             if (target.squaredBoxedDistanceTo(player) > scanRange) {
@@ -183,7 +184,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 },
                 cps
             )
-
 
             if (blocking) {
                 network.sendPacket(PlayerInteractItemC2SPacket(player.activeHand))

@@ -34,14 +34,12 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import org.lwjgl.glfw.GLFW
 
-
 private val modules = mutableListOf<Module>()
 
 /**
  * A fairly simple module manager
  */
 object ModuleManager : Listenable, Iterable<Module> by modules {
-
 
     init {
         ConfigSystem.root("modules", modules)
@@ -155,7 +153,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     operator fun plusAssign(module: Module) {
         addModule(module)
     }
-
 
     fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
         return filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }

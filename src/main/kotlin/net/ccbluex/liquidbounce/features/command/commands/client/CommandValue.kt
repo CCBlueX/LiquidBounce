@@ -60,7 +60,7 @@ object CommandValue {
 
                 val value = module.getContainedSettingsRecursively()
                     .firstOrNull { it.name.equals(valueName, true) }
-                        ?: throw CommandException(command.result("valueNotFound", valueName))
+                    ?: throw CommandException(command.result("valueNotFound", valueName))
 
                 try {
                     value.setByString(valueString)

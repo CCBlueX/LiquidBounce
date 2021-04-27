@@ -81,7 +81,7 @@ object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
                         } else {
                             var x = 0.0
                             var z = 0.0
-                            when(player.horizontalFacing) {
+                            when (player.horizontalFacing) {
                                 Direction.NORTH -> z = -1.0
                                 Direction.SOUTH -> z = +1.0
                                 Direction.WEST -> x = -1.0

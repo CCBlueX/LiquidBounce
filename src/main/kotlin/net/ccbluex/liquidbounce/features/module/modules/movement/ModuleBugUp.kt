@@ -43,8 +43,9 @@ object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
     val listener = repeatable {
         detectedLocation = null
 
-        if (ModuleBlink.enabled)
+        if (ModuleBlink.enabled) {
             return@repeatable
+        }
 
         val thePlayer = mc.player ?: return@repeatable
 
@@ -71,7 +72,8 @@ object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
             detectedLocation = fallingPlayer.findCollision(60)?.pos
 
             if (detectedLocation != null && abs(thePlayer.y - detectedLocation!!.y) +
-                thePlayer.fallDistance <= maxFallDistance) {
+                thePlayer.fallDistance <= maxFallDistance
+            ) {
                 lastFound = thePlayer.fallDistance
             }
 

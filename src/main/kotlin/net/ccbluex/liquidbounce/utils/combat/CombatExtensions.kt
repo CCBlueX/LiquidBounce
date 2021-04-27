@@ -95,13 +95,15 @@ class EnemyConfigurable : Configurable("enemies") {
         if (suspect is LivingEntity && (dead || suspect.isAlive)) {
             // Check if enemy is invisible (or ignore being invisible)
             if (invisible || !suspect.isInvisible) {
-                if (attackable && !teamMates && ModuleTeams.isInClientPlayersTeam(suspect))
+                if (attackable && !teamMates && ModuleTeams.isInClientPlayersTeam(suspect)) {
                     return false
+                }
 
                 // Check if enemy is a player and should be considered as enemy
                 if (suspect is PlayerEntity && suspect != mc.player) {
-                    if (attackable && !friends && FriendManager.isFriend(suspect))
+                    if (attackable && !friends && FriendManager.isFriend(suspect)) {
                         return false
+                    }
 
                     // Check if player might be a bot
                     if (suspect is ClientPlayerEntity && antibot.isBot(suspect)) {

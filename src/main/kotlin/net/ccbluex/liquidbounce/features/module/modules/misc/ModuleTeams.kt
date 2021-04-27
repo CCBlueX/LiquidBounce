@@ -33,13 +33,15 @@ object ModuleTeams : Module("Teams", Category.MISC) {
      * Check if [entity] is in your own team using scoreboard, name color or team prefix
      */
     fun isInClientPlayersTeam(entity: LivingEntity): Boolean {
-        if (!enabled)
+        if (!enabled) {
             return false
+        }
 
         val thePlayer = mc.player ?: return false
 
-        if (scoreboard && thePlayer.isTeammate(entity))
+        if (scoreboard && thePlayer.isTeammate(entity)) {
             return true
+        }
 
         val displayName = thePlayer.displayName
 
@@ -47,20 +49,24 @@ object ModuleTeams : Module("Teams", Category.MISC) {
             val targetName = entity.displayName!!.string.replace("§r", "")
             val clientName = displayName.string.replace("§r", "")
 
-            if (targetName.length < 2 || clientName.length < 2)
+            if (targetName.length < 2 || clientName.length < 2) {
                 return false
+            }
 
-            if (targetName.startsWith("T") && clientName.startsWith("T"))
-                if (targetName[1].isDigit() && clientName[1].isDigit())
+            if (targetName.startsWith("T") && clientName.startsWith("T")) {
+                if (targetName[1].isDigit() && clientName[1].isDigit()) {
                     return targetName[1] == clientName[1]
+                }
+            }
         }
 
         if (color && displayName != null && entity.displayName != null) {
             val targetName = entity.displayName!!.string.replace("§r", "")
             val clientName = displayName.string.replace("§r", "")
 
-            if (targetName.length < 2 || clientName.length < 2)
+            if (targetName.length < 2 || clientName.length < 2) {
                 return false
+            }
 
             return targetName.startsWith("§${clientName[1]}")
         }

@@ -30,7 +30,6 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
     var delay by int("Delay", 20, 0..400)
 
-
 //    val networkTickHandler = repeatable { event ->
 //        currentTarget = updateTarget(player.blockPos.add(0, -1, 0))
 //    }

@@ -94,7 +94,7 @@ object EventManager {
      *
      * @param event to call
      */
-    fun <T: Event> callEvent(event: T): T {
+    fun <T : Event> callEvent(event: T): T {
         val target = registry[event.javaClass] ?: return event
 
         for (eventHook in target) {

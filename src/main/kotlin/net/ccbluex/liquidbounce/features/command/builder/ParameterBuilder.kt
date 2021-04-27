@@ -39,10 +39,11 @@ class ParameterBuilder<T> private constructor(val name: String) {
         val MODULE_VALIDATOR: ParameterVerifier<Module> = { name ->
             val mod = ModuleManager.find { it.name.equals(name, true) }
 
-            if (mod == null)
+            if (mod == null) {
                 ParameterValidationResult.error("Module '$name' not found")
-            else
+            } else {
                 ParameterValidationResult.ok(mod)
+            }
         }
         val INTEGER_VALIDATOR: ParameterVerifier<Int> = {
             try {

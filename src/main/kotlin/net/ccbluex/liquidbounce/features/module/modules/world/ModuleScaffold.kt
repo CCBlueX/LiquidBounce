@@ -81,7 +81,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val rayTraceResult = raycast(4.0, serverRotation) ?: return@repeatable
 
         if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos ||
-            rayTraceResult.pos.y < target.minY) {
+            rayTraceResult.pos.y < target.minY
+        ) {
             return@repeatable
         }
 
@@ -105,8 +106,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             SilentHotbar.resetSlot(this)
         }
 
-        if (!hasBlockInHand)
+        if (!hasBlockInHand) {
             return@repeatable
+        }
 
         val result = interaction.interactBlock(
             player,
@@ -130,13 +132,15 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private fun isValidBlock(stack: ItemStack?, target: Target): Boolean {
-        if (stack == null)
+        if (stack == null) {
             return false
+        }
 
         val item = stack.item
 
-        if (item !is BlockItem)
+        if (item !is BlockItem) {
             return false
+        }
 
         val block = item.block
 

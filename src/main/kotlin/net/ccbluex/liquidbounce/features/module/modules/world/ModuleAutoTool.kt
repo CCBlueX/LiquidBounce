@@ -35,7 +35,8 @@ object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
             item.getMiningSpeedMultiplier(blockState)
         }
 
-        if (bestSlot != null)
+        if (bestSlot != null) {
             player.inventory.selectedSlot = bestSlot
+        }
     }
 }

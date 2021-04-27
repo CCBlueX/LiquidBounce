@@ -72,7 +72,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                 // Send stop using item to server
                 network.sendPacket(
                     PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
+                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                        BlockPos.ORIGIN,
+                        Direction.DOWN
                     )
                 ) // Stop using item client-side
                 player.stopUsingItem()
@@ -119,11 +121,12 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                 target = enemy
                 rotation = rot
 
-                break;
+                break
             }
 
-            if (rotation == null)
+            if (rotation == null) {
                 return@handler
+            }
 
             player.yaw = rotation.yaw
             player.pitch = rotation.pitch
@@ -163,6 +166,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         val v_y = sin(Math.toRadians(rotation.pitch.toDouble())) * v0
 
         val maxX = -(v_x * v_y) / (2.0 * ACCELERATION) // -(v_x*v_y)/a
+
         val maxY = -(v_y * v_y) / (4.0 * ACCELERATION) // -v_y^2/(2*a)
 
         val positions = mutableListOf<Vec3d>()
@@ -174,7 +178,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         val vertex = if (maxX < 0 && maxX * maxX < deltaPos.x * deltaPos.x + deltaPos.z * deltaPos.z) {
             Vec3d(
-                xPitch * maxX, maxY, zPitch * maxX
+                xPitch * maxX,
+                maxY,
+                zPitch * maxX
             )
         } else {
             null
@@ -247,7 +253,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             Rotation(
                 (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f,
                 (-Math.toDegrees(Math.atan((velocity * velocity - Math.sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX)))).toFloat()
-            ), velocity, travelledOnX
+            ),
+            velocity,
+            travelledOnX
         )
     }
 

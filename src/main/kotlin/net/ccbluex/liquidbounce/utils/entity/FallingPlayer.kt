@@ -84,7 +84,9 @@ class FallingPlayer(
                     this.player.input.movementSideways.toDouble() * 0.98,
                     0.0,
                     this.player.input.movementForward.toDouble() * 0.98
-                ), 0.02F, yaw
+                ),
+                0.02F,
+                yaw
             )
         )
 
@@ -120,29 +122,37 @@ class FallingPlayer(
             val w = player.width / 2.0
             if (rayTrace(start, end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock, i)
             if (rayTrace(start.add(w, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(
-                raytracedBlock, i
+                raytracedBlock,
+                i
             )
             if (rayTrace(start.add(-w, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(
-                raytracedBlock, i
+                raytracedBlock,
+                i
             )
             if (rayTrace(start.add(w, 0.0, -w), end).also { raytracedBlock = it } != null) return CollisionResult(
-                raytracedBlock, i
+                raytracedBlock,
+                i
             )
             if (rayTrace(start.add(-w, 0.0, -w), end).also { raytracedBlock = it } != null) return CollisionResult(
-                raytracedBlock, i
+                raytracedBlock,
+                i
             )
             if (rayTrace(start.add(w, 0.0, w / 2f), end).also {
-                    raytracedBlock = it
-                } != null) return CollisionResult(raytracedBlock, i)
+                raytracedBlock = it
+            } != null
+            ) return CollisionResult(raytracedBlock, i)
             if (rayTrace(start.add(-w, 0.0, w / 2f), end).also {
-                    raytracedBlock = it
-                } != null) return CollisionResult(raytracedBlock, i)
+                raytracedBlock = it
+            } != null
+            ) return CollisionResult(raytracedBlock, i)
             if (rayTrace(start.add(w / 2f, 0.0, w), end).also {
-                    raytracedBlock = it
-                } != null) return CollisionResult(raytracedBlock, i)
+                raytracedBlock = it
+            } != null
+            ) return CollisionResult(raytracedBlock, i)
             if (rayTrace(start.add(w / 2f, 0.0, -w), end).also {
-                    raytracedBlock = it
-                } != null) return CollisionResult(raytracedBlock, i)
+                raytracedBlock = it
+            } != null
+            ) return CollisionResult(raytracedBlock, i)
         }
         return null
     }

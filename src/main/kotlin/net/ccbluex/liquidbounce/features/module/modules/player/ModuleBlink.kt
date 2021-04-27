@@ -48,7 +48,6 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         val breadcrumbsrainbow by boolean("BreadcrumbsRainbow", false)
     }
 
-
     private object AutoResetOption : ToggleableConfigurable(this, "AutoReset", false) {
         val resetAfter by int("ResetAfter", 100, 1..1000)
     }
@@ -140,8 +139,9 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
             event.packet is HandSwingC2SPacket ||
             event.packet is PlayerActionC2SPacket || event.packet is PlayerInteractEntityC2SPacket
         ) {
-            if (event.packet is PlayerMoveC2SPacket && !event.packet.changePosition)
+            if (event.packet is PlayerMoveC2SPacket && !event.packet.changePosition) {
                 return@handler
+            }
 
             if (event.packet is PlayerMoveC2SPacket) {
                 positionPackets.getAndIncrement()

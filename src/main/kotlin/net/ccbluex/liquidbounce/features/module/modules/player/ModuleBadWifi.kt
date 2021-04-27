@@ -84,10 +84,11 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         val player = player
         val rangeSquared = enemyRange * enemyRange
 
-        var currentPosition = if (currentlyBlinking)
+        var currentPosition = if (currentlyBlinking) {
             serverSidePosition
-        else
+        } else {
             player.pos
+        }
 
         if (currentPosition == null) currentPosition = player.pos
 

@@ -78,7 +78,12 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                 val d = dimensions.width.toDouble() / 2.0
 
                 Box(
-                    -d, 0.0, -d, d, dimensions.height.toDouble(), d
+                    -d,
+                    0.0,
+                    -d,
+                    d,
+                    dimensions.height.toDouble(),
+                    d
                 )
             }
 
@@ -109,10 +114,12 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     fun getColor(entity: Entity): Color4b? {
         run {
             if (entity is LivingEntity) {
-                if (entity.hurtTime > 0)
+                if (entity.hurtTime > 0) {
                     return Color4b(255, 0, 0)
-                if (entity is PlayerEntity && FriendManager.isFriend(entity))
+                }
+                if (entity is PlayerEntity && FriendManager.isFriend(entity)) {
                     return Color4b(0, 0, 255)
+                }
 
                 if (teamColor) {
                     val chars: CharArray = (entity.displayName ?: return@run).string.toCharArray()
@@ -121,13 +128,15 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                     val colors = "0123456789abcdef"
 
                     for (i in chars.indices) {
-                        if (chars[i] != '§' || i + 1 >= chars.size)
+                        if (chars[i] != '§' || i + 1 >= chars.size) {
                             continue
+                        }
 
                         val index = colors.indexOf(chars[i + 1])
 
-                        if (index < 0 || index > 15)
+                        if (index < 0 || index > 15) {
                             continue
+                        }
 
                         color = ColorUtils.hexColors[index]
                         break
