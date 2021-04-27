@@ -60,21 +60,21 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         blink()
     }
 
-    val packetHandler = handler<PacketEvent>(priority = -1) { event ->
-        if (mc.player == null || disablelogger || !currentlyBlinking || event.origin != TransferOrigin.SEND) {
-            return@handler
+    val packetHandler = packetHandler<Packet<*>>(priority = -1) { event ->
+        if (mc.player == null || disablelogger || !currentlyBlinking || event.source.origin != TransferOrigin.SEND) {
+            return@packetHandler
         }
 
         if (event.packet is PlayerInteractEntityC2SPacket) {
             blink()
 
-            return@handler
+            return@packetHandler
         }
 
-        if (event.packet is PlayerMoveC2SPacket && !event.packet.changePosition) return@handler
+        if (event.packet is PlayerMoveC2SPacket && !event.packet.changePosition) return@packetHandler
 
         if (event.packet is PlayerMoveC2SPacket || event.packet is PlayerInteractBlockC2SPacket || event.packet is HandSwingC2SPacket || event.packet is PlayerActionC2SPacket || event.packet is PlayerInteractEntityC2SPacket) {
-            event.cancelEvent()
+            event.source.cancelEvent()
 
             packets.add(event.packet)
         }

@@ -1,8 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.packetHandler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -17,29 +16,16 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
     }
 
     private object SpoofGround : Choice("SpoofGround", modes) {
-
-        val packetHandler = handler<PacketEvent> {
-            val packet = it.packet
-
-            if (packet is PlayerMoveC2SPacket) {
-                packet.onGround = true
-            }
-
+        val packetHandler = packetHandler<PlayerMoveC2SPacket> {
+            it.packet.onGround = true
         }
-
     }
 
     private object NoGround : Choice("NoGround", modes) {
 
-        val packetHandler = handler<PacketEvent> {
-            val packet = it.packet
-
-            if (packet is PlayerMoveC2SPacket) {
-                packet.onGround = false
-            }
-
+        val packetHandler = packetHandler<PlayerMoveC2SPacket> {
+            it.packet.onGround = false
         }
-
     }
 
     private object Packet : Choice("Packet", modes) {
