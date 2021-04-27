@@ -133,7 +133,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNameProtect,
             ModuleSafeWalk,
             ModuleAutoTool,
-            ModuleNoPush
+            ModuleNoPush,
+            ModuleAntiBerryBush
         )
 
         builtin.apply {
