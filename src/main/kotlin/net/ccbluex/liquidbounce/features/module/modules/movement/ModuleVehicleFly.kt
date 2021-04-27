@@ -22,18 +22,28 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.entity.directionYaw
+import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.strafe
 
+/**
+ * Vehicle Fly module
+ *
+ * Fly with your vehicle.
+ */
 object ModuleVehicleFly : Module("VehicleFly", Category.MOVEMENT) {
 
-    val speed by float("Speed", 0.32f, 0.1f..0.4f)
+    val speedVertical by float("Vertical", 0.32f, 0.1f..0.4f)
+    val speedHorizontal by float("Horizontal", 0.48f, 0.1f..0.4f)
 
     val repeatable = repeatable {
         val vehicle = player.vehicle ?: return@repeatable
 
         vehicle.velocity.y = when {
-            mc.options.keyJump.isPressed -> speed.toDouble()
+            mc.options.keyJump.isPressed -> speedVertical.toDouble()
             else -> 0.0
         }
+        vehicle.velocity.strafe(yaw = player.directionYaw, speed = if (player.moving) speedHorizontal.toDouble() else 0.0)
     }
 
 }
