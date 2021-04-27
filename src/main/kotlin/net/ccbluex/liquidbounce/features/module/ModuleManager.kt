@@ -133,10 +133,14 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTeams,
             ModuleBugUp,
             ModuleNameProtect,
-            ModuleSafeWalk
+            ModuleSafeWalk,
+            ModuleAutoTool,
         )
 
-        builtin.forEach(this::addModule)
+        builtin.apply {
+            sortBy { it.name }
+            forEach(::addModule)
+        }
     }
 
     fun addModule(module: Module) {
