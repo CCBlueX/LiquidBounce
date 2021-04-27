@@ -106,6 +106,9 @@ class UseCooldownEvent(var cooldown: Int) : Event()
 @Nameable("blockShape")
 class BlockShapeEvent(val state: BlockState, val pos: BlockPos, var shape: VoxelShape) : Event()
 
+@Nameable("blockAttack")
+class BlockAttackEvent(val pos: BlockPos) : Event()
+
 @Nameable("blockMultiplier")
 class BlockVelocityMultiplierEvent(val block: Block, var multiplier: Float) : Event()
 
