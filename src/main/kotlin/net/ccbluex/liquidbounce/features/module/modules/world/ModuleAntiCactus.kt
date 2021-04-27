@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player
+package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.event.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,7 +30,7 @@ import net.minecraft.util.shape.VoxelShapes
  *
  * Prevents taking damage from cactus
  */
-object ModuleAntiCactus : Module("AntiCactus", Category.PLAYER) {
+object ModuleAntiCactus : Module("AntiCactus", Category.WORLD) {
 
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (event.state.block is CactusBlock) {
