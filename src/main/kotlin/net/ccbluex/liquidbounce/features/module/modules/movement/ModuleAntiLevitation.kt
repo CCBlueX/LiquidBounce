@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player
+package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -26,6 +26,6 @@ import net.ccbluex.liquidbounce.features.module.Module
  *
  * Stops the levitation and slow falling effect
  */
-object ModuleAntiLevitation : Module("AntiLevitation", Category.PLAYER) {
+object ModuleAntiLevitation : Module("AntiLevitation", Category.MOVEMENT) {
     // @see net/ccbluex/liquidbounce/injection/mixins/minecraft/entity/MixinLivingEntity hookTravelStatusEffect
 }
