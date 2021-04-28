@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 
 object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
 
-    private val motion by float("Motion", 0.42f, 0.2f..1f)
+    private val motion by float("Motion", 0.8f, 0.2f..1f)
 
     val jumpEvent = handler<PlayerJumpEvent> {
         it.motion = motion
