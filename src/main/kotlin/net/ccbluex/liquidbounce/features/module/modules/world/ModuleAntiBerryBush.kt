@@ -26,9 +26,9 @@ import net.minecraft.block.SweetBerryBushBlock
 import net.minecraft.util.shape.VoxelShapes
 
 /**
- * A anti berry bush module
+ * Anti berry bush module
  *
- * Prevents taking damage from cactus
+ * Prevents taking damage from berry bushes
  */
 object ModuleAntiBerryBush : Module("AntiBerryBush", Category.WORLD) {
 
