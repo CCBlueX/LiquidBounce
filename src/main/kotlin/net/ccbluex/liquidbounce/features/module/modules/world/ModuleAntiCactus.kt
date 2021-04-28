@@ -26,9 +26,9 @@ import net.minecraft.block.CactusBlock
 import net.minecraft.util.shape.VoxelShapes
 
 /**
- * A anti cactus module
+ * Anti cactus module
  *
- * Prevents taking damage from cactus
+ * Prevents taking damage from cacti
  */
 object ModuleAntiCactus : Module("AntiCactus", Category.WORLD) {
 
