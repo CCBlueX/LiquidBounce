@@ -70,7 +70,6 @@ dependencies {
 
     // MultiConnect API
     modImplementation "net.earthcomputer:multiconnect:${project.multiconnect_version}:api"
-    include "net.earthcomputer:multiconnect:${project.multiconnect_version}:api"
 
     // Recommended mods (on IDE)
     modRuntime "net.earthcomputer:multiconnect:${project.multiconnect_version}:slim"
@@ -78,6 +77,17 @@ dependencies {
     modRuntime "com.github.jellysquid3:sodium-fabric:${project.sodium_version}"
     modRuntime "com.github.jellysquid3:lithium-fabric:${project.lithium_version}"
     modRuntime "com.github.jellysquid3:phosphor-fabric:${project.phosphor_version}"
+    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
+        exclude group: "org.ow2.asm", module: "asm-debug-all"
+
+        exclude group: "org.lwjgl.lwjgl", module: "lwjgl"
+        exclude group: "org.lwjgl.lwjgl", module: "lwjgl-platform"
+
+        exclude group: "net.java.jinput", module: "jinput"
+        exclude group: "net.java.jinput", module: "jinput-platform"
+
+        exclude group: "net.sf.jopt-simple", module: "jopt-simple"
+    }
 
     // Ignore in export
     implementation "com.google.code.findbugs:jsr305:3.0.2" // to fix nullable imports
