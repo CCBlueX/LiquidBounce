@@ -30,10 +30,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -76,37 +73,19 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
     }
 
-    /**
-     * Hook jump event
-     * @author mojang
-     */
-    @Overwrite
-    public void jump() {
-        float f = this.getJumpVelocity();
-
+    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getJumpVelocity()F"))
+    private float hookJumpEvent(LivingEntity entity) {
         // Check if entity is client user
         if ((Object) this == MinecraftClient.getInstance().player) {
             // Hook player jump event
-            final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(f);
+            final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
             EventManager.INSTANCE.callEvent(jumpEvent);
             if (jumpEvent.isCancelled()) {
-                return;
+                return 0f;
             }
-            f = jumpEvent.getMotion();
+            return jumpEvent.getMotion();
         }
-
-        if (this.hasStatusEffect(StatusEffects.JUMP_BOOST)) {
-            f += 0.1F * (float)(this.getStatusEffect(StatusEffects.JUMP_BOOST).getAmplifier() + 1);
-        }
-
-        Vec3d vec3d = this.getVelocity();
-        this.setVelocity(vec3d.x, f, vec3d.z);
-        if (this.isSprinting()) {
-            float g = this.yaw * 0.017453292F;
-            this.setVelocity(this.getVelocity().add(-MathHelper.sin(g) * 0.2F, 0.0D, MathHelper.cos(g) * 0.2F));
-        }
-
-        this.velocityDirty = true;
+        return getJumpVelocity();
     }
 
     @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)
