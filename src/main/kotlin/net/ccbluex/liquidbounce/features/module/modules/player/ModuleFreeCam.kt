@@ -24,18 +24,23 @@ object ModuleFreeCam : Module("FreeCam", Category.PLAYER) {
     private var x = 0.0
     private var y = 0.0
     private var z = 0.0
+    private var posX = 0.0
+    private var posY = 0.0
+    private var posZ = 0.0
+    private var ground = false
 
     override fun enable() {
-        if (mc.player == null) {
-            return
-        } else {
+        if (mc.player != null) {
             if (resetMotion) {
                 player.setVelocity(0.0, 0.0, 0.0)
-            } else {
-                x = player.velocity.x
-                y = player.velocity.y
-                z = player.velocity.z
             }
+            x = 0.0
+            y = 0.0
+            z = 0.0
+            posX = player.x
+            posY = player.y
+            posZ = player.z
+            ground = player.isOnGround
             val faker = OtherClientPlayerEntity(world, player.gameProfile)
 
             faker.headYaw = player.headYaw
@@ -50,9 +55,7 @@ object ModuleFreeCam : Module("FreeCam", Category.PLAYER) {
     }
 
     override fun disable() {
-        if (mc.player == null || mc.world == null) {
-            return
-        } else {
+        if (mc.player != null || mc.world != null || fakePlayer != null) {
             player.updatePositionAndAngles(fakePlayer!!.x, fakePlayer!!.y, fakePlayer!!.z, player.yaw, player.pitch)
             world.removeEntity(fakePlayer!!.entityId)
             fakePlayer = null
@@ -89,18 +92,27 @@ object ModuleFreeCam : Module("FreeCam", Category.PLAYER) {
     val packetHandler = handler<PacketEvent> { event ->
         when (val packet = event.packet) {
             // For better FreeCam detecting AntiCheats, we need to prove to them that the player's moving
-            is PlayerMoveC2SPacket.PositionOnly, is PlayerMoveC2SPacket.LookOnly, is PlayerMoveC2SPacket.Both -> {
+            is PlayerMoveC2SPacket -> {
                 if (spoofMovement) {
-                    network.sendPacket(PlayerMoveC2SPacket(fakePlayer!!.isOnGround))
+                    if (packet.changePosition) {
+                        packet.x = posX
+                        packet.y = posY
+                        packet.z = posZ
+                    }
+                    packet.onGround = ground
+                    if (packet.changeLook) {
+                        packet.yaw = player.yaw
+                        packet.pitch = player.pitch
+                    }
+                } else {
                     event.cancelEvent()
                 }
             }
-            is PlayerMoveC2SPacket, is PlayerActionC2SPacket -> event.cancelEvent()
+            is PlayerActionC2SPacket -> event.cancelEvent()
             // In case of a teleport
             is PlayerPositionLookS2CPacket -> {
-                fakePlayer!!.setPos(packet.x, packet.y, packet.z)
+                fakePlayer!!.updatePosition(packet.x, packet.y, packet.z)
                 // Reset the motion
-                player.setVelocity(0.0, 0.0, 0.0)
                 event.cancelEvent()
             }
         }
