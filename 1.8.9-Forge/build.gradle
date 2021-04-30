@@ -5,7 +5,7 @@ buildscript {
         mavenLocal()
         mavenCentral()
 
-        maven { url 'https://files.minecraftforge.net/maven' }
+        maven { url 'https://maven.minecraftforge.net/' }
         maven { url 'https://plugins.gradle.org/m2' }
         maven { url 'https://repo.spongepowered.org/maven' }
         maven { url 'https://jitpack.io' }
