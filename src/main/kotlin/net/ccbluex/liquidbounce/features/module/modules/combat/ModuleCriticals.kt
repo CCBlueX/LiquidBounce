@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.attackHandler
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -47,11 +47,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     private object PacketCrit : Choice("Packet", modes) {
 
-        val attackHandler = handler<AttackEvent> { event ->
-            if (event.enemy !is LivingEntity) {
-                return@handler
-            }
-
+        val attackHandler = attackHandler<LivingEntity> {
             val (x, y, z) = player.exactPosition
 
             network.sendPacket(PlayerMoveC2SPacket.PositionOnly(x, y + 0.11, z, false))
@@ -90,17 +86,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val critParticles by int("CritParticles", 1, 0..20)
         val magicParticles by int("MagicParticles", 0, 0..20)
 
-        val attackHandler = handler<AttackEvent> { event ->
-            if (event.enemy !is LivingEntity) {
-                return@handler
-            }
-
+        val attackHandler = attackHandler<LivingEntity> {
             repeat(critParticles) {
-                player.addCritParticles(event.enemy)
+                player.addCritParticles(entity)
             }
 
             repeat(magicParticles) {
-                player.addEnchantedHitParticles(event.enemy)
+                player.addEnchantedHitParticles(entity)
             }
         }
 

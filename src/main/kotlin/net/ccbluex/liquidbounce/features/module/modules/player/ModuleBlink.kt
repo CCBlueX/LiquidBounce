@@ -124,33 +124,33 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         }
     }
 
-    val packetHandler = handler<PacketEvent>(priority = -1) { event ->
-        if (mc.player == null || disablelogger || event.origin != TransferOrigin.SEND) {
-            return@handler
+    val packetHandler = packetHandler<Packet<*>>(priority = -1) {
+        if (mc.player == null || disablelogger || sourceEvent.origin != TransferOrigin.SEND) {
+            return@packetHandler
         }
 
-        if (ambush && event.packet is PlayerInteractEntityC2SPacket) {
+        if (ambush && packet is PlayerInteractEntityC2SPacket) {
             enabled = false
 
-            return@handler
+            return@packetHandler
         }
 
-        if (event.packet is PlayerMoveC2SPacket || event.packet is PlayerInteractBlockC2SPacket ||
-            event.packet is HandSwingC2SPacket ||
-            event.packet is PlayerActionC2SPacket || event.packet is PlayerInteractEntityC2SPacket
+        if (packet is PlayerMoveC2SPacket || packet is PlayerInteractBlockC2SPacket ||
+            packet is HandSwingC2SPacket ||
+            packet is PlayerActionC2SPacket || packet is PlayerInteractEntityC2SPacket
         ) {
-            if (event.packet is PlayerMoveC2SPacket && !event.packet.changePosition) {
-                return@handler
+            if (packet is PlayerMoveC2SPacket && !packet.changePosition) {
+                return@packetHandler
             }
 
-            if (event.packet is PlayerMoveC2SPacket) {
+            if (packet is PlayerMoveC2SPacket) {
                 positionPackets.getAndIncrement()
-                synchronized(positions) { positions.addAll(listOf(event.packet.x, event.packet.y, event.packet.z)) }
+                synchronized(positions) { positions.addAll(listOf(packet.x, packet.y, packet.z)) }
             }
 
-            event.cancelEvent()
+            cancelEvent()
 
-            packets.add(event.packet)
+            packets.add(packet)
         }
     }
 

@@ -19,7 +19,10 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.NotificationEvent
+import net.ccbluex.liquidbounce.event.TransferOrigin
+import net.ccbluex.liquidbounce.event.packetHandler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -60,23 +63,23 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         blink()
     }
 
-    val packetHandler = handler<PacketEvent>(priority = -1) { event ->
-        if (mc.player == null || disablelogger || !currentlyBlinking || event.origin != TransferOrigin.SEND) {
-            return@handler
+    val packetHandler = packetHandler<Packet<*>>(priority = -1) {
+        if (mc.player == null || disablelogger || !currentlyBlinking || sourceEvent.origin != TransferOrigin.SEND) {
+            return@packetHandler
         }
 
-        if (event.packet is PlayerInteractEntityC2SPacket) {
+        if (packet is PlayerInteractEntityC2SPacket) {
             blink()
 
-            return@handler
+            return@packetHandler
         }
 
-        if (event.packet is PlayerMoveC2SPacket && !event.packet.changePosition) return@handler
+        if (packet is PlayerMoveC2SPacket && !packet.changePosition) return@packetHandler
 
-        if (event.packet is PlayerMoveC2SPacket || event.packet is PlayerInteractBlockC2SPacket || event.packet is HandSwingC2SPacket || event.packet is PlayerActionC2SPacket || event.packet is PlayerInteractEntityC2SPacket) {
-            event.cancelEvent()
+        if (packet is PlayerMoveC2SPacket || packet is PlayerInteractBlockC2SPacket || packet is HandSwingC2SPacket || packet is PlayerActionC2SPacket || packet is PlayerInteractEntityC2SPacket) {
+            cancelEvent()
 
-            packets.add(event.packet)
+            packets.add(packet)
         }
     }
 

@@ -1,13 +1,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.packetHandler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.client.network.OtherClientPlayerEntity
+import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -86,22 +86,22 @@ object ModuleFreeCam : Module("FreeCam", Category.PLAYER) {
         }
     }
 
-    val packetHandler = handler<PacketEvent> { event ->
-        when (val packet = event.packet) {
+    val packetHandler = packetHandler<Packet<*>> {
+        when (val packet = packet) {
             // For better FreeCam detecting AntiCheats, we need to prove to them that the player's moving
             is PlayerMoveC2SPacket.PositionOnly, is PlayerMoveC2SPacket.LookOnly, is PlayerMoveC2SPacket.Both -> {
                 if (spoofMovement) {
                     network.sendPacket(PlayerMoveC2SPacket(fakePlayer!!.isOnGround))
-                    event.cancelEvent()
+                    cancelEvent()
                 }
             }
-            is PlayerMoveC2SPacket, is PlayerActionC2SPacket -> event.cancelEvent()
+            is PlayerMoveC2SPacket, is PlayerActionC2SPacket -> cancelEvent()
             // In case of a teleport
             is PlayerPositionLookS2CPacket -> {
                 fakePlayer!!.setPos(packet.x, packet.y, packet.z)
                 // Reset the motion
                 player.setVelocity(0.0, 0.0, 0.0)
-                event.cancelEvent()
+                cancelEvent()
             }
         }
     }

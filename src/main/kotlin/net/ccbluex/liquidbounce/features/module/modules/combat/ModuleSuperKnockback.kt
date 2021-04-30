@@ -19,8 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.attackHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.entity.LivingEntity
@@ -35,10 +34,9 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
     val hurtTime by int("HurtTime", 10, 0..10)
 
-    val attackHandler = handler<AttackEvent> { event ->
-        val enemy = event.enemy
+    val attackHandler = attackHandler<LivingEntity> {
 
-        if (enemy is LivingEntity && enemy.hurtTime <= hurtTime) {
+        if (entity.hurtTime <= hurtTime) {
             if (player.isSprinting) {
                 network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
             }

@@ -18,9 +18,19 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.minecraft.entity.Entity
+import net.minecraft.network.Packet
+
 typealias Handler<T> = (T) -> Unit
 
-class EventHook<T : Event>(val handlerClass: Listenable, val handler: Handler<T>, val ignoresCondition: Boolean, val priority: Int = 0)
+typealias ReceiverHandler<T> = T.() -> Unit
+
+class EventHook<T : Event>(
+    val handlerClass: Listenable,
+    val handler: Handler<T>,
+    val ignoresCondition: Boolean,
+    val priority: Int = 0,
+)
 
 interface Listenable {
 
@@ -36,14 +46,58 @@ interface Listenable {
 
 }
 
-inline fun <reified T : Event> Listenable.handler(ignoreCondition: Boolean = false, priority: Int = 0, noinline handler: Handler<T>) {
+inline fun <reified T : Event> Listenable.handler(
+    ignoreCondition: Boolean = false,
+    priority: Int = 0,
+    noinline handler: Handler<T>,
+) {
     EventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition, priority))
+}
+
+class WrappedAttackEvent<out E : Entity>(val sourceEvent: AttackEvent, val entity: E)
+
+inline fun <reified E> Listenable.attackHandler(
+    ignoreCondition: Boolean = false,
+    priority: Int = 0,
+    noinline handler: ReceiverHandler<WrappedAttackEvent<E>>,
+) where E : Entity {
+    handler<AttackEvent>(ignoreCondition, priority) {
+        if (it.enemy is E) {
+            val wrappedAttackEvent = WrappedAttackEvent(it, it.enemy)
+            handler(wrappedAttackEvent)
+        }
+    }
+
+}
+
+class WrappedPacketEvent<out P : Packet<*>>(val sourceEvent: PacketEvent, val packet: P) {
+
+    fun cancelEvent() {
+        sourceEvent.cancelEvent()
+    }
+}
+
+inline fun <reified P> Listenable.packetHandler(
+    ignoreCondition: Boolean = false,
+    priority: Int = 0,
+    noinline handler: ReceiverHandler<WrappedPacketEvent<P>>,
+) where P : Packet<*> {
+    handler<PacketEvent>(ignoreCondition, priority) {
+        if (it.packet is P) {
+            val wrappedPacketEvent = WrappedPacketEvent(it, it.packet)
+            handler(wrappedPacketEvent)
+        }
+    }
+
 }
 
 /**
  * Registers an event hook for events of type [T] and launches a sequence
  */
-inline fun <reified T : Event> Listenable.sequenceHandler(ignoreCondition: Boolean = false, noinline eventHandler: SuspendableHandler<T>) {
+inline fun <reified T : Event> Listenable.sequenceHandler(
+    ignoreCondition: Boolean = false,
+    noinline eventHandler: SuspendableHandler<T>,
+) {
     handler<T>(ignoreCondition) { event -> Sequence(eventHandler, event) }
 }
 
