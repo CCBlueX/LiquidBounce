@@ -135,7 +135,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoTool,
             ModuleNoPush,
             ModuleAntiBerryBush,
-            ModuleFreeCam
+            ModuleFreeCam,
+            ModuleConsoleSpammer
         )
 
         builtin.apply {
