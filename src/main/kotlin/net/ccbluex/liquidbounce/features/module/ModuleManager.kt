@@ -150,6 +150,11 @@ object ModuleManager : Listenable, MutableList<Module> by modules {
         modules += module
     }
 
+    override fun add(element: Module): Boolean {
+        addModule(element)
+        return true
+    }
+
     /**
      * Allow `ModuleManager += Module` syntax
      */
