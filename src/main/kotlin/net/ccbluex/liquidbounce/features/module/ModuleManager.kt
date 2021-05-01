@@ -39,7 +39,7 @@ private val modules = mutableListOf<Module>()
 /**
  * A fairly simple module manager
  */
-object ModuleManager : Listenable, Iterable<Module> by modules {
+object ModuleManager : Listenable, MutableList<Module> by modules {
 
     init {
         ConfigSystem.root("modules", modules)
