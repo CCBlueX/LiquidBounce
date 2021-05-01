@@ -29,7 +29,10 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
 import net.ccbluex.liquidbounce.utils.entity.upwards
+import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -39,16 +42,22 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  */
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
-    private val modes = choices("Mode", "Packet") {
-        NoneChoice(it)
-        PacketCrit
-        JumpCrit
+    /**
+     * Should criticals be active or passive?
+     */
+    private object ActiveOption : ToggleableConfigurable(this, "Active", true) {
+
+        val modes = choices("Mode", "Packet") {
+            NoneChoice(it)
+            PacketCrit
+            JumpCrit
+        }
     }
 
-    private object PacketCrit : Choice("Packet", modes) {
+    private object PacketCrit : Choice("Packet", ActiveOption.modes) {
 
         val attackHandler = handler<AttackEvent> { event ->
-            if (event.enemy !is LivingEntity) {
+            if (!ActiveOption.enabled || event.enemy !is LivingEntity) {
                 return@handler
             }
 
@@ -61,7 +70,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     }
 
-    private object JumpCrit : Choice("Jump", modes) {
+    private object JumpCrit : Choice("Jump", ActiveOption.modes) {
 
         // There are diffrent possible jump heights to crit enemy
         //   Hop: 0.1 (like in Wurst-Client)
@@ -73,6 +82,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val range by float("Range", 4f, 1f..6f)
 
         val tickHandler = handler<PlayerTickEvent> {
+            if (!ActiveOption.enabled) return@handler
+
             val (_, _) = world.findEnemy(range) ?: return@handler
 
             if (player.isOnGround) {
@@ -108,6 +119,58 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     init {
         tree(VisualsConfigurable)
+        tree(ActiveOption)
+    }
+
+    /**
+     * Sometimes when the player is almost at the highest point of his jump, the KillAura
+     * will try to attack the enemy anyways. To maximise damage, this function is used to determine
+     * whether or not it is worth to wait for the fall
+     */
+    fun shouldWaitForCrit(): Boolean {
+        if (!enabled) return false
+
+        val player = player
+
+        if (!canCrit(player) || player.velocity.y < -0.08)
+            return false
+
+        val nextPossibleCrit = (player.attackCooldownProgressPerTick - 0.5f - player.lastAttackedTicks.toFloat()).coerceAtLeast(0.0f)
+
+        val gravity = 0.08
+
+        val ticksTillFall = (player.velocity.y / gravity).toFloat()
+
+        val ticksTillCrit = nextPossibleCrit.coerceAtLeast(ticksTillFall)
+
+        val hitProbability = 0.6f
+
+        val damageOnCrit = getCooldownDamageFactorWithCurrentTickDelta(player, ticksTillCrit) * (1.0f + 0.5f * hitProbability)
+
+        val damageLostWaiting = 1.0f + getCooldownDamageFactor(player, ticksTillCrit)
+
+        return damageOnCrit > damageLostWaiting
+    }
+
+    fun canCrit(player: ClientPlayerEntity) =
+        !player.isInLava && !player.isTouchingWater && !player.isHoldingOntoLadder && !player.hasNoGravity() && !player.hasStatusEffect(
+            StatusEffects.LEVITATION
+        ) && !player.hasStatusEffect(StatusEffects.BLINDNESS) && !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && !player.isOnGround
+
+    fun getCooldownDamageFactorWithCurrentTickDelta(player: PlayerEntity, tickDelta: Float): Float {
+        val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
+
+        return (0.2f + base * base * 0.8f).coerceAtMost(1.0f)
+    }
+
+    private fun getCooldownDamageFactor(player: PlayerEntity, tickDelta: Float): Float {
+        val base = ((tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
+
+        return (0.2f + base * base * 0.8f).coerceAtMost(1.0f)
+    }
+
+    fun wouldCrit(ignoreSprint: Boolean = false): Boolean {
+        return canCrit(player) && player.velocity.y < -0.08 && (!player.isSprinting || ignoreSprint)
     }
 
 }
