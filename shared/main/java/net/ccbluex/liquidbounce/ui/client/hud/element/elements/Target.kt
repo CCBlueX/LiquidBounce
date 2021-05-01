@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -111,7 +112,7 @@ class Target : Element()
 
 			val healthColor = ColorUtils.getHealthColor(easingHealth, targetMaxHealth)
 
-			val width = (100.0F + Fonts.font60.getStringWidth(targetPlayer.name)).coerceAtLeast(250.0F)
+			val width = (100.0F + Fonts.font60.getStringWidth(targetPlayer.displayNameString)).coerceAtLeast(250.0F)
 
 			// Draw Body Rect
 			RenderUtils.drawBorderedRect(0F, 0F, width, 110F, borderWidth.get(), createRGB(borderColorRed.get(), borderColorGreen.get(), borderColorBlue.get(), 255), -16777216)
@@ -220,11 +221,9 @@ class Target : Element()
 			Fonts.font35.drawString("${if (targetPlayer.onGround) "\u00A7aOn" else "\u00A7cOff"}-Ground\u00A7r | Distance: ${distanceText}m", 100, 60, 0xffffff)
 			Fonts.font35.drawString("${if (!targetPlayer.sprinting) "\u00A7cNot " else "\u00A7a"}Sprinting\u00A7r | ${if (!targetPlayer.sneaking) "\u00A7cNot " else "\u00A7a"}Sneaking\u00A7r", 100, 70, 0xffffff)
 
-			val yawText = decimalFormat.format(targetPlayer.rotationYaw % 360f)
+			val yawText = "${decimalFormat.format(targetPlayer.rotationYaw % 360f)}${StringUtils.getHorizontalFacingAdv(targetPlayer.rotationYaw)}"
 			val pitchText = decimalFormat.format(targetPlayer.rotationPitch)
 			Fonts.font35.drawString("Yaw: $yawText | Pitch: $pitchText | Hurt: ${if (targetPlayer.hurtTime > 0) "\u00A7c" else "\u00A7a"}${targetPlayer.hurtTime}\u00A7r", 100, 85, 0xffffff)
-
-			Fonts.font35.drawString("Damage/Heal: ${if (targetPlayer.hurtTime > 0) "\u00A7c" else "\u00A7a"}${targetPlayer.hurtTime}\u00A7r", 100, 85, 0xffffff)
 		}
 
 		lastTarget = targetEntity
