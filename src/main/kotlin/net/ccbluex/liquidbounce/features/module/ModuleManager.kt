@@ -153,14 +153,9 @@ object ModuleManager : Listenable, MutableList<Module> by modules {
     override fun add(element: Module): Boolean {
         addModule(element)
         return true
+
     }
 
-    /**
-     * Allow `ModuleManager += Module` syntax
-     */
-    operator fun plusAssign(module: Module) {
-        addModule(module)
-    }
 
     fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
         return filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }
