@@ -139,7 +139,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
         )
 
         builtin.apply {
-            sortBy { it.name }
+            sort()
             forEach(::addModule)
         }
     }

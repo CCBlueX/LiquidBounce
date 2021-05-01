@@ -21,7 +21,10 @@ package net.ccbluex.liquidbounce.features.module
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.NotificationEvent
+import net.ccbluex.liquidbounce.event.ToggleModuleEvent
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -45,7 +48,7 @@ open class Module(
     @Exclude
     val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
-) : Listenable, Configurable(name) {
+) : Listenable, Configurable(name), Comparable<Module> {
 
     open val translationBaseKey: String
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
@@ -134,6 +137,14 @@ open class Module(
 
     fun message(key: String, vararg args: Any): TranslatableText {
         return TranslatableText("$translationBaseKey.messages.$key", args)
+    }
+
+    override fun compareTo(other: Module): Int {
+        return if (this.category == other.category) {
+            this.name.compareTo(other.name)
+        } else {
+            (this.category.name.compareTo(other.category.name))
+        }
     }
 
 }
