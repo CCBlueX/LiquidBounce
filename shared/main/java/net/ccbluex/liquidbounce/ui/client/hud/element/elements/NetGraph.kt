@@ -5,7 +5,10 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.ui.client.hud.element.*
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.utils.PPSCounter
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -14,12 +17,11 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import java.util.*
 
 /**
- * CustomHUD text element
+ * CustomHUD network-activity graph element
  *
- * Allows to draw custom text
+ * Allows to draw custom network-activity graph
  */
 @ElementInfo(name = "NetGraph")
 class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side)
@@ -61,7 +63,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 		val thePlayer = mc.thePlayer ?: return null
 
 		val width = widthValue.get()
-		val height = heightValue.get()
+		val height = heightValue.get().toFloat()
 		val pingUpdatePeriod = pingUpdatePeriodValue.get().toLong()
 		val packetUpdatePeriod = packetUpdatePeriodValue.get().toLong()
 
@@ -113,8 +115,8 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 				val pingNextY = pingList[i + 1] * pingYMul
 
 				RenderUtils.glColor(Color(pingColorRedValue.get(), pingColorGreenValue.get(), pingColorBlueValue.get(), 255))
-				GL11.glVertex2f(i.toFloat() - pingListStart, height + 1 - pingY.coerceAtMost(height.toFloat()))
-				GL11.glVertex2f(i + 1.0F - pingListStart, height + 1 - pingNextY.coerceAtMost(height.toFloat()))
+				GL11.glVertex2f(i.toFloat() - pingListStart, height + 1 - pingY.coerceAtMost(height))
+				GL11.glVertex2f(i + 1.0F - pingListStart, height + 1 - pingNextY.coerceAtMost(height))
 			}
 		}
 
@@ -133,8 +135,8 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 				val inPacketNextY = inPacketList[i + 1] * inPacketYMul
 
 				RenderUtils.glColor(Color(inPacketColorRedValue.get(), inPacketColorGreenValue.get(), inPacketColorBlueValue.get(), 255))
-				GL11.glVertex2f(i.toFloat() - inPacketListStart, height + 1 - inPacketY.coerceAtMost(height.toFloat()))
-				GL11.glVertex2f(i + 1.0F - inPacketListStart, height + 1 - inPacketNextY.coerceAtMost(height.toFloat()))
+				GL11.glVertex2f(i.toFloat() - inPacketListStart, height + 1 - inPacketY.coerceAtMost(height))
+				GL11.glVertex2f(i + 1.0F - inPacketListStart, height + 1 - inPacketNextY.coerceAtMost(height))
 			}
 		}
 
@@ -153,8 +155,8 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 				val outPacketNextY = outPacketList[i + 1] * outPacketYMul
 
 				RenderUtils.glColor(Color(outPacketColorRedValue.get(), outPacketColorGreenValue.get(), outPacketColorBlueValue.get(), 255))
-				GL11.glVertex2f((i - outPacketListStart).toFloat(), height + 1 - outPacketY.coerceAtMost(height.toFloat()))
-				GL11.glVertex2f(i + 1.0F - outPacketListStart, height + 1 - outPacketNextY.coerceAtMost(height.toFloat()))
+				GL11.glVertex2f((i - outPacketListStart).toFloat(), height + 1 - outPacketY.coerceAtMost(height))
+				GL11.glVertex2f(i + 1.0F - outPacketListStart, height + 1 - outPacketNextY.coerceAtMost(height))
 			}
 		}
 
@@ -167,6 +169,6 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 		GL11.glDisable(GL11.GL_BLEND)
 		classProvider.glStateManager.resetColor()
 
-		return Border(0F, 0F, width.toFloat(), height.toFloat() + 2)
+		return Border(0F, 0F, width.toFloat(), height + 2)
 	}
 }

@@ -5,20 +5,22 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.ui.client.hud.element.*
+import net.ccbluex.liquidbounce.ui.client.hud.element.Border
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element
+import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import java.util.*
 import kotlin.math.hypot
 
 /**
- * CustomHUD text element
+ * CustomHUD Speed-graph element
  *
- * Allows to draw custom text
+ * Allows to draw custom speed graph
  */
 @ElementInfo(name = "SpeedGraph")
 class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side)
@@ -73,7 +75,11 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 		val thePlayer = mc.thePlayer ?: return null
 
 		val width = widthValue.get()
-		val height = heightValue.get()
+		val height = heightValue.get().toFloat()
+
+		val timerEnabled = timerEnabled.get()
+		val motionEnabled = motionEnabled.get()
+		val ymotionEnabled = ymotionEnabled.get()
 
 		if (lastTick != thePlayer.ticksExisted)
 		{
@@ -90,20 +96,39 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 
 			val speed = hypot((x - prevX), (z - prevZ))
 			val yspeed = y - prevY
-			val timer = mc.timer.timerSpeed
-			val motion = hypot(thePlayer.motionX, thePlayer.motionZ)
-			val ymotion = thePlayer.motionY
 
 			speedList.add(speed)
 			yspeedList.add(yspeed)
-			timerList.add(timer)
-			motionList.add(motion)
-			ymotionList.add(ymotion)
+
 			while (speedList.size > width) speedList.removeAt(0)
 			while (yspeedList.size > width) yspeedList.removeAt(0)
-			while (timerList.size > width) timerList.removeAt(0)
-			while (motionList.size > width) motionList.removeAt(0)
-			while (ymotionList.size > width) ymotionList.removeAt(0)
+
+			if (timerEnabled)
+			{
+				val timer = mc.timer.timerSpeed
+
+				timerList.add(timer)
+
+				while (timerList.size > width) timerList.removeAt(0)
+			}
+
+			if (motionEnabled)
+			{
+				val motion = hypot(thePlayer.motionX, thePlayer.motionZ)
+
+				motionList.add(motion)
+
+				while (motionList.size > width) motionList.removeAt(0)
+			}
+
+			if (ymotionEnabled)
+			{
+				val ymotion = thePlayer.motionY
+
+				ymotionList.add(ymotion)
+
+				while (ymotionList.size > width) ymotionList.removeAt(0)
+			}
 		}
 
 		val speedYMul = speedyMultiplier.get()
@@ -161,15 +186,15 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 				val yspeedNextY = yspeedList[i + 1] * 10 * yspeedYMul
 
 				RenderUtils.glColor(yspeedColor)
-				GL11.glVertex2d(i.toDouble() - yspeedListStart, height + 1 - ypos - yspeedY.coerceAtLeast(-ypos).coerceAtMost(height.toDouble() - ypos))
-				GL11.glVertex2d(i + 1.0 - yspeedListStart, height + 1 - ypos - yspeedNextY.coerceAtLeast(-ypos).coerceAtMost(height.toDouble() - ypos))
+				GL11.glVertex2d(i.toDouble() - yspeedListStart, height + 1 - ypos - yspeedY.coerceIn(-ypos, height.toDouble() - ypos))
+				GL11.glVertex2d(i + 1.0 - yspeedListStart, height + 1 - ypos - yspeedNextY.coerceIn(-ypos, height.toDouble() - ypos))
 			}
 		}
 
 		GL11.glEnd()
 
 		// Draw Timer
-		if (timerEnabled.get())
+		if (timerEnabled)
 		{
 			GL11.glLineWidth(timerThicknessValue.get())
 			GL11.glBegin(GL11.GL_LINES)
@@ -184,8 +209,8 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 					val timerNextY = timerList[i + 1] * 10 * timerYMul
 
 					RenderUtils.glColor(timerColor)
-					GL11.glVertex2f(i.toFloat() - timerListStart, height + 1 - timerY.coerceAtMost(height.toFloat()))
-					GL11.glVertex2f(i + 1.0F - timerListStart, height + 1 - timerNextY.coerceAtMost(height.toFloat()))
+					GL11.glVertex2f(i.toFloat() - timerListStart, height + 1 - timerY.coerceAtMost(height))
+					GL11.glVertex2f(i + 1.0F - timerListStart, height + 1 - timerNextY.coerceAtMost(height))
 				}
 			}
 
@@ -193,7 +218,7 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 		}
 
 		// Draw Motion
-		if (motionEnabled.get())
+		if (motionEnabled)
 		{
 			GL11.glLineWidth(motionThicknessValue.get())
 			GL11.glBegin(GL11.GL_LINES)
@@ -217,7 +242,7 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 		}
 
 		// Draw YMotion
-		if (ymotionEnabled.get())
+		if (ymotionEnabled)
 		{
 			GL11.glLineWidth(ymotionThicknessValue.get())
 			GL11.glBegin(GL11.GL_LINES)
@@ -233,8 +258,8 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 					val ymotionNextY = ymotionList[i + 1] * 10 * ymotionYMul
 
 					RenderUtils.glColor(ymotionColor)
-					GL11.glVertex2d(i.toDouble() - ymotionListStart, height + 1 - ypos - ymotionY.coerceAtLeast(-ypos).coerceAtMost(height.toDouble() - ypos))
-					GL11.glVertex2d(i + 1.0 - ymotionListStart, height + 1 - ypos - ymotionNextY.coerceAtLeast(-ypos).coerceAtMost(height.toDouble() - ypos))
+					GL11.glVertex2d(i.toDouble() - ymotionListStart, height + 1 - ypos - ymotionY.coerceIn(-ypos, height.toDouble() - ypos))
+					GL11.glVertex2d(i + 1.0 - ymotionListStart, height + 1 - ypos - ymotionNextY.coerceIn(-ypos, height.toDouble() - ypos))
 				}
 			}
 

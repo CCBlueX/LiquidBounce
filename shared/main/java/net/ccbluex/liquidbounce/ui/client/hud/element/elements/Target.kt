@@ -9,7 +9,6 @@ package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.ITextureManager
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.api.minecraft.util.WDefaultPlayerSkin
 import net.ccbluex.liquidbounce.features.module.modules.combat.Aimbot
@@ -24,7 +23,10 @@ import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import java.awt.Color
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -94,7 +96,7 @@ class Target : Element()
 			} + targetPlayer.absorptionAmount
 			val targetArmor = targetPlayer.totalArmorValue
 
-			val targetMaxHealth = targetPlayer.maxHealth /* + ptargetHealthBoost + ptargetAbsorption */ + targetPlayer.absorptionAmount
+			val targetMaxHealth = targetPlayer.maxHealth + targetPlayer.absorptionAmount
 			val targetMaxHealthInt = targetMaxHealth.roundToInt()
 
 			val damageColor = createRGB(damageAnimationColorRed.get(), damageAnimationColorGreen.get(), damageAnimationColorBlue.get(), 255)
@@ -112,13 +114,13 @@ class Target : Element()
 			val width = (100.0F + Fonts.font60.getStringWidth(targetPlayer.name)).coerceAtLeast(250.0F)
 
 			// Draw Body Rect
-			RenderUtils.drawBorderedRect(0F, 0F, width, 110F, borderWidth.get(), ColorUtils.createRGB(borderColorRed.get(), borderColorGreen.get(), borderColorBlue.get(), 255), -16777216)
+			RenderUtils.drawBorderedRect(0F, 0F, width, 110F, borderWidth.get(), createRGB(borderColorRed.get(), borderColorGreen.get(), borderColorBlue.get(), 255), -16777216)
 
 			// Draw Head Box
 			RenderUtils.drawRect(2F, 2F, 96F, 96F, -12566464)
 
 			// Draw Absorption
-			RenderUtils.drawRect(((easingHealth / targetMaxHealth) * width) - ((/* ptargetAbsorption */ easingAbsorption / targetMaxHealth) * width) + 1, 103F, (easingHealth / targetMaxHealth) * width, 104F, -256)
+			RenderUtils.drawRect(((easingHealth / targetMaxHealth) * width) - ((easingAbsorption / targetMaxHealth) * width) + 1, 103F, (easingHealth / targetMaxHealth) * width, 104F, -256)
 
 			// Draw Damage animation
 			if (easingHealth > targetHealth) RenderUtils.drawRect(0F, 105F, (easingHealth / targetMaxHealth) * width, 107F, damageColor)
@@ -168,9 +170,11 @@ class Target : Element()
 			}
 
 			// Draw head
-			drawHead(textureManager, skinResource, 90, 90)
+			RenderUtils.resetColor()
+			textureManager.bindTexture(skinResource)
+			RenderUtils.drawScaledCustomSizeModalRect(4, 4, 8F, 8F, 8, 8, 90, 90, 64F, 64F)
 
-			RenderUtils.glColor(Color.white) // Reset Color
+			RenderUtils.glColor(Color.white)
 
 			val pingLevelImageID: Int = when
 			{
@@ -213,23 +217,17 @@ class Target : Element()
 			// Render Target Stats
 
 			val distanceText = decimalFormat.format(thePlayer.getDistanceToEntityBox(targetPlayer))
-			Fonts.font35.drawString("${if (targetPlayer.onGround) "\u00A7aOn" else "\u00A7cOff"}-Ground\u00A7r | distance: ${distanceText}m", 100, 60, 0xffffff)
+			Fonts.font35.drawString("${if (targetPlayer.onGround) "\u00A7aOn" else "\u00A7cOff"}-Ground\u00A7r | Distance: ${distanceText}m", 100, 60, 0xffffff)
 			Fonts.font35.drawString("${if (!targetPlayer.sprinting) "\u00A7cNot " else "\u00A7a"}Sprinting\u00A7r | ${if (!targetPlayer.sneaking) "\u00A7cNot " else "\u00A7a"}Sneaking\u00A7r", 100, 70, 0xffffff)
 
 			val yawText = decimalFormat.format(targetPlayer.rotationYaw % 360f)
 			val pitchText = decimalFormat.format(targetPlayer.rotationPitch)
-			Fonts.font35.drawString("yaw: $yawText | pitch: $pitchText | hurt: ${if (targetPlayer.hurtTime > 0) "\u00A7c" else "\u00A7a"}${targetPlayer.hurtTime}\u00A7r", 100, 85, 0xffffff)
+			Fonts.font35.drawString("Yaw: $yawText | Pitch: $pitchText | Hurt: ${if (targetPlayer.hurtTime > 0) "\u00A7c" else "\u00A7a"}${targetPlayer.hurtTime}\u00A7r", 100, 85, 0xffffff)
+
+			Fonts.font35.drawString("Damage/Heal: ${if (targetPlayer.hurtTime > 0) "\u00A7c" else "\u00A7a"}${targetPlayer.hurtTime}\u00A7r", 100, 85, 0xffffff)
 		}
 
 		lastTarget = targetEntity
 		return Border(0F, 0F, 250F, 110F)
-	}
-
-	private fun drawHead(textureManager: ITextureManager, skin: IResourceLocation, width: Int, height: Int)
-	{
-		RenderUtils.resetColor()
-
-		textureManager.bindTexture(skin)
-		RenderUtils.drawScaledCustomSizeModalRect(4, 4, 8F, 8F, 8, 8, width, height, 64F, 64F)
 	}
 }

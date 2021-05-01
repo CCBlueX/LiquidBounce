@@ -86,6 +86,8 @@ class Ignite : Module()
 				val yaw = WMathHelper.toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f
 				val pitch = -WMathHelper.toDegrees(StrictMath.atan2(diffY, sqrt).toFloat())
 
+				CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
+
 				netHandler.addToSendQueue(provider.createCPacketPlayerLook(thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround))
 
 				controller.sendUseItem(thePlayer, theWorld, itemStack)

@@ -7,7 +7,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.JumpEvent
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -87,19 +90,22 @@ class Velocity : Module()
 				velocityInput = false
 			}
 
+			"aac3.1.2" -> if (velocityInput && velocityTimer.hasTimePassed(80L))
+			{
+				thePlayer.motionX *= horizontalValue.get()
+				thePlayer.motionZ *= horizontalValue.get()
+
+				//mc.thePlayer.motionY *= verticalValue.get() ?
+
+				velocityInput = false
+			}
+
 			"aac3.2.0-reverse" ->
 			{
 				if (!velocityInput) return
 
 				if (!thePlayer.onGround) MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * reverseStrengthValue.get())
 				else if (velocityTimer.hasTimePassed(80L)) velocityInput = false
-			}
-
-			"aac3.1.2" -> if (velocityInput && velocityTimer.hasTimePassed(80L))
-			{
-				thePlayer.motionX *= horizontalValue.get()
-				thePlayer.motionZ *= horizontalValue.get() //mc.thePlayer.motionY *= verticalValue.get() ?
-				velocityInput = false
 			}
 
 			"aac3.3.4-reverse" ->
@@ -153,6 +159,7 @@ class Velocity : Module()
 			{
 				if (!velocityInput || thePlayer.onGround || thePlayer.fallDistance > 2F) return
 
+				// Generate AAC Movement-check flag
 				thePlayer.motionY -= 1.0
 				thePlayer.isAirBorne = true
 				thePlayer.onGround = true
