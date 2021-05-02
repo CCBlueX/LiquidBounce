@@ -30,61 +30,53 @@ object ModuleFreeCam : Module("FreeCam", Category.PLAYER) {
     private var ground = false
 
     override fun enable() {
-        if (mc.player != null) {
-            if (resetMotion) {
-                player.setVelocity(0.0, 0.0, 0.0)
-            }
-            x = 0.0
-            y = 0.0
-            z = 0.0
-            posX = player.x
-            posY = player.y
-            posZ = player.z
-            ground = player.isOnGround
-            val faker = OtherClientPlayerEntity(world, player.gameProfile)
+        if (resetMotion) {
+            player.setVelocity(0.0, 0.0, 0.0)
+        }
+        x = 0.0
+        y = 0.0
+        z = 0.0
+        posX = player.x
+        posY = player.y
+        posZ = player.z
+        ground = player.isOnGround
+        val faker = OtherClientPlayerEntity(world, player.gameProfile)
 
-            faker.headYaw = player.headYaw
-            faker.copyPositionAndRotation(player)
-            world.addEntity(faker.entityId, faker)
-            fakePlayer = faker
+        faker.headYaw = player.headYaw
+        faker.copyPositionAndRotation(player)
+        world.addEntity(faker.entityId, faker)
+        fakePlayer = faker
 
-            if (!collision) {
-                player.noClip = true
-            }
+        if (!collision) {
+            player.noClip = true
         }
     }
 
     override fun disable() {
-        if (mc.player != null || mc.world != null || fakePlayer != null) {
-            player.updatePositionAndAngles(fakePlayer!!.x, fakePlayer!!.y, fakePlayer!!.z, player.yaw, player.pitch)
-            world.removeEntity(fakePlayer!!.entityId)
-            fakePlayer = null
-            player.setVelocity(x, y, z)
-        }
+        player.updatePositionAndAngles(fakePlayer!!.x, fakePlayer!!.y, fakePlayer!!.z, player.yaw, player.pitch)
+        world.removeEntity(fakePlayer!!.entityId)
+        fakePlayer = null
+        player.setVelocity(x, y, z)
     }
 
     val repeatable = repeatable {
-        if (mc.world == null) {
-            enabled = false
-        } else {
-            // Just to make sure it stays enabled
-            if (!collision) {
-                player.noClip = true
-                player.fallDistance = 0f
-                player.isOnGround = false
+        // Just to make sure it stays enabled
+        if (!collision) {
+            player.noClip = true
+            player.fallDistance = 0f
+            player.isOnGround = false
+        }
+
+        if (fly) {
+            val speed = speed.toDouble()
+            if (player.moving) {
+                player.strafe(speed = speed)
             }
 
-            if (fly) {
-                val speed = speed.toDouble()
-                if (player.moving) {
-                    player.strafe(speed = speed)
-                }
-
-                player.velocity.y = when {
-                    mc.options.keyJump.isPressed -> speed
-                    mc.options.keySneak.isPressed -> -speed
-                    else -> 0.0
-                }
+            player.velocity.y = when {
+                mc.options.keyJump.isPressed -> speed
+                mc.options.keySneak.isPressed -> -speed
+                else -> 0.0
             }
         }
     }
