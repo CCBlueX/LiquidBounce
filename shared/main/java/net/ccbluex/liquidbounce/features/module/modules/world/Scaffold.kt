@@ -597,17 +597,6 @@ class Scaffold : Module()
 	// Search for new target block
 	private fun findBlock(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, expand: Boolean)
 	{
-
-		//		val blockPosition: WBlockPos = if (shouldGoDown) (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) WBlockPos(
-		//			thePlayer.posX, thePlayer.posY - 0.6, thePlayer.posZ
-		//		) else WBlockPos(
-		//			thePlayer.posX, thePlayer.posY - 0.6, thePlayer.posZ
-		//		).down()) else (if (sameYValue.get() && launchY <= thePlayer.posY) WBlockPos(
-		//			thePlayer.posX, launchY - 1.0, thePlayer.posZ
-		//		) else (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) WBlockPos(thePlayer) else WBlockPos(
-		//			thePlayer.posX, thePlayer.posY, thePlayer.posZ
-		//		).down()))
-
 		val groundBlockState = lastGroundBlockState ?: return
 		val groundBlockBB = lastGroundBlockBB ?: return
 		val groundBlock: IBlock = groundBlockState.block
@@ -638,7 +627,7 @@ class Scaffold : Module()
 		var sameY = false
 		if (sameYValue.get() && launchY != -999) // TODO: Fix Broken SameY Option
 		{
-			pos = WBlockPos(thePlayer.posX, launchY - 1.0, thePlayer.posZ)
+			pos = WBlockPos(thePlayer.posX, launchY - 1.0, thePlayer.posZ).up()
 			sameY = true
 		}
 
@@ -1130,7 +1119,7 @@ class Scaffold : Module()
 	}
 
 	override val tag: String
-		get() = modeValue.get()
+		get() = "${modeValue.get()}${if (sameYValue.get()) ", Y Fixed At ${launchY - 1.0}" else ""}"
 
 	class SearchBounds(x: Double, x2: Double, xsteps: Double, y: Double, y2: Double, ysteps: Double, z: Double, z2: Double, zsteps: Double)
 	{

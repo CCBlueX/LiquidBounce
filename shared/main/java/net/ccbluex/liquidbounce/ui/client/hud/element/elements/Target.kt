@@ -108,8 +108,9 @@ class Target : Element()
 
 				var name = targetEntity.name // TODO: displayName
 
-				val healthText = "$targetHealth (${decimalFormat.format(targetHealth / targetMaxHealth * 100.0)})"
-				val armorText = "$targetArmor (${decimalFormat.format(targetArmor / 20.0 * 100.0)})"
+				val targetHealthPercentage = targetHealth / targetMaxHealth
+				val healthText = "${if (targetHealthPercentage < 0.25) "\u00A7c" else if (targetHealthPercentage < 0.5) "\u00A7e" else "\u00A7a"}$targetHealth (${decimalFormat.format(targetHealthPercentage * 100.0)}%)\u00A7r"
+				val armorText = "${if (targetArmor > 0) "\u00A7b" else "\u00A77"}$targetArmor (${decimalFormat.format(targetArmor / 20.0 * 100.0)}%)\u00A7r"
 
 				val distanceText = decimalFormat.format(thePlayer.getDistanceToEntityBox(targetEntity))
 				val yawText = "${decimalFormat.format(targetEntity.rotationYaw % 360f)} (${StringUtils.getHorizontalFacingAdv(targetEntity.rotationYaw)})"
@@ -161,10 +162,10 @@ class Target : Element()
 				if (easingHealth > targetHealth) RenderUtils.drawRect(0F, healthBarYOffset, (easingHealth / targetMaxHealth) * width, healthBarYOffset + 2, damageColor)
 
 				// Draw Health bar
-				RenderUtils.drawRect(0F, healthBarYOffset, (targetHealth / targetMaxHealth) * width, healthBarYOffset + 2, healthColor.rgb)
+				RenderUtils.drawRect(0F, healthBarYOffset, targetHealthPercentage * width, healthBarYOffset + 2, healthColor.rgb)
 
 				// Draw Heal animation
-				if (easingHealth < targetHealth) RenderUtils.drawRect((easingHealth / targetMaxHealth) * width, healthBarYOffset, (targetHealth / targetMaxHealth) * width, healthBarYOffset + 2, healColor)
+				if (easingHealth < targetHealth) RenderUtils.drawRect((easingHealth / targetMaxHealth) * width, healthBarYOffset, targetHealthPercentage * width, healthBarYOffset + 2, healColor)
 
 				// Draw Health Gradations
 				val healthGradationGap = width / targetMaxHealthInt
@@ -265,7 +266,7 @@ class Target : Element()
 				GL11.glScalef(scale, scale, scale)
 
 				// Health/Armor-related
-				Fonts.font35.drawString("Health: $healthText | Absorption: $targetAbsorption | Armor: $armorText", scaledXShift, scaledYPos, 0xffffff)
+				Fonts.font35.drawString("Health: $healthText | Absorption: ${if (targetAbsorption > 0) "\u00A7e" else "\u00A77"}$targetAbsorption\u00A7r | Armor: $armorText", scaledXShift, scaledYPos, 0xffffff)
 
 				// Movement/Position-related
 				Fonts.font35.drawString("Distance: ${distanceText}m | ${if (targetEntity.onGround) "\u00A7a" else "\u00A7c"}Ground\u00A7r | ${if (targetEntity.isAirBorne) "\u00A7a" else "\u00A7c"}AirBorne\u00A7r | ${if (!targetEntity.sprinting) "\u00A7c" else "\u00A7a"}Sprinting§r | ${if (!targetEntity.sneaking) "\u00A7c" else "\u00A7a"}Sneaking§r", scaledXShift, scaledYPos + 10, 0xffffff)
