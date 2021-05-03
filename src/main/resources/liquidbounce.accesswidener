@@ -66,6 +66,7 @@ accessible field net/minecraft/item/BucketItem fluid Lnet/minecraft/fluid/Fluid;
 
 accessible field net/minecraft/client/options/KeyBinding boundKey Lnet/minecraft/client/util/InputUtil$Key;
 accessible field net/minecraft/entity/LivingEntity lastAttackedTicks I
+accessible field net/minecraft/entity/projectile/PersistentProjectileEntity inGround Z
 
 accessible method net/minecraft/entity/player/PlayerEntity getVelocityMultiplier ()F
 accessible method net/minecraft/entity/Entity movementInputToVelocity (Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;

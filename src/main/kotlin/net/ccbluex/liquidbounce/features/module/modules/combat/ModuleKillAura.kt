@@ -37,11 +37,14 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityGroup
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.AxeItem
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
@@ -82,6 +85,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val swing by boolean("Swing", true)
     private val keepSprint by boolean("KeepSprint", true)
     private val unsprintOnCrit by boolean("UnsprintOnCrit", true)
+    private val attackShielding by boolean("AttackShielding", false)
 
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
 
@@ -182,7 +186,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     attackEntity(raycastedEntity)
                 },
                 condition = {
-                     !cooldown || (player.getAttackCooldownProgress(0.0f) >= 1.0f && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25))
+                     !cooldown || (player.getAttackCooldownProgress(0.0f) >= 1.0f && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25)) && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem || !raycastedEntity.wouldBlockHit(player))
                 },
                 cps
             )

@@ -24,9 +24,11 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
 import net.ccbluex.liquidbounce.utils.entity.upwards
 import net.minecraft.client.network.ClientPlayerEntity
@@ -81,16 +83,54 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         // Jump crit should just be active until an enemy is in your reach to be attacked
         val range by float("Range", 4f, 1f..6f)
 
+        val optimizeForCooldown by boolean("OptimizeForCooldown", true)
+
         val tickHandler = handler<PlayerTickEvent> {
             if (!ActiveOption.enabled) return@handler
+
+            if (!canCrit(player, true))
+                return@handler
+
+            if (optimizeForCooldown && shouldWaitForJump())
+                return@handler
 
             val (_, _) = world.findEnemy(range) ?: return@handler
 
             if (player.isOnGround) {
+                player.jump()
                 player.upwards(height)
             }
         }
 
+    }
+
+    fun shouldWaitForJump(initialMotion: Float = 0.42f): Boolean {
+        if (!canCrit(player, true))
+            return false
+
+        val ticksTillFall = initialMotion / 0.08f
+
+        val nextPossibleCrit =
+            (player.attackCooldownProgressPerTick - 0.5f - player.lastAttackedTicks.toFloat()).coerceAtLeast(0.0f)
+
+        var ticksTillNextOnGround = FallingPlayer(
+            player,
+            player.x,
+            player.y,
+            player.z,
+            player.velocity.x,
+            player.velocity.y + initialMotion,
+            player.velocity.z,
+            player.yaw
+        ).findCollision((ticksTillFall * 2.25f).toInt())?.tick
+
+        if (ticksTillNextOnGround == null)
+            ticksTillNextOnGround = ticksTillFall.toInt() * 2
+
+        if (ticksTillNextOnGround + ticksTillFall < nextPossibleCrit)
+            return false
+
+        return ticksTillFall + 1.0f < nextPossibleCrit
     }
 
     /**
@@ -115,6 +155,15 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             }
         }
 
+    }
+
+    var ticksOnGround = 0
+
+    val repeatable = repeatable {
+        if (player.isOnGround)
+            ticksOnGround++
+        else
+            ticksOnGround = 0
     }
 
     init {
@@ -145,17 +194,22 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val hitProbability = 0.6f
 
-        val damageOnCrit = getCooldownDamageFactorWithCurrentTickDelta(player, ticksTillCrit) * (1.0f + 0.5f * hitProbability)
+        val damageOnCrit = 0.5f * hitProbability
 
-        val damageLostWaiting = 1.0f + getCooldownDamageFactor(player, ticksTillCrit)
+        val damageLostWaiting = getCooldownDamageFactor(player, ticksTillCrit)
 
-        return damageOnCrit > damageLostWaiting
+        if (damageOnCrit > damageLostWaiting) {
+            if (FallingPlayer.fromPlayer(player).findCollision((ticksTillCrit * 1.3f).toInt()) == null)
+                return true
+        }
+
+        return false
     }
 
-    fun canCrit(player: ClientPlayerEntity) =
-        !player.isInLava && !player.isTouchingWater && !player.isHoldingOntoLadder && !player.hasNoGravity() && !player.hasStatusEffect(
+    fun canCrit(player: ClientPlayerEntity, ignoreOnGround: Boolean = false) =
+        !player.isInLava && !player.isTouchingWater && !player.isClimbing && !player.hasNoGravity() && !player.hasStatusEffect(
             StatusEffects.LEVITATION
-        ) && !player.hasStatusEffect(StatusEffects.BLINDNESS) && !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && !player.isOnGround
+        ) && !player.hasStatusEffect(StatusEffects.BLINDNESS) && !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && (!player.isOnGround || ignoreOnGround)
 
     fun getCooldownDamageFactorWithCurrentTickDelta(player: PlayerEntity, tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
@@ -170,7 +224,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun wouldCrit(ignoreSprint: Boolean = false): Boolean {
-        return canCrit(player) && player.velocity.y < -0.08 && (!player.isSprinting || ignoreSprint)
+        return canCrit(player) && player.fallDistance > 0.0 && player.getAttackCooldownProgress(0.5f) > 0.9f && (!player.isSprinting || ignoreSprint)
     }
 
 }

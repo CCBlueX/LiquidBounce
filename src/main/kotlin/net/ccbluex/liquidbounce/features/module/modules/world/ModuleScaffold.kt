@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.extensions.getFace
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.block.ShapeContext
@@ -282,17 +283,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
         event.isSafeWalk = true
-    }
-
-    fun Box.getFace(direction: Direction): Face {
-        return when (direction) {
-            Direction.DOWN -> Face(Vec3d(this.minX, this.minY, this.minZ), Vec3d(this.maxX, this.minY, this.maxZ))
-            Direction.UP -> Face(Vec3d(this.minX, this.maxY, this.minZ), Vec3d(this.maxX, this.maxY, this.maxZ))
-            Direction.NORTH -> Face(Vec3d(this.minX, this.minY, this.maxZ), Vec3d(this.maxX, this.maxY, this.maxZ))
-            Direction.SOUTH -> Face(Vec3d(this.minX, this.minY, this.minZ), Vec3d(this.maxX, this.maxY, this.minZ))
-            Direction.WEST -> Face(Vec3d(this.maxX, this.minY, this.minZ), Vec3d(this.maxX, this.maxY, this.maxZ))
-            Direction.EAST -> Face(Vec3d(this.minX, this.minY, this.minZ), Vec3d(this.minX, this.maxY, this.maxZ))
-        }
     }
 
     data class Face(val from: Vec3d, val to: Vec3d) {

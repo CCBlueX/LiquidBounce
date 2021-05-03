@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
@@ -126,6 +127,14 @@ fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
     return xDist * xDist + yDist * yDist + zDist * zDist
 }
 
+fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
+    return Vec3(
+        this.lastRenderX + (this.x - this.lastRenderX) * tickDelta,
+        this.lastRenderY + (this.y - this.lastRenderY) * tickDelta,
+        this.lastRenderZ + (this.z - this.lastRenderZ) * tickDelta,
+    )
+}
+
 /**
  * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
  */
@@ -144,4 +153,18 @@ fun getNearestPoint(eyes: Vec3d, box: Box): Vec3d {
     }
 
     return Vec3d(origin[0], origin[1], origin[2])
+}
+
+fun PlayerEntity.wouldBlockHit(source: PlayerEntity): Boolean {
+    if (!this.isBlocking)
+        return false
+
+    val vec3d = source.pos
+
+    val facingVec = getRotationVec(1.0f)
+    var deltaPos = vec3d.reverseSubtract(pos).normalize()
+
+    deltaPos = Vec3d(deltaPos.x, 0.0, deltaPos.z)
+
+    return deltaPos.dotProduct(facingVec) < 0.0
 }

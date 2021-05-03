@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.utils.entity.downwards
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -31,7 +32,10 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     private val modes = choices("Mode", "YPort") {
         SpeedYPort
+        LegitHop
     }
+
+    private val optimizeForCriticals by boolean("OptimizeForCriticals", true)
 
     private object SpeedYPort : Choice("YPort", modes) {
 
@@ -41,6 +45,19 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
                 player.upwards(0.42f)
                 wait(1)
                 player.downwards(-1f)
+            }
+        }
+
+    }
+
+    private object LegitHop : Choice("LegitHop", modes) {
+
+        val repeatable = repeatable {
+            if (optimizeForCriticals && ModuleCriticals.shouldWaitForJump(0.42f))
+                return@repeatable
+
+            if (player.isOnGround && player.moving) {
+                player.jump()
             }
         }
 
