@@ -291,7 +291,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 return TrajectoryInfo(
                     0.05F,
                     0.25F,
-                    motionSlowdown = 0.5F,
+                    motionFactor = 0.5F,
                     pitchSubtrahend = 20.0F
                 )
             }
@@ -302,7 +302,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
     data class TrajectoryInfo(
         var gravity: Float,
         var size: Float,
-        var motionFactor: Float = 1.5F * 0.4F,
+        var motionFactor: Float = 1.5F,
         var motionSlowdown: Float = 0.99F,
         var pitchSubtrahend: Float = 0.0F,
         var angle: Float = 0.99F,
