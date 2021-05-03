@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.render.engine.ColoredPrimitiveRenderTask
 import net.ccbluex.liquidbounce.render.engine.PrimitiveType
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 
 fun drawBox(box: Box, color: Color4b): ColoredPrimitiveRenderTask {
     val renderTask = ColoredPrimitiveRenderTask(12, PrimitiveType.Triangles)
@@ -44,6 +45,49 @@ fun drawBox(box: Box, color: Color4b): ColoredPrimitiveRenderTask {
     renderTask.indexQuad(p3, p1, p5, p7)
     renderTask.indexQuad(p6, p2, p3, p7)
     renderTask.indexQuad(p0, p4, p5, p1)
+
+    return renderTask
+}
+
+fun drawBoxSide(box: Box, side: Direction, color: Color4b): ColoredPrimitiveRenderTask {
+    val renderTask = ColoredPrimitiveRenderTask(12, PrimitiveType.Triangles)
+
+    if (side == Direction.SOUTH) renderTask.indexQuad(
+        renderTask.vertex(Vec3(box.minX, box.maxY, box.maxZ), color),
+        renderTask.vertex(Vec3(box.minX, box.minY, box.maxZ), color),
+        renderTask.vertex(Vec3(box.maxX, box.minY, box.maxZ), color),
+        renderTask.vertex(Vec3(box.maxX, box.maxY, box.maxZ), color)
+    )
+    if (side == Direction.WEST) renderTask.indexQuad(
+        renderTask.vertex(Vec3(box.minX, box.maxY, box.minZ), color),
+        renderTask.vertex(Vec3(box.minX, box.minY, box.minZ), color),
+        renderTask.vertex(Vec3(box.minX, box.minY, box.maxZ), color),
+        renderTask.vertex(Vec3(box.minX, box.maxY, box.maxZ), color)
+    )
+    if (side == Direction.NORTH) renderTask.indexQuad(
+        renderTask.vertex(Vec3(box.maxX, box.maxY, box.minZ), color),
+        renderTask.vertex(Vec3(box.maxX, box.minY, box.minZ), color),
+        renderTask.vertex(Vec3(box.minX, box.minY, box.minZ), color),
+        renderTask.vertex(Vec3(box.minX, box.maxY, box.minZ), color)
+    )
+    if (side == Direction.EAST) renderTask.indexQuad(
+        renderTask.vertex(Vec3(box.maxX, box.maxY, box.maxZ), color),
+        renderTask.vertex(Vec3(box.maxX, box.minY, box.maxZ), color),
+        renderTask.vertex(Vec3(box.maxX, box.minY, box.minZ), color),
+        renderTask.vertex(Vec3(box.maxX, box.maxY, box.minZ), color)
+    )
+    if (side == Direction.UP) renderTask.indexQuad(
+        renderTask.vertex(Vec3(box.minX, box.maxY, box.minZ), color),
+        renderTask.vertex(Vec3(box.minX, box.maxY, box.maxZ), color),
+        renderTask.vertex(Vec3(box.maxX, box.maxY, box.maxZ), color),
+        renderTask.vertex(Vec3(box.maxX, box.maxY, box.minZ), color)
+    )
+    if (side == Direction.DOWN) renderTask.indexQuad(
+        renderTask.vertex(Vec3(box.minX, box.minY, box.maxZ), color),
+        renderTask.vertex(Vec3(box.minX, box.minY, box.minZ), color),
+        renderTask.vertex(Vec3(box.maxX, box.minY, box.minZ), color),
+        renderTask.vertex(Vec3(box.maxX, box.minY, box.maxZ), color)
+    )
 
     return renderTask
 }
@@ -100,19 +144,11 @@ fun ColoredPrimitiveRenderTask.indexLine(p0: Int, p1: Int) {
 fun ColoredPrimitiveRenderTask.rect(p1: Vec3, p2: Vec3, color: Color4b, outline: Boolean = false) {
     if (outline) {
         this.outlineQuad(
-            Vec3(p1.x, p1.y, p1.z),
-            Vec3(p1.x, p2.y, p1.z),
-            Vec3(p2.x, p2.y, p1.z),
-            Vec3(p2.x, p1.y, p1.z),
-            color
+            Vec3(p1.x, p1.y, p1.z), Vec3(p1.x, p2.y, p1.z), Vec3(p2.x, p2.y, p1.z), Vec3(p2.x, p1.y, p1.z), color
         )
     } else {
         this.quad(
-            Vec3(p1.x, p1.y, p1.z),
-            Vec3(p1.x, p2.y, p1.z),
-            Vec3(p2.x, p2.y, p1.z),
-            Vec3(p2.x, p1.y, p1.z),
-            color
+            Vec3(p1.x, p1.y, p1.z), Vec3(p1.x, p2.y, p1.z), Vec3(p2.x, p2.y, p1.z), Vec3(p2.x, p1.y, p1.z), color
         )
     }
 }

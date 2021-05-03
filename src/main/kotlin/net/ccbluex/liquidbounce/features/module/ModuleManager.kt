@@ -136,7 +136,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoPush,
             ModuleAntiBerryBush,
             ModuleFreeCam,
-            ModuleConsoleSpammer
+            ModuleConsoleSpammer,
+            ModuleTrajectories
         )
 
         builtin.apply {
