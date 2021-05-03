@@ -84,8 +84,6 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
         startPos = player.pos
 
-        println(startPos)
-
         positionPackets.set(0)
     }
 

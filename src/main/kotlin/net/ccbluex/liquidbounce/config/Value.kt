@@ -221,7 +221,7 @@ interface NamedChoice {
 
 enum class ValueType {
     BOOLEAN, FLOAT, FLOAT_RANGE, INT, INT_RANGE, TEXT, TEXT_ARRAY, CURVE, COLOR, BLOCK, BLOCKS, ITEM,
-    ITEMS, CHOICE, INVALID, TOGGLEABLE
+    ITEMS, CHOICE, INVALID, CONFIGURABLE, TOGGLEABLE
 }
 
 enum class ListValueType(val type: Class<*>?) {

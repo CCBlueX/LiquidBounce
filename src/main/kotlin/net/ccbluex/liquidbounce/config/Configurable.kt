@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 
-open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf(), valueType: ValueType = ValueType.INVALID) :
+open class Configurable(name: String, value: MutableList<Value<*>> = mutableListOf(), valueType: ValueType = ValueType.CONFIGURABLE) :
     Value<MutableList<Value<*>>>(name, value = value, valueType) {
 
     open fun initConfigurable() {

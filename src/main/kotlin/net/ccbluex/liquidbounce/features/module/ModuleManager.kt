@@ -136,7 +136,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoPush,
             ModuleAntiBerryBush,
             ModuleFreeCam,
-            ModulePlugins
+            ModulePlugins,
+            ModuleTrajectories
         )
 
         builtin.apply {

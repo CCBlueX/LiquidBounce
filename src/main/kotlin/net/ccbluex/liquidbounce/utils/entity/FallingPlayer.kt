@@ -41,6 +41,21 @@ class FallingPlayer(
     private var motionZ: Double,
     private val yaw: Float,
 ) {
+    companion object {
+        fun fromPlayer(player: ClientPlayerEntity): FallingPlayer {
+            return FallingPlayer(
+                player,
+                player.x,
+                player.y,
+                player.z,
+                player.velocity.x,
+                player.velocity.y,
+                player.velocity.z,
+                player.yaw
+            )
+        }
+    }
+
     private var simulatedTicks: Int = 0
 
     private fun calculateForTick(rotationVec: Vec3d) {
