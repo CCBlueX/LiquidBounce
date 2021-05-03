@@ -59,7 +59,6 @@ class Zoot : Module()
 		}
 	}
 
-	// TODO: Check current potion
 	private fun isBadEffect(potionID: Int): Boolean = badEffectsArray.any { potionID == it }
 
 	companion object

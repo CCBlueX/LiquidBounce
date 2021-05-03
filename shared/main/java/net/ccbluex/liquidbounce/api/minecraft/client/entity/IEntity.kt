@@ -75,6 +75,7 @@ interface IEntity
 	val name: String
 
 	val prevRotationYaw: Float
+	val prevRotationPitch: Float
 
 	val ticksExisted: Int
 

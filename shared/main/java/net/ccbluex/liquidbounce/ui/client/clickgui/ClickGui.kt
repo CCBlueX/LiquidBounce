@@ -118,8 +118,9 @@ class ClickGui : WrappedGuiScreen()
 			localClickedPanel.y2 = localClickedPanel.y - newMouseYI
 			localClickedPanel.drag = true
 
+			// TODO: Optimize this shitty workaround
 			panels.remove(localClickedPanel)
-			panels.add(localClickedPanel) // TODO: Optimize it
+			panels.add(localClickedPanel)
 
 			clickedPanel = null
 		}

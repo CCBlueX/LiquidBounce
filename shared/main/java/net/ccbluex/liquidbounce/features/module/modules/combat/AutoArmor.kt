@@ -103,7 +103,6 @@ class AutoArmor : Module()
 		for ((armorType, candidates) in armorPieces) bestArmor[armorType] = candidates.maxWith(ARMOR_COMPARATOR)
 
 		// Swap armor
-		// TODO: Check it work correctly
 		if ((0..3).mapNotNull { i ->
 				val armorSlot = 3 - i
 				Triple(bestArmor[i] ?: return@mapNotNull null, armorSlot, ArmorPiece(inventory.armorItemInSlot(armorSlot), -1))

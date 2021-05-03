@@ -120,8 +120,6 @@ object RenderUtils : MinecraftInstance()
 
 			worldrenderer.begin(GL11.GL_LINE_STRIP, provider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
 
-			// TODO: Optimize it (한붓그리기하듯이 가능한 한 적은 pos콜로 Hydra-like BlockESP 구현하기) -> 중복 콜 최대한 없애보기
-
 			// From min, min, min
 			worldrenderer.pos(minX, minY, minZ).endVertex()
 			worldrenderer.pos(maxX, maxY, minZ).endVertex()

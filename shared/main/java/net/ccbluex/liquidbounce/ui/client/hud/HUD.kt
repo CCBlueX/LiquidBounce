@@ -185,8 +185,5 @@ open class HUD : MinecraftInstance()
 	 */
 	fun addNotification(notification: Notification) = elements.any { it is Notifications } && notifications.add(notification)
 
-	fun addNotification(header: String, text: String, rectColor: Color?, keepTime: Long) = addNotification(Notification(header, text, rectColor, keepTime))
-
-	// TODO: Convert it to kotlin optional argument when all class converted to kotlin
-	fun addNotification(header: String, message: String, stayTime: Long): Boolean = addNotification(header, message, null, stayTime)
+	fun addNotification(header: String, message: String, stayTime: Long, rectColor: Color? = null) = addNotification(Notification(header, message, rectColor, stayTime))
 }

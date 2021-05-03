@@ -147,7 +147,7 @@ class Speed : Module()
 			MovementUtils.zeroXZ(thePlayer)
 			thePlayer.jumpMovementFactor = 0.02F
 
-			LiquidBounce.hud.addNotification("Speed", "A teleport has been detected. Disabled Speed to prevent more flags.", Color.red, 1000L)
+			LiquidBounce.hud.addNotification("Speed", "A teleport has been detected. Disabled Speed to prevent more flags.", 1000L, Color.red)
 		}
 	}
 

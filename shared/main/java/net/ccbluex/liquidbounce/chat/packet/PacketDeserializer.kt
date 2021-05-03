@@ -43,7 +43,8 @@ class PacketDeserializer : JsonDeserializer<Packet>
 	 * @throws JsonParseException if json is not in the expected format of `typeofT`
 	 */
 	override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext?): Packet?
-	{ // TODO: Use SerializedPacket class
+	{
+		// TODO: Use SerializedPacket class
 
 		val packetObject = json.asJsonObject
 		val packetName = packetObject.get("m").asString

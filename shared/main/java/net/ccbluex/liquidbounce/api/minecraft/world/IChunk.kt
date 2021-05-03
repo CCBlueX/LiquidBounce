@@ -9,7 +9,6 @@ package net.ccbluex.liquidbounce.api.minecraft.world
 import com.google.common.base.Predicate
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 
@@ -19,7 +18,7 @@ interface IChunk
 	val z: Int
 	val isLoaded: Boolean
 
-	fun getEntitiesWithinAABBForEntity(thePlayer: IEntityPlayerSP, arrowBox: IAxisAlignedBB, collidedEntities: MutableList<IEntity>, predicate: Predicate<IEntity>?)
+	fun getEntitiesWithinAABBForEntity(entity: IEntity, arrowBox: IAxisAlignedBB, collidedEntities: MutableList<IEntity>, predicate: Predicate<IEntity>?)
 	fun getHeightValue(x: Int, z: Int): Int
 	fun getBlockState(blockPos: WBlockPos): IIBlockState
 }

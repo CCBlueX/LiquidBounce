@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -54,14 +55,13 @@ class Projectiles : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return
+		val renderManager = mc.renderManager
+
+		val partialTicks = event.partialTicks
 
 		val heldItem = thePlayer.heldItem ?: return
 
 		val item = heldItem.item
-		val renderManager = mc.renderManager
-		val renderPosX = renderManager.renderPosX
-		val renderPosY = renderManager.renderPosY
-		val renderPosZ = renderManager.renderPosZ
 
 		var isSplash = false
 
@@ -71,8 +71,6 @@ class Projectiles : Module()
 
 		val gravity: Float
 		val size: Float
-
-		val partialTicks = event.partialTicks
 
 		val provider = classProvider
 
@@ -99,11 +97,9 @@ class Projectiles : Module()
 				var power = (lastBowChargeDuration + (bowChargeDuration - lastBowChargeDuration) * partialTicks) * 0.05f
 				lastBowChargeDuration = bowChargeDuration
 
-				power = (power * power + power * 2F) / 3F
+				power = ((power * power + power * 2F) / 3F).coerceAtMost(1F)
 
 				if (power < 0.1F) return
-
-				if (power > 1F) power = 1F
 
 				motionFactor = power * 3F
 			}
@@ -132,12 +128,15 @@ class Projectiles : Module()
 			}
 		}
 
-		// Interpolated yaw and pitch of player
 		val (serverYaw, serverPitch) = RotationUtils.serverRotation
 		val (lastServerYaw, lastServerPitch) = RotationUtils.lastServerRotation
 
 		val yaw = lastServerYaw + (serverYaw - lastServerYaw) * partialTicks
 		val pitch = lastServerPitch + (serverPitch - lastServerPitch) * partialTicks
+
+		val renderPosX = renderManager.renderPosX
+		val renderPosY = renderManager.renderPosY
+		val renderPosZ = renderManager.renderPosZ
 
 		val yawRadians = WMathHelper.toRadians(yaw)
 		val pitchRadians = WMathHelper.toRadians(pitch)

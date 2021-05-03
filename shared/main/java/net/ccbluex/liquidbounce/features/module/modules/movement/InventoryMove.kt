@@ -19,7 +19,7 @@ class InventoryMove : Module()
 {
 
 	private val undetectable = BoolValue("Undetectable", false)
-	val aacAdditionProValue = BoolValue("AACAdditionPro", false) // TODO: Add NoSprint option
+	val aacAdditionProValue = BoolValue("AACAdditionPro", false)
 	private val noMoveClicksValue = BoolValue("NoMoveClicks", false)
 
 	private val affectedBindings = run {

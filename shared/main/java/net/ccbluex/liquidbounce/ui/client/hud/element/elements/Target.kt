@@ -46,11 +46,12 @@ class Target : Element()
 {
 	companion object
 	{
-		private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
+		private val decimalFormat1 = DecimalFormat("##0.0", DecimalFormatSymbols(Locale.ENGLISH))
+		private val decimalFormat2 = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
 	}
 
 	private val playerOnlyValue = BoolValue("PlayerOnly", true)
-	private val textScaleValue = FloatValue("TextScale", 0.65F, 0.5F, 0.67F)
+	private val barWidthSubtractorValue = IntegerValue("BarWidthSubtractor", 2, 0, 5)
 
 	private val damageAnimationColorRed = IntegerValue("DamageAnimationColorRed", 252, 0, 255)
 	private val damageAnimationColorGreen = IntegerValue("DamageAnimationColorGreen", 185, 0, 255)
@@ -106,33 +107,23 @@ class Target : Element()
 				val damageColor = createRGB(damageAnimationColorRed.get(), damageAnimationColorGreen.get(), damageAnimationColorBlue.get(), 255)
 				val healColor = createRGB(healAnimationColorRed.get(), healAnimationColorGreen.get(), healAnimationColorBlue.get(), 255)
 
-				var name = targetEntity.name // TODO: displayName
+				val dataWatcherBuilder = StringJoiner("\u00A7r | ", " | ", "\u00A7r")
 
-				val targetHealthPercentage = targetHealth / targetMaxHealth
-				val healthText = "${if (targetHealthPercentage < 0.25) "\u00A7c" else if (targetHealthPercentage < 0.5) "\u00A7e" else "\u00A7a"}$targetHealth (${decimalFormat.format(targetHealthPercentage * 100.0)}%)\u00A7r"
-				val armorText = "${if (targetArmor > 0) "\u00A7b" else "\u00A77"}$targetArmor (${decimalFormat.format(targetArmor / 20.0 * 100.0)}%)\u00A7r"
-
-				val distanceText = decimalFormat.format(thePlayer.getDistanceToEntityBox(targetEntity))
-				val yawText = "${decimalFormat.format(targetEntity.rotationYaw % 360f)} (${StringUtils.getHorizontalFacingAdv(targetEntity.rotationYaw)})"
-				val pitchText = decimalFormat.format(targetEntity.rotationPitch)
-
-				val dataWatcherBuilder = StringJoiner("\u00A7r | ", "", "\u00A7r")
-
-				if (targetEntity.invisible) dataWatcherBuilder.add("\u00A7oInvisible")
+				if (targetEntity.invisible) dataWatcherBuilder.add("\u00A77\u00A7oInvisible")
 
 				if (targetEntity.burning) dataWatcherBuilder.add("\u00A7cBurning")
 
-				// TODO: Add more DataWatcher options
+				if (targetEntity.isInWeb) dataWatcherBuilder.add("\u00A77In Web")
 
-				if (targetEntity != lastTarget)
-				{
-					if (easingHealth < 0 || easingHealth > targetMaxHealth || abs(easingHealth - targetHealth) < 0.01) easingHealth = targetHealth
-					if (easingAbsorption < 0 || easingAbsorption > targetAbsorption || abs(easingAbsorption - targetAbsorption) < 0.01) easingAbsorption = targetAbsorption
-					if (isPlayer && (easingArmor < 0 || easingArmor > 20 || abs(easingArmor - targetArmor) < 0.01)) easingArmor = targetArmor.toFloat()
-				}
+				if (targetEntity.isInWater) dataWatcherBuilder.add("\u00A79In Water")
+
+				if (targetEntity.isInLava) dataWatcherBuilder.add("\u00A7cIn Lava")
 
 				var xShift = 2
-				var healthBarYOffset = 108F
+				var healthBarYOffset = 107F
+
+				var name = targetEntity.name // TODO: displayName support
+				val targetHealthPercentage = targetHealth / targetMaxHealth
 
 				if (isPlayer)
 				{
@@ -145,8 +136,21 @@ class Target : Element()
 					name = targetPlayer.displayNameString
 
 					xShift = 100
-					healthBarYOffset = 105F
+					healthBarYOffset = 104F
 				}
+
+				val targetChanged = targetEntity != lastTarget
+
+				if (targetChanged || easingHealth < 0 || easingHealth > targetMaxHealth || abs(easingHealth - targetHealth) < 0.01) easingHealth = targetHealth
+				if (targetChanged || easingAbsorption < 0 || easingAbsorption > targetAbsorption || abs(easingAbsorption - targetAbsorption) < 0.01) easingAbsorption = targetAbsorption
+				if (isPlayer && (targetChanged || easingArmor < 0 || easingArmor > 20 || abs(easingArmor - targetArmor) < 0.01)) easingArmor = targetArmor.toFloat()
+
+				val healthText = "${if (targetHealthPercentage < 0.25) "\u00A7c" else if (targetHealthPercentage < 0.5) "\u00A7e" else "\u00A7a"}${decimalFormat2.format(targetHealth.toDouble())} (${decimalFormat1.format(targetHealthPercentage * 100.0)}%)\u00A7r"
+				val armorText = "${if (targetArmor > 0) "\u00A7b" else "\u00A77"}$targetArmor (${decimalFormat2.format(targetArmor / 20.0 * 100.0)}%)\u00A7r"
+
+				val distanceText = decimalFormat2.format(thePlayer.getDistanceToEntityBox(targetEntity))
+				val yawText = "${decimalFormat2.format(targetEntity.rotationYaw % 360f)} (${StringUtils.getHorizontalFacingAdv(targetEntity.rotationYaw)})"
+				val pitchText = decimalFormat2.format(targetEntity.rotationPitch)
 
 				val healthColor = ColorUtils.getHealthColor(easingHealth, targetMaxHealth)
 
@@ -155,21 +159,25 @@ class Target : Element()
 				// Draw Body Rect
 				RenderUtils.drawBorderedRect(0F, 0F, width, 110F, borderWidth.get(), createRGB(borderColorRed.get(), borderColorGreen.get(), borderColorBlue.get(), 255), -16777216)
 
+				val barWidthSubtractor = barWidthSubtractorValue.get().toFloat()
+				val barWidth = width - barWidthSubtractor
+				val gradationWidth = barWidth - barWidthSubtractor
+
 				// Draw Absorption
-				RenderUtils.drawRect(((easingHealth / targetMaxHealth) * width) - ((easingAbsorption / targetMaxHealth) * width), healthBarYOffset - 2, (easingHealth / targetMaxHealth) * width, healthBarYOffset - 1, -256)
+				RenderUtils.drawRect(((easingHealth / targetMaxHealth) * barWidth) - ((easingAbsorption / targetMaxHealth) * barWidth), healthBarYOffset - 2, (easingHealth / targetMaxHealth) * barWidth, healthBarYOffset - 1, -256)
 
 				// Draw Damage animation
-				if (easingHealth > targetHealth) RenderUtils.drawRect(0F, healthBarYOffset, (easingHealth / targetMaxHealth) * width, healthBarYOffset + 2, damageColor)
+				if (easingHealth > targetHealth) RenderUtils.drawRect(barWidthSubtractor, healthBarYOffset, (easingHealth / targetMaxHealth) * barWidth, healthBarYOffset + 2, damageColor)
 
 				// Draw Health bar
-				RenderUtils.drawRect(0F, healthBarYOffset, targetHealthPercentage * width, healthBarYOffset + 2, healthColor.rgb)
+				RenderUtils.drawRect(barWidthSubtractor, healthBarYOffset, targetHealthPercentage * barWidth, healthBarYOffset + 2, healthColor.rgb)
 
 				// Draw Heal animation
-				if (easingHealth < targetHealth) RenderUtils.drawRect((easingHealth / targetMaxHealth) * width, healthBarYOffset, targetHealthPercentage * width, healthBarYOffset + 2, healColor)
+				if (easingHealth < targetHealth) RenderUtils.drawRect((easingHealth / targetMaxHealth) * barWidth, healthBarYOffset, targetHealthPercentage * barWidth, healthBarYOffset + 2, healColor)
 
 				// Draw Health Gradations
-				val healthGradationGap = width / targetMaxHealthInt
-				for (index in 1..targetMaxHealthInt) RenderUtils.drawRect(healthGradationGap * index, healthBarYOffset, healthGradationGap * index + 1, healthBarYOffset + 2, -16777216)
+				val healthGradationGap = gradationWidth / targetMaxHealthInt
+				for (index in 1 until targetMaxHealthInt) RenderUtils.drawRect(healthGradationGap * index + barWidthSubtractor, healthBarYOffset - 2, healthGradationGap * index + 1 + barWidthSubtractor, healthBarYOffset + 2, -16777216)
 
 				if (isPlayer)
 				{
@@ -177,11 +185,11 @@ class Target : Element()
 					RenderUtils.drawRect(2F, 2F, xShift - 4F, 96F, -12566464)
 
 					// Draw Total Armor bar
-					RenderUtils.drawRect(0F, 109F, easingArmor * width * 0.05f, 110F, -16711681)
+					RenderUtils.drawRect(barWidthSubtractor, 108F, easingArmor * barWidth * 0.05f, 109F, -16711681)
 
 					// Draw Armor Gradations
-					val armorGradationGap = width * 0.05f
-					for (index in 1..20) RenderUtils.drawRect(armorGradationGap * index, 109F, armorGradationGap * index + 1, 110F, -16777216)
+					val armorGradationGap = gradationWidth * 0.05f
+					for (index in 1 until 20) RenderUtils.drawRect(armorGradationGap * index + barWidthSubtractor, 108F, armorGradationGap * index + 1 + barWidthSubtractor, 109F, -16777216)
 
 					val skinResource: IResourceLocation
 					val ping: Int
@@ -257,28 +265,28 @@ class Target : Element()
 
 				// Render Target Stats
 
-				val scale = textScaleValue.get()
+				val scale = 0.6F
 				val reverseScale = 1.0F / scale
 
 				val scaledXShift = xShift * reverseScale
-				val scaledYPos = 60 * reverseScale
+				val scaledYPos = 55 * reverseScale
 
 				GL11.glScalef(scale, scale, scale)
 
 				// Health/Armor-related
-				Fonts.font35.drawString("Health: $healthText | Absorption: ${if (targetAbsorption > 0) "\u00A7e" else "\u00A77"}$targetAbsorption\u00A7r | Armor: $armorText", scaledXShift, scaledYPos, 0xffffff)
+				Fonts.font35.drawString("Health: $healthText | Absorption: ${if (targetAbsorption > 0) "\u00A7e" else "\u00A77"}${decimalFormat1.format(targetAbsorption.toLong())}\u00A7r | Armor: $armorText", scaledXShift, scaledYPos, 0xffffff)
 
 				// Movement/Position-related
-				Fonts.font35.drawString("Distance: ${distanceText}m | ${if (targetEntity.onGround) "\u00A7a" else "\u00A7c"}Ground\u00A7r | ${if (targetEntity.isAirBorne) "\u00A7a" else "\u00A7c"}AirBorne\u00A7r | ${if (!targetEntity.sprinting) "\u00A7c" else "\u00A7a"}Sprinting§r | ${if (!targetEntity.sneaking) "\u00A7c" else "\u00A7a"}Sneaking§r", scaledXShift, scaledYPos + 10, 0xffffff)
+				Fonts.font35.drawString("Distance: ${distanceText}m | ${if (targetEntity.onGround) "\u00A7a" else "\u00A7c"}Ground\u00A7r | ${if (targetEntity.isAirBorne) "\u00A7a" else "\u00A7c"}AirBorne\u00A7r | ${if (!targetEntity.sprinting) "\u00A7c" else "\u00A7a"}Sprinting\u00A7r | ${if (!targetEntity.sneaking) "\u00A7c" else "\u00A7a"}Sneaking\u00A7r", scaledXShift, scaledYPos + 15, 0xffffff)
 
 				// Rotation-related
-				Fonts.font35.drawString("Yaw: $yawText | Pitch: $pitchText", scaledXShift, scaledYPos + 20, 0xffffff)
+				Fonts.font35.drawString("Yaw: $yawText | Pitch: $pitchText", scaledXShift, scaledYPos + 25, 0xffffff)
 
 				// Hurt-related
-				Fonts.font35.drawString("Hurt: ${if (targetEntity.hurtTime > 0) "\u00A7c" else "\u00A7a"}${targetEntity.hurtTime}\u00A7r | HurtResistantTime: ${if (targetEntity.hurtResistantTime > 0) "\u00A7c" else "\u00A7a"}${targetEntity.hurtResistantTime}\u00A7r ", scaledXShift, scaledYPos + 30, 0xffffff)
+				Fonts.font35.drawString("Hurt: ${if (targetEntity.hurtTime > 0) "\u00A7c" else "\u00A7a"}${targetEntity.hurtTime}\u00A7r | HurtResistantTime: ${if (targetEntity.hurtResistantTime > 0) "\u00A7c" else "\u00A7a"}${targetEntity.hurtResistantTime}\u00A7r ", scaledXShift, scaledYPos + 40, 0xffffff)
 
 				// Datawatcher-related
-				Fonts.font35.drawString("$dataWatcherBuilder ", scaledXShift, scaledYPos + 40, 0xffffff)
+				Fonts.font35.drawString("EntityID: ${targetEntity.entityId}$dataWatcherBuilder ", scaledXShift, scaledYPos + 55, 0xffffff)
 
 				GL11.glScalef(reverseScale, reverseScale, reverseScale)
 			}

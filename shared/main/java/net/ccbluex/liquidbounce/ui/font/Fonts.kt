@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.utils.misc.MiscUtils.createBufferedFileWriter
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils.nanosecondsToString
 import java.awt.Font
 import java.io.*
-import java.util.*
 import java.util.zip.ZipInputStream
 
 // TODO: Customizable main font (make can choose between roboto-medium and others)
@@ -99,7 +98,6 @@ object Fonts : MinecraftInstance()
 	{
 		val outputFile = File(LiquidBounce.fileManager.fontsDir, "roboto.zip")
 
-		// TEST: Download fonts in a worker thread
 		if (!outputFile.exists()) workers.execute {
 			try
 			{

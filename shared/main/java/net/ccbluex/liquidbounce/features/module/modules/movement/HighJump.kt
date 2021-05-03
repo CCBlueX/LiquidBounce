@@ -57,7 +57,7 @@ class HighJump : Module()
 			if (disableScaffold) scaffold.state = false
 			if (disableTower) tower.state = false
 
-			if (disableScaffold || disableTower) LiquidBounce.hud.addNotification("HighJump", "Disabled ${if (disableScaffold && disableTower) "Scaffold and Tower" else if (disableScaffold) "Scaffold" else "Tower"}", Color.yellow, 1000)
+			if (disableScaffold || disableTower) LiquidBounce.hud.addNotification("HighJump", "Disabled ${if (disableScaffold && disableTower) "Scaffold and Tower" else if (disableScaffold) "Scaffold" else "Tower"}", 1000, Color.yellow)
 		}
 
 		if (modeValue.get().equals("mineplex", ignoreCase = true)) ClientUtils.displayChatMessage(mc.thePlayer, "\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cWalk off an island to highjump.")
@@ -187,7 +187,7 @@ class HighJump : Module()
 			MovementUtils.zeroXZ(thePlayer)
 			thePlayer.jumpMovementFactor = 0.02F
 
-			LiquidBounce.hud.addNotification("Mineplex HighJump", "A teleport has been detected. Disabled HighJump to prevent kick.", Color.red, 1000L)
+			LiquidBounce.hud.addNotification("Mineplex HighJump", "A teleport has been detected. Disabled HighJump to prevent kick.", 1000L, Color.red)
 		}
 	}
 

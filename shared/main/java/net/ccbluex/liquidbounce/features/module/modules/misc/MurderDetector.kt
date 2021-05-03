@@ -40,7 +40,7 @@ class MurderDetector : Module()
 		theWorld.loadedEntityList.asSequence().filter(provider::isEntityPlayer).map(IEntity::asEntityPlayer).filter { it != thePlayer }.filter { it.currentEquippedItem?.item != null }.filter { !murders.contains(it) }.filter { isMurder(it.currentEquippedItem?.item!!) }.forEach {
 			murders.add(it.asEntityPlayer())
 			ClientUtils.displayChatMessage(thePlayer, "\u00A7a\u00A7l${it.asEntityPlayer().name}\u00A7r is the \u00A74\u00A7lmurderer\u00A7r!")
-			LiquidBounce.hud.addNotification("Murder Detector", it.name, Color(153, 0, 153), 5000L)
+			LiquidBounce.hud.addNotification("Murder Detector", it.name, 5000L, Color(153, 0, 153))
 		}
 	}
 

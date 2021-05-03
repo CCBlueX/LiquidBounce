@@ -220,6 +220,8 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 
 	override val prevRotationYaw: Float
 		get() = wrapped.prevRotationYaw
+	override val prevRotationPitch: Float
+		get() = wrapped.prevRotationPitch
 
 	/* Type casting */
 	override fun asEntityPlayer(): IEntityPlayer = EntityPlayerImpl(wrapped as EntityPlayer)

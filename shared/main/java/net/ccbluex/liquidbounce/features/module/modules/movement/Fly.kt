@@ -971,7 +971,7 @@ class Fly : Module()
 		else if (provider.isSPacketPlayerPosLook(event.packet) && mode.equals("Hypixel", ignoreCase = true) && canPerformHypixelDamageFly && hypixelFlyStarted && !hypixelDamageBoostFailed)
 		{
 			hypixelDamageBoostFailed = true
-			LiquidBounce.hud.addNotification("Hypixel Damage-Boost Fly", "A teleport has been detected. Disabled Damage-Boost to prevent more flags.", Color.red, 1000L)
+			LiquidBounce.hud.addNotification("Hypixel Damage-Boost Fly", "A teleport has been detected. Disabled Damage-Boost to prevent more flags.", 1000L, Color.red)
 		}
 	}
 

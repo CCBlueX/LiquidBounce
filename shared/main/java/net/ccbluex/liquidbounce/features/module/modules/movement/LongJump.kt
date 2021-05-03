@@ -99,7 +99,7 @@ class LongJump : Module()
 			if (disableScaffold) scaffold.state = false
 			if (disableTower) tower.state = false
 
-			if (disableScaffold || disableTower) LiquidBounce.hud.addNotification("LongJump", "Disabled ${if (disableScaffold && disableTower) "Scaffold and Tower" else if (disableScaffold) "Scaffold" else "Tower"}", Color.yellow, 1000)
+			if (disableScaffold || disableTower) LiquidBounce.hud.addNotification("LongJump", "Disabled ${if (disableScaffold && disableTower) "Scaffold and Tower" else if (disableScaffold) "Scaffold" else "Tower"}", 1000, Color.yellow)
 		}
 	}
 

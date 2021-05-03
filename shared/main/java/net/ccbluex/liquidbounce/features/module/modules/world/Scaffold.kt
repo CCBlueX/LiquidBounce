@@ -625,7 +625,7 @@ class Scaffold : Module()
 		var pos = WBlockPos(thePlayer)
 
 		var sameY = false
-		if (sameYValue.get() && launchY != -999) // TODO: Fix Broken SameY Option
+		if (sameYValue.get() && launchY != -999)
 		{
 			pos = WBlockPos(thePlayer.posX, launchY - 1.0, thePlayer.posZ).up()
 			sameY = true

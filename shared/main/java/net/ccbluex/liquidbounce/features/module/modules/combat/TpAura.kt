@@ -44,7 +44,7 @@ import kotlin.math.min
  * @author LeakedPvP
  * @game   Minecraft
  * // TODO: Maximum packets per ticks limit
- * // FIXME: Compatibility with Criticals
+ * // FixMe: Make compatible with Criticals
  */
 @ModuleInfo(name = "TpAura", description = "InfiniteAura from Sigma 4.1.", category = ModuleCategory.COMBAT)
 class TpAura : Module()

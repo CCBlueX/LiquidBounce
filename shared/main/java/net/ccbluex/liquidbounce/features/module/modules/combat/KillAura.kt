@@ -44,7 +44,6 @@ import kotlin.math.min
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-// TODO: Fix broken target searching algorithm
 // TODO: Visually start-stop blocking like as Xave
 @ModuleInfo(name = "KillAura", description = "Automatically attacks targets around you.", category = ModuleCategory.COMBAT, keyBind = Keyboard.KEY_R)
 class KillAura : Module()
@@ -412,7 +411,7 @@ class KillAura : Module()
 		if (disableOnDeathValue.get())
 		{
 			state = false
-			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due world change", Color.red, 1000L)
+			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due world change", 1000L, Color.red)
 		}
 	}
 
@@ -422,7 +421,7 @@ class KillAura : Module()
 		if (mc.thePlayer == null || mc.theWorld == null)
 		{
 			state = false
-			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due world change", Color.red, 1000L)
+			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due world change", 1000L, Color.red)
 		}
 	}
 
@@ -1088,7 +1087,7 @@ class KillAura : Module()
 		if (shouldDisableOnDeath && disableOnDeathValue.get())
 		{
 			state = false
-			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due player death", Color.red, 1000L)
+			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due player death", 1000L, Color.red)
 		}
 
 		return shouldDisableOnDeath || (moduleManager[Blink::class.java] as Blink).state || moduleManager[FreeCam::class.java].state || !suspendTimer.hasTimePassed(suspend)

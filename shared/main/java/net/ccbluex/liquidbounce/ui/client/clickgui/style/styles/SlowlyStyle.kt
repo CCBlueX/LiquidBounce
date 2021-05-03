@@ -305,7 +305,7 @@ class SlowlyStyle : Style()
 			return value
 		}
 
-		private fun round(v: Float): BigDecimal = BigDecimal("$v").setScale(2, RoundingMode.HALF_UP)  // TODO: Should change scale to 3?
+		private fun round(v: Float): BigDecimal = BigDecimal("$v").setScale(2, RoundingMode.HALF_UP)
 
 		private fun hoverColor(color: Color, hover: Int): Color
 		{

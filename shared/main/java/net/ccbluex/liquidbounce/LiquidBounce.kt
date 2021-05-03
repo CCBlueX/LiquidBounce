@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 
-// TODO: Add fade-in(or slide-in) animations to GUIs
 object LiquidBounce
 {
 	// Client information
@@ -74,7 +73,7 @@ object LiquidBounce
 	lateinit var wrapper: Wrapper
 
 	@JvmStatic
-	val title: String = "$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR | Backend version $MINECRAFT_VERSION | Forked version | Repo: github.com/hsheric0210/LiquidBounce${if (IN_DEV) " | DEVELOPMENT BUILD" else ""}" // TODO: Add more details
+	val title: String = "$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR | Backend version $MINECRAFT_VERSION | Forked version | Repo: github.com/hsheric0210/LiquidBounce${if (IN_DEV) " | DEVELOPMENT BUILD" else ""}"
 
 	/**
 	 * Execute if client will be started

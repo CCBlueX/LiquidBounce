@@ -321,6 +321,6 @@ class LiquidBounceStyle : Style()
 
 	companion object
 	{
-		private fun round(f: Float): BigDecimal = BigDecimal("$f").setScale(2, RoundingMode.HALF_UP) // TODO: Should change scale to 3?
+		private fun round(f: Float): BigDecimal = BigDecimal("$f").setScale(2, RoundingMode.HALF_UP)
 	}
 }
