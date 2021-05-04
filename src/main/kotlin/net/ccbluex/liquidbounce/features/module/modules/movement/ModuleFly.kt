@@ -75,6 +75,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         }
 
     }
+
     private object Verus : Choice("Verus", modes) {
         val packetHandler = handler<PacketEvent> { event ->
             if (event.packet is PlayerMoveC2SPacket) {
