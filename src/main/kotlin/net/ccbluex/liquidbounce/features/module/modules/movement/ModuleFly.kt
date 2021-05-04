@@ -37,6 +37,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
     private val modes = choices("Mode", "Vanilla") {
         Vanilla
         Jetpack
+        Verus
     }
 
     private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
@@ -72,6 +73,21 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             }
         }
 
+    }
+    private object Verus : Choice("Verus", modes) {
+        val packetHandler = handler<PacketEvent> { event ->
+            if (event.packet is PlayerMoveC2SPacket) {
+                event.packet.onGround = true
+            }
+        }
+        val shapeHandler = handler<BlockShapeEvent> { event ->
+            if (event.state.block.`is`(Blocks.AIR) && event.pos.y < player.y) {
+                event.shape = VoxelShapes.fullCube()
+            }
+        }
+        val jumpEvent = handler<PlayerJumpEvent> { event ->
+            event.cancelEvent()
+        }
     }
 
     init {
