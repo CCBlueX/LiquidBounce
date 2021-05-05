@@ -833,17 +833,17 @@ object RenderUtils : MinecraftInstance()
 	@JvmStatic
 	fun drawHorizontalLine(startX: Int, endX: Int, y: Int, color: Int)
 	{
-		var startX = startX
-		var endX = endX
+		var _startX = startX
+		var _endX = endX
 
-		if (endX < startX)
+		if (_endX < _startX)
 		{
-			val i = startX
-			startX = endX
-			endX = i
+			val i = _startX
+			_startX = _endX
+			_endX = i
 		}
 
-		Gui.drawRect(startX, y, endX + 1, y + 1, color)
+		Gui.drawRect(_startX, y, _endX + 1, y + 1, color)
 	}
 
 	init

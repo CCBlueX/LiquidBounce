@@ -28,7 +28,7 @@ class FastUse : Module()
 	private val noMoveValue = BoolValue("NoMove", false)
 
 	private val ncpWaitTicksValue = IntegerValue("NCP-AtOnce-WaitTicks", 14, 0, 20)
-	private val ncpPacketsValue = IntegerValue("NCP-AtOnce-Packets", 20, 10, 100)
+	private val ncpPacketsValue = IntegerValue("NCP-AtOnce-Packets", 20, 12, 100)
 	private val ncpConstantPacketsValue = IntegerValue("NCP-Constant-Packets", 1, 1, 10)
 	private val ncpTimerValue = FloatValue("NCP-Timer", 1.0f, 0.2f, 1.5f)
 
@@ -76,6 +76,8 @@ class FastUse : Module()
 						repeat(35) {
 							netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 						}
+
+						mc.playerController.onStoppedUsingItem(thePlayer)
 					}
 				}
 
@@ -90,6 +92,8 @@ class FastUse : Module()
 								repeat(ncpPacketsValue.get()) {
 									netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 								}
+
+								mc.playerController.onStoppedUsingItem(thePlayer)
 							}
 						}
 

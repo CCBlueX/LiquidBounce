@@ -247,8 +247,9 @@ class Scaffold : Module()
 
 	// Killaura bypass
 	val killauraBypassValue = ListValue("KillauraBypassMode", arrayOf("None", "SuspendKillaura", "WaitForKillauraEnd"), "SuspendKillaura")
-
 	private val suspendKillauraDuration = IntegerValue("SuspendKillauraDuration", 300, 300, 1000)
+
+	private val stopConsumingBeforePlaceValue = BoolValue("StopConsumingBeforePlace", true)
 
 	// Visuals
 	val counterDisplayValue = BoolValue("Counter", true)
@@ -809,6 +810,8 @@ class Scaffold : Module()
 
 		// CPSCounter support
 		CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
+
+		if (thePlayer.isUsingItem && stopConsumingBeforePlaceValue.get()) mc.playerController.onStoppedUsingItem(thePlayer)
 
 		// Place block
 		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, targetPlace.blockPos, targetPlace.enumFacing, targetPlace.vec3))

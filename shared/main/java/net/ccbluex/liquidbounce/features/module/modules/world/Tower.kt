@@ -129,6 +129,8 @@ class Tower : Module()
 	// Killaura bypass (Other settings are same as scaffold's)
 	private val suspendKillauraDuration = IntegerValue("SuspendKillauraDuration", 500, 250, 1000)
 
+	private val stopConsumingBeforePlaceValue = BoolValue("StopConsumingBeforePlace", true)
+
 	// Render
 	val counterDisplayValue = BoolValue("Counter", true)
 
@@ -405,6 +407,8 @@ class Tower : Module()
 
 		// CPSCounter support
 		CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
+
+		if (thePlayer.isUsingItem && stopConsumingBeforePlaceValue.get()) mc.playerController.onStoppedUsingItem(thePlayer)
 
 		// Place block
 		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, placeInfo.blockPos, placeInfo.enumFacing, placeInfo.vec3)) if (swingValue.get()) thePlayer.swingItem() else netHandler.addToSendQueue(provider.createCPacketAnimation())
