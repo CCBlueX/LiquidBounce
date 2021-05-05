@@ -69,7 +69,7 @@ class FastStairs : Module()
 			{
 				when (mode)
 				{
-					"ncp" -> thePlayer.motionY = -1.0
+					"ncp" -> thePlayer.motionY = -1.0 // NCP ReverseStep
 					"aac3.3.13" -> thePlayer.motionY -= 0.014
 				}
 

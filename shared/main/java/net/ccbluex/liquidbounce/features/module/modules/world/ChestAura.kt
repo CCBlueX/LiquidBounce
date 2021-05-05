@@ -40,6 +40,7 @@ object ChestAura : Module()
 	private val rotationsValue = BoolValue("Rotations", true)
 	private val throughWallsValue = BoolValue("ThroughWalls", true)
 	private val visualSwing = BoolValue("VisualSwing", true)
+	private val noHitValue = BoolValue("NoHit", true)
 
 	var currentBlock: WBlockPos? = null
 
@@ -52,7 +53,7 @@ object ChestAura : Module()
 	fun onMotion(event: MotionEvent)
 	{
 		val moduleManager = LiquidBounce.moduleManager
-		if (moduleManager[Blink::class.java].state || (moduleManager[KillAura::class.java] as KillAura).hasTarget) return
+		if (moduleManager[Blink::class.java].state || (noHitValue.get() && (moduleManager[KillAura::class.java] as KillAura).hasTarget)) return
 
 		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return

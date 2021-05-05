@@ -54,7 +54,7 @@ public abstract class MixinBlockLadder extends MixinBlock
 	{
 		if (state.getBlock() instanceof BlockLadder)
 		{
-			final FastClimb fastClimb = (FastClimb) LiquidBounce.moduleManager.getModule(FastClimb.class);
+			final FastClimb fastClimb = (FastClimb) LiquidBounce.moduleManager.get(FastClimb.class);
 			final boolean fastLadder = fastClimb.getState() && fastClimb.getModeValue().get().equalsIgnoreCase("AAC3.0.0");
 			final float f = 0.99f;
 

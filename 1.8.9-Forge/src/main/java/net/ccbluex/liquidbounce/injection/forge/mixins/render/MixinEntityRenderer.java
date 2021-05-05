@@ -78,7 +78,7 @@ public abstract class MixinEntityRenderer
 	@Inject(method = "hurtCameraEffect", at = @At("HEAD"), cancellable = true)
 	private void noHurtCam(final CallbackInfo callbackInfo)
 	{
-		final HurtCam hurtCam = (HurtCam) LiquidBounce.moduleManager.getModule(HurtCam.class);
+		final HurtCam hurtCam = (HurtCam) LiquidBounce.moduleManager.get(HurtCam.class);
 		if (hurtCam.getState() && hurtCam.getNoHurtCam().get())
 			callbackInfo.cancel();
 	}
@@ -86,7 +86,7 @@ public abstract class MixinEntityRenderer
 	@Inject(method = "orientCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Vec3;distanceTo(Lnet/minecraft/util/Vec3;)D"), cancellable = true)
 	private void cameraClip(final float partialTicks, final CallbackInfo callbackInfo)
 	{
-		if (LiquidBounce.moduleManager.getModule(CameraClip.class).getState())
+		if (LiquidBounce.moduleManager.get(CameraClip.class).getState())
 		{
 			callbackInfo.cancel();
 
@@ -165,14 +165,14 @@ public abstract class MixinEntityRenderer
 	@Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = Shift.BEFORE))
 	private void setupCameraViewBobbingPre(final CallbackInfo callbackInfo)
 	{
-		if (LiquidBounce.moduleManager.getModule(Tracers.class).getState())
+		if (LiquidBounce.moduleManager.get(Tracers.class).getState())
 			GL11.glPushMatrix();
 	}
 
 	@Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = Shift.AFTER))
 	private void setupCameraViewBobbingPost(final CallbackInfo callbackInfo)
 	{
-		if (LiquidBounce.moduleManager.getModule(Tracers.class).getState())
+		if (LiquidBounce.moduleManager.get(Tracers.class).getState())
 			GL11.glPopMatrix();
 	}
 
@@ -189,7 +189,7 @@ public abstract class MixinEntityRenderer
 			mc.mcProfiler.startSection("pick");
 			mc.pointedEntity = null;
 
-			final Reach reach = (Reach) LiquidBounce.moduleManager.getModule(Reach.class);
+			final Reach reach = (Reach) LiquidBounce.moduleManager.get(Reach.class);
 			final ExtendedReach extendedReach = (ExtendedReach) LiquidBounce.moduleManager.get(ExtendedReach.class);
 
 			double blockReach = extendedReach.getState() ? extendedReach.buildReach.get() : reach.getState() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();

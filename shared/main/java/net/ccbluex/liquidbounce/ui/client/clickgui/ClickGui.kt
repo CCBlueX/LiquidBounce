@@ -281,6 +281,33 @@ class ClickGui : WrappedGuiScreen()
 					}
 				})
 
+				elements.add(object : ButtonElement("Armor-Stand")
+				{
+					override var displayName: String = "Armor-Stand"
+						get()
+						{
+							color = if (EntityUtils.targetArmorStand) clickGuiColor else i
+							return field
+						}
+
+					override fun createButton(displayName: String)
+					{
+						color = if (EntityUtils.targetArmorStand) clickGuiColor else i
+						super.createButton(displayName)
+					}
+
+					override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
+					{
+						if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible)
+						{
+							EntityUtils.targetArmorStand = !EntityUtils.targetArmorStand
+							displayName = "Armor-Stand"
+							color = if (EntityUtils.targetArmorStand) clickGuiColor else i
+							mc.soundHandler.playSound("gui.button.press", 1.0f)
+						}
+					}
+				})
+
 				elements.add(object : ButtonElement("Invisible")
 				{
 					override var displayName: String = "Invisible"

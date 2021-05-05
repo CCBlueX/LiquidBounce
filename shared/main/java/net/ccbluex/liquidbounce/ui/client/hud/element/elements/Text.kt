@@ -114,6 +114,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 		if (thePlayer != null)
 		{
+			val defaultTPS = 20.0
+
 			when (str.toLowerCase())
 			{
 				"x" -> return DECIMAL_FORMAT.format(thePlayer.posX)
@@ -126,12 +128,24 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 				"mx" -> return DECIMAL_FORMAT.format(thePlayer.motionX)
 				"my" -> return DECIMAL_FORMAT.format(thePlayer.motionY)
 				"mz" -> return DECIMAL_FORMAT.format(thePlayer.motionZ)
+
+				"mxpersec" -> return DECIMAL_FORMAT.format(thePlayer.motionX * defaultTPS)
+				"mypersec" -> return DECIMAL_FORMAT.format(thePlayer.motionY * defaultTPS)
+				"mzpersec" -> return DECIMAL_FORMAT.format(thePlayer.motionZ * defaultTPS)
+
 				"mxdp" -> return thePlayer.motionX.toString()
 				"mydp" -> return thePlayer.motionY.toString()
 				"mzdp" -> return thePlayer.motionZ.toString()
 
+				"mxdppersec" -> return (thePlayer.motionX * defaultTPS).toString()
+				"mydppersec" -> return (thePlayer.motionY * defaultTPS).toString()
+				"mzdppersec" -> return (thePlayer.motionZ * defaultTPS).toString()
+
 				"velocity" -> return DECIMAL_FORMAT.format(hypot(thePlayer.motionX, thePlayer.motionZ))
+				"velocitypersec" -> return DECIMAL_FORMAT.format(hypot(thePlayer.motionX, thePlayer.motionZ) * defaultTPS)
+
 				"velocitydp" -> return "${hypot(thePlayer.motionX, thePlayer.motionZ)}"
+				"velocitydppersec" -> return "${hypot(thePlayer.motionX, thePlayer.motionZ) * defaultTPS}"
 
 				"ping" -> return thePlayer.getPing().toString()
 				"health" -> return DECIMAL_FORMAT.format(thePlayer.health)

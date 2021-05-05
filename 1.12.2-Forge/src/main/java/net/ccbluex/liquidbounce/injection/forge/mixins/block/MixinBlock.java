@@ -92,7 +92,7 @@ public abstract class MixinBlock
 	@Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
 	private void shouldSideBeRendered(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
-		final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
+		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
 		if (xray.getState())
 			// noinspection SuspiciousMethodCalls
@@ -102,7 +102,7 @@ public abstract class MixinBlock
 	@Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)
 	private void isCollidable(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
-		final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.getModule(GhostHand.class);
+		final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.get(GhostHand.class);
 
 		if (ghostHand.getState() && !(ghostHand.getBlockValue().get() == Block.getIdFromBlock((Block) (Object) this)))
 			callbackInfoReturnable.setReturnValue(false);
@@ -111,7 +111,7 @@ public abstract class MixinBlock
 	@Inject(method = "getAmbientOcclusionLightValue", at = @At("HEAD"), cancellable = true)
 	private void getAmbientOcclusionLightValue(final CallbackInfoReturnable<Float> floatCallbackInfoReturnable)
 	{
-		if (LiquidBounce.moduleManager.getModule(XRay.class).getState())
+		if (LiquidBounce.moduleManager.get(XRay.class).getState())
 			floatCallbackInfoReturnable.setReturnValue(1F);
 	}
 
@@ -121,7 +121,7 @@ public abstract class MixinBlock
 		float f = callbackInfo.getReturnValue();
 
 		// NoSlowBreak
-		final NoSlowBreak noSlowBreak = (NoSlowBreak) LiquidBounce.moduleManager.getModule(NoSlowBreak.class);
+		final NoSlowBreak noSlowBreak = (NoSlowBreak) LiquidBounce.moduleManager.get(NoSlowBreak.class);
 		if (noSlowBreak.getState())
 		{
 			if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.WATER) && !EnchantmentHelper.getAquaAffinityModifier(playerIn))
@@ -136,8 +136,8 @@ public abstract class MixinBlock
 		}
 		else if (playerIn.onGround)
 		{ // NoGround
-			final NoFall noFall = (NoFall) LiquidBounce.moduleManager.getModule(NoFall.class);
-			final Criticals criticals = (Criticals) LiquidBounce.moduleManager.getModule(Criticals.class);
+			final NoFall noFall = (NoFall) LiquidBounce.moduleManager.get(NoFall.class);
+			final Criticals criticals = (Criticals) LiquidBounce.moduleManager.get(Criticals.class);
 
 			if (noFall.getState() && noFall.modeValue.get().equalsIgnoreCase("NoGround") || criticals.getState() && criticals.getModeValue().get().equalsIgnoreCase("NoGround"))
 			{

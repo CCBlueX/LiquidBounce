@@ -89,6 +89,12 @@ object SettingsUtils
 					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetInvisible}\u00A77.")
 				}
 
+				"targetarmorstand" ->
+				{
+					EntityUtils.targetArmorStand = args[1].equals("true", ignoreCase = true)
+					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetArmorStand}\u00A77.")
+				}
+
 				"targetdead" ->
 				{
 					EntityUtils.targetDead = args[1].equals("true", ignoreCase = true)

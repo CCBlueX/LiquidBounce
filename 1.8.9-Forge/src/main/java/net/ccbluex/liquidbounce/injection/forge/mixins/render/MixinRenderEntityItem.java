@@ -49,7 +49,7 @@ public class MixinRenderEntityItem
 	private void injectItemPhysicsAndChams(final EntityItem entity, final double x, final double y, final double z, final float entityYaw, final float partialTicks, final CallbackInfo callbackInfo)
 	{
 		final Minecraft mc = Minecraft.getMinecraft();
-		final Chams chams = (Chams) LiquidBounce.moduleManager.getModule(Chams.class);
+		final Chams chams = (Chams) LiquidBounce.moduleManager.get(Chams.class);
 		final ItemPhysics itemPhysics = (ItemPhysics) LiquidBounce.moduleManager.get(ItemPhysics.class);
 
 		if (chams.getState() && chams.getItemsValue().get())
@@ -188,8 +188,8 @@ public class MixinRenderEntityItem
 	@Inject(method = "doRender", at = @At("RETURN"))
 	private void injectItemChamsPost(final CallbackInfo callbackInfo)
 	{
-		final Chams chams = (Chams) LiquidBounce.moduleManager.getModule(Chams.class);
-		final ItemPhysics itemPhysics = (ItemPhysics) LiquidBounce.moduleManager.getModule(ItemPhysics.class);
+		final Chams chams = (Chams) LiquidBounce.moduleManager.get(Chams.class);
+		final ItemPhysics itemPhysics = (ItemPhysics) LiquidBounce.moduleManager.get(ItemPhysics.class);
 
 		if (!itemPhysics.getState() && chams.getState() && chams.getItemsValue().get())
 		{

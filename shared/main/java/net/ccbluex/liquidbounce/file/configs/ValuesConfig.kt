@@ -59,6 +59,7 @@ class ValuesConfig(file: File) : FileConfig(file)
 				if (jsonValue.has("TargetMobs")) EntityUtils.targetMobs = jsonValue["TargetMobs"].asBoolean
 				if (jsonValue.has("TargetAnimals")) EntityUtils.targetAnimals = jsonValue["TargetAnimals"].asBoolean
 				if (jsonValue.has("TargetInvisible")) EntityUtils.targetInvisible = jsonValue["TargetInvisible"].asBoolean
+				if (jsonValue.has("TargetArmorStand")) EntityUtils.targetArmorStand = jsonValue["TargetArmorStand"].asBoolean
 				if (jsonValue.has("TargetDead")) EntityUtils.targetDead = jsonValue["TargetDead"].asBoolean
 			}
 
@@ -140,6 +141,7 @@ class ValuesConfig(file: File) : FileConfig(file)
 		jsonTargets.addProperty("TargetMobs", EntityUtils.targetMobs)
 		jsonTargets.addProperty("TargetAnimals", EntityUtils.targetAnimals)
 		jsonTargets.addProperty("TargetInvisible", EntityUtils.targetInvisible)
+		jsonTargets.addProperty("TargetArmorStand", EntityUtils.targetArmorStand)
 		jsonTargets.addProperty("TargetDead", EntityUtils.targetDead)
 		jsonObject.add("targets", jsonTargets)
 

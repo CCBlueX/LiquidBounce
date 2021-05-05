@@ -48,7 +48,7 @@ public class MixinModelBiped
 		if (heldItemRight == 3)
 			bipedRightArm.rotateAngleY = 0.0F;
 
-		final Rotations rotations = (Rotations) LiquidBounce.moduleManager.getModule(Rotations.class);
+		final Rotations rotations = (Rotations) LiquidBounce.moduleManager.get(Rotations.class);
 
 		if (rotations.getState() && !rotations.getBodyValue().get() && entityIn instanceof EntityPlayer && entityIn.equals(Minecraft.getMinecraft().thePlayer))
 			bipedHead.rotateAngleX = WMathHelper.toRadians(rotations.getInterpolateRotationsValue().get() ? Rotations.Companion.interpolateRotation(RotationUtils.lastServerRotation.getPitch(), RotationUtils.serverRotation.getPitch(), Minecraft.getMinecraft().timer.renderPartialTicks) : RotationUtils.serverRotation.getPitch());

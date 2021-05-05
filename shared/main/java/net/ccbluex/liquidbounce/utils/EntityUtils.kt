@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.isAnimal
+import net.ccbluex.liquidbounce.utils.extensions.isArmorStand
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.extensions.isMob
 import kotlin.math.ceil
@@ -36,6 +37,9 @@ object EntityUtils : MinecraftInstance()
 
 	@JvmField
 	var targetAnimals = false
+
+	@JvmField
+	var targetArmorStand = false
 
 	@JvmField
 	var targetDead = false
@@ -70,7 +74,7 @@ object EntityUtils : MinecraftInstance()
 					return true
 				}
 
-				return targetMobs && entity.isMob() || targetAnimals && entity.isAnimal()
+				return targetMobs && entity.isMob() || targetAnimals && entity.isAnimal() || targetArmorStand && entity.isArmorStand()
 			}
 		}
 
@@ -115,7 +119,7 @@ object EntityUtils : MinecraftInstance()
 				return !teams.state || !teams.isInYourTeam(entity.asEntityLivingBase())
 			}
 
-			return targetMobs && entity.isMob() || targetAnimals && entity.isAnimal()
+			return targetMobs && entity.isMob() || targetAnimals && entity.isAnimal() || targetArmorStand && entity.isArmorStand()
 		}
 
 		return false

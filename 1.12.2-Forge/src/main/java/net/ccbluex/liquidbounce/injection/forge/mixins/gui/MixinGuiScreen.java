@@ -71,7 +71,7 @@ public abstract class MixinGuiScreen
 	@Inject(method = "drawWorldBackground", at = @At("HEAD"))
 	private void drawWorldBackground(final CallbackInfo callbackInfo)
 	{
-		final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
 
 		if (hud.getInventoryParticle().get() && mc.player != null)
 		{
@@ -147,7 +147,7 @@ public abstract class MixinGuiScreen
 	@Inject(method = "handleComponentHover", at = @At("HEAD"))
 	private void handleHoverOverComponent(final ITextComponent component, final int x, final int y, final CallbackInfo callbackInfo)
 	{
-		if (component == null || component.getStyle().getClickEvent() == null || !LiquidBounce.moduleManager.getModule(ComponentOnHover.class).getState())
+		if (component == null || component.getStyle().getClickEvent() == null || !LiquidBounce.moduleManager.get(ComponentOnHover.class).getState())
 			return;
 
 		final Style chatStyle = component.getStyle();

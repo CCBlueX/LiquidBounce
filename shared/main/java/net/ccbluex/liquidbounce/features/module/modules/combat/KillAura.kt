@@ -329,6 +329,7 @@ class KillAura : Module()
 	private val particles = IntegerValue("Particles", 1, 0, 10)
 
 	private val disableOnDeathValue = BoolValue("DisableOnDeath", true)
+	private val suspendWhileConsumingValue = BoolValue("SuspendWhileConsuming", true)
 
 	/**
 	 * MODULE
@@ -1082,7 +1083,7 @@ class KillAura : Module()
 	{
 		val moduleManager = LiquidBounce.moduleManager
 
-		val shouldDisableOnDeath = thePlayer.spectator || !EntityUtils.isAlive(thePlayer, aacValue.get())
+		val shouldDisableOnDeath = thePlayer.spectator || !EntityUtils.isAlive(thePlayer, false)
 
 		if (shouldDisableOnDeath && disableOnDeathValue.get())
 		{
@@ -1090,7 +1091,7 @@ class KillAura : Module()
 			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due player death", 1000L, Color.red)
 		}
 
-		return shouldDisableOnDeath || (moduleManager[Blink::class.java] as Blink).state || moduleManager[FreeCam::class.java].state || !suspendTimer.hasTimePassed(suspend)
+		return shouldDisableOnDeath || (suspendWhileConsumingValue.get() && thePlayer.isUsingItem && thePlayer.heldItem == thePlayer.itemInUse && (classProvider.isItemFood(thePlayer.heldItem?.item) || classProvider.isItemPotion(thePlayer.heldItem?.item))) || !suspendTimer.hasTimePassed(suspend) || (moduleManager[Blink::class.java] as Blink).state || moduleManager[FreeCam::class.java].state
 	}
 
 	/**

@@ -111,8 +111,8 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 		if (MinecraftForge.EVENT_BUS.post(new Pre(entity, (RendererLivingEntity) (Object) this, x, y, z)))
 			return;
 
-		final Chams chams = (Chams) LiquidBounce.moduleManager.getModule(Chams.class);
-		final Rotations rotations = (Rotations) LiquidBounce.moduleManager.getModule(Rotations.class);
+		final Chams chams = (Chams) LiquidBounce.moduleManager.get(Chams.class);
+		final Rotations rotations = (Rotations) LiquidBounce.moduleManager.get(Rotations.class);
 
 		// Chams Pre
 		if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
@@ -207,7 +207,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 				final boolean flag = setDoRenderBrightness(entity, partialTicks);
 				renderModel(entity, reverseinterpolatedLimbSwingDelta, interpolatedLimbSwingAmount, f8, yawDelta, interpolatedPitch, 0.0625F);
 
-				final ESP esp = (ESP) LiquidBounce.moduleManager.getModule(ESP.class);
+				final ESP esp = (ESP) LiquidBounce.moduleManager.get(ESP.class);
 				final String mode = esp.getModeValue().get();
 				if (esp.getState() && ("Fill".equalsIgnoreCase(mode) || "CSGO".equalsIgnoreCase(mode)) && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
 				{
@@ -275,7 +275,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	@Inject(method = "canRenderName", at = @At("HEAD"), cancellable = true)
 	private <T extends EntityLivingBase> void canRenderName(final T entity, final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
 	{
-		if (!ESP.Companion.getRenderNameTags() || LiquidBounce.moduleManager.getModule(NameTags.class).getState() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
+		if (!ESP.Companion.getRenderNameTags() || LiquidBounce.moduleManager.get(NameTags.class).getState() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
 			callbackInfoReturnable.setReturnValue(false);
 	}
 
@@ -287,7 +287,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	protected <T extends EntityLivingBase> void renderModel(final T entitylivingbaseIn, final float p_77036_2_, final float p_77036_3_, final float p_77036_4_, final float p_77036_5_, final float p_77036_6_, final float scaleFactor)
 	{
 		final boolean visible = !entitylivingbaseIn.isInvisible();
-		final TrueSight trueSight = (TrueSight) LiquidBounce.moduleManager.getModule(TrueSight.class);
+		final TrueSight trueSight = (TrueSight) LiquidBounce.moduleManager.get(TrueSight.class);
 
 		final boolean trueSightEntities = trueSight.getState() && trueSight.getEntitiesValue().get();
 		final boolean semiVisible = !visible && (!entitylivingbaseIn.isInvisibleToPlayer(Minecraft.getMinecraft().thePlayer) || trueSightEntities);
@@ -308,7 +308,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 				GlStateManager.alphaFunc(GL11.GL_GREATER, 0.003921569F);
 			}
 
-			final ESP esp = (ESP) LiquidBounce.moduleManager.getModule(ESP.class);
+			final ESP esp = (ESP) LiquidBounce.moduleManager.get(ESP.class);
 			if (esp.getState() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entitylivingbaseIn), false))
 			{
 				final Minecraft mc = Minecraft.getMinecraft();

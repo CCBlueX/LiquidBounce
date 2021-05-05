@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -105,7 +106,7 @@ class BowAimbot : Module()
 	 */
 	private val markValue = BoolValue("Mark", true)
 
-	private var target: IEntity? = null
+	var target: IEntityLivingBase? = null
 
 	override fun onDisable()
 	{
@@ -148,12 +149,12 @@ class BowAimbot : Module()
 		if (currentTarget != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get()) RenderUtils.drawPlatform(currentTarget, Color(37, 126, 255, 70))
 	}
 
-	private fun getTarget(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, priorityMode: String, minPlayerPredictSize: Float, maxPlayerPredictSize: Float, flags: Int): IEntity?
+	private fun getTarget(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, priorityMode: String, minPlayerPredictSize: Float, maxPlayerPredictSize: Float, flags: Int): IEntityLivingBase?
 	{
 		val ignoreVisibleCheck = flags and RotationUtils.SKIP_VISIBLE_CHECK != 0
 
 		// The Target Candidates
-		val targetCandidates = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { ignoreVisibleCheck || thePlayer.canEntityBeSeen(it) }
+		val targetCandidates = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { ignoreVisibleCheck || thePlayer.canEntityBeSeen(it) }.map(IEntity::asEntityLivingBase)
 
 		val playerPredict = flags and RotationUtils.PLAYER_PREDICT != 0
 

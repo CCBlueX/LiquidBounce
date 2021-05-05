@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 @ModuleInfo(name = "AutoFish", description = "Automatically catches fish when using a rod.", category = ModuleCategory.PLAYER, supportedVersions = [MinecraftVersion.MC_1_8])
 class AutoFish : Module()
 {
-
 	private val rodOutTimer = MSTimer()
 
 	@EventTarget

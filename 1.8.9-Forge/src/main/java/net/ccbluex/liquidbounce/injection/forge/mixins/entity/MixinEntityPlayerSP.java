@@ -187,7 +187,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				final float lastReportedYaw = RotationUtils.serverRotation.getYaw();
 				final float lastReportedPitch = RotationUtils.serverRotation.getPitch();
 
-				final Derp derp = (Derp) LiquidBounce.moduleManager.getModule(Derp.class);
+				final Derp derp = (Derp) LiquidBounce.moduleManager.get(Derp.class);
 				if (derp.getState())
 				{
 					final float[] rot = derp.getRotation();
@@ -250,7 +250,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	@Inject(method = "swingItem", at = @At("HEAD"), cancellable = true)
 	private void swingItem(final CallbackInfo callbackInfo)
 	{
-		final NoSwing noSwing = (NoSwing) LiquidBounce.moduleManager.getModule(NoSwing.class);
+		final NoSwing noSwing = (NoSwing) LiquidBounce.moduleManager.get(NoSwing.class);
 
 		if (noSwing.getState())
 		{
@@ -297,7 +297,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		if (inPortal)
 		{
-			if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !LiquidBounce.moduleManager.getModule(PortalMenu.class).getState())
+			if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !LiquidBounce.moduleManager.get(PortalMenu.class).getState())
 				mc.displayGuiScreen(null);
 
 			if (timeInPortal == 0.0F)
@@ -336,8 +336,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		movementInput.updatePlayerMoveState();
 
-		final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
-		final KillAura killAura = (KillAura) LiquidBounce.moduleManager.getModule(KillAura.class);
+		final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.get(NoSlow.class);
+		final KillAura killAura = (KillAura) LiquidBounce.moduleManager.get(KillAura.class);
 
 		if (getHeldItem() != null && (isUsingItem() || getHeldItem().getItem() instanceof ItemSword && killAura.getServerSideBlockingStatus()) && !isRiding())
 		{
@@ -353,7 +353,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 		pushOutOfBlocks(posX + width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - width * 0.35D);
 		pushOutOfBlocks(posX + width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + width * 0.35D);
 
-		final Sprint sprint = (Sprint) LiquidBounce.moduleManager.getModule(Sprint.class);
+		final Sprint sprint = (Sprint) LiquidBounce.moduleManager.get(Sprint.class);
 
 		final boolean foodCheck = !sprint.getFoodValue().get() || getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
 
@@ -574,7 +574,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			// Apply Z Offset
 			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, 0.0D, moveZ));
 
-			final Step step = (Step) LiquidBounce.moduleManager.getModule(Step.class);
+			final Step step = (Step) LiquidBounce.moduleManager.get(Step.class);
 			final boolean airStep = step.getState() && step.getAirStepValue().get() && step.canAirStep();
 			final boolean steppable = onGround || airStep || safewalkAppliedY != moveY && safewalkAppliedY < 0.0D;
 

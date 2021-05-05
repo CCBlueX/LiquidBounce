@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import java.util.*
 
-@ModuleInfo(name = "BufferSpeed", description = "Allows you to walk faster on slabs and stairs.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "BufferSpeed", description = "Allows you to walk faster on slabs, stairs, ice and more. (a.k.a. TerrainSpeed)", category = ModuleCategory.MOVEMENT)
 class BufferSpeed : Module()
 {
 	private val speedLimitValue = BoolValue("SpeedLimit", true)

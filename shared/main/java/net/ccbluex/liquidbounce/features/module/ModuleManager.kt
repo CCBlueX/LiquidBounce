@@ -24,9 +24,11 @@ import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import java.util.*
 
 // TODO: Add AutoGApple (or AutoEat)
+// TODO: Add LightningTracker
+// TODO: Add TpFucker (like TpEggBreaker in Jigsaw)
+// TODO: Add TargetStrafe
 class ModuleManager : Listenable
 {
-
 	val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }
 	private val moduleClassMap = hashMapOf<Class<*>, Module>()
 
@@ -122,8 +124,6 @@ class ModuleManager : Listenable
 	/**
 	 * Get module by [clazz]
 	 */
-	fun getModule(clazz: Class<*>) = get(clazz)
-
 	operator fun get(clazz: Class<*>) = moduleClassMap[clazz] ?: throw ClassNotFoundException("Module ${clazz.simpleName} is not registered")
 
 	/**

@@ -60,4 +60,6 @@ fun IEntity.isMob(): Boolean
 	return classProvider.isEntityMob(this) || classProvider.isEntityVillager(this) || classProvider.isEntitySlime(this) || classProvider.isEntityGhast(this) || classProvider.isEntityDragon(this) || classProvider.isEntityShulker(this)
 }
 
+fun IEntity.isArmorStand(): Boolean = wrapper.classProvider.isEntityArmorStand(this)
+
 fun IEntityPlayer.isClientFriend(): Boolean = LiquidBounce.fileManager.friendsConfig.isFriend(stripColor(name))

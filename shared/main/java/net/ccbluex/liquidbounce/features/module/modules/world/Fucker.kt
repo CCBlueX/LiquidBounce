@@ -68,12 +68,7 @@ object Fucker : Module()
 
 		val moduleManager = LiquidBounce.moduleManager
 
-		if (noHitValue.get())
-		{
-			val killAura = moduleManager[KillAura::class.java] as KillAura
-
-			if (killAura.state && killAura.target != null) return
-		}
+		if (noHitValue.get() && (moduleManager[KillAura::class.java] as KillAura).hasTarget) return
 
 		val targetId = blockValue.get()
 

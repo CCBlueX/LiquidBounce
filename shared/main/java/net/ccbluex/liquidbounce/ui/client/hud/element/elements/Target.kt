@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.api.minecraft.util.WDefaultPlayerSkin
 import net.ccbluex.liquidbounce.features.module.modules.combat.Aimbot
+import net.ccbluex.liquidbounce.features.module.modules.combat.BowAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.TpAura
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
@@ -37,7 +38,6 @@ import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-// TODO: BowAimbot support
 /**
  * A target hud
  */
@@ -89,7 +89,7 @@ class Target : Element()
 		val moduleManager = LiquidBounce.moduleManager
 
 		val tpAura = moduleManager[TpAura::class.java] as TpAura
-		val targetEntity = if (tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null) tpAura.currentTarget else ((moduleManager[KillAura::class.java] as KillAura).target ?: (moduleManager[Aimbot::class.java] as Aimbot).target)
+		val targetEntity = if (tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null) tpAura.currentTarget else ((moduleManager[KillAura::class.java] as KillAura).target ?: (moduleManager[Aimbot::class.java] as Aimbot).target) ?: (moduleManager[BowAimbot::class.java] as BowAimbot).target
 
 		if (targetEntity != null && targetEntity.entityAlive)
 		{
@@ -122,7 +122,7 @@ class Target : Element()
 				var xShift = 2
 				var healthBarYOffset = 107F
 
-				var name = targetEntity.name // TODO: displayName support
+				var name = targetEntity.customNameTag.ifBlank(targetEntity::name)
 				val targetHealthPercentage = targetHealth / targetMaxHealth
 
 				if (isPlayer)
@@ -133,7 +133,7 @@ class Target : Element()
 					if (healthMethod.equals("Mineplex", ignoreCase = true) || healthMethod.equals("Hive", ignoreCase = true)) targetHealth = EntityUtils.getPlayerHealthFromScoreboard(targetPlayer.gameProfile.name, isMineplex = healthGetMethod.get().equals("Mineplex", true)).toFloat()
 
 					targetArmor = targetPlayer.totalArmorValue
-					name = targetPlayer.displayNameString
+					name = targetPlayer.customNameTag.ifBlank(targetPlayer::displayNameString)
 
 					xShift = 100
 					healthBarYOffset = 104F
@@ -151,6 +151,8 @@ class Target : Element()
 				val distanceText = decimalFormat2.format(thePlayer.getDistanceToEntityBox(targetEntity))
 				val yawText = "${decimalFormat2.format(targetEntity.rotationYaw % 360f)} (${StringUtils.getHorizontalFacingAdv(targetEntity.rotationYaw)})"
 				val pitchText = decimalFormat2.format(targetEntity.rotationPitch)
+
+				val velocityText = "${decimalFormat2.format(targetEntity.motionX)}, ${decimalFormat2.format(targetEntity.motionY)}, ${decimalFormat2.format(targetEntity.motionZ)}"
 
 				val healthColor = ColorUtils.getHealthColor(easingHealth, targetMaxHealth)
 
@@ -280,7 +282,7 @@ class Target : Element()
 				Fonts.font35.drawString("Distance: ${distanceText}m | ${if (targetEntity.onGround) "\u00A7a" else "\u00A7c"}Ground\u00A7r | ${if (targetEntity.isAirBorne) "\u00A7a" else "\u00A7c"}AirBorne\u00A7r | ${if (!targetEntity.sprinting) "\u00A7c" else "\u00A7a"}Sprinting\u00A7r | ${if (!targetEntity.sneaking) "\u00A7c" else "\u00A7a"}Sneaking\u00A7r", scaledXShift, scaledYPos + 15, 0xffffff)
 
 				// Rotation-related
-				Fonts.font35.drawString("Yaw: $yawText | Pitch: $pitchText", scaledXShift, scaledYPos + 25, 0xffffff)
+				Fonts.font35.drawString("Yaw: $yawText | Pitch: $pitchText | Velocity: [$velocityText]", scaledXShift, scaledYPos + 25, 0xffffff)
 
 				// Hurt-related
 				Fonts.font35.drawString("Hurt: ${if (targetEntity.hurtTime > 0) "\u00A7c" else "\u00A7a"}${targetEntity.hurtTime}\u00A7r | HurtResistantTime: ${if (targetEntity.hurtResistantTime > 0) "\u00A7c" else "\u00A7a"}${targetEntity.hurtResistantTime}\u00A7r ", scaledXShift, scaledYPos + 40, 0xffffff)

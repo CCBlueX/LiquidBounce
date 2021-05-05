@@ -387,8 +387,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 		final float f = 0.8F;
 		final boolean flag2 = movementInput.moveForward >= 0.8F;
 		movementInput.updatePlayerMoveState();
-		final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
-		final KillAura killAura = (KillAura) LiquidBounce.moduleManager.getModule(KillAura.class);
+		final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.get(NoSlow.class);
+		final KillAura killAura = (KillAura) LiquidBounce.moduleManager.get(KillAura.class);
 
 		ForgeHooksClient.onInputUpdate((EntityPlayerSP) (Object) this, movementInput);
 		mc.getTutorial().handleMovement(movementInput);
@@ -421,7 +421,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			pushOutOfBlocks(posX + (double) width * 0.35D, axisalignedbb.minY + 0.5D, posZ - (double) width * 0.35D);
 			pushOutOfBlocks(posX + (double) width * 0.35D, axisalignedbb.minY + 0.5D, posZ + (double) width * 0.35D);
 		}
-		final Sprint sprint = (Sprint) LiquidBounce.moduleManager.getModule(Sprint.class);
+		final Sprint sprint = (Sprint) LiquidBounce.moduleManager.get(Sprint.class);
 
 		final boolean flag4 = !sprint.foodValue.get() || (float) getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
 
@@ -442,7 +442,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			setSprinting(true);
 		}
 
-		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.getModule(Scaffold.class);
+		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.get(Scaffold.class);
 
 		if (scaffold.getState() && !scaffold.sprintValue.get() || sprint.getState() && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.player.rotationYaw, mc.player.rotationPitch)) > 30)
 			setSprinting(false);

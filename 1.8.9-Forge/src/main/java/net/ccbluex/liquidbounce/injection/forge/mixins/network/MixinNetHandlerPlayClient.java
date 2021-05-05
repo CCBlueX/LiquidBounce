@@ -77,7 +77,10 @@ public abstract class MixinNetHandlerPlayClient
 	@Shadow
 	private boolean doneLoadingTerrain;
 
-	@SuppressWarnings({"ThrowCaughtLocally", "IfCanBeAssertion"})
+	@SuppressWarnings(
+	{
+			"ThrowCaughtLocally", "IfCanBeAssertion"
+	})
 	@Inject(method = "handleResourcePack", at = @At("HEAD"), cancellable = true)
 	private void handleResourcePack(final S48PacketResourcePackSend packetResourcePack, final CallbackInfo callbackInfo)
 	{
@@ -313,16 +316,16 @@ public abstract class MixinNetHandlerPlayClient
 					LiquidBounce.hud.addNotification("Chat", "Someone called you a hacker.", 2000L, Color.yellow);
 
 				if (text.contains("ground items will be removed in"))
-					LiquidBounce.hud.addNotification("ClearLag", "ClearLag " + text.substring(text.lastIndexOf("in ")), 2000L);
+					LiquidBounce.hud.addNotification("ClearLag", "ClearLag " + text.substring(text.lastIndexOf("in ")), 2000L, null);
 
 				if (text.contains("removed ") && text.contains("entities"))
-					LiquidBounce.hud.addNotification("ClearLag", text.substring(text.lastIndexOf("removed ")), 2000L);
+					LiquidBounce.hud.addNotification("ClearLag", text.substring(text.lastIndexOf("removed ")), 2000L, null);
 
 				if (text.contains("you are now in "))
-					LiquidBounce.hud.addNotification("Faction Warning", "Chunk: " + text.substring(text.lastIndexOf("in ") + 3), 2000L);
+					LiquidBounce.hud.addNotification("Faction Warning", "Chunk: " + text.substring(text.lastIndexOf("in ") + 3), 2000L, null);
 
 				if (text.contains("now entering"))
-					LiquidBounce.hud.addNotification("Faction", "Chunk: " + text.substring(text.lastIndexOf(": ") + 4), 2000L);
+					LiquidBounce.hud.addNotification("Faction", "Chunk: " + text.substring(text.lastIndexOf(": ") + 4), 2000L, null);
 			});
 
 		final IChatComponent message = ForgeEventFactory.onClientChat(messageType, messageComponent);

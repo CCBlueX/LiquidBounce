@@ -212,7 +212,7 @@ public abstract class MixinEntity
 	private void setAngles(final float yaw, final float pitch, final CallbackInfo callbackInfo)
 	{
 		// NoPitchLimit
-		if (LiquidBounce.moduleManager.getModule(NoPitchLimit.class).getState())
+		if (LiquidBounce.moduleManager.get(NoPitchLimit.class).getState())
 		{
 			callbackInfo.cancel();
 
