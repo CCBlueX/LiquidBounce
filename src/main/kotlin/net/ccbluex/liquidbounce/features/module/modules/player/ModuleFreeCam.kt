@@ -18,7 +18,6 @@ object ModuleFreeCam : Module("FreeCam", Category.PLAYER) {
     private val fly by boolean("Fly", true)
     private val collision by boolean("Collision", false)
     private val resetMotion by boolean("ResetMotion", true)
-    private val spoofMovement by boolean("SpoofMovement", true)
 
     private var fakePlayer: OtherClientPlayerEntity? = null
     private var x = 0.0
@@ -85,19 +84,15 @@ object ModuleFreeCam : Module("FreeCam", Category.PLAYER) {
         when (val packet = event.packet) {
             // For better FreeCam detecting AntiCheats, we need to prove to them that the player's moving
             is PlayerMoveC2SPacket -> {
-                if (spoofMovement) {
-                    if (packet.changePosition) {
-                        packet.x = posX
-                        packet.y = posY
-                        packet.z = posZ
-                    }
-                    packet.onGround = ground
-                    if (packet.changeLook) {
-                        packet.yaw = player.yaw
-                        packet.pitch = player.pitch
-                    }
-                } else {
-                    event.cancelEvent()
+                if (packet.changePosition) {
+                    packet.x = posX
+                    packet.y = posY
+                    packet.z = posZ
+                }
+                packet.onGround = ground
+                if (packet.changeLook) {
+                    packet.yaw = player.yaw
+                    packet.pitch = player.pitch
                 }
             }
             is PlayerActionC2SPacket -> event.cancelEvent()
