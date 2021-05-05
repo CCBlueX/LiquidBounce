@@ -34,7 +34,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
 	private CapeInfo capeInfo;
 
 	@Inject(method = "getLocationCape", at = @At("HEAD"), cancellable = true)
-	private void getCape(final CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable)
+	private void getCape(final CallbackInfoReturnable<? super ResourceLocation> callbackInfoReturnable)
 	{
 		// Custom Cape
 		if (!CapeAPI.INSTANCE.hasCapeService())
@@ -48,7 +48,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
 	}
 
 	@Inject(method = "getFovModifier", at = @At("HEAD"), cancellable = true)
-	private void getFovModifier(final CallbackInfoReturnable<Float> callbackInfoReturnable)
+	private void getFovModifier(final CallbackInfoReturnable<? super Float> callbackInfoReturnable)
 	{
 		// NoFOV
 		final NoFOV fovModule = (NoFOV) LiquidBounce.moduleManager.get(NoFOV.class);
@@ -78,7 +78,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
 	}
 
 	@Inject(method = "getLocationSkin()Lnet/minecraft/util/ResourceLocation;", at = @At("HEAD"), cancellable = true)
-	private void getSkin(final CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable)
+	private void getSkin(final CallbackInfoReturnable<? super ResourceLocation> callbackInfoReturnable)
 	{
 		// NameProtect SkinProtect
 		final NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.get(NameProtect.class);

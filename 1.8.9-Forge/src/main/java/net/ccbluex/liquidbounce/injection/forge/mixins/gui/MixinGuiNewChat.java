@@ -176,7 +176,7 @@ public abstract class MixinGuiNewChat
 	 */
 
 	@Inject(method = "getChatComponent", at = @At("HEAD"), cancellable = true)
-	private void getChatComponent(final int p_getChatComponent_1_, final int p_getChatComponent_2_, final CallbackInfoReturnable<IChatComponent> callbackInfo)
+	private void getChatComponent(final int p_getChatComponent_1_, final int p_getChatComponent_2_, final CallbackInfoReturnable<? super IChatComponent> callbackInfo)
 	{
 		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
 

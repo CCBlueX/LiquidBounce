@@ -24,7 +24,10 @@ import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import kotlin.random.Random
 
 @ModuleInfo(name = "AutoPot", description = "Automatically throws healing potions.", category = ModuleCategory.COMBAT)
@@ -82,6 +85,68 @@ class AutoPot : Module()
 	private val groundDistanceValue = FloatValue("GroundDistance", 2F, 0F, 5F)
 
 	private val ignoreScreen = BoolValue("IgnoreScreen", true)
+
+	private val rotationsValue = BoolValue("Rotations", true)
+
+	/**
+	 * Acceleration
+	 */
+	private val maxAccelerationRatioValue: FloatValue = object : FloatValue("MaxAccelerationRatio", 0f, 0f, .99f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = minAccelerationRatioValue.get()
+			if (v > newValue) this.set(v)
+		}
+	}
+	private val minAccelerationRatioValue: FloatValue = object : FloatValue("MinAccelerationRatio", 0f, 0f, .99f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = maxAccelerationRatioValue.get()
+			if (v < newValue) this.set(v)
+		}
+	}
+
+	/**
+	 * TurnSpeed
+	 */
+	private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 0f, 180f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = minTurnSpeedValue.get()
+			if (v > newValue) set(v)
+		}
+	}
+	private val minTurnSpeedValue: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 0f, 180f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = maxTurnSpeedValue.get()
+			if (v < newValue) set(v)
+		}
+	}
+
+	/**
+	 * Rotation Reset TurnSpeed
+	 */
+	private val maxResetTurnSpeed: FloatValue = object : FloatValue("MaxRotationResetSpeed", 180f, 20f, 180f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = minResetTurnSpeed.get()
+			if (v > newValue) this.set(v)
+		}
+	}
+	private val minResetTurnSpeed: FloatValue = object : FloatValue("MinRotationResetSpeed", 180f, 20f, 180f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val v = maxResetTurnSpeed.get()
+			if (v < newValue) this.set(v)
+		}
+	}
 
 	private val keepRotationValue = BoolValue("KeepRotation", false)
 	private val keepRotationLengthValue = IntegerValue("KeepRotationLength", 1, 1, 40)
@@ -162,13 +227,15 @@ class AutoPot : Module()
 		val containerOpen = provider.isGuiContainer(screen)
 		val isNotInventory = !provider.isGuiInventory(screen)
 
+		val serverRotation = RotationUtils.serverRotation
+		val ignoreScreen = ignoreScreen.get()
+
 		when (motionEvent.eventState)
 		{
 			PRE ->
 			{
-				if (potThrowDelayTimer.hasTimePassed(potThrowDelay) && (ignoreScreen.get() || containerOpen))
+				if (potThrowDelayTimer.hasTimePassed(potThrowDelay) && (ignoreScreen || containerOpen))
 				{
-
 					// Hotbar Potion
 					val healPotionInHotbar = findHealPotion(thePlayer, 36, 45, inventoryContainer, randomSlot)
 					val buffPotionInHotbar = findBuffPotion(activePotionEffects, 36, 45, inventoryContainer, randomSlot)
@@ -203,21 +270,25 @@ class AutoPot : Module()
 
 						val pitch = thePlayer.rotationPitch
 
-						if (pitch <= 80F) RotationUtils.setTargetRotation(Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)))
+						val maxTurnSpeed = maxTurnSpeedValue.get()
+						val minTurnSpeed = minTurnSpeedValue.get()
 
-						if (when (throwDirection)
-							{
-								"up" -> pitch > -80F
-								else -> pitch < 80F
-							}) RotationUtils.setTargetRotation(Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(when (throwDirection)
+						if (!rotationsValue.get() || maxTurnSpeed <= 0F) return
+
+						if (if (throwDirection == "up") pitch > -80F else pitch < 80F)
 						{
-							"up" -> -80F
-							else -> 80F
-						}, when (throwDirection)
-						{
-							"up" -> -90F
-							else -> 90F
-						})), if (keepRotationValue.get()) keepRotationLengthValue.get() else 0)
+							// Limit TurnSpeed
+							val turnSpeed = if (minTurnSpeed < 180f) minTurnSpeed + (maxTurnSpeed - minTurnSpeed) * Random.nextFloat() else 180f
+
+							// Acceleration
+							val maxAcceleration = maxAccelerationRatioValue.get()
+							val minAcceleration = minAccelerationRatioValue.get()
+							val acceleration = if (maxAcceleration > 0f) minAcceleration + (maxAcceleration - minAcceleration) * Random.nextFloat() else 0f
+
+							val targetRotation = Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(if (throwDirection == "up") -80F else 80F, if (throwDirection == "up") -90F else 90F))
+
+							RotationUtils.setTargetRotation(RotationUtils.limitAngleChange(serverRotation, targetRotation, turnSpeed, acceleration), if (keepRotationValue.get()) keepRotationLengthValue.get() else 0)
+						}
 
 						return
 					}
@@ -261,13 +332,10 @@ class AutoPot : Module()
 
 			POST ->
 			{
-				val pitchCheck = when (throwDirection)
-				{
-					"up" -> RotationUtils.serverRotation.pitch <= -75F
-					else -> RotationUtils.serverRotation.pitch >= 75F
-				}
+				val serverPitch = serverRotation.pitch
+				val pitchCheck = if (throwDirection == "up") serverPitch <= -75F else serverPitch >= 75F
 
-				if ((ignoreScreen.get() || !containerOpen) && potion >= 0 && pitchCheck)
+				if ((ignoreScreen || !containerOpen) && potion >= 0 && pitchCheck)
 				{
 					val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack
 

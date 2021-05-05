@@ -68,7 +68,7 @@ public abstract class MixinBlock
 	 * @reason BlockBBEvent
 	 */
 	@Overwrite
-	public void addCollisionBoxesToList(final World worldIn, final BlockPos pos, final IBlockState state, final AxisAlignedBB mask, final List<AxisAlignedBB> list, final Entity collidingEntity)
+	public void addCollisionBoxesToList(final World worldIn, final BlockPos pos, final IBlockState state, final AxisAlignedBB mask, final List<? super AxisAlignedBB> list, final Entity collidingEntity)
 	{
 		AxisAlignedBB axisalignedbb = getCollisionBoundingBox(worldIn, pos, state);
 		final BlockBBEvent blockBBEvent = new BlockBBEvent(BackendExtentionsKt.wrap(pos), BlockImplKt.wrap(blockState.getBlock()), Optional.ofNullable(axisalignedbb).map(AxisAlignedBBImplKt::wrap).orElse(null));
@@ -81,7 +81,7 @@ public abstract class MixinBlock
 	}
 
 	@Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
-	private void shouldSideBeRendered(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	private void shouldSideBeRendered(final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
@@ -91,7 +91,7 @@ public abstract class MixinBlock
 	}
 
 	@Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)
-	private void isCollidable(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	private void isCollidable(final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
 	{
 		final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.get(GhostHand.class);
 
@@ -101,7 +101,7 @@ public abstract class MixinBlock
 	}
 
 	@Inject(method = "getAmbientOcclusionLightValue", at = @At("HEAD"), cancellable = true)
-	private void getAmbientOcclusionLightValue(final CallbackInfoReturnable<Float> floatCallbackInfoReturnable)
+	private void getAmbientOcclusionLightValue(final CallbackInfoReturnable<? super Float> floatCallbackInfoReturnable)
 	{
 		if (LiquidBounce.moduleManager.get(XRay.class).getState())
 			floatCallbackInfoReturnable.setReturnValue(1.0F);

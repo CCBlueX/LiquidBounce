@@ -17,7 +17,7 @@ public abstract class MixinBlockAnvil extends MixinBlock
 {
 
 	@Inject(method = "onBlockPlaced", cancellable = true, at = @At("HEAD"))
-	private void injectAnvilCrashFix(final World worldIn, final BlockPos pos, final EnumFacing facing, final float hitX, final float hitY, final float hitZ, final int meta, final EntityLivingBase placer, final CallbackInfoReturnable<IBlockState> cir)
+	private void injectAnvilCrashFix(final World worldIn, final BlockPos pos, final EnumFacing facing, final float hitX, final float hitY, final float hitZ, final int meta, final EntityLivingBase placer, final CallbackInfoReturnable<? super IBlockState> cir)
 	{
 		// Make anvil crash exploit not work for me
 		if ((meta >> 2 & ~0x3) != 0)

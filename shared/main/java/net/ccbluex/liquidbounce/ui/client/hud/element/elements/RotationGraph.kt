@@ -113,15 +113,6 @@ class RotationGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side
 
 			val rotation = hypot(yawMovement, pitchMovement)
 
-			val rotationConsistency = abs(rotation - lastRotation)
-
-			val yawConsistency = abs(yawMovement - lastYawMovement)
-			val pitchConsistency = abs(pitchMovement - lastPitchMovement)
-
-			lastRotation = rotation
-			lastYawMovement = yawMovement
-			lastPitchMovement = pitchMovement
-
 			rotationList.add(rotation)
 
 			while (rotationList.size > width) rotationList.removeAt(0)
@@ -142,24 +133,28 @@ class RotationGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side
 
 			if (rotationConsistencyEnabled)
 			{
-				rotationConsistencyList.add(rotationConsistency)
+				rotationConsistencyList.add(abs(rotation - lastRotation))
 
 				while (rotationConsistencyList.size > width) rotationConsistencyList.removeAt(0)
 			}
 
 			if (yawConsistencyEnabled)
 			{
-				yawConsistencyList.add(yawConsistency)
+				yawConsistencyList.add(abs(yawMovement - lastYawMovement))
 
 				while (yawConsistencyList.size > width) yawConsistencyList.removeAt(0)
 			}
 
 			if (pitchConsistencyEnabled)
 			{
-				pitchConsistencyList.add(pitchConsistency)
+				pitchConsistencyList.add(abs(pitchMovement - lastPitchMovement))
 
 				while (pitchMovementList.size > width) pitchMovementList.removeAt(0)
 			}
+
+			lastRotation = rotation
+			lastYawMovement = yawMovement
+			lastPitchMovement = pitchMovement
 		}
 
 		val rotationYMul = rotationyMultiplier.get()

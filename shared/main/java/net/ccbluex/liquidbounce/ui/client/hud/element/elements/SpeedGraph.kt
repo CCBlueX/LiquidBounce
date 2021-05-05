@@ -94,38 +94,29 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 			val z = thePlayer.posZ
 			val prevZ = thePlayer.prevPosZ
 
-			val speed = hypot((x - prevX), (z - prevZ))
-			val yspeed = y - prevY
-
-			speedList.add(speed)
-			yspeedList.add(yspeed)
+			speedList.add(hypot((x - prevX), (z - prevZ)))
+			yspeedList.add(y - prevY)
 
 			while (speedList.size > width) speedList.removeAt(0)
 			while (yspeedList.size > width) yspeedList.removeAt(0)
 
 			if (timerEnabled)
 			{
-				val timer = mc.timer.timerSpeed
-
-				timerList.add(timer)
+				timerList.add(mc.timer.timerSpeed)
 
 				while (timerList.size > width) timerList.removeAt(0)
 			}
 
 			if (motionEnabled)
 			{
-				val motion = hypot(thePlayer.motionX, thePlayer.motionZ)
-
-				motionList.add(motion)
+				motionList.add(hypot(thePlayer.motionX, thePlayer.motionZ))
 
 				while (motionList.size > width) motionList.removeAt(0)
 			}
 
 			if (ymotionEnabled)
 			{
-				val ymotion = thePlayer.motionY
-
-				ymotionList.add(ymotion)
+				ymotionList.add(thePlayer.motionY)
 
 				while (ymotionList.size > width) ymotionList.removeAt(0)
 			}

@@ -35,7 +35,7 @@ public class MixinPlayerControllerMP
 	}
 
 	@Inject(method = "getIsHittingBlock", at = @At("HEAD"), cancellable = true)
-	private void getIsHittingBlock(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	private void getIsHittingBlock(final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
 	{
 		if (LiquidBounce.moduleManager.get(AbortBreaking.class).getState())
 			callbackInfoReturnable.setReturnValue(false);

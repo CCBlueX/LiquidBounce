@@ -21,6 +21,7 @@ import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemStack;
@@ -38,7 +39,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@SuppressWarnings({"WeakerAccess", "MethodMayBeStatic", "DesignForExtension"})
+@SuppressWarnings(
+{
+		"WeakerAccess", "MethodMayBeStatic", "DesignForExtension"
+})
 @Mixin(ItemRenderer.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinItemRenderer
@@ -52,6 +56,9 @@ public abstract class MixinItemRenderer
 	private Minecraft mc;
 	@Shadow
 	private ItemStack itemToRender;
+
+	@Shadow
+	private int equippedItemSlot;
 
 	@Shadow
 	protected abstract void rotateArroundXAndY(float angle, float angleY);
@@ -321,24 +328,29 @@ public abstract class MixinItemRenderer
 		final float yEquipProgressTranslationAffectness = -swingAnimation.getEquipProgressAnimationTranslationAffectnessY().get();
 		final float zEquipProgressTranslationAffectness = -swingAnimation.getEquipProgressAnimationTranslationAffectnessZ().get();
 
-		switch (swingAnimation.getAnimationMode().get().toLowerCase(Locale.ENGLISH)) {
-			case "liquidbounce": {
+		switch (swingAnimation.getAnimationMode().get().toLowerCase(Locale.ENGLISH))
+		{
+			case "liquidbounce":
+			{
 				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
 				doBlockTransformations();
 				GlStateManager.translate(-0.5f, 0.2F, 0.0F);
 				break;
 			}
-			case "1.8": {
+			case "1.8":
+			{
 				transformFirstPersonItemBlock(equipProgress, 0, 1);
 				doBlockTransformations();
 				break;
 			}
-			case "1.7": {
+			case "1.7":
+			{
 				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
 				doBlockTransformations();
 				break;
 			}
-			case "avatar": {
+			case "avatar":
+			{
 				translateBlock(swingAnimation, swingProgress);
 
 				final double xTranslate = equipProgress * (equipProgressAffectTranslation ? xEquipProgressTranslationAffectness : 0.0f);
@@ -355,7 +367,8 @@ public abstract class MixinItemRenderer
 				doBlockTransformations();
 				break;
 			}
-			case "sigma": {
+			case "sigma":
+			{
 				transformFirstPersonItemBlock(equipProgress, 0, 1);
 				GlStateManager.rotate(equipProgressAffect * -sqrt * 27.5f, -8.0f, -0.0f, 9.0F);
 				GlStateManager.rotate(equipProgressAffect * -sqrt * 45, 1.0F, sqrt * 0.5f, -0.0f);
@@ -364,14 +377,16 @@ public abstract class MixinItemRenderer
 				GL11.glTranslatef(-1, mc.thePlayer.isSneaking() ? -0.1f : -0.2f, 0.2F);
 				break;
 			}
-			case "push": {
+			case "push":
+			{
 				transformFirstPersonItemBlock(equipProgress, 0.0F, 1);
 				doBlockTransformations();
 				GlStateManager.translate(-0.3f, 0.1f, 0.0f);
 				GlStateManager.rotate(equipProgressAffect * sqrt * -25.0f, -8.0f, 0.0F, 9.0f);
 				break;
 			}
-			case "tap": {
+			case "tap":
+			{
 				translateBlock(swingAnimation, swingProgress);
 
 				final double xTranslate = equipProgress * (equipProgressAffectTranslation ? xEquipProgressTranslationAffectness : 0.0f);
@@ -386,7 +401,8 @@ public abstract class MixinItemRenderer
 				doBlockTransformations();
 				break;
 			}
-			case "tap2": {
+			case "tap2":
+			{
 				final float smooth = swingProgress * 0.8f - swingProgress * swingProgress * 0.8f;
 
 				translateBlock(swingAnimation, swingProgress);
@@ -403,7 +419,8 @@ public abstract class MixinItemRenderer
 				doBlockTransformations();
 				break;
 			}
-			case "slide": {
+			case "slide":
+			{
 				translateBlock(swingAnimation, swingProgress);
 
 				final double xTranslate = equipProgress * (equipProgressAffectTranslation ? xEquipProgressTranslationAffectness : 0.0f) + equipProgressAffect * sqrt * (swingAnimation.getSlideXPos().get() * 0.001);
@@ -420,7 +437,8 @@ public abstract class MixinItemRenderer
 				doBlockTransformations();
 				break;
 			}
-			case "exhibobo": {
+			case "exhibobo":
+			{
 				translateBlock(swingAnimation, swingProgress);
 
 				final double xTranslate = equipProgress * (equipProgressAffectTranslation ? xEquipProgressTranslationAffectness : 0.0f);
@@ -438,7 +456,8 @@ public abstract class MixinItemRenderer
 				doBlockTransformations();
 				break;
 			}
-			case "lucid": {
+			case "lucid":
+			{
 				transformFirstPersonItemBlock(equipProgress, swingProgress, equipProgressAffect);
 				doBlockTransformations();
 
@@ -452,7 +471,8 @@ public abstract class MixinItemRenderer
 				GL11.glTranslatef(-0.05F, mc.thePlayer.isSneaking() ? -0.2F : 0.0F, 0.1F);
 				break;
 			}
-			case "luna": {
+			case "luna":
+			{
 				transformFirstPersonItemBlock(equipProgress, 0.0F, equipProgressAffect);
 				doBlockTransformations();
 
@@ -678,5 +698,55 @@ public abstract class MixinItemRenderer
 
 		if (antiBlind.getState() && antiBlind.getFireEffect().get())
 			callbackInfo.cancel();
+	}
+
+	@Overwrite
+	public void updateEquippedItem()
+	{
+		prevEquippedProgress = equippedProgress;
+
+		final EntityPlayer entityplayer = mc.thePlayer;
+
+		final int currentItem = entityplayer.inventory.currentItem;
+		final ItemStack currentItemStack = entityplayer.inventory.getCurrentItem();
+
+		boolean shouldCauseReequipAnimation = false;
+
+		if (itemToRender != null && currentItemStack != null)
+		{
+			if (!itemToRender.getIsItemStackEqual(currentItemStack))
+			{
+				if (!itemToRender.getItem().shouldCauseReequipAnimation(itemToRender, currentItemStack, equippedItemSlot != currentItem))
+				{
+					itemToRender = currentItemStack;
+					equippedItemSlot = currentItem;
+					return;
+				}
+
+				shouldCauseReequipAnimation = true;
+			}
+		}
+		else
+			shouldCauseReequipAnimation = itemToRender != null || currentItemStack != null;
+
+		final SwingAnimation swingAnimation = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
+
+		final float deltaLimit = 0.4F;
+
+		final float unclampedDelta = MathHelper.clamp_float((shouldCauseReequipAnimation ? 0.0F/* Going DOWN */ : 1.0F/* Going UP */) - equippedProgress, -1.0F, 1.0F);
+		final float clampedDelta = MathHelper.clamp_float(unclampedDelta, -deltaLimit, deltaLimit);
+
+		if (swingAnimation.getEquipProgressSmoothingValue().get())
+			equippedProgress += clampedDelta < 0 ? -MathHelper.clamp_double(MathHelper.sqrt_float((unclampedDelta + 1.01f) / swingAnimation.getEquipProgressDownSpeedValue().get()), 0.0f, 1.0f) : StrictMath.pow(clampedDelta, 1.0f + swingAnimation.getEquipProgressUpSpeedValue().get() * 0.1f);
+		else
+			equippedProgress += clampedDelta;
+
+		if (equippedProgress < 0.1F)
+		{
+			itemToRender = currentItemStack;
+			equippedItemSlot = currentItem;
+		}
+		else if (equippedProgress >= 0.999)
+			equippedProgress = 1.0F;
 	}
 }

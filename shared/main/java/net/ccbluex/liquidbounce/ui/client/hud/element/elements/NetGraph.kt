@@ -23,6 +23,8 @@ import java.awt.Color
  *
  * Allows to draw custom network-activity graph
  */
+
+// TODO: Column Auto-Scaling
 @ElementInfo(name = "NetGraph")
 class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side)
 {
@@ -69,9 +71,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 		if (pingUpdateTimer.hasTimePassed(pingUpdatePeriod))
 		{
-			val ping = thePlayer.getPing()
-
-			pingList.add(ping)
+			pingList.add(thePlayer.getPing())
 			while (pingList.size > width) pingList.removeAt(0)
 
 			pingUpdateTimer.reset()
@@ -79,12 +79,10 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 		if (packetUpdateTimer.hasTimePassed(packetUpdatePeriod))
 		{
-			val inboundPackets = PPSCounter.getPacketCount(PPSCounter.BoundType.INBOUND, packetUpdatePeriod)
-			val outboundPackets = PPSCounter.getPacketCount(PPSCounter.BoundType.OUTBOUND, packetUpdatePeriod)
-
-			inPacketList.add(inboundPackets)
+			inPacketList.add(PPSCounter.getPacketCount(PPSCounter.BoundType.INBOUND, packetUpdatePeriod))
 			while (inPacketList.size > width) inPacketList.removeAt(0)
-			outPacketList.add(outboundPackets)
+
+			outPacketList.add(PPSCounter.getPacketCount(PPSCounter.BoundType.OUTBOUND, packetUpdatePeriod))
 			while (outPacketList.size > width) outPacketList.removeAt(0)
 
 			packetUpdateTimer.reset()

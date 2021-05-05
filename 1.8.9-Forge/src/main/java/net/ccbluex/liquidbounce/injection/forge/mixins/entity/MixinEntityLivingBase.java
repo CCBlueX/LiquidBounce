@@ -155,7 +155,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	}
 
 	@Inject(method = "getLook", at = @At("HEAD"), cancellable = true)
-	private void getLook(final CallbackInfoReturnable<Vec3> callbackInfoReturnable)
+	private void getLook(final CallbackInfoReturnable<? super Vec3> callbackInfoReturnable)
 	{
 		// noinspection ConstantConditions
 		if ((EntityLivingBase) (Object) this instanceof EntityPlayerSP)
@@ -163,7 +163,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	}
 
 	@Inject(method = "isPotionActive(Lnet/minecraft/potion/Potion;)Z", at = @At("HEAD"), cancellable = true)
-	private void isPotionActive(final Potion potion, final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	private void isPotionActive(final Potion potion, final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
 	{
 		final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.get(AntiBlind.class);
 
