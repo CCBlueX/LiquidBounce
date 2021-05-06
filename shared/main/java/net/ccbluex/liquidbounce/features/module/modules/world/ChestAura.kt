@@ -38,6 +38,8 @@ object ChestAura : Module()
 	private val maxDelayValue = IntegerValue("MaxDelay", 100, 50, 200)
 	private val minDelayValue = IntegerValue("MinDelay", 100, 50, 200)
 	private val rotationsValue = BoolValue("Rotations", true)
+
+	// TODO: TurnSpeed and more
 	private val throughWallsValue = BoolValue("ThroughWalls", true)
 	private val visualSwing = BoolValue("VisualSwing", true)
 	private val noHitValue = BoolValue("NoHit", true)

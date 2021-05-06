@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 class SwingAnimation : Module()
 {
 	val equipProgressSmoothingValue = BoolValue("EquipProgressSmoothing", true)
+	val equipProgressSmoothingReverseValue = BoolValue("EquipProgressSmoothingReverse", false)
 	val equipProgressDownSpeedValue = IntegerValue("EquipProgressSmoothDownSpeed", 6, 1, 10)
 	val equipProgressUpSpeedValue = IntegerValue("EquipProgressSmoothUpSpeed", 3, 1, 10)
 

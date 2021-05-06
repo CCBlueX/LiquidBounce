@@ -1060,23 +1060,23 @@ class Scaffold : Module()
 				facesBlock = false
 
 				run searchLoop@{
-					EnumFacingType.values().map(provider::getEnumFacing).forEach { side ->
+					EnumFacingType.values().map(provider::getEnumFacing).forEach sideLoop@{ side ->
 						val neighbor = blockPosition.offset(side)
 
-						if (!canBeClicked(theWorld, neighbor)) return@forEach
+						if (!canBeClicked(theWorld, neighbor)) return@sideLoop
 
 						val dirVec = WVec3(side.directionVec)
 						val posVec = WVec3(blockPosition).addVector(xSearchFace, ySearchFace, zSearchFace)
 						val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
 						val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
 
-						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) return@forEach
+						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) return@sideLoop
 
 						val rotationVector = RotationUtils.getVectorForRotation(limitedRotation!!)
 						val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
 						val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, false, false, true)
 
-						if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)) return@forEach
+						if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)) return@sideLoop
 
 						facesBlock = true
 

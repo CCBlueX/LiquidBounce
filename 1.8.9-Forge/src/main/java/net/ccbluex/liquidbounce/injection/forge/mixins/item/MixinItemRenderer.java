@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.item;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -13,6 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.TpAura;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.SwingAnimation;
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.SpeedGraph;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -737,7 +740,10 @@ public abstract class MixinItemRenderer
 		final float clampedDelta = MathHelper.clamp_float(unclampedDelta, -deltaLimit, deltaLimit);
 
 		if (swingAnimation.getEquipProgressSmoothingValue().get())
-			equippedProgress += clampedDelta < 0 ? -MathHelper.clamp_double(MathHelper.sqrt_float((unclampedDelta + 1.01f) / swingAnimation.getEquipProgressDownSpeedValue().get()), 0.0f, 1.0f) : StrictMath.pow(clampedDelta, 1.0f + swingAnimation.getEquipProgressUpSpeedValue().get() * 0.1f);
+			if (swingAnimation.getEquipProgressSmoothingReverseValue().get())
+				equippedProgress += clampedDelta < 0 ? -StrictMath.pow(-clampedDelta, 1.0f + swingAnimation.getEquipProgressDownSpeedValue().get() * 0.1f) : MathHelper.clamp_double(MathHelper.sqrt_double((1.0 - unclampedDelta) / swingAnimation.getEquipProgressUpSpeedValue().get().doubleValue()), 0.0, 1.0);
+			else
+				equippedProgress += clampedDelta < 0 ? -MathHelper.clamp_double(MathHelper.sqrt_double((unclampedDelta + 1.00001) / swingAnimation.getEquipProgressDownSpeedValue().get().doubleValue()), 0.0, 1.0) : StrictMath.pow(clampedDelta, 1.0f + swingAnimation.getEquipProgressUpSpeedValue().get() * 0.1f);
 		else
 			equippedProgress += clampedDelta;
 
