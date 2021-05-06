@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.item;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -14,8 +12,8 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.TpAura;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.EatAnimation;
 import net.ccbluex.liquidbounce.features.module.modules.render.SwingAnimation;
-import net.ccbluex.liquidbounce.ui.client.hud.element.elements.SpeedGraph;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -76,9 +74,6 @@ public abstract class MixinItemRenderer
 	protected abstract void renderItemMap(AbstractClientPlayer clientPlayer, float pitch, float equipmentProgress, float swingProgress);
 
 	@Shadow
-	protected abstract void performDrinking(AbstractClientPlayer clientPlayer, float partialTicks);
-
-	@Shadow
 	protected abstract void doBowTransformations(float partialTicks, AbstractClientPlayer clientPlayer);
 
 	@Shadow
@@ -89,6 +84,36 @@ public abstract class MixinItemRenderer
 
 	@Shadow
 	protected abstract void renderPlayerArm(AbstractClientPlayer clientPlayer, float equipProgress, float swingProgress);
+
+	@Overwrite
+	private void performDrinking(final AbstractClientPlayer clientPlayer, final float partialTicks)
+	{
+		final EatAnimation ea = (EatAnimation) LiquidBounce.moduleManager.get(EatAnimation.class);
+		final boolean eaState = ea.getState();
+
+		final float interpolatedItemInUse = clientPlayer.getItemInUseCount() - partialTicks + 1.0F;
+		final float itemInUseUnfinishedPercentage = interpolatedItemInUse / itemToRender.getMaxItemUseDuration();
+		float xTranslation = 0.0f;
+		float yTranslation = MathHelper.abs(MathHelper.cos(interpolatedItemInUse / (eaState ? ea.getVerticalShakeSpeedValue().get() : 4.0F) * WMathHelper.PI) * (eaState ? ea.getVerticalShakeIntensityValue().get() : 0.1F));
+
+		if (eaState && ea.getHorizontalShakeValue().get())
+			xTranslation = MathHelper.abs(MathHelper.cos(interpolatedItemInUse / ea.getHorizontalShakeSpeedValue().get() * WMathHelper.PI) * ea.getHorizontalShakeIntensityValue().get());
+
+		// Don't start shaking animation way too fast
+		if (itemInUseUnfinishedPercentage >= (eaState ? ea.getShakeStartTime().get() : 0.8F))
+		{
+			xTranslation = 0.0F;
+			yTranslation = 0.0F;
+		}
+
+		GlStateManager.translate(xTranslation, yTranslation, 0.0F);
+
+		final float moveFoodToMouth = 1.0F - (float) StrictMath.pow(itemInUseUnfinishedPercentage, 27.0);
+		GlStateManager.translate(moveFoodToMouth * 0.6F, moveFoodToMouth * -0.5F, 0.0F);
+		GlStateManager.rotate(moveFoodToMouth * 90.0F, 0.0F, 1.0F, 0.0F);
+		GlStateManager.rotate(moveFoodToMouth * 10.0F, 1.0F, 0.0F, 0.0F);
+		GlStateManager.rotate(moveFoodToMouth * 30.0F, 0.0F, 0.0F, 1.0F);
+	}
 
 	/**
 	 * @author eric0210
@@ -143,28 +168,28 @@ public abstract class MixinItemRenderer
 		{
 			if (swingAnimation.getState())
 			{
-				final float fixedSwingProgress;
+				final float newSwingProgress;
 
 				switch ((isSwing ? swingAnimation.getSwingSqSmoothingMethod() : swingAnimation.getBlockSqSwingSmoothingMethod()).get().toLowerCase(Locale.ENGLISH))
 				{
 					case "sqrt":
-						fixedSwingProgress = MathHelper.sqrt_float(swingProgress);
+						newSwingProgress = MathHelper.sqrt_float(swingProgress);
 						break;
 					case "sqrtsqrt":
-						fixedSwingProgress = MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress));
+						newSwingProgress = MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress));
 						break;
 					case "sq":
-						fixedSwingProgress = swingProgress * swingProgress;
+						newSwingProgress = swingProgress * swingProgress;
 						break;
 					case "sqsq":
-						fixedSwingProgress = swingProgress * swingProgress * swingProgress;
+						newSwingProgress = swingProgress * swingProgress * swingProgress;
 						break;
 					default:
-						fixedSwingProgress = swingProgress;
+						newSwingProgress = swingProgress;
 				}
 
 				final Boolean sqSmoothSin = (isSwing ? swingAnimation.getSwingSqSmoothingSin() : swingAnimation.getBlockSqSmoothingSin()).get();
-				return sqSmoothSin ? MathHelper.sin(fixedSwingProgress * WMathHelper.PI) : fixedSwingProgress;
+				return sqSmoothSin ? MathHelper.sin(newSwingProgress * WMathHelper.PI) : newSwingProgress;
 			}
 
 			return MathHelper.sin(swingProgress * swingProgress * WMathHelper.PI);
@@ -172,28 +197,28 @@ public abstract class MixinItemRenderer
 
 		if (swingAnimation.getState())
 		{
-			final float fixedSwingProgress;
+			final float newSwingProgress;
 
 			switch ((isSwing ? swingAnimation.getSwingSqrtSmoothingMethod() : swingAnimation.getBlockSqrtSwingSmoothingMethod()).get().toLowerCase(Locale.ENGLISH))
 			{
 				case "sqrt":
-					fixedSwingProgress = MathHelper.sqrt_float(swingProgress);
+					newSwingProgress = MathHelper.sqrt_float(swingProgress);
 					break;
 				case "sqrtsqrt":
-					fixedSwingProgress = MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress));
+					newSwingProgress = MathHelper.sqrt_float(MathHelper.sqrt_float(swingProgress));
 					break;
 				case "sq":
-					fixedSwingProgress = swingProgress * swingProgress;
+					newSwingProgress = swingProgress * swingProgress;
 					break;
 				case "sqsq":
-					fixedSwingProgress = swingProgress * swingProgress * swingProgress;
+					newSwingProgress = swingProgress * swingProgress * swingProgress;
 					break;
 				default:
-					fixedSwingProgress = swingProgress;
+					newSwingProgress = swingProgress;
 			}
 
 			final Boolean sqrtSmoothSin = (isSwing ? swingAnimation.getSwingSqrtSmoothingSin() : swingAnimation.getBlockSqrtSmoothingSin()).get();
-			return sqrtSmoothSin ? MathHelper.sin(fixedSwingProgress * WMathHelper.PI) : fixedSwingProgress;
+			return sqrtSmoothSin ? MathHelper.sin(newSwingProgress * WMathHelper.PI) : newSwingProgress;
 		}
 
 		return MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
