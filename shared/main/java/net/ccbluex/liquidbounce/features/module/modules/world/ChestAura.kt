@@ -165,7 +165,7 @@ object ChestAura : Module()
 					val currentBlock = currentBlock ?: return
 					val vecRotation = RotationUtils.faceBlock(theWorld, thePlayer, currentBlock) ?: return
 					val rotation = vecRotation.rotation
-					val searchFace = vecRotation.searchFace ?: return
+					val posVec = vecRotation.vec
 
 					val keepRotationTicks = if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get() else minKeepRotationTicksValue.get() + Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get()) else 0
 
@@ -178,8 +178,6 @@ object ChestAura : Module()
 						facesBlock = false
 
 						if (!BlockUtils.canBeClicked(theWorld, currentBlock)) return
-
-						val posVec = WVec3(currentBlock).addVector(searchFace.xCoord, searchFace.yCoord, searchFace.zCoord)
 
 						if (!throughWalls && (eyesPos.squareDistanceTo(posVec) > 18.0 || run {
 								val rayTrace = theWorld.rayTraceBlocks(eyesPos, posVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
