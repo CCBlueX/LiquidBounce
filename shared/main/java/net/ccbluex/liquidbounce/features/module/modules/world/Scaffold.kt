@@ -171,14 +171,7 @@ class Scaffold : Module()
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
 		{
-			if (maximum < newValue)
-			{
-				set(maximum)
-			}
-			else if (minimum > newValue)
-			{
-				set(minimum)
-			}
+			if (maximum < newValue) set(maximum) else if (minimum > newValue) set(minimum)
 		}
 	}
 
@@ -192,14 +185,7 @@ class Scaffold : Module()
 		{
 			val v = minTurnSpeedValue.get()
 			if (v > newValue) set(v)
-			if (maximum < newValue)
-			{
-				set(maximum)
-			}
-			else if (minimum > newValue)
-			{
-				set(minimum)
-			}
+			if (maximum < newValue) set(maximum) else if (minimum > newValue) set(minimum)
 		}
 	}
 	private val minTurnSpeedValue: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 1f, 180f)
@@ -208,14 +194,7 @@ class Scaffold : Module()
 		{
 			val v = maxTurnSpeedValue.get()
 			if (v < newValue) set(v)
-			if (maximum < newValue)
-			{
-				set(maximum)
-			}
-			else if (minimum > newValue)
-			{
-				set(minimum)
-			}
+			if (maximum < newValue) set(maximum) else if (minimum > newValue) set(minimum)
 		}
 	}
 
@@ -1070,11 +1049,11 @@ class Scaffold : Module()
 						val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
 						val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
 
-						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) return@sideLoop
+						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || theWorld.rayTraceBlocks(eyesPos, hitVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) != null)) return@sideLoop
 
 						val rotationVector = RotationUtils.getVectorForRotation(limitedRotation!!)
 						val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
-						val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, false, false, true)
+						val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
 
 						if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)) return@sideLoop
 

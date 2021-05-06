@@ -766,9 +766,9 @@ public abstract class MixinItemRenderer
 
 		if (swingAnimation.getEquipProgressSmoothingValue().get())
 			if (swingAnimation.getEquipProgressSmoothingReverseValue().get())
-				equippedProgress += clampedDelta < 0 ? -StrictMath.pow(-clampedDelta, 1.0f + swingAnimation.getEquipProgressDownSpeedValue().get() * 0.1f) : MathHelper.clamp_double(MathHelper.sqrt_double((1.0 - unclampedDelta) / swingAnimation.getEquipProgressUpSpeedValue().get().doubleValue()), 0.0, 1.0);
+				equippedProgress += clampedDelta < 0 ? -StrictMath.pow(-clampedDelta, 1.0f + swingAnimation.getEquipProgressDownSpeedValue().get() * 0.1f) : MathHelper.clamp_double(MathHelper.sqrt_double((1.001 - unclampedDelta) / swingAnimation.getEquipProgressUpSpeedValue().get().doubleValue()), 0.0, 1.0);
 			else
-				equippedProgress += clampedDelta < 0 ? -MathHelper.clamp_double(MathHelper.sqrt_double((unclampedDelta + 1.00001) / swingAnimation.getEquipProgressDownSpeedValue().get().doubleValue()), 0.0, 1.0) : StrictMath.pow(clampedDelta, 1.0f + swingAnimation.getEquipProgressUpSpeedValue().get() * 0.1f);
+				equippedProgress += clampedDelta < 0 ? -MathHelper.clamp_double(MathHelper.sqrt_double((unclampedDelta + 1.001) / swingAnimation.getEquipProgressDownSpeedValue().get().doubleValue()), 0.0, 1.0) : StrictMath.pow(clampedDelta, 1.0f + swingAnimation.getEquipProgressUpSpeedValue().get() * 0.1f);
 		else
 			equippedProgress += clampedDelta;
 

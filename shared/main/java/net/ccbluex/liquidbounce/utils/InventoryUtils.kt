@@ -14,7 +14,10 @@ import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos.Companion.ORIGIN
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.ClickWindowEvent
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 
@@ -51,7 +54,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 		// inventoryContainer.getSlot(i).stack is using different Slot ID system unlike inventory.getStackInSlot()
 		// ID system can be found on
 		// mc.thePlayer.inventoryContainer.getSlot(i).stack - https://wiki.vg/File:Inventory-slots.png
-		// mc.thePlayer.inventory.getStackInSlot() (same as mc.thePlayer.inventory.mainInventory) - https://minecraft.gamepedia.com/File:Items_slot_number.png
+		// mc.thePlayer.inventory.getStackInSlot() (= mc.thePlayer.inventory.mainInventory) - https://minecraft.gamepedia.com/File:Items_slot_number.png
 		// !! ---------------------------------------------------------------------------------------------------------------------------- !!
 
 		val AUTOBLOCK_BLACKLIST = run {
@@ -86,7 +89,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 			}
 		}
 
-		fun hasSpaceHotbar(inventory: IInventoryPlayer): Boolean = (36..44).map(inventory::getStackInSlot).any { it == null }
+		fun hasSpaceHotbar(inventory: IInventoryPlayer): Boolean = (0 until 9).map(inventory::getStackInSlot).any { it == null }
 
 		fun findAutoBlockBlock(theWorld: IWorldClient, container: IContainer, autoblockFullcubeOnly: Boolean, boundingBoxYLimit: Double = 0.0): Int
 		{

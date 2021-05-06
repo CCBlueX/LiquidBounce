@@ -112,6 +112,29 @@ class KillAura : Module()
 	private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "ServerDirection", "ClientDirection", "LivingTime"), "Distance")
 	private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
 
+	// Switch Delay
+	private val maxSwitchDelayValue: IntegerValue = object : IntegerValue("MaxSwitchDelay", 0, 0, 1000)
+	{
+		override fun onChanged(oldValue: Int, newValue: Int)
+		{
+			val i = minSwitchDelayValue.get()
+			if (i > newValue) set(i)
+
+			switchDelay = TimeUtils.randomDelay(minSwitchDelayValue.get(), this.get())
+		}
+	}
+
+	private val minSwitchDelayValue: IntegerValue = object : IntegerValue("MinSwitchDelay", 0, 0, 1000)
+	{
+		override fun onChanged(oldValue: Int, newValue: Int)
+		{
+			val i = maxSwitchDelayValue.get()
+			if (i < newValue) set(i)
+
+			switchDelay = TimeUtils.randomDelay(this.get(), maxSwitchDelayValue.get())
+		}
+	}
+
 	// Bypass
 	private val swingValue = BoolValue("Swing", true)
 	private val keepSprintValue = BoolValue("KeepSprint", true)
@@ -377,6 +400,9 @@ class KillAura : Module()
 	 * Target of auto-block
 	 */
 	private var autoBlockTarget: IEntityLivingBase? = null
+
+	private var switchDelay = TimeUtils.randomDelay(minSwitchDelayValue.get(), maxSwitchDelayValue.get())
+	private val switchDelayTimer = MSTimer()
 
 	init
 	{
@@ -714,7 +740,13 @@ class KillAura : Module()
 			else attackEntity(currentTarget)
 		}
 
-		previouslySwitchedTargets.add(if (aac) (target ?: return).entityId else currentTarget.entityId)
+		if (switchDelayTimer.hasTimePassed(switchDelay))
+		{
+			previouslySwitchedTargets.add(if (aac) (target ?: return).entityId else currentTarget.entityId)
+
+			switchDelayTimer.reset()
+			switchDelay = TimeUtils.randomDelay(minSwitchDelayValue.get(), maxSwitchDelayValue.get())
+		}
 
 		if (!fakeAttack && target == currentTarget) target = null
 

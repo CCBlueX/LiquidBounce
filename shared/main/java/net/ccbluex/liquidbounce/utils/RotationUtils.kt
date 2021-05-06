@@ -418,6 +418,15 @@ class RotationUtils : MinecraftInstance(), Listenable
 		fun getClientRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double = getRotationDifference(toRotation(thePlayer, getCenter(entity.entityBoundingBox), minPlayerPredictSize, maxPlayerPredictSize, playerPredict), Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch))
 
 		/**
+		 * Calculate difference between the "client-sided rotation" and your block position
+		 *
+		 * @param  blockPos
+		 * your block position
+		 * @return        difference between rotation
+		 */
+		fun getClientRotationDifference(thePlayer: IEntityPlayerSP, blockPos: WBlockPos, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double = getRotationDifference(toRotation(thePlayer, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), minPlayerPredictSize, maxPlayerPredictSize, playerPredict), Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch))
+
+		/**
 		 * Calculate difference between the "server-sided rotation" and your entity
 		 *
 		 * @param  entity
@@ -425,6 +434,15 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * @return        difference between rotation
 		 */
 		fun getServerRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double = getRotationDifference(toRotation(thePlayer, getCenter(entity.entityBoundingBox), minPlayerPredictSize, maxPlayerPredictSize, playerPredict), serverRotation)
+
+		/**
+		 * Calculate difference between the "server-sided rotation" and your block position
+		 *
+		 * @param  blockPos
+		 * your block position
+		 * @return        difference between rotation
+		 */
+		fun getServerRotationDifference(thePlayer: IEntityPlayerSP, blockPos: WBlockPos, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double = getRotationDifference(toRotation(thePlayer, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), minPlayerPredictSize, maxPlayerPredictSize, playerPredict), serverRotation)
 
 		// /**
 		//  * Calculate difference between the client rotation and your entity

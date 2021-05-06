@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlockIntersects
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 
-@ModuleInfo(name = "WallClimb", description = "Allows you to climb up walls like a spider.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "WallClimb", description = "Allows you to climb up walls like a spider. (a.k.a. Spider)", category = ModuleCategory.MOVEMENT)
 class WallClimb : Module()
 {
 	private val modeValue = ListValue("Mode", arrayOf("Simple", "CheckerClimb", "Clip", "AAC3.3.8-Glide", "AAC3.3.12"), "Simple")
