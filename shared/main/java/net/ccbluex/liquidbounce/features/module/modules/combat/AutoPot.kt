@@ -82,7 +82,7 @@ class AutoPot : Module()
 	private val misClickRateValue = IntegerValue("ClickMistakeRate", 5, 0, 100)
 	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
-	private val groundDistanceValue = FloatValue("GroundDistance", 2F, 0F, 5F)
+	private val groundDistanceValue = FloatValue("GroundDistance", 2F, 0.72F, 5F)
 
 	private val ignoreScreen = BoolValue("IgnoreScreen", true)
 
@@ -160,7 +160,6 @@ class AutoPot : Module()
 
 	private val potThrowDelayTimer = MSTimer()
 	private var potThrowDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
-	private val invDelayTimer = MSTimer()
 	private var invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
 
 	private var potion = -1
@@ -244,7 +243,6 @@ class AutoPot : Module()
 					{
 						if (thePlayer.onGround)
 						{
-							ClientUtils.displayChatMessage(thePlayer, "jump/hop performed")
 							when (modeValue.get().toLowerCase())
 							{
 								"jump" -> thePlayer.jump()
@@ -259,23 +257,15 @@ class AutoPot : Module()
 
 						val collisionBlock = fallingPlayer.findCollision(20)?.pos
 
-						val d = posY - (collisionBlock?.y ?: 0)
-
-						ClientUtils.displayChatMessage(thePlayer, "d: $d")
-
-						if (d >= groundDistanceValue.get()) return
+						if (posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get()) return
 
 						// Suspend killaura if option is present
 						if (killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
 
 						potion = if (thePlayer.health <= health && healPotionInHotbar != -1) healPotionInHotbar else buffPotionInHotbar
 
-						ClientUtils.displayChatMessage(thePlayer, "found potion in hotbar: $potion")
-
 						// Swap hotbar slot to potion slot
 						netHandler.addToSendQueue(provider.createCPacketHeldItemChange(potion - 36))
-
-						ClientUtils.displayChatMessage(thePlayer, "-changed held item slot to: ${potion - 36}")
 
 						val pitch = thePlayer.rotationPitch
 
@@ -297,8 +287,6 @@ class AutoPot : Module()
 							val targetRotation = Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(if (throwDirection == "up") -80F else 80F, if (throwDirection == "up") -90F else 90F))
 
 							RotationUtils.setTargetRotation(RotationUtils.limitAngleChange(serverRotation, targetRotation, turnSpeed, acceleration), if (keepRotationValue.get()) keepRotationLengthValue.get() else 0)
-
-							ClientUtils.displayChatMessage(thePlayer, "rotated")
 						}
 
 						return
@@ -306,7 +294,7 @@ class AutoPot : Module()
 				}
 
 				val currentContainer = thePlayer.openContainer
-				if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(currentContainer != null && currentContainer.windowId != 0))
+				if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(currentContainer != null && currentContainer.windowId != 0))
 				{
 					// Move Potion Inventory -> Hotbar
 					val healPotionInInventory = findHealPotion(thePlayer, 9, 36, inventoryContainer, randomSlot)
@@ -317,8 +305,6 @@ class AutoPot : Module()
 						if (openInventoryValue.get() && isNotInventory) return
 
 						var slot = if (healPotionInInventory != -1) healPotionInInventory else buffPotionInInventory
-
-						ClientUtils.displayChatMessage(thePlayer, "found potion in inv: $slot")
 
 						val misclickRate = misClickRateValue.get()
 
@@ -338,7 +324,7 @@ class AutoPot : Module()
 						if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
 						invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
-						invDelayTimer.reset()
+						InventoryUtils.CLICK_TIMER.reset()
 					}
 				}
 			}
@@ -350,8 +336,6 @@ class AutoPot : Module()
 
 				if ((ignoreScreen || !containerOpen) && potion >= 0 && pitchCheck)
 				{
-					ClientUtils.displayChatMessage(thePlayer, "throwing potion in hotbar: $potion")
-
 					val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack
 
 					if (itemStack != null)

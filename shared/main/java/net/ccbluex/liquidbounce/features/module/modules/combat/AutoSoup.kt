@@ -82,7 +82,6 @@ class AutoSoup : Module()
 	private val soupDelayTimer = MSTimer()
 	private var soupDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 
-	private val invDelayTimer = MSTimer()
 	private var invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
 
 	override val tag: String
@@ -123,7 +122,7 @@ class AutoSoup : Module()
 			}
 		}
 
-		if (invDelayTimer.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(openContainer != null && openContainer.windowId != 0))
+		if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(openContainer != null && openContainer.windowId != 0))
 		{
 			val bowl = provider.getItemEnum(ItemType.BOWL)
 
@@ -146,7 +145,7 @@ class AutoSoup : Module()
 					controller.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
 
 					invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
-					invDelayTimer.reset()
+					InventoryUtils.CLICK_TIMER.reset()
 
 					return
 				}
@@ -176,7 +175,7 @@ class AutoSoup : Module()
 				if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
 				invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
-				invDelayTimer.reset()
+				InventoryUtils.CLICK_TIMER.reset()
 			}
 		}
 	}
