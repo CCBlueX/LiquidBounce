@@ -107,7 +107,7 @@ class Target : Element()
 				val damageColor = createRGB(damageAnimationColorRed.get(), damageAnimationColorGreen.get(), damageAnimationColorBlue.get(), 255)
 				val healColor = createRGB(healAnimationColorRed.get(), healAnimationColorGreen.get(), healAnimationColorBlue.get(), 255)
 
-				val dataWatcherBuilder = StringJoiner("\u00A7r | ", " | ", "\u00A7r")
+				val dataWatcherBuilder = StringJoiner("\u00A7r | ", " | ", "\u00A7r").setEmptyValue("")
 
 				if (targetEntity.invisible) dataWatcherBuilder.add("\u00A77\u00A7oInvisible")
 
@@ -133,7 +133,7 @@ class Target : Element()
 					if (healthMethod.equals("Mineplex", ignoreCase = true) || healthMethod.equals("Hive", ignoreCase = true)) targetHealth = EntityUtils.getPlayerHealthFromScoreboard(targetPlayer.gameProfile.name, isMineplex = healthGetMethod.get().equals("Mineplex", true)).toFloat()
 
 					targetArmor = targetPlayer.totalArmorValue
-					name = targetPlayer.customNameTag.ifBlank(targetPlayer::displayNameString)
+					name = targetPlayer.customNameTag.ifBlank(targetPlayer.displayName::formattedText)
 
 					xShift = 100
 					healthBarYOffset = 104F
